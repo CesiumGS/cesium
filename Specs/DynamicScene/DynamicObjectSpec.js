@@ -171,14 +171,14 @@ defineSuite([
         objectToMerge.position = 1;
         objectToMerge.orientation = 2;
         objectToMerge.vertexPositions = 3;
-        objectToMerge.availability = 4;
+        objectToMerge.availability = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
         objectToMerge.viewFrom = 5;
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.position = 6;
         targetObject.orientation = 7;
         targetObject.vertexPositions = 8;
-        targetObject.availability = 9;
+        targetObject.availability = TimeInterval.fromIso8601('2002-01-01/2003-01-01');
         targetObject.viewFrom = 10;
 
         DynamicObject.mergeProperties(targetObject, objectToMerge);
@@ -186,7 +186,7 @@ defineSuite([
         expect(targetObject.position).toEqual(6);
         expect(targetObject.orientation).toEqual(7);
         expect(targetObject.vertexPositions).toEqual(8);
-        expect(targetObject.availability).toEqual(9);
+        expect(targetObject.availability).toEqual(objectToMerge.availability); //Is currently always overwritten
         expect(targetObject.viewFrom).toEqual(10);
     });
 

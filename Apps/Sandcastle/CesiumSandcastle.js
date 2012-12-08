@@ -137,6 +137,7 @@ require({
             // These are copied from the Eclipse jsHint plugin options on the Cesium project itself.
             // They should be kept in sync with that list of options.
             bitwise : false,
+            camelcase : false,
             curly : true,
             eqeqeq : true,
             forin : true,
@@ -147,10 +148,12 @@ require({
             noempty : false,
             nonew : true,
             plusplus : false,
+            quotmark : false,
             regexp : false,
             undef : true,
+            unused : false,
             strict : true,
-            trailing : false,
+            trailing : true,
             asi : false,
             boss : false,
             debug : false,

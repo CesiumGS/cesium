@@ -287,7 +287,7 @@ defineSuite([
         var i = 0;
         for ( var col = 0; col < 4; col++) {
             for ( var row = 0; row < 4; row++) {
-                var index = Matrix4.getElementIndex(row, col);
+                var index = Matrix4.getElementIndex(col, row);
                 expect(index).toEqual(i);
                 i++;
             }
@@ -541,6 +541,24 @@ defineSuite([
         var expected = new Cartesian4(190, 486, 782, 1078);
         var result = new Cartesian4();
         var returnedResult = left.multiplyByVector(right, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyByPoint works without a result parameter', function() {
+        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+        var right = new Cartesian4(17, 18, 19);
+        var expected = new Cartesian4(114, 334, 554, 774);
+        var result = left.multiplyByPoint(right);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyByPoint works with a result parameter', function() {
+        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+        var right = new Cartesian4(17, 18, 19);
+        var expected = new Cartesian4(114, 334, 554, 774);
+        var result = new Cartesian4();
+        var returnedResult = left.multiplyByPoint(right, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });
@@ -1085,15 +1103,15 @@ defineSuite([
         var row;
         var col = 0.0;
         expect(function() {
-            Matrix4.getElementIndex(row, col);
+            Matrix4.getElementIndex(col, row);
         }).toThrow();
     });
 
-    it('static getElement throws without col parameter', function() {
+    it('static getElement throws without column parameter', function() {
         var row = 0.0;
         var col;
         expect(function() {
-            Matrix4.getElementIndex(row, col);
+            Matrix4.getElementIndex(col, row);
         }).toThrow();
     });
 
@@ -1207,6 +1225,20 @@ defineSuite([
         var matrix = new Matrix4();
         expect(function() {
             Matrix4.multiplyByVector(matrix, undefined);
+        }).toThrow();
+    });
+
+    it('static multiplyByPoint throws with no matrix parameter', function() {
+        var cartesian = new Cartesian4();
+        expect(function() {
+            Matrix4.multiplyByPoint(undefined, cartesian);
+        }).toThrow();
+    });
+
+    it('static multiplyByPoint throws with no cartesian parameter', function() {
+        var matrix = new Matrix4();
+        expect(function() {
+            Matrix4.multiplyByPoint(matrix, undefined);
         }).toThrow();
     });
 

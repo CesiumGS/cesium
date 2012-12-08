@@ -4,6 +4,8 @@ defineSuite([
          'Scene/Polyline',
          'Specs/createContext',
          'Specs/destroyContext',
+         'Specs/createCamera',
+         'Specs/createFrameState',
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
@@ -13,6 +15,7 @@ defineSuite([
          'Core/Cartographic',
          'Core/Matrix4',
          'Core/Math',
+         'Core/JulianDate',
          'Renderer/BufferUsage',
          'Scene/SceneMode'
      ], function(
@@ -20,6 +23,8 @@ defineSuite([
          Polyline,
          createContext,
          destroyContext,
+         createCamera,
+         createFrameState,
          frameState,
          pick,
          render,
@@ -29,6 +34,7 @@ defineSuite([
          Cartographic,
          Matrix4,
          CesiumMath,
+         JulianDate,
          BufferUsage,
          SceneMode) {
     "use strict";
@@ -49,14 +55,8 @@ defineSuite([
     beforeEach(function() {
         polylines = new PolylineCollection();
 
-        var camera = {
-            eye : new Cartesian3(-1.0, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z
-        };
         us = context.getUniformState();
-        us.setView(Matrix4.fromCamera(camera));
-        us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
+        us.update(createFrameState(createCamera(context)));
     });
 
     afterEach(function() {

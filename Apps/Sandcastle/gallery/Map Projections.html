@@ -15,6 +15,7 @@
             { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
             { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
             { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -77,7 +78,7 @@ require([
 
         var geographic = new ToggleButton({
             label: "Geographic",
-            onClick: function() { 
+            onClick: function() {
                 scene.scene2D.projection = new Cesium.GeographicProjection(Cesium.Ellipsoid.WGS84);
                 geographic.set('checked', true);
                 webMercator.set('checked', false);
@@ -99,22 +100,16 @@ require([
         webMercator.set('checked', false);
     }
     
-    var cesiumWidget = new CesiumViewerWidget({
-        postSetup : function(widget) {
-            widget.showSkyAtmosphere(false);
-            widget.showGroundAtmosphere(false);
-            widget.scene.getPrimitives().getCentralBody().affectedByLighting = false;
-            var transitioner = new Cesium.SceneTransitioner(widget.scene);
-            transitioner.to2D();
-            
-            createButtons(widget.scene);
-            widget.startRenderLoop();
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
-
+    var widget = new CesiumViewerWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
-});
 
+    var transitioner = new Cesium.SceneTransitioner(widget.scene);
+    transitioner.to2D();
+
+    createButtons(widget.scene);
+});
 </script>
 </body>
 </html>

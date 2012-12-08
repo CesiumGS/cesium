@@ -82,22 +82,21 @@
     function createScene(canvas) {
         var scene = new Cesium.Scene(canvas);
         var primitives = scene.getPrimitives();
-        var imagery = new Cesium.SingleTileImageryProvider({
-            url : '../../../Images/NE2_50M_SR_W_2048.jpg' 
+
+        var imageryUrl = '../../../Source/Assets/Textures/';
+        var imageryProvider = new Cesium.SingleTileImageryProvider({
+            url : imageryUrl + 'NE2_50M_SR_W_2048.jpg'
         });
 
         var cb = new Cesium.CentralBody(ellipsoid);
-        cb.getImageryLayers().addImageryProvider(imagery);
-        cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
-        cb.specularMapSource = '../../../Images/earthspec1k.jpg';
-        cb.showSkyAtmosphere = (canvas === canvas3D);
-        cb.showGroundAtmosphere = false;
+        cb.getImageryLayers().addImageryProvider(imageryProvider);
+
         primitives.setCentralBody(cb);
 
         scene.getCamera().getControllers().addCentralBody();
 
         scene.setAnimation(function () {
-            scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
+            // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
         });
 
         // Prevent right-click from opening a context menu.
@@ -111,6 +110,8 @@
     var scene3D = createScene(canvas3D);
     var scene2D = createScene(canvas2D);
 
+    scene3D.skyAtmosphere = new Cesium.SkyAtmosphere();
+    
     var transitioner = new Cesium.SceneTransitioner(scene2D);
     transitioner.to2D();
 

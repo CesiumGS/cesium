@@ -45,7 +45,7 @@
 }
 
 .cw-bingIcon {
-    background-image: url('../../../Images/Bing_Logo_51x19_White.png');
+    background-image: url('../Images/Bing_Logo_51x19_White.png');
     background-repeat: no-repeat;
     background-position:center;
     width: 51px;
@@ -78,7 +78,7 @@
     bottom: 68px;
     left: 5px;
     text-decoration: none;
-    background-image: url(../../../Images/Cesium_Logo_overlay.png);
+    background-image: url(../Images/Cesium_Logo_overlay.png);
     width: 118px;
     height: 26px;
 }
@@ -140,11 +140,7 @@
     background-position: -72px 0;
 }
 
-.cw-toggleCbLighting {
-    background-position: -96px 0;
-}
-
-.cw-viewFullScreen {
+.cw-viewFullscreen {
     background-position: -120px 0;
 }
 

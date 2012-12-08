@@ -15,6 +15,7 @@
             { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
             { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
             { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -63,10 +64,10 @@
 <div id="toolbar">Loading...</div>
 <script id="cesium_sandcastle_script">
 require([
-    'Source/Cesium', 'Widgets/Dojo/CesiumWidget', 'dijit/form/Button', 'dijit/form/DropDownButton', 
+    'Source/Cesium', 'Widgets/Dojo/CesiumWidget', 'dijit/form/Button', 'dijit/form/DropDownButton',
     'dijit/DropDownMenu', 'dijit/MenuItem', 'dojo/on', 'dojo/dom'
 ], function(
-    Cesium, CesiumWidget, Button, DropDownButton, 
+    Cesium, CesiumWidget, Button, DropDownButton,
     DropDownMenu, MenuItem, on, dom)
 {
     "use strict";
@@ -163,7 +164,7 @@ require([
         this._commandLists.removeAll();
         if (pass.color) {
             this._commandLists.colorList.push(colorCommand);
-        } 
+        }
         if (pass.pick) {
             this._commandLists.pickList.push(pickCommand);
         }
@@ -281,17 +282,17 @@ require([
                 var projectedPositions = [];
                 var projectedPositionsFlat = [];
                 for (var i = 0; i < positions.length; i += 3) {
-                    var p = new Cesium.Cartesian4(positions[i], positions[i + 1], positions[i + 2], 1.0);
-                    p = this._modelMatrix.multiplyByVector(p);
+                    var modelPosition = new Cesium.Cartesian3(positions[i], positions[i + 1], positions[i + 2]);
+                    var worldPosition = this._modelMatrix.multiplyByPoint(modelPosition);
 
-                    positions[i] = p.x;
-                    positions[i + 1] = p.y;
-                    positions[i + 2] = p.z;
+                    positions[i] = worldPosition.x;
+                    positions[i + 1] = worldPosition.y;
+                    positions[i + 2] = worldPosition.z;
 
-                    p = projection.project(this._ellipsoid.cartesianToCartographic(Cesium.Cartesian3.fromCartesian4(p)));
+                    var projectedPosition = projection.project(this._ellipsoid.cartesianToCartographic(worldPosition));
 
-                    projectedPositions.push(p);
-                    projectedPositionsFlat.push(p.z, p.x, p.y);
+                    projectedPositions.push(projectedPosition);
+                    projectedPositionsFlat.push(projectedPosition.z, projectedPosition.x, projectedPosition.y);
                 }
 
                 if (mode === Cesium.SceneMode.SCENE2D || mode === Cesium.SceneMode.COLUMBUS_VIEW) {
@@ -362,7 +363,7 @@ require([
         if (pass.color) {
             colorCommand.modelMatrix = modelMatrix;
             this._commandLists.colorList.push(colorCommand);
-        } 
+        }
         if (pass.pick) {
             pickCommand.modelMatrix = modelMatrix;
             this._commandLists.pickList.push(pickCommand);
@@ -386,27 +387,21 @@ require([
         
         sceneMenu.addChild(new MenuItem({
             label: '2D',
-            onClick: function() { 
-                centralBody.showSkyAtmosphere = false;
-                centralBody.showGroundAtmosphere = false;
+            onClick: function() {
                 transitioner.morphTo2D();
             }
         }));
         
         sceneMenu.addChild(new MenuItem({
             label: 'Columbus View',
-            onClick: function() { 
-                centralBody.showSkyAtmosphere = false;
-                centralBody.showGroundAtmosphere = false;
+            onClick: function() {
                 transitioner.morphToColumbusView();
             }
         }));
         
         sceneMenu.addChild(new MenuItem({
             label: '3D',
-            onClick: function() { 
-                centralBody.showSkyAtmosphere = true;
-                centralBody.showGroundAtmosphere = true;
+            onClick: function() {
                 transitioner.morphTo3D();
             }
         }));
@@ -414,7 +409,7 @@ require([
         new Button({
             label: 'Render a box',
             onClick: function() {
-                primitives.removeAll();               
+                primitives.removeAll();
                 renderBox(scene);
                 Sandcastle.highlight(renderBox);
             }
@@ -434,16 +429,14 @@ require([
             dropDown: sceneMenu
         }).placeAt('toolbar');
     }
-    
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            createButtons(widget);
-            widget.startRenderLoop();
-            renderBox(widget.scene);
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
 
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
+
+    createButtons(widget);
+    renderBox(widget.scene);
 });
 </script>
 </body>

@@ -29,6 +29,7 @@ define([
         '../Shaders/Materials/RefractionMaterial',
         '../Shaders/Materials/StripeMaterial',
         '../Shaders/Materials/TieDyeMaterial',
+        '../Shaders/Materials/Water',
         '../Shaders/Materials/WoodMaterial'
     ], function(
         when,
@@ -60,6 +61,7 @@ define([
         RefractionMaterial,
         StripeMaterial,
         TieDyeMaterial,
+        WaterMaterial,
         WoodMaterial) {
     "use strict";
 
@@ -232,6 +234,18 @@ define([
      *      <li><code>darkColor</code>:  rgba color object for the dark color.</li>
      *      <li><code>frequency</code>:  Number that controls the frequency of the pattern.</li>
      *  </ul>
+     *  <li>Water</li>
+     *  <ul>
+     *      <li><code>baseWaterColor</code>:  rgba color object base color of the water.</li>
+     *      <li><code>blendColor</code>:  rgba color object used when blending from water to non-water areas.</li>
+     *      <li><code>specularMap</code>:  Single channel texture used to indicate areas of water.</li>
+     *      <li><code>normalMap</code>:  Normal map for water normal perturbation.</li>
+     *      <li><code>frequency</code>:  Number that controls the number of waves.</li>
+     *      <li><code>normalMap</code>:  Normal map for water normal perturbation.</li>
+     *      <li><code>animationSpeed</code>:  Number that controls the animations speed of the water.</li>
+     *      <li><code>amplitude</code>:  Number that controls the amplitude of water waves.</li>
+     *      <li><code>specularIntensity</code>:  Number that controls the intensity of specular reflections.</li>
+     *  </ul>
      * </ul>
      * </div>
      *
@@ -247,7 +261,7 @@ define([
      * @exception {DeveloperError} fabric: uniforms and materials cannot share the same property.
      * @exception {DeveloperError} fabric: cannot have source and components in the same section.
      * @exception {DeveloperError} fabric: property name is not valid. It should be 'type', 'materials', 'uniforms', 'components', or 'source'.
-     * @exception {DeveloperError} fabric: property name is not valid. It should be 'diffuse', 'specular', 'normal', 'emission', or 'alpha'.
+     * @exception {DeveloperError} fabric: property name is not valid. It should be 'diffuse', 'specular', 'shininess', 'normal', 'emission', or 'alpha'.
      * @exception {DeveloperError} image: context is not defined.
      * @exception {DeveloperError} strict: shader source does not use string.
      * @exception {DeveloperError} strict: shader source does not use uniform.
@@ -315,7 +329,10 @@ define([
         this._template = undefined;
 
         initializeMaterial(description, 0, this);
-        Object.defineProperty(this, 'type', { value : this.type, writable : false});
+        Object.defineProperty(this, 'type', {
+            value : this.type,
+            writable : false
+        });
     };
 
     /**
@@ -358,33 +375,33 @@ define([
     *
     * @see Material#destroy
     */
-   Material.prototype.isDestroyed = function() {
-       return false;
-   };
+    Material.prototype.isDestroyed = function() {
+        return false;
+    };
 
-   /**
-    * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-    * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-    * <br /><br />
-    * Once an object is destroyed, it should not be used; calling any function other than
-    * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-    * assign the return value (<code>undefined</code>) to the object as done in the example.
-    *
-    * @memberof Material
-    *
-    * @returns {undefined}
-    *
-    * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-    *
-    * @see Material#isDestroyed
-    *
-    * @example
-    * material = material && material.destroy();
-    */
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof Material
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see Material#isDestroyed
+     *
+     * @example
+     * material = material && material.destroy();
+     */
     Material.prototype.destroy = function() {
         var materials = this.materials;
         var uniforms = this.uniforms;
-        for (var uniformId in uniforms) {
+        for ( var uniformId in uniforms) {
             if (uniforms.hasOwnProperty(uniformId)) {
                 var uniformValue = uniforms[uniformId];
                 if (uniformValue instanceof Texture || uniformValue instanceof CubeMap) {
@@ -392,7 +409,7 @@ define([
                 }
             }
         }
-        for (var material in materials) {
+        for ( var material in materials) {
             if (materials.hasOwnProperty(material)) {
                 material.destroy();
             }
@@ -426,7 +443,7 @@ define([
         checkForTemplateErrors(result);
 
         // If the material has a new type, add it to the cache.
-        if (typeof cachedTemplate === 'undefined'){
+        if (typeof cachedTemplate === 'undefined') {
             Material._materialCache.addMaterial(result.type, result._template);
         }
 
@@ -438,7 +455,7 @@ define([
 
     function checkForValidProperties(object, properties, result, throwNotFound) {
         if (typeof object !== 'undefined') {
-            for (var property in object) {
+            for ( var property in object) {
                 if (object.hasOwnProperty(property)) {
                     var hasProperty = properties.indexOf(property) !== -1;
                     if ((throwNotFound && !hasProperty) || (!throwNotFound && hasProperty)) {
@@ -451,7 +468,7 @@ define([
 
     function invalidNameError(property, properties) {
         var errorString = 'fabric: property name \'' + property + '\' is not valid. It should be ';
-        for (var i = 0; i < properties.length; i++) {
+        for ( var i = 0; i < properties.length; i++) {
             var propertyName = '\'' + properties[i] + '\'';
             errorString += (i === properties.length - 1) ? ('or ' + propertyName + '.') : (propertyName + ', ');
         }
@@ -464,7 +481,7 @@ define([
     }
 
     var templateProperties = ['type', 'materials', 'uniforms', 'components', 'source'];
-    var componentProperties = ['diffuse', 'specular', 'normal', 'emission', 'alpha'];
+    var componentProperties = ['diffuse', 'specular', 'shininess', 'normal', 'emission', 'alpha'];
 
     function checkForTemplateErrors(material) {
         var template = material._template;
@@ -483,7 +500,7 @@ define([
 
         // Make sure uniforms and materials do not share any of the same names.
         var materialNames = [];
-        for (var property in materials) {
+        for ( var property in materials) {
             if (materials.hasOwnProperty(property)) {
                 materialNames.push(property);
             }
@@ -497,12 +514,11 @@ define([
         var source = material._template.source;
         if (typeof source !== 'undefined') {
             material.shaderSource += source + '\n';
-        }
-        else {
+        } else {
             material.shaderSource += 'czm_material czm_getMaterial(czm_materialInput materialInput)\n{\n';
             material.shaderSource += 'czm_material material = czm_getDefaultMaterial(materialInput);\n';
             if (typeof components !== 'undefined') {
-                for (var component in components) {
+                for ( var component in components) {
                     if (components.hasOwnProperty(component)) {
                         material.shaderSource += 'material.' + component + ' = ' + components[component] + ';\n';
                     }
@@ -514,7 +530,7 @@ define([
 
     function createUniforms(material, count) {
         var uniforms = material._template.uniforms;
-        for (var uniformId in uniforms) {
+        for ( var uniformId in uniforms) {
             if (uniforms.hasOwnProperty(uniformId)) {
                 count = createUniform(material, uniformId, count);
             }
@@ -531,13 +547,11 @@ define([
         var uniformType = getUniformType(uniformValue);
         if (typeof uniformType === 'undefined') {
             throw new DeveloperError('fabric: uniform \'' + uniformId + '\' has invalid type.');
-        }
-        else if (uniformType === 'channels') {
+        } else if (uniformType === 'channels') {
             if (replaceToken(material, uniformId, uniformValue, false) === 0 && strict) {
                 throw new DeveloperError('strict: shader source does not use channels \'' + uniformId + '\'.');
             }
-        }
-        else {
+        } else {
             // If uniform type is an image, add image dimension uniforms.
             if (uniformType.indexOf('sampler') !== -1) {
                 if (typeof material._context === 'undefined') {
@@ -549,7 +563,11 @@ define([
             if (uniformType === 'sampler2D') {
                 var imageDimensionsUniformName = uniformId + 'Dimensions';
                 if (getNumberOfTokens(material, imageDimensionsUniformName) > 0) {
-                    materialUniforms[imageDimensionsUniformName] = {type : 'ivec3', x : 1, y : 1};
+                    materialUniforms[imageDimensionsUniformName] = {
+                        type : 'ivec3',
+                        x : 1,
+                        y : 1
+                    };
                     createUniform(material, imageDimensionsUniformName);
                 }
             }
@@ -572,7 +590,11 @@ define([
     }
 
     // Checks for updates to material values to refresh the uniforms.
-    var matrixMap = {'mat2' : Matrix2, 'mat3' : Matrix3, 'mat4' : Matrix4};
+    var matrixMap = {
+        'mat2' : Matrix2,
+        'mat3' : Matrix3,
+        'mat4' : Matrix4
+    };
     function returnUniform(material, uniformId, originalUniformType) {
         return function() {
             var uniforms = material.uniforms;
@@ -585,23 +607,20 @@ define([
                 }
                 // Since texture dimensions can't be updated manually, update them when the texture is updated.
                 var uniformDimensionsName = uniformId + 'Dimensions';
-                if(uniforms.hasOwnProperty(uniformDimensionsName)) {
+                if (uniforms.hasOwnProperty(uniformDimensionsName)) {
                     var uniformDimensions = uniforms[uniformDimensionsName];
                     uniformDimensions.x = uniformValue._width;
                     uniformDimensions.y = uniformValue._height;
                 }
-            }
-            else if (originalUniformType === 'samplerCube' && (uniformType === originalUniformType || uniformValue instanceof CubeMap)) {
+            } else if (originalUniformType === 'samplerCube' && (uniformType === originalUniformType || uniformValue instanceof CubeMap)) {
                 if (uniformType === originalUniformType) {
                     uniformValue = Material._textureCache.registerCubeMapToMaterial(material, uniformId, uniformValue);
                 }
-            }
-            else if (originalUniformType.indexOf('mat') !== -1 && (uniformType === originalUniformType || uniformValue instanceof matrixMap[originalUniformType])) {
+            } else if (originalUniformType.indexOf('mat') !== -1 && (uniformType === originalUniformType || uniformValue instanceof matrixMap[originalUniformType])) {
                 if (uniformType === originalUniformType) {
                     uniformValue = matrixMap[originalUniformType].fromColumnMajorArray(uniformValue);
                 }
-            }
-            else if (typeof uniformType === 'undefined' || originalUniformType !== uniformType) {
+            } else if (typeof uniformType === 'undefined' || originalUniformType !== uniformType) {
                 throw new DeveloperError('fabric: uniform \'' + uniformId + '\' has invalid value.');
             }
             uniforms[uniformId] = uniformValue;
@@ -616,38 +635,31 @@ define([
             var type = typeof uniformValue;
             if (type === 'number') {
                 uniformType = 'float';
-            }
-            else if (type === 'boolean') {
+            } else if (type === 'boolean') {
                 uniformType = 'bool';
-            }
-            else if (type === 'string') {
+            } else if (type === 'string') {
                 if (/^([rgba]){1,4}$/i.test(uniformValue)) {
                     uniformType = 'channels';
-                }
-                else if (uniformValue === Material.DefaultCubeMapId) {
+                } else if (uniformValue === Material.DefaultCubeMapId) {
                     uniformType = 'samplerCube';
-                }
-                else {
+                } else {
                     uniformType = 'sampler2D';
                 }
-            }
-            else if (type === 'object') {
+            } else if (type === 'object') {
                 if (Array.isArray(uniformValue)) {
                     if (uniformValue.length === 4 || uniformValue.length === 9 || uniformValue.length === 16) {
                         uniformType = 'mat' + Math.sqrt(uniformValue.length);
                     }
-                }
-                else {
+                } else {
                     var numAttributes = 0;
-                    for (var attribute in uniformValue) {
+                    for ( var attribute in uniformValue) {
                         if (uniformValue.hasOwnProperty(attribute)) {
                             numAttributes += 1;
                         }
                     }
                     if (numAttributes >= 2 && numAttributes <= 4) {
                         uniformType = 'vec' + numAttributes;
-                    }
-                    else if (numAttributes === 6) {
+                    } else if (numAttributes === 6) {
                         uniformType = 'samplerCube';
                     }
                 }
@@ -661,7 +673,7 @@ define([
         var context = material._context;
         var strict = material._strict;
         var subMaterialTemplates = material._template.materials;
-        for (var subMaterialId in subMaterialTemplates) {
+        for ( var subMaterialId in subMaterialTemplates) {
             if (subMaterialTemplates.hasOwnProperty(subMaterialId)) {
                 // Construct the sub-material.
                 var subMaterial = {};
@@ -722,7 +734,7 @@ define([
         _updateMaterialsOnLoad : function(texture, path) {
             this._pathsToTextures[path] = texture;
             var materialContainers = this._pathsToMaterials[path];
-            for (var i = 0; i < materialContainers.length; i++) {
+            for ( var i = 0; i < materialContainers.length; i++) {
                 var materialContainer = materialContainers[i];
                 var material = materialContainer.material;
                 var property = materialContainer.property;
@@ -733,10 +745,10 @@ define([
 
         releaseTexture : function(material, texture) {
             var pathsToTexture = this._pathsToTextures;
-            for (var path in pathsToTexture) {
+            for ( var path in pathsToTexture) {
                 if (pathsToTexture[path] === texture) {
                     var materialsWithTexture = this._pathsToMaterials[path];
-                    for (var i = 0; i < materialsWithTexture.length; i++) {
+                    for ( var i = 0; i < materialsWithTexture.length; i++) {
                         if (materialsWithTexture[i].material === material) {
                             materialsWithTexture.splice(i, 1);
                             var numMaterialsWithTexture = materialsWithTexture.length;
@@ -756,11 +768,13 @@ define([
             var texture;
             if (info === Material.DefaultCubeMapId) {
                 texture = material._context.getDefaultCubeMap();
-            }
-            else {
+            } else {
                 var path = info.positiveX + info.negativeX + info.positiveY + info.negativeY + info.positiveZ + info.negativeZ;
                 this._pathsToMaterials[path] = defaultValue(this._pathsToMaterials[path], []);
-                this._pathsToMaterials[path].push({'material' : material, 'property' : property});
+                this._pathsToMaterials[path].push({
+                    'material' : material,
+                    'property' : property
+                });
                 texture = this._pathsToTextures[path];
                 if (typeof texture === 'undefined') {
                     var oldTexture = material.uniforms[property];
@@ -768,7 +782,16 @@ define([
                     texture = hasOldTexture ? oldTexture : material._context.getDefaultCubeMap();
                     if (this._pathsToMaterials[path].length === 1) {
                         when.all([loadImage(info.positiveX), loadImage(info.negativeX), loadImage(info.positiveY), loadImage(info.negativeY), loadImage(info.positiveZ), loadImage(info.negativeZ)]).then(function(images) {
-                            texture = material._context.createCubeMap({source : {positiveX : images[0], negativeX : images[1], positiveY : images[2], negativeY : images[3], positiveZ : images[4], negativeZ : images[5]}});
+                            texture = material._context.createCubeMap({
+                                source : {
+                                    positiveX : images[0],
+                                    negativeX : images[1],
+                                    positiveY : images[2],
+                                    negativeY : images[3],
+                                    positiveZ : images[4],
+                                    negativeZ : images[5]
+                                }
+                            });
                             that._updateMaterialsOnLoad(texture, path);
                         });
                     }
@@ -782,11 +805,13 @@ define([
             var texture;
             if (info === Material.DefaultImageId) {
                 texture = material._context.getDefaultTexture();
-            }
-            else {
+            } else {
                 var path = info;
                 this._pathsToMaterials[path] = defaultValue(this._pathsToMaterials[path], []);
-                this._pathsToMaterials[path].push({'material' : material, 'property' : property});
+                this._pathsToMaterials[path].push({
+                    'material' : material,
+                    'property' : property
+                });
                 texture = this._pathsToTextures[path];
                 if (typeof texture === 'undefined') {
                     var oldTexture = material.uniforms[property];
@@ -794,7 +819,9 @@ define([
                     texture = hasOldTexture ? oldTexture : material._context.getDefaultTexture();
                     if (this._pathsToMaterials[path].length === 1) {
                         when(loadImage(path), function(image) {
-                            texture = material._context.createTexture2D({source : image});
+                            texture = material._context.createTexture2D({
+                                source : image
+                            });
                             that._updateMaterialsOnLoad(texture, path);
                         });
                     }
@@ -806,10 +833,10 @@ define([
 
     Material._materialCache = {
         _materials : {},
-        addMaterial : function (type, materialTemplate) {
+        addMaterial : function(type, materialTemplate) {
             this._materials[type] = materialTemplate;
         },
-        getMaterial : function (type) {
+        getMaterial : function(type) {
             return this._materials[type];
         }
     };
@@ -878,7 +905,7 @@ define([
     });
 
     Material.SpecularMapType = 'SpecularMap';
-    Material._materialCache.addMaterial(Material.SpecularMapType , {
+    Material._materialCache.addMaterial(Material.SpecularMapType, {
         type : Material.SpecularMapType,
         uniforms : {
             image : Material.DefaultImageId,
@@ -894,7 +921,7 @@ define([
     });
 
     Material.EmissionMapType = 'EmissionMap';
-    Material._materialCache.addMaterial(Material.EmissionMapType , {
+    Material._materialCache.addMaterial(Material.EmissionMapType, {
         type : Material.EmissionMapType,
         uniforms : {
             image : Material.DefaultImageId,
@@ -910,7 +937,7 @@ define([
     });
 
     Material.BumpMapType = 'BumpMap';
-    Material._materialCache.addMaterial(Material.BumpMapType , {
+    Material._materialCache.addMaterial(Material.BumpMapType, {
         type : Material.BumpMapType,
         uniforms : {
             image : Material.DefaultImageId,
@@ -961,7 +988,7 @@ define([
     });
 
     Material.FresnelType = 'Fresnel';
-    Material._materialCache.addMaterial(Material.FresnelType , {
+    Material._materialCache.addMaterial(Material.FresnelType, {
         type : Material.FresnelType,
         materials : {
             reflection : {
@@ -979,10 +1006,10 @@ define([
         type : Material.BrickType,
         uniforms : {
             brickColor : {
-                red: 0.6,
-                green: 0.3,
-                blue: 0.1,
-                alpha: 1.0
+                red : 0.6,
+                green : 0.3,
+                blue : 0.1,
+                alpha : 1.0
             },
             mortarColor : {
                 red : 0.8,
@@ -1215,6 +1242,33 @@ define([
             frequency : 10.0
         },
         source : BlobMaterial
+    });
+
+    Material.WaterType = 'Water';
+    Material._materialCache.addMaterial(Material.WaterType, {
+        type : Material.WaterType,
+        uniforms : {
+            baseWaterColor : {
+                red : 0.2,
+                green : 0.3,
+                blue : 0.6,
+                alpha : 1.0
+            },
+            blendColor : {
+                red : 0.0,
+                green : 1.0,
+                blue : 0.699,
+                alpha : 1.0
+            },
+            specularMap : Material.DefaultImageId,
+            normalMap : Material.DefaultImageId,
+            frequency : 10.0,
+            animationSpeed : 0.01,
+            amplitude : 1.0,
+            specularIntensity : 0.5,
+            fadeFactor : 1.0
+        },
+        source : WaterMaterial
     });
 
     return Material;

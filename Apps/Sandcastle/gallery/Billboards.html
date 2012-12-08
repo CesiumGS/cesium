@@ -15,6 +15,7 @@
             { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
             { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
             { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -84,7 +85,7 @@ require([
             });
             scene.getPrimitives().add(billboards);
         };
-        image.src = '../../../Images/Cesium_Logo_overlay.png';
+        image.src = '../images/Cesium_Logo_overlay.png';
     }
     
     function setBillboardPropertiesAtCreation(scene, ellipsoid) {
@@ -107,7 +108,7 @@ require([
             });
             scene.getPrimitives().add(billboards);
         };
-        image.src = '../../../Images/Cesium_Logo_overlay.png';
+        image.src = '../images/Cesium_Logo_overlay.png';
     }
     
     function setBillboardProperties(scene, ellipsoid) {
@@ -130,14 +131,14 @@ require([
 
             scene.getPrimitives().add(billboards);
         };
-        image.src = '../../../Images/Cesium_Logo_overlay.png';
+        image.src = '../images/Cesium_Logo_overlay.png';
     }
     
     function addMultipleBillboards(scene, ellipsoid) {
         Sandcastle.declare(addMultipleBillboards);  // For highlighting in Sandcastle.
         Cesium.when.all([
-                         Cesium.loadImage('../../../Images/Cesium_Logo_overlay.png'),
-                         Cesium.loadImage('../../../Images/facility.gif')
+                         Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
+                         Cesium.loadImage('../images/facility.gif')
                         ])
                    .then(function(images) {
             // Once both images are downloaded, they are combined into one image,
@@ -306,7 +307,7 @@ require([
             });
             scene.getPrimitives().add(billboards);
         };
-        image.src = '../../../Images/whiteShapes.png';
+        image.src = '../images/whiteShapes.png';
     }
     
     function addBillboardsInReferenceframe(scene, ellipsoid) {
@@ -326,7 +327,7 @@ require([
             billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
             scene.getPrimitives().add(billboards);
         };
-        image.src = '../../../Images/facility.gif';
+        image.src = '../images/facility.gif';
     }
     
     function createButtons(widget) {
@@ -338,7 +339,7 @@ require([
             label: 'Add billboard',
             onClick: function() {
                 primitives.removeAll();
-                addBillboard(scene, ellipsoid); 
+                addBillboard(scene, ellipsoid);
                 Sandcastle.highlight(addBillboard);
             }
         }).placeAt('toolbar');
@@ -347,7 +348,7 @@ require([
             label: 'Set billboard properties at creation',
             onClick: function() {
                 primitives.removeAll();
-                setBillboardPropertiesAtCreation(scene, ellipsoid); 
+                setBillboardPropertiesAtCreation(scene, ellipsoid);
                 Sandcastle.highlight(setBillboardPropertiesAtCreation);
             }
         }).placeAt('toolbar');
@@ -356,7 +357,7 @@ require([
             label: 'Change billboard properties',
             onClick: function() {
                 primitives.removeAll();
-                setBillboardProperties(scene, ellipsoid); 
+                setBillboardProperties(scene, ellipsoid);
                 Sandcastle.highlight(setBillboardProperties);
             }
         }).placeAt('toolbar');
@@ -365,7 +366,7 @@ require([
             label: 'Add multiple billboards',
             onClick: function() {
                 primitives.removeAll();
-                addMultipleBillboards(scene, ellipsoid); 
+                addMultipleBillboards(scene, ellipsoid);
                 Sandcastle.highlight(addMultipleBillboards);
             }
         }).placeAt('toolbar');
@@ -374,7 +375,7 @@ require([
             label: 'Add point billboards',
             onClick: function() {
                 primitives.removeAll();
-                addPointBillboards(scene, ellipsoid); 
+                addPointBillboards(scene, ellipsoid);
                 Sandcastle.highlight(addPointBillboards);
             }
         }).placeAt('toolbar');
@@ -383,7 +384,7 @@ require([
             label: 'Add marker billboards',
             onClick: function() {
                 primitives.removeAll();
-                addMarkerBillboards(scene, ellipsoid); 
+                addMarkerBillboards(scene, ellipsoid);
                 Sandcastle.highlight(addMarkerBillboards);
             }
         }).placeAt('toolbar');
@@ -392,21 +393,19 @@ require([
             label: 'Add billboards in reference frame',
             onClick: function() {
                 primitives.removeAll();
-                addBillboardsInReferenceframe(scene, ellipsoid); 
+                addBillboardsInReferenceframe(scene, ellipsoid);
                 Sandcastle.highlight(addBillboardsInReferenceframe);
             }
-        }).placeAt('toolbar');        
+        }).placeAt('toolbar');
     }
 
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            createButtons(widget);
-            widget.startRenderLoop();
-            addBillboard(widget.scene, widget.ellipsoid);
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
-    
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
+
+    createButtons(widget);
+    addBillboard(widget.scene, widget.ellipsoid);
 });
 </script>
 </body>

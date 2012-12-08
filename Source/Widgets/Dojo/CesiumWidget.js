@@ -8,6 +8,7 @@ define([
         'dojo/on',
         'dijit/_WidgetBase',
         'dijit/_TemplatedMixin',
+        '../../Core/defaultValue',
         '../../Core/BoundingRectangle',
         '../../Core/Ellipsoid',
         '../../Core/computeSunPosition',
@@ -25,6 +26,8 @@ define([
         '../../Scene/BingMapsStyle',
         '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
+        '../../Scene/SkyBox',
+        '../../Scene/SkyAtmosphere',
         'dojo/text!./CesiumWidget.html'
     ], function (
         require,
@@ -35,6 +38,7 @@ define([
         on,
         _WidgetBase,
         _TemplatedMixin,
+        defaultValue,
         BoundingRectangle,
         Ellipsoid,
         computeSunPosition,
@@ -52,6 +56,8 @@ define([
         BingMapsStyle,
         SingleTileImageryProvider,
         PerformanceDisplay,
+        SkyBox,
+        SkyAtmosphere,
         template) {
     "use strict";
 
@@ -61,10 +67,15 @@ define([
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
         dayImageUrl : undefined,
-        nightImageUrl : undefined,
-        specularMapUrl : undefined,
-        cloudsMapUrl : undefined,
-        bumpMapUrl : undefined,
+        /**
+         * Determines if a sky box with stars is drawn around the globe.  This is read-only after construction.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default true
+         * @see SkyBox
+         */
+        showSkyBox : true,
         resizeWidgetOnWindowResize : true,
 
         constructor : function() {
@@ -72,10 +83,8 @@ define([
         },
 
         postCreate : function() {
-            ready(this, '_setupCesium');
+            this.cesiumLogo.style.backgroundImage = 'url(' + require.toUrl('../Images/Cesium_Logo_overlay.png') + ')';
         },
-
-        postSetup : undefined,
 
         onSetupError : function(widget, error) {
             console.error(error);
@@ -172,7 +181,13 @@ define([
             }
         },
 
-        _setupCesium : function() {
+        _started : false,
+
+        startup : function() {
+            if (this._started) {
+                return;
+            }
+
             var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
             try {
@@ -183,34 +198,35 @@ define([
                 }
                 return;
             }
+            this._started = true;
 
             this.resize();
 
             on(canvas, 'contextmenu', event.stop);
             on(canvas, 'selectstart', event.stop);
 
-            var maxTextureSize = scene.getContext().getMaximumTextureSize();
-            if (maxTextureSize < 4095) {
-                // Mobile, or low-end card
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_2048.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_512.jpg');
-            } else {
-                // Desktop
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_4096.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_2048.jpg');
-                this.specularMapUrl = this.specularMapUrl || require.toUrl('Images/earthspec1k.jpg');
-                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl('Images/earthcloudmaptrans.jpg');
-                this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images/earthbump1k.jpg');
-            }
+            var imageryUrl = '../../Assets/Textures/';
+            this.dayImageUrl = defaultValue(this.dayImageUrl, require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg'));
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
-            centralBody.showSkyAtmosphere = true;
-            centralBody.showGroundAtmosphere = true;
             centralBody.logoOffset = new Cartesian2(125, 0);
 
             this._configureCentralBodyImagery();
 
             scene.getPrimitives().setCentralBody(centralBody);
+
+            if (this.showSkyBox) {
+                scene.skyBox = new SkyBox({
+                    positiveX: require.toUrl(imageryUrl + 'SkyBox/tycho8_px_80.jpg'),
+                    negativeX: require.toUrl(imageryUrl + 'SkyBox/tycho8_mx_80.jpg'),
+                    positiveY: require.toUrl(imageryUrl + 'SkyBox/tycho8_py_80.jpg'),
+                    negativeY: require.toUrl(imageryUrl + 'SkyBox/tycho8_my_80.jpg'),
+                    positiveZ: require.toUrl(imageryUrl + 'SkyBox/tycho8_pz_80.jpg'),
+                    negativeZ: require.toUrl(imageryUrl + 'SkyBox/tycho8_mz_80.jpg')
+                });
+            }
+
+            scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
 
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
@@ -233,11 +249,11 @@ define([
                 });
             }
 
-            if (typeof this.postSetup !== 'undefined') {
-                this.postSetup(this);
-            }
-
             this.defaultCamera = camera.clone();
+
+            if (this.autoStartRenderLoop) {
+                this.startRenderLoop();
+            }
         },
 
         viewHome : function() {
@@ -253,17 +269,6 @@ define([
             this.centralBodyCameraController = controllers.addCentralBody();
         },
 
-        areCloudsAvailable : function() {
-            return typeof this.centralBody.cloudsMapSource !== 'undefined';
-        },
-
-        enableClouds : function(useClouds) {
-            if (this.areCloudsAvailable()) {
-                this.centralBody.showClouds = useClouds;
-                this.centralBody.showCloudShadows = useClouds;
-            }
-        },
-
         enableStatistics : function(showStatistics) {
             if (typeof this._performanceDisplay === 'undefined' && showStatistics) {
                 this._performanceDisplay = new PerformanceDisplay();
@@ -275,11 +280,7 @@ define([
         },
 
         showSkyAtmosphere : function(show) {
-            this.centralBody.showSkyAtmosphere = show;
-        },
-
-        showGroundAtmosphere : function(show) {
-            this.centralBody.showGroundAtmosphere = show;
+            this.scene.skyAtmosphere.show = show;
         },
 
         enableStreamingImagery : function(value) {
@@ -303,14 +304,11 @@ define([
             }
         },
 
-        _sunPosition : new Cartesian3(),
-
         update : function(currentTime) {
-            this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
         },
 
-        render : function() {
-            this.scene.render();
+        render : function(currentTime) {
+            this.scene.render(currentTime);
         },
 
         _configureCentralBodyImagery : function() {
@@ -327,12 +325,9 @@ define([
             } else {
                 centralBody.getImageryLayers().addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
             }
-
-            centralBody.nightImageSource = this.nightImageUrl;
-            centralBody.specularMapSource = this.specularMapUrl;
-            centralBody.cloudsMapSource = this.cloudsMapUrl;
-            centralBody.bumpMapSource = this.bumpMapUrl;
         },
+
+        autoStartRenderLoop : true,
 
         startRenderLoop : function() {
             var widget = this;
@@ -343,7 +338,7 @@ define([
             function updateAndRender() {
                 var currentTime = new JulianDate();
                 widget.update(currentTime);
-                widget.render();
+                widget.render(currentTime);
                 requestAnimationFrame(updateAndRender);
             }
             updateAndRender();

@@ -58,12 +58,6 @@ defineSuite([
         expect(scene.getAnimations()).toBeDefined();
     });
 
-    it('get and set sun position', function() {
-        var position = Cartesian3.UNIT_X;
-        scene.setSunPosition(position);
-        expect(scene.getSunPosition()).toEqual(position);
-    });
-
     it('pickEllipsoid throws without a point', function() {
         expect(function() {
             scene.pickEllipsoid();

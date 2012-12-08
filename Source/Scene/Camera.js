@@ -55,7 +55,7 @@ define([
      * camera.frustum.far = 2.0;
      */
     var Camera = function(canvas) {
-        if (!canvas) {
+        if (typeof canvas === 'undefined') {
             throw new DeveloperError('canvas is required.');
         }
 
@@ -66,7 +66,7 @@ define([
          */
         this.transform = Matrix4.IDENTITY.clone();
         this._transform = this.transform.clone();
-        this._invTransform = Matrix4.IDENTITY;
+        this._invTransform = Matrix4.IDENTITY.clone();
 
         var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
         var position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.0 * maxRadii);
@@ -255,11 +255,11 @@ define([
         var transform = this.transform.setColumn(3, Cartesian4.UNIT_W);
 
         var northEast = projection.project(new Cartographic(east, north));
-        northEast = transform.multiplyByVector(new Cartesian4(northEast.x, northEast.y, northEast.z, 1.0));
+        northEast = transform.multiplyByPoint(northEast);
         northEast = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(northEast));
 
         var southWest = projection.project(new Cartographic(west, south));
-        southWest = transform.multiplyByVector(new Cartesian4(southWest.x, southWest.y, southWest.z, 1.0));
+        southWest = transform.multiplyByPoint(southWest);
         southWest = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(southWest));
 
         var tanPhi = Math.tan(this.frustum.fovy * 0.5);
@@ -267,7 +267,7 @@ define([
         var d = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
 
         var position = projection.project(new Cartographic(0.5 * (west + east), 0.5 * (north + south), d));
-        position = transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
+        position = transform.multiplyByPoint(position);
         this.position = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(position));
 
         // Not exactly -z direction because that would lock the camera in place with a constrained z axis.
@@ -382,7 +382,7 @@ define([
         }
 
         if (positionChanged || transformChanged) {
-            camera._positionWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
+            camera._positionWC = Cartesian3.fromCartesian4(transform.multiplyByPoint(position));
         }
 
         if (directionChanged || transformChanged) {

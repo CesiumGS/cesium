@@ -15,6 +15,7 @@
             { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
             { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
             { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -64,29 +65,74 @@
 <script id="cesium_sandcastle_script">
 require([
     'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
-    'dojo/on', 'dojo/dom', 'dojo/io-query'
+    'dojo/on', 'dojo/dom', 'dojo/io-query', 'dijit/form/Button'
 ], function(
     Cesium, CesiumViewerWidget,
-    on, dom, ioQuery)
+    on, dom, ioQuery, Button)
 {
     "use strict";
 
+    var gallery = '../../CesiumViewer/Gallery/';
     var endUserOptions = {
-        'source' : '../../CesiumViewer/Gallery/simple.czml'
+        'source' : gallery + 'simple.czml'
     };
+
+    function czmlSatellites(widget) {
+        Sandcastle.declare(czmlSatellites);    // For highlighting in Sandcastle.
+        widget.removeAllCzml();
+        widget.viewHome();
+        widget.loadCzml(gallery + 'simple.czml');
+    }
+
+    function czmlSensors(widget) {
+        Sandcastle.declare(czmlSensors);    // For highlighting in Sandcastle.
+        widget.removeAllCzml();
+        widget.viewHome();
+        widget.loadCzml(gallery + 'LotsOfSensors.czml');
+    }
+    function czmlVehicle(widget) {
+        Sandcastle.declare(czmlVehicle);    // For highlighting in Sandcastle.
+        widget.removeAllCzml();
+        widget.loadCzml(gallery + 'Vehicle.czml', 'Vehicle');
+    }
+
+    function createButtons(widget) {
+        new Button({
+            label: 'Satellites',
+            onClick: function() {
+                czmlSatellites(widget);
+                Sandcastle.highlight(czmlSatellites);
+            }
+        }).placeAt('toolbar');
+
+        new Button({
+            label: 'Sensors',
+            onClick: function() {
+                czmlSensors(widget);
+                Sandcastle.highlight(czmlSensors);
+            }
+        }).placeAt('toolbar');
+
+        new Button({
+            label: 'Vehicle',
+            onClick: function() {
+                czmlVehicle(widget);
+                Sandcastle.highlight(czmlVehicle);
+            }
+        }).placeAt('toolbar');
+    }
 
     // Initialize a viewer capable of drag-and-drop
     // and user customizations.
-    var cesiumViewerWidget = new CesiumViewerWidget({
+    var widget = new CesiumViewerWidget({
         endUserOptions : endUserOptions,
-        enableDragDrop : true,
-
-        postSetup : function(widget) {
-            widget.startRenderLoop();
-        }
-    }).placeAt(dom.byId("cesiumContainer"));
-
+        enableDragDrop : true
+    });
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
+
+    createButtons(widget);
 });
 </script>
 </body>

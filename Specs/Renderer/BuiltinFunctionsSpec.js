@@ -2,18 +2,26 @@
 defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
+         'Specs/createCamera',
+         'Specs/createFrameState',
          'Core/BoundingRectangle',
          'Core/Math',
          'Core/Matrix4',
          'Core/PrimitiveType',
+         'Core/Cartesian3',
+         'Core/EncodedCartesian3',
          'Renderer/BufferUsage'
      ], 'Renderer/BuiltinFunctions', function(
          createContext,
          destroyContext,
+         createCamera,
+         createFrameState,
          BoundingRectangle,
          CesiumMath,
          Matrix4,
          PrimitiveType,
+         Cartesian3,
+         EncodedCartesian3,
          BufferUsage) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -28,7 +36,7 @@ defineSuite([
         destroyContext(context);
     });
 
-    var verifyDraw = function(fs) {
+    var verifyDraw = function(fs, uniformMap) {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var sp = context.createShaderProgram(vs, fs);
 
@@ -45,7 +53,8 @@ defineSuite([
         context.draw({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
-            vertexArray : va
+            vertexArray : va,
+            uniformMap : uniformMap
         });
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
@@ -87,13 +96,16 @@ defineSuite([
     });
 
     it('has czm_eyeToWindowCoordinates', function() {
+        var camera = createCamera(context);
+        camera.frustum.near = 1.0;
+        camera.update();
+
         var canvas = context.getCanvas();
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
         context.getUniformState().setViewport(vp);
-        var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), vp.width / vp.height, 1.0, 10.0);
-        context.getUniformState().setProjection(perspective);
+        context.getUniformState().update(createFrameState(camera));
 
         var fs =
             'void main() { ' +
@@ -111,13 +123,16 @@ defineSuite([
     });
 
     it('has czm_windowToEyeCoordinates', function() {
+        var camera = createCamera(context);
+        camera.frustum.near = 1.0;
+        camera.update();
+
         var canvas = context.getCanvas();
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
         context.getUniformState().setViewport(vp);
-        var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), vp.width / vp.height, 1.0, 10.0);
-        context.getUniformState().setProjection(perspective);
+        context.getUniformState().update(createFrameState(camera));
 
         var fs =
             'void main() { ' +
@@ -132,5 +147,32 @@ defineSuite([
             '}';
 
         verifyDraw(fs);
+    });
+
+    it('has czm_translateRelativeToEye', function() {
+        var camera = createCamera(context, new Cartesian3(1.0, 2.0, 3.0));
+        context.getUniformState().update(createFrameState(camera));
+
+        var p = new Cartesian3(6.0, 5.0, 4.0);
+        var encoded = EncodedCartesian3.fromCartesian(p);
+
+        var uniformMap = {
+            u_high : function() {
+                return encoded.high;
+            },
+            u_low : function() {
+                return encoded.low;
+            }
+        };
+
+        var fs =
+            'uniform vec3 u_high;' +
+            'uniform vec3 u_low;' +
+            'void main() { ' +
+            '  vec3 p = czm_translateRelativeToEye(u_high, u_low);' +
+            '  gl_FragColor = vec4(p == vec3(5.0, 3.0, 1.0)); ' +
+            '}';
+
+        verifyDraw(fs, uniformMap);
     });
 });

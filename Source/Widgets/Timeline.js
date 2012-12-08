@@ -74,6 +74,7 @@ define(['./TimelineTrack',
         }
         this._clock = clock;
         this._scrubJulian = clock.currentTime;
+        this._mainTicSpan = -1;
         this._mouseMode = timelineMouseMode.none;
         this._touchMode = timelineTouchMode.none;
         this._touchState = {
@@ -81,7 +82,7 @@ define(['./TimelineTrack',
             spanX : 0
         };
         this._mouseX = 0;
-        var self = this;
+        var widget = this;
 
         this._topElement.className += ' timelineMain';
         this._topElement.innerHTML = '<div class="timelineBar"></div><div class="timelineTrackContainer">' +
@@ -100,39 +101,39 @@ define(['./TimelineTrack',
         this.zoomTo(clock.startTime, clock.stopTime);
 
         this._timeBarEle.addEventListener('mousedown', function(e) {
-            self._handleMouseDown(e);
+            widget._handleMouseDown(e);
         }, false);
         document.addEventListener('mouseup', function(e) {
-            self._handleMouseUp(e);
+            widget._handleMouseUp(e);
         }, false);
         document.addEventListener('mousemove', function(e) {
-            self._handleMouseMove(e);
+            widget._handleMouseMove(e);
         }, false);
         this._timeBarEle.addEventListener('DOMMouseScroll', function(e) {
-            self._handleMouseWheel(e);
+            widget._handleMouseWheel(e);
         }, false); // Mozilla mouse wheel
         this._timeBarEle.addEventListener('mousewheel', function(e) {
-            self._handleMouseWheel(e);
+            widget._handleMouseWheel(e);
         }, false);
         this._timeBarEle.addEventListener('touchstart', function(e) {
-            self._handleTouchStart(e);
+            widget._handleTouchStart(e);
         }, false);
         document.addEventListener('touchmove', function(e) {
-            self._handleTouchMove(e);
+            widget._handleTouchMove(e);
         }, false);
         document.addEventListener('touchend', function(e) {
-            self._handleTouchEnd(e);
+            widget._handleTouchEnd(e);
         }, false);
         this._topElement.oncontextmenu = function() {
             return false;
         };
 
         window.addEventListener('resize', function() {
-            self.handleResize();
+            widget.handleResize();
         }, false);
 
         this.addEventListener = function(type, listener, useCapture) {
-            self._topElement.addEventListener(type, listener, useCapture);
+            widget._topElement.addEventListener(type, listener, useCapture);
         };
     }
 
@@ -193,13 +194,18 @@ define(['./TimelineTrack',
         evt.initEvent('setzoom', true, true);
         evt.startJulian = this._startJulian;
         evt.endJulian = this._endJulian;
+        evt.epochJulian = this._epochJulian;
+        evt.totalSpan = this._timeBarSecondsSpan;
+        evt.mainTicSpan = this._mainTicSpan;
         this._topElement.dispatchEvent(evt);
     };
 
     Timeline.prototype.zoomFrom = function(amount) {
         var centerSec = this._startJulian.getSecondsDifference(this._scrubJulian);
-        if ((centerSec < 0) || (centerSec > this._timeBarSecondsSpan)) {
+        if ((amount > 1) || (centerSec < 0) || (centerSec > this._timeBarSecondsSpan)) {
             centerSec = this._timeBarSecondsSpan * 0.5;
+        } else {
+            centerSec += (centerSec - this._timeBarSecondsSpan * 0.5);
         }
         var centerSecFlip = this._timeBarSecondsSpan - centerSec;
         this.zoomTo(this._startJulian.addSeconds(centerSec - (centerSec * amount)), this._endJulian.addSeconds((centerSecFlip * amount) - centerSecFlip));
@@ -209,7 +215,8 @@ define(['./TimelineTrack',
         return ((num < 10) ? ('0' + num.toString()) : num.toString());
     }
 
-    Timeline.prototype.makeLabel = function(date) {
+    Timeline.prototype.makeLabel = function(julianDate) {
+        var date = julianDate.toDate();
         var hours = date.getUTCHours();
         var ampm = (hours < 12) ? ' AM' : ' PM';
         if (hours >= 13) {
@@ -230,57 +237,66 @@ define(['./TimelineTrack',
                 twoDigits(date.getUTCSeconds()) + milString + ampm;
     };
 
+    Timeline.prototype.smallestTicInPixels = 7.0;
+
     Timeline.prototype._makeTics = function() {
         var timeBar = this._timeBarEle;
 
         var seconds = this._startJulian.getSecondsDifference(this._scrubJulian);
         var xPos = seconds * this._topElement.clientWidth / this._timeBarSecondsSpan;
         var scrubX = xPos - 8, tic;
-        var self = this;
+        var widget = this;
 
         this._needleEle.style.left = xPos.toString() + 'px';
 
         var tics = '<span class="timelineIcon16" style="left:' + scrubX + 'px;bottom:0;background-position: 0px 0px;"></span>';
 
-        var MinimumDuration = 0.01;
-        var MaximumDuration = 31536000000.0; // ~1000 years
-        var Epsilon = 1e-10;
+        var minimumDuration = 0.01;
+        var maximumDuration = 31536000000.0; // ~1000 years
+        var epsilon = 1e-10;
 
         // If time step size is known, enter it here...
         var minSize = 0;
 
-        // StartTime is the number of seconds into the day of _startJulian.
-        var StartTime = this._startJulian.getSecondsOfDay() - 0.0001;
-        var Duration = this._timeBarSecondsSpan;
-        if (Duration < MinimumDuration) {
-            Duration = MinimumDuration;
-            this._timeBarSecondsSpan = MinimumDuration;
-            this._endJulian = this._startJulian.addSeconds(MinimumDuration);
-        } else if (Duration > MaximumDuration) {
-            Duration = MaximumDuration;
-            this._timeBarSecondsSpan = MaximumDuration;
-            this._endJulian = this._startJulian.addSeconds(MaximumDuration);
+        var duration = this._timeBarSecondsSpan;
+        if (duration < minimumDuration) {
+            duration = minimumDuration;
+            this._timeBarSecondsSpan = minimumDuration;
+            this._endJulian = this._startJulian.addSeconds(minimumDuration);
+        } else if (duration > maximumDuration) {
+            duration = maximumDuration;
+            this._timeBarSecondsSpan = maximumDuration;
+            this._endJulian = this._startJulian.addSeconds(maximumDuration);
         }
 
-        var epochJulian;
-        if (Duration > 31536000) { // 365 days
-            epochJulian = JulianDate.fromDate(new Date(this._startJulian.toDate().getFullYear().toString().substring(0, 3) + '0-01-01'));
-            StartTime = epochJulian.addSeconds(0.01).getSecondsDifference(this._startJulian);
-        } else if (Duration > 86400) { // 1 day
-            epochJulian = JulianDate.fromDate(new Date(this._startJulian.toDate().getFullYear().toString() + '-01-01'));
-            StartTime = epochJulian.addSeconds(0.01).getSecondsDifference(this._startJulian);
-        } else {
-            epochJulian = this._startJulian.addSeconds(-StartTime);
-        }
-        var EndTime = StartTime + Duration;
         var timeBarWidth = this._timeBarEle.clientWidth;
         if (timeBarWidth < 10) {
             timeBarWidth = 10;
         }
         var startJulian = this._startJulian;
 
+        // epsilonTime: a small fraction of one pixel width of the timeline, measured in seconds.
+        var epsilonTime = Math.min((duration / timeBarWidth) * 1e-5, 0.4);
+
+        // epochJulian: a nearby time to be considered "zero seconds", should be a round-ish number by human standards.
+        var epochJulian;
+        if (duration > 315360000) { // 3650+ days visible, epoch is start of the first visible century.
+            epochJulian = JulianDate.fromIso8601(startJulian.toDate().toISOString().substring(0, 2) + '00-01-01T00:00:00Z');
+        } else if (duration > 31536000) { // 365+ days visible, epoch is start of the first visible decade.
+            epochJulian = JulianDate.fromIso8601(startJulian.toDate().toISOString().substring(0, 3) + '0-01-01T00:00:00Z');
+        } else if (duration > 86400) { // 1+ day(s) visible, epoch is start of the year.
+            epochJulian = JulianDate.fromIso8601(startJulian.toDate().toISOString().substring(0, 4) + '-01-01T00:00:00Z');
+        } else { // Less than a day on timeline, epoch is midnight of the visible day.
+            epochJulian = JulianDate.fromIso8601(startJulian.toDate().toISOString().substring(0, 10) + 'T00:00:00Z');
+        }
+        // startTime: Seconds offset of the left side of the timeline from epochJulian.
+        var startTime = epochJulian.addSeconds(epsilonTime).getSecondsDifference(this._startJulian);
+        // endTime: Seconds offset of the right side of the timeline from epochJulian.
+        var endTime = startTime + duration;
+        this._epochJulian = epochJulian;
+
         function getStartTic(ticScale) {
-            return Math.ceil((StartTime / ticScale) - 1.0) * ticScale;
+            return Math.floor(startTime / ticScale) * ticScale;
         }
 
         function getNextTic(tic, ticScale) {
@@ -288,13 +304,7 @@ define(['./TimelineTrack',
         }
 
         function getAlpha(time) {
-            return (time - StartTime) / Duration;
-        }
-
-        function getTicLabel(tic) {
-            var date = startJulian.addSeconds(tic - StartTime).toDate();
-            //return date.toString();
-            return self.makeLabel(date);
+            return (time - startTime) / duration;
         }
 
         function remainder(x, y) {
@@ -303,18 +313,18 @@ define(['./TimelineTrack',
         }
 
         // Width in pixels of a typical label, plus padding
-        this._rulerEle.innerHTML = getTicLabel(EndTime - MinimumDuration);
+        this._rulerEle.innerHTML = this.makeLabel(this._endJulian.addSeconds(-minimumDuration));
         var sampleWidth = this._rulerEle.offsetWidth + 20;
 
         var origMinSize = minSize;
-        minSize -= Epsilon;
+        minSize -= epsilon;
 
         var renderState = {
             y : 0,
-            startTime : StartTime,
+            startTime : startTime,
             startJulian : startJulian,
             epochJulian : epochJulian,
-            duration : Duration,
+            duration : duration,
             timeBarWidth : timeBarWidth,
             getAlpha : getAlpha
         };
@@ -343,7 +353,7 @@ define(['./TimelineTrack',
             if ((sc > idealTic) && (sc > minSize)) {
                 break;
             }
-            if ((smallestIndex < 0) && ((timeBarWidth * (sc / this._timeBarSecondsSpan)) >= 3.0)) {
+            if ((smallestIndex < 0) && ((timeBarWidth * (sc / this._timeBarSecondsSpan)) >= this.smallestTicInPixels)) {
                 smallestIndex = ticIndex;
             }
         }
@@ -372,28 +382,40 @@ define(['./TimelineTrack',
         }
 
         minSize = origMinSize;
-        if ((minSize > Epsilon) && (tinyTic < 0.00001) && (Math.abs(minSize - mainTic) > Epsilon)) {
+        if ((minSize > epsilon) && (tinyTic < 0.00001) && (Math.abs(minSize - mainTic) > epsilon)) {
             tinyTic = minSize;
-            if (minSize <= (mainTic + Epsilon)) {
+            if (minSize <= (mainTic + epsilon)) {
                 subTic = 0.0;
             }
         }
 
         var lastTextLeft = -999999, textWidth;
         if ((timeBarWidth * (tinyTic / this._timeBarSecondsSpan)) >= 3.0) {
-            for (tic = getStartTic(tinyTic); tic <= EndTime; tic = getNextTic(tic, tinyTic)) {
+            for (tic = getStartTic(tinyTic); tic <= endTime; tic = getNextTic(tic, tinyTic)) {
                 tics += '<span class="timelineTicTiny" style="left: ' + Math.round(timeBarWidth * getAlpha(tic)).toString() + 'px;"></span>';
             }
         }
         if ((timeBarWidth * (subTic / this._timeBarSecondsSpan)) >= 3.0) {
-            for (tic = getStartTic(subTic); tic <= EndTime; tic = getNextTic(tic, subTic)) {
+            for (tic = getStartTic(subTic); tic <= endTime; tic = getNextTic(tic, subTic)) {
                 tics += '<span class="timelineTicSub" style="left: ' + Math.round(timeBarWidth * getAlpha(tic)).toString() + 'px;"></span>';
             }
         }
         if ((timeBarWidth * (mainTic / this._timeBarSecondsSpan)) >= 2.0) {
-            for (tic = getStartTic(mainTic); tic <= (EndTime + mainTic); tic = getNextTic(tic, mainTic)) {
+            this._mainTicSpan = mainTic;
+            endTime += mainTic;
+            tic = getStartTic(mainTic);
+            var leapSecond = epochJulian.getTaiMinusUtc();
+            while (tic <= endTime) {
+                var ticTime = startJulian.addSeconds(tic - startTime);
+                if (mainTic > 2.1) {
+                    var ticLeap = ticTime.getTaiMinusUtc();
+                    if (Math.abs(ticLeap - leapSecond) > 0.1) {
+                        tic += (ticLeap - leapSecond);
+                        ticTime = startJulian.addSeconds(tic - startTime);
+                    }
+                }
                 var ticLeft = Math.round(timeBarWidth * getAlpha(tic));
-                var ticLabel = getTicLabel(tic);
+                var ticLabel = this.makeLabel(ticTime);
                 this._rulerEle.innerHTML = ticLabel;
                 textWidth = this._rulerEle.offsetWidth;
                 var labelLeft = ticLeft - ((textWidth / 2) - 1);
@@ -404,7 +426,10 @@ define(['./TimelineTrack',
                 } else {
                     tics += '<span class="timelineTicSub" style="left: ' + ticLeft.toString() + 'px;"></span>';
                 }
+                tic = getNextTic(tic, mainTic);
             }
+        } else {
+            this._mainTicSpan = -1;
         }
 
         timeBar.innerHTML = tics;
@@ -412,7 +437,7 @@ define(['./TimelineTrack',
 
         renderState.y = 0;
         this._trackList.forEach(function(track) {
-            track.render(self._context, renderState);
+            track.render(widget._context, renderState);
             renderState.y += track.height;
         });
     };

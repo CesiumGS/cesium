@@ -15,6 +15,7 @@
             { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
             { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
             { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -85,10 +86,10 @@ require([
         
         rectangularPyramidSensor.material = Cesium.Material.fromType(scene.getContext(), 'Color');
         rectangularPyramidSensor.material.uniforms.color = {
-                         red : 0.0,
-                         green : 1.0,
-                         blue : 1.0,
-                         alpha : 0.5
+            red : 0.0,
+            green : 1.0,
+            blue : 1.0,
+            alpha : 0.5
         };
     }
     
@@ -123,7 +124,7 @@ require([
             label: 'Rectangular',
             onClick: function() {
                 sensors.removeAll();
-                addRectangularSensor(sensors, ellipsoid, scene); 
+                addRectangularSensor(sensors, ellipsoid, scene);
             }
         }));
         
@@ -131,7 +132,7 @@ require([
             label: 'Custom',
             onClick: function() {
                 sensors.removeAll();
-                addCustomSensor(sensors, ellipsoid, scene); 
+                addCustomSensor(sensors, ellipsoid, scene);
             }
         }));
 
@@ -142,20 +143,19 @@ require([
         }).placeAt('toolbar');
     }
 
-    var cesiumViewerWidget = new CesiumViewerWidget({
+    var widget = new CesiumViewerWidget({
         onObjectMousedOver : function(mousedOverObject) {
-            cesiumViewerWidget.highlightObject(mousedOverObject);
+            widget.highlightObject(mousedOverObject);
             Sandcastle.highlight(mousedOverObject);
-        },
-        postSetup : function(widget) {
-            var sensors = new Cesium.SensorVolumeCollection();
-            createButtons(widget, sensors);
-            widget.startRenderLoop();
-            addRectangularSensor(sensors, widget.ellipsoid, widget.scene);
         }
-    }).placeAt(dom.byId('cesiumContainer'));
-
+    });
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
+
+    var sensors = new Cesium.SensorVolumeCollection();
+    createButtons(widget, sensors);
+    addRectangularSensor(sensors, widget.ellipsoid, widget.scene);
 });
 </script>
 </body>

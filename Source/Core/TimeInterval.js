@@ -109,6 +109,55 @@ define([
     };
 
     /**
+     * Compares the provided TimeIntervals componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof TimeInterval
+     *
+     * @param {TimeInterval} [left] The first Cartesian.
+     * @param {TimeInterval} [right] The second Cartesian.
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    TimeInterval.equals = function(left, right) {
+        return left === right ||
+               typeof left !== 'undefined' &&
+               typeof right !== 'undefined' &&
+               (left.isEmpty && right.isEmpty ||
+                left.isStartIncluded === right.isStartIncluded &&
+                left.isStopIncluded === right.isStopIncluded &&
+                left.start.equals(right.start) &&
+                left.stop.equals(right.stop));
+    };
+
+    /**
+     * Compares the provided TimeIntervals componentwise and returns
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
+     * @memberof TimeInterval
+     *
+     * @param {TimeInterval} [left] The first TimeInterval.
+     * @param {TimeInterval} [right] The second TimeInterval.
+     * @param {Number} epsilon The epsilon to use for equality testing.
+     *
+     * @return {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+     *
+     * @exception {DeveloperError} epsilon is required and must be number.
+     */
+    TimeInterval.equalsEpsilon = function(left, right, epsilon) {
+        if (typeof epsilon !== 'number') {
+            throw new DeveloperError('epsilon is required and must be a number.');
+        }
+
+        return left === right ||
+               typeof left !== 'undefined' &&
+               typeof right !== 'undefined' &&
+               (left.isEmpty && right.isEmpty ||
+                left.isStartIncluded === right.isStartIncluded &&
+                left.isStopIncluded === right.isStopIncluded &&
+                left.start.equalsEpsilon(right.start, epsilon) &&
+                left.stop.equalsEpsilon(right.stop, epsilon));
+    };
+
+    /**
      * Creates a copy of this TimeInterval.
      *
      * @returns A new TimeInterval that is equal to this interval.
@@ -225,39 +274,31 @@ define([
     };
 
     /**
-     * Returns true if this TimeInterval equals <code>other</code> componentwise.
-     *
+     * Compares this TimeInterval against the provided TimeInterval componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof TimeInterval
-     * @param {TimeInterval} other The TimeInterval to compare for equality.
-     * @return {Boolean} <code>true</code> if the TimeIntervals are equal componentwise, <code>false</code> otherwise.
+     *
+     * @param {TimeInterval} [right] The right hand side Cartesian.
+     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     TimeInterval.prototype.equals = function(other) {
-        return typeof other !== 'undefined' &&
-               ((this.isEmpty && other.isEmpty) ||
-                (this.isStartIncluded === other.isStartIncluded &&
-                this.isStopIncluded === other.isStopIncluded &&
-                this.start.equals(other.start) &&
-                this.stop.equals(other.stop)));
+        return TimeInterval.equals(this, other);
     };
 
     /**
-     * Returns <code>true</code> if this TimeInterval equals other componentwise
-     * within the specified epsilon.
-     *
+     * Compares this TimeInterval against the provided TimeInterval componentwise and returns
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
      * @memberof TimeInterval
      *
-     * @param {TimeInterval} other The TimeInterval to compare for equality.
-     * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
+     * @param {TimeInterval} [right] The right hand side Cartesian.
+     * @param {Number} epsilon The epsilon to use for equality testing.
+     * @return {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
      *
-     * @return {Boolean} <code>true</code> if the TimeIntervals are equal within the specified epsilon, <code>false</code> otherwise.
+     * @exception {DeveloperError} epsilon is required and must be a number.
      */
     TimeInterval.prototype.equalsEpsilon = function(other, epsilon) {
-        return typeof other !== 'undefined' &&
-               ((this.isEmpty && other.isEmpty) ||
-                (this.isStartIncluded === other.isStartIncluded &&
-                 this.isStopIncluded === other.isStopIncluded &&
-                 this.start.equalsEpsilon(other.start, epsilon) &&
-                 this.stop.equalsEpsilon(other.stop, epsilon)));
+        return TimeInterval.equalsEpsilon(this, other, epsilon);
     };
 
     return TimeInterval;

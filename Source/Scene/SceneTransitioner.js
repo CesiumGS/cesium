@@ -139,6 +139,14 @@ define([
 
         var centralBody = primitives.getCentralBody();
         centralBody.morphTime = morphTime;
+
+        if (typeof scene.skyBox !== 'undefined') {
+            scene.skyBox.morphTime = morphTime;
+        }
+
+        if (typeof scene.skyAtmosphere !== 'undefined') {
+            scene.skyAtmosphere.morphTime = morphTime;
+        }
     }
 
     //in the future the animations will be more complicated
@@ -146,7 +154,7 @@ define([
         //for now, all objects morph at the same rate
         var template = {
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut
+            easingFunction : Tween.Easing.Quartic.Out
         };
 
         var primitives = scene.getPrimitives();
@@ -163,6 +171,16 @@ define([
         var centralBody = primitives.getCentralBody();
         animation = sceneAnimations.addProperty(centralBody, 'morphTime', start, stop, template);
         transitioner._currentAnimations.push(animation);
+
+        if (typeof scene.skyBox !== 'undefined') {
+            animation = sceneAnimations.addProperty(scene.skyBox, 'morphTime', start, stop, template);
+            transitioner._currentAnimations.push(animation);
+        }
+
+        if (typeof scene.skyAtmosphere !== 'undefined') {
+            animation = sceneAnimations.addProperty(scene.skyAtmosphere, 'morphTime', start, stop, template);
+            transitioner._currentAnimations.push(animation);
+        }
 
         if (typeof onComplete !== 'undefined') {
             template.onComplete = function() {
@@ -288,7 +306,7 @@ define([
             controllers.addCentralBody();
 
             updateFrustums(this);
-            camera.transform = Matrix4.IDENTITY;
+            camera.transform = Matrix4.IDENTITY.clone();
 
             if (previousMode !== SceneMode.MORPHING || this._morphCancelled) {
                 this._morphCancelled = false;
@@ -370,7 +388,7 @@ define([
 
         var animation = scene.getAnimations().add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
+            easingFunction : Tween.Easing.Quartic.Out,
             startValue : {
                 time : 0.0
             },
@@ -417,7 +435,7 @@ define([
         duration = duration * 0.5;
         var animation = scene.getAnimations().add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
+            easingFunction : Tween.Easing.Quartic.Out,
             startValue : {
                 time : 0.0
             },
@@ -496,7 +514,7 @@ define([
         }
 
         var animation = scene.getAnimations().add({
-            easingFunction : Tween.Easing.Quartic.EaseOut,
+            easingFunction : Tween.Easing.Quartic.Out,
             duration : partialDuration,
             startValue : {
                 time : startTime
@@ -539,7 +557,7 @@ define([
 
             var animation = scene.getAnimations().add({
                 duration : duration,
-                easingFunction : Tween.Easing.Quartic.EaseOut,
+                easingFunction : Tween.Easing.Quartic.Out,
                 startValue : {
                     time : 0.0
                 },
@@ -583,7 +601,7 @@ define([
 
         var animation = scene.getAnimations().add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
+            easingFunction : Tween.Easing.Quartic.Out,
             startValue : {
                 time : 0.0
             },
@@ -642,7 +660,7 @@ define([
 
         var animation = scene.getAnimations().add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
+            easingFunction : Tween.Easing.Quartic.Out,
             startValue : {
                 time : 0.0
             },

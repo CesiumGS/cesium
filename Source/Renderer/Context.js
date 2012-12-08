@@ -248,7 +248,7 @@ define([
         this._defaultClearDepth = this._clearDepth;
         this._defaultClearStencil = this._clearStencil;
 
-        this._us = new UniformState(this);
+        this._us = new UniformState();
         this._currentFramebuffer = undefined;
         this._currentSp = undefined;
 
@@ -1402,12 +1402,12 @@ define([
             throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + this._maximumTextureSize + ').  Check getMaximumTextureSize().');
         }
 
-        var pixelFormat = description.pixelFormat || PixelFormat.RGBA;
+        var pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid description.pixelFormat.');
         }
 
-        var pixelDatatype = description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE;
+        var pixelDatatype = defaultValue(description.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
         if (!PixelDatatype.validate(pixelDatatype)) {
             throw new DeveloperError('Invalid description.pixelDatatype.');
         }
@@ -1626,7 +1626,7 @@ define([
             throw new DeveloperError('Width and height must be less than or equal to the maximum cube map size (' + this._maximumCubeMapSize + ').  Check getMaximumCubeMapSize().');
         }
 
-        var pixelFormat = description.pixelFormat || PixelFormat.RGBA;
+        var pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid description.pixelFormat.');
         }
@@ -1635,7 +1635,7 @@ define([
             throw new DeveloperError('description.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
 
-        var pixelDatatype = description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE;
+        var pixelDatatype = defaultValue(description.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
         if (!PixelDatatype.validate(pixelDatatype)) {
             throw new DeveloperError('Invalid description.pixelDatatype.');
         }
