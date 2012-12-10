@@ -187,16 +187,20 @@ define([
             var url = property.getValue(time);
             if (typeof url !== 'undefined' && existingMaterial.currentUrl !== url) {
                 existingMaterial.currentUrl = url;
+                //if (typeof existingMaterial.video !== 'undefined') {
+                //document.body.removeChild(video);
+                //}
                 video = existingMaterial.video = document.createElement('video');
+                //document.body.appendChild(video);
+                //video.style.display = 'none';
                 video.preload = 'auto';
                 video.src = url;
             }
         }
-
         video = existingMaterial.video;
 
-        //These properties won't be set until the video is actually ready to be used.
-        if (video.videoWidth > 0 && video.seekable.length > 0) {
+        //videoWidth won't be > 0 until the video is actually ready to be used.
+        if (video.videoWidth > 0) {
             if (typeof existingMaterial.texture === 'undefined') {
                 existingMaterial.texture = context.createTexture2D({
                     source : video
@@ -205,9 +209,7 @@ define([
             } else {
                 if (!video.seeking) {
                     existingMaterial.texture.copyFrom(video);
-
                     var duration = video.duration;
-
                     //TODO: We should probably be checking the video.seekable segments
                     //before setting the currentTime, but if there are no seekable
                     //segments, then this code will have no affect, so the net result
@@ -230,7 +232,6 @@ define([
                 }
             }
         }
-
         return existingMaterial;
     };
 
