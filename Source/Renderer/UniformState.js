@@ -1014,6 +1014,10 @@ define([
         return 1.0;
     };
 
+    var view2Dto3DPScratch = new Cartesian3(0.0, 0.0, 0.0);
+    var view2Dto3DRScratch = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    var view2Dto3DUScratch = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    var view2Dto3DDScratch = new Cartesian4(0.0, 0.0, 0.0, 0.0);
     var view2Dto3DCartographicScratch = new Cartographic(0.0, 0.0, 0.0);
     var view2Dto3DCartesian3Scratch = new Cartesian3(0.0, 0.0, 0.0);
     var view2Dto3DMatrix4Scratch = new Matrix4();
@@ -1022,18 +1026,36 @@ define([
         // The camera position and directions are expressed in the 2D coordinate system where the Y axis is to the East,
         // the Z axis is to the North, and the X axis is out of the map.  Express them instead in the ENU axes where
         // X is to the East, Y is to the North, and Z is out of the local horizontal plane.
-        var p = new Cartesian3(position2D.y, position2D.z, position2D.x);
-        var r = new Cartesian4(right2D.y, right2D.z, right2D.x, 0.0);
-        var u = new Cartesian4(up2D.y, up2D.z, up2D.x, 0.0);
-        var d = new Cartesian4(direction2D.y, direction2D.z, direction2D.x, 0.0);
+        var p = view2Dto3DPScratch;
+        p.x = position2D.y;
+        p.y = position2D.z;
+        p.z = position2D.x;
+
+        var r = view2Dto3DRScratch;
+        r.x = right2D.y;
+        r.y = right2D.z;
+        r.z = right2D.x;
+
+        var u = view2Dto3DUScratch;
+        u.x = up2D.y;
+        u.y = up2D.z;
+        u.z = up2D.x;
+
+        var d = view2Dto3DDScratch;
+        d.x = direction2D.y;
+        d.y = direction2D.z;
+        d.z = direction2D.x;
 
         // Compute the equivalent camera position in the real (3D) world.
+        // In 2D and Columbus View, the camera can travel outside the projection, and when it does so
+        // there's not really any corresponding location in the real world.  So clamp the unprojected
+        // longitude and latitude to their valid ranges.
         var cartographic = projection.unproject(p, view2Dto3DCartographicScratch);
         cartographic.longitude = CesiumMath.clamp(cartographic.longitude, -Math.PI, Math.PI);
         cartographic.latitude = CesiumMath.clamp(cartographic.latitude, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
         var position3D = ellipsoid.cartographicToCartesian(cartographic, view2Dto3DCartesian3Scratch);
 
-        // Compute the rotation from the local ENU at the camera position to the fixed axes.
+        // Compute the rotation from the local ENU at the real world camera position to the fixed axes.
         var enuToFixed = Transforms.eastNorthUpToFixedFrame(position3D, ellipsoid, view2Dto3DMatrix4Scratch);
 
         // Transform each camera direction to the fixed axes.
@@ -1058,9 +1080,9 @@ define([
         result[9] = u.z;
         result[10] = -d.z;
         result[11] = 0.0;
-        result[12] = -Cartesian3.fromCartesian4(r).dot(position3D);
-        result[13] = -Cartesian3.fromCartesian4(u).dot(position3D);
-        result[14] = Cartesian3.fromCartesian4(d).dot(position3D);
+        result[12] = -Cartesian3.dot(r, position3D);
+        result[13] = -Cartesian3.dot(u, position3D);
+        result[14] = Cartesian3.dot(d, position3D);
         result[15] = 1.0;
 
         return result;
