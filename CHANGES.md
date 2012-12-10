@@ -6,12 +6,21 @@ Beta Releases
 
 ### b12 - xx/xx/2013
 
+* Breaking changes:
+   * Renamed `EventHandler` to `ScreenSpaceEventHandler`.
+   * Renamed `MouseEventType` to `ScreenSpaceEventType`.
+   * Renamed `MouseEventType.MOVE` to `ScreenSpaceEventType.MOUSE_MOVE`.
+   * Renamed `CameraEventHandler` to `CameraEventAggregator`.
+   * Renamed all `*MouseAction` to `*InputAction` (including get, set, remove, etc).
+   * Removed `Camera2DController`, `CameraCentralBodyController`, `CameraColumbusViewController`, `CameraFlightController`, `CameraFreeLookController`, `CameraSpindleController`, and `CameraControllerCollection`. Common ways to modify the camera are through the `CameraController` object of the `Camera` and will work in all scene modes. The default camera handler is the 'ScreenSpaceCameraController` object on the `Scene`.
 * Improved support on Nexus 4.
+* Added Sandbox example using NASA's new [Black Marble](http://www.nasa.gov/mission_pages/NPP/news/earth-at-night.html) night imagery.
+
 
 ### b11 - 12/03/2012
 
 * Breaking changes:
-   * Widget render loop now started by default.  Startup code changed, see `Sandcastle` examples.
+   * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
    * Changed `Timeline.makeLabel` to take a `JulianDate` instead of a JavaScript date parameter.
    * Default Earth imagery has been moved to a new package `Assets`.  Images used by `Sandcastle` examples have been moved to the Sandcastle folder, and images used by the Dojo widgets are now self-contained in the `Widgets` package.
    * `positionToEyeEC` in `czm_materialInput` is no longer normalized by default.

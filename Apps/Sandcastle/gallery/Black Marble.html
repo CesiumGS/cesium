@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Transform the camera's reference frame to model coordinates.">
+    <meta name="description" content="NASA Black Marble imagery.">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
@@ -65,73 +65,40 @@
 <script id="cesium_sandcastle_script">
 require([
     'Source/Cesium', 'Widgets/Dojo/CesiumWidget',
-    'dojo/on', 'dojo/dom', 'dijit/form/Button'
+    'dojo/on', 'dojo/dom', 'dojo/io-query'
 ], function(
     Cesium, CesiumWidget,
-    on, dom, ToggleButton)
+    on, dom, ioQuery)
 {
     "use strict";
 
-    function eastNorthUp(scene) {
-        var center = Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-            Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
-        var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-
-        var camera = scene.getCamera();
-        camera.transform = transform;
-        camera.controller.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
-        
-        // View in east-north-up frame
-        var controller = scene.getScreenSpaceCameraController();
-        controller.setEllipsoid(Cesium.Ellipsoid.UNIT_SPHERE);
-
-        // Zoom in
-        camera.controller.lookAt(
-            new Cesium.Cartesian3(120000.0, 120000.0, 120000.0),
-            Cesium.Cartesian3.ZERO,
-            Cesium.Cartesian3.UNIT_Z);
-
-        // Show reference frame.  Not required.
-        var primitives = scene.getPrimitives();
-        var polylines = new Cesium.PolylineCollection();
-        polylines.modelMatrix = transform;
-        
-        var xAxis = {
-                color : new Cesium.Color(1.0, 0.0, 0.0, 1.0),
-                positions : [
-                    Cesium.Cartesian3.ZERO,
-                    new Cesium.Cartesian3(100000.0, 0.0, 0.0)
-                ]
-        };
-        polylines.add(xAxis);
-        
-        var yAxis = {
-                color : new Cesium.Color(0.0, 1.0, 0.0, 1.0),
-                positions : [
-                    Cesium.Cartesian3.ZERO,
-                    new Cesium.Cartesian3(0.0, 100000.0, 0.0)
-                ]
-        };
-        polylines.add(yAxis);
-        
-        var zAxis = {
-                color : new Cesium.Color(0.0, 0.0, 1.0, 1.0),
-                positions : [
-                    Cesium.Cartesian3.ZERO,
-                    new Cesium.Cartesian3(0.0, 0.0, 100000.0)
-                ]
-        };
-        polylines.add(zAxis);
-        
-        primitives.add(polylines);
+    // Ask Dojo to parse URL configuration options
+    var endUserOptions = {};
+    if (window.location.search) {
+        endUserOptions = ioQuery.queryToObject(window.location.search.substring(1));
     }
-    
-    var widget = new CesiumWidget();
+
+    // Initialize a viewer capable of drag-and-drop
+    // and user customizations.
+    var widget = new CesiumWidget({
+        endUserOptions : endUserOptions,
+        enableDragDrop : true
+    });
     widget.placeAt(dom.byId('cesiumContainer'));
     widget.startup();
-    dom.byId('toolbar').innerHTML = '';
 
-    eastNorthUp(widget.scene);
+    var scene = widget.scene;
+    var centralBody = widget.centralBody;
+
+    var imageryLayerCollection = centralBody.getImageryLayers();
+    imageryLayerCollection.removeAll();
+    imageryLayerCollection.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
+        url : 'http://cesium.agi.com/blackmarble',
+        maximumLevel : 8,
+		credit : 'Black Marble imagery courtesy NASA Earth Observatory'
+    }));
+    
+    dom.byId('toolbar').innerHTML = '';
 });
 </script>
 </body>
