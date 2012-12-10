@@ -454,7 +454,7 @@ define([
             Matrix4.getRotation(view3D, this._viewRotation3D);
             this._viewRotation3DDirty = false;
         }
-        return this._viewRotation;
+        return this._viewRotation3D;
     };
 
 
