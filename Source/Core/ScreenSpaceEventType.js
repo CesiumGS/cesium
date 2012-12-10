@@ -5,9 +5,9 @@ define(['./Enumeration'], function(Enumeration) {
     /**
      * This enumerated type is for classifying mouse events: down, up, click, double click, move and move while a button is held down.
      *
-     * @exports MouseEventType
+     * @exports ScreenSpaceEventType
      */
-    var MouseEventType = {
+    var ScreenSpaceEventType = {
         /**
          * Represents a mouse left button down event.
          *
@@ -110,7 +110,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        MOVE : new Enumeration(15, 'MOVE'),
+        MOUSE_MOVE : new Enumeration(15, 'MOUSE_MOVE'),
 
         /**
          * Represents a mouse wheel event.
@@ -118,8 +118,32 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        WHEEL : new Enumeration(16, 'WHEEL')
+        WHEEL : new Enumeration(16, 'WHEEL'),
+
+        /**
+         * Represents the start of a two-finger event on a touch surface.
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        PINCH_START : new Enumeration(17, 'PINCH_START'),
+
+        /**
+         * Represents the end of a two-finger event on a touch surface.
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        PINCH_END : new Enumeration(18, 'PINCH_END'),
+
+        /**
+         * Represents a change of a two-finger event on a touch surface.
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        PINCH_MOVE : new Enumeration(19, 'PINCH_MOVE')
     };
 
-    return MouseEventType;
+    return ScreenSpaceEventType;
 });
