@@ -1036,6 +1036,97 @@ defineSuite([
         expect(actualDelta).toEqual(expectedDelta);
     });
 
+    it('touch', function() {
+        var startPosition;
+        var endPosition;
+        var callback = function(event) {
+            startPosition = event.position.clone();
+        };
+        var callbackMove = function(event) {
+            startPosition = event.startPosition.clone();
+            endPosition = event.endPosition.clone();
+        };
+
+        handler.setInputAction(callback, ScreenSpaceEventType.LEFT_DOWN);
+        handler.setInputAction(callbackMove, ScreenSpaceEventType.MOUSE_MOVE);
+        handler.setInputAction(callback, ScreenSpaceEventType.LEFT_UP);
+
+        expect(handler.getInputAction(ScreenSpaceEventType.LEFT_DOWN) === callback).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.MOUSE_MOVE) === callbackMove).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.LEFT_UP) === callback).toEqual(true);
+
+        element.fireEvents('touchstart', {
+            touches : [{
+                clientX : 1,
+                clientY : 1
+            }]
+        });
+        expect(startPosition).toEqual(new Cartesian2(1, 1));
+
+        element.fireEvents('touchmove', {
+            touches : [{
+                clientX : 2,
+                clientY : 2
+            }]
+        });
+        expect(startPosition).toEqual(new Cartesian2(1, 1));
+        expect(endPosition).toEqual(new Cartesian2(2, 2));
+
+        element.fireEvents('touchend', {
+            touches : [],
+            targetTouches : [{
+                clientX : 3,
+                clientY : 3
+            }]
+        });
+        expect(startPosition).toEqual(new Cartesian2(3, 3));
+    });
+
+    it('pinch', function() {
+        var pinching = false;
+        var pinchStartCallback = function() {
+            pinching = true;
+        };
+        var pinchEndCallback = function() {
+            pinching = false;
+        };
+        var movement;
+        var pinchMoveCallback = function(event) {
+            movement = event;
+        };
+
+        handler.setInputAction(pinchStartCallback, ScreenSpaceEventType.PINCH_START);
+        handler.setInputAction(pinchMoveCallback, ScreenSpaceEventType.PINCH_MOVE);
+        handler.setInputAction(pinchEndCallback, ScreenSpaceEventType.PINCH_END);
+
+        expect(handler.getInputAction(ScreenSpaceEventType.PINCH_START) === pinchStartCallback).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.PINCH_MOVE) === pinchMoveCallback).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.PINCH_END) === pinchEndCallback).toEqual(true);
+
+        var touches = [{
+            clientX : 2,
+            clientY : 2,
+            identifier : 0
+        }];
+        element.fireEvents('touchstart', { touches : touches });
+        touches.push({
+            clientX : 3,
+            clientY : 3,
+            identifier : 1
+        });
+        element.fireEvents('touchstart', { touches : touches });
+        expect(pinching).toEqual(true);
+
+        touches[0].clientX = touches[0].clientY = 1;
+        touches[1].clientX = touches[1].clientY = 4;
+        element.fireEvents('touchmove', { touches : touches });
+        expect(pinching).toEqual(true);
+        expect(movement.distance.startPosition).toEqual(new Cartesian2(0, Math.sqrt(2.0) * 0.25));
+        expect(movement.distance.endPosition).toEqual(new Cartesian2(0, Math.sqrt(18.0) * 0.25));
+        expect(movement.angleAndHeight.startPosition).toEqual(new Cartesian2(Math.atan2(1.0, 1.0), 5.0 * 0.125));
+        expect(movement.angleAndHeight.endPosition).toEqual(new Cartesian2(Math.atan2(3.0, 3.0), 5.0 * 0.125));
+    });
+
     it('isDestroyed', function() {
         expect(handler.isDestroyed()).toEqual(false);
         handler.destroy();
