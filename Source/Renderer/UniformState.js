@@ -9,6 +9,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/Math',
         '../Core/EncodedCartesian3',
         '../Core/BoundingRectangle',
         '../Core/Transforms',
@@ -24,6 +25,7 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        CesiumMath,
         EncodedCartesian3,
         BoundingRectangle,
         Transforms,
@@ -1027,6 +1029,8 @@ define([
 
         // Compute the equivalent camera position in the real (3D) world.
         var cartographic = projection.unproject(p, view2Dto3DCartographicScratch);
+        cartographic.longitude = CesiumMath.clamp(cartographic.longitude, -Math.PI, Math.PI);
+        cartographic.latitude = CesiumMath.clamp(cartographic.latitude, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
         var position3D = ellipsoid.cartographicToCartesian(cartographic, view2Dto3DCartesian3Scratch);
 
         // Compute the rotation from the local ENU at the camera position to the fixed axes.
