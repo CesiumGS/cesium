@@ -1074,7 +1074,7 @@ defineSuite([
 
         element.fireEvents('touchend', {
             touches : [],
-            targetTouches : [{
+            changedTouches : [{
                 clientX : 3,
                 clientY : 3
             }]
@@ -1125,6 +1125,26 @@ defineSuite([
         expect(movement.distance.endPosition).toEqual(new Cartesian2(0, Math.sqrt(18.0) * 0.25));
         expect(movement.angleAndHeight.startPosition).toEqual(new Cartesian2(Math.atan2(1.0, 1.0), 5.0 * 0.125));
         expect(movement.angleAndHeight.endPosition).toEqual(new Cartesian2(Math.atan2(3.0, 3.0), 5.0 * 0.125));
+    });
+
+    it('touch click', function() {
+        var touchClick = new Cartesian2();
+        var touchClickCallback = function(event) {
+            touchClick = event.position.clone();
+        };
+
+        handler.setInputAction(touchClickCallback, ScreenSpaceEventType.LEFT_CLICK);
+        expect(handler.getInputAction(ScreenSpaceEventType.LEFT_CLICK) === touchClickCallback).toEqual(true);
+
+        var touches = [{
+            clientX : 2,
+            clientY : 2,
+            identifier : 0
+        }];
+        element.fireEvents('touchstart', { touches : touches });
+        element.fireEvents('touchend', { touches : [], changedTouches : touches });
+
+        expect(touchClick).toEqual(new Cartesian2(2.0, 2.0));
     });
 
     it('isDestroyed', function() {
