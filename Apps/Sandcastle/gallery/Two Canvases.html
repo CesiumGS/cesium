@@ -111,13 +111,11 @@
 
     function render3D() {
         scene3D.initializeFrame();
-        scene3D.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
         scene3D.render();
     }
     
     function render2D() {
         scene2D.initializeFrame();
-        scene2D.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
         scene2D.render();
     }
         

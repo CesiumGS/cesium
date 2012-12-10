@@ -115,7 +115,7 @@ define([
     var update3DControllerMatrix3 = new Matrix3();
 
     function update3DController(that, camera, objectChanged, offset) {
-        that.scene.getCameraMouseController().enableTilt = false;
+        that.scene.getScreenSpaceCameraController().enableTilt = false;
         camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         if (objectChanged) {
