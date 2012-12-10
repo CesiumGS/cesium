@@ -78,14 +78,15 @@ require([
         var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
 
         var camera = scene.getCamera();
-        var spindle = camera.getControllers().get(0).spindleController;
+        camera.transform = transform;
+        camera.controller.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
         
         // View in east-north-up frame
-        spindle.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
-        spindle.setReferenceFrame(transform, Cesium.Ellipsoid.UNIT_SPHERE);
+        var controller = scene.getScreenSpaceCameraController();
+        controller.setEllipsoid(Cesium.Ellipsoid.UNIT_SPHERE);
 
         // Zoom in
-        camera.lookAt(
+        camera.controller.lookAt(
             new Cesium.Cartesian3(120000.0, 120000.0, 120000.0),
             Cesium.Cartesian3.ZERO,
             Cesium.Cartesian3.UNIT_Z);
