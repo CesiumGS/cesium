@@ -240,12 +240,12 @@ require([
 
     document.addEventListener('keydown', keydownHandler, false);
     
-    var handler = new Cesium.EventHandler(widget.canvas);
+    var handler = new Cesium.ScreenSpaceEventHandler(widget.canvas);
 
-    handler.setMouseAction(function(movement) {
+    handler.setInputAction(function(movement) {
         mousePosition = movement.endPosition;
         // Use movement.startPosition, movement.endPosition
-    }, Cesium.MouseEventType.MOVE);
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 });
 </script>
 </body>
