@@ -88,7 +88,7 @@ require([
             var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
                 destination : destination
             });
-            scene.getAnimations().add(flight);        
+            scene.getAnimations().add(flight);
         }
         
         navigator.geolocation.getCurrentPosition(fly);

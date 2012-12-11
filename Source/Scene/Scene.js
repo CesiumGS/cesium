@@ -472,7 +472,6 @@ define([
             this._context.getShaderCache().destroyReleasedShaderPrograms();
         }
 
-        // TODO: shouldn't we do this in initializeFrame?
         var us = this.getUniformState();
         var frameState = this._frameState;
         us.update(frameState);
