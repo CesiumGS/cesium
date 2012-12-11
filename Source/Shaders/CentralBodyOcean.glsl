@@ -62,12 +62,12 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     vec4 noise = getNoise(textureCoordinates * frequency, time);
     vec3 normalTangentSpace = noise.xyz * vec3(1.0, 1.0, (1.0 / amplitude));
     
-    // fade out the normal perturbation as we move further from the water surface
+    // fade out the normal perturbation as we move farther from the water surface
     normalTangentSpace.xy /= fade;
     normalTangentSpace = normalize(normalTangentSpace);
     
     // get ratios for alignment of the new normal vector with a vector perpendicular to the tangent plane
-    float tsPerturbationRatio = clamp(dot(normalTangentSpace, vec3(0.0, 0.0, 1.0)), 0.0, 1.0);
+    float tsPerturbationRatio = normalTangentSpace.z;
     
     czm_material material;
     
