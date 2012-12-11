@@ -133,6 +133,48 @@ define([
 
     var startTime;
 
+    function createSeekFunction(context, video, existingMaterial) {
+        return function() {
+            //            console.log("seek called");
+            //            if (video.seekable.length === 0) {
+            //                console.log(video.seekable);
+            //            } else {
+            //                for ( var i = 0; i < video.seekable.length; i++) {
+            //                    console.log(video.seekable.start(i));
+            //                    console.log(video.seekable.end(i));
+            //                }
+            //            }
+
+            if (typeof existingMaterial.texture === 'undefined') {
+                existingMaterial.texture = context.createTexture2D({
+                    source : video
+                });
+                existingMaterial.uniforms.image = existingMaterial.texture;
+            }
+            existingMaterial.texture.copyFrom(video);
+            var duration = video.duration;
+            //TODO: We should probably be checking the video.seekable segments
+            //before setting the currentTime, but if there are no seekable
+            //segments, then this code will have no affect, so the net result
+            //seems to be the same.
+            var videoTime = startTime.getSecondsDifference(existingMaterial.time);
+            videoTime = videoTime * existingMaterial.speed;
+            if (existingMaterial.loop) {
+                videoTime = videoTime % duration;
+                if (videoTime < 0.0) {
+                    videoTime = duration - videoTime;
+                }
+                video.currentTime = videoTime;
+            } else if (videoTime > duration) {
+                video.currentTime = duration;
+            } else if (videoTime < 0.0) {
+                video.currentTime = 0.0;
+            } else {
+                video.currentTime = videoTime;
+            }
+        };
+    }
+
     /**
      * Gets an Image Material that represents this dynamic material at the provided time.
      *
@@ -176,6 +218,10 @@ define([
             speed = property.getValue(time);
         }
 
+        existingMaterial.speed = speed;
+        existingMaterial.loop = loop;
+        existingMaterial.time = time;
+
         property = this.startTime;
         if (typeof property !== 'undefined') {
             startTime = property.getValue(time, startTime);
@@ -187,51 +233,25 @@ define([
             var url = property.getValue(time);
             if (typeof url !== 'undefined' && existingMaterial.currentUrl !== url) {
                 existingMaterial.currentUrl = url;
-                //if (typeof existingMaterial.video !== 'undefined') {
-                //document.body.removeChild(video);
-                //}
+                if (typeof existingMaterial.video !== 'undefined') {
+                    document.body.removeChild(video);
+                }
                 video = existingMaterial.video = document.createElement('video');
-                //document.body.appendChild(video);
-                //video.style.display = 'none';
+                document.body.appendChild(video);
+                video.style.display = 'none';
                 video.preload = 'auto';
+                video.addEventListener("loadeddata", function() {
+                    //console.log("load event fired");
+                    var seekFunction = createSeekFunction(context, video, existingMaterial);
+                    video.addEventListener("seeked", seekFunction, false);
+                    seekFunction();
+                }, false);
+
                 video.src = url;
+                video.load();
             }
         }
         video = existingMaterial.video;
-
-        //videoWidth won't be > 0 until the video is actually ready to be used.
-        if (video.videoWidth > 0) {
-            if (typeof existingMaterial.texture === 'undefined') {
-                existingMaterial.texture = context.createTexture2D({
-                    source : video
-                });
-                existingMaterial.uniforms.image = existingMaterial.texture;
-            } else {
-                if (!video.seeking) {
-                    existingMaterial.texture.copyFrom(video);
-                    var duration = video.duration;
-                    //TODO: We should probably be checking the video.seekable segments
-                    //before setting the currentTime, but if there are no seekable
-                    //segments, then this code will have no affect, so the net result
-                    //seems to be the same.
-                    var videoTime = startTime.getSecondsDifference(time);
-                    videoTime = videoTime * speed;
-                    if (loop) {
-                        videoTime = videoTime % duration;
-                        if (videoTime < 0.0) {
-                            videoTime = duration - videoTime;
-                        }
-                        video.currentTime = videoTime;
-                    } else if (videoTime > duration) {
-                        video.currentTime = duration;
-                    } else if (videoTime < 0.0) {
-                        video.currentTime = 0.0;
-                    } else {
-                        video.currentTime = videoTime;
-                    }
-                }
-            }
-        }
         return existingMaterial;
     };
 
