@@ -72,11 +72,33 @@ require([
 {
     "use strict";
     
+    function disableInput(scene) {
+        var controller = scene.getScreenSpaceCameraController();
+        controller.enableTranslate = false;
+        controller.enableZoom = false;
+        controller.enableRotate = false;
+        controller.enableTilt = false;
+        controller.enableLook = false;
+    }
+    
+    function enableInput(scene) {
+        var controller = scene.getScreenSpaceCameraController();
+        controller.enableTranslate = true;
+        controller.enableZoom = true;
+        controller.enableRotate = true;
+        controller.enableTilt = true;
+        controller.enableLook = true;
+    }
+    
     function flyToSanDiego(scene) {
         Sandcastle.declare(flyToSanDiego);    // For highlighting in Sandcastle.
+        disableInput(scene);
         var destination = Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0);
         var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
-            destination : destination
+            destination : destination,
+            onComplete : function() {
+                enableInput(scene);
+            }
         });
         scene.getAnimations().add(flight);
     }
@@ -84,9 +106,13 @@ require([
     function flyToMyLocation(scene) {
         Sandcastle.declare(flyToMyLocation);    // For highlighting in Sandcastle.
         function fly(position) {
+            disableInput(scene);
             var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
             var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
-                destination : destination
+                destination : destination,
+                onComplete : function() {
+                    enableInput(scene);
+                }
             });
             scene.getAnimations().add(flight);
         }
@@ -175,6 +201,7 @@ require([
     function reset(scene) {
         scene.getPrimitives().removeAll();
         scene.getAnimations().removeAll();
+        enableInput(scene);
         
         var camera = scene.getCamera();
         if (camera.transform.equals(Cesium.Matrix4.IDENTITY)) {
