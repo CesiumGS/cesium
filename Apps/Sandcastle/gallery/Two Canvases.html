@@ -93,12 +93,6 @@
 
         primitives.setCentralBody(cb);
 
-        scene.getCamera().getControllers().addCentralBody();
-
-        scene.setAnimation(function () {
-            // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
-        });
-
         // Prevent right-click from opening a context menu.
         canvas.oncontextmenu = function () {
             return false;
@@ -115,9 +109,19 @@
     var transitioner = new Cesium.SceneTransitioner(scene2D);
     transitioner.to2D();
 
-    function tick() {
+    function render3D() {
+        scene3D.initializeFrame();
         scene3D.render();
+    }
+    
+    function render2D() {
+        scene2D.initializeFrame();
         scene2D.render();
+    }
+        
+    function tick() {
+        render3D();
+        render2D();
         Cesium.requestAnimationFrame(tick);
     }
     tick();
