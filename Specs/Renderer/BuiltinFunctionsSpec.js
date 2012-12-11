@@ -98,7 +98,6 @@ defineSuite([
     it('has czm_eyeToWindowCoordinates', function() {
         var camera = createCamera(context);
         camera.frustum.near = 1.0;
-        camera.update();
 
         var canvas = context.getCanvas();
         var width = canvas.clientWidth;
@@ -125,7 +124,6 @@ defineSuite([
     it('has czm_windowToEyeCoordinates', function() {
         var camera = createCamera(context);
         camera.frustum.near = 1.0;
-        camera.update();
 
         var canvas = context.getCanvas();
         var width = canvas.clientWidth;

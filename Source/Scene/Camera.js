@@ -1,29 +1,23 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
-        '../Core/destroyObject',
         '../Core/Math',
         '../Core/Ellipsoid',
-        '../Core/IntersectionTests',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Cartographic',
         '../Core/Matrix4',
         '../Core/Ray',
-        './CameraControllerCollection',
+        './CameraController',
         './PerspectiveFrustum'
     ], function(
         DeveloperError,
-        destroyObject,
         CesiumMath,
         Ellipsoid,
-        IntersectionTests,
         Cartesian3,
         Cartesian4,
-        Cartographic,
         Matrix4,
         Ray,
-        CameraControllerCollection,
+        CameraController,
         PerspectiveFrustum) {
     "use strict";
 
@@ -60,9 +54,11 @@ define([
         }
 
         /**
-         * DOC_TBA
+         * Modifies the camera's reference frame. The inverse of this transformation is appended to the view matrix.
          *
          * @type {Matrix4}
+         *
+         * @see Transforms
          */
         this.transform = Matrix4.IDENTITY.clone();
         this._transform = this.transform.clone();
@@ -92,16 +88,6 @@ define([
         this._directionWC = direction;
 
         var right = direction.cross(Cartesian3.UNIT_Z).normalize();
-
-        /**
-         * The right direction of the camera.
-         *
-         * @type {Cartesian3}
-         */
-        this.right = right.clone();
-        this._right = right;
-        this._rightWC = right;
-
         var up = right.cross(direction);
 
         /**
@@ -113,224 +99,42 @@ define([
         this._up = up;
         this._upWC = up;
 
+        right = direction.cross(up);
+
         /**
-         * DOC_TBA
+         * The right direction of the camera.
+         *
+         * @type {Cartesian3}
+         */
+        this.right = right.clone();
+        this._right = right;
+        this._rightWC = right;
+
+        /**
+         * The region of space in view.
          *
          * @type {Frustum}
+         *
+         * @see PerspectiveFrustum
+         * @see PerspectiveOffCenterFrustum
+         * @see OrthographicFrustum
          */
         this.frustum = new PerspectiveFrustum();
         this.frustum.fovy = CesiumMath.toRadians(60.0);
         this.frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
+
+        /**
+         * Defines camera behavior. The controller can be used to perform common camera manipulations.
+         *
+         * @type {CameraController}
+         */
+        this.controller = new CameraController(this);
 
         this._viewMatrix = undefined;
         this._invViewMatrix = undefined;
         updateViewMatrix(this);
 
         this._canvas = canvas;
-        this._controllers = new CameraControllerCollection(this, canvas);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Camera
-     */
-    Camera.prototype.getControllers = function() {
-        return this._controllers;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Camera
-     */
-    Camera.prototype.update = function() {
-        this._controllers.update();
-    };
-
-    /**
-     * Sets the camera position and orientation with an eye position, target, and up vector.
-     *
-     * @memberof Camera
-     *
-     * @param {Cartesian3} eye The position of the camera.
-     * @param {Cartesian3} target The position to look at.
-     * @param {Cartesian3} up The up vector.
-     *
-     * @exception {DeveloperError} eye is required.
-     * @exception {DeveloperError} target is required.
-     * @exception {DeveloperError} up is required.
-     */
-    Camera.prototype.lookAt = function(eye, target, up) {
-        if (typeof eye === 'undefined') {
-            throw new DeveloperError('eye is required');
-        }
-        if (typeof target === 'undefined') {
-            throw new DeveloperError('target is required');
-        }
-        if (typeof up === 'undefined') {
-            throw new DeveloperError('up is required');
-        }
-
-        this.position = Cartesian3.clone(eye, this.position);
-        this.direction = Cartesian3.subtract(target, eye, this.direction).normalize(this.direction);
-        this.right = Cartesian3.cross(this.direction, up, this.right).normalize(this.right);
-        this.up = Cartesian3.cross(this.right, this.direction, this.up);
-    };
-
-    /**
-     * Zooms to a cartographic extent on the central body. The camera will be looking straight down at the extent,
-     * with the up vector pointing toward local north.
-     *
-     * @memberof Camera
-     * @param {Ellipsoid} ellipsoid The ellipsoid to view.
-     * @param {Extent} extent The extent to view.
-     *
-     * @exception {DeveloperError} extent is required.
-     */
-    Camera.prototype.viewExtent = function(extent, ellipsoid) {
-        if (typeof extent === 'undefined') {
-            throw new DeveloperError('extent is required.');
-        }
-
-        ellipsoid = (typeof ellipsoid === 'undefined') ? Ellipsoid.WGS84 : ellipsoid;
-
-        var north = extent.north;
-        var south = extent.south;
-        var east = extent.east;
-        var west = extent.west;
-
-        // If we go across the International Date Line
-        if (west > east) {
-            east += CesiumMath.TWO_PI;
-        }
-
-        var northEast = ellipsoid.cartographicToCartesian(new Cartographic(east, north));
-        var southWest = ellipsoid.cartographicToCartesian(new Cartographic(west, south));
-        var diagonal = northEast.subtract(southWest);
-        var center = southWest.add(diagonal.normalize().multiplyByScalar(diagonal.magnitude() * 0.5));
-
-        var northWest = ellipsoid.cartographicToCartesian(new Cartographic(west, north)).subtract(center);
-        var southEast = ellipsoid.cartographicToCartesian(new Cartographic(east, south)).subtract(center);
-        northEast = northEast.subtract(center);
-        southWest = southWest.subtract(center);
-
-        this.direction = center.negate().normalize();
-        this.right = this.direction.cross(Cartesian3.UNIT_Z).normalize();
-        this.up = this.right.cross(this.direction);
-
-        var height = Math.max(Math.abs(this.up.dot(northWest)), Math.abs(this.up.dot(southEast)), Math.abs(this.up.dot(northEast)), Math.abs(this.up.dot(southWest)));
-        var width = Math.max(Math.abs(this.right.dot(northWest)), Math.abs(this.right.dot(southEast)), Math.abs(this.right.dot(northEast)), Math.abs(this.right.dot(southWest)));
-
-        var tanPhi = Math.tan(this.frustum.fovy * 0.5);
-        var tanTheta = this.frustum.aspectRatio * tanPhi;
-        var d = Math.max(width / tanTheta, height / tanPhi);
-
-        this.position = center.normalize().multiplyByScalar(center.magnitude() + d);
-    };
-
-    /**
-     * Zooms to a cartographic extent on the Columbus view map. The camera will be looking straight down at the extent,
-     * with the up vector pointing toward local north.
-     *
-     * @memberof Camera
-     * @param {Ellipsoid} ellipsoid The ellipsoid to view.
-     * @param {Extent} extent The extent to view.
-     *
-     * @exception {DeveloperError} extent is required.
-     * @exception {DeveloperError} projection is required.
-     */
-    Camera.prototype.viewExtentColumbusView = function(extent, projection) {
-        if (typeof extent === 'undefined') {
-            throw new DeveloperError('extent is required.');
-        }
-
-        if (typeof projection === 'undefined') {
-            throw new DeveloperError('projection is required.');
-        }
-
-        var north = extent.north;
-        var south = extent.south;
-        var east = extent.east;
-        var west = extent.west;
-
-        var transform = this.transform.setColumn(3, Cartesian4.UNIT_W);
-
-        var northEast = projection.project(new Cartographic(east, north));
-        northEast = transform.multiplyByPoint(northEast);
-        northEast = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(northEast));
-
-        var southWest = projection.project(new Cartographic(west, south));
-        southWest = transform.multiplyByPoint(southWest);
-        southWest = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(southWest));
-
-        var tanPhi = Math.tan(this.frustum.fovy * 0.5);
-        var tanTheta = this.frustum.aspectRatio * tanPhi;
-        var d = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
-
-        var position = projection.project(new Cartographic(0.5 * (west + east), 0.5 * (north + south), d));
-        position = transform.multiplyByPoint(position);
-        this.position = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(position));
-
-        // Not exactly -z direction because that would lock the camera in place with a constrained z axis.
-        this.direction = new Cartesian3(0.0, 0.0001, -0.999);
-        Cartesian3.UNIT_X.clone(this.right);
-        this.up = this.right.cross(this.direction);
-    };
-
-    /**
-     * Zooms to a cartographic extent on the 2D map. The camera will be looking straight down at the extent,
-     * with the up vector pointing toward local north.
-     *
-     * @memberof Camera
-     * @param {Ellipsoid} ellipsoid The ellipsoid to view.
-     * @param {Extent} extent The extent to view.
-     *
-     * @exception {DeveloperError} extent is required.
-     * @exception {DeveloperError} projection is required.
-     */
-    Camera.prototype.viewExtent2D = function(extent, projection) {
-        if (typeof extent === 'undefined') {
-            throw new DeveloperError('extent is required.');
-        }
-
-        if (typeof projection === 'undefined') {
-            throw new DeveloperError('projection is required.');
-        }
-
-        var north = extent.north;
-        var south = extent.south;
-        var east = extent.east;
-        var west = extent.west;
-        var lla = new Cartographic(0.5 * (west + east), 0.5 * (north + south));
-
-        var northEast = projection.project(new Cartographic(east, north));
-        var southWest = projection.project(new Cartographic(west, south));
-
-        var width = Math.abs(northEast.x - southWest.x) * 0.5;
-        var height = Math.abs(northEast.y - southWest.y) * 0.5;
-
-        var position = projection.project(lla);
-        this.position.x = position.x;
-        this.position.y = position.y;
-
-        var right, top;
-        var ratio = this.frustum.right / this.frustum.top;
-        var heightRatio = height * ratio;
-        if (width > heightRatio) {
-            right = width;
-            top = right / ratio;
-        } else {
-            top = height;
-            right = heightRatio;
-        }
-
-        this.frustum.right = right;
-        this.frustum.left = -right;
-        this.frustum.top = top;
-        this.frustum.bottom = -top;
-
-        //Orient the camera north.
-        Cartesian3.UNIT_X.clone(this.right);
-        this.up = this.right.cross(this.direction);
     };
 
     function updateViewMatrix(camera) {
@@ -344,7 +148,6 @@ define([
                                      -d.x, -d.y, -d.z,  d.dot(e),
                                       0.0,  0.0,  0.0,      1.0);
         camera._viewMatrix = viewMatrix.multiply(camera._invTransform);
-
         camera._invViewMatrix = camera._viewMatrix.inverseTransformation();
     }
 
@@ -385,18 +188,6 @@ define([
             camera._positionWC = Cartesian3.fromCartesian4(transform.multiplyByPoint(position));
         }
 
-        if (directionChanged || transformChanged) {
-            camera._directionWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
-        }
-
-        if (upChanged || transformChanged) {
-            camera._upWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-        }
-
-        if (rightChanged || transformChanged) {
-            camera._rightWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-        }
-
         if (directionChanged || upChanged || rightChanged) {
             var det = direction.dot(up.cross(right));
             if (Math.abs(1.0 - det) > CesiumMath.EPSILON2) {
@@ -413,6 +204,18 @@ define([
                 right = camera._right = direction.cross(up);
                 camera.right = right.clone();
             }
+        }
+
+        if (directionChanged || transformChanged) {
+            camera._directionWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+        }
+
+        if (upChanged || transformChanged) {
+            camera._upWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+        }
+
+        if (rightChanged || transformChanged) {
+            camera._rightWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
         }
 
         if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged) {
@@ -497,166 +300,6 @@ define([
         return this._rightWC;
     };
 
-    function getPickRayPerspective(camera, windowPosition) {
-        var width = camera._canvas.clientWidth;
-        var height = camera._canvas.clientHeight;
-
-        var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
-        var tanTheta = camera.frustum.aspectRatio * tanPhi;
-        var near = camera.frustum.near;
-
-        var x = (2.0 / width) * windowPosition.x - 1.0;
-        var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
-
-        var position = camera.getPositionWC();
-        var nearCenter = position.add(camera.getDirectionWC().multiplyByScalar(near));
-        var xDir = camera.getRightWC().multiplyByScalar(x * near * tanTheta);
-        var yDir = camera.getUpWC().multiplyByScalar(y * near * tanPhi);
-        var direction = nearCenter.add(xDir).add(yDir).subtract(position).normalize();
-
-        return new Ray(position, direction);
-    }
-
-    function getPickRayOrthographic(camera, windowPosition) {
-        var width = camera._canvas.clientWidth;
-        var height = camera._canvas.clientHeight;
-
-        var x = (2.0 / width) * windowPosition.x - 1.0;
-        x *= (camera.frustum.right - camera.frustum.left) * 0.5;
-        var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
-        y *= (camera.frustum.top - camera.frustum.bottom) * 0.5;
-
-        var position = camera.position.clone();
-        position.x += x;
-        position.y += y;
-
-        return new Ray(position, camera.getDirectionWC());
-    }
-
-    /**
-     * Create a ray from the camera position through the pixel at <code>windowPosition</code>
-     * in world coordinates.
-     *
-     * @memberof Camera
-     *
-     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
-     *
-     * @exception {DeveloperError} windowPosition is required.
-     *
-     * @return {Object} Returns the {@link Cartesian3} position and direction of the ray.
-     */
-    Camera.prototype.getPickRay = function(windowPosition) {
-        if (typeof windowPosition === 'undefined') {
-            throw new DeveloperError('windowPosition is required.');
-        }
-
-        var frustum = this.frustum;
-        if (typeof frustum.aspectRatio !== 'undefined' && typeof frustum.fovy !== 'undefined' && typeof frustum.near !== 'undefined') {
-            return getPickRayPerspective(this, windowPosition);
-        }
-
-        return getPickRayOrthographic(this, windowPosition);
-    };
-
-    /**
-     * Pick an ellipsoid in 3D mode.
-     *
-     * @memberof Camera
-     *
-     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
-     *
-     * @exception {DeveloperError} windowPosition is required.
-     *
-     * @return {Cartesian3} If the ellipsoid was picked, returns the point on the surface of the ellipsoid.
-     * If the ellipsoid was not picked, returns undefined.
-     */
-    Camera.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
-        if (typeof windowPosition === 'undefined') {
-            throw new DeveloperError('windowPosition is required.');
-        }
-
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
-        var ray = getPickRayPerspective(this, windowPosition);
-        var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
-        if (!intersection) {
-            return undefined;
-        }
-
-        var iPt = ray.getPoint(intersection.start);
-        return iPt;
-    };
-
-    /**
-     * Pick the map in 2D mode.
-     *
-     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
-     * @param {DOC_TBA} projection DOC_TBA
-     *
-     * @exception {DeveloperError} windowPosition is required.
-     * @exception {DeveloperError} projection is required.
-     *
-     * @return {Cartesian3} If the map was picked, returns the point on the surface of the map.
-     * If the map was not picked, returns undefined.
-     */
-    Camera.prototype.pickMap2D = function(windowPosition, projection) {
-        if (typeof windowPosition === 'undefined') {
-            throw new DeveloperError('windowPosition is required.');
-        }
-
-        if (typeof projection === 'undefined') {
-            throw new DeveloperError('projection is required.');
-        }
-
-        var ray = getPickRayOrthographic(this, windowPosition);
-        var position = ray.origin;
-        position.z = 0.0;
-        var cart = projection.unproject(position);
-
-        if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
-                cart.longitude < - Math.PI || cart.longitude > Math.PI) {
-            return undefined;
-        }
-
-        return projection.getEllipsoid().cartographicToCartesian(cart);
-    };
-
-    /**
-     * Pick the map in Columbus View mode.
-     *
-     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
-     * @param {DOC_TBA} projection DOC_TBA
-     *
-     * @exception {DeveloperError} windowPosition is required.
-     * @exception {DeveloperError} projection is required.
-     *
-     * @return {Cartesian3} If the map was picked, returns the point on the surface of the map.
-     * If the map was not picked, returns undefined.
-     */
-    Camera.prototype.pickMapColumbusView = function(windowPosition, projection) {
-        if (typeof windowPosition === 'undefined') {
-            throw new DeveloperError('windowPosition is required.');
-        }
-
-        if (typeof projection === 'undefined') {
-            throw new DeveloperError('projection is required.');
-        }
-
-        var ray = getPickRayPerspective(this, windowPosition);
-        var scalar = -ray.origin.x / ray.direction.x;
-        var position = ray.getPoint(scalar);
-
-        var cart = projection.unproject(new Cartesian3(position.y, position.z, 0.0));
-
-        if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
-                cart.longitude < - Math.PI || cart.longitude > Math.PI) {
-            return undefined;
-        }
-
-        position = projection.getEllipsoid().cartographicToCartesian(cart);
-        return position;
-    };
-
     /**
      * Returns a duplicate of a Camera instance.
      *
@@ -676,42 +319,39 @@ define([
     };
 
     /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
+     * Transform a vector or point from world coordinates to the camera's reference frame.
      * @memberof Camera
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @param {Cartesian4} cartesian The vector or point to transform.
+     * @param {Cartesian4} [result] The object onto which to store the result.
      *
-     * @see Camera#destroy
+     * @exception {DeveloperError} cartesian is required.
+     *
+     * @returns {Cartesian4} The transformed vector or point.
      */
-    Camera.prototype.isDestroyed = function() {
-        return false;
+    Camera.prototype.worldToCameraCoordinates = function(cartesian, result) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required.');
+        }
+        return Matrix4.multiplyByVector(this.getInverseTransform(), cartesian, result);
     };
 
     /**
-     * Removes keyboard listeners held by this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
+     * Transform a vector or point from the camera's reference frame to world coordinates.
      * @memberof Camera
      *
-     * @return {undefined}
+     * @param {Cartesian4} vector The vector or point to transform.
+     * @param {Cartesian4} [result] The object onto which to store the result.
      *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     * @exception {DeveloperError} cartesian is required.
      *
-     * @see Camera#isDestroyed
-     *
-     * @example
-     * camera = camera && camera.destroy();
+     * @returns {Cartesian4} The transformed vector or point.
      */
-    Camera.prototype.destroy = function() {
-        this._controllers.destroy();
-        return destroyObject(this);
+    Camera.prototype.cameraToWorldCoordinates = function(cartesian, result) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required.');
+        }
+        return Matrix4.multiplyByVector(this.transform, cartesian, result);
     };
 
     return Camera;
