@@ -174,6 +174,7 @@ require([
     
     function reset(scene) {
         scene.getPrimitives().removeAll();
+        scene.getAnimations().removeAll();
         
         var camera = scene.getCamera();
         if (camera.transform.equals(Cesium.Matrix4.IDENTITY)) {
