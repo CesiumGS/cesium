@@ -12,8 +12,9 @@ Beta Releases
    * Renamed `MouseEventType.MOVE` to `ScreenSpaceEventType.MOUSE_MOVE`.
    * Renamed `CameraEventHandler` to `CameraEventAggregator`.
    * Renamed all `*MouseAction` to `*InputAction` (including get, set, remove, etc).
-   * Removed `Camera2DController`, `CameraCentralBodyController`, `CameraColumbusViewController`, `CameraFlightController`, `CameraFreeLookController`, `CameraSpindleController`, and `CameraControllerCollection`. Common ways to modify the camera are through the `CameraController` object of the `Camera` and will work in all scene modes. The default camera handler is the 'ScreenSpaceCameraController` object on the `Scene`.
-* Improved support on Nexus 4.
+   * Removed `Camera2DController`, `CameraCentralBodyController`, `CameraColumbusViewController`, `CameraFlightController`, `CameraFreeLookController`, `CameraSpindleController`, and `CameraControllerCollection`. Common ways to modify the camera are through the `CameraController` object of the `Camera` and will work in all scene modes. The default camera handler is the `ScreenSpaceCameraController` object on the `Scene`.
+* Improved camera flights.
+* Improved support on Nexus 4 and Nexus 7 using Firefox.
 * Added Sandbox example using NASA's new [Black Marble](http://www.nasa.gov/mission_pages/NPP/news/earth-at-night.html) night imagery.
 
 
