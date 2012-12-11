@@ -406,15 +406,15 @@ float getLambertDiffuse(vec3 lightDirection, czm_material material)
 
 float getSpecular(vec3 lightDirection, vec3 toEye, czm_material material)
 {
-	float diffuse = dot(lightDirection, material.normal);
+	//float diffuse = dot(lightDirection, material.normal);
 
-	if (diffuse >= 0.0)
-	{
+	//if (diffuse >= 0.0)
+	//{
 	    vec3 toReflectedLight = reflect(-lightDirection, material.normal);
 	    float specular = max(dot(toReflectedLight, toEye), 0.0);
 
 	    return pow(specular, material.shininess);
-	}
+	//}
 
 	return 0.0;
 }
@@ -440,10 +440,11 @@ float getSpecular(vec3 lightDirection, vec3 toEye, czm_material material)
 vec4 czm_phong(vec3 toEye, czm_material material)
 {
     // Diffuse from directional light sources at eye (for top-down and horizon views)
-    float diffuse = getLambertDiffuse(vec3(0.0, 0.0, 1.0), material) + getLambertDiffuse(vec3(0.0, 1.0, 0.0), material);
+    //float diffuse = getLambertDiffuse(vec3(0.0, 0.0, 1.0), material) + getLambertDiffuse(vec3(0.0, 1.0, 0.0), material);
+    float diffuse = getLambertDiffuse(czm_sunDirectionEC, material) /*+ getLambertDiffuse(czm_moonDirectionEC, material)*/ ;
 
     // Specular from sun and pseudo-moon
-    float specular = getSpecular(czm_sunDirectionEC, toEye, material) + 0.5 * getSpecular(czm_moonDirectionEC, toEye, material);
+    float specular = getSpecular(czm_sunDirectionEC, toEye, material) + 0.25 * getSpecular(czm_moonDirectionEC, toEye, material);
 
     vec3 ambient = vec3(0.0);
     vec3 color = ambient + material.emission;

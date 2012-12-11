@@ -9,6 +9,7 @@ uniform float frequency;
 uniform float animationSpeed;
 uniform float amplitude;
 uniform float specularIntensity;
+uniform float zoomedOutSpecularIntensity;
 uniform float fadeFactor;
 
 vec4 getNoise(vec2 uv, float time) {
@@ -46,6 +47,11 @@ vec4 getNoise(vec2 uv, float time) {
     return ((noise / 4.0) - 0.5) * 2.0;
 }
 
+float linearstep(float edge0, float edge1, float x)
+{
+    return clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+}
+
 vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec3 imageryColor, float specularMapValue)
 {
     float time = czm_frameNumber * animationSpeed;
@@ -57,13 +63,15 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     vec3 normalizedpositionToEyeEC = normalize(normalize(positionToEyeEC));
     
     // fade is a function of the distance from the fragment and the frequency of the waves
-    float fade = max(1.0, (positionToEyeECLength / 10000000000.0) * frequency * fadeFactor);
+    //float fade = max(1.0, (positionToEyeECLength / 10000000000.0) * frequency * fadeFactor);
+    float waveIntensity = 1.0 - linearstep(70000.0, 700000.0, positionToEyeECLength);
+    //float fade = 1.0;
             
     vec4 noise = getNoise(textureCoordinates * frequency, time);
     vec3 normalTangentSpace = noise.xyz * vec3(1.0, 1.0, (1.0 / amplitude));
     
     // fade out the normal perturbation as we move farther from the water surface
-    normalTangentSpace.xy /= fade;
+    normalTangentSpace.xy *= waveIntensity;
     normalTangentSpace = normalize(normalTangentSpace);
     
     // get ratios for alignment of the new normal vector with a vector perpendicular to the tangent plane
@@ -71,11 +79,18 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     
     czm_material material;
     
-    material.emission = imageryColor;
-    material.diffuse = vec3(mix(0.0, 0.2 * tsPerturbationRatio, specularMapValue));
     material.normal = enuToEye * normalTangentSpace;
-    material.specular = mix(0.0, specularIntensity, specularMapValue);
+
+    float diffuseIntensity = max(dot(czm_sunDirectionEC, material.normal), 0.0);
+
+    material.emission = imageryColor + mix(vec3(0.3, 0.45, 0.6) * 5.0 * (1.0 - tsPerturbationRatio), vec3(0.0), diffuseIntensity);
+    material.diffuse = vec3(0.3, 0.45, 0.6);
+    //material.diffuse = vec3(0.2, 0.2, 0.3);
+    //material.diffuse = vec3(mix(0.0, 0.2 * tsPerturbationRatio, specularMapValue));
+    material.specular = mix(0.0, mix(zoomedOutSpecularIntensity, specularIntensity, waveIntensity), specularMapValue);
     material.shininess = 10.0;
     
     return czm_phong(normalizedpositionToEyeEC, material);
+    //return vec4(1.0 / fade, 0.0, 0.0, 1.0);
+    //return vec4(normalTangentSpace.x, normalTangentSpace.y, normalTangentSpace.z, 1.0);
 }
