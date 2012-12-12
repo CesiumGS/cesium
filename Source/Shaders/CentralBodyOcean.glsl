@@ -73,21 +73,23 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     normalTangentSpace.xy *= waveIntensity;
     normalTangentSpace = normalize(normalTangentSpace);
     
-    // get ratios for alignment of the new normal vector with a vector perpendicular to the tangent plane
-    float tsPerturbationRatio = normalTangentSpace.z;
-    
-    czm_material material;
-    
-    material.normal = enuToEye * normalTangentSpace;
-
-    float diffuseIntensity = getLambertDiffuse(czm_sunDirectionEC, material);
+    vec3 normalEC = enuToEye * normalTangentSpace;
     
     const vec3 waveHighlightColor = vec3(0.3, 0.45, 0.6);
-
-    material.emission = imageryColor + mix(waveHighlightColor * 5.0 * (1.0 - tsPerturbationRatio), vec3(0.0), diffuseIntensity);
-    material.diffuse = waveHighlightColor;
-    material.specular = mix(0.0, mix(zoomedOutSpecularIntensity, specularIntensity, waveIntensity), specularMapValue);
-    material.shininess = 10.0;
     
-    return czm_phong(normalizedpositionToEyeEC, material);
+    // Use diffuse light to highlight the waves
+    float diffuseIntensity = getLambertDiffuse(czm_sunDirectionEC, normalEC);
+    vec3 diffuseHighlight = waveHighlightColor * diffuseIntensity;
+    
+    // Where diffuse light is low or non-existent, use wave highlights based solely on
+    // the wave bumpiness and no particular light direction.
+    float tsPerturbationRatio = normalTangentSpace.z;
+    vec3 nonDiffuseHighlight = mix(waveHighlightColor * 5.0 * (1.0 - tsPerturbationRatio), vec3(0.0), diffuseIntensity);
+
+    // Add specular highlights in 3D, and in all modes when zoomed in.
+    float specularIntensity = getSpecular(czm_sunDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0);
+    float surfaceReflectance = mix(0.0, mix(zoomedOutSpecularIntensity, specularIntensity, waveIntensity), specularMapValue);
+    float specular = specularIntensity * surfaceReflectance;
+    
+    return vec4(imageryColor + diffuseHighlight + nonDiffuseHighlight + specular, 1.0); 
 }
