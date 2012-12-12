@@ -827,21 +827,18 @@ define([
                 view3D.set('checked', false);
                 viewColumbus.set('checked', false);
                 transitioner.morphTo2D();
-                widget.scene.getPrimitives().getCentralBody().oceanMaterial.uniforms.zoomedOutSpecularIntensity = 0.0;
             });
             on(view3D, 'Click', function() {
                 view2D.set('checked', false);
                 view3D.set('checked', true);
                 viewColumbus.set('checked', false);
                 transitioner.morphTo3D();
-                widget.scene.getPrimitives().getCentralBody().oceanMaterial.uniforms.zoomedOutSpecularIntensity = 0.5;
             });
             on(viewColumbus, 'Click', function() {
                 view2D.set('checked', false);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', true);
                 transitioner.morphToColumbusView();
-                widget.scene.getPrimitives().getCentralBody().oceanMaterial.uniforms.zoomedOutSpecularIntensity = 0.0;
             });
 
             var imagery = widget.imagery;
