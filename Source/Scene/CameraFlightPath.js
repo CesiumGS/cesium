@@ -191,7 +191,7 @@ define([
         }
 
         point = points[length];
-        if (typeof endDirection !== 'undefined' && typeof up !== 'undefined') {
+        if (typeof endDirection !== 'undefined' && typeof endUp !== 'undefined') {
             point.orientation = createQuaternion(endDirection, endUp);
         } else {
             direction = point.point.negate().normalize();
