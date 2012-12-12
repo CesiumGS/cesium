@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/combine',
+        '../Core/loadImage',
         '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/BoundingRectangle',
@@ -40,9 +41,11 @@ define([
         '../Shaders/CentralBodyFSPole',
         '../Shaders/CentralBodyVS',
         '../Shaders/CentralBodyVSDepth',
-        '../Shaders/CentralBodyVSPole'
+        '../Shaders/CentralBodyVSPole',
+        '../ThirdParty/when'
     ], function(
         combine,
+        loadImage,
         defaultValue,
         destroyObject,
         BoundingRectangle,
@@ -82,7 +85,8 @@ define([
         CentralBodyFSPole,
         CentralBodyVS,
         CentralBodyVSDepth,
-        CentralBodyVSPole) {
+        CentralBodyVSPole,
+        when) {
     "use strict";
 
     /**
@@ -177,6 +181,19 @@ define([
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
 
+        /**
+         * The normal map to use for rendering waves in the ocean.  Setting this property will
+         * only have an effect if the configured terrain provider includes a water mask.
+         *
+         * @type String
+         */
+        this.oceanNormalMapUrl = undefined;
+
+        this._lastOceanNormalMapUrl = undefined;
+        this._oceanNormalMap = undefined;
+        this._zoomedOutOceanSpecularIntensity = 0.5;
+        this._showingPrettyOcean = false;
+
         var that = this;
 
         this._drawUniforms = {
@@ -185,10 +202,14 @@ define([
             },
             u_morphTime : function() {
                 return that.morphTime;
+            },
+            u_zoomedOutOceanSpecularIntensity : function() {
+                return that._zoomedOutOceanSpecularIntensity;
+            },
+            u_oceanNormalMap : function() {
+                return that._oceanNormalMap;
             }
         };
-
-        this.oceanMaterial = undefined;
     };
 
     var attributeIndices = {
@@ -548,6 +569,20 @@ define([
                     });
         }
 
+        if (this._surface._terrainProvider.hasWaterMask &&
+            this.oceanNormalMapUrl !== this._lastOceanNormalMapUrl) {
+
+            this._lastOceanNormalMapUrl = this.oceanNormalMapUrl;
+
+            var that = this;
+            when(loadImage(this.oceanNormalMapUrl, true), function(image) {
+                that._oceanNormalMap = that._oceanNormalMap && that._oceanNormalMap.destroy();
+                that._oceanNormalMap = context.createTexture2D({
+                    source : image
+                });
+            });
+        }
+
         // Initial compile or re-compile if uber-shader parameters changed
         var projectionChanged = this._projection !== projection;
 
@@ -555,7 +590,8 @@ define([
             typeof this._northPoleCommand.shaderProgram === 'undefined' ||
             typeof this._southPoleCommand.shaderProgram === 'undefined' ||
             modeChanged ||
-            projectionChanged) {
+            projectionChanged ||
+            (typeof this._oceanNormalMap !== 'undefined') !== this._showingPrettyOcean) {
 
             var getPosition3DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition3DMode(position3DWC); }';
             var getPosition2DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition2DMode(position3DWC); }';
@@ -594,9 +630,13 @@ define([
                  CentralBodyVS + '\n' +
                  getPositionMode + '\n' +
                  get2DYPositionFraction;
+
+            var hasWaterMask = this._surface._terrainProvider.hasWaterMask;
+            var showPrettyOcean = hasWaterMask && typeof this._oceanNormalMap !== 'undefined';
+
             this._surfaceShaderSet.baseFragmentShaderString =
-                (this._surface._terrainProvider.hasWaterMask ? '#define SHOW_REFLECTIVE_OCEAN\n' : '') +
-                (typeof this.oceanMaterial !== 'undefined' ? '#define SHOW_OCEAN_WAVES\n' + this.oceanMaterial.shaderSource : '') +
+                (hasWaterMask ? '#define SHOW_REFLECTIVE_OCEAN\n' : '') +
+                (showPrettyOcean ? '#define SHOW_OCEAN_WAVES\n' : '') +
                 '#line 0\n' +
                 CentralBodyFS;
             this._surfaceShaderSet.invalidateShaders();
@@ -606,6 +646,8 @@ define([
 
             this._northPoleCommand.shaderProgram = poleShaderProgram;
             this._southPoleCommand.shaderProgram = poleShaderProgram;
+
+            this._showingPrettyOcean = typeof this._oceanNormalMap !== 'undefined';
         }
 
         var cameraPosition = frameState.camera.getPositionWC();
@@ -636,8 +678,12 @@ define([
             }
 
             var drawUniforms = this._drawUniforms;
-            if (typeof this.oceanMaterial !== 'undefined') {
-                drawUniforms = combine([this._drawUniforms, this.oceanMaterial._uniforms]);
+
+            // Don't show the ocean specular highlights when zoomed out in 2D and Columbus View.
+            if (mode === SceneMode.SCENE3D) {
+                this._zoomedOutOceanSpecularIntensity = 0.5;
+            } else {
+                this._zoomedOutOceanSpecularIntensity = 0.0;
             }
 
             this._surface.update(context,
@@ -716,6 +762,8 @@ define([
         this._depthCommand.vertexArray = this._depthCommand.vertexArray && this._depthCommand.vertexArray.destroy();
 
         this._surface = this._surface && this._surface.destroy();
+
+        this._oceanNormalMap = this._oceanNormalMap && this._oceanNormalMap.destroy();
 
         return destroyObject(this);
     };

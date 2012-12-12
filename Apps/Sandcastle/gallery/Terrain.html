@@ -76,13 +76,14 @@ body {
 <script id="cesium_sandcastle_script">
 require([
     'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
-    'dojo/on', 'dojo/dom', 'Shaders/CentralBodyOcean', 'dojo/io-query'
+    'dojo/on', 'dojo/dom', 'dojo/io-query'
 ], function(
     Cesium, CesiumViewerWidget,
-    on, dom, CentralBodyOcean, ioQuery)
+    on, dom, ioQuery)
 {
     "use strict";
 
+    var widget;
     var ellipsoid = Cesium.Ellipsoid.WGS84;
     var scene; 
     var cb;
@@ -123,9 +124,29 @@ require([
         }
         return 0.0;
     }
-
+    
     function keydownHandler(e) {
+        var position, direction, up;
+        var camera = scene.getCamera();
+        
         switch (e.keyCode) {
+        case '2'.charCodeAt(0):
+            widget.sceneTransitioner.toColumbusView();
+            position = new Cesium.Cartesian3(2264.9817327431592, -13637202.637733376, 4211296.286087755);
+            position = new Cesium.Cartesian3(position.y, position.z, position.x);
+            direction = new Cesium.Cartesian3(-0.29586386622810074, 0.8547210238753364, -0.42651675700499164);
+            direction = new Cesium.Cartesian3(direction.y, direction.z, direction.x);
+            up = new Cesium.Cartesian3(0.9552301150293372, 0.2647331137639788, -0.13210528307421182);
+            up = new Cesium.Cartesian3(up.y, up.z, up.x);
+            camera.controller.lookAt(position, position.add(direction), up);
+            break;
+        case '3'.charCodeAt(0):
+            widget.sceneTransitioner.to3D();
+            position = new Cesium.Cartesian3(-2711464.1509439386, -4255314.2593585625, 3892009.8245821474);
+            direction = new Cesium.Cartesian3(0.705822742123692, -0.48284733621560527, -0.5183364801077429);
+            up = new Cesium.Cartesian3(-0.2257095701947508, -0.8468657216044324, 0.4815325944234253);
+            camera.controller.lookAt(position, position.add(direction), up);
+            break;
         case 'F'.charCodeAt(0):
             cb._surface.debugToggleLodUpdate();
             break;
@@ -168,7 +189,7 @@ require([
 
     // Initialize a viewer capable of drag-and-drop
     // and user customizations.
-    var widget = new CesiumViewerWidget({
+    widget = new CesiumViewerWidget({
         endUserOptions : endUserOptions,
         enableDragDrop : true
     });
@@ -189,20 +210,7 @@ require([
 
     cb._surface._terrainProvider = terrainProvider;
     
-    cb.oceanMaterial = new Cesium.Material({
-        context : scene.getContext(),
-        fabric : {
-            uniforms : {
-                normalMap: require.toUrl('Assets/Textures/waterNormalsSmall.jpg'),
-                frequency: 500000.0,
-                animationSpeed: 0.006,
-                amplitude: 1.0,
-                specularIntensity : 0.5,
-                fadeFactor : 1.0
-            },
-            source : CentralBodyOcean
-        }
-    });
+    cb.oceanNormalMapUrl = require.toUrl('Assets/Textures/waterNormalsSmall.jpg');
 
     /*var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
         url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
