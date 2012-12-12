@@ -358,8 +358,8 @@ define([
             near = camera.frustum.near;
             far = camera.frustum.far;
         } else {
-            near = Math.max(near, camera.frustum.near);
-            far = Math.min(far, camera.frustum.far);
+            near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
+            far = Math.max(Math.min(far, camera.frustum.far), near);
         }
 
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
