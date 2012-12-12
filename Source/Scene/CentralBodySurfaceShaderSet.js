@@ -35,7 +35,7 @@ define([
             var vs = this.baseVertexShaderString;
             var fs =
                 '#define TEXTURE_UNITS ' + textureCount + '\n' +
-                this.baseFragmentShaderString +
+                this.baseFragmentShaderString + '\n' +
                 'vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)\n' +
                 '{\n' +
                 '    vec3 color = initialColor;\n';

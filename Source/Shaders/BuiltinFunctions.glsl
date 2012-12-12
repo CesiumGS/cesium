@@ -312,7 +312,7 @@ vec2 czm_ellipsoidWgs84TextureCoordinates(vec3 normal)
 mat3 czm_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
 {
     vec3 tangentMC = normalize(vec3(-positionMC.y, positionMC.x, 0.0));  // normalized surface tangent in model coordinates
-    vec3 tangentEC = normalize(czm_normal * tangentMC);                  // normalized surface tangent in eye coordiantes
+    vec3 tangentEC = normalize(czm_normal3D * tangentMC);                // normalized surface tangent in eye coordiantes
     vec3 bitangentEC = normalize(cross(normalEC, tangentEC));            // normalized surface bitangent in eye coordinates
 
     return mat3(
@@ -399,17 +399,26 @@ czm_material czm_getDefaultMaterial(czm_materialInput materialInput)
     return material;
 }
 
-float getLambertDiffuse(vec3 lightDirection, czm_material material)
+float getLambertDiffuse(vec3 lightDirectionEC, vec3 normalEC)
 {
-    return max(dot(lightDirection, material.normal), 0.0);
+    return max(dot(lightDirectionEC, normalEC), 0.0);
 }
 
-float getSpecular(vec3 lightDirection, vec3 toEye, czm_material material)
+float getLambertDiffuseOfMaterial(vec3 lightDirectionEC, czm_material material)
 {
-    vec3 toReflectedLight = reflect(-lightDirection, material.normal);
-    float specular = max(dot(toReflectedLight, toEye), 0.0);
+    return getLambertDiffuse(lightDirectionEC, material.normal);
+}
 
-    return pow(specular, material.shininess);
+float getSpecular(vec3 lightDirectionEC, vec3 toEyeEC, vec3 normalEC, float shininess)
+{
+    vec3 toReflectedLight = reflect(-lightDirectionEC, normalEC);
+    float specular = max(dot(toReflectedLight, toEyeEC), 0.0);
+    return pow(specular, shininess);
+}
+
+float getSpecularOfMaterial(vec3 lightDirectionEC, vec3 toEyeEC, czm_material material)
+{
+    return getSpecular(lightDirectionEC, toEyeEC, material.normal, material.shininess);
 }
 
 /**
@@ -433,10 +442,10 @@ float getSpecular(vec3 lightDirection, vec3 toEye, czm_material material)
 vec4 czm_phong(vec3 toEye, czm_material material)
 {
     // Diffuse from directional light sources at eye (for top-down and horizon views)
-    float diffuse = getLambertDiffuse(vec3(0.0, 0.0, 1.0), material) + getLambertDiffuse(vec3(0.0, 1.0, 0.0), material);
+    float diffuse = getLambertDiffuseOfMaterial(vec3(0.0, 0.0, 1.0), material) + getLambertDiffuseOfMaterial(vec3(0.0, 1.0, 0.0), material);
 
     // Specular from sun and pseudo-moon
-    float specular = getSpecular(czm_sunDirectionEC, toEye, material) + getSpecular(czm_moonDirectionEC, toEye, material);
+    float specular = getSpecularOfMaterial(czm_sunDirectionEC, toEye, material) + getSpecularOfMaterial(czm_moonDirectionEC, toEye, material);
 
     vec3 ambient = vec3(0.0);
     vec3 color = ambient + material.emission;
