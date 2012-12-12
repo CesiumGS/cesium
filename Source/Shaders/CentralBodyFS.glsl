@@ -111,10 +111,11 @@ void main()
         color = computeWaterColor(v_positionEC, czm_ellipsoidWgs84TextureCoordinates(normalMC), enuToEye, startDayColor, mask);
     }
 #endif
-
     
     gl_FragColor = color;
 }
+
+#ifdef SHOW_REFLECTIVE_OCEAN
 
 #ifdef SHOW_OCEAN_WAVES
 vec4 getNoise(vec2 uv, float time)
@@ -215,3 +216,5 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     
     return vec4(imageryColor + diffuseHighlight + nonDiffuseHighlight + specular, 1.0); 
 }
+
+#endif // #ifdef SHOW_REFLECTIVE_OCEAN
