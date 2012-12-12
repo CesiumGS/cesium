@@ -57,8 +57,8 @@ vec3 sampleAndBlend(
     vec3 color = sample.rgb;
     float alpha = sample.a;
     
-    color = mix(vec3(0.0, 0.0, 0.0), color, textureBrightness);
-    color = mix(vec3(0.5, 0.5, 0.5), color, textureContrast);
+    color = mix(vec3(0.0), color, textureBrightness);
+    color = mix(vec3(0.5), color, textureContrast);
     
     color = pow(color, vec3(textureOneOverGamma));
 
@@ -66,7 +66,7 @@ vec3 sampleAndBlend(
     if (textureCoordinates.x < (1.0/256.0) || textureCoordinates.x > (255.0/256.0) ||
         textureCoordinates.y < (1.0/256.0) || textureCoordinates.y > (255.0/256.0))
     {
-        color = vec3(1.0, 1.0, 0.0);
+        color = vec3(1.0);
         alpha = 1.0;
     }
 #endif
@@ -206,7 +206,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     float tsPerturbationRatio = normalTangentSpace.z;
     vec3 nonDiffuseHighlight = mix(waveHighlightColor * 5.0 * (1.0 - tsPerturbationRatio), vec3(0.0), diffuseIntensity);
 #else
-    vec3 nonDiffuseHighlight = vec3(0.0, 0.0, 0.0);
+    vec3 nonDiffuseHighlight = vec3(0.0);
 #endif
 
     // Add specular highlights in 3D, and in all modes when zoomed in.

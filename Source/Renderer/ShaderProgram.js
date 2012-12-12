@@ -290,11 +290,6 @@ define([
          *
          * @see UniformState#getView3D
          * @see czm_view
-         * @see czm_viewRotation3D
-         * @see czm_modelView3D
-         * @see czm_viewProjection
-         * @see czm_modelViewProjection
-         * @see czm_inverseView3D
          *
          * @example
          * // GLSL declaration
@@ -370,9 +365,6 @@ define([
          *
          * @see UniformState#getViewRotation3D
          * @see czm_viewRotation
-         * @see czm_view3D
-         * @see czm_inverseView3D
-         * @see czm_inverseViewRotation3D
          *
          * @example
          * // GLSL declaration
@@ -447,8 +439,6 @@ define([
          *
          * @see UniformState#getInverseView3D
          * @see czm_inverseView
-         * @see czm_view3D
-         * @see czm_inverseNormal3D
          *
          * @example
          * // GLSL declaration
@@ -524,9 +514,6 @@ define([
          *
          * @see UniformState#getInverseView3D
          * @see czm_inverseViewRotation
-         * @see czm_view3D
-         * @see czm_viewRotation3D
-         * @see czm_inverseViewRotation3D
          *
          * @example
          * // GLSL declaration
@@ -724,11 +711,7 @@ define([
          * @glslUniform
          *
          * @see UniformState#getModelView3D
-         * @see czm_modelView3D
-         * @see czm_model
-         * @see czm_view3D
-         * @see czm_modelViewProjection
-         * @see czm_normal3D
+         * @see czm_modelView
          *
          * @example
          * // GLSL declaration
@@ -1105,8 +1088,6 @@ define([
          *
          * @see UniformState#getNormal3D
          * @see czm_normal
-         * @see czm_inverseNormal3D
-         * @see czm_modelView3D
          *
          * @example
          * // GLSL declaration
@@ -1185,9 +1166,6 @@ define([
          *
          * @see UniformState#getInverseNormal3D
          * @see czm_inverseNormal
-         * @see czm_normal3D
-         * @see czm_modelView3D
-         * @see czm_inverseView3D
          *
          * @example
          * // GLSL declaration
