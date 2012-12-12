@@ -633,7 +633,7 @@ define([
             }
 
             var imageryUrl = '../../Assets/Textures/';
-            this.dayImageUrl = defaultValue(this.dayImageUrl, require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg'));
+            this.dayImageUrl = defaultValue(this.dayImageUrl, require.toUrl(imageryUrl + 'NE2_LR_LC_SR_W_DR_2048.jpg'));
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
 
