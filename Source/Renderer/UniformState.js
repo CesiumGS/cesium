@@ -131,6 +131,7 @@ define([
         this._cameraDirection = new Cartesian3();
         this._cameraRight = new Cartesian3();
         this._cameraUp = new Cartesian3();
+        this._frustum2DWidth = 0.0;
     };
 
     function setView(uniformState, matrix) {
@@ -232,6 +233,11 @@ define([
         setView(this, camera.getViewMatrix());
         setInverseView(this, camera.getInverseViewMatrix());
         setCameraPosition(this, camera.getPositionWC(), camera.getDirectionWC(), camera.getRightWC(), camera.getUpWC());
+
+        if (frameState.mode === SceneMode.SCENE2D) {
+            this._frustum2DWidth = camera.frustum.right - camera.frustum.left;
+        }
+
         setSunAndMoonDirections(this, frameState);
 
         this._entireFrustum.x = camera.frustum.near;
@@ -400,7 +406,7 @@ define([
             if (this._mode === SceneMode.SCENE3D) {
                 Matrix4.clone(this._view, this._view3D);
             } else {
-                view2Dto3D(this._cameraPosition, this._cameraDirection, this._cameraRight, this._cameraUp, this._mapProjection, this._view3D);
+                view2Dto3D(this._cameraPosition, this._cameraDirection, this._cameraRight, this._cameraUp, this._frustum2DWidth, this._mode, this._mapProjection, this._view3D);
             }
             this._view3DDirty = false;
         }
@@ -1020,7 +1026,7 @@ define([
     var view2Dto3DCartesian3Scratch = new Cartesian3(0.0, 0.0, 0.0);
     var view2Dto3DMatrix4Scratch = new Matrix4();
 
-    function view2Dto3D(position2D, direction2D, right2D, up2D, projection, result) {
+    function view2Dto3D(position2D, direction2D, right2D, up2D, frustum2DWidth, mode, projection, result) {
         // The camera position and directions are expressed in the 2D coordinate system where the Y axis is to the East,
         // the Z axis is to the North, and the X axis is out of the map.  Express them instead in the ENU axes where
         // X is to the East, Y is to the North, and Z is out of the local horizontal plane.
@@ -1043,6 +1049,12 @@ define([
         d.x = direction2D.y;
         d.y = direction2D.z;
         d.z = direction2D.x;
+
+        // In 2D, the camera height is always 12.7 million meters.
+        // The apparent height is equal to half the frustum width.
+        if (mode === SceneMode.SCENE2D) {
+            p.z = frustum2DWidth * 0.5;
+        }
 
         // Compute the equivalent camera position in the real (3D) world.
         // In 2D and Columbus View, the camera can travel outside the projection, and when it does so
