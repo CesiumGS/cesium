@@ -71,6 +71,28 @@ define([
         return Math.max(dx, dy);
     }
 
+    function createSpline(points) {
+        if (points.length > 2) {
+            return new HermiteSpline(points);
+        }
+
+        // only two points, use linear interpolation
+        var p = points[0];
+        var q = points[1];
+
+        return {
+            getControlPoints : function() {
+                return points;
+            },
+
+            evaluate : function(time) {
+                time = CesiumMath.clamp(time, p.time, q.time);
+                var t = (time - p.time) / (q.time - p.time);
+                return Cartesian3.lerp(p.point, q.point, t);
+            }
+        };
+    }
+
     function createPath3D(camera, ellipsoid, start, end, duration) {
         // get minimum altitude from which the whole ellipsoid is visible
         var radius = ellipsoid.getMaximumRadius();
@@ -148,7 +170,7 @@ define([
             points[k].time = k * scalar;
         }
 
-        return new HermiteSpline(points);
+        return createSpline(points);
     }
 
     function createOrientations3D(camera, points, endDirection, endUp) {
@@ -271,7 +293,7 @@ define([
             points[k].time = k * scalar;
         }
 
-        return new HermiteSpline(points);
+        return createSpline(points);
     }
 
     function createOrientations2D(camera, points, endDirection, endUp) {
