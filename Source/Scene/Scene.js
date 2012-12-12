@@ -358,6 +358,9 @@ define([
             near = camera.frustum.near;
             far = camera.frustum.far;
         } else {
+            // The computed near plane must be between the user defined near and far planes.
+            // The computed far plane must between the user defined far and computed near.
+            // This will handle the case where the computed near plane is further than the user defined far plane.
             near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
             far = Math.max(Math.min(far, camera.frustum.far), near);
         }
