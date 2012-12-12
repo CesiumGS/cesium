@@ -452,8 +452,8 @@ define([
         var us = this.getUniformState();
         var frameState = this._frameState;
 
-        this._camera.controller.update(frameState);
-        this._screenSpaceCameraController.update(this._frameState);
+        this._camera.controller.update(this.mode, this.scene2D);
+        this._screenSpaceCameraController.update(this.mode);
 
         var frameNumber = CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0);
         updateFrameState(this, frameNumber, time);

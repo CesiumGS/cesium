@@ -881,8 +881,7 @@ define([
     /**
      * @private
      */
-    ScreenSpaceCameraController.prototype.update = function(frameState) {
-        var mode = frameState.mode;
+    ScreenSpaceCameraController.prototype.update = function(mode) {
         if (mode === SceneMode.SCENE2D) {
             update2D(this);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {

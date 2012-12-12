@@ -176,14 +176,13 @@ define([
          * @type Scene
          */
         this.scene = scene;
+        this._lastScene = undefined;
 
         /**
          * The ellipsoid to use for orienting the camera.
          * @type Ellipsoid
          */
         this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
-        this._screenSpaceCameraController = scene.getScreenSpaceCameraController();
 
         //Shadow copies of the objects so we can detect changes.
         this._lastDynamicObject = undefined;
@@ -226,6 +225,11 @@ define([
         var scene = this.scene;
         if (typeof scene === 'undefined') {
             throw new DeveloperError('DynamicObjectView.scene is required.');
+        }
+
+        if (scene !== this._lastScene) {
+            this._lastScene = scene;
+            this._screenSpaceCameraController = scene.getScreenSpaceCameraController();
         }
 
         var dynamicObject = this.dynamicObject;

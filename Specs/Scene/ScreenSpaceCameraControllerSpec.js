@@ -158,8 +158,8 @@ defineSuite([
     }
 
     function updateController(frameState) {
-        camera.controller.update(frameState);
-        controller.update(frameState);
+        camera.controller.update(frameState.mode, frameState.scene2D);
+        controller.update(frameState.mode);
     }
 
     function setUp2D() {

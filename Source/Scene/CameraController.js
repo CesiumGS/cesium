@@ -111,14 +111,14 @@ define([
     /**
      * @private
      */
-    CameraController.prototype.update = function(frameState) {
+    CameraController.prototype.update = function(mode, scene2D) {
         var updateFrustum = false;
-        if (frameState.mode !== this._mode) {
-            this._mode = frameState.mode;
+        if (mode !== this._mode) {
+            this._mode = mode;
             updateFrustum = this._mode === SceneMode.SCENE2D;
         }
 
-        var projection = frameState.scene2D.projection;
+        var projection = scene2D.projection;
         if (typeof projection !== 'undefined' && projection !== this._projection) {
             this._projection = projection;
             this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
