@@ -256,4 +256,16 @@ defineSuite([
             scene.render();
         }).not.toThrow();
     });
+
+    it('does not crash when near plane is greater than or equal to the far plane', function() {
+        var camera = scene.getCamera();
+        camera.frustum.far = 1000.0;
+        camera.position = new Cartesian3(0.0, 0.0, 1e12);
+
+        createBillboards();
+        expect(function() {
+            scene.initializeFrame();
+            scene.render();
+        }).not.toThrow();
+    });
 });
