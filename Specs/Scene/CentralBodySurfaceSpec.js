@@ -89,7 +89,7 @@ defineSuite([
         frustum.top = frustum.right;
         frustum.bottom = -frustum.top;
         frameState.camera.frustum = frustum;
-        frameState.camera.controller.update(frameState);
+        frameState.camera.controller.update(frameState.mode, frameState.scene2D);
         frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
     }
 
@@ -286,9 +286,7 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.mode = SceneMode.COLUMBUS_VIEW;
-        frameState.scene2D.projection = new GeographicProjection(Ellipsoid.WGS84);
-        frameState.camera.controller.update(frameState);
+        frameState.camera.controller.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
         frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
@@ -303,9 +301,7 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.mode = SceneMode.COLUMBUS_VIEW;
-        frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
-        frameState.camera.controller.update(frameState);
+        frameState.camera.controller.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
         frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
@@ -341,9 +337,7 @@ defineSuite([
         runs(function() {
             expect(render(context, frameState, cb)).toBeGreaterThan(0);
 
-            frameState.mode = SceneMode.COLUMBUS_VIEW;
-            frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
-            frameState.camera.controller.update(frameState);
+            frameState.camera.controller.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
             frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
         });
 
