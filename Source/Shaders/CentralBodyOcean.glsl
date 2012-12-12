@@ -1,19 +1,16 @@
-// Thanks for the contribution Jonas
+// Based on water rendering by Jonas Wagner:
 // http://29a.ch/2012/7/19/webgl-terrain-rendering-water-fog
 
-uniform sampler2D specularMap;
-uniform sampler2D normalMap;
-uniform vec4 baseWaterColor;
-uniform vec4 blendColor;
-uniform float frequency;
-uniform float animationSpeed;
-uniform float amplitude;
-uniform float specularIntensity;
-uniform float zoomedOutSpecularIntensity;
-uniform float fadeFactor;
+uniform sampler2D u_oceanNormalMap;
+uniform float u_zoomedOutOceanSpecularIntensity;
 
-vec4 getNoise(vec2 uv, float time) {
+const float oceanFrequency = 125000.0;
+const float oceanAnimationSpeed = 0.006;
+const float oceanAmplitude = 2.0;
+const float oceanSpecularIntensity = 0.5;
 
+vec4 getNoise(vec2 uv, float time)
+{
     float cosAngle = 1.0; // cos(angleInRadians);
     float sinAngle = 0.0; // sin(angleInRadians);
     
@@ -38,10 +35,10 @@ vec4 getNoise(vec2 uv, float time) {
     uv1 = fract(uv1);
     uv2 = fract(uv2);
     uv3 = fract(uv3);
-    vec4 noise = (texture2D(normalMap, uv0)) +
-                 (texture2D(normalMap, uv1)) +
-                 (texture2D(normalMap, uv2)) +
-                 (texture2D(normalMap, uv3));
+    vec4 noise = (texture2D(u_oceanNormalMap, uv0)) +
+                 (texture2D(u_oceanNormalMap, uv1)) +
+                 (texture2D(u_oceanNormalMap, uv2)) +
+                 (texture2D(u_oceanNormalMap, uv3));
                  
     // average and scale to between -1 and 1
     return ((noise / 4.0) - 0.5) * 2.0;
@@ -55,7 +52,7 @@ float waveFade(float edge0, float edge1, float x)
 
 vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec3 imageryColor, float specularMapValue)
 {
-    float time = czm_frameNumber * animationSpeed;
+    float time = czm_frameNumber * oceanAnimationSpeed;
     
     vec3 positionToEyeEC = -positionEyeCoordinates;
     float positionToEyeECLength = length(positionToEyeEC);
@@ -66,8 +63,8 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     // Fade out the waves as the camera moves far from the surface.
     float waveIntensity = waveFade(70000.0, 1000000.0, positionToEyeECLength);
             
-    vec4 noise = getNoise(textureCoordinates * frequency, time);
-    vec3 normalTangentSpace = noise.xyz * vec3(1.0, 1.0, (1.0 / amplitude));
+    vec4 noise = getNoise(textureCoordinates * oceanFrequency, time);
+    vec3 normalTangentSpace = noise.xyz * vec3(1.0, 1.0, (1.0 / oceanAmplitude));
     
     // fade out the normal perturbation as we move farther from the water surface
     normalTangentSpace.xy *= waveIntensity;
@@ -88,7 +85,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 
     // Add specular highlights in 3D, and in all modes when zoomed in.
     float specularIntensity = getSpecular(czm_sunDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0);
-    float surfaceReflectance = mix(0.0, mix(zoomedOutSpecularIntensity, specularIntensity, waveIntensity), specularMapValue);
+    float surfaceReflectance = mix(0.0, mix(u_zoomedOutOceanSpecularIntensity, oceanSpecularIntensity, waveIntensity), specularMapValue);
     float specular = specularIntensity * surfaceReflectance;
     
     return vec4(imageryColor + diffuseHighlight + nonDiffuseHighlight + specular, 1.0); 

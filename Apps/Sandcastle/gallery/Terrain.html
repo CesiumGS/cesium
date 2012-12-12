@@ -210,21 +210,7 @@ require([
 
     cb._surface._terrainProvider = terrainProvider;
     
-    cb.oceanMaterial = new Cesium.Material({
-        context : scene.getContext(),
-        fabric : {
-            uniforms : {
-                normalMap: require.toUrl('Assets/Textures/waterNormalsSmall.jpg'),
-                frequency: 125000.0,
-                animationSpeed: 0.006,
-                amplitude: 2.0,
-                specularIntensity : 0.5,
-                zoomedOutSpecularIntensity : 0.5,
-                fadeFactor : 1.0
-            },
-            source : CentralBodyOcean
-        }
-    });
+    cb.oceanNormalMapUrl = require.toUrl('Assets/Textures/waterNormalsSmall.jpg');
 
     /*var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
         url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
