@@ -43,25 +43,29 @@ defineSuite([
 
     it('create animation throws without a frameState', function() {
         expect(function() {
-            return CameraFlightPath.createAnimation();
+            CameraFlightPath.createAnimation(undefined, {
+                destination : new Cartesian3(1e9, 1e9, 1e9)
+            });
         }).toThrow();
     });
 
     it('create animation throws without a destination', function() {
         expect(function() {
-            return CameraFlightPath.createAnimation(frameState, {});
+            CameraFlightPath.createAnimation(frameState, {});
         }).toThrow();
     });
 
     it('create animation with cartographic throws without a frameState', function() {
         expect(function() {
-            return CameraFlightPath.createAnimation();
+            CameraFlightPath.createAnimationCartographic(undefined, {
+                destination : new Cartographic(0.0, 0.0, 1e6)
+            });
         }).toThrow();
     });
 
     it('create animation with cartographic throws without a destination', function() {
         expect(function() {
-            return CameraFlightPath.createAnimation(frameState, {});
+            CameraFlightPath.createAnimationCartographic(frameState, {});
         }).toThrow();
     });
 

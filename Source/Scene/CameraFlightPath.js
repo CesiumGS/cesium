@@ -412,12 +412,12 @@ define([
         var direction = description.direction;
         var up = description.up;
 
-        if (typeof destination === 'undefined') {
-            throw new DeveloperError('destination is required.');
-        }
-
         if (typeof frameState === 'undefined') {
             throw new DeveloperError('frameState is required.');
+        }
+
+        if (typeof destination === 'undefined') {
+            throw new DeveloperError('destination is required.');
         }
 
         var duration = defaultValue(description.duration, 3000.0);
@@ -470,12 +470,12 @@ define([
         description = defaultValue(description, {});
         var destination = description.destination;
 
-        if (typeof destination === 'undefined') {
-            throw new DeveloperError('destination is required.');
-        }
-
         if (typeof frameState === 'undefined') {
             throw new DeveloperError('frameState is required.');
+        }
+
+        if (typeof destination === 'undefined') {
+            throw new DeveloperError('description.destination is required.');
         }
 
         var end;
