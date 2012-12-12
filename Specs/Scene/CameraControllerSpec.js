@@ -84,9 +84,8 @@ defineSuite([
     });
 
     it('update throws in 2D mode without an orthographic frustum', function() {
-        var frameState = { mode : SceneMode.SCENE2D, scene2D : {} };
         expect(function() {
-            controller.update(frameState);
+            controller.update(SceneMode.SCENE2D);
         }).toThrow();
     });
 
@@ -164,8 +163,7 @@ defineSuite([
         camera.frustum = frustum;
 
         var projection = new GeographicProjection();
-        var frameState = { mode : SceneMode.SCENE2D, scene2D : { projection : projection } };
-        controller.update(frameState);
+        controller.update(SceneMode.SCENE2D, { projection : projection });
 
         var max = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
         var factor = 1000.0;
@@ -387,13 +385,7 @@ defineSuite([
 
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
-        var frameState = {
-            mode : SceneMode.SCENE2D,
-            scene2D : {
-                projection : projection
-            }
-        };
-        controller.update(frameState);
+        controller.update(SceneMode.SCENE2D, { projection : projection });
 
         controller.zoomOut(zoomAmount);
         expect(camera.frustum.right).toEqualEpsilon(3.0, CesiumMath.EPSILON10);
@@ -414,13 +406,7 @@ defineSuite([
 
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
-        var frameState = {
-            mode : SceneMode.SCENE2D,
-            scene2D : {
-                projection : projection
-            }
-        };
-        controller.update(frameState);
+        controller.update(SceneMode.SCENE2D, { projection : projection });
 
         var maxZoom = 10.0;
         controller.maximumZoomDistance = maxZoom;
@@ -443,13 +429,7 @@ defineSuite([
 
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
-        var frameState = {
-            mode : SceneMode.SCENE2D,
-            scene2D : {
-                projection : projection
-            }
-        };
-        controller.update(frameState);
+        controller.update(SceneMode.SCENE2D, { projection : projection });
 
         controller.zoomIn(zoomAmount);
         expect(camera.frustum.right).toEqualEpsilon(1.0, CesiumMath.EPSILON10);
@@ -470,13 +450,7 @@ defineSuite([
 
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
-        var frameState = {
-            mode : SceneMode.SCENE2D,
-            scene2D : {
-                projection : projection
-            }
-        };
-        controller.update(frameState);
+        controller.update(SceneMode.SCENE2D, { projection : projection });
 
         var max = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
         var factor = 1000.0;
@@ -576,8 +550,7 @@ defineSuite([
         frustum.bottom = -1.0;
         camera.frustum = frustum;
 
-        var frameState = { mode : SceneMode.SCENE2D, scene2D : { projection : new GeographicProjection() } };
-        controller.update(frameState);
+        controller.update(SceneMode.SCENE2D, { projection : new GeographicProjection() });
 
         expect(function() {
             controller.lookAt(Cartesian3.UNIT_X, Cartesian3.ZERO, Cartesian3.UNIT_Y);
@@ -585,8 +558,7 @@ defineSuite([
     });
 
     it('lookAt throws when morphing', function() {
-        var frameState = {mode : SceneMode.MORPHING, scene2D : { projection : new GeographicProjection() } };
-        controller.update(frameState);
+        controller.update(SceneMode.MORPHING, { projection : new GeographicProjection() });
 
         expect(function() {
             controller.lookAt(Cartesian3.UNIT_X, Cartesian3.ZERO, Cartesian3.UNIT_Y);
@@ -953,8 +925,7 @@ defineSuite([
         camera.frustum = frustum;
 
         var projection = new GeographicProjection();
-        var frameState = { mode : SceneMode.SCENE2D, scene2D : { projection : projection } };
-        controller.update(frameState);
+        controller.update(SceneMode.SCENE2D, { projection : projection });
 
         var max = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         var factor = 1000.0;
@@ -1001,13 +972,7 @@ defineSuite([
 
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
-        var frameState = {
-            mode : SceneMode.SCENE2D,
-            scene2D : {
-                projection : projection
-            }
-        };
-        controller.update(frameState);
+        controller.update(SceneMode.SCENE2D, { projection : projection });
 
         var max = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
         var factor = 1000.0;
@@ -1049,8 +1014,7 @@ defineSuite([
                 0.0, 0.0, 0.0, 1.0);
 
         var projection = new GeographicProjection();
-        var frameState = { mode : SceneMode.COLUMBUS_VIEW, scene2D : { projection : projection } };
-        controller.update(frameState);
+        controller.update(SceneMode.COLUMBUS_VIEW, { projection : projection });
 
         var max = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
         var factor = 1000.0;
