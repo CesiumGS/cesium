@@ -51,7 +51,6 @@
         border: none;
         width: 100%;
         height: 100%;
-        z-index: -1;
     }
     #toolbar {
         padding: 2px 5px;
@@ -92,22 +91,11 @@ require([
     
     function flyToSanDiego(scene) {
         Sandcastle.declare(flyToSanDiego);    // For highlighting in Sandcastle.
-        disableInput(scene);
         var destination = Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0);
-        var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
-            destination : destination,
-            onComplete : function() {
-                enableInput(scene);
-            }
-        });
-        scene.getAnimations().add(flight);
-    }
-    
-    function flyToMyLocation(scene) {
-        Sandcastle.declare(flyToMyLocation);    // For highlighting in Sandcastle.
-        function fly(position) {
+        
+        // only fly there if it is not the camera's current position
+        if (!Cesium.Ellipsoid.WGS84.cartographicToCartesian(destination).equalsEpsilon(scene.getCamera().getPositionWC(), Cesium.Math.EPSILON6)) {
             disableInput(scene);
-            var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
             var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
                 destination : destination,
                 onComplete : function() {
@@ -115,6 +103,26 @@ require([
                 }
             });
             scene.getAnimations().add(flight);
+        }
+    }
+    
+    function flyToMyLocation(scene) {
+        Sandcastle.declare(flyToMyLocation);    // For highlighting in Sandcastle.
+        function fly(position) {
+            var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
+            destination = Cesium.Ellipsoid.WGS84.cartographicToCartesian(destination);
+            
+            // only fly there if it is not the camera's current position
+            if (!destination.equalsEpsilon(scene.getCamera().getPositionWC(), Cesium.Math.EPSILON6)) {
+                disableInput(scene);
+                var flight = Cesium.CameraFlightPath.createAnimation(scene.getFrameState(), {
+                    destination : destination,
+                    onComplete : function() {
+                        enableInput(scene);
+                    }
+                });
+                scene.getAnimations().add(flight);
+            }
         }
         
         navigator.geolocation.getCurrentPosition(fly);
