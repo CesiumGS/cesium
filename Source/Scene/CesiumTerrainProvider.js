@@ -99,6 +99,9 @@ define([
 
         this.ready = true;
         this.hasWaterMask = true;
+
+        this._allLandTexture = undefined;
+        this._allWaterTexture = undefined;
     }
 
     /**
@@ -172,10 +175,10 @@ define([
             var that = this;
             when(loadArrayBuffer(url), function(buffer) {
 
-                var geometry = new Float32Array(buffer, 0, that.heightmapWidth * that.heightmapWidth);
+                var geometry = new Uint16Array(buffer, 0, that.heightmapWidth * that.heightmapWidth);
                 tile.transientData = {
                         geometry : geometry,
-                        waterMask : new Uint8Array(buffer, geometry.byteLength + 1, 256 * 256)
+                        waterMask : new Uint8Array(buffer, geometry.byteLength + 1, buffer.byteLength - geometry.byteLength - 1)
                 };
 
                 tile.childTileBits = new Uint8Array(buffer, geometry.byteLength, 1)[0];
@@ -193,7 +196,7 @@ define([
                 console.error('failed to load tile geometry: ' + e);
 
                 tile.transientData = {
-                        geometry : new Float32Array(65 * 65),
+                        geometry : new Uint16Array(65 * 65),
                         waterMask : new Uint8Array(1)
                 };
 
@@ -245,13 +248,9 @@ define([
             var bottomInteger = bottomPostIndex | 0;
 
             var sourceHeights = sourceTile.transientData.geometry;
-            //var sourceWaterMask = new Uint8Array(sourceTile.waterMask);
 
             var buffer;
             var heights;
-
-            //var waterMaskBuffer;
-            //var waterMask;
 
             // We can support the following level differences without interpolating:
             // 1 - 33x33 posts
@@ -294,8 +293,8 @@ define([
             } else {
                 // Copy the relevant posts.
                 var numberOfFloats = (rightInteger - leftInteger + 1) * (bottomInteger - topInteger + 1);
-                buffer = new ArrayBuffer(numberOfFloats * 4 + 1);
-                heights = new Float32Array(buffer, 0, numberOfFloats);
+                buffer = new ArrayBuffer(numberOfFloats * 2 + 1);
+                heights = new Uint16Array(buffer, 0, numberOfFloats);
 
                 var outputIndex = 0;
                 for (var j = topInteger; j <= bottomInteger; ++j) {
@@ -314,9 +313,6 @@ define([
 
             // Use the source tile's water mask texture.
             tile.waterMaskTexture = sourceTile.waterMaskTexture;
-            if (typeof tile.waterMaskTexture === 'undefined') {
-                console.log('bad');
-            }
 
             // Compute the water mask translation and scale
             var sourceTileExtent = sourceTile.extent;
@@ -373,22 +369,48 @@ define([
 
         if (typeof tile.waterMaskTexture === 'undefined') {
             var waterMaskSize = Math.sqrt(waterMask.length);
-
-            tile.waterMaskTexture = context.createTexture2D({
-                pixelFormat : PixelFormat.LUMINANCE,
-                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-                source : {
-                    width : waterMaskSize,
-                    height : waterMaskSize,
-                    arrayBufferView : waterMask
+            if (waterMaskSize === 1 && (waterMask[0] === 0 || waterMask[0] === 255)) {
+                // Tile is entirely land or entirely water.
+                if (typeof this._allWaterTexture === 'undefined') {
+                    this._allWaterTexture = context.createTexture2D({
+                        pixelFormat : PixelFormat.LUMINANCE,
+                        pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                        source : {
+                            arrayBufferView : new Uint8Array([255]),
+                            width : 1,
+                            height : 1
+                        }
+                    });
+                    this._allWaterTexture.doNotDestroy = true;
+                    this._allLandTexture = context.createTexture2D({
+                        pixelFormat : PixelFormat.LUMINANCE,
+                        pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                        source : {
+                            arrayBufferView : new Uint8Array([0]),
+                            width : 1,
+                            height : 1
+                        }
+                    });
+                    this._allLandTexture.doNotDestroy = true;
                 }
-            });
-            tile.waterMaskTexture.setSampler({
-                wrapS : TextureWrap.CLAMP,
-                wrapT : TextureWrap.CLAMP,
-                minificationFilter : TextureMinificationFilter.LINEAR,
-                magnificationFilter : TextureMagnificationFilter.LINEAR
-            });
+                tile.waterMaskTexture = waterMask[0] === 0 ? this._allLandTexture : this._allWaterTexture;
+            } else {
+                tile.waterMaskTexture = context.createTexture2D({
+                    pixelFormat : PixelFormat.LUMINANCE,
+                    pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                    source : {
+                        width : waterMaskSize,
+                        height : waterMaskSize,
+                        arrayBufferView : waterMask
+                    }
+                });
+                tile.waterMaskTexture.setSampler({
+                    wrapS : TextureWrap.CLAMP,
+                    wrapT : TextureWrap.CLAMP,
+                    minificationFilter : TextureMinificationFilter.LINEAR,
+                    magnificationFilter : TextureMagnificationFilter.LINEAR
+                });
+            }
         }
 
         // If data is not available for any of this tile's children, keep the
@@ -403,8 +425,8 @@ define([
 
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : pixels,
-            heightScale : 1.0,
-            heightOffset : 0.0,
+            heightScale : 5.0,
+            heightOffset : 1000.0,
             stride : 1,
             width : width,
             height : height,
@@ -413,8 +435,7 @@ define([
             radiiSquared : ellipsoid.getRadiiSquared(),
             oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
             skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
-            isGeographic : true /*,
-            waterMask : waterMask */
+            isGeographic : true
         }, transfer);
 
         if (typeof verticesPromise === 'undefined') {

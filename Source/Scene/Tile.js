@@ -329,7 +329,7 @@ define([
             // Only destroy the water texture if the scale values are both 1.0.
             // If they're not, the water texture is shared with one of this tile's ancestors, so
             // let that ancestor destroy it.
-            if (this.waterMaskTranslationAndScale.z === 1.0 && this.waterMaskTranslationAndScale.w === 1.0) {
+            if (this.waterMaskTranslationAndScale.z === 1.0 && this.waterMaskTranslationAndScale.w === 1.0 && !this.waterMaskTexture.doNotDestroy) {
                 this.waterMaskTexture.destroy();
             }
             this.waterMaskTexture = undefined;
