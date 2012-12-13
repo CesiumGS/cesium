@@ -492,10 +492,19 @@ define([
         }
 
         var partialDuration = (endTime - startTime) * duration;
-        if (partialDuration === 0 && Cartesian2.magnitude(Cartesian2.subtract(startPos, endPos2D, startPos)) !== 0) {
-            partialDuration = duration;
-            startTime = 0.0;
-            endTime = 1.0;
+        if (partialDuration < CesiumMath.EPSILON6) {
+            if (!startPos.equalsEpsilon(endPos2D, CesiumMath.EPSILON6)) {
+                partialDuration = duration;
+                startTime = 0.0;
+                endTime = 1.0;
+            } else {
+                // If the camera and frustum are already in position for the switch to
+                // a perspective projection, nothing needs to be animated.
+                camera.position = endPos2D;
+                camera.frustum = frustumCV.clone();
+                onComplete.call(that);
+                return;
+            }
         }
 
         var animation = scene.getAnimations().add({
