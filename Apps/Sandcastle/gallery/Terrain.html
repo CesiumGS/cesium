@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Drag and drop CZML files onto the Cesium Viewer Widget to visualize time dynamic data.">
+    <meta name="description" content="Demo and test various aspects of terrain rendering.">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
@@ -65,16 +65,17 @@
 <script id="cesium_sandcastle_script">
 require([
     'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
-    'dojo/on', 'dojo/dom', 'dojo/io-query'
+    'dojo/on', 'dojo/dom', 'dojo/io-query', 'dijit/form/Button'
 ], function(
     Cesium, CesiumViewerWidget,
-    on, dom, ioQuery)
+    on, dom, ioQuery, Button)
 {
     "use strict";
 
     var widget;
     var ellipsoid = Cesium.Ellipsoid.WGS84;
     var scene;
+    var camera;
     var cb;
     var mousePosition;
 
@@ -113,34 +114,63 @@ require([
         }
         return 0.0;
     }
-    
+
+    function sfBayCV() {
+        Sandcastle.declare(sfBayCV);  // For highlighting in Sandcastle.
+        var position, direction, up;
+        widget.sceneTransitioner.toColumbusView();
+        position = new Cesium.Cartesian3(2264.9817327431592, -13637202.637733376, 4211296.286087755);
+        position = new Cesium.Cartesian3(position.y, position.z, position.x);
+        direction = new Cesium.Cartesian3(-0.29586386622810074, 0.8547210238753364, -0.42651675700499164);
+        direction = new Cesium.Cartesian3(direction.y, direction.z, direction.x);
+        up = new Cesium.Cartesian3(0.9552301150293372, 0.2647331137639788, -0.13210528307421182);
+        up = new Cesium.Cartesian3(up.y, up.z, up.x);
+        camera.controller.lookAt(position, position.add(direction), up);
+    }
+
+    function sfBay3D() {
+        Sandcastle.declare(sfBay3D);  // For highlighting in Sandcastle.
+        var position, direction, up;
+        widget.sceneTransitioner.to3D();
+        position = new Cesium.Cartesian3(-2711464.1509439386, -4255314.2593585625, 3892009.8245821474);
+        direction = new Cesium.Cartesian3(0.705822742123692, -0.48284733621560527, -0.5183364801077429);
+        up = new Cesium.Cartesian3(-0.2257095701947508, -0.8468657216044324, 0.4815325944234253);
+        camera.controller.lookAt(position, position.add(direction), up);
+    }
+
+    function chesapeakeBay() {
+        Sandcastle.declare(chesapeakeBay);  // For highlighting in Sandcastle.
+        var position, direction, up;
+        position = new Cesium.Cartesian3(1235514.4818091553, -4996224.532789806, 3894637.0982041876);
+        direction = new Cesium.Cartesian3(-0.19142739361697755, 0.7741020071546907, -0.6034249211725352);
+        up = new Cesium.Cartesian3(-0.022861502949612936, 0.6111110780404753, 0.791214637111247);
+        camera.controller.lookAt(position, position.add(direction), up);
+    }
+
+    function gulfOfCalifornia() {
+        Sandcastle.declare(gulfOfCalifornia);  // For highlighting in Sandcastle.
+        var position, direction, up;
+        position = new Cesium.Cartesian3(-2154047.1693888847, -5129769.958774299, 3112753.0357638514);
+        direction = new Cesium.Cartesian3(-0.6303093658511963, -0.09320311457302291, -0.7707290592381483);
+        up = new Cesium.Cartesian3(-0.36365569382280133, -0.8416695313076181, 0.3991828358266927);
+        camera.controller.lookAt(position, position.add(direction), up);
+    }
+
     function keydownHandler(e) {
         var position, direction, up;
-        var camera = scene.getCamera();
 
         switch (e.keyCode) {
         case '2'.charCodeAt(0):
-            widget.sceneTransitioner.toColumbusView();
-            position = new Cesium.Cartesian3(2264.9817327431592, -13637202.637733376, 4211296.286087755);
-            position = new Cesium.Cartesian3(position.y, position.z, position.x);
-            direction = new Cesium.Cartesian3(-0.29586386622810074, 0.8547210238753364, -0.42651675700499164);
-            direction = new Cesium.Cartesian3(direction.y, direction.z, direction.x);
-            up = new Cesium.Cartesian3(0.9552301150293372, 0.2647331137639788, -0.13210528307421182);
-            up = new Cesium.Cartesian3(up.y, up.z, up.x);
-            camera.controller.lookAt(position, position.add(direction), up);
+            sfBayCV();
             break;
         case '3'.charCodeAt(0):
-            widget.sceneTransitioner.to3D();
-            position = new Cesium.Cartesian3(-2711464.1509439386, -4255314.2593585625, 3892009.8245821474);
-            direction = new Cesium.Cartesian3(0.705822742123692, -0.48284733621560527, -0.5183364801077429);
-            up = new Cesium.Cartesian3(-0.2257095701947508, -0.8468657216044324, 0.4815325944234253);
-            camera.controller.lookAt(position, position.add(direction), up);
+            sfBay3D();
             break;
         case 'F'.charCodeAt(0):
             cb._surface.debugToggleLodUpdate();
             break;
         case 'B'.charCodeAt(0):
-            var pickRay = camera.getPickRay(mousePosition);
+            var pickRay = camera.controller.getPickRay(mousePosition);
             var intersectionDistance = ellipsoidIntersections(ellipsoid, pickRay)[0];
             var intersectionPoint = pickRay.getPoint(intersectionDistance);
             var cartographicPick = ellipsoid.cartesianToCartographic(intersectionPoint);
@@ -152,18 +182,49 @@ require([
             console.log('var up = new Cesium.Cartesian3' + camera.getUpWC() + ';');
             break;
         case 'L'.charCodeAt(0):
-            position = new Cesium.Cartesian3(1235514.4818091553, -4996224.532789806, 3894637.0982041876);
-            direction = new Cesium.Cartesian3(-0.19142739361697755, 0.7741020071546907, -0.6034249211725352);
-            up = new Cesium.Cartesian3(-0.022861502949612936, 0.6111110780404753, 0.791214637111247);
-            camera.lookAt(position, position.add(direction), up);
+            chesapeakeBay();
             break;
         case 'C'.charCodeAt(0):
-            position = new Cesium.Cartesian3(-2154047.1693888847, -5129769.958774299, 3112753.0357638514);
-            direction = new Cesium.Cartesian3(-0.6303093658511963, -0.09320311457302291, -0.7707290592381483);
-            up = new Cesium.Cartesian3(-0.36365569382280133, -0.8416695313076181, 0.3991828358266927);
-            camera.lookAt(position, position.add(direction), up);
+            gulfOfCalifornia();
             break;
         }
+    }
+
+    function createButtons() {
+        var position, direction, up;
+        var camera = scene.getCamera();
+
+        new Button({
+            label: "SF Bay in Columbus View",
+            onClick: function() {
+                sfBayCV();
+                Sandcastle.highlight(sfBayCV);
+            }
+        }).placeAt('toolbar');
+
+        new Button({
+            label: "SF Bay on Globe",
+            onClick: function() {
+                sfBay3D();
+                Sandcastle.highlight(sfBay3D);
+            }
+        }).placeAt('toolbar');
+
+        new Button({
+            label: "Chesapeake Bay",
+            onClick: function() {
+                chesapeakeBay();
+                Sandcastle.highlight(chesapeakeBay);
+            }
+        }).placeAt('toolbar');
+
+        new Button({
+            label: "Gulf of California",
+            onClick: function() {
+                gulfOfCalifornia();
+                Sandcastle.highlight(gulfOfCalifornia);
+            }
+        }).placeAt('toolbar');
     }
 
     // Ask Dojo to parse URL configuration options
@@ -183,6 +244,7 @@ require([
     dom.byId('toolbar').innerHTML = '';
 
     scene = widget.scene;
+    camera = scene.getCamera();
     cb = scene.getPrimitives().getCentralBody();
 
     var terrainProvider = new Cesium.CesiumTerrainProvider({
@@ -213,8 +275,8 @@ require([
     }
     surface._levelZeroTiles = terrainProvider.tilingScheme.createLevelZeroTiles();*/
 
-    scene.getCamera().frustum.near = 10.0;
-    cb.affectedByLighting = false;
+    //scene.getCamera().frustum.near = 10.0;
+    //cb.affectedByLighting = false;
     
     /*var imageryLayerCollection = cb.getImageLayers();
     imageryLayerCollection.removeAll();
@@ -239,6 +301,8 @@ require([
         mousePosition = movement.endPosition;
         // Use movement.startPosition, movement.endPosition
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+    createButtons();
 });
 </script>
 </body>
