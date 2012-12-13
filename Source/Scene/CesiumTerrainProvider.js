@@ -174,45 +174,39 @@ define([
 
             var that = this;
             when(loadArrayBuffer(url), function(buffer) {
-
                 var geometry = new Uint16Array(buffer, 0, that.heightmapWidth * that.heightmapWidth);
                 tile.transientData = {
+                        isDownloaded : true,
                         geometry : geometry,
                         waterMask : new Uint8Array(buffer, geometry.byteLength + 1, buffer.byteLength - geometry.byteLength - 1)
                 };
 
                 tile.childTileBits = new Uint8Array(buffer, geometry.byteLength, 1)[0];
-                tile.waterMaskTranslationAndScale.x = 0.0;
-                tile.waterMaskTranslationAndScale.y = 0.0;
-                tile.waterMaskTranslationAndScale.z = 1.0;
-                tile.waterMaskTranslationAndScale.w = 1.0;
+                if (tile.childTileBits !== 0) {
+                    // If there is actual data for any children, reset their state so it gets loaded.
+                    if (typeof tile.children !== 'undefined') {
+                        for (var childIndex = 0, childLength = tile.children.length; childIndex < childLength; ++childIndex) {
+                            var childTile = tile.children[childIndex];
+                            childTile.state = TileState.UNLOADED;
+                            childTile.doneLoading = false;
+                        }
+                    }
+                }
 
                 --requestsInFlight;
                 tile.state = TileState.RECEIVED;
+                tile.doneLoading = false;
             }, function(e) {
-                /*global console*/
-                // This shouldn't happen in the absence of network problems.  Log it and then use 0 heights.
-                // TODO: retry?  use parent heights and water mask?
-                console.error('failed to load tile geometry: ' + e);
-
-                tile.transientData = {
-                        geometry : new Uint16Array(65 * 65),
-                        waterMask : new Uint8Array(1)
-                };
-
-                tile.childTileBits = 0;
-                tile.waterMaskTranslationAndScale.x = 0.0;
-                tile.waterMaskTranslationAndScale.y = 0.0;
-                tile.waterMaskTranslationAndScale.z = 1.0;
-                tile.waterMaskTranslationAndScale.w = 1.0;
+                // Do nothing - terrain has already been upsampled from the parent.
                 --requestsInFlight;
-                tile.state = TileState.RECEIVED;
             });
-        } else {
+        }
+
+        if (typeof parent !== 'undefined' && typeof tile.transientData !== 'undefined') {
             // Find the nearest ancestor with data.
             var levelDifference = 1;
             var sourceTile = parent;
-            while (typeof sourceTile.transientData === 'undefined' || typeof sourceTile.transientData.geometry === 'undefined') {
+            while (typeof sourceTile.transientData === 'undefined' || typeof sourceTile.transientData.geometry === 'undefined' || !sourceTile.transientData.isDownloaded) {
                 sourceTile = sourceTile.parent;
                 ++levelDifference;
             }
@@ -413,14 +407,11 @@ define([
             }
         }
 
-        // If data is not available for any of this tile's children, keep the
-        // raw geometry around because the no-data children will use it.
+        // Keep all downloaded tile data because child tiles will need to upsample it before
+        // their data is downloaded.
         var transfer = [];
-        if (tile.childTileBits === 15 || pixels.length !== this.heightmapWidth * this.heightmapWidth) {
+        if (!tile.transientData.isDownloaded) {
             transfer.push(pixels.buffer);
-
-            // TODO: remove this.  It's only here to help track down an intermittent bug.
-            tile.transferredBuffer = true;
         }
 
         var verticesPromise = taskProcessor.scheduleTask({
@@ -444,9 +435,22 @@ define([
             return;
         }
 
-        var that = this;
+        var wasDownloaded = tile.transientData.isDownloaded;
+
         when(verticesPromise, function(result) {
-            if (tile.childTileBits === 15 || pixels.length !== that.heightmapWidth * that.heightmapWidth) {
+            // If the data for this tile was previously not downloaded, but now
+            // downloaded data is available, ignore this callback because it contains
+            // results for the non-downloaded data, which we not longer care about.
+            if (wasDownloaded !== tile.transientData.isDownloaded) {
+                return;
+            }
+
+            if (tile.transientData.isDownloaded) {
+                tile.waterMaskTranslationAndScale.x = 0.0;
+                tile.waterMaskTranslationAndScale.y = 0.0;
+                tile.waterMaskTranslationAndScale.z = 1.0;
+                tile.waterMaskTranslationAndScale.w = 1.0;
+            } else {
                 tile.transientData = undefined;
             }
             tile.transformedGeometry = {
@@ -456,10 +460,6 @@ define([
             };
 
             tile.state = TileState.TRANSFORMED;
-        }, function(e) {
-            /*global console*/
-            console.error('failed to transform geometry: ' + e);
-            tile.state = TileState.FAILED;
         });
     };
 
