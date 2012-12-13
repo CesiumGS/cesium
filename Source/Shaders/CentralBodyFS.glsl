@@ -1,6 +1,8 @@
 //#define SHOW_TILE_BOUNDARIES
 //#define SHOW_TEXTURE_BOUNDARIES
 
+uniform float u_morphTime;
+
 #if TEXTURE_UNITS > 0
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
@@ -108,7 +110,13 @@ void main()
         vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
         vec3 normalEC = normalize(czm_normal3D * normalMC);                                           // normalized surface normal in eye coordiantes
         mat3 enuToEye = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalEC);
-        color = computeWaterColor(v_positionEC, czm_ellipsoidWgs84TextureCoordinates(normalMC), enuToEye, startDayColor, mask);
+
+        vec2 ellipsoidTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC);
+        vec2 ellipsoidFlippedTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC.zyx);
+
+        vec2 textureCoordinates = mix(ellipsoidTextureCoordinates, ellipsoidFlippedTextureCoordinates, u_morphTime * smoothstep(0.9, 0.95, normalMC.z));
+
+        color = computeWaterColor(v_positionEC, textureCoordinates, enuToEye, startDayColor, mask);
     }
 #endif
     
@@ -210,7 +218,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 #endif
 
     // Add specular highlights in 3D, and in all modes when zoomed in.
-    float specularIntensity = getSpecular(czm_sunDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0);
+    float specularIntensity = getSpecular(czm_sunDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0) + 0.25 * getSpecular(czm_moonDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0);
     float surfaceReflectance = mix(0.0, mix(u_zoomedOutOceanSpecularIntensity, oceanSpecularIntensity, waveIntensity), specularMapValue);
     float specular = specularIntensity * surfaceReflectance;
     
