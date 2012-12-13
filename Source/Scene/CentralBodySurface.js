@@ -788,10 +788,17 @@ define([
                 });
             }
 
-            var rtc2 = surface._debug.boundingSphereTile.center;
+            var tile = surface._debug.boundingSphereTile;
+            if (typeof tile.vertexArray === 'undefined') {
+                return;
+            }
+
+            var rtc2 = tile.center;
 
             var uniformMap2 = createTileUniformMap();
             mergeUniformMap(uniformMap2, centralBodyUniformMap);
+
+            uniformMap2.waterMask = tile.waterMaskTexture;
 
             uniformMap2.center3D = rtc2;
 
@@ -806,7 +813,7 @@ define([
             uniformMap2.dayTextureAlpha[0] = 1.0;
 
             var boundingSphereCommand = new DrawCommand();
-            boundingSphereCommand.shaderProgram = shaderSet.getShaderProgram(context, 1);
+            boundingSphereCommand.shaderProgram = shaderSet.getShaderProgram(context, 0);
             boundingSphereCommand.renderState = renderState;
             boundingSphereCommand.primitiveType = PrimitiveType.LINES;
             boundingSphereCommand.vertexArray = surface._debug.boundingSphereVA;
