@@ -6,17 +6,7 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Drag and drop CZML files onto the Cesium Viewer Widget to visualize time dynamic data.">
     <title>Cesium Demo</title>
-    <script>
-    var Sandcastle = {};
-    Sandcastle.declare = function () {};
-    Sandcastle.highlight = function () {};
-    Sandcastle.registered = [];
-    if (window.location.protocol === 'file:') {
-        if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
-            window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
-        }
-    }
-    </script>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
     <script type="text/javascript">
     require({
@@ -40,34 +30,33 @@
     <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
     <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
-<body class="claro">
+<body class="claro" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
-body {
-    background: #000;
-    color: #eee;
-    font-family: sans-serif;
-    font-size: 9pt;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-.fullSize {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    border: none;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-}
-#toolbar {
-    margin: 5px;
-    padding: 2px 5px;
-    position: absolute;
-}
+    body {
+        background: #000;
+        color: #eee;
+        font-family: sans-serif;
+        font-size: 9pt;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    .fullSize {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        border: none;
+        width: 100%;
+        height: 100%;
+    }
+    #toolbar {
+        margin: 5px;
+        padding: 2px 5px;
+        position: absolute;
+    }
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
@@ -85,7 +74,7 @@ require([
 
     var widget;
     var ellipsoid = Cesium.Ellipsoid.WGS84;
-    var scene; 
+    var scene;
     var cb;
     var mousePosition;
 
@@ -128,7 +117,7 @@ require([
     function keydownHandler(e) {
         var position, direction, up;
         var camera = scene.getCamera();
-        
+
         switch (e.keyCode) {
         case '2'.charCodeAt(0):
             widget.sceneTransitioner.toColumbusView();
@@ -151,7 +140,6 @@ require([
             cb._surface.debugToggleLodUpdate();
             break;
         case 'B'.charCodeAt(0):
-            var camera = scene.getCamera();
             var pickRay = camera.getPickRay(mousePosition);
             var intersectionDistance = ellipsoidIntersections(ellipsoid, pickRay)[0];
             var intersectionPoint = pickRay.getPoint(intersectionDistance);
@@ -159,23 +147,20 @@ require([
             cb._surface.debugShowBoundingSphereOfTileAt(cartographicPick);
             break;
         case 'V'.charCodeAt(0):
-            var camera = scene.getCamera();
-        	console.log('var position = new Cesium.Cartesian3' + camera.getPositionWC() + ';');
-        	console.log('var direction = new Cesium.Cartesian3' + camera.getDirectionWC() + ';');
-        	console.log('var up = new Cesium.Cartesian3' + camera.getUpWC() + ';');
+            console.log('var position = new Cesium.Cartesian3' + camera.getPositionWC() + ';');
+            console.log('var direction = new Cesium.Cartesian3' + camera.getDirectionWC() + ';');
+            console.log('var up = new Cesium.Cartesian3' + camera.getUpWC() + ';');
             break;
         case 'L'.charCodeAt(0):
-            var position = new Cesium.Cartesian3(1235514.4818091553, -4996224.532789806, 3894637.0982041876);
-            var direction = new Cesium.Cartesian3(-0.19142739361697755, 0.7741020071546907, -0.6034249211725352);
-            var up = new Cesium.Cartesian3(-0.022861502949612936, 0.6111110780404753, 0.791214637111247);
-        	var camera = scene.getCamera();
+            position = new Cesium.Cartesian3(1235514.4818091553, -4996224.532789806, 3894637.0982041876);
+            direction = new Cesium.Cartesian3(-0.19142739361697755, 0.7741020071546907, -0.6034249211725352);
+            up = new Cesium.Cartesian3(-0.022861502949612936, 0.6111110780404753, 0.791214637111247);
             camera.lookAt(position, position.add(direction), up);
             break;
         case 'C'.charCodeAt(0):
-            var position = new Cesium.Cartesian3(-2154047.1693888847, -5129769.958774299, 3112753.0357638514);
-            var direction = new Cesium.Cartesian3(-0.6303093658511963, -0.09320311457302291, -0.7707290592381483);
-            var up = new Cesium.Cartesian3(-0.36365569382280133, -0.8416695313076181, 0.3991828358266927);
-            var camera = scene.getCamera();
+            position = new Cesium.Cartesian3(-2154047.1693888847, -5129769.958774299, 3112753.0357638514);
+            direction = new Cesium.Cartesian3(-0.6303093658511963, -0.09320311457302291, -0.7707290592381483);
+            up = new Cesium.Cartesian3(-0.36365569382280133, -0.8416695313076181, 0.3991828358266927);
             camera.lookAt(position, position.add(direction), up);
             break;
         }
@@ -206,7 +191,7 @@ require([
     
     /*var terrainProvider = new Cesium.TileMapServiceTerrainProvider({
         url : 'http://cesium.agi.com/terrain'
-    });*/    
+    });*/
 
     cb._surface._terrainProvider = terrainProvider;
     
