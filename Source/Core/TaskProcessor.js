@@ -26,33 +26,33 @@ define([
         delete deferreds[id];
     }
 
-    var cesiumScriptRegex = /(.*\/?)Cesium\w*\.js(?:\W|$)/i;
+    var cesiumScriptRegex = /(.*?)Cesium\w*\.js(?:\W|$)/i;
     var bootstrapperScript = 'cesiumWorkerBootstrapper.js';
     var bootstrapperUrl;
     function getBootstrapperUrl() {
         /*global CESIUM_BASE_URL*/
-        if (typeof bootstrapperUrl === 'undefined') {
-            if (typeof CESIUM_BASE_URL !== 'undefined') {
-                bootstrapperUrl = CESIUM_BASE_URL + '/' + bootstrapperScript;
-            } else if (typeof require.toUrl !== 'undefined') {
-                bootstrapperUrl = require.toUrl('../Workers/' + bootstrapperScript);
-            } else {
-                var scripts = document.getElementsByTagName('script');
-                for ( var i = 0, len = scripts.length; i < len; ++i) {
-                    var src = scripts[i].getAttribute('src');
-                    var result = cesiumScriptRegex.exec(src);
-                    if (result !== null) {
-                        bootstrapperUrl = result[1] + bootstrapperScript;
-                        break;
-                    }
-                }
-                if (typeof bootstrapperUrl === 'undefined') {
-                    throw new DeveloperError('Unable to determine Cesium base URL automatically, try defining a global variable called CESIUM_BASE_URL.');
-                }
+        if (typeof bootstrapperUrl !== 'undefined') {
+            return bootstrapperUrl;
+        }
+
+        if (typeof CESIUM_BASE_URL !== 'undefined') {
+            return (bootstrapperUrl = CESIUM_BASE_URL + '/' + bootstrapperScript);
+        }
+
+        if (typeof require.toUrl !== 'undefined') {
+            return (bootstrapperUrl = require.toUrl('../Workers/' + bootstrapperScript));
+        }
+
+        var scripts = document.getElementsByTagName('script');
+        for ( var i = 0, len = scripts.length; i < len; ++i) {
+            var src = scripts[i].getAttribute('src');
+            var result = cesiumScriptRegex.exec(src);
+            if (result !== null) {
+                return (bootstrapperUrl = result[1] + bootstrapperScript);
             }
         }
 
-        return bootstrapperUrl;
+        throw new DeveloperError('Unable to determine Cesium base URL automatically, try defining a global variable called CESIUM_BASE_URL.');
     }
 
     function createWorker(processor) {
