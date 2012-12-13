@@ -492,8 +492,8 @@ define([
         }
 
         var partialDuration = (endTime - startTime) * duration;
-        if (partialDuration === 0) {
-            if (Cartesian2.magnitude(Cartesian2.subtract(startPos, endPos2D)) !== 0) {
+        if (partialDuration < CesiumMath.EPSILON6) {
+            if (!startPos.equalsEpsilon(endPos2D, CesiumMath.EPSILON6)) {
                 partialDuration = duration;
                 startTime = 0.0;
                 endTime = 1.0;
