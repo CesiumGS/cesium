@@ -102,4 +102,41 @@ defineSuite(['Core/Color'], function(Color) {
         expect(Color.BLUE.toCSSColor()).toEqual('rgba(0,0,255,1)');
         expect(new Color(0.1, 0.2, 0.3, 0.4).toCSSColor()).toEqual('rgba(25,51,76,0.4)');
     });
+
+    it('fromCSSColor supports the #rgb format', function() {
+        expect(Color.WHITE.equals(Color.fromCSSColor('#fFf'))).toBe(true);
+        expect(Color.RED.equals(Color.fromCSSColor('#F00'))).toBe(true);
+        expect(Color.BLUE.equals(Color.fromCSSColor('#00f'))).toBe(true);
+        expect(new Color(1.0/15, 2.0/15, 3.0/15).equalsEpsilon(Color.fromCSSColor('#123'), 1/30)).toBe(true);
+    });
+
+    it('fromCSSColor supports the #rrggbb format', function() {
+        expect(Color.WHITE.equals(Color.fromCSSColor('#ffFFff'))).toBe(true);
+        expect(Color.RED.equals(Color.fromCSSColor('#Ff0000'))).toBe(true);
+        expect(Color.BLUE.equals(Color.fromCSSColor('#0000ff'))).toBe(true);
+        expect(new Color(1.0/255, 2.0/255, 3.0/255).equalsEpsilon(Color.fromCSSColor('#010203'), 1/510)).toBe(true);
+    });
+
+    it('fromCSSColor supports the rgb() format', function() {
+        expect(Color.WHITE.equals(Color.fromCSSColor('rgb(255, 100%, 255)'))).toBe(true);
+        expect(Color.RED.equals(Color.fromCSSColor('rgb(255, 0, 0)'))).toBe(true);
+        expect(Color.BLUE.equals(Color.fromCSSColor('rgb(0, 0, 255)'))).toBe(true);
+        expect(new Color(1.0, 0.5, 0.25).equalsEpsilon(Color.fromCSSColor('rgb(255, 50%, 25%)'), 1/510)).toBe(true);
+    });
+
+    it('fromCSSColor supports the rgba() format', function() {
+        expect(Color.WHITE.equals(Color.fromCSSColor('rgba(255, 100%, 255, 1)'))).toBe(true);
+        expect(Color.RED.equals(Color.fromCSSColor('rgba(255, 0, 0, 1)'))).toBe(true);
+        expect(Color.BLUE.equals(Color.fromCSSColor('rgba(0, 0, 255, 1)'))).toBe(true);
+        expect(new Color(1.0, 0.5, 0.25, 0.5).equalsEpsilon(Color.fromCSSColor('rgb(255, 50%, 25%, 0.5)'), 1/510)).toBe(true);
+    });
+
+    it('fromCSSColor does not support named colors', function() {
+        expect(function() { Color.fromCSSColor('red'); }).toThrow();
+    });
+
+    it('fromCSSColor does not support hsl/hsla formats', function() {
+        expect(function() { Color.fromCSSColor('hsl(0, 10%, 10%)'); }).toThrow();
+        expect(function() { Color.fromCSSColor('hsla(0, 10%, 10%, 0.5)'); }).toThrow();
+    });
 });
