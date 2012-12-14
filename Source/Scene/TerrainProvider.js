@@ -42,8 +42,8 @@ define([
      */
     TerrainProvider.attributeIndices = {
         position3D : 0,
-        textureCoordinates : 1,
-        waterMask : 2
+        height : 1,
+        textureCoordinates : 2
     };
 
     TerrainProvider.wireframe = false;
@@ -109,15 +109,11 @@ define([
         return lines;
     }
 
-    TerrainProvider.createTileEllipsoidGeometryFromBuffers = function(context, tile, buffers, includesWaterMask) {
+    TerrainProvider.createTileEllipsoidGeometryFromBuffers = function(context, tile, buffers) {
         var datatype = ComponentDatatype.FLOAT;
         var typedArray = buffers.vertices;
         var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
-        var stride = 5 * datatype.sizeInBytes;
-
-        if (includesWaterMask) {
-            stride += datatype.sizeInBytes;
-        }
+        var stride = 6 * datatype.sizeInBytes;
 
         var attributes = [{
             index : TerrainProvider.attributeIndices.position3D,
@@ -127,32 +123,20 @@ define([
             offsetInBytes : 0,
             strideInBytes : stride
         }, {
+            index : TerrainProvider.attributeIndices.height,
+            vertexBuffer : buffer,
+            componentDatatype : datatype,
+            componentsPerAttribute : 1,
+            offsetInBytes : 3 * datatype.sizeInBytes,
+            strideInBytes : stride
+        }, {
             index : TerrainProvider.attributeIndices.textureCoordinates,
             vertexBuffer : buffer,
             componentDatatype : datatype,
             componentsPerAttribute : 2,
-            offsetInBytes : 3 * datatype.sizeInBytes,
+            offsetInBytes : 4 * datatype.sizeInBytes,
             strideInBytes : stride
         }];
-
-
-        if (includesWaterMask) {
-            attributes.push({
-                index : TerrainProvider.attributeIndices.waterMask,
-                vertexBuffer : buffer,
-                componentDatatype : datatype,
-                componentsPerAttribute : 1,
-                offsetInBytes : 5 * datatype.sizeInBytes,
-                strideInBytes : stride
-            });
-        } else {
-            attributes.push({
-                index : TerrainProvider.attributeIndices.waterMask,
-                value : [0.0],
-                componentDatatype : datatype,
-                componentsPerAttribute : 1
-            });
-        }
 
         var indexBuffers = buffers.indices.indexBuffers || {};
         var indexBuffer = indexBuffers[context.getId()];

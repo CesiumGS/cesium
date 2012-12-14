@@ -214,7 +214,8 @@ define([
 
     var attributeIndices = {
         position3D : 0,
-        textureCoordinates : 1
+        height : 1,
+        textureCoordinates : 2
     };
 
     /**
@@ -480,7 +481,7 @@ define([
 
         if (this._mode !== mode || typeof this._rsColor === 'undefined') {
             modeChanged = true;
-            if (mode === SceneMode.SCENE3D) {
+            if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
                 this._rsColor = context.createRenderState({ // Write color and depth
                     cull : {
                         enabled : true

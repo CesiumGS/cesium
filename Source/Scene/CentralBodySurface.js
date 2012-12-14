@@ -481,8 +481,8 @@ define([
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
-            BoundingSphere.fromExtent2D(tile.extent, frameState.scene2D.projection, boundingVolume);
-            boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
+            BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minHeight, tile.maxHeight, boundingVolume);
+            boundingVolume.center = new Cartesian3(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y);
 
             if (frameState.mode === SceneMode.MORPHING) {
                 boundingVolume = BoundingSphere.union(tile.boundingSphere3D, boundingVolume, boundingVolume);
@@ -1086,7 +1086,7 @@ define([
                     if (frameState.mode !== SceneMode.SCENE3D) {
                         // TODO: If we show terrain heights in Columbus View, the bounding sphere
                         //       needs to be expanded to include the heights.
-                        boundingVolume = BoundingSphere.fromExtent2D(tile.extent, frameState.scene2D.projection);
+                        boundingVolume = BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minHeight, tile.maxHeight);
                         boundingVolume.center = new Cartesian3(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y);
 
                         if (frameState.mode === SceneMode.MORPHING) {

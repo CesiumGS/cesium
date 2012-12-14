@@ -1,4 +1,5 @@
 attribute vec3 position3D;
+attribute float height;
 attribute vec2 textureCoordinates;
 
 uniform float u_morphTime;
@@ -54,16 +55,21 @@ float get2DGeographicYPositionFraction()
     return textureCoordinates.y;
 }
 
-vec4 getPosition2DMode(vec3 position3DWC)
+vec4 getPositionPlanarEarth(vec3 position3DWC, float height2D)
 {
     float yPositionFraction = get2DYPositionFraction();
-    vec4 rtcPosition2D = vec4(0.0, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);  
+    vec4 rtcPosition2D = vec4(height2D, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);  
     return czm_projection * (u_modifiedModelView * rtcPosition2D);
+}
+
+vec4 getPosition2DMode(vec3 position3DWC)
+{
+    return getPositionPlanarEarth(position3DWC, 0.0);
 }
 
 vec4 getPositionColumbusViewMode(vec3 position3DWC)
 {
-    return getPosition2DMode(position3DWC);
+    return getPositionPlanarEarth(position3DWC, height);
 }
 
 vec4 getPositionMorphingMode(vec3 position3DWC)

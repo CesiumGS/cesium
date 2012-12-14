@@ -69,6 +69,7 @@ define([
         var granularityY = (extent.north - extent.south) / (height - 1);
         var generateTextureCoordinates = description.generateTextureCoordinates;
         var interleaveTextureCoordinates = description.interleaveTextureCoordinates;
+        var includeHeightsInVertexData = description.includeHeightsInVertexData;
         var relativeToCenter = description.relativeToCenter;
         var isGeographic = description.isGeographic;
         var voidIndicator = defaultValue(description.voidIndicator, -32768);
@@ -208,6 +209,10 @@ define([
                 vertices[vertexArrayIndex++] = rSurfaceX + nX * heightSample - relativeToCenter.x;
                 vertices[vertexArrayIndex++] = rSurfaceY + nY * heightSample - relativeToCenter.y;
                 vertices[vertexArrayIndex++] = rSurfaceZ + nZ * heightSample - relativeToCenter.z;
+
+                if (includeHeightsInVertexData) {
+                    vertices[vertexArrayIndex++] = heightSample;
+                }
 
                 if (generateTextureCoordinates) {
                     var u = (longitude - geographicWest) / (geographicEast - geographicWest);

@@ -111,6 +111,12 @@ define([
         this.center = undefined;
 
         /**
+         * The minimum height of terrain in this tile, in meters above the ellipsoid.
+         * @type Number
+         */
+        this.minHeight = 0.0;
+
+        /**
          * The maximum height of terrain in this tile, in meters above the ellipsoid.
          * @type Number
          */
