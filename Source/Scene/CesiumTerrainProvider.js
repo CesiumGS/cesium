@@ -202,7 +202,7 @@ define([
             });
         }
 
-        if (typeof parent !== 'undefined' && typeof tile.transientData !== 'undefined') {
+        if (typeof parent !== 'undefined' && typeof tile.transientData === 'undefined') {
             // Find the nearest ancestor with data.
             var levelDifference = 1;
             var sourceTile = parent;
@@ -299,6 +299,7 @@ define([
             }
 
             tile.transientData = {
+                    isDownloaded : false,
                     geometry : heights,
                     waterMask : undefined
             };
@@ -307,6 +308,7 @@ define([
 
             // Use the source tile's water mask texture.
             tile.waterMaskTexture = sourceTile.waterMaskTexture;
+            ++tile.waterMaskTexture.referenceCount;
 
             // Compute the water mask translation and scale
             var sourceTileExtent = sourceTile.extent;
@@ -353,7 +355,6 @@ define([
         var pixels = tile.transientData.geometry;
         var width = Math.sqrt(pixels.length) | 0;
         var height = width;
-        var waterMask = tile.transientData.waterMask;
 
         var tilingScheme = this.tilingScheme;
         var ellipsoid = tilingScheme.getEllipsoid();
@@ -361,57 +362,11 @@ define([
 
         tile.center = ellipsoid.cartographicToCartesian(tile.extent.getCenter());
 
-        if (typeof tile.waterMaskTexture === 'undefined') {
-            var waterMaskSize = Math.sqrt(waterMask.length);
-            if (waterMaskSize === 1 && (waterMask[0] === 0 || waterMask[0] === 255)) {
-                // Tile is entirely land or entirely water.
-                if (typeof this._allWaterTexture === 'undefined') {
-                    this._allWaterTexture = context.createTexture2D({
-                        pixelFormat : PixelFormat.LUMINANCE,
-                        pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-                        source : {
-                            arrayBufferView : new Uint8Array([255]),
-                            width : 1,
-                            height : 1
-                        }
-                    });
-                    this._allWaterTexture.doNotDestroy = true;
-                    this._allLandTexture = context.createTexture2D({
-                        pixelFormat : PixelFormat.LUMINANCE,
-                        pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-                        source : {
-                            arrayBufferView : new Uint8Array([0]),
-                            width : 1,
-                            height : 1
-                        }
-                    });
-                    this._allLandTexture.doNotDestroy = true;
-                }
-                tile.waterMaskTexture = waterMask[0] === 0 ? this._allLandTexture : this._allWaterTexture;
-            } else {
-                tile.waterMaskTexture = context.createTexture2D({
-                    pixelFormat : PixelFormat.LUMINANCE,
-                    pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-                    source : {
-                        width : waterMaskSize,
-                        height : waterMaskSize,
-                        arrayBufferView : waterMask
-                    }
-                });
-                tile.waterMaskTexture.setSampler({
-                    wrapS : TextureWrap.CLAMP,
-                    wrapT : TextureWrap.CLAMP,
-                    minificationFilter : TextureMinificationFilter.LINEAR,
-                    magnificationFilter : TextureMagnificationFilter.LINEAR
-                });
-            }
-        }
-
         // Keep all downloaded tile data because child tiles will need to upsample it before
         // their data is downloaded.
         var transfer = [];
         if (!tile.transientData.isDownloaded) {
-            transfer.push(pixels.buffer);
+            //transfer.push(pixels.buffer);
         }
 
         var verticesPromise = taskProcessor.scheduleTask({
@@ -440,7 +395,7 @@ define([
         when(verticesPromise, function(result) {
             // If the data for this tile was previously not downloaded, but now
             // downloaded data is available, ignore this callback because it contains
-            // results for the non-downloaded data, which we not longer care about.
+            // results for the non-downloaded data, which we no longer care about.
             if (wasDownloaded !== tile.transientData.isDownloaded) {
                 return;
             }
@@ -451,7 +406,7 @@ define([
                 tile.waterMaskTranslationAndScale.z = 1.0;
                 tile.waterMaskTranslationAndScale.w = 1.0;
             } else {
-                tile.transientData = undefined;
+                //tile.transientData = undefined;
             }
             tile.transformedGeometry = {
                 vertices : result.vertices,
@@ -477,6 +432,56 @@ define([
     CesiumTerrainProvider.prototype.createResources = function(context, tile) {
         var buffers = tile.transformedGeometry;
         tile.transformedGeometry = undefined;
+
+        var waterMask = tile.transientData.waterMask;
+
+        if (tile.transientData.isDownloaded) {
+            var waterMaskSize = Math.sqrt(waterMask.length);
+            if (waterMaskSize === 1 && (waterMask[0] === 0 || waterMask[0] === 255)) {
+                // Tile is entirely land or entirely water.
+                if (typeof this._allWaterTexture === 'undefined') {
+                    this._allWaterTexture = context.createTexture2D({
+                        pixelFormat : PixelFormat.LUMINANCE,
+                        pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                        source : {
+                            arrayBufferView : new Uint8Array([255]),
+                            width : 1,
+                            height : 1
+                        }
+                    });
+                    this._allWaterTexture.referenceCount = 1;
+                    this._allLandTexture = context.createTexture2D({
+                        pixelFormat : PixelFormat.LUMINANCE,
+                        pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                        source : {
+                            arrayBufferView : new Uint8Array([0]),
+                            width : 1,
+                            height : 1
+                        }
+                    });
+                    this._allLandTexture.referenceCount = 1;
+                }
+                tile.waterMaskTexture = waterMask[0] === 0 ? this._allLandTexture : this._allWaterTexture;
+                ++tile.waterMaskTexture.referenceCount;
+            } else {
+                tile.waterMaskTexture = context.createTexture2D({
+                    pixelFormat : PixelFormat.LUMINANCE,
+                    pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                    source : {
+                        width : waterMaskSize,
+                        height : waterMaskSize,
+                        arrayBufferView : waterMask
+                    }
+                });
+                tile.waterMaskTexture.referenceCount = 1;
+                tile.waterMaskTexture.setSampler({
+                    wrapS : TextureWrap.CLAMP,
+                    wrapT : TextureWrap.CLAMP,
+                    minificationFilter : TextureMinificationFilter.LINEAR,
+                    magnificationFilter : TextureMagnificationFilter.LINEAR
+                });
+            }
+        }
 
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
         tile.maxHeight = buffers.statistics.maxHeight;
