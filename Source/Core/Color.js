@@ -197,32 +197,32 @@ define([
         var matches;
 
         if (null !== (matches = /^#([0-9a-z])([0-9a-z])([0-9a-z])$/i.exec(color))) {
-          return new Color(
-              parseInt(matches[1], 16) / 15.0,
-              parseInt(matches[2], 16) / 15.0,
-              parseInt(matches[3], 16) / 15.0
-          );
+            return new Color(
+                parseInt(matches[1], 16) / 15.0,
+                parseInt(matches[2], 16) / 15.0,
+                parseInt(matches[3], 16) / 15.0
+            );
         }
 
         if (null !== (matches = /^#([0-9a-z]{2})([0-9a-z]{2})([0-9a-z]{2})$/i.exec(color))) {
-          return new Color(
-              parseInt(matches[1], 16) / 255.0,
-              parseInt(matches[2], 16) / 255.0,
-              parseInt(matches[3], 16) / 255.0
-          );
+            return new Color(
+                parseInt(matches[1], 16) / 255.0,
+                parseInt(matches[2], 16) / 255.0,
+                parseInt(matches[3], 16) / 255.0
+            );
         }
 
         if (null !== (matches = /^rgba?\(([0-9.]+%?),([0-9.]+%?),([0-9.]+%?)(?:,([0-9.]+))?\)$/i.exec(color.replace(/\s/g, '')))) {
-          return new Color(
-              parseFloat(matches[1], 10) / ('%' === matches[1].substr(-1) ? 100.0 : 255.0),
-              parseFloat(matches[2], 10) / ('%' === matches[2].substr(-1) ? 100.0 : 255.0),
-              parseFloat(matches[3], 10) / ('%' === matches[3].substr(-1) ? 100.0 : 255.0),
-              parseFloat(defaultValue(matches[4], '1.0'))
-          );
+            return new Color(
+                parseFloat(matches[1], 10) / ('%' === matches[1].substr(-1) ? 100.0 : 255.0),
+                parseFloat(matches[2], 10) / ('%' === matches[2].substr(-1) ? 100.0 : 255.0),
+                parseFloat(matches[3], 10) / ('%' === matches[3].substr(-1) ? 100.0 : 255.0),
+                parseFloat(defaultValue(matches[4], '1.0'))
+            );
         }
 
         throw new DeveloperError('unsupported CSS color value: ' + color);
-    }
+    };
 
     /**
      * An immutable Color instance initialized to white, RGBA (1.0, 1.0, 1.0, 1.0).
