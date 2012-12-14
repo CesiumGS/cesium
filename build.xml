@@ -177,6 +177,10 @@
 			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. name=${relativeAlmondPath} include=Workers/createVerticesFromExtent out=${relativeCombineOutputDirectory}\createVerticesFromExtent.js" />
 		</exec>
 
+		<exec executable="${nodePath}" dir="${sourceDirectory}">
+			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. name=${relativeAlmondPath} include=Workers/createVerticesFromHeightmap out=${relativeCombineOutputDirectory}\createVerticesFromHeightmap.js" />
+		</exec>
+
 		<copy todir="${buildDirectory}">
 			<fileset dir="${combineOutputDirectory}" includes="*.js" />
 			<filterchain>
