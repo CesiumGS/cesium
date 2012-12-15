@@ -133,8 +133,7 @@ define(['./DeveloperError'], function(DeveloperError) {
 
             while (cursor < maximumIndexPlusOne) {
                 if (vertices[cursor].numLiveTriangles > 0) {
-                    ++cursor;
-                    return cursor - 1;
+                    return cursor;
                 }
                 ++cursor;
             }
@@ -211,17 +210,15 @@ define(['./DeveloperError'], function(DeveloperError) {
                 vertexTriangles : []
             };
         }
-        currentIndex = 0;
-        var triangle = 0;
-        while (currentIndex < endIndex) {
+
+        var triangle;
+        for (currentIndex = 0, triangle = 0; currentIndex < endIndex; ++triangle, currentIndex += 3) {
             (vertices[indices[currentIndex]]).vertexTriangles.push(triangle);
             ++(vertices[indices[currentIndex]]).numLiveTriangles;
             (vertices[indices[currentIndex + 1]]).vertexTriangles.push(triangle);
             ++(vertices[indices[currentIndex + 1]]).numLiveTriangles;
             (vertices[indices[currentIndex + 2]]).vertexTriangles.push(triangle);
             ++(vertices[indices[currentIndex + 2]]).numLiveTriangles;
-            ++triangle;
-            currentIndex += 3;
         }
 
         // Starting index

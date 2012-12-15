@@ -186,11 +186,11 @@ define([
 
         var xTileWidth = (this._extentNortheastInMeters.x - this._extentSouthwestInMeters.x) / xTiles;
         var west = this._extentSouthwestInMeters.x + x * xTileWidth;
-        var east = this._extentSouthwestInMeters.x + (x + 1) * xTileWidth;
+        var east = west + xTileWidth;
 
         var yTileHeight = (this._extentNortheastInMeters.y - this._extentSouthwestInMeters.y) / yTiles;
         var north = this._extentNortheastInMeters.y - y * yTileHeight;
-        var south = this._extentNortheastInMeters.y - (y + 1) * yTileHeight;
+        var south = north - yTileHeight;
 
         if (typeof result === 'undefined') {
             return new Extent(west, south, east, north);
