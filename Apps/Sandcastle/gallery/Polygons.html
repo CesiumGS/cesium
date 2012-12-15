@@ -87,22 +87,22 @@ require([
             Cesium.Cartographic.fromDegrees(-68.0, 40.0)
         ]));
         primitives.add(polygon);
-        
+
         // Create a nested polygon with holes
         var polygonHierarchy = new Cesium.Polygon();
         Sandcastle.declare(polygonHierarchy);   // For highlighting on mouseover in Sandcastle.
         var hierarchy = {
                 positions: ellipsoid.cartographicArrayToCartesianArray([
-                new Cesium.Cartographic.fromDegrees(-109.0, 30.0, 0.0), new Cesium.Cartographic.fromDegrees(-95.0, 30.0, 0.0), new Cesium.Cartographic.fromDegrees(-95.0, 40.0, 0.0), new Cesium.Cartographic.fromDegrees(-109.0, 40.0, 0.0)]),
+                Cesium.Cartographic.fromDegrees(-109.0, 30.0, 0.0), Cesium.Cartographic.fromDegrees(-95.0, 30.0, 0.0), Cesium.Cartographic.fromDegrees(-95.0, 40.0, 0.0), Cesium.Cartographic.fromDegrees(-109.0, 40.0, 0.0)]),
                 holes: [{
                     positions: ellipsoid.cartographicArrayToCartesianArray([
-                    new Cesium.Cartographic.fromDegrees(-107.0, 31.0, 0.0), new Cesium.Cartographic.fromDegrees(-107.0, 39.0, 0.0), new Cesium.Cartographic.fromDegrees(-97.0, 39.0, 0.0), new Cesium.Cartographic.fromDegrees(-97.0, 31.0, 0.0)]),
+                    Cesium.Cartographic.fromDegrees(-107.0, 39.0, 0.0), Cesium.Cartographic.fromDegrees(-97.0, 39.0, 0.0), Cesium.Cartographic.fromDegrees(-97.0, 31.0, 0.0)]),
                     holes: [{
                         positions: ellipsoid.cartographicArrayToCartesianArray([
-                        new Cesium.Cartographic.fromDegrees(-105.0, 33.0, 0.0), new Cesium.Cartographic.fromDegrees(-99.0, 33.0, 0.0), new Cesium.Cartographic.fromDegrees(-99.0, 37.0, 0.0), new Cesium.Cartographic.fromDegrees(-105.0, 37.0, 0.0)]),
+                        Cesium.Cartographic.fromDegrees(-105.0, 33.0, 0.0), Cesium.Cartographic.fromDegrees(-99.0, 33.0, 0.0), Cesium.Cartographic.fromDegrees(-99.0, 37.0, 0.0), Cesium.Cartographic.fromDegrees(-105.0, 37.0, 0.0)]),
                         holes: [{
                             positions: ellipsoid.cartographicArrayToCartesianArray([
-                            new Cesium.Cartographic.fromDegrees(-103.0, 34.0, 0.0), new Cesium.Cartographic.fromDegrees(-101.0, 34.0, 0.0), new Cesium.Cartographic.fromDegrees(-101.0, 36.0, 0.0), new Cesium.Cartographic.fromDegrees(-103.0, 36.0, 0.0)])
+                            Cesium.Cartographic.fromDegrees(-103.0, 34.0, 0.0), Cesium.Cartographic.fromDegrees(-101.0, 34.0, 0.0), Cesium.Cartographic.fromDegrees(-101.0, 36.0, 0.0), Cesium.Cartographic.fromDegrees(-103.0, 36.0, 0.0)])
                         }]
                     }]
                 }]
@@ -111,14 +111,14 @@ require([
         polygonHierarchy.material.uniforms.color = new Cesium.Color(0.0, 1.0, 1.0, 0.75);
         polygonHierarchy.configureFromPolygonHierarchy(hierarchy);
         primitives.add(polygonHierarchy);
-        
+
         // Create a polygon from an extent
         var polygonExtent = new Cesium.Polygon();
         Sandcastle.declare(polygonExtent);  // For highlighting on mouseover in Sandcastle.
         polygonExtent.configureExtent(new Cesium.Extent(
         Cesium.Math.toRadians(-180.0), Cesium.Math.toRadians(50.0), Cesium.Math.toRadians(180.0), Cesium.Math.toRadians(90.0)));
         primitives.add(polygonExtent);
-        
+
         // Apply a material to a polygon
         var checkeredPolygon = new Cesium.Polygon();
         Sandcastle.declare(checkeredPolygon);   // For highlighting on mouseover in Sandcastle.
