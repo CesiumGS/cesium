@@ -83,8 +83,8 @@ define([
         var vertexArrayIndex = 0;
         var textureCoordinatesIndex = 0;
 
-        for ( var row = 0; row < height; ++row) {
-            var latitude = extent.north - granularityY * row;
+        var latitude = extent.north;
+        for ( var row = 0; row < height; ++row, latitude -= granularityY) {
             var cosLatitude = cos(latitude);
             var nZ = sin(latitude);
             var kZ = radiiSquaredZ * nZ;
@@ -93,8 +93,8 @@ define([
 
             var v = geographicV;
 
-            for ( var col = 0; col < width; ++col) {
-                var longitude = extent.west + granularityX * col;
+            var longitude = extent.west;
+            for ( var col = 0; col < width; ++col, longitude += granularityX) {
 
                 var nX = cosLatitude * cos(longitude);
                 var nY = cosLatitude * sin(longitude);
@@ -131,8 +131,8 @@ define([
         if (typeof indices !== 'undefined') {
             var index = 0;
             var indicesIndex = 0;
-            for ( var i = 0; i < height - 1; ++i) {
-                for ( var j = 0; j < width - 1; ++j) {
+            for ( var i = 0; i < height - 1; ++i, ++index) {
+                for ( var j = 0; j < width - 1; ++j, ++index) {
                     var upperLeft = index;
                     var lowerLeft = upperLeft + width;
                     var lowerRight = lowerLeft + 1;
@@ -144,10 +144,7 @@ define([
                     indices[indicesIndex++] = upperRight;
                     indices[indicesIndex++] = lowerLeft;
                     indices[indicesIndex++] = lowerRight;
-
-                    ++index;
                 }
-                ++index;
             }
         }
     };

@@ -171,7 +171,9 @@ define([
     CesiumMath.sign = function(value) {
         if (value > 0) {
             return 1;
-        } else if (value < 0) {
+        }
+
+        if (value < 0) {
             return -1;
         }
 
@@ -375,11 +377,15 @@ define([
         var twoPi = CesiumMath.TWO_PI;
 
         var simplified = angle - Math.floor(angle / twoPi) * twoPi;
+
         if (simplified < -Math.PI) {
-            simplified += twoPi;
-        } else if (simplified >= Math.PI) {
-            simplified -= twoPi;
+            return simplified + twoPi;
         }
+
+        if (simplified >= Math.PI) {
+            return simplified - twoPi;
+        }
+
         return simplified;
     };
 

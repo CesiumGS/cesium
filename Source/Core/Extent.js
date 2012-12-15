@@ -351,8 +351,8 @@ define([
             lla.latitude = 0.0;
         }
 
-        for ( var i = 1; i < 8; ++i) {
-            var temp = -Math.PI + i * CesiumMath.PI_OVER_TWO;
+        var temp = -CesiumMath.PI_OVER_TWO;
+        for ( var i = 1; i < 8; ++i, temp += CesiumMath.PI_OVER_TWO) {
             if (west < temp && temp < east) {
                 lla.longitude = temp;
                 result[length] = ellipsoid.cartographicToCartesian(lla, result[length]);
