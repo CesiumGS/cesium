@@ -159,3 +159,15 @@
     border: 1px solid #EA0;
     box-shadow: 0 0 5px rgba(255, 170, 42, 1);
 }
+
+.cw-loading {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-position:center;
+    background-repeat: no-repeat;
+    background-image: url(../Images/ajax-loader.gif);
+}
