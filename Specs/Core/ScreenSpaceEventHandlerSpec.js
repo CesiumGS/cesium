@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
          'Core/ScreenSpaceEventHandler',
-         'Core/EventModifier',
+         'Core/KeyboardEventModifier',
          'Core/ScreenSpaceEventType',
          'Core/Cartesian2'
      ], function(
          ScreenSpaceEventHandler,
-         EventModifier,
+         KeyboardEventModifier,
          ScreenSpaceEventType,
          Cartesian2) {
     "use strict";
@@ -573,7 +573,7 @@ defineSuite([
             actualCoords = event.position.clone();
         };
 
-        handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_DOWN, EventModifier.SHIFT);
+        handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_DOWN, KeyboardEventModifier.SHIFT);
         element.fireEvents('mousedown', {
             button : 2,
             clientX : 1,
@@ -582,9 +582,9 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getInputAction(ScreenSpaceEventType.RIGHT_DOWN, EventModifier.SHIFT) === mouseDown).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.RIGHT_DOWN, KeyboardEventModifier.SHIFT) === mouseDown).toEqual(true);
 
-        handler.removeInputAction(ScreenSpaceEventType.RIGHT_DOWN, EventModifier.SHIFT);
+        handler.removeInputAction(ScreenSpaceEventType.RIGHT_DOWN, KeyboardEventModifier.SHIFT);
         element.fireEvents('mousedown', {
             button : 2,
             clientX : 2,
@@ -603,7 +603,7 @@ defineSuite([
             actualCoords = event.position.clone();
         };
 
-        handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_UP, EventModifier.SHIFT);
+        handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_UP, KeyboardEventModifier.SHIFT);
         element.fireEvents('mouseup', {
             button : 2,
             clientX : 1,
@@ -612,9 +612,9 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getInputAction(ScreenSpaceEventType.RIGHT_UP, EventModifier.SHIFT) === mouseDown).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.RIGHT_UP, KeyboardEventModifier.SHIFT) === mouseDown).toEqual(true);
 
-        handler.removeInputAction(ScreenSpaceEventType.RIGHT_UP, EventModifier.SHIFT);
+        handler.removeInputAction(ScreenSpaceEventType.RIGHT_UP, KeyboardEventModifier.SHIFT);
         element.fireEvents('mousedown', {
             button : 2,
             clientX : 2,
@@ -633,7 +633,7 @@ defineSuite([
             actualCoords = event.position.clone();
         };
 
-        handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_CLICK, EventModifier.SHIFT);
+        handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_CLICK, KeyboardEventModifier.SHIFT);
         element.fireEvents('mousedown', {
             button : 2,
             clientX : 1,
@@ -648,9 +648,9 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getInputAction(ScreenSpaceEventType.RIGHT_CLICK, EventModifier.SHIFT) === mouseDown).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.RIGHT_CLICK, KeyboardEventModifier.SHIFT) === mouseDown).toEqual(true);
 
-        handler.removeInputAction(ScreenSpaceEventType.RIGHT_CLICK, EventModifier.SHIFT);
+        handler.removeInputAction(ScreenSpaceEventType.RIGHT_CLICK, KeyboardEventModifier.SHIFT);
         element.fireEvents('mousedown', {
             button : 2,
             clientX : 2,
@@ -675,7 +675,7 @@ defineSuite([
             actualCoords = event.position.clone();
         };
 
-        handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_DOWN, EventModifier.ALT);
+        handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_DOWN, KeyboardEventModifier.ALT);
         element.fireEvents('mousedown', {
             button : 0,
             clientX : 1,
@@ -684,9 +684,9 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getInputAction(ScreenSpaceEventType.LEFT_DOWN, EventModifier.ALT) === mouseDown).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.LEFT_DOWN, KeyboardEventModifier.ALT) === mouseDown).toEqual(true);
 
-        handler.removeInputAction(ScreenSpaceEventType.LEFT_DOWN, EventModifier.ALT);
+        handler.removeInputAction(ScreenSpaceEventType.LEFT_DOWN, KeyboardEventModifier.ALT);
         element.fireEvents('mousedown', {
             button : 0,
             clientX : 2,
@@ -705,7 +705,7 @@ defineSuite([
             actualCoords = event.position.clone();
         };
 
-        handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_UP, EventModifier.ALT);
+        handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_UP, KeyboardEventModifier.ALT);
         element.fireEvents('mouseup', {
             button : 0,
             clientX : 1,
@@ -714,9 +714,9 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getInputAction(ScreenSpaceEventType.LEFT_UP, EventModifier.ALT) === mouseDown).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.LEFT_UP, KeyboardEventModifier.ALT) === mouseDown).toEqual(true);
 
-        handler.removeInputAction(ScreenSpaceEventType.LEFT_UP, EventModifier.ALT);
+        handler.removeInputAction(ScreenSpaceEventType.LEFT_UP, KeyboardEventModifier.ALT);
         element.fireEvents('mousedown', {
             button : 0,
             clientX : 2,
@@ -735,7 +735,7 @@ defineSuite([
             actualCoords = event.position.clone();
         };
 
-        handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_CLICK, EventModifier.ALT);
+        handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_CLICK, KeyboardEventModifier.ALT);
         element.fireEvents('mousedown', {
             button : 0,
             clientX : 1,
@@ -750,9 +750,9 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getInputAction(ScreenSpaceEventType.LEFT_CLICK, EventModifier.ALT) === mouseDown).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.LEFT_CLICK, KeyboardEventModifier.ALT) === mouseDown).toEqual(true);
 
-        handler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK, EventModifier.ALT);
+        handler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK, KeyboardEventModifier.ALT);
         element.fireEvents('mousedown', {
             button : 0,
             clientX : 2,
@@ -777,7 +777,7 @@ defineSuite([
             actualCoords = event.position.clone();
         };
 
-        handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_DOWN, EventModifier.CTRL);
+        handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_DOWN, KeyboardEventModifier.CTRL);
         element.fireEvents('mousedown', {
             button : 1,
             clientX : 1,
@@ -786,9 +786,9 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getInputAction(ScreenSpaceEventType.MIDDLE_DOWN, EventModifier.CTRL) === mouseDown).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.MIDDLE_DOWN, KeyboardEventModifier.CTRL) === mouseDown).toEqual(true);
 
-        handler.removeInputAction(ScreenSpaceEventType.MIDDLE_DOWN, EventModifier.CTRL);
+        handler.removeInputAction(ScreenSpaceEventType.MIDDLE_DOWN, KeyboardEventModifier.CTRL);
         element.fireEvents('mousedown', {
             button : 1,
             clientX : 2,
@@ -807,7 +807,7 @@ defineSuite([
             actualCoords = event.position.clone();
         };
 
-        handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_UP, EventModifier.CTRL);
+        handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_UP, KeyboardEventModifier.CTRL);
         element.fireEvents('mouseup', {
             button : 1,
             clientX : 1,
@@ -816,9 +816,9 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getInputAction(ScreenSpaceEventType.MIDDLE_UP, EventModifier.CTRL) === mouseDown).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.MIDDLE_UP, KeyboardEventModifier.CTRL) === mouseDown).toEqual(true);
 
-        handler.removeInputAction(ScreenSpaceEventType.MIDDLE_UP, EventModifier.CTRL);
+        handler.removeInputAction(ScreenSpaceEventType.MIDDLE_UP, KeyboardEventModifier.CTRL);
         element.fireEvents('mousedown', {
             button : 1,
             clientX : 2,
@@ -837,7 +837,7 @@ defineSuite([
             actualCoords = event.position.clone();
         };
 
-        handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_CLICK, EventModifier.CTRL);
+        handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_CLICK, KeyboardEventModifier.CTRL);
         element.fireEvents('mousedown', {
             button : 1,
             clientX : 1,
@@ -852,9 +852,9 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getInputAction(ScreenSpaceEventType.MIDDLE_CLICK, EventModifier.CTRL) === mouseDown).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.MIDDLE_CLICK, KeyboardEventModifier.CTRL) === mouseDown).toEqual(true);
 
-        handler.removeInputAction(ScreenSpaceEventType.MIDDLE_CLICK, EventModifier.CTRL);
+        handler.removeInputAction(ScreenSpaceEventType.MIDDLE_CLICK, KeyboardEventModifier.CTRL);
         element.fireEvents('mousedown', {
             button : 1,
             clientX : 2,
@@ -879,7 +879,7 @@ defineSuite([
             actualCoords = event.position.clone();
         };
 
-        handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_DOUBLE_CLICK, EventModifier.CTRL);
+        handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_DOUBLE_CLICK, KeyboardEventModifier.CTRL);
         element.fireEvents('dblclick', {
             button : 0,
             clientX : 1,
@@ -888,9 +888,9 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK, EventModifier.CTRL) === mouseDown).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK, KeyboardEventModifier.CTRL) === mouseDown).toEqual(true);
 
-        handler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK, EventModifier.CTRL);
+        handler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK, KeyboardEventModifier.CTRL);
         element.fireEvents('dblclick', {
             button : 0,
             clientX : 2,
@@ -909,7 +909,7 @@ defineSuite([
             actualCoords = event.position.clone();
         };
 
-        handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_DOUBLE_CLICK, EventModifier.CTRL);
+        handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_DOUBLE_CLICK, KeyboardEventModifier.CTRL);
         element.fireEvents('dblclick', {
             button : 2,
             clientX : 1,
@@ -918,9 +918,9 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getInputAction(ScreenSpaceEventType.RIGHT_DOUBLE_CLICK, EventModifier.CTRL) === mouseDown).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.RIGHT_DOUBLE_CLICK, KeyboardEventModifier.CTRL) === mouseDown).toEqual(true);
 
-        handler.removeInputAction(ScreenSpaceEventType.RIGHT_DOUBLE_CLICK, EventModifier.CTRL);
+        handler.removeInputAction(ScreenSpaceEventType.RIGHT_DOUBLE_CLICK, KeyboardEventModifier.CTRL);
         element.fireEvents('dblclick', {
             button : 2,
             clientX : 2,
@@ -939,7 +939,7 @@ defineSuite([
             actualCoords = event.position.clone();
         };
 
-        handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK, EventModifier.CTRL);
+        handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK, KeyboardEventModifier.CTRL);
         element.fireEvents('dblclick', {
             button : 1,
             clientX : 1,
@@ -948,9 +948,9 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getInputAction(ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK, EventModifier.CTRL) === mouseDown).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK, KeyboardEventModifier.CTRL) === mouseDown).toEqual(true);
 
-        handler.removeInputAction(ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK, EventModifier.CTRL);
+        handler.removeInputAction(ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK, KeyboardEventModifier.CTRL);
         element.fireEvents('dblclick', {
             button : 1,
             clientX : 2,
@@ -976,7 +976,7 @@ defineSuite([
             actualMove.endPosition = movement.endPosition.clone();
         };
 
-        handler.setInputAction(mouseMove, ScreenSpaceEventType.MOUSE_MOVE, EventModifier.CTRL);
+        handler.setInputAction(mouseMove, ScreenSpaceEventType.MOUSE_MOVE, KeyboardEventModifier.CTRL);
         element.fireEvents('mousemove', {
             button : 1,
             clientX : 1,
@@ -991,9 +991,9 @@ defineSuite([
         });
         expect(actualMove).toEqual(expectedMove);
 
-        expect(handler.getInputAction(ScreenSpaceEventType.MOUSE_MOVE, EventModifier.CTRL) === mouseMove).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.MOUSE_MOVE, KeyboardEventModifier.CTRL) === mouseMove).toEqual(true);
 
-        handler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE, EventModifier.CTRL);
+        handler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE, KeyboardEventModifier.CTRL);
         element.fireEvents('mousemove', {
             button : 1,
             clientX : 2,
@@ -1018,22 +1018,133 @@ defineSuite([
             actualDelta = delta;
         };
 
-        handler.setInputAction(mouseWheel, ScreenSpaceEventType.WHEEL, EventModifier.CTRL);
+        handler.setInputAction(mouseWheel, ScreenSpaceEventType.WHEEL, KeyboardEventModifier.CTRL);
         element.fireEvents('mousewheel', {
             wheelDelta : -120,
             ctrlKey : true
         });
         expect(actualDelta).toEqual(expectedDelta);
 
-        expect(handler.getInputAction(ScreenSpaceEventType.WHEEL, EventModifier.CTRL) === mouseWheel).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.WHEEL, KeyboardEventModifier.CTRL) === mouseWheel).toEqual(true);
 
-        handler.removeInputAction(ScreenSpaceEventType.WHEEL, EventModifier.CTRL);
+        handler.removeInputAction(ScreenSpaceEventType.WHEEL, KeyboardEventModifier.CTRL);
         element.fireEvents('mousewheel', {
             wheelDelta : -360,
             ctrlKey : true
         });
 
         expect(actualDelta).toEqual(expectedDelta);
+    });
+
+    it('touch', function() {
+        var startPosition;
+        var endPosition;
+        var callback = function(event) {
+            startPosition = event.position.clone();
+        };
+        var callbackMove = function(event) {
+            startPosition = event.startPosition.clone();
+            endPosition = event.endPosition.clone();
+        };
+
+        handler.setInputAction(callback, ScreenSpaceEventType.LEFT_DOWN);
+        handler.setInputAction(callbackMove, ScreenSpaceEventType.MOUSE_MOVE);
+        handler.setInputAction(callback, ScreenSpaceEventType.LEFT_UP);
+
+        expect(handler.getInputAction(ScreenSpaceEventType.LEFT_DOWN) === callback).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.MOUSE_MOVE) === callbackMove).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.LEFT_UP) === callback).toEqual(true);
+
+        element.fireEvents('touchstart', {
+            touches : [{
+                clientX : 1,
+                clientY : 1
+            }]
+        });
+        expect(startPosition).toEqual(new Cartesian2(1, 1));
+
+        element.fireEvents('touchmove', {
+            touches : [{
+                clientX : 2,
+                clientY : 2
+            }]
+        });
+        expect(startPosition).toEqual(new Cartesian2(1, 1));
+        expect(endPosition).toEqual(new Cartesian2(2, 2));
+
+        element.fireEvents('touchend', {
+            touches : [],
+            changedTouches : [{
+                clientX : 3,
+                clientY : 3
+            }]
+        });
+        expect(startPosition).toEqual(new Cartesian2(3, 3));
+    });
+
+    it('pinch', function() {
+        var pinching = false;
+        var pinchStartCallback = function() {
+            pinching = true;
+        };
+        var pinchEndCallback = function() {
+            pinching = false;
+        };
+        var movement;
+        var pinchMoveCallback = function(event) {
+            movement = event;
+        };
+
+        handler.setInputAction(pinchStartCallback, ScreenSpaceEventType.PINCH_START);
+        handler.setInputAction(pinchMoveCallback, ScreenSpaceEventType.PINCH_MOVE);
+        handler.setInputAction(pinchEndCallback, ScreenSpaceEventType.PINCH_END);
+
+        expect(handler.getInputAction(ScreenSpaceEventType.PINCH_START) === pinchStartCallback).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.PINCH_MOVE) === pinchMoveCallback).toEqual(true);
+        expect(handler.getInputAction(ScreenSpaceEventType.PINCH_END) === pinchEndCallback).toEqual(true);
+
+        var touches = [{
+            clientX : 2,
+            clientY : 2,
+            identifier : 0
+        }];
+        element.fireEvents('touchstart', { touches : touches });
+        touches.push({
+            clientX : 3,
+            clientY : 3,
+            identifier : 1
+        });
+        element.fireEvents('touchstart', { touches : touches });
+        expect(pinching).toEqual(true);
+
+        touches[0].clientX = touches[0].clientY = 1;
+        touches[1].clientX = touches[1].clientY = 4;
+        element.fireEvents('touchmove', { touches : touches });
+        expect(pinching).toEqual(true);
+        expect(movement.distance.startPosition).toEqual(new Cartesian2(0, Math.sqrt(2.0) * 0.25));
+        expect(movement.distance.endPosition).toEqual(new Cartesian2(0, Math.sqrt(18.0) * 0.25));
+        expect(movement.angleAndHeight.startPosition).toEqual(new Cartesian2(Math.atan2(1.0, 1.0), 5.0 * 0.125));
+        expect(movement.angleAndHeight.endPosition).toEqual(new Cartesian2(Math.atan2(3.0, 3.0), 5.0 * 0.125));
+    });
+
+    it('touch click', function() {
+        var touchClick = new Cartesian2();
+        var touchClickCallback = function(event) {
+            touchClick = event.position.clone();
+        };
+
+        handler.setInputAction(touchClickCallback, ScreenSpaceEventType.LEFT_CLICK);
+        expect(handler.getInputAction(ScreenSpaceEventType.LEFT_CLICK) === touchClickCallback).toEqual(true);
+
+        var touches = [{
+            clientX : 2,
+            clientY : 2,
+            identifier : 0
+        }];
+        element.fireEvents('touchstart', { touches : touches });
+        element.fireEvents('touchend', { touches : [], changedTouches : touches });
+
+        expect(touchClick).toEqual(new Cartesian2(2.0, 2.0));
     });
 
     it('isDestroyed', function() {

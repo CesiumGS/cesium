@@ -31,11 +31,12 @@ define([
 
     function update2D(that, camera, objectChanged, offset, positionProperty, time, projection) {
         var viewDistance;
-        var modeChanged = that.scene.mode !== that._mode;
+        var scene = that.scene;
+        var modeChanged = scene.mode !== that._mode;
 
         if (modeChanged) {
-            that._mode = that.scene.mode;
-            that.scene.getScreenSpaceCameraController().enableTranslate = false;
+            that._mode = scene.mode;
+            that._screenSpaceCameraController.enableTranslate = false;
             viewDistance = offset.magnitude();
         } else if (objectChanged) {
             viewDistance = offset.magnitude();
@@ -78,7 +79,7 @@ define([
 
         var cartesian = positionProperty.getValueCartesian(time, that._lastCartesian);
         camera.transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
-        that.scene.getScreenSpaceCameraController().setEllipsoid(Ellipsoid.UNIT_SPHERE);
+        that._screenSpaceCameraController.setEllipsoid(Ellipsoid.UNIT_SPHERE);
 
         var position = camera.position;
         Cartesian3.clone(position, that._lastOffset);
@@ -99,7 +100,7 @@ define([
         var tranform = camera.transform;
         tranform.setColumn(3, updateColumbusCartesian4, tranform);
 
-        var controller = that.scene.getScreenSpaceCameraController();
+        var controller = that._screenSpaceCameraController;
         controller.enableTranslate = false;
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
         controller.columbusViewMode = CameraColumbusViewMode.LOCKED;
@@ -115,13 +116,14 @@ define([
     var update3DControllerMatrix3 = new Matrix3();
 
     function update3DController(that, camera, objectChanged, offset) {
-        that.scene.getCameraMouseController().enableTilt = false;
+        var scene = that.scene;
+        that._screenSpaceCameraController.enableTilt = false;
         camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         if (objectChanged) {
             camera.controller.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
-        } else if (that.scene.mode !== that._mode) {
-            that._mode = that.scene.mode;
+        } else if (scene.mode !== that._mode) {
+            that._mode = scene.mode;
 
             //If we're switching from 2D and any rotation was applied to the camera,
             //apply that same rotation to the last offset used in 3D or Columbus view.
@@ -174,6 +176,7 @@ define([
          * @type Scene
          */
         this.scene = scene;
+        this._lastScene = undefined;
 
         /**
          * The ellipsoid to use for orienting the camera.
@@ -222,6 +225,11 @@ define([
         var scene = this.scene;
         if (typeof scene === 'undefined') {
             throw new DeveloperError('DynamicObjectView.scene is required.');
+        }
+
+        if (scene !== this._lastScene) {
+            this._lastScene = scene;
+            this._screenSpaceCameraController = scene.getScreenSpaceCameraController();
         }
 
         var dynamicObject = this.dynamicObject;
@@ -273,11 +281,11 @@ define([
 
         var mode = scene.mode;
         if (mode === SceneMode.SCENE2D) {
-            update2D(this, this.scene.getCamera(), objectChanged, offset, positionProperty, time, scene.scene2D.projection);
+            update2D(this, scene.getCamera(), objectChanged, offset, positionProperty, time, scene.scene2D.projection);
         } else if (mode === SceneMode.SCENE3D) {
-            update3D(this, this.scene.getCamera(), objectChanged, offset, positionProperty, time, ellipsoid);
+            update3D(this, scene.getCamera(), objectChanged, offset, positionProperty, time, ellipsoid);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            updateColumbus(this, this.scene.getCamera(), objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
+            updateColumbus(this, scene.getCamera(), objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
         }
     };
 

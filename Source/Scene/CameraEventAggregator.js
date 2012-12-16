@@ -24,7 +24,7 @@ define([
      *
      * @param {HTMLCanvasElement} canvas DOC_TBA
      * @param {CameraEventType} moveType DOC_TBA
-     * @param {EventModifier} moveModifier DOC_TBA
+     * @param {KeyboardEventModifier} moveModifier DOC_TBA
      *
      * @exception {DeveloperError} canvas is required.
      * @exception {DeveloperError} moveType is required.

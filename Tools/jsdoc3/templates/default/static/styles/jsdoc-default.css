@@ -486,3 +486,24 @@ h6
 .disabled {
     color: #454545;
 }
+
+/* For printing out the documentation */
+@media print {
+    body {
+        background: #fff;
+    }
+    .nav {
+        display: none;
+    }
+    #mainIndex .nav {
+        display: block;
+    }
+    #main {
+        float: none;
+        width: auto;
+        margin-right: 25px;
+    }
+    footer {
+        padding: 6px;
+    }
+}

@@ -5,14 +5,14 @@ define([
         './Cartesian2',
         './JulianDate',
         './ScreenSpaceEventType',
-        './EventModifier'
+        './KeyboardEventModifier'
     ], function(
         DeveloperError,
         destroyObject,
         Cartesian2,
         JulianDate,
         ScreenSpaceEventType,
-        EventModifier) {
+        KeyboardEventModifier) {
     "use strict";
 
     /**
@@ -33,8 +33,8 @@ define([
         }
 
         this._modifiedMouseEvents = {};
-        for ( var modifier in EventModifier) {
-            if (EventModifier.hasOwnProperty(modifier)) {
+        for ( var modifier in KeyboardEventModifier) {
+            if (KeyboardEventModifier.hasOwnProperty(modifier)) {
                 this._modifiedMouseEvents[modifier] = {};
                 for (button in ScreenSpaceEventType) {
                     if (ScreenSpaceEventType.hasOwnProperty(button)) {
@@ -88,7 +88,7 @@ define([
      *
      * @param {Function} action Function to be executed when the input event occurs.
      * @param {Enumeration} type The ScreenSpaceEventType of input event.
-     * @param {Enumeration} modifier A EventModifier key that is held when a <code>type</code>
+     * @param {Enumeration} modifier A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
      *
      * @exception {DeveloperError} action is required.
@@ -124,7 +124,7 @@ define([
      * @memberof ScreenSpaceEventHandler
      *
      * @param {Enumeration} type The ScreenSpaceEventType of input event.
-     * @param {Enumeration} modifier A EventModifier key that is held when a <code>type</code>
+     * @param {Enumeration} modifier A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
      *
      * @exception {DeveloperError} type is required.
@@ -157,7 +157,7 @@ define([
      * @memberof ScreenSpaceEventHandler
      *
      * @param {Enumeration} type The ScreenSpaceEventType of input event.
-     * @param {Enumeration} modifier A EventModifier key that is held when a <code>type</code>
+     * @param {Enumeration} modifier A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
      *
      * @exception {DeveloperError} type is required.
@@ -184,11 +184,11 @@ define([
 
     ScreenSpaceEventHandler.prototype._getModifier = function(event) {
         if (event.shiftKey) {
-            return EventModifier.SHIFT;
+            return KeyboardEventModifier.SHIFT;
         } else if (event.ctrlKey) {
-            return EventModifier.CTRL;
+            return KeyboardEventModifier.CTRL;
         } else if (event.altKey) {
-            return EventModifier.ALT;
+            return KeyboardEventModifier.ALT;
         }
 
         return undefined;
@@ -363,7 +363,7 @@ define([
 
     ScreenSpaceEventHandler.prototype._handleTouchEnd = function(event) {
         var numberOfTouches = event.touches.length;
-        var numberOfTargetTouches = event.targetTouches.length;
+        var numberOfChangedTouches = event.changedTouches.length;
         var modifier = this._getModifier(event);
         var action, clickAction;
 
@@ -372,8 +372,8 @@ define([
             action = this.getInputAction(ScreenSpaceEventType.LEFT_UP, modifier);
             clickAction = this.getInputAction(ScreenSpaceEventType.LEFT_CLICK, modifier);
 
-            if (numberOfTargetTouches > 0) {
-                var pos = this._getPosition(event.targetTouches[0]);
+            if (numberOfChangedTouches > 0) {
+                var pos = this._getPosition(event.changedTouches[0]);
 
                 var xDiff = this._lastMouseX - pos.x;
                 var yDiff = this._lastMouseY - pos.y;

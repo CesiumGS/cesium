@@ -358,8 +358,11 @@ define([
             near = camera.frustum.near;
             far = camera.frustum.far;
         } else {
-            near = Math.max(near, camera.frustum.near);
-            far = Math.min(far, camera.frustum.far);
+            // The computed near plane must be between the user defined near and far planes.
+            // The computed far plane must between the user defined far and computed near.
+            // This will handle the case where the computed near plane is further than the user defined far plane.
+            near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
+            far = Math.max(Math.min(far, camera.frustum.far), near);
         }
 
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
@@ -452,8 +455,8 @@ define([
         var us = this.getUniformState();
         var frameState = this._frameState;
 
-        this._camera.controller.update(frameState);
-        this._screenSpaceCameraController.update(this._frameState);
+        this._camera.controller.update(this.mode, this.scene2D);
+        this._screenSpaceCameraController.update(this.mode);
 
         var frameNumber = CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0);
         updateFrameState(this, frameNumber, time);
@@ -472,7 +475,6 @@ define([
             this._context.getShaderCache().destroyReleasedShaderPrograms();
         }
 
-        // TODO: shouldn't we do this in initializeFrame?
         var us = this.getUniformState();
         var frameState = this._frameState;
         us.update(frameState);

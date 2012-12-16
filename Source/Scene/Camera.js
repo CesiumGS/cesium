@@ -54,9 +54,11 @@ define([
         }
 
         /**
-         * DOC_TBA
+         * Modifies the camera's reference frame. The inverse of this transformation is appended to the view matrix.
          *
          * @type {Matrix4}
+         *
+         * @see Transforms
          */
         this.transform = Matrix4.IDENTITY.clone();
         this._transform = this.transform.clone();
@@ -109,16 +111,20 @@ define([
         this._rightWC = right;
 
         /**
-         * DOC_TBA
+         * The region of space in view.
          *
          * @type {Frustum}
+         *
+         * @see PerspectiveFrustum
+         * @see PerspectiveOffCenterFrustum
+         * @see OrthographicFrustum
          */
         this.frustum = new PerspectiveFrustum();
         this.frustum.fovy = CesiumMath.toRadians(60.0);
         this.frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
 
         /**
-         * DOC_TBA
+         * Defines camera behavior. The controller can be used to perform common camera manipulations.
          *
          * @type {CameraController}
          */
@@ -327,12 +333,11 @@ define([
         if (typeof cartesian === 'undefined') {
             throw new DeveloperError('cartesian is required.');
         }
-        var transform = this.getInverseTransform();
-        return Matrix4.multiplyByVector(transform, cartesian, result);
+        return Matrix4.multiplyByVector(this.getInverseTransform(), cartesian, result);
     };
 
     /**
-     * Transform a vector or point from the camera's reference frame to world coordinates .
+     * Transform a vector or point from the camera's reference frame to world coordinates.
      * @memberof Camera
      *
      * @param {Cartesian4} vector The vector or point to transform.
@@ -346,8 +351,7 @@ define([
         if (typeof cartesian === 'undefined') {
             throw new DeveloperError('cartesian is required.');
         }
-        var transform = this.transform;
-        return Matrix4.multiplyByVector(transform, cartesian, result);
+        return Matrix4.multiplyByVector(this.transform, cartesian, result);
     };
 
     return Camera;

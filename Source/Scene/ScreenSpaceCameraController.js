@@ -7,7 +7,7 @@ define([
         '../Core/Cartographic',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
-        '../Core/EventModifier',
+        '../Core/KeyboardEventModifier',
         '../Core/FAR',
         '../Core/IntersectionTests',
         '../Core/Math',
@@ -29,7 +29,7 @@ define([
         Cartographic,
         DeveloperError,
         Ellipsoid,
-        EventModifier,
+        KeyboardEventModifier,
         FAR,
         IntersectionTests,
         CesiumMath,
@@ -138,7 +138,7 @@ define([
 
         this._spinHandler = new CameraEventAggregator(canvas, CameraEventType.LEFT_DRAG);
         this._translateHandler = new CameraEventAggregator(canvas, CameraEventType.LEFT_DRAG);
-        this._lookHandler = new CameraEventAggregator(canvas, CameraEventType.LEFT_DRAG, EventModifier.SHIFT);
+        this._lookHandler = new CameraEventAggregator(canvas, CameraEventType.LEFT_DRAG, KeyboardEventModifier.SHIFT);
         this._rotateHandler = new CameraEventAggregator(canvas, CameraEventType.MIDDLE_DRAG);
         this._zoomHandler = new CameraEventAggregator(canvas, CameraEventType.RIGHT_DRAG);
         this._zoomWheelHandler = new CameraEventAggregator(canvas, CameraEventType.WHEEL);
@@ -881,8 +881,7 @@ define([
     /**
      * @private
      */
-    ScreenSpaceCameraController.prototype.update = function(frameState) {
-        var mode = frameState.mode;
+    ScreenSpaceCameraController.prototype.update = function(mode) {
         if (mode === SceneMode.SCENE2D) {
             update2D(this);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
