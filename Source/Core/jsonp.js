@@ -45,10 +45,7 @@ define([
         var deferred = when.defer();
 
         //generate a unique function name
-        var functionName;
-        do {
-            functionName = 'jsonp' + Math.random().toString().substring(2, 8);
-        } while (typeof window[functionName] !== 'undefined');
+        var functionName = 'jsonp' + jsonp.UID++;
 
         //assign a function with that name in the global scope
         window[functionName] = function(data) {
@@ -111,6 +108,8 @@ define([
     };
 
     jsonp.defaultLoadAndExecuteScript = jsonp.loadAndExecuteScript;
+
+    jsonp.UID = 0;
 
     return jsonp;
 });
