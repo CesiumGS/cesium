@@ -60,7 +60,7 @@ define([
     };
 
     /**
-     * Creates a Color instance from a HSL values.
+     * Creates a Color instance from H, S, L values.
      * @memberof Color
      *
      * @param {Number} [hue=0] The hue angle 0...1
