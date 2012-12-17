@@ -52,7 +52,6 @@
         border-bottom: solid 2px #888;
         width: 100%;
         height: 50%;
-        z-index: -1;
     }
     .bottom {
         display: block;
@@ -63,7 +62,6 @@
         border-top: solid 2px #888;
         width: 100%;
         height: 50%;
-        z-index: -1;
     }
     #topbar {
         margin: 5px;
@@ -135,6 +133,8 @@ require([
         // Get the time from the shared controller, then
         // update and render both widgets.
         var currentTime = animationController.update();
+        widget1.initializeFrame(currentTime);
+        widget2.initializeFrame(currentTime);
         widget1.update(currentTime);
         widget2.update(currentTime);
         widget1.render();

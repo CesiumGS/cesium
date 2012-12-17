@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/CameraEventHandler',
+         'Scene/CameraEventAggregator',
          'Scene/CameraEventType',
-         'Core/MouseEventType'
+         'Core/ScreenSpaceEventType'
      ], function(
-         CameraEventHandler,
+         CameraEventAggregator,
          CameraEventType,
-         MouseEventType) {
+         ScreenSpaceEventType) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -14,7 +14,7 @@ defineSuite([
     var handler2;
 
     beforeEach(function() {
-        handler = new CameraEventHandler(document, CameraEventType.LEFT_DRAG);
+        handler = new CameraEventAggregator(document, CameraEventType.LEFT_DRAG);
     });
 
     afterEach(function() {
@@ -24,25 +24,25 @@ defineSuite([
 
     it('throws without a canvas', function() {
         expect(function() {
-            handler2 = new CameraEventHandler();
+            handler2 = new CameraEventAggregator();
         }).toThrow();
     });
 
     it('throws without a moveType', function() {
         expect(function() {
-            handler2 = new CameraEventHandler(document);
+            handler2 = new CameraEventAggregator(document);
         }).toThrow();
     });
 
     it('throws if the event type is not of CameraEventType', function() {
         expect(function() {
-            handler2 = new CameraEventHandler(document, MouseEventType.LEFT_CLICK);
+            handler2 = new CameraEventAggregator(document, ScreenSpaceEventType.LEFT_CLICK);
         }).toThrow();
     });
 
     it('can be constructed using the middle drag event type', function() {
         expect(function(){
-            handler2 = new CameraEventHandler(document, CameraEventType.MIDDLE_DRAG);
+            handler2 = new CameraEventAggregator(document, CameraEventType.MIDDLE_DRAG);
         }).not.toThrow();
     });
 
