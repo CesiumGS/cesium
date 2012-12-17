@@ -81,16 +81,16 @@ require([
         var polyline = polylines.add();
         Sandcastle.declare(polyline);   // For highlighting on mouseover in Sandcastle.
         polyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-            new Cesium.Cartographic.fromDegrees(-120.0, 40.0),
-            new Cesium.Cartographic.fromDegrees(-110.0, 30.0)
+            Cesium.Cartographic.fromDegrees(-120.0, 40.0),
+            Cesium.Cartographic.fromDegrees(-110.0, 30.0)
         ]));
-        
+
         // Set a polyline's color
         var coloredPolyline = polylines.add();
         Sandcastle.declare(coloredPolyline);    // For highlighting on mouseover in Sandcastle.
         coloredPolyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-            new Cesium.Cartographic.fromDegrees(-95.0, 30.0),
-            new Cesium.Cartographic.fromDegrees(-85.0, 40.0)
+            Cesium.Cartographic.fromDegrees(-95.0, 30.0),
+            Cesium.Cartographic.fromDegrees(-85.0, 40.0)
         ]));
         coloredPolyline.setColor({
             red   : 1.0,
@@ -98,16 +98,16 @@ require([
             blue  : 0.0,
             alpha : 0.75
         });
-        
+
         // Set a polyline's width and outline width
         // (Note that wide lines don't work with ANGLE enabled)
         var widePolyline = polylines.add();
         Sandcastle.declare(widePolyline);   // For highlighting on mouseover in Sandcastle.
         widePolyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-            new Cesium.Cartographic.fromDegrees(-105.0, 40.0),
-            new Cesium.Cartographic.fromDegrees(-100.0, 38.0),
-            new Cesium.Cartographic.fromDegrees(-105.0, 35.0),
-            new Cesium.Cartographic.fromDegrees(-100.0, 32.0)
+            Cesium.Cartographic.fromDegrees(-105.0, 40.0),
+            Cesium.Cartographic.fromDegrees(-100.0, 38.0),
+            Cesium.Cartographic.fromDegrees(-105.0, 35.0),
+            Cesium.Cartographic.fromDegrees(-100.0, 32.0)
         ]));
         widePolyline.setWidth(5); // Request 5 pixels interior
         widePolyline.setOutlineWidth(10); // Request 10 pixels total
@@ -117,9 +117,9 @@ require([
             blue : 0.0,
             alpha : 1.0
         });
-        
+
         primitives.add(polylines);
-                
+
         // Draw a line in a local reference frame
         // The arrow points to the east, i.e. along the local x-axis.
         var localPolylines = new Cesium.PolylineCollection();
