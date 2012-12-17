@@ -528,14 +528,14 @@ define([
         }
 
         while (day < 1) {
-            tmp = (inLeapYear && month === 2) ? daysInLeapFeburary : daysInMonth[month - 1];
-            day += tmp;
             month--;
-
             if (month < 1) {
                 month += 12;
                 year--;
             }
+
+            tmp = (inLeapYear && month === 2) ? daysInLeapFeburary : daysInMonth[month - 1];
+            day += tmp;
         }
 
         //Now create the JulianDate components from the Gregorian date and actually create our instance.
