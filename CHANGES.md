@@ -18,7 +18,7 @@ Beta Releases
 * Improved rendering support on Nexus 4 and Nexus 7 using Firefox.
 * Improved camera flights.
 * Added Sandbox example using NASA's new [Black Marble](http://www.nasa.gov/mission_pages/NPP/news/earth-at-night.html) night imagery.
-* Added `fromCSSColor` to `Color` to create a `Color` instance from a CSS value (supports #rgb, #rrggbb, rgb(), rgba())
+* Added `fromCSSColor` to `Color` to create a `Color` instance from any CSS value
 
 ### b11 - 12/03/2012
 
