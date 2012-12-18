@@ -1,16 +1,20 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/Cartographic',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/loadXML',
         '../Core/writeTextToCanvas',
         '../Core/Extent',
         './ImageryProvider',
         './WebMercatorTilingScheme'
     ], function(
         defaultValue,
+        Cartographic,
         DeveloperError,
         Event,
+        loadXML,
         writeTextToCanvas,
         Extent,
         ImageryProvider,
@@ -73,27 +77,65 @@ define([
         }
 
         this._url = url;
-        this._fileExtension = defaultValue(description.fileExtension, 'png');
+        this._ready = false;
+
         this._proxy = description.proxy;
         this._tileDiscardPolicy = description.tileDiscardPolicy;
 
-        this._tilingScheme = defaultValue(description.tilingScheme, new WebMercatorTilingScheme() );
-
-        this._tileWidth = defaultValue(description.tileWidth,256);
-        this._tileHeight = defaultValue(description.tileHeight,256);
-
-        this._maximumLevel = defaultValue(description.maximumLevel, 18);
-
-        this._extent = defaultValue(description.extent, this._tilingScheme.getExtent());
-
         this._errorEvent = new Event();
 
-        this._ready = true;
+        var credit = description.credit;
+        if (typeof credit !== 'undefined') {
+            this._logo = writeTextToCanvas(credit, {
+                font : '12px sans-serif'
+            });
+        }
 
-        var credit = defaultValue(description.credit, '');
-        this._logo = writeTextToCanvas(credit, {
-            font : '12px sans-serif'
+        var that = this;
+
+        // Try to load remaing parameters from XML
+        loadXML(url + 'tilemapresource.xml').then(function(xml) {
+            // Allowing description properties to override XML values
+            var format = xml.getElementsByTagName('TileFormat')[0];
+            that._fileExtension = defaultValue(description.fileExtension, format.getAttribute('extension'));
+            that._tileWidth = defaultValue(description.tileWidth, parseInt(format.getAttribute('width')));
+            that._tileHeight = defaultValue(description.tileHeight, parseInt(format.getAttribute('height')));
+            var tilesets = xml.getElementsByTagName('TileSet');
+            that._maximumLevel = defaultValue(description.maximumLevel, parseInt(tilesets[tilesets.length - 1].getAttribute('order')));
+
+            // extent handling
+            var bbox = xml.getElementsByTagName('BoundingBox')[0];
+            var sw = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('miny')), parseFloat(bbox.getAttribute('minx')));
+            var ne = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('maxy')), parseFloat(bbox.getAttribute('maxx')));
+            var extent = new Extent(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
+            that._extent = defaultValue(description.extent, extent);
+
+            // tiling scheme handling
+            var tilingSchemeName = xml.getElementsByTagName('TileSets')[0].getAttribute('profile');
+            var tilingScheme;
+            switch (tilingSchemeName) {
+            case 'geodetic':
+                tilingScheme = new GeographicTilingScheme();
+                break;
+            case 'mercator':
+            default:
+                tilingScheme = new WebMercatorTilingScheme();
+            }
+            that._tilingScheme = defaultValue(description.tilingScheme, tilingScheme);
+            that._ready = true;
+        }, function(error) {
+            // Can't load XML, still allow description and defaults
+            that._fileExtension = defaultValue(description.fileExtension, 'png');
+            that._tileWidth = defaultValue(description.tileWidth, 256);
+            that._tileHeight = defaultValue(description.tileHeight, 256);
+            that._minimumLevel = defaultValue(description.minimumLevel, 0);
+            that._maximumLevel = defaultValue(description.maximumLevel, 18);
+            that._tilingScheme = defaultValue(description.tilingScheme, new WebMercatorTilingScheme());
+            that._extent = defaultValue(description.extent, that._tilingScheme.getExtent());
+            that._ready = true;
         });
+
+
     };
 
     function buildImageUrl(imageryProvider, x, y, level) {
