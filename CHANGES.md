@@ -17,6 +17,7 @@ Beta Releases
 * Added pinch-zoom, pinch-twist, and pinch-tilt for touch-enabled browsers (particularly mobile browsers).
 * Improved rendering support on Nexus 4 and Nexus 7 using Firefox.
 * Improved camera flights.
+* Fixed memory leak when destroying primitives.
 * Added Sandbox example using NASA's new [Black Marble](http://www.nasa.gov/mission_pages/NPP/news/earth-at-night.html) night imagery.
 
 ### b11 - 12/03/2012

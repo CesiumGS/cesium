@@ -92,7 +92,43 @@ require([
 
     ///////////////////////////////////////////////////////////////////////////
     // INSERT CODE HERE to create graphics primitives in the scene.
+    var canvas2 = document.createElement('canvas');
+    canvas2.width = 16;
+    canvas2.height = 16;
+    var context2D = canvas2.getContext('2d');
+    context2D.beginPath();
+    context2D.arc(8, 8, 8, 0, Cesium.Math.TWO_PI, true);
+    context2D.closePath();
+    context2D.fillStyle='rgb(255, 255, 255)';
+    context2D.fill();
 
+    var billboards = new Cesium.BillboardCollection();
+    var textureAtlas = scene.getContext().createTextureAtlas({image : canvas2});
+    billboards.setTextureAtlas(textureAtlas);
+    scene.getPrimitives().add(billboards);
+
+    var addAbunch = function(){
+        for (var i=0; i<500; i++){
+            for (var j = 0; j < 500; j++) {
+                billboards.add({
+                    position: ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777 + i, 40.03883+j)),
+                    color: {
+                        red: 1.0,
+                        blue: 0.0,
+                        green: 0.0,
+                        alpha: 1.0
+                    },
+                    scale: 0.5,
+                    imageIndex: 0
+                });
+            }
+        }
+    }
+    
+    var removeAll = function(){
+        billboards.removeAll();
+    }
+    
     ///////////////////////////////////////////////////////////////////////////
 
     function animate() {
@@ -130,11 +166,11 @@ require([
         case '3'.charCodeAt(0):  // '3' -> 3D globe
             transitioner.morphTo3D();
             break;
-        case '2'.charCodeAt(0):  // '2' -> Columbus View
-            transitioner.morphToColumbusView();
+        case '2'.charCodeAt(0):
+            removeAll();
             break;
-        case '1'.charCodeAt(0):  // '1' -> 2D map
-            transitioner.morphTo2D();
+        case '1'.charCodeAt(0):
+            addAbunch();
             break;
         default:
             break;

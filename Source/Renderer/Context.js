@@ -2767,8 +2767,8 @@ define([
                 unnormalizedRgb : new Color(nextRgb.red, nextRgb.green, nextRgb.blue, 1.0),
                 normalizedRgba : Color.fromBytes(nextRgb.red, nextRgb.green, nextRgb.blue, 255.0),
                 destroy : function() {
-                    // TODO: Remove from objects
-                    return null;
+                    delete objects[rgbToObjectIndex(pickId.unnormalizedRgb)];
+                    return undefined;
                 }
             };
 
