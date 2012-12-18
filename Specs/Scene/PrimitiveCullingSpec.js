@@ -84,7 +84,6 @@ defineSuite([
     afterEach(function() {
         primitives = primitives && primitives.destroy();
         us = undefined;
-        camera = camera && camera.destroy();
     });
 
     function verifyNoDraw() {

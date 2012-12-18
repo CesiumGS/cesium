@@ -122,9 +122,11 @@ defineSuite([
     it('renders primitive in closest frustum', function() {
         createBillboards();
 
+        scene.initializeFrame();
         scene.render();
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
+        scene.initializeFrame();
         scene.render();
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
@@ -138,9 +140,11 @@ defineSuite([
             alpha : 0.0
         });
 
+        scene.initializeFrame();
         scene.render();
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
+        scene.initializeFrame();
         scene.render();
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
@@ -156,9 +160,11 @@ defineSuite([
         billboard0.setColor(color);
         billboard1.setColor(color);
 
+        scene.initializeFrame();
         scene.render();
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
+        scene.initializeFrame();
         scene.render();
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
@@ -235,15 +241,30 @@ defineSuite([
     it('renders primitive with undefined bounding volume', function() {
         createUnboundedPrimitive();
 
+        scene.initializeFrame();
         scene.render();
         expect(context.readPixels()).toEqual([255, 255, 0, 255]);
 
+        scene.initializeFrame();
         scene.render();
         expect(context.readPixels()).toEqual([255, 255, 0, 255]);
     });
 
     it('render without a central body or any primitives', function() {
         expect(function() {
+            scene.initializeFrame();
+            scene.render();
+        }).not.toThrow();
+    });
+
+    it('does not crash when near plane is greater than or equal to the far plane', function() {
+        var camera = scene.getCamera();
+        camera.frustum.far = 1000.0;
+        camera.position = new Cartesian3(0.0, 0.0, 1e12);
+
+        createBillboards();
+        expect(function() {
+            scene.initializeFrame();
             scene.render();
         }).not.toThrow();
     });
