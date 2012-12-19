@@ -435,9 +435,9 @@ define([
                     this.onObjectMousedOver(mousedOverObject);
                 }
             }
-            if (typeof this.leftDown !== 'undefined' && this.leftDown && typeof this.onLeftDrag !== 'undefined') {
+            if (true === this.leftDown && typeof this.onLeftDrag !== 'undefined') {
                 this.onLeftDrag(movement);
-            } else if (typeof this.rightDown !== 'undefined' && this.rightDown && typeof this.onZoom !== 'undefined') {
+            } else if (true === this.rightDown && typeof this.onZoom !== 'undefined') {
                 this.onZoom(movement);
             }
         },
@@ -632,8 +632,8 @@ define([
                 context.setThrowOnWebGLError(true);
             }
 
-            var imageryUrl = '../../Assets/Textures/';
-            this.dayImageUrl = defaultValue(this.dayImageUrl, require.toUrl(imageryUrl + 'NE2_LR_LC_SR_W_DR_2048.jpg'));
+            var imageryUrl = require.toUrl('../../Assets/Textures/');
+            this.dayImageUrl = defaultValue(this.dayImageUrl, imageryUrl + 'NE2_LR_LC_SR_W_DR_2048.jpg');
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
 
@@ -646,12 +646,12 @@ define([
 
             if (this.showSkyBox) {
                 scene.skyBox = new SkyBox({
-                    positiveX: require.toUrl(imageryUrl + 'SkyBox/tycho8_px_80.jpg'),
-                    negativeX: require.toUrl(imageryUrl + 'SkyBox/tycho8_mx_80.jpg'),
-                    positiveY: require.toUrl(imageryUrl + 'SkyBox/tycho8_py_80.jpg'),
-                    negativeY: require.toUrl(imageryUrl + 'SkyBox/tycho8_my_80.jpg'),
-                    positiveZ: require.toUrl(imageryUrl + 'SkyBox/tycho8_pz_80.jpg'),
-                    negativeZ: require.toUrl(imageryUrl + 'SkyBox/tycho8_mz_80.jpg')
+                    positiveX: imageryUrl + 'SkyBox/tycho8_px_80.jpg',
+                    negativeX: imageryUrl + 'SkyBox/tycho8_mx_80.jpg',
+                    positiveY: imageryUrl + 'SkyBox/tycho8_py_80.jpg',
+                    negativeY: imageryUrl + 'SkyBox/tycho8_my_80.jpg',
+                    positiveZ: imageryUrl + 'SkyBox/tycho8_pz_80.jpg',
+                    negativeZ: imageryUrl + 'SkyBox/tycho8_mz_80.jpg'
                 });
             }
 
@@ -1093,7 +1093,6 @@ define([
          * Render the widget's scene.
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
         render : function() {
             this.scene.render();
