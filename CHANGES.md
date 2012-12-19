@@ -18,6 +18,8 @@ Beta Releases
 * Improved rendering support on Nexus 4 and Nexus 7 using Firefox.
 * Improved camera flights.
 * Added Sandbox example using NASA's new [Black Marble](http://www.nasa.gov/mission_pages/NPP/news/earth-at-night.html) night imagery.
+* Added `fromCSSColor` to `Color` to create a `Color` instance from any CSS value.
+* Added `fromHSL` to `Color` to create a `Color` instance from H, S, L values.
 
 ### b11 - 12/03/2012
 
@@ -31,7 +33,7 @@ Beta Releases
    * `Fullscreen.getFullScreenChangeEventName` and `Fullscreen.getFullScreenChangeEventName` now return the proper event name, suitable for use with the `addEventListener` API, instead prefixing them with "on".
    * Removed `Scene.setSunPosition` and `Scene.getSunPosition`.  The sun position used for lighting is automatically computed based on the scene's time.
    * Removed a number of rendering options from `CentralBody`, including the ground atmosphere, night texture, specular map, cloud map, cloud shadows, and bump map.  These features weren't really production ready and had a disproportionate cost in terms of shader complexity and compilation time.  They may return in a more polished form in a future release.
-   * Removed `affectedByLighting` property from `Polygon`, `EllipsoidPrimitive`, `RectangularPyramidSensorVolume`, `CustomSensorVolume`, and `ComplexConicSensorVolume`.  
+   * Removed `affectedByLighting` property from `Polygon`, `EllipsoidPrimitive`, `RectangularPyramidSensorVolume`, `CustomSensorVolume`, and `ComplexConicSensorVolume`.
    * Removed `DistanceIntervalMaterial`.  This was not documented.
    * `Matrix2.getElementIndex`, `Matrix3.getElementIndex`, and `Matrix4.getElementIndex` functions have had their parameters swapped and now take row first and column second.  This is consistent with other class constants, such as Matrix2.COLUMN1ROW2.
    * Replaced `CentralBody.showSkyAtmosphere` with `Scene.skyAtmosphere` and `SkyAtmosphere`.  This has no impact for those using the Cesium widget.
@@ -49,7 +51,7 @@ Beta Releases
 * Added `QuadraticRealPolynomial`, `CubicRealPolynomial`, and `QuarticRealPolynomial` for finding the roots of quadratic, cubic, and quartic polynomials.
 * Added `IntersectionTests.grazingAltitudeLocation` for finding a point on a ray nearest to an ellipsoid.
 * Added `mostOrthogonalAxis` function to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
-* Changed CesiumViewerWidget default behavior so that zooming to an object now requires a single left-click, rather than a double-click. 
+* Changed CesiumViewerWidget default behavior so that zooming to an object now requires a single left-click, rather than a double-click.
 * Updated third-party [Tween.js](https://github.com/sole/tween.js/).
 
 ### b10 - 11/02/2012
