@@ -20,22 +20,22 @@ defineSuite([
         var data = {};
 
         var interval = new TimeInterval(start, stop, isStartIncluded, isStopIncluded, data);
-        expect(interval.start === start).toEqual(true);
-        expect(interval.stop === stop).toEqual(true);
-        expect(interval.isStartIncluded === isStartIncluded).toEqual(true);
-        expect(interval.isStopIncluded === isStopIncluded).toEqual(true);
-        expect(interval.data === data).toEqual(true);
+        expect(interval.start).toEqual(start);
+        expect(interval.stop).toEqual(stop);
+        expect(interval.isStartIncluded).toEqual(isStartIncluded);
+        expect(interval.isStopIncluded).toEqual(isStopIncluded);
+        expect(interval.data).toEqual(data);
     });
 
     it('Optional constructor parameters initialize properties to expected defaults.', function() {
         var start = new JulianDate();
         var stop = start.addDays(1);
         var interval = new TimeInterval(start, stop);
-        expect(interval.start === start).toEqual(true);
-        expect(interval.stop === stop).toEqual(true);
+        expect(interval.start).toEqual(start);
+        expect(interval.stop).toEqual(stop);
         expect(interval.isStartIncluded).toEqual(true);
         expect(interval.isStopIncluded).toEqual(true);
-        expect(interval.data === undefined).toEqual(true);
+        expect(interval.data).toEqual(undefined);
     });
 
     it('throws when constructing with an undefined start', function() {
@@ -139,7 +139,7 @@ defineSuite([
 
     it('clone returns an identical interval', function() {
         var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false, 12);
-        expect(interval.equals(interval.clone())).toEqual(true);
+        expect(interval.clone()).toEqual(interval);
     });
 
     it('intersect properly intersects with an exhaustive set of cases', function() {
@@ -183,9 +183,9 @@ defineSuite([
             var expectedResult = testParameters[i + 2];
             var intersect1 = first.intersect(second);
             var intersect2 = second.intersect(first);
-            expect(intersect1.equals(intersect2)).toEqual(true);
-            expect(intersect2.equals(intersect1)).toEqual(true);
-            expect(expectedResult.equals(intersect1)).toEqual(true);
+            expect(intersect1).toEqual(intersect2);
+            expect(intersect2).toEqual(intersect1);
+            expect(expectedResult).toEqual(intersect1);
         }
     });
 
