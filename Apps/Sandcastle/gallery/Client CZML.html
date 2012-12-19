@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="A simple CZML example showing four satellites in orbit around the Earth, and some ground objects.">
+    <meta name="description" content="This example supplies custom CZML objects directly to the CesiumViewerWidget.">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
@@ -64,39 +64,17 @@
 <script id="cesium_sandcastle_script">
 require([
     'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
-    'dojo/on', 'dojo/dom', 'dojo/io-query', 'dijit/form/Button'
+    'dojo/on', 'dojo/dom'
 ], function(
     Cesium, CesiumViewerWidget,
-    on, dom, ioQuery, Button)
+    on, dom)
 {
     "use strict";
 
-    var gallery = '../../CesiumViewer/Gallery/';
-    var endUserOptions = {
-        'source' : gallery + 'simple.czml'
-    };
-
-    function czmlSatellites(widget) {
-        Sandcastle.declare(czmlSatellites);    // For highlighting in Sandcastle.
-        widget.removeAllCzml();
-        widget.viewHome();
-        widget.loadCzml(gallery + 'simple.czml');
-    }
-
-    function czmlSensors(widget) {
-        Sandcastle.declare(czmlSensors);    // For highlighting in Sandcastle.
-        widget.removeAllCzml();
-        widget.viewHome();
-        widget.loadCzml(gallery + 'LotsOfSensors.czml');
-    }
-
-    function czmlVehicle(widget) {
-        Sandcastle.declare(czmlVehicle);    // For highlighting in Sandcastle.
-        widget.removeAllCzml();
-        widget.loadCzml(gallery + 'Vehicle.czml', 'Vehicle');
-    }
-
-    var builtInCzml = [
+    // This demo shows dynamically-generated CZML along
+    // with a custom visualizer and custom render loop.
+    // For a simpler example see the "Simple CZML Demo".
+    var czml = [
         {
             "id" : "Vehicle",
             "availability" : "2012-08-04T16:00:00Z/2012-08-04T17:04:54.9962195740191Z",
@@ -164,62 +142,61 @@ require([
         }
     ];
 
-    function useBuiltInCzml(widget) {
-        Sandcastle.declare(useBuiltInCzml);    // For highlighting in Sandcastle.
-        widget.removeAllCzml();
-        widget.viewHome();
-        widget.addCzml(builtInCzml, 'Built-in CZML');
+    // Add CZML to the scene and set the clock range
+    function addCZML(czml, scene, clock) {
+        // Create a DynamicObjectCollection for handling the CZML
+        var dynamicObjectCollection = new Cesium.DynamicObjectCollection();
 
-        // Zoom in a little closer...
-        var extent = new Cesium.Extent(-2.056, 0.587, -2.010, 0.633);
-        widget.scene.getCamera().controller.viewExtent(extent);
+        // Create the standard CZML visualizer collection
+        var visualizers = Cesium.VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
+
+        // Process the CZML, which populates the collection with DynamicObjects
+        Cesium.processCzml(czml, dynamicObjectCollection);
+
+        // Figure out the time span of the data
+        var availability = dynamicObjectCollection.computeAvailability();
+
+        // Set the clock range
+        clock.startTime = availability.start.clone();
+        clock.currentTime = availability.start.clone();
+        clock.stopTime = availability.stop.clone();
+        clock.clockRange = Cesium.ClockRange.LOOP;
+
+        return visualizers;
     }
 
-    function createButtons(widget) {
-        new Button({
-            label: 'Satellites',
-            onClick: function() {
-                czmlSatellites(widget);
-                Sandcastle.highlight(czmlSatellites);
-            }
-        }).placeAt('toolbar');
-
-        new Button({
-            label: 'Sensors',
-            onClick: function() {
-                czmlSensors(widget);
-                Sandcastle.highlight(czmlSensors);
-            }
-        }).placeAt('toolbar');
-
-        new Button({
-            label: 'Vehicle',
-            onClick: function() {
-                czmlVehicle(widget);
-                Sandcastle.highlight(czmlVehicle);
-            }
-        }).placeAt('toolbar');
-
-        new Button({
-            label: 'Built-in CZML',
-            onClick: function() {
-                useBuiltInCzml(widget);
-                Sandcastle.highlight(useBuiltInCzml);
-            }
-        }).placeAt('toolbar');
-    }
-
-    // Initialize a viewer capable of drag-and-drop
-    // and user customizations.
-    var widget = new CesiumViewerWidget({
-        endUserOptions : endUserOptions,
-        enableDragDrop : true
-    });
+    var widget = new CesiumViewerWidget();
     widget.placeAt(dom.byId('cesiumContainer'));
-    widget.startup();
     dom.byId('toolbar').innerHTML = '';
+    widget.autoStartRenderLoop = false; // We need a custom render loop
+    widget.startup();
 
-    createButtons(widget);
+    var visualizers = addCZML(czml, widget.scene, widget.clock);
+    widget.timelineControl.zoomTo(widget.clock.startTime, widget.clock.stopTime);
+
+    // Let's make the playback speed faster
+    widget.clock.multiplier = 300.0;
+
+    // Custom render loop adapted from CesiumViewerWidget.startRenderLoop()
+    var animationController = widget.animationController;
+
+    function updateAndRender() {
+        var currentTime = animationController.update();
+        widget.initializeFrame(currentTime);
+        widget.update(currentTime);
+
+        // Update the visualizers...
+        visualizers.update(currentTime);
+
+        widget.render();
+        Cesium.requestAnimationFrame(updateAndRender);
+    }
+
+    Cesium.requestAnimationFrame(updateAndRender);
+
+    // Zoom in a little closer...
+    var extent = new Cesium.Extent(-2.056, 0.587, -2.010, 0.633);
+    widget.scene.getCamera().controller.viewExtent(extent);
 });
 </script>
 </body>
