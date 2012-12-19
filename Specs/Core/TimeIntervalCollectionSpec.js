@@ -179,35 +179,35 @@ defineSuite([
 
         intervals.addInterval(interval1);
         expect(intervals.getLength()).toEqual(1);
-        expect(intervals.getStart().equals(interval1.start)).toEqual(true);
-        expect(intervals.getStop().equals(interval1.stop)).toEqual(true);
+        expect(intervals.getStart()).toEqual(interval1.start);
+        expect(intervals.getStop()).toEqual(interval1.stop);
         expect(intervals.isEmpty()).toEqual(false);
 
-        expect(intervals.findIntervalContainingDate(interval1.start).equals(interval1)).toEqual(true);
-        expect(intervals.findIntervalContainingDate(interval1.stop).equals(interval1)).toEqual(true);
+        expect(intervals.findIntervalContainingDate(interval1.start)).toEqual(interval1);
+        expect(intervals.findIntervalContainingDate(interval1.stop)).toEqual(interval1);
 
         intervals.addInterval(interval2);
 
         expect(intervals.getLength()).toEqual(2);
-        expect(intervals.getStart().equals(interval1.start)).toEqual(true);
-        expect(intervals.getStop().equals(interval2.stop)).toEqual(true);
+        expect(intervals.getStart()).toEqual(interval1.start);
+        expect(intervals.getStop()).toEqual(interval2.stop);
         expect(intervals.isEmpty()).toEqual(false);
 
-        expect(intervals.findIntervalContainingDate(interval1.start).equals(interval1)).toEqual(true);
-        expect(intervals.findIntervalContainingDate(interval1.stop).equals(interval1)).toEqual(true);
-        expect(intervals.findIntervalContainingDate(interval2.stop).equals(interval2)).toEqual(true);
+        expect(intervals.findIntervalContainingDate(interval1.start)).toEqual(interval1);
+        expect(intervals.findIntervalContainingDate(interval1.stop)).toEqual(interval1);
+        expect(intervals.findIntervalContainingDate(interval2.stop)).toEqual(interval2);
 
         intervals.addInterval(interval3);
         expect(intervals.getLength()).toEqual(3);
-        expect(intervals.getStart().equals(interval1.start)).toEqual(true);
-        expect(intervals.getStop().equals(interval3.stop)).toEqual(true);
+        expect(intervals.getStart()).toEqual(interval1.start);
+        expect(intervals.getStop()).toEqual(interval3.stop);
         expect(intervals.isEmpty()).toEqual(false);
 
-        expect(intervals.findIntervalContainingDate(interval1.start).equals(interval1)).toEqual(true);
-        expect(intervals.findIntervalContainingDate(interval1.stop).equals(interval1)).toEqual(true);
-        expect(intervals.findIntervalContainingDate(interval2.stop).equals(interval2)).toEqual(true);
-        expect(intervals.findIntervalContainingDate(interval3.start).equals(interval3)).toEqual(true);
-        expect(intervals.findIntervalContainingDate(interval3.stop).equals(interval3)).toEqual(true);
+        expect(intervals.findIntervalContainingDate(interval1.start)).toEqual(interval1);
+        expect(intervals.findIntervalContainingDate(interval1.stop)).toEqual(interval1);
+        expect(intervals.findIntervalContainingDate(interval2.stop)).toEqual(interval2);
+        expect(intervals.findIntervalContainingDate(interval3.start)).toEqual(interval3);
+        expect(intervals.findIntervalContainingDate(interval3.stop)).toEqual(interval3);
     });
 
     it('addInterval and findIntervalContainingDate work when using overlapping intervals', function() {
@@ -219,8 +219,8 @@ defineSuite([
 
         intervals.addInterval(interval1);
         expect(intervals.getLength()).toEqual(1);
-        expect(intervals.getStart().equals(interval1.start)).toEqual(true);
-        expect(intervals.getStop().equals(interval1.stop)).toEqual(true);
+        expect(intervals.getStart()).toEqual(interval1.start);
+        expect(intervals.getStop()).toEqual(interval1.stop);
         expect(intervals.isEmpty()).toEqual(false);
 
         expect(intervals.findIntervalContainingDate(interval1.start).data).toEqual(1);
@@ -229,8 +229,8 @@ defineSuite([
         intervals.addInterval(interval2);
 
         expect(intervals.getLength()).toEqual(2);
-        expect(intervals.getStart().equals(interval1.start)).toEqual(true);
-        expect(intervals.getStop().equals(interval2.stop)).toEqual(true);
+        expect(intervals.getStart()).toEqual(interval1.start);
+        expect(intervals.getStop()).toEqual(interval2.stop);
         expect(intervals.isEmpty()).toEqual(false);
 
         expect(intervals.findIntervalContainingDate(interval1.start).data).toEqual(1);
@@ -239,8 +239,8 @@ defineSuite([
 
         intervals.addInterval(interval3);
         expect(intervals.getLength()).toEqual(1);
-        expect(intervals.getStart().equals(interval3.start)).toEqual(true);
-        expect(intervals.getStop().equals(interval3.stop)).toEqual(true);
+        expect(intervals.getStart()).toEqual(interval3.start);
+        expect(intervals.getStop()).toEqual(interval3.stop);
         expect(intervals.isEmpty()).toEqual(false);
 
         expect(intervals.findIntervalContainingDate(interval1.start).data).toEqual(3);

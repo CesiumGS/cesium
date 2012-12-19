@@ -65,40 +65,40 @@ defineSuite([
         var leftPlane = planes[0];
         var x = 1.0 / Math.sqrt(2.0);
         var expectedResult = new Cartesian4(x, 0.0, -x, 0.0);
-        expect(leftPlane.equals(expectedResult)).toEqual(true);
+        expect(leftPlane).toEqual(expectedResult);
     });
 
     it('get frustum right plane', function() {
         var rightPlane = planes[1];
         var x = 1.0 / Math.sqrt(2.0);
         var expectedResult = new Cartesian4(-x, 0.0, -x, 0.0);
-        expect(rightPlane.equals(expectedResult)).toEqual(true);
+        expect(rightPlane).toEqual(expectedResult);
     });
 
     it('get frustum bottom plane', function() {
         var bottomPlane = planes[2];
         var x = 1.0 / Math.sqrt(2.0);
         var expectedResult = new Cartesian4(0.0, x, -x, 0.0);
-        expect(bottomPlane.equals(expectedResult)).toEqual(true);
+        expect(bottomPlane).toEqual(expectedResult);
     });
 
     it('get frustum top plane', function() {
         var topPlane = planes[3];
         var x = 1.0 / Math.sqrt(2.0);
         var expectedResult = new Cartesian4(0.0, -x, -x, 0.0);
-        expect(topPlane.equals(expectedResult)).toEqual(true);
+        expect(topPlane).toEqual(expectedResult);
     });
 
     it('get frustum near plane', function() {
         var nearPlane = planes[4];
         var expectedResult = new Cartesian4(0.0, 0.0, -1.0, -1.0);
-        expect(nearPlane.equals(expectedResult)).toEqual(true);
+        expect(nearPlane).toEqual(expectedResult);
     });
 
     it('get frustum far plane', function() {
         var farPlane = planes[5];
         var expectedResult = new Cartesian4(0.0, 0.0, 1.0, 2.0);
-        expect(farPlane.equals(expectedResult)).toEqual(true);
+        expect(farPlane).toEqual(expectedResult);
     });
 
     it('get perspective projection matrix', function() {
@@ -112,7 +112,7 @@ defineSuite([
         var far = frustum.far;
         var expected = Matrix4.computePerspectiveOffCenter(left, right, bottom, top, near, far);
 
-        expect(projectionMatrix.equalsEpsilon(expected, CesiumMath.EPSILON6)).toEqual(true);
+        expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 
     it('get infinite perspective matrix', function() {
@@ -123,7 +123,7 @@ defineSuite([
         var near = frustum.near;
 
         var expected = Matrix4.computeInfinitePerspectiveOffCenter(left, right, bottom, top, near);
-        expect(expected.equals(frustum.getInfiniteProjectionMatrix())).toEqual(true);
+        expect(expected).toEqual(frustum.getInfiniteProjectionMatrix());
     });
 
     it('get pixel size throws without canvas dimensions', function() {
@@ -162,7 +162,7 @@ defineSuite([
         frustum2.direction =  Cartesian3.UNIT_Z.negate();
         frustum2.up = Cartesian3.UNIT_Y;
 
-        expect(frustum.equals(frustum2)).toEqual(true);
+        expect(frustum).toEqual(frustum2);
     });
 
     it('throws with undefined frustum parameters', function() {
