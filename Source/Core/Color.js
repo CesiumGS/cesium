@@ -137,7 +137,7 @@ define([
 
         var matches;
 
-        if (null !== (matches = /^#([0-9a-z])([0-9a-z])([0-9a-z])$/i.exec(color))) {
+        if (null !== (matches = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(color))) {
             return new Color(
                 parseInt(matches[1], 16) / 15.0,
                 parseInt(matches[2], 16) / 15.0,
@@ -145,7 +145,7 @@ define([
             );
         }
 
-        if (null !== (matches = /^#([0-9a-z]{2})([0-9a-z]{2})([0-9a-z]{2})$/i.exec(color))) {
+        if (null !== (matches = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color))) {
             return new Color(
                 parseInt(matches[1], 16) / 255.0,
                 parseInt(matches[2], 16) / 255.0,
