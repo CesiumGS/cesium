@@ -5,15 +5,28 @@ define([
         './TimeConstants',
         './LeapSecond',
         './TimeStandard',
-        './isLeapYear'
+        './isLeapYear',
+        '../ThirdParty/sprintf'
     ], function(
         DeveloperError,
         binarySearch,
         TimeConstants,
         LeapSecond,
         TimeStandard,
-        isLeapYear) {
+        isLeapYear,
+        sprintf) {
     "use strict";
+
+    var GregorianDate = function(year, month, day, hour, minute, second, millisecond, isLeapSecond) {
+        this.year = year;
+        this.month = month;
+        this.day = day;
+        this.hour = hour;
+        this.minute = minute;
+        this.second = second;
+        this.millisecond = millisecond;
+        this.isLeapSecond = isLeapSecond;
+    };
 
     var daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     var daysInLeapFeburary = 29;
@@ -80,7 +93,7 @@ define([
             return undefined;
         }
 
-        //The time is in between two leap seconds, undex is the leap second after the date
+        //The time is in between two leap seconds, index is the leap second after the date
         //we're converting, so we subtract one to get the correct LeapSecond instance.
         return julianDate.addSeconds(-leapSeconds[--index].offset, result);
     }
@@ -663,23 +676,18 @@ define([
         return this._secondsOfDay;
     };
 
-    var toDateScratch = new JulianDate(0, 0, TimeStandard.TAI);
-    /**
-     * Creates a new JavaScript Date object equivalent to the Julian date
-     * (accurate to the nearest millisecond in the UTC time standard).
-     *
-     * @memberof JulianDate
-     *
-     * @return {Date} A new JavaScript Date equivalent to this Julian date.
-     */
-    JulianDate.prototype.toDate = function() {
-        //Attempt to convert to UTC; if we are on a leap second, this will
-        //return undefined.  Since JavaScript Date doesn't support leap second
-        //we can just add second and re-convert.
-        var thisUtc = convertTaiToUtc(this, toDateScratch);
+    var toGregorianDateScratch = new JulianDate(0, 0, TimeStandard.TAI);
+
+    JulianDate.prototype.toGregorianDate = function() {
+        var isLeapSecond = false;
+        var thisUtc = convertTaiToUtc(this, toGregorianDateScratch);
         if (typeof thisUtc === 'undefined') {
-            this.addSeconds(1, toDateScratch);
-            thisUtc = convertTaiToUtc(toDateScratch, toDateScratch);
+            //Conversion to UTC will fail if we are during a leap second.
+            //If that's the case, subtract a second and convert again.
+            //JavaScript doesn't support leap seconds, so this results in second 59 being repeated twice.
+            this.addSeconds(-1, toGregorianDateScratch);
+            thisUtc = convertTaiToUtc(toGregorianDateScratch, toGregorianDateScratch);
+            isLeapSecond = true;
         }
 
         var julianDayNumber = thisUtc._julianDayNumber;
@@ -702,14 +710,12 @@ define([
         var month = (J + 2 - 12 * L) | 0;
         var year = (100 * (N - 49) + I + L) | 0;
 
-        month--; // month field is zero-indexed
-
         var hours = (secondsOfDay / TimeConstants.SECONDS_PER_HOUR) | 0;
         var remainingSeconds = secondsOfDay - (hours * TimeConstants.SECONDS_PER_HOUR);
         var minutes = (remainingSeconds / TimeConstants.SECONDS_PER_MINUTE) | 0;
         remainingSeconds = remainingSeconds - (minutes * TimeConstants.SECONDS_PER_MINUTE);
         var seconds = remainingSeconds | 0;
-        var milliseconds = ((remainingSeconds - seconds) / TimeConstants.SECONDS_PER_MILLISECOND) | 0;
+        var milliseconds = ((remainingSeconds - seconds) / TimeConstants.SECONDS_PER_MILLISECOND);
 
         // JulianDates are noon-based
         hours += 12;
@@ -717,7 +723,56 @@ define([
             hours -= 24;
         }
 
-        return new Date(Date.UTC(year, month, day, hours, minutes, seconds, milliseconds));
+        //If we were on a leap second, add it back.
+        if (isLeapSecond) {
+            seconds += 1;
+        }
+
+        return new GregorianDate(year, month, day, hours, minutes, seconds, milliseconds, isLeapSecond);
+    };
+
+    /**
+     * Creates a new JavaScript Date object equivalent to the Julian date
+     * (accurate to the nearest millisecond in the UTC time standard).
+     *
+     * @memberof JulianDate
+     *
+     * @return {Date} A new JavaScript Date equivalent to this Julian date.
+     */
+    JulianDate.prototype.toDate = function() {
+        var gDate = this.toGregorianDate();
+        var second = gDate.second;
+        if (gDate.isLeapSecond) {
+            second -= 1;
+        }
+        return new Date(Date.UTC(gDate.year, gDate.month - 1, gDate.day, gDate.hour, gDate.minute, second, gDate.millisecond));
+    };
+
+    /**
+     * Creates an ISO8601 string represenation of this Julian date.
+     * @memberof JulianDate
+     *
+     * @param {Number} [precision=0] The other Julian date, which is the end of the interval.
+     * @return {String} An ISO8601 string represenation of this Julian date.
+     */
+    JulianDate.prototype.toIso8601 = function(precision) {
+        var gDate = this.toGregorianDate();
+        var millisecondStr;
+
+        if (typeof precision === 'undefined' && gDate.millisecond !== 0) {
+            //Forces milliseconds into a number with at least 3 digits to whatever the default toString() precision is.
+            millisecondStr = (gDate.millisecond * 0.01).toString().replace('.', '');
+            return sprintf("%04d-%02d-%02dT%02d:%02d:%02d.%sZ", gDate.year, gDate.month, gDate.day, gDate.hour, gDate.minute, gDate.second, millisecondStr);
+        }
+
+        //Precision is either 0 or milliseconds is 0 with undefined precision, in either case, leave off milliseconds entirely
+        if (typeof precision === 'undefined' || precision === 0) {
+            return sprintf("%04d-%02d-%02dT%02d:%02d:%02dZ", gDate.year, gDate.month, gDate.day, gDate.hour, gDate.minute, gDate.second);
+        }
+
+        //Forces milliseconds into a number with at least 3 digits to whatever the specified precision is.
+        millisecondStr = (gDate.millisecond * 0.01).toFixed(precision).replace('.', '').slice(0, precision);
+        return sprintf("%04d-%02d-%02dT%02d:%02d:%02d.%sZ", gDate.year, gDate.month, gDate.day, gDate.hour, gDate.minute, gDate.second, millisecondStr);
     };
 
     /**
