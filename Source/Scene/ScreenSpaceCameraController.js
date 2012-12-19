@@ -727,7 +727,14 @@ define([
 
             var deltaPhi = startPhi - endPhi;
 
-            var planeNormal = Cartesian3.cross(basis0, cameraController._camera.right, pan3DTemp0);
+            var east;
+            if (Cartesian3.equalsEpsilon(basis0, cameraController._camera.position, CesiumMath.EPSILON2)) {
+                east = cameraController._camera.right;
+            } else {
+                east = Cartesian3.cross(basis0, cameraController._camera.position);
+            }
+
+            var planeNormal = Cartesian3.cross(basis0, east, pan3DTemp0);
             var side0 = Cartesian3.dot(planeNormal, Cartesian3.subtract(p0, basis0, pan3DTemp1));
             var side1 = Cartesian3.dot(planeNormal, Cartesian3.subtract(p1, basis0, pan3DTemp1));
 
