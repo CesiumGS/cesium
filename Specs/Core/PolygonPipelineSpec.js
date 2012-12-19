@@ -264,19 +264,19 @@ defineSuite([
         var innerRings = [innerRing];
         var positions = PolygonPipeline.eliminateHoles(outerRing, innerRings, Ellipsoid.UNIT_SPHERE);
 
-        expect(positions[0].equals(outerRing[0])).toEqual(true);
-        expect(positions[1].equals(outerRing[1])).toEqual(true);
+        expect(positions[0]).toEqual(outerRing[0]);
+        expect(positions[1]).toEqual(outerRing[1]);
 
-        expect(positions[2].equals(innerRing[0])).toEqual(true);
-        expect(positions[3].equals(innerRing[1])).toEqual(true);
-        expect(positions[4].equals(innerRing[2])).toEqual(true);
-        expect(positions[5].equals(innerRing[3])).toEqual(true);
-        expect(positions[6].equals(innerRing[0])).toEqual(true);
+        expect(positions[2]).toEqual(innerRing[0]);
+        expect(positions[3]).toEqual(innerRing[1]);
+        expect(positions[4]).toEqual(innerRing[2]);
+        expect(positions[5]).toEqual(innerRing[3]);
+        expect(positions[6]).toEqual(innerRing[0]);
 
-        expect(positions[7].equals(outerRing[1])).toEqual(true);
-        expect(positions[8].equals(outerRing[2])).toEqual(true);
-        expect(positions[9].equals(outerRing[3])).toEqual(true);
-        expect(positions[10].equals(outerRing[0])).toEqual(true);
+        expect(positions[7]).toEqual(outerRing[1]);
+        expect(positions[8]).toEqual(outerRing[2]);
+        expect(positions[9]).toEqual(outerRing[3]);
+        expect(positions[10]).toEqual(outerRing[0]);
     });
 
     it('eliminateHoles removes a hole from a polygon', function() {
@@ -298,19 +298,19 @@ defineSuite([
         var innerRings = [innerRing];
         var positions = PolygonPipeline.eliminateHoles(outerRing, innerRings);
 
-        expect(positions[0].equals(outerRing[0])).toEqual(true);
-        expect(positions[1].equals(outerRing[1])).toEqual(true);
+        expect(positions[0]).toEqual(outerRing[0]);
+        expect(positions[1]).toEqual(outerRing[1]);
 
-        expect(positions[2].equals(innerRing[0])).toEqual(true);
-        expect(positions[3].equals(innerRing[1])).toEqual(true);
-        expect(positions[4].equals(innerRing[2])).toEqual(true);
-        expect(positions[5].equals(innerRing[3])).toEqual(true);
-        expect(positions[6].equals(innerRing[0])).toEqual(true);
+        expect(positions[2]).toEqual(innerRing[0]);
+        expect(positions[3]).toEqual(innerRing[1]);
+        expect(positions[4]).toEqual(innerRing[2]);
+        expect(positions[5]).toEqual(innerRing[3]);
+        expect(positions[6]).toEqual(innerRing[0]);
 
-        expect(positions[7].equals(outerRing[1])).toEqual(true);
-        expect(positions[8].equals(outerRing[2])).toEqual(true);
-        expect(positions[9].equals(outerRing[3])).toEqual(true);
-        expect(positions[10].equals(outerRing[0])).toEqual(true);
+        expect(positions[7]).toEqual(outerRing[1]);
+        expect(positions[8]).toEqual(outerRing[2]);
+        expect(positions[9]).toEqual(outerRing[3]);
+        expect(positions[10]).toEqual(outerRing[0]);
     });
 
     it('eliminateHoles ensures proper winding order', function() {
@@ -332,19 +332,19 @@ defineSuite([
         var innerRings = [innerRing];
         var positions = PolygonPipeline.eliminateHoles(outerRing, innerRings);
 
-        expect(positions[0].equals(outerRing[0])).toEqual(true);
-        expect(positions[1].equals(outerRing[1])).toEqual(true);
+        expect(positions[0]).toEqual(outerRing[0]);
+        expect(positions[1]).toEqual(outerRing[1]);
 
-        expect(positions[2].equals(innerRing[0])).toEqual(true);
-        expect(positions[3].equals(innerRing[3])).toEqual(true);
-        expect(positions[4].equals(innerRing[2])).toEqual(true);
-        expect(positions[5].equals(innerRing[1])).toEqual(true);
-        expect(positions[6].equals(innerRing[0])).toEqual(true);
+        expect(positions[2]).toEqual(innerRing[0]);
+        expect(positions[3]).toEqual(innerRing[3]);
+        expect(positions[4]).toEqual(innerRing[2]);
+        expect(positions[5]).toEqual(innerRing[1]);
+        expect(positions[6]).toEqual(innerRing[0]);
 
-        expect(positions[7].equals(outerRing[1])).toEqual(true);
-        expect(positions[8].equals(outerRing[2])).toEqual(true);
-        expect(positions[9].equals(outerRing[3])).toEqual(true);
-        expect(positions[10].equals(outerRing[0])).toEqual(true);
+        expect(positions[7]).toEqual(outerRing[1]);
+        expect(positions[8]).toEqual(outerRing[2]);
+        expect(positions[9]).toEqual(outerRing[3]);
+        expect(positions[10]).toEqual(outerRing[0]);
     });
 
     it('eliminateHoles works with concave polygons', function() {
@@ -367,21 +367,21 @@ defineSuite([
 
         var positions = PolygonPipeline.eliminateHoles(outerRing, [innerRing]);
 
-        expect(positions[0].equals(outerRing[0])).toEqual(true);
-        expect(positions[1].equals(outerRing[1])).toEqual(true);
-        expect(positions[2].equals(outerRing[2])).toEqual(true);
+        expect(positions[0]).toEqual(outerRing[0]);
+        expect(positions[1]).toEqual(outerRing[1]);
+        expect(positions[2]).toEqual(outerRing[2]);
 
-        expect(positions[3].equals(innerRing[2])).toEqual(true);
-        expect(positions[4].equals(innerRing[3])).toEqual(true);
-        expect(positions[5].equals(innerRing[0])).toEqual(true);
-        expect(positions[6].equals(innerRing[1])).toEqual(true);
-        expect(positions[7].equals(innerRing[2])).toEqual(true);
+        expect(positions[3]).toEqual(innerRing[2]);
+        expect(positions[4]).toEqual(innerRing[3]);
+        expect(positions[5]).toEqual(innerRing[0]);
+        expect(positions[6]).toEqual(innerRing[1]);
+        expect(positions[7]).toEqual(innerRing[2]);
 
-        expect(positions[8].equals(outerRing[2])).toEqual(true);
-        expect(positions[9].equals(outerRing[3])).toEqual(true);
-        expect(positions[10].equals(outerRing[4])).toEqual(true);
-        expect(positions[11].equals(outerRing[5])).toEqual(true);
-        expect(positions[12].equals(outerRing[6])).toEqual(true);
+        expect(positions[8]).toEqual(outerRing[2]);
+        expect(positions[9]).toEqual(outerRing[3]);
+        expect(positions[10]).toEqual(outerRing[4]);
+        expect(positions[11]).toEqual(outerRing[5]);
+        expect(positions[12]).toEqual(outerRing[6]);
     });
 
     it('eliminateHoles eliminates multiple holes', function() {
