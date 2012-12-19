@@ -344,24 +344,14 @@ defineSuite([
     });
 
     it('rotates', function() {
-        var camera2 = new Camera(document);
-        camera2.position = position;
-        camera2.up = up;
-        camera2.direction = dir;
-        camera2.right = right;
-
-        var controller2 = new CameraController(camera2);
+        var axis = new Cartesian3(Math.cos(CesiumMath.PI_OVER_FOUR), Math.sin(CesiumMath.PI_OVER_FOUR), 0.0).normalize();
         var angle = CesiumMath.PI_OVER_TWO;
+        controller.rotate(axis, angle);
 
-        controller.rotate(new Cartesian3(Math.cos(CesiumMath.PI_OVER_FOUR), Math.sin(CesiumMath.PI_OVER_FOUR), 0.0), angle);
-
-        controller2.moveLeft(angle);
-        controller2.moveUp(angle);
-
-        expect(camera.position).toEqualEpsilon(camera2.position, CesiumMath.EPSILON15);
-        expect(camera.direction).toEqualEpsilon(camera2.direction, CesiumMath.EPSILON15);
-        expect(camera.up).toEqualEpsilon(camera2.up, CesiumMath.EPSILON15);
-        expect(camera.right).toEqualEpsilon(camera2.right, CesiumMath.EPSILON15);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(-axis.x, axis.y, 0.0), CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(camera.position.normalize().negate(), CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(new Cartesian3(0.5, 0.5, axis.x).normalize(), CesiumMath.EPSILON15);
+        expect(camera.up).toEqualEpsilon(camera.right.cross(camera.direction), CesiumMath.EPSILON15);
     });
 
     it('rotate past constrained axis stops at constained axis', function() {
