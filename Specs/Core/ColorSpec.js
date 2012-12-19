@@ -102,4 +102,79 @@ defineSuite(['Core/Color'], function(Color) {
         expect(Color.BLUE.toCSSColor()).toEqual('rgba(0,0,255,1)');
         expect(new Color(0.1, 0.2, 0.3, 0.4).toCSSColor()).toEqual('rgba(25,51,76,0.4)');
     });
+
+    it('fromCSSColor supports the #rgb format', function() {
+        expect(Color.fromCSSColor('#f00')).toEqual(Color.RED);
+        expect(Color.fromCSSColor('#0f0')).toEqual(Color.GREEN);
+        expect(Color.fromCSSColor('#00f')).toEqual(Color.BLUE);
+    });
+
+    it('fromCSSColor supports the #RGB format', function() {
+        expect(Color.fromCSSColor('#F00')).toEqual(Color.RED);
+        expect(Color.fromCSSColor('#0F0')).toEqual(Color.GREEN);
+        expect(Color.fromCSSColor('#00F')).toEqual(Color.BLUE);
+    });
+
+    it('fromCSSColor supports the #rrggbb format', function() {
+        expect(Color.fromCSSColor('#ff0000')).toEqual(Color.RED);
+        expect(Color.fromCSSColor('#00ff00')).toEqual(Color.GREEN);
+        expect(Color.fromCSSColor('#0000ff')).toEqual(Color.BLUE);
+    });
+
+    it('fromCSSColor supports the #RRGGBB format', function() {
+        expect(Color.fromCSSColor('#FF0000')).toEqual(Color.RED);
+        expect(Color.fromCSSColor('#00FF00')).toEqual(Color.GREEN);
+        expect(Color.fromCSSColor('#0000FF')).toEqual(Color.BLUE);
+    });
+
+    it('fromCSSColor supports the rgb() format', function() {
+        expect(Color.fromCSSColor('rgb(255, 0, 0)')).toEqual(Color.RED);
+        expect(Color.fromCSSColor('rgb(0, 255, 0)')).toEqual(Color.GREEN);
+        expect(Color.fromCSSColor('rgb(0, 0, 255)')).toEqual(Color.BLUE);
+    });
+
+    it('fromCSSColor supports the rgb%() format', function() {
+        expect(Color.fromCSSColor('rgb(100%, 0, 0)')).toEqual(Color.RED);
+        expect(Color.fromCSSColor('rgb(0, 100%, 0)')).toEqual(Color.GREEN);
+        expect(Color.fromCSSColor('rgb(0, 0, 100%)')).toEqual(Color.BLUE);
+    });
+
+    it('fromCSSColor supports the rgba() format', function() {
+        expect(Color.fromCSSColor('rgba(255, 50%, 25%, 0.5)')).toEqual(new Color(1.0, 0.5, 0.25, 0.5));
+    });
+
+    it('fromCSSColor supports named colors', function() {
+        expect(Color.fromCSSColor('red')).toEqual(Color.RED);
+        expect(Color.fromCSSColor('green')).toEqual(Color.fromCSSColor('#008000'));
+        expect(Color.fromCSSColor('blue')).toEqual(Color.BLUE);
+    });
+
+    it('fromCSSColor supports NAMED colors', function() {
+        expect(Color.fromCSSColor('RED')).toEqual(Color.RED);
+        expect(Color.fromCSSColor('GREEN')).toEqual(Color.fromCSSColor('#008000'));
+        expect(Color.fromCSSColor('BLUE')).toEqual(Color.BLUE);
+    });
+
+    it('fromCSSColor supports the hsl() format', function() {
+        expect(Color.fromCSSColor('hsl(360, 100%, 100%, 0.5)')).toEqual(Color.fromHSL(1, 1, 1, 0.5));
+    });
+
+    it('fromCSSColor supports the hsla() format', function() {
+        expect(Color.fromCSSColor('hsla(360, 100%, 100%, 0.5)')).toEqual(Color.fromHSL(1, 1, 1, 0.5));
+    });
+
+    it('fromCSSColor can return a default value on unknown colors', function() {
+        expect(Color.fromCSSColor('unknown', Color.GREEN)).toEqual(Color.GREEN);
+    });
+
+    it('fromCSSColor can throw on unknown colors', function() {
+        expect(function() {Color.fromCSSColor('unknown', undefined, true);}).toThrow();
+    });
+
+    it('fromHSL works', function() {
+        expect(Color.fromHSL(0, 1, 0.25)).toEqual(new Color(0.5, 0, 0));
+        expect(Color.fromHSL(120 / 360, 1, 0.25)).toEqual(new Color(0, 0.5, 0));
+        expect(Color.fromHSL(240 / 360, 1, 0.25)).toEqual(new Color(0, 0, 0.5));
+        expect(Color.fromHSL(0, 0, 0.5)).toEqual(new Color(0.5, 0.5, 0.5));
+    });
 });
