@@ -726,7 +726,19 @@ define([
             }
 
             var deltaPhi = startPhi - endPhi;
-            var deltaTheta = startTheta - endTheta;
+
+            var planeNormal = Cartesian3.cross(basis0, cameraController._camera.right, pan3DTemp0);
+            var side0 = Cartesian3.dot(planeNormal, Cartesian3.subtract(p0, basis0, pan3DTemp1));
+            var side1 = Cartesian3.dot(planeNormal, Cartesian3.subtract(p1, basis0, pan3DTemp1));
+
+            var deltaTheta;
+            if (side0 > 0 && side1 > 0) {
+                deltaTheta = endTheta - startTheta;
+            } else if (side0 > 0 && side1 <= 0) {
+                deltaTheta = -startTheta - endTheta;
+            } else {
+                deltaTheta = startTheta - endTheta;
+            }
 
             cameraController.rotateRight(deltaPhi);
             cameraController.rotateUp(deltaTheta);
