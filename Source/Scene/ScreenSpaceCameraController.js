@@ -735,7 +735,11 @@ define([
             if (side0 > 0 && side1 > 0) {
                 deltaTheta = endTheta - startTheta;
             } else if (side0 > 0 && side1 <= 0) {
-                deltaTheta = -startTheta - endTheta;
+                if (Cartesian3.dot(cameraController._camera.position, basis0) > 0) {
+                    deltaTheta = -startTheta - endTheta;
+                } else {
+                    deltaTheta = startTheta + endTheta;
+                }
             } else {
                 deltaTheta = startTheta - endTheta;
             }
