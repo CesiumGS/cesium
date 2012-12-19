@@ -116,7 +116,7 @@ define([
      * Creates a Color instance from a CSS color value.
      * @memberof Color
      *
-     * @param {String} color The CSS color value.
+     * @param {String} color The CSS color value in #rgb, #rrggbb, rgb(), rgba(), hsl(), or hsla() format.
      * @param {Color} [defaultColor=Color.WHITE] The default color.
      * @param {Boolean} [throwIfUnsupported=false] Whether unsuported values
      *     should return the default value or throw

@@ -140,7 +140,7 @@ defineSuite(['Core/Color'], function(Color) {
     });
 
     it('fromCSSColor supports the rgba() format', function() {
-        expect(Color.fromCSSColor('rgb(255, 50%, 25%, 0.5)')).toEqual(new Color(1.0, 0.5, 0.25, 0.5));
+        expect(Color.fromCSSColor('rgba(255, 50%, 25%, 0.5)')).toEqual(new Color(1.0, 0.5, 0.25, 0.5));
     });
 
     it('fromCSSColor supports named colors', function() {
@@ -172,9 +172,9 @@ defineSuite(['Core/Color'], function(Color) {
     });
 
     it('fromHSL works', function() {
-        expect(Color.fromHSL(0, 1, .25)).toEqual(new Color(.5, 0, 0));
-        expect(Color.fromHSL(120 / 360, 1, .25)).toEqual(new Color(0, .5, 0));
-        expect(Color.fromHSL(240 / 360, 1, .25)).toEqual(new Color(0, 0, .5));
-        expect(Color.fromHSL(0, 0, .5)).toEqual(new Color(.5, .5, .5));
+        expect(Color.fromHSL(0, 1, 0.25)).toEqual(new Color(0.5, 0, 0));
+        expect(Color.fromHSL(120 / 360, 1, 0.25)).toEqual(new Color(0, 0.5, 0));
+        expect(Color.fromHSL(240 / 360, 1, 0.25)).toEqual(new Color(0, 0, 0.5));
+        expect(Color.fromHSL(0, 0, 0.5)).toEqual(new Color(0.5, 0.5, 0.5));
     });
 });
