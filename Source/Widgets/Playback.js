@@ -1,10 +1,12 @@
 /*global define*/
 define([
     '../Core/DeveloperError',
-    '../Core/ClockStep'
+    '../Core/ClockStep',
+    '../Core/Color'
 ], function(
     DeveloperError,
-    ClockStep
+    ClockStep,
+    Color
 ) {
     "use strict";
 
@@ -113,6 +115,30 @@ define([
         this.knobOuter.setAttribute('transform', 'rotate(' + angle + ')');
     };
 
+    Playback.prototype.buttonNormalBackColor = Color.fromCSSColor('#222');
+    Playback.prototype.buttonHoverBackColor = Color.fromCSSColor('#4488B0'); //oops
+    Playback.prototype.buttonSelectedBackColor = Color.fromCSSColor('#242');
+    // Playback.prototype.buttonSelectedHoverBackColor = Color.fromCSSColor('#484');
+    Playback.prototype.buttonDisabledBackColor = Color.fromCSSColor('#333');
+
+    Playback.prototype.gradientEnabledColor0 = Color.fromCSSColor('rgba(247,250,255,0.384)');
+    Playback.prototype.gradientEnabledColor1 = Color.fromCSSColor('rgba(143,191,255,0.216)');
+    Playback.prototype.gradientEnabledColor2 = Color.fromCSSColor('rgba(153,197,255,0.098)');
+    Playback.prototype.gradientEnabledColor3 = Color.fromCSSColor('rgba(255,255,255,0.086)');
+
+    Playback.prototype.gradientDisabledColor0 = Color.fromCSSColor('rgba(255,255,255,0.267)');
+    Playback.prototype.gradientDisabledColor1 = Color.fromCSSColor('rgba(255,255,255,0)');
+
+    Playback.prototype._makeColorString = function(background, gradient) {
+        var gradientAlpha = gradient.alpha;
+        var backgroundAlpha = 1.0 - gradientAlpha;
+        var red = (background.red * backgroundAlpha) + (gradient.red * gradientAlpha);
+        var green = (background.green * backgroundAlpha) + (gradient.green * gradientAlpha);
+        var blue = (background.blue * backgroundAlpha) + (gradient.blue * gradientAlpha);
+        return 'rgb(' + Math.round(red * 255) + ',' + Math.round(green * 255) + ',' +
+            Math.round(blue * 255) + ')';
+    };
+
     Playback.prototype._createNodes = function(parentNode) {
         var widget = this;
 
@@ -149,38 +175,53 @@ define([
                     'tagName' : 'linearGradient',
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
-                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : 'rgb(116,117,119)' },
-                        { 'tagName' : 'stop', 'offset' : '12%', 'stop-color' : 'rgb(58,68,82)' },   // add a 'stop-opacity' field to make translucent.
-                        { 'tagName' : 'stop', 'offset' : '46%', 'stop-color' : 'rgb(46,50,56)' },
-                        { 'tagName' : 'stop', 'offset' : '81%', 'stop-color' : 'rgb(53,53,53)' }
+                        //add a 'stop-opacity' field to make translucent.
+                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' :
+                            widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor0) },
+                        { 'tagName' : 'stop', 'offset' : '12%', 'stop-color' :
+                            widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor1) },
+                        { 'tagName' : 'stop', 'offset' : '46%', 'stop-color' :
+                            widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor2) },
+                        { 'tagName' : 'stop', 'offset' : '81%', 'stop-color' :
+                            widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor3) }
                     ]
                 }, {
                     'id' : 'playback_buttonHovered',
                     'tagName' : 'linearGradient',
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
-                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : 'rgb(137,180,206)' },
-                        { 'tagName' : 'stop', 'offset' : '12%', 'stop-color' : 'rgb(84,148,193)' },
-                        { 'tagName' : 'stop', 'offset' : '46%', 'stop-color' : 'rgb(76,142,184)' },
-                        { 'tagName' : 'stop', 'offset' : '81%', 'stop-color' : 'rgb(84,146,183)' }
+                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' :
+                            widget._makeColorString(widget.buttonHoverBackColor, widget.gradientEnabledColor0) },
+                        { 'tagName' : 'stop', 'offset' : '12%', 'stop-color' :
+                            widget._makeColorString(widget.buttonHoverBackColor, widget.gradientEnabledColor1) },
+                        { 'tagName' : 'stop', 'offset' : '46%', 'stop-color' :
+                            widget._makeColorString(widget.buttonHoverBackColor, widget.gradientEnabledColor2) },
+                        { 'tagName' : 'stop', 'offset' : '81%', 'stop-color' :
+                            widget._makeColorString(widget.buttonHoverBackColor, widget.gradientEnabledColor3) }
                     ]
                 }, {
                     'id' : 'playback_buttonSelected',
                     'tagName' : 'linearGradient',
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
-                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : 'rgb(116,138,119)' },
-                        { 'tagName' : 'stop', 'offset' : '12%', 'stop-color' : 'rgb(58,95,82)' },
-                        { 'tagName' : 'stop', 'offset' : '46%', 'stop-color' : 'rgb(46,81,56)' },
-                        { 'tagName' : 'stop', 'offset' : '81%', 'stop-color' : 'rgb(53,84,53)' }
+                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' :
+                            widget._makeColorString(widget.buttonSelectedBackColor, widget.gradientEnabledColor0) },
+                        { 'tagName' : 'stop', 'offset' : '12%', 'stop-color' :
+                            widget._makeColorString(widget.buttonSelectedBackColor, widget.gradientEnabledColor1) },
+                        { 'tagName' : 'stop', 'offset' : '46%', 'stop-color' :
+                            widget._makeColorString(widget.buttonSelectedBackColor, widget.gradientEnabledColor2) },
+                        { 'tagName' : 'stop', 'offset' : '81%', 'stop-color' :
+                            widget._makeColorString(widget.buttonSelectedBackColor, widget.gradientEnabledColor3) }
                     ]
                 }, {
                     'id' : 'playback_buttonDisabled',
                     'tagName' : 'linearGradient',
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
-                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : '#696969' },
-                        { 'tagName' : 'stop', 'offset' : '75%', 'stop-color' : '#333' }
+                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' :
+                            widget._makeColorString(widget.buttonDisabledBackColor, widget.gradientDisabledColor0) },
+                        { 'tagName' : 'stop', 'offset' : '75%', 'stop-color' :
+                            widget._makeColorString(widget.buttonDisabledBackColor, widget.gradientDisabledColor0) }
                     ]
                 }, {
                     'id' : 'playback_blurred',
@@ -236,18 +277,24 @@ define([
                     'tagName' : 'linearGradient',
                     'x1' : '20%', 'y1' : '0%', 'x2' : '90%', 'y2' : '100%',
                     'children' : [
-                          { 'tagName' : 'stop', 'offset' : '5%', 'stop-color' : 'rgb(116,117,119)' },
-                          { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' : 'rgb(46,50,56)' },
-                          { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' : 'rgb(58,68,82)' }
+                          { 'tagName' : 'stop', 'offset' : '5%', 'stop-color' :
+                              widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor0) },
+                          { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' :
+                              widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor2) },
+                          { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' :
+                              widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor1) }
                     ]
                 }, {
                     'id' : 'playback_knobInner',
                     'tagName' : 'linearGradient',
                     'x1' : '20%', 'y1' : '0%', 'x2' : '90%', 'y2' : '100%',
                     'children' : [
-                          { 'tagName' : 'stop', 'offset' : '5%', 'stop-color' : 'rgb(53,53,53)' },
-                          { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' : 'rgb(116,117,119)' },
-                          { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' : 'rgb(53,53,53)' }
+                          { 'tagName' : 'stop', 'offset' : '5%', 'stop-color' :
+                              widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor3) },
+                          { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' :
+                              widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor0) },
+                          { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' :
+                              widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor3) }
                     ]
                 }, {
                     'id' : 'playback_pathReset',
