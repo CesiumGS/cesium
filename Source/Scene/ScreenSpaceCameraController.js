@@ -667,7 +667,10 @@ define([
 
     var pan3DP0 = Cartesian4.UNIT_W.clone();
     var pan3DP1 = Cartesian4.UNIT_W.clone();
-    var pan3DAxis = new Cartesian3();
+    var pan3DTemp0 = new Cartesian3();
+    var pan3DTemp1 = new Cartesian3();
+    var pan3DTemp2 = new Cartesian3();
+    var pan3DTemp3 = new Cartesian3();
     function pan3D(controller, movement) {
         var cameraController = controller._cameraController;
         var p0 = cameraController.pickEllipsoid(movement.startPosition, controller._ellipsoid, pan3DP0);
@@ -685,20 +688,42 @@ define([
             Cartesian3.normalize(p0, p0);
             Cartesian3.normalize(p1, p1);
             var dot = Cartesian3.dot(p0, p1);
-            var axis = Cartesian3.cross(p0, p1, pan3DAxis);
+            var axis = Cartesian3.cross(p0, p1, pan3DTemp0);
 
             if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
                 var angle = Math.acos(dot);
                 cameraController.rotate(axis, angle);
             }
         } else {
+            var basis0 = cameraController.constrainedAxis;
+            var basis1 = Cartesian3.mostOrthogonalAxis(basis0, pan3DTemp0);
+            Cartesian3.cross(basis1, basis0, basis1);
+            Cartesian3.normalize(basis1, basis1);
+            var basis2 = Cartesian3.cross(basis0, basis1, pan3DTemp1);
+
             var startRho = Cartesian3.magnitude(p0);
-            var startPhi = Math.atan2(p0.y, p0.x);
-            var startTheta = Math.acos(p0.z / startRho);
+            var startDot = Cartesian3.dot(basis0, p0);
+            var startTheta = Math.acos(startDot / startRho);
+            var startRej = Cartesian3.multiplyByScalar(basis0, startDot, pan3DTemp2);
+            Cartesian3.subtract(p0, startRej, startRej);
+            Cartesian3.normalize(startRej, startRej);
 
             var endRho = Cartesian3.magnitude(p1);
-            var endPhi = Math.atan2(p1.y, p1.x);
-            var endTheta = Math.acos(p1.z / endRho);
+            var endDot = Cartesian3.dot(basis0, p1);
+            var endTheta = Math.acos(endDot / endRho);
+            var endRej = Cartesian3.multiplyByScalar(basis0, endDot, pan3DTemp3);
+            Cartesian3.subtract(p1, endRej, endRej);
+            Cartesian3.normalize(endRej, endRej);
+
+            var startPhi = Math.acos(Cartesian3.dot(startRej, basis1));
+            if (Cartesian3.dot(startRej, basis2) < 0) {
+                startPhi = CesiumMath.TWO_PI - startPhi;
+            }
+
+            var endPhi = Math.acos(Cartesian3.dot(endRej, basis1));
+            if (Cartesian3.dot(endRej, basis2) < 0) {
+                endPhi = CesiumMath.TWO_PI - endPhi;
+            }
 
             var deltaPhi = startPhi - endPhi;
             var deltaTheta = startTheta - endTheta;
