@@ -10,52 +10,64 @@
 @import url('../../Source/Widgets/Timeline.css');
 
 body {
-	font-family: "Open Sans", "Trebuchet MS", Sans-Serif;
-	font-size: 15px;
+    font-family: "Open Sans", "Trebuchet MS", Sans-Serif;
+    font-size: 15px;
+    -webkit-transition: background-color, color;
+    -webkit-transition-duration: 1s;
+    -moz-transition: background-color, color;
+    -moz-transition-duration: 1s;
+    transition: background-color, color;
+    transition-duration: 1s;
+}
+body.cesium-darker {
+    background: #000;
+    color: #C0CCCC;
+}
+
+.startStopBlock {
+    overflow: hidden;  /* causes it to contain floating children. */
 }
 
 .dateTimeBlock {
-	display: block;
-	float: left;
-	margin-right: 10px;
-	border: solid 1px #000;
-	border-radius: 25px;
+    display: block;
+    float: left;
+    margin-right: 10px;
+    border: solid 1px #000;
+    border-radius: 25px;
+    color: #000;
+}
+.cesium-darker .dateTimeBlock {
+    background: #444;
 }
 
 .info {
-	display: block;
-	float: left;
-	margin-right: 10px;
-	font-family: Monospace;
+    display: block;
+    float: left;
+    margin-right: 10px;
+    font-family: Monospace;
 }
 
 .timeSel {
-	padding: 10px 20px;
+    padding: 10px 20px;
+}
+.cesium-darker .timeSel {
+    color: #C0CCCC;
 }
 
 .dateTimeBlock .dijitCalendarContainer {
-	margin: 5px auto 15px auto;
-}
-
-.clear {
-	clear: both;
-}
-
-.widgetBackground {
-    background: #000;
-    padding: 20px 0;
-    margin: 10px 0 0;
+    margin: 5px auto 15px auto;
 }
 
 .timelineAndPlayback {
     display: block;
+    clear: both;
     position: relative;
     top: 0;
     left: 0;
     width: 90%;
     height: 140px;
-    margin: 20px auto;
-    border: 1px solid #555;
+    margin: 20px auto 0;
+    border-bottom: 1px solid #888;
 }
 
 .myPlayback {
@@ -63,14 +75,14 @@ body {
     position: absolute;
     bottom: 0;
     left: 0;
-    z-index: 500;
+    z-index: 10;
 }
 
 .myTimeline {
 	display: block;
     position: absolute;
-    bottom: 0;
-    left: 198px;
+    bottom: -1px;
+    left: 195px;
     right: 0;
 	height: 59px;
 }
@@ -107,6 +119,11 @@ table {
 tr {
     border-top: solid 1px #ddd;
 }
+
+.themeSelector {
+    display: block;
+    float: right;
+}
 </style>
 <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0"
     src="../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
@@ -125,6 +142,14 @@ tr {
         <tr><td class="action">Middle-drag</td><td>Pan, only after zooming in.</td></tr>
         </table>
     </div>
+    <div data-dojo-type="dijit.form.ComboButton" data-dojo-props='iconClass:"dijitIconSample", optionsTitle:"select theme"'
+            id="themeSelector" class="themeSelector">
+        <span>Theme: Light</span>
+        <div data-dojo-type="dijit.Menu" id="themeMenu" style="display: none;">
+            <div id="themeLight" data-dojo-type="dijit.MenuItem">Light</div>
+            <div id="themeDark" data-dojo-type="dijit.MenuItem">Dark</div>
+        </div>
+    </div>
     <h1>Timeline Demo</h1>
     <p>This is a simple demo of the Cesium Timeline widget. Select a start and end date below to set the start and
         end dates of the timeline. You can click on the time bar at the top to jump to the time at that location. You
@@ -136,14 +161,14 @@ tr {
         <div class="dateTimeBlock">
             <div class="timeSel">
                 Start time: <input type="text" id="startTimeSel"
-                    data-dojo-type="dijit.form.TimeTextBox" required="true" />
+                    data-dojo-type="dijit.form.TimeTextBox" />
             </div>
             <div id="startCal" data-dojo-type="dijit.Calendar"></div>
         </div>
         <div class="dateTimeBlock">
             <div class="timeSel">
                 End time: <input type="text" id="endTimeSel"
-                    data-dojo-type="dijit.form.TimeTextBox" required="true" />
+                    data-dojo-type="dijit.form.TimeTextBox" />
             </div>
             <div id="endCal" data-dojo-type="dijit.Calendar"></div>
         </div>
@@ -152,14 +177,11 @@ tr {
                 Visible Timespan: <span id="formatted">(none)</span>
             </p>
         </div>
-        <div class="clear"></div>
     </div>
 
-    <div class="widgetBackground">
-        <div class="timelineAndPlayback">
-            <div id="time1" class="myTimeline"></div>
-            <div id="playbackTest" class="myPlayback"></div>
-        </div>
+    <div class="timelineAndPlayback">
+        <div id="time1" class="myTimeline"></div>
+        <div id="playbackTest" class="myPlayback"></div>
     </div>
 
     <p class="info">

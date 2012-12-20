@@ -25,6 +25,9 @@ require({
     'dijit/form/Button',
     'dijit/Calendar',
     'dijit/form/TimeTextBox',
+    'dijit/form/ComboButton',
+    'dijit/Menu',
+    'dijit/MenuItem',
     'TimelineDemo/TimelineDemo',
     'dojo/domReady!'
 ], function(

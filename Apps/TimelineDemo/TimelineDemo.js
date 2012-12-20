@@ -76,8 +76,8 @@ define(['dojo',
         clock = new Clock({
             startTime : startJulian,
             currentTime : scrubJulian,
-            stopTime : endJulian
-            // , multiplier : 60
+            stopTime : endJulian,
+            multiplier : 60
         });
 
         timeline = new Timeline('time1', clock);
@@ -90,7 +90,7 @@ define(['dojo',
         timeline.addTrack(new TimeInterval(startJulian.addSeconds(middle), startJulian.addSeconds(middle * 3)), 8, Color.CYAN, new Color(0.75, 0.75, 0.75, 0.5));
 
         animationController = new AnimationController(clock);
-        animationController.pause();
+        //animationController.pause();
         playback = new Playback(dojo.byId('playbackTest'), animationController);
 
         function tick() {
@@ -153,11 +153,33 @@ define(['dojo',
         newDatesSelected();
     }
 
+    // React to theme changes
+    //
+    function setThemeLight() {
+        document.body.className = 'claro';
+        dijit.byId('themeSelector').set('label', 'Theme: Light');
+    }
+    function setThemeDark() {
+        document.body.className = 'claro cesium-darker';
+        dijit.byId('themeSelector').set('label', 'Theme: Dark');
+    }
+    function cycleTheme() {
+        if (document.body.className === 'claro') {
+            setThemeDark();
+        } else {
+            setThemeLight();
+        }
+    }
+
     dojo.ready(function() {
         dojo.connect(dijit.byId('startCal'), 'onChange', newStartDateSelected);
         dojo.connect(dijit.byId('endCal'), 'onChange', newEndDateSelected);
         dojo.connect(dijit.byId('startTimeSel'), 'onChange', newStartTimeSelected);
         dojo.connect(dijit.byId('endTimeSel'), 'onChange', newEndTimeSelected);
+
+        dojo.connect(dijit.byId('themeSelector'), 'onClick', cycleTheme);
+        dojo.connect(dijit.byId('themeLight'), 'onClick', setThemeLight);
+        dojo.connect(dijit.byId('themeDark'), 'onClick', setThemeDark);
 
         dijit.byId('startTimeSel').set('value', 'T00:00:00');
         dijit.byId('endTimeSel').set('value', 'T24:00:00');

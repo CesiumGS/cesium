@@ -1,5 +1,5 @@
 .playback-svgText {
-    fill: #edffff;
+    fill: #111;
     font-family: Sans-Serif;
     font-size: 15px;
     text-anchor: middle;
@@ -16,7 +16,7 @@
     user-select: none;
 }
 .playback-rectButton .playback-buttonPath {
-    fill: #edffff;
+    fill: #111;
 }
 .playback-rectButton .playback-buttonGlow {
     fill: #fff;
@@ -26,29 +26,29 @@
 }
 .playback-rectButton .playback-buttonMain {
     fill: url(#playback_buttonNormal);
-    stroke: #444;
+    stroke: #759DC0;
     stroke-width: 1.2;
 }
 .playback-buttonSelected .playback-buttonGlow {
     display: block;
-    fill: #2E2;
+    fill: #FFAA2A;
 }
 .playback-buttonSelected .playback-buttonMain {
     fill: url(#playback_buttonSelected);
-    stroke: #2E2;
+    stroke: #EA0;
 }
 .playback-rectButton:hover .playback-buttonGlow {
     display: block;
 }
 .playback-rectButton:hover .playback-buttonMain {
     fill: url(#playback_buttonHovered);
-    stroke: #AEF;
+    stroke: #759DC0;
 }
 .playback-buttonSelected:hover .playback-buttonGlow {
     fill: #fff;
 }
 .playback-buttonSelected:hover .playback-buttonMain {
-    stroke: #2E2;
+    stroke: #EA0;
 }
 .playback-rectButton:active .playback-buttonMain {
     fill: #ABD6FF;
@@ -60,7 +60,7 @@
 }
 .playback-buttonDisabled .playback-buttonMain {
     fill: url(#playback_buttonDisabled);
-    stroke: #555;
+    stroke: #D3D3D3;
 }
 .playback-buttonDisabled .playback-buttonPath {
     fill: #818181;
@@ -69,9 +69,9 @@
     display: none;
 }
 .playback-shuttleRingBack {
-    fill: #181818;
+    fill: #FAFAFA;
     /* fill-opacity: 0.9;  Leave commented-out until issue #361 gets fixed.  */
-    stroke: #333;
+    stroke: #759DC0;
     stroke-width: 1.2;
 }
 .playback-shuttleRingG {
@@ -106,4 +106,52 @@
 .playback-knobInner {
     fill: url(#playback_knobInner);
     cursor: pointer;
+}
+
+/* Apply a darker theme with some modifications. */
+
+.cesium-darker .playback-svgText {
+    fill: #edffff;
+}
+.cesium-darker .playback-rectButton .playback-buttonPath {
+    fill: #edffff;
+}
+.cesium-darker .playback-rectButton .playback-buttonMain {
+    stroke: #444;
+}
+.cesium-darker .playback-buttonSelected .playback-buttonGlow {
+    fill: #2E2;
+}
+.cesium-darker .playback-buttonSelected .playback-buttonMain {
+    stroke: #2E2;
+}
+.cesium-darker .playback-rectButton:hover .playback-buttonMain {
+    stroke: #AEF;
+}
+.cesium-darker .playback-buttonSelected:hover .playback-buttonGlow {
+    fill: #fff;
+}
+.cesium-darker .playback-buttonSelected:hover .playback-buttonMain {
+    stroke: #2E2;
+}
+.cesium-darker .playback-rectButton:active .playback-buttonMain {
+    fill: #ABD6FF;
+}
+.cesium-darker .playback-buttonDisabled .playback-buttonMain {
+    stroke: #555;
+}
+.cesium-darker .playback-buttonDisabled .playback-buttonPath {
+    fill: #818181;
+}
+.cesium-darker .playback-shuttleRingBack {
+    fill: #181818;
+    /* fill-opacity: 0.9;  Leave commented-out until issue #361 gets fixed.  */
+    stroke: #333;
+    stroke-width: 1.2;
+}
+.cesium-darker .playback-shuttleRingSwoosh line {
+    stroke: #8AC;
+}
+.cesium-darker .playback-knobOuter {
+    stroke: #444;
 }

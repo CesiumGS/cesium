@@ -115,8 +115,8 @@ define([
         this.knobOuter.setAttribute('transform', 'rotate(' + angle + ')');
     };
 
-    Playback.prototype.buttonNormalBackColor = Color.fromCSSColor('#222');
-    Playback.prototype.buttonHoverBackColor = Color.fromCSSColor('#4488B0'); //oops
+    Playback.prototype.buttonNormalBackColor = Color.fromCSSColor('#222');   // light is #E5F2FE
+    Playback.prototype.buttonHoverBackColor = Color.fromCSSColor('#4488B0'); // light is #ABD6FF
     Playback.prototype.buttonSelectedBackColor = Color.fromCSSColor('#242');
     // Playback.prototype.buttonSelectedHoverBackColor = Color.fromCSSColor('#484');
     Playback.prototype.buttonDisabledBackColor = Color.fromCSSColor('#333');
