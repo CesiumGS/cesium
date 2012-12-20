@@ -31,6 +31,34 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
   width: 99%;
   padding: 2px 0 2px 10px;
 }
+.expander, .collapser {
+  padding-right: 0.5em;
+  cursor: pointer;
+}
+
+.collapse .specSummary,
+.collapse .suite,
+.collapse .collapser {
+  display: none;
+}
+
+.collapse.failed .specSummary,
+.collapse.failed .suite {
+  display: block;
+}
+
+.collapse.failed .collapser {
+  display: inline;
+}
+
+.expander {
+  display: none;
+}
+
+.collapse.passed .expander,
+.collapse.skipped .expander  {
+  display: inline;
+}
 
 #HTMLReporter { font-size: 11px; font-family: Monaco, "Lucida Console", monospace; line-height: 14px; color: #333333; }
 #HTMLReporter a { text-decoration: none; }

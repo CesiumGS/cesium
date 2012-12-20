@@ -189,7 +189,7 @@ var afterAll;
 
         createTests = function() {
             var reporter = new jasmine.HtmlReporter();
-            var isSuiteFocused = reporter.isSuiteFocused;
+            var isSuiteFocused = jasmine.HtmlReporterHelpers.isSuiteFocused;
             var suites = jasmine.getEnv().currentRunner().suites();
 
             for ( var i = 1, insertPoint = 0, len = suites.length; i < len; i++) {

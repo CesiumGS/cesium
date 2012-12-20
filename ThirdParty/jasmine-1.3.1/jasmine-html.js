@@ -58,6 +58,44 @@ jasmine.HtmlReporterHelpers.addHelpers = function(ctor) {
   }
 };
 
+jasmine.HtmlReporterHelpers.isSuiteFocused = function(suite) {
+    var paramMap = [];
+    var params = jasmine.HtmlReporter.parameters(window.document);
+
+    for (var i = 0; i < params.length; i++) {
+      var p = params[i].split('=');
+      paramMap[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
+    }
+  
+    if (suite.getFullName() === paramMap.spec) {
+	  return true;
+    }
+
+    var parentSuite = suite.parentSuite;
+    while (parentSuite) {
+      if (parentSuite.getFullName() === paramMap.spec) {
+        return true;
+      }
+      parentSuite = parentSuite.parentSuite;
+    }
+
+    var childSpecs = suite.specs();
+    for (var i = 0, len = childSpecs.length; i < len; i++) {
+      if (childSpecs[i].getFullName() === paramMap.spec) {
+	    return true;
+	  }
+    }
+
+    var childSuites = suite.suites();
+    for (i = 0, len = childSuites.length; i < len; i++) {
+      if (jasmine.HtmlReporterHelpers.isSuiteFocused(childSuites[i])) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
 jasmine.HtmlReporter = function(_doc) {
   var self = this;
   var doc = _doc || window.document;
@@ -145,44 +183,6 @@ jasmine.HtmlReporter = function(_doc) {
     }
 
     return spec.getFullName().indexOf(focusedSpecName()) === 0;
-  };
-  
-  self.isSuiteFocused = function(suite) {
-    var paramMap = [];
-    var params = jasmine.HtmlReporter.parameters(doc);
-
-    for (var i = 0; i < params.length; i++) {
-      var p = params[i].split('=');
-      paramMap[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
-    }
-  
-    if (suite.getFullName() === paramMap.suite) {
-	  return true;
-    }
-
-    var parentSuite = suite.parentSuite;
-    while (parentSuite) {
-      if (parentSuite.getFullName() === paramMap.suite) {
-        return true;
-      }
-      parentSuite = parentSuite.parentSuite;
-    }
-
-    var childSpecs = suite.specs();
-    for (var i = 0, len = childSpecs.length; i < len; i++) {
-      if (childSpecs[i].getFullName() === paramMap.spec) {
-	    return true;
-	  }
-    }
-
-    var childSuites = suite.suites();
-    for (i = 0, len = childSuites.length; i < len; i++) {
-      if (self.isSuiteFocused(childSuites[i])) {
-        return true;
-      }
-    }
-
-    return false;
   };
   
   return self;
@@ -570,9 +570,31 @@ jasmine.HtmlReporter.SuiteView = function(suite, dom, views) {
   this.dom = dom;
   this.views = views;
 
-  this.element = this.createDom('div', { className: 'suite' },
+  var collapser, expander;
+  
+  this.element = this.createDom('div', { className: 'suite' + (jasmine.HtmlReporterHelpers.isSuiteFocused(suite) ? '' : ' collapse') },
+    expander = this.createDom('a', {className: 'expander'}, '[+]'),
+	collapser = this.createDom('a', {className: 'collapser'}, '[-]'),
     this.createDom('a', { className: 'description', href: jasmine.HtmlReporter.sectionLink(this.suite.getFullName()) }, this.suite.description)
   );
+  
+	expander.onclick = (function(suiteDiv) {
+		return function() {
+			var classes = suiteDiv.className.split(' ');
+			for (var i = classes.length - 1; i >= 0; i--) {
+				if (classes[i] == 'collapse') {
+					classes.splice(i, 1);
+				}
+			}
+			suiteDiv.className = classes.join(' ');
+		};
+	}(this.element));
+	
+	collapser.onclick = (function(suiteDiv) {
+		return function() {
+			suiteDiv.className += ' collapse';
+		};
+	}(this.element));
 
   this.appendToSummary(this.suite, this.element);
 };
