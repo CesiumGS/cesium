@@ -217,6 +217,8 @@ jasmine.HtmlReporter = function(_doc) {
 
       dom.symbolSummary = self.createDom('ul', {className: 'symbolSummary'}),
       dom.alert = self.createDom('div', {className: 'alert'},
+        self.createDom('div', {className: 'progressContainer'},
+        dom.progress = self.createDom('div', {className: 'progressBar', style: 'width: 0%'})),
         self.createDom('span', { className: 'exceptions' },
           self.createDom('label', { className: 'label', 'for': 'no_try_catch' }, 'No try/catch'),
           self.createDom('input', { id: 'no_try_catch', type: 'checkbox' }))),
@@ -402,7 +404,11 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
       dom.alert.appendChild(this.runningAlert);
     }
     this.runningAlert.innerHTML = "Running " + this.completeSpecCount + " of " + specPluralizedFor(this.totalSpecCount);
-
+	dom.progress.style.width = (100 * this.completeSpecCount / this.totalSpecCount) + '%';
+	if (this.completeSpecCount === this.totalSpecCount) {
+		dom.progress.style.display = 'none';
+	}
+	
     // skipped specs UI
     if (isUndefined(this.skippedAlert)) {
       this.skippedAlert = this.createDom('a', { href: jasmine.HtmlReporter.sectionLink(), className: "skippedAlert bar" });
@@ -485,7 +491,7 @@ jasmine.HtmlReporter.SpecView = function(spec, dom, views) {
   this.views = views;
 
   this.symbol = this.createDom('li', { className: 'pending' });
-  this.dom.symbolSummary.appendChild(this.symbol);
+  // this.dom.symbolSummary.appendChild(this.symbol);
 
   this.summary = this.createDom('div', { className: 'specSummary' },
     this.createDom('a', {

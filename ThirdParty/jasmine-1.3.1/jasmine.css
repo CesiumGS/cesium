@@ -6,6 +6,32 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
   text-decoration: none;
 }
 
+.progressContainer {
+  position: relative;
+}
+.progressBar {
+  background: #67addf; /* Old browsers */
+  /* IE9 SVG, needs conditional override of 'filter' to 'none' */
+  background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY3YWRkZiIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iI2ZmZmZmZiIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM1Yzg3MjciIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+  background: -moz-linear-gradient(top,  #67addf 0%, #ffffff 50%, #5c8727 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#67addf), color-stop(50%,#ffffff), color-stop(100%,#5c8727)); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top,  #67addf 0%,#ffffff 50%,#5c8727 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top,  #67addf 0%,#ffffff 50%,#5c8727 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top,  #67addf 0%,#ffffff 50%,#5c8727 100%); /* IE10+ */
+  background: linear-gradient(to bottom,  #67addf 0%,#ffffff 50%,#5c8727 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#67addf', endColorstr='#5c8727',GradientType=0 ); /* IE6-8 */
+}
+.progressBar, .progressText {
+  height: 2.0em;
+}
+.progressText {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 99%;
+  padding: 2px 0 2px 10px;
+}
+
 #HTMLReporter { font-size: 11px; font-family: Monaco, "Lucida Console", monospace; line-height: 14px; color: #333333; }
 #HTMLReporter a { text-decoration: none; }
 #HTMLReporter a:hover { text-decoration: underline; }
@@ -14,7 +40,7 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 #HTMLReporter #jasmine_content { position: fixed; right: 100%; }
 #HTMLReporter .version { color: #aaaaaa; }
 #HTMLReporter .banner { margin-top: 14px; }
-#HTMLReporter .duration { color: #aaaaaa; float: right; }
+#HTMLReporter .duration { color: #000000; float: right; }
 #HTMLReporter .symbolSummary { overflow: hidden; *zoom: 1; margin: 14px 0; }
 #HTMLReporter .symbolSummary li { display: block; float: left; height: 7px; width: 14px; margin-bottom: 7px; font-size: 16px; }
 #HTMLReporter .symbolSummary li.passed { font-size: 14px; }
@@ -47,7 +73,7 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 #HTMLReporter .summary { margin-top: 14px; }
 #HTMLReporter .summary .suite .suite, #HTMLReporter .summary .specSummary { margin-left: 14px; }
 #HTMLReporter .summary .specSummary.passed a { color: #5e7d00; }
-#HTMLReporter .summary .specSummary.failed a { color: #b03911; }
+#HTMLReporter .summary .specSummary.failed, #HTMLReporter .summary .specSummary.failed a { color: white; background-color: #b03911; }
 #HTMLReporter .description + .suite { margin-top: 0; }
 #HTMLReporter .suite { margin-top: 14px; }
 #HTMLReporter .suite a { color: #333333; }
