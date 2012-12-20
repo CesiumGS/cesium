@@ -1,3 +1,21 @@
+.playback-theme {
+    visibility: hidden;
+    display: block;
+    position: absolute;
+    z-index: -100;
+}
+.playback-themeNormal {
+    color: #E5F2FE;
+}
+.playback-themeHover {
+    color: #ABD6FF;
+}
+.playback-themeSelect {
+    color: #E5F2FE;
+}
+.playback-themeDisabled {
+    color: #EFEFEF;
+}
 .playback-svgText {
     fill: #111;
     font-family: Sans-Serif;
@@ -110,6 +128,18 @@
 
 /* Apply a darker theme with some modifications. */
 
+.cesium-darker .playback-themeNormal {
+    color: #222;
+}
+.cesium-darker .playback-themeHover {
+    color: #4488B0;
+}
+.cesium-darker .playback-themeSelect {
+    color: #242;
+}
+.cesium-darker .playback-themeDisabled {
+    color: #333;
+}
 .cesium-darker .playback-svgText {
     fill: #edffff;
 }

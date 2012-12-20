@@ -158,10 +158,12 @@ define(['dojo',
     function setThemeLight() {
         document.body.className = 'claro';
         dijit.byId('themeSelector').set('label', 'Theme: Light');
+        playback.onThemeChanged();
     }
     function setThemeDark() {
         document.body.className = 'claro cesium-darker';
         dijit.byId('themeSelector').set('label', 'Theme: Dark');
+        playback.onThemeChanged();
     }
     function cycleTheme() {
         if (document.body.className === 'claro') {

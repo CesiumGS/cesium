@@ -115,12 +115,6 @@ define([
         this.knobOuter.setAttribute('transform', 'rotate(' + angle + ')');
     };
 
-    Playback.prototype.buttonNormalBackColor = Color.fromCSSColor('#222');   // light is #E5F2FE
-    Playback.prototype.buttonHoverBackColor = Color.fromCSSColor('#4488B0'); // light is #ABD6FF
-    Playback.prototype.buttonSelectedBackColor = Color.fromCSSColor('#242');
-    // Playback.prototype.buttonSelectedHoverBackColor = Color.fromCSSColor('#484');
-    Playback.prototype.buttonDisabledBackColor = Color.fromCSSColor('#333');
-
     Playback.prototype.gradientEnabledColor0 = Color.fromCSSColor('rgba(247,250,255,0.384)');
     Playback.prototype.gradientEnabledColor1 = Color.fromCSSColor('rgba(143,191,255,0.216)');
     Playback.prototype.gradientEnabledColor2 = Color.fromCSSColor('rgba(153,197,255,0.098)');
@@ -139,33 +133,20 @@ define([
             Math.round(blue * 255) + ')';
     };
 
-    Playback.prototype._createNodes = function(parentNode) {
+    /**
+     * Call this after changing the CSS rules that affect the color theme of the widget.
+     *
+     * @function
+     * @memberof Playback.prototype
+     */
+    Playback.prototype.onThemeChanged = function() {
         var widget = this;
+        var svg = this.svgNode;
 
-        // This is a workaround for a bug or security feature in Firefox.
-        var cssStyle = document.createElement('style');
-        cssStyle.textContent =
-            '.playback-rectButton .playback-buttonGlow { filter: url(#playback_blurred); }\n' +
-            '.playback-rectButton .playback-buttonMain { fill: url(#playback_buttonNormal); }\n' +
-            '.playback-buttonSelected .playback-buttonMain { fill: url(#playback_buttonSelected); }\n' +
-            '.playback-rectButton:hover .playback-buttonMain { fill: url(#playback_buttonHovered); }\n' +
-            '.playback-shuttleRingG .playback-shuttleRingSwoosh { fill: url(#playback_shuttleRingSwooshGradient); }\n' +
-            '.playback-shuttleRingG:hover .playback-shuttleRingSwoosh { fill: url(#playback_shuttleRingSwooshHovered); }\n' +
-            '.playback-shuttleRingPointer { fill: url(#playback_shuttleRingPointerGradient); }\n' +
-            '.playback-shuttleRingPausePointer { fill: url(#playback_shuttleRingPointerPaused); }\n' +
-            '.playback-knobOuter { fill: url(#playback_knobOuter); }\n' +
-            '.playback-knobInner { fill: url(#playback_knobInner); }\n';
-        document.head.appendChild(cssStyle);
-
-        var svg = this.svgNode = this._svg('svg:svg');
-
-        // Define the XLink namespace that SVG uses
-        svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', this._xlinkNS);
-
-        svg.style.cssText = 'width: 200px; height: 132px; position: absolute; bottom: 0; left: 0;';
-        svg.setAttribute('width', 200);
-        svg.setAttribute('height', 132);
-        svg.setAttribute('viewBox', '0 0 200 132');
+        var buttonNormalBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeNormal).getPropertyValue('color'));
+        var buttonHoverBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeHover).getPropertyValue('color'));
+        var buttonSelectedBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeSelect).getPropertyValue('color'));
+        var buttonDisabledBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeDisabled).getPropertyValue('color'));
 
         var defs = {
             'tagName' : 'defs',
@@ -177,13 +158,13 @@ define([
                     'children' : [
                         //add a 'stop-opacity' field to make translucent.
                         { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' :
-                            widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor0) },
+                            widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor0) },
                         { 'tagName' : 'stop', 'offset' : '12%', 'stop-color' :
-                            widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor1) },
+                            widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor1) },
                         { 'tagName' : 'stop', 'offset' : '46%', 'stop-color' :
-                            widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor2) },
+                            widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor2) },
                         { 'tagName' : 'stop', 'offset' : '81%', 'stop-color' :
-                            widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor3) }
+                            widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor3) }
                     ]
                 }, {
                     'id' : 'playback_buttonHovered',
@@ -191,13 +172,13 @@ define([
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
                         { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' :
-                            widget._makeColorString(widget.buttonHoverBackColor, widget.gradientEnabledColor0) },
+                            widget._makeColorString(buttonHoverBackColor, widget.gradientEnabledColor0) },
                         { 'tagName' : 'stop', 'offset' : '12%', 'stop-color' :
-                            widget._makeColorString(widget.buttonHoverBackColor, widget.gradientEnabledColor1) },
+                            widget._makeColorString(buttonHoverBackColor, widget.gradientEnabledColor1) },
                         { 'tagName' : 'stop', 'offset' : '46%', 'stop-color' :
-                            widget._makeColorString(widget.buttonHoverBackColor, widget.gradientEnabledColor2) },
+                            widget._makeColorString(buttonHoverBackColor, widget.gradientEnabledColor2) },
                         { 'tagName' : 'stop', 'offset' : '81%', 'stop-color' :
-                            widget._makeColorString(widget.buttonHoverBackColor, widget.gradientEnabledColor3) }
+                            widget._makeColorString(buttonHoverBackColor, widget.gradientEnabledColor3) }
                     ]
                 }, {
                     'id' : 'playback_buttonSelected',
@@ -205,13 +186,13 @@ define([
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
                         { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' :
-                            widget._makeColorString(widget.buttonSelectedBackColor, widget.gradientEnabledColor0) },
+                            widget._makeColorString(buttonSelectedBackColor, widget.gradientEnabledColor0) },
                         { 'tagName' : 'stop', 'offset' : '12%', 'stop-color' :
-                            widget._makeColorString(widget.buttonSelectedBackColor, widget.gradientEnabledColor1) },
+                            widget._makeColorString(buttonSelectedBackColor, widget.gradientEnabledColor1) },
                         { 'tagName' : 'stop', 'offset' : '46%', 'stop-color' :
-                            widget._makeColorString(widget.buttonSelectedBackColor, widget.gradientEnabledColor2) },
+                            widget._makeColorString(buttonSelectedBackColor, widget.gradientEnabledColor2) },
                         { 'tagName' : 'stop', 'offset' : '81%', 'stop-color' :
-                            widget._makeColorString(widget.buttonSelectedBackColor, widget.gradientEnabledColor3) }
+                            widget._makeColorString(buttonSelectedBackColor, widget.gradientEnabledColor3) }
                     ]
                 }, {
                     'id' : 'playback_buttonDisabled',
@@ -219,9 +200,9 @@ define([
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
                         { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' :
-                            widget._makeColorString(widget.buttonDisabledBackColor, widget.gradientDisabledColor0) },
+                            widget._makeColorString(buttonDisabledBackColor, widget.gradientDisabledColor0) },
                         { 'tagName' : 'stop', 'offset' : '75%', 'stop-color' :
-                            widget._makeColorString(widget.buttonDisabledBackColor, widget.gradientDisabledColor0) }
+                            widget._makeColorString(buttonDisabledBackColor, widget.gradientDisabledColor1) }
                     ]
                 }, {
                     'id' : 'playback_blurred',
@@ -278,11 +259,11 @@ define([
                     'x1' : '20%', 'y1' : '0%', 'x2' : '90%', 'y2' : '100%',
                     'children' : [
                           { 'tagName' : 'stop', 'offset' : '5%', 'stop-color' :
-                              widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor0) },
+                              widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor0) },
                           { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' :
-                              widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor2) },
+                              widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor2) },
                           { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' :
-                              widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor1) }
+                              widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor1) }
                     ]
                 }, {
                     'id' : 'playback_knobInner',
@@ -290,11 +271,11 @@ define([
                     'x1' : '20%', 'y1' : '0%', 'x2' : '90%', 'y2' : '100%',
                     'children' : [
                           { 'tagName' : 'stop', 'offset' : '5%', 'stop-color' :
-                              widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor3) },
+                              widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor3) },
                           { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' :
-                              widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor0) },
+                              widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor0) },
                           { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' :
-                              widget._makeColorString(widget.buttonNormalBackColor, widget.gradientEnabledColor3) }
+                              widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor3) }
                     ]
                 }, {
                     'id' : 'playback_pathReset',
@@ -342,7 +323,57 @@ define([
             ]
         };
 
-        svg.appendChild(this._svgFromObject(defs));
+        var defsElement = this._svgFromObject(defs);
+        if (typeof widget._defsElement === 'undefined') {
+            svg.appendChild(defsElement);
+        } else {
+            svg.replaceChild(defsElement, widget._defsElement);
+        }
+        widget._defsElement = defsElement;
+    };
+
+    Playback.prototype._createNodes = function(parentNode) {
+        var widget = this;
+
+        // This is a workaround for a bug or security feature in Firefox.
+        var cssStyle = document.createElement('style');
+        cssStyle.textContent =
+            '.playback-rectButton .playback-buttonGlow { filter: url(#playback_blurred); }\n' +
+            '.playback-rectButton .playback-buttonMain { fill: url(#playback_buttonNormal); }\n' +
+            '.playback-buttonSelected .playback-buttonMain { fill: url(#playback_buttonSelected); }\n' +
+            '.playback-rectButton:hover .playback-buttonMain { fill: url(#playback_buttonHovered); }\n' +
+            '.playback-shuttleRingG .playback-shuttleRingSwoosh { fill: url(#playback_shuttleRingSwooshGradient); }\n' +
+            '.playback-shuttleRingG:hover .playback-shuttleRingSwoosh { fill: url(#playback_shuttleRingSwooshHovered); }\n' +
+            '.playback-shuttleRingPointer { fill: url(#playback_shuttleRingPointerGradient); }\n' +
+            '.playback-shuttleRingPausePointer { fill: url(#playback_shuttleRingPointerPaused); }\n' +
+            '.playback-knobOuter { fill: url(#playback_knobOuter); }\n' +
+            '.playback-knobInner { fill: url(#playback_knobInner); }\n';
+        document.head.appendChild(cssStyle);
+
+        var themeEle = document.createElement('div');
+        themeEle.className = 'playback-theme';
+        themeEle.innerHTML =
+            '<div class="playback-themeNormal"></div>' +
+            '<div class="playback-themeHover"></div>' +
+            '<div class="playback-themeSelect"></div>' +
+            '<div class="playback-themeDisabled"></div>';
+        parentNode.appendChild(themeEle);
+        widget._themeNormal = themeEle.childNodes[0];
+        widget._themeHover = themeEle.childNodes[1];
+        widget._themeSelect = themeEle.childNodes[2];
+        widget._themeDisabled = themeEle.childNodes[3];
+
+        var svg = this.svgNode = this._svg('svg:svg');
+
+        // Define the XLink namespace that SVG uses
+        svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', this._xlinkNS);
+
+        svg.style.cssText = 'width: 200px; height: 132px; position: absolute; bottom: 0; left: 0;';
+        svg.setAttribute('width', 200);
+        svg.setAttribute('height', 132);
+        svg.setAttribute('viewBox', '0 0 200 132');
+
+        widget.onThemeChanged();
 
         var topG = this._svg('g');
 
