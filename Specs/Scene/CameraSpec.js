@@ -66,18 +66,18 @@ defineSuite([
                                       0.0, 0.0, 1.0, -position.z,
                                       0.0, 0.0, 0.0,         1.0);
         var expected = rotation.multiply(translation);
-        expect(viewMatrix.equals(expected)).toEqual(true);
+        expect(viewMatrix).toEqual(expected);
     });
 
     it('get inverse view matrix', function() {
         var expected = camera.getViewMatrix().inverse();
-        expect(expected.equalsEpsilon(camera.getInverseViewMatrix(), CesiumMath.EPSILON15)).toEqual(true);
+        expect(expected).toEqualEpsilon(camera.getInverseViewMatrix(), CesiumMath.EPSILON15);
     });
 
     it('get inverse transform', function() {
         camera.transform = new Matrix4(5.0, 0.0, 0.0, 1.0, 0.0, 5.0, 0.0, 2.0, 0.0, 0.0, 5.0, 3.0, 0.0, 0.0, 0.0, 1.0);
         var expected = camera.transform.inverseTransformation();
-        expect(expected.equals(camera.getInverseTransform())).toEqual(true);
+        expect(expected).toEqual(camera.getInverseTransform());
     });
 
     it('worldToCameraCoordinates throws without cartesian', function() {

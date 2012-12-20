@@ -53,8 +53,8 @@ defineSuite([
         var end = points[points.length - 1].point.subtract(points[points.length - 2].point);
         var crs = new CatmullRomSpline(points, start, end);
 
-        expect(start.equals(crs.getStartTangent())).toEqual(true);
-        expect(end.equals(crs.getEndTangent())).toEqual(true);
+        expect(start).toEqual(crs.getStartTangent());
+        expect(end).toEqual(crs.getEndTangent());
     });
 
     it('evaluate fails with undefined time', function() {
@@ -90,7 +90,7 @@ defineSuite([
 
         var granularity = 0.5;
         for ( var j = points[0].time; j <= points[points.length - 1].time; j = j + granularity) {
-            expect(hs.evaluate(j).equalsEpsilon(crs.evaluate(j), CesiumMath.EPSILON4)).toEqual(true);
+            expect(hs.evaluate(j)).toEqualEpsilon(crs.evaluate(j), CesiumMath.EPSILON4);
         }
     });
 });
