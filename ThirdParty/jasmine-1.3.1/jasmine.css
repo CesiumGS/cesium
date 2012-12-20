@@ -1,5 +1,11 @@
 body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 
+.run_spec {
+  float: right;
+  padding-right: 12px;
+  text-decoration: none;
+}
+
 #HTMLReporter { font-size: 11px; font-family: Monaco, "Lucida Console", monospace; line-height: 14px; color: #333333; }
 #HTMLReporter a { text-decoration: none; }
 #HTMLReporter a:hover { text-decoration: underline; }

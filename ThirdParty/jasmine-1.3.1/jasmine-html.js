@@ -117,8 +117,29 @@ jasmine.HtmlReporter = function(_doc) {
       }
     }
   };
+  
+  function wrapWithDebugger(originalFunction) {
+    return function() {
+        var stepIntoThisFunction = originalFunction.bind(this);
+        debugger;
+        stepIntoThisFunction();
+    };
+}
 
   self.specFilter = function(spec) {
+    var paramMap = [];
+    var params = jasmine.HtmlReporter.parameters(doc);
+
+    for (var i = 0; i < params.length; i++) {
+      var p = params[i].split('=');
+      paramMap[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
+    }
+  
+    if (paramMap.debug && spec.getFullName() === paramMap.debug) {
+      var block = spec.queue.blocks[0];
+      block.func = wrapWithDebugger(block.func);
+    }
+  
     if (!focusedSpecName()) {
       return true;
     }
@@ -319,7 +340,14 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
     }
 
     var specView = this.views.specs[spec.id];
-	specView.summary.appendChild(this.createDom('span', {className: 'specTime'}, ' (' + (spec.runTime / 1000) + 's)'));
+	var name = encodeURIComponent(spec.getFullName());
+	
+	specView.summary.appendChild(this.createDom('span', {className: 'specTime'}, 
+		this.createDom('a', {className: 'run_spec', href: '?spec=' + name}, 'run'),
+		this.createDom('a', {className: 'run_spec', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
+            window.encodeURIComponent('?baseUrl=../Instrumented&spec=' + name), target: '_top' }, "coverage"),
+		this.createDom('a', {className: 'run_spec', href: '?spec=' + name + '&debug=' + name}, 'debug'),
+	' (' + (spec.runTime / 1000) + 's)'));
 	
     switch (specView.status()) {
       case 'passed':
@@ -346,12 +374,19 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
 	  suite.stopTime = Date.now();
 	  suite.runTime = suite.stopTime - suite.startTime;
 	}
-	suiteView.element.insertBefore(this.createDom('span', {className: 'suiteTime'}, ' (' + (suite.runTime / 1000) + 's)'), suiteView.element.getElementsByTagName('a')[0].nextSibling);
-	console.log(suiteView.element);
 	
     if (isUndefined(suiteView)) {
       return;
     }
+	
+	var name = encodeURIComponent(suite.getFullName());
+	suiteView.element.insertBefore(this.createDom('span', {className: 'suiteTime'},
+      this.createDom('a', {className: 'run_spec', href: '?spec=' + name, target: '_top'}, 'run'),
+	  this.createDom('a', {className: 'run_spec', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
+                window.encodeURIComponent('?baseUrl=../Instrumented&spec=' + name), target: '_top' }, "coverage"),
+	' (' + (suite.runTime / 1000) + 's)'), suiteView.element.getElementsByTagName('a')[0].nextSibling);
+	
+	
     suiteView.refresh();
   };
 
