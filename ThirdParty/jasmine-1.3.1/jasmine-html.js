@@ -386,7 +386,7 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
       this.createDom('a', {className: 'run_spec', href: '?spec=' + name, target: '_top'}, 'run'),
 	  this.createDom('a', {className: 'run_spec', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
                 window.encodeURIComponent('?baseUrl=../Instrumented&spec=' + name), target: '_top' }, "coverage"),
-	' (' + (suite.runTime / 1000) + 's)'), suiteView.element.getElementsByTagName('a')[0].nextSibling);
+	' (' + (suite.runTime / 1000) + 's)'), suiteView.element.getElementsByTagName('a')[2].nextSibling);
 	
 	
     suiteView.refresh();
