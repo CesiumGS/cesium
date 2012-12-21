@@ -7,6 +7,7 @@ Beta Releases
 ### b12 - xx/xx/2013
 
 * Breaking changes:
+   * Renamed `toCSSColor` to `toCssColorString`.
    * Renamed `EventHandler` to `ScreenSpaceEventHandler`.
    * Renamed `MouseEventType` to `ScreenSpaceEventType`.
    * Renamed `MouseEventType.MOVE` to `ScreenSpaceEventType.MOUSE_MOVE`.

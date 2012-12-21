@@ -119,14 +119,20 @@ define([
      * @memberof Color
      *
      * @param {String} color The CSS color value in #rgb, #rrggbb, rgb(), rgba(), hsl(), or hsla() format.
-     * @param {Color} [defaultColor=Color.WHITE] The default color.
+     * @param {Color} [defaultColor=new Color(1.0, 1.0, 1.0, 1.0)] The default color.
      * @param {Boolean} [throwIfUnsupported=false] Whether unsuported values
      *     should return the default value or throw
      *
      * @return {Color} The color object.
      *
      * @exception {DeveloperError} unsupported CSS color value.
+     *
+     * @see NamedColors
      * @see <a href="http://www.w3.org/TR/css3-color">CSS color values</a>
+     *
+     * @example
+     * var cesiumBlue = Color.fromCssColorString('#67ADDF');
+     * var green = Color.fromCssColorString(NamedColors.GREEN.value);
      */
     Color.fromCssColorString = function(color, defaultColor, throwIfUnsupported) {
         if(typeof color === 'undefined') {
