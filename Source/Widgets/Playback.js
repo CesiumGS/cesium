@@ -124,6 +124,7 @@ define([
     Playback.prototype.gradientDisabledColor1 = Color.fromCSSColor('rgba(255,255,255,0)');
 
     Playback.prototype.gradientKnobColor = Color.fromCSSColor('rgba(66,67,68,0.3)');
+    Playback.prototype.gradientPointerColor = Color.fromCSSColor('rgba(0,0,0,0.5)');
 
     Playback.prototype._makeColorString = function(background, gradient) {
         var gradientAlpha = gradient.alpha;
@@ -150,6 +151,9 @@ define([
         var buttonSelectedBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeSelect).getPropertyValue('color'));
         var buttonDisabledBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeDisabled).getPropertyValue('color'));
         var knobBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeKnob).getPropertyValue('color'));
+        var pointerColor = Color.fromCSSColor(window.getComputedStyle(widget._themePointer).getPropertyValue('color'));
+        var swooshColor = Color.fromCSSColor(window.getComputedStyle(widget._themeSwoosh).getPropertyValue('color'));
+        var swooshHoverColor = Color.fromCSSColor(window.getComputedStyle(widget._themeSwooshHover).getPropertyValue('color'));
 
         var defs = {
             'tagName' : 'defs',
@@ -223,28 +227,38 @@ define([
                     'tagName' : 'linearGradient',
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
-                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : '#8AC', 'stop-opacity' : 0.2 },
-                        { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' : '#8AC', 'stop-opacity' : 0.85 },
-                        { 'tagName' : 'stop', 'offset' : '95%', 'stop-color' : '#8AC', 'stop-opacity' : 0.05 }
+                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-opacity' : 0.2, 'stop-color' :
+                            swooshColor.toCSSColor() },
+                        { 'tagName' : 'stop', 'offset' : '85%', 'stop-opacity' : 0.85, 'stop-color' :
+                            swooshColor.toCSSColor() },
+                        { 'tagName' : 'stop', 'offset' : '95%', 'stop-opacity' : 0.05, 'stop-color' :
+                            swooshColor.toCSSColor() }
                     ]
                 }, {
                     'id' : 'playback_shuttleRingSwooshHovered',
                     'tagName' : 'linearGradient',
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
-                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : '#AEF', 'stop-opacity' : 0.2 },
-                        { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' : '#AEF', 'stop-opacity' : 0.85 },
-                        { 'tagName' : 'stop', 'offset' : '95%', 'stop-color' : '#AEF', 'stop-opacity' : 0.05 }
+                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-opacity' : 0.2, 'stop-color' :
+                            swooshHoverColor.toCSSColor() },
+                        { 'tagName' : 'stop', 'offset' : '85%', 'stop-opacity' : 0.85, 'stop-color' :
+                            swooshHoverColor.toCSSColor() },
+                        { 'tagName' : 'stop', 'offset' : '95%', 'stop-opacity' : 0.05, 'stop-color' :
+                            swooshHoverColor.toCSSColor() }
                     ]
                 }, {
                     'id' : 'playback_shuttleRingPointerGradient',
                     'tagName' : 'linearGradient',
                     'x1' : '0%', 'y1' : '50%', 'x2' : '100%', 'y2' : '50%',
                     'children' : [
-                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : '#2E2' },
-                        { 'tagName' : 'stop', 'offset' : '40%', 'stop-color' : '#2E2' },
-                        { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' : '#072' },
-                        { 'tagName' : 'stop', 'offset' : '100%', 'stop-color' : '#072' }
+                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' :
+                            pointerColor.toCSSColor() },
+                        { 'tagName' : 'stop', 'offset' : '40%', 'stop-color' :
+                            pointerColor.toCSSColor() },
+                        { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' :
+                            widget._makeColorString(pointerColor, widget.gradientPointerColor) },
+                        { 'tagName' : 'stop', 'offset' : '100%', 'stop-color' :
+                            widget._makeColorString(pointerColor, widget.gradientPointerColor) }
                     ]
                 }, {
                     'id' : 'playback_shuttleRingPointerPaused',
@@ -360,13 +374,19 @@ define([
             '<div class="playback-themeHover"></div>' +
             '<div class="playback-themeSelect"></div>' +
             '<div class="playback-themeDisabled"></div>' +
-            '<div class="playback-themeKnob"></div>';
+            '<div class="playback-themeKnob"></div>' +
+            '<div class="playback-themePointer"></div>' +
+            '<div class="playback-themeSwoosh"></div>' +
+            '<div class="playback-themeSwooshHover"></div>';
         parentNode.appendChild(themeEle);
         widget._themeNormal = themeEle.childNodes[0];
         widget._themeHover = themeEle.childNodes[1];
         widget._themeSelect = themeEle.childNodes[2];
         widget._themeDisabled = themeEle.childNodes[3];
         widget._themeKnob = themeEle.childNodes[4];
+        widget._themePointer = themeEle.childNodes[5];
+        widget._themeSwoosh = themeEle.childNodes[6];
+        widget._themeSwooshHover = themeEle.childNodes[7];
 
         var svg = this.svgNode = this._svg('svg:svg');
 

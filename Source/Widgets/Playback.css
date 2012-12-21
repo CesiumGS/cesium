@@ -19,6 +19,15 @@
 .playback-themeKnob {
     color: #E1E2E3;
 }
+.playback-themePointer {
+    color: #FA5;
+}
+.playback-themeSwoosh {
+    color: #ACE;
+}
+.playback-themeSwooshHover {
+    color: #BDF;
+}
 .playback-svgText {
     fill: #111;
     font-family: Sans-Serif;
@@ -145,6 +154,15 @@
 }
 .cesium-darker .playback-themeKnob {
     color: #222;
+}
+.cesium-darker .playback-themePointer {
+    color: #2E2;
+}
+.cesium-darker .playback-themeSwoosh {
+    color: #8AC;
+}
+.cesium-darker .playback-themeSwooshHover {
+    color: #AEF;
 }
 .cesium-darker .playback-svgText {
     fill: #edffff;
