@@ -152,6 +152,7 @@ require([
     }
     
     function eastNorthUp(scene) {
+        Sandcastle.declare(eastNorthUp);   // For highlighting in Sandcastle.
         var center = Cesium.Ellipsoid.WGS84.cartographicToCartesian(
             Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
         var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
