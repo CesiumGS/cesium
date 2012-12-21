@@ -646,9 +646,11 @@ define([
         var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
         var deltaTheta = rotateRate * thetaWindowRatio * Math.PI;
 
-        if (typeof cameraController.constrainedAxis !== 'undefined' && typeof transform === 'undefined') {
-            var camera = cameraController._camera;
-
+        var camera = cameraController._camera;
+        var p = camera.position.normalize();
+        var northParallel = p.equalsEpsilon(cameraController.constrainedAxis, CesiumMath.EPSILON2);
+        var southParallel = p.equalsEpsilon(cameraController.constrainedAxis.negate(), CesiumMath.EPSILON2);
+        if (typeof cameraController.constrainedAxis !== 'undefined' && typeof transform === 'undefined' && !northParallel && !southParallel) {
             var up;
             if (Cartesian3.dot(camera.position, camera.direction) + 1 < CesiumMath.EPSILON4) {
                 up = camera.up;
