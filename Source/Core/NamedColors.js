@@ -15,7 +15,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #F0F8FF
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         ALICE_BLUE : new Enumeration('#F0F8FF', 'aliceblue'),
 
@@ -23,7 +23,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FAEBD7
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         ANTIQUE_WHITE : new Enumeration('#FAEBD7', 'antiquewhite'),
 
@@ -31,7 +31,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #00FFFF
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         AQUA : new Enumeration('#00FFFF', 'aqua'),
 
@@ -39,7 +39,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #7FFFD4
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         AQUAMARINE : new Enumeration('#7FFFD4', 'aquamarine'),
 
@@ -47,7 +47,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #F0FFFF
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         AZURE : new Enumeration('#F0FFFF', 'azure'),
 
@@ -55,7 +55,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #F5F5DC
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         BEIGE: new Enumeration('#F5F5DC', 'beige'),
 
@@ -63,7 +63,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFE4C4
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         BISQUE : new Enumeration('#FFE4C4', 'bisque'),
 
@@ -71,7 +71,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #000000
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         BLACK : new Enumeration('#000000', 'black'),
 
@@ -79,7 +79,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFEBCD
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         BLANCHED_ALMOND : new Enumeration('#FFEBCD', 'blanchedalmond'),
 
@@ -87,7 +87,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #0000FF
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         BLUE : new Enumeration('#0000FF', 'blue'),
 
@@ -95,7 +95,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #8A2BE2
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         BLUE_VIOLET : new Enumeration('#8A2BE2', 'blueviolet'),
 
@@ -103,7 +103,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #A52A2A
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         BROWN : new Enumeration('#A52A2A', 'brown'),
 
@@ -111,7 +111,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #DEB887
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         BURLY_WOOD : new Enumeration('#DEB887', 'burlywood'),
 
@@ -119,7 +119,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #5F9EA0
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         CADET_BLUE : new Enumeration('#5F9EA0', 'cadetblue'),
 
@@ -127,7 +127,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #7FFF00
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         CHARTREUSE : new Enumeration('#7FFF00', 'chartreuse'),
 
@@ -135,7 +135,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #D2691E
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         CHOCOLATE : new Enumeration('#D2691E', 'chocolate'),
 
@@ -143,7 +143,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FF7F50
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         CORAL : new Enumeration('#FF7F50', 'coral'),
 
@@ -151,7 +151,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #6495ED
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         CORNFLOWER_BLUE : new Enumeration('#6495ED', 'cornflowerblue'),
 
@@ -159,7 +159,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFF8DC
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         CORNSILK : new Enumeration('#FFF8DC', 'cornsilk'),
 
@@ -167,7 +167,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #DC143C
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         CRIMSON : new Enumeration('#DC143C', 'crimson'),
 
@@ -175,7 +175,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #00FFFF
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         CYAN : new Enumeration('#00FFFF', 'cyan'),
 
@@ -183,7 +183,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #00008B
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_BLUE : new Enumeration('#00008B', 'darkblue'),
 
@@ -191,7 +191,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #008B8B
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_CYAN : new Enumeration('#008B8B', 'darkcyan'),
 
@@ -199,7 +199,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #B8860B
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_GOLDENROD : new Enumeration('#B8860B', 'darkgoldenrod'),
 
@@ -207,7 +207,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #A9A9A9
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_GRAY : new Enumeration('#A9A9A9', 'darkgray'),
 
@@ -215,7 +215,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #006400
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_GREEN : new Enumeration('#006400', 'darkgreen'),
 
@@ -223,7 +223,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #A9A9A9
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_GREY : new Enumeration('#A9A9A9', 'darkgray'),
 
@@ -231,7 +231,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #BDB76B
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_KHAKI : new Enumeration('#BDB76B', 'darkkhaki'),
 
@@ -239,7 +239,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #8B008B
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_MAGENTA : new Enumeration('#8B008B', 'darkmagenta'),
 
@@ -247,7 +247,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #556B2F
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_OLIVE_GREEN : new Enumeration('#556B2F', 'darkolivegreen'),
 
@@ -255,7 +255,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FF8C00
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_ORANGE : new Enumeration('#FF8C00', 'darkorange'),
 
@@ -263,7 +263,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #9932CC
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_ORCHID : new Enumeration('#9932CC', 'darkorchid'),
 
@@ -271,7 +271,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #8B0000
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_RED : new Enumeration('#8B0000', 'darkred'),
 
@@ -279,7 +279,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #E9967A
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_SALMON : new Enumeration('#E9967A', 'darksalmon'),
 
@@ -287,7 +287,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #8FBC8F
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_SEAGREEN : new Enumeration('#8FBC8F', 'darkseagreen'),
 
@@ -295,7 +295,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #483D8B
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_SLATE_BLUE : new Enumeration('#483D8B', 'darkslateblue'),
 
@@ -303,7 +303,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #2F4F4F
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_SLATE_GRAY : new Enumeration('#2F4F4F', 'darkslategray'),
 
@@ -311,7 +311,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #2F4F4F
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_SLATE_GREY : new Enumeration('#2F4F4F', 'darkslategrey'),
 
@@ -319,7 +319,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #00CED1
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_TURQUOISE : new Enumeration('#00CED1', 'darktruquoise'),
 
@@ -327,7 +327,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #9400D3
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DARK_VIOLET : new Enumeration('#9400D3', 'darkviolet'),
 
@@ -335,7 +335,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FF1493
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DEEP_PINK : new Enumeration('#FF1493', 'deeppink'),
 
@@ -343,7 +343,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #00BFFF
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DEEP_SKY_BLUE : new Enumeration('#00BFFF', 'deepskyblue'),
 
@@ -351,7 +351,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #696969
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DIM_GRAY : new Enumeration('#696969', 'dimgray'),
 
@@ -359,7 +359,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #696969
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DIM_GREY : new Enumeration('#696969', 'dimgrey'),
 
@@ -367,7 +367,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #1E90FF
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         DODGER_BLUE : new Enumeration('#1E90FF', 'dodgerblue'),
 
@@ -375,7 +375,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #B22222
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         FIREBRICK : new Enumeration('#B22222', 'firebrick'),
 
@@ -383,7 +383,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFFAF0
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         FLORAL_WHITE : new Enumeration('#FFFAF0', 'floralwhite'),
 
@@ -391,7 +391,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #228B22
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         FOREST_GREEN : new Enumeration('#228B22', 'forestgreen'),
 
@@ -399,7 +399,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FF00FF
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         FUSCHIA : new Enumeration('#FF00FF', 'fuschia'),
 
@@ -407,7 +407,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #DCDCDC
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         GAINSBORO : new Enumeration('#DCDCDC', 'gainsboro'),
 
@@ -415,7 +415,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #F8F8FF
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         GHOST_WHITE : new Enumeration('#F8F8FF', 'ghostwhite'),
 
@@ -423,7 +423,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFD700
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         GOLD : new Enumeration('#FFD700', 'gold'),
 
@@ -431,7 +431,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #DAA520
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         GOLDENROD : new Enumeration('#DAA520', 'goldenrod'),
 
@@ -439,7 +439,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #808080
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         GRAY : new Enumeration('#808080', 'gray'),
 
@@ -447,7 +447,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #008000
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         GREEN : new Enumeration('#008000', 'green'),
 
@@ -455,7 +455,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #ADFF2F
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         GREEN_YELLOW : new Enumeration('#ADFF2F', 'greenyellow'),
 
@@ -463,7 +463,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #808080
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         GREY : new Enumeration('#808080', 'grey'),
 
@@ -471,7 +471,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #F0FFF0
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         HONEYDEW : new Enumeration('#F0FFF0', 'honeydew'),
 
@@ -479,7 +479,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FF69B4
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         HOT_PINK : new Enumeration('#FF69B4', 'hotpink'),
 
@@ -487,7 +487,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #CD5C5C
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         INDIAN_RED : new Enumeration('#CD5C5C', 'indianred'),
 
@@ -495,7 +495,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #4B0082
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         INDIGO : new Enumeration('#4B0082', 'indigo'),
 
@@ -503,7 +503,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFFFF0
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         IVORY : new Enumeration('#FFFFF0', 'ivory'),
 
@@ -511,7 +511,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #F0E68C
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         KHAKI : new Enumeration('#F0E68C', 'khaki'),
 
@@ -519,7 +519,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #E6E6FA
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LAVENDER : new Enumeration('#E6E6FA', 'lavendar'),
 
@@ -527,7 +527,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FF00FF
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LAVENDAR_BLUSH : new Enumeration('#FFF0F5', 'lavendarblush'),
 
@@ -535,7 +535,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FF00FF
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LAWN_GREEN : new Enumeration('#7CFC00', 'lawngreen'),
 
@@ -543,7 +543,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFFACD
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LEMON_CHIFFON : new Enumeration('#FFFACD', 'lemonchiffon'),
 
@@ -551,7 +551,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #ADD8E6
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIGHT_BLUE : new Enumeration('#ADD8E6', 'lightblue'),
 
@@ -559,7 +559,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #F08080
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIGHT_CORAL : new Enumeration('#F08080', 'lightcoral'),
 
@@ -567,7 +567,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #E0FFFF
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIGHT_CYAN : new Enumeration('#E0FFFF', 'lightcyan'),
 
@@ -575,7 +575,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FAFAD2
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIGHT_GOLDENROD_YELLOW : new Enumeration('#FAFAD2', 'lightgoldenrodyellow'),
 
@@ -583,7 +583,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #D3D3D3
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIGHT_GRAY : new Enumeration('#D3D3D3', 'lightgray'),
 
@@ -591,7 +591,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #90EE90
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIGHT_GREEN : new Enumeration('#90EE90', 'lightgreen'),
 
@@ -599,7 +599,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #D3D3D3
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIGHT_GREY : new Enumeration('#D3D3D3', 'lightgrey'),
 
@@ -607,7 +607,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFB6C1
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIGHT_PINK : new Enumeration('#FFB6C1', 'lightpink'),
 
@@ -615,7 +615,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #20B2AA
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIGHT_SEAGREEN : new Enumeration('#20B2AA', 'lightseagreen'),
 
@@ -623,7 +623,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #87CEFA
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIGHT_SKY_BLUE : new Enumeration('#87CEFA', 'lightskyblue'),
 
@@ -631,7 +631,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #778899
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIGHT_SLATE_GRAY : new Enumeration('#778899', 'lightslategray'),
 
@@ -639,7 +639,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #778899
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIGHT_SLATE_GREY : new Enumeration('#778899', 'lightslategrey'),
 
@@ -647,7 +647,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #B0C4DE
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIGHT_STEE_LBLUE : new Enumeration('#B0C4DE', 'lightsteelblue'),
 
@@ -655,7 +655,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFFFE0
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIGHT_YELLOW : new Enumeration('#FFFFE0', 'lightyellow'),
 
@@ -663,7 +663,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #00FF00
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIME : new Enumeration('#00FF00', 'lime'),
 
@@ -671,7 +671,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #32CD32
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LIME_GREEN : new Enumeration('#32CD32', 'limegreen'),
 
@@ -679,7 +679,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FAF0E6
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         LINEN : new Enumeration('#FAF0E6', 'linen'),
 
@@ -687,7 +687,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FF00FF
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         MAGENTA : new Enumeration('#FF00FF', 'magenta'),
 
@@ -695,7 +695,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #800000
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         MAROON : new Enumeration('#800000', 'maroon'),
 
@@ -703,7 +703,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #66CDAA
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         MEDIUM__AQUAMARINE : new Enumeration('#66CDAA', 'mediumaquamarine'),
 
@@ -711,7 +711,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #0000CD
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         MEDIUM_BLUE : new Enumeration('#0000CD', 'mediumblue'),
 
@@ -719,7 +719,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #BA55D3
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         MEDIUM_ORCHID : new Enumeration('#BA55D3', 'mediumorchid'),
 
@@ -727,7 +727,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #9370DB
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         MEDIUM_PURPLE : new Enumeration('#9370DB', 'mediumpurple'),
 
@@ -735,7 +735,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #3CB371
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         MEDIUM_SEAGREEN : new Enumeration('#3CB371', 'mediumseagreen'),
 
@@ -743,7 +743,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #7B68EE
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         MEDIUM_SLATE_BLUE : new Enumeration('#7B68EE', 'mediumslateblue'),
 
@@ -751,7 +751,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #00FA9A
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         MEDIUM_SPRING_GREEN : new Enumeration('#00FA9A', 'mediumspringgreen'),
 
@@ -759,7 +759,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #48D1CC
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         MEDIUM_TURQUOISE : new Enumeration('#48D1CC', 'mediumturquoise'),
 
@@ -767,7 +767,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #C71585
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         MEDIUM_VIOLET_RED : new Enumeration('#C71585', 'mediumvioletred'),
 
@@ -775,7 +775,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #191970
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         MIDNIGHT_BLUE : new Enumeration('#191970', 'MIDNIGHTBLUE'),
 
@@ -783,7 +783,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #F5FFFA
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         MINT_CREAM : new Enumeration('#F5FFFA', 'mintcream'),
 
@@ -791,7 +791,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFE4E1
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         MISTY_ROSE : new Enumeration('#FFE4E1', 'mistyrose'),
 
@@ -799,7 +799,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFE4B5
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         MOCCASIN : new Enumeration('#FFE4B5', 'moccasin'),
 
@@ -807,7 +807,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFDEAD
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         NAVAJO_WHITE : new Enumeration('#FFDEAD', 'navajowhite'),
 
@@ -815,7 +815,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #000080
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         NAVY : new Enumeration('#000080','navy'),
 
@@ -823,7 +823,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FDF5E6
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         OLD_LACE : new Enumeration('#FDF5E6', 'oldlace'),
 
@@ -831,7 +831,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #808000
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         OLIVE : new Enumeration('#808000', 'olive'),
 
@@ -839,7 +839,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #6B8E23
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         OLIVE_DRAB : new Enumeration('#6B8E23', 'olivedrab'),
 
@@ -847,7 +847,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFA500
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         ORANGE : new Enumeration('#FFA500', 'orange'),
 
@@ -855,7 +855,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FF4500
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         ORANGE_RED : new Enumeration('#FF4500', 'orangered'),
 
@@ -863,7 +863,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #DA70D6
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         ORCHID : new Enumeration('#DA70D6', 'orchid'),
 
@@ -871,7 +871,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #EEE8AA
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         PALE__GOLDENROD : new Enumeration('#EEE8AA', 'palegoldenrod'),
 
@@ -879,7 +879,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #98FB98
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         PALE__GREEN : new Enumeration('#98FB98', 'palegreen'),
 
@@ -887,7 +887,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #AFEEEE
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         PALE_TURQUOISE : new Enumeration('#AFEEEE', 'paleturquoise'),
 
@@ -895,7 +895,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #DB7093
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         PALE_VIOLET_RED : new Enumeration('#DB7093', 'palevioletred'),
 
@@ -903,7 +903,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFEFD5
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         PAPAYA_WHIP : new Enumeration('#FFEFD5', 'papayawhip'),
 
@@ -911,7 +911,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFDAB9
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         PEACH_PUFF : new Enumeration('#FFDAB9', 'peachpuff'),
 
@@ -919,7 +919,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #CD853F
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         PERU : new Enumeration('#CD853F', 'peru'),
 
@@ -927,7 +927,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFC0CB
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         PINK : new Enumeration('#FFC0CB', 'pink'),
 
@@ -935,7 +935,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #DDA0DD
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         PLUM : new Enumeration('#DDA0DD', 'plum'),
 
@@ -943,7 +943,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #B0E0E6
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         POWDER_BLUE : new Enumeration('#B0E0E6', 'powderblue'),
 
@@ -951,7 +951,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #800080
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         PURPLE : new Enumeration('#800080', 'purple'),
 
@@ -959,7 +959,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FF0000
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         RED : new Enumeration('#FF0000', 'red'),
 
@@ -967,7 +967,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color ##BC8F8F
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         ROSY_BROWN : new Enumeration('##BC8F8F', 'rosybrown'),
 
@@ -975,7 +975,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #4169E1
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         ROYAL_BLUE : new Enumeration('#4169E1', 'royalblue'),
 
@@ -983,7 +983,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #8B4513
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         SADDLE_BROWN : new Enumeration('#8B4513', 'saddlebrown'),
 
@@ -991,7 +991,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FA8072
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         SALMON : new Enumeration('#FA8072', 'salmon'),
 
@@ -999,7 +999,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #F4A460
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         SANDY_BROWN : new Enumeration('#F4A460', 'sandybrown'),
 
@@ -1007,7 +1007,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #2E8B57
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         SEAGREEN : new Enumeration('#2E8B57', 'seagreen'),
 
@@ -1015,7 +1015,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFF5EE
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         SEASHELL : new Enumeration('#FFF5EE', 'seashell'),
 
@@ -1023,7 +1023,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #A0522D
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         SIENNA : new Enumeration('#A0522D', 'sienna'),
 
@@ -1031,7 +1031,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #C0C0C0
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         SILVER : new Enumeration('#C0C0C0', 'silver'),
 
@@ -1039,7 +1039,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #87CEEB
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         SKY_BLUE : new Enumeration('#87CEEB', 'skyblue'),
 
@@ -1047,7 +1047,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #6A5ACD
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         SLATE_BLUE : new Enumeration('#6A5ACD', 'slateblue'),
 
@@ -1055,7 +1055,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #708090
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         SLATE_GRAY : new Enumeration('#708090', 'slategray'),
 
@@ -1063,7 +1063,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #708090
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         SLATE_GREY : new Enumeration('#708090', 'slategrey'),
 
@@ -1071,7 +1071,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFFAFA
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         SNOW : new Enumeration('#FFFAFA', 'snow'),
 
@@ -1079,7 +1079,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #00FF7F
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         SPRING_GREEN : new Enumeration('#00FF7F', 'springgreen'),
 
@@ -1087,7 +1087,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #98FB98
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         STEEL_BLUE : new Enumeration('#4682B4', 'steelblue'),
 
@@ -1095,7 +1095,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #D2B48C
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         TAN : new Enumeration('#D2B48C', 'tan'),
 
@@ -1103,7 +1103,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #008080
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         TEAL : new Enumeration('#008080', 'teal'),
 
@@ -1111,7 +1111,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #D8BFD8
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         THISTLE : new Enumeration('#D8BFD8', 'thistle'),
 
@@ -1119,7 +1119,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FF6347
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         TOMATO : new Enumeration('#FF6347', 'tomato'),
 
@@ -1127,7 +1127,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #40E0D0
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         TURQUOISE : new Enumeration('#40E0D0', 'turquoise'),
 
@@ -1135,7 +1135,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #EE82EE
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         VIOLET : new Enumeration('#EE82EE', 'violet'),
 
@@ -1143,7 +1143,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #F5DEB3
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         WHEAT : new Enumeration('#F5DEB3', 'wheat'),
 
@@ -1151,7 +1151,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFFFFF
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         WHITE : new Enumeration('#FFFFFF', 'white'),
 
@@ -1159,7 +1159,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #F5F5F5
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         WHITE_SMOKE : new Enumeration('#F5F5F5', 'whitesmoke'),
 
@@ -1167,7 +1167,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #FFFF00
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         YELLOW : new Enumeration('#FFFF00', 'yellow'),
 
@@ -1175,7 +1175,7 @@ define(['./Enumeration'], function(Enumeration) {
          * Represents the CSS color #9ACD32
          *
          * @constant
-         * @type {Color}
+         * @type {Enumeration}
          */
         YELLOW_GREEN : new Enumeration('#9ACD32', 'yellowgreen')
     };
