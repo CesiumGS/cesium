@@ -664,13 +664,16 @@ define([
             }
 
             var rDotE = Cartesian3.dot(camera.right, east);
-            var sign = (CesiumMath.sign(rDotE) < 0.0) ? -1.0 : 1.0;
+            var signRDotE = (CesiumMath.sign(rDotE) < 0.0) ? -1.0 : 1.0;
             rDotE = Math.abs(rDotE);
-            var uDotA = Math.abs(Cartesian3.dot(up, cameraController.constrainedAxis));
+            var uDotA = Cartesian3.dot(up, cameraController.constrainedAxis);
+            var uDotE = Cartesian3.dot(up, east);
+            var signInnerSum = ((uDotA > 0.0 && uDotE > 0.0) || (uDotA < 0.0 && uDotE < 0.0)) ? -1.0 : 1.0;
+            uDotA = Math.abs(uDotA);
 
             var originalDeltaTheta = deltaTheta;
-            deltaTheta = sign * (deltaTheta * uDotA - deltaPhi * (1.0 - rDotE));
-            deltaPhi = sign * (deltaPhi * rDotE + originalDeltaTheta * (1.0 - uDotA));
+            deltaTheta = signRDotE * (deltaTheta * uDotA - signInnerSum * deltaPhi * (1.0 - rDotE));
+            deltaPhi = signRDotE * (deltaPhi * rDotE + signInnerSum * originalDeltaTheta * (1.0 - uDotA));
         }
 
         cameraController.rotateRight(deltaPhi, transform);
