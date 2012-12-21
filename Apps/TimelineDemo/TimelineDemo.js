@@ -67,8 +67,8 @@ define(['dojo',
             //'<br/>Epoch: ' + timeline.makeLabel(e.epochJulian) + ' UTC' +
             '<br/>Start: ' + timeline.makeLabel(e.startJulian) + ' UTC' +
             '<br/>&nbsp;Stop: ' + timeline.makeLabel(e.endJulian) + ' UTC' +
-            '<br/>Span: ' + spanToString(e.totalSpan) +
-            '<br/>Tic: ' + spanToString(e.mainTicSpan);
+            '<br/>&nbsp;Span: ' + spanToString(e.totalSpan) +
+            '<br/>&nbsp;&nbsp;Tic: ' + spanToString(e.mainTicSpan);
         updateScrubTime(clock.currentTime);
     }
 

@@ -147,6 +147,7 @@ define([
         var buttonHoverBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeHover).getPropertyValue('color'));
         var buttonSelectedBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeSelect).getPropertyValue('color'));
         var buttonDisabledBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeDisabled).getPropertyValue('color'));
+        var knobBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeKnob).getPropertyValue('color'));
 
         var defs = {
             'tagName' : 'defs',
@@ -259,11 +260,11 @@ define([
                     'x1' : '20%', 'y1' : '0%', 'x2' : '90%', 'y2' : '100%',
                     'children' : [
                           { 'tagName' : 'stop', 'offset' : '5%', 'stop-color' :
-                              widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor0) },
+                              widget._makeColorString(knobBackColor, widget.gradientEnabledColor0) },
                           { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' :
-                              widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor2) },
+                              widget._makeColorString(knobBackColor, widget.gradientEnabledColor2) },
                           { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' :
-                              widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor1) }
+                              widget._makeColorString(knobBackColor, widget.gradientEnabledColor1) }
                     ]
                 }, {
                     'id' : 'playback_knobInner',
@@ -271,11 +272,11 @@ define([
                     'x1' : '20%', 'y1' : '0%', 'x2' : '90%', 'y2' : '100%',
                     'children' : [
                           { 'tagName' : 'stop', 'offset' : '5%', 'stop-color' :
-                              widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor3) },
+                              widget._makeColorString(knobBackColor, widget.gradientEnabledColor3) },
                           { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' :
-                              widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor0) },
+                              widget._makeColorString(knobBackColor, widget.gradientEnabledColor0) },
                           { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' :
-                              widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor3) }
+                              widget._makeColorString(knobBackColor, widget.gradientEnabledColor3) }
                     ]
                 }, {
                     'id' : 'playback_pathReset',
@@ -356,12 +357,14 @@ define([
             '<div class="playback-themeNormal"></div>' +
             '<div class="playback-themeHover"></div>' +
             '<div class="playback-themeSelect"></div>' +
-            '<div class="playback-themeDisabled"></div>';
+            '<div class="playback-themeDisabled"></div>' +
+            '<div class="playback-themeKnob"></div>';
         parentNode.appendChild(themeEle);
         widget._themeNormal = themeEle.childNodes[0];
         widget._themeHover = themeEle.childNodes[1];
         widget._themeSelect = themeEle.childNodes[2];
         widget._themeDisabled = themeEle.childNodes[3];
+        widget._themeKnob = themeEle.childNodes[4];
 
         var svg = this.svgNode = this._svg('svg:svg');
 

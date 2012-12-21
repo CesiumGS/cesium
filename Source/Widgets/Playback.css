@@ -16,6 +16,9 @@
 .playback-themeDisabled {
     color: #EFEFEF;
 }
+.playback-themeKnob {
+    color: #888;
+}
 .playback-svgText {
     fill: #111;
     font-family: Sans-Serif;
@@ -89,7 +92,7 @@
 .playback-shuttleRingBack {
     fill: #FAFAFA;
     /* fill-opacity: 0.9;  Leave commented-out until issue #361 gets fixed.  */
-    stroke: #759DC0;
+    stroke: #AEAEAE;
     stroke-width: 1.2;
 }
 .playback-shuttleRingG {
@@ -139,6 +142,9 @@
 }
 .cesium-darker .playback-themeDisabled {
     color: #333;
+}
+.cesium-darker .playback-themeKnob {
+    color: #222;
 }
 .cesium-darker .playback-svgText {
     fill: #edffff;
