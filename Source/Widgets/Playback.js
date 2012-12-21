@@ -123,6 +123,8 @@ define([
     Playback.prototype.gradientDisabledColor0 = Color.fromCSSColor('rgba(255,255,255,0.267)');
     Playback.prototype.gradientDisabledColor1 = Color.fromCSSColor('rgba(255,255,255,0)');
 
+    Playback.prototype.gradientKnobColor = Color.fromCSSColor('rgba(66,67,68,0.3)');
+
     Playback.prototype._makeColorString = function(background, gradient) {
         var gradientAlpha = gradient.alpha;
         var backgroundAlpha = 1.0 - gradientAlpha;
@@ -262,7 +264,7 @@ define([
                           { 'tagName' : 'stop', 'offset' : '5%', 'stop-color' :
                               widget._makeColorString(knobBackColor, widget.gradientEnabledColor0) },
                           { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' :
-                              widget._makeColorString(knobBackColor, widget.gradientEnabledColor2) },
+                              widget._makeColorString(knobBackColor, widget.gradientKnobColor) },
                           { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' :
                               widget._makeColorString(knobBackColor, widget.gradientEnabledColor1) }
                     ]
@@ -272,7 +274,7 @@ define([
                     'x1' : '20%', 'y1' : '0%', 'x2' : '90%', 'y2' : '100%',
                     'children' : [
                           { 'tagName' : 'stop', 'offset' : '5%', 'stop-color' :
-                              widget._makeColorString(knobBackColor, widget.gradientEnabledColor3) },
+                              widget._makeColorString(knobBackColor, widget.gradientKnobColor) },
                           { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' :
                               widget._makeColorString(knobBackColor, widget.gradientEnabledColor0) },
                           { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' :
