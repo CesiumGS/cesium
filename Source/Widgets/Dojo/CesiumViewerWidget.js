@@ -659,6 +659,7 @@ define([
 
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
+            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
             var handler = new ScreenSpaceEventHandler(canvas);
             handler.setInputAction(lang.hitch(this, '_handleLeftClick'), ScreenSpaceEventType.LEFT_CLICK);
@@ -853,7 +854,7 @@ define([
             var mode = scene.mode;
 
             var camera = scene.getCamera();
-            camera.controller.constrainedAxis = undefined;
+            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
             var controller = scene.getScreenSpaceCameraController();
             controller.enableTranslate = true;
