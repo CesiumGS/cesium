@@ -115,16 +115,16 @@ define([
         this.knobOuter.setAttribute('transform', 'rotate(' + angle + ')');
     };
 
-    Playback.prototype.gradientEnabledColor0 = Color.fromCSSColor('rgba(247,250,255,0.384)');
-    Playback.prototype.gradientEnabledColor1 = Color.fromCSSColor('rgba(143,191,255,0.216)');
-    Playback.prototype.gradientEnabledColor2 = Color.fromCSSColor('rgba(153,197,255,0.098)');
-    Playback.prototype.gradientEnabledColor3 = Color.fromCSSColor('rgba(255,255,255,0.086)');
+    Playback.prototype.gradientEnabledColor0 = Color.fromCssColorString('rgba(247,250,255,0.384)');
+    Playback.prototype.gradientEnabledColor1 = Color.fromCssColorString('rgba(143,191,255,0.216)');
+    Playback.prototype.gradientEnabledColor2 = Color.fromCssColorString('rgba(153,197,255,0.098)');
+    Playback.prototype.gradientEnabledColor3 = Color.fromCssColorString('rgba(255,255,255,0.086)');
 
-    Playback.prototype.gradientDisabledColor0 = Color.fromCSSColor('rgba(255,255,255,0.267)');
-    Playback.prototype.gradientDisabledColor1 = Color.fromCSSColor('rgba(255,255,255,0)');
+    Playback.prototype.gradientDisabledColor0 = Color.fromCssColorString('rgba(255,255,255,0.267)');
+    Playback.prototype.gradientDisabledColor1 = Color.fromCssColorString('rgba(255,255,255,0)');
 
-    Playback.prototype.gradientKnobColor = Color.fromCSSColor('rgba(66,67,68,0.3)');
-    Playback.prototype.gradientPointerColor = Color.fromCSSColor('rgba(0,0,0,0.5)');
+    Playback.prototype.gradientKnobColor = Color.fromCssColorString('rgba(66,67,68,0.3)');
+    Playback.prototype.gradientPointerColor = Color.fromCssColorString('rgba(0,0,0,0.5)');
 
     Playback.prototype._makeColorString = function(background, gradient) {
         var gradientAlpha = gradient.alpha;
@@ -146,14 +146,14 @@ define([
         var widget = this;
         var svg = this.svgNode;
 
-        var buttonNormalBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeNormal).getPropertyValue('color'));
-        var buttonHoverBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeHover).getPropertyValue('color'));
-        var buttonSelectedBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeSelect).getPropertyValue('color'));
-        var buttonDisabledBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeDisabled).getPropertyValue('color'));
-        var knobBackColor = Color.fromCSSColor(window.getComputedStyle(widget._themeKnob).getPropertyValue('color'));
-        var pointerColor = Color.fromCSSColor(window.getComputedStyle(widget._themePointer).getPropertyValue('color'));
-        var swooshColor = Color.fromCSSColor(window.getComputedStyle(widget._themeSwoosh).getPropertyValue('color'));
-        var swooshHoverColor = Color.fromCSSColor(window.getComputedStyle(widget._themeSwooshHover).getPropertyValue('color'));
+        var buttonNormalBackColor = Color.fromCssColorString(window.getComputedStyle(widget._themeNormal).getPropertyValue('color'));
+        var buttonHoverBackColor = Color.fromCssColorString(window.getComputedStyle(widget._themeHover).getPropertyValue('color'));
+        var buttonSelectedBackColor = Color.fromCssColorString(window.getComputedStyle(widget._themeSelect).getPropertyValue('color'));
+        var buttonDisabledBackColor = Color.fromCssColorString(window.getComputedStyle(widget._themeDisabled).getPropertyValue('color'));
+        var knobBackColor = Color.fromCssColorString(window.getComputedStyle(widget._themeKnob).getPropertyValue('color'));
+        var pointerColor = Color.fromCssColorString(window.getComputedStyle(widget._themePointer).getPropertyValue('color'));
+        var swooshColor = Color.fromCssColorString(window.getComputedStyle(widget._themeSwoosh).getPropertyValue('color'));
+        var swooshHoverColor = Color.fromCssColorString(window.getComputedStyle(widget._themeSwooshHover).getPropertyValue('color'));
 
         var defs = {
             'tagName' : 'defs',
@@ -228,11 +228,11 @@ define([
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
                         { 'tagName' : 'stop', 'offset' : '0%', 'stop-opacity' : 0.2, 'stop-color' :
-                            swooshColor.toCSSColor() },
+                            swooshColor.toCssColorString() },
                         { 'tagName' : 'stop', 'offset' : '85%', 'stop-opacity' : 0.85, 'stop-color' :
-                            swooshColor.toCSSColor() },
+                            swooshColor.toCssColorString() },
                         { 'tagName' : 'stop', 'offset' : '95%', 'stop-opacity' : 0.05, 'stop-color' :
-                            swooshColor.toCSSColor() }
+                            swooshColor.toCssColorString() }
                     ]
                 }, {
                     'id' : 'playback_shuttleRingSwooshHovered',
@@ -240,11 +240,11 @@ define([
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
                         { 'tagName' : 'stop', 'offset' : '0%', 'stop-opacity' : 0.2, 'stop-color' :
-                            swooshHoverColor.toCSSColor() },
+                            swooshHoverColor.toCssColorString() },
                         { 'tagName' : 'stop', 'offset' : '85%', 'stop-opacity' : 0.85, 'stop-color' :
-                            swooshHoverColor.toCSSColor() },
+                            swooshHoverColor.toCssColorString() },
                         { 'tagName' : 'stop', 'offset' : '95%', 'stop-opacity' : 0.05, 'stop-color' :
-                            swooshHoverColor.toCSSColor() }
+                            swooshHoverColor.toCssColorString() }
                     ]
                 }, {
                     'id' : 'playback_shuttleRingPointerGradient',
@@ -252,9 +252,9 @@ define([
                     'x1' : '0%', 'y1' : '50%', 'x2' : '100%', 'y2' : '50%',
                     'children' : [
                         { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' :
-                            pointerColor.toCSSColor() },
+                            pointerColor.toCssColorString() },
                         { 'tagName' : 'stop', 'offset' : '40%', 'stop-color' :
-                            pointerColor.toCSSColor() },
+                            pointerColor.toCssColorString() },
                         { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' :
                             widget._makeColorString(pointerColor, widget.gradientPointerColor) },
                         { 'tagName' : 'stop', 'offset' : '100%', 'stop-color' :
