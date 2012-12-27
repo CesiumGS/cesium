@@ -256,21 +256,20 @@ define([
         }
     }
 
-    function handleZoom(object, movement, zoomFactor, distanceMeasure) {
-        // distanceMeasure should be the height above the ellipsoid.
-        // The zoomRate slows as it approaches the surface and stops minHeight above it.
-        var minHeight = object._cameraController.minimumZoomDistance;
-        var zoomRate = zoomFactor * (distanceMeasure - minHeight);
-
-        if (zoomRate > object._maximumZoomRate) {
-            zoomRate = object._maximumZoomRate;
+    function handleZoom(object, movement, zoomFactor, distanceMeasure, unitPositionDotDirection) {
+        var percentage = 1.0;
+        if (typeof unitPositionDotDirection !== 'undefined') {
+            percentage = CesiumMath.clamp(Math.abs(unitPositionDotDirection), 0.25, 1.0);
         }
+
+        // distanceMeasure should be the height above the ellipsoid.
+        // The zoomRate slows as it approaches the surface and stops minimumZoomDistance above it.
+        var minHeight = object._cameraController.minimumZoomDistance * percentage;
+        var distance = distanceMeasure - minHeight;
+        var zoomRate = zoomFactor * distance;
+        zoomRate = CesiumMath.clamp(zoomRate, object._minimumZoomRate, object._maximumZoomRate);
 
         var diff = movement.endPosition.y - movement.startPosition.y;
-        if (diff === 0) {
-            return;
-        }
-
         var rangeWindowRatio = diff / object._canvas.clientHeight;
         rangeWindowRatio = Math.min(rangeWindowRatio, object.maximumMovementRatio);
         var dist = zoomRate * rangeWindowRatio;
@@ -283,11 +282,7 @@ define([
             dist = distanceMeasure - minHeight - 1.0;
         }
 
-        if (dist > 0.0) {
-            object._cameraController.zoomIn(dist);
-        } else {
-            object._cameraController.zoomOut(-dist);
-        }
+        object._cameraController.zoomIn(dist);
     }
 
     var translate2DStart = new Ray();
@@ -484,8 +479,18 @@ define([
         controller.setEllipsoid(oldEllipsoid);
     }
 
+    var zoomCVUnitPosition = new Cartesian3();
     function zoomCV(controller, movement) {
-        handleZoom(controller, movement, controller._zoomFactor, controller._cameraController.getMagnitude());
+        // CAMERA TODO: remove access to camera
+        var camera = controller._cameraController._camera;
+
+        var height = camera.position.z;
+        var unitPosition = Cartesian3.clone(camera.position, zoomCVUnitPosition);
+        unitPosition.x = 0.0;
+        unitPosition.y = 0.0;
+        Cartesian3.normalize(unitPosition, unitPosition);
+
+        handleZoom(controller, movement, controller._zoomFactor, Math.abs(height), Cartesian3.dot(unitPosition, camera.direction));
     }
 
     function updateCV(controller) {
@@ -791,11 +796,16 @@ define([
         }
     }
 
+    var zoom3DUnitPosition = new Cartesian3();
     function zoom3D(controller, movement) {
         // CAMERA TODO: remove access to camera
+        var camera = controller._cameraController._camera;
         var ellipsoid = controller._ellipsoid;
-        var height = ellipsoid.cartesianToCartographic(controller._cameraController._camera.position).height;
-        handleZoom(controller, movement, controller._zoomFactor, height);
+
+        var height = ellipsoid.cartesianToCartographic(camera.position).height;
+        var unitPosition = Cartesian3.normalize(camera.position, zoom3DUnitPosition);
+
+        handleZoom(controller, movement, controller._zoomFactor, height, Cartesian3.dot(unitPosition, camera.direction));
     }
 
     var tilt3DWindowPos = new Cartesian2();
@@ -807,7 +817,7 @@ define([
         var cameraController = controller._cameraController;
 
         var ellipsoid = controller._ellipsoid;
-        var minHeight = cameraController.minimumHeightAboveSurface;
+        var minHeight = cameraController.minimumZoomDistance * 0.25;
         var height = ellipsoid.cartesianToCartographic(controller._cameraController._camera.position).height;
         if (height - minHeight - 1.0 < CesiumMath.EPSILON3 &&
                 movement.endPosition.y - movement.startPosition.y < 0) {
@@ -901,6 +911,8 @@ define([
         var pinching = pinch && pinch.isMoving();
         var rotate = controller._rotateHandler;
         var rotating = rotate.isMoving() && rotate.getMovement();
+        var look = controller._lookHandler;
+        var looking = look.isMoving() && look.getMovement();
 
         if (controller.enableRotate) {
             if (spinning) {
@@ -953,8 +965,8 @@ define([
         }
 
         if (controller.enableLook) {
-            if (controller._lookHandler.isMoving()) {
-                look3D(controller, controller._lookHandler.getMovement());
+            if (looking) {
+                look3D(controller, look.getMovement());
             }
         }
 
