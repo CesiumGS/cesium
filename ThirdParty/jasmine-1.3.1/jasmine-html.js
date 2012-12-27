@@ -220,6 +220,9 @@ jasmine.HtmlReporter = function(_doc) {
         self.createDom('div', {className: 'progressContainer'},
         dom.progress = self.createDom('div', {className: 'progressBar', style: 'width: 0%'})),
         self.createDom('span', { className: 'exceptions' },
+          self.createDom('a',  {className: 'run_all', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
+            window.encodeURIComponent('?baseUrl=../Instrumented'), target: '_top' }, 'coverage'),
+          self.createDom('a', { className: 'run_all', href: '?' }, 'run all'),
           self.createDom('label', { className: 'label', 'for': 'no_try_catch' }, 'No try/catch'),
           self.createDom('input', { id: 'no_try_catch', type: 'checkbox' }))),
       dom.results = self.createDom('div', {className: 'results'},

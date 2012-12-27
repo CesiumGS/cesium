@@ -6,6 +6,11 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
   text-decoration: none;
 }
 
+.run_all {
+  color: #FFF;
+  padding-right: 12px;
+}
+
 .progressContainer {
   position: relative;
 }
