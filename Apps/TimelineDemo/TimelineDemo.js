@@ -85,15 +85,13 @@ define(['dojo',
     // Adjust start/end dates in reaction to any calendar/time clicks
     //
     function newDatesSelected() {
-        var startJulian, endJulian, startDate, endDate;
+        var startJulian, endJulian;
 
         if (startDatePart && startTimePart) {
-            startDate = dojo.date.stamp.fromISOString(startDatePart + startTimePart + 'Z'); // + 'Z' for UTC
-            startJulian = new JulianDate.fromDate(startDate);
+            startJulian = JulianDate.fromIso8601(startDatePart + startTimePart + 'Z'); // + 'Z' for UTC
         }
         if (endDatePart && endTimePart) {
-            endDate = dojo.date.stamp.fromISOString(endDatePart + endTimePart + 'Z');
-            endJulian = new JulianDate.fromDate(endDate);
+            endJulian = JulianDate.fromIso8601(endDatePart + endTimePart + 'Z');
         }
 
         if (startJulian && endJulian) {
@@ -123,12 +121,21 @@ define(['dojo',
 
     // React to time-of-day selectors
     //
+    function getTimePart(newTime) {
+        var h = newTime.getHours().toString();
+        h = (h.length < 2) ? ('0' + h) : h;
+        var m = newTime.getMinutes().toString();
+        m = (m.length < 2) ? ('0' + m) : m;
+        var s = newTime.getSeconds().toString();
+        s = (s.length < 2) ? ('0' + s) : s;
+        return 'T' + h + ':' + m + ':' + s;
+    }
     function newStartTimeSelected(newTime) {
-        startTimePart = newTime.toString().replace(/.*1970\s(\S+).*/, 'T$1');
+        startTimePart = getTimePart(newTime);
         newDatesSelected();
     }
     function newEndTimeSelected(newTime) {
-        endTimePart = newTime.toString().replace(/.*1970\s(\S+).*/, 'T$1');
+        endTimePart = getTimePart(newTime);
         newDatesSelected();
     }
 
