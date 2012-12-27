@@ -122,8 +122,9 @@ define([
      * @exception {DeveloperError} <code>description.server</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
-     * @see SingleTileImageryProvider
      * @see OpenStreetMapImageryProvider
+     * @see SingleTileImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
      * @see <a href='http://msdn.microsoft.com/en-us/library/ff701713.aspx'>Bing Maps REST Services</a>
