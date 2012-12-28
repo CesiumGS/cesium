@@ -70,10 +70,17 @@ jasmine.HtmlReporterHelpers.isSuiteFocused = function(suite) {
     if (suite.getFullName() === paramMap.spec) {
 	  return true;
     }
+	
+    if (typeof suite.category !== 'undefined' && suite.category === paramMap.category) {
+      return true;
+    }
 
     var parentSuite = suite.parentSuite;
     while (parentSuite) {
       if (parentSuite.getFullName() === paramMap.spec) {
+        return true;
+      }
+      if (typeof parentSuite.category !== 'undefined' && parentSuite.category === paramMap.category) {
         return true;
       }
       parentSuite = parentSuite.parentSuite;
@@ -84,6 +91,9 @@ jasmine.HtmlReporterHelpers.isSuiteFocused = function(suite) {
       if (childSpecs[i].getFullName() === paramMap.spec) {
 	    return true;
 	  }
+      if (typeof childSpecs[i].suite.category !== 'undefined' && childSpecs[i].suite.category === paramMap.category) {
+        return true;
+      }
     }
 
     var childSuites = suite.suites();
