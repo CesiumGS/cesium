@@ -13,6 +13,7 @@ Beta Releases
    * Renamed `CameraEventHandler` to `CameraEventAggregator`.
    * Renamed all `*MouseAction` to `*InputAction` (including get, set, remove, etc).
    * Removed `Camera2DController`, `CameraCentralBodyController`, `CameraColumbusViewController`, `CameraFlightController`, `CameraFreeLookController`, `CameraSpindleController`, and `CameraControllerCollection`. Common ways to modify the camera are through the `CameraController` object of the `Camera` and will work in all scene modes. The default camera handler is the `ScreenSpaceCameraController` object on the `Scene`.
+   * Renamed the `server` property to `url` when constructing a `BingMapsImageryProvider`.  Likewise, renamed `BingMapsImageryProvider.getServer` to `BingMapsImageryProvider.getUrl`.
    * Changed default Natural Earth imagery to a 2K version of [Natural Earth II with Shaded Relief, Water, and Drainages](http://www.naturalearthdata.com/downloads/10m-raster-data/10m-natural-earth-2/).  The previously used version did not include lakes and rivers.  This replaced `Source/Assets/Textures/NE2_50M_SR_W_2048.jpg` with `Source/Assets/Textures/NE2_LR_LC_SR_W_DR_2048.jpg`.
 * Added pinch-zoom, pinch-twist, and pinch-tilt for touch-enabled browsers (particularly mobile browsers).
 * Improved rendering support on Nexus 4 and Nexus 7 using Firefox.

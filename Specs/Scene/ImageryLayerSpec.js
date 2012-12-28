@@ -125,7 +125,7 @@ defineSuite([
         };
 
         var provider = new BingMapsImageryProvider({
-            server : 'invalid.localhost',
+            url : 'invalid.localhost',
             tileDiscardPolicy : new NeverTileDiscardPolicy()
         });
 

@@ -1116,7 +1116,7 @@ define([
                     existingImagery.getMapStyle() !== this.mapStyle) {
 
                     newLayer = imageLayers.addImageryProvider(new BingMapsImageryProvider({
-                        server : 'dev.virtualearth.net',
+                        url : 'dev.virtualearth.net',
                         mapStyle : this.mapStyle,
                         // Some versions of Safari support WebGL, but don't correctly implement
                         // cross-origin image loading, so we need to load Bing imagery using a proxy.
