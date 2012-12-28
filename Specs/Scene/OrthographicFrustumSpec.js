@@ -83,37 +83,37 @@ defineSuite([
     it('get frustum left plane', function() {
         var leftPlane = planes[0];
         var expectedResult = new Cartesian4(1.0, 0.0, 0.0, 1.0);
-        expect(leftPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toEqual(true);
+        expect(leftPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON4);
     });
 
     it('get frustum right plane', function() {
         var rightPlane = planes[1];
         var expectedResult = new Cartesian4(-1.0, 0.0, 0.0, 1.0);
-        expect(rightPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toEqual(true);
+        expect(rightPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON4);
     });
 
     it('get frustum bottom plane', function() {
         var bottomPlane = planes[2];
         var expectedResult = new Cartesian4(0.0, 1.0, 0.0, 1.0);
-        expect(bottomPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toEqual(true);
+        expect(bottomPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON4);
     });
 
     it('get frustum top plane', function() {
         var topPlane = planes[3];
         var expectedResult = new Cartesian4(0.0, -1.0, 0.0, 1.0);
-        expect(topPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toEqual(true);
+        expect(topPlane).toEqual(expectedResult, CesiumMath.EPSILON4);
     });
 
     it('get frustum near plane', function() {
         var nearPlane = planes[4];
         var expectedResult = new Cartesian4(0.0, 0.0, -1.0, -1.0);
-        expect(nearPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toEqual(true);
+        expect(nearPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON4);
     });
 
     it('get frustum far plane', function() {
         var farPlane = planes[5];
         var expectedResult = new Cartesian4(0.0, 0.0, 1.0, 3.0);
-        expect(farPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toEqual(true);
+        expect(farPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON4);
     });
 
     it('get orthographic projection matrix', function() {
@@ -148,7 +148,7 @@ defineSuite([
 
     it('clone', function() {
         var clone = frustum.clone();
-        expect(clone.equals(frustum)).toEqual(true);
+        expect(clone).toEqual(frustum);
     });
 
     it('throws with undefined frustum parameters', function() {

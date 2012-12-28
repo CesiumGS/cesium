@@ -31,7 +31,7 @@ defineSuite([
         var height = 10.0;
         var cartographic = new Cartographic(0.0, 0.0, height);
         var projection = new WebMercatorProjection();
-        expect(projection.project(cartographic).equals(new Cartesian3(0.0, 0.0, height))).toEqual(true);
+        expect(projection.project(cartographic)).toEqual(new Cartesian3(0.0, 0.0, height));
     });
 
     it('project1', function() {
@@ -46,7 +46,7 @@ defineSuite([
                 0.0);
 
         var projection = new WebMercatorProjection(ellipsoid);
-        expect(projection.project(cartographic).equalsEpsilon(expected, CesiumMath.EPSILON8)).toEqual(true);
+        expect(projection.project(cartographic)).toEqualEpsilon(expected, CesiumMath.EPSILON8);
     });
 
     it('project2', function() {
@@ -61,7 +61,7 @@ defineSuite([
                 0.0);
 
         var projection = new WebMercatorProjection(ellipsoid);
-        expect(projection.project(cartographic).equalsEpsilon(expected, CesiumMath.EPSILON15)).toEqual(true);
+        expect(projection.project(cartographic)).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     });
 
     it('project3', function() {
@@ -79,14 +79,14 @@ defineSuite([
         var result = new Cartesian3(0.0, 0.0, 0.0);
         var returnValue = projection.project(cartographic, result);
         expect(result).toEqual(returnValue);
-        expect(result.equalsEpsilon(expected, CesiumMath.EPSILON8)).toEqual(true);
+        expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON8);
     });
 
     it('unproject0', function() {
         var cartographic = new Cartographic(CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_FOUR, 12.0);
         var projection = new WebMercatorProjection();
         var projected = projection.project(cartographic);
-        expect(projection.unproject(projected).equalsEpsilon(cartographic, CesiumMath.EPSILON14)).toEqual(true);
+        expect(projection.unproject(projected)).toEqualEpsilon(cartographic, CesiumMath.EPSILON14);
     });
 
     it('unproject1', function() {
@@ -96,7 +96,7 @@ defineSuite([
         var result = new Cartographic(0.0, 0.0, 0.0);
         var returnValue = projection.unproject(projected, result);
         expect(result).toEqual(returnValue);
-        expect(result.equalsEpsilon(cartographic, CesiumMath.EPSILON14)).toEqual(true);
+        expect(result).toEqualEpsilon(cartographic, CesiumMath.EPSILON14);
     });
 
     it('unproject is correct at corners', function() {

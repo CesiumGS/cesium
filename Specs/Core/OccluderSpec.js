@@ -151,7 +151,7 @@ defineSuite([
         var tileOccluderSphere = BoundingSphere.fromPoints(positions);
         var occludeePosition = tileOccluderSphere.center;
         var result = Occluder.getOccludeePoint(occluderBS, occludeePosition, positions);
-        expect(result.equalsEpsilon(new Cartesian3(0, 0, -5), CesiumMath.EPSILON1)).toEqual(true);
+        expect(result).toEqualEpsilon(new Cartesian3(0, 0, -5), CesiumMath.EPSILON1);
     });
 
     it('can compute a rotation vector (major axis = 0)', function() {

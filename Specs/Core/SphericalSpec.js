@@ -97,12 +97,12 @@ defineSuite([
     });
 
     it('equalsEpsilon returns true for expected values.', function() {
-        expect(new Spherical(1, 2, 1).equalsEpsilon(new NotSpherical(1, 2, 1), 0)).toEqual(true);
-        expect(new Spherical(1, 2, 1).equalsEpsilon(new NotSpherical(1, 2, 2), 1)).toEqual(true);
+        expect(new Spherical(1, 2, 1)).toEqualEpsilon(new NotSpherical(1, 2, 1), 0);
+        expect(new Spherical(1, 2, 1)).toEqualEpsilon(new NotSpherical(1, 2, 2), 1);
     });
 
     it('equalsEpsilon returns false for expected values.', function() {
-        expect(new Spherical(1, 2, 1).equalsEpsilon(new NotSpherical(1, 2, 3), 1)).toEqual(false);
+        expect(new Spherical(1, 2, 1)).not.toEqualEpsilon(new NotSpherical(1, 2, 3), 1);
     });
 
     it('toString returns the expected format.', function() {
