@@ -599,8 +599,8 @@ if (isCommonJS) exports.afterEach = afterEach;
  * @param {String} description A string, usually the class under test.
  * @param {Function} specDefinitions function that defines several specs.
  */
-var describe = function(description, specDefinitions) {
-  return jasmine.getEnv().describe(description, specDefinitions);
+var describe = function(description, specDefinitions, category) {
+  return jasmine.getEnv().describe(description, specDefinitions, category);
 };
 if (isCommonJS) exports.describe = describe;
 
@@ -802,8 +802,8 @@ jasmine.Env.prototype.execute = function() {
   this.currentRunner_.execute();
 };
 
-jasmine.Env.prototype.describe = function(description, specDefinitions) {
-  var suite = new jasmine.Suite(this, description, specDefinitions, this.currentSuite);
+jasmine.Env.prototype.describe = function(description, specDefinitions, category) {
+  var suite = new jasmine.Suite(this, description, specDefinitions, this.currentSuite, category);
 
   var parentSuite = this.currentSuite;
   if (parentSuite) {
@@ -2449,13 +2449,15 @@ jasmine.Spec.prototype.removeAllSpies = function() {
  * @param {String} description
  * @param {Function} specDefinitions
  * @param {jasmine.Suite} parentSuite
+ * @param {String} category
  */
-jasmine.Suite = function(env, description, specDefinitions, parentSuite) {
+jasmine.Suite = function(env, description, specDefinitions, parentSuite, category) {
   var self = this;
   self.id = env.nextSuiteId ? env.nextSuiteId() : null;
   self.description = description;
   self.queue = new jasmine.Queue(env);
   self.parentSuite = parentSuite;
+  self.category = category;
   self.env = env;
   self.before_ = [];
   self.after_ = [];

@@ -197,6 +197,10 @@ jasmine.HtmlReporter = function(_doc) {
       return spec.category.indexOf(focusedCategory) === 0;
     }
 
+    if (focusedCategory && typeof spec.suite.category !== 'undefined') {
+      return spec.suite.category.indexOf(focusedCategory) === 0;
+    }
+	
     return spec.getFullName().indexOf(focusedSpecName) === 0;
   };
   
