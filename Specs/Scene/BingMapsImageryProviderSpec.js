@@ -100,7 +100,7 @@ defineSuite([
             mapStyle : mapStyle
         });
 
-        expect(provider.getServer()).toEqual(url);
+        expect(provider.getUrl()).toEqual(url);
         expect(provider.getKey()).not.toBeUndefined();
         expect(provider.getMapStyle()).toEqual(mapStyle);
 
@@ -189,7 +189,7 @@ defineSuite([
             proxy : proxy
         });
 
-        expect(provider.getServer()).toEqual(url);
+        expect(provider.getUrl()).toEqual(url);
 
         waitsFor(function() {
             return provider.isReady();
