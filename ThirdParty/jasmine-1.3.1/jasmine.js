@@ -495,8 +495,8 @@ if (isCommonJS) exports.spyOn = spyOn;
  * @param {String} desc description of this specification
  * @param {Function} func defines the preconditions and expectations of the spec
  */
-var it = function(desc, func) {
-  return jasmine.getEnv().it(desc, func);
+var it = function(desc, func, category) {
+  return jasmine.getEnv().it(desc, func, category);
 };
 if (isCommonJS) exports.it = it;
 
@@ -860,8 +860,8 @@ jasmine.Env.prototype.xdescribe = function(desc, specDefinitions) {
   };
 };
 
-jasmine.Env.prototype.it = function(description, func) {
-  var spec = new jasmine.Spec(this, this.currentSuite, description);
+jasmine.Env.prototype.it = function(description, func, category) {
+  var spec = new jasmine.Spec(this, this.currentSuite, description, category);
   this.currentSuite.add(spec);
   this.currentSpec = spec;
 
@@ -2205,7 +2205,7 @@ jasmine.Runner.prototype.results = function() {
  * @param {jasmine.Suite} suite
  * @param {String} description
  */
-jasmine.Spec = function(env, suite, description) {
+jasmine.Spec = function(env, suite, description, category) {
   if (!env) {
     throw new Error('jasmine.Env() required');
   }
@@ -2217,6 +2217,7 @@ jasmine.Spec = function(env, suite, description) {
   spec.env = env;
   spec.suite = suite;
   spec.description = description;
+  spec.category = category;
   spec.queue = new jasmine.Queue(env);
 
   spec.afterCallbacks = [];

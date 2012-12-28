@@ -172,22 +172,59 @@ jasmine.HtmlReporter = function(_doc) {
       var p = params[i].split('=');
       paramMap[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
     }
-  
+    
     if (paramMap.debug && spec.getFullName() === paramMap.debug) {
       var block = spec.queue.blocks[0];
       block.func = wrapWithDebugger(block.func);
     }
-  
-    if (!focusedSpecName()) {
+
+    var focusedSpecName = getFocusedSpecName();
+    var focusedCategory = getFocusedCategory();
+	
+    if (!focusedSpecName && !focusedCategory) {
       return true;
     }
+	
+    if (focusedSpecName && focusedCategory && !spec.category) {
+      return false;
+    }
+	
+    if (focusedSpecName && focusedCategory && typeof spec.category !== 'undefined') {
+      return (spec.getFullName().indexOf(focusedSpecName) === 0) && (spec.category.indexOf(focusedCategory) === 0);
+    }
+	
+    if (focusedCategory && typeof spec.category !== 'undefined') {
+      return spec.category.indexOf(focusedCategory) === 0;
+    }
 
-    return spec.getFullName().indexOf(focusedSpecName()) === 0;
+    return spec.getFullName().indexOf(focusedSpecName) === 0;
   };
   
   return self;
+  
+  function getFocusedCategory() {
+    var categoryName;
 
-  function focusedSpecName() {
+    (function memoizeFocusedSpec() {
+      if (categoryName) {
+        return;
+      }
+
+      var paramMap = [];
+      var params = jasmine.HtmlReporter.parameters(doc);
+
+      for (var i = 0; i < params.length; i++) {
+        var p = params[i].split('=');
+        paramMap[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
+      }
+
+      categoryName = paramMap.category;
+    })();
+
+    return categoryName;
+  }
+
+  function getFocusedSpecName() {
     var specName;
 
     (function memoizeFocusedSpec() {
