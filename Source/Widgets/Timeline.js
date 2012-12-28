@@ -216,25 +216,25 @@ define(['./TimelineTrack',
     }
 
     Timeline.prototype.makeLabel = function(julianDate) {
-        var date = julianDate.toDate();
-        var hours = date.getUTCHours();
+        var gregorian = julianDate.toGregorianDate();
+        var hours = gregorian.hour;
         var ampm = (hours < 12) ? ' AM' : ' PM';
         if (hours >= 13) {
             hours -= 12;
         } else if (hours === 0) {
             hours = 12;
         }
-        var mils = date.getUTCMilliseconds(), milString = '';
+        var mils = gregorian.millisecond, milString = '';
         if ((mils > 0) && (this._timeBarSecondsSpan < 3600)) {
-            milString = mils.toString();
+            milString = Math.floor(mils).toString();
             while (milString.length < 3) {
                 milString = '0' + milString;
             }
             milString = '.' + milString;
         }
 
-        return timelineMonthNames[date.getUTCMonth()] + ' ' + date.getUTCDate() + ' ' + date.getUTCFullYear() + ' ' + twoDigits(hours) + ':' + twoDigits(date.getUTCMinutes()) + ':' +
-                twoDigits(date.getUTCSeconds()) + milString + ampm;
+        return timelineMonthNames[gregorian.month - 1] + ' ' + gregorian.day + ' ' + gregorian.year + ' ' + twoDigits(hours) + ':' +
+            twoDigits(gregorian.minute) + ':' + twoDigits(gregorian.second) + milString + ampm;
     };
 
     Timeline.prototype.smallestTicInPixels = 7.0;
