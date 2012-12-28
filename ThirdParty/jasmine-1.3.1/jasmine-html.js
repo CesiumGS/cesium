@@ -94,6 +94,10 @@ jasmine.HtmlReporterHelpers.isSuiteFocused = function(suite) {
       if (typeof childSpecs[i].suite.category !== 'undefined' && childSpecs[i].suite.category === paramMap.category) {
         return true;
       }
+	  
+      if (typeof childSpecs[i].category !== 'undefined' && childSpecs[i].category === paramMap.category) {
+        return true;
+      }
     }
 
     var childSuites = suite.suites();
@@ -174,8 +178,8 @@ jasmine.HtmlReporter = function(_doc) {
     };
 }
 
-  self.specFilter = function(spec) {
-    var paramMap = [];
+  self.specFilter = function(spec) {    
+	var paramMap = [];
     var params = jasmine.HtmlReporter.parameters(doc);
 
     for (var i = 0; i < params.length; i++) {
@@ -270,7 +274,7 @@ jasmine.HtmlReporter = function(_doc) {
       dom.alert = self.createDom('div', {className: 'alert'},
         self.createDom('div', {className: 'progressContainer'},
         dom.progress = self.createDom('div', {className: 'progressBar', style: 'width: 0%'})),
-        self.createDom('span', { className: 'exceptions' },
+        dom.exceptions = self.createDom('span', { className: 'exceptions' },
           self.createDom('a',  {className: 'run_all', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
             window.encodeURIComponent('?baseUrl=../Instrumented'), target: '_top' }, 'coverage'),
           self.createDom('a', { className: 'run_all', href: '?' }, 'run all'),
@@ -365,7 +369,26 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
       showDetails();
     };
   };
+  
+  this.categories = [];
 
+  this.createCategoryMenu = function() {
+	this.categoryMenu = this.createDom('span', {className: 'categoryMenu'}, 'Category: ',
+	  this.categorySelect = this.createDom('select', {id: 'categorySelect' },
+	  this.createDom('option', {value: ' '}, 'Select a category')));
+	  
+	this.categorySelect.onchange = function() {
+	  var select = document.getElementById('categorySelect');
+	  top.location.href = '?category=' + select.options[select.selectedIndex].value;
+	  return false;
+	}
+	  
+	for (var i = 0; i < this.categories.length; i++) {
+	  this.categorySelect.appendChild(this.createDom('option', {value: this.categories[i]}, this.categories[i]));
+	}
+	dom.exceptions.insertBefore(this.categoryMenu, dom.exceptions.getElementsByTagName('input')[0].nextSibling);
+  }
+  
   this.addSpecs = function(specs, specFilter) {
     this.totalSpecCount = specs.length;
 
@@ -379,6 +402,12 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
       this.views.specs[spec.id] = new jasmine.HtmlReporter.SpecView(spec, dom, this.views);
       if (specFilter(spec)) {
         this.runningSpecCount++;
+      }
+	  if (typeof spec.category !== 'undefined' && this.categories.indexOf(spec.category) === -1) {
+	    this.categories.push(spec.category);
+      }
+	  if (typeof spec.suite.category !== 'undefined' && this.categories.indexOf(spec.suite.category) === -1) {
+	    this.categories.push(spec.suite.category);
       }
     }
   };
@@ -451,6 +480,10 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
     if (isUndefined(this.resultsMenu)) {
       this.createResultsMenu();
     }
+	
+	if (isUndefined(this.categoryMenu)) {
+	  this.createCategoryMenu();
+	}
 
     // currently running UI
     if (isUndefined(this.runningAlert)) {

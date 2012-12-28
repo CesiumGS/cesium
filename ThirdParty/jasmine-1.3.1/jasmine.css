@@ -11,6 +11,10 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
   padding-right: 12px;
 }
 
+.categoryMenu {
+  padding: 0 12px;
+}
+
 .progressContainer {
   position: relative;
 }
