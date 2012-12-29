@@ -66,13 +66,22 @@ jasmine.HtmlReporterHelpers.isSuiteFocused = function(suite) {
       var p = params[i].split('=');
       paramMap[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
     }
-  
+	
     if (suite.getFullName() === paramMap.spec) {
 	  return true;
     }
 	
-    if (typeof suite.category !== 'undefined' && suite.category === paramMap.category) {
-      return true;
+    var categories;
+    if (typeof paramMap.category !== 'undefined') {
+      categories = paramMap.category.split(',');
+    }
+	
+    if (typeof categories !== 'undefined' && typeof suite.categories !== 'undefined') {
+      for (var i = 0; i < categories.length; i++) {
+        if (suite.categories.indexOf(categories[i]) !== -1) {
+          return true;
+        }
+      }
     }
 
     var parentSuite = suite.parentSuite;
@@ -80,8 +89,13 @@ jasmine.HtmlReporterHelpers.isSuiteFocused = function(suite) {
       if (parentSuite.getFullName() === paramMap.spec) {
         return true;
       }
-      if (typeof parentSuite.category !== 'undefined' && parentSuite.category === paramMap.category) {
-        return true;
+	  
+      if (typeof categories !== 'undefined' && typeof parentSuite.categories !== 'undefined') {
+        for (var i = 0; i < categories.length; i++) {
+          if (parentSuite.categories.indexOf(categories[i]) !== -1) {
+            return true;
+          }
+        }
       }
       parentSuite = parentSuite.parentSuite;
     }
@@ -91,12 +105,20 @@ jasmine.HtmlReporterHelpers.isSuiteFocused = function(suite) {
       if (childSpecs[i].getFullName() === paramMap.spec) {
 	    return true;
 	  }
-      if (typeof childSpecs[i].suite.category !== 'undefined' && childSpecs[i].suite.category === paramMap.category) {
-        return true;
+      if (typeof categories !== 'undefined' && typeof childSpecs[i].suite.categories !== 'undefined') {
+        for (var j = 0; j < categories.length; j++) {
+    	  if (childSpecs[i].suite.categories.indexOf(categories[j]) !== -1) {
+	    return true;
+	  }
+        }
       }
 	  
-      if (typeof childSpecs[i].category !== 'undefined' && childSpecs[i].category === paramMap.category) {
-        return true;
+      if (typeof categories !== 'undefined' && typeof childSpecs[i].categories !== 'undefined') {
+        for (var j = 0; j < categories.length; j++) {
+	  if (childSpecs[i].categories.indexOf(categories[j]) !== -1) {
+	    return true;
+	  }
+        }
       }
     }
 
@@ -193,26 +215,41 @@ jasmine.HtmlReporter = function(_doc) {
     }
 
     var focusedSpecName = getFocusedSpecName();
-    var focusedCategory = getFocusedCategory();
+    var focusedCategories = getFocusedCategories();
 	
-    if (!focusedSpecName && !focusedCategory) {
+    if (!focusedSpecName && !focusedCategories) {
       return true;
     }
 	
-    if (focusedSpecName && focusedCategory && !spec.category) {
+    if (focusedSpecName && focusedCategories && !spec.categories) {
       return false;
     }
 	
-    if (focusedSpecName && focusedCategory && typeof spec.category !== 'undefined') {
-      return (spec.getFullName().indexOf(focusedSpecName) === 0) && (spec.category.indexOf(focusedCategory) === 0);
-    }
+    var i, matchedCategory = false;	
 	
-    if (focusedCategory && typeof spec.category !== 'undefined') {
-      return spec.category.indexOf(focusedCategory) === 0;
+    if (focusedCategories && typeof spec.categories !== 'undefined') {
+      for (i = 0 ; i < focusedCategories.length; i++) {
+        if (spec.categories.indexOf(focusedCategories[i]) !== -1) {
+          matchedCategory = true;
+          break;
+        }
+      }
+
+      if (focusedSpecName) {
+        return (spec.getFullName().indexOf(focusedSpecName) === 0) && matchedCategory;
+      }
+	  
+      return matchedCategory;
     }
 
-    if (focusedCategory && typeof spec.suite.category !== 'undefined') {
-      return spec.suite.category.indexOf(focusedCategory) === 0;
+    if (focusedCategories && typeof spec.suite.categories !== 'undefined') {
+      for (i = 0 ; i < focusedCategories.length; i++) {
+	if (spec.suite.categories.indexOf(focusedCategories[i]) !== -1) {
+	  matchedCategory = true;
+	  break;
+	}
+      }
+      return matchedCategory;
     }
 	
     return spec.getFullName().indexOf(focusedSpecName) === 0;
@@ -220,11 +257,11 @@ jasmine.HtmlReporter = function(_doc) {
   
   return self;
   
-  function getFocusedCategory() {
-    var categoryName;
+  function getFocusedCategories() {
+    var categoryNames;
 
     (function memoizeFocusedSpec() {
-      if (categoryName) {
+      if (categoryNames) {
         return;
       }
 
@@ -236,10 +273,13 @@ jasmine.HtmlReporter = function(_doc) {
         paramMap[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
       }
 
-      categoryName = paramMap.category;
+      categoryNames = paramMap.category;
     })();
 
-    return categoryName;
+    if (typeof categoryNames !== 'undefined') {
+      return categoryNames.split(',');
+    }
+    return categoryNames;
   }
 
   function getFocusedSpecName() {
@@ -379,7 +419,7 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
 	  
 	this.categorySelect.onchange = function() {
 	  var select = document.getElementById('categorySelect');
-	  top.location.href = '?category=' + select.options[select.selectedIndex].value;
+	  top.location.href = '?category=' + encodeURIComponent(select.options[select.selectedIndex].value);
 	  return false;
 	}
 	  
@@ -403,11 +443,21 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
       if (specFilter(spec)) {
         this.runningSpecCount++;
       }
-	  if (typeof spec.category !== 'undefined' && this.categories.indexOf(spec.category) === -1) {
-	    this.categories.push(spec.category);
+
+      if (typeof spec.categories !== 'undefined') {
+        for (var j = 0; j < spec.categories.length; j++) {
+          if (this.categories.indexOf(spec.categories[j]) === -1) {
+            this.categories.push(spec.categories[j]);
+          }
+        }
       }
-	  if (typeof spec.suite.category !== 'undefined' && this.categories.indexOf(spec.suite.category) === -1) {
-	    this.categories.push(spec.suite.category);
+
+      if (typeof spec.suite.categories !== 'undefined') { 
+        for (var j = 0; j < spec.suite.categories.length; j++) {
+          if (this.categories.indexOf(spec.suite.categories[j]) === -1) {
+            this.categories.push(spec.suite.categories[j]);
+          }
+        }
       }
     }
   };

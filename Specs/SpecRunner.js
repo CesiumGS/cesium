@@ -128,7 +128,7 @@ var afterAll;
     require(['Cesium']);
 
     defineSuite = function(deps, name, suite, category) {
-        if (typeof suite === 'string') {
+        if (typeof suite === 'object') {
             category = suite;
         }
 
