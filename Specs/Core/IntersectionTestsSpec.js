@@ -21,7 +21,7 @@ defineSuite([
 
         var intersectionPoint = IntersectionTests.rayPlane(ray, planeNormal, planeD);
 
-        expect(intersectionPoint.equals(new Cartesian3(1.0, 0.0, 0.0))).toEqual(true);
+        expect(intersectionPoint).toEqual(new Cartesian3(1.0, 0.0, 0.0));
     });
 
     it('rayPlane misses', function() {
