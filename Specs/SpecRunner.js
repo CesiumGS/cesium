@@ -130,6 +130,8 @@ var afterAll;
     defineSuite = function(deps, name, suite, category) {
         if (typeof suite === 'object') {
             category = suite;
+        } else if (typeof suite === 'string') {
+            category = [suite];
         }
 
         if (typeof name === 'function') {
