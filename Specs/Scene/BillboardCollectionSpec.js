@@ -1158,4 +1158,4 @@ defineSuite([
         expect(bs.center).toEqualEpsilon(actual.center, CesiumMath.EPSILON8);
         expect(bs.radius).toBeLessThan(actual.radius);
     });
-});
+}, 'WebGL');

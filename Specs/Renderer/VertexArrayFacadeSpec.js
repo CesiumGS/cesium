@@ -421,4 +421,4 @@ defineSuite([
             vaf.subCommit(1, 10);
         }).toThrow();
     });
-});
+}, 'WebGL');
