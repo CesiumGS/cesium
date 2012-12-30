@@ -497,6 +497,9 @@ if (isCommonJS) exports.spyOn = spyOn;
  * @param {Array} categories
  */
 var it = function(desc, func, categories) {
+  if (typeof categories === 'string') {
+    categories = [categories];
+  }
   return jasmine.getEnv().it(desc, func, categories);
 };
 if (isCommonJS) exports.it = it;
@@ -599,8 +602,12 @@ if (isCommonJS) exports.afterEach = afterEach;
  *
  * @param {String} description A string, usually the class under test.
  * @param {Function} specDefinitions function that defines several specs.
+ * @param {Array} categories
  */
 var describe = function(description, specDefinitions, categories) {
+  if (typeof categories === 'string') {
+    categories = [categories];
+  }
   return jasmine.getEnv().describe(description, specDefinitions, categories);
 };
 if (isCommonJS) exports.describe = describe;
