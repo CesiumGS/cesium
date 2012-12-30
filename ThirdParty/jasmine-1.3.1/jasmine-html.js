@@ -227,8 +227,26 @@ jasmine.HtmlReporter = function(_doc) {
 	
     var i, matchedCategory = false;	
 	
+    if (focusedCategories && focusedCategories.indexOf('all') !== -1
+      && (typeof spec.categories !== 'undefined' || typeof spec.suite.categories !== 'undefined')) {
+	  
+      if (typeof spec.categories !== 'undefined') {
+        if (paramMap.not && spec.categories.indexOf(paramMap.not) !== -1) {
+          return false;
+        }
+      }
+	  
+      if (typeof spec.suite.categories !== 'undefined') {
+        if (paramMap.not && spec.suite.categories.indexOf(paramMap.not) !== -1) {
+          return false;
+        }
+      }
+  
+      return true;
+    }
+	
     if (focusedCategories && typeof spec.categories !== 'undefined') {
-      for (i = 0 ; i < focusedCategories.length; i++) {
+	  for (i = 0 ; i < focusedCategories.length; i++) {
         if (spec.categories.indexOf(focusedCategories[i]) !== -1) {
           matchedCategory = true;
           break;
@@ -244,10 +262,10 @@ jasmine.HtmlReporter = function(_doc) {
 
     if (focusedCategories && typeof spec.suite.categories !== 'undefined') {
       for (i = 0 ; i < focusedCategories.length; i++) {
-	if (spec.suite.categories.indexOf(focusedCategories[i]) !== -1) {
-	  matchedCategory = true;
-	  break;
-	}
+	    if (spec.suite.categories.indexOf(focusedCategories[i]) !== -1) {
+	      matchedCategory = true;
+	      break;
+	    }
       }
       return matchedCategory;
     }
@@ -413,20 +431,26 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
   this.categories = [];
 
   this.createCategoryMenu = function() {
-	this.categoryMenu = this.createDom('span', {className: 'categoryMenu'}, 'Category: ',
-	  this.categorySelect = this.createDom('select', {id: 'categorySelect' },
-	  this.createDom('option', {value: ' '}, 'Select a category')));
+    this.categoryMenu = this.createDom('span', {className: 'categoryMenu'}, 'Category: ',
+      this.categorySelect = this.createDom('select', {id: 'categorySelect' },
+      this.createDom('option', {value: ' '}, 'Select a category'),
+      this.createDom('option', {value: 'all'}, 'All')), 'Run all but selected:',
+      this.categoryException = this.createDom('input', {type: 'checkbox', id: 'categoryException'}));
 	  
-	this.categorySelect.onchange = function() {
-	  var select = document.getElementById('categorySelect');
-	  top.location.href = '?category=' + encodeURIComponent(select.options[select.selectedIndex].value);
-	  return false;
-	}
+    this.categorySelect.onchange = function() {
+      var select = document.getElementById('categorySelect');
+      if (document.getElementById('categoryException').checked) {
+        top.location.href = '?category=all&not=' + encodeURIComponent(select.options[select.selectedIndex].value);
+        return false;
+      }
+      top.location.href = '?category=' + encodeURIComponent(select.options[select.selectedIndex].value);
+      return false;
+    }
 	  
-	for (var i = 0; i < this.categories.length; i++) {
-	  this.categorySelect.appendChild(this.createDom('option', {value: this.categories[i]}, this.categories[i]));
-	}
-	dom.exceptions.insertBefore(this.categoryMenu, dom.exceptions.getElementsByTagName('input')[0].nextSibling);
+    for (var i = 0; i < this.categories.length; i++) {
+      this.categorySelect.appendChild(this.createDom('option', {value: this.categories[i]}, this.categories[i]));
+    }
+    dom.exceptions.insertBefore(this.categoryMenu, dom.exceptions.getElementsByTagName('input')[0].nextSibling);
   }
   
   this.addSpecs = function(specs, specFilter) {
