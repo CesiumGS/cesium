@@ -227,8 +227,7 @@ jasmine.HtmlReporter = function(_doc) {
 	
     var i, matchedCategory = false;	
 	
-    if (focusedCategories && focusedCategories.indexOf('all') !== -1
-      && (typeof spec.categories !== 'undefined' || typeof spec.suite.categories !== 'undefined')) {
+    if (focusedCategories && focusedCategories.indexOf('all') !== -1) {
 	  
       if (typeof spec.categories !== 'undefined') {
         if (paramMap.not && spec.categories.indexOf(paramMap.not) !== -1) {
