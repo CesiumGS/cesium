@@ -188,7 +188,8 @@ var afterAll;
         env.addEqualityTester(equalsMethodEqualityTester);
 
         createTests = function() {
-            var isSuiteFocused = jasmine.TrivialReporter.isSuiteFocused;
+            var reporter = new jasmine.HtmlReporter();
+            var isSuiteFocused = jasmine.HtmlReporterHelpers.isSuiteFocused;
             var suites = jasmine.getEnv().currentRunner().suites();
 
             for ( var i = 1, insertPoint = 0, len = suites.length; i < len; i++) {
@@ -200,7 +201,7 @@ var afterAll;
                     i--;
                 }
             }
-            var reporter = new jasmine.TrivialReporter();
+
             env.addReporter(reporter);
             env.specFilter = reporter.specFilter;
             env.execute();
