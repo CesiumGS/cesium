@@ -131,7 +131,7 @@ jasmine.HtmlReporterHelpers.isSuiteFocused = function(suite) {
 
     return false;
   };
-
+  
 jasmine.HtmlReporter = function(_doc) {
   var self = this;
   var doc = _doc || window.document;
@@ -227,7 +227,7 @@ jasmine.HtmlReporter = function(_doc) {
 	
     var i, matchedCategory = false;	
 	
-    if (focusedCategories && focusedCategories.indexOf('all') !== -1) {
+    if (focusedCategories && focusedCategories.indexOf('All') !== -1) {
 	  
       if (typeof spec.categories !== 'undefined') {
         if (paramMap.not && spec.categories.indexOf(paramMap.not) !== -1) {
@@ -429,17 +429,39 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
   
   this.categories = [];
 
+  function getCurrentCategoryName() {
+    var paramMap = [];
+    var params = jasmine.HtmlReporter.parameters(window.document);
+
+    for (var i = 0; i < params.length; i++) {
+      var p = params[i].split('=');
+      paramMap[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
+    }
+
+    var categoryNames = paramMap.category;
+
+    if (typeof categoryNames === 'undefined') {
+      return '---';
+    }
+
+    if (typeof paramMap.not !== 'undefined') {
+      return 'All except ' + paramMap.not;
+    }
+
+    return categoryNames.split(',')[0];
+  }
+  
   this.createCategoryMenu = function() {
     this.categoryMenu = this.createDom('span', {className: 'categoryMenu'}, 'Category: ',
       this.categorySelect = this.createDom('select', {id: 'categorySelect' },
-      this.createDom('option', {value: ' '}, 'Select a category'),
-      this.createDom('option', {value: 'all'}, 'All')), 'Run all but selected:',
+      this.createDom('option', {value: ' '}, getCurrentCategoryName()),
+      this.createDom('option', {value: 'All'}, 'All')), 'Run all but selected:',
       this.categoryException = this.createDom('input', {type: 'checkbox', id: 'categoryException'}));
 	  
     this.categorySelect.onchange = function() {
       var select = document.getElementById('categorySelect');
       if (document.getElementById('categoryException').checked) {
-        top.location.href = '?category=all&not=' + encodeURIComponent(select.options[select.selectedIndex].value);
+        top.location.href = '?category=All&not=' + encodeURIComponent(select.options[select.selectedIndex].value);
         return false;
       }
       top.location.href = '?category=' + encodeURIComponent(select.options[select.selectedIndex].value);
