@@ -381,12 +381,20 @@ define([
         iso8601String = iso8601String.replace(',', '.');
 
         //Split the string into its date and time components, denoted by a mandatory T
-        var tokens = iso8601String.split('T'), year, month = 1, day = 1, hour = 0, minute = 0, second = 0, millisecond = 0;
+        var tokens = iso8601String.split('T');
+        var year;
+        var month = 1;
+        var day = 1;
+        var hour = 0;
+        var minute = 0;
+        var second = 0;
+        var millisecond = 0;
 
         //Lacking a time is okay, but a missing date is illegal.
         var date = tokens[0];
         var time = tokens[1];
-        var tmp, inLeapYear;
+        var tmp;
+        var inLeapYear;
         if (typeof date === 'undefined') {
             throw new DeveloperError(iso8601ErrorMessage);
         }
