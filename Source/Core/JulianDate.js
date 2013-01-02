@@ -381,7 +381,7 @@ define([
         iso8601String = iso8601String.replace(',', '.');
 
         //Split the string into its date and time components, denoted by a mandatory T
-        var tokens = iso8601String.split('T'), year, month = 1, day = 1, hours = 0, minutes = 0, seconds = 0, milliseconds = 0;
+        var tokens = iso8601String.split('T'), year, month = 1, day = 1, hour = 0, minute = 0, second = 0, millisecond = 0;
 
         //Lacking a time is okay, but a missing date is illegal.
         var date = tokens[0];
@@ -474,10 +474,10 @@ define([
                     throw new DeveloperError(iso8601ErrorMessage);
                 }
 
-                hours = +tokens[1];
-                minutes = +tokens[2];
-                seconds = +tokens[3];
-                milliseconds = +(tokens[4] || 0) * 1000.0;
+                hour = +tokens[1];
+                minute = +tokens[2];
+                second = +tokens[3];
+                millisecond = +(tokens[4] || 0) * 1000.0;
                 offsetIndex = 5;
             } else {
                 tokens = time.match(matchHoursMinutes);
@@ -487,15 +487,15 @@ define([
                         throw new DeveloperError(iso8601ErrorMessage);
                     }
 
-                    hours = +tokens[1];
-                    minutes = +tokens[2];
-                    seconds = +(tokens[3] || 0) * 60.0;
+                    hour = +tokens[1];
+                    minute = +tokens[2];
+                    second = +(tokens[3] || 0) * 60.0;
                     offsetIndex = 4;
                 } else {
                     tokens = time.match(matchHours);
                     if (tokens !== null) {
-                        hours = +tokens[1];
-                        minutes = +(tokens[2] || 0) * 60.0;
+                        hour = +tokens[1];
+                        minute = +(tokens[2] || 0) * 60.0;
                         offsetIndex = 3;
                     } else {
                         throw new DeveloperError(iso8601ErrorMessage);
@@ -504,7 +504,7 @@ define([
             }
 
             //Validate that all values are in proper range.  Minutes and hours have special cases at 60 and 24.
-            if (minutes >= 60 || seconds >= 61 || hours > 24 || (hours === 24 && (minutes > 0 || seconds > 0 || milliseconds > 0))) {
+            if (minute >= 60 || second >= 61 || hour > 24 || (hour === 24 && (minute > 0 || second > 0 || millisecond > 0))) {
                 throw new DeveloperError(iso8601ErrorMessage);
             }
 
@@ -515,43 +515,43 @@ define([
             var offsetMinutes = +(tokens[offsetIndex + 2] || 0);
             switch (offset) {
             case '+':
-                hours = hours - offsetHours;
-                minutes = minutes - offsetMinutes;
+                hour = hour - offsetHours;
+                minute = minute - offsetMinutes;
                 break;
             case '-':
-                hours = hours + offsetHours;
-                minutes = minutes + offsetMinutes;
+                hour = hour + offsetHours;
+                minute = minute + offsetMinutes;
                 break;
             case 'Z':
                 break;
             default:
-                minutes = minutes + new Date(Date.UTC(year, month - 1, day, hours, minutes)).getTimezoneOffset();
+                minute = minute + new Date(Date.UTC(year, month - 1, day, hour, minute)).getTimezoneOffset();
                 break;
             }
         } else {
             //If no time is specified, it is considered the beginning of the day, local time.
-            minutes = minutes + new Date(Date.UTC(year, month - 1, day)).getTimezoneOffset();
+            minute = minute + new Date(Date.UTC(year, month - 1, day)).getTimezoneOffset();
         }
 
         //ISO8601 denotes a leap second by any time having a seconds component of 60 seconds.
         //If that's the case, we need to temporarily subtract a second in order to build a UTC date.
         //Then we add it back in after converting to TAI.
-        var isLeapSecond = seconds === 60;
+        var isLeapSecond = second === 60;
         if (isLeapSecond) {
-            seconds--;
+            second--;
         }
 
         //Even if we successfully parsed the string into its components, after applying UTC offset or
         //special cases like 24:00:00 denoting midnight, we need to normalize the data appropriately.
 
         //milliseconds can never be greater than 1000, and seconds can't be above 60, so we start with minutes
-        while (minutes >= 60) {
-            minutes -= 60;
-            hours++;
+        while (minute >= 60) {
+            minute -= 60;
+            hour++;
         }
 
-        while (hours >= 24) {
-            hours -= 24;
+        while (hour >= 24) {
+            hour -= 24;
             day++;
         }
 
@@ -569,13 +569,13 @@ define([
         }
 
         //If UTC offset is at the beginning/end of the day, minutes can be negative.
-        while (minutes < 0) {
-            minutes += 60;
-            hours--;
+        while (minute < 0) {
+            minute += 60;
+            hour--;
         }
 
-        while (hours < 0) {
-            hours += 24;
+        while (hour < 0) {
+            hour += 24;
             day--;
         }
 
@@ -591,7 +591,7 @@ define([
         }
 
         //Now create the JulianDate components from the Gregorian date and actually create our instance.
-        var components = computeJulianDateComponents(year, month, day, hours, minutes, seconds, milliseconds);
+        var components = computeJulianDateComponents(year, month, day, hour, minute, second, millisecond);
         var result = new JulianDate(components[0], components[1], TimeStandard.UTC);
 
         //If we were on a leap second, add it back.
@@ -755,25 +755,25 @@ define([
         var month = (J + 2 - 12 * L) | 0;
         var year = (100 * (N - 49) + I + L) | 0;
 
-        var hours = (secondsOfDay / TimeConstants.SECONDS_PER_HOUR) | 0;
-        var remainingSeconds = secondsOfDay - (hours * TimeConstants.SECONDS_PER_HOUR);
-        var minutes = (remainingSeconds / TimeConstants.SECONDS_PER_MINUTE) | 0;
-        remainingSeconds = remainingSeconds - (minutes * TimeConstants.SECONDS_PER_MINUTE);
-        var seconds = remainingSeconds | 0;
-        var milliseconds = ((remainingSeconds - seconds) / TimeConstants.SECONDS_PER_MILLISECOND);
+        var hour = (secondsOfDay / TimeConstants.SECONDS_PER_HOUR) | 0;
+        var remainingSeconds = secondsOfDay - (hour * TimeConstants.SECONDS_PER_HOUR);
+        var minute = (remainingSeconds / TimeConstants.SECONDS_PER_MINUTE) | 0;
+        remainingSeconds = remainingSeconds - (minute * TimeConstants.SECONDS_PER_MINUTE);
+        var second = remainingSeconds | 0;
+        var millisecond = ((remainingSeconds - second) / TimeConstants.SECONDS_PER_MILLISECOND);
 
         // JulianDates are noon-based
-        hours += 12;
-        if (hours > 23) {
-            hours -= 24;
+        hour += 12;
+        if (hour > 23) {
+            hour -= 24;
         }
 
         //If we were on a leap second, add it back.
         if (isLeapSecond) {
-            seconds += 1;
+            second += 1;
         }
 
-        return new GregorianDate(year, month, day, hours, minutes, seconds, milliseconds, isLeapSecond);
+        return new GregorianDate(year, month, day, hour, minute, second, millisecond, isLeapSecond);
     };
 
     /**
