@@ -17,7 +17,7 @@ define(['dojo',
     "use strict";
 
     var startDatePart, endDatePart, startTimePart, endTimePart;
-    var timeline, clock;
+    var timeline, clock, endBeforeStart, timeElement;
 
     function updateScrubTime(julianDate) {
         document.getElementById('mousePos').innerHTML = timeline.makeLabel(julianDate) + ' UTC';
@@ -85,24 +85,29 @@ define(['dojo',
     // Adjust start/end dates in reaction to any calendar/time clicks
     //
     function newDatesSelected() {
-        var startJulian, endJulian, startDate, endDate;
+        var startJulian, endJulian;
 
         if (startDatePart && startTimePart) {
-            startDate = dojo.date.stamp.fromISOString(startDatePart + startTimePart + 'Z'); // + 'Z' for UTC
-            startJulian = new JulianDate.fromDate(startDate);
+            startJulian = JulianDate.fromIso8601(startDatePart + startTimePart + 'Z'); // + 'Z' for UTC
         }
         if (endDatePart && endTimePart) {
-            endDate = dojo.date.stamp.fromISOString(endDatePart + endTimePart + 'Z');
-            endJulian = new JulianDate.fromDate(endDate);
+            endJulian = JulianDate.fromIso8601(endDatePart + endTimePart + 'Z');
         }
 
         if (startJulian && endJulian) {
-            if (!timeline) {
-                makeTimeline(startJulian, startJulian, endJulian);
+            if (startJulian.getSecondsDifference(endJulian) < 0.1) {
+                endBeforeStart.style.display = 'block';
+                timeElement.style.visibility = 'hidden';
+            } else {
+                endBeforeStart.style.display = 'none';
+                timeElement.style.visibility = 'visible';
+                if (!timeline) {
+                    makeTimeline(startJulian, startJulian, endJulian);
+                }
+                clock.startTime = startJulian;
+                clock.stopTime = endJulian;
+                timeline.zoomTo(startJulian, endJulian);
             }
-            clock.startTime = startJulian;
-            clock.stopTime = endJulian;
-            timeline.zoomTo(startJulian, endJulian);
         }
     }
 
@@ -123,16 +128,27 @@ define(['dojo',
 
     // React to time-of-day selectors
     //
+    function getTimePart(newTime) {
+        var h = newTime.getHours().toString();
+        h = (h.length < 2) ? ('0' + h) : h;
+        var m = newTime.getMinutes().toString();
+        m = (m.length < 2) ? ('0' + m) : m;
+        var s = newTime.getSeconds().toString();
+        s = (s.length < 2) ? ('0' + s) : s;
+        return 'T' + h + ':' + m + ':' + s;
+    }
     function newStartTimeSelected(newTime) {
-        startTimePart = newTime.toString().replace(/.*1970\s(\S+).*/, 'T$1');
+        startTimePart = getTimePart(newTime);
         newDatesSelected();
     }
     function newEndTimeSelected(newTime) {
-        endTimePart = newTime.toString().replace(/.*1970\s(\S+).*/, 'T$1');
+        endTimePart = getTimePart(newTime);
         newDatesSelected();
     }
 
     dojo.ready(function() {
+        endBeforeStart = document.getElementById('endBeforeStart');
+        timeElement = document.getElementById('time1');
         dojo.connect(dijit.byId('startCal'), 'onChange', newStartDateSelected);
         dojo.connect(dijit.byId('endCal'), 'onChange', newEndDateSelected);
         dojo.connect(dijit.byId('startTimeSel'), 'onChange', newStartTimeSelected);

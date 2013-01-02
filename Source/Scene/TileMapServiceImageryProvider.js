@@ -1,20 +1,26 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/Cartographic',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/loadXML',
         '../Core/writeTextToCanvas',
         '../Core/Extent',
         './ImageryProvider',
-        './WebMercatorTilingScheme'
+        './WebMercatorTilingScheme',
+        './GeographicTilingScheme'
     ], function(
         defaultValue,
+        Cartographic,
         DeveloperError,
         Event,
+        loadXML,
         writeTextToCanvas,
         Extent,
         ImageryProvider,
-        WebMercatorTilingScheme) {
+        WebMercatorTilingScheme,
+        GeographicTilingScheme) {
     "use strict";
 
     var trailingSlashRegex = /\/$/;
@@ -28,12 +34,18 @@ define([
      * @param {String} [description.url='.'] Path to image tiles on server.
      * @param {String} [description.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {String} [description.credit='AGI'] A string crediting the data source, which is displayed on the canvas.
+     * @param {String} [description.credit=''] A string crediting the data source, which is displayed on the canvas.
      * @param {Number} [description.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
      * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent, in radians, covered by the image.
+     * @param {TilingScheme} [description.tilingScheme] The tiling scheme specifying how the ellipsoidal
+     * surface is broken into tiles.  If this parameter is not provided, a {@link WebMercatorTilingScheme}
+     * is used.
+     * @param {Number} [description.tileWidth=256] Pixel width of image tiles.
+     * @param {Number} [description.tileHeight=256] Pixel height of image tiles.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
+     * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see WebMapServiceImageryProvider
      *
@@ -43,11 +55,10 @@ define([
      *
      * @example
      * // TileMapService tile provider
-     * var osm = new TileMapServiceImageryProvider({
+     * var tms = new TileMapServiceImageryProvider({
      *    url : '../images/cesium_maptiler/Cesium_Logo_Color',
      *    fileExtension: 'png',
      *    maximumLevel: 4,
-     *    credit: 'AGI',
      *    extent: new Cesium.Extent(
      *        Cesium.Math.toRadians(-120.0),
      *        Cesium.Math.toRadians(20.0),
@@ -69,31 +80,65 @@ define([
         }
 
         this._url = url;
-        this._fileExtension = defaultValue(description.fileExtension, 'png');
+        this._ready = false;
+
         this._proxy = description.proxy;
         this._tileDiscardPolicy = description.tileDiscardPolicy;
 
-        this._tilingScheme = new WebMercatorTilingScheme(); // spherical mercator
-
-        this._tileWidth = 256;
-        this._tileHeight = 256;
-
-        this._maximumLevel = defaultValue(description.maximumLevel, 18);
-
-        this._extent = defaultValue(description.extent, this._tilingScheme.getExtent());
-
         this._errorEvent = new Event();
 
-        this._ready = true;
+        var credit = description.credit;
+        if (typeof credit !== 'undefined') {
+            this._logo = writeTextToCanvas(credit, {
+                font : '12px sans-serif'
+            });
+        }
 
-        var credit = defaultValue(description.credit, 'AGI');
-        this._logo = writeTextToCanvas(credit, {
-            font : '12px sans-serif'
+        var that = this;
+
+        // Try to load remaing parameters from XML
+        loadXML(url + 'tilemapresource.xml').then(function(xml) {
+            // Allowing description properties to override XML values
+            var format = xml.getElementsByTagName('TileFormat')[0];
+            that._fileExtension = defaultValue(description.fileExtension, format.getAttribute('extension'));
+            that._tileWidth = defaultValue(description.tileWidth, parseInt(format.getAttribute('width'), 10));
+            that._tileHeight = defaultValue(description.tileHeight, parseInt(format.getAttribute('height'), 10));
+            var tilesets = xml.getElementsByTagName('TileSet');
+            that._maximumLevel = defaultValue(description.maximumLevel, parseInt(tilesets[tilesets.length - 1].getAttribute('order'), 10));
+
+            // extent handling
+            var bbox = xml.getElementsByTagName('BoundingBox')[0];
+            var sw = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('miny')), parseFloat(bbox.getAttribute('minx')));
+            var ne = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('maxy')), parseFloat(bbox.getAttribute('maxx')));
+            var extent = new Extent(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
+            that._extent = defaultValue(description.extent, extent);
+
+            // tiling scheme handling
+            var tilingScheme = description.tilingScheme;
+            if (typeof tilingScheme === 'undefined') {
+                var tilingSchemeName = xml.getElementsByTagName('TileSets')[0].getAttribute('profile');
+                tilingScheme = tilingSchemeName === 'geodetic' ? new GeographicTilingScheme() : new WebMercatorTilingScheme();
+            }
+
+            that._tilingScheme = tilingScheme;
+            that._ready = true;
+        }, function(error) {
+            // Can't load XML, still allow description and defaults
+            that._fileExtension = defaultValue(description.fileExtension, 'png');
+            that._tileWidth = defaultValue(description.tileWidth, 256);
+            that._tileHeight = defaultValue(description.tileHeight, 256);
+            that._minimumLevel = defaultValue(description.minimumLevel, 0);
+            that._maximumLevel = defaultValue(description.maximumLevel, 18);
+            that._tilingScheme = defaultValue(description.tilingScheme, new WebMercatorTilingScheme());
+            that._extent = defaultValue(description.extent, that._tilingScheme.getExtent());
+            that._ready = true;
         });
+
     };
 
     function buildImageUrl(imageryProvider, x, y, level) {
-        var url = imageryProvider._url + level + '/' + x + '/' + (Math.pow(2,level)-y-1) + '.' + imageryProvider._fileExtension;
+        var yTiles = imageryProvider._tilingScheme.getNumberOfYTilesAtLevel(level);
+        var url = imageryProvider._url + level + '/' + x + '/' + (yTiles - y - 1) + '.' + imageryProvider._fileExtension;
 
         var proxy = imageryProvider._proxy;
         if (typeof proxy !== 'undefined') {
