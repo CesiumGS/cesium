@@ -163,10 +163,21 @@
 .cw-loading {
     display: none;
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 45%;
+    left: 50%;
+    width: 0;
+    height: 0;
+}
+
+.cw-loading-img {
+    display: block;
+    position: relative;
+    top: -38px;
+    left: -38px;
+    width: 76px;
+    height: 76px;
+    border-radius: 38px;
+    background-color: rgba(0, 0, 0, 0.55);
     background-position:center;
     background-repeat: no-repeat;
     background-image: url(../Images/ajax-loader.gif);
