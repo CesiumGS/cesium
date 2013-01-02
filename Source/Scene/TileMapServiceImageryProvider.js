@@ -114,19 +114,13 @@ define([
             that._extent = defaultValue(description.extent, extent);
 
             // tiling scheme handling
-            var tilingSchemeName = xml.getElementsByTagName('TileSets')[0].getAttribute('profile');
-            var tilingScheme;
-            switch (tilingSchemeName) {
-            case 'geodetic':
-                tilingScheme = new GeographicTilingScheme();
-                break;
-            case 'mercator':
-                tilingScheme = new WebMercatorTilingScheme();
-                break;
-            default:
-                tilingScheme = new WebMercatorTilingScheme();
+            var tilingScheme = description.tilingScheme;
+            if (typeof tilingScheme === 'undefined') {
+                var tilingSchemeName = xml.getElementsByTagName('TileSets')[0].getAttribute('profile');
+                tilingScheme = tilingSchemeName === 'geodetic' ? new GeographicTilingScheme() : new WebMercatorTilingScheme();
             }
-            that._tilingScheme = defaultValue(description.tilingScheme, tilingScheme);
+
+            that._tilingScheme = tilingScheme;
             that._ready = true;
         }, function(error) {
             // Can't load XML, still allow description and defaults
