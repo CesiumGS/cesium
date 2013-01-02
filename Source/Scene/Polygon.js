@@ -437,7 +437,7 @@ define([
      *     CesiumMath.toRadians(10.0)
      * ));
      */
-    Polygon.prototype.configureExtent = function(extent, height){
+    Polygon.prototype.configureExtent = function(extent, height) {
         this._extent = extent;
         this.height = defaultValue(height, 0.0);
         this._positions = undefined;

@@ -475,7 +475,7 @@ define([
         }
 
         ++n;
-        if(n > maximumValue) {
+        if (n > maximumValue) {
             n = minimumValue;
         }
         return n;
