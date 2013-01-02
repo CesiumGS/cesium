@@ -89,7 +89,9 @@ define([
 
         this._clearColorCommand = new ClearCommand();
         this._clearColorCommand.clearState = context.createClearState({
-            color : Color.BLACK
+            color : Color.BLACK,
+            depth : 1.0,
+            stencil : 0.0
         });
         this._clearDepthStencilCommand = new ClearCommand();
         this._clearDepthStencilCommand.clearState = context.createClearState({
