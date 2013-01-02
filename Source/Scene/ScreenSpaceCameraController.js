@@ -506,6 +506,10 @@ define([
         var rotating = rotate.isMoving() && rotate.getMovement();
         var spin = controller._spinHandler;
         var spinning = spin.isMoving() && spin.getMovement();
+        var look = controller._lookHandler;
+        var looking = look && look.isMoving();
+
+        var buttonDown = rotate.isButtonDown() || spin.isButtonDown() || translate.isButtonDown() || zoom.isButtonDown() || looking || wheelZooming || pinching;
 
         if (controller.columbusViewMode === CameraColumbusViewMode.LOCKED) {
             if (controller.enableRotate) {
@@ -513,7 +517,7 @@ define([
                     rotate3D(controller, spin.getMovement());
                 }
 
-                if (spin && !spinning && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
+                if (!buttonDown && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
                     maintainInertia(spin, controller.inertiaSpin, rotate3D, controller, '_lastInertiaSpinMovement');
                 }
             }
@@ -527,20 +531,19 @@ define([
                     zoom3D(controller, pinch.getMovement().distance);
                 }
 
-                if (zoom && !zoomimg && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                     maintainInertia(zoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
                 }
 
-                if (wheelZoom && !wheelZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                     maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
                 }
 
-                if (pinch && !pinching && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                     maintainInertia(pinch, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
                 }
             }
         } else {
-            var buttonDown = translate.isButtonDown() || zoom.isButtonDown() || wheelZooming || pinching || rotate.isButtonDown() || controller._lookHandler.isButtonDown();
             if (buttonDown) {
                 controller._animationCollection.removeAll();
             }
@@ -554,11 +557,11 @@ define([
                     rotateCV(controller, pinch.getMovement().angleAndHeight);
                 }
 
-                if (rotate && !rotating && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
+                if (!buttonDown && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
                     maintainInertia(rotate, controller.inertiaSpin, rotateCV, controller, '_lastInertiaTiltMovement');
                 }
 
-                if (pinch && !pinching && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                     maintainInertia(pinch, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
                 }
             }
@@ -568,7 +571,7 @@ define([
                     translateCV(controller, translate.getMovement());
                 }
 
-                if (!translating && controller.inertiaTranslate >= 0.0 && controller.inertiaTranslate < 1.0) {
+                if (!buttonDown && controller.inertiaTranslate >= 0.0 && controller.inertiaTranslate < 1.0) {
                     maintainInertia(translate, controller.inertiaTranslate, translateCV, controller, '_lastInertiaTranslateMovement');
                 }
             }
@@ -582,21 +585,21 @@ define([
                     zoomCV(controller, pinch.getMovement().distance);
                 }
 
-                if (zoom && !zoomimg && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                     maintainInertia(zoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
                 }
 
-                if (!wheelZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                     maintainInertia(wheelZoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaWheelZoomMovement');
                 }
 
-                if (pinch && !pinching && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                     maintainInertia(pinch, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
                 }
             }
 
-            if (controller.enableLook && controller._lookHandler.isMoving()) {
-                look3D(controller, controller._lookHandler.getMovement());
+            if (controller.enableLook && looking) {
+                look3D(controller, look.getMovement());
             }
 
             if (!buttonDown && !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
@@ -914,12 +917,14 @@ define([
         var look = controller._lookHandler;
         var looking = look.isMoving() && look.getMovement();
 
+        var buttonDown = spin.isButtonDown() || rightZoom.isButtonDown() || rotate.isButtonDown() || looking || wheelZooming || pinching;
+
         if (controller.enableRotate) {
             if (spinning) {
                 spin3D(controller, spin.getMovement());
             }
 
-            if (spin && !spinning && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
+            if (!buttonDown && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
                 maintainInertia(spin, controller.inertiaSpin, spin3D, controller, '_lastInertiaSpinMovement');
             }
 
@@ -933,11 +938,11 @@ define([
                 tilt3D(controller, pinch.getMovement().angleAndHeight);
             }
 
-            if (rotate && !rotating && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
+            if (!buttonDown && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
                 maintainInertia(rotate, controller.inertiaSpin, tilt3D, controller, '_lastInertiaTiltMovement');
             }
 
-            if (pinch && !pinch && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
+            if (!buttonDown && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
                 maintainInertia(pinch, controller.inertiaSpin, tilt3D, controller, '_lastInertiaTiltMovement');
             }
         }
@@ -951,15 +956,15 @@ define([
                 zoom3D(controller, pinch.getMovement().distance);
             }
 
-            if (rightZoom && !rightZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+            if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                 maintainInertia(rightZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
             }
 
-            if (wheelZoom && !wheelZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+            if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                 maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
             }
 
-            if (pinch && !pinching && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+            if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                 maintainInertia(pinch, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
             }
         }
