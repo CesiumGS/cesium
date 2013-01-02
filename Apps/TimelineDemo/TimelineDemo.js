@@ -17,7 +17,7 @@ define(['dojo',
     "use strict";
 
     var startDatePart, endDatePart, startTimePart, endTimePart;
-    var timeline, clock;
+    var timeline, clock, endBeforeStart, timeElement;
 
     function updateScrubTime(julianDate) {
         document.getElementById('mousePos').innerHTML = timeline.makeLabel(julianDate) + ' UTC';
@@ -95,12 +95,19 @@ define(['dojo',
         }
 
         if (startJulian && endJulian) {
-            if (!timeline) {
-                makeTimeline(startJulian, startJulian, endJulian);
+            if (startJulian.getSecondsDifference(endJulian) < 0.1) {
+                endBeforeStart.style.display = 'block';
+                timeElement.style.visibility = 'hidden';
+            } else {
+                endBeforeStart.style.display = 'none';
+                timeElement.style.visibility = 'visible';
+                if (!timeline) {
+                    makeTimeline(startJulian, startJulian, endJulian);
+                }
+                clock.startTime = startJulian;
+                clock.stopTime = endJulian;
+                timeline.zoomTo(startJulian, endJulian);
             }
-            clock.startTime = startJulian;
-            clock.stopTime = endJulian;
-            timeline.zoomTo(startJulian, endJulian);
         }
     }
 
@@ -140,6 +147,8 @@ define(['dojo',
     }
 
     dojo.ready(function() {
+        endBeforeStart = document.getElementById('endBeforeStart');
+        timeElement = document.getElementById('time1');
         dojo.connect(dijit.byId('startCal'), 'onChange', newStartDateSelected);
         dojo.connect(dijit.byId('endCal'), 'onChange', newEndDateSelected);
         dojo.connect(dijit.byId('startTimeSel'), 'onChange', newStartTimeSelected);
