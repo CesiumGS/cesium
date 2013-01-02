@@ -48,10 +48,11 @@ define([
             var deferred = when.defer();
 
             xhr.onload = function(e) {
-                if( xhr.status === 200 )
+                if (xhr.status === 200) {
                     deferred.resolve(xhr.responseXML);
-                else
+                } else {
                     deferred.reject(e);
+                }
             };
 
             xhr.onerror = function(e) {

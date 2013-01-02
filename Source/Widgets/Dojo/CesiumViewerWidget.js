@@ -553,10 +553,13 @@ define([
          */
         loadCzml : function(source, lookAt) {
             var widget = this;
+            widget._setLoading(true);
             loadJson(source).then(function(czml) {
                 widget.addCzml(czml, source, lookAt);
+                widget._setLoading(false);
             },
             function(error) {
+                widget._setLoading(false);
                 console.error(error);
                 window.alert(error);
             });
@@ -573,13 +576,16 @@ define([
             event.stopPropagation(); // Stops some browsers from redirecting.
             event.preventDefault();
 
+            var widget = this;
+            widget._setLoading(true);
+            widget.removeAllCzml();
+
             var files = event.dataTransfer.files;
             var f = files[0];
             var reader = new FileReader();
-            var widget = this;
-            widget.removeAllCzml();
             reader.onload = function(evt) {
                 widget.addCzml(JSON.parse(evt.target.result), f.name);
+                widget._setLoading(false);
             };
             reader.readAsText(f);
         },
@@ -723,11 +729,7 @@ define([
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
-                if (typeof widget.endUserOptions.lookAt !== 'undefined') {
-                    widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);
-                } else {
-                    widget.loadCzml(widget.endUserOptions.source);
-                }
+                widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);
             }
 
             if (typeof widget.endUserOptions.stats !== 'undefined' && widget.endUserOptions.stats) {
@@ -1044,6 +1046,10 @@ define([
          */
         render : function() {
             this.scene.render();
+        },
+
+        _setLoading : function(isLoading) {
+            this.loading.style.display = isLoading ? 'block' : 'none';
         },
 
         _configureCentralBodyImagery : function() {
