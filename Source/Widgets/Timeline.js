@@ -1,16 +1,19 @@
 /*global define*/
-define(['./TimelineTrack',
+define([
+        './TimelineTrack',
         './TimelineHighlightRange',
+        '../Core/DeveloperError',
         '../Core/Clock',
         '../Core/ClockRange',
         '../Core/JulianDate'
-        ], function (
+    ], function (
          TimelineTrack,
          TimelineHighlightRange,
+         DeveloperError,
          Clock,
          ClockRange,
          JulianDate) {
-        "use strict";
+    "use strict";
 
     var timelineWheelDelta = 1e12;
 
@@ -153,14 +156,11 @@ define(['./TimelineTrack',
 
     Timeline.prototype.zoomTo = function(startJulianDate, endJulianDate) {
         this._timeBarSecondsSpan = startJulianDate.getSecondsDifference(endJulianDate);
-        if (this._timeBarSecondsSpan >= 0) {
-            this._startJulian = startJulianDate;
-            this._endJulian = endJulianDate;
-        } else {
-            this._timeBarSecondsSpan = -this._timeBarSecondsSpan;
-            this._startJulian = endJulianDate;
-            this._endJulian = startJulianDate;
+        if (this._timeBarSecondsSpan <= 0) {
+            throw new DeveloperError('Start time must come before end time.');
         }
+        this._startJulian = startJulianDate;
+        this._endJulian = endJulianDate;
 
         // If clock is not unbounded, clamp timeline range to clock.
         if (this._clock && (this._clock.clockRange !== ClockRange.UNBOUNDED)) {
