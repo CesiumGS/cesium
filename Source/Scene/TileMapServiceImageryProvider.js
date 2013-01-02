@@ -8,7 +8,8 @@ define([
         '../Core/writeTextToCanvas',
         '../Core/Extent',
         './ImageryProvider',
-        './WebMercatorTilingScheme'
+        './WebMercatorTilingScheme',
+        './GeographicTilingScheme'
     ], function(
         defaultValue,
         Cartographic,
@@ -18,7 +19,8 @@ define([
         writeTextToCanvas,
         Extent,
         ImageryProvider,
-        WebMercatorTilingScheme) {
+        WebMercatorTilingScheme,
+        GeographicTilingScheme) {
     "use strict";
 
     var trailingSlashRegex = /\/$/;
@@ -99,10 +101,10 @@ define([
             // Allowing description properties to override XML values
             var format = xml.getElementsByTagName('TileFormat')[0];
             that._fileExtension = defaultValue(description.fileExtension, format.getAttribute('extension'));
-            that._tileWidth = defaultValue(description.tileWidth, parseInt(format.getAttribute('width')));
-            that._tileHeight = defaultValue(description.tileHeight, parseInt(format.getAttribute('height')));
+            that._tileWidth = defaultValue(description.tileWidth, parseInt(format.getAttribute('width'), 10));
+            that._tileHeight = defaultValue(description.tileHeight, parseInt(format.getAttribute('height'), 10));
             var tilesets = xml.getElementsByTagName('TileSet');
-            that._maximumLevel = defaultValue(description.maximumLevel, parseInt(tilesets[tilesets.length - 1].getAttribute('order')));
+            that._maximumLevel = defaultValue(description.maximumLevel, parseInt(tilesets[tilesets.length - 1].getAttribute('order'), 10));
 
             // extent handling
             var bbox = xml.getElementsByTagName('BoundingBox')[0];
@@ -119,6 +121,8 @@ define([
                 tilingScheme = new GeographicTilingScheme();
                 break;
             case 'mercator':
+                tilingScheme = new WebMercatorTilingScheme();
+                break;
             default:
                 tilingScheme = new WebMercatorTilingScheme();
             }
@@ -135,7 +139,6 @@ define([
             that._extent = defaultValue(description.extent, that._tilingScheme.getExtent());
             that._ready = true;
         });
-
 
     };
 
