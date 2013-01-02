@@ -83,7 +83,7 @@ require([
         Sandcastle.declare(circle); // For highlighting on mouseover in Sandcastle.
         circle.setPositions(Cesium.Shapes.computeCircleBoundary(
             ellipsoid, ellipsoid.cartographicToCartesian(
-                new Cesium.Cartographic.fromDegrees(-75.0, 40.0)), 300000.0));
+                Cesium.Cartographic.fromDegrees(-75.0, 40.0)), 300000.0));
         primitives.add(circle);
 
         // Outline circle
@@ -91,7 +91,7 @@ require([
         Sandcastle.declare(outline);    // For highlighting on mouseover in Sandcastle.
         outline.setPositions(Cesium.Shapes.computeCircleBoundary(
             ellipsoid, ellipsoid.cartographicToCartesian(
-                new Cesium.Cartographic.fromDegrees(-82.0, 37.0)), 300000.0));
+                Cesium.Cartographic.fromDegrees(-82.0, 37.0)), 300000.0));
         primitives.add(polylines);
 
         // Apply a material to a filled circle
@@ -99,7 +99,7 @@ require([
         Sandcastle.declare(circle2);    // For highlighting on mouseover in Sandcastle.
         circle2.setPositions(Cesium.Shapes.computeCircleBoundary(
             ellipsoid, ellipsoid.cartographicToCartesian(
-                new Cesium.Cartographic.fromDegrees(-90.0, 35.0)), 400000.0));
+                Cesium.Cartographic.fromDegrees(-90.0, 35.0)), 400000.0));
         // Any polygon-compatible material can be used
         circle2.material = Cesium.Material.fromType(scene.getContext(), Cesium.Material.TyeDyeType);
         primitives.add(circle2);
@@ -109,7 +109,7 @@ require([
         Sandcastle.declare(ellipse);    // For highlighting on mouseover in Sandcastle.
         ellipse.setPositions(Cesium.Shapes.computeEllipseBoundary(
             ellipsoid, ellipsoid.cartographicToCartesian(
-                new Cesium.Cartographic.fromDegrees(-78.0, 32.5)), 500000.0,
+                Cesium.Cartographic.fromDegrees(-78.0, 32.5)), 500000.0,
                     250000.0, Cesium.Math.toRadians(60)));
         primitives.add(ellipse);
 

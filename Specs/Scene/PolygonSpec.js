@@ -376,7 +376,7 @@ defineSuite([
 
         var sphere = BoundingSphere.fromPoints(projectedPositions);
         sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
-        expect(boundingVolume.center.equalsEpsilon(sphere.center, CesiumMath.EPSILON9)).toEqual(true);
+        expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON9);
         expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON9);
     }
 
