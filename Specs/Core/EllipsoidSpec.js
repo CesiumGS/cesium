@@ -150,7 +150,19 @@ defineSuite([
         expect(returnedResult).toEqualEpsilon(surfaceCartographic, CesiumMath.EPSILON8);
     });
 
-    it('cartesianToCartographic return udnefined at center', function() {
+    it('cartesianToCartographic works close to center', function() {
+        var expected = new Cartographic(9.999999999999999e-11, 1.0067394967422763e-20, -6378137.0);
+        var returnedResult = Ellipsoid.WGS84.cartesianToCartographic(new Cartesian3(1e-50, 1e-60, 1e-70));
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('cartesianToCartographic return undefined very close to center', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var returnedResult = ellipsoid.cartesianToCartographic(new Cartesian3(1e-150, 1e-150, 1e-150));
+        expect(returnedResult).toBeUndefined();
+    });
+
+    it('cartesianToCartographic return undefined at center', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var returnedResult = ellipsoid.cartesianToCartographic(Cartesian3.ZERO);
         expect(returnedResult).toBeUndefined();

@@ -401,7 +401,7 @@ define([
 
         //* If the position is near the center, the iteration will not converge.
         if (squaredNorm < this._centerToleranceSquared) {
-            return Cartesian3.magnitudeSquared(cartesian) === 0 ? undefined : Cartesian3.clone(intersection, result);
+            return !isFinite(ratio) ? undefined : Cartesian3.clone(intersection, result);
         }
 
         var oneOverRadiiSquared = this._oneOverRadiiSquared;
