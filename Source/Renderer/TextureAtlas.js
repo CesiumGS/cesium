@@ -227,7 +227,7 @@ define([
         var node = this._findNode(this._root, image);
 
         // Found a node that can hold the image.
-        if (typeof node !== 'undefined'){
+        if (typeof node !== 'undefined') {
             node.imageIndex = index;
 
             // Add texture coordinate and write to texture

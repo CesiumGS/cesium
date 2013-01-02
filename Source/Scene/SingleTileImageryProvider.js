@@ -38,6 +38,7 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see OpenStreetMapImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      */
     var SingleTileImageryProvider = function(description) {
