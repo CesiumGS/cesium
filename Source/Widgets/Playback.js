@@ -34,6 +34,7 @@ define([
 
     Playback.prototype._svgNS = "http://www.w3.org/2000/svg";
     Playback.prototype._xlinkNS = "http://www.w3.org/1999/xlink";
+    Playback.prototype._monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     Playback.prototype._svgSet = function (name, val) {
         this.setAttribute(name, val);
@@ -633,6 +634,40 @@ define([
         parentNode.appendChild(svg);
     };
 
+    function _twoDigits(num) {
+        return ((num < 10) ? ('0' + num.toString()) : num.toString());
+    }
+
+    /**
+     * Override this function to change the format of the date label on the widget.
+     *
+     * @function
+     * @memberof Playback.prototype
+     */
+    Playback.prototype.makeDateLabel = function (gregorianDate) {
+        return this._monthNames[gregorianDate.month - 1] + ' ' + gregorianDate.day + ' ' + gregorianDate.year;
+    };
+
+    /**
+     * Override this function to change the format of the time label on the widget.
+     *
+     * @function
+     * @memberof Playback.prototype
+     */
+    Playback.prototype.makeTimeLabel = function (gregorianDate) {
+        var millisecond = gregorianDate.millisecond, millisecondString = ' UTC';
+        if ((millisecond > 0) && (Math.abs(this.clock.multiplier) < 0.9)) {
+            millisecondString = Math.floor(millisecond).toString();
+            while (millisecondString.length < 3) {
+                millisecondString = '0' + millisecondString;
+            }
+            millisecondString = '.' + millisecondString;
+        }
+
+        return _twoDigits(gregorianDate.hour) + ':' + _twoDigits(gregorianDate.minute) + ':' +
+            _twoDigits(gregorianDate.second) + millisecondString;
+    };
+
     /**
      * Update the widget to reflect the current state of animation.
      *
@@ -641,9 +676,9 @@ define([
      */
     Playback.prototype.update = function () {
         var currentTime = this.clock.currentTime;
-        var currentTimeLabel = currentTime.toDate().toUTCString();
-        var currentDateLabel = currentTimeLabel.substring(5, 16);
-        currentTimeLabel = currentTimeLabel.substring(17);
+        var gregorianDate = currentTime.toGregorianDate();
+        var currentTimeLabel = this.makeTimeLabel(gregorianDate);
+        var currentDateLabel = this.makeDateLabel(gregorianDate);
         if (currentDateLabel !== this._lastKnobDate) {
             this._lastKnobDate = currentDateLabel;
             this._updateSvgText(this.knobDate, currentDateLabel);
