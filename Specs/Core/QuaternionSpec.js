@@ -57,7 +57,7 @@ defineSuite([
         var rotation = new Matrix3(-1.0,  0.0, 0.0,
                                     0.0, -1.0, 0.0,
                                     0.0,  0.0, 1.0);
-        expect(Quaternion.fromRotationMatrix(rotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toEqual(true);
+        expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(q, CesiumMath.EPSILON15);
     });
 
     it('fromRotationMatrix works when m11 is max', function() {
@@ -65,7 +65,7 @@ defineSuite([
         var rotation = new Matrix3(-1.0, 0.0,  0.0,
                                     0.0, 1.0,  0.0,
                                     0.0, 0.0, -1.0);
-        expect(Quaternion.fromRotationMatrix(rotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toEqual(true);
+        expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(q, CesiumMath.EPSILON15);
     });
 
     it('fromRotationMatrix works when m00 is max', function() {
@@ -73,7 +73,7 @@ defineSuite([
         var rotation = new Matrix3(1.0,  0.0,  0.0,
                                    0.0, -1.0,  0.0,
                                    0.0,  0.0, -1.0);
-        expect(Quaternion.fromRotationMatrix(rotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toEqual(true);
+        expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(q, CesiumMath.EPSILON15);
     });
 
     it('fromRotationMatrix works when trace is greater than zero', function() {

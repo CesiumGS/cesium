@@ -41,7 +41,7 @@ defineSuite([
     });
 
     it('can be constructed using the middle drag event type', function() {
-        expect(function(){
+        expect(function() {
             handler2 = new CameraEventAggregator(document, CameraEventType.MIDDLE_DRAG);
         }).not.toThrow();
     });
