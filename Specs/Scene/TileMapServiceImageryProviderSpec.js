@@ -135,11 +135,11 @@ defineSuite([
         });
     });
 
-    it('when no credit is supplied, a default one is used', function() {
+    it('when no credit is supplied, the provider has no logo', function() {
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
-        expect(provider.getLogo()).not.toBeUndefined();
+        expect(provider.getLogo()).toBeUndefined();
     });
 
     it('turns the supplied credit into a logo', function() {
@@ -223,7 +223,14 @@ defineSuite([
             url : 'made/up/tms/server',
             maximumLevel : 5
         });
-        expect(provider.getMaximumLevel()).toEqual(5);
+
+        waitsFor(function() {
+            return provider.isReady();
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(provider.getMaximumLevel()).toEqual(5);
+        });
     });
 
     it('raises error event when image cannot be loaded', function() {
