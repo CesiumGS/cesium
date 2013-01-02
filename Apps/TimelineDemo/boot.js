@@ -14,6 +14,9 @@ require({
         name : 'Widgets',
         location : 'Source/Widgets'
     }, {
+        name : 'ThirdParty',
+        location : 'Source/ThirdParty'
+    }, {
         name : 'TimelineDemo',
         location : 'Apps/TimelineDemo'
     }]

@@ -43,8 +43,9 @@ define([
      * @exception {DeveloperError} <code>description.layers</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
-     * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
+     * @see SingleTileImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see OpenStreetMapImageryProvider
      *
      * @see <a href='http://resources.esri.com/help/9.3/arcgisserver/apis/rest/'>ArcGIS Server REST API</a>
