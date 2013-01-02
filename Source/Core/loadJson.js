@@ -27,7 +27,7 @@ define([
      * @exception {DeveloperError} url is required.
      *
      * @example
-     * loadJson('http://someUrl.com/someJson.txt').then(function(jsonData){
+     * loadJson('http://someUrl.com/someJson.txt').then(function(jsonData) {
      *     //Do something with the JSON object
      * }, function() {
      *     // an error occurred
