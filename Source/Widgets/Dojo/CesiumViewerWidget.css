@@ -47,7 +47,7 @@
 .cw-bingIcon {
     background-image: url('../Images/Bing_Logo_51x19_White.png');
     background-repeat: no-repeat;
-    background-position:center;
+    background-position: center;
     width: 51px;
     height: 24px;
 }
@@ -162,23 +162,14 @@
 
 .cw-loading {
     display: none;
-    position: absolute;
-    top: 45%;
+    position: fixed;
+    top: 50%;
     left: 50%;
-    width: 0;
-    height: 0;
-}
-
-.cw-loading-img {
-    display: block;
-    position: relative;
-    top: -38px;
-    left: -38px;
-    width: 76px;
-    height: 76px;
-    border-radius: 38px;
-    background-color: rgba(0, 0, 0, 0.55);
-    background-position:center;
+    margin-top: -33px;
+    margin-left: -33px;
+    width: 66px;
+    height: 66px;
+    background-position: center;
     background-repeat: no-repeat;
     background-image: url(../Images/ajax-loader.gif);
 }
