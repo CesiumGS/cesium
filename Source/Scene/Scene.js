@@ -87,9 +87,9 @@ define([
         this._commandList = [];
         this._frustumCommandsList = [];
 
-        this._clearColorCommand = new ClearCommand();
-        this._clearColorCommand.clearState = context.createClearState({
-            color : Color.BLACK,
+        this._clearCommand = new ClearCommand();
+        this._clearCommand.clearState = context.createClearState({
+            color : new Color(),
             depth : 1.0,
             stencil : 0.0
         });
@@ -105,6 +105,8 @@ define([
          * @type SkyBox
          *
          * @default undefined
+         *
+         * @see Scene#backgroundColor
          */
         this.skyBox = undefined;
 
@@ -116,6 +118,17 @@ define([
          * @default undefined
          */
         this.skyAtmosphere = undefined;
+
+        /**
+         * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
+         *
+         * @type Color
+         *
+         * @default Color.BLACK
+         *
+         * @see Scene#skyBox
+         */
+        this.backgroundColor = Color.BLACK.clone();
 
         /**
          * The current mode of the scene.
@@ -386,7 +399,9 @@ define([
         var skyBoxCommand = (typeof scene.skyBox !== 'undefined') ? scene.skyBox.update(context, scene._frameState) : undefined;
         var skyAtmosphereCommand = (typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, scene._frameState) : undefined;
 
-        scene._clearColorCommand.execute(context, framebuffer);
+        var clear = scene._clearCommand;
+        Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.clearState.color);
+        clear.execute(context, framebuffer);
 
         // Ideally, we would render the sky box and atmosphere last for
         // early-z, but we would have to draw it in each frustum
