@@ -27,7 +27,7 @@ define(['./DeveloperError'], function(DeveloperError) {
      *
      * @example
      * // Create a comparator function to search through an array of numbers.
-     * var comparator = function (a, b){
+     * var comparator = function (a, b) {
      *     return a - b;
      * };
      * var numbers = [0, 2, 4, 6, 8];
