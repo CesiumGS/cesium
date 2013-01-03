@@ -74,7 +74,7 @@ https://github.com/ashima/webgl-noise
 
 ### proceduraltextures
 
-http://openglinsights.git.sourceforge.net/git/gitweb.cgi?p=openglinsights/openglinsights;a=tree;f=proceduraltextures
+https://github.com/OpenGLInsights/OpenGLInsightsCode/tree/master/Chapter%2007%20Procedural%20Textures%20in%20GLSL/library
 
 > Copyright (C) 2011 by Stefan Gustavson and Ian McEwan
 >
