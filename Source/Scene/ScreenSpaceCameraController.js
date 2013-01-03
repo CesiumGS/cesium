@@ -866,13 +866,15 @@ define([
         }
 
         // CAMERA TODO: Remove the need for camera access
-        center = cameraController._camera.worldToCameraCoordinates(center, center);
+        var camera = cameraController._camera;
+        center = camera.worldToCameraCoordinates(center, center);
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
 
         var oldEllipsoid = controller._ellipsoid;
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
 
-        rotate3D(controller, movement, transform, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_TWO);
+        var angle = (minHeight * 0.25) / (Cartesian3.subtract(center, camera.position).magnitude());
+        rotate3D(controller, movement, transform, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_TWO - angle);
 
         controller.setEllipsoid(oldEllipsoid);
     }

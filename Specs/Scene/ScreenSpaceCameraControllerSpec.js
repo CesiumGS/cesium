@@ -866,6 +866,25 @@ defineSuite([
         expect(camera.right.cross(camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
     });
 
+    it('tilts at the minimum zoom distance', function() {
+        var frameState = setUp3D();
+
+        var positionCart = Ellipsoid.WGS84.cartesianToCartographic(camera.position);
+        positionCart.height = controller.minimumZoomDistance;
+        camera.position = Ellipsoid.WGS84.cartographicToCartesian(positionCart);
+
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, 0);
+
+        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+        updateController(frameState);
+
+        var height = Ellipsoid.WGS84.cartesianToCartographic(camera.position).height;
+        expect(height).toBeLessThan(controller.minimumZoomDistance);
+        expect(camera.direction.cross(camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
+        expect(camera.right.cross(camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
+    });
+
     it('looks in 3D', function() {
         var frameState = setUp3D();
         var position = camera.position.clone();
