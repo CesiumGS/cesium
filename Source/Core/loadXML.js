@@ -21,8 +21,6 @@ define([
      *
      * @exception {DeveloperError} url is required.
      *
-     * @example
-     *
      * @see <a href="http://en.wikipedia.org/wiki/XMLHttpRequest">XMLHttpRequest</a>
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
@@ -41,6 +39,7 @@ define([
         });
     };
 
+    // This is broken out into a separate function so that it can be mocked for testing purposes.
     loadXML.loadXML = function(url, headers, deferred) {
         var xhr = new XMLHttpRequest();
         xhr.overrideMimeType('text/xml');
