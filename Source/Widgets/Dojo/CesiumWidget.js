@@ -205,8 +205,8 @@ define([
             on(canvas, 'contextmenu', event.stop);
             on(canvas, 'selectstart', event.stop);
 
-            var imageryUrl = '../../Assets/Textures/';
-            this.dayImageUrl = defaultValue(this.dayImageUrl, require.toUrl(imageryUrl + 'NE2_LR_LC_SR_W_DR_2048.jpg'));
+            var imageryUrl = require.toUrl('../../Assets/Textures/');
+            this.dayImageUrl = defaultValue(this.dayImageUrl, imageryUrl + 'NE2_LR_LC_SR_W_DR_2048.jpg');
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
             centralBody.logoOffset = new Cartesian2(125, 0);
@@ -217,12 +217,12 @@ define([
 
             if (this.showSkyBox) {
                 scene.skyBox = new SkyBox({
-                    positiveX: require.toUrl(imageryUrl + 'SkyBox/tycho8_px_80.jpg'),
-                    negativeX: require.toUrl(imageryUrl + 'SkyBox/tycho8_mx_80.jpg'),
-                    positiveY: require.toUrl(imageryUrl + 'SkyBox/tycho8_py_80.jpg'),
-                    negativeY: require.toUrl(imageryUrl + 'SkyBox/tycho8_my_80.jpg'),
-                    positiveZ: require.toUrl(imageryUrl + 'SkyBox/tycho8_pz_80.jpg'),
-                    negativeZ: require.toUrl(imageryUrl + 'SkyBox/tycho8_mz_80.jpg')
+                    positiveX: imageryUrl + 'SkyBox/tycho8_px_80.jpg',
+                    negativeX: imageryUrl + 'SkyBox/tycho8_mx_80.jpg',
+                    positiveY: imageryUrl + 'SkyBox/tycho8_py_80.jpg',
+                    negativeY: imageryUrl + 'SkyBox/tycho8_my_80.jpg',
+                    positiveZ: imageryUrl + 'SkyBox/tycho8_pz_80.jpg',
+                    negativeZ: imageryUrl + 'SkyBox/tycho8_mz_80.jpg'
                 });
             }
 
@@ -230,6 +230,7 @@ define([
 
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
+            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
             var handler = new ScreenSpaceEventHandler(canvas);
             handler.setInputAction(lang.hitch(this, '_handleLeftClick'), ScreenSpaceEventType.LEFT_CLICK);
@@ -261,6 +262,7 @@ define([
             camera.up = this.defaultCamera.up;
             camera.transform = this.defaultCamera.transform;
             camera.frustum = this.defaultCamera.frustum.clone();
+            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
         },
 
         enableStatistics : function(showStatistics) {

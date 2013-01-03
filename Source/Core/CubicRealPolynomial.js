@@ -32,7 +32,7 @@ define([
      * @exception {DeveloperError} c is a required number.
      * @exception {DeveloperError} d is a required number.
      */
-    CubicRealPolynomial.discriminant = function(a, b, c, d){
+    CubicRealPolynomial.discriminant = function(a, b, c, d) {
         if (typeof a !== 'number') {
             throw new DeveloperError('a is a required number.');
         }
@@ -55,8 +55,7 @@ define([
         return discriminant;
     };
 
-    function computeRealRoots(a, b, c, d)
-    {
+    function computeRealRoots(a, b, c, d) {
         var A = a;
         var B = b / 3.0;
         var C = c / 3.0;
@@ -74,13 +73,12 @@ define([
         var temp;
         var temp1;
 
-        if (discriminant < 0.0){
+        if (discriminant < 0.0) {
             var ABar;
             var CBar;
             var DBar;
 
-            if (B2 * BD >= AC * C2)
-            {
+            if (B2 * BD >= AC * C2) {
                 ABar = A;
                 CBar = delta1;
                 DBar = -2.0 * B * delta1 + A * delta2;
@@ -101,10 +99,10 @@ define([
             temp = (CBar <= 0.0) ? p + q : -DBar / (p * p + q * q + CBar);
 
             if (B2 * BD >= AC * C2) {
-                return [ (temp - B) / A ];
+                return [(temp - B) / A];
             }
 
-            return [ -D / (temp + C) ];
+            return [-D / (temp + C)];
         }
 
         var CBarA = delta1;
@@ -147,19 +145,19 @@ define([
         if (root1 <= root2) {
             if (root1 <= root3) {
                 if (root2 <= root3) {
-                    return [ root1, root2, root3 ];
+                    return [root1, root2, root3];
                 }
-                return [ root1, root3, root2 ];
+                return [root1, root3, root2];
             }
-            return [ root3, root1, root2 ];
+            return [root3, root1, root2];
         }
         if (root1 <= root3) {
-            return [ root2, root1, root3 ];
+            return [root2, root1, root3];
         }
         if (root2 <= root3) {
-            return [ root2, root3, root1 ];
+            return [root2, root3, root1];
         }
-        return [ root3, root2, root1 ];
+        return [root3, root2, root1];
     }
 
     /**
@@ -200,22 +198,22 @@ define([
             if (c === 0.0) {
                 if (d === 0.0) {
                     // 3rd order monomial: a * x^3 = 0.
-                    return [ 0.0, 0.0, 0.0 ];
+                    return [0.0, 0.0, 0.0];
                 }
 
                 // a * x^3 + d = 0
                 ratio = -d / a;
                 var root = (ratio < 0.0) ? -Math.pow(-ratio, 1.0 / 3.0) : Math.pow(ratio, 1.0 / 3.0);
-                return [ root, root, root ];
+                return [root, root, root];
             } else if (d === 0.0) {
                 // x * (a * x^2 + c) = 0.
                 roots = QuadraticRealPolynomial.realRoots(a, 0, c);
 
                 // Return the roots in ascending order.
-                if (roots.Length === 0){
-                    return [ 0.0 ];
+                if (roots.Length === 0) {
+                    return [0.0];
                 }
-                return [ roots[0], 0.0, roots[1] ];
+                return [roots[0], 0.0, roots[1]];
             }
 
             // Deflated cubic polynomial: a * x^3 + c * x + d= 0.
@@ -225,9 +223,9 @@ define([
                 // x^2 * (a * x + b) = 0.
                 ratio = -b / a;
                 if (ratio < 0.0) {
-                    return [ ratio, 0.0, 0.0 ];
+                    return [ratio, 0.0, 0.0];
                 }
-                return [ 0.0, 0.0, ratio ];
+                return [0.0, 0.0, ratio];
             }
             // a * x^3 + b * x^2 + d = 0.
             return computeRealRoots(a, b, 0, d);
@@ -237,13 +235,13 @@ define([
 
             // Return the roots in ascending order.
             if (roots.length === 0) {
-                return [ 0.0 ];
+                return [0.0];
             } else if (roots[1] <= 0.0) {
-                return [ roots[0], roots[1], 0.0 ];
+                return [roots[0], roots[1], 0.0];
             } else if (roots[0] >= 0.0) {
-                return [ 0.0, roots[0], roots[1] ];
+                return [0.0, roots[0], roots[1]];
             }
-            return [ roots[0], 0.0, roots[1] ];
+            return [roots[0], 0.0, roots[1]];
         }
 
         return computeRealRoots(a, b, c, d);

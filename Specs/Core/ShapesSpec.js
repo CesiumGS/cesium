@@ -17,7 +17,7 @@ defineSuite([
         var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
         var positions = Shapes.computeCircleBoundary(ellipsoid, center, 1.0);
 
-        expect(positions[0].equals(positions[positions.length - 1])).toEqual(true);
+        expect(positions[0]).toEqual(positions[positions.length - 1]);
     });
 
     it('computeCircleBoundary uses custom granularity', function() {
@@ -70,7 +70,7 @@ defineSuite([
         var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
         var positions = Shapes.computeEllipseBoundary(ellipsoid, center, 5.0, 1.0);
 
-        expect(positions[0].equals(positions[positions.length - 1])).toEqual(true);
+        expect(positions[0]).toEqual(positions[positions.length - 1]);
     });
 
     it('computeEllipseBoundary can swap the semi major and minor axes', function() {

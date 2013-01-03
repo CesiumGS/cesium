@@ -107,9 +107,9 @@ defineSuite([
     it('default constructs a billboard', function() {
         var b = billboards.add();
         expect(b.getShow()).toEqual(true);
-        expect(b.getPosition().equals(Cartesian3.ZERO)).toEqual(true);
-        expect(b.getPixelOffset().equals(Cartesian2.ZERO)).toEqual(true);
-        expect(b.getEyeOffset().equals(Cartesian3.ZERO)).toEqual(true);
+        expect(b.getPosition()).toEqual(Cartesian3.ZERO);
+        expect(b.getPixelOffset()).toEqual(Cartesian2.ZERO);
+        expect(b.getEyeOffset()).toEqual(Cartesian3.ZERO);
         expect(b.getHorizontalOrigin()).toEqual(HorizontalOrigin.CENTER);
         expect(b.getVerticalOrigin()).toEqual(VerticalOrigin.CENTER);
         expect(b.getScale()).toEqual(1.0);
@@ -139,9 +139,9 @@ defineSuite([
         });
 
         expect(b.getShow()).toEqual(false);
-        expect(b.getPosition().equals(new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
-        expect(b.getPixelOffset().equals(new Cartesian2(1.0, 2.0))).toEqual(true);
-        expect(b.getEyeOffset().equals(new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
+        expect(b.getPosition()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(b.getPixelOffset()).toEqual(new Cartesian2(1.0, 2.0));
+        expect(b.getEyeOffset()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
         expect(b.getHorizontalOrigin()).toEqual(HorizontalOrigin.LEFT);
         expect(b.getVerticalOrigin()).toEqual(VerticalOrigin.BOTTOM);
         expect(b.getScale()).toEqual(2.0);
@@ -170,9 +170,9 @@ defineSuite([
         });
 
         expect(b.getShow()).toEqual(false);
-        expect(b.getPosition().equals(new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
-        expect(b.getPixelOffset().equals(new Cartesian2(1.0, 2.0))).toEqual(true);
-        expect(b.getEyeOffset().equals(new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
+        expect(b.getPosition()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(b.getPixelOffset()).toEqual(new Cartesian2(1.0, 2.0));
+        expect(b.getEyeOffset()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
         expect(b.getHorizontalOrigin()).toEqual(HorizontalOrigin.LEFT);
         expect(b.getVerticalOrigin()).toEqual(VerticalOrigin.BOTTOM);
         expect(b.getScale()).toEqual(2.0);
@@ -228,7 +228,7 @@ defineSuite([
         });
 
         expect(billboards.getLength()).toEqual(1);
-        expect(billboards.get(0).equals(b)).toEqual(true);
+        expect(billboards.get(0)).toEqual(b);
     });
 
     it('removes the first billboard', function() {
@@ -252,7 +252,7 @@ defineSuite([
         expect(billboards.remove(one)).toEqual(true);
 
         expect(billboards.getLength()).toEqual(1);
-        expect(billboards.get(0).equals(two)).toEqual(true);
+        expect(billboards.get(0)).toEqual(two);
     });
 
     it('removes the last billboard', function() {
@@ -276,7 +276,7 @@ defineSuite([
         expect(billboards.remove(two)).toEqual(true);
 
         expect(billboards.getLength()).toEqual(1);
-        expect(billboards.get(0).equals(one)).toEqual(true);
+        expect(billboards.get(0)).toEqual(one);
     });
 
     it('removes the same billboard twice', function() {
@@ -326,8 +326,8 @@ defineSuite([
             }
         });
         expect(billboards.getLength()).toEqual(2);
-        expect(billboards.get(0).equals(one)).toEqual(true);
-        expect(billboards.get(1).equals(two)).toEqual(true);
+        expect(billboards.get(0)).toEqual(one);
+        expect(billboards.get(1)).toEqual(two);
 
         expect(billboards.remove(two)).toEqual(true);
         var three = billboards.add({
@@ -338,8 +338,8 @@ defineSuite([
             }
         });
         expect(billboards.getLength()).toEqual(2);
-        expect(billboards.get(0).equals(one)).toEqual(true);
-        expect(billboards.get(1).equals(three)).toEqual(true);
+        expect(billboards.get(0)).toEqual(one);
+        expect(billboards.get(1)).toEqual(three);
     });
 
     it('removes all billboards', function() {
@@ -930,7 +930,7 @@ defineSuite([
             }
         });
 
-        expect(b.computeScreenSpacePosition(us).equals(new Cartesian2(0.5, 0.5)));
+        expect(b.computeScreenSpacePosition(us)).toEqual(new Cartesian2(0.5, 0.5));
     });
 
     it('computes screen space position (2)', function() {
@@ -946,7 +946,7 @@ defineSuite([
             }
         });
 
-        expect(b.computeScreenSpacePosition(us).equals(new Cartesian2(1.5, 2.5)));
+        expect(b.computeScreenSpacePosition(us)).toEqual(new Cartesian2(1.5, 2.5));
     });
 
     it('computes screen space position (3)', function() {
@@ -1019,7 +1019,7 @@ defineSuite([
             }
         });
 
-        expect(b.equals(b2)).toEqual(true);
+        expect(b).toEqual(b2);
     });
 
     it('does not equal another billboard', function() {
@@ -1075,7 +1075,7 @@ defineSuite([
         var positions = [one.getPosition(), two.getPosition()];
         var bs = BoundingSphere.fromPoints(positions);
         expect(actual.center).toEqual(bs.center);
-        expect(actual.radius > bs.radius).toEqual(true);
+        expect(actual.radius).toBeGreaterThan(bs.radius);
     });
 
     it('computes bounding sphere in Columbus view', function() {
@@ -1107,8 +1107,8 @@ defineSuite([
         ];
         var bs = BoundingSphere.fromPoints(projectedPositions);
         bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
-        expect(actual.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
-        expect(actual.radius > bs.radius).toEqual(true);
+        expect(bs.center).toEqualEpsilon(actual.center, CesiumMath.EPSILON8);
+        expect(bs.radius).toBeLessThan(actual.radius);
     });
 
     it('computes bounding sphere in 2D', function() {
@@ -1155,7 +1155,7 @@ defineSuite([
         ];
         var bs = BoundingSphere.fromPoints(projectedPositions);
         bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
-        expect(actual.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
-        expect(actual.radius > bs.radius).toEqual(true);
+        expect(bs.center).toEqualEpsilon(actual.center, CesiumMath.EPSILON8);
+        expect(bs.radius).toBeLessThan(actual.radius);
     });
 });

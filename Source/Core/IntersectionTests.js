@@ -140,7 +140,6 @@ define([
                     stop : root
                 };
             }
-
         } else if (q2 < 1.0) {
             // Inside ellipsoid (2 intersections).
             difference = q2 - 1.0; // Negatively valued.
@@ -251,8 +250,7 @@ define([
             return solutions;
         }
 
-
-        for (var i = 0; i < length; ++i) {
+        for ( var i = 0; i < length; ++i) {
             var cosine = cosines[i];
             var cosineSquared = cosine * cosine;
             var sineSquared = Math.max(1.0 - cosineSquared, 0.0);
@@ -349,11 +347,11 @@ define([
         var s;
         var altitude;
         var length = solutions.length;
-        if(length > 0) {
+        if (length > 0) {
             var closest = Cartesian3.ZERO;
             var maximumValue = Number.NEGATIVE_INFINITY;
 
-            for (var i = 0; i < length; ++i) {
+            for ( var i = 0; i < length; ++i) {
                 s = D_I.multiplyByVector(B.multiplyByVector(solutions[i]));
                 var v = s.subtract(position).normalize();
                 var dotProduct = v.dot(direction);

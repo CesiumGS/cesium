@@ -4,7 +4,7 @@ Change Log
 Beta Releases
 -------------
 
-### b12 - xx/xx/2013
+### b12 - 01/03/2013
 
 * Breaking changes:
    * Renamed `EventHandler` to `ScreenSpaceEventHandler`.
@@ -18,6 +18,10 @@ Beta Releases
 * Improved rendering support on Nexus 4 and Nexus 7 using Firefox.
 * Improved camera flights.
 * Added Sandbox example using NASA's new [Black Marble](http://www.nasa.gov/mission_pages/NPP/news/earth-at-night.html) night imagery.
+* Added constrained z-axis by default to the Cesium widgets.
+* Upgraded Jasmine from version 1.1.0 to 1.3.0.
+* Added `JulianDate.toIso8601`, which creates an ISO8601 compliant representation of a JulianDate.
+* The `Timeline` widget now properly displays leap seconds.
 
 ### b11 - 12/03/2012
 

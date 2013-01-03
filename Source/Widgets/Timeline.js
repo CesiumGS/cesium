@@ -1,16 +1,19 @@
 /*global define*/
-define(['./TimelineTrack',
+define([
+        './TimelineTrack',
         './TimelineHighlightRange',
+        '../Core/DeveloperError',
         '../Core/Clock',
         '../Core/ClockRange',
         '../Core/JulianDate'
-        ], function (
+    ], function (
          TimelineTrack,
          TimelineHighlightRange,
+         DeveloperError,
          Clock,
          ClockRange,
          JulianDate) {
-        "use strict";
+    "use strict";
 
     var timelineWheelDelta = 1e12;
 
@@ -153,14 +156,11 @@ define(['./TimelineTrack',
 
     Timeline.prototype.zoomTo = function(startJulianDate, endJulianDate) {
         this._timeBarSecondsSpan = startJulianDate.getSecondsDifference(endJulianDate);
-        if (this._timeBarSecondsSpan >= 0) {
-            this._startJulian = startJulianDate;
-            this._endJulian = endJulianDate;
-        } else {
-            this._timeBarSecondsSpan = -this._timeBarSecondsSpan;
-            this._startJulian = endJulianDate;
-            this._endJulian = startJulianDate;
+        if (this._timeBarSecondsSpan <= 0) {
+            throw new DeveloperError('Start time must come before end time.');
         }
+        this._startJulian = startJulianDate;
+        this._endJulian = endJulianDate;
 
         // If clock is not unbounded, clamp timeline range to clock.
         if (this._clock && (this._clock.clockRange !== ClockRange.UNBOUNDED)) {
@@ -216,25 +216,25 @@ define(['./TimelineTrack',
     }
 
     Timeline.prototype.makeLabel = function(julianDate) {
-        var date = julianDate.toDate();
-        var hours = date.getUTCHours();
-        var ampm = (hours < 12) ? ' AM' : ' PM';
-        if (hours >= 13) {
-            hours -= 12;
-        } else if (hours === 0) {
-            hours = 12;
+        var gregorian = julianDate.toGregorianDate();
+        var hour = gregorian.hour;
+        var ampm = (hour < 12) ? ' AM' : ' PM';
+        if (hour >= 13) {
+            hour -= 12;
+        } else if (hour === 0) {
+            hour = 12;
         }
-        var mils = date.getUTCMilliseconds(), milString = '';
-        if ((mils > 0) && (this._timeBarSecondsSpan < 3600)) {
-            milString = mils.toString();
-            while (milString.length < 3) {
-                milString = '0' + milString;
+        var millisecond = gregorian.millisecond, millisecondString = '';
+        if ((millisecond > 0) && (this._timeBarSecondsSpan < 3600)) {
+            millisecondString = Math.floor(millisecond).toString();
+            while (millisecondString.length < 3) {
+                millisecondString = '0' + millisecondString;
             }
-            milString = '.' + milString;
+            millisecondString = '.' + millisecondString;
         }
 
-        return timelineMonthNames[date.getUTCMonth()] + ' ' + date.getUTCDate() + ' ' + date.getUTCFullYear() + ' ' + twoDigits(hours) + ':' + twoDigits(date.getUTCMinutes()) + ':' +
-                twoDigits(date.getUTCSeconds()) + milString + ampm;
+        return timelineMonthNames[gregorian.month - 1] + ' ' + gregorian.day + ' ' + gregorian.year + ' ' + twoDigits(hour) + ':' +
+            twoDigits(gregorian.minute) + ':' + twoDigits(gregorian.second) + millisecondString + ampm;
     };
 
     Timeline.prototype.smallestTicInPixels = 7.0;
