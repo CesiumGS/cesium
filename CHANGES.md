@@ -8,6 +8,7 @@ Beta Releases
 * Breaking changes:
    * Moved `minimumZoomDistance` and `maximumZoomDistance` from the `CameraController` to the `ScreenSpaceCameraController`.
 * Upgraded RequireJS to version 2.1.2, and Almond to 0.2.3.
+* Fixed camera tilt close to the `minimumZoomDistance`.
 
 ### b12 - 01/03/2013
 
