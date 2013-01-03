@@ -378,33 +378,10 @@ defineSuite([
         controller.update(SceneMode.SCENE2D, { projection : projection });
 
         controller.zoomOut(zoomAmount);
-        expect(camera.frustum.right).toEqualEpsilon(3.0, CesiumMath.EPSILON10);
-        expect(camera.frustum.left).toEqual(-3.0, CesiumMath.EPSILON10);
-        expect(camera.frustum.top).toEqual(1.5, CesiumMath.EPSILON10);
-        expect(camera.frustum.bottom).toEqual(-1.5, CesiumMath.EPSILON10);
-    });
-
-    it('zooms out with maximum distance in 2D', function() {
-        var frustum = new OrthographicFrustum();
-        frustum.near = 1.0;
-        frustum.far = 2.0;
-        frustum.left = -2.0;
-        frustum.right = 2.0;
-        frustum.top = 1.0;
-        frustum.bottom = -1.0;
-        camera.frustum = frustum;
-
-        var ellipsoid = Ellipsoid.WGS84;
-        var projection = new GeographicProjection(ellipsoid);
-        controller.update(SceneMode.SCENE2D, { projection : projection });
-
-        var maxZoom = 10.0;
-        controller.maximumZoomDistance = maxZoom;
-        controller.zoomOut(maxZoom + 100.0);
-        expect(camera.frustum.right).toEqualEpsilon(maxZoom * 0.5, CesiumMath.EPSILON10);
-        expect(camera.frustum.left).toEqual(-camera.frustum.right);
-        expect(camera.frustum.top).toEqualEpsilon(maxZoom * 0.25, CesiumMath.EPSILON10);
-        expect(camera.frustum.bottom).toEqual(-camera.frustum.top);
+        expect(camera.frustum.right).toEqualEpsilon(2.5, CesiumMath.EPSILON10);
+        expect(camera.frustum.left).toEqual(-2.5, CesiumMath.EPSILON10);
+        expect(camera.frustum.top).toEqual(1.25, CesiumMath.EPSILON10);
+        expect(camera.frustum.bottom).toEqual(-1.25, CesiumMath.EPSILON10);
     });
 
     it('zooms in 2D', function() {
@@ -422,10 +399,10 @@ defineSuite([
         controller.update(SceneMode.SCENE2D, { projection : projection });
 
         controller.zoomIn(zoomAmount);
-        expect(camera.frustum.right).toEqualEpsilon(1.0, CesiumMath.EPSILON10);
-        expect(camera.frustum.left).toEqual(-1.0, CesiumMath.EPSILON10);
-        expect(camera.frustum.top).toEqual(0.5, CesiumMath.EPSILON10);
-        expect(camera.frustum.bottom).toEqual(-0.5, CesiumMath.EPSILON10);
+        expect(camera.frustum.right).toEqualEpsilon(1.5, CesiumMath.EPSILON10);
+        expect(camera.frustum.left).toEqual(-1.5, CesiumMath.EPSILON10);
+        expect(camera.frustum.top).toEqual(0.75, CesiumMath.EPSILON10);
+        expect(camera.frustum.bottom).toEqual(-0.75, CesiumMath.EPSILON10);
     });
 
     it('clamps zoom in 2D', function() {
@@ -468,14 +445,6 @@ defineSuite([
         expect(camera.up).toEqual(up);
         expect(camera.direction).toEqual(dir);
         expect(camera.right).toEqual(right);
-    });
-
-    it('zooms out to maximum height in 3D', function() {
-        var maxDist = 100.0;
-        controller.maximumZoomDistance = maxDist;
-        controller.zoomOut(maxDist * 1e12);
-        var magnitude = camera.position.magnitude();
-        expect(magnitude).toEqualEpsilon(maxDist, CesiumMath.EPSILON2);
     });
 
     it('zooms in throws with undefined OrthogrphicFrustum properties 2D', function() {
