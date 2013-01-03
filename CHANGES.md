@@ -4,7 +4,7 @@ Change Log
 Beta Releases
 -------------
 
-### b12 - xx/xx/2013
+### b12 - 01/03/2013
 
 * Breaking changes:
    * Renamed `EventHandler` to `ScreenSpaceEventHandler`.
