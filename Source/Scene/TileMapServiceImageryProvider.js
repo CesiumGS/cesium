@@ -107,17 +107,35 @@ define([
             that._maximumLevel = defaultValue(description.maximumLevel, parseInt(tilesets[tilesets.length - 1].getAttribute('order'), 10));
 
             // extent handling
-            var bbox = xml.getElementsByTagName('BoundingBox')[0];
-            var sw = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('miny')), parseFloat(bbox.getAttribute('minx')));
-            var ne = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('maxy')), parseFloat(bbox.getAttribute('maxx')));
-            var extent = new Extent(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
-            that._extent = defaultValue(description.extent, extent);
+            that._extent = description.extent;
+            if (typeof that._extent === 'undefined') {
+                var bbox = xml.getElementsByTagName('BoundingBox')[0];
+                var sw = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('miny')), parseFloat(bbox.getAttribute('minx')));
+                var ne = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('maxy')), parseFloat(bbox.getAttribute('maxx')));
+                that._extent = new Extent(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
+            } else {
+                that._extent = that._extent.clone();
+            }
 
             // tiling scheme handling
             var tilingScheme = description.tilingScheme;
             if (typeof tilingScheme === 'undefined') {
                 var tilingSchemeName = xml.getElementsByTagName('TileSets')[0].getAttribute('profile');
                 tilingScheme = tilingSchemeName === 'geodetic' ? new GeographicTilingScheme() : new WebMercatorTilingScheme();
+            }
+
+            // The extent must not be outside the bounds allowed by the tiling scheme.
+            if (that._extent.west < tilingScheme.getExtent().west) {
+                that._extent.west = tilingScheme.getExtent().west;
+            }
+            if (that._extent.east > tilingScheme.getExtent().east) {
+                that._extent.east = tilingScheme.getExtent().east;
+            }
+            if (that._extent.south < tilingScheme.getExtent().south) {
+                that._extent.south = tilingScheme.getExtent().south;
+            }
+            if (that._extent.north > tilingScheme.getExtent().north) {
+                that._extent.north = tilingScheme.getExtent().north;
             }
 
             that._tilingScheme = tilingScheme;
