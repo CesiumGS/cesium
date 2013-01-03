@@ -131,6 +131,16 @@ define([
          * @type Number
          */
         this.bounceAnimationTime = 3000.0;
+        /**
+         * The minimum magnitude, in meters, of the camera position when zooming. Defaults to 20.0.
+         * @type Number
+         */
+        this.minimumZoomDistance = 75.0;
+        /**
+         * The maximum magnitude, in meters, of the camera position when zooming. Defaults to positive infinity.
+         * @type Number
+         */
+        this.maximumZoomDistance = Number.POSITIVE_INFINITY;
 
         this._canvas = canvas;
         this._cameraController = cameraController;
@@ -162,7 +172,6 @@ define([
         this._rotateRateRangeAdjustment = radius;
         this._maximumRotateRate = 1.77;
         this._minimumRotateRate = 1.0 / 5000.0;
-        this._zoomFactor2D = 1.5;
         this._translateFactor = 1.0;
         this._minimumZoomRate = 20.0;
         this._maximumZoomRate = FAR;
@@ -264,25 +273,33 @@ define([
 
         // distanceMeasure should be the height above the ellipsoid.
         // The zoomRate slows as it approaches the surface and stops minimumZoomDistance above it.
-        var minHeight = object._cameraController.minimumZoomDistance * percentage;
-        var distance = distanceMeasure - minHeight;
-        var zoomRate = zoomFactor * distance;
+        var minHeight = object.minimumZoomDistance * percentage;
+        var maxHeight = object.maximumZoomDistance;
+
+        var minDistance = distanceMeasure - minHeight;
+        var zoomRate = zoomFactor * minDistance;
         zoomRate = CesiumMath.clamp(zoomRate, object._minimumZoomRate, object._maximumZoomRate);
 
         var diff = movement.endPosition.y - movement.startPosition.y;
         var rangeWindowRatio = diff / object._canvas.clientHeight;
         rangeWindowRatio = Math.min(rangeWindowRatio, object.maximumMovementRatio);
-        var dist = zoomRate * rangeWindowRatio;
+        var distance = zoomRate * rangeWindowRatio;
 
-        if (dist > 0.0 && Math.abs(distanceMeasure - minHeight) < 1.0) {
+        if (distance > 0.0 && Math.abs(distanceMeasure - minHeight) < 1.0) {
             return;
         }
 
-        if (distanceMeasure - dist < minHeight) {
-            dist = distanceMeasure - minHeight - 1.0;
+        if (distance < 0.0 && Math.abs(distanceMeasure - maxHeight) < 1.0) {
+            return;
         }
 
-        object._cameraController.zoomIn(dist);
+        if (distanceMeasure - distance < minHeight) {
+            distance = distanceMeasure - minHeight - 1.0;
+        } else if (distanceMeasure - distance > maxHeight) {
+            distance = distanceMeasure - maxHeight;
+        }
+
+        object._cameraController.zoomIn(distance);
     }
 
     var translate2DStart = new Ray();
@@ -297,7 +314,7 @@ define([
     }
 
     function zoom2D(controller, movement) {
-        handleZoom(controller, movement, controller._zoomFactor2D, controller._cameraController.getMagnitude());
+        handleZoom(controller, movement, controller._zoomFactor, controller._cameraController.getMagnitude());
     }
 
     var twist2DStart = new Cartesian2();
@@ -479,18 +496,20 @@ define([
         controller.setEllipsoid(oldEllipsoid);
     }
 
-    var zoomCVUnitPosition = new Cartesian3();
+    var zoomCVWindowPos = new Cartesian2();
+    var zoomCVWindowRay = new Ray();
     function zoomCV(controller, movement) {
-        // CAMERA TODO: remove access to camera
-        var camera = controller._cameraController._camera;
+        var windowPosition = zoomCVWindowPos;
+        windowPosition.x = controller._canvas.clientWidth / 2;
+        windowPosition.y = controller._canvas.clientHeight / 2;
+        var ray = controller._cameraController.getPickRay(windowPosition, zoomCVWindowRay);
+        var normal = Cartesian3.UNIT_X;
 
-        var height = camera.position.z;
-        var unitPosition = Cartesian3.clone(camera.position, zoomCVUnitPosition);
-        unitPosition.x = 0.0;
-        unitPosition.y = 0.0;
-        Cartesian3.normalize(unitPosition, unitPosition);
+        var position = ray.origin;
+        var direction = ray.direction;
+        var scalar = -normal.dot(position) / normal.dot(direction);
 
-        handleZoom(controller, movement, controller._zoomFactor, Math.abs(height), Cartesian3.dot(unitPosition, camera.direction));
+        handleZoom(controller, movement, controller._zoomFactor, scalar);
     }
 
     function updateCV(controller) {
@@ -820,7 +839,7 @@ define([
         var cameraController = controller._cameraController;
 
         var ellipsoid = controller._ellipsoid;
-        var minHeight = cameraController.minimumZoomDistance * 0.25;
+        var minHeight = controller.minimumZoomDistance * 0.25;
         var height = ellipsoid.cartesianToCartographic(controller._cameraController._camera.position).height;
         if (height - minHeight - 1.0 < CesiumMath.EPSILON3 &&
                 movement.endPosition.y - movement.startPosition.y < 0) {
