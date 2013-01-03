@@ -21,8 +21,6 @@ define([
      *
      * @exception {DeveloperError} url is required.
      *
-     * @example
-     *
      * @see <a href="http://en.wikipedia.org/wiki/XMLHttpRequest">XMLHttpRequest</a>
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
@@ -33,37 +31,44 @@ define([
         }
 
         return when(url, function(url) {
-            var xhr = new XMLHttpRequest();
-            xhr.overrideMimeType('text/xml');
-            xhr.open("GET", url, true);
-
-            if (typeof headers !== 'undefined') {
-                for ( var key in headers) {
-                    if (headers.hasOwnProperty(key)) {
-                        xhr.setRequestHeader(key, headers[key]);
-                    }
-                }
-            }
-
             var deferred = when.defer();
 
-            xhr.onload = function(e) {
-                if (xhr.status === 200) {
-                    deferred.resolve(xhr.responseXML);
-                } else {
-                    deferred.reject(e);
-                }
-            };
-
-            xhr.onerror = function(e) {
-                deferred.reject(e);
-            };
-
-            xhr.send();
+            loadXML.loadXML(url, headers, deferred);
 
             return deferred.promise;
         });
     };
+
+    // This is broken out into a separate function so that it can be mocked for testing purposes.
+    loadXML.loadXML = function(url, headers, deferred) {
+        var xhr = new XMLHttpRequest();
+        xhr.overrideMimeType('text/xml');
+        xhr.open("GET", url, true);
+
+        if (typeof headers !== 'undefined') {
+            for ( var key in headers) {
+                if (headers.hasOwnProperty(key)) {
+                    xhr.setRequestHeader(key, headers[key]);
+                }
+            }
+        }
+
+        xhr.onload = function(e) {
+            if (xhr.status === 200) {
+                deferred.resolve(xhr.responseXML);
+            } else {
+                deferred.reject(e);
+            }
+        };
+
+        xhr.onerror = function(e) {
+            deferred.reject(e);
+        };
+
+        xhr.send();
+    };
+
+    loadXML.defaultLoadXML = loadXML.loadXML;
 
     return loadXML;
 });

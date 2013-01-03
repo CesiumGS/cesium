@@ -8,7 +8,8 @@ define([
         '../Core/writeTextToCanvas',
         '../Core/Extent',
         './ImageryProvider',
-        './WebMercatorTilingScheme'
+        './WebMercatorTilingScheme',
+        './GeographicTilingScheme'
     ], function(
         defaultValue,
         Cartographic,
@@ -18,7 +19,8 @@ define([
         writeTextToCanvas,
         Extent,
         ImageryProvider,
-        WebMercatorTilingScheme) {
+        WebMercatorTilingScheme,
+        GeographicTilingScheme) {
     "use strict";
 
     var trailingSlashRegex = /\/$/;
@@ -99,30 +101,44 @@ define([
             // Allowing description properties to override XML values
             var format = xml.getElementsByTagName('TileFormat')[0];
             that._fileExtension = defaultValue(description.fileExtension, format.getAttribute('extension'));
-            that._tileWidth = defaultValue(description.tileWidth, parseInt(format.getAttribute('width')));
-            that._tileHeight = defaultValue(description.tileHeight, parseInt(format.getAttribute('height')));
+            that._tileWidth = defaultValue(description.tileWidth, parseInt(format.getAttribute('width'), 10));
+            that._tileHeight = defaultValue(description.tileHeight, parseInt(format.getAttribute('height'), 10));
             var tilesets = xml.getElementsByTagName('TileSet');
-            that._maximumLevel = defaultValue(description.maximumLevel, parseInt(tilesets[tilesets.length - 1].getAttribute('order')));
+            that._maximumLevel = defaultValue(description.maximumLevel, parseInt(tilesets[tilesets.length - 1].getAttribute('order'), 10));
 
             // extent handling
-            var bbox = xml.getElementsByTagName('BoundingBox')[0];
-            var sw = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('miny')), parseFloat(bbox.getAttribute('minx')));
-            var ne = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('maxy')), parseFloat(bbox.getAttribute('maxx')));
-            var extent = new Extent(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
-            that._extent = defaultValue(description.extent, extent);
+            that._extent = description.extent;
+            if (typeof that._extent === 'undefined') {
+                var bbox = xml.getElementsByTagName('BoundingBox')[0];
+                var sw = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('miny')), parseFloat(bbox.getAttribute('minx')));
+                var ne = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('maxy')), parseFloat(bbox.getAttribute('maxx')));
+                that._extent = new Extent(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
+            } else {
+                that._extent = that._extent.clone();
+            }
 
             // tiling scheme handling
-            var tilingSchemeName = xml.getElementsByTagName('TileSets')[0].getAttribute('profile');
-            var tilingScheme;
-            switch (tilingSchemeName) {
-            case 'geodetic':
-                tilingScheme = new GeographicTilingScheme();
-                break;
-            case 'mercator':
-            default:
-                tilingScheme = new WebMercatorTilingScheme();
+            var tilingScheme = description.tilingScheme;
+            if (typeof tilingScheme === 'undefined') {
+                var tilingSchemeName = xml.getElementsByTagName('TileSets')[0].getAttribute('profile');
+                tilingScheme = tilingSchemeName === 'geodetic' ? new GeographicTilingScheme() : new WebMercatorTilingScheme();
             }
-            that._tilingScheme = defaultValue(description.tilingScheme, tilingScheme);
+
+            // The extent must not be outside the bounds allowed by the tiling scheme.
+            if (that._extent.west < tilingScheme.getExtent().west) {
+                that._extent.west = tilingScheme.getExtent().west;
+            }
+            if (that._extent.east > tilingScheme.getExtent().east) {
+                that._extent.east = tilingScheme.getExtent().east;
+            }
+            if (that._extent.south < tilingScheme.getExtent().south) {
+                that._extent.south = tilingScheme.getExtent().south;
+            }
+            if (that._extent.north > tilingScheme.getExtent().north) {
+                that._extent.north = tilingScheme.getExtent().north;
+            }
+
+            that._tilingScheme = tilingScheme;
             that._ready = true;
         }, function(error) {
             // Can't load XML, still allow description and defaults
@@ -135,7 +151,6 @@ define([
             that._extent = defaultValue(description.extent, that._tilingScheme.getExtent());
             that._ready = true;
         });
-
 
     };
 

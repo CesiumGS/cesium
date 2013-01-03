@@ -24,6 +24,7 @@ define([
     /**
      * A plane tangent to the provided ellipsoid at the provided origin.
      * If origin is not on the surface of the ellipsoid, it's surface projection will be used.
+     * If origin as at the center of the ellipsoid, an exception will be thrown.
      * @alias EllipsoidTangentPlane
      * @constructor
      *
@@ -31,6 +32,7 @@ define([
      * @param {Cartesian3} origin The point on the surface of the ellipsoid where the tangent plane touches.
      *
      * @exception {DeveloperError} origin is required.
+     * @exception {DeveloperError} origin must not be at the center of the ellipsoid.
      */
     var EllipsoidTangentPlane = function(origin, ellipsoid) {
         if (typeof origin === 'undefined') {
@@ -40,6 +42,9 @@ define([
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         origin = ellipsoid.scaleToGeodeticSurface(origin);
+        if (typeof origin === 'undefined') {
+            throw new DeveloperError('origin must not be at the center of the ellipsoid.');
+        }
         var eastNorthUp = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
         this._ellipsoid = ellipsoid;
         this._origin = Cartesian3.clone(origin);

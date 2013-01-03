@@ -13,7 +13,8 @@
             data-dojo-props="iconClass: 'cw-viewIcon cw-viewColumbus', showLabel: false, label:'Columbus View'"></div>
         <div data-dojo-attach-point="viewFullscreen" data-dojo-type="dijit.form.Button"
             data-dojo-props="iconClass: 'cw-viewIcon cw-viewFullscreen', showLabel: false, label:'Toggle Full Screen'"></div>
-        <div data-dojo-attach-point="imagery" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'cw-bingIcon', showLabel: false, label:'Bing'">
+        <div data-dojo-attach-point="imagery" data-dojo-type="dijit.form.DropDownButton"
+            data-dojo-props="iconClass: 'cw-bingIcon', showLabel: false, label:'Bing'">
             <div data-dojo-type="dijit.TooltipDialog">
                 <span data-dojo-type="dijit.form.ToggleButton" data-dojo-attach-point="imageryAerial"
                     data-dojo-props="'class':'cw-imagerySelector', showLabel: true, checked: true, label:'Bing Maps Aerial'">
@@ -27,7 +28,8 @@
         </div>
     </div>
     <div class="cw-timelineContainer">
-        <div data-dojo-attach-point="timelineWidget" data-dojo-type="Cesium.TimelineWidget" data-dojo-props="'class':'cw-timeline'"></div>
+        <div data-dojo-attach-point="timelineWidget" data-dojo-type="Cesium.TimelineWidget"
+            data-dojo-props="'class':'cw-timeline'"></div>
     </div>
     <div class="cw-animButtons">
         <div data-dojo-attach-point="animReset" data-dojo-type="dijit.form.Button"
@@ -44,6 +46,7 @@
             data-dojo-props="iconClass: 'cw-animationIcon cw-animFast', showLabel: false, label:'Play Faster'"></div>
         <span data-dojo-attach-point="speedIndicator" class="cw-speedIndicator"></span>
     </div>
-    <a class="cw-cesiumLogo" data-dojo-attach-point="cesiumLogo" href="http://cesium.agi.com/" target="_blank"></a>
-    <span data-dojo-attach-point="containerNode"></span>
+    <a class="cw-cesiumLogo" data-dojo-attach-point="cesiumLogo" href="http://cesium.agi.com/" target="_blank"></a> <span
+        data-dojo-attach-point="containerNode"></span>
+    <div class="cw-loading" data-dojo-attach-point="loading"></div>
 </div>
