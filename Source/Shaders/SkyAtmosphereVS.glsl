@@ -1,4 +1,5 @@
-/*!
+/**
+ * @license
  * Copyright (c) 2000-2005, Sean O'Neil (s_p_oneil@hotmail.com)
  * All rights reserved.
  * 
