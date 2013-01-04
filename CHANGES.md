@@ -7,6 +7,8 @@ Beta Releases
 ### b13 - xx/xx/2013
 * Breaking changes:
    * Moved `minimumZoomDistance` and `maximumZoomDistance` from the `CameraController` to the `ScreenSpaceCameraController`.
+* Added `Scene.backgroundColor`.
+* Fixed sky atmosphere flickering on Intel on Mac.
 * Fixed camera tilt close to the `minimumZoomDistance`.
 * Upgraded RequireJS to version 2.1.2, and Almond to 0.2.3.
 
@@ -25,8 +27,6 @@ Beta Releases
 * Improved camera flights.
 * Added Sandbox example using NASA's new [Black Marble](http://www.nasa.gov/mission_pages/NPP/news/earth-at-night.html) night imagery.
 * Added constrained z-axis by default to the Cesium widgets.
-* Added `Scene.backgroundColor`.
-* Fixed sky atmosphere flickering on Intel on Mac.
 * Upgraded Jasmine from version 1.1.0 to 1.3.0.
 * Added `JulianDate.toIso8601`, which creates an ISO8601 compliant representation of a JulianDate.
 * The `Timeline` widget now properly displays leap seconds.
