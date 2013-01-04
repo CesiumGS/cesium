@@ -100,4 +100,4 @@ defineSuite([
             r.destroy();
         }).toThrow();
     });
-});
+}, 'WebGL');

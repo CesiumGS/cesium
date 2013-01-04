@@ -66,15 +66,36 @@ jasmine.HtmlReporterHelpers.isSuiteFocused = function(suite) {
       var p = params[i].split('=');
       paramMap[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
     }
-  
+	
     if (suite.getFullName() === paramMap.spec) {
 	  return true;
+    }
+	
+    var categories;
+    if (typeof paramMap.category !== 'undefined') {
+      categories = paramMap.category.split(',');
+    }
+	
+    if (typeof categories !== 'undefined' && typeof suite.categories !== 'undefined') {
+      for (var i = 0; i < categories.length; i++) {
+        if (suite.categories.indexOf(categories[i]) !== -1) {
+          return true;
+        }
+      }
     }
 
     var parentSuite = suite.parentSuite;
     while (parentSuite) {
       if (parentSuite.getFullName() === paramMap.spec) {
         return true;
+      }
+	  
+      if (typeof categories !== 'undefined' && typeof parentSuite.categories !== 'undefined') {
+        for (var i = 0; i < categories.length; i++) {
+          if (parentSuite.categories.indexOf(categories[i]) !== -1) {
+            return true;
+          }
+        }
       }
       parentSuite = parentSuite.parentSuite;
     }
@@ -84,6 +105,21 @@ jasmine.HtmlReporterHelpers.isSuiteFocused = function(suite) {
       if (childSpecs[i].getFullName() === paramMap.spec) {
 	    return true;
 	  }
+      if (typeof categories !== 'undefined' && typeof childSpecs[i].suite.categories !== 'undefined') {
+        for (var j = 0; j < categories.length; j++) {
+    	  if (childSpecs[i].suite.categories.indexOf(categories[j]) !== -1) {
+	    return true;
+	  }
+        }
+      }
+	  
+      if (typeof categories !== 'undefined' && typeof childSpecs[i].categories !== 'undefined') {
+        for (var j = 0; j < categories.length; j++) {
+	  if (childSpecs[i].categories.indexOf(categories[j]) !== -1) {
+	    return true;
+	  }
+        }
+      }
     }
 
     var childSuites = suite.suites();
@@ -95,7 +131,7 @@ jasmine.HtmlReporterHelpers.isSuiteFocused = function(suite) {
 
     return false;
   };
-
+  
 jasmine.HtmlReporter = function(_doc) {
   var self = this;
   var doc = _doc || window.document;
@@ -117,6 +153,36 @@ jasmine.HtmlReporter = function(_doc) {
     createReporterDom(runner.env.versionString());
     doc.body.appendChild(dom.reporter);
     setExceptionHandling();
+
+    var runButton = document.getElementById('runButton');
+    runButton.onclick = function() {
+      if (document.getElementById('no_try_catch').checked) {
+        window.location.search = searchWithCatch();
+    	return false;
+      }
+   	
+	  var select = document.getElementById('categorySelect');
+      if (document.getElementById('categoryException').checked) {
+        top.location.href = '?category=All&not=' + encodeURIComponent(select.options[select.selectedIndex].value);
+        return false;
+      }
+      top.location.href = '?category=' + encodeURIComponent(select.options[select.selectedIndex].value);
+      return false;
+    }
+	
+    var runCoverageButton = document.getElementById('runCoverageButton');
+    runCoverageButton.onclick = function() {
+	  var baseInstrumentUrl = '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
+            window.encodeURIComponent('?baseUrl=../Instrumented');
+	
+      var select = document.getElementById('categorySelect');	
+	  if (document.getElementById('categoryException').checked) {
+        top.location.href = baseInstrumentUrl + window.encodeURIComponent('&category=All&not=' + select.options[select.selectedIndex].value);
+        return false;
+      }
+      top.location.href = baseInstrumentUrl + window.encodeURIComponent('&category=' + select.options[select.selectedIndex].value);
+	  return false;
+    }
 
     reporterView = new jasmine.HtmlReporter.ReporterView(dom);
     reporterView.addSpecs(specs, self.specFilter);
@@ -164,30 +230,106 @@ jasmine.HtmlReporter = function(_doc) {
     };
 }
 
-  self.specFilter = function(spec) {
-    var paramMap = [];
+  self.specFilter = function(spec) {    
+	var paramMap = [];
     var params = jasmine.HtmlReporter.parameters(doc);
 
     for (var i = 0; i < params.length; i++) {
       var p = params[i].split('=');
       paramMap[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
     }
-  
+    
     if (paramMap.debug && spec.getFullName() === paramMap.debug) {
       var block = spec.queue.blocks[0];
       block.func = wrapWithDebugger(block.func);
     }
-  
-    if (!focusedSpecName()) {
+
+    var focusedSpecName = getFocusedSpecName();
+    var focusedCategories = getFocusedCategories();
+	
+    if (!focusedSpecName && !focusedCategories) {
       return true;
     }
+	
+    if (focusedSpecName && focusedCategories && !spec.categories) {
+      return false;
+    }
+	
+    var i, matchedCategory = false;	
+	
+    if (focusedCategories && focusedCategories.indexOf('All') !== -1) {
+	  
+      if (typeof spec.categories !== 'undefined') {
+        if (paramMap.not && spec.categories.indexOf(paramMap.not) !== -1) {
+          return false;
+        }
+      }
+	  
+      if (typeof spec.suite.categories !== 'undefined') {
+        if (paramMap.not && spec.suite.categories.indexOf(paramMap.not) !== -1) {
+          return false;
+        }
+      }
+  
+      return true;
+    }
+	
+    if (focusedCategories && typeof spec.categories !== 'undefined') {
+	  for (i = 0 ; i < focusedCategories.length; i++) {
+        if (spec.categories.indexOf(focusedCategories[i]) !== -1) {
+          matchedCategory = true;
+          break;
+        }
+      }
 
-    return spec.getFullName().indexOf(focusedSpecName()) === 0;
+      if (focusedSpecName) {
+        return (spec.getFullName().indexOf(focusedSpecName) === 0) && matchedCategory;
+      }
+	  
+      return matchedCategory;
+    }
+
+    if (focusedCategories && typeof spec.suite.categories !== 'undefined') {
+      for (i = 0 ; i < focusedCategories.length; i++) {
+	    if (spec.suite.categories.indexOf(focusedCategories[i]) !== -1) {
+	      matchedCategory = true;
+	      break;
+	    }
+      }
+      return matchedCategory;
+    }
+	
+    return spec.getFullName().indexOf(focusedSpecName) === 0;
   };
   
   return self;
+  
+  function getFocusedCategories() {
+    var categoryNames;
 
-  function focusedSpecName() {
+    (function memoizeFocusedSpec() {
+      if (categoryNames) {
+        return;
+      }
+
+      var paramMap = [];
+      var params = jasmine.HtmlReporter.parameters(doc);
+
+      for (var i = 0; i < params.length; i++) {
+        var p = params[i].split('=');
+        paramMap[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
+      }
+
+      categoryNames = paramMap.category;
+    })();
+
+    if (typeof categoryNames !== 'undefined') {
+      return categoryNames.split(',');
+    }
+    return categoryNames;
+  }
+
+  function getFocusedSpecName() {
     var specName;
 
     (function memoizeFocusedSpec() {
@@ -219,12 +361,11 @@ jasmine.HtmlReporter = function(_doc) {
       dom.alert = self.createDom('div', {className: 'alert'},
         self.createDom('div', {className: 'progressContainer'},
         dom.progress = self.createDom('div', {className: 'progressBar', style: 'width: 0%'})),
-        self.createDom('span', { className: 'exceptions' },
-          self.createDom('a',  {className: 'run_all', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
-            window.encodeURIComponent('?baseUrl=../Instrumented'), target: '_top' }, 'coverage'),
-          self.createDom('a', { className: 'run_all', href: '?' }, 'run all'),
+        dom.exceptions = self.createDom('span', { className: 'exceptions' },
           self.createDom('label', { className: 'label', 'for': 'no_try_catch' }, 'No try/catch'),
-          self.createDom('input', { id: 'no_try_catch', type: 'checkbox' }))),
+          self.createDom('input', { id: 'no_try_catch', type: 'checkbox' }), 
+          self.createDom('input', { type: 'button', value: 'run', id: 'runButton'}, 'run'),
+          self.createDom('input',  { type: 'button', value: 'run with coverage', id: 'runCoverageButton' }, 'run with coverage'))),
       dom.results = self.createDom('div', {className: 'results'},
         dom.summary = self.createDom('div', { className: 'summary' }),
         dom.details = self.createDom('div', { id: 'details' }))
@@ -261,9 +402,6 @@ jasmine.HtmlReporter = function(_doc) {
       chxCatch.setAttribute('checked', true);
       jasmine.CATCH_EXCEPTIONS = false;
     }
-    chxCatch.onclick = function() {
-      window.location.search = searchWithCatch();
-    };
   }
 };
 jasmine.HtmlReporter.parameters = function(doc) {
@@ -314,7 +452,55 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
       showDetails();
     };
   };
+  
+  this.categories = [];
+  
+  function getCurrentCategoryName() {
+    var paramMap = [];
+    var params = jasmine.HtmlReporter.parameters(window.document);
 
+    for (var i = 0; i < params.length; i++) {
+      var p = params[i].split('=');
+      paramMap[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
+    }
+
+    var categoryNames = paramMap.category;
+
+    if (typeof categoryNames === 'undefined') {
+      return 'All';
+    }
+    
+	if (typeof paramMap.not !== 'undefined') {
+      return paramMap.not;
+    }
+	
+    return categoryNames.split(',')[0];
+  }
+  
+  this.createCategoryMenu = function() {
+    this.categoryMenu = this.createDom('span', {className: 'categoryMenu'}, 'Category: ',
+      this.categorySelect = this.createDom('select', {id: 'categorySelect'},
+      this.createDom('option', {value: 'All'}, 'All')), 'Run all but selected:',
+      this.categoryException = this.createDom('input', {type: 'checkbox', id: 'categoryException'}))
+	  
+    for (var i = 0; i < this.categories.length; i++) {
+      this.categorySelect.appendChild(this.createDom('option', {value: this.categories[i]}, this.categories[i]));
+    }
+
+    var currentCategoryName = getCurrentCategoryName();
+
+    for (var i = 0; i < this.categorySelect.options.length; i++) {
+      if (this.categorySelect.options[i].value === currentCategoryName) {
+        this.categorySelect.selectedIndex = i;
+    	if (window.location.search.match(/not=/)) {
+    	  this.categoryException.checked = true;
+    	}
+    	break;
+      }
+    }
+    dom.exceptions.insertBefore(this.categoryMenu, dom.exceptions.getElementsByTagName('input')[0].nextSibling);
+  }
+  
   this.addSpecs = function(specs, specFilter) {
     this.totalSpecCount = specs.length;
 
@@ -328,6 +514,22 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
       this.views.specs[spec.id] = new jasmine.HtmlReporter.SpecView(spec, dom, this.views);
       if (specFilter(spec)) {
         this.runningSpecCount++;
+      }
+
+      if (typeof spec.categories !== 'undefined') {
+        for (var j = 0; j < spec.categories.length; j++) {
+          if (this.categories.indexOf(spec.categories[j]) === -1) {
+            this.categories.push(spec.categories[j]);
+          }
+        }
+      }
+
+      if (typeof spec.suite.categories !== 'undefined') { 
+        for (var j = 0; j < spec.suite.categories.length; j++) {
+          if (this.categories.indexOf(spec.suite.categories[j]) === -1) {
+            this.categories.push(spec.suite.categories[j]);
+          }
+        }
       }
     }
   };
@@ -400,6 +602,10 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
     if (isUndefined(this.resultsMenu)) {
       this.createResultsMenu();
     }
+	
+	if (isUndefined(this.categoryMenu)) {
+	  this.createCategoryMenu();
+	}
 
     // currently running UI
     if (isUndefined(this.runningAlert)) {

@@ -848,17 +848,19 @@ define([
         }
 
         var length = billboards.length;
-        var positions = new Array(length);
-        for (var i = 0; i < length; ++i) {
+        var positions = [];
+        for ( var i = 0; i < length; ++i) {
             var billboard = billboards[i];
             var position = billboard.getPosition();
             var actualPosition = Billboard._computeActualPosition(position, frameState, morphTime, modelMatrix);
-            billboard._setActualPosition(actualPosition);
+            if (typeof actualPosition !== 'undefined') {
+                billboard._setActualPosition(actualPosition);
 
-            if (recomputeBoundingVolume) {
-                positions[i] = actualPosition;
-            } else {
-                boundingVolume.expand(actualPosition, boundingVolume);
+                if (recomputeBoundingVolume) {
+                    positions.push(actualPosition);
+                } else {
+                    boundingVolume.expand(actualPosition, boundingVolume);
+                }
             }
         }
 

@@ -38,6 +38,7 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see OpenStreetMapImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      */
     var SingleTileImageryProvider = function(description) {
@@ -75,9 +76,7 @@ define([
             imageUrl = proxy.getURL(imageUrl);
         }
 
-        // Create the credit message.
         if (typeof description.credit !== 'undefined') {
-            // Create the copyright message.
             this._logo = writeTextToCanvas(description.credit, {
                 font : '12px sans-serif'
             });
