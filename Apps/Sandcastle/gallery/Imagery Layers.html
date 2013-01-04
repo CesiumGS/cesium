@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Layer imagery from multiple sources, including WMS servers, Bing Maps, ArcGIS Online, OpenStreetMaps, and more, and adjust the alpha of each independently.">
+    <meta name="description" content="Create imagery layers from multiple sources.">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
@@ -57,283 +57,57 @@
         padding: 2px 5px;
         position: absolute;
     }
-    .upArrow {
-        background-image: url("../images/UpArrow.png");
-        background-repeat: no-repeat;
-        width: 16px;
-        height: 16px;
-        text-align: center;
-    }
-    .downArrow {
-        background-image: url("../images/DownArrow.png");
-        background-repeat: no-repeat;
-        width: 16px;
-        height: 16px;
-        text-align: center;
-    }
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="toolbar">Loading...</div>
 <script id="cesium_sandcastle_script">
 require([
-    'Source/Cesium',
-    'Widgets/Dojo/CesiumWidget',
-    'dojo/on',
-    'dojo/dom',
-    'dojo/dom-construct',
-    'dijit/DropDownMenu',
-    'dijit/MenuItem',
-    'dijit/form/Button',
-    'dijit/form/CheckBox',
-    'dijit/form/DropDownButton',
-    'dijit/form/HorizontalSlider'
+    'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
+    'dojo/on', 'dojo/dom', 'dojo/io-query'
 ], function(
-    Cesium,
-    CesiumWidget,
-    on,
-    dom,
-    domConstruct,
-    DropDownMenu,
-    MenuItem,
-    Button,
-    CheckBox,
-    DropDownButton,
-    HorizontalSlider)
+    Cesium, CesiumViewerWidget,
+    on, dom, ioQuery)
 {
     "use strict";
 
-    var imageryLayerCollection;
-    var baseLayers = [];
-    
-    function setupLayers() {
-        // Create all the base layers that this example will support.
-        // These base layers aren't really special.  It's possible to have multiple of them
-        // enabled at once, just like the other layers, but it doesn't make much sense because
-        // all of these layers cover the entire globe and are opaque.
-        addBaseLayerOption(
-                'Bing Maps Aerial',
-                undefined); // the current base layer
-        addBaseLayerOption(
-                'Bing Maps Road',
-                new Cesium.BingMapsImageryProvider({
-                    server: 'dev.virtualearth.net',
-                    mapStyle: Cesium.BingMapsStyle.ROAD,
-                    // Some versions of Safari support WebGL, but don't correctly implement
-                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                    proxy: Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
-                }));
-        addBaseLayerOption(
-                'ArcGIS World Street Maps',
-                new Cesium.ArcGisMapServerImageryProvider({
-                    url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
-                    proxy: new Cesium.DefaultProxy('/proxy/')
-                }));
-        addBaseLayerOption(
-                'OpenStreetMaps',
-                new Cesium.OpenStreetMapImageryProvider({
-                    proxy: new Cesium.DefaultProxy('/proxy/')
-                }));
-        addBaseLayerOption(
-                'MapQuest OpenStreetMaps',
-                new Cesium.OpenStreetMapImageryProvider({
-                    url: 'http://otile1.mqcdn.com/tiles/1.0.0/osm/',
-                    proxy: new Cesium.DefaultProxy('/proxy/')
-                }));
-        addBaseLayerOption(
-                'Stamen Maps',
-                new Cesium.OpenStreetMapImageryProvider({
-                    url: 'http://tile.stamen.com/watercolor/',
-                    fileExtension: 'jpg',
-                    proxy: new Cesium.DefaultProxy('/proxy/'),
-                    credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
-                }));
-        addBaseLayerOption(
-                'Single Image',
-                new Cesium.SingleTileImageryProvider({
-                    url : require.toUrl('Assets/Textures/NE2_LR_LC_SR_W_DR_2048.jpg')
-                }));
-
-        // Create the additional layers
-        addAdditionalLayerOption(
-                'United States GOES infrared',
-                new Cesium.WebMapServiceImageryProvider({
-                    url : 'http://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?',
-                    layers : 'goes_conus_ir',
-                    credit : 'Infrared data courtesy Iowa Environmental Mesonet',
-                    parameters : {
-                        transparent : 'true',
-                        format : 'image/png'
-                    },
-                    proxy : new Cesium.DefaultProxy('/proxy/')
-                }));
-        addAdditionalLayerOption(
-                'United States weather radar',
-                new Cesium.WebMapServiceImageryProvider({
-                    url : 'http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
-                    layers : 'nexrad-n0r',
-                    credit : 'Radar data courtesy Iowa Environmental Mesonet',
-                    parameters : {
-                        transparent : 'true',
-                        format : 'image/png'
-                    },
-                    proxy : new Cesium.DefaultProxy('/proxy/')
-                }));
-        addAdditionalLayerOption(
-                'TMS Image',
-                new Cesium.TileMapServiceImageryProvider({
-                    url : '../images/cesium_maptiler/Cesium_Logo_Color',
-                    fileExtension: 'png',
-                    maximumLevel: 4,
-                    credit: 'AGI',
-                    extent: new Cesium.Extent(
-                            Cesium.Math.toRadians(-120.0),
-                            Cesium.Math.toRadians(20.0),
-                            Cesium.Math.toRadians(-60.0),
-                            Cesium.Math.toRadians(40.0))
-                }),0.2);
-        addAdditionalLayerOption(
-                'Single image',
-                new Cesium.SingleTileImageryProvider({
-                    url : '../images/Cesium_Logo_overlay.png',
-                    extent : new Cesium.Extent(
-                            Cesium.Math.toRadians(-115.0),
-                            Cesium.Math.toRadians(38.0),
-                            Cesium.Math.toRadians(-107),
-                            Cesium.Math.toRadians(39.75))
-                }),
-                1.0);
-    }
-    
-    function addBaseLayerOption(name, imageryProvider) {
-        var layer;
-        if (typeof imageryProvider === 'undefined') {
-            layer = imageryLayerCollection.get(0);
-        } else {
-            layer = new Cesium.ImageryLayer(imageryProvider);
-        }
-
-        layer.name = name;
-        baseLayers.push(layer);
-    }
-    
-    function addAdditionalLayerOption(name, imageryProvider, alpha) {
-        var layer = imageryLayerCollection.addImageryProvider(imageryProvider);
-        layer.alpha = Cesium.defaultValue(alpha, 0.5);
-        layer.name = name;
-    }
-    
-    function createLayerUserInterface() {
-        domConstruct.place('<table id="layerTable"></table>', 'toolbar');
-        updateUserInterface(imageryLayerCollection);
-    }
-    
-    function updateUserInterface() {
-        domConstruct.place('<table id="layerTable"></table>', 'layerTable', 'replace');
-        
-        for (var i = imageryLayerCollection.getLength() - 1; i >= 0; --i) {
-            var layer = imageryLayerCollection.get(i);
-            
-            domConstruct.place('<tr><td id="layerToggle' + i + '"></td><td id="layerLabel' + i + '"></td><td id="layerSlider' + i + '"></td><td id="layerUpArrow' + i + '"></td><td id="layerDownArrow' + i + '"></td></tr>', 'layerTable');
-            
-            if (baseLayers.indexOf(layer) < 0) {
-                domConstruct.place('<span>' + layer.name + '</span>', 'layerLabel' + i);
-            } else {
-                createBaseLayerSelector(layer, i);
-            }
-            createUserInterfaceForLayer(layer, i);
-        }
+    // Ask Dojo to parse URL configuration options
+    var endUserOptions = {};
+    if (window.location.search) {
+        endUserOptions = ioQuery.queryToObject(window.location.search.substring(1));
     }
 
-    function createUserInterfaceForLayer(layer, layerIndex) {
-        new CheckBox({
-            checked: layer.show,
-            onChange: function(b) {
-                layer.show = !layer.show;
-                updateUserInterface();
-            }
-        }).placeAt('layerToggle' + layerIndex);
-
-        new HorizontalSlider({
-            value: layer.alpha,
-            minimum: 0.0,
-            maximum: 1.0,
-            intermediateChanges: true,
-            style: "width:150px;",
-            onChange: function(value) {
-                layer.alpha = value;
-            }
-        }).placeAt('layerSlider' + layerIndex);
-
-        var showRaise = layerIndex >= 0 && layerIndex < imageryLayerCollection.getLength() - 1;
-        var showLower = layerIndex > 0;
-
-        new Button({
-            label: "Raise",
-            showLabel: false,
-            iconClass: "upArrow",
-            style: (showRaise ? "" : "visibility:hidden"),
-            onClick: function() {
-                if (showRaise) {
-                    imageryLayerCollection.raise(layer);
-                    updateUserInterface();
-                }
-            }
-        }).placeAt('layerUpArrow' + layerIndex);
-
-        new Button({
-            label: "Lower",
-            showLabel: false,
-            iconClass: "downArrow",
-            style: (showLower ? "" : "visibility:hidden"),
-            onClick: function() {
-                if (showLower) {
-                  imageryLayerCollection.lower(layer);
-                  updateUserInterface();
-                }
-            }
-        }).placeAt('layerDownArrow' + layerIndex);
-    }
-    
-    function createBaseLayerSelector(layer, layerIndex) {
-        var menu = new DropDownMenu();
-        
-        for (var i = 0, len = baseLayers.length; i < len; ++i) {
-            menu.addChild(createBaseLayerMenuItem(baseLayers[i], i, layer, layerIndex));
-        }
-        
-        var button = new DropDownButton({
-            label : layer.name,
-            dropDown : menu
-        });
-        
-        button.placeAt('layerLabel' + layerIndex);
-    }
-    
-    function createBaseLayerMenuItem(baseLayer, baseLayerIndex, activeLayer, activeLayerIndex) {
-        return new MenuItem({
-            label : baseLayer.name,
-            onClick : function() {
-                imageryLayerCollection.remove(activeLayer, false);
-                imageryLayerCollection.add(baseLayer, activeLayerIndex);
-                updateUserInterface();
-            }
-        });
-    }
-
-    var widget = new CesiumWidget();
+    // Initialize a viewer capable of drag-and-drop
+    // and user customizations.
+    var widget = new CesiumViewerWidget({
+        endUserOptions : endUserOptions,
+        enableDragDrop : true
+    });
     widget.placeAt(dom.byId('cesiumContainer'));
     widget.startup();
     dom.byId('toolbar').innerHTML = '';
-
-    var scene = widget.scene;
-    var centralBody = widget.centralBody;
-
-    imageryLayerCollection = centralBody.getImageryLayers();
-
-    setupLayers();
-
-    createLayerUserInterface();
+    
+    var layers = widget.centralBody.getImageryLayers();
+    layers.removeAll();
+    layers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
+        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
+        proxy : new Cesium.DefaultProxy('/proxy/')
+    }));
+    var blackMarble = layers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
+        url : 'http://cesium.agi.com/blackmarble',
+        maximumLevel : 8,
+        credit : 'Black Marble imagery courtesy NASA Earth Observatory'
+    }));
+    blackMarble.alpha = 0.5;
+    blackMarble.brightness = 2.0;
+    layers.addImageryProvider(new Cesium.SingleTileImageryProvider({
+        url : '../images/Cesium_Logo_overlay.png',
+        extent : new Cesium.Extent(
+            Cesium.Math.toRadians(-75.0),
+            Cesium.Math.toRadians(28.0),
+            Cesium.Math.toRadians(-67.0),
+            Cesium.Math.toRadians(29.75))
+    }));
 });
 </script>
 </body>

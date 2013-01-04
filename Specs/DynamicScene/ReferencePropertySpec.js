@@ -25,37 +25,37 @@ defineSuite([
     }
 
     it('constructor throws if missing dynamicObjectCollection parameter', function() {
-        expect(function(){
+        expect(function() {
             return new ReferenceProperty(undefined, 'object', 'property');
         }).toThrow();
     });
 
     it('constructor throws if missing targetObjectId parameter', function() {
-        expect(function(){
+        expect(function() {
             return new ReferenceProperty(new DynamicObjectCollection(), undefined, 'property');
         }).toThrow();
     });
 
     it('constructor throws if missing targetPropertyName parameter', function() {
-        expect(function(){
+        expect(function() {
             return new ReferenceProperty(new DynamicObjectCollection(), 'object', undefined);
         }).toThrow();
     });
 
     it('fromString throws if missing dynamicObjectCollection parameter', function() {
-        expect(function(){
+        expect(function() {
             return ReferenceProperty.fromString(undefined, 'object.property');
         }).toThrow();
     });
 
     it('fromString throws if missing string parameter', function() {
-        expect(function(){
+        expect(function() {
             return ReferenceProperty.fromString(new DynamicObjectCollection(), undefined);
         }).toThrow();
     });
 
     it('fromString throws if invalid string parameter', function() {
-        expect(function(){
+        expect(function() {
             return ReferenceProperty.fromString(new DynamicObjectCollection(), 'a.b.c');
         }).toThrow();
     });

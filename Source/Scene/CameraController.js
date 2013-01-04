@@ -93,16 +93,6 @@ define([
          * @type Number
          */
         this.maximumZoomFactor = 2.5;
-        /**
-         * The minimum magnitude, in meters, of the camera position when zooming. Defaults to 20.0.
-         * @type Number
-         */
-        this.minimumZoomDistance = 20.0;
-        /**
-         * The maximum magnitude, in meters, of the camera position when zooming. Defaults to positive infinity.
-         * @type Number
-         */
-        this.maximumZoomDistance = Number.POSITIVE_INFINITY;
 
         this._maxCoord = undefined;
         this._frustum = undefined;
@@ -609,6 +599,7 @@ define([
             throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
         }
 
+        amount = amount * 0.5;
         var newRight = frustum.right - amount;
         var newLeft = frustum.left + amount;
 
@@ -616,23 +607,6 @@ define([
         if (newRight > maxRight) {
             newRight = maxRight;
             newLeft = -maxRight;
-        }
-
-        var height = newRight - newLeft;
-        var diff;
-
-        var minHeight = controller.minimumZoomDistance;
-        if (height < minHeight) {
-            diff = (minHeight - height) * 0.5;
-            newRight -= diff;
-            newLeft += diff;
-        }
-
-        var maxHeight = controller.maximumZoomDistance;
-        if (height > maxHeight) {
-            diff = (height - maxHeight) * 0.5;
-            newRight -= diff;
-            newLeft += diff;
         }
 
         var ratio = frustum.top / frustum.right;
@@ -645,23 +619,6 @@ define([
     function zoom3D(controller, amount) {
         var camera = controller._camera;
         controller.move(camera.direction, amount);
-
-        var height;
-        if (controller._mode === SceneMode.SCENE3D) {
-            height = camera.position.magnitude();
-        } else {
-            height = Math.abs(camera.position.z);
-        }
-
-        var min = controller.minimumZoomDistance;
-        if (height < min) {
-            controller.move(camera.direction, -(min - height));
-        }
-
-        var max = controller.maximumZoomDistance;
-        if (height > max) {
-            controller.move(camera.direction, height - max);
-        }
     }
 
     /**
