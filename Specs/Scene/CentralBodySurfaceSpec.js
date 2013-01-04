@@ -466,4 +466,4 @@ defineSuite([
             expect(tileCommandCount).toBeGreaterThan(0);
         });
     });
-});
+}, 'WebGL');

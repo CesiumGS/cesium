@@ -11,6 +11,14 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
   padding-right: 12px;
 }
 
+.categoryMenu {
+  padding: 0 12px;
+}
+
+#categorySelect {
+  margin: 0 12px 0 0;
+}
+
 .progressContainer {
   position: relative;
 }
