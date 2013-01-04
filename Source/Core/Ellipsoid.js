@@ -66,6 +66,8 @@ define([
         this._minimumRadius = Math.min(x, y, z);
 
         this._maximumRadius = Math.max(x, y, z);
+
+        this._centerToleranceSquared = CesiumMath.EPSILON1;
     };
 
     /**
@@ -285,11 +287,12 @@ define([
 
     /**
      * Converts the provided cartesian to cartographic representation.
+     * The cartesian is undefined at the center of the ellipsoid.
      * @memberof Ellipsoid
      *
      * @param {Cartesian3} cartesian The Cartesian position to convert to cartographic representation.
      * @param {Cartographic} [result] The object onto which to store the result.
-     * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
+     * @return {Cartographic} The modified result parameter, new Cartographic instance if none was provided, or undefined if the cartesian is at the center of the ellipsoid.
      *
      * @exception {DeveloperError} cartesian is required.
      *
@@ -301,6 +304,11 @@ define([
     Ellipsoid.prototype.cartesianToCartographic = function(cartesian, result) {
         //`cartesian is required.` is thrown from scaleToGeodeticSurface
         var p = this.scaleToGeodeticSurface(cartesian, cartesianToCartographicP);
+
+        if (typeof p === 'undefined') {
+            return undefined;
+        }
+
         var n = this.geodeticSurfaceNormal(p, cartesianToCartographicN);
         var h = Cartesian3.subtract(cartesian, p, cartesianToCartographicH);
 
@@ -351,14 +359,18 @@ define([
         return result;
     };
 
+    var scaleToGeodeticSurfaceIntersection;
+    var scaleToGeodeticSurfaceGradient = new Cartesian3();
+
     /**
      * Scales the provided Cartesian position along the geodetic surface normal
-     * so that it is on the surface of this ellipsoid.
+     * so that it is on the surface of this ellipsoid.  If the position is
+     * at the center of the ellipsoid, this function returns undefined.
      * @memberof Ellipsoid
      *
      * @param {Cartesian3} cartesian The Cartesian position to scale.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @return {Cartesian3} The modified result parameter, a new Cartesian3 instance if none was provided, or undefined if the position is at the center.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -371,74 +383,87 @@ define([
         var positionY = cartesian.y;
         var positionZ = cartesian.z;
 
+        var oneOverRadii = this._oneOverRadii;
+        var oneOverRadiiX = oneOverRadii.x;
+        var oneOverRadiiY = oneOverRadii.y;
+        var oneOverRadiiZ = oneOverRadii.z;
+
+        var x2 = positionX * positionX * oneOverRadiiX * oneOverRadiiX;
+        var y2 = positionY * positionY * oneOverRadiiY * oneOverRadiiY;
+        var z2 = positionZ * positionZ * oneOverRadiiZ * oneOverRadiiZ;
+
+        // Compute the squared ellipsoid norm.
+        var squaredNorm = x2 + y2 + z2;
+        var ratio = Math.sqrt(1.0 / squaredNorm);
+
+        // As an initial approximation, assume that the radial intersection is the projection point.
+        var intersection = Cartesian3.multiplyByScalar(cartesian, ratio, scaleToGeodeticSurfaceIntersection);
+
+        //* If the position is near the center, the iteration will not converge.
+        if (squaredNorm < this._centerToleranceSquared) {
+            return !isFinite(ratio) ? undefined : Cartesian3.clone(intersection, result);
+        }
+
         var oneOverRadiiSquared = this._oneOverRadiiSquared;
         var oneOverRadiiSquaredX = oneOverRadiiSquared.x;
         var oneOverRadiiSquaredY = oneOverRadiiSquared.y;
         var oneOverRadiiSquaredZ = oneOverRadiiSquared.z;
 
-        var radiiSquared = this._radiiSquared;
-        var radiiSquaredX = radiiSquared.x;
-        var radiiSquaredY = radiiSquared.y;
-        var radiiSquaredZ = radiiSquared.z;
+        // Use the gradient at the intersection point in place of the true unit normal.
+        // The difference in magnitude will be absorbed in the multiplier.
+        var gradient = scaleToGeodeticSurfaceGradient;
+        gradient.x = intersection.x * oneOverRadiiSquaredX * 2.0;
+        gradient.y = intersection.y * oneOverRadiiSquaredY * 2.0;
+        gradient.z = intersection.z * oneOverRadiiSquaredZ * 2.0;
 
-        var radiiToTheFourth = this._radiiToTheFourth;
-        var radiiToTheFourthX = radiiToTheFourth.x;
-        var radiiToTheFourthY = radiiToTheFourth.y;
-        var radiiToTheFourthZ = radiiToTheFourth.z;
+        // Compute the initial guess at the normal vector multiplier, lambda.
+        var lambda = (1.0 - ratio) * Cartesian3.magnitude(cartesian) / (0.5 * Cartesian3.magnitude(gradient));
+        var correction = 0.0;
 
-        var beta = 1.0 / Math.sqrt(
-                (positionX * positionX) * oneOverRadiiSquaredX +
-                (positionY * positionY) * oneOverRadiiSquaredY +
-                (positionZ * positionZ) * oneOverRadiiSquaredZ);
-
-        var x = beta * positionX * oneOverRadiiSquaredX;
-        var y = beta * positionY * oneOverRadiiSquaredY;
-        var z = beta * positionZ * oneOverRadiiSquaredZ;
-
-        var n = Math.sqrt(x * x + y * y + z * z);
-        var alpha = (1.0 - beta) * (Cartesian3.magnitude(cartesian) / n);
-
-        var x2 = positionX * positionX;
-        var y2 = positionY * positionY;
-        var z2 = positionZ * positionZ;
-
-        var da = 0.0;
-        var db = 0.0;
-        var dc = 0.0;
-
-        var s = 0.0;
-        var dSdA = 1.0;
+        var func;
+        var denominator;
+        var xMultiplier;
+        var yMultiplier;
+        var zMultiplier;
+        var xMultiplier2;
+        var yMultiplier2;
+        var zMultiplier2;
+        var xMultiplier3;
+        var yMultiplier3;
+        var zMultiplier3;
 
         do {
-            alpha -= (s / dSdA);
+            lambda -= correction;
 
-            da = 1.0 + (alpha * oneOverRadiiSquaredX);
-            db = 1.0 + (alpha * oneOverRadiiSquaredY);
-            dc = 1.0 + (alpha * oneOverRadiiSquaredZ);
+            xMultiplier = 1.0 / (1.0 + lambda * oneOverRadiiSquaredX);
+            yMultiplier = 1.0 / (1.0 + lambda * oneOverRadiiSquaredY);
+            zMultiplier = 1.0 / (1.0 + lambda * oneOverRadiiSquaredZ);
 
-            var da2 = da * da;
-            var db2 = db * db;
-            var dc2 = dc * dc;
+            xMultiplier2 = xMultiplier * xMultiplier;
+            yMultiplier2 = yMultiplier * yMultiplier;
+            zMultiplier2 = zMultiplier * zMultiplier;
 
-            var da3 = da * da2;
-            var db3 = db * db2;
-            var dc3 = dc * dc2;
+            xMultiplier3 = xMultiplier2 * xMultiplier;
+            yMultiplier3 = yMultiplier2 * yMultiplier;
+            zMultiplier3 = zMultiplier2 * zMultiplier;
 
-            s = x2 / (radiiSquaredX * da2) + y2 / (radiiSquaredY * db2) + z2 / (radiiSquaredZ * dc2) - 1.0;
+            func = x2 * xMultiplier2 + y2 * yMultiplier2 + z2 * zMultiplier2 - 1.0;
 
-            dSdA = -2.0 * (x2 / (radiiToTheFourthX * da3) + y2 / (radiiToTheFourthY * db3) + z2 / (radiiToTheFourthZ * dc3));
-        } while (Math.abs(s) > CesiumMath.EPSILON10);
+            // "denominator" here refers to the use of this expression in the velocity and acceleration
+            // computations in the sections to follow.
+            denominator = x2 * xMultiplier3 * oneOverRadiiSquaredX + y2 * yMultiplier3 * oneOverRadiiSquaredY + z2 * zMultiplier3 * oneOverRadiiSquaredZ;
 
-        x = positionX / da;
-        y = positionY / db;
-        z = positionZ / dc;
+            var derivative = -2.0 * denominator;
+
+            correction = func / derivative;
+        } while (Math.abs(func) > CesiumMath.EPSILON12);
 
         if (typeof result === 'undefined') {
-            return new Cartesian3(x, y, z);
+            return new Cartesian3(positionX * xMultiplier, positionY * yMultiplier, positionZ * zMultiplier);
         }
-        result.x = x;
-        result.y = y;
-        result.z = z;
+        result.x = positionX * xMultiplier;
+        result.y = positionY * yMultiplier;
+        result.z = positionZ * zMultiplier;
         return result;
     };
 

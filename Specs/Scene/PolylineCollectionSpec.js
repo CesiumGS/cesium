@@ -91,7 +91,7 @@ defineSuite([
                 blue : 3.0,
                 alpha : 4.0
             },
-            outlineColor : {
+            outlineColor: {
                 red : 6.0,
                 green : 7.0,
                 blue : 8.0,
@@ -165,7 +165,7 @@ defineSuite([
                 x : 1.0,
                 y : 2.0,
                 z : 3.0
-            }, {
+            },{
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
@@ -182,7 +182,7 @@ defineSuite([
                 x : 1.0,
                 y : 2.0,
                 z : 3.0
-            }, {
+            },{
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
@@ -193,7 +193,7 @@ defineSuite([
                 x : 4.0,
                 y : 5.0,
                 z : 6.0
-            }, {
+            },{
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
@@ -214,7 +214,7 @@ defineSuite([
                 x : 1.0,
                 y : 2.0,
                 z : 3.0
-            }, {
+            },{
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
@@ -225,7 +225,7 @@ defineSuite([
                 x : 4.0,
                 y : 5.0,
                 z : 6.0
-            }, {
+            },{
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
@@ -246,7 +246,7 @@ defineSuite([
                 x : 1.0,
                 y : 2.0,
                 z : 3.0
-            }, {
+            },{
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
@@ -285,7 +285,7 @@ defineSuite([
                 x : 1.0,
                 y : 2.0,
                 z : 3.0
-            }, {
+            },{
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
@@ -296,7 +296,7 @@ defineSuite([
                 x : 4.0,
                 y : 5.0,
                 z : 6.0
-            }, {
+            },{
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
@@ -312,7 +312,7 @@ defineSuite([
                 x : 7.0,
                 y : 8.0,
                 z : 9.0
-            }, {
+            },{
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
@@ -329,7 +329,7 @@ defineSuite([
                 x : 1.0,
                 y : 2.0,
                 z : 3.0
-            }, {
+            },{
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
@@ -340,7 +340,7 @@ defineSuite([
                 x : 4.0,
                 y : 5.0,
                 z : 6.0
-            }, {
+            },{
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
@@ -408,7 +408,7 @@ defineSuite([
         });
         polylines.add();
         polylines.add({
-            positions : positions,
+            positions: positions,
             color : {
                 red : 1,
                 green : 0,
@@ -846,7 +846,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        for ( var j = 0; j < 101; ++j) {
+        for(var j = 0; j < 101; ++j){
             render(context, frameState, polylines);
         }
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
@@ -965,7 +965,7 @@ defineSuite([
             z : 0
         });
         polylines.add({
-            positions : positions,
+           positions:positions,
             color : {
                 red : 0,
                 green : 1,
@@ -1006,14 +1006,14 @@ defineSuite([
         });
 
         polylines.add({
-            positions : positions,
+            positions:positions,
             color : {
                 red : 1,
                 green : 0,
                 blue : 0,
                 alpha : 1
             },
-            width : 2
+            width:2
         });
         positions = [];
 
@@ -1038,8 +1038,8 @@ defineSuite([
             z : 0
         });
         polylines.add({
-            positions : positions,
-            width : 5,
+           positions:positions,
+           width:5,
             color : {
                 red : 0,
                 green : 1,
@@ -1431,7 +1431,7 @@ defineSuite([
                 y : 1.0,
                 z : 0.0
             }],
-            outlineWidth : 2
+            outlineWidth:2
         });
 
         context.clear();
@@ -1468,7 +1468,7 @@ defineSuite([
 
     it('renders and updates one polyline from many polylines using show property', function() {
         var positions = [];
-        for ( var i = 0; i < 200; i++) {
+        for(var i = 0; i < 200; i++){
             positions.push({
                 x : -1.0,
                 y : -1.0,
@@ -1481,17 +1481,17 @@ defineSuite([
         }
         polylines.add({
             positions : positions,
-            width : 2
+            width:2
         });
 
         polylines.add({
             positions : positions,
-            width : 2
+            width:2
         });
 
         polylines.add({
             positions : positions,
-            width : 2
+            width:2
         });
 
         var p = polylines.add({
@@ -1504,7 +1504,7 @@ defineSuite([
                 y : 1.0,
                 z : 0.0
             }],
-            width : 2,
+            width:2,
             color : {
                 red : 1.0,
                 green : 1.0,
@@ -1546,7 +1546,7 @@ defineSuite([
                 y : 1.0,
                 z : 0.0
             }],
-            show : true
+            show:true
         });
 
         context.clear();
@@ -1573,12 +1573,12 @@ defineSuite([
 
     it('renders four polylines with different widths and outline widths', function() {
         var positions = [];
-        for ( var i = 0; i < 200; ++i) {
+        for(var i = 0; i < 200; ++i){
             positions.push({
                 x : -1.0,
                 y : 1.0,
                 z : 0.0
-            }, {
+            },{
                 x : -1.0,
                 y : -1.0,
                 z : 0.0
@@ -1586,18 +1586,18 @@ defineSuite([
         }
         polylines.add({
             positions : positions,
-            color : {
+            color:{
                 red : 1.0,
                 green : 0.0,
                 blue : 0.0,
                 alpha : 1.0
             },
             width : 3,
-            outlineWidth : 8
+            outlineWidth:8
         });
         polylines.add({
             positions : positions,
-            color : {
+            color:{
                 red : 1.0,
                 green : 0.0,
                 blue : 0.0,
@@ -1607,14 +1607,14 @@ defineSuite([
         });
         polylines.add({
             positions : positions,
-            color : {
+            color:{
                 red : 1.0,
                 green : 0.0,
                 blue : 0.0,
                 alpha : 1.0
             },
             width : 2,
-            outlineWidth : 4
+            outlineWidth:4
         });
         polylines.add({
             positions : [{
@@ -1626,14 +1626,14 @@ defineSuite([
                 y : 1.0,
                 z : 0.0
             }],
-            color : {
+            color:{
                 red : 0.0,
                 green : 0.0,
                 blue : 1.0,
                 alpha : 1.0
             },
             width : 7,
-            outlineWidth : 2
+            outlineWidth:2
         });
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -1644,12 +1644,12 @@ defineSuite([
 
     it('renders three polylines with different widths and updates one', function() {
         var positions = [];
-        for ( var i = 0; i < 200; ++i) {
+        for(var i = 0; i < 200; ++i){
             positions.push({
                 x : -1.0,
                 y : 1.0,
                 z : 0.0
-            }, {
+            },{
                 x : -1.0,
                 y : -1.0,
                 z : 0.0
@@ -1657,7 +1657,7 @@ defineSuite([
         }
         polylines.add({
             positions : positions,
-            color : {
+            color:{
                 red : 1.0,
                 green : 0.0,
                 blue : 0.0,
@@ -1667,7 +1667,7 @@ defineSuite([
         });
         polylines.add({
             positions : positions,
-            color : {
+            color:{
                 red : 1.0,
                 green : 0.0,
                 blue : 0.0,
@@ -1685,7 +1685,7 @@ defineSuite([
                 y : 1.0,
                 z : 0.0
             }],
-            color : {
+            color:{
                 red : 0.0,
                 green : 0.0,
                 blue : 1.0,
@@ -1720,12 +1720,12 @@ defineSuite([
 
     it('changes polyline position size recreates vertex arrays', function() {
         var positions = [];
-        for ( var i = 0; i < 20; ++i) {
+        for(var i = 0; i < 20; ++i){
             positions.push({
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }, {
+            },{
                 x : 0.0,
                 y : -1.0,
                 z : 0.0
@@ -1733,7 +1733,7 @@ defineSuite([
         }
         var p = polylines.add({
             positions : positions,
-            outlineWidth : 2
+            outlineWidth:2
         });
 
         context.clear();
@@ -1748,10 +1748,10 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         positions.push({
-            x : 0.0,
-            y : 1.0,
-            z : 0.0
-        });
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            });
 
         p.setPositions(positions);
         render(context, frameState, polylines);
@@ -1895,7 +1895,7 @@ defineSuite([
                 x : 1.0,
                 y : 2.0,
                 z : 3.0
-            }, {
+            },{
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
@@ -1906,7 +1906,7 @@ defineSuite([
                 x : 4.0,
                 y : 5.0,
                 z : 6.0
-            }, {
+            },{
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
@@ -1917,7 +1917,7 @@ defineSuite([
                 x : 7.0,
                 y : 8.0,
                 z : 9.0
-            }, {
+            },{
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
@@ -1940,15 +1940,15 @@ defineSuite([
 
         var one = polylines.add({
             positions : [
-                         ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
-                         ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0))
-                        ]
+                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0))
+            ]
         });
         var two = polylines.add({
             positions : [
-                         ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
-                         ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
-                        ]
+                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
+                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
+            ]
         });
 
         var mode = frameState.mode;

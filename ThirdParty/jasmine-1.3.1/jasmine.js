@@ -494,9 +494,13 @@ if (isCommonJS) exports.spyOn = spyOn;
  *
  * @param {String} desc description of this specification
  * @param {Function} func defines the preconditions and expectations of the spec
+ * @param {Array} categories
  */
-var it = function(desc, func) {
-  return jasmine.getEnv().it(desc, func);
+var it = function(desc, func, categories) {
+  if (typeof categories === 'string') {
+    categories = [categories];
+  }
+  return jasmine.getEnv().it(desc, func, categories);
 };
 if (isCommonJS) exports.it = it;
 
@@ -598,9 +602,13 @@ if (isCommonJS) exports.afterEach = afterEach;
  *
  * @param {String} description A string, usually the class under test.
  * @param {Function} specDefinitions function that defines several specs.
+ * @param {Array} categories
  */
-var describe = function(description, specDefinitions) {
-  return jasmine.getEnv().describe(description, specDefinitions);
+var describe = function(description, specDefinitions, categories) {
+  if (typeof categories === 'string') {
+    categories = [categories];
+  }
+  return jasmine.getEnv().describe(description, specDefinitions, categories);
 };
 if (isCommonJS) exports.describe = describe;
 
@@ -802,8 +810,8 @@ jasmine.Env.prototype.execute = function() {
   this.currentRunner_.execute();
 };
 
-jasmine.Env.prototype.describe = function(description, specDefinitions) {
-  var suite = new jasmine.Suite(this, description, specDefinitions, this.currentSuite);
+jasmine.Env.prototype.describe = function(description, specDefinitions, categories) {
+  var suite = new jasmine.Suite(this, description, specDefinitions, this.currentSuite, categories);
 
   var parentSuite = this.currentSuite;
   if (parentSuite) {
@@ -860,8 +868,8 @@ jasmine.Env.prototype.xdescribe = function(desc, specDefinitions) {
   };
 };
 
-jasmine.Env.prototype.it = function(description, func) {
-  var spec = new jasmine.Spec(this, this.currentSuite, description);
+jasmine.Env.prototype.it = function(description, func, categories) {
+  var spec = new jasmine.Spec(this, this.currentSuite, description, categories);
   this.currentSuite.add(spec);
   this.currentSpec = spec;
 
@@ -2204,8 +2212,9 @@ jasmine.Runner.prototype.results = function() {
  * @param {jasmine.Env} env
  * @param {jasmine.Suite} suite
  * @param {String} description
+ * @param {Array} categories
  */
-jasmine.Spec = function(env, suite, description) {
+jasmine.Spec = function(env, suite, description, categories) {
   if (!env) {
     throw new Error('jasmine.Env() required');
   }
@@ -2217,6 +2226,7 @@ jasmine.Spec = function(env, suite, description) {
   spec.env = env;
   spec.suite = suite;
   spec.description = description;
+  spec.categories = categories;
   spec.queue = new jasmine.Queue(env);
 
   spec.afterCallbacks = [];
@@ -2448,13 +2458,15 @@ jasmine.Spec.prototype.removeAllSpies = function() {
  * @param {String} description
  * @param {Function} specDefinitions
  * @param {jasmine.Suite} parentSuite
+ * @param {Array} categories
  */
-jasmine.Suite = function(env, description, specDefinitions, parentSuite) {
+jasmine.Suite = function(env, description, specDefinitions, parentSuite, categories) {
   var self = this;
   self.id = env.nextSuiteId ? env.nextSuiteId() : null;
   self.description = description;
   self.queue = new jasmine.Queue(env);
   self.parentSuite = parentSuite;
+  self.categories = categories;
   self.env = env;
   self.before_ = [];
   self.after_ = [];

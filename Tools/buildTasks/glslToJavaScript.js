@@ -39,10 +39,6 @@ for ( var i = 0, len = glslFilesets.size(); i < len; ++i) {
         var jsFile = new File(basedir, glslFilename.replace('.glsl', '.js'));
         leftOverJsFiles.remove(jsFile.getAbsolutePath());
 
-        if (glslFile.lastModified() < jsFile.lastModified()) {
-            continue;
-        }
-
         var reader = new FileReader(glslFile);
         var contents = String(FileUtils.readFully(reader));
         reader.close();
@@ -50,7 +46,7 @@ for ( var i = 0, len = glslFilesets.size(); i < len; ++i) {
         contents = contents.replace(/\r\n/gm, '\n');
 
         var copyrightComments = '';
-        var extractedCopyrightComments = contents.match(/\/\*\!(?:.|\n)*?\*\//gm);
+        var extractedCopyrightComments = contents.match(/\/\*\*(?:[^*\/]|\*(?!\/)|\n)*?@license(?:.|\n)*?\*\//gm);
         if (extractedCopyrightComments) {
             copyrightComments = extractedCopyrightComments.join('\n') + '\n';
         }
@@ -70,9 +66,17 @@ define(function() {\n\
     return "' + contents + '";\n\
 });';
 
-        var writer = new FileWriter(jsFile);
-        writer.write(contents);
-        writer.close();
+        if (new File(jsFile).exists()) {
+            var reader = new FileReader(jsFile);
+            var oldContents = String(FileUtils.readFully(reader));
+            reader.close();
+        }
+
+        if (oldContents !== contents) {
+            var writer = new FileWriter(jsFile);
+            writer.write(contents);
+            writer.close();
+        }
     }
 }
 

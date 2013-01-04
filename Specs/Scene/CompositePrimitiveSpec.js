@@ -634,4 +634,4 @@ defineSuite([
             primitives.lowerToBottom(p);
         }).toThrow();
     });
-});
+}, 'WebGL');

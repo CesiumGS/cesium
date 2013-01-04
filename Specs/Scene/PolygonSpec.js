@@ -472,4 +472,4 @@ defineSuite([
             render(context, frameState, polygon);
         }).toThrow();
     });
-});
+}, 'WebGL');
