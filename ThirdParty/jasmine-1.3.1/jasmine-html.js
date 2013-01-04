@@ -154,6 +154,36 @@ jasmine.HtmlReporter = function(_doc) {
     doc.body.appendChild(dom.reporter);
     setExceptionHandling();
 
+    var runButton = document.getElementById('runButton');
+    runButton.onclick = function() {
+      if (document.getElementById('no_try_catch').checked) {
+        window.location.search = searchWithCatch();
+    	return false;
+      }
+   	
+	  var select = document.getElementById('categorySelect');
+      if (document.getElementById('categoryException').checked) {
+        top.location.href = '?category=All&not=' + encodeURIComponent(select.options[select.selectedIndex].value);
+        return false;
+      }
+      top.location.href = '?category=' + encodeURIComponent(select.options[select.selectedIndex].value);
+      return false;
+    }
+	
+    var runCoverageButton = document.getElementById('runCoverageButton');
+    runCoverageButton.onclick = function() {
+	  var baseInstrumentUrl = '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
+            window.encodeURIComponent('?baseUrl=../Instrumented');
+	
+      var select = document.getElementById('categorySelect');	
+	  if (document.getElementById('categoryException').checked) {
+        top.location.href = baseInstrumentUrl + window.encodeURIComponent('&category=All&not=' + select.options[select.selectedIndex].value);
+        return false;
+      }
+      top.location.href = baseInstrumentUrl + window.encodeURIComponent('&category=' + select.options[select.selectedIndex].value);
+	  return false;
+    }
+
     reporterView = new jasmine.HtmlReporter.ReporterView(dom);
     reporterView.addSpecs(specs, self.specFilter);
   };
@@ -332,11 +362,10 @@ jasmine.HtmlReporter = function(_doc) {
         self.createDom('div', {className: 'progressContainer'},
         dom.progress = self.createDom('div', {className: 'progressBar', style: 'width: 0%'})),
         dom.exceptions = self.createDom('span', { className: 'exceptions' },
-          self.createDom('a',  {className: 'run_all', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
-            window.encodeURIComponent('?baseUrl=../Instrumented'), target: '_top' }, 'coverage'),
-          self.createDom('a', { className: 'run_all', href: '?' }, 'run all'),
           self.createDom('label', { className: 'label', 'for': 'no_try_catch' }, 'No try/catch'),
-          self.createDom('input', { id: 'no_try_catch', type: 'checkbox' }))),
+          self.createDom('input', { id: 'no_try_catch', type: 'checkbox' }), 
+          self.createDom('input', { type: 'button', value: 'run', id: 'runButton'}, 'run'),
+          self.createDom('input',  { type: 'button', value: 'run with coverage', id: 'runCoverageButton' }, 'run with coverage'))),
       dom.results = self.createDom('div', {className: 'results'},
         dom.summary = self.createDom('div', { className: 'summary' }),
         dom.details = self.createDom('div', { id: 'details' }))
@@ -373,9 +402,6 @@ jasmine.HtmlReporter = function(_doc) {
       chxCatch.setAttribute('checked', true);
       jasmine.CATCH_EXCEPTIONS = false;
     }
-    chxCatch.onclick = function() {
-      window.location.search = searchWithCatch();
-    };
   }
 };
 jasmine.HtmlReporter.parameters = function(doc) {
@@ -428,7 +454,7 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
   };
   
   this.categories = [];
-
+  
   function getCurrentCategoryName() {
     var paramMap = [];
     var params = jasmine.HtmlReporter.parameters(window.document);
@@ -441,35 +467,36 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
     var categoryNames = paramMap.category;
 
     if (typeof categoryNames === 'undefined') {
-      return '---';
+      return 'All';
     }
-
-    if (typeof paramMap.not !== 'undefined') {
-      return 'All except ' + paramMap.not;
+    
+	if (typeof paramMap.not !== 'undefined') {
+      return paramMap.not;
     }
-
+	
     return categoryNames.split(',')[0];
   }
   
   this.createCategoryMenu = function() {
     this.categoryMenu = this.createDom('span', {className: 'categoryMenu'}, 'Category: ',
-      this.categorySelect = this.createDom('select', {id: 'categorySelect' },
-      this.createDom('option', {value: ' '}, getCurrentCategoryName()),
+      this.categorySelect = this.createDom('select', {id: 'categorySelect'},
       this.createDom('option', {value: 'All'}, 'All')), 'Run all but selected:',
-      this.categoryException = this.createDom('input', {type: 'checkbox', id: 'categoryException'}));
-	  
-    this.categorySelect.onchange = function() {
-      var select = document.getElementById('categorySelect');
-      if (document.getElementById('categoryException').checked) {
-        top.location.href = '?category=All&not=' + encodeURIComponent(select.options[select.selectedIndex].value);
-        return false;
-      }
-      top.location.href = '?category=' + encodeURIComponent(select.options[select.selectedIndex].value);
-      return false;
-    }
+      this.categoryException = this.createDom('input', {type: 'checkbox', id: 'categoryException'}))
 	  
     for (var i = 0; i < this.categories.length; i++) {
       this.categorySelect.appendChild(this.createDom('option', {value: this.categories[i]}, this.categories[i]));
+    }
+
+    var currentCategoryName = getCurrentCategoryName();
+
+    for (var i = 0; i < this.categorySelect.options.length; i++) {
+      if (this.categorySelect.options[i].value === currentCategoryName) {
+        this.categorySelect.selectedIndex = i;
+    	if (window.location.search.match(/not=/)) {
+    	  this.categoryException.checked = true;
+    	}
+    	break;
+      }
     }
     dom.exceptions.insertBefore(this.categoryMenu, dom.exceptions.getElementsByTagName('input')[0].nextSibling);
   }
