@@ -316,5 +316,53 @@ define([
         return 'rgba(' + r + ',' + g + ',' + b + ',' + this.alpha + ')';
     };
 
+    /**
+     * An immutable Color instance initialized to white, RGBA (1.0, 1.0, 1.0, 1.0).
+     * @memberof Color
+     */
+    Color.WHITE = freezeObject(new Color(1.0, 1.0, 1.0, 1.0));
+
+    /**
+     * An immutable Color instance initialized to black, RGBA (0.0, 0.0, 0.0, 1.0).
+     * @memberof Color
+     */
+    Color.BLACK = freezeObject(new Color(0.0, 0.0, 0.0, 1.0));
+
+    /**
+     * An immutable Color instance initialized to red, RGBA (1.0, 0.0, 0.0, 1.0).
+     * @memberof Color
+     */
+    Color.RED = freezeObject(new Color(1.0, 0.0, 0.0, 1.0));
+
+    /**
+     * An immutable Color instance initialized to green, RGBA (0.0, 1.0, 0.0, 1.0).
+     * @memberof Color
+     */
+    Color.GREEN = freezeObject(new Color(0.0, 1.0, 0.0, 1.0));  // TODO: Match web Colors (Green vs. Lime)
+
+    /**
+     * An immutable Color instance initialized to blue, RGBA (0.0, 0.0, 1.0, 1.0).
+     * @memberof Color
+     */
+    Color.BLUE = freezeObject(new Color(0.0, 0.0, 1.0, 1.0));
+
+    /**
+     * An immutable Color instance initialized to yellow, RGBA (1.0, 1.0, 0.0, 1.0).
+     * @memberof Color
+     */
+    Color.YELLOW = freezeObject(new Color(1.0, 1.0, 0.0, 1.0));
+
+    /**
+     * An immutable Color instance initialized to magenta, RGBA (1.0, 0.0, 1.0, 1.0).
+     * @memberof Color
+     */
+    Color.MAGENTA = freezeObject(new Color(1.0, 0.0, 1.0, 1.0));
+
+    /**
+     * An immutable Color instance initialized to cyan, RGBA (0.0, 1.0, 1.0, 1.0).
+     * @memberof Color
+     */
+    Color.CYAN = freezeObject(new Color(0.0, 1.0, 1.0, 1.0));
+
     return Color;
 });
