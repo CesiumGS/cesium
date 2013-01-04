@@ -211,8 +211,6 @@ define([
      *
      * @memberof ArcGisMapServerImageryProvider
      *
-     * @memberof ArcGisMapServerImageryProvider
-     *
      * @returns {Number} The width.
      *
      * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
@@ -227,8 +225,6 @@ define([
     /**
      * Gets the height of each tile, in pixels.  This function should
      * not be called before {@link ArcGisMapServerImageryProvider#isReady} returns true.
-     *
-     * @memberof ArcGisMapServerImageryProvider
      *
      * @memberof ArcGisMapServerImageryProvider
      *
@@ -266,8 +262,6 @@ define([
      *
      * @memberof ArcGisMapServerImageryProvider
      *
-     * @memberof ArcGisMapServerImageryProvider
-     *
      * @returns {TilingScheme} The tiling scheme.
      * @see WebMercatorTilingScheme
      * @see GeographicTilingScheme
@@ -284,8 +278,6 @@ define([
     /**
      * Gets the extent, in radians, of the imagery provided by this instance.  This function should
      * not be called before {@link ArcGisMapServerImageryProvider#isReady} returns true.
-     *
-     * @memberof ArcGisMapServerImageryProvider
      *
      * @memberof ArcGisMapServerImageryProvider
      *
@@ -349,8 +341,6 @@ define([
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link ArcGisMapServerImageryProvider#isReady} returns true.
-     *
-     * @memberof ArcGisMapServerImageryProvider
      *
      * @memberof ArcGisMapServerImageryProvider
      *
