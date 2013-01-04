@@ -640,4 +640,4 @@ defineSuite([
             });
         }).toThrow();
     });
-});
+}, 'WebGL');

@@ -785,4 +785,4 @@ defineSuite([
             t.destroy();
         }).toThrow();
     });
-});
+}, 'WebGL');

@@ -166,4 +166,4 @@ defineSuite([
             render(context, frameState, ellipsoid);
         }).toThrow();
     });
-});
+}, 'WebGL');

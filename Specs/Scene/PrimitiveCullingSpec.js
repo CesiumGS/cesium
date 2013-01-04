@@ -444,5 +444,4 @@ defineSuite([
         var polylines = createPolylines();
         testOcclusionCull(polylines);
     });
-
-});
+}, 'WebGL');
