@@ -56,9 +56,10 @@ define([
      *
      * @exception {DeveloperError} <code>description.url</code> is required.
      *
-     * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
      * @see OpenStreetMapImageryProvider
+     * @see SingleTileImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
      * @see <a href='http://resources.esri.com/help/9.3/arcgisserver/apis/rest/'>ArcGIS Server REST API</a>
@@ -129,7 +130,6 @@ define([
                 that._useTiles = true;
             }
 
-            // Create the copyright message.
             if (typeof data.copyrightText !== 'undefined' && data.copyrightText.length > 0) {
                 that._logo = writeTextToCanvas(data.copyrightText, {
                     font : '12px sans-serif'

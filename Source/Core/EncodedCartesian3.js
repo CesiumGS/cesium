@@ -76,8 +76,8 @@ define([
      * @exception {DeveloperError} cartesian is required.
      *
      * @example
-     * var c = new Cartesian3(-10000000.0, 0.0, 10000000.0);
-     * var encoded = EncodedCartesian3.fromCartesian(c);
+     * var cart = new Cartesian3(-10000000.0, 0.0, 10000000.0);
+     * var encoded = EncodedCartesian3.fromCartesian(cart);
      */
     EncodedCartesian3.fromCartesian = function(cartesian, result) {
         if (typeof cartesian === 'undefined') {

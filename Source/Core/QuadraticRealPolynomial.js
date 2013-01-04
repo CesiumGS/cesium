@@ -28,7 +28,7 @@ define([
      * @exception {DeveloperError} b is a required number.
      * @exception {DeveloperError} c is a required number.
      */
-    QuadraticRealPolynomial.discriminant = function(a, b, c){
+    QuadraticRealPolynomial.discriminant = function(a, b, c) {
         if (typeof a !== 'number') {
             throw new DeveloperError('a is a required number.');
         }
@@ -85,11 +85,11 @@ define([
             }
 
             // Linear function: b * x + c = 0.
-            return [ -c / b ];
+            return [-c / b];
         } else if (b === 0.0) {
             if (c === 0.0) {
                 // 2nd order monomial: a * x^2 = 0.
-                return [ 0.0, 0.0 ];
+                return [0.0, 0.0];
             }
 
             var cMagnitude = Math.abs(c);
@@ -97,7 +97,7 @@ define([
 
             if ((cMagnitude < aMagnitude) && (cMagnitude / aMagnitude < CesiumMath.EPSILON14)) { // c ~= 0.0.
                 // 2nd order monomial: a * x^2 = 0.
-                return [ 0.0, 0.0 ];
+                return [0.0, 0.0];
             } else if ((cMagnitude > aMagnitude) && (aMagnitude / cMagnitude < CesiumMath.EPSILON14)) { // a ~= 0.0.
                 // Constant function: c = 0.
                 return [];
@@ -113,15 +113,15 @@ define([
 
             // Both roots are real.
             var root = Math.sqrt(ratio);
-            return [ -root, root ];
+            return [-root, root];
         } else if (c === 0.0) {
             // a * x^2 + b * x = 0
             ratio = -b / a;
             if (ratio < 0.0) {
-                return [ ratio, 0.0 ];
+                return [ratio, 0.0];
             }
 
-            return [ 0.0, ratio ];
+            return [0.0, ratio];
         }
 
         // a * x^2 + b * x + c = 0
@@ -136,10 +136,10 @@ define([
 
         var q = -0.5 * addWithCancellationCheck(b, CesiumMath.sign(b) * Math.sqrt(radicand), CesiumMath.EPSILON14);
         if (b > 0.0) {
-            return [ q / a, c / q ];
+            return [q / a, c / q];
         }
 
-        return [ c / q, q / a ];
+        return [c / q, q / a];
     };
 
     return QuadraticRealPolynomial;

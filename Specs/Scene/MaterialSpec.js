@@ -703,4 +703,4 @@ defineSuite([
         material = material && material.destroy();
         expect(material).toEqual(undefined);
     });
-});
+}, 'WebGL');
