@@ -211,10 +211,14 @@ define([
     };
 
     var defaultProjection = new GeographicProjection();
-    var fromExtent2DLowerLeft = new Cartographic();
-    var fromExtent2DUpperRight = new Cartographic();
+    var fromExtent2DLowerLeft = new Cartesian3(0.0, 0.0, 0.0);
+    var fromExtent2DUpperRight = new Cartesian3(0.0, 0.0, 0.0);
+    var fromExtent2DSouthwest = new Cartographic(0.0, 0.0, 0.0);
+    var fromExtent2DNortheast = new Cartographic(0.0, 0.0, 0.0);
+
     /**
      * Computes a bounding sphere from an extent projected in 2D.
+     *
      * @memberof BoundingSphere
      *
      * @param {Extent} extent The extent around which to create a bounding sphere.
@@ -223,6 +227,23 @@ define([
      * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
     BoundingSphere.fromExtent2D = function(extent, projection, result) {
+        return BoundingSphere.fromExtentWithHeights2D(extent, projection, 0.0, 0.0, result);
+    };
+
+    /**
+     * Computes a bounding sphere from an extent projected in 2D.  The bounding sphere accounts for the
+     * object's minimum and maximum heights over the extent.
+     *
+     * @memberof BoundingSphere
+     *
+     * @param {Extent} extent The extent around which to create a bounding sphere.
+     * @param {Object} [projection=GeographicProjection] The projection used to project the extent into 2D.
+     * @param {Number} [minimumHeight=0.0] The minimum height over the extent.
+     * @param {Number} [maximumHeight=0.0] The maximum height over the extent.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     */
+    BoundingSphere.fromExtentWithHeights2D = function(extent, projection, minimumHeight, maximumHeight, result) {
         if (typeof result === 'undefined') {
             result = new BoundingSphere();
         }
@@ -235,21 +256,28 @@ define([
 
         projection = (typeof projection !== 'undefined') ? projection : defaultProjection;
 
-        var lowerLeft = projection.project(extent.getSouthwest(fromExtent2DLowerLeft));
-        var upperRight = projection.project(extent.getNortheast(fromExtent2DUpperRight));
+        extent.getSouthwest(fromExtent2DSouthwest);
+        fromExtent2DSouthwest.height = minimumHeight;
+        extent.getNortheast(fromExtent2DNortheast);
+        fromExtent2DNortheast.height = maximumHeight;
+
+        var lowerLeft = projection.project(fromExtent2DSouthwest, fromExtent2DLowerLeft);
+        var upperRight = projection.project(fromExtent2DNortheast, fromExtent2DUpperRight);
 
         var width = upperRight.x - lowerLeft.x;
         var height = upperRight.y - lowerLeft.y;
+        var elevation = upperRight.z - lowerLeft.z;
 
-        result.radius = Math.sqrt(width * width + height * height) * 0.5;
+        result.radius = Math.sqrt(width * width + height * height + elevation * elevation) * 0.5;
         var center = result.center;
         center.x = lowerLeft.x + width * 0.5;
         center.y = lowerLeft.y + height * 0.5;
-        center.z = 0;
+        center.z = lowerLeft.z + elevation * 0.5;
         return result;
     };
 
     var fromExtent3DScratch = [];
+
     /**
      * Computes a bounding sphere from an extent in 3D. The bounding sphere is created using a subsample of points
      * on the ellipsoid and contained in the extent. It may not be accurate for all extents on all types of ellipsoids.
