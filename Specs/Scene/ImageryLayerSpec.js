@@ -182,4 +182,4 @@ defineSuite([
         expect(layer.getExtent()).toEqual(extent);
         expect(layer.isDestroyed()).toEqual(false);
     });
-});
+}, 'WebGL');

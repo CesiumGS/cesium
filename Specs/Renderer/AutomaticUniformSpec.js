@@ -735,4 +735,4 @@ defineSuite([
             '}';
         verifyDraw(fs);
     });
-});
+}, 'WebGL');

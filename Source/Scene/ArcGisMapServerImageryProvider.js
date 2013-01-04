@@ -130,7 +130,6 @@ define([
                 that._useTiles = true;
             }
 
-            // Create the copyright message.
             if (typeof data.copyrightText !== 'undefined' && data.copyrightText.length > 0) {
                 that._logo = writeTextToCanvas(data.copyrightText, {
                     font : '12px sans-serif'
