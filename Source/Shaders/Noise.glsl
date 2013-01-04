@@ -1,7 +1,8 @@
 #ifndef czm_NOISE
 #define czm_NOISE 1
 
-/*!
+/**
+ * @license
  * Description : Array and textureless GLSL 2D/3D/4D simplex 
  *               noise functions.
  *      Author : Ian McEwan, Ashima Arts.
@@ -285,7 +286,8 @@ float czm_snoise(vec4 v)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/*!
+/**
+ * @license
  * Cellular noise ("Worley noise") in 2D in GLSL.
  * Copyright (c) Stefan Gustavson 2011-04-19. All rights reserved.
  * This code is released under the conditions of the MIT license.

@@ -1021,4 +1021,4 @@ defineSuite([
             return new TextureAtlas();
         }).toThrow();
     });
-});
+}, 'WebGL');

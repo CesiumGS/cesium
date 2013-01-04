@@ -166,4 +166,4 @@ defineSuite([
         visualizers.removeAllPrimitives();
         expect(mockVisualizer.removeAllPrimitivesCalled).toEqual(true);
     });
-});
+}, 'WebGL');

@@ -194,4 +194,4 @@ defineSuite([
             }, undefined);
         }).toThrow();
     });
-});
+}, 'WebGL');
