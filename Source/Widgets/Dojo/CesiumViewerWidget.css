@@ -160,7 +160,6 @@
     box-shadow: 0 0 5px rgba(255, 170, 42, 1);
 }
 
-<<<<<<< HEAD
 .cw-agiLogo {
     display: block;
     position: absolute;
@@ -176,7 +175,7 @@
 .cw-agiLogo img {
     border: none;
 }
-=======
+
 .cw-loading {
     display: none;
     position: absolute;
@@ -190,4 +189,3 @@
     background-repeat: no-repeat;
     background-image: url(../Images/ajax-loader.gif);
 }
->>>>>>> master
