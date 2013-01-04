@@ -268,4 +268,4 @@ defineSuite([
             scene.render();
         }).not.toThrow();
     });
-});
+}, 'WebGL');

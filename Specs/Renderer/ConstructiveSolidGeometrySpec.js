@@ -641,4 +641,4 @@ defineSuite([
             '}';
         expect(renderFragment(context, fs)).toEqual([255, 255, 255, 255]);
     });
-});
+}, 'WebGL');

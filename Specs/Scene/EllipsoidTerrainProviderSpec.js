@@ -65,4 +65,4 @@ defineSuite([
             expect(tile.boundingSphere3D).not.toBeNull();
         });
     });
-});
+}, 'WebGL');

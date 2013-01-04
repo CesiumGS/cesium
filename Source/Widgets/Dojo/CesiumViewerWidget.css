@@ -47,7 +47,7 @@
 .cw-bingIcon {
     background-image: url('../Images/Bing_Logo_51x19_White.png');
     background-repeat: no-repeat;
-    background-position:center;
+    background-position: center;
     width: 51px;
     height: 24px;
 }
@@ -158,4 +158,18 @@
 .claro .dijitToggleButtonChecked .dijitButtonNode {
     border: 1px solid #EA0;
     box-shadow: 0 0 5px rgba(255, 170, 42, 1);
+}
+
+.cw-loading {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -33px;
+    margin-left: -33px;
+    width: 66px;
+    height: 66px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: url(../Images/ajax-loader.gif);
 }

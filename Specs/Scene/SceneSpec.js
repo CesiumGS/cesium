@@ -63,4 +63,4 @@ defineSuite([
         destroyScene(s);
         expect(s.isDestroyed()).toEqual(true);
     });
-});
+}, 'WebGL');

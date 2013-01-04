@@ -1,73 +1,3 @@
-/*!
-   Portions Copyright (c) 2006-2009 Microsoft Corporation.  All rights reserved.
-
-   http://msdn.microsoft.com/en-us/library/bb259689.aspx
-   http://msdn.microsoft.com/en-us/cc300389.aspx#O
-
-   MICROSOFT LIMITED PUBLIC LICENSE
-
-   This license governs use of code marked as 'sample' or 'example' available on
-   this web site without a license agreement, as provided under the section above
-   titled 'NOTICE SPECIFIC TO SOFTWARE AVAILABLE ON THIS WEB SITE.' If you use
-   such code (the 'software'), you accept this license. If you do not accept the
-   license, do not use the software.
-
-   1. Definitions
-
-   The terms 'reproduce,' 'reproduction,' 'derivative works,' and 'distribution'
-   have the same meaning here as under U.S. copyright law.
-
-   A 'contribution' is the original software, or any additions or changes to the software.
-
-   A 'contributor' is any person that distributes its contribution under this license.
-
-   'Licensed patents' are a contributor's patent claims that read directly on its contribution.
-
-   2. Grant of Rights
-
-   (A) Copyright Grant - Subject to the terms of this license, including the license
-   conditions and limitations in section 3, each contributor grants you a non-exclusive,
-   worldwide, royalty-free copyright license to reproduce its contribution, prepare
-   derivative works of its contribution, and distribute its contribution or any
-   derivative works that you create.
-
-   (B) Patent Grant - Subject to the terms of this license, including the license
-   conditions and limitations in section 3, each contributor grants you a
-   non-exclusive, worldwide, royalty-free license under its licensed patents to
-   make, have made, use, sell, offer for sale, import, and/or otherwise dispose
-   of its contribution in the software or derivative works of the contribution
-   in the software.
-
-   3. Conditions and Limitations
-
-   (A) No Trademark License- This license does not grant you rights to use any
-   contributors' name, logo, or trademarks.
-
-   (B) If you bring a patent claim against any contributor over patents that
-   you claim are infringed by the software, your patent license from such
-   contributor to the software ends automatically.
-
-   (C) If you distribute any portion of the software, you must retain all
-   copyright, patent, trademark, and attribution notices that are present in
-   the software.
-
-   (D) If you distribute any portion of the software in source code form, you
-   may do so only under this license by including a complete copy of this license
-   with your distribution. If you distribute any portion of the software in
-   compiled or object code form, you may only do so under a license that
-   complies with this license.
-
-   (E) The software is licensed 'as-is.' You bear the risk of using it. The
-   contributors give no express warranties, guarantees or conditions. You may
-   have additional consumer rights under your local laws which this license
-   cannot change. To the extent permitted under your local laws, the contributors
-   exclude the implied warranties of merchantability, fitness for a particular
-   purpose and non-infringement.
-
-   (F) Platform Limitation - The licenses granted in sections 2(A) and 2(B)
-   extend only to the software or derivative works that you create that run
-   on a Microsoft Windows operating system product.
- */
 /*global define*/
 define([
         '../Core/defaultValue',
@@ -122,8 +52,9 @@ define([
      * @exception {DeveloperError} <code>description.server</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
-     * @see SingleTileImageryProvider
      * @see OpenStreetMapImageryProvider
+     * @see SingleTileImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
      * @see <a href='http://msdn.microsoft.com/en-us/library/ff701713.aspx'>Bing Maps REST Services</a>
@@ -455,18 +386,20 @@ define([
      * @see BingMapsImageryProvider#quadKeyToTileXY
      */
     BingMapsImageryProvider.tileXYToQuadKey = function(x, y, level) {
-        ++level;
         var quadkey = '';
-        for ( var i = level; i > 0; --i) {
-            var digit = '0'.charCodeAt(0);
-            var mask = 1 << (i - 1);
-            if ((x & mask) !== 0) {
-                digit++;
+        for ( var i = level; i >= 0; --i) {
+            var bitmask = 1 << i;
+            var digit = 0;
+
+            if ((x & bitmask) !== 0) {
+                digit |= 1;
             }
-            if ((y & mask) !== 0) {
-                digit += 2;
+
+            if ((y & bitmask) !== 0) {
+                digit |= 2;
             }
-            quadkey += String.fromCharCode(digit);
+
+            quadkey += digit;
         }
         return quadkey;
     };
@@ -483,28 +416,26 @@ define([
      * @see BingMapsImageryProvider#tileXYToQuadKey
      */
     BingMapsImageryProvider.quadKeyToTileXY = function(quadkey) {
-        var result = {
-            x : 0,
-            y : 0,
-            level : quadkey.length
-        };
+        var x = 0;
+        var y = 0;
+        var level = quadkey.length - 1;
+        for ( var i = level; i >= 0; --i) {
+            var bitmask = 1 << i;
+            var digit = +quadkey[level - i];
 
-        for ( var i = result.level; i > 0; --i) {
-            var mask = 1 << (i - 1);
-            var c = quadkey[result.level - i];
-            if (c === '1') {
-                result.x |= mask;
-            } else if (c === '2') {
-                result.y |= mask;
-            } else if (c === '3') {
-                result.x |= mask;
-                result.y |= mask;
+            if ((digit & 1) !== 0) {
+                x |= bitmask;
+            }
+
+            if ((digit & 2) !== 0) {
+                y |= bitmask;
             }
         }
-
-        --result.level;
-
-        return result;
+        return {
+            x : x,
+            y : y,
+            level : level
+        };
     };
 
     function buildImageUrl(imageryProvider, x, y, level) {

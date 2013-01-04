@@ -82,7 +82,7 @@
 	<property name="build.minification" value="false" />
 
 	<!-- Inputs -->
-	<property name="version" value="b11" />
+	<property name="version" value="b12" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -91,8 +91,8 @@
 	<property name="toolsDirectory" location="Tools" />
 	<property name="tasksDirectory" location="${toolsDirectory}/buildTasks" />
 	<property name="thirdPartyDirectory" location="ThirdParty" />
-	<property name="rjsPath" location="${thirdPartyDirectory}/requirejs-1.0.8/r.js" />
-	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.0.3/almond.js" />
+	<property name="rjsPath" location="${thirdPartyDirectory}/requirejs-2.1.2/r.js" />
+	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.2.3/almond.js" />
 	<property name="jscoveragePath" location="${toolsDirectory}/jscoverage-0.5.1/jscoverage.exe" />
 	<property name="documentationImagesDirectory" location="Documentation/Images" />
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
@@ -174,7 +174,7 @@
 		</exec>
 
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. name=${relativeAlmondPath} include=Workers/createVerticesFromExtent out=${relativeCombineOutputDirectory}\createVerticesFromExtent.js" />
+			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. name=Workers/createVerticesFromExtent out=${relativeCombineOutputDirectory}\createVerticesFromExtent.js" />
 		</exec>
 
 		<copy todir="${buildDirectory}">
@@ -249,7 +249,10 @@
 		<server proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" allowedHostList="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net,mesonet.agron.iastate.edu" port="8080" baseDir="${basedir}" />
 	</target>
 
-	<target name="buildApps" depends="build" description="Create built versions of all example applications.">
+	<target name="buildApps" description="Create built versions of all example applications.">
+		<antcall target="combine">
+			<param name="build.minification" value="true" />
+		</antcall>
 		<antcall target="buildApp">
 			<param name="app.path" value="Apps/CesiumViewer" />
 		</antcall>
@@ -303,5 +306,12 @@
 		<replaceregexp match="(baseUrl\s*:\s*[&quot;'])../.." flags="g" replace="\1.">
 			<fileset refid="jsFiles" />
 		</replaceregexp>
+
+		<copy todir="${buildDirectory}/${app.path}/Workers" overwrite="true">
+			<fileset dir="${buildDirectory}">
+				<include name="cesiumWorkerBootstrapper.js" />
+				<include name="createVerticesFromExtent.js" />
+			</fileset>
+		</copy>
 	</target>
 </project>

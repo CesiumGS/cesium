@@ -1,25 +1,3 @@
-if (typeof self === 'undefined') {
-    self = {}; //define self so that the Dojo build can evaluate this file without crashing.
-}
-
-self.onmessage = function(event) {
-    var data = event.data;
-
-    require(data.loaderConfig, [data.workerModule], function(workerModule) {
-        //replace onmessage with the required-in workerModule
-        self.onmessage = workerModule;
-    });
-};
-
-// replace setTimeout with a function that executes immediately synchronously, which
-// will make the above require synchronous like it used to be, to ensure that we we
-// have the real worker module loaded and installed before receiving any more messages.
-function setTimeout(fn) {
-    fn();
-}
-
-//below is RequireJS, verbatim
-
 /** vim: et:ts=4:sw=4:sts=4
  * @license RequireJS 2.1.2 Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
