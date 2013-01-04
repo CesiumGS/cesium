@@ -218,6 +218,7 @@ define([
 
     /**
      * Computes a bounding sphere from an extent projected in 2D.
+     *
      * @memberof BoundingSphere
      *
      * @param {Extent} extent The extent around which to create a bounding sphere.
@@ -232,6 +233,7 @@ define([
     /**
      * Computes a bounding sphere from an extent projected in 2D.  The bounding sphere accounts for the
      * object's minimum and maximum heights over the extent.
+     *
      * @memberof BoundingSphere
      *
      * @param {Extent} extent The extent around which to create a bounding sphere.
@@ -275,6 +277,7 @@ define([
     };
 
     var fromExtent3DScratch = [];
+
     /**
      * Computes a bounding sphere from an extent in 3D. The bounding sphere is created using a subsample of points
      * on the ellipsoid and contained in the extent. It may not be accurate for all extents on all types of ellipsoids.
