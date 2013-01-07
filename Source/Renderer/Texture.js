@@ -219,18 +219,13 @@ define([
     };
 
     /**
-    * Sets the sampler to use when sampling this texture.
+    * DOC_TBA
     *
     * @memberof Texture
     *
-    * @param [sampler] The sampler to use.  Create a sampler by calling {@link Context#createSampler}.  If this
-    *                  parameter is not specified, a default sampler is used.  The default sampler clamps texture
-    *                  coordinates in both directions, uses linear filtering for both magnification and minifcation,
-    *                  and uses a maximum anisotropy of 1.0.
+    * @param sampler optional.
     *
     * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
-    *
-    * @see Context#createSampler
     */
     Texture.prototype.setSampler = function(sampler) {
         var s = sampler || {
@@ -251,7 +246,7 @@ define([
         gl.texParameteri(target, gl.TEXTURE_WRAP_S, s.wrapS);
         gl.texParameteri(target, gl.TEXTURE_WRAP_T, s.wrapT);
         if (this._textureFilterAnisotropic) {
-            gl.texParameteri(target, this._textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, s.maximumAnisotropy || 1);
+            gl.texParameteri(target, this._textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, s.maximumAnisotropy);
         }
         gl.bindTexture(target, null);
 
