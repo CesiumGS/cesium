@@ -101,6 +101,11 @@ define(function() {
         }
     };
 
+    /**
+     * Clears the queue, removing all tiles.
+     *
+     * @memberof TileLoadQueue
+     */
     TileLoadQueue.prototype.clear = function() {
         var item = this.head;
         while (typeof item !== 'undefined') {
