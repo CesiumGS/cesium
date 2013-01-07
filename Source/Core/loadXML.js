@@ -1,9 +1,11 @@
 /*global define*/
 define([
         './DeveloperError',
+        './RequestErrorEvent',
         '../ThirdParty/when'
     ], function(
         DeveloperError,
+        RequestErrorEvent,
         when) {
     "use strict";
 
@@ -57,12 +59,12 @@ define([
             if (xhr.status === 200) {
                 deferred.resolve(xhr.responseXML);
             } else {
-                deferred.reject(e);
+                deferred.reject(new RequestErrorEvent(xhr.status, xhr.response));
             }
         };
 
         xhr.onerror = function(e) {
-            deferred.reject(e);
+            deferred.reject(new RequestErrorEvent());
         };
 
         xhr.send();
