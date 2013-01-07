@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        './ImageryState',
         './TileState'
     ], function(
+        ImageryState,
         TileState) {
     "use strict";
 
@@ -48,10 +50,21 @@ define([
             keepTrimming = tileToTrim !== this._lastBeforeStartOfFrame;
 
             var previous = tileToTrim.replacementPrevious;
-            if (tileToTrim.state !== TileState.TRANSITIONING) {
+
+            // Do not remove tiles that are transitioning or that have
+            // imagery that is transitioning.
+            var removeTile = tileToTrim.state !== TileState.TRANSITIONING;
+            var imagery = tileToTrim.imagery;
+            for (var i = 0, len = imagery.length; removeTile && i < len; ++i) {
+                var tileImagery = imagery[i];
+                removeTile = tileImagery.imagery.state !== ImageryState.TRANSITIONING;
+            }
+
+            if (removeTile) {
                 tileToTrim.freeResources();
                 this._remove(tileToTrim);
             }
+
             tileToTrim = previous;
         }
     };
