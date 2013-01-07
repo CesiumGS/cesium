@@ -1,17 +1,20 @@
-/*!
+/**
+  @license
+  fontmetrics.js - https://github.com/Pomax/fontmetrics.js
+
   This library rewrites the Canvas2D "measureText" function
   so that it returns a more complete metrics object.
   This library is licensed under the MIT (Expat) license,
   the text for which is included below.
 
-   -----------------------------------------------------------------------------
+** -----------------------------------------------------------------------------
 
   CHANGELOG:
 
     2012-01-21 - Whitespace handling added by Joe Turner
                  (https://github.com/oampo)
 
-   -----------------------------------------------------------------------------
+** -----------------------------------------------------------------------------
 
   Copyright (C) 2011 by Mike "Pomax" Kamermans
 
@@ -32,63 +35,64 @@
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   THE SOFTWARE.
-*/
+**/
 /*global define*/
 define(function() {
-    "use strict";
-//  var NAME = "FontMetrics Library";
-//  var VERSION = "1-2012.0121.1300";
+    /*jshint strict:false*/
+/*
+  var NAME = "FontMetrics Library"
+  var VERSION = "1-2012.0121.1300";
 
   // if there is no getComputedStyle, this library won't work.
-//  if(!document.defaultView.getComputedStyle) {
-//    throw("ERROR: 'document.defaultView.getComputedStyle' not found. This library only works in browsers that can report computed CSS values.");
-//  }
+  if(!document.defaultView.getComputedStyle) {
+    throw("ERROR: 'document.defaultView.getComputedStyle' not found. This library only works in browsers that can report computed CSS values.");
+  }
 
   // store the old text metrics function on the Canvas2D prototype
-  //CanvasRenderingContext2D.prototype.measureTextWidth = CanvasRenderingContext2D.prototype.measureText;
-
+  CanvasRenderingContext2D.prototype.measureTextWidth = CanvasRenderingContext2D.prototype.measureText;
+*/
   /**
    *  shortcut function for getting computed CSS values
    */
   var getCSSValue = function(element, property) {
     return document.defaultView.getComputedStyle(element,null).getPropertyValue(property);
   };
-
+/*
   // debug function
-//  var show = function(canvas, ctx, xstart, w, h, metrics)
-//  {
-//    document.body.appendChild(canvas);
-//    ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-//
-//    ctx.beginPath();
-//    ctx.moveTo(xstart,0);
-//    ctx.lineTo(xstart,h);
-//    ctx.closePath();
-//    ctx.stroke();
-//
-//    ctx.beginPath();
-//    ctx.moveTo(xstart+metrics.bounds.maxx,0);
-//    ctx.lineTo(xstart+metrics.bounds.maxx,h);
-//    ctx.closePath();
-//    ctx.stroke();
-//
-//    ctx.beginPath();
-//    ctx.moveTo(0,h/2-metrics.ascent);
-//    ctx.lineTo(w,h/2-metrics.ascent);
-//    ctx.closePath();
-//    ctx.stroke();
-//
-//    ctx.beginPath();
-//    ctx.moveTo(0,h/2+metrics.descent);
-//    ctx.lineTo(w,h/2+metrics.descent);
-//    ctx.closePath();
-//    ctx.stroke();
-//  }
+  var show = function(canvas, ctx, xstart, w, h, metrics)
+  {
+    document.body.appendChild(canvas);
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
 
+    ctx.beginPath();
+    ctx.moveTo(xstart,0);
+    ctx.lineTo(xstart,h);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(xstart+metrics.bounds.maxx,0);
+    ctx.lineTo(xstart+metrics.bounds.maxx,h);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(0,h/2-metrics.ascent);
+    ctx.lineTo(w,h/2-metrics.ascent);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(0,h/2+metrics.descent);
+    ctx.lineTo(w,h/2+metrics.descent);
+    ctx.closePath();
+    ctx.stroke();
+  }
+*/
   /**
    * The new text metrics function
    */
-  return function(context2D, textstring) {
+  var measureText = function(context2D, textstring) {
     var metrics = context2D.measureText(textstring),
         fontFamily = getCSSValue(context2D.canvas,"font-family"),
         fontSize = getCSSValue(context2D.canvas,"font-size").replace("px",""),
@@ -188,4 +192,6 @@ define(function() {
     }
     return metrics;
   };
+
+  return measureText;
 });

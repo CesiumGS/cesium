@@ -13,7 +13,8 @@ var profile = {
         'dojo/dojo' : {
             include : ['dojo/dojo', 'CesiumViewer/CesiumViewer', 'CesiumViewer/boot'],
             boot : true,
-            customBase : true
+            customBase : true,
+            copyright : 'Source/copyrightHeader.js'
         }
     },
 

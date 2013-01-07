@@ -46,7 +46,7 @@ for ( var i = 0, len = glslFilesets.size(); i < len; ++i) {
         contents = contents.replace(/\r\n/gm, '\n');
 
         var copyrightComments = '';
-        var extractedCopyrightComments = contents.match(/\/\*\!(?:.|\n)*?\*\//gm);
+        var extractedCopyrightComments = contents.match(/\/\*\*(?:[^*\/]|\*(?!\/)|\n)*?@license(?:.|\n)*?\*\//gm);
         if (extractedCopyrightComments) {
             copyrightComments = extractedCopyrightComments.join('\n') + '\n';
         }
