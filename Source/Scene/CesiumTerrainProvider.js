@@ -102,6 +102,7 @@ define([
 
         this._allLandTexture = undefined;
         this._allWaterTexture = undefined;
+        this._waterMaskSampler = undefined;
     }
 
     /**
@@ -474,12 +475,17 @@ define([
                     }
                 });
                 tile.waterMaskTexture.referenceCount = 1;
-                tile.waterMaskTexture.setSampler({
-                    wrapS : TextureWrap.CLAMP,
-                    wrapT : TextureWrap.CLAMP,
-                    minificationFilter : TextureMinificationFilter.LINEAR,
-                    magnificationFilter : TextureMagnificationFilter.LINEAR
-                });
+
+                if (typeof this._waterMaskSampler === 'undefined') {
+                    this._waterMaskSampler = context.createSampler({
+                        wrapS : TextureWrap.CLAMP,
+                        wrapT : TextureWrap.CLAMP,
+                        minificationFilter : TextureMinificationFilter.LINEAR,
+                        magnificationFilter : TextureMagnificationFilter.LINEAR
+                    });
+                }
+
+                tile.waterMaskTexture.setSampler(this._waterMaskSampler);
             }
         }
 
