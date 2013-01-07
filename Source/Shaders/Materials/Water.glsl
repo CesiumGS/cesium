@@ -46,7 +46,7 @@ vec4 getNoise(vec2 uv, float time, float angleInRadians) {
     return ((noise / 4.0) - 0.5) * 2.0;
 }
 
-czm_material czm_getSurfaceMaterial(czm_materialInput materialInput, vec3 baseColor, vec3 blendColor, float mask)
+czm_material czm_getMaterial(czm_materialInput materialInput)
 {
     czm_material material = czm_getDefaultMaterial(materialInput);
 
@@ -55,7 +55,7 @@ czm_material czm_getSurfaceMaterial(czm_materialInput materialInput, vec3 baseCo
     // fade is a function of the distance from the fragment and the frequency of the waves
     float fade = max(1.0, (length(materialInput.positionToEyeEC) / 10000000000.0) * frequency * fadeFactor);
             
-    float specularMapValue = mask;
+    float specularMapValue = texture2D(specularMap, materialInput.st).r;
     
     // note: not using directional motion at this time, just set the angle to 0.0;
     vec4 noise = getNoise(materialInput.st * frequency, time, 0.0);
@@ -65,7 +65,7 @@ czm_material czm_getSurfaceMaterial(czm_materialInput materialInput, vec3 baseCo
     normalTangentSpace.xy /= fade;
         
     // attempt to fade out the normal perturbation as we approach non water areas (low specular map value)
-    //normalTangentSpace = mix(vec3(0.0, 0.0, 50.0), normalTangentSpace, specularMapValue);
+    normalTangentSpace = mix(vec3(0.0, 0.0, 50.0), normalTangentSpace, specularMapValue);
     
     normalTangentSpace = normalize(normalTangentSpace);
     
@@ -73,25 +73,19 @@ czm_material czm_getSurfaceMaterial(czm_materialInput materialInput, vec3 baseCo
     float tsPerturbationRatio = clamp(dot(normalTangentSpace, vec3(0.0, 0.0, 1.0)), 0.0, 1.0);
     
     // fade out water effect as specular map value decreases
-    material.alpha = 1.0; //specularMapValue;
+    material.alpha = specularMapValue;
     
     // base color is a blend of the water and non-water color based on the value from the specular map
     // may need a uniform blend factor to better control this
-    material.diffuse = mix(blendColor.rgb, baseColor.rgb, specularMapValue);
+    material.diffuse = mix(blendColor.rgb, baseWaterColor.rgb, specularMapValue);
     
     // diffuse highlights are based on how perturbed the normal is
-    material.diffuse += vec3(mix(0.0, 0.2 * tsPerturbationRatio, specularMapValue));
+    material.diffuse += (0.1 * tsPerturbationRatio);
     
     material.normal = normalize(materialInput.tangentToEyeMatrix * normalTangentSpace);
     
-    material.specular = mix(0.0, specularIntensity, specularMapValue);
+    material.specular = specularIntensity;
     material.shininess = 10.0;
     
     return material;
-}
-
-czm_material czm_getMaterial(czm_materialInput materialInput)
-{
-    float waterMask = texture2D(specularMap, materialInput.st).r;
-    return czm_getSurfaceMaterial(materialInput, baseWaterColor.rgb, blendColor.rgb, waterMask); 
 }
