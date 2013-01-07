@@ -483,7 +483,7 @@ define([
             }
         }
 
-        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
+        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers, true);
         tile.minHeight = buffers.statistics.minHeight;
         tile.maxHeight = buffers.statistics.maxHeight;
         tile.boundingSphere3D = BoundingSphere.fromVertices(buffers.vertices, tile.center, 5);

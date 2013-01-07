@@ -153,7 +153,7 @@ define([
         var buffers = tile.transientData;
         tile.transientData = undefined;
 
-        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
+        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers, false);
         tile.maxHeight = 0;
         tile.boundingSphere3D = BoundingSphere.fromVertices(buffers.vertices, tile.center, 5);
 
