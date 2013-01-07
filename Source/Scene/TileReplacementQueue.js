@@ -53,14 +53,14 @@ define([
 
             // Do not remove tiles that are transitioning or that have
             // imagery that is transitioning.
-            var removeTile = tileToTrim.state !== TileState.TRANSITIONING;
+            var shouldRemoveTile = tileToTrim.state !== TileState.TRANSITIONING;
             var imagery = tileToTrim.imagery;
-            for (var i = 0, len = imagery.length; removeTile && i < len; ++i) {
+            for (var i = 0, len = imagery.length; shouldRemoveTile && i < len; ++i) {
                 var tileImagery = imagery[i];
-                removeTile = tileImagery.imagery.state !== ImageryState.TRANSITIONING;
+                shouldRemoveTile = tileImagery.imagery.state !== ImageryState.TRANSITIONING;
             }
 
-            if (removeTile) {
+            if (shouldRemoveTile) {
                 tileToTrim.freeResources();
                 this._remove(tileToTrim);
             }
