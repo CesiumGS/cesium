@@ -11,6 +11,7 @@ Beta Releases
 * Fixed sky atmosphere flickering on Intel on Mac.
 * Fixed camera tilt close to the `minimumZoomDistance`.
 * Upgraded RequireJS to version 2.1.2, and Almond to 0.2.3.
+* Fixed a bug that could lead to blue tiles when zoomed in close to the North and South poles.
 
 ### b12 - 01/03/2013
 
