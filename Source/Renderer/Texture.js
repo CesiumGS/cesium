@@ -246,7 +246,7 @@ define([
         gl.texParameteri(target, gl.TEXTURE_WRAP_S, s.wrapS);
         gl.texParameteri(target, gl.TEXTURE_WRAP_T, s.wrapT);
         if (this._textureFilterAnisotropic) {
-            gl.texParameteri(target, this._textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, s.maximumAnisotropy);
+            gl.texParameteri(target, this._textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, s.maximumAnisotropy || 1);
         }
         gl.bindTexture(target, null);
 
