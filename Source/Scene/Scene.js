@@ -87,11 +87,9 @@ define([
         this._commandList = [];
         this._frustumCommandsList = [];
 
-        this._clearCommand = new ClearCommand();
-        this._clearCommand.clearState = context.createClearState({
-            color : new Color(),
-            depth : 1.0,
-            stencil : 0.0
+        this._clearColorCommand = new ClearCommand();
+        this._clearColorCommand.clearState = context.createClearState({
+            color : new Color()
         });
         this._clearDepthStencilCommand = new ClearCommand();
         this._clearDepthStencilCommand.clearState = context.createClearState({
@@ -399,7 +397,7 @@ define([
         var skyBoxCommand = (typeof scene.skyBox !== 'undefined') ? scene.skyBox.update(context, scene._frameState) : undefined;
         var skyAtmosphereCommand = (typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, scene._frameState) : undefined;
 
-        var clear = scene._clearCommand;
+        var clear = scene._clearColorCommand;
         Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.clearState.color);
         clear.execute(context, framebuffer);
 

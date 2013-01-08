@@ -5,13 +5,13 @@ Beta Releases
 -------------
 
 ### b13 - xx/xx/2013
+
 * Breaking changes:
    * Moved `minimumZoomDistance` and `maximumZoomDistance` from the `CameraController` to the `ScreenSpaceCameraController`.
 * Added `Scene.backgroundColor`.
-* Fixed sky atmosphere flickering on Intel on Mac.
 * Fixed camera tilt close to the `minimumZoomDistance`.
-* Upgraded RequireJS to version 2.1.2, and Almond to 0.2.3.
 * Fixed a bug that could lead to blue tiles when zoomed in close to the North and South poles.
+* Upgraded RequireJS to version 2.1.2, and Almond to 0.2.3.
 
 ### b12 - 01/03/2013
 
