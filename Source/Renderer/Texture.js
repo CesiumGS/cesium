@@ -219,13 +219,18 @@ define([
     };
 
     /**
-    * DOC_TBA
+    * Sets the sampler to use when sampling this texture.
     *
     * @memberof Texture
     *
-    * @param sampler optional.
+    * @param [sampler] The sampler to use.  Create a sampler by calling {@link Context#createSampler}.  If this
+    *                  parameter is not specified, a default sampler is used.  The default sampler clamps texture
+    *                  coordinates in both directions, uses linear filtering for both magnification and minifcation,
+    *                  and uses a maximum anisotropy of 1.0.
     *
     * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
+    *
+    * @see Context#createSampler
     */
     Texture.prototype.setSampler = function(sampler) {
         var s = sampler || {

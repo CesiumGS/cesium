@@ -19,3 +19,9 @@ Our mission is to create the leading web-based globe and map for visualizing dyn
 See the [Quick Start](http://cesium.agi.com/quickstart.html).  Have questions?  Ask them on the [forum](https://groups.google.com/d/forum/cesium-dev).
 
 Interested in contributing?  See the [wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki).
+
+<p align="center">
+<img src="http://cesium.agi.com/images/OneApiThreeViews.png" height="150" />&nbsp;
+<img src="http://cesium.agi.com/images/KoreaLaunch.png" height="150" />&nbsp;
+<img src="http://cesium.agi.com/images/Terrain.png" height="150" />
+</p>

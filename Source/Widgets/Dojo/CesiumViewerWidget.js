@@ -1059,6 +1059,7 @@ define([
          * Initialize the current frame.
          * @function
          * @memberof CesiumViewerWidget.prototype
+         * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
         initializeFrame : function(currentTime) {
             this.scene.initializeFrame(currentTime);

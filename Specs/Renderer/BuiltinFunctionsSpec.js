@@ -173,4 +173,4 @@ defineSuite([
 
         verifyDraw(fs, uniformMap);
     });
-});
+}, 'WebGL');

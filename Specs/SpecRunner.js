@@ -3,7 +3,8 @@
  * @param {Array} deps An array of dependencies, to be passed to require.
  * @param {String|Function} name Either the name of the test suite, or the test suite itself,
  * in which case the first dependency in the array will be used as the name.
- * @param {Function} [suite] The test suite.
+ * @param {Function|Array} [suite] Either the test suite or an array of category names for the suite.
+ * @param {Array} [categories] An optional array of category names for the test suite.
  */
 var defineSuite;
 
@@ -126,7 +127,11 @@ var afterAll;
     //start loading all of Cesium early, so it's all available for code coverage calculations.
     require(['Cesium']);
 
-    defineSuite = function(deps, name, suite) {
+    defineSuite = function(deps, name, suite, categories) {
+        if (typeof suite === 'object' || typeof suite === 'string') {
+            categories = suite;
+        }
+
         if (typeof name === 'function') {
             suite = name;
             name = deps[0];
@@ -144,7 +149,7 @@ var afterAll;
             test.f = function() {
                 return describe(name, function() {
                     suite.apply(null, args);
-                });
+                }, categories);
             };
 
             createTestsIfReady();
