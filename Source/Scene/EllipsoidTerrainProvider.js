@@ -127,7 +127,7 @@ define([
 
         when(verticesPromise, function(result) {
             tile.transientData = {
-                vertices : result,
+                vertices : new Float32Array(result),
                 indices : TerrainProvider.getRegularGridIndices(width, height)
             };
             tile.state = TileState.TRANSFORMED;
