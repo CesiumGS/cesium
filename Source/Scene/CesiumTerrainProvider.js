@@ -158,8 +158,11 @@ define([
                 url = this._proxy.getURL(url);
             }
 
+            ++tile.asyncOperationsInProgress;
+
             var that = this;
             when(loadArrayBuffer(url), function(buffer) {
+                --tile.asyncOperationsInProgress;
                 var geometry = new Uint16Array(buffer, 0, that.heightmapWidth * that.heightmapWidth);
                 tile.transientData = {
                         isDownloaded : true,
@@ -186,6 +189,7 @@ define([
                 tile.doneLoading = false;
             }, function(e) {
                 // Do nothing - terrain has already been upsampled from the parent.
+                --tile.asyncOperationsInProgress;
                 --requestsInFlight;
             });
         }
@@ -380,11 +384,15 @@ define([
 
         var wasDownloaded = tile.transientData.isDownloaded;
 
+        ++tile.asyncOperationsInProgress;
+
         when(verticesPromise, function(result) {
+            --tile.asyncOperationsInProgress;
+
             // If the data for this tile was previously not downloaded, but now
             // downloaded data is available, ignore this callback because it contains
             // results for the non-downloaded data, which we no longer care about.
-            if (wasDownloaded !== tile.transientData.isDownloaded) {
+            if (typeof tile.transientData === 'undefined' || wasDownloaded !== tile.transientData.isDownloaded) {
                 return;
             }
 
@@ -403,6 +411,8 @@ define([
             };
 
             tile.state = TileState.TRANSFORMED;
+        }, function(e) {
+            --tile.asyncOperationsInProgress;
         });
     };
 
@@ -471,7 +481,6 @@ define([
                         magnificationFilter : TextureMagnificationFilter.LINEAR
                     });
                 }
-
                 tile.waterMaskTexture.setSampler(this._waterMaskSampler);
             }
         }
