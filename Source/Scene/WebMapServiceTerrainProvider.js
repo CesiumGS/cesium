@@ -226,7 +226,7 @@ define([
         when(verticesPromise, function(result) {
             tile.geometry = undefined;
             tile.transformedGeometry = {
-                vertices : result.vertices,
+                vertices : new Float32Array(result.vertices),
                 statistics : result.statistics,
                 indices : TerrainProvider.getRegularGridIndices(width, height)
             };

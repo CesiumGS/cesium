@@ -397,7 +397,7 @@ define([
                 //tile.transientData = undefined;
             }
             tile.transformedGeometry = {
-                vertices : result.vertices,
+                vertices : new Float32Array(result.vertices),
                 statistics : result.statistics,
                 indices : TerrainProvider.getRegularGridIndices(width + 2, height + 2)
             };

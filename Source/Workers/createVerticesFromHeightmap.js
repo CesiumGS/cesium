@@ -27,7 +27,7 @@ define([
         var statistics = HeightmapTessellator.computeVertices(parameters);
 
         return {
-            vertices : vertices,
+            vertices : vertices.buffer,
             statistics : statistics
         };
     }
