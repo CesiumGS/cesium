@@ -114,26 +114,11 @@ define([
     CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = TerrainProvider.prototype.getLevelMaximumGeometricError;
 
     var requestsInFlight = 0;
-    // Creating the geometry will require a request to the ImageServer, which will complete
-    // asynchronously.  The question is, what do we do in the meantime?  The best thing to do is
-    // to use terrain associated with the parent tile.  Ideally, we would be able to render
-    // high-res imagery attached to low-res terrain.  In some ways, this is similar to the need
-    // described in TerrainProvider of creating geometry for tiles at a higher level than
-    // the terrain source actually provides.
-
-    // In the short term, for simplicity:
-    // 1. If a tile has geometry available but it has not yet been loaded, don't render the tile until
-    //    the geometry has been loaded.
-    // 2. If a tile does not have geometry available at all, do not render it or its siblings.
-    // Longer term, #1 may be acceptable, but #2 won't be for the reasons described above.
-    // To address #2, we can subdivide a mesh into its four children.  This will be fairly CPU
-    // intensive, though, which is why we probably won't want to do it while waiting for the
-    // actual data to load.  We could also potentially add fractal detail when subdividing.
 
     /**
      * Request the tile geometry from the remote server.  Once complete, the
      * tile state should be set to RECEIVED.  Alternatively, tile state can be set to
-     * UNLOADED to indicate that the request should be attempted again next update, if the tile
+     * IMAGERY_SKELETONS_CREATED to indicate that the request should be attempted again next update, if the tile
      * is still needed.
      *
      * @param {Tile} The tile to request geometry for.
@@ -159,7 +144,7 @@ define([
 
         if (dataAvailable) {
             if (requestsInFlight > 6) {
-                tile.state = TileState.UNLOADED;
+                tile.state = TileState.IMAGERY_SKELETONS_CREATED;
                 return;
             }
 
@@ -188,8 +173,10 @@ define([
                     if (typeof tile.children !== 'undefined') {
                         for (var childIndex = 0, childLength = tile.children.length; childIndex < childLength; ++childIndex) {
                             var childTile = tile.children[childIndex];
-                            childTile.state = TileState.UNLOADED;
-                            childTile.doneLoading = false;
+                            if (childTile.state !== TileState.UNLOADED) {
+                                childTile.state = TileState.IMAGERY_SKELETONS_CREATED;
+                                childTile.doneLoading = false;
+                            }
                         }
                     }
                 }

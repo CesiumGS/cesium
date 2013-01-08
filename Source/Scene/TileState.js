@@ -8,11 +8,12 @@ define(['../Core/Enumeration'], function(Enumeration) {
     var TileState = {
         UNLOADED : new Enumeration(0, 'UNLOADED'),
         TRANSITIONING : new Enumeration(1, 'TRANSITIONING'),
-        RECEIVED : new Enumeration(2, 'RECEIVED'),
-        TRANSFORMED : new Enumeration(3, 'TRANSFORMED'),
-        READY : new Enumeration(4, 'READY'),
-        FAILED : new Enumeration(5, 'FAILED'),
-        INVALID : new Enumeration(6, 'INVALID')
+        IMAGERY_SKELETONS_CREATED : new Enumeration(2, 'IMAGERY_SKELETONS_CREATED'),
+        RECEIVED : new Enumeration(3, 'RECEIVED'),
+        TRANSFORMED : new Enumeration(4, 'TRANSFORMED'),
+        READY : new Enumeration(5, 'READY'),
+        FAILED : new Enumeration(6, 'FAILED'),
+        INVALID : new Enumeration(7, 'INVALID')
     };
 
     return TileState;

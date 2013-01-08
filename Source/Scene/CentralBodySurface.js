@@ -608,6 +608,10 @@ define([
             return;
         }
 
+        // Arbitrarily limit the number of loaded tiles to 100, or however
+        // many tiles were traversed this frame, whichever is greater.
+        surface._tileReplacementQueue.trimTiles(100);
+
         var startTime = Date.now();
         var timeSlice = surface._loadQueueTimeSlice;
         var endTime = startTime + timeSlice;
@@ -618,26 +622,21 @@ define([
             // Transition terrain states.
             if (tile.state === TileState.UNLOADED) {
                 tile.state = TileState.TRANSITIONING;
-                terrainProvider.requestTileGeometry(tile);
 
-                // If we've made it past the UNLOADED state, add this tile to the replacement queue
-                // (replacing another tile if necessary), and create skeletons for the imagery.
-                if (tile.state !== TileState.UNLOADED) {
-                    surface._tileReplacementQueue.markTileRendered(tile);
-
-                    // Arbitrarily limit the number of loaded tiles to 100, or however
-                    // many tiles were traversed this frame, whichever is greater.
-                    surface._tileReplacementQueue.trimTiles(100);
-
-                    var imageryLayerCollection = surface._imageryLayerCollection;
-                    for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
-                        var layer = imageryLayerCollection.get(i);
-                        if (layer.show) {
-                            layer._createTileImagerySkeletons(tile, terrainProvider);
-                        }
+                var imageryLayerCollection = surface._imageryLayerCollection;
+                for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
+                    var layer = imageryLayerCollection.get(i);
+                    if (layer.show) {
+                        layer._createTileImagerySkeletons(tile, terrainProvider);
                     }
-
                 }
+
+                tile.state = TileState.IMAGERY_SKELETONS_CREATED;
+            }
+
+            if (tile.state === TileState.IMAGERY_SKELETONS_CREATED) {
+                tile.state = TileState.TRANSITIONING;
+                terrainProvider.requestTileGeometry(tile);
             }
 
             if (tile.state === TileState.RECEIVED) {

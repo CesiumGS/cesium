@@ -217,7 +217,7 @@ define([
     /**
      * Request the tile geometry from the remote server.  Once complete, the
      * tile state should be set to RECEIVED.  Alternatively, tile state can be set to
-     * UNLOADED to indicate that the request should be attempted again next update, if the tile
+     * IMAGERY_SKELETONS_CREATED to indicate that the request should be attempted again next update, if the tile
      * is still needed.
      *
      * @param {Tile} The tile to request geometry for.
