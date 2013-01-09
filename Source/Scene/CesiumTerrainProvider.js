@@ -1,10 +1,11 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/getImagePixels',
         '../Core/jsonp',
         '../Core/loadArrayBuffer',
         '../Core/loadImage',
-        '../Core/getImagePixels',
+        '../Core/throttleRequestByServer',
         '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
         '../Core/Math',
@@ -21,18 +22,22 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
-        './Projections',
-        './TileState',
-        './TerrainProvider',
         './GeographicTilingScheme',
+        './HeightmapTerrainData',
+        './Projections',
+        './RequestTileGeometryResult',
+        './TerrainProvider',
+        './TileState',
+        './WaterMaskData',
         './WebMercatorTilingScheme',
         '../ThirdParty/when'
     ], function(
         defaultValue,
+        getImagePixels,
         jsonp,
         loadArrayBuffer,
         loadImage,
-        getImagePixels,
+        throttleRequestByServer,
         writeTextToCanvas,
         DeveloperError,
         CesiumMath,
@@ -49,10 +54,13 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
-        Projections,
-        TileState,
-        TerrainProvider,
         GeographicTilingScheme,
+        HeightmapTerrainData,
+        Projections,
+        RequestTileGeometryResult,
+        TerrainProvider,
+        TileState,
+        WaterMaskData,
         WebMercatorTilingScheme,
         when) {
     "use strict";
@@ -103,6 +111,14 @@ define([
         this._allLandTexture = undefined;
         this._allWaterTexture = undefined;
         this._waterMaskSampler = undefined;
+
+        this._terrainDataStructure = {
+            heightScale : 1.0 / 5.0,
+            heightOffset : -1000.0,
+            stride : 1,
+            strideMultiplier : 256.0,
+            isBigEndian : false
+        };
     }
 
     /**
@@ -113,7 +129,43 @@ define([
      */
     CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = TerrainProvider.prototype.getLevelMaximumGeometricError;
 
+    /**
+     * Requests the geometry for a given tile.  This function should not be called before
+     * {@link TerrainProvider#isReady} returns true.  The result must include terrain data and
+     * may optionally include a water mask and an indication of which child tiles are available.
+     *
+     * @memberof CesiumTerrainProvider
+     *
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {Promise|RequestTileGeometryResult} A promise for the requested geometry.  If this method
+     *          returns undefined instead of a promise, it is an indication that too many requests are already
+     *          pending and the request will be retried later.
+     */
+    CesiumTerrainProvider.prototype.requestTileGeometry2 = function(x, y, level) {
+        var yTiles = this.tilingScheme.getNumberOfYTilesAtLevel(level);
+        var url = this.url + '/' + level + '/' + x + '/' + (yTiles - y - 1) + '.terrain';
+
+        var promise = throttleRequestByServer(url, loadArrayBuffer);
+        if (typeof promise === 'undefined') {
+            return undefined;
+        }
+
+        var that = this;
+        return when(promise, function(buffer) {
+            var heightBuffer = new Uint16Array(buffer, 0, that.heightmapWidth * that.heightmapWidth);
+            var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
+            var waterMaskBuffer = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
+
+            var terrainData = new HeightmapTerrainData(heightBuffer, that.heightmapWidth, that.heightmapWidth, that._terrainDataStructure);
+            var waterData = new WaterMaskData(waterMaskBuffer);
+            return new RequestTileGeometryResult(terrainData, waterData, childTileMask);
+        });
+    };
+
     var requestsInFlight = 0;
+
 
     /**
      * Request the tile geometry from the remote server.  Once complete, the
