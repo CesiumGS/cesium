@@ -13,6 +13,7 @@ Beta Releases
 * Added `fromCssColorString` to `Color` to create a `Color` instance from any CSS value.
 * Added `fromHsl` to `Color` to create a `Color` instance from H, S, L values.
 * Upgraded RequireJS to version 2.1.2, and Almond to 0.2.3.
+* Fixed a bug that could lead to blue tiles when zoomed in close to the North and South poles.
 
 ### b12 - 01/03/2013
 
