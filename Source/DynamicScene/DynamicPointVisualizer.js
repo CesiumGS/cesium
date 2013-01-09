@@ -267,8 +267,8 @@ define([
         }
 
         if (needRedraw) {
-            var cssColor = typeof billboard._visualizerColor !== 'undefined' ? billboard._visualizerColor.toCSSColor() : '#FFFFFF';
-            var cssOutlineColor = typeof billboard._visualizerOutlineColor !== 'undefined' ? billboard._visualizerOutlineColor.toCSSColor() : '#000000';
+            var cssColor = typeof billboard._visualizerColor !== 'undefined' ? billboard._visualizerColor.toCssColorString() : '#FFFFFF';
+            var cssOutlineColor = typeof billboard._visualizerOutlineColor !== 'undefined' ? billboard._visualizerOutlineColor.toCssColorString() : '#000000';
             var cssPixelSize = typeof billboard._visualizerPixelSize !== 'undefined' ? billboard._visualizerPixelSize : 3;
             var cssOutlineWidth = typeof billboard._visualizerOutlineWidth !== 'undefined' ? billboard._visualizerOutlineWidth : 2;
             var textureId = JSON.stringify([cssColor, cssPixelSize, cssOutlineColor, cssOutlineWidth]);
