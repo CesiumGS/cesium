@@ -159,7 +159,7 @@ define([
         'yellowgreen' : '#9ACD32'
     };
 
-    var hue2rgb = function(m1, m2, h) {
+    function hue2rgb(m1, m2, h) {
         if (h < 0) {
             h += 1;
         }
@@ -176,7 +176,7 @@ define([
             return m1 + (m2 - m1) * (2 / 3 - h) * 6;
         }
         return m1;
-    };
+    }
 
     /**
      * A color, specified using red, green, blue, and alpha values,
@@ -221,15 +221,15 @@ define([
      * @returns {Color} A new color instance.
      */
     Color.fromBytes = function(red, green, blue, alpha) {
-        red = defaultValue(red, 255.0);
-        green = defaultValue(green, 255.0);
-        blue = defaultValue(blue, 255.0);
-        alpha = defaultValue(alpha, 255.0);
-        return new Color(red / 255.0, green / 255.0, blue / 255.0, alpha / 255.0);
+        red = defaultValue(red, 255.0) / 255.0;
+        green = defaultValue(green, 255.0) / 255.0;
+        blue = defaultValue(blue, 255.0) / 255.0;
+        alpha = defaultValue(alpha, 255.0) / 255.0;
+        return new Color(red, green, blue, alpha);
     };
 
     /**
-     * Creates a Color instance from H, S, L values.
+     * Creates a Color instance from hue, saturation, and lightness.
      * @memberof Color
      *
      * @param {Number} [hue=0] The hue angle 0...1
@@ -238,11 +238,10 @@ define([
      * @param {Number} [alpha=1.0] The alpha component 0...1
      * @return {Color} The color object.
      *
-     * @exception {DeveloperError} unsupported CSS color value.
      * @see <a href="http://www.w3.org/TR/css3-color/#hsl-color">CSS color values</a>
      */
     Color.fromHsl = function(hue, saturation, lightness, alpha) {
-        hue = defaultValue(hue, 0.0);
+        hue = defaultValue(hue, 0.0) % 1.0;
         saturation = defaultValue(saturation, 0.0);
         lightness = defaultValue(lightness, 0.0);
         alpha = defaultValue(alpha, 1.0);
@@ -268,14 +267,14 @@ define([
         return new Color(r, g, b, alpha);
     };
 
-    //#rgb format
+    //#rgb
     var rgbMatcher = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i;
-    //#rrggbb format
+    //#rrggbb
     var rrggbbMatcher = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
-    //rgb(), rgba(), or rgb%() format
-    var rgbParenthesesMatcher = /^rgba?\(([0-9.]+%?),([0-9.]+%?),([0-9.]+%?)(?:,([0-9.]+))?\)$/i;
-    //hsl(), hsla(), or hsl%() format
-    var hslParenthesesMatcher = /^hsla?\(([0-9.]+),([0-9.]+%),([0-9.]+%)(?:,([0-9.]+))?\)$/i;
+    //rgb(), rgba(), or rgb%()
+    var rgbParenthesesMatcher = /^rgba?\(\s*([0-9.]+%?)\s*,\s*([0-9.]+%?)\s*,\s*([0-9.]+%?)(?:\s*,\s*([0-9.]+))?\s*\)$/i;
+    //hsl(), hsla(), or hsl%()
+    var hslParenthesesMatcher = /^hsla?\(\s*([0-9.]+)\s*,\s*([0-9.]+%)\s*,\s*([0-9.]+%)(?:\s*,\s*([0-9.]+))?\s*\)$/i;
 
     /**
      * Creates a Color instance from a CSS color value.
@@ -284,20 +283,18 @@ define([
      * @param {String} color The CSS color value in #rgb, #rrggbb, rgb(), rgba(), hsl(), or hsla() format.
      * @return {Color} The color object, or undefined if the string was not a valid CSS color.
      *
-     * @see <a href="http://www.w3.org/TR/css3-color">CSS color values</a>
+     * @exception {DeveloperError} color is required.
      *
      * @example
      * var cesiumBlue = Color.fromCssColorString('#67ADDF');
      * var green = Color.fromCssColorString('green');
+     *
+     * @see <a href="http://www.w3.org/TR/css3-color">CSS color values</a>
      */
     Color.fromCssColorString = function(color) {
         if (typeof color === 'undefined') {
             throw new DeveloperError('color is required');
         }
-
-        //Eliminate whitespace
-        //TODO: We can probably fold this directly into the other expressions.
-        color = color.replace(/\s/g, '');
 
         var namedColor = cssColorNames[color.toLowerCase()];
         if (typeof namedColor !== 'undefined') {
@@ -331,7 +328,7 @@ define([
 
         matches = hslParenthesesMatcher.exec(color);
         if (matches !== null) {
-            return new Color(
+            return Color.fromHsl(
                     parseFloat(matches[1], 10) / 360.0,
                     parseFloat(matches[2], 10) / 100.0,
                     parseFloat(matches[3], 10) / 100.0,

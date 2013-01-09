@@ -1,7 +1,9 @@
 /*global defineSuite*/
-defineSuite(['Core/Color'
-         ], function(
-             Color) {
+defineSuite(['Core/Color',
+             'Core/Math'
+            ], function(
+              Color,
+              CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -98,81 +100,122 @@ defineSuite(['Core/Color'
         expect(v.equalsEpsilon(v6, 0.4)).toEqual(true);
     });
 
-    it('toCssColorString works', function() {
-        expect(Color.fromCssColorString('WHITE').toCssColorString()).toEqual('rgba(255,255,255,1)');
-        expect(Color.fromCssColorString('RED').toCssColorString()).toEqual('rgba(255,0,0,1)');
-        expect(Color.fromCssColorString('BLUE').toCssColorString()).toEqual('rgba(0,0,255,1)');
+    it('toCssColorString produces expected output', function() {
+        expect(Color.WHITE.toCssColorString()).toEqual('rgba(255,255,255,1)');
+        expect(Color.RED.toCssColorString()).toEqual('rgba(255,0,0,1)');
+        expect(Color.BLUE.toCssColorString()).toEqual('rgba(0,0,255,1)');
+        expect(Color.LIME.toCssColorString()).toEqual('rgba(0,255,0,1)');
+        expect(new Color(0.0, 0.0, 0.0, 1.0).toCssColorString()).toEqual('rgba(0,0,0,1)');
         expect(new Color(0.1, 0.2, 0.3, 0.4).toCssColorString()).toEqual('rgba(25,51,76,0.4)');
     });
 
     it('fromCssColorString supports the #rgb format', function() {
-        expect(Color.fromCssColorString('#f00')).toEqual(new Color(1.0, 0.0, 0.0, 1.0));
-        expect(Color.fromCssColorString('#0f0')).toEqual(new Color(0.0, 1.0, 0.0, 1.0));
-        expect(Color.fromCssColorString('#00f')).toEqual(new Color(0.0, 0.0, 1.0, 1.0));
+        expect(Color.fromCssColorString('#369')).toEqual(new Color(0.2, 0.4, 0.6, 1.0));
     });
 
-    it('fromCssColorString supports the #RGB format', function() {
-        expect(Color.fromCssColorString('#F00')).toEqual(new Color(1.0, 0.0, 0.0, 1.0));
-        expect(Color.fromCssColorString('#0F0')).toEqual(new Color(0.0, 1.0, 0.0, 1.0));
-        expect(Color.fromCssColorString('#00F')).toEqual(new Color(0.0, 0.0, 1.0, 1.0));
+    it('fromCssColorString supports the #rgb format with lowercase', function() {
+        expect(Color.fromCssColorString('#f00')).toEqual(Color.RED);
+        expect(Color.fromCssColorString('#0f0')).toEqual(Color.LIME);
+        expect(Color.fromCssColorString('#00f')).toEqual(Color.BLUE);
     });
 
-    it('fromCssColorString supports the #rrggbb format', function() {
-        expect(Color.fromCssColorString('#ff0000')).toEqual(new Color(1.0, 0.0, 0.0, 1.0));
-        expect(Color.fromCssColorString('#00ff00')).toEqual(new Color(0.0, 1.0, 0.0, 1.0));
-        expect(Color.fromCssColorString('#0000ff')).toEqual(new Color(0.0, 0.0, 1.0, 1.0));
+    it('fromCssColorString supports the #rgb format with uppercase', function() {
+        expect(Color.fromCssColorString('#F00')).toEqual(Color.RED);
+        expect(Color.fromCssColorString('#0F0')).toEqual(Color.LIME);
+        expect(Color.fromCssColorString('#00F')).toEqual(Color.BLUE);
     });
 
-    it('fromCssColorString supports the #RRGGBB format', function() {
-        expect(Color.fromCssColorString('#FF0000')).toEqual(new Color(1.0, 0.0, 0.0, 1.0));
-        expect(Color.fromCssColorString('#00FF00')).toEqual(new Color(0.0, 1.0, 0.0, 1.0));
-        expect(Color.fromCssColorString('#0000FF')).toEqual(new Color(0.0, 0.0, 1.0, 1.0));
+    it('fromCssColorString supports the #rrggbb', function() {
+        expect(Color.fromCssColorString('#336699')).toEqual(new Color(0.2, 0.4, 0.6, 1.0));
     });
 
-    it('fromCssColorString supports the rgb() format', function() {
-        expect(Color.fromCssColorString('rgb(255, 0, 0)')).toEqual(new Color(1.0, 0.0, 0.0, 1.0));
-        expect(Color.fromCssColorString('rgb(0, 255, 0)')).toEqual(new Color(0.0, 1.0, 0.0, 1.0));
-        expect(Color.fromCssColorString('rgb(0, 0, 255)')).toEqual(Color.fromCssColorString('BLUE'));
+    it('fromCssColorString supports the #rrggbb format with lowercase', function() {
+        expect(Color.fromCssColorString('#ff0000')).toEqual(Color.RED);
+        expect(Color.fromCssColorString('#00ff00')).toEqual(Color.LIME);
+        expect(Color.fromCssColorString('#0000ff')).toEqual(Color.BLUE);
     });
 
-    it('fromCssColorString supports the rgb%() format', function() {
-        expect(Color.fromCssColorString('rgb(100%, 0, 0)')).toEqual(new Color(1.0, 0.0, 0.0, 1.0));
-        expect(Color.fromCssColorString('rgb(0, 100%, 0)')).toEqual(new Color(0.0, 1.0, 0.0, 1.0));
-        expect(Color.fromCssColorString('rgb(0, 0, 100%)')).toEqual(new Color(0.0, 0.0, 1.0, 1.0));
+    it('fromCssColorString supports the #rrggbb format with uppercase', function() {
+        expect(Color.fromCssColorString('#FF0000')).toEqual(Color.RED);
+        expect(Color.fromCssColorString('#00FF00')).toEqual(Color.LIME);
+        expect(Color.fromCssColorString('#0000FF')).toEqual(Color.BLUE);
     });
 
-    it('fromCssColorString supports the rgba() format', function() {
-        expect(Color.fromCssColorString('rgba(255, 50%, 25%, 0.5)')).toEqual(new Color(1.0, 0.5, 0.25, 0.5));
+    it('fromCssColorString supports the rgb() format with absolute values', function() {
+        expect(Color.fromCssColorString('rgb(255, 0, 0)')).toEqual(Color.RED);
+        expect(Color.fromCssColorString('rgb(0, 255, 0)')).toEqual(Color.LIME);
+        expect(Color.fromCssColorString('rgb(0, 0, 255)')).toEqual(Color.BLUE);
+        expect(Color.fromCssColorString('rgb(51, 102, 204)')).toEqual(new Color(0.2, 0.4, 0.8, 1.0));
     });
 
-    it('fromCssColorString supports named colors', function() {
+    it('fromCssColorString supports the rgb() format with percentages', function() {
+        expect(Color.fromCssColorString('rgb(100%, 0, 0)')).toEqual(Color.RED);
+        expect(Color.fromCssColorString('rgb(0, 100%, 0)')).toEqual(Color.LIME);
+        expect(Color.fromCssColorString('rgb(0, 0, 100%)')).toEqual(Color.BLUE);
+        expect(Color.fromCssColorString('rgb(20%, 40%, 80%)')).toEqual(new Color(0.2, 0.4, 0.8, 1.0));
+    });
+
+    it('fromCssColorString supports the rgba() format with absolute values', function() {
+        expect(Color.fromCssColorString('rgba(255, 0, 0, 1.0)')).toEqual(Color.RED);
+        expect(Color.fromCssColorString('rgba(0, 255, 0, 1.0)')).toEqual(Color.LIME);
+        expect(Color.fromCssColorString('rgba(0, 0, 255, 1.0)')).toEqual(Color.BLUE);
+        expect(Color.fromCssColorString('rgba(51, 102, 204, 0.6)')).toEqual(new Color(0.2, 0.4, 0.8, 0.6));
+    });
+
+    it('fromCssColorString supports the rgba() format with percentages', function() {
+        expect(Color.fromCssColorString('rgba(100%, 0, 0, 1.0)')).toEqual(Color.RED);
+        expect(Color.fromCssColorString('rgba(0, 100%, 0, 1.0)')).toEqual(Color.LIME);
+        expect(Color.fromCssColorString('rgba(0, 0, 100%, 1.0)')).toEqual(Color.BLUE);
+        expect(Color.fromCssColorString('rgba(20%, 40%, 80%, 0.6)')).toEqual(new Color(0.2, 0.4, 0.8, 0.6));
+    });
+
+    it('fromCssColorString supports named colors regardless of case', function() {
         expect(Color.fromCssColorString('red')).toEqual(Color.RED);
-        expect(Color.fromCssColorString('green')).toEqual(Color.GREEN);
-        expect(Color.fromCssColorString('blue')).toEqual(Color.BLUE);
-    });
-
-    it('fromCssColorString supports NAMED colors', function() {
-        expect(Color.fromCssColorString('RED')).toEqual(Color.RED);
         expect(Color.fromCssColorString('GREEN')).toEqual(Color.GREEN);
-        expect(Color.fromCssColorString('BLUE')).toEqual(Color.BLUE);
+        expect(Color.fromCssColorString('BLue')).toEqual(Color.BLUE);
     });
 
     it('fromCssColorString supports the hsl() format', function() {
-        expect(Color.fromCssColorString('hsl(360, 100%, 100%, 0.5)')).toEqual(Color.fromHsl(1, 1, 1, 0.5));
+        expect(Color.fromCssColorString('hsl(0, 100%, 50%)')).toEqual(Color.RED);
+        expect(Color.fromCssColorString('hsl(120, 100%, 50%)')).toEqual(Color.LIME);
+        expect(Color.fromCssColorString('hsl(240, 100%, 50%)')).toEqual(Color.BLUE);
+        expect(Color.fromCssColorString('hsl(220, 60%, 50%)')).toEqualEpsilon(new Color(0.2, 0.4, 0.8), CesiumMath.EPSILON15);
     });
 
     it('fromCssColorString supports the hsla() format', function() {
-        expect(Color.fromCssColorString('hsla(360, 100%, 100%, 0.5)')).toEqual(Color.fromHsl(1, 1, 1, 0.5));
+        expect(Color.fromCssColorString('hsla(0, 100%, 50%, 1.0)')).toEqual(Color.RED);
+        expect(Color.fromCssColorString('hsla(120, 100%, 50%, 1.0)')).toEqual(Color.LIME);
+        expect(Color.fromCssColorString('hsla(240, 100%, 50%, 1.0)')).toEqual(Color.BLUE);
+        expect(Color.fromCssColorString('hsla(220, 60%, 50%, 0.6)')).toEqualEpsilon(new Color(0.2, 0.4, 0.8, 0.6), CesiumMath.EPSILON15);
     });
 
-    it('fromCssColorString can throw on unknown colors', function() {
-        expect(Color.fromCssColorString('unknown', undefined, true)).toBeUndefined();
+    it('fromCssColorString wraps hue into valid range for hsl() format', function() {
+        expect(Color.fromCssColorString('hsl(720, 100%, 50%)')).toEqual(Color.RED);
+        expect(Color.fromCssColorString('hsla(720, 100%, 50%, 1.0)')).toEqual(Color.RED);
     });
 
-    it('fromHSL works', function() {
-        expect(Color.fromHsl(0, 1, 0.25)).toEqual(new Color(0.5, 0, 0));
-        expect(Color.fromHsl(120 / 360, 1, 0.25)).toEqual(new Color(0, 0.5, 0));
-        expect(Color.fromHsl(240 / 360, 1, 0.25)).toEqual(new Color(0, 0, 0.5));
-        expect(Color.fromHsl(0, 0, 0.5)).toEqual(new Color(0.5, 0.5, 0.5));
+    it('fromCssColorString returns undefined for unknown colors', function() {
+        expect(Color.fromCssColorString('not a color')).toBeUndefined();
+    });
+
+    it('fromCssColorString throws with undefined', function() {
+        expect(function() {
+            Color.fromCssColorString(undefined);
+        }).toThrow();
+    });
+
+    it('fromHsl produces expected output', function() {
+        expect(Color.fromHsl(0.0, 1.0, 0.5, 1.0)).toEqual(Color.RED);
+        expect(Color.fromHsl(120.0 / 360.0, 1.0, 0.5, 1.0)).toEqual(Color.LIME);
+        expect(Color.fromHsl(240.0 / 360.0, 1.0, 0.5, 1.0)).toEqual(Color.BLUE);
+        expect(Color.fromHsl(220.0 / 360.0, 0.6, 0.5, 0.7)).toEqualEpsilon(new Color(0.2, 0.4, 0.8, 0.7), CesiumMath.EPSILON15);
+    });
+
+    it('fromHsl properly wraps hue into valid range', function() {
+        expect(Color.fromHsl(5, 1.0, 0.5, 1.0)).toEqual(Color.RED);
+    });
+
+    it('toString produces correct results', function() {
+        expect(new Color(0.1, 0.2, 0.3, 0.4).toString()).toEqual('(0.1, 0.2, 0.3, 0.4)');
     });
 });
