@@ -483,6 +483,16 @@ h6
 .params th, .props th { border-right: 1px solid #aaa; }
 .params thead .last, .props thead .last { border-right: 1px solid #ddd; }
 
+.colorSwath {
+    display: inline-block;
+    width: 15em;
+    height: 1.4em;
+    position: absolute;
+    left: 36em;
+    border: solid 1px #000;
+    border-radius: 5px;
+}
+
 .disabled {
     color: #454545;
 }
@@ -505,5 +515,8 @@ h6
     }
     footer {
         padding: 6px;
+    }
+    .colorSwath {
+        display: none;
     }
 }

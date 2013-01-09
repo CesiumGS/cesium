@@ -9,156 +9,6 @@ define([
         DeveloperError) {
     "use strict";
 
-    var cssColorNames = {
-        'aliceblue' : '#F0F8FF',
-        'antiquewhite' : '#FAEBD7',
-        'aqua' : '#00FFFF',
-        'aquamarine' : '#7FFFD4',
-        'azure' : '#F0FFFF',
-        'beige' : '#F5F5DC',
-        'bisque' : '#FFE4C4',
-        'black' : '#000000',
-        'blanchedalmond' : '#FFEBCD',
-        'blue' : '#0000FF',
-        'blueviolet' : '#8A2BE2',
-        'brown' : '#A52A2A',
-        'burlywood' : '#DEB887',
-        'cadetblue' : '#5F9EA0',
-        'chartreuse' : '#7FFF00',
-        'chocolate' : '#D2691E',
-        'coral' : '#FF7F50',
-        'cornflowerblue' : '#6495ED',
-        'cornsilk' : '#FFF8DC',
-        'crimson' : '#DC143C',
-        'cyan' : '#00FFFF',
-        'darkblue' : '#00008B',
-        'darkcyan' : '#008B8B',
-        'darkgoldenrod' : '#B8860B',
-        'darkgray' : '#A9A9A9',
-        'darkgreen' : '#006400',
-        'darkgrey' : '#A9A9A9',
-        'darkkhaki' : '#BDB76B',
-        'darkmagenta' : '#8B008B',
-        'darkolivegreen' : '#556B2F',
-        'darkorange' : '#FF8C00',
-        'darkorchid' : '#9932CC',
-        'darkred' : '#8B0000',
-        'darksalmon' : '#E9967A',
-        'darkseagreen' : '#8FBC8F',
-        'darkslateblue' : '#483D8B',
-        'darkslategray' : '#2F4F4F',
-        'darkslategrey' : '#2F4F4F',
-        'darkturquoise' : '#00CED1',
-        'darkviolet' : '#9400D3',
-        'deeppink' : '#FF1493',
-        'deepskyblue' : '#00BFFF',
-        'dimgray' : '#696969',
-        'dimgrey' : '#696969',
-        'dodgerblue' : '#1E90FF',
-        'firebrick' : '#B22222',
-        'floralwhite' : '#FFFAF0',
-        'forestgreen' : '#228B22',
-        'fuchsia' : '#FF00FF',
-        'gainsboro' : '#DCDCDC',
-        'ghostwhite' : '#F8F8FF',
-        'gold' : '#FFD700',
-        'goldenrod' : '#DAA520',
-        'gray' : '#808080',
-        'green' : '#008000',
-        'greenyellow' : '#ADFF2F',
-        'grey' : '#808080',
-        'honeydew' : '#F0FFF0',
-        'hotpink' : '#FF69B4',
-        'indianred' : '#CD5C5C',
-        'indigo' : '#4B0082',
-        'ivory' : '#FFFFF0',
-        'khaki' : '#F0E68C',
-        'lavender' : '#E6E6FA',
-        'lavenderblush' : '#FFF0F5',
-        'lawngreen' : '#7CFC00',
-        'lemonchiffon' : '#FFFACD',
-        'lightblue' : '#ADD8E6',
-        'lightcoral' : '#F08080',
-        'lightcyan' : '#E0FFFF',
-        'lightgoldenrodyellow' : '#FAFAD2',
-        'lightgray' : '#D3D3D3',
-        'lightgreen' : '#90EE90',
-        'lightgrey' : '#D3D3D3',
-        'lightpink' : '#FFB6C1',
-        'lightsalmon' : '#FFA07A',
-        'lightseagreen' : '#20B2AA',
-        'lightskyblue' : '#87CEFA',
-        'lightslategray' : '#778899',
-        'lightslategrey' : '#778899',
-        'lightsteelblue' : '#B0C4DE',
-        'lightyellow' : '#FFFFE0',
-        'lime' : '#00FF00',
-        'limegreen' : '#32CD32',
-        'linen' : '#FAF0E6',
-        'magenta' : '#FF00FF',
-        'maroon' : '#800000',
-        'mediumaquamarine' : '#66CDAA',
-        'mediumblue' : '#0000CD',
-        'mediumorchid' : '#BA55D3',
-        'mediumpurple' : '#9370DB',
-        'mediumseagreen' : '#3CB371',
-        'mediumslateblue' : '#7B68EE',
-        'mediumspringgreen' : '#00FA9A',
-        'mediumturquoise' : '#48D1CC',
-        'mediumvioletred' : '#C71585',
-        'midnightblue' : '#191970',
-        'mintcream' : '#F5FFFA',
-        'mistyrose' : '#FFE4E1',
-        'moccasin' : '#FFE4B5',
-        'navajowhite' : '#FFDEAD',
-        'navy' : '#000080',
-        'oldlace' : '#FDF5E6',
-        'olive' : '#808000',
-        'olivedrab' : '#6B8E23',
-        'orange' : '#FFA500',
-        'orangered' : '#FF4500',
-        'orchid' : '#DA70D6',
-        'palegoldenrod' : '#EEE8AA',
-        'palegreen' : '#98FB98',
-        'paleturquoise' : '#AFEEEE',
-        'palevioletred' : '#DB7093',
-        'papayawhip' : '#FFEFD5',
-        'peachpuff' : '#FFDAB9',
-        'peru' : '#CD853F',
-        'pink' : '#FFC0CB',
-        'plum' : '#DDA0DD',
-        'powderblue' : '#B0E0E6',
-        'purple' : '#800080',
-        'red' : '#FF0000',
-        'rosybrown' : '#BC8F8F',
-        'royalblue' : '#4169E1',
-        'saddlebrown' : '#8B4513',
-        'salmon' : '#FA8072',
-        'sandybrown' : '#F4A460',
-        'seagreen' : '#2E8B57',
-        'seashell' : '#FFF5EE',
-        'sienna' : '#A0522D',
-        'silver' : '#C0C0C0',
-        'skyblue' : '#87CEEB',
-        'slateblue' : '#6A5ACD',
-        'slategray' : '#708090',
-        'slategrey' : '#708090',
-        'snow' : '#FFFAFA',
-        'springgreen' : '#00FF7F',
-        'steelblue' : '#4682B4',
-        'tan' : '#D2B48C',
-        'teal' : '#008080',
-        'thistle' : '#D8BFD8',
-        'tomato' : '#FF6347',
-        'turquoise' : '#40E0D0',
-        'violet' : '#EE82EE',
-        'wheat' : '#F5DEB3',
-        'white' : '#FFFFFF',
-        'whitesmoke' : '#F5F5F5',
-        'yellow' : '#FFFF00',
-        'yellowgreen' : '#9ACD32'
-    };
-
     function hue2rgb(m1, m2, h) {
         if (h < 0) {
             h += 1;
@@ -246,9 +96,9 @@ define([
         lightness = defaultValue(lightness, 0.0);
         alpha = defaultValue(alpha, 1.0);
 
-        var r = lightness;
-        var g = lightness;
-        var b = lightness;
+        var red = lightness;
+        var green = lightness;
+        var blue = lightness;
 
         if (saturation !== 0) {
             var m2;
@@ -259,12 +109,12 @@ define([
             }
 
             var m1 = 2.0 * lightness - m2;
-            r = hue2rgb(m1, m2, hue + 1 / 3);
-            g = hue2rgb(m1, m2, hue);
-            b = hue2rgb(m1, m2, hue - 1 / 3);
+            red = hue2rgb(m1, m2, hue + 1 / 3);
+            green = hue2rgb(m1, m2, hue);
+            blue = hue2rgb(m1, m2, hue - 1 / 3);
         }
 
-        return new Color(r, g, b, alpha);
+        return new Color(red, green, blue, alpha);
     };
 
     //#rgb
@@ -296,9 +146,9 @@ define([
             throw new DeveloperError('color is required');
         }
 
-        var namedColor = cssColorNames[color.toLowerCase()];
+        var namedColor = Color[color.toUpperCase()];
         if (typeof namedColor !== 'undefined') {
-            return Color.fromCssColorString(namedColor);
+            return namedColor.clone();
         }
 
         var matches = rgbMatcher.exec(color);
@@ -320,18 +170,18 @@ define([
         matches = rgbParenthesesMatcher.exec(color);
         if (matches !== null) {
             return new Color(
-                    parseFloat(matches[1], 10) / ('%' === matches[1].substr(-1) ? 100.0 : 255.0),
-                    parseFloat(matches[2], 10) / ('%' === matches[2].substr(-1) ? 100.0 : 255.0),
-                    parseFloat(matches[3], 10) / ('%' === matches[3].substr(-1) ? 100.0 : 255.0),
+                    parseFloat(matches[1]) / ('%' === matches[1].substr(-1) ? 100.0 : 255.0),
+                    parseFloat(matches[2]) / ('%' === matches[2].substr(-1) ? 100.0 : 255.0),
+                    parseFloat(matches[3]) / ('%' === matches[3].substr(-1) ? 100.0 : 255.0),
                     parseFloat(defaultValue(matches[4], '1.0')));
         }
 
         matches = hslParenthesesMatcher.exec(color);
         if (matches !== null) {
             return Color.fromHsl(
-                    parseFloat(matches[1], 10) / 360.0,
-                    parseFloat(matches[2], 10) / 100.0,
-                    parseFloat(matches[3], 10) / 100.0,
+                    parseFloat(matches[1]) / 360.0,
+                    parseFloat(matches[2]) / 100.0,
+                    parseFloat(matches[3]) / 100.0,
                     parseFloat(defaultValue(matches[4], '1.0')));
         }
 
@@ -456,14 +306,15 @@ define([
      * @see <a href="http://www.w3.org/TR/css3-color/#rgba-color">CSS RGBA color values</a>
      */
     Color.prototype.toCssColorString = function() {
-        var r = Color.floatToByte(this.red);
-        var g = Color.floatToByte(this.green);
-        var b = Color.floatToByte(this.blue);
-        return 'rgba(' + r + ',' + g + ',' + b + ',' + this.alpha + ')';
+        var red = Color.floatToByte(this.red);
+        var green = Color.floatToByte(this.green);
+        var blue = Color.floatToByte(this.blue);
+        return 'rgba(' + red + ',' + green + ',' + blue + ',' + this.alpha + ')';
     };
 
     /**
      * An immutable Color instance initialized to CSS color #F0F8FF
+     * <span class="colorSwath" style="background: #F0F8FF;"></span>
      *
      * @constant
      * @type {Color}
@@ -472,6 +323,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FAEBD7
+     * <span class="colorSwath" style="background: #FAEBD7;"></span>
      *
      * @constant
      * @type {Color}
@@ -480,6 +332,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #00FFFF
+     * <span class="colorSwath" style="background: #00FFFF;"></span>
      *
      * @constant
      * @type {Color}
@@ -488,6 +341,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #7FFFD4
+     * <span class="colorSwath" style="background: #7FFFD4;"></span>
      *
      * @constant
      * @type {Color}
@@ -496,6 +350,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #F0FFFF
+     * <span class="colorSwath" style="background: #F0FFFF;"></span>
      *
      * @constant
      * @type {Color}
@@ -504,6 +359,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #F5F5DC
+     * <span class="colorSwath" style="background: #F5F5DC;"></span>
      *
      * @constant
      * @type {Color}
@@ -512,6 +368,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFE4C4
+     * <span class="colorSwath" style="background: #FFE4C4;"></span>
      *
      * @constant
      * @type {Color}
@@ -520,6 +377,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #000000
+     * <span class="colorSwath" style="background: #000000;"></span>
      *
      * @constant
      * @type {Color}
@@ -528,6 +386,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFEBCD
+     * <span class="colorSwath" style="background: #FFEBCD;"></span>
      *
      * @constant
      * @type {Color}
@@ -536,6 +395,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #0000FF
+     * <span class="colorSwath" style="background: #0000FF;"></span>
      *
      * @constant
      * @type {Color}
@@ -544,6 +404,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #8A2BE2
+     * <span class="colorSwath" style="background: #8A2BE2;"></span>
      *
      * @constant
      * @type {Color}
@@ -552,6 +413,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #A52A2A
+     * <span class="colorSwath" style="background: #A52A2A;"></span>
      *
      * @constant
      * @type {Color}
@@ -560,6 +422,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #DEB887
+     * <span class="colorSwath" style="background: #DEB887;"></span>
      *
      * @constant
      * @type {Color}
@@ -568,6 +431,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #5F9EA0
+     * <span class="colorSwath" style="background: #5F9EA0;"></span>
      *
      * @constant
      * @type {Color}
@@ -575,6 +439,7 @@ define([
     Color.CADETBLUE = freezeObject(Color.fromCssColorString('#5F9EA0'));
     /**
      * An immutable Color instance initialized to CSS color #7FFF00
+     * <span class="colorSwath" style="background: #7FFF00;"></span>
      *
      * @constant
      * @type {Color}
@@ -583,6 +448,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #D2691E
+     * <span class="colorSwath" style="background: #D2691E;"></span>
      *
      * @constant
      * @type {Color}
@@ -591,6 +457,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FF7F50
+     * <span class="colorSwath" style="background: #FF7F50;"></span>
      *
      * @constant
      * @type {Color}
@@ -599,6 +466,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #6495ED
+     * <span class="colorSwath" style="background: #6495ED;"></span>
      *
      * @constant
      * @type {Color}
@@ -607,6 +475,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFF8DC
+     * <span class="colorSwath" style="background: #FFF8DC;"></span>
      *
      * @constant
      * @type {Color}
@@ -615,6 +484,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #DC143C
+     * <span class="colorSwath" style="background: #DC143C;"></span>
      *
      * @constant
      * @type {Color}
@@ -623,6 +493,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #00FFFF
+     * <span class="colorSwath" style="background: #00FFFF;"></span>
      *
      * @constant
      * @type {Color}
@@ -631,6 +502,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #00008B
+     * <span class="colorSwath" style="background: #00008B;"></span>
      *
      * @constant
      * @type {Color}
@@ -639,6 +511,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #008B8B
+     * <span class="colorSwath" style="background: #008B8B;"></span>
      *
      * @constant
      * @type {Color}
@@ -647,6 +520,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #B8860B
+     * <span class="colorSwath" style="background: #B8860B;"></span>
      *
      * @constant
      * @type {Color}
@@ -655,6 +529,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #A9A9A9
+     * <span class="colorSwath" style="background: #A9A9A9;"></span>
      *
      * @constant
      * @type {Color}
@@ -663,6 +538,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #006400
+     * <span class="colorSwath" style="background: #006400;"></span>
      *
      * @constant
      * @type {Color}
@@ -671,6 +547,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #A9A9A9
+     * <span class="colorSwath" style="background: #A9A9A9;"></span>
      *
      * @constant
      * @type {Color}
@@ -679,6 +556,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #BDB76B
+     * <span class="colorSwath" style="background: #BDB76B;"></span>
      *
      * @constant
      * @type {Color}
@@ -687,6 +565,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #8B008B
+     * <span class="colorSwath" style="background: #8B008B;"></span>
      *
      * @constant
      * @type {Color}
@@ -695,6 +574,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #556B2F
+     * <span class="colorSwath" style="background: #556B2F;"></span>
      *
      * @constant
      * @type {Color}
@@ -703,6 +583,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FF8C00
+     * <span class="colorSwath" style="background: #FF8C00;"></span>
      *
      * @constant
      * @type {Color}
@@ -711,6 +592,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #9932CC
+     * <span class="colorSwath" style="background: #9932CC;"></span>
      *
      * @constant
      * @type {Color}
@@ -719,6 +601,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #8B0000
+     * <span class="colorSwath" style="background: #8B0000;"></span>
      *
      * @constant
      * @type {Color}
@@ -727,6 +610,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #E9967A
+     * <span class="colorSwath" style="background: #E9967A;"></span>
      *
      * @constant
      * @type {Color}
@@ -735,6 +619,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #8FBC8F
+     * <span class="colorSwath" style="background: #8FBC8F;"></span>
      *
      * @constant
      * @type {Color}
@@ -743,6 +628,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #483D8B
+     * <span class="colorSwath" style="background: #483D8B;"></span>
      *
      * @constant
      * @type {Color}
@@ -751,6 +637,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #2F4F4F
+     * <span class="colorSwath" style="background: #2F4F4F;"></span>
      *
      * @constant
      * @type {Color}
@@ -759,6 +646,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #2F4F4F
+     * <span class="colorSwath" style="background: #2F4F4F;"></span>
      *
      * @constant
      * @type {Color}
@@ -767,6 +655,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #00CED1
+     * <span class="colorSwath" style="background: #00CED1;"></span>
      *
      * @constant
      * @type {Color}
@@ -775,6 +664,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #9400D3
+     * <span class="colorSwath" style="background: #9400D3;"></span>
      *
      * @constant
      * @type {Color}
@@ -783,6 +673,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FF1493
+     * <span class="colorSwath" style="background: #FF1493;"></span>
      *
      * @constant
      * @type {Color}
@@ -791,6 +682,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #00BFFF
+     * <span class="colorSwath" style="background: #00BFFF;"></span>
      *
      * @constant
      * @type {Color}
@@ -799,6 +691,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #696969
+     * <span class="colorSwath" style="background: #696969;"></span>
      *
      * @constant
      * @type {Color}
@@ -807,6 +700,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #696969
+     * <span class="colorSwath" style="background: #696969;"></span>
      *
      * @constant
      * @type {Color}
@@ -815,6 +709,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #1E90FF
+     * <span class="colorSwath" style="background: #1E90FF;"></span>
      *
      * @constant
      * @type {Color}
@@ -823,6 +718,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #B22222
+     * <span class="colorSwath" style="background: #B22222;"></span>
      *
      * @constant
      * @type {Color}
@@ -831,6 +727,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFFAF0
+     * <span class="colorSwath" style="background: #FFFAF0;"></span>
      *
      * @constant
      * @type {Color}
@@ -839,6 +736,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #228B22
+     * <span class="colorSwath" style="background: #228B22;"></span>
      *
      * @constant
      * @type {Color}
@@ -847,6 +745,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FF00FF
+     * <span class="colorSwath" style="background: #FF00FF;"></span>
      *
      * @constant
      * @type {Color}
@@ -855,6 +754,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #DCDCDC
+     * <span class="colorSwath" style="background: #DCDCDC;"></span>
      *
      * @constant
      * @type {Color}
@@ -863,6 +763,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #F8F8FF
+     * <span class="colorSwath" style="background: #F8F8FF;"></span>
      *
      * @constant
      * @type {Color}
@@ -871,6 +772,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFD700
+     * <span class="colorSwath" style="background: #FFD700;"></span>
      *
      * @constant
      * @type {Color}
@@ -879,6 +781,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #DAA520
+     * <span class="colorSwath" style="background: #DAA520;"></span>
      *
      * @constant
      * @type {Color}
@@ -887,6 +790,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #808080
+     * <span class="colorSwath" style="background: #808080;"></span>
      *
      * @constant
      * @type {Color}
@@ -895,6 +799,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #008000
+     * <span class="colorSwath" style="background: #008000;"></span>
      *
      * @constant
      * @type {Color}
@@ -903,6 +808,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #ADFF2F
+     * <span class="colorSwath" style="background: #ADFF2F;"></span>
      *
      * @constant
      * @type {Color}
@@ -911,6 +817,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #808080
+     * <span class="colorSwath" style="background: #808080;"></span>
      *
      * @constant
      * @type {Color}
@@ -919,6 +826,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #F0FFF0
+     * <span class="colorSwath" style="background: #F0FFF0;"></span>
      *
      * @constant
      * @type {Color}
@@ -927,6 +835,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FF69B4
+     * <span class="colorSwath" style="background: #FF69B4;"></span>
      *
      * @constant
      * @type {Color}
@@ -935,6 +844,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #CD5C5C
+     * <span class="colorSwath" style="background: #CD5C5C;"></span>
      *
      * @constant
      * @type {Color}
@@ -943,6 +853,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #4B0082
+     * <span class="colorSwath" style="background: #4B0082;"></span>
      *
      * @constant
      * @type {Color}
@@ -951,6 +862,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFFFF0
+     * <span class="colorSwath" style="background: #FFFFF0;"></span>
      *
      * @constant
      * @type {Color}
@@ -959,6 +871,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #F0E68C
+     * <span class="colorSwath" style="background: #F0E68C;"></span>
      *
      * @constant
      * @type {Color}
@@ -967,6 +880,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #E6E6FA
+     * <span class="colorSwath" style="background: #E6E6FA;"></span>
      *
      * @constant
      * @type {Color}
@@ -974,7 +888,8 @@ define([
     Color.LAVENDER = freezeObject(Color.fromCssColorString('#E6E6FA'));
 
     /**
-     * An immutable Color instance initialized to CSS color #FF00FF
+     * An immutable Color instance initialized to CSS color #FFF0F5
+     * <span class="colorSwath" style="background: #FFF0F5;"></span>
      *
      * @constant
      * @type {Color}
@@ -982,7 +897,8 @@ define([
     Color.LAVENDAR_BLUSH = freezeObject(Color.fromCssColorString('#FFF0F5'));
 
     /**
-     * An immutable Color instance initialized to CSS color #FF00FF
+     * An immutable Color instance initialized to CSS color #7CFC00
+     * <span class="colorSwath" style="background: #7CFC00;"></span>
      *
      * @constant
      * @type {Color}
@@ -991,6 +907,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFFACD
+     * <span class="colorSwath" style="background: #FFFACD;"></span>
      *
      * @constant
      * @type {Color}
@@ -999,6 +916,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #ADD8E6
+     * <span class="colorSwath" style="background: #ADD8E6;"></span>
      *
      * @constant
      * @type {Color}
@@ -1007,6 +925,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #F08080
+     * <span class="colorSwath" style="background: #F08080;"></span>
      *
      * @constant
      * @type {Color}
@@ -1015,6 +934,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #E0FFFF
+     * <span class="colorSwath" style="background: #E0FFFF;"></span>
      *
      * @constant
      * @type {Color}
@@ -1023,6 +943,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FAFAD2
+     * <span class="colorSwath" style="background: #FAFAD2;"></span>
      *
      * @constant
      * @type {Color}
@@ -1031,6 +952,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #D3D3D3
+     * <span class="colorSwath" style="background: #D3D3D3;"></span>
      *
      * @constant
      * @type {Color}
@@ -1039,6 +961,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #90EE90
+     * <span class="colorSwath" style="background: #90EE90;"></span>
      *
      * @constant
      * @type {Color}
@@ -1047,6 +970,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #D3D3D3
+     * <span class="colorSwath" style="background: #D3D3D3;"></span>
      *
      * @constant
      * @type {Color}
@@ -1055,6 +979,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFB6C1
+     * <span class="colorSwath" style="background: #FFB6C1;"></span>
      *
      * @constant
      * @type {Color}
@@ -1063,6 +988,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #20B2AA
+     * <span class="colorSwath" style="background: #20B2AA;"></span>
      *
      * @constant
      * @type {Color}
@@ -1071,6 +997,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #87CEFA
+     * <span class="colorSwath" style="background: #87CEFA;"></span>
      *
      * @constant
      * @type {Color}
@@ -1079,6 +1006,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #778899
+     * <span class="colorSwath" style="background: #778899;"></span>
      *
      * @constant
      * @type {Color}
@@ -1087,6 +1015,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #778899
+     * <span class="colorSwath" style="background: #778899;"></span>
      *
      * @constant
      * @type {Color}
@@ -1095,6 +1024,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #B0C4DE
+     * <span class="colorSwath" style="background: #B0C4DE;"></span>
      *
      * @constant
      * @type {Color}
@@ -1103,6 +1033,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFFFE0
+     * <span class="colorSwath" style="background: #FFFFE0;"></span>
      *
      * @constant
      * @type {Color}
@@ -1111,6 +1042,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #00FF00
+     * <span class="colorSwath" style="background: #00FF00;"></span>
      *
      * @constant
      * @type {Color}
@@ -1119,6 +1051,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #32CD32
+     * <span class="colorSwath" style="background: #32CD32;"></span>
      *
      * @constant
      * @type {Color}
@@ -1127,6 +1060,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FAF0E6
+     * <span class="colorSwath" style="background: #FAF0E6;"></span>
      *
      * @constant
      * @type {Color}
@@ -1135,6 +1069,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FF00FF
+     * <span class="colorSwath" style="background: #FF00FF;"></span>
      *
      * @constant
      * @type {Color}
@@ -1143,6 +1078,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #800000
+     * <span class="colorSwath" style="background: #800000;"></span>
      *
      * @constant
      * @type {Color}
@@ -1151,6 +1087,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #66CDAA
+     * <span class="colorSwath" style="background: #66CDAA;"></span>
      *
      * @constant
      * @type {Color}
@@ -1159,6 +1096,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #0000CD
+     * <span class="colorSwath" style="background: #0000CD;"></span>
      *
      * @constant
      * @type {Color}
@@ -1167,6 +1105,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #BA55D3
+     * <span class="colorSwath" style="background: #BA55D3;"></span>
      *
      * @constant
      * @type {Color}
@@ -1175,6 +1114,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #9370DB
+     * <span class="colorSwath" style="background: #9370DB;"></span>
      *
      * @constant
      * @type {Color}
@@ -1183,6 +1123,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #3CB371
+     * <span class="colorSwath" style="background: #3CB371;"></span>
      *
      * @constant
      * @type {Color}
@@ -1191,6 +1132,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #7B68EE
+     * <span class="colorSwath" style="background: #7B68EE;"></span>
      *
      * @constant
      * @type {Color}
@@ -1199,6 +1141,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #00FA9A
+     * <span class="colorSwath" style="background: #00FA9A;"></span>
      *
      * @constant
      * @type {Color}
@@ -1207,6 +1150,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #48D1CC
+     * <span class="colorSwath" style="background: #48D1CC;"></span>
      *
      * @constant
      * @type {Color}
@@ -1215,6 +1159,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #C71585
+     * <span class="colorSwath" style="background: #C71585;"></span>
      *
      * @constant
      * @type {Color}
@@ -1223,6 +1168,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #191970
+     * <span class="colorSwath" style="background: #191970;"></span>
      *
      * @constant
      * @type {Color}
@@ -1231,6 +1177,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #F5FFFA
+     * <span class="colorSwath" style="background: #F5FFFA;"></span>
      *
      * @constant
      * @type {Color}
@@ -1239,6 +1186,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFE4E1
+     * <span class="colorSwath" style="background: #FFE4E1;"></span>
      *
      * @constant
      * @type {Color}
@@ -1247,6 +1195,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFE4B5
+     * <span class="colorSwath" style="background: #FFE4B5;"></span>
      *
      * @constant
      * @type {Color}
@@ -1255,6 +1204,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFDEAD
+     * <span class="colorSwath" style="background: #FFDEAD;"></span>
      *
      * @constant
      * @type {Color}
@@ -1263,6 +1213,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #000080
+     * <span class="colorSwath" style="background: #000080;"></span>
      *
      * @constant
      * @type {Color}
@@ -1271,6 +1222,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FDF5E6
+     * <span class="colorSwath" style="background: #FDF5E6;"></span>
      *
      * @constant
      * @type {Color}
@@ -1279,6 +1231,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #808000
+     * <span class="colorSwath" style="background: #808000;"></span>
      *
      * @constant
      * @type {Color}
@@ -1287,6 +1240,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #6B8E23
+     * <span class="colorSwath" style="background: #6B8E23;"></span>
      *
      * @constant
      * @type {Color}
@@ -1295,6 +1249,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFA500
+     * <span class="colorSwath" style="background: #FFA500;"></span>
      *
      * @constant
      * @type {Color}
@@ -1303,6 +1258,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FF4500
+     * <span class="colorSwath" style="background: #FF4500;"></span>
      *
      * @constant
      * @type {Color}
@@ -1311,6 +1267,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #DA70D6
+     * <span class="colorSwath" style="background: #DA70D6;"></span>
      *
      * @constant
      * @type {Color}
@@ -1319,6 +1276,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #EEE8AA
+     * <span class="colorSwath" style="background: #EEE8AA;"></span>
      *
      * @constant
      * @type {Color}
@@ -1327,6 +1285,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #98FB98
+     * <span class="colorSwath" style="background: #98FB98;"></span>
      *
      * @constant
      * @type {Color}
@@ -1335,6 +1294,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #AFEEEE
+     * <span class="colorSwath" style="background: #AFEEEE;"></span>
      *
      * @constant
      * @type {Color}
@@ -1343,6 +1303,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #DB7093
+     * <span class="colorSwath" style="background: #DB7093;"></span>
      *
      * @constant
      * @type {Color}
@@ -1351,6 +1312,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFEFD5
+     * <span class="colorSwath" style="background: #FFEFD5;"></span>
      *
      * @constant
      * @type {Color}
@@ -1359,6 +1321,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFDAB9
+     * <span class="colorSwath" style="background: #FFDAB9;"></span>
      *
      * @constant
      * @type {Color}
@@ -1367,6 +1330,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #CD853F
+     * <span class="colorSwath" style="background: #CD853F;"></span>
      *
      * @constant
      * @type {Color}
@@ -1375,6 +1339,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFC0CB
+     * <span class="colorSwath" style="background: #FFC0CB;"></span>
      *
      * @constant
      * @type {Color}
@@ -1383,6 +1348,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #DDA0DD
+     * <span class="colorSwath" style="background: #DDA0DD;"></span>
      *
      * @constant
      * @type {Color}
@@ -1391,6 +1357,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #B0E0E6
+     * <span class="colorSwath" style="background: #B0E0E6;"></span>
      *
      * @constant
      * @type {Color}
@@ -1399,6 +1366,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #800080
+     * <span class="colorSwath" style="background: #800080;"></span>
      *
      * @constant
      * @type {Color}
@@ -1407,6 +1375,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FF0000
+     * <span class="colorSwath" style="background: #FF0000;"></span>
      *
      * @constant
      * @type {Color}
@@ -1415,6 +1384,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #BC8F8F
+     * <span class="colorSwath" style="background: #BC8F8F;"></span>
      *
      * @constant
      * @type {Color}
@@ -1423,6 +1393,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #4169E1
+     * <span class="colorSwath" style="background: #4169E1;"></span>
      *
      * @constant
      * @type {Color}
@@ -1431,6 +1402,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #8B4513
+     * <span class="colorSwath" style="background: #8B4513;"></span>
      *
      * @constant
      * @type {Color}
@@ -1439,6 +1411,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FA8072
+     * <span class="colorSwath" style="background: #FA8072;"></span>
      *
      * @constant
      * @type {Color}
@@ -1447,6 +1420,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #F4A460
+     * <span class="colorSwath" style="background: #F4A460;"></span>
      *
      * @constant
      * @type {Color}
@@ -1455,6 +1429,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #2E8B57
+     * <span class="colorSwath" style="background: #2E8B57;"></span>
      *
      * @constant
      * @type {Color}
@@ -1463,6 +1438,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFF5EE
+     * <span class="colorSwath" style="background: #FFF5EE;"></span>
      *
      * @constant
      * @type {Color}
@@ -1471,6 +1447,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #A0522D
+     * <span class="colorSwath" style="background: #A0522D;"></span>
      *
      * @constant
      * @type {Color}
@@ -1479,6 +1456,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #C0C0C0
+     * <span class="colorSwath" style="background: #C0C0C0;"></span>
      *
      * @constant
      * @type {Color}
@@ -1487,6 +1465,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #87CEEB
+     * <span class="colorSwath" style="background: #87CEEB;"></span>
      *
      * @constant
      * @type {Color}
@@ -1495,6 +1474,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #6A5ACD
+     * <span class="colorSwath" style="background: #6A5ACD;"></span>
      *
      * @constant
      * @type {Color}
@@ -1503,6 +1483,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #708090
+     * <span class="colorSwath" style="background: #708090;"></span>
      *
      * @constant
      * @type {Color}
@@ -1511,6 +1492,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #708090
+     * <span class="colorSwath" style="background: #708090;"></span>
      *
      * @constant
      * @type {Color}
@@ -1519,6 +1501,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFFAFA
+     * <span class="colorSwath" style="background: #FFFAFA;"></span>
      *
      * @constant
      * @type {Color}
@@ -1527,6 +1510,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #00FF7F
+     * <span class="colorSwath" style="background: #00FF7F;"></span>
      *
      * @constant
      * @type {Color}
@@ -1534,7 +1518,8 @@ define([
     Color.SPRINGGREEN = freezeObject(Color.fromCssColorString('#00FF7F'));
 
     /**
-     * An immutable Color instance initialized to CSS color #98FB98
+     * An immutable Color instance initialized to CSS color #4682B4
+     * <span class="colorSwath" style="background: #4682B4;"></span>
      *
      * @constant
      * @type {Color}
@@ -1543,6 +1528,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #D2B48C
+     * <span class="colorSwath" style="background: #D2B48C;"></span>
      *
      * @constant
      * @type {Color}
@@ -1551,6 +1537,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #008080
+     * <span class="colorSwath" style="background: #008080;"></span>
      *
      * @constant
      * @type {Color}
@@ -1559,6 +1546,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #D8BFD8
+     * <span class="colorSwath" style="background: #D8BFD8;"></span>
      *
      * @constant
      * @type {Color}
@@ -1567,6 +1555,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FF6347
+     * <span class="colorSwath" style="background: #FF6347;"></span>
      *
      * @constant
      * @type {Color}
@@ -1575,6 +1564,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #40E0D0
+     * <span class="colorSwath" style="background: #40E0D0;"></span>
      *
      * @constant
      * @type {Color}
@@ -1583,6 +1573,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #EE82EE
+     * <span class="colorSwath" style="background: #EE82EE;"></span>
      *
      * @constant
      * @type {Color}
@@ -1591,6 +1582,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #F5DEB3
+     * <span class="colorSwath" style="background: #F5DEB3;"></span>
      *
      * @constant
      * @type {Color}
@@ -1599,6 +1591,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFFFFF
+     * <span class="colorSwath" style="background: #FFFFFF;"></span>
      *
      * @constant
      * @type {Color}
@@ -1607,6 +1600,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #F5F5F5
+     * <span class="colorSwath" style="background: #F5F5F5;"></span>
      *
      * @constant
      * @type {Color}
@@ -1615,6 +1609,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #FFFF00
+     * <span class="colorSwath" style="background: #FFFF00;"></span>
      *
      * @constant
      * @type {Color}
@@ -1623,6 +1618,7 @@ define([
 
     /**
      * An immutable Color instance initialized to CSS color #9ACD32
+     * <span class="colorSwath" style="background: #9ACD32;"></span>
      *
      * @constant
      * @type {Color}

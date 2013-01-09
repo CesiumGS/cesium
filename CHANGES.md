@@ -7,7 +7,6 @@ Beta Releases
 ### b13 - xx/xx/2013
 * Breaking changes:
    * Renamed `toCSSColor` to `toCssColorString`.
-   * Renamed `toCSSColor` to `toCssColorString`.
    * Moved `minimumZoomDistance` and `maximumZoomDistance` from the `CameraController` to the `ScreenSpaceCameraController`.
 * Fixed camera tilt close to the `minimumZoomDistance`.
 * Added `fromCssColorString` to `Color` to create a `Color` instance from any CSS value.
