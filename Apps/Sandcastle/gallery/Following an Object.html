@@ -89,6 +89,7 @@ require([
     dom.byId('toolbar').innerHTML = '';
     
     var scene = widget.scene;
+    var camera = scene.getCamera();
     var ellipsoid = Cesium.Ellipsoid.WGS84;
     var radius = ellipsoid.getMaximumRadius();
     
@@ -108,18 +109,23 @@ require([
     };
     image.src = '../images/Cesium_Logo_overlay.png';
     
-    var now = new Cesium.JulianDate();
+    var now = widget.animationController.update();
     var start = now.getTotalDays();
     var end = now.addMinutes(1.0).getTotalDays();
     var duration = end - start;
     
+    var axis = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(-65.0, 32.0)).normalize();
+    var rotation = Cesium.Matrix3.fromQuaternion(Cesium.Quaternion.fromAxisAngle(Cesium.Cartesian3.UNIT_Z, 1000000.0 / radius));
+    var startPosition = Cesium.Matrix3.multiplyByVector(rotation, axis).multiplyByScalar(radius);
+    ellipsoid.scaleToGeodeticSurface(startPosition);
+    
     function computePosition(time) {
-        var t = (time.getTotalDays() - start) / duration;
+        var t = Math.abs(time.getTotalDays() - start) / duration;
         t -= Math.floor(t);
         t *= Cesium.Math.TWO_PI;
         
-        var position = new Cesium.Cartesian3(Math.cos(t), Math.sin(t), 0.0);
-        Cesium.Cartesian3.multiplyByScalar(position, radius * 1.5, position);
+        var rotation = Cesium.Matrix3.fromQuaternion(Cesium.Quaternion.fromAxisAngle(axis, t));
+        var position = Cesium.Matrix3.multiplyByVector(rotation, startPosition);
         
         return position;
     }
@@ -129,11 +135,16 @@ require([
         if (typeof billboard !== 'undefined') {
             billboard.setPosition(position);
         }
-        scene.getCamera().transform = Cesium.Transforms.eastNorthUpToFixedFrame(position, ellipsoid);
+        camera.transform = Cesium.Transforms.eastNorthUpToFixedFrame(position, ellipsoid);
     }
+    update(now);
+    
+    camera.controller.lookAt(new Cesium.Cartesian3(0.0, -1000000.0, 1000000.0),
+            Cesium.Cartesian3.ZERO,
+            Cesium.Cartesian3.UNIT_Z);
     
     function tick() {
-        var time = new Cesium.JulianDate();
+        var time = widget.animationController.update();
         widget.initializeFrame(time);
         widget.update(time);
         update(time);
