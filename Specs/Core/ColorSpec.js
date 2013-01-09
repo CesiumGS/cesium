@@ -1,9 +1,7 @@
 /*global defineSuite*/
-defineSuite(['Core/Color',
-             'Core/NamedColors'
+defineSuite(['Core/Color'
          ], function(
-             Color,
-             NamedColors) {
+             Color) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -148,15 +146,15 @@ defineSuite(['Core/Color',
     });
 
     it('fromCssColorString supports named colors', function() {
-        expect(Color.fromCssColorString('red')).toEqual(new Color(1.0, 0.0, 0.0, 1.0));
-        expect(Color.fromCssColorString('green')).toEqual(Color.fromCssColorString(NamedColors.GREEN.value));
-        expect(Color.fromCssColorString('blue')).toEqual(Color.fromCssColorString(NamedColors.BLUE.value));
+        expect(Color.fromCssColorString('red')).toEqual(Color.RED);
+        expect(Color.fromCssColorString('green')).toEqual(Color.GREEN);
+        expect(Color.fromCssColorString('blue')).toEqual(Color.BLUE);
     });
 
     it('fromCssColorString supports NAMED colors', function() {
-        expect(Color.fromCssColorString('RED')).toEqual(new Color(1.0, 0.0, 0.0, 1.0));
-        expect(Color.fromCssColorString('GREEN')).toEqual(Color.fromCssColorString('#008000'));
-        expect(Color.fromCssColorString('BLUE')).toEqual(new Color(0.0, 0.0, 1.0, 1.0));
+        expect(Color.fromCssColorString('RED')).toEqual(Color.RED);
+        expect(Color.fromCssColorString('GREEN')).toEqual(Color.GREEN);
+        expect(Color.fromCssColorString('BLUE')).toEqual(Color.BLUE);
     });
 
     it('fromCssColorString supports the hsl() format', function() {
@@ -167,12 +165,8 @@ defineSuite(['Core/Color',
         expect(Color.fromCssColorString('hsla(360, 100%, 100%, 0.5)')).toEqual(Color.fromHsl(1, 1, 1, 0.5));
     });
 
-    it('fromCssColorString can return a default value on unknown colors', function() {
-        expect(Color.fromCssColorString('unknown', Color.fromCssColorString('GREEN'))).toEqual(Color.fromCssColorString('GREEN'));
-    });
-
     it('fromCssColorString can throw on unknown colors', function() {
-        expect(function() {Color.fromCssColorString('unknown', undefined, true);}).toThrow();
+        expect(Color.fromCssColorString('unknown', undefined, true)).toBeUndefined();
     });
 
     it('fromHSL works', function() {
