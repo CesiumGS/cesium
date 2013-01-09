@@ -10,6 +10,7 @@ Beta Releases
 * Fixed camera tilt close to the `minimumZoomDistance`.
 * Upgraded RequireJS to version 2.1.2, and Almond to 0.2.3.
 * Fixed a bug that could lead to blue tiles when zoomed in close to the North and South poles.
+* Fixed a bug where removing labels would remove the wrong label and ultimately cause a crash.
 
 ### b12 - 01/03/2013
 
