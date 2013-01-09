@@ -170,18 +170,18 @@ define([
         matches = rgbParenthesesMatcher.exec(color);
         if (matches !== null) {
             return new Color(
-                    parseFloat(matches[1], 10) / ('%' === matches[1].substr(-1) ? 100.0 : 255.0),
-                    parseFloat(matches[2], 10) / ('%' === matches[2].substr(-1) ? 100.0 : 255.0),
-                    parseFloat(matches[3], 10) / ('%' === matches[3].substr(-1) ? 100.0 : 255.0),
+                    parseFloat(matches[1]) / ('%' === matches[1].substr(-1) ? 100.0 : 255.0),
+                    parseFloat(matches[2]) / ('%' === matches[2].substr(-1) ? 100.0 : 255.0),
+                    parseFloat(matches[3]) / ('%' === matches[3].substr(-1) ? 100.0 : 255.0),
                     parseFloat(defaultValue(matches[4], '1.0')));
         }
 
         matches = hslParenthesesMatcher.exec(color);
         if (matches !== null) {
             return Color.fromHsl(
-                    parseFloat(matches[1], 10) / 360.0,
-                    parseFloat(matches[2], 10) / 100.0,
-                    parseFloat(matches[3], 10) / 100.0,
+                    parseFloat(matches[1]) / 360.0,
+                    parseFloat(matches[2]) / 100.0,
+                    parseFloat(matches[3]) / 100.0,
                     parseFloat(defaultValue(matches[4], '1.0')));
         }
 
