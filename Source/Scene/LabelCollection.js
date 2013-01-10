@@ -427,7 +427,7 @@ define([
      * });
      */
     LabelCollection.prototype.add = function(description) {
-        var label = new Label(description, this, this._labels.length);
+        var label = new Label(description, this);
 
         this._labels.push(label);
         this._labelsToUpdate.push(label);
@@ -468,7 +468,7 @@ define([
         }
 
         if (label._labelCollection === this) {
-            this._labels.splice(label._index, 1);
+            this._labels.splice(this._labels.indexOf(label), 1);
             destroyLabel(this, label);
 
             return true;
