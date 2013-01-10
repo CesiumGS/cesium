@@ -57,6 +57,25 @@
         padding: 2px 5px;
         position: absolute;
     }
+    .zoomButton {
+        display: inline-block;
+        font-size: 20px;
+        background: #BDF;
+        border-radius: 4px;
+        margin: 0 5px;
+        width: 2em;
+        color: black;
+        text-align: center;
+        border: solid 1px #578;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+    }
+    .zoomButton:hover {
+        background: #DEF;
+        box-shadow: 0 0 8px #fff;
+    }
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
@@ -94,33 +113,32 @@ require([
     var zoomOut;
     
     function createButtons() {
-        zoomIn = new Button({
-            label: '+'
-        });
-        zoomIn.placeAt('toolbar');
-        
-        zoomOut = new Button({
-            label: '-'
-        });
-        zoomOut.placeAt('toolbar');
-        
-        on(zoomIn, 'mousedown', function() {
+        zoomIn = document.getElementById('zoomIn');
+        zoomOut = document.getElementById('zoomOut');
+
+        zoomIn.addEventListener('mousedown', function () {
             zoomingIn = true;
-        });
-        on(zoomOut, 'mousedown', function() {
+            zoomingOut = false;
+        }, false);
+
+        zoomOut.addEventListener('mousedown', function () {
+            zoomingIn = false;
             zoomingOut = true;
-        });
-        on(document, 'mouseup', function() {
+        }, false);
+
+        document.addEventListener('mouseup', function () {
             zoomingIn = false;
             zoomingOut = false;
-        });
+        }, false);
     }
 
     var widget = new CesiumWidget();
     widget.placeAt(dom.byId('cesiumContainer'));
     widget.autoStartRenderLoop = false;             // Going to roll our own render loop.
     widget.startup();
-    dom.byId('toolbar').innerHTML = '';
+    dom.byId('toolbar').innerHTML =
+        '<span id="zoomIn" class="zoomButton">+</span>' +
+        '<span id="zoomOut" class="zoomButton">-</span>';
     
     createButtons();
     
