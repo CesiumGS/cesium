@@ -19,11 +19,13 @@ define([
         '../Core/WebMercatorProjection',
         '../Renderer/DrawCommand',
         './ImageryState',
+        './RequestTileGeometryResult',
         './SceneMode',
         './TerrainProvider',
         './TileLoadQueue',
         './TileReplacementQueue',
-        './TileState'
+        './TileState',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         destroyObject,
@@ -44,11 +46,13 @@ define([
         WebMercatorProjection,
         DrawCommand,
         ImageryState,
+        RequestTileGeometryResult,
         SceneMode,
         TerrainProvider,
         TileLoadQueue,
         TileReplacementQueue,
-        TileState) {
+        TileState,
+        when) {
     "use strict";
 
     /**
@@ -636,7 +640,7 @@ define([
 
             if (tile.state === TileState.IMAGERY_SKELETONS_CREATED) {
                 tile.state = TileState.TRANSITIONING;
-                terrainProvider.requestTileGeometry(tile);
+                requestTileGeometry(terrainProvider, tile);
             }
 
             if (tile.state === TileState.RECEIVED) {
@@ -744,6 +748,94 @@ define([
 
             tile = tile.loadNext;
         } while (Date.now() < endTime && typeof tile !== 'undefined');
+    }
+
+    function requestTileGeometry(terrainProvider, tile) {
+        var newMethod = false;
+
+        if (!newMethod) {
+            terrainProvider.requestTileGeometry(tile);
+            return;
+        }
+
+        // Is data for this tile known to be unavailable?
+        // If so, don't try to request it.
+        var parent = tile.parent;
+        var dataAvailable = true;
+        if (typeof parent !== 'undefined') {
+            var childBits = parent.childTileBits;
+
+            var bitNumber = 2; // northwest child
+            if (tile.x !== parent.x * 2) {
+                ++bitNumber; // east child
+            }
+            if (tile.y !== parent.y * 2) {
+                bitNumber -= 2; // south child
+            }
+
+            dataAvailable = (childBits & (1 << bitNumber)) !== 0;
+        }
+
+        if (dataAvailable) {
+            // Request the geometry from the terrain provider.
+            var geometryPromise = terrainProvider.requestTileGeometry2(tile.x, tile.y, tile.level);
+
+            // If the request method returns undefined (instead of a promise), the request has been
+            // deferred.  Transition back to the IMAGERY_SKELETONS_CREATED state.
+            if (typeof geometryPromise === 'undefined') {
+                tile.state = TileState.IMAGERY_SKELETONS_CREATED;
+                return;
+            }
+
+            when(geometryPromise, function(requestedGeometry) {
+                tile.requestedTerrain = requestedGeometry.terrainData;
+                tile.upsampledTerrain = undefined;
+
+                if (typeof requestedGeometry.waterMaskData !== 'undefined') {
+                    tile.requestedWaterMask = requestedGeometry.waterMaskData;
+                }
+
+                tile.state = TileState.RECEIVED;
+                tile.doneLoading = false;
+
+                // If there is (or might be) geometry data for any children, reset their state so it gets loaded.
+                if (typeof tile.children !== 'undefined') {
+                    var childMask = requestedGeometry.childTileMask;
+                    for (var childIndex = 0; childIndex < 4; ++childIndex) {
+                        var bitMaskValue = 1 << childIndex;
+                        if ((childMask & bitMaskValue) !== 0) {
+                            var childTile = tile.children[childIndex];
+                            if (childTile.state !== TileState.UNLOADED) {
+                                childTile.state = TileState.IMAGERY_SKELETONS_CREATED;
+                                childTile.doneLoading = false;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // The above request might take awhile.  In the meantime, upsample this tile's geometry from
+        // its closest ancestor that does have data.
+        // Skip this for root tiles and for tiles that already have upsampled geometry.
+        if (typeof parent !== 'undefined' && typeof tile.upsampledGeometry === 'undefined') {
+            // Find the nearest ancestor with data.
+            // This loop is guaranteed to terminate because the root tiles cannot be upsampled (only requested)
+            // and we won't refine past them until they're fully loaded.
+            var sourceTile = parent;
+            while (typeof sourceTile.requestedGeometry === 'undefined') {
+                sourceTile = sourceTile.parent;
+            }
+
+            var geometryToUpsample = sourceTile.requestedGeometry;
+
+            var upsampledTerrain = geometryToUpsample.terrainData.upsample(
+                    sourceTile.tilingScheme,
+                    sourceTile.x, sourceTile.y, sourceTile.level,
+                    tile.x, tile.y, tile.level);
+
+            tile.upsampledGeometry = new RequestTileGeometryResult(upsampledTerrain, undefined, 0);
+        }
     }
 
     // This is debug code to render the bounding sphere of the tile in
