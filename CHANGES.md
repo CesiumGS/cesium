@@ -7,7 +7,10 @@ Beta Releases
 ### b13 - xx/xx/2013
 
 * Breaking changes:
+   * Renamed `toCSSColor` to `toCssColorString`.
    * Moved `minimumZoomDistance` and `maximumZoomDistance` from the `CameraController` to the `ScreenSpaceCameraController`.
+* Added `fromCssColorString` to `Color` to create a `Color` instance from any CSS value.
+* Added `fromHsl` to `Color` to create a `Color` instance from H, S, L values.
 * Added `Scene.backgroundColor`.
 * Fixed camera tilt close to the `minimumZoomDistance`.
 * Fixed a bug that could lead to blue tiles when zoomed in close to the North and South poles.
