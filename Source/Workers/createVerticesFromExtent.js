@@ -17,7 +17,7 @@ define([
 
         ExtentTessellator.computeVertices(parameters);
 
-        return vertices;
+        return vertices.buffer;
     }
 
     return createTaskProcessorWorker(createVerticesFromExtent);
