@@ -377,6 +377,7 @@ defineSuite([
         layer.brightness = 0.456;
         layer.contrast = 0.654;
         layer.gamma = 0.321;
+        layer.saturation = 0.123;
 
         frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
@@ -405,6 +406,7 @@ defineSuite([
                     expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
                     expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
                     expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0/0.321]);
+                    expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
                 }
             }
 
@@ -432,6 +434,7 @@ defineSuite([
         layer.brightness = createFunction(0.456);
         layer.contrast = createFunction(0.654);
         layer.gamma = createFunction(0.321);
+        layer.saturation = createFunction(0.123);
 
         frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
@@ -460,6 +463,7 @@ defineSuite([
                     expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
                     expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
                     expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0/0.321]);
+                    expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
                 }
             }
 

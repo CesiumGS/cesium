@@ -852,6 +852,9 @@ define([
             u_dayTextureContrast : function() {
                 return this.dayTextureContrast;
             },
+            u_dayTextureSaturation : function() {
+                return this.dayTextureSaturation;
+            },
             u_dayTextureOneOverGamma : function() {
                 return this.dayTextureOneOverGamma;
             },
@@ -875,6 +878,7 @@ define([
             dayTextureAlpha : [],
             dayTextureBrightness : [],
             dayTextureContrast : [],
+            dayTextureSaturation : [],
             dayTextureOneOverGamma : [],
             dayIntensity : 0.0,
 
@@ -1039,6 +1043,12 @@ define([
                             uniformMap.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
                         } else {
                             uniformMap.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast;
+                        }
+
+                        if (typeof imageryLayer.saturation === 'function') {
+                            uniformMap.dayTextureSaturation[numberOfDayTextures] = imageryLayer.saturation(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        } else {
+                            uniformMap.dayTextureSaturation[numberOfDayTextures] = imageryLayer.saturation;
                         }
 
                         if (typeof imageryLayer.gamma === 'function') {

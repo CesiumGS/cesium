@@ -51,6 +51,7 @@ define([
                     '   u_dayTextureAlpha[' + i + '],\n' +
                     '   u_dayTextureBrightness[' + i + '],\n' +
                     '   u_dayTextureContrast[' + i + '],\n' +
+                    '   u_dayTextureSaturation[' + i + '],\n' +
                     '   u_dayTextureOneOverGamma[' + i + ']);\n';
             }
 
