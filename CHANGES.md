@@ -12,11 +12,11 @@ Beta Releases
 * Added `fromCssColorString` to `Color` to create a `Color` instance from any CSS value.
 * Added `fromHsl` to `Color` to create a `Color` instance from H, S, L values.
 * Added `Scene.backgroundColor`.
+* Added `hue` and `saturation` properties to `ImageryLayer`.
+* Added `czm_hue` and `czm_saturation` to adjust the hue and saturation of RGB colors.
 * Fixed camera tilt close to the `minimumZoomDistance`.
 * Fixed a bug that could lead to blue tiles when zoomed in close to the North and South poles.
 * Fixed a bug where removing labels would remove the wrong label and ultimately cause a crash.
-* Added `czm_hue` and `czm_saturation` to adjust the hue and saturation of RGB colors.
-* Added `hue` and `saturation` properties to `ImageryLayer`.
 * Upgraded RequireJS to version 2.1.2, and Almond to 0.2.3.
 
 ### b12 - 01/03/2013
