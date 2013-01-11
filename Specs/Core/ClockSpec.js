@@ -304,7 +304,7 @@ defineSuite([
         expect(clock.isOutOfRange()).toEqual(false);
     });
 
-    it('Tick dependant clock step loops animating backwards.', function() {
+    it('Tick dependant clock step stops at start when animating backwards.', function() {
         var start = JulianDate.fromTotalDays(0);
         var stop = JulianDate.fromTotalDays(1);
         var currentTime = JulianDate.fromTotalDays(0);
@@ -319,19 +319,14 @@ defineSuite([
             stopTime : stop,
             clockRange : range
         });
-        expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = stop.addSeconds(multiplier);
-        expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
-
-        currentTime = currentTime.addSeconds(multiplier);
-        expect(currentTime).toEqual(clock.tick());
-        expect(clock.currentTime).toEqual(currentTime);
-        expect(clock.isOutOfRange()).toEqual(false);
+        expect(start).toEqual(clock.tick());
+        expect(start).toEqual(clock.currentTime);
+        expect(clock.isOutOfRange()).toEqual(true);
     });
 
-    it('Tick dependant clock step stops at end when animating .', function() {
+    it('Tick dependant clock step stops at end when animating forwards.', function() {
         var start = JulianDate.fromTotalDays(0);
         var stop = JulianDate.fromTotalDays(1);
 

@@ -2,11 +2,13 @@
 defineSuite([
              'Core/AnimationController',
              'Core/Clock',
-             'Core/ClockStep'
+             'Core/ClockStep',
+             'Core/Math'
             ], function(
               AnimationController,
               Clock,
-              ClockStep) {
+              ClockStep,
+              CesiumMath) {
     "use strict";
     /*global it,expect,waitsFor*/
 
@@ -79,6 +81,9 @@ defineSuite([
         animationController.faster();
         expect(clock.clockStep).toEqual(ClockStep.SPEED_MULTIPLIER);
         expect(clock.multiplier).toBeGreaterThan(1);
+        clock.multiplier = 1.0001;
+        animationController.faster();
+        expect(clock.multiplier).toBeGreaterThan(1);
     });
 
     it('slower makes it go slower', function() {
@@ -105,6 +110,46 @@ defineSuite([
         expect(clock.clockStep).toEqual(ClockStep.SPEED_MULTIPLIER);
         expect(clock.multiplier).toBeLessThan(1);
         expect(clock.multiplier).toBeGreaterThan(0);
+    });
+
+    it('typical speeds are reasonable', function() {
+        var clock = new Clock();
+        var animationController = new AnimationController(clock);
+
+        expect(animationController.getTypicalSpeed(60.001)).toEqualEpsilon(60.0, CesiumMath.EPSILON14);
+        expect(animationController.getTypicalSpeed(304.0)).toEqualEpsilon(300.0, CesiumMath.EPSILON14);
+        expect(animationController.getTypicalSpeed(0.000000001)).toEqualEpsilon(0.000001, CesiumMath.EPSILON14);
+        expect(animationController.getTypicalSpeed(1e15)).toEqualEpsilon(604800.0, CesiumMath.EPSILON14);
+    });
+
+    it('moreReverse slows and goes backwards', function() {
+        var clock = new Clock();
+        var animationController = new AnimationController(clock);
+
+        clock.multiplier = 0.0025;
+        animationController.moreReverse();
+        expect(clock.multiplier).toEqualEpsilon(0.002, CesiumMath.EPSILON14);
+        animationController.moreReverse();
+        expect(clock.multiplier).toEqualEpsilon(0.001, CesiumMath.EPSILON14);
+        animationController.moreReverse();
+        expect(clock.multiplier).toEqualEpsilon(-0.001, CesiumMath.EPSILON14);
+        animationController.moreReverse();
+        expect(clock.multiplier).toEqualEpsilon(-0.002, CesiumMath.EPSILON14);
+    });
+
+    it('moreForward slows reverse and goes forwards', function() {
+        var clock = new Clock();
+        var animationController = new AnimationController(clock);
+
+        clock.multiplier = -0.0025;
+        animationController.moreForward();
+        expect(clock.multiplier).toEqualEpsilon(-0.002, CesiumMath.EPSILON14);
+        animationController.moreForward();
+        expect(clock.multiplier).toEqualEpsilon(-0.001, CesiumMath.EPSILON14);
+        animationController.moreForward();
+        expect(clock.multiplier).toEqualEpsilon(0.001, CesiumMath.EPSILON14);
+        animationController.moreForward();
+        expect(clock.multiplier).toEqualEpsilon(0.002, CesiumMath.EPSILON14);
     });
 
 });
