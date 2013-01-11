@@ -742,7 +742,8 @@ define([
             logoData.logos.length = logoData.logoIndex;
         }
 
-        if (logoData.rebuildLogo) {
+        if (logoData.rebuildLogo || !centralBody.logoOffset.equals(centralBody._logoOffset)) {
+            centralBody._logoOffset = centralBody.logoOffset;
             var width = logoData.totalLogoWidth;
             var height = logoData.totalLogoHeight;
             var logoRectangle = new BoundingRectangle(centralBody.logoOffset.x, centralBody.logoOffset.y, width, height);
