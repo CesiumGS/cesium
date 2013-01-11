@@ -100,7 +100,7 @@
 }
 .playback-shuttleRingBack {
     fill: #FAFAFA;
-    /* fill-opacity: 0.9;  Leave commented-out until issue #361 gets fixed.  */
+    fill-opacity: 1;
     stroke: #AEAEAE;
     stroke-width: 1.2;
 }
@@ -199,7 +199,7 @@
 }
 .cesium-darker .playback-shuttleRingBack {
     fill: #181818;
-    /* fill-opacity: 0.9;  Leave commented-out until issue #361 gets fixed.  */
+    fill-opacity: 0.8;
     stroke: #333;
     stroke-width: 1.2;
 }
