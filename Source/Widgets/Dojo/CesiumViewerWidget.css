@@ -59,7 +59,7 @@
     display: block;
     position: absolute;
     bottom: 32px;
-    right: 5px;
+    left: 205px;
     text-decoration: none;
     background-image: url(../Images/Cesium_Logo_overlay.png);
     width: 118px;
@@ -102,6 +102,8 @@
 
 .cw-imagerySelector {
     display: block;
+    font-family: sans-serif;
+    font-size: 9pt;
 }
 
 .claro .dijitToggleButtonChecked .dijitButtonNode {

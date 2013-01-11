@@ -643,8 +643,7 @@ define([
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
 
-            // This logo is replicated by the imagery selector button, so it's hidden here.
-            centralBody.logoOffset = new Cartesian2(-100, -100);
+            centralBody.logoOffset = new Cartesian2(335, 28);
 
             this._configureCentralBodyImagery();
 
