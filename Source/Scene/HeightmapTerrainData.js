@@ -23,6 +23,17 @@ define([
      * @param {TypedArray} buffer The buffer containing height data.
      * @param {Number} width The width (longitude direction) of the heightmap, in samples.
      * @param {Number} height The height (latitude direction) of the heightmap, in samples.
+     * @param {Number} [childTileMask=15] A bit mask indicating which of this tile's four children exist.
+     *                 If a child's bit is set, geometry will be requested for that tile as well when it
+     *                 is needed.  If the bit is cleared, the child tile is not requested and geometry is
+     *                 instead upsampled from the parent.  The bit values are as follows:
+     *                 <table>
+     *                  <th><td>Bit Position</td><td>Bit Value</td><td>Child Tile</td></th>
+     *                  <tr><td>0</td><td>1</td><td>Southwest</td></tr>
+     *                  <tr><td>1</td><td>2</td><td>Southeast</td></tr>
+     *                  <tr><td>2</td><td>4</td><td>Northwest</td></tr>
+     *                  <tr><td>3</td><td>8</td><td>Northeast</td></tr>
+     *                 </table>
      * @param {Object} [structure] An object describing the structure of the height data.
      * @param {Number} [structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
      *                 the height above the heightOffset, in meters.  The heightOffset is added to the resulting
@@ -44,7 +55,7 @@ define([
      *                  stride property is greater than 1.  If this property is false, the first element is the
      *                  low-order element.  If it is true, the first element is the high-order element.
      */
-    var HeightmapTerrainData = function HeightmapTerrainData(buffer, width, height, structure) {
+    var HeightmapTerrainData = function HeightmapTerrainData(buffer, width, height, childTileMask, structure) {
         /**
          * The buffer containing the height data.
          * @type {TypedArray}
@@ -62,6 +73,22 @@ define([
          * @type {Number}
          */
         this.height = height;
+
+        /**
+         * A bit mask indicating which of this tile's four children exist.
+         * If a child's bit is set, geometry will be requested for that tile as well when it
+         * is needed.  If the bit is cleared, the child tile is not requested and geometry is
+         * instead upsampled from the parent.  The bit values are as follows:
+         * <table>
+         *   <th><td>Bit Position</td><td>Bit Value</td><td>Child Tile</td></th>
+         *   <tr><td>0</td><td>1</td><td>Southwest</td></tr>
+         *   <tr><td>1</td><td>2</td><td>Southeast</td></tr>
+         *   <tr><td>2</td><td>4</td><td>Northwest</td></tr>
+         *   <tr><td>3</td><td>8</td><td>Northeast</td></tr>
+         * </table>
+         * @type {Number}
+         */
+        this.childTileMask = childTileMask;
 
         if (typeof structure === 'undefined') {
             structure = defaultStructure;

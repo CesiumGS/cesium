@@ -156,11 +156,7 @@ define([
         return when(promise, function(buffer) {
             var heightBuffer = new Uint16Array(buffer, 0, that.heightmapWidth * that.heightmapWidth);
             var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
-            var waterMaskBuffer = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
-
-            var terrainData = new HeightmapTerrainData(heightBuffer, that.heightmapWidth, that.heightmapWidth, that._terrainDataStructure);
-            var waterData = new WaterMaskData(waterMaskBuffer);
-            return new RequestTileGeometryResult(terrainData, waterData, childTileMask);
+            return new HeightmapTerrainData(heightBuffer, that.heightmapWidth, that.heightmapWidth, childTileMask, that._terrainDataStructure);
         });
     };
 
