@@ -147,12 +147,24 @@ define([
         this.contrast = defaultValue(description.contrast, defaultValue(imageryProvider.defaultContrast, 1.0));
 
         /**
+         * The hue of this layer in radians. 0.0 uses the unmodified imagery color. This can either be a
+         * simple number or a function with the signature <code>function(frameState, layer, x, y, level)</code>.
+         * The function is passed the current {@link FrameState}, this layer, and the x, y, and level
+         * coordinates of the imagery tile for which the hue is required, and it is expected to return
+         * the hue value to use for the tile.  The function is executed for every
+         * frame and for every tile, so it must be fast.
+         *
+         * @type {Number}
+         */
+        this.hue = defaultValue(description.hue, defaultValue(imageryProvider.defaultHue, 0.0));
+
+        /**
          * The saturation of this layer. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
          * saturation while greater than 1.0 increases it. This can either be a simple number or a function
          * with the signature <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
          * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
-         * imagery tile for which the contrast is required, and it is expected to return
-         * the contrast value to use for the tile.  The function is executed for every
+         * imagery tile for which the saturation is required, and it is expected to return
+         * the saturation value to use for the tile.  The function is executed for every
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}

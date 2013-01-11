@@ -7,6 +7,7 @@ uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 uniform float u_dayTextureBrightness[TEXTURE_UNITS];
 uniform float u_dayTextureContrast[TEXTURE_UNITS];
+uniform float u_dayTextureHue[TEXTURE_UNITS];
 uniform float u_dayTextureSaturation[TEXTURE_UNITS];
 uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
@@ -26,6 +27,7 @@ vec3 sampleAndBlend(
     float textureAlpha,
     float textureBrightness,
     float textureContrast,
+    float textureHue,
     float textureSaturation,
     float textureOneOverGamma)
 {
@@ -51,6 +53,7 @@ vec3 sampleAndBlend(
     
     color = mix(vec3(0.0, 0.0, 0.0), color, textureBrightness);
     color = mix(vec3(0.5, 0.5, 0.5), color, textureContrast);
+    color = czm_hue(color, textureHue);
     color = czm_saturation(color, textureSaturation);
     
     color = pow(color, vec3(textureOneOverGamma));
