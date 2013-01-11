@@ -47,14 +47,6 @@
     margin: 0;
 }
 
-.cw-bingIcon {
-    background-image: url('../Images/Bing_Logo_51x19_White.png');
-    background-repeat: no-repeat;
-    background-position: center;
-    width: 51px;
-    height: 24px;
-}
-
 .cw-cesiumLogo {
     display: block;
     position: absolute;

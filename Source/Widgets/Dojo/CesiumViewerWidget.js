@@ -803,7 +803,6 @@ define([
             var imageryRoad = widget.imageryRoad;
             var imagerySingleTile = widget.imagerySingleTile;
             var imageryOptions = [imageryAerial, imageryAerialWithLabels, imageryRoad, imagerySingleTile];
-            var bingHtml = imagery.containerNode.innerHTML;
 
             imagery.startup();
 
@@ -811,10 +810,8 @@ define([
                 return function() {
                     if (style) {
                         widget.setStreamingImageryMapStyle(style);
-                        imagery.containerNode.innerHTML = bingHtml;
                     } else {
                         widget.enableStreamingImagery(false);
-                        imagery.containerNode.innerHTML = 'Imagery';
                     }
 
                     imageryOptions.forEach(function(o) {
