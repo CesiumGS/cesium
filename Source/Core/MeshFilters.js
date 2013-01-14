@@ -511,7 +511,7 @@ define([
      * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.FLOAT.
      *
      * @example
-     * mesh = MeshFilters.encodePosition(mesh, 'position3D', 'position3DHigh', 'position3DLow');
+     * mesh = MeshFilters.encodeAttribute(mesh, 'position3D', 'position3DHigh', 'position3DLow');
      *
      * @see EncodedCartesian3
      */
@@ -530,7 +530,7 @@ define([
 
         var attribute = mesh.attributes[attributeName];
 
-        if (attribute === 'undefined') {
+        if (typeof attribute === 'undefined') {
             throw new DeveloperError('mesh must have attribute matching the attributeName argument: ' + attributeName + '.');
         }
 
@@ -540,24 +540,24 @@ define([
 
         var values = attribute.values;
         var length = values.length;
-        var highPositions = new Array(length);
-        var lowPositions = new Array(length);
+        var highValues = new Array(length);
+        var lowValues = new Array(length);
 
         for (var i = 0; i < length; ++i) {
             EncodedCartesian3.split(values[i], encodedResult);
-            highPositions[i] = encodedResult.high;
-            lowPositions[i] = encodedResult.low;
+            highValues[i] = encodedResult.high;
+            lowValues[i] = encodedResult.low;
         }
 
         mesh.attributes[attributeHighName] = {
             componentDatatype : attribute.componentDatatype,
             componentsPerAttribute : attribute.componentsPerAttribute,
-            values : highPositions
+            values : highValues
         };
         mesh.attributes[attributeLowName] = {
             componentDatatype : attribute.componentDatatype,
             componentsPerAttribute : attribute.componentsPerAttribute,
-            values : lowPositions
+            values : lowValues
         };
         delete mesh.attributes[attributeName];
 

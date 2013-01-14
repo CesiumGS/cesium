@@ -13,6 +13,7 @@ Beta Releases
 * Added `fromHsl` to `Color` to create a `Color` instance from H, S, L values.
 * Added `Scene.backgroundColor`.
 * Added `MeshFilters.encodePosition`.
+* Fixed jitter artifacts with polygons.
 * Fixed camera tilt close to the `minimumZoomDistance`.
 * Fixed a bug that could lead to blue tiles when zoomed in close to the North and South poles.
 * Fixed a bug where removing labels would remove the wrong label and ultimately cause a crash.
