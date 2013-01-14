@@ -20,7 +20,8 @@ define([
         '../Core/WindingOrder',
         '../Core/ExtentTessellator',
         '../Core/Queue',
-        '../Core/Matrix2',
+        '../Core/Matrix3',
+        '../Core/Quaternion',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/CommandLists',
@@ -55,7 +56,8 @@ define([
         WindingOrder,
         ExtentTessellator,
         Queue,
-        Matrix2,
+        Matrix3,
+        Quaternion,
         BlendingState,
         BufferUsage,
         CommandLists,
@@ -204,6 +206,7 @@ define([
         };
 
         this._positions = undefined;
+        this._textureRotationAngle = undefined;
         this._extent = undefined;
         this._polygonHierarchy = undefined;
         this._createVertexArray = false;
@@ -259,13 +262,6 @@ define([
          */
         this.erosion = 1.0;
 
-        /**
-         * DOC_TBA
-         *
-         * @type Matrix2
-         */
-        this.textureMatrix = Matrix2.IDENTITY.clone();
-
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
 
@@ -287,9 +283,6 @@ define([
             },
             u_height : function() {
                 return (that._mode !== SceneMode.SCENE2D) ? that.height : 0.0;
-            },
-            u_textureMatrix : function() {
-                return that.textureMatrix;
             }
         };
         this._pickUniforms = undefined;
@@ -319,8 +312,9 @@ define([
      *
      * @see Polygon#getPositions
      *
-     * @param {Array} positions. The cartesian positions of the polygon.
-     * @param {double} [height=0.0]. The height of the polygon.
+     * @param {Array} positions The cartesian positions of the polygon.
+     * @param {Number} [height=0.0] The height of the polygon.
+     * @param {Number} [textureRotationAngle=0.0] The angle to rotate the texture in radians.
      *
      * @example
      * polygon.setPositions([
@@ -329,12 +323,13 @@ define([
      *   ellipsoid.cartographicToCartesian(new Cartographic(...))
      * ], 10.0);
      */
-    Polygon.prototype.setPositions = function(positions, height) {
+    Polygon.prototype.setPositions = function(positions, height, textureRotationAngle) {
         // positions can be undefined
         if (typeof positions !== 'undefined' && (positions.length < 3)) {
             throw new DeveloperError('At least three positions are required.');
         }
         this.height = defaultValue(height, 0.0);
+        this._textureRotationAngle = defaultValue(textureRotationAngle, 0.0);
         this._extent = undefined;
         this._polygonHierarchy = undefined;
         this._positions = positions;
@@ -369,7 +364,8 @@ define([
      * }
      * </code>
      * </pre>
-     * @param {double} [height=0.0] The height of the polygon.
+     * @param {Number} [height=0.0] The height of the polygon.
+     * @param {Number} [textureRotationAngle=0.0] The angle to rotate the texture in radians.
      *
      * @exception {DeveloperError} At least three positions are required.
      *
@@ -386,7 +382,7 @@ define([
      *      }]
      *  };
      */
-    Polygon.prototype.configureFromPolygonHierarchy  = function(hierarchy, height) {
+    Polygon.prototype.configureFromPolygonHierarchy  = function(hierarchy, height, textureRotationAngle) {
         // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
         var polygons = [];
         var queue = new Queue();
@@ -426,6 +422,7 @@ define([
         }
 
         this.height = defaultValue(height, 0.0);
+        this._textureRotationAngle = defaultValue(textureRotationAngle, 0.0);
         this._positions = undefined;
         this._extent = undefined;
         this._polygonHierarchy = polygons;
@@ -452,6 +449,7 @@ define([
     Polygon.prototype.configureExtent = function(extent, height) {
         this._extent = extent;
         this.height = defaultValue(height, 0.0);
+        this._textureRotationAngle = undefined;
         this._positions = undefined;
         this._polygonHierarchy = undefined;
         this._createVertexArray = true;
@@ -459,8 +457,10 @@ define([
 
     var appendTextureCoordinatesCartesian2 = new Cartesian2();
     var appendTextureCoordinatesCartesian3 = new Cartesian3();
+    var appendTextureCoordinatesQuaternion = new Quaternion();
+    var appendTextureCoordinatesMatrix3 = new Matrix3();
 
-    function appendTextureCoordinates(tangentPlane, positions2D, mesh) {
+    function appendTextureCoordinates(tangentPlane, positions2D, mesh, angle) {
         var boundingRectangle = new BoundingRectangle.fromPoints(positions2D);
         var origin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
 
@@ -470,6 +470,9 @@ define([
         var textureCoordinates = new Float32Array(2 * (length / 3));
         var j = 0;
 
+        var rotation = Quaternion.fromAxisAngle(tangentPlane._normal, angle, appendTextureCoordinatesQuaternion);
+        var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
+
         // PERFORMANCE_IDEA:  Instead of storing texture coordinates per-vertex, we could
         // save memory by computing them in the fragment shader.  However, projecting
         // the point onto the plane may have precision issues.
@@ -478,6 +481,7 @@ define([
             p.x = positions[i];
             p.y = positions[i + 1];
             p.z = positions[i + 2];
+            Matrix3.multiplyByVector(textureMatrix, p, p);
             var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
             st.subtract(origin, st);
 
@@ -496,7 +500,7 @@ define([
 
     var createMeshFromPositionsPositions = [];
 
-    function createMeshFromPositions(polygon, positions, outerPositions2D) {
+    function createMeshFromPositions(polygon, positions, angle, outerPositions2D) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
         if (cleanedPositions.length < 3) {
             // Duplicate positions result in not enough positions to form a polygon.
@@ -514,7 +518,7 @@ define([
         var indices = PolygonPipeline.earClip2D(positions2D);
         var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, polygon._granularity);
         var boundary2D = outerPositions2D || positions2D;
-        mesh = appendTextureCoordinates(tangentPlane, boundary2D, mesh);
+        mesh = appendTextureCoordinates(tangentPlane, boundary2D, mesh, angle);
         return mesh;
     }
 
@@ -536,7 +540,7 @@ define([
                 polygon._boundingVolume2D.center = new Cartesian3(0.0, center2D.x, center2D.y);
             }
         } else if (typeof polygon._positions !== 'undefined') {
-            mesh = createMeshFromPositions(polygon, polygon._positions);
+            mesh = createMeshFromPositions(polygon, polygon._positions, polygon._textureRotationAngle);
             if (typeof mesh !== 'undefined') {
                 meshes.push(mesh);
                 polygon._boundingVolume = BoundingSphere.fromPoints(polygon._positions, polygon._boundingVolume);
@@ -546,7 +550,7 @@ define([
             var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, polygon.ellipsoid);
             var outerPositions2D = tangentPlane.projectPointsOntoPlane(outerPositions, createMeshesOuterPositions2D);
             for (i = 0; i < polygon._polygonHierarchy.length; i++) {
-                mesh = createMeshFromPositions(polygon, polygon._polygonHierarchy[i], outerPositions2D);
+                mesh = createMeshFromPositions(polygon, polygon._polygonHierarchy[i], polygon._textureRotationAngle, outerPositions2D);
                 if (typeof mesh !== 'undefined') {
                     meshes.push(mesh);
                 }
