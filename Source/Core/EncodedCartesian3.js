@@ -43,15 +43,33 @@ define([
         this.low = Cartesian3.ZERO.clone();
     };
 
-// TODO: update CHANGES.md
-// TODO: doc
 // TODO: tests
-// TODO: replace spilt below
 
     /**
-     * DOC_TBA
+     * Encodes a 64-bit floating-point value as two floating-point values that, when converted to
+     * 32-bit floating-point and added, approximate the original input.  The returned object
+     * has <code>high</code> and <code>low</code> properties for the high and low bits, respectively.
+     * <p>
+     * The fixed-point encoding follows <a href="http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/">Precisions, Precisions</a>.
+     * </p>
+     * @memberof EncodedCartesian3
+     *
+     * @param {Number} value The floating-point value to encode.
+     * @param {Object} [result] The object onto which to store the result.
+     *
+     * @return {Object} The modified result parameter or a new instance if one was not provided.
+     *
+     * @exception {DeveloperError} value is required.
+     *
+     * @example
+     * var value = 1234567.1234567;
+     * var splitValue = EncodedCartesian3.encode(value);
      */
-    EncodedCartesian3.split = function(value, result) {
+    EncodedCartesian3.encode = function(value, result) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required');
+        }
+
         if (typeof result === 'undefined') {
             result = {
                 high : 0.0,
@@ -73,22 +91,9 @@ define([
         return result;
     };
 
-    function spilt(value, result) {
-        var doubleHigh;
-        if (value >= 0.0) {
-            doubleHigh = Math.floor(value / 65536.0) * 65536.0;
-            result.high = doubleHigh;
-            result.low = value - doubleHigh;
-        } else {
-            doubleHigh = Math.floor(-value / 65536.0) * 65536.0;
-            result.high = -doubleHigh;
-            result.low = value + doubleHigh;
-        }
-    }
-
-    var scratchSpilt = function() {
-        this.high = 0.0;
-        this.low = 0.0;
+    var scratchEncode = {
+        high : 0.0,
+        low : 0.0
     };
 
     /**
@@ -121,17 +126,17 @@ define([
         var high = result.high;
         var low = result.low;
 
-        spilt(cartesian.x, scratchSpilt);
-        high.x = scratchSpilt.high;
-        low.x = scratchSpilt.low;
+        EncodedCartesian3.encode(cartesian.x, scratchEncode);
+        high.x = scratchEncode.high;
+        low.x = scratchEncode.low;
 
-        spilt(cartesian.y, scratchSpilt);
-        high.y = scratchSpilt.high;
-        low.y = scratchSpilt.low;
+        EncodedCartesian3.encode(cartesian.y, scratchEncode);
+        high.y = scratchEncode.high;
+        low.y = scratchEncode.low;
 
-        spilt(cartesian.z, scratchSpilt);
-        high.z = scratchSpilt.high;
-        low.z = scratchSpilt.low;
+        EncodedCartesian3.encode(cartesian.z, scratchEncode);
+        high.z = scratchEncode.high;
+        low.z = scratchEncode.low;
 
         return result;
     };

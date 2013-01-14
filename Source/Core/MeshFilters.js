@@ -544,7 +544,7 @@ define([
         var lowValues = new Array(length);
 
         for (var i = 0; i < length; ++i) {
-            EncodedCartesian3.split(values[i], encodedResult);
+            EncodedCartesian3.encode(values[i], encodedResult);
             highValues[i] = encodedResult.high;
             lowValues[i] = encodedResult.low;
         }
