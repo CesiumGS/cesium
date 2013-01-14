@@ -54,17 +54,23 @@ defineSuite([
         expect(matrix).toEqual(expected);
     });
 
-    it('Matrix2.fromRotation works without a result parameter', function() {
+    it('fromRotation works without a result parameter', function() {
         var matrix = Matrix2.fromRotation(0.0);
         expect(matrix).toEqual(Matrix2.IDENTITY);
     });
 
-    it('Matrix2.fromRotation works with a result parameter', function() {
+    it('fromRotation works with a result parameter', function() {
         var expected = new Matrix2(0.0, -1.0, 1.0, 0.0);
         var result = new Matrix2();
         var matrix = Matrix2.fromRotation(CesiumMath.toRadians(90.0), result);
         expect(matrix).toBe(result);
         expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('fromRotation throws without angle', function() {
+        expect(function() {
+            Matrix2.fromRotation();
+        }).toThrow();
     });
 
     it('clone works without a result parameter', function() {

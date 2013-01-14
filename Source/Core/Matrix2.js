@@ -101,7 +101,7 @@ define([
     /**
      * Creates a rotation matrix.
      *
-     * @param {Number} angle The angle, in radians, of the counterclockwise rotation.
+     * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
      *
      * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
@@ -115,7 +115,7 @@ define([
      * var rotated = m.multiplyByVector(p);
      */
     Matrix2.fromRotation = function(angle, result) {
-        if (typeof values === 'angle') {
+        if (typeof angle === 'undefined') {
             throw new DeveloperError('angle is required.');
         }
 
