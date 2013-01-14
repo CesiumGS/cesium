@@ -117,6 +117,72 @@ defineSuite([
         expect(matrix).toEqual(expected);
     });
 
+    it('fromRotationX works without a result parameter', function() {
+        var matrix = Matrix3.fromRotationX(0.0);
+        expect(matrix).toEqual(Matrix3.IDENTITY);
+    });
+
+    it('fromRotationX works with a result parameter', function() {
+        var expected = new Matrix3(
+                1.0, 0.0,  0.0,
+                0.0, 0.0, -1.0,
+                0.0, 1.0,  0.0);
+        var result = new Matrix3();
+        var matrix = Matrix3.fromRotationX(CesiumMath.toRadians(90.0), result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('fromRotationX throws without angle', function() {
+        expect(function() {
+            Matrix3.fromRotationX();
+        }).toThrow();
+    });
+
+    it('fromRotationY works without a result parameter', function() {
+        var matrix = Matrix3.fromRotationY(0.0);
+        expect(matrix).toEqual(Matrix3.IDENTITY);
+    });
+
+    it('fromRotationY works with a result parameter', function() {
+        var expected = new Matrix3(
+                 0.0, 0.0, 1.0,
+                 0.0, 1.0, 0.0,
+                -1.0, 0.0, 0.0);
+        var result = new Matrix3();
+        var matrix = Matrix3.fromRotationY(CesiumMath.toRadians(90.0), result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('fromRotationY throws without angle', function() {
+        expect(function() {
+            Matrix3.fromRotationY();
+        }).toThrow();
+    });
+
+    it('fromRotationZ works without a result parameter', function() {
+        var matrix = Matrix3.fromRotationZ(0.0);
+        expect(matrix).toEqual(Matrix3.IDENTITY);
+    });
+
+    it('fromRotationZ works with a result parameter', function() {
+        var expected = new Matrix3(
+                0.0, -1.0, 0.0,
+                1.0,  0.0, 0.0,
+                0.0,  0.0, 1.0);
+        var result = new Matrix3();
+        var matrix = Matrix3.fromRotationZ(CesiumMath.toRadians(90.0), result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('fromRotationZ throws without angle', function() {
+        expect(function() {
+            Matrix3.fromRotationZ();
+        }).toThrow();
+    });
+
     it('clone works without a result parameter', function() {
         var expected = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var returnedResult = expected.clone();
