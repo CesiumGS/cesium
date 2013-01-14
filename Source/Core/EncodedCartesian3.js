@@ -43,6 +43,36 @@ define([
         this.low = Cartesian3.ZERO.clone();
     };
 
+// TODO: update CHANGES.md
+// TODO: doc
+// TODO: tests
+// TODO: replace spilt below
+
+    /**
+     * DOC_TBA
+     */
+    EncodedCartesian3.split = function(value, result) {
+        if (typeof result === 'undefined') {
+            result = {
+                high : 0.0,
+                low : 0.0
+            };
+        }
+
+        var doubleHigh;
+        if (value >= 0.0) {
+            doubleHigh = Math.floor(value / 65536.0) * 65536.0;
+            result.high = doubleHigh;
+            result.low = value - doubleHigh;
+        } else {
+            doubleHigh = Math.floor(-value / 65536.0) * 65536.0;
+            result.high = -doubleHigh;
+            result.low = value + doubleHigh;
+        }
+
+        return result;
+    };
+
     function spilt(value, result) {
         var doubleHigh;
         if (value >= 0.0) {
