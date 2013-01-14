@@ -315,6 +315,7 @@
 			<fileset dir="${buildDirectory}">
 				<include name="cesiumWorkerBootstrapper.js" />
 				<include name="createVerticesFromExtent.js" />
+				<include name="createVerticesFromHeightmap.js" />
 			</fileset>
 		</copy>
 	</target>
