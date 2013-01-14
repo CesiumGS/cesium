@@ -14,6 +14,7 @@ Beta Releases
 * Added `Scene.backgroundColor`.
 * Added `Matrix3.fromRotationX`, `Matrix3.fromRotationY`, `Matrix3.fromRotationZ`, and `Matrix2.fromRotation`.
 * Added `MeshFilters.encodePosition` and `EncodedCartesian3.encode`.
+* Added a `textureRotationAngle` parameter to `Polygon.setPositions` and `Polygon.configureFromPolygonHierarchy` to compute rotated texture coordinates.
 * Fixed jitter artifacts with polygons.
 * Fixed camera tilt close to the `minimumZoomDistance`.
 * Fixed a bug that could lead to blue tiles when zoomed in close to the North and South poles.
