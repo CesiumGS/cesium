@@ -99,6 +99,42 @@ define([
     };
 
     /**
+     * Creates a rotation matrix.
+     *
+     * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
+     * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     *
+     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     *
+     * @exception {DeveloperError} angle is required.
+     *
+     * @example
+     * // Rotate a point 45 degrees counterclockwise.
+     * var p = new Cartesian2(5, 6);
+     * var m = Matrix2.fromRotation(CesiumMath.toRadians(45.0));
+     * var rotated = m.multiplyByVector(p);
+     */
+    Matrix2.fromRotation = function(angle, result) {
+        if (typeof angle === 'undefined') {
+            throw new DeveloperError('angle is required.');
+        }
+
+        var cosAngle = Math.cos(angle);
+        var sinAngle = Math.sin(angle);
+
+        if (typeof result === 'undefined') {
+            return new Matrix2(
+                cosAngle, -sinAngle,
+                sinAngle, cosAngle);
+        }
+        result[0] = cosAngle;
+        result[1] = sinAngle;
+        result[2] = -sinAngle;
+        result[3] = cosAngle;
+        return result;
+    };
+
+    /**
      * Creates an Array from the provided Matrix2 instance.
      * The array will be in column-major order.
      * @memberof Matrix2

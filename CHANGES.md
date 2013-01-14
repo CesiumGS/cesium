@@ -12,6 +12,7 @@ Beta Releases
 * Added `fromCssColorString` to `Color` to create a `Color` instance from any CSS value.
 * Added `fromHsl` to `Color` to create a `Color` instance from H, S, L values.
 * Added `Scene.backgroundColor`.
+* Added `Matrix3.fromRotationX`, `Matrix3.fromRotationY`, `Matrix3.fromRotationZ`, and `Matrix2.fromRotation`.
 * Added `MeshFilters.encodePosition` and `EncodedCartesian3.encode`.
 * Fixed jitter artifacts with polygons.
 * Fixed camera tilt close to the `minimumZoomDistance`.
