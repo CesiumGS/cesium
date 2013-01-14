@@ -4,6 +4,7 @@ attribute vec2 textureCoordinates;
 
 uniform float u_morphTime;
 uniform float u_height;     // in meters
+uniform mat2 u_textureMatrix;
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
@@ -15,6 +16,6 @@ void main()
 
     v_positionMC = position3D;                      // position in model coordinates
     v_positionEC = (czm_modelView * p).xyz;         // position in eye coordinates
-    v_textureCoordinates = textureCoordinates;
+    v_textureCoordinates = u_textureMatrix * textureCoordinates;
     gl_Position = czm_modelViewProjection * p;      // position in clip coordinates
 }

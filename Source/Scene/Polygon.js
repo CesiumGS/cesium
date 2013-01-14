@@ -20,6 +20,7 @@ define([
         '../Core/WindingOrder',
         '../Core/ExtentTessellator',
         '../Core/Queue',
+        '../Core/Matrix2',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/CommandLists',
@@ -54,6 +55,7 @@ define([
         WindingOrder,
         ExtentTessellator,
         Queue,
+        Matrix2,
         BlendingState,
         BufferUsage,
         CommandLists,
@@ -257,6 +259,13 @@ define([
          */
         this.erosion = 1.0;
 
+        /**
+         * DOC_TBA
+         *
+         * @type Matrix2
+         */
+        this.textureMatrix = Matrix2.IDENTITY.clone();
+
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
 
@@ -278,6 +287,9 @@ define([
             },
             u_height : function() {
                 return (that._mode !== SceneMode.SCENE2D) ? that.height : 0.0;
+            },
+            u_textureMatrix : function() {
+                return that.textureMatrix;
             }
         };
         this._pickUniforms = undefined;
