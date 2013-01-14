@@ -70,9 +70,11 @@ define([
     "use strict";
 
     var attributeIndices = {
-        position2D : 0,
-        position3D : 1,
-        textureCoordinates : 2
+        position3DHigh : 0,
+        position3DLow : 1,
+        position2DHigh : 2,
+        position2DLow : 3,
+        textureCoordinates : 4
     };
 
     function PositionVertices() {
@@ -560,29 +562,33 @@ define([
             mesh = MeshFilters.reorderForPreVertexCache(mesh);
 
             if (polygon._mode === SceneMode.SCENE3D) {
-                mesh.attributes.position2D = { // Not actually used in shader
-                        value : [0.0, 0.0]
-                    };
-                mesh.attributes.position3D = mesh.attributes.position;
-                delete mesh.attributes.position;
+                mesh.attributes.position2DHigh = { // Not actually used in shader
+                    value : [0.0, 0.0]
+                };
+                mesh.attributes.position2DLow = { // Not actually used in shader
+                    value : [0.0, 0.0]
+                };
+                mesh = MeshFilters.encodeAttribute(mesh, 'position', 'position3DHigh', 'position3DLow');
             } else {
                 mesh = MeshFilters.projectTo2D(mesh, polygon._projection);
+
+                if ((i === 0) && (polygon._mode !== SceneMode.SCENE3D)) {
+                    var projectedPositions = mesh.attributes.position2D.values;
+                    var positions = [];
+
+                    for (var j = 0; j < projectedPositions.length; j += 2) {
+                        positions.push(new Cartesian3(projectedPositions[j], projectedPositions[j + 1], 0.0));
+                    }
+
+                    polygon._boundingVolume2D = BoundingSphere.fromPoints(positions, polygon._boundingVolume2D);
+                    var center2DPositions = polygon._boundingVolume2D.center;
+                    polygon._boundingVolume2D.center = new Cartesian3(0.0, center2DPositions.x, center2DPositions.y);
+                }
+
+                mesh = MeshFilters.encodeAttribute(mesh, 'position3D', 'position3DHigh', 'position3DLow');
+                mesh = MeshFilters.encodeAttribute(mesh, 'position2D', 'position2DHigh', 'position2DLow');
             }
             processedMeshes = processedMeshes.concat(MeshFilters.fitToUnsignedShortIndices(mesh));
-        }
-
-        if (polygon._mode !== SceneMode.SCENE3D) {
-            mesh = meshes[0];
-            var projectedPositions = mesh.attributes.position2D.values;
-            var positions = [];
-
-            for (i = 0; i < projectedPositions.length; i += 2) {
-                positions.push(new Cartesian3(projectedPositions[i], projectedPositions[i + 1], 0.0));
-            }
-
-            polygon._boundingVolume2D = BoundingSphere.fromPoints(positions, polygon._boundingVolume2D);
-            var center2DPositions = polygon._boundingVolume2D.center;
-            polygon._boundingVolume2D.center = new Cartesian3(0.0, center2DPositions.x, center2DPositions.y);
         }
 
         return processedMeshes;
