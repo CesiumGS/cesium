@@ -43,8 +43,6 @@ define([
         this.low = Cartesian3.ZERO.clone();
     };
 
-// TODO: tests
-
     /**
      * Encodes a 64-bit floating-point value as two floating-point values that, when converted to
      * 32-bit floating-point and added, approximate the original input.  The returned object
