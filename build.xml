@@ -178,7 +178,7 @@
 		</exec>
 
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. name=${relativeAlmondPath} include=Workers/createVerticesFromHeightmap out=${relativeCombineOutputDirectory}\createVerticesFromHeightmap.js" />
+			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. name=Workers/createVerticesFromHeightmap out=${relativeCombineOutputDirectory}\createVerticesFromHeightmap.js" />
 		</exec>
 
 		<copy todir="${buildDirectory}">
