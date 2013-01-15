@@ -11,7 +11,7 @@ defineSuite([
          'Core/Math',
          'Core/Quaternion',
          'Core/TimeConstants',
-         'Core/EarthData'
+         'Core/EarthOrientationData'
      ], function(
          Transforms,
          Cartesian2,
@@ -24,7 +24,7 @@ defineSuite([
          CesiumMath,
          Quaternion,
          TimeConstants,
-         EarthData) {
+         EarthOrientationData) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -198,10 +198,12 @@ defineSuite([
         // 2012-07-03 00:00:00 UTC
         var time = new JulianDate(2455745, 43200);
 
-        EarthData.eop.push(new EarthData.OrientationParameterData(
+        // Make sure to clear the data in case it's been set by another test
+        EarthOrientationData.clear();
+        EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
                 0.046663 * CesiumMath.RADIANS_PER_ARCSECOND, 0.437099 * CesiumMath.RADIANS_PER_ARCSECOND,
                 -0.2905572, -0.000072 * CesiumMath.RADIANS_PER_ARCSECOND, 0.000144 * CesiumMath.RADIANS_PER_ARCSECOND));
-        EarthData.xys.push(new EarthData.XYSData(
+        EarthOrientationData.xys.push(new EarthOrientationData.XYSData(
                 0.0011515694122596007,
                 -0.0000095636523417490289,
                 0.000000020097888209856277));
@@ -225,8 +227,118 @@ defineSuite([
         var tAngle = Quaternion.fromRotationMatrix(t).getAngle();
         var uAngle = Quaternion.fromRotationMatrix(u).getAngle();
         expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
+
+        var expectedMtx = new Matrix3(
+                0.18264414843630006, -0.98317906144315947, -0.00021950336420248503,
+                0.98317840915224974, 0.18264428011734501, -0.0011325710874539787,
+                0.0011536112127187594, -0.0000089534866085598909, 0.99999933455028112);
+
+        var testInverse = t.transpose().multiply(expectedMtx);
+        var testDiff = //t.subtract(expectedMtx);
+            new Matrix3();
+        for (var i=0; i<9; i++){
+            testDiff[i] = t[i] - expectedMtx[i];
+        }
+        expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
+        expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
     });
-    //2011 07 03 55745  0.046663  0.437099 -0.2905572  0.0000019 -0.070756 -0.011073 -0.000072  0.000144  34
+
+    it('computeIcrfToFixedMatrix works over day boundary', function() {
+
+        var time = new JulianDate(2455745, 86395);
+
+        // Make sure to clear the data in case it's been set by another test
+        EarthOrientationData.clear();
+        EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
+                0.0000002301721108351985, 0.0000021209335928745266, -0.29062894169560183,
+                -0.00000000048479796955505559, 0.00000000074175988195507851));
+        EarthOrientationData.xys.push(new EarthOrientationData.XYSData(
+                0.001151763570872462,
+                -0.0000094532539883252168,
+                0.0000000200333868534987));
+
+        var resultT = new Matrix3();
+        var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+
+        var expectedMtx = new Matrix3(
+                -0.19073578935932833, 0.98164138366748721, 0.00022919174269963536,
+                -0.98164073712836186, -0.19073592679333939, 0.0011266944449015753,
+                0.0011497249933208494, -0.000010082996932331842, 0.99999933901516791);
+
+        var testInverse = t.transpose().multiply(expectedMtx);
+        var testDiff = //t.subtract(expectedMtx);
+            new Matrix3();
+        for (var i=0; i<9; i++){
+            testDiff[i] = t[i] - expectedMtx[i];
+        }
+        expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
+        expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+    });
+
+    it('computeIcrfToFixedMatrix works over day boundary backwards', function() {
+
+        var time = new JulianDate(2455745, 10);
+
+        // Make sure to clear the data in case it's been set by another test
+        EarthOrientationData.clear();
+        EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
+                0.00000022277995715869222, 0.000002117288427504905, -0.29060358925925928,
+                -0.00000000021577295007575856, 0.00000000063027349699687717));
+        EarthOrientationData.xys.push(new EarthOrientationData.XYSData(
+                0.0011513515572884863,
+                -0.0000096646620142172178,
+                0.000000020157087720063123));
+
+        var resultT = new Matrix3();
+        var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+
+        var expectedMtx = new Matrix3(
+                -0.17489910479510423, 0.984586338811966, 0.00021110831245616662,
+                -0.98458569065286827, -0.17489923190143036, 0.0011297972845023996,
+                0.0011493056536445096, -0.00001025368996280683, 0.99999933949547);
+
+        var testInverse = t.transpose().multiply(expectedMtx);
+        var testDiff = //t.subtract(expectedMtx);
+            new Matrix3();
+        for (var i=0; i<9; i++){
+            testDiff[i] = t[i] - expectedMtx[i];
+        }
+        expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
+        expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+
+
+    });
+
+    it('computeIcrfToFixedMatrix works with position rotation', function() {
+
+        // GEO Satellite position
+        var expectedFixedPos = new Cartesian3(39489858.9917795, -14783363.192887, -8075.05820056297);
+        var inertialPos = new Cartesian3(-7322101.15395708, -41525699.1558387, 0);
+
+        // 2012-07-03 00:00:00 UTC
+        var time = new JulianDate(2455745, 43200);
+
+        // Make sure to clear the data in case it's been set by another test
+        EarthOrientationData.clear();
+        EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
+                0.046663 * CesiumMath.RADIANS_PER_ARCSECOND, 0.437099 * CesiumMath.RADIANS_PER_ARCSECOND,
+                -0.2905572, -0.000072 * CesiumMath.RADIANS_PER_ARCSECOND, 0.000144 * CesiumMath.RADIANS_PER_ARCSECOND));
+        EarthOrientationData.xys.push(new EarthOrientationData.XYSData(
+                0.0011515694122596007,
+                -0.0000095636523417490289,
+                0.000000020097888209856277));
+
+        var resultT = new Matrix3();
+        var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+
+        var result = t.multiplyByVector(inertialPos);
+        var error = result.subtract(expectedFixedPos);
+
+        // Given the magnitude of the positions involved (1e8)
+        // this tolerance represents machine precision
+        expect(error).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON7);
+
+    });
 
     var width = 1024.0;
     var height = 768.0;

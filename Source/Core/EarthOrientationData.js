@@ -24,16 +24,21 @@ define([
         Ellipsoid) {
     "use strict";
 
-    var EarthData = {
+    var EarthOrientationData = {
 
             eop : [],
 
             xys : [],
 
+            clear : function(){
+                EarthOrientationData.eop = [];
+                EarthOrientationData.xys = [];
+            },
+
             computeOrientationParameters : function (dateTai){
 
                 //if(this.eop.length !== 0){
-                    return EarthData.eop[0];
+                    return EarthOrientationData.eop[0];
 //                }
 //                else {
                     //return new OrientationParameterData(0,0,0,0,0);
@@ -42,7 +47,7 @@ define([
 
             computeXYSRadians : function(dateTai) {
                 //if(this.xys.length !== 0){
-                    return EarthData.xys[0];
+                    return EarthOrientationData.xys[0];
 //                }
 //                else {
                     //return new XYSData(0, 0, 0);
@@ -67,5 +72,5 @@ define([
             }
     };
 
-    return EarthData;
+    return EarthOrientationData;
 });

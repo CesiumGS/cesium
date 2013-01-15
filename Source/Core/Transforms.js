@@ -11,7 +11,7 @@ define([
         './TimeConstants',
         './Ellipsoid',
         './JulianDate',
-        './EarthData'
+        './EarthOrientationData'
     ],
     function(
         defaultValue,
@@ -25,7 +25,7 @@ define([
         TimeConstants,
         Ellipsoid,
         JulianDate,
-        EarthData) {
+        EarthOrientationData) {
     "use strict";
 
     var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;
@@ -347,7 +347,7 @@ define([
             }
 
             // Compute pole wander
-            var eop = EarthData.computeOrientationParameters(dateTai);
+            var eop = EarthOrientationData.computeOrientationParameters(dateTai);
 
             // Compute pole wander matrix
             var cosxp = Math.cos(eop.xPoleWander);
@@ -365,13 +365,13 @@ define([
             // i.e. If 'secondTT' > 86400.0 we need to increment dayTT before applying the
             // conversion to julian centuries or else there will be a small but important
             // numerical noise added to the time value 'ttt'
-            if (secondTT >= 86400.0 || secondTT <= -86400.0)
-            {
-                var newDays = (secondTT / TimeConstants.SECONDS_PER_DAY);
-                // Cast to integer (round toward zero)
-                dayTT += (newDays | 0);
-                secondTT -= TimeConstants.SECONDS_PER_DAY * newDays;
-            }
+//            if (secondTT >= 86400.0 || secondTT <= -86400.0)
+//            {
+//                // Coerce to integer (round toward zero)
+//                var newDays = (secondTT / TimeConstants.SECONDS_PER_DAY) | 0;
+//                dayTT += newDays;
+//                secondTT -= TimeConstants.SECONDS_PER_DAY * newDays;
+//            }
 
             var ttt = (dayTT - j2000ttDays) + secondTT / TimeConstants.SECONDS_PER_DAY;
             ttt /= 36525.0;
@@ -386,13 +386,17 @@ define([
                     cosxp * sinsp, cosyp * cossp + sinyp * sinxp * sinsp, sinyp * cossp - cosyp * sinxp * sinsp,
                     sinxp, -sinyp * cosxp, cosyp * cosxp);
 
-            // fToPfMtx.conjugate()?
-
             // Compute Earth rotation angle
-//            var dateUt1 = new JulianDate(dateTai.getJulianDayNumber(),
-//                    dateTai.getSecondsOfDay() - dateTai.getTaiMinusUtc() + eop.ut1MinusUtc);
             var dateUt1day = dateTai.getJulianDayNumber();
             var dateUt1sec = dateTai.getSecondsOfDay() - dateTai.getTaiMinusUtc() + eop.ut1MinusUtc;
+            // Similar to TT, check for rollover with UT1 as well
+//            if (dateUt1sec >= 86400.0 || dateUt1sec <= -86400.0)
+//            {
+//                // Coerce to integer (round toward zero)
+//                var newDays = (dateUt1sec / TimeConstants.SECONDS_PER_DAY) | 0;
+//                dateUt1day += newDays;
+//                dateUt1sec -= TimeConstants.SECONDS_PER_DAY * newDays;
+//            }
 
             // The IERS standard for era is
             //    era = 0.7790572732640 + 1.00273781191135448 * Tu
@@ -410,7 +414,7 @@ define([
 
             var earthRotation = Matrix3.fromZRotation(-era);
 
-            var xys = EarthData.computeXYSRadians(dateTai);
+            var xys = EarthOrientationData.computeXYSRadians(dateTai);
             var x = xys.x + eop.xPoleOffset;
             var y = xys.y + eop.yPoleOffset;
 
@@ -429,8 +433,8 @@ define([
 
             // conjugate?
 
-            result = fToPfMtx.multiply(pfToIcrf);
-            return result;
+            //return pfToIcrf.multiply(fToPfMtx, result);
+            return fToPfMtx.transpose().multiply(pfToIcrf.transpose(), result);
         },
 
         /**
