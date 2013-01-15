@@ -9,7 +9,9 @@ define([
         './Cartesian3',
         './Cartesian4',
         './TimeConstants',
-        './Ellipsoid'
+        './Ellipsoid',
+        './JulianDate',
+        './EarthData'
     ],
     function(
         defaultValue,
@@ -21,7 +23,9 @@ define([
         Cartesian3,
         Cartesian4,
         TimeConstants,
-        Ellipsoid) {
+        Ellipsoid,
+        JulianDate,
+        EarthData) {
     "use strict";
 
     var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;
@@ -41,6 +45,9 @@ define([
     var northEastDownToFixedFrameBitangent = new Cartesian3();
 
     var pointToWindowCoordinatesTemp = new Cartesian4();
+
+    var ttMinusTai = 32.184;
+    var j2000ttDays = 2451545.0;
 
     /**
      * Contains functions for transforming positions to various reference frames.
@@ -308,6 +315,121 @@ define([
             result[6] = 0.0;
             result[7] = 0.0;
             result[8] = 1.0;
+            return result;
+        },
+
+        /**
+         * Computes a rotation matrix to transform a point or vector from the International Celestial
+         * Reference Frame (GCRF/ICRF) inertial frame axes to the Earth-Fixed frame axes (ITRF)
+         * at a given time.
+         *
+         * @param {JulianDate} date The time at which to compute the rotation matrix.
+         * @param {Matrix3} [result] The object onto which to store the result.
+         * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+         *
+         * @exception {DeveloperError} date is required.
+         *
+         * @example
+         * //Set the view to in the inertial frame.
+         * function updateAndRender() {
+         *     var now = new JulianDate();
+         *     scene.initializeFrame();
+         *     scene.setSunPosition(computeSunPosition(now));
+         *     scene.getCamera().transform = Matrix4.fromRotationTranslation(Transforms.computeIcrfToFixedMatrix(now), Cartesian3.ZERO);
+         *     scene.render();
+         *     requestAnimationFrame(updateAndRender);
+         * }
+         * updateAndRender();
+         */
+        computeIcrfToFixedMatrix : function (dateTai, result) {
+            if (typeof dateTai === 'undefined') {
+                throw new DeveloperError('date is required.');
+            }
+
+            // Compute pole wander
+            var eop = EarthData.computeOrientationParameters(dateTai);
+
+            // Compute pole wander matrix
+            var cosxp = Math.cos(eop.xPoleWander);
+            var cosyp = Math.cos(eop.yPoleWander);
+            var sinxp = Math.sin(eop.xPoleWander);
+            var sinyp = Math.sin(eop.yPoleWander);
+
+            // There is no external conversion to Terrestrial Time (TT).
+            // So use International Atomic Time (TAI) and convert using offsets.
+            // Here we are assuming that dayTT and secondTT are positive
+            var dayTT = dateTai.getJulianDayNumber();
+            var secondTT = dateTai.getSecondsOfDay() + ttMinusTai;
+
+            // Note here that we will lose precision if the seconds above roll over a day
+            // i.e. If 'secondTT' > 86400.0 we need to increment dayTT before applying the
+            // conversion to julian centuries or else there will be a small but important
+            // numerical noise added to the time value 'ttt'
+            if (secondTT >= 86400.0 || secondTT <= -86400.0)
+            {
+                var newDays = (secondTT / TimeConstants.SECONDS_PER_DAY);
+                // Cast to integer (round toward zero)
+                dayTT += (newDays | 0);
+                secondTT -= TimeConstants.SECONDS_PER_DAY * newDays;
+            }
+
+            var ttt = (dayTT - j2000ttDays) + secondTT / TimeConstants.SECONDS_PER_DAY;
+            ttt /= 36525.0;
+
+            // approximate sp value in rad
+            var sp = -47.0e-6 * ttt * CesiumMath.RADIANS_PER_DEGREE / 3600.0;
+            var cossp = Math.cos(sp);
+            var sinsp = Math.sin(sp);
+
+            var fToPfMtx = new Matrix3(
+                    cosxp * cossp, -cosyp * sinsp + sinyp * sinxp * cossp, -sinyp * sinsp - cosyp * sinxp * cossp,
+                    cosxp * sinsp, cosyp * cossp + sinyp * sinxp * sinsp, sinyp * cossp - cosyp * sinxp * sinsp,
+                    sinxp, -sinyp * cosxp, cosyp * cosxp);
+
+            // fToPfMtx.conjugate()?
+
+            // Compute Earth rotation angle
+//            var dateUt1 = new JulianDate(dateTai.getJulianDayNumber(),
+//                    dateTai.getSecondsOfDay() - dateTai.getTaiMinusUtc() + eop.ut1MinusUtc);
+            var dateUt1day = dateTai.getJulianDayNumber();
+            var dateUt1sec = dateTai.getSecondsOfDay() - dateTai.getTaiMinusUtc() + eop.ut1MinusUtc;
+
+            // The IERS standard for era is
+            //    era = 0.7790572732640 + 1.00273781191135448 * Tu
+            // where
+            //    Tu = JulianDateInUt1 - 2451545.0
+            // However, you get much more precision if you make the following simplification
+            //    era = a + (1 + b) * (JulianDayNumber + FractionOfDay - 2451545)
+            //    era = a + (JulianDayNumber - 2451545) + FractionOfDay + b (JulianDayNumber - 2451545 + FractionOfDay)
+            //    era = a + FractionOfDay + b (JulianDayNumber - 2451545 + FractionOfDay)
+            // since (JulianDayNumber - 2451545) represents an integer number of revolutions which will be discarded anyway.
+            var daysSinceJ2000 = dateUt1day - 2451545;
+            var fractionOfDay = dateUt1sec / TimeConstants.SECONDS_PER_DAY;
+            var era = 0.7790572732640 + fractionOfDay + 0.00273781191135448 * (daysSinceJ2000 + fractionOfDay);
+            era = (era % 1.0) * CesiumMath.TWO_PI;
+
+            var earthRotation = Matrix3.fromZRotation(-era);
+
+            var xys = EarthData.computeXYSRadians(dateTai);
+            var x = xys.x + eop.xPoleOffset;
+            var y = xys.y + eop.yPoleOffset;
+
+            // Compute XYS rotation
+            var a = 1.0 / (1.0 + Math.sqrt(1.0 - x * x - y * y));
+
+            var rotation1 = new Matrix3(
+                    1.0 - a * x * x, -a * x * y, x,
+                    -a * x * y, 1 - a * y * y, y,
+                    -x, -y, 1 - a * (x * x + y * y));
+            var rotation2 = Matrix3.fromZRotation(xys.s);
+            var matrixQ = rotation1.multiply(rotation2);
+
+            // pseudoFixed to ICRF
+            var pfToIcrf = matrixQ.multiply(earthRotation);
+
+            // conjugate?
+
+            result = fToPfMtx.multiply(pfToIcrf);
             return result;
         },
 

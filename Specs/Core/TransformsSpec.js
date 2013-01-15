@@ -10,7 +10,8 @@ defineSuite([
          'Core/Matrix4',
          'Core/Math',
          'Core/Quaternion',
-         'Core/TimeConstants'
+         'Core/TimeConstants',
+         'Core/EarthData'
      ], function(
          Transforms,
          Cartesian2,
@@ -22,7 +23,8 @@ defineSuite([
          Matrix4,
          CesiumMath,
          Quaternion,
-         TimeConstants) {
+         TimeConstants,
+         EarthData) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -191,6 +193,40 @@ defineSuite([
         var uAngle = Quaternion.fromRotationMatrix(u).getAngle();
         expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
     });
+
+    it('computeIcrfToFixedMatrix works with hard-coded data', function() {
+        // 2012-07-03 00:00:00 UTC
+        var time = new JulianDate(2455745, 43200);
+
+        EarthData.eop.push(new EarthData.OrientationParameterData(
+                0.046663 * CesiumMath.RADIANS_PER_ARCSECOND, 0.437099 * CesiumMath.RADIANS_PER_ARCSECOND,
+                -0.2905572, -0.000072 * CesiumMath.RADIANS_PER_ARCSECOND, 0.000144 * CesiumMath.RADIANS_PER_ARCSECOND));
+        EarthData.xys.push(new EarthData.XYSData(
+                0.0011515694122596007,
+                -0.0000095636523417490289,
+                0.000000020097888209856277));
+
+        var resultT = new Matrix3();
+        var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+        expect(t).toBe(resultT);
+
+        // rotation matrix determinants are 1.0
+        var det = t[0] * t[4] * t[8] + t[3] * t[7] * t[2] + t[6] * t[1] * t[5] - t[6] * t[4] * t[2] - t[3] * t[1] * t[8] - t[0] * t[7] * t[5];
+        expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+
+        // rotation matrix inverses are equal to its transpose
+        var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
+        expect(t4.inverse()).toEqualEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14);
+
+        time = time.addHours(23.93447); // add one sidereal day
+        var resultU = new Matrix3();
+        var u = Transforms.computeIcrfToFixedMatrix(time, resultU);
+        expect(u).toBe(resultU);
+        var tAngle = Quaternion.fromRotationMatrix(t).getAngle();
+        var uAngle = Quaternion.fromRotationMatrix(u).getAngle();
+        expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
+    });
+    //2011 07 03 55745  0.046663  0.437099 -0.2905572  0.0000019 -0.070756 -0.011073 -0.000072  0.000144  34
 
     var width = 1024.0;
     var height = 768.0;
