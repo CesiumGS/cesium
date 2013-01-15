@@ -64,7 +64,7 @@ define([
                 this.x = xVal;
                 this.y = yVal;
                 this.s = sVal;
-            },
+            }
     };
 
     return EarthData;
