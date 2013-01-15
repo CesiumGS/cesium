@@ -1,14 +1,18 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError',
         './Cartesian3',
+        './EncodedCartesian3',
         './GeographicProjection',
         './ComponentDatatype',
         './PrimitiveType',
         './Tipsify'
     ], function(
+        defaultValue,
         DeveloperError,
         Cartesian3,
+        EncodedCartesian3,
         GeographicProjection,
         ComponentDatatype,
         PrimitiveType,
@@ -336,7 +340,7 @@ define([
         return newAttributes;
     };
 
-    MeshFilters._copyVertex = function(destinationAttributes, sourceAttributes, index) {
+    function copyVertex(destinationAttributes, sourceAttributes, index) {
         for ( var attribute in sourceAttributes) {
             if (sourceAttributes.hasOwnProperty(attribute) && sourceAttributes[attribute].values) {
                 var attr = sourceAttributes[attribute];
@@ -346,7 +350,7 @@ define([
                 }
             }
         }
-    };
+    }
 
     /**
      * DOC_TBA.  Old mesh is not guaranteed to be copied.
@@ -402,7 +406,7 @@ define([
                             i0 = currentIndex++;
                             oldToNewIndex[x0] = i0;
 
-                            MeshFilters._copyVertex(newAttributes, mesh.attributes, x0);
+                            copyVertex(newAttributes, mesh.attributes, x0);
                         }
 
                         var i1 = oldToNewIndex[x1];
@@ -410,7 +414,7 @@ define([
                             i1 = currentIndex++;
                             oldToNewIndex[x1] = i1;
 
-                            MeshFilters._copyVertex(newAttributes, mesh.attributes, x1);
+                            copyVertex(newAttributes, mesh.attributes, x1);
                         }
 
                         var i2 = oldToNewIndex[x2];
@@ -418,7 +422,7 @@ define([
                             i2 = currentIndex++;
                             oldToNewIndex[x2] = i2;
 
-                            MeshFilters._copyVertex(newAttributes, mesh.attributes, x2);
+                            copyVertex(newAttributes, mesh.attributes, x2);
                         }
 
                         newIndices.push(i0);
@@ -449,8 +453,6 @@ define([
         return meshes;
     };
 
-    ///////////////////////////////////////////////////////////////////////////
-
     /**
      * DOC_TBA
      */
@@ -480,6 +482,84 @@ define([
             };
             delete mesh.attributes.position;
         }
+
+        return mesh;
+    };
+
+    var encodedResult = {
+        high : 0.0,
+        low : 0.0
+    };
+
+    /**
+     * Encodes floating-point mesh attribute values as two separate attributes to improve
+     * rendering precision using the same encoding as {@link EncodedCartesian3}.
+     * <p>
+     * This is commonly used to create high-precision position vertex attributes.
+     * </p>
+     *
+     * @param {Object} mesh The mesh to filter, which is modified in place.
+     * @param {String} [attributeName='position'] The name of the attribute.
+     * @param {String} [attributeHighName='positionHigh'] The name of the attribute for the encoded high bits.
+     * @param {String} [attributeLowName='positionLow'] The name of the attribute for the encoded low bits.
+     *
+     * @returns The modified <code>mesh</code> argument, with its encoded attribute.
+     *
+     * @exception {DeveloperError} mesh is required.
+     * @exception {DeveloperError} mesh must have an attributes property.
+     * @exception {DeveloperError} mesh must have attribute matching the attributeName argument.
+     * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.FLOAT.
+     *
+     * @example
+     * mesh = MeshFilters.encodeAttribute(mesh, 'position3D', 'position3DHigh', 'position3DLow');
+     *
+     * @see EncodedCartesian3
+     */
+    MeshFilters.encodeAttribute = function(mesh, attributeName, attributeHighName, attributeLowName) {
+        attributeName = defaultValue(attributeName, 'position');
+        attributeHighName = defaultValue(attributeHighName, 'positionHigh');
+        attributeLowName = defaultValue(attributeLowName, 'positionLow');
+
+        if (typeof mesh === 'undefined') {
+            throw new DeveloperError('mesh is required.');
+        }
+
+        if (typeof mesh.attributes === 'undefined') {
+            throw new DeveloperError('mesh must have an attributes property.');
+        }
+
+        var attribute = mesh.attributes[attributeName];
+
+        if (typeof attribute === 'undefined') {
+            throw new DeveloperError('mesh must have attribute matching the attributeName argument: ' + attributeName + '.');
+        }
+
+        if (attribute.componentDatatype !== ComponentDatatype.FLOAT) {
+            throw new DeveloperError('The attribute componentDatatype must be ComponentDatatype.FLOAT.');
+        }
+
+        var values = attribute.values;
+        var length = values.length;
+        var highValues = new Array(length);
+        var lowValues = new Array(length);
+
+        for (var i = 0; i < length; ++i) {
+            EncodedCartesian3.encode(values[i], encodedResult);
+            highValues[i] = encodedResult.high;
+            lowValues[i] = encodedResult.low;
+        }
+
+        mesh.attributes[attributeHighName] = {
+            componentDatatype : attribute.componentDatatype,
+            componentsPerAttribute : attribute.componentsPerAttribute,
+            values : highValues
+        };
+        mesh.attributes[attributeLowName] = {
+            componentDatatype : attribute.componentDatatype,
+            componentsPerAttribute : attribute.componentsPerAttribute,
+            values : lowValues
+        };
+        delete mesh.attributes[attributeName];
 
         return mesh;
     };
