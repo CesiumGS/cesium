@@ -1,6 +1,6 @@
 /**
- * @license
  * @fileOverview
+ * @license
  *
  * Grauw URI utilities
  *
@@ -62,7 +62,6 @@ define(function() {
 	/**
 	 * Returns the scheme part of the URI.
 	 * In "http://example.com:80/a/b?x#y" this is "http".
-	 * @return
 	 */
 	URI.prototype.getScheme = function() {
 		return this.scheme;
@@ -71,7 +70,6 @@ define(function() {
 	/**
 	 * Returns the authority part of the URI.
 	 * In "http://example.com:80/a/b?x#y" this is "example.com:80".
-	 * @return
 	 */
 	URI.prototype.getAuthority = function() {
 		return this.authority;
@@ -81,7 +79,6 @@ define(function() {
 	 * Returns the path part of the URI.
 	 * In "http://example.com:80/a/b?x#y" this is "/a/b".
 	 * In "mailto:mike@example.com" this is "mike@example.com".
-	 * @return
 	 */
 	URI.prototype.getPath = function() {
 		return this.path;
@@ -90,7 +87,6 @@ define(function() {
 	/**
 	 * Returns the query part of the URI.
 	 * In "http://example.com:80/a/b?x#y" this is "x".
-	 * @return
 	 */
 	URI.prototype.getQuery = function() {
 		return this.query;
@@ -99,7 +95,6 @@ define(function() {
 	/**
 	 * Returns the fragment part of the URI.
 	 * In "http://example.com:80/a/b?x#y" this is "y".
-	 * @return
 	 */
 	URI.prototype.getFragment = function() {
 		return this.fragment;

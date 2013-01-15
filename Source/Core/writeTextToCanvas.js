@@ -74,14 +74,14 @@ define([
         var fill = defaultValue(description.fill, true);
         if (fill) {
             var fillColor = defaultValue(description.fillColor, Color.WHITE);
-            context2D.fillStyle = fillColor.toCSSColor();
+            context2D.fillStyle = fillColor.toCssColorString();
             context2D.fillText(text, 0, y);
         }
 
         var stroke = defaultValue(description.stroke, false);
         if (stroke) {
             var strokeColor = defaultValue(description.strokeColor, Color.BLACK);
-            context2D.strokeStyle = strokeColor.toCSSColor();
+            context2D.strokeStyle = strokeColor.toCssColorString();
             context2D.strokeText(text, 0, y);
         }
 
