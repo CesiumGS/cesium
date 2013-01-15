@@ -346,6 +346,39 @@ define([
                 throw new DeveloperError('date is required.');
             }
 
+            var fixedToIcrfMtx = Transforms.computeFixedToIcrfMatrix(dateTai, result);
+
+            return fixedToIcrfMtx.transpose(result);
+        },
+
+        /**
+         * Computes a rotation matrix to transform a point or vector from the Earth-Fixed frame axes (ITRF)
+         * to the International Celestial Reference Frame (GCRF/ICRF) inertial frame axes
+         * at a given time.
+         *
+         * @param {JulianDate} date The time at which to compute the rotation matrix.
+         * @param {Matrix3} [result] The object onto which to store the result.
+         * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+         *
+         * @exception {DeveloperError} date is required.
+         *
+         * @example
+         * //Set the view to in the inertial frame.
+         * function updateAndRender() {
+         *     var now = new JulianDate();
+         *     scene.initializeFrame();
+         *     scene.setSunPosition(computeSunPosition(now));
+         *     scene.getCamera().transform = Matrix4.fromRotationTranslation(Transforms.computeIcrfToFixedMatrix(now), Cartesian3.ZERO);
+         *     scene.render();
+         *     requestAnimationFrame(updateAndRender);
+         * }
+         * updateAndRender();
+         */
+        computeFixedToIcrfMatrix : function (dateTai, result) {
+            if (typeof dateTai === 'undefined') {
+                throw new DeveloperError('date is required.');
+            }
+
             // Compute pole wander
             var eop = EarthOrientationData.computeOrientationParameters(dateTai);
 
@@ -359,19 +392,9 @@ define([
             // So use International Atomic Time (TAI) and convert using offsets.
             // Here we are assuming that dayTT and secondTT are positive
             var dayTT = dateTai.getJulianDayNumber();
+            // It's possible here that secondTT could roll over 86400
+            // This does not seem to affect the precision (unit tests check for this)
             var secondTT = dateTai.getSecondsOfDay() + ttMinusTai;
-
-            // Note here that we will lose precision if the seconds above roll over a day
-            // i.e. If 'secondTT' > 86400.0 we need to increment dayTT before applying the
-            // conversion to julian centuries or else there will be a small but important
-            // numerical noise added to the time value 'ttt'
-//            if (secondTT >= 86400.0 || secondTT <= -86400.0)
-//            {
-//                // Coerce to integer (round toward zero)
-//                var newDays = (secondTT / TimeConstants.SECONDS_PER_DAY) | 0;
-//                dayTT += newDays;
-//                secondTT -= TimeConstants.SECONDS_PER_DAY * newDays;
-//            }
 
             var ttt = (dayTT - j2000ttDays) + secondTT / TimeConstants.SECONDS_PER_DAY;
             ttt /= 36525.0;
@@ -386,18 +409,13 @@ define([
                     cosxp * sinsp, cosyp * cossp + sinyp * sinxp * sinsp, sinyp * cossp - cosyp * sinxp * sinsp,
                     sinxp, -sinyp * cosxp, cosyp * cosxp);
 
-            // Compute Earth rotation angle
+            // Similar to TT conversions above
+            // It's possible here that secondTT could roll over 86400
+            // This does not seem to affect the precision (unit tests check for this)
             var dateUt1day = dateTai.getJulianDayNumber();
             var dateUt1sec = dateTai.getSecondsOfDay() - dateTai.getTaiMinusUtc() + eop.ut1MinusUtc;
-            // Similar to TT, check for rollover with UT1 as well
-//            if (dateUt1sec >= 86400.0 || dateUt1sec <= -86400.0)
-//            {
-//                // Coerce to integer (round toward zero)
-//                var newDays = (dateUt1sec / TimeConstants.SECONDS_PER_DAY) | 0;
-//                dateUt1day += newDays;
-//                dateUt1sec -= TimeConstants.SECONDS_PER_DAY * newDays;
-//            }
 
+            // Compute Earth rotation angle
             // The IERS standard for era is
             //    era = 0.7790572732640 + 1.00273781191135448 * Tu
             // where
@@ -431,10 +449,7 @@ define([
             // pseudoFixed to ICRF
             var pfToIcrf = matrixQ.multiply(earthRotation);
 
-            // conjugate?
-
-            //return pfToIcrf.multiply(fToPfMtx, result);
-            return fToPfMtx.transpose().multiply(pfToIcrf.transpose(), result);
+            return pfToIcrf.multiply(fToPfMtx, result);
         },
 
         /**
