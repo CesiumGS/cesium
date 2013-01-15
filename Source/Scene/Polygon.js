@@ -316,7 +316,7 @@ define([
      *
      * @param {Array} positions The cartesian positions of the polygon.
      * @param {Number} [height=0.0] The height of the polygon.
-     * @param {Number} [textureRotationAngle=0.0] The angle to rotate the texture in radians.
+     * @param {Number} [textureRotationAngle=0.0] The angle, in radians, to rotate the texture.  Positive angles are counter-clockwise.
      *
      * @example
      * polygon.setPositions([
