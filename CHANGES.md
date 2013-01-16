@@ -9,6 +9,7 @@ Beta Releases
 * Breaking changes:
    * Renamed `toCSSColor` to `toCssColorString`.
    * Moved `minimumZoomDistance` and `maximumZoomDistance` from the `CameraController` to the `ScreenSpaceCameraController`.
+* Added a new `Animation` widget, plus related API in `AnimationController` and `Clock`.
 * Added `fromCssColorString` to `Color` to create a `Color` instance from any CSS value.
 * Added `fromHsl` to `Color` to create a `Color` instance from H, S, L values.
 * Added `Scene.backgroundColor`.

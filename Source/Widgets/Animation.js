@@ -11,7 +11,28 @@ define([
     "use strict";
 
     /**
-     * This widget provides a UI to manipulate an AnimationController.
+     * <span style="display: block; text-align: center;">
+     * <img src="images/AnimationWidget.png" width="211" height="142" alt="" style="border: none; border-radius: 5px;" />
+     * <br />Animation widget
+     * </span>
+     * <br /><br />
+     * The Animation widget manipulates an {@link AnimationController}.  It provides buttons for play, pause,
+     * and reverse, along with the current time and date, surrounded by a "shuttle ring"
+     * for controlling the speed of animation.
+     * <br /><br />
+     * The "shuttle ring" concept is borrowed from video editing, where typically a
+     * "jog wheel" can be rotated to move past individual animation frames very slowly, and
+     * a surrounding shuttle ring can be twisted to control direction and speed of fast playback.
+     * Cesium typically treats time as continuous (not broken into pre-defined animation frames),
+     * so this widget offers no jog wheel.  Instead, the shuttle ring is capable of both fast and
+     * very slow playback.  Click and drag the shuttle ring pointer itself (shown above in green),
+     * or click in the rest of the ring area to nudge the pointer to the next preset speed in that direction.
+     * <br /><br />
+     * The Animation widget also provides a "realtime" button (in the upper-left) that keeps
+     * animation time in sync with the end user's system clock, typically displaying
+     * "today" or "right now."  This mode is not available in {@link ClockRange.CLAMPED} or
+     * {@link ClockRange.LOOP} mode if the current time is outside of {@link Clock}'s startTime and endTime.
+     *
      * @alias Animation
      * @constructor
      *
@@ -143,7 +164,7 @@ define([
      *
      * @function
      * @memberof Animation.prototype
-     * @param Number scale - A size modifier for the widget UI
+     * @param {Number} scale A size modifier for the widget UI
      */
     Animation.prototype.setScale = function(scale) {
         scale *= 0.85; // The default 1.0 scale is smaller than the native SVG as originally designed.
@@ -163,6 +184,7 @@ define([
 
     /**
      * Call this after changing the CSS rules that affect the color theme of the widget.
+     * It updates the SVG gradients to match the new rules.
      *
      * @function
      * @memberof Animation.prototype
@@ -661,9 +683,11 @@ define([
 
     /**
      * Override this function to change the format of the date label on the widget.
+     * The returned string will be displayed as the middle line of text on the widget.
      *
      * @function
      * @memberof Animation.prototype
+     * @returns {String} dateLabel - The human-readable version of the current date.
      */
     Animation.prototype.makeDateLabel = function (gregorianDate) {
         return this._monthNames[gregorianDate.month - 1] + ' ' + gregorianDate.day + ' ' + gregorianDate.year;
@@ -671,9 +695,11 @@ define([
 
     /**
      * Override this function to change the format of the time label on the widget.
+     * The returned string will be displayed as the bottom line of text on the widget.
      *
      * @function
      * @memberof Animation.prototype
+     * @returns {String} timeLabel - The human-readable version of the current time.
      */
     Animation.prototype.makeTimeLabel = function (gregorianDate) {
         var millisecond = gregorianDate.millisecond, millisecondString = ' UTC';
@@ -690,7 +716,8 @@ define([
     };
 
     /**
-     * Update the widget to reflect the current state of animation.
+     * Update the widget to reflect the current state of its {@link AnimationController}.
+     * Typically, call this function once per animation frame, after the clock has ticked.
      *
      * @function
      * @memberof Animation.prototype
