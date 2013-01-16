@@ -31,6 +31,7 @@ define([
      * @see Matrix3.fromRowMajorArray
      * @see Matrix3.fromQuaternion
      * @see Matrix3.fromScale
+     * @see Matrix3.fromUniformScale
      * @see Matrix2
      * @see Matrix4
      */
@@ -214,6 +215,48 @@ define([
         result[6] = 0.0;
         result[7] = 0.0;
         result[8] = scale.z;
+
+        return result;
+    };
+
+    /**
+     * Computes a Matrix3 instance representing a uniform scale.
+     * @memberof Matrix3
+     *
+     * @param {Number} scale The uniform scale factor.
+     * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
+     *
+     * @exception {DeveloperError} scale is required.
+     *
+     * @example
+     * // Creates
+     * //   [2.0, 0.0, 0.0]
+     * //   [0.0, 2.0, 0.0]
+     * //   [0.0, 0.0, 2.0]
+     * var m = Matrix3.fromUniformScale(2.0);
+     */
+    Matrix3.fromUniformScale = function(scale, result) {
+        if (typeof scale !== 'number') {
+            throw new DeveloperError('scale is required.');
+        }
+        if (typeof result === 'undefined') {
+            return new Matrix3(scale, 0.0,   0.0,
+                               0.0,   scale, 0.0,
+                               0.0,   0.0,   scale);
+        }
+
+        result[0] = scale;
+        result[1] = 0.0;
+        result[2] = 0.0;
+
+        result[3] = 0.0;
+        result[4] = scale;
+        result[5] = 0.0;
+
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = scale;
 
         return result;
     };

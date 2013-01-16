@@ -47,6 +47,7 @@ define([
      * @see Matrix4.fromRotationTranslation
      * @see Matrix4.fromTranslation
      * @see Matrix4.fromScale
+     * @see Matrix4.fromUniformScale
      * @see Matrix4.fromCamera
      * @see Matrix4.computePerspectiveFieldOfView
      * @see Matrix4.computeOrthographicOffCenter
@@ -272,6 +273,54 @@ define([
         result[8] = 0.0;
         result[9] = 0.0;
         result[10] = scale.z;
+        result[11] = 0.0;
+        result[12] = 0.0;
+        result[13] = 0.0;
+        result[14] = 0.0;
+        result[15] = 1.0;
+        return result;
+    };
+
+    /**
+     * Computes a Matrix4 instance representing a uniform scale.
+     * @memberof Matrix4
+     *
+     * @param {Number} scale The uniform scale factor.
+     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} scale is required.
+     *
+     * @example
+     * // Creates
+     * //   [2.0, 0.0, 0.0, 0.0]
+     * //   [0.0, 2.0, 0.0, 0.0]
+     * //   [0.0, 0.0, 2.0, 0.0]
+     * //   [0.0, 0.0, 0.0, 1.0]
+     * var m = Matrix4.fromScale(2.0);
+     */
+    Matrix4.fromUniformScale = function(scale, result) {
+        if (typeof scale !== 'number') {
+            throw new DeveloperError('scale is required.');
+        }
+        if (typeof result === 'undefined') {
+            return new Matrix4(scale, 0.0,   0.0,   0.0,
+                               0.0,   scale, 0.0,   0.0,
+                               0.0,   0.0,   scale, 0.0,
+                               0.0,   0.0,   0.0,   1.0);
+        }
+
+        result[0] = scale;
+        result[1] = 0.0;
+        result[2] = 0.0;
+        result[3] = 0.0;
+        result[4] = 0.0;
+        result[5] = scale;
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = 0.0;
+        result[9] = 0.0;
+        result[10] = scale;
         result[11] = 0.0;
         result[12] = 0.0;
         result[13] = 0.0;
@@ -1066,7 +1115,7 @@ define([
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} translation is required.
      *
-     * @see Matrix.#fromTranslation
+     * @see Matrix4#fromTranslation
      *
      * @example
      * // Instead of Matrix4.multiply(m, Matrix4.fromTranslation(position), m);
@@ -1111,6 +1160,68 @@ define([
         result[13] = ty;
         result[14] = tz;
         result[15] = matrix[15];
+        return result;
+    };
+
+    /**
+     * Multiplies a transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
+     * by an implicit uniform scale matrix.  This is an optimization
+     * for <code>Matrix4.multiply(m, Matrix4.fromScale(scale), m);</code> with less allocations and arithmetic operations.
+     *
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} matrix The matrix on the left-hand side.
+     * @param {Number} scale The uniform scale on the right-hand side.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     *
+     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} scale is required.
+     *
+     * @see Matrix4#fromUniformScale
+     *
+     * @example
+     * // Instead of Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);
+     * Matrix4.multiplyByUniformScale(m, scale, m);
+     */
+    Matrix4.multiplyByUniformScale = function(matrix, scale, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+        if (typeof scale !== 'number') {
+            throw new DeveloperError('scale is required');
+        }
+
+        if (scale === 1.0) {
+            return Matrix4.clone(matrix, result);
+        }
+
+        return Matrix4.multiply(matrix, Matrix4.fromUniformScale(scale), result);
+
+        if (typeof result === 'undefined') {
+            return new Matrix4(scale * matrix[0], scale * matrix[4], scale * matrix[8],  matrix[12],
+                               scale * matrix[1], scale * matrix[5], scale * matrix[9],  matrix[13],
+                               scale * matrix[2], scale * matrix[6], scale * matrix[10], matrix[14],
+                               0.0,               0.0,               0.0,                1.0);
+        }
+
+        result[0] = scale * matrix[0];
+        result[1] = scale * matrix[1];
+        result[2] = scale * matrix[2];
+        result[3] = 0.0;
+        result[4] = scale * matrix[4];
+        result[5] = scale * matrix[5];
+        result[6] = scale * matrix[6];
+        result[7] = 0.0;
+        result[8] = scale * matrix[8];
+        result[9] = scale * matrix[9];
+        result[10] = scale * matrix[10];
+        result[11] = 0.0;
+        result[12] = matrix[12];
+        result[13] = matrix[13];
+        result[14] = matrix[14];
+        result[15] = 1.0;
         return result;
     };
 
@@ -1862,6 +1973,23 @@ define([
      */
     Matrix4.prototype.multiplyByTranslation = function(translation, result) {
         return Matrix4.multiplyByTranslation(this, translation, result);
+    };
+
+    /**
+     * Multiplies this matrix, assuming it is a transformation matrix (with a bottom row of
+     * <code>[0.0, 0.0, 0.0, 1.0]</code>), by an implicit uniform scale matrix.
+     *
+     * @memberof Matrix4
+     *
+     * @param {Number} scale The scale on the right-hand side of the multiplication.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     *
+     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} scale is required.
+     */
+    Matrix4.prototype.multiplyByUniformScale = function(scale, result) {
+        return Matrix4.multiplyByUniformScale(this, scale, result);
     };
 
     /**
