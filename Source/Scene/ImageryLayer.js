@@ -188,6 +188,10 @@ define([
         this._isBaseLayer = false;
 
         this._requestImageError = undefined;
+
+        this._nonMipmapSampler = undefined;
+        this._mipmapSampler = undefined;
+        this._reprojectSampler = undefined;
     };
 
     /**
@@ -596,25 +600,30 @@ define([
                 imagery.texture = texture = reprojectedTexture;
         }
 
-        var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
-
         // Use mipmaps if this texture has power-of-two dimensions.
         if (CesiumMath.isPowerOfTwo(texture.getWidth()) && CesiumMath.isPowerOfTwo(texture.getHeight())) {
+            if (typeof this._mipmapSampler === 'undefined') {
+                var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
+                this._mipmapSampler = context.createSampler({
+                    wrapS : TextureWrap.CLAMP,
+                    wrapT : TextureWrap.CLAMP,
+                    minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
+                    magnificationFilter : TextureMagnificationFilter.LINEAR,
+                    maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy))
+                });
+            }
             texture.generateMipmap(MipmapHint.NICEST);
-            texture.setSampler({
-                wrapS : TextureWrap.CLAMP,
-                wrapT : TextureWrap.CLAMP,
-                minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
-                magnificationFilter : TextureMagnificationFilter.LINEAR,
-                maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy))
-            });
+            texture.setSampler(this._mipmapSampler);
         } else {
-            texture.setSampler({
-                wrapS : TextureWrap.CLAMP,
-                wrapT : TextureWrap.CLAMP,
-                minificationFilter : TextureMinificationFilter.LINEAR,
-                magnificationFilter : TextureMagnificationFilter.LINEAR
-            });
+            if (typeof this._nonMipmapSampler === 'undefined') {
+                this._nonMipmapSampler = context.createSampler({
+                    wrapS : TextureWrap.CLAMP,
+                    wrapT : TextureWrap.CLAMP,
+                    minificationFilter : TextureMinificationFilter.LINEAR,
+                    magnificationFilter : TextureMagnificationFilter.LINEAR
+                });
+            }
+            texture.setSampler(this._nonMipmapSampler);
         }
 
         imagery.state = ImageryState.READY;
@@ -709,15 +718,18 @@ define([
             imageryLayer._rsColor = context.createRenderState();
         }
 
-        var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
+        if (typeof imageryLayer._reprojectSampler === 'undefined') {
+            var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
+            imageryLayer._reprojectSampler = context.createSampler({
+                wrapS : TextureWrap.CLAMP,
+                wrapT : TextureWrap.CLAMP,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR,
+                maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
+            });
+        }
 
-        texture.setSampler({
-            wrapS : TextureWrap.CLAMP,
-            wrapT : TextureWrap.CLAMP,
-            minificationFilter : TextureMinificationFilter.LINEAR,
-            magnificationFilter : TextureMagnificationFilter.LINEAR,
-            maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
-        });
+        texture.setSampler(imageryLayer._reprojectSampler);
 
         var width = texture.getWidth();
         var height = texture.getHeight();
