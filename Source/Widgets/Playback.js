@@ -138,6 +138,30 @@ define([
     };
 
     /**
+     * Adjust the overall size of the widget relative to the rest of the page.
+     * The default scale is 1.0.
+     *
+     * @function
+     * @memberof Playback.prototype
+     * @param Number scale - A size modifier for the widget UI
+     */
+    Playback.prototype.setScale = function(scale) {
+        scale *= 0.85; // The default 1.0 scale is smaller than the native SVG as originally designed.
+        this._centerX = Math.max(1, Math.floor(100 * scale));
+
+        var svg = this.svgNode;
+        var width = Math.max(2, Math.floor(200 * scale));
+        var height = Math.max(2, Math.floor(132 * scale));
+
+        svg.style.cssText = 'width: ' + width + 'px; height: ' + height + 'px; position: absolute; bottom: 0; left: 0;';
+        svg.setAttribute('width', width);
+        svg.setAttribute('height', height);
+        svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+
+        this._topG.set('transform', 'scale(' + scale + ')');
+    };
+
+    /**
      * Call this after changing the CSS rules that affect the color theme of the widget.
      *
      * @function
@@ -394,14 +418,10 @@ define([
         // Define the XLink namespace that SVG uses
         svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', this._xlinkNS);
 
-        svg.style.cssText = 'width: 200px; height: 132px; position: absolute; bottom: 0; left: 0;';
-        svg.setAttribute('width', 200);
-        svg.setAttribute('height', 132);
-        svg.setAttribute('viewBox', '0 0 200 132');
+        var topG = this._topG = this._svg('g');
 
+        widget.setScale(1);
         widget.onThemeChanged();
-
-        var topG = this._svg('g');
 
         var rectButton = function (x, y, path, tooltip) {
             var button = {
@@ -547,11 +567,12 @@ define([
         var shuttleRingDragging = false;
 
         function setShuttleRingFromMouse(e) {
+            var centerX = widget._centerX;
             if (e.type === 'mousedown' || (shuttleRingDragging && e.type === 'mousemove')) {
                 widget.clock.clockStep = ClockStep.SPEED_MULTIPLIER;
                 var rect = svg.getBoundingClientRect();
-                var x = e.clientX - 100 - rect.left;
-                var y = e.clientY - 100 - rect.top;
+                var x = e.clientX - centerX - rect.left;
+                var y = e.clientY - centerX - rect.top;
                 var angle = Math.atan2(y, x) * 180 / Math.PI + 90;
                 if (angle > 180) {
                     angle -= 360;

@@ -643,7 +643,7 @@ define([
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
 
-            centralBody.logoOffset = new Cartesian2(335, 28);
+            centralBody.logoOffset = new Cartesian2(308, 28);
 
             this._configureCentralBodyImagery();
 

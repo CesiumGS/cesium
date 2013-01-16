@@ -27,7 +27,7 @@
 .cw-timelineContainer {
     position: absolute;
     bottom: 0;
-    left: 195px;
+    left: 169px;
     right: 2px;
     height: 27px;
     padding: 0;
@@ -51,7 +51,7 @@
     display: block;
     position: absolute;
     bottom: 32px;
-    left: 205px;
+    left: 179px;
     text-decoration: none;
     background-image: url(../Images/Cesium_Logo_overlay.png);
     width: 118px;
