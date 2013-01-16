@@ -320,8 +320,13 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns true if the source pixels are flipped vertically when the texture is created or updated, i.e.,
+     * <code>UNPACK_FLIP_Y_WEBGL</code> is used.
+     *
      * @memberof Texture
+     *
+     * @return {Boolean} True if the source pixels are flipped vertically; otherwise, false.
+     *
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      */
     Texture.prototype.getFlipY = function() {

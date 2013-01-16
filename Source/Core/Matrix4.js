@@ -256,10 +256,11 @@ define([
             throw new DeveloperError('scale is required.');
         }
         if (typeof result === 'undefined') {
-            return new Matrix4(scale.x, 0.0,     0.0,     0.0,
-                               0.0,     scale.y, 0.0,     0.0,
-                               0.0,     0.0,     scale.z, 0.0,
-                               0.0,     0.0,     0.0,     1.0);
+            return new Matrix4(
+                scale.x, 0.0,     0.0,     0.0,
+                0.0,     scale.y, 0.0,     0.0,
+                0.0,     0.0,     scale.z, 0.0,
+                0.0,     0.0,     0.0,     1.0);
         }
 
         result[0] = scale.x;
@@ -1200,10 +1201,11 @@ define([
         return Matrix4.multiply(matrix, Matrix4.fromUniformScale(scale), result);
 
         if (typeof result === 'undefined') {
-            return new Matrix4(scale * matrix[0], scale * matrix[4], scale * matrix[8],  matrix[12],
-                               scale * matrix[1], scale * matrix[5], scale * matrix[9],  matrix[13],
-                               scale * matrix[2], scale * matrix[6], scale * matrix[10], matrix[14],
-                               0.0,               0.0,               0.0,                1.0);
+            return new Matrix4(
+                scale * matrix[0], scale * matrix[4], scale * matrix[8],  matrix[12],
+                scale * matrix[1], scale * matrix[5], scale * matrix[9],  matrix[13],
+                scale * matrix[2], scale * matrix[6], scale * matrix[10], matrix[14],
+                0.0,               0.0,               0.0,                1.0);
         }
 
         result[0] = scale * matrix[0];

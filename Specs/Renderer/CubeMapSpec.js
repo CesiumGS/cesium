@@ -138,6 +138,16 @@ defineSuite([
         expect(cubeMap.getHeight()).toEqual(16);
     });
 
+    it('gets width and height', function() {
+        cubeMap = context.createCubeMap({
+            width : 16,
+            height : 16,
+            flipY : true
+        });
+
+        expect(cubeMap.getFlipY()).toEqual(true);
+    });
+
     it('draws with a cube map', function() {
         cubeMap = context.createCubeMap({
             source : {

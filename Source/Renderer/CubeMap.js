@@ -286,9 +286,12 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns true if the source pixels are flipped vertically when cube-map faces are created or updated, i.e.,
+     * <code>UNPACK_FLIP_Y_WEBGL</code> is used.
      *
      * @memberof CubeMap
+     *
+     * @return {Boolean} True if the source pixels are flipped vertically; otherwise, false.
      *
      * @exception {DeveloperError} This cube map was destroyed, i.e., destroy() was called.
      */

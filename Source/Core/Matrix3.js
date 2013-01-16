@@ -199,23 +199,21 @@ define([
             throw new DeveloperError('scale is required.');
         }
         if (typeof result === 'undefined') {
-            return new Matrix3(scale.x, 0.0,     0.0,
-                               0.0,     scale.y, 0.0,
-                               0.0,     0.0,     scale.z);
+            return new Matrix3(
+                scale.x, 0.0,     0.0,
+                0.0,     scale.y, 0.0,
+                0.0,     0.0,     scale.z);
         }
 
         result[0] = scale.x;
         result[1] = 0.0;
         result[2] = 0.0;
-
         result[3] = 0.0;
         result[4] = scale.y;
         result[5] = 0.0;
-
         result[6] = 0.0;
         result[7] = 0.0;
         result[8] = scale.z;
-
         return result;
     };
 
@@ -241,23 +239,21 @@ define([
             throw new DeveloperError('scale is required.');
         }
         if (typeof result === 'undefined') {
-            return new Matrix3(scale, 0.0,   0.0,
-                               0.0,   scale, 0.0,
-                               0.0,   0.0,   scale);
+            return new Matrix3(
+                scale, 0.0,   0.0,
+                0.0,   scale, 0.0,
+                0.0,   0.0,   scale);
         }
 
         result[0] = scale;
         result[1] = 0.0;
         result[2] = 0.0;
-
         result[3] = 0.0;
         result[4] = scale;
         result[5] = 0.0;
-
         result[6] = 0.0;
         result[7] = 0.0;
         result[8] = scale;
-
         return result;
     };
 

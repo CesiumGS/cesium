@@ -121,16 +121,15 @@ define([
             throw new DeveloperError('scale is required.');
         }
         if (typeof result === 'undefined') {
-            return new Matrix2(scale.x, 0.0,
-                               0.0,     scale.y);
+            return new Matrix2(
+                scale.x, 0.0,
+                0.0,     scale.y);
         }
 
         result[0] = scale.x;
         result[1] = 0.0;
-
         result[2] = 0.0;
         result[3] = scale.y;
-
         return result;
     };
 
@@ -155,13 +154,13 @@ define([
             throw new DeveloperError('scale is required.');
         }
         if (typeof result === 'undefined') {
-            return new Matrix2(scale, 0.0,
-                               0.0,   scale);
+            return new Matrix2(
+                scale, 0.0,
+                0.0,   scale);
         }
 
         result[0] = scale;
         result[1] = 0.0;
-
         result[2] = 0.0;
         result[3] = scale;
         return result;
