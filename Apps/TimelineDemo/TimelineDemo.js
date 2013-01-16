@@ -7,7 +7,7 @@ define(['dojo',
         'Core/TimeInterval',
         'Core/AnimationController',
         'Core/requestAnimationFrame',
-        'Widgets/Playback',
+        'Widgets/Animation',
         'Widgets/Timeline'
     ], function(
          dojo,
@@ -18,12 +18,12 @@ define(['dojo',
          TimeInterval,
          AnimationController,
          requestAnimationFrame,
-         Playback,
+         Animation,
          Timeline) {
     "use strict";
 
     var startDatePart, endDatePart, startTimePart, endTimePart;
-    var timeline, clock, endBeforeStart, containerElement, animationController, playback;
+    var timeline, clock, endBeforeStart, containerElement, animationController, animation;
 
     function updateScrubTime(julianDate) {
         document.getElementById('mousePos').innerHTML = timeline.makeLabel(julianDate) + ' UTC';
@@ -90,12 +90,11 @@ define(['dojo',
         timeline.addTrack(new TimeInterval(startJulian.addSeconds(middle), startJulian.addSeconds(middle * 3)), 8, Color.DEEPSKYBLUE, new Color(0.55, 0.55, 0.55, 0.25));
 
         animationController = new AnimationController(clock);
-        //animationController.pause();
-        playback = new Playback(dojo.byId('playbackTest'), animationController);
+        animation = new Animation(dojo.byId('animationWidget'), animationController);
 
         function tick() {
             var currentTime = animationController.update();
-            playback.update();
+            animation.update();
             timeline.updateFromClock();
             updateScrubTime(currentTime);
             requestAnimationFrame(tick);
@@ -172,12 +171,12 @@ define(['dojo',
     function setThemeLight() {
         document.body.className = 'claro';
         dijit.byId('themeSelector').set('label', 'Theme: Light');
-        playback.onThemeChanged();
+        animation.onThemeChanged();
     }
     function setThemeDark() {
         document.body.className = 'claro cesium-darker';
         dijit.byId('themeSelector').set('label', 'Theme: Dark');
-        playback.onThemeChanged();
+        animation.onThemeChanged();
     }
     function cycleTheme() {
         if (document.body.className === 'claro') {
@@ -189,7 +188,7 @@ define(['dojo',
 
     dojo.ready(function() {
         endBeforeStart = document.getElementById('endBeforeStart');
-        containerElement = document.getElementById('timelineAndPlayback');
+        containerElement = document.getElementById('timelineAndAnimation');
         dojo.connect(dijit.byId('startCal'), 'onChange', newStartDateSelected);
         dojo.connect(dijit.byId('endCal'), 'onChange', newEndDateSelected);
         dojo.connect(dijit.byId('startTimeSel'), 'onChange', newStartTimeSelected);

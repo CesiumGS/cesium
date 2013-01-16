@@ -1,211 +1,211 @@
-.playback-theme {
+.animation-theme {
     visibility: hidden;
     display: block;
     position: absolute;
     z-index: -100;
 }
-.playback-themeNormal {
+.animation-themeNormal {
     color: #E5F2FE;
 }
-.playback-themeHover {
+.animation-themeHover {
     color: #ABD6FF;
 }
-.playback-themeSelect {
+.animation-themeSelect {
     color: #E5F2FE;
 }
-.playback-themeDisabled {
+.animation-themeDisabled {
     color: #EFEFEF;
 }
-.playback-themeKnob {
+.animation-themeKnob {
     color: #E1E2E3;
 }
-.playback-themePointer {
+.animation-themePointer {
     color: #FA5;
 }
-.playback-themeSwoosh {
+.animation-themeSwoosh {
     color: #ACE;
 }
-.playback-themeSwooshHover {
+.animation-themeSwooshHover {
     color: #BDF;
 }
-.playback-svgText {
+.animation-svgText {
     fill: #111;
     font-family: Sans-Serif;
     font-size: 15px;
     text-anchor: middle;
 }
-.playback-blank {
+.animation-blank {
     fill: #000;
     fill-opacity: 0.01;  /* This must be clickable, so it can't be 'fill: none'. */
     stroke: none;
 }
-.playback-rectButton {
+.animation-rectButton {
     cursor: pointer;
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
 }
-.playback-rectButton .playback-buttonPath {
+.animation-rectButton .animation-buttonPath {
     fill: #111;
 }
-.playback-rectButton .playback-buttonGlow {
+.animation-rectButton .animation-buttonGlow {
     fill: #fff;
     stroke: none;
-    filter: url(#playback_blurred);
+    filter: url(#animation_blurred);
     display: none;
 }
-.playback-rectButton .playback-buttonMain {
-    fill: url(#playback_buttonNormal);
+.animation-rectButton .animation-buttonMain {
+    fill: url(#animation_buttonNormal);
     stroke: #759DC0;
     stroke-width: 1.2;
 }
-.playback-buttonSelected .playback-buttonGlow {
+.animation-buttonSelected .animation-buttonGlow {
     display: block;
     fill: #FFAA2A;
 }
-.playback-buttonSelected .playback-buttonMain {
-    fill: url(#playback_buttonSelected);
+.animation-buttonSelected .animation-buttonMain {
+    fill: url(#animation_buttonSelected);
     stroke: #EA0;
 }
-.playback-rectButton:hover .playback-buttonGlow {
+.animation-rectButton:hover .animation-buttonGlow {
     display: block;
 }
-.playback-rectButton:hover .playback-buttonMain {
-    fill: url(#playback_buttonHovered);
+.animation-rectButton:hover .animation-buttonMain {
+    fill: url(#animation_buttonHovered);
     stroke: #759DC0;
 }
-.playback-buttonSelected:hover .playback-buttonGlow {
+.animation-buttonSelected:hover .animation-buttonGlow {
     fill: #fff;
 }
-.playback-buttonSelected:hover .playback-buttonMain {
+.animation-buttonSelected:hover .animation-buttonMain {
     stroke: #EA0;
 }
-.playback-rectButton:active .playback-buttonMain {
+.animation-rectButton:active .animation-buttonMain {
     fill: #ABD6FF;
 }
-.playback-buttonDisabled {
+.animation-buttonDisabled {
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
 }
-.playback-buttonDisabled .playback-buttonMain {
-    fill: url(#playback_buttonDisabled);
+.animation-buttonDisabled .animation-buttonMain {
+    fill: url(#animation_buttonDisabled);
     stroke: #D3D3D3;
 }
-.playback-buttonDisabled .playback-buttonPath {
+.animation-buttonDisabled .animation-buttonPath {
     fill: #818181;
 }
-.playback-buttonDisabled .playback-buttonGlow {
+.animation-buttonDisabled .animation-buttonGlow {
     display: none;
 }
-.playback-shuttleRingBack {
+.animation-shuttleRingBack {
     fill: #FAFAFA;
     fill-opacity: 1;
     stroke: #AEAEAE;
     stroke-width: 1.2;
 }
-.playback-shuttleRingG {
+.animation-shuttleRingG {
     cursor: pointer;
 }
-.playback-shuttleRingG .playback-shuttleRingSwoosh {
-    fill: url(#playback_shuttleRingSwooshGradient);
+.animation-shuttleRingG .animation-shuttleRingSwoosh {
+    fill: url(#animation_shuttleRingSwooshGradient);
 }
-.playback-shuttleRingSwoosh line {
+.animation-shuttleRingSwoosh line {
     stroke: #8AC;
     stroke-width: 3;
     stroke-opacity: 0.2;
     stroke-linecap: round;
 }
-.playback-shuttleRingG:hover .playback-shuttleRingSwoosh {
-    fill: url(#playback_shuttleRingSwooshHovered);
+.animation-shuttleRingG:hover .animation-shuttleRingSwoosh {
+    fill: url(#animation_shuttleRingSwooshHovered);
 }
-.playback-shuttleRingPointer {
-    fill: url(#playback_shuttleRingPointerGradient);
+.animation-shuttleRingPointer {
+    fill: url(#animation_shuttleRingPointerGradient);
     cursor: pointer;
 }
-.playback-shuttleRingPausePointer {
-    fill: url(#playback_shuttleRingPointerPaused);
+.animation-shuttleRingPausePointer {
+    fill: url(#animation_shuttleRingPointerPaused);
     cursor: pointer;
 }
-.playback-knobOuter {
-    fill: url(#playback_knobOuter);
+.animation-knobOuter {
+    fill: url(#animation_knobOuter);
     cursor: pointer;
     stroke: #A5A5A5;
     stroke-width: 1.2;
 }
-.playback-knobInner {
-    fill: url(#playback_knobInner);
+.animation-knobInner {
+    fill: url(#animation_knobInner);
     cursor: pointer;
 }
 
 /* Apply a darker theme with some modifications. */
 
-.cesium-darker .playback-themeNormal {
+.cesium-darker .animation-themeNormal {
     color: #222;
 }
-.cesium-darker .playback-themeHover {
+.cesium-darker .animation-themeHover {
     color: #4488B0;
 }
-.cesium-darker .playback-themeSelect {
+.cesium-darker .animation-themeSelect {
     color: #242;
 }
-.cesium-darker .playback-themeDisabled {
+.cesium-darker .animation-themeDisabled {
     color: #333;
 }
-.cesium-darker .playback-themeKnob {
+.cesium-darker .animation-themeKnob {
     color: #222;
 }
-.cesium-darker .playback-themePointer {
+.cesium-darker .animation-themePointer {
     color: #2E2;
 }
-.cesium-darker .playback-themeSwoosh {
+.cesium-darker .animation-themeSwoosh {
     color: #8AC;
 }
-.cesium-darker .playback-themeSwooshHover {
+.cesium-darker .animation-themeSwooshHover {
     color: #AEF;
 }
-.cesium-darker .playback-svgText {
+.cesium-darker .animation-svgText {
     fill: #edffff;
 }
-.cesium-darker .playback-rectButton .playback-buttonPath {
+.cesium-darker .animation-rectButton .animation-buttonPath {
     fill: #edffff;
 }
-.cesium-darker .playback-rectButton .playback-buttonMain {
+.cesium-darker .animation-rectButton .animation-buttonMain {
     stroke: #444;
 }
-.cesium-darker .playback-buttonSelected .playback-buttonGlow {
+.cesium-darker .animation-buttonSelected .animation-buttonGlow {
     fill: #2E2;
 }
-.cesium-darker .playback-buttonSelected .playback-buttonMain {
+.cesium-darker .animation-buttonSelected .animation-buttonMain {
     stroke: #2E2;
 }
-.cesium-darker .playback-rectButton:hover .playback-buttonMain {
+.cesium-darker .animation-rectButton:hover .animation-buttonMain {
     stroke: #AEF;
 }
-.cesium-darker .playback-buttonSelected:hover .playback-buttonGlow {
+.cesium-darker .animation-buttonSelected:hover .animation-buttonGlow {
     fill: #fff;
 }
-.cesium-darker .playback-buttonSelected:hover .playback-buttonMain {
+.cesium-darker .animation-buttonSelected:hover .animation-buttonMain {
     stroke: #2E2;
 }
-.cesium-darker .playback-rectButton:active .playback-buttonMain {
+.cesium-darker .animation-rectButton:active .animation-buttonMain {
     fill: #ABD6FF;
 }
-.cesium-darker .playback-buttonDisabled .playback-buttonMain {
+.cesium-darker .animation-buttonDisabled .animation-buttonMain {
     stroke: #555;
 }
-.cesium-darker .playback-buttonDisabled .playback-buttonPath {
+.cesium-darker .animation-buttonDisabled .animation-buttonPath {
     fill: #818181;
 }
-.cesium-darker .playback-shuttleRingBack {
+.cesium-darker .animation-shuttleRingBack {
     fill: #181818;
     fill-opacity: 0.8;
     stroke: #333;
     stroke-width: 1.2;
 }
-.cesium-darker .playback-shuttleRingSwoosh line {
+.cesium-darker .animation-shuttleRingSwoosh line {
     stroke: #8AC;
 }
-.cesium-darker .playback-knobOuter {
+.cesium-darker .animation-knobOuter {
     stroke: #444;
 }

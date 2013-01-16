@@ -1,5 +1,5 @@
 @import url('TimelineWidget.css');
-@import url('../Playback.css');
+@import url('../Animation.css');
 
 .cw-node {
     font-family: sans-serif;
@@ -35,7 +35,7 @@
     font-size: 14px;
 }
 
-.cw-playbackContainer {
+.cw-animationContainer {
     position: absolute;
     bottom: 0;
     left: 0;

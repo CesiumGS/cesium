@@ -12,7 +12,7 @@ define([
 
     /**
      * This widget provides a UI to manipulate an AnimationController.
-     * @alias Playback
+     * @alias Animation
      * @constructor
      *
      * @param {DOM Node} parentNode The parent HTML DOM node for this widget.
@@ -21,33 +21,33 @@ define([
      * @see AnimationController
      * @see Clock
      */
-    var Playback = function(parentNode, animationController) {
+    var Animation = function(parentNode, animationController) {
         this.parentNode = parentNode;
         this.animationController = animationController;
         if (typeof animationController !== 'object') {
-            throw new DeveloperError('AnimationController parameter required to construct Playback widget.');
+            throw new DeveloperError('AnimationController parameter required to construct Animation widget.');
         }
         this.clock = animationController.clock;
 
         this._createNodes(parentNode);
     };
 
-    Playback.prototype._svgNS = "http://www.w3.org/2000/svg";
-    Playback.prototype._xlinkNS = "http://www.w3.org/1999/xlink";
-    Playback.prototype._monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    Animation.prototype._svgNS = "http://www.w3.org/2000/svg";
+    Animation.prototype._xlinkNS = "http://www.w3.org/1999/xlink";
+    Animation.prototype._monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-    Playback.prototype._svgSet = function (name, val) {
+    Animation.prototype._svgSet = function (name, val) {
         this.setAttribute(name, val);
         return this;
     };
 
-    Playback.prototype._svg = function (name) {
+    Animation.prototype._svg = function (name) {
         var element = document.createElementNS(this._svgNS, name);
-        element.set = Playback.prototype._svgSet;
+        element.set = Animation.prototype._svgSet;
         return element;
     };
 
-    Playback.prototype._svgFromObject = function (obj) {
+    Animation.prototype._svgFromObject = function (obj) {
         var ele = this._svg(obj.tagName);
         for (var field in obj) {
             if (obj.hasOwnProperty(field) && field !== 'tagName') {
@@ -68,21 +68,21 @@ define([
         return ele;
     };
 
-    Playback.prototype._svgText = function(x, y, msg) {
-        var text = this._svg('text').set('x', x).set('y', y).set('class', 'playback-svgText');
+    Animation.prototype._svgText = function(x, y, msg) {
+        var text = this._svg('text').set('x', x).set('y', y).set('class', 'animation-svgText');
         var tspan = this._svg('tspan');
         tspan.textContent = msg;
         text.appendChild(tspan);
         return text;
     };
 
-    Playback.prototype._updateSvgText = function(svgText, msg) {
+    Animation.prototype._updateSvgText = function(svgText, msg) {
         svgText.childNodes[0].textContent = msg;
     };
 
-    Playback.prototype._maxShuttleAngle = 105;
+    Animation.prototype._maxShuttleAngle = 105;
 
-    Playback.prototype._shuttleAngletoSpeed = function (angle) {
+    Animation.prototype._shuttleAngletoSpeed = function (angle) {
         if (Math.abs(angle) < 5) {
             return 0;
         }
@@ -102,7 +102,7 @@ define([
         return speed;
     };
 
-    Playback.prototype._shuttleSpeedtoAngle = function (speed) {
+    Animation.prototype._shuttleSpeedtoAngle = function (speed) {
         var angle = Math.log(Math.abs(speed)) / 0.15 + 15;
         angle = Math.max(Math.min(angle, this._maxShuttleAngle), 0);
         if (speed < 0) {
@@ -111,23 +111,23 @@ define([
         return angle;
     };
 
-    Playback.prototype._setShuttleRingPointer = function (angle) {
+    Animation.prototype._setShuttleRingPointer = function (angle) {
         this.shuttleRingPointer.setAttribute('transform', 'translate(100,100) rotate(' + angle + ')');
         this.knobOuter.setAttribute('transform', 'rotate(' + angle + ')');
     };
 
-    Playback.prototype.gradientEnabledColor0 = Color.fromCssColorString('rgba(247,250,255,0.384)');
-    Playback.prototype.gradientEnabledColor1 = Color.fromCssColorString('rgba(143,191,255,0.216)');
-    Playback.prototype.gradientEnabledColor2 = Color.fromCssColorString('rgba(153,197,255,0.098)');
-    Playback.prototype.gradientEnabledColor3 = Color.fromCssColorString('rgba(255,255,255,0.086)');
+    Animation.prototype.gradientEnabledColor0 = Color.fromCssColorString('rgba(247,250,255,0.384)');
+    Animation.prototype.gradientEnabledColor1 = Color.fromCssColorString('rgba(143,191,255,0.216)');
+    Animation.prototype.gradientEnabledColor2 = Color.fromCssColorString('rgba(153,197,255,0.098)');
+    Animation.prototype.gradientEnabledColor3 = Color.fromCssColorString('rgba(255,255,255,0.086)');
 
-    Playback.prototype.gradientDisabledColor0 = Color.fromCssColorString('rgba(255,255,255,0.267)');
-    Playback.prototype.gradientDisabledColor1 = Color.fromCssColorString('rgba(255,255,255,0)');
+    Animation.prototype.gradientDisabledColor0 = Color.fromCssColorString('rgba(255,255,255,0.267)');
+    Animation.prototype.gradientDisabledColor1 = Color.fromCssColorString('rgba(255,255,255,0)');
 
-    Playback.prototype.gradientKnobColor = Color.fromCssColorString('rgba(66,67,68,0.3)');
-    Playback.prototype.gradientPointerColor = Color.fromCssColorString('rgba(0,0,0,0.5)');
+    Animation.prototype.gradientKnobColor = Color.fromCssColorString('rgba(66,67,68,0.3)');
+    Animation.prototype.gradientPointerColor = Color.fromCssColorString('rgba(0,0,0,0.5)');
 
-    Playback.prototype._makeColorString = function(background, gradient) {
+    Animation.prototype._makeColorString = function(background, gradient) {
         var gradientAlpha = gradient.alpha;
         var backgroundAlpha = 1.0 - gradientAlpha;
         var red = (background.red * backgroundAlpha) + (gradient.red * gradientAlpha);
@@ -142,10 +142,10 @@ define([
      * The default scale is 1.0.
      *
      * @function
-     * @memberof Playback.prototype
+     * @memberof Animation.prototype
      * @param Number scale - A size modifier for the widget UI
      */
-    Playback.prototype.setScale = function(scale) {
+    Animation.prototype.setScale = function(scale) {
         scale *= 0.85; // The default 1.0 scale is smaller than the native SVG as originally designed.
         this._centerX = Math.max(1, Math.floor(100 * scale));
 
@@ -165,9 +165,9 @@ define([
      * Call this after changing the CSS rules that affect the color theme of the widget.
      *
      * @function
-     * @memberof Playback.prototype
+     * @memberof Animation.prototype
      */
-    Playback.prototype.onThemeChanged = function() {
+    Animation.prototype.onThemeChanged = function() {
         var widget = this;
         var svg = this.svgNode;
 
@@ -184,7 +184,7 @@ define([
             'tagName' : 'defs',
             'children' : [
                 {
-                    'id' : 'playback_buttonNormal',
+                    'id' : 'animation_buttonNormal',
                     'tagName' : 'linearGradient',
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
@@ -199,7 +199,7 @@ define([
                             widget._makeColorString(buttonNormalBackColor, widget.gradientEnabledColor3) }
                     ]
                 }, {
-                    'id' : 'playback_buttonHovered',
+                    'id' : 'animation_buttonHovered',
                     'tagName' : 'linearGradient',
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
@@ -213,7 +213,7 @@ define([
                             widget._makeColorString(buttonHoverBackColor, widget.gradientEnabledColor3) }
                     ]
                 }, {
-                    'id' : 'playback_buttonSelected',
+                    'id' : 'animation_buttonSelected',
                     'tagName' : 'linearGradient',
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
@@ -227,7 +227,7 @@ define([
                             widget._makeColorString(buttonSelectedBackColor, widget.gradientEnabledColor3) }
                     ]
                 }, {
-                    'id' : 'playback_buttonDisabled',
+                    'id' : 'animation_buttonDisabled',
                     'tagName' : 'linearGradient',
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
@@ -237,7 +237,7 @@ define([
                             widget._makeColorString(buttonDisabledBackColor, widget.gradientDisabledColor1) }
                     ]
                 }, {
-                    'id' : 'playback_blurred',
+                    'id' : 'animation_blurred',
                     'tagName' : 'filter',
                     'width' : '200%', 'height' : '200%', 'x' : '-50%', 'y' : '-50%',
                     'children' : [
@@ -248,7 +248,7 @@ define([
                         }
                     ]
                 }, {
-                    'id' : 'playback_shuttleRingSwooshGradient',
+                    'id' : 'animation_shuttleRingSwooshGradient',
                     'tagName' : 'linearGradient',
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
@@ -260,7 +260,7 @@ define([
                             swooshColor.toCssColorString() }
                     ]
                 }, {
-                    'id' : 'playback_shuttleRingSwooshHovered',
+                    'id' : 'animation_shuttleRingSwooshHovered',
                     'tagName' : 'linearGradient',
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
@@ -272,7 +272,7 @@ define([
                             swooshHoverColor.toCssColorString() }
                     ]
                 }, {
-                    'id' : 'playback_shuttleRingPointerGradient',
+                    'id' : 'animation_shuttleRingPointerGradient',
                     'tagName' : 'linearGradient',
                     'x1' : '0%', 'y1' : '50%', 'x2' : '100%', 'y2' : '50%',
                     'children' : [
@@ -286,7 +286,7 @@ define([
                             widget._makeColorString(pointerColor, widget.gradientPointerColor) }
                     ]
                 }, {
-                    'id' : 'playback_shuttleRingPointerPaused',
+                    'id' : 'animation_shuttleRingPointerPaused',
                     'tagName' : 'linearGradient',
                     'x1' : '0%', 'y1' : '50%', 'x2' : '100%', 'y2' : '50%',
                     'children' : [
@@ -296,7 +296,7 @@ define([
                         { 'tagName' : 'stop', 'offset' : '100%', 'stop-color' : '#555' }
                     ]
                 }, {
-                    'id' : 'playback_knobOuter',
+                    'id' : 'animation_knobOuter',
                     'tagName' : 'linearGradient',
                     'x1' : '20%', 'y1' : '0%', 'x2' : '90%', 'y2' : '100%',
                     'children' : [
@@ -308,7 +308,7 @@ define([
                               widget._makeColorString(knobBackColor, widget.gradientEnabledColor1) }
                     ]
                 }, {
-                    'id' : 'playback_knobInner',
+                    'id' : 'animation_knobInner',
                     'tagName' : 'linearGradient',
                     'x1' : '20%', 'y1' : '0%', 'x2' : '90%', 'y2' : '100%',
                     'children' : [
@@ -320,45 +320,45 @@ define([
                               widget._makeColorString(knobBackColor, widget.gradientEnabledColor3) }
                     ]
                 }, {
-                    'id' : 'playback_pathReset',
+                    'id' : 'animation_pathReset',
                     'tagName' : 'path',
                     'transform' : 'translate(16,16) scale(0.85) translate(-16,-16)',
                     'd' : 'M24.316,5.318,9.833,13.682,9.833,5.5,5.5,5.5,5.5,25.5,9.833,25.5,9.833,17.318,24.316,25.682z'
                 }, {
-                    'id' : 'playback_pathPause',
+                    'id' : 'animation_pathPause',
                     'tagName' : 'path',
                     'transform' : 'translate(16,16) scale(0.85) translate(-16,-16)',
                     'd' : 'M13,5.5,7.5,5.5,7.5,25.5,13,25.5zM24.5,5.5,19,5.5,19,25.5,24.5,25.5z'
                 }, {
-                    'id' : 'playback_pathPlay',
+                    'id' : 'animation_pathPlay',
                     'tagName' : 'path',
                     'transform' : 'translate(16,16) scale(0.85) translate(-16,-16)',
                     'd' : 'M6.684,25.682L24.316,15.5L6.684,5.318V25.682z'
                 }, {
-                    'id' : 'playback_pathPlayReverse',
+                    'id' : 'animation_pathPlayReverse',
                     'tagName' : 'path',
                     'transform' : 'translate(16,16) scale(-0.85,0.85) translate(-16,-16)',
                     'd' : 'M6.684,25.682L24.316,15.5L6.684,5.318V25.682z'
                 }, {
-                    'id' : 'playback_pathLoop',
+                    'id' : 'animation_pathLoop',
                     'tagName' : 'path',
                     'transform' : 'translate(16,16) scale(0.85) translate(-16,-16)',
                     'd' : 'M24.249,15.499c-0.009,4.832-3.918,8.741-8.75,8.75c-2.515,0-4.768-1.064-6.365-2.763l2.068-1.442l-7.901-3.703l0.744,8.694l2.193-1.529c2.244,2.594,5.562,4.242,9.26,4.242c6.767,0,12.249-5.482,12.249-12.249H24.249zM15.499,6.75c2.516,0,4.769,1.065,6.367,2.764l-2.068,1.443l7.901,3.701l-0.746-8.693l-2.192,1.529c-2.245-2.594-5.562-4.245-9.262-4.245C8.734,3.25,3.25,8.734,3.249,15.499H6.75C6.758,10.668,10.668,6.758,15.499,6.75z'
                 }, {
-                    'id' : 'playback_pathClock',
+                    'id' : 'animation_pathClock',
                     'tagName' : 'path',
                     'transform' : 'translate(16,16) scale(0.85) translate(-16,-15.5)',
                     'd' : 'M15.5,2.374C8.251,2.375,2.376,8.251,2.374,15.5C2.376,22.748,8.251,28.623,15.5,28.627c7.249-0.004,13.124-5.879,13.125-13.127C28.624,8.251,22.749,2.375,15.5,2.374zM15.5,25.623C9.909,25.615,5.385,21.09,5.375,15.5C5.385,9.909,9.909,5.384,15.5,5.374c5.59,0.01,10.115,4.535,10.124,10.125C25.615,21.09,21.091,25.615,15.5,25.623zM8.625,15.5c-0.001-0.552-0.448-0.999-1.001-1c-0.553,0-1,0.448-1,1c0,0.553,0.449,1,1,1C8.176,16.5,8.624,16.053,8.625,15.5zM8.179,18.572c-0.478,0.277-0.642,0.889-0.365,1.367c0.275,0.479,0.889,0.641,1.365,0.365c0.479-0.275,0.643-0.887,0.367-1.367C9.27,18.461,8.658,18.297,8.179,18.572zM9.18,10.696c-0.479-0.276-1.09-0.112-1.366,0.366s-0.111,1.09,0.365,1.366c0.479,0.276,1.09,0.113,1.367-0.366C9.821,11.584,9.657,10.973,9.18,10.696zM22.822,12.428c0.478-0.275,0.643-0.888,0.366-1.366c-0.275-0.478-0.89-0.642-1.366-0.366c-0.479,0.278-0.642,0.89-0.366,1.367C21.732,12.54,22.344,12.705,22.822,12.428zM12.062,21.455c-0.478-0.275-1.089-0.111-1.366,0.367c-0.275,0.479-0.111,1.09,0.366,1.365c0.478,0.277,1.091,0.111,1.365-0.365C12.704,22.344,12.54,21.732,12.062,21.455zM12.062,9.545c0.479-0.276,0.642-0.888,0.366-1.366c-0.276-0.478-0.888-0.642-1.366-0.366s-0.642,0.888-0.366,1.366C10.973,9.658,11.584,9.822,12.062,9.545zM22.823,18.572c-0.48-0.275-1.092-0.111-1.367,0.365c-0.275,0.479-0.112,1.092,0.367,1.367c0.477,0.275,1.089,0.113,1.365-0.365C23.464,19.461,23.3,18.848,22.823,18.572zM19.938,7.813c-0.477-0.276-1.091-0.111-1.365,0.366c-0.275,0.48-0.111,1.091,0.366,1.367s1.089,0.112,1.366-0.366C20.581,8.702,20.418,8.089,19.938,7.813zM23.378,14.5c-0.554,0.002-1.001,0.45-1.001,1c0.001,0.552,0.448,1,1.001,1c0.551,0,1-0.447,1-1C24.378,14.949,23.929,14.5,23.378,14.5zM15.501,6.624c-0.552,0-1,0.448-1,1l-0.466,7.343l-3.004,1.96c-0.478,0.277-0.642,0.889-0.365,1.365c0.275,0.479,0.889,0.643,1.365,0.367l3.305-1.676C15.39,16.99,15.444,17,15.501,17c0.828,0,1.5-0.671,1.5-1.5l-0.5-7.876C16.501,7.072,16.053,6.624,15.501,6.624zM15.501,22.377c-0.552,0-1,0.447-1,1s0.448,1,1,1s1-0.447,1-1S16.053,22.377,15.501,22.377zM18.939,21.455c-0.479,0.277-0.643,0.889-0.366,1.367c0.275,0.477,0.888,0.643,1.366,0.365c0.478-0.275,0.642-0.889,0.366-1.365C20.028,21.344,19.417,21.18,18.939,21.455z'
                 }, {
-                    'id' : 'playback_pathWingButton',
+                    'id' : 'animation_pathWingButton',
                     'tagName' : 'path',
                     'd' : 'm 4.5,0.5 c -2.216,0 -4,1.784 -4,4 l 0,24 c 0,2.216 1.784,4 4,4 l 13.71875,0 C 22.478584,27.272785 27.273681,22.511272 32.5,18.25 l 0,-13.75 c 0,-2.216 -1.784,-4 -4,-4 l -24,0 z'
                 }, {
-                    'id' : 'playback_pathPointer',
+                    'id' : 'animation_pathPointer',
                     'tagName' : 'path',
                     'd' : 'M-15,-65,-15,-55,15,-55,15,-65,0,-95z'
                 }, {
-                    'id' : 'playback_pathSwooshFX',
+                    'id' : 'animation_pathSwooshFX',
                     'tagName' : 'path',
                     'd' : 'm 85,0 c 0,16.617 -4.813944,35.356 -13.131081,48.4508 h 6.099803 c 8.317138,-13.0948 13.13322,-28.5955 13.13322,-45.2124 0,-46.94483 -38.402714,-85.00262 -85.7743869,-85.00262 -1.0218522,0 -2.0373001,0.0241 -3.0506131,0.0589 45.958443,1.59437 82.723058,35.77285 82.723058,81.70532 z'
                 }
@@ -374,35 +374,35 @@ define([
         widget._defsElement = defsElement;
     };
 
-    Playback.prototype._createNodes = function(parentNode) {
+    Animation.prototype._createNodes = function(parentNode) {
         var widget = this;
 
         // This is a workaround for a bug or security feature in Firefox.
         var cssStyle = document.createElement('style');
         cssStyle.textContent =
-            '.playback-rectButton .playback-buttonGlow { filter: url(#playback_blurred); }\n' +
-            '.playback-rectButton .playback-buttonMain { fill: url(#playback_buttonNormal); }\n' +
-            '.playback-buttonSelected .playback-buttonMain { fill: url(#playback_buttonSelected); }\n' +
-            '.playback-rectButton:hover .playback-buttonMain { fill: url(#playback_buttonHovered); }\n' +
-            '.playback-shuttleRingG .playback-shuttleRingSwoosh { fill: url(#playback_shuttleRingSwooshGradient); }\n' +
-            '.playback-shuttleRingG:hover .playback-shuttleRingSwoosh { fill: url(#playback_shuttleRingSwooshHovered); }\n' +
-            '.playback-shuttleRingPointer { fill: url(#playback_shuttleRingPointerGradient); }\n' +
-            '.playback-shuttleRingPausePointer { fill: url(#playback_shuttleRingPointerPaused); }\n' +
-            '.playback-knobOuter { fill: url(#playback_knobOuter); }\n' +
-            '.playback-knobInner { fill: url(#playback_knobInner); }\n';
+            '.animation-rectButton .animation-buttonGlow { filter: url(#animation_blurred); }\n' +
+            '.animation-rectButton .animation-buttonMain { fill: url(#animation_buttonNormal); }\n' +
+            '.animation-buttonSelected .animation-buttonMain { fill: url(#animation_buttonSelected); }\n' +
+            '.animation-rectButton:hover .animation-buttonMain { fill: url(#animation_buttonHovered); }\n' +
+            '.animation-shuttleRingG .animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshGradient); }\n' +
+            '.animation-shuttleRingG:hover .animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshHovered); }\n' +
+            '.animation-shuttleRingPointer { fill: url(#animation_shuttleRingPointerGradient); }\n' +
+            '.animation-shuttleRingPausePointer { fill: url(#animation_shuttleRingPointerPaused); }\n' +
+            '.animation-knobOuter { fill: url(#animation_knobOuter); }\n' +
+            '.animation-knobInner { fill: url(#animation_knobInner); }\n';
         document.head.appendChild(cssStyle);
 
         var themeEle = document.createElement('div');
-        themeEle.className = 'playback-theme';
+        themeEle.className = 'animation-theme';
         themeEle.innerHTML =
-            '<div class="playback-themeNormal"></div>' +
-            '<div class="playback-themeHover"></div>' +
-            '<div class="playback-themeSelect"></div>' +
-            '<div class="playback-themeDisabled"></div>' +
-            '<div class="playback-themeKnob"></div>' +
-            '<div class="playback-themePointer"></div>' +
-            '<div class="playback-themeSwoosh"></div>' +
-            '<div class="playback-themeSwooshHover"></div>';
+            '<div class="animation-themeNormal"></div>' +
+            '<div class="animation-themeHover"></div>' +
+            '<div class="animation-themeSelect"></div>' +
+            '<div class="animation-themeDisabled"></div>' +
+            '<div class="animation-themeKnob"></div>' +
+            '<div class="animation-themePointer"></div>' +
+            '<div class="animation-themeSwoosh"></div>' +
+            '<div class="animation-themeSwooshHover"></div>';
         parentNode.appendChild(themeEle);
         widget._themeNormal = themeEle.childNodes[0];
         widget._themeHover = themeEle.childNodes[1];
@@ -426,26 +426,26 @@ define([
         var rectButton = function (x, y, path, tooltip) {
             var button = {
                 'tagName' : 'g',
-                'class' : 'playback-rectButton',
+                'class' : 'animation-rectButton',
                 'transform' : 'translate(' + x + ',' + y + ')',
                 'children' : [
                     {
                         'tagName' : 'rect',
-                        'class' : 'playback-buttonGlow',
+                        'class' : 'animation-buttonGlow',
                         'width' : 32,
                         'height' : 32,
                         'rx' : 2,
                         'ry' : 2
                     }, {
                         'tagName' : 'rect',
-                        'class' : 'playback-buttonMain',
+                        'class' : 'animation-buttonMain',
                         'width' : 32,
                         'height' : 32,
                         'rx' : 4,
                         'ry' : 4
                     }, {
                         'tagName': 'use',
-                        'class' : 'playback-buttonPath',
+                        'class' : 'animation-buttonPath',
                         'xlink:href' : path
                     }, {
                         'tagName': 'title',
@@ -459,20 +459,20 @@ define([
         var wingButton = function (x, y, path, tooltip) {
             var button = {
                 'tagName' : 'g',
-                'class' : 'playback-rectButton',
+                'class' : 'animation-rectButton',
                 'transform' : 'translate(' + x + ',' + y + ')',
                 'children' : [
                     {
                         'tagName' : 'use',
-                        'class' : 'playback-buttonGlow',
-                        'xlink:href' : '#playback_pathWingButton'
+                        'class' : 'animation-buttonGlow',
+                        'xlink:href' : '#animation_pathWingButton'
                     }, {
                         'tagName' : 'use',
-                        'class' : 'playback-buttonMain',
-                        'xlink:href' : '#playback_pathWingButton'
+                        'class' : 'animation-buttonMain',
+                        'xlink:href' : '#animation_pathWingButton'
                     }, {
                         'tagName': 'use',
-                        'class' : 'playback-buttonPath',
+                        'class' : 'animation-buttonPath',
                         'xlink:href' : path
                     }, {
                         'tagName': 'title',
@@ -486,7 +486,7 @@ define([
         var buttonsG = this._svg('g');
 
         // Realtime
-        this.realtimeSVG = wingButton(3, 4, '#playback_pathClock', 'Real-time');
+        this.realtimeSVG = wingButton(3, 4, '#animation_pathClock', 'Real-time');
         this.realtimeTooltip = this.realtimeSVG.getElementsByTagName('title')[0];
         buttonsG.appendChild(this.realtimeSVG);
         this.realtimeSVG.addEventListener('click', function () {
@@ -494,21 +494,21 @@ define([
         }, true);
 
         // Play Reverse
-        this.playReverseSVG = rectButton(44, 99, '#playback_pathPlayReverse', 'Play Reverse');
+        this.playReverseSVG = rectButton(44, 99, '#animation_pathPlayReverse', 'Play Reverse');
         buttonsG.appendChild(this.playReverseSVG);
         this.playReverseSVG.addEventListener('click', function () {
             widget.animationController.playReverse();
         }, true);
 
         // Play Forward
-        this.playForwardSVG = rectButton(124, 99, '#playback_pathPlay', 'Play Forward');
+        this.playForwardSVG = rectButton(124, 99, '#animation_pathPlay', 'Play Forward');
         buttonsG.appendChild(this.playForwardSVG);
         this.playForwardSVG.addEventListener('click', function () {
             widget.animationController.play();
         }, true);
 
         // Pause
-        this.pauseSVG = rectButton(84, 99, '#playback_pathPause', 'Pause');
+        this.pauseSVG = rectButton(84, 99, '#animation_pathPause', 'Pause');
         this.pauseTooltip = this.pauseSVG.getElementsByTagName('title')[0];
         buttonsG.appendChild(this.pauseSVG);
         this.pauseSVG.addEventListener('click', function () {
@@ -519,12 +519,12 @@ define([
             }
         }, true);
 
-        var shuttleRingBackG = this._svg('g').set('class', 'playback-shuttleRingG');
+        var shuttleRingBackG = this._svg('g').set('class', 'animation-shuttleRingG');
         topG.appendChild(shuttleRingBackG);
 
         var shuttleRingBackPanel = this._svgFromObject({
             'tagName' : 'circle',
-            'class' : 'playback-shuttleRingBack',
+            'class' : 'animation-shuttleRingBack',
             'cx' : 100,
             'cy' : 100,
             'r' : 99
@@ -533,16 +533,16 @@ define([
 
         var shuttleRingSwooshG = this._svgFromObject({
             'tagName' : 'g',
-            'class' : 'playback-shuttleRingSwoosh',
+            'class' : 'animation-shuttleRingSwoosh',
             'children' : [
                 {
                     'tagName' : 'use',
                     'transform' : 'translate(100,97) scale(-1,1)',
-                    'xlink:href' : '#playback_pathSwooshFX'
+                    'xlink:href' : '#animation_pathSwooshFX'
                 }, {
                     'tagName' : 'use',
                     'transform' : 'translate(100,97)',
-                    'xlink:href' : '#playback_pathSwooshFX'
+                    'xlink:href' : '#animation_pathSwooshFX'
                 }, {
                     'tagName' : 'line',
                     'x1' : 100,
@@ -556,8 +556,8 @@ define([
 
         this.shuttleRingPointer = this._svgFromObject({
             'tagName' : 'use',
-            'class' : 'playback-shuttleRingPointer',
-            'xlink:href' : '#playback_pathPointer'
+            'class' : 'animation-shuttleRingPointer',
+            'xlink:href' : '#animation_pathPointer'
         });
         shuttleRingBackG.appendChild(this.shuttleRingPointer);
 
@@ -607,7 +607,7 @@ define([
 
         this.knobOuter = this._svgFromObject({
             'tagName' : 'circle',
-            'class' : 'playback-knobOuter',
+            'class' : 'animation-knobOuter',
             'cx' : 0,
             'cy' : 0,
             'r' : 71
@@ -617,7 +617,7 @@ define([
 
         var knobInner = this._svgFromObject({
             'tagName' : 'circle',
-            'class' : 'playback-knobInner',
+            'class' : 'animation-knobInner',
             'cx' : 0,
             'cy' : 0,
             'r' : 61  // Same size as shield
@@ -634,7 +634,7 @@ define([
         // This shield catches clicks on the knob itself (even while DOM elements underneath are changing).
         var knobShield = this._svgFromObject({
             'tagName' : 'circle',
-            'class' : 'playback-blank',
+            'class' : 'animation-blank',
             'cx' : 0,
             'cy' : 0,
             'r' : 61  // Same size as knobInner
@@ -663,9 +663,9 @@ define([
      * Override this function to change the format of the date label on the widget.
      *
      * @function
-     * @memberof Playback.prototype
+     * @memberof Animation.prototype
      */
-    Playback.prototype.makeDateLabel = function (gregorianDate) {
+    Animation.prototype.makeDateLabel = function (gregorianDate) {
         return this._monthNames[gregorianDate.month - 1] + ' ' + gregorianDate.day + ' ' + gregorianDate.year;
     };
 
@@ -673,9 +673,9 @@ define([
      * Override this function to change the format of the time label on the widget.
      *
      * @function
-     * @memberof Playback.prototype
+     * @memberof Animation.prototype
      */
-    Playback.prototype.makeTimeLabel = function (gregorianDate) {
+    Animation.prototype.makeTimeLabel = function (gregorianDate) {
         var millisecond = gregorianDate.millisecond, millisecondString = ' UTC';
         if ((millisecond > 0) && (Math.abs(this.clock.multiplier) < 0.9)) {
             millisecondString = Math.floor(millisecond).toString();
@@ -693,9 +693,9 @@ define([
      * Update the widget to reflect the current state of animation.
      *
      * @function
-     * @memberof Playback.prototype
+     * @memberof Animation.prototype
      */
-    Playback.prototype.update = function () {
+    Animation.prototype.update = function () {
         var currentTime = this.clock.currentTime;
         var gregorianDate = currentTime.toGregorianDate();
         var currentTimeLabel = this.makeTimeLabel(gregorianDate);
@@ -729,25 +729,25 @@ define([
             this._lastKnobSpeed = speedLabel;
             this._wasAnimating = isAnimating;
             if (!isAnimating) {
-                this.shuttleRingPointer.set('class', 'playback-shuttleRingPausePointer');
-                this.pauseSVG.set('class', 'playback-rectButton playback-buttonSelected');
-                this.playForwardSVG.set('class', 'playback-rectButton');
-                this.playReverseSVG.set('class', 'playback-rectButton');
+                this.shuttleRingPointer.set('class', 'animation-shuttleRingPausePointer');
+                this.pauseSVG.set('class', 'animation-rectButton animation-buttonSelected');
+                this.playForwardSVG.set('class', 'animation-rectButton');
+                this.playReverseSVG.set('class', 'animation-rectButton');
             } else if (this.clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-                this.shuttleRingPointer.set('class', 'playback-shuttleRingPointer');
-                this.pauseSVG.set('class', 'playback-rectButton');
-                this.playForwardSVG.set('class', 'playback-rectButton');
-                this.playReverseSVG.set('class', 'playback-rectButton');
+                this.shuttleRingPointer.set('class', 'animation-shuttleRingPointer');
+                this.pauseSVG.set('class', 'animation-rectButton');
+                this.playForwardSVG.set('class', 'animation-rectButton');
+                this.playReverseSVG.set('class', 'animation-rectButton');
             } else if (speed > 0) {
-                this.shuttleRingPointer.set('class', 'playback-shuttleRingPointer');
-                this.pauseSVG.set('class', 'playback-rectButton');
-                this.playForwardSVG.set('class', 'playback-rectButton playback-buttonSelected');
-                this.playReverseSVG.set('class', 'playback-rectButton');
+                this.shuttleRingPointer.set('class', 'animation-shuttleRingPointer');
+                this.pauseSVG.set('class', 'animation-rectButton');
+                this.playForwardSVG.set('class', 'animation-rectButton animation-buttonSelected');
+                this.playReverseSVG.set('class', 'animation-rectButton');
             } else {
-                this.shuttleRingPointer.set('class', 'playback-shuttleRingPointer');
-                this.pauseSVG.set('class', 'playback-rectButton');
-                this.playForwardSVG.set('class', 'playback-rectButton');
-                this.playReverseSVG.set('class', 'playback-rectButton playback-buttonSelected');
+                this.shuttleRingPointer.set('class', 'animation-shuttleRingPointer');
+                this.pauseSVG.set('class', 'animation-rectButton');
+                this.playForwardSVG.set('class', 'animation-rectButton');
+                this.playReverseSVG.set('class', 'animation-rectButton animation-buttonSelected');
             }
             this._updateSvgText(this.knobStatus, speedLabel);
         }
@@ -755,7 +755,7 @@ define([
         if (this.clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
             if (!this._realtimeMode) {
                 this._realtimeMode = true;
-                this.realtimeSVG.set('class', 'playback-rectButton playback-buttonSelected');
+                this.realtimeSVG.set('class', 'animation-rectButton animation-buttonSelected');
                 this.realtimeTooltip.textContent = 'Today (real-time)';
             }
         } else {
@@ -774,10 +774,10 @@ define([
 
             if (setRealtimeStyle) {
                 if (!isSystemTimeAvailable) {
-                    this.realtimeSVG.set('class', 'playback-buttonDisabled');
+                    this.realtimeSVG.set('class', 'animation-buttonDisabled');
                     this.realtimeTooltip.textContent = 'Current time not in range.';
                 } else {
-                    this.realtimeSVG.set('class', 'playback-rectButton');
+                    this.realtimeSVG.set('class', 'animation-rectButton');
                     this.realtimeTooltip.textContent = 'Today (real-time)';
                 }
             }
@@ -794,5 +794,5 @@ define([
         }
     };
 
-    return Playback;
+    return Animation;
 });

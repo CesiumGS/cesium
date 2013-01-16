@@ -15,7 +15,7 @@ define([
         'dijit/form/DropDownButton',
         'dijit/TooltipDialog',
         './TimelineWidget',
-        '../Playback',
+        '../Animation',
         '../../Core/defaultValue',
         '../../Core/loadJson',
         '../../Core/BoundingRectangle',
@@ -74,7 +74,7 @@ define([
         DropDownButton,
         TooltipDialog,
         TimelineWidget,
-        Playback,
+        Animation,
         defaultValue,
         loadJson,
         BoundingRectangle,
@@ -719,7 +719,7 @@ define([
             } else {
                 this.clock = this.animationController.clock;
             }
-            this.playback = new Playback(this.playbackWidget, this.animationController);
+            this.animation = new Animation(this.animationWidget, this.animationController);
 
             var animationController = this.animationController;
             var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
@@ -1025,7 +1025,7 @@ define([
          */
         update : function(currentTime) {
 
-            this.playback.update();
+            this.animation.update();
             this.timelineControl.updateFromClock();
             this.visualizers.update(currentTime);
 
