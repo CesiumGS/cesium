@@ -131,7 +131,7 @@ define([
          * @param {Cartesian3} center The ellipse's center point in the fixed frame.
          * @param {Number} semiMajorAxis The length of the ellipse's semi-major axis in meters.
          * @param {Number} semiMinorAxis The length of the ellipse's semi-minor axis in meters.
-         * @param {Number} [bearing] The angle from north (counter-clockwise) in radians. The default is zero.
+         * @param {Number} [bearing] The angle from north (clockwise) in radians. The default is zero.
          * @param {Number} [granularity] The angular distance between points on the circle.
          *
          * @exception {DeveloperError} ellipsoid, center, semiMajorAxis, and semiMinorAxis are required.
