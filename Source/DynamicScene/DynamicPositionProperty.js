@@ -8,6 +8,7 @@ define([
         '../Core/Iso8601',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Transforms',
         './CzmlCartesian3',
         './CzmlCartographic',
         './DynamicProperty'
@@ -20,6 +21,7 @@ define([
         Iso8601,
         Cartesian3,
         Cartographic,
+        Transforms,
         CzmlCartesian3,
         CzmlCartographic,
         DynamicProperty) {
@@ -51,6 +53,7 @@ define([
         this._propertyIntervals = new TimeIntervalCollection();
         this._cachedTime = undefined;
         this._cachedInterval = undefined;
+        this.referenceFrame = undefined;
     };
 
     /**
@@ -103,6 +106,13 @@ define([
         }
         result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== 'undefined') {
+            if (this.referenceFrame === 'INERTIAL') {
+                var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time);
+                if (typeof icrfToFixed === 'undefined') {
+                    return undefined;
+                }
+                result = icrfToFixed.multiplyByVector(result, result);
+            }
             result = wgs84.cartesianToCartographic(result);
         }
         return result;
@@ -136,7 +146,15 @@ define([
         var property = interval.data;
         var valueType = property.valueType;
         if (valueType === CzmlCartesian3) {
-            return property.getValue(time, result);
+            result = property.getValue(time, result);
+            if (this.referenceFrame === 'INERTIAL') {
+                var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time);
+                if (typeof icrfToFixed === 'undefined') {
+                    return undefined;
+                }
+                return icrfToFixed.multiplyByVector(result, result);
+            }
+            return result;
         }
         result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== 'undefined') {
@@ -286,6 +304,12 @@ define([
     DynamicPositionProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval) {
         this._cachedTime = undefined;
         this._cachedInterval = undefined;
+
+        //TODO: Right now we don't handler per-interval frames but set it at the property level.
+        //This will be fixed when we add general reference frame support.
+        if (typeof czmlInterval.referenceFrame !== 'undefined') {
+            this.referenceFrame = czmlInterval.referenceFrame;
+        }
 
         var iso8601Interval = czmlInterval.interval, property, valueType, unwrappedInterval;
         if (typeof iso8601Interval === 'undefined') {

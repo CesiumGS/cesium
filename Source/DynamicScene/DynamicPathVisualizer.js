@@ -2,12 +2,18 @@
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/Cartesian3',
+        '../Core/Matrix4',
         '../Core/Color',
+        '../Core/Transforms',
         '../Scene/PolylineCollection'
        ], function(
          DeveloperError,
          destroyObject,
+         Cartesian3,
+         Matrix4,
          Color,
+         Transforms,
          PolylineCollection) {
     "use strict";
 
@@ -71,10 +77,15 @@ define([
             throw new DeveloperError('scene is required.');
         }
         this._scene = scene;
-        this._unusedIndexes = [];
         this._primitives = scene.getPrimitives();
-        var polylineCollection = this._polylineCollection = new PolylineCollection();
-        scene.getPrimitives().add(polylineCollection);
+
+        var polylineCollections = this._polylineCollections = {
+            FIXED : new PolylineCollection(),
+            INERTIAL : new PolylineCollection()
+        };
+
+        scene.getPrimitives().add(polylineCollections.FIXED);
+        scene.getPrimitives().add(polylineCollections.INERTIAL);
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -128,6 +139,12 @@ define([
         if (typeof time === 'undefined') {
             throw new DeveloperError('time is requied.');
         }
+
+        var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time);
+        if (typeof icrfToFixed !== 'undefined') {
+            this._polylineCollections.INERTIAL.modelMatrix = Matrix4.fromRotationTranslation(icrfToFixed, Cartesian3.ZERO);
+        }
+
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
@@ -141,7 +158,8 @@ define([
      */
     DynamicPathVisualizer.prototype.removeAllPrimitives = function() {
         var i;
-        this._polylineCollection.removeAll();
+        this._polylineCollections.FIXED.removeAll();
+        this._polylineCollections.INERTIAL.removeAll();
 
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
@@ -149,8 +167,6 @@ define([
                 dynamicObjects[i]._pathVisualizerIndex = undefined;
             }
         }
-
-        this._unusedIndexes = [];
     };
 
     /**
@@ -190,7 +206,8 @@ define([
      */
     DynamicPathVisualizer.prototype.destroy = function() {
         this.removeAllPrimitives();
-        this._scene.getPrimitives().remove(this._polylineCollection);
+        this._scene.getPrimitives().remove(this._polylineCollections.FIXED);
+        this._scene.getPrimitives().remove(this._polylineCollections.INERTIAL);
         return destroyObject(this);
     };
 
@@ -206,6 +223,7 @@ define([
         }
 
         var polyline;
+        var referenceFrame = positionProperty.referenceFrame;
         var showProperty = dynamicPath.show;
         var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
         var show = (typeof showProperty === 'undefined' || showProperty.getValue(time));
@@ -213,24 +231,26 @@ define([
         if (!show) {
             //don't bother creating or updating anything else
             if (typeof pathVisualizerIndex !== 'undefined') {
-                polyline = this._polylineCollection.get(pathVisualizerIndex);
-                polyline.setShow(false);
+                if (referenceFrame === 'INERTIAL') {
+                    this._polylineCollections.INERTIAL.remove(polyline);
+                } else {
+                    this._polylineCollections.FIXED.remove(polyline);
+                }
                 dynamicObject._pathVisualizerIndex = undefined;
-                this._unusedIndexes.push(pathVisualizerIndex);
             }
             return;
         }
 
         if (typeof pathVisualizerIndex === 'undefined') {
-            var unusedIndexes = this._unusedIndexes;
-            var length = unusedIndexes.length;
-            if (length > 0) {
-                pathVisualizerIndex = unusedIndexes.pop();
-                polyline = this._polylineCollection.get(pathVisualizerIndex);
+            var polylineCollection;
+            if (referenceFrame === 'INERTIAL') {
+                polylineCollection = this._polylineCollections.INERTIAL;
             } else {
-                pathVisualizerIndex = this._polylineCollection.getLength();
-                polyline = this._polylineCollection.add();
+                polylineCollection = this._polylineCollections.FIXED;
             }
+
+            pathVisualizerIndex = polylineCollection.getLength();
+            polyline = polylineCollection.add();
             dynamicObject._pathVisualizerIndex = pathVisualizerIndex;
             polyline.dynamicObject = dynamicObject;
 
@@ -240,7 +260,11 @@ define([
             polyline.setOutlineWidth(1);
             polyline.setWidth(1);
         } else {
-            polyline = this._polylineCollection.get(pathVisualizerIndex);
+            if (referenceFrame === 'INERTIAL') {
+                polyline = this._polylineCollections.INERTIAL.get(pathVisualizerIndex);
+            } else {
+                polyline = this._polylineCollections.FIXED.get(pathVisualizerIndex);
+            }
         }
 
         polyline.setShow(true);
@@ -287,15 +311,18 @@ define([
     };
 
     DynamicPathVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
-        var thisPolylineCollection = this._polylineCollection;
-        var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
             var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
             if (typeof pathVisualizerIndex !== 'undefined') {
+                var thisPolylineCollection;
+                if (dynamicObject.referenceFrame === 'INERTIAL') {
+                    thisPolylineCollection = this._polylineCollections.INERTIAL;
+                } else {
+                    thisPolylineCollection = this._polylineCollections.FIXED;
+                }
                 var polyline = thisPolylineCollection.get(pathVisualizerIndex);
-                polyline.setShow(false);
-                thisUnusedIndexes.push(pathVisualizerIndex);
+                thisPolylineCollection.remove(polyline);
                 dynamicObject._pathVisualizerIndex = undefined;
             }
         }

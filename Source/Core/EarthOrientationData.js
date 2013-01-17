@@ -35,10 +35,10 @@ define([
             computeOrientationParameters : function (dateTai){
 
                 //if(this.eop.length !== 0){
-                    return EarthOrientationData.eop[0];
+                    //return EarthOrientationData.eop[0];
 //                }
 //                else {
-                    //return new OrientationParameterData(0,0,0,0,0);
+                    return new EarthOrientationData.OrientationParameterData(0,0,0,0,0);
 //                }
             },
 

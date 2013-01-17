@@ -369,6 +369,9 @@ define([
             }
 
             var fixedToIcrfMtx = Transforms.computeFixedToIcrfMatrix(dateTai, result);
+            if (typeof fixedToIcrfMtx === 'undefined') {
+                return undefined;
+            }
 
             return fixedToIcrfMtx.transpose(result);
         },
@@ -455,6 +458,9 @@ define([
             var earthRotation = Matrix3.fromZRotation(-era);
 
             var xys = Transforms.iau2006XysData.computeXysRadians(dayTT, secondTT, xysScratch);
+            if (typeof xys === 'undefined') {
+                return undefined;
+            }
             var x = xys.x + eop.xPoleOffset;
             var y = xys.y + eop.yPoleOffset;
 
