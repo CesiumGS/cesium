@@ -373,6 +373,16 @@ defineSuite([
         expect(texture.getHeight()).toEqual(2);
     });
 
+    it('gets flip Y', function() {
+        texture = context.createTexture2D({
+            source : blueOverRedImage,
+            pixelFormat :PixelFormat.RGBA,
+            flipY : true
+        });
+
+        expect(texture.getFlipY()).toEqual(true);
+    });
+
     it('destroys', function() {
         var t = context.createTexture2D({
             source : blueImage,
