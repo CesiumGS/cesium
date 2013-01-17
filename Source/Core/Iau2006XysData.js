@@ -62,12 +62,40 @@ define([
 
     var julianDateScratch = new JulianDate(0, 0.0, TimeStandard.TAI);
 
-    Iau2006XysData.prototype.computeXysRadians = function(dayTT, secondTT, result) {
+    function getDaysSinceEpoch(xys, dayTT, secondTT) {
         var dateTT = julianDateScratch;
         dateTT._julianDayNumber = dayTT;
         dateTT._secondsOfDay = secondTT;
+        return xys._sampleZeroDateTT.getDaysDifference(dateTT);
+    }
 
-        var daysSinceEpoch = this._sampleZeroDateTT.getDaysDifference(dateTT);
+    Iau2006XysData.prototype.preload = function(startDayTT, startSecondTT, stopDayTT, stopSecondTT) {
+        var startDaysSinceEpoch = getDaysSinceEpoch(this, startDayTT, startSecondTT);
+        var stopDaysSinceEpoch = getDaysSinceEpoch(this, stopDayTT, stopSecondTT);
+
+        var startIndex = (startDaysSinceEpoch / this._stepSizeDays - this._interpolationOrder / 2) | 0;
+        if (startIndex < 0) {
+            startIndex = 0;
+        }
+
+        var stopIndex = (stopDaysSinceEpoch / this._stepSizeDays - this._interpolationOrder / 2) | 0 + this._interpolationOrder;
+        if (stopIndex >= this._totalSamples) {
+            stopIndex = this._totalSamples - 1;
+        }
+
+        var startChunk = (startIndex / this._samplesPerXysFile) | 0;
+        var stopChunk = (stopIndex / this._samplesPerXysFile) | 0;
+
+        var promises = [];
+        for (var i = startChunk; i <= stopChunk; ++i) {
+            promises.push(requestXysChunk(this, i));
+        }
+
+        return when.all(promises);
+    };
+
+    Iau2006XysData.prototype.computeXysRadians = function(dayTT, secondTT, result) {
+        var daysSinceEpoch = getDaysSinceEpoch(this, dayTT, secondTT);
         if (daysSinceEpoch < 0.0) {
             // Can't evaluate prior to the epoch of the data.
             return undefined;
@@ -113,11 +141,15 @@ define([
         }
 
         if (typeof result === 'undefined') {
-            result = [0.0, 0.0, 0.0];
+            result = {
+                    x: 0.0,
+                    y: 0.0,
+                    s: 0.0
+            };
         } else {
-            result[0] = 0.0;
-            result[1] = 0.0;
-            result[2] = 0.0;
+            result.x = 0.0;
+            result.y = 0.0;
+            result.s = 0.0;
         }
 
         var x = daysSinceEpoch - firstIndex * this._stepSizeDays;
@@ -147,9 +179,9 @@ define([
             coef[i] *= denom[i];
 
             var sampleIndex = (firstIndex + i) * 3;
-            result[0] += coef[i] * samples[sampleIndex++];
-            result[1] += coef[i] * samples[sampleIndex++];
-            result[2] += coef[i] * samples[sampleIndex];
+            result.x += coef[i] * samples[sampleIndex++];
+            result.y += coef[i] * samples[sampleIndex++];
+            result.s += coef[i] * samples[sampleIndex];
         }
 
         return result;
@@ -158,10 +190,12 @@ define([
     function requestXysChunk(xysData, chunkIndex) {
         if (xysData._chunkDownloadsInProgress[chunkIndex]) {
             // Chunk has already been requested.
-            return;
+            return xysData._chunkDownloadsInProgress[chunkIndex];
         }
 
-        xysData._chunkDownloadsInProgress[chunkIndex] = true;
+        var deferred = when.defer();
+
+        xysData._chunkDownloadsInProgress[chunkIndex] = deferred;
 
         var chunkUrl = xysData._xysFileUrlTemplate.replace('{0}', chunkIndex);
         when(loadJson(chunkUrl), function(chunk) {
@@ -169,12 +203,16 @@ define([
 
             var samples = xysData._samples;
             var newSamples = chunk.samples;
-            var startIndex = chunkIndex * xysData._samplesPerXysFile;
+            var startIndex = chunkIndex * xysData._samplesPerXysFile * 3;
 
             for (var i = 0, len = newSamples.length; i < len; ++i) {
                 samples[startIndex + i] = newSamples[i];
             }
+
+            deferred.resolve();
         });
+
+        return deferred.promise;
     }
 
     return Iau2006XysData;

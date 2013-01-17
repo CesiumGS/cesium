@@ -11,7 +11,9 @@ defineSuite([
          'Core/Math',
          'Core/Quaternion',
          'Core/TimeConstants',
-         'Core/EarthOrientationData'
+         'Core/TimeInterval',
+         'Core/EarthOrientationData',
+         'ThirdParty/when'
      ], function(
          Transforms,
          Cartesian2,
@@ -24,7 +26,9 @@ defineSuite([
          CesiumMath,
          Quaternion,
          TimeConstants,
-         EarthOrientationData) {
+         TimeInterval,
+         EarthOrientationData,
+         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -194,156 +198,169 @@ defineSuite([
         expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
     });
 
-    it('computeIcrfToFixedMatrix works with hard-coded data', function() {
-        // 2012-07-03 00:00:00 UTC
-        var time = new JulianDate(2455745, 43200);
+    describe('computeIcrfToFixedMatrix', function() {
+        function preloadTransformationData(start, stop) {
+            var ready = false;
 
-        // Make sure to clear the data in case it's been set by another test
-        EarthOrientationData.clear();
-        // These values come from the STK Components ICRF Validation for the time above
-        EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
-                0.046663 * CesiumMath.RADIANS_PER_ARCSECOND, 0.437099 * CesiumMath.RADIANS_PER_ARCSECOND,
-                -0.2905572, -0.000072 * CesiumMath.RADIANS_PER_ARCSECOND, 0.000144 * CesiumMath.RADIANS_PER_ARCSECOND));
-        // Sample Earth Orientation Parameter data
-        EarthOrientationData.xys.push(new EarthOrientationData.XYSData(
-                0.0011515694122596007,
-                -0.0000095636523417490289,
-                0.000000020097888209856277));
+            runs(function() {
+                var preloadInterval = new TimeInterval(start, stop);
+                when(Transforms.preloadIcrfFixed(preloadInterval), function() {
+                    ready = true;
+                });
+            });
 
-        var resultT = new Matrix3();
-        var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
-        expect(t).toBe(resultT);
-
-        // rotation matrix determinants are 1.0
-        var det = t[0] * t[4] * t[8] + t[3] * t[7] * t[2] + t[6] * t[1] * t[5] - t[6] * t[4] * t[2] - t[3] * t[1] * t[8] - t[0] * t[7] * t[5];
-        expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
-
-        // rotation matrix inverses are equal to its transpose
-        var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
-        expect(t4.inverse()).toEqualEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14);
-
-        time = time.addHours(23.93447); // add one sidereal day
-        var resultU = new Matrix3();
-        var u = Transforms.computeIcrfToFixedMatrix(time, resultU);
-        expect(u).toBe(resultU);
-        var tAngle = Quaternion.fromRotationMatrix(t).getAngle();
-        var uAngle = Quaternion.fromRotationMatrix(u).getAngle();
-        expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
-
-        // The rotation matrix from STK Components corresponding to the time and data inputs above
-        var expectedMtx = new Matrix3(
-                0.18264414843630006, -0.98317906144315947, -0.00021950336420248503,
-                0.98317840915224974, 0.18264428011734501, -0.0011325710874539787,
-                0.0011536112127187594, -0.0000089534866085598909, 0.99999933455028112);
-
-        var testInverse = t.transpose().multiply(expectedMtx);
-        var testDiff = new Matrix3();
-        for (var i=0; i<9; i++){
-            testDiff[i] = t[i] - expectedMtx[i];
+            waitsFor(function() {
+                return ready;
+            });
         }
-        expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
-        expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
-    });
 
-    it('computeIcrfToFixedMatrix works over day boundary', function() {
+        it('works with hard-coded data', function() {
+            // 2012-07-03 00:00:00 UTC
+            var time = new JulianDate(2455745, 43200);
 
-        var time = new JulianDate(2455745, 86395);
+            preloadTransformationData(time, time);
 
-        // Make sure to clear the data in case it's been set by another test
-        EarthOrientationData.clear();
-        // These values come from the STK Components ICRF Validation for the time above
-        EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
-                0.0000002301721108351985, 0.0000021209335928745266, -0.29062894169560183,
-                -0.00000000048479796955505559, 0.00000000074175988195507851));
-        EarthOrientationData.xys.push(new EarthOrientationData.XYSData(
-                0.001151763570872462,
-                -0.0000094532539883252168,
-                0.0000000200333868534987));
+            runs(function() {
+                // Make sure to clear the data in case it's been set by another test
+                EarthOrientationData.clear();
+                // These values come from the STK Components ICRF Validation for the time above
+                EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
+                        0.046663 * CesiumMath.RADIANS_PER_ARCSECOND, 0.437099 * CesiumMath.RADIANS_PER_ARCSECOND,
+                        -0.2905572, -0.000072 * CesiumMath.RADIANS_PER_ARCSECOND, 0.000144 * CesiumMath.RADIANS_PER_ARCSECOND));
 
-        var resultT = new Matrix3();
-        var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+                var resultT = new Matrix3();
+                var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+                expect(t).toBe(resultT);
 
-        // The rotation matrix from STK Components corresponding to the time and data inputs above
-        var expectedMtx = new Matrix3(
-                -0.19073578935932833, 0.98164138366748721, 0.00022919174269963536,
-                -0.98164073712836186, -0.19073592679333939, 0.0011266944449015753,
-                0.0011497249933208494, -0.000010082996932331842, 0.99999933901516791);
+                // rotation matrix determinants are 1.0
+                var det = t[0] * t[4] * t[8] + t[3] * t[7] * t[2] + t[6] * t[1] * t[5] - t[6] * t[4] * t[2] - t[3] * t[1] * t[8] - t[0] * t[7] * t[5];
+                expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
 
-        var testInverse = t.transpose().multiply(expectedMtx);
-        var testDiff = new Matrix3();
-        for (var i=0; i<9; i++){
-            testDiff[i] = t[i] - expectedMtx[i];
-        }
-        expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
-        expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
-    });
+                // rotation matrix inverses are equal to its transpose
+                var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
+                expect(t4.inverse()).toEqualEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14);
 
-    it('computeIcrfToFixedMatrix works over day boundary backwards', function() {
+                time = time.addHours(23.93447); // add one sidereal day
+                var resultU = new Matrix3();
+                var u = Transforms.computeIcrfToFixedMatrix(time, resultU);
+                expect(u).toBe(resultU);
+                var tAngle = Quaternion.fromRotationMatrix(t).getAngle();
+                var uAngle = Quaternion.fromRotationMatrix(u).getAngle();
+                expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
 
-        var time = new JulianDate(2455745, 10);
+                // The rotation matrix from STK Components corresponding to the time and data inputs above
+                var expectedMtx = new Matrix3(
+                        0.18264414843630006, -0.98317906144315947, -0.00021950336420248503,
+                        0.98317840915224974, 0.18264428011734501, -0.0011325710874539787,
+                        0.0011536112127187594, -0.0000089534866085598909, 0.99999933455028112);
 
-        // Make sure to clear the data in case it's been set by another test
-        EarthOrientationData.clear();
-        // These values come from the STK Components ICRF Validation for the time above
-        EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
-                0.00000022277995715869222, 0.000002117288427504905, -0.29060358925925928,
-                -0.00000000021577295007575856, 0.00000000063027349699687717));
-        EarthOrientationData.xys.push(new EarthOrientationData.XYSData(
-                0.0011513515572884863,
-                -0.0000096646620142172178,
-                0.000000020157087720063123));
+                var testInverse = t.transpose().multiply(expectedMtx);
+                var testDiff = new Matrix3();
+                for (var i=0; i<9; i++){
+                    testDiff[i] = t[i] - expectedMtx[i];
+                }
+                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
+                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+            });
+        });
 
-        var resultT = new Matrix3();
-        var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+        it('works over day boundary', function() {
 
-        //The rotation matrix from STK Components corresponding to the time and data inputs above
-        var expectedMtx = new Matrix3(
-                -0.17489910479510423, 0.984586338811966, 0.00021110831245616662,
-                -0.98458569065286827, -0.17489923190143036, 0.0011297972845023996,
-                0.0011493056536445096, -0.00001025368996280683, 0.99999933949547);
+            var time = new JulianDate(2455745, 86395);
 
-        var testInverse = t.transpose().multiply(expectedMtx);
-        var testDiff = new Matrix3();
-        for (var i=0; i<9; i++){
-            testDiff[i] = t[i] - expectedMtx[i];
-        }
-        expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
-        expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+            preloadTransformationData(time, time);
 
+            runs(function() {
+                // Make sure to clear the data in case it's been set by another test
+                EarthOrientationData.clear();
+                // These values come from the STK Components ICRF Validation for the time above
+                EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
+                        0.0000002301721108351985, 0.0000021209335928745266, -0.29062894169560183,
+                        -0.00000000048479796955505559, 0.00000000074175988195507851));
 
-    });
+                var resultT = new Matrix3();
+                var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
-    it('computeIcrfToFixedMatrix works with position rotation', function() {
+                // The rotation matrix from STK Components corresponding to the time and data inputs above
+                var expectedMtx = new Matrix3(
+                        -0.19073578935932833, 0.98164138366748721, 0.00022919174269963536,
+                        -0.98164073712836186, -0.19073592679333939, 0.0011266944449015753,
+                        0.0011497249933208494, -0.000010082996932331842, 0.99999933901516791);
 
-        // GEO Satellite position
-        var inertialPos = new Cartesian3(-7322101.15395708, -41525699.1558387, 0);
-        // The following is the value computed by STK Components for the date specified below
-        var expectedFixedPos = new Cartesian3(39489858.9917795, -14783363.192887, -8075.05820056297);
+                var testInverse = t.transpose().multiply(expectedMtx);
+                var testDiff = new Matrix3();
+                for (var i=0; i<9; i++){
+                    testDiff[i] = t[i] - expectedMtx[i];
+                }
+                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
+                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+            });
+        });
 
-        // 2012-07-03 00:00:00 UTC
-        var time = new JulianDate(2455745, 43200);
+        it('works over day boundary backwards', function() {
 
-        // Make sure to clear the data in case it's been set by another test
-        EarthOrientationData.clear();
-        // These values come from the STK Components ICRF Validation for the time above
-        EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
-                0.046663 * CesiumMath.RADIANS_PER_ARCSECOND, 0.437099 * CesiumMath.RADIANS_PER_ARCSECOND,
-                -0.2905572, -0.000072 * CesiumMath.RADIANS_PER_ARCSECOND, 0.000144 * CesiumMath.RADIANS_PER_ARCSECOND));
-        EarthOrientationData.xys.push(new EarthOrientationData.XYSData(
-                0.0011515694122596007,
-                -0.0000095636523417490289,
-                0.000000020097888209856277));
+            var time = new JulianDate(2455745, 10);
 
-        var resultT = new Matrix3();
-        var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+            preloadTransformationData(time, time);
 
-        var result = t.multiplyByVector(inertialPos);
-        var error = result.subtract(expectedFixedPos);
+            runs(function() {
+                // Make sure to clear the data in case it's been set by another test
+                EarthOrientationData.clear();
+                // These values come from the STK Components ICRF Validation for the time above
+                EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
+                        0.00000022277995715869222, 0.000002117288427504905, -0.29060358925925928,
+                        -0.00000000021577295007575856, 0.00000000063027349699687717));
 
-        // Given the magnitude of the positions involved (1e8)
-        // this tolerance represents machine precision
-        expect(error).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON7);
+                var resultT = new Matrix3();
+                var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
+                //The rotation matrix from STK Components corresponding to the time and data inputs above
+                var expectedMtx = new Matrix3(
+                        -0.17489910479510423, 0.984586338811966, 0.00021110831245616662,
+                        -0.98458569065286827, -0.17489923190143036, 0.0011297972845023996,
+                        0.0011493056536445096, -0.00001025368996280683, 0.99999933949547);
+
+                var testInverse = t.transpose().multiply(expectedMtx);
+                var testDiff = new Matrix3();
+                for (var i=0; i<9; i++){
+                    testDiff[i] = t[i] - expectedMtx[i];
+                }
+                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
+                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+            });
+        });
+
+        it('works with position rotation', function() {
+
+            // GEO Satellite position
+            var inertialPos = new Cartesian3(-7322101.15395708, -41525699.1558387, 0);
+            // The following is the value computed by STK Components for the date specified below
+            var expectedFixedPos = new Cartesian3(39489858.9917795, -14783363.192887, -8075.05820056297);
+
+            // 2012-07-03 00:00:00 UTC
+            var time = new JulianDate(2455745, 43200);
+
+            preloadTransformationData(time, time);
+
+            runs(function() {
+                // Make sure to clear the data in case it's been set by another test
+                EarthOrientationData.clear();
+                // These values come from the STK Components ICRF Validation for the time above
+                EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
+                        0.046663 * CesiumMath.RADIANS_PER_ARCSECOND, 0.437099 * CesiumMath.RADIANS_PER_ARCSECOND,
+                        -0.2905572, -0.000072 * CesiumMath.RADIANS_PER_ARCSECOND, 0.000144 * CesiumMath.RADIANS_PER_ARCSECOND));
+
+                var resultT = new Matrix3();
+                var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+
+                var result = t.multiplyByVector(inertialPos);
+                var error = result.subtract(expectedFixedPos);
+
+                // Given the magnitude of the positions involved (1e8)
+                // this tolerance represents machine precision
+                expect(error).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON7);
+            });
+        });
     });
 
     var width = 1024.0;

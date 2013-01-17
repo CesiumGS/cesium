@@ -38,7 +38,7 @@ defineSuite([
         }, 'computeXysRadians to return an answer');
 
         runs(function() {
-            expect(result).toEqual([-0.0024019733101066816, -0.000024843279494458311, -0.000000016941747917421229]);
+            expect(result).toEqual({x:-0.0024019733101066816, y:-0.000024843279494458311, s:-0.000000016941747917421229});
         });
     });
 

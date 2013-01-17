@@ -28,11 +28,8 @@ define([
 
             eop : [],
 
-            xys : [],
-
             clear : function(){
                 EarthOrientationData.eop = [];
-                EarthOrientationData.xys = [];
             },
 
             computeOrientationParameters : function (dateTai){
@@ -45,15 +42,6 @@ define([
 //                }
             },
 
-            computeXYSRadians : function(dateTai) {
-                //if(this.xys.length !== 0){
-                    return EarthOrientationData.xys[0];
-//                }
-//                else {
-                    //return new XYSData(0, 0, 0);
-//                }
-            },
-
             OrientationParameterData : function(xVal, yVal, ut1MinusUtc, xPoleOffset, yPoleOffset){
                 this.xPoleWander = xVal;
                 this.yPoleWander = yVal;
@@ -63,12 +51,6 @@ define([
                 //this.lengthOfDayCorrection
                 //this.deltaPsiCorrection
                 //this.deltaEpsilonCorrection
-            },
-
-            XYSData : function(xVal, yVal, sVal){
-                this.x = xVal;
-                this.y = yVal;
-                this.s = sVal;
             }
     };
 

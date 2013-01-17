@@ -2,6 +2,7 @@
 define([
         './defaultValue',
         './DeveloperError',
+        './Iau2006XysData',
         './Math',
         './Matrix3',
         './Matrix4',
@@ -16,6 +17,7 @@ define([
     function(
         defaultValue,
         DeveloperError,
+        Iau2006XysData,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -48,6 +50,12 @@ define([
 
     var ttMinusTai = 32.184;
     var j2000ttDays = 2451545.0;
+
+    var xysScratch = {
+            x : 0.0,
+            y : 0.0,
+            s : 0.0
+    };
 
     /**
      * Contains functions for transforming positions to various reference frames.
@@ -319,6 +327,20 @@ define([
         },
 
         /**
+         * The source of IAU 2006 XYS data, used for computing the transformation between the
+         * Fixed and ICRF axes.
+         */
+        iau2006XysData : new Iau2006XysData(),
+
+        preloadIcrfFixed : function(timeInterval) {
+            var startDayTT = timeInterval.start.getJulianDayNumber();
+            var startSecondTT = timeInterval.start.getSecondsOfDay() + ttMinusTai;
+            var stopDayTT = timeInterval.stop.getJulianDayNumber();
+            var stopSecondTT = timeInterval.stop.getSecondsOfDay() + ttMinusTai;
+            return Transforms.iau2006XysData.preload(startDayTT, startSecondTT, stopDayTT, stopSecondTT);
+        },
+
+        /**
          * Computes a rotation matrix to transform a point or vector from the International Celestial
          * Reference Frame (GCRF/ICRF) inertial frame axes to the Earth-Fixed frame axes (ITRF)
          * at a given time.
@@ -432,7 +454,7 @@ define([
 
             var earthRotation = Matrix3.fromZRotation(-era);
 
-            var xys = EarthOrientationData.computeXYSRadians(dateTai);
+            var xys = Transforms.iau2006XysData.computeXysRadians(dayTT, secondTT, xysScratch);
             var x = xys.x + eop.xPoleOffset;
             var y = xys.y + eop.yPoleOffset;
 
