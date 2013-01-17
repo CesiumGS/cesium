@@ -51,11 +51,11 @@
 .animation-rectButton .animation-buttonGlow {
     fill: #fff;
     stroke: none;
-    filter: url(#animation_blurred);
+    /* Widget will add: filter: url(#animation_blurred); */
     display: none;
 }
 .animation-rectButton .animation-buttonMain {
-    fill: url(#animation_buttonNormal);
+    /* Widget will add: fill: url(#animation_buttonNormal); */
     stroke: #759DC0;
     stroke-width: 1.2;
 }
@@ -64,14 +64,14 @@
     fill: #FFAA2A;
 }
 .animation-buttonSelected .animation-buttonMain {
-    fill: url(#animation_buttonSelected);
+    /* Widget will add: fill: url(#animation_buttonSelected); */
     stroke: #EA0;
 }
 .animation-rectButton:hover .animation-buttonGlow {
     display: block;
 }
 .animation-rectButton:hover .animation-buttonMain {
-    fill: url(#animation_buttonHovered);
+    /* Widget will add: fill: url(#animation_buttonHovered); */
     stroke: #759DC0;
 }
 .animation-buttonSelected:hover .animation-buttonGlow {
@@ -89,7 +89,7 @@
     user-select: none;
 }
 .animation-buttonDisabled .animation-buttonMain {
-    fill: url(#animation_buttonDisabled);
+    /* Widget will add: fill: url(#animation_buttonDisabled); */
     stroke: #D3D3D3;
 }
 .animation-buttonDisabled .animation-buttonPath {
@@ -107,34 +107,36 @@
 .animation-shuttleRingG {
     cursor: pointer;
 }
-.animation-shuttleRingG .animation-shuttleRingSwoosh {
-    fill: url(#animation_shuttleRingSwooshGradient);
-}
 .animation-shuttleRingSwoosh line {
     stroke: #8AC;
     stroke-width: 3;
     stroke-opacity: 0.2;
     stroke-linecap: round;
 }
+/* Widget will add:
+.animation-shuttleRingG .animation-shuttleRingSwoosh {
+    fill: url(#animation_shuttleRingSwooshGradient);
+}
 .animation-shuttleRingG:hover .animation-shuttleRingSwoosh {
     fill: url(#animation_shuttleRingSwooshHovered);
 }
+*/
 .animation-shuttleRingPointer {
-    fill: url(#animation_shuttleRingPointerGradient);
+    /* Widget will add: fill: url(#animation_shuttleRingPointerGradient); */
     cursor: pointer;
 }
 .animation-shuttleRingPausePointer {
-    fill: url(#animation_shuttleRingPointerPaused);
+    /* Widget will add: fill: url(#animation_shuttleRingPointerPaused); */
     cursor: pointer;
 }
 .animation-knobOuter {
-    fill: url(#animation_knobOuter);
+    /* Widget will add: fill: url(#animation_knobOuter); */
     cursor: pointer;
     stroke: #A5A5A5;
     stroke-width: 1.2;
 }
 .animation-knobInner {
-    fill: url(#animation_knobInner);
+    /* Widget will add: fill: url(#animation_knobInner); */
     cursor: pointer;
 }
 

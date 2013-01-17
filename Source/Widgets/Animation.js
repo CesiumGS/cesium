@@ -399,20 +399,22 @@ define([
     Animation.prototype._createNodes = function(parentNode) {
         var widget = this;
 
-        // This is a workaround for a bug or security feature in Firefox.
+        // Firefox requires SVG references to be included directly, not imported from external CSS.
+        // Also, CSS minifiers get confused by this being in an external CSS file.
         var cssStyle = document.createElement('style');
         cssStyle.textContent =
             '.animation-rectButton .animation-buttonGlow { filter: url(#animation_blurred); }\n' +
             '.animation-rectButton .animation-buttonMain { fill: url(#animation_buttonNormal); }\n' +
             '.animation-buttonSelected .animation-buttonMain { fill: url(#animation_buttonSelected); }\n' +
             '.animation-rectButton:hover .animation-buttonMain { fill: url(#animation_buttonHovered); }\n' +
+            '.animation-buttonDisabled .animation-buttonMain { fill: url(#animation_buttonDisabled); }\n' +
             '.animation-shuttleRingG .animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshGradient); }\n' +
             '.animation-shuttleRingG:hover .animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshHovered); }\n' +
             '.animation-shuttleRingPointer { fill: url(#animation_shuttleRingPointerGradient); }\n' +
             '.animation-shuttleRingPausePointer { fill: url(#animation_shuttleRingPointerPaused); }\n' +
             '.animation-knobOuter { fill: url(#animation_knobOuter); }\n' +
             '.animation-knobInner { fill: url(#animation_knobInner); }\n';
-        document.head.appendChild(cssStyle);
+        document.head.insertBefore(cssStyle, document.head.childNodes[0]);
 
         var themeEle = document.createElement('div');
         themeEle.className = 'animation-theme';
