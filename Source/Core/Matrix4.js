@@ -1198,8 +1198,6 @@ define([
             return Matrix4.clone(matrix, result);
         }
 
-        return Matrix4.multiply(matrix, Matrix4.fromUniformScale(scale), result);
-
         if (typeof result === 'undefined') {
             return new Matrix4(
                 scale * matrix[0], scale * matrix[4], scale * matrix[8],  matrix[12],

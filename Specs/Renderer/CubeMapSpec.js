@@ -138,7 +138,7 @@ defineSuite([
         expect(cubeMap.getHeight()).toEqual(16);
     });
 
-    it('gets width and height', function() {
+    it('gets flip Y', function() {
         cubeMap = context.createCubeMap({
             width : 16,
             height : 16,

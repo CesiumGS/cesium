@@ -90,6 +90,8 @@ defineSuite([
         var returnedResult = Matrix2.fromUniformScale(2.0, result);
         expect(returnedResult).toBe(result);
         expect(returnedResult).toEqual(expected);
+    });
+
     it('fromRotation works without a result parameter', function() {
         var matrix = Matrix2.fromRotation(0.0);
         expect(matrix).toEqual(Matrix2.IDENTITY);
