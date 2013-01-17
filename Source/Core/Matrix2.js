@@ -24,6 +24,8 @@ define([
      *
      * @see Matrix2.fromColumnMajor
      * @see Matrix2.fromRowMajorArray
+     * @see Matrix2.fromScale
+     * @see Matrix2.fromUniformScale
      * @see Matrix3
      * @see Matrix4
      */
@@ -95,6 +97,72 @@ define([
         result[1] = values[2];
         result[2] = values[1];
         result[3] = values[3];
+        return result;
+    };
+
+    /**
+     * Computes a Matrix2 instance representing a non-uniform scale.
+     * @memberof Matrix2
+     *
+     * @param {Cartesian2} scale The x and y scale factors.
+     * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     *
+     * @exception {DeveloperError} scale is required.
+     *
+     * @example
+     * // Creates
+     * //   [7.0, 0.0]
+     * //   [0.0, 8.0]
+     * var m = Matrix2.fromScale(new Cartesian2(7.0, 8.0));
+     */
+    Matrix2.fromScale = function(scale, result) {
+        if (typeof scale === 'undefined') {
+            throw new DeveloperError('scale is required.');
+        }
+        if (typeof result === 'undefined') {
+            return new Matrix2(
+                scale.x, 0.0,
+                0.0,     scale.y);
+        }
+
+        result[0] = scale.x;
+        result[1] = 0.0;
+        result[2] = 0.0;
+        result[3] = scale.y;
+        return result;
+    };
+
+    /**
+     * Computes a Matrix2 instance representing a uniform scale.
+     * @memberof Matrix2
+     *
+     * @param {Number} scale The uniform scale factor.
+     * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     *
+     * @exception {DeveloperError} scale is required.
+     *
+     * @example
+     * // Creates
+     * //   [2.0, 0.0]
+     * //   [0.0, 2.0]
+     * var m = Matrix2.fromUniformScale(2.0);
+     */
+    Matrix2.fromUniformScale = function(scale, result) {
+        if (typeof scale !== 'number') {
+            throw new DeveloperError('scale is required.');
+        }
+        if (typeof result === 'undefined') {
+            return new Matrix2(
+                scale, 0.0,
+                0.0,   scale);
+        }
+
+        result[0] = scale;
+        result[1] = 0.0;
+        result[2] = 0.0;
+        result[3] = scale;
         return result;
     };
 
