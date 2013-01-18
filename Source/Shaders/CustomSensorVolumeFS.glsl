@@ -85,15 +85,9 @@ vec4 shade(czm_raySegment ellipsoidInterval)
 bool czm_pointInEllipsoid(czm_ellipsoid ellipsoid, vec3 point)
 {
     // TODO: Take into account ellipsoid's center; optimize with radii-squared; and move elsewhere
-/*
     return (((point.x * point.x) / (ellipsoid.radii.x * ellipsoid.radii.x)) +
             ((point.y * point.y) / (ellipsoid.radii.y * ellipsoid.radii.y)) +
             ((point.z * point.z) / (ellipsoid.radii.z * ellipsoid.radii.z)) < 1.0);
-*/
-
-    return (((point.x * point.x) / (6378137.0 * 6378137.0)) +
-            ((point.y * point.y) / (6378137.0 * 6378137.0)) +
-            ((point.z * point.z) / (6356752.314245 * 6356752.314245)) < 1.0);
 }
 
 void main()
@@ -110,13 +104,9 @@ void main()
 	    // PERFORMANCE_IDEA: A coarse check for ellipsoid intersection could be done on the CPU first.
 	    if (czm_pointInEllipsoid(ellipsoid, v_positionWC))
 	    {
-            gl_FragColor = vec4(1.0);
-            return;
-//            discard;
+            discard;
 	    }
 
-    }	
-/*    
 	    // Discard if in the sensor's shadow
 	    if (inSensorShadow(sensorVertexWC, ellipsoid, v_positionEC))
 	    {
@@ -130,7 +120,6 @@ void main()
     {
         discard;
     }
-*/
 
     czm_ray ray = czm_ray(vec3(0.0), normalize(v_positionEC));  // Ray from eye to fragment in eye coordinates
     czm_raySegment ellipsoidInterval = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
