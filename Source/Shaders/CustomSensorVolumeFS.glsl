@@ -11,8 +11,6 @@ uniform vec4 u_pickColor;
 varying vec3 v_positionWC;
 varying vec3 v_positionEC;
 varying vec3 v_normalEC;
-varying vec3 v_sensorVertexWC;
-varying vec3 v_sensorVertexEC;
 
 #ifndef RENDER_FOR_PICK
 
@@ -35,8 +33,7 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     materialInput.normalEC = normalEC;
     
     czm_material material = czm_getMaterial(materialInput);
-    
-    return czm_phong(normalize(positionToEyeEC), material);        
+    return czm_phong(normalize(positionToEyeEC), material);
 }
 
 #endif
@@ -95,6 +92,9 @@ bool czm_pointInEllipsoid(czm_ellipsoid ellipsoid, vec3 point)
 
 void main()
 {
+    vec3 sensorVertexWC = czm_model[3].xyz;      // (0.0, 0.0, 0.0) in model coordinates
+    vec3 sensorVertexEC = czm_modelView[3].xyz;  // (0.0, 0.0, 0.0) in model coordinates
+
     czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();
 
     // Occluded by the ellipsoid?
@@ -104,19 +104,19 @@ void main()
 	    // PERFORMANCE_IDEA: A coarse check for ellipsoid intersection could be done on the CPU first.
 	    if (czm_pointInEllipsoid(ellipsoid, v_positionWC))
 	    {
-	        discard;
+            discard;
 	    }
-	
+
 	    // Discard if in the sensor's shadow
-	    if (inSensorShadow(v_sensorVertexWC, ellipsoid, v_positionEC))
+	    if (inSensorShadow(sensorVertexWC, ellipsoid, v_positionEC))
 	    {
 	        discard;
 	    }
     }
-    
+
     // Discard if not in the sensor's sphere
     // PERFORMANCE_IDEA: We can omit this check if the radius is Number.POSITIVE_INFINITY.
-    if (distance(v_positionEC, v_sensorVertexEC) > u_sensorRadius)
+    if (distance(v_positionEC, sensorVertexEC) > u_sensorRadius)
     {
         discard;
     }
