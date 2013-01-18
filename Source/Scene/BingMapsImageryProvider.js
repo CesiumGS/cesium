@@ -31,7 +31,7 @@ define([
      * @alias BingMapsImageryProvider
      * @constructor
      *
-     * @param {String} description.server The name of the Bing Maps server hosting the imagery.
+     * @param {String} description.url The url of the Bing Maps server hosting the imagery.
      * @param {String} [description.key] An optional Bing Maps key, which can be created at
      *        <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
      * @param {Enumeration} [description.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
@@ -49,7 +49,7 @@ define([
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
-     * @exception {DeveloperError} <code>description.server</code> is required.
+     * @exception {DeveloperError} <code>description.url</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
      * @see OpenStreetMapImageryProvider
@@ -62,18 +62,18 @@ define([
      *
      * @example
      * var bing = new BingMapsImageryProvider({
-     *     server : 'dev.virtualearth.net',
+     *     url : 'http://dev.virtualearth.net',
      *     mapStyle : BingMapsStyle.AERIAL
      * });
      */
     var BingMapsImageryProvider = function BingMapsImageryProvider(description) {
         description = defaultValue(description, {});
 
-        if (typeof description.server === 'undefined') {
-            throw new DeveloperError('description.server is required.');
+        if (typeof description.url === 'undefined') {
+            throw new DeveloperError('description.url is required.');
         }
 
-        this._server = description.server;
+        this._url = description.url;
         this._key = defaultValue(description.key, 'Auc5O1omLRY_ub2safz0m2vJbzhYhSfTkO9eRDtLOauonIVoAiy6BV8c-L4jl1MT');
         this._mapStyle = defaultValue(description.mapStyle, BingMapsStyle.AERIAL);
         this._tileDiscardPolicy = description.tileDiscardPolicy;
@@ -107,7 +107,7 @@ define([
 
         this._ready = false;
 
-        var metadataUrl = 'http://' + this._server + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?key=' + this._key;
+        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?key=' + this._key;
         var that = this;
         var metadataError;
 
@@ -150,14 +150,14 @@ define([
     };
 
     /**
-     * Gets the name of the Bing Maps server hosting the imagery.
+     * Gets the name of the Bing Maps server url hosting the imagery.
      *
      * @memberof BingMapsImageryProvider
      *
-     * @returns {String} The server name.
+     * @returns {String} The url.
      */
-    BingMapsImageryProvider.prototype.getServer = function() {
-        return this._server;
+    BingMapsImageryProvider.prototype.getUrl = function() {
+        return this._url;
     };
 
     /**

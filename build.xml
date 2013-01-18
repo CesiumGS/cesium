@@ -82,7 +82,8 @@
 	<property name="build.minification" value="false" />
 
 	<!-- Inputs -->
-	<property name="version" value="b12" />
+	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
+	<property name="version" value="b13" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
