@@ -7,7 +7,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     czm_material material = czm_getDefaultMaterial(materialInput);
 
     // See http://www.fundza.com/rman_shaders/surface/fake_rim/fake_rim1.html
-    float d = 1.0 - dot(materialInput.normalEC, materialInput.positionToEyeEC);
+    float d = 1.0 - dot(materialInput.normalEC, normalize(materialInput.positionToEyeEC));
     float s = smoothstep(1.0 - width, 1.0, d);
 
     material.diffuse = color.rgb;
