@@ -43,8 +43,9 @@ define([
      * @exception {DeveloperError} <code>description.layers</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
-     * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
+     * @see SingleTileImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see OpenStreetMapImageryProvider
      *
      * @see <a href='http://resources.esri.com/help/9.3/arcgisserver/apis/rest/'>ArcGIS Server REST API</a>
@@ -53,7 +54,7 @@ define([
      * @example
      * var provider = new WebMapServiceImageryProvider({
      *     url: 'http://sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
-     *     layerName: '0',
+     *     layers : '0',
      *     proxy: new Cesium.DefaultProxy('/proxy/')
      * });
      */
@@ -95,9 +96,7 @@ define([
             extent : extent
         });
 
-        // Create the credit message.
         if (typeof description.credit !== 'undefined') {
-            // Create the copyright message.
             this._logo = writeTextToCanvas(description.credit, {
                 font : '12px sans-serif'
             });

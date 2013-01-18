@@ -334,7 +334,7 @@ mat3 czm_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
  * @property {vec3} str 3D texture coordinates.
  * @property {vec3} normalEC Unperturbed surface normal in eye coordinates.
  * @property {mat3} tangentToEyeMatrix Matrix for converting a tangent space normal to eye space.
- * @property {vec3} positionToEyeEC Direction from the fragment to the eye in eye coordinates.
+ * @property {vec3} positionToEyeEC Vector from the fragment to the eye in eye coordinates.  The magnitude is the distance in meters from the fragment to the eye.
  * @property {vec3} positionMC Position in model coordinates.
  */
 struct czm_materialInput
@@ -356,7 +356,8 @@ struct czm_materialInput
  *
  * @property {vec3} diffuse Incoming light that scatters evenly in all directions.
  * @property {float} specular Intensity of incoming light reflecting in a single direction.
- * @property {vec3} normal Surface's normal in tangent coordinates. It is used for effects such as normal mapping. The default is the surface's unmodified normal.
+ * @property {float} shininess The sharpness of the specular reflection.  Higher values create a smaller, more focused specular highlight.
+ * @property {vec3} normal Surface's normal in eye coordinates. It is used for effects such as normal mapping. The default is the surface's unmodified normal.
  * @property {vec3} emission Light emitted by the material equally in all directions. The default is vec3(0.0), which emits no light.
  * @property {float} alpha Opacity of this material. 0.0 is completely transparent; 1.0 is completely opaque.
  */
@@ -364,6 +365,7 @@ struct czm_material
 {
     vec3 diffuse;
     float specular;
+    float shininess;
     vec3 normal;
     vec3 emission;
     float alpha;
@@ -390,53 +392,79 @@ czm_material czm_getDefaultMaterial(czm_materialInput materialInput)
     czm_material material;
     material.diffuse = vec3(0.0);
     material.specular = 0.0;
+    material.shininess = 1.0;
     material.normal = materialInput.normalEC;
     material.emission = vec3(0.0);
     material.alpha = 1.0;
     return material;
 }
 
+float getLambertDiffuse(vec3 lightDirection, czm_material material)
+{
+    return max(dot(lightDirection, material.normal), 0.0);
+}
+
+float getSpecular(vec3 lightDirection, vec3 toEye, czm_material material)
+{
+    vec3 toReflectedLight = reflect(-lightDirection, material.normal);
+    float specular = max(dot(toReflectedLight, toEye), 0.0);
+
+    return pow(specular, material.shininess);
+}
+
 /**
- * Fast phong light computation.
+ * Computes a color using the Phong lighting model.
  *
- * @name czm_lightValuePhong
+ * @name czm_phong
  * @glslFunction
  *
- * @param {vec3} toLight Direction to light in eye coordinates.
- * @param {vec3} toEye Direction to eye in eye coordinates.
- * @param {czm_material} material Material value used for light computation.
+ * @param {vec3} toEye A normalized vector from the fragment to the eye in eye coordinates.
+ * @param {czm_material} material The fragment's material.
+ * 
+ * @returns {vec4} The computed color.
+ * 
+ * @example
+ * vec3 positionToEyeEC = // ...
+ * czm_material material = // ...
+ * gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
  *
- * @returns {vec4} Final rgba light value.
- *
- * @see czm_material
+ * @see czm_getMaterial
  */
-
-vec4 czm_lightValuePhong(vec3 toLight, vec3 toEye, czm_material material)
+vec4 czm_phong(vec3 toEye, czm_material material)
 {
-    vec3 diffuseColor = material.diffuse;
-    float specularIntensity = material.specular;
-    vec3 normal = material.normal;
-    vec3 emissionColor = material.emission;
-    float alpha = material.alpha;
+    // Diffuse from directional light sources at eye (for top-down and horizon views)
+    float diffuse = getLambertDiffuse(vec3(0.0, 0.0, 1.0), material) + getLambertDiffuse(vec3(0.0, 1.0, 0.0), material);
 
-    float cosAngIncidence = clamp(dot(normal, toLight), 0.0, 1.0);    
-    vec3 toReflectedLight = reflect(-toLight, normal);
-    float diffuseAmount = clamp(dot(toLight, normal), 0.0, 1.0);
-    float specularAmount = clamp(dot(toReflectedLight, toEye), 0.0, 1.0);
-    specularAmount = cosAngIncidence != 0.0 ? specularAmount : 0.0;
-    specularAmount = specularIntensity != 0.0 ? pow(specularAmount, 1.0/specularIntensity) : 0.0;
+    // Specular from sun and pseudo-moon
+    float specular = getSpecular(czm_sunDirectionEC, toEye, material) + getSpecular(czm_moonDirectionEC, toEye, material);
 
-    //x, y, z : diffuse ambient
-    //w : specular strength
-    vec4 ambientLight = vec4(0.0, 0.0, 0.0, 1.0);
-    
-    vec3 lighting = ambientLight.xyz + emissionColor;
-    lighting += diffuseColor * diffuseAmount;
-    lighting += specularAmount * ambientLight.w;
-    lighting = clamp(lighting, 0.0, 1.0);
-    
-    vec4 finalLighting = vec4(lighting, alpha);
-    return finalLighting;
+    vec3 ambient = vec3(0.0);
+    vec3 color = ambient + material.emission;
+    color += material.diffuse * diffuse;
+    color += material.specular * specular;
+
+    return vec4(color, material.alpha);
+}
+
+/**
+ * Computes the luminance of a color. 
+ *
+ * @name czm_luminance
+ * @glslFunction
+ *
+ * @param {vec3} rgb The color.
+ * 
+ * @returns {float} The luminance.
+ *
+ * @example
+ * float light = luminance(vec3(0.0)); // 0.0
+ * float dark = luminance(vec3(1.0));  // ~1.0 
+ */
+float czm_luminance(vec3 rgb)
+{
+    // Algorithm from Chapter 10 of Graphics Shaders.
+    const vec3 W = vec3(0.2125, 0.7154, 0.0721);
+    return dot(rgb, W);
 }
 
 /**
@@ -452,10 +480,10 @@ vec3 czm_multiplyWithColorBalance(vec3 left, vec3 right)
     
     vec3 target = left * right;
     float leftLuminance = dot(left, W);
-    float rightLumiance = dot(right, W);
-    float targetLumiance = dot(target, W);
+    float rightLuminance = dot(right, W);
+    float targetLuminance = dot(target, W);
     
-    return ((leftLuminance + rightLumiance) / (2.0 * targetLumiance)) * target;
+    return ((leftLuminance + rightLuminance) / (2.0 * targetLuminance)) * target;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -819,4 +847,44 @@ float czm_latitudeToWebMercatorFraction(float latitude, float southMercatorYLow,
     float lowDifference = t2 - (highDifference - t1);
     
     return highDifference * oneOverMercatorHeight + lowDifference * oneOverMercatorHeight;
+}
+
+/**
+ * Translates a position (or any <code>vec3</code>) that was encoded with {@link EncodedCartesian3},
+ * and then provided to the shader as separate <code>high</code> and <code>low</code> bits to
+ * be relative to the eye.  As shown in the example, the position can then be transformed in eye
+ * or clip coordinates using {@link czm_modelViewRelativeToEye} or {@link czm_modelViewProjectionRelativeToEye},
+ * respectively.
+ * <p>
+ * This technique, called GPU RTE, eliminates jittering artifacts when using large coordinates as
+ * described in <a href="http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/">Precisions, Precisions</a>.
+ * </p>
+ *
+ * @name czm_translateRelativeToEye
+ * @glslFunction
+ *
+ * @param {vec3} high The position's high bits.
+ * @param {vec3} low The position's low bits.
+ * @returns {vec3} The position translated to be relative to the camera's position.
+ *
+ * @example
+ * attribute vec3 positionHigh;
+ * attribute vec3 positionLow;
+ * 
+ * void main() 
+ * {
+ *   vec3 p = czm_translateRelativeToEye(positionHigh, positionLow);
+ *   gl_Position = czm_modelViewProjectionRelativeToEye * vec4(p, 1.0);
+ * }
+ *
+ * @see czm_modelViewRelativeToEye
+ * @see czm_modelViewProjectionRelativeToEye
+ * @see EncodedCartesian3
+ */
+vec3 czm_translateRelativeToEye(vec3 high, vec3 low)
+{
+    vec3 highDifference = high - czm_encodedCameraPositionMCHigh;
+    vec3 lowDifference = low - czm_encodedCameraPositionMCLow;
+
+    return highDifference + lowDifference;
 }

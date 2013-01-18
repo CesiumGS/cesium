@@ -435,15 +435,13 @@ define([
             var innerChanged = this._innerMaterial !== this.innerMaterial;
             var capChanged = this._capMaterial !== this.capMaterial;
             var silhouetteChanged = this._silhouetteMaterial !== this.silhouetteMaterial;
-            var affectedByLightingChanged = this._affectedByLighting !== this.affectedByLighting;
-            var materialChanged = outerChanged || innerChanged || capChanged || silhouetteChanged || affectedByLightingChanged;
+            var materialChanged = outerChanged || innerChanged || capChanged || silhouetteChanged;
 
             if (materialChanged) {
                 this._outerMaterial = this.outerMaterial;
                 this._innerMaterial = this.innerMaterial;
                 this._capMaterial = this.capMaterial;
                 this._silhouetteMaterial = this.silhouetteMaterial;
-                this._affectedByLighting = this.affectedByLighting;
 
                 var material = this._combineMaterials();
                 this._colorCommand.uniformMap = combine([this._uniforms, material._uniforms], false, false);
@@ -459,7 +457,6 @@ define([
                     ShadersSensorVolume +
                     '#line 0\n' +
                     material.shaderSource +
-                    (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
                     '#line 0\n' +
                     ComplexConicSensorVolumeFS;
 

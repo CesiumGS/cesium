@@ -226,4 +226,4 @@ defineSuite([
         c.destroy();
         expect(c.isDestroyed()).toEqual(true);
     });
-});
+}, 'WebGL');

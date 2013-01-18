@@ -64,9 +64,9 @@ defineSuite([
         var actual = TridiagonalSystemSolver.solve(l, d, u, r);
 
         expect(actual.length).toEqual(expected.length);
-        expect(actual[0].equalsEpsilon(expected[0], CesiumMath.EPSILON4)).toEqual(true);
-        expect(actual[1].equalsEpsilon(expected[1], CesiumMath.EPSILON4)).toEqual(true);
-        expect(actual[2].equalsEpsilon(expected[2], CesiumMath.EPSILON4)).toEqual(true);
+        expect(actual[0]).toEqualEpsilon(expected[0], CesiumMath.EPSILON4);
+        expect(actual[1]).toEqualEpsilon(expected[1], CesiumMath.EPSILON4);
+        expect(actual[2]).toEqualEpsilon(expected[2], CesiumMath.EPSILON4);
     });
 
     it('solve nine unknowns', function() {
@@ -99,14 +99,14 @@ defineSuite([
         var actual = TridiagonalSystemSolver.solve(l, d, u, r);
 
         expect(actual.length).toEqual(expected.length);
-        expect(actual[0].equalsEpsilon(expected[0], CesiumMath.EPSILON4)).toEqual(true);
-        expect(actual[1].equalsEpsilon(expected[1], CesiumMath.EPSILON4)).toEqual(true);
-        expect(actual[2].equalsEpsilon(expected[2], CesiumMath.EPSILON4)).toEqual(true);
-        expect(actual[3].equalsEpsilon(expected[3], CesiumMath.EPSILON4)).toEqual(true);
-        expect(actual[4].equalsEpsilon(expected[4], CesiumMath.EPSILON4)).toEqual(true);
-        expect(actual[5].equalsEpsilon(expected[5], CesiumMath.EPSILON4)).toEqual(true);
-        expect(actual[6].equalsEpsilon(expected[6], CesiumMath.EPSILON4)).toEqual(true);
-        expect(actual[7].equalsEpsilon(expected[7], CesiumMath.EPSILON4)).toEqual(true);
-        expect(actual[8].equalsEpsilon(expected[8], CesiumMath.EPSILON4)).toEqual(true);
+        expect(actual[0]).toEqualEpsilon(expected[0], CesiumMath.EPSILON4);
+        expect(actual[1]).toEqualEpsilon(expected[1], CesiumMath.EPSILON4);
+        expect(actual[2]).toEqualEpsilon(expected[2], CesiumMath.EPSILON4);
+        expect(actual[3]).toEqualEpsilon(expected[3], CesiumMath.EPSILON4);
+        expect(actual[4]).toEqualEpsilon(expected[4], CesiumMath.EPSILON4);
+        expect(actual[5]).toEqualEpsilon(expected[5], CesiumMath.EPSILON4);
+        expect(actual[6]).toEqualEpsilon(expected[6], CesiumMath.EPSILON4);
+        expect(actual[7]).toEqualEpsilon(expected[7], CesiumMath.EPSILON4);
+        expect(actual[8]).toEqualEpsilon(expected[8], CesiumMath.EPSILON4);
     });
 });

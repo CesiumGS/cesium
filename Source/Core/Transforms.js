@@ -255,10 +255,15 @@ define([
          *
          * @example
          * //Set the view to in the inertial frame.
-         * scene.setAnimation(function() {
-         *     var time = new JulianDate();
-         *     scene.getCamera().transform = Matrix4.fromRotationTranslation(Transforms.computeTemeToPseudoFixedMatrix(time), Cartesian3.ZERO)});;
-         * });
+         * function updateAndRender() {
+         *     var now = new JulianDate();
+         *     scene.initializeFrame();
+         *     scene.setSunPosition(computeSunPosition(now));
+         *     scene.getCamera().transform = Matrix4.fromRotationTranslation(Transforms.computeTemeToPseudoFixedMatrix(now), Cartesian3.ZERO);
+         *     scene.render();
+         *     requestAnimationFrame(updateAndRender);
+         * }
+         * updateAndRender();
          */
         computeTemeToPseudoFixedMatrix : function (date, result) {
             if (typeof date === 'undefined') {
@@ -338,12 +343,8 @@ define([
             }
 
             var tmp = pointToWindowCoordinatesTemp;
-            tmp.x = point.x;
-            tmp.y = point.y;
-            tmp.z = point.z;
-            tmp.w = 1.0;
 
-            Matrix4.multiplyByVector(modelViewProjectionMatrix, tmp, tmp);
+            Matrix4.multiplyByPoint(modelViewProjectionMatrix, point, tmp);
             Cartesian4.multiplyByScalar(tmp, 1.0 / tmp.w, tmp);
             Matrix4.multiplyByVector(viewportTransformation, tmp, tmp);
             return Cartesian2.fromCartesian4(tmp, result);

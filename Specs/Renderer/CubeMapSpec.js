@@ -138,6 +138,16 @@ defineSuite([
         expect(cubeMap.getHeight()).toEqual(16);
     });
 
+    it('gets flip Y', function() {
+        cubeMap = context.createCubeMap({
+            width : 16,
+            height : 16,
+            flipY : true
+        });
+
+        expect(cubeMap.getFlipY()).toEqual(true);
+    });
+
     it('draws with a cube map', function() {
         cubeMap = context.createCubeMap({
             source : {
@@ -714,8 +724,7 @@ defineSuite([
         texture = texture.destroy();
     });
 
-    // Fails on firefox.  Should be fixed soon: https://bugzilla.mozilla.org/show_bug.cgi?id=685156
-    xit('generates mipmaps', function() {
+    it('generates mipmaps', function() {
         cubeMap = context.createCubeMap({
             source : {
                 positiveX : blueImage,
@@ -1027,4 +1036,4 @@ defineSuite([
             c.destroy();
         }).toThrow();
     });
-});
+}, 'WebGL');

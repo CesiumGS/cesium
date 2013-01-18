@@ -265,4 +265,4 @@ defineSuite([
         conePrimitive = scene.getPrimitives().get(0);
         expect(conePrimitive.dynamicObject).toEqual(testObject2);
     });
-});
+}, 'WebGL');

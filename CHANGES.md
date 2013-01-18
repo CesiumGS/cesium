@@ -4,17 +4,99 @@ Change Log
 Beta Releases
 -------------
 
+### b13 - xx/xx/2013
+
 * Breaking changes:
    * Removed `erosion` property from `Polygon`, `ComplexConicSensorVolume`, `RectangularPyramidSensorVolume`, and `ComplexConicSensorVolume`.  Use the new `Erosion` material.  See the Sandbox examples.
    * Replaced the `positionToEyeWC` field of the `czm_materialInput` struct with its equivalent in eye coordinates, `positionToEyeEC`.
 * Added new Materials: `RimLighting`, Erosion`, TODO.  See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page.
 
-### b11 - xx/xx/2012
+### b12a - 01/18/2013
+
+* Breaking changes:
+   * Renamed the `server` property to `url` when constructing a `BingMapsImageryProvider`.  Likewise, renamed `BingMapsImageryProvider.getServer` to `BingMapsImageryProvider.getUrl`.  Code that looked like
+   
+            var bing = new BingMapsImageryProvider({
+                server : 'dev.virtualearth.net'
+            });
+
+        should now look like:
+
+            var bing = new BingMapsImageryProvider({
+                url : 'http://dev.virtualearth.net'
+            });
+     
+   * Renamed `toCSSColor` to `toCssColorString`.
+   * Moved `minimumZoomDistance` and `maximumZoomDistance` from the `CameraController` to the `ScreenSpaceCameraController`.
+* Added `fromCssColorString` to `Color` to create a `Color` instance from any CSS value.
+* Added `fromHsl` to `Color` to create a `Color` instance from H, S, L values.
+* Added `Scene.backgroundColor`.
+* Added `textureRotationAngle` parameter to `Polygon.setPositions` and `Polygon.configureFromPolygonHierarchy` to rotate textures on polygons.
+* Added `Matrix3.fromRotationX`, `Matrix3.fromRotationY`, `Matrix3.fromRotationZ`, and `Matrix2.fromRotation`.
+* Added `fromUniformScale` to `Matrix2`, `Matrix3`, and `Matrix4`.
+* Added `fromScale` to `Matrix2`.
+* Added `multiplyByUniformScale` to `Matrix4`.
+* Added `flipY` property when calling `Context.createTexture2D` and `Context.createCubeMap`.
+* Added `MeshFilters.encodePosition` and `EncodedCartesian3.encode`.
+* Fixed jitter artifacts with polygons.
+* Fixed camera tilt close to the `minimumZoomDistance`.
+* Fixed a bug that could lead to blue tiles when zoomed in close to the North and South poles.
+* Fixed a bug where removing labels would remove the wrong label and ultimately cause a crash.
+* Worked around a bug in Firefox 18 preventing typed arrays from being transferred to or from Web Workers.
+* Upgraded RequireJS to version 2.1.2, and Almond to 0.2.3.
+* Updated the default Bing Maps API key.
+
+### b12 - 01/03/2013
+
+* Breaking changes:
+   * Renamed `EventHandler` to `ScreenSpaceEventHandler`.
+   * Renamed `MouseEventType` to `ScreenSpaceEventType`.
+   * Renamed `MouseEventType.MOVE` to `ScreenSpaceEventType.MOUSE_MOVE`.
+   * Renamed `CameraEventHandler` to `CameraEventAggregator`.
+   * Renamed all `*MouseAction` to `*InputAction` (including get, set, remove, etc).
+   * Removed `Camera2DController`, `CameraCentralBodyController`, `CameraColumbusViewController`, `CameraFlightController`, `CameraFreeLookController`, `CameraSpindleController`, and `CameraControllerCollection`. Common ways to modify the camera are through the `CameraController` object of the `Camera` and will work in all scene modes. The default camera handler is the `ScreenSpaceCameraController` object on the `Scene`.
+   * Changed default Natural Earth imagery to a 2K version of [Natural Earth II with Shaded Relief, Water, and Drainages](http://www.naturalearthdata.com/downloads/10m-raster-data/10m-natural-earth-2/).  The previously used version did not include lakes and rivers.  This replaced `Source/Assets/Textures/NE2_50M_SR_W_2048.jpg` with `Source/Assets/Textures/NE2_LR_LC_SR_W_DR_2048.jpg`.
+* Added pinch-zoom, pinch-twist, and pinch-tilt for touch-enabled browsers (particularly mobile browsers).
+* Improved rendering support on Nexus 4 and Nexus 7 using Firefox.
+* Improved camera flights.
+* Added Sandbox example using NASA's new [Black Marble](http://www.nasa.gov/mission_pages/NPP/news/earth-at-night.html) night imagery.
+* Added constrained z-axis by default to the Cesium widgets.
+* Upgraded Jasmine from version 1.1.0 to 1.3.0.
+* Added `JulianDate.toIso8601`, which creates an ISO8601 compliant representation of a JulianDate.
+* The `Timeline` widget now properly displays leap seconds.
+
+### b11 - 12/03/2012
 
 * Breaking changes:
    * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
-   * Changed Timeline.makeLabel() to take a julianDate instead of a JavaScript date parameter.
+   * Changed `Timeline.makeLabel` to take a `JulianDate` instead of a JavaScript date parameter.
    * Default Earth imagery has been moved to a new package `Assets`.  Images used by `Sandcastle` examples have been moved to the Sandcastle folder, and images used by the Dojo widgets are now self-contained in the `Widgets` package.
+   * `positionToEyeEC` in `czm_materialInput` is no longer normalized by default.
+   * `FullScreen` and related functions have been renamed to `Fullscreen` to match the W3C standard name.
+   * `Fullscreen.isFullscreenEnabled` was incorrectly implemented in certain browsers.  `isFullscreenEnabled` now correctly determines whether the browser will allow an element to go fullscreen.  A new `isFullscreen` function is available to determine if the browser is currently in fullscreen mode.
+   * `Fullscreen.getFullScreenChangeEventName` and `Fullscreen.getFullScreenChangeEventName` now return the proper event name, suitable for use with the `addEventListener` API, instead prefixing them with "on".
+   * Removed `Scene.setSunPosition` and `Scene.getSunPosition`.  The sun position used for lighting is automatically computed based on the scene's time.
+   * Removed a number of rendering options from `CentralBody`, including the ground atmosphere, night texture, specular map, cloud map, cloud shadows, and bump map.  These features weren't really production ready and had a disproportionate cost in terms of shader complexity and compilation time.  They may return in a more polished form in a future release.
+   * Removed `affectedByLighting` property from `Polygon`, `EllipsoidPrimitive`, `RectangularPyramidSensorVolume`, `CustomSensorVolume`, and `ComplexConicSensorVolume`.
+   * Removed `DistanceIntervalMaterial`.  This was not documented.
+   * `Matrix2.getElementIndex`, `Matrix3.getElementIndex`, and `Matrix4.getElementIndex` functions have had their parameters swapped and now take row first and column second.  This is consistent with other class constants, such as Matrix2.COLUMN1ROW2.
+   * Replaced `CentralBody.showSkyAtmosphere` with `Scene.skyAtmosphere` and `SkyAtmosphere`.  This has no impact for those using the Cesium widget.
+* Improved lighting in Columbus view and on polygons, ellipsoids, and sensors.
+* Fixed atmosphere rendering artifacts and improved Columbus view transition.
+* Fixed jitter artifacts with billboards and polylines.
+* Added `TileMapServiceImageryProvider`.  See the Imagery Layers `Sandcastle` example.
+* Added `Water` material.  See the Materials `Sandcastle` example.
+* Added `SkyBox` to draw stars.  Added `CesiumWidget.showSkyBox` and `CesiumViewerWidget.showSkyBox`.
+* Added new `Matrix4` functions: `Matrix4.multiplyByTranslation`, `multiplyByPoint`, and `Matrix4.fromScale`. Added `Matrix3.fromScale`.
+* Added `EncodedCartesian3`, which is used to eliminate jitter when drawing primitives.
+* Added new automatic GLSL uniforms: `czm_frameNumber`, `czm_temeToPseudoFixed`, `czm_entireFrustum`, `czm_inverseModel`, `czm_modelViewRelativeToEye`, `czm_modelViewProjectionRelativeToEye`, `czm_encodedCameraPositionMCHigh`, and `czm_encodedCameraPositionMCLow`.
+* Added `czm_translateRelativeToEye` and `czm_luminance` GLSL functions.
+* Added `shininess` to `czm_materialInput`.
+* Added `QuadraticRealPolynomial`, `CubicRealPolynomial`, and `QuarticRealPolynomial` for finding the roots of quadratic, cubic, and quartic polynomials.
+* Added `IntersectionTests.grazingAltitudeLocation` for finding a point on a ray nearest to an ellipsoid.
+* Added `mostOrthogonalAxis` function to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
+* Changed CesiumViewerWidget default behavior so that zooming to an object now requires a single left-click, rather than a double-click.
+* Updated third-party [Tween.js](https://github.com/sole/tween.js/).
 
 ### b10 - 11/02/2012
 

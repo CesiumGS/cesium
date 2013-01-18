@@ -22,7 +22,7 @@ define([
 
         if (startInterval.lessThan(spanStart) && stopInterval.greaterThan(spanStop)) {
             //The track takes up the entire visible span.
-            context.fillStyle = this.color.toCSSColor();
+            context.fillStyle = this.color.toCssColorString();
             context.fillRect(0, renderState.y, renderState.timeBarWidth, this.height);
         } else if (startInterval.lessThanOrEquals(spanStop) && stopInterval.greaterThanOrEquals(spanStart)) {
             //The track only takes up some of the visible span, compute that span.
@@ -37,14 +37,14 @@ define([
                 }
             }
 
-            context.fillStyle = this.backgroundColor.toCSSColor();
+            context.fillStyle = this.backgroundColor.toCssColorString();
             context.fillRect(0, renderState.y, renderState.timeBarWidth, this.height);
 
             if (typeof start !== 'undefined') {
                 if (typeof stop === 'undefined') {
                     stop = renderState.timeBarWidth;
                 }
-                context.fillStyle = this.color.toCSSColor();
+                context.fillStyle = this.color.toCssColorString();
                 context.fillRect(start, renderState.y, Math.max(stop - start, 1), this.height);
             }
         }

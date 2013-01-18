@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Math',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/destroyObject',
@@ -16,9 +17,11 @@ define([
         '../Core/IntersectionTests',
         '../Core/Interval',
         '../Core/Matrix4',
+        '../Core/JulianDate',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         './Camera',
+        './ScreenSpaceCameraController',
         './CompositePrimitive',
         './CullingVolume',
         './AnimationCollection',
@@ -28,6 +31,7 @@ define([
         './PerspectiveOffCenterFrustum',
         './FrustumCommands'
     ], function(
+        CesiumMath,
         Color,
         defaultValue,
         destroyObject,
@@ -44,9 +48,11 @@ define([
         IntersectionTests,
         Interval,
         Matrix4,
+        JulianDate,
         Context,
         ClearCommand,
         Camera,
+        ScreenSpaceCameraController,
         CompositePrimitive,
         CullingVolume,
         AnimationCollection,
@@ -72,8 +78,8 @@ define([
         this._primitives = new CompositePrimitive();
         this._pickFramebuffer = undefined;
         this._camera = new Camera(canvas);
+        this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, this._camera.controller);
 
-        this._animate = undefined; // Animation callback
         this._animations = new AnimationCollection();
 
         this._shaderFrameCount = 0;
@@ -83,13 +89,44 @@ define([
 
         this._clearColorCommand = new ClearCommand();
         this._clearColorCommand.clearState = context.createClearState({
-            color : Color.BLACK
+            color : new Color()
         });
         this._clearDepthStencilCommand = new ClearCommand();
         this._clearDepthStencilCommand.clearState = context.createClearState({
             depth : 1.0,
             stencil : 0.0
         });
+
+        /**
+         * The {@link SkyBox} used to draw the stars.
+         *
+         * @type SkyBox
+         *
+         * @default undefined
+         *
+         * @see Scene#backgroundColor
+         */
+        this.skyBox = undefined;
+
+        /**
+         * The sky atmosphere drawn around the globe.
+         *
+         * @type SkyAtmosphere
+         *
+         * @default undefined
+         */
+        this.skyAtmosphere = undefined;
+
+        /**
+         * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
+         *
+         * @type Color
+         *
+         * @default Color.BLACK
+         *
+         * @see Scene#skyBox
+         */
+        this.backgroundColor = Color.BLACK.clone();
 
         /**
          * The current mode of the scene.
@@ -164,6 +201,14 @@ define([
      * DOC_TBA
      * @memberof Scene
      */
+    Scene.prototype.getScreenSpaceCameraController = function() {
+        return this._screenSpaceCameraController;
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof Scene
+     */
     Scene.prototype.getUniformState = function() {
         return this._context.getUniformState();
     };
@@ -189,46 +234,21 @@ define([
      * DOC_TBA
      * @memberof Scene
      */
-    Scene.prototype.setSunPosition = function(sunPosition) {
-        this.getUniformState().setSunPosition(sunPosition);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getSunPosition = function() {
-        return this.getUniformState().getSunPosition();
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.setAnimation = function(animationCallback) {
-        this._animate = animationCallback;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getAnimation = function() {
-        return this._animate;
-    };
-
     function clearPasses(passes) {
         passes.color = false;
         passes.pick = false;
         passes.overlay = false;
     }
 
-    function updateFrameState(scene) {
+    function updateFrameState(scene, frameNumber, time) {
         var camera = scene._camera;
 
         var frameState = scene._frameState;
         frameState.mode = scene.mode;
+        frameState.morphTime = scene.morphTime;
         frameState.scene2D = scene.scene2D;
+        frameState.frameNumber = frameNumber;
+        frameState.time = time;
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
         frameState.occluder = undefined;
@@ -243,36 +263,6 @@ define([
         }
 
         clearPasses(frameState.passes);
-    }
-
-    function update(scene) {
-        var us = scene.getUniformState();
-        var camera = scene._camera;
-
-        // Destroy released shaders once every 120 frames to avoid thrashing the cache
-        if (scene._shaderFrameCount++ === 120) {
-            scene._shaderFrameCount = 0;
-            scene._context.getShaderCache().destroyReleasedShaderPrograms();
-        }
-
-        scene._animations.update();
-        camera.update();
-        us.setView(camera.getViewMatrix());
-        us.setProjection(camera.frustum.getProjectionMatrix());
-        if (camera.frustum.getInfiniteProjectionMatrix) {
-            us.setInfiniteProjection(camera.frustum.getInfiniteProjectionMatrix());
-        }
-
-        if (scene._animate) {
-            scene._animate();
-        }
-
-        updateFrameState(scene);
-        scene._frameState.passes.color = true;
-        scene._frameState.passes.overlay = true;
-
-        scene._commandList.length = 0;
-        scene._primitives.update(scene._context, scene._frameState, scene._commandList);
     }
 
     function updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList) {
@@ -381,16 +371,19 @@ define([
             near = camera.frustum.near;
             far = camera.frustum.far;
         } else {
-            near = Math.max(near, camera.frustum.near);
-            far = Math.min(far, camera.frustum.far);
+            // The computed near plane must be between the user defined near and far planes.
+            // The computed far plane must between the user defined far and computed near.
+            // This will handle the case where the computed near plane is further than the user defined far plane.
+            near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
+            far = Math.max(Math.min(far, camera.frustum.far), near);
         }
 
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.
         var farToNearRatio = scene.farToNearRatio;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-        if (near !== Number.MAX_VALUE && (numFrustums !== frustumsLength ||
-                near < frustumCommandsList[0].near || far > frustumCommandsList[frustumsLength - 1].far)) {
+        if (near !== Number.MAX_VALUE && (numFrustums !== frustumsLength || (frustumCommandsList.length !== 0 &&
+                (near < frustumCommandsList[0].near || far > frustumCommandsList[frustumsLength - 1].far)))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList);
             createPotentiallyVisibleSet(scene, listName);
         }
@@ -399,10 +392,28 @@ define([
     function executeCommands(scene, framebuffer) {
         var camera = scene._camera;
         var frustum = camera.frustum.clone();
-
         var context = scene._context;
         var us = context.getUniformState();
-        scene._clearColorCommand.execute(context, framebuffer);
+        var skyBoxCommand = (typeof scene.skyBox !== 'undefined') ? scene.skyBox.update(context, scene._frameState) : undefined;
+        var skyAtmosphereCommand = (typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, scene._frameState) : undefined;
+
+        var clear = scene._clearColorCommand;
+        Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.clearState.color);
+        clear.execute(context, framebuffer);
+
+        // Ideally, we would render the sky box and atmosphere last for
+        // early-z, but we would have to draw it in each frustum
+        frustum.near = camera.frustum.near;
+        frustum.far = camera.frustum.far;
+        us.updateFrustum(frustum);
+
+        if (typeof skyBoxCommand !== 'undefined') {
+            skyBoxCommand.execute(context, framebuffer);
+        }
+
+        if (typeof skyAtmosphereCommand !== 'undefined') {
+            skyAtmosphereCommand.execute(context, framebuffer);
+        }
 
         var clearDepthStencil = scene._clearDepthStencilCommand;
 
@@ -416,10 +427,7 @@ define([
             frustum.near = frustumCommands.near;
             frustum.far = frustumCommands.far;
 
-            us.setProjection(frustum.getProjectionMatrix());
-            if (frustum.getInfiniteProjectionMatrix) {
-                us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
-            }
+            us.updateFrustum(frustum);
 
             var commands = frustumCommands.commands;
             var length = commands.length;
@@ -446,8 +454,49 @@ define([
      * DOC_TBA
      * @memberof Scene
      */
+    Scene.prototype.initializeFrame = function(time) {
+        if (typeof time === 'undefined') {
+            time = new JulianDate();
+        }
+
+        // Destroy released shaders once every 120 frames to avoid thrashing the cache
+        if (this._shaderFrameCount++ === 120) {
+            this._shaderFrameCount = 0;
+            this._context.getShaderCache().destroyReleasedShaderPrograms();
+        }
+
+        this._animations.update();
+
+        var us = this.getUniformState();
+        var frameState = this._frameState;
+
+        this._camera.controller.update(this.mode, this.scene2D);
+        this._screenSpaceCameraController.update(this.mode);
+
+        var frameNumber = CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0);
+        updateFrameState(this, frameNumber, time);
+        frameState.passes.color = true;
+        frameState.passes.overlay = true;
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof Scene
+     */
     Scene.prototype.render = function() {
-        update(this);
+        // Destroy released shaders once every 120 frames to avoid thrashing the cache
+        if (this._shaderFrameCount++ === 120) {
+            this._shaderFrameCount = 0;
+            this._context.getShaderCache().destroyReleasedShaderPrograms();
+        }
+
+        var us = this.getUniformState();
+        var frameState = this._frameState;
+        us.update(frameState);
+
+        this._commandList.length = 0;
+        this._primitives.update(this._context, this._frameState, this._commandList);
+
         createPotentiallyVisibleSet(this, 'colorList');
         executeCommands(this);
         executeOverlayCommands(this);
@@ -544,7 +593,8 @@ define([
         this._pickFramebuffer = this._pickFramebuffer || context.createPickFramebuffer();
         var fb = this._pickFramebuffer.begin();
 
-        updateFrameState(this);
+        // Update with previous frame's number aqnd time, assuming that render is called before picking.
+        updateFrameState(this, frameState.frameNumber, frameState.time);
         frameState.cullingVolume = getPickCullingVolume(this, windowPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
 
@@ -561,64 +611,6 @@ define([
     };
 
     /**
-     * Pick an ellipsoid or map.
-     *
-     * @memberof Scene
-     *
-     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
-     *
-     * @exception {DeveloperError} windowPosition is required.
-     *
-     * @return {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
-     * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
-     */
-    Scene.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
-        if (typeof windowPosition === 'undefined') {
-            throw new DeveloperError('windowPosition is required.');
-        }
-
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
-
-        var p;
-        if (this.mode === SceneMode.SCENE3D) {
-            p = this._camera.pickEllipsoid(windowPosition, ellipsoid);
-        } else if (this.mode === SceneMode.SCENE2D) {
-            p = this._camera.pickMap2D(windowPosition, this.scene2D.projection);
-        } else if (this.mode === SceneMode.COLUMBUS_VIEW) {
-            p = this._camera.pickMapColumbusView(windowPosition, this.scene2D.projection);
-        }
-
-        return p;
-    };
-
-    /**
-     * View an extent on an ellipsoid or map.
-     *
-     * @memberof Scene
-     *
-     * @param {Extent} extent The extent to view.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to view.
-     *
-     * @exception {DeveloperError} extent is required.
-     */
-    Scene.prototype.viewExtent = function(extent, ellipsoid) {
-        if (typeof extent === 'undefined') {
-            throw new DeveloperError('extent is required.');
-        }
-
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
-
-        if (this.mode === SceneMode.SCENE3D) {
-            this._camera.viewExtent(extent, ellipsoid);
-        } else if (this.mode === SceneMode.SCENE2D) {
-            this._camera.viewExtent2D(extent, this.scene2D.projection);
-        } else if (this.mode === SceneMode.COLUMBUS_VIEW) {
-            this._camera.viewExtentColumbusView(extent, this.scene2D.projection);
-        }
-    };
-
-    /**
      * DOC_TBA
      * @memberof Scene
      */
@@ -631,9 +623,11 @@ define([
      * @memberof Scene
      */
     Scene.prototype.destroy = function() {
-        this._camera = this._camera && this._camera.destroy();
+        this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
+        this.skyBox = this.skyBox && this.skyBox.destroy();
+        this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
         this._context = this._context && this._context.destroy();
         return destroyObject(this);
     };

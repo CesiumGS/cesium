@@ -116,6 +116,12 @@ defineSuite([
         }
     });
 
+    it('incrementWrap correctly increments and wraps', function() {
+        expect(CesiumMath.incrementWrap(5, 10, 0)).toEqual(6);
+        expect(CesiumMath.incrementWrap(10, 10, 0)).toEqual(0);
+        expect(CesiumMath.incrementWrap(10, 10)).toEqual(0);
+    });
+
     it('isPowerOfTwo finds powers of two', function() {
         expect(CesiumMath.isPowerOfTwo(1)).toEqual(true);
         expect(CesiumMath.isPowerOfTwo(2)).toEqual(true);
@@ -149,6 +155,15 @@ defineSuite([
     it('factorial throws for undefined', function() {
         expect(function() {
             CesiumMath.factorial();
+        }).toThrow();
+    });
+
+    it('incrementWrap throws for minimum value >= maximum value', function() {
+        expect(function() {
+            CesiumMath.incrementWrap(5, 0, 10);
+        }).toThrow();
+        expect(function() {
+            CesiumMath.incrementWrap(5, 10, 10);
         }).toThrow();
     });
 

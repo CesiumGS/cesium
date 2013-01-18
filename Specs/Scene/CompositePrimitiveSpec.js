@@ -3,6 +3,8 @@ defineSuite([
          'Scene/CompositePrimitive',
          'Specs/createContext',
          'Specs/destroyContext',
+         'Specs/createCamera',
+         'Specs/createFrameState',
          'Specs/equals',
          'Specs/frameState',
          'Specs/pick',
@@ -21,6 +23,8 @@ defineSuite([
          CompositePrimitive,
          createContext,
          destroyContext,
+         createCamera,
+         createFrameState,
          equals,
          frameState,
          pick,
@@ -54,25 +58,18 @@ defineSuite([
     beforeEach(function() {
         primitives = new CompositePrimitive();
 
-        camera = new Camera(context.getCanvas());
+        camera = createCamera(context);
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.up = Cartesian3.UNIT_Z;
         camera.direction = camera.position.normalize().negate();
-        camera.frustum.near = 0.01;
-        camera.frustum.far = 10.0;
-        camera.frustum.fovy = CesiumMath.toRadians(60.0);
-        camera.frustum.aspectRatio = 1.0;
 
         us = context.getUniformState();
-        us.setView(camera.getViewMatrix());
-        us.setProjection(camera.frustum.getProjectionMatrix());
-        us.setSunPosition(new Cartesian3(-2.0, 0.0, 0.0));
+        us.update(createFrameState(camera));
     });
 
     afterEach(function() {
         primitives = primitives && primitives.destroy();
         us = undefined;
-        camera = camera && camera.destroy();
     });
 
     function createLabels(position) {
@@ -637,4 +634,4 @@ defineSuite([
             primitives.lowerToBottom(p);
         }).toThrow();
     });
-});
+}, 'WebGL');
