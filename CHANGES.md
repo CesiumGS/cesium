@@ -7,6 +7,19 @@ Beta Releases
 ### b13 - xx/xx/2013
 
 * Breaking changes:
+
+   * Renamed the `server` property to `url` when constructing a `BingMapsImageryProvider`.  Likewise, renamed `BingMapsImageryProvider.getServer` to `BingMapsImageryProvider.getUrl`.  Code that looked like
+   
+            var bing = new BingMapsImageryProvider({
+                server : 'dev.virtualearth.net'
+            });
+
+        should now look like:
+
+            var bing = new BingMapsImageryProvider({
+                url : 'http://dev.virtualearth.net'
+            });
+     
    * Renamed `toCSSColor` to `toCssColorString`.
    * Moved `minimumZoomDistance` and `maximumZoomDistance` from the `CameraController` to the `ScreenSpaceCameraController`.
 * Added `fromCssColorString` to `Color` to create a `Color` instance from any CSS value.
