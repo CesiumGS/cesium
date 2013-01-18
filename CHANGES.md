@@ -5,6 +5,9 @@ Beta Releases
 -------------
 
 ### b13 - 2013-xx-xx
+* Breaking changes:
+   * The combined `Cesium.js` file and other required files are now created in `Build/Cesium` and `Build/CesiumUnminified` folders.
+   * The Web Worker files needed when using the combined `Cesium.js` file are now in a `Workers` subdirectory.
 
 ### b12a - 2013-01-18
 
