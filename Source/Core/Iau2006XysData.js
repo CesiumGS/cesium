@@ -3,6 +3,7 @@ define([
         'require',
         './defaultValue',
         './loadJson',
+        './Iau2006XysSample',
         './JulianDate',
         './TimeStandard',
         '../ThirdParty/when'
@@ -11,13 +12,27 @@ define([
         require,
         defaultValue,
         loadJson,
+        Iau2006XysSample,
         JulianDate,
         TimeStandard,
         when) {
     "use strict";
 
     /**
+     * A set of IAU2006 XYS data that is used to evaluate the transformation between the International
+     * Celestial Reference Frame (ICRF) and the International Terrestrial Reference Frame (ITRF).
      *
+     * @alias Iau2006XysData
+     * @constructor
+     *
+     * @param {String} [description.xysFileUrlTemplate='Assets/IAU2006_XYS/IAU2006_XYS_{0}.dat'] A template URL for obtaining the XYS data.  In the template,
+     *                 `{0}` will be replaced with the file index.
+     * @param {Number} [description.interpolationOrder=9] The order of interpolation to perform on the XYS data.
+     * @param {Number} [description.sampleZeroJulianEphemerisDate=2442396.5] The Julian ephemeris date (JED) of the
+     *                 first XYS sample.
+     * @param {Number} [description.stepSizeDays=1.0] The step size, in days, between successive XYS samples.
+     * @param {Number} [description.samplesPerXysFile=1000] The number of samples in each XYS file.
+     * @param {Number} [description.totalSamples=27426] The total number of samples in all XYS files.
      */
     var Iau2006XysData = function Iau2006XysData(description) {
         description = description || {};
@@ -69,6 +84,23 @@ define([
         return xys._sampleZeroDateTT.getDaysDifference(dateTT);
     }
 
+    /**
+     * Preloads XYS data for a specified date range.
+     *
+     * @memberof Iau2006XysData
+     *
+     * @param {Number} startDayTT The Julian day number of the beginning of the interval to preload, expressed in
+     *                 the Terrestrial Time (TT) time standard.
+     * @param {Number} startSecondTT The seconds past noon of the beginning of the interval to preload, expressed in
+     *                 the Terrestrial Time (TT) time standard.
+     * @param {Number} stopDayTT The Julian day number of the end of the interval to preload, expressed in
+     *                 the Terrestrial Time (TT) time standard.
+     * @param {Number} stopSecondTT The seconds past noon of the end of the interval to preload, expressed in
+     *                 the Terrestrial Time (TT) time standard.
+
+     * @returns {Promise} A promise that, when resolved, indicates that the requested interval has been
+     *                    preloaded.
+     */
     Iau2006XysData.prototype.preload = function(startDayTT, startSecondTT, stopDayTT, stopSecondTT) {
         var startDaysSinceEpoch = getDaysSinceEpoch(this, startDayTT, startSecondTT);
         var stopDaysSinceEpoch = getDaysSinceEpoch(this, stopDayTT, stopSecondTT);
@@ -94,6 +126,23 @@ define([
         return when.all(promises);
     };
 
+    /**
+     * Computes the XYS values for a given date by interpolating.  If the required data is not yet downloaded,
+     * this method will return undefined.
+     *
+     * @memberof Iau2006XysData
+     *
+     * @param {Number} dayTT The Julian day number for which to compute the XYS value, expressed in
+     *                 the Terrestrial Time (TT) time standard.
+     * @param {Number} secondTT The seconds past noon of the date for which to compute the XYS value, expressed in
+     *                 the Terrestrial Time (TT) time standard.
+     * @param {Iau2006XysSample} [result] The instance to which to copy the interpolated result.  If this parameter
+     *                           is undefined, a new instance is allocated and returned.
+     * @returns {Iau2006XysSample} The interpolated XYS values, or undefined if the required data for this
+     *                             computation has not yet been downloaded.
+     *
+     * @see Iau2006XysData#preload
+     */
     Iau2006XysData.prototype.computeXysRadians = function(dayTT, secondTT, result) {
         var daysSinceEpoch = getDaysSinceEpoch(this, dayTT, secondTT);
         if (daysSinceEpoch < 0.0) {
@@ -141,11 +190,7 @@ define([
         }
 
         if (typeof result === 'undefined') {
-            result = {
-                    x: 0.0,
-                    y: 0.0,
-                    s: 0.0
-            };
+            result = new Iau2006XysSample(0.0, 0.0, 0.0);
         } else {
             result.x = 0.0;
             result.y = 0.0;

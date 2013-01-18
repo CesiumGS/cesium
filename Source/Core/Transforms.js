@@ -3,6 +3,7 @@ define([
         './defaultValue',
         './DeveloperError',
         './Iau2006XysData',
+        './Iau2006XysSample',
         './Math',
         './Matrix3',
         './Matrix4',
@@ -18,6 +19,7 @@ define([
         defaultValue,
         DeveloperError,
         Iau2006XysData,
+        Iau2006XysSample,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -51,11 +53,7 @@ define([
     var ttMinusTai = 32.184;
     var j2000ttDays = 2451545.0;
 
-    var xysScratch = {
-            x : 0.0,
-            y : 0.0,
-            s : 0.0
-    };
+    var xysScratch = new Iau2006XysSample(0.0, 0.0, 0.0);
 
     /**
      * Contains functions for transforming positions to various reference frames.
