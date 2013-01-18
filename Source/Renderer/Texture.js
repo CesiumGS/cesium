@@ -30,7 +30,7 @@ define([
      * @see Context#createTexture2D
      * @see Context#createTexture2DFromFramebuffer
      */
-    var Texture = function(gl, textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, width, height, preMultiplyAlpha) {
+    var Texture = function(gl, textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, width, height, preMultiplyAlpha, flipY) {
         this._gl = gl;
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         this._textureTarget = textureTarget;
@@ -41,6 +41,7 @@ define([
         this._height = height;
         this._dimensions = new Cartesian2(width, height);
         this._preMultiplyAlpha = preMultiplyAlpha;
+        this._flipY = flipY;
         this._sampler = undefined;
 
         this.setSampler();
@@ -99,7 +100,7 @@ define([
 
         // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this._preMultiplyAlpha);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this._flipY);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
 
@@ -316,6 +317,20 @@ define([
      */
     Texture.prototype.getPreMultiplyAlpha = function() {
         return this._preMultiplyAlpha;
+    };
+
+    /**
+     * Returns true if the source pixels are flipped vertically when the texture is created or updated, i.e.,
+     * <code>UNPACK_FLIP_Y_WEBGL</code> is used.
+     *
+     * @memberof Texture
+     *
+     * @return {Boolean} True if the source pixels are flipped vertically; otherwise, false.
+     *
+     * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
+     */
+    Texture.prototype.getFlipY = function() {
+        return this._flipY;
     };
 
     /**
