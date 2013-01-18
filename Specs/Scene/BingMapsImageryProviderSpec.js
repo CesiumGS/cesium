@@ -84,9 +84,9 @@ defineSuite([
     });
 
     it('can provide a root tile', function() {
-        var url = 'fake.fake.net';
+        var url = 'http://fake.fake.net';
         var mapStyle = BingMapsStyle.COLLINS_BART;
-        var metadataUrl = 'http://' + url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
+        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url.indexOf(metadataUrl) === 0).toEqual(true);
@@ -171,9 +171,9 @@ defineSuite([
     });
 
     it('routes requests through a proxy if one is specified', function() {
-        var url = 'foo.bar.net';
+        var url = 'http://foo.bar.net';
         var mapStyle = BingMapsStyle.COLLINS_BART;
-        var metadataUrl = 'http://' + url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
+        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
         var proxy = new DefaultProxy('/proxy/');
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
@@ -206,7 +206,7 @@ defineSuite([
         };
 
         var provider = new BingMapsImageryProvider({
-            url : 'foo.bar.net',
+            url : 'http://foo.bar.net',
             mapStyle : mapStyle,
             proxy : proxy
         });

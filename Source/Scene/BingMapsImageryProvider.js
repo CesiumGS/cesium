@@ -62,7 +62,7 @@ define([
      *
      * @example
      * var bing = new BingMapsImageryProvider({
-     *     url : 'dev.virtualearth.net',
+     *     url : 'http://dev.virtualearth.net',
      *     mapStyle : BingMapsStyle.AERIAL
      * });
      */
@@ -107,7 +107,7 @@ define([
 
         this._ready = false;
 
-        var metadataUrl = 'http://' + this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?key=' + this._key;
+        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?key=' + this._key;
         var that = this;
         var metadataError;
 
