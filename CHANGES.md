@@ -6,8 +6,9 @@ Beta Releases
 
 ### b13 - xx/xx/2013
 
-* Breaking changes:
+### b12a - 01/18/2013
 
+* Breaking changes:
    * Renamed the `server` property to `url` when constructing a `BingMapsImageryProvider`.  Likewise, renamed `BingMapsImageryProvider.getServer` to `BingMapsImageryProvider.getUrl`.  Code that looked like
    
             var bing = new BingMapsImageryProvider({
@@ -36,7 +37,9 @@ Beta Releases
 * Fixed camera tilt close to the `minimumZoomDistance`.
 * Fixed a bug that could lead to blue tiles when zoomed in close to the North and South poles.
 * Fixed a bug where removing labels would remove the wrong label and ultimately cause a crash.
+* Worked around a bug in Firefox 18 preventing typed arrays from being transferred to or from Web Workers.
 * Upgraded RequireJS to version 2.1.2, and Almond to 0.2.3.
+* Updated the default Bing Maps API key.
 
 ### b12 - 01/03/2013
 
