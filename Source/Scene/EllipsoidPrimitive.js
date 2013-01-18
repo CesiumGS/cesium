@@ -318,6 +318,7 @@ define([
                 colorCommand.renderState = this._rs;
                 colorCommand.shaderProgram = this._sp;
                 colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
+                colorCommand.drawOnce = true;
             }
 
             colorCommand.boundingVolume = this._boundingSphere;
@@ -352,6 +353,7 @@ define([
                 pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = combine([this._uniforms, pickMaterial._uniforms], false, false);
+                pickCommand.drawOnce = true;
             }
 
             pickCommand.boundingVolume = this._boundingSphere;

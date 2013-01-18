@@ -14,4 +14,8 @@ void main()
     
     v_positionEC = (czm_modelView * p).xyz;     // position in eye coordinates
     gl_Position = czm_modelViewProjection * p;  // position in clip coordinates
+    
+    // Only draw in one frustum of the multi-frustum. Clamp depth so the primitive is not clipped
+    // by the frustum near and far planes.
+    gl_Position.z = clamp(gl_Position.z, gl_DepthRange.near, gl_DepthRange.far);
 }
