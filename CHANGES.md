@@ -6,7 +6,21 @@ Beta Releases
 
 ### b13 - xx/xx/2013
 
+### b12a - 01/18/2013
+
 * Breaking changes:
+   * Renamed the `server` property to `url` when constructing a `BingMapsImageryProvider`.  Likewise, renamed `BingMapsImageryProvider.getServer` to `BingMapsImageryProvider.getUrl`.  Code that looked like
+   
+            var bing = new BingMapsImageryProvider({
+                server : 'dev.virtualearth.net'
+            });
+
+        should now look like:
+
+            var bing = new BingMapsImageryProvider({
+                url : 'http://dev.virtualearth.net'
+            });
+     
    * Renamed `toCSSColor` to `toCssColorString`.
    * Moved `minimumZoomDistance` and `maximumZoomDistance` from the `CameraController` to the `ScreenSpaceCameraController`.
 * Added `fromCssColorString` to `Color` to create a `Color` instance from any CSS value.
@@ -14,12 +28,18 @@ Beta Releases
 * Added `Scene.backgroundColor`.
 * Added `textureRotationAngle` parameter to `Polygon.setPositions` and `Polygon.configureFromPolygonHierarchy` to rotate textures on polygons.
 * Added `Matrix3.fromRotationX`, `Matrix3.fromRotationY`, `Matrix3.fromRotationZ`, and `Matrix2.fromRotation`.
+* Added `fromUniformScale` to `Matrix2`, `Matrix3`, and `Matrix4`.
+* Added `fromScale` to `Matrix2`.
+* Added `multiplyByUniformScale` to `Matrix4`.
+* Added `flipY` property when calling `Context.createTexture2D` and `Context.createCubeMap`.
 * Added `MeshFilters.encodePosition` and `EncodedCartesian3.encode`.
 * Fixed jitter artifacts with polygons.
 * Fixed camera tilt close to the `minimumZoomDistance`.
 * Fixed a bug that could lead to blue tiles when zoomed in close to the North and South poles.
 * Fixed a bug where removing labels would remove the wrong label and ultimately cause a crash.
+* Worked around a bug in Firefox 18 preventing typed arrays from being transferred to or from Web Workers.
 * Upgraded RequireJS to version 2.1.2, and Almond to 0.2.3.
+* Updated the default Bing Maps API key.
 
 ### b12 - 01/03/2013
 
