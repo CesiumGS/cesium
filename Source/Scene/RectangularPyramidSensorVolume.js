@@ -173,7 +173,6 @@ define([
         s.radius = this.radius;
         s.material = this.material;
         s.intersectionColor = this.intersectionColor;
-        s.affectedByLighting = this.affectedByLighting;
 
         if ((this._xHalfAngle !== this.xHalfAngle) || (this._yHalfAngle !== this.yHalfAngle)) {
 

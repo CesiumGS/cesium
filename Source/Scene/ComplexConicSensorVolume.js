@@ -210,19 +210,6 @@ define([
          */
         this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : Color.clone(Color.WHITE);
 
-        /**
-         * <p>
-         * Determines if the sensor is affected by lighting, i.e., if the sensor is bright on the
-         * day side of the globe, and dark on the night side.  When <code>true</code>, the sensor
-         * is affected by lighting; when <code>false</code>, the sensor is uniformly shaded regardless
-         * of the sun position.
-         * </p>
-         * <p>
-         * The default is <code>true</code>.
-         * </p>
-         */
-        this.affectedByLighting = this._affectedByLighting = (typeof t.affectedByLighting !== 'undefined') ? t.affectedByLighting : true;
-
         var that = this;
         this._uniforms = {
             u_sensorRadius : function() {
