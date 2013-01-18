@@ -14,6 +14,10 @@ Beta Releases
 * Added `Scene.backgroundColor`.
 * Added `textureRotationAngle` parameter to `Polygon.setPositions` and `Polygon.configureFromPolygonHierarchy` to rotate textures on polygons.
 * Added `Matrix3.fromRotationX`, `Matrix3.fromRotationY`, `Matrix3.fromRotationZ`, and `Matrix2.fromRotation`.
+* Added `fromUniformScale` to `Matrix2`, `Matrix3`, and `Matrix4`.
+* Added `fromScale` to `Matrix2`.
+* Added `multiplyByUniformScale` to `Matrix4`.
+* Added `flipY` property when calling `Context.createTexture2D` and `Context.createCubeMap`.
 * Added `MeshFilters.encodePosition` and `EncodedCartesian3.encode`.
 * Fixed jitter artifacts with polygons.
 * Fixed camera tilt close to the `minimumZoomDistance`.
