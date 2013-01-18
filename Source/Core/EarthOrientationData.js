@@ -34,12 +34,11 @@ define([
 
             computeOrientationParameters : function (dateTai){
 
-                //if(this.eop.length !== 0){
-                    //return EarthOrientationData.eop[0];
-//                }
-//                else {
+                if (EarthOrientationData.eop.length !== 0){
+                    return EarthOrientationData.eop[0];
+                } else {
                     return new EarthOrientationData.OrientationParameterData(0,0,0,0,0);
-//                }
+                }
             },
 
             OrientationParameterData : function(xVal, yVal, ut1MinusUtc, xPoleOffset, yPoleOffset){
