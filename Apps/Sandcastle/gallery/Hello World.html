@@ -66,7 +66,7 @@ require([
 
     // Bing Maps
     var bing = new Cesium.BingMapsImageryProvider({
-        server : 'dev.virtualearth.net',
+        url : 'http://dev.virtualearth.net',
         mapStyle : Cesium.BingMapsStyle.AERIAL,
         // Some versions of Safari support WebGL, but don't correctly implement
         // cross-origin image loading, so we need to load Bing imagery using a proxy.
