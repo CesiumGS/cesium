@@ -224,9 +224,10 @@ defineSuite([
                 // Make sure to clear the data in case it's been set by another test
                 EarthOrientationData.clear();
                 // These values come from the STK Components ICRF Validation for the time above
-                EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
+                EarthOrientationData.addOrientationParameterData(time,
                         0.046663 * CesiumMath.RADIANS_PER_ARCSECOND, 0.437099 * CesiumMath.RADIANS_PER_ARCSECOND,
-                        -0.2905572, -0.000072 * CesiumMath.RADIANS_PER_ARCSECOND, 0.000144 * CesiumMath.RADIANS_PER_ARCSECOND));
+                        -0.000072 * CesiumMath.RADIANS_PER_ARCSECOND, 0.000144 * CesiumMath.RADIANS_PER_ARCSECOND,
+                        -0.2905572);
 
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -274,9 +275,10 @@ defineSuite([
                 // Make sure to clear the data in case it's been set by another test
                 EarthOrientationData.clear();
                 // These values come from the STK Components ICRF Validation for the time above
-                EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
-                        0.0000002301721108351985, 0.0000021209335928745266, -0.29062894169560183,
-                        -0.00000000048479796955505559, 0.00000000074175988195507851));
+                EarthOrientationData.addOrientationParameterData(time,
+                        0.0000002301721108351985, 0.0000021209335928745266,
+                        -0.00000000048479796955505559, 0.00000000074175988195507851,
+                        -0.29062894169560183);
 
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -307,9 +309,10 @@ defineSuite([
                 // Make sure to clear the data in case it's been set by another test
                 EarthOrientationData.clear();
                 // These values come from the STK Components ICRF Validation for the time above
-                EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
-                        0.00000022277995715869222, 0.000002117288427504905, -0.29060358925925928,
-                        -0.00000000021577295007575856, 0.00000000063027349699687717));
+                EarthOrientationData.addOrientationParameterData(time,
+                        0.00000022277995715869222, 0.000002117288427504905,
+                        -0.00000000021577295007575856, 0.00000000063027349699687717,
+                        -0.29060358925925928);
 
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -346,9 +349,10 @@ defineSuite([
                 // Make sure to clear the data in case it's been set by another test
                 EarthOrientationData.clear();
                 // These values come from the STK Components ICRF Validation for the time above
-                EarthOrientationData.eop.push(new EarthOrientationData.OrientationParameterData(
+                EarthOrientationData.addOrientationParameterData(time,
                         0.046663 * CesiumMath.RADIANS_PER_ARCSECOND, 0.437099 * CesiumMath.RADIANS_PER_ARCSECOND,
-                        -0.2905572, -0.000072 * CesiumMath.RADIANS_PER_ARCSECOND, 0.000144 * CesiumMath.RADIANS_PER_ARCSECOND));
+                        -0.000072 * CesiumMath.RADIANS_PER_ARCSECOND, 0.000144 * CesiumMath.RADIANS_PER_ARCSECOND,
+                        -0.2905572);
 
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
