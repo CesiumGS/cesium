@@ -77,7 +77,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * to the eye containing the bounding volume. Defaults to <code>false</code>.
          * @type Boolean
          */
-        this.drawOnce = false;
+        this.executeInClosestFrustum = false;
     };
 
     /**

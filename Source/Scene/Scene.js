@@ -303,7 +303,7 @@ define([
             // PERFORMANCE_IDEA: sort bins
             frustumCommands.commands.push(command);
 
-            if (command.drawOnce) {
+            if (command.executeInClosestFrustum) {
                 break;
             }
         }
