@@ -42,7 +42,7 @@ define([
             sampleStop = availability.stop;
         }
 
-        return positionProperty.getValueRangeCartesian(sampleStart, sampleStop, currentTime, result);
+        return positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, currentTime, positionProperty._getReferenceFrame(), result);
     }
 
     /**
@@ -223,7 +223,7 @@ define([
         }
 
         var polyline;
-        var referenceFrame = positionProperty.referenceFrame;
+        var referenceFrame = positionProperty._getReferenceFrame();
         var showProperty = dynamicPath.show;
         var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
         var show = (typeof showProperty === 'undefined' || showProperty.getValue(time));
