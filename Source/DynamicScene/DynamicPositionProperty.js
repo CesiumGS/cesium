@@ -8,6 +8,7 @@ define([
         '../Core/Iso8601',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Matrix3',
         '../Core/Transforms',
         './CzmlCartesian3',
         './CzmlCartographic',
@@ -21,12 +22,14 @@ define([
         Iso8601,
         Cartesian3,
         Cartographic,
+        Matrix3,
         Transforms,
         CzmlCartesian3,
         CzmlCartographic,
         DynamicProperty) {
     "use strict";
 
+    var scratchMatrix3 = new Matrix3();
     var wgs84 = Ellipsoid.WGS84;
     var potentialTypes = [CzmlCartesian3, CzmlCartographic];
     var ReferenceFrame = {
@@ -110,7 +113,7 @@ define([
         result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== 'undefined') {
             if (interval.referenceFrame === ReferenceFrame.INERTIAL) {
-                var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time);
+                var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
                 if (typeof icrfToFixed === 'undefined') {
                     return undefined;
                 }
@@ -151,7 +154,7 @@ define([
         if (valueType === CzmlCartesian3) {
             result = property.getValue(time, result);
             if (interval.referenceFrame === ReferenceFrame.INERTIAL) {
-                var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time);
+                var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
                 if (typeof icrfToFixed === 'undefined') {
                     return undefined;
                 }
@@ -398,14 +401,14 @@ define([
 
         if (interval.referenceFrame !== referenceFrame) {
             if (referenceFrame === ReferenceFrame.FIXED) {
-                var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time);
+                var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
                 if (typeof icrfToFixed === 'undefined') {
                     return undefined;
                 }
                 return icrfToFixed.multiplyByVector(result, result);
             }
             if (referenceFrame === ReferenceFrame.INERTIAL) {
-                var fixedToIcrf = Transforms.computeFixedToIcrfMatrix(time);
+                var fixedToIcrf = Transforms.computeFixedToIcrfMatrix(time, scratchMatrix3);
                 if (typeof fixedToIcrf === 'undefined') {
                     return undefined;
                 }
