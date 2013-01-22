@@ -159,6 +159,17 @@ define([
     };
 
     /**
+     * Get the widget scale last set by {@link Animation#setScale}.
+     *
+     * @function
+     * @memberof Animation.prototype
+     * @returns {Number} : The scale of the widget.
+     */
+    Animation.prototype.getScale = function() {
+        return this._scale;
+    };
+
+    /**
      * Adjust the overall size of the widget relative to the rest of the page.
      * The default scale is 1.0.
      *
@@ -168,6 +179,7 @@ define([
      */
     Animation.prototype.setScale = function(scale) {
         scale *= 0.85; // The default 1.0 scale is smaller than the native SVG as originally designed.
+        this._scale = scale;
         this._centerX = Math.max(1, Math.floor(100 * scale));
 
         var svg = this.svgNode;
@@ -689,7 +701,7 @@ define([
      *
      * @function
      * @memberof Animation.prototype
-     * @returns {String} dateLabel - The human-readable version of the current date.
+     * @returns {String} : The human-readable version of the current date.
      */
     Animation.prototype.makeDateLabel = function (gregorianDate) {
         return this._monthNames[gregorianDate.month - 1] + ' ' + gregorianDate.day + ' ' + gregorianDate.year;
@@ -701,7 +713,7 @@ define([
      *
      * @function
      * @memberof Animation.prototype
-     * @returns {String} timeLabel - The human-readable version of the current time.
+     * @returns {String} : The human-readable version of the current time.
      */
     Animation.prototype.makeTimeLabel = function (gregorianDate) {
         var millisecond = gregorianDate.millisecond, millisecondString = ' UTC';

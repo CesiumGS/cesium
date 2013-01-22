@@ -18,6 +18,7 @@ define([
      * @param {Clock} clock The clock that will be controlled.
      *
      * @see Clock
+     * @see Animation
      */
     var AnimationController = function(clock) {
         this.clock = clock;
@@ -35,7 +36,7 @@ define([
      * Test if the AnimationController is playing or paused.
      * @memberof AnimationController
      *
-     * @returns Boolean <code>true</code> if the AnimationController is animating in either direction.
+     * @returns Boolean : <code>true</code> if the AnimationController is animating in either direction.
      */
     AnimationController.prototype.isAnimating = function() {
         return this._animating;
@@ -56,7 +57,7 @@ define([
      * any other objects that depend on the animation time.
      * @memberof AnimationController
      *
-     * @returns {JulianDate} The updated time if animating, or <code>currentTime</code> if paused.
+     * @returns {JulianDate} : The updated time if animating, or <code>currentTime</code> if paused.
      */
     AnimationController.prototype.update = function() {
         var currentTime;
@@ -141,7 +142,7 @@ define([
      *
      * @memberof AnimationController
      * @param {Number} speed A speed to use for the search.
-     * @returns {Number} typicalSpeed - A typical speed close to the supplied speed.
+     * @returns {Number} : A typical speed close to the supplied speed.
      */
     AnimationController.prototype.getTypicalSpeed = function(speed) {
         if (typeof speed !== 'number') {

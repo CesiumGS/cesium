@@ -108,8 +108,8 @@ define([
 
         /**
          * Determines how much time advances when tick is called, negative values allow for advancing backwards.
-         * If <code>clockStep</code> is set to ClockStep.TICK_DEPENDENT this is the number of seconds to advance.
-         * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_DEPENDENT this value is multiplied by the
+         * If <code>clockStep</code> is set to {@link ClockStep.TICK_DEPENDENT}, this is the number of seconds to advance.
+         * If <code>clockStep</code> is set to {@link ClockStep.SYSTEM_CLOCK_TIME}, this value is multiplied by the
          * elapsed system time since the last call to tick.
          * @type Number
          */
@@ -137,7 +137,7 @@ define([
      *
      * @param {Number} [secondsToTick] optional parameter to force the clock to tick the provided number of seconds,
      * regardless of the value of <code>clockStep</code> and <code>multiplier</code>.
-     * @returns {JulianDate} The new value of the <code>currentTime</code> property.
+     * @returns {JulianDate} : The new value of the <code>currentTime</code> property.
      */
     Clock.prototype.tick = function(secondsToTick) {
         return this._tick(secondsToTick, this.multiplier);
@@ -149,19 +149,18 @@ define([
      * If <code>multiplier</code> is negative this will advance the clock forward one tick.
      * @memberof Clock
      *
-     * @returns {JulianDate} The new value of Clock.currentTime
+     * @returns {JulianDate} : The new value of Clock.currentTime
      */
     Clock.prototype.reverseTick = function() {
         return this._tick(undefined, -this.multiplier);
     };
 
     /**
-     * This returns true if {@link ClockStep.SYSTEM_CLOCK_TIME} is a valid mode given
-     * the current {@link ClockRange} setting.  This can change over time, as the system
-     * time passes in and out of range.
+     * Check if system clock time is within range.  This can change over time, as the system
+     * time passes the start and stop times.
      * @memberof Clock
      *
-     * @returns {Boolean} value
+     * @returns {Boolean} : <code>true</code> if {@link ClockStep.SYSTEM_CLOCK_TIME} is a valid mode given the current {@link ClockRange} setting.
      */
     Clock.prototype.isSystemTimeAvailable = function () {
         if (this.clockRange === ClockRange.UNBOUNDED) {
@@ -175,12 +174,10 @@ define([
     };
 
     /**
-     * This returns true only in {@link ClockRange.CLAMPED} mode after a {@link Clock#tick} or
-     * {@link Clock#reverseTick} has reached a clamp point.  It indicates that pause mode
-     * should be engaged.
-     * @memberof Clock
+     * Check if last tick went outside the startTime or stopTime, indicating pause mode should be engaged.
      *
-     * @returns {Boolean} value
+     * @memberof Clock
+     * @returns {Boolean} : <code>true</code> if the previous {@link Clock#tick} or {@link Clock#reverseTick} reached a {@link ClockRange.CLAMPED} start or stop time.
      */
     Clock.prototype.isOutOfRange = function () {
         return this._isOutOfRange;
