@@ -71,6 +71,13 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * @type Framebuffer
          */
         this.framebuffer = undefined;
+
+        /**
+         * Specifies if this command is only to be executed in the frustum closest
+         * to the eye containing the bounding volume. Defaults to <code>false</code>.
+         * @type Boolean
+         */
+        this.executeInClosestFrustum = false;
     };
 
     /**
