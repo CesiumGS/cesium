@@ -82,7 +82,8 @@
 	<property name="build.minification" value="false" />
 
 	<!-- Inputs -->
-	<property name="version" value="b12a" />
+	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
+	<property name="version" value="b13" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -101,10 +102,11 @@
 
 	<!-- Outputs -->
 	<property name="buildDirectory" location="Build" />
-	<property name="instrumentedDirectory" location="Instrumented" />
 	<property name="buildOutputDirectory" location="${buildDirectory}/Cesium" />
+	<property name="unminifiedOutputDirectory" location="${buildDirectory}/CesiumUnminified" />
 	<property name="buildDocumentationDirectory" location="${buildDirectory}/Documentation" />
 	<property name="buildDocumentationImagesDirectory" location="${buildDocumentationDirectory}/images" />
+	<property name="instrumentedDirectory" location="Instrumented" />
 
 	<scriptdef name="glslToJavascript" language="javascript" src="${tasksDirectory}/glslToJavaScript.js">
 		<attribute name="stripcomments" />
@@ -157,7 +159,7 @@
 		</condition>
 	</target>
 
-	<target name="combineJavaScript.runrjs">
+	<target name="combineJavaScript.create">
 		<!-- create relative paths because r.js can't handle full Windows paths -->
 		<property name="relativeAlmondPath" location="${almondPath}" relative="true" basedir="${sourceDirectory}" />
 		<property name="combineOutputDirectory" location="${buildDirectory}/combineOutput" />
@@ -165,41 +167,62 @@
 		<mkdir dir="${combineOutputDirectory}" />
 		<property name="relativeCombineOutputDirectory" location="${combineOutputDirectory}" relative="true" basedir="${sourceDirectory}" />
 
+		<!-- create combined Cesium.js  -->
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} wrap=true baseUrl=. name=${relativeAlmondPath} include=main out=${relativeCombineOutputDirectory}\Cesium.js" />
+			<arg line="${rjsPath} -o optimize=${optimize} wrap=true baseUrl=. name=${relativeAlmondPath} include=main out=${relativeCombineOutputDirectory}/Cesium.js" />
 		</exec>
 
+		<!-- create cesiumWorkerBootstrapper -->
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. include=Workers/cesiumWorkerBootstrapper.js out=${relativeCombineOutputDirectory}\cesiumWorkerBootstrapper.js" />
+			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. include=Workers/cesiumWorkerBootstrapper.js out=${relativeCombineOutputDirectory}/Workers/cesiumWorkerBootstrapper.js" />
 		</exec>
 
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. name=Workers/createVerticesFromExtent out=${relativeCombineOutputDirectory}\createVerticesFromExtent.js" />
-		</exec>
+		<!-- create each combined worker layer -->
+		<antcall target="combineJavaScript.combineWorker">
+			<param name="worker" value="createVerticesFromExtent" />
+		</antcall>
 
-		<copy todir="${buildDirectory}">
-			<fileset dir="${combineOutputDirectory}" includes="*.js" />
+		<!-- copy to build folder with copyright header added at the top -->
+		<copy todir="${buildOutputDirectory}">
+			<fileset dir="${combineOutputDirectory}" />
 			<filterchain>
 				<concatfilter prepend="${sourceDirectory}/copyrightHeader.js" />
 			</filterchain>
 		</copy>
 
 		<delete dir="${combineOutputDirectory}" />
+
+		<!-- copy other resources -->
+		<copy todir="${buildOutputDirectory}">
+			<fileset dir="${sourceDirectory}">
+				<include name="**/*.css" />
+				<include name="**/*.jpg" />
+				<include name="**/*.gif" />
+				<include name="**/*.png" />
+				<exclude name="Widgets/Dojo/**" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="combineJavaScript.combineWorker">
+		<exec executable="${nodePath}" dir="${sourceDirectory}">
+			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. name=Workers/${worker} out=${relativeCombineOutputDirectory}/Workers/${worker}.js" />
+		</exec>
 	</target>
 
 	<target name="combineJavaScript.createUnminified" depends="combineJavaScript.setNodePath">
-		<antcall target="combineJavaScript.runrjs">
+		<antcall target="combineJavaScript.create">
 			<param name="optimize" value="none" />
 		</antcall>
 
-		<mkdir dir="${buildDirectory}/Unminified" />
-		<copy todir="${buildDirectory}/Unminified">
-			<fileset dir="${buildDirectory}" includes="*.js" />
+		<mkdir dir="${unminifiedOutputDirectory}" />
+		<copy todir="${unminifiedOutputDirectory}">
+			<fileset dir="${buildOutputDirectory}" />
 		</copy>
 	</target>
 
 	<target name="combineJavaScript.createMinified" if="${build.minification}">
-		<antcall target="combineJavaScript.runrjs">
+		<antcall target="combineJavaScript.create">
 			<param name="optimize" value="uglify" />
 		</antcall>
 	</target>
@@ -308,10 +331,7 @@
 		</replaceregexp>
 
 		<copy todir="${buildDirectory}/${app.path}/Workers" overwrite="true">
-			<fileset dir="${buildDirectory}">
-				<include name="cesiumWorkerBootstrapper.js" />
-				<include name="createVerticesFromExtent.js" />
-			</fileset>
+			<fileset dir="${buildOutputDirectory}/Workers" includes="*.js" />
 		</copy>
 	</target>
 </project>

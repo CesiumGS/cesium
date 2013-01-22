@@ -3,36 +3,44 @@ defineSuite([
          'Specs/createScene',
          'Specs/destroyScene',
          'Core/destroyObject',
+         'Core/BoundingSphere',
          'Core/BoxTessellator',
          'Core/Cartesian2',
          'Core/Cartesian3',
+         'Core/Color',
          'Core/Math',
          'Core/Matrix4',
          'Core/MeshFilters',
          'Core/PrimitiveType',
+         'Renderer/BlendingState',
          'Renderer/BufferUsage',
          'Renderer/CommandLists',
          'Renderer/DrawCommand',
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter',
-         'Scene/BillboardCollection'
+         'Scene/BillboardCollection',
+         'Scene/EllipsoidPrimitive'
      ], 'Scene/Multifrustum', function(
          createScene,
          destroyScene,
          destroyObject,
+         BoundingSphere,
          BoxTessellator,
          Cartesian2,
          Cartesian3,
+         Color,
          CesiumMath,
          Matrix4,
          MeshFilters,
          PrimitiveType,
+         BlendingState,
          BufferUsage,
          CommandLists,
          DrawCommand,
          TextureMinificationFilter,
          TextureMagnificationFilter,
-         BillboardCollection) {
+         BillboardCollection,
+         EllipsoidPrimitive) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -82,6 +90,7 @@ defineSuite([
 
     var billboard0;
     var billboard1;
+    var billboard2;
 
     function createBillboards() {
         var atlas = context.createTextureAtlas({images : [greenImage, blueImage, whiteImage], borderWidthInPixels : 1, initialSize : new Cartesian2(3, 3)});
@@ -110,7 +119,7 @@ defineSuite([
 
         billboards = new BillboardCollection();
         billboards.setTextureAtlas(atlas);
-        billboards.add({
+        billboard2 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50000000.0),
             imageIndex : 2
         });
@@ -133,12 +142,7 @@ defineSuite([
 
     it('renders primitive in middle frustum', function() {
         createBillboards();
-        billboard0.setColor({
-            red   : 1.0,
-            green : 1.0,
-            blue  : 1.0,
-            alpha : 0.0
-        });
+        billboard0.setColor(new Color(1.0, 1.0, 1.0, 0.0));
 
         scene.initializeFrame();
         scene.render();
@@ -151,12 +155,7 @@ defineSuite([
 
     it('renders primitive in last frustum', function() {
         createBillboards();
-        var color = {
-            red   : 1.0,
-            green : 1.0,
-            blue  : 1.0,
-            alpha : 0.0
-        };
+        var color = new Color(1.0, 1.0, 1.0, 0.0);
         billboard0.setColor(color);
         billboard1.setColor(color);
 
@@ -169,15 +168,23 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
-    function createUnboundedPrimitive() {
+    function createPrimitive(bounded, closestFrustum) {
+        bounded = (typeof bounded === 'undefined') ? true : bounded;
+        closestFrustum = (typeof closestFrustum === 'undefined') ? false : closestFrustum;
+
         var Primitive = function() {
             this._va = undefined;
             this._sp = undefined;
             this._rs = undefined;
             this._modelMatrix = Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, -50000.0));
 
+            this.color = new Color(1.0, 1.0, 0.0, 1.0);
+
             var that = this;
             this._um = {
+                    u_color : function() {
+                        return that.color;
+                    },
                     u_model : function() {
                         return that._modelMatrix;
                     }
@@ -191,11 +198,13 @@ defineSuite([
                 vs += 'void main()';
                 vs += '{';
                 vs += '    gl_Position = czm_modelViewProjection * position;';
+                vs += closestFrustum ? '    gl_Position.z = clamp(gl_Position.z, gl_DepthRange.near, gl_DepthRange.far);' : '';
                 vs += '}';
                 var fs = '';
+                fs += 'uniform vec4 u_color;';
                 fs += 'void main()';
                 fs += '{';
-                fs += '    gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);';
+                fs += '    gl_FragColor = u_color;';
                 fs += '}';
 
                 var dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
@@ -213,7 +222,9 @@ defineSuite([
                 });
 
                 this._sp = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
-                this._rs = context.createRenderState();
+                this._rs = context.createRenderState({
+                    blending : BlendingState.ALPHA_BLEND
+                });
             }
 
             var command = new DrawCommand();
@@ -223,6 +234,8 @@ defineSuite([
             command.vertexArray = this._va;
             command.uniformMap = this._um;
             command.modelMatrix = this._modelMatrix;
+            command.executeInClosestFrustum = closestFrustum;
+            command.boundingVolume = bounded ? new BoundingSphere(Cartesian3.ZERO.clone(), 500000.0) : undefined;
 
             var commandList = new CommandLists();
             commandList.colorList.push(command);
@@ -235,11 +248,12 @@ defineSuite([
             return destroyObject(this);
         };
 
-        primitives.add(new Primitive());
+        return new Primitive();
     }
 
     it('renders primitive with undefined bounding volume', function() {
-        createUnboundedPrimitive();
+        var primitive = createPrimitive(false);
+        primitives.add(primitive);
 
         scene.initializeFrame();
         scene.render();
@@ -248,6 +262,26 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
         expect(context.readPixels()).toEqual([255, 255, 0, 255]);
+    });
+
+    it('renders only in the closest frustum', function() {
+        createBillboards();
+        var color = new Color(1.0, 1.0, 1.0, 0.0);
+        billboard0.setColor(color);
+        billboard1.setColor(color);
+        billboard2.setColor(color);
+
+        var primitive = createPrimitive(true, true);
+        primitive.color = new Color(1.0, 1.0, 0.0, 0.5);
+        primitives.add(primitive);
+
+        scene.initializeFrame();
+        scene.render();
+        expect(context.readPixels()).toEqual([127, 127, 0, 255]);
+
+        scene.initializeFrame();
+        scene.render();
+        expect(context.readPixels()).toEqual([127, 127, 0, 255]);
     });
 
     it('render without a central body or any primitives', function() {
