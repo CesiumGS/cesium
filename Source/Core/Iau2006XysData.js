@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        'require',
+        './buildModuleUrl',
         './defaultValue',
         './loadJson',
         './Iau2006XysSample',
@@ -9,7 +9,7 @@ define([
         '../ThirdParty/when'
     ],
     function(
-        require,
+        buildModuleUrl,
         defaultValue,
         loadJson,
         Iau2006XysSample,
@@ -37,9 +37,7 @@ define([
     var Iau2006XysData = function Iau2006XysData(description) {
         description = description || {};
 
-        // TODO: what should the default value of this URL really be?
-        //       @shunter says there's a better thing to use in the simple widget branch.
-        this._xysFileUrlTemplate = defaultValue(description.xysFileUrlTemplate, require.toUrl('Assets/IAU2006_XYS/IAU2006_XYS_{0}.dat'));
+        this._xysFileUrlTemplate = defaultValue(description.xysFileUrlTemplate, buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_{0}.dat'));
         this._interpolationOrder = defaultValue(description.interpolationOrder, 9);
         this._sampleZeroJulianEphemerisDate = defaultValue(description.sampleZeroJulianEphemerisDate, 2442396.5);
         this._sampleZeroDateTT = new JulianDate(this._sampleZeroJulianEphemerisDate, 0.0, TimeStandard.TAI);
