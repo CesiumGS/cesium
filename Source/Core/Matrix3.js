@@ -196,13 +196,13 @@ define([
        }
 
        result[0] = 1;
-       result[1] = 0;
-       result[2] = 0;
        result[3] = 0;
-       result[4] = c;
-       result[5] = s;
        result[6] = 0;
-       result[7] = -s;
+       result[1] = 0;
+       result[4] = c;
+       result[7] = s;
+       result[2] = 0;
+       result[5] = -s;
        result[8] = c;
        return result;
     };
@@ -226,13 +226,13 @@ define([
        }
 
        result[0] = c;
-       result[1] = 0;
-       result[2] = -s;
        result[3] = 0;
+       result[6] = -s;
+       result[1] = 0;
        result[4] = 1;
-       result[5] = 0;
-       result[6] = s;
        result[7] = 0;
+       result[2] = s;
+       result[5] = 0;
        result[8] = c;
        return result;
     };
@@ -256,13 +256,13 @@ define([
        }
 
        result[0] = c;
-       result[1] = s;
-       result[2] = 0;
-       result[3] = -s;
-       result[4] = c;
-       result[5] = 0;
+       result[3] = s;
        result[6] = 0;
+       result[1] = -s;
+       result[4] = c;
        result[7] = 0;
+       result[2] = 0;
+       result[5] = 0;
        result[8] = 1;
        return result;
     };

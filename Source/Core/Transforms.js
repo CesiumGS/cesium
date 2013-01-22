@@ -14,6 +14,7 @@ define([
         './Ellipsoid',
         './JulianDate',
         './EarthOrientationParameters',
+        './EarthOrientationParametersSample',
         '../ThirdParty/when'
     ],
     function(
@@ -31,6 +32,7 @@ define([
         Ellipsoid,
         JulianDate,
         EarthOrientationParameters,
+        EarthOrientationParametersSample,
         when) {
     "use strict";
 
@@ -56,6 +58,9 @@ define([
     var j2000ttDays = 2451545.0;
 
     var xysScratch = new Iau2006XysSample(0.0, 0.0, 0.0);
+    var eopScratch = new EarthOrientationParametersSample(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    var rotation1Scratch = new Matrix3();
+    var rotation2Scratch = new Matrix3();
 
     /**
      * Contains functions for transforming positions to various reference frames.
@@ -416,7 +421,7 @@ define([
             }
 
             // Compute pole wander
-            var eop = Transforms.earthOrientationParameters.compute(dateTai);
+            var eop = Transforms.earthOrientationParameters.compute(dateTai, eopScratch);
             if (typeof eop === 'undefined') {
                 return undefined;
             }
@@ -434,24 +439,25 @@ define([
                 return undefined;
             }
 
-            // Compute pole wander matrix
-            var cosxp = Math.cos(eop.xPoleWander);
-            var cosyp = Math.cos(eop.yPoleWander);
-            var sinxp = Math.sin(eop.xPoleWander);
-            var sinyp = Math.sin(eop.yPoleWander);
+            var x = xys.x + eop.xPoleOffset;
+            var y = xys.y + eop.yPoleOffset;
 
-            var ttt = (dayTT - j2000ttDays) + secondTT / TimeConstants.SECONDS_PER_DAY;
-            ttt /= 36525.0;
+            // Compute XYS rotation
+            var a = 1.0 / (1.0 + Math.sqrt(1.0 - x * x - y * y));
 
-            // approximate sp value in rad
-            var sp = -47.0e-6 * ttt * CesiumMath.RADIANS_PER_DEGREE / 3600.0;
-            var cossp = Math.cos(sp);
-            var sinsp = Math.sin(sp);
+            var rotation1 = rotation1Scratch;
+            rotation1[0] = 1.0 - a * x * x;
+            rotation1[3] = -a * x * y;
+            rotation1[6] = x;
+            rotation1[1] = -a * x * y;
+            rotation1[4] = 1 - a * y * y;
+            rotation1[7] = y;
+            rotation1[2] = -x;
+            rotation1[5] = -y;
+            rotation1[8] = 1 - a * (x * x + y * y);
 
-            var fToPfMtx = new Matrix3(
-                    cosxp * cossp, -cosyp * sinsp + sinyp * sinxp * cossp, -sinyp * sinsp - cosyp * sinxp * cossp,
-                    cosxp * sinsp, cosyp * cossp + sinyp * sinxp * sinsp, sinyp * cossp - cosyp * sinxp * sinsp,
-                    sinxp, -sinyp * cosxp, cosyp * cosxp);
+            var rotation2 = Matrix3.fromZRotation(xys.s, rotation2Scratch);
+            var matrixQ = rotation1.multiply(rotation2, rotation1Scratch);
 
             // Similar to TT conversions above
             // It's possible here that secondTT could roll over 86400
@@ -474,23 +480,35 @@ define([
             var era = 0.7790572732640 + fractionOfDay + 0.00273781191135448 * (daysSinceJ2000 + fractionOfDay);
             era = (era % 1.0) * CesiumMath.TWO_PI;
 
-            var earthRotation = Matrix3.fromZRotation(-era);
-
-            var x = xys.x + eop.xPoleOffset;
-            var y = xys.y + eop.yPoleOffset;
-
-            // Compute XYS rotation
-            var a = 1.0 / (1.0 + Math.sqrt(1.0 - x * x - y * y));
-
-            var rotation1 = new Matrix3(
-                    1.0 - a * x * x, -a * x * y, x,
-                    -a * x * y, 1 - a * y * y, y,
-                    -x, -y, 1 - a * (x * x + y * y));
-            var rotation2 = Matrix3.fromZRotation(xys.s);
-            var matrixQ = rotation1.multiply(rotation2);
+            var earthRotation = Matrix3.fromZRotation(-era, rotation2Scratch);
 
             // pseudoFixed to ICRF
-            var pfToIcrf = matrixQ.multiply(earthRotation);
+            var pfToIcrf = matrixQ.multiply(earthRotation, rotation1Scratch);
+
+            // Compute pole wander matrix
+            var cosxp = Math.cos(eop.xPoleWander);
+            var cosyp = Math.cos(eop.yPoleWander);
+            var sinxp = Math.sin(eop.xPoleWander);
+            var sinyp = Math.sin(eop.yPoleWander);
+
+            var ttt = (dayTT - j2000ttDays) + secondTT / TimeConstants.SECONDS_PER_DAY;
+            ttt /= 36525.0;
+
+            // approximate sp value in rad
+            var sp = -47.0e-6 * ttt * CesiumMath.RADIANS_PER_DEGREE / 3600.0;
+            var cossp = Math.cos(sp);
+            var sinsp = Math.sin(sp);
+
+            var fToPfMtx = rotation2Scratch;
+            fToPfMtx[0] = cosxp * cossp;
+            fToPfMtx[1] = cosxp * sinsp;
+            fToPfMtx[2] = sinxp;
+            fToPfMtx[3] = -cosyp * sinsp + sinyp * sinxp * cossp;
+            fToPfMtx[4] = cosyp * cossp + sinyp * sinxp * sinsp;
+            fToPfMtx[5] = -sinyp * cosxp;
+            fToPfMtx[6] = -sinyp * sinsp - cosyp * sinxp * cossp;
+            fToPfMtx[7] = sinyp * cossp - cosyp * sinxp * sinsp;
+            fToPfMtx[8] = cosyp * cosxp;
 
             return pfToIcrf.multiply(fToPfMtx, result);
         },
