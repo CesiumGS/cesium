@@ -8,6 +8,7 @@ Beta Releases
 * Breaking changes:
    * The combined `Cesium.js` file and other required files are now created in `Build/Cesium` and `Build/CesiumUnminified` folders.
    * The Web Worker files needed when using the combined `Cesium.js` file are now in a `Workers` subdirectory.
+* Added a new `Animation` widget, plus related API in `AnimationController` and `Clock`.
 * Fixed rendering artifacts in `EllipsoidPrimitive`.
 
 ### b12a - 2013-01-18
@@ -27,7 +28,6 @@ Beta Releases
 
    * Renamed `toCSSColor` to `toCssColorString`.
    * Moved `minimumZoomDistance` and `maximumZoomDistance` from the `CameraController` to the `ScreenSpaceCameraController`.
-* Added a new `Animation` widget, plus related API in `AnimationController` and `Clock`.
 * Added `fromCssColorString` to `Color` to create a `Color` instance from any CSS value.
 * Added `fromHsl` to `Color` to create a `Color` instance from H, S, L values.
 * Added `Scene.backgroundColor`.
