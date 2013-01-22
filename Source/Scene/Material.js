@@ -30,8 +30,8 @@ define([
         '../Shaders/Materials/RefractionMaterial',
         '../Shaders/Materials/StripeMaterial',
         '../Shaders/Materials/TieDyeMaterial',
-        '../Shaders/Materials/WoodMaterial',
         '../Shaders/Materials/Water',
+        '../Shaders/Materials/WoodMaterial',
         '../Shaders/Materials/RimLightingMaterial',
         '../Shaders/Materials/ErosionMaterial'
     ], function(
@@ -65,8 +65,8 @@ define([
         RefractionMaterial,
         StripeMaterial,
         TieDyeMaterial,
-        WoodMaterial,
         WaterMaterial,
+        WoodMaterial,
         RimLightingMaterial,
         ErosionMaterial) {
     "use strict";
