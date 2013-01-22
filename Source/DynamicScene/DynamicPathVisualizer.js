@@ -6,6 +6,7 @@ define([
         '../Core/Matrix4',
         '../Core/Color',
         '../Core/Transforms',
+        '../Scene/SceneMode',
         '../Scene/PolylineCollection'
        ], function(
          DeveloperError,
@@ -14,10 +15,11 @@ define([
          Matrix4,
          Color,
          Transforms,
+         SceneMode,
          PolylineCollection) {
     "use strict";
 
-    function samplePositions(currentTime, positionProperty, availability, leadTime, trailTime, result) {
+    function samplePositions(currentTime, positionProperty, availability, leadTime, trailTime, referenceFrame, result) {
         var hasAvailability = typeof availability !== 'undefined';
         var hasLeadTime = typeof leadTime !== 'undefined';
         var hasTrailTime = typeof trailTime !== 'undefined';
@@ -42,8 +44,139 @@ define([
             sampleStop = availability.stop;
         }
 
-        return positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, currentTime, positionProperty._getReferenceFrame(), result);
+        return positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, currentTime, referenceFrame, result);
     }
+
+    var PolylineUpdater = function(scene, referenceFrame) {
+        this._unusedIndexes = [];
+        this._polylineCollection = new PolylineCollection();
+        this._scene = scene;
+        this._referenceFrame = referenceFrame;
+
+        var transform;
+        if (referenceFrame === 'INERTIAL') {
+            transform = Transforms.computeIcrfToFixedMatrix;
+        }
+        scene.getPrimitives().add(this._polylineCollection);
+        this._transformFunction = transform;
+    };
+
+    PolylineUpdater.prototype.update = function(time) {
+        var transform = this._transformFunction;
+        if (typeof transform !== 'undefined') {
+            var toFixed = transform(time);
+            if (typeof toFixed !== 'undefined') {
+                Matrix4.fromRotationTranslation(toFixed, Cartesian3.ZERO, this._polylineCollection.modelMatrix);
+            }
+        }
+    };
+
+    PolylineUpdater.prototype.updateObject = function(time, dynamicObject) {
+        var dynamicPath = dynamicObject.path;
+        if (typeof dynamicPath === 'undefined') {
+            return;
+        }
+
+        var positionProperty = dynamicObject.position;
+        if (typeof positionProperty === 'undefined') {
+            return;
+        }
+
+        var polyline;
+        var showProperty = dynamicPath.show;
+        var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
+        var show = (typeof showProperty === 'undefined' || showProperty.getValue(time));
+
+        if (!show) {
+            //don't bother creating or updating anything else
+            if (typeof pathVisualizerIndex !== 'undefined') {
+                polyline = this._polylineCollection.get(pathVisualizerIndex);
+                polyline.setShow(false);
+                dynamicObject._pathVisualizerIndex = undefined;
+                this._unusedIndexes.push(pathVisualizerIndex);
+            }
+            return;
+        }
+
+        if (typeof pathVisualizerIndex === 'undefined') {
+            var unusedIndexes = this._unusedIndexes;
+            var length = unusedIndexes.length;
+            if (length > 0) {
+                pathVisualizerIndex = unusedIndexes.pop();
+                polyline = this._polylineCollection.get(pathVisualizerIndex);
+            } else {
+                pathVisualizerIndex = this._polylineCollection.getLength();
+                polyline = this._polylineCollection.add();
+            }
+            dynamicObject._pathVisualizerIndex = pathVisualizerIndex;
+            polyline.dynamicObject = dynamicObject;
+
+            // CZML_TODO Determine official defaults
+            polyline.setColor(Color.WHITE);
+            polyline.setOutlineColor(Color.BLACK);
+            polyline.setOutlineWidth(1);
+            polyline.setWidth(1);
+        } else {
+            polyline = this._polylineCollection.get(pathVisualizerIndex);
+        }
+
+        polyline.setShow(true);
+
+        var property = dynamicPath.leadTime;
+        var leadTime;
+        if (typeof property !== 'undefined') {
+            leadTime = property.getValue(time);
+        }
+
+        property = dynamicPath.trailTime;
+        var trailTime;
+        if (typeof property !== 'undefined') {
+            trailTime = property.getValue(time);
+        }
+
+        polyline.setPositions(samplePositions(time, positionProperty, dynamicObject.availability, leadTime, trailTime, this._referenceFrame, polyline.getPositions()));
+
+        property = dynamicPath.color;
+        if (typeof property !== 'undefined') {
+            polyline.setColor(property.getValue(time, polyline.getColor()));
+        }
+
+        property = dynamicPath.outlineColor;
+        if (typeof property !== 'undefined') {
+            polyline.setOutlineColor(property.getValue(time, polyline.getOutlineColor()));
+        }
+
+        property = dynamicPath.outlineWidth;
+        if (typeof property !== 'undefined') {
+            var outlineWidth = property.getValue(time);
+            if (typeof outlineWidth !== 'undefined') {
+                polyline.setOutlineWidth(outlineWidth);
+            }
+        }
+
+        property = dynamicPath.width;
+        if (typeof property !== 'undefined') {
+            var width = property.getValue(time);
+            if (typeof width !== 'undefined') {
+                polyline.setWidth(width);
+            }
+        }
+    };
+
+    PolylineUpdater.prototype.removeObject = function(dynamicObject) {
+        var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
+        if (typeof pathVisualizerIndex !== 'undefined') {
+            var polyline = this._polylineCollection.get(pathVisualizerIndex);
+            polyline.setShow(false);
+            this._unusedIndexes.push(pathVisualizerIndex);
+            dynamicObject._pathVisualizerIndex = undefined;
+        }
+    };
+
+    PolylineUpdater.prototype.destroy = function() {
+        this._scene.getPrimitives().remove(this._polylineCollection);
+        return destroyObject(this);
+    };
 
     /**
      * A DynamicObject visualizer which maps the DynamicPath instance
@@ -77,15 +210,7 @@ define([
             throw new DeveloperError('scene is required.');
         }
         this._scene = scene;
-        this._primitives = scene.getPrimitives();
-
-        var polylineCollections = this._polylineCollections = {
-            FIXED : new PolylineCollection(),
-            INERTIAL : new PolylineCollection()
-        };
-
-        scene.getPrimitives().add(polylineCollections.FIXED);
-        scene.getPrimitives().add(polylineCollections.INERTIAL);
+        this._updaters = {};
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -140,15 +265,50 @@ define([
             throw new DeveloperError('time is requied.');
         }
 
-        var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time);
-        if (typeof icrfToFixed !== 'undefined') {
-            this._polylineCollections.INERTIAL.modelMatrix = Matrix4.fromRotationTranslation(icrfToFixed, Cartesian3.ZERO);
-        }
-
         if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var updaters = this._updaters;
+            for ( var key in updaters) {
+                if (updaters.hasOwnProperty(key)) {
+                    updaters[key].update(time);
+                }
+            }
+
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                this._updateObject(time, dynamicObjects[i]);
+                var dynamicObject = dynamicObjects[i];
+
+                var positionProperty = dynamicObject.position;
+                if (typeof positionProperty === 'undefined') {
+                    continue;
+                }
+
+                var lastUpdater = dynamicObject._pathUpdater;
+
+                var frameToVisualize = "FIXED";
+                if (this._scene.mode === SceneMode.SCENE3D) {
+                    frameToVisualize = positionProperty._getReferenceFrame();
+                }
+
+                var currentUpdater = this._updaters[frameToVisualize];
+
+                if ((lastUpdater === currentUpdater) && (typeof currentUpdater !== 'undefined')) {
+                    currentUpdater.updateObject(time, dynamicObject);
+                    continue;
+                }
+
+                if (typeof lastUpdater !== 'undefined') {
+                    lastUpdater.removeObject(dynamicObject);
+                }
+
+                if (typeof currentUpdater === 'undefined') {
+                    currentUpdater = new PolylineUpdater(this._scene, frameToVisualize);
+                    this._updaters[frameToVisualize] = currentUpdater;
+                }
+
+                dynamicObject._pathUpdater = currentUpdater;
+                if (typeof currentUpdater !== 'undefined') {
+                    currentUpdater.updateObject(time, dynamicObject);
+                }
             }
         }
     };
@@ -157,13 +317,18 @@ define([
      * Removes all primitives from the scene.
      */
     DynamicPathVisualizer.prototype.removeAllPrimitives = function() {
-        var i;
-        this._polylineCollections.FIXED.removeAll();
-        this._polylineCollections.INERTIAL.removeAll();
+        var updaters = this._updaters;
+        for ( var key in updaters) {
+            if (updaters.hasOwnProperty(key)) {
+                updaters[key].destroy();
+            }
+        }
+        this._updaters = {};
 
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for (i = dynamicObjects.length - 1; i > -1; i--) {
+            for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+                dynamicObjects[i]._pathUpdater = undefined;
                 dynamicObjects[i]._pathVisualizerIndex = undefined;
             }
         }
@@ -206,124 +371,15 @@ define([
      */
     DynamicPathVisualizer.prototype.destroy = function() {
         this.removeAllPrimitives();
-        this._scene.getPrimitives().remove(this._polylineCollections.FIXED);
-        this._scene.getPrimitives().remove(this._polylineCollections.INERTIAL);
         return destroyObject(this);
-    };
-
-    DynamicPathVisualizer.prototype._updateObject = function(time, dynamicObject) {
-        var dynamicPath = dynamicObject.path;
-        if (typeof dynamicPath === 'undefined') {
-            return;
-        }
-
-        var positionProperty = dynamicObject.position;
-        if (typeof positionProperty === 'undefined') {
-            return;
-        }
-
-        var polyline;
-        var referenceFrame = positionProperty._getReferenceFrame();
-        var showProperty = dynamicPath.show;
-        var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
-        var show = (typeof showProperty === 'undefined' || showProperty.getValue(time));
-
-        if (!show) {
-            //don't bother creating or updating anything else
-            if (typeof pathVisualizerIndex !== 'undefined') {
-                if (referenceFrame === 'INERTIAL') {
-                    this._polylineCollections.INERTIAL.remove(polyline);
-                } else {
-                    this._polylineCollections.FIXED.remove(polyline);
-                }
-                dynamicObject._pathVisualizerIndex = undefined;
-            }
-            return;
-        }
-
-        if (typeof pathVisualizerIndex === 'undefined') {
-            var polylineCollection;
-            if (referenceFrame === 'INERTIAL') {
-                polylineCollection = this._polylineCollections.INERTIAL;
-            } else {
-                polylineCollection = this._polylineCollections.FIXED;
-            }
-
-            pathVisualizerIndex = polylineCollection.getLength();
-            polyline = polylineCollection.add();
-            dynamicObject._pathVisualizerIndex = pathVisualizerIndex;
-            polyline.dynamicObject = dynamicObject;
-
-            // CZML_TODO Determine official defaults
-            polyline.setColor(Color.WHITE);
-            polyline.setOutlineColor(Color.BLACK);
-            polyline.setOutlineWidth(1);
-            polyline.setWidth(1);
-        } else {
-            if (referenceFrame === 'INERTIAL') {
-                polyline = this._polylineCollections.INERTIAL.get(pathVisualizerIndex);
-            } else {
-                polyline = this._polylineCollections.FIXED.get(pathVisualizerIndex);
-            }
-        }
-
-        polyline.setShow(true);
-
-        var property = dynamicPath.leadTime;
-        var leadTime;
-        if (typeof property !== 'undefined') {
-            leadTime = property.getValue(time);
-        }
-
-        property = dynamicPath.trailTime;
-        var trailTime;
-        if (typeof property !== 'undefined') {
-            trailTime = property.getValue(time);
-        }
-
-        polyline.setPositions(samplePositions(time, positionProperty, dynamicObject.availability, leadTime, trailTime, polyline.getPositions()));
-
-        property = dynamicPath.color;
-        if (typeof property !== 'undefined') {
-            polyline.setColor(property.getValue(time, polyline.getColor()));
-        }
-
-        property = dynamicPath.outlineColor;
-        if (typeof property !== 'undefined') {
-            polyline.setOutlineColor(property.getValue(time, polyline.getOutlineColor()));
-        }
-
-        property = dynamicPath.outlineWidth;
-        if (typeof property !== 'undefined') {
-            var outlineWidth = property.getValue(time);
-            if (typeof outlineWidth !== 'undefined') {
-                polyline.setOutlineWidth(outlineWidth);
-            }
-        }
-
-        property = dynamicPath.width;
-        if (typeof property !== 'undefined') {
-            var width = property.getValue(time);
-            if (typeof width !== 'undefined') {
-                polyline.setWidth(width);
-            }
-        }
     };
 
     DynamicPathVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
-            var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
-            if (typeof pathVisualizerIndex !== 'undefined') {
-                var thisPolylineCollection;
-                if (dynamicObject.referenceFrame === 'INERTIAL') {
-                    thisPolylineCollection = this._polylineCollections.INERTIAL;
-                } else {
-                    thisPolylineCollection = this._polylineCollections.FIXED;
-                }
-                var polyline = thisPolylineCollection.get(pathVisualizerIndex);
-                thisPolylineCollection.remove(polyline);
-                dynamicObject._pathVisualizerIndex = undefined;
+            var _pathUpdater = dynamicObject._pathUpdater;
+            if (typeof _pathUpdater !== 'undefined') {
+                _pathUpdater.removeObject(dynamicObject);
             }
         }
     };
