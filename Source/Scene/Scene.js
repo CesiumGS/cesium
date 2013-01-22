@@ -302,6 +302,10 @@ define([
 
             // PERFORMANCE_IDEA: sort bins
             frustumCommands.commands.push(command);
+
+            if (command.executeInClosestFrustum) {
+                break;
+            }
         }
     }
 
