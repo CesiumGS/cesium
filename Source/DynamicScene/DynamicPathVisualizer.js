@@ -277,6 +277,10 @@ define([
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
                 var dynamicObject = dynamicObjects[i];
 
+                if (typeof dynamicObject.path === 'undefined') {
+                    continue;
+                }
+
                 var positionProperty = dynamicObject.position;
                 if (typeof positionProperty === 'undefined') {
                     continue;
