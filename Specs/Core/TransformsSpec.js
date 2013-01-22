@@ -12,7 +12,7 @@ defineSuite([
          'Core/Quaternion',
          'Core/TimeConstants',
          'Core/TimeInterval',
-         'Core/EarthOrientationData',
+         'Core/EarthOrientationParameters',
          'ThirdParty/when'
      ], function(
          Transforms,
@@ -27,7 +27,7 @@ defineSuite([
          Quaternion,
          TimeConstants,
          TimeInterval,
-         EarthOrientationData,
+         EarthOrientationParameters,
          when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -203,6 +203,7 @@ defineSuite([
             var ready = false;
 
             runs(function() {
+                Transforms.earthOrientationParameters = new EarthOrientationParameters('Data/EarthOrientationParameters/EOP-2011-July.json');
                 var preloadInterval = new TimeInterval(start, stop);
                 when(Transforms.preloadIcrfFixed(preloadInterval), function() {
                     ready = true;
@@ -215,20 +216,12 @@ defineSuite([
         }
 
         it('works with hard-coded data', function() {
-            // 2012-07-03 00:00:00 UTC
+            // 2011-07-03 00:00:00 UTC
             var time = new JulianDate(2455745, 43200);
 
             preloadTransformationData(time, time);
 
             runs(function() {
-                // Make sure to clear the data in case it's been set by another test
-                EarthOrientationData.clear();
-                // These values come from the STK Components ICRF Validation for the time above
-                EarthOrientationData.addOrientationParameterData(time,
-                        0.046663 * CesiumMath.RADIANS_PER_ARCSECOND, 0.437099 * CesiumMath.RADIANS_PER_ARCSECOND,
-                        -0.000072 * CesiumMath.RADIANS_PER_ARCSECOND, 0.000144 * CesiumMath.RADIANS_PER_ARCSECOND,
-                        -0.2905572);
-
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
                 expect(t).toBe(resultT);
@@ -272,14 +265,6 @@ defineSuite([
             preloadTransformationData(time, time);
 
             runs(function() {
-                // Make sure to clear the data in case it's been set by another test
-                EarthOrientationData.clear();
-                // These values come from the STK Components ICRF Validation for the time above
-                EarthOrientationData.addOrientationParameterData(time,
-                        0.0000002301721108351985, 0.0000021209335928745266,
-                        -0.00000000048479796955505559, 0.00000000074175988195507851,
-                        -0.29062894169560183);
-
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
@@ -306,14 +291,6 @@ defineSuite([
             preloadTransformationData(time, time);
 
             runs(function() {
-                // Make sure to clear the data in case it's been set by another test
-                EarthOrientationData.clear();
-                // These values come from the STK Components ICRF Validation for the time above
-                EarthOrientationData.addOrientationParameterData(time,
-                        0.00000022277995715869222, 0.000002117288427504905,
-                        -0.00000000021577295007575856, 0.00000000063027349699687717,
-                        -0.29060358925925928);
-
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
@@ -346,14 +323,6 @@ defineSuite([
             preloadTransformationData(time, time);
 
             runs(function() {
-                // Make sure to clear the data in case it's been set by another test
-                EarthOrientationData.clear();
-                // These values come from the STK Components ICRF Validation for the time above
-                EarthOrientationData.addOrientationParameterData(time,
-                        0.046663 * CesiumMath.RADIANS_PER_ARCSECOND, 0.437099 * CesiumMath.RADIANS_PER_ARCSECOND,
-                        -0.000072 * CesiumMath.RADIANS_PER_ARCSECOND, 0.000144 * CesiumMath.RADIANS_PER_ARCSECOND,
-                        -0.2905572);
-
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 

@@ -13,7 +13,8 @@ define([
         './TimeConstants',
         './Ellipsoid',
         './JulianDate',
-        './EarthOrientationData'
+        './EarthOrientationParameters',
+        '../ThirdParty/when'
     ],
     function(
         defaultValue,
@@ -29,7 +30,8 @@ define([
         TimeConstants,
         Ellipsoid,
         JulianDate,
-        EarthOrientationData) {
+        EarthOrientationParameters,
+        when) {
     "use strict";
 
     var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;
@@ -330,12 +332,23 @@ define([
          */
         iau2006XysData : new Iau2006XysData(),
 
+        /**
+         * The source of Earth Orientation Parameters (EOP) data, used for computing the transformation
+         * between the Fixed and ICRF axes.  By default, zero values are for all EOP parameters,
+         * yielding a reasonable but not completely accurate representation of the ICRF axes.
+         */
+        earthOrientationParameters : new EarthOrientationParameters(),
+
         preloadIcrfFixed : function(timeInterval) {
             var startDayTT = timeInterval.start.getJulianDayNumber();
             var startSecondTT = timeInterval.start.getSecondsOfDay() + ttMinusTai;
             var stopDayTT = timeInterval.stop.getJulianDayNumber();
             var stopSecondTT = timeInterval.stop.getSecondsOfDay() + ttMinusTai;
-            return Transforms.iau2006XysData.preload(startDayTT, startSecondTT, stopDayTT, stopSecondTT);
+
+            var xysPromise = Transforms.iau2006XysData.preload(startDayTT, startSecondTT, stopDayTT, stopSecondTT);
+            var eopPromise = Transforms.earthOrientationParameters.getPromiseToLoad();
+
+            return when.all([xysPromise, eopPromise]);
         },
 
         /**
@@ -403,13 +416,10 @@ define([
             }
 
             // Compute pole wander
-            var eop = EarthOrientationData.computeOrientationParameters(dateTai);
-
-            // Compute pole wander matrix
-            var cosxp = Math.cos(eop.xPoleWander);
-            var cosyp = Math.cos(eop.yPoleWander);
-            var sinxp = Math.sin(eop.xPoleWander);
-            var sinyp = Math.sin(eop.yPoleWander);
+            var eop = Transforms.earthOrientationParameters.compute(dateTai);
+            if (typeof eop === 'undefined') {
+                return undefined;
+            }
 
             // There is no external conversion to Terrestrial Time (TT).
             // So use International Atomic Time (TAI) and convert using offsets.
@@ -418,6 +428,17 @@ define([
             // It's possible here that secondTT could roll over 86400
             // This does not seem to affect the precision (unit tests check for this)
             var secondTT = dateTai.getSecondsOfDay() + ttMinusTai;
+
+            var xys = Transforms.iau2006XysData.computeXysRadians(dayTT, secondTT, xysScratch);
+            if (typeof xys === 'undefined') {
+                return undefined;
+            }
+
+            // Compute pole wander matrix
+            var cosxp = Math.cos(eop.xPoleWander);
+            var cosyp = Math.cos(eop.yPoleWander);
+            var sinxp = Math.sin(eop.xPoleWander);
+            var sinyp = Math.sin(eop.yPoleWander);
 
             var ttt = (dayTT - j2000ttDays) + secondTT / TimeConstants.SECONDS_PER_DAY;
             ttt /= 36525.0;
@@ -455,10 +476,6 @@ define([
 
             var earthRotation = Matrix3.fromZRotation(-era);
 
-            var xys = Transforms.iau2006XysData.computeXysRadians(dayTT, secondTT, xysScratch);
-            if (typeof xys === 'undefined') {
-                return undefined;
-            }
             var x = xys.x + eop.xPoleOffset;
             var y = xys.y + eop.yPoleOffset;
 
