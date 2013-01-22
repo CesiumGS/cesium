@@ -16,6 +16,34 @@ define([
         when) {
     "use strict";
 
+    /**
+     * Specifies Earth polar motion coordinates and the difference between UT1 and UTC.
+     * These Earth Orientation Parameters (EOP) are primarily used in the transformation from
+     * the International Celestial Reference Frame (ITRF) to the International Terrestrial
+     * Reference Frame (ITRF).
+     *
+     * @alias EarthOrientationParameters
+     * @constructor
+     *
+     * @param {String} [url] The URL from which to obtain EOP data.  If this parameter is not specified
+     *                 all EOP values are assumed to be 0.0.
+     *
+     * @example
+     * // An example EOP data file, EOP.json:
+     * {
+     *   "columnNames" : ["dateIso8601","xPoleWanderRadians","yPoleWanderRadians","ut1MinusUtcSeconds","lengthOfDayCorrectionSeconds","xCelestialPoleOffsetRadians","yCelestialPoleOffsetRadians","taiMinusUtcSeconds"],
+     *   "samples" : [
+     *      "2011-07-01T00:00:00Z",2.117957047295119e-7,2.111518721609984e-6,-0.2908948,-2.956e-4,3.393695767766752e-11,3.3452143996557983e-10,34.0,
+     *      "2011-07-02T00:00:00Z",2.193297093339541e-7,2.115460256837405e-6,-0.29065,-1.824e-4,-8.241832578862112e-11,5.623838700870617e-10,34.0,
+     *      "2011-07-03T00:00:00Z",2.262286080161428e-7,2.1191157519929706e-6,-0.2905572,1.9e-6,-3.490658503988659e-10,6.981317007977318e-10,34.0
+     *   ]
+     * }
+     *
+     * @example
+     * // Loading the EOP data
+     * var eop = new EarthOrientationParameters('Data/EOP.json');
+     * Transforms.earthOrientationParameters = eop;
+     */
     var EarthOrientationParameters = function EarthOrientationParameters(url) {
         this._dates = undefined;
         this._samples = undefined;
@@ -65,7 +93,22 @@ define([
         return when(this._downloadPromise);
     };
 
-    EarthOrientationParameters.prototype.compute = function(dateTai, result) {
+    /**
+     * Computes the Earth Orientation Parameters (EOP) for a given date by interpolating.
+     * If the EOP data has not yet been download, this method returns undefined.
+     *
+     * @memberof EarthOrientationParameters
+     *
+     * @param {JulianDate} date The date for each to evaluate the EOP.
+     * @param {EarthOrientationParametersSample} [result] The instance to which to copy the result.
+     *        If this parameter is undefined, a new instance is created and returned.
+     * @returns {EarthOrientationParametersSample} The EOP evaluated at the given date, or
+     *          undefined if the data necessary to evaluate EOP at the date has not yet been
+     *          downloaded.
+     *
+     * @see EarthOrientationParameters#getPromiseToLoad
+     */
+    EarthOrientationParameters.prototype.compute = function(date, result) {
         // We cannot compute until the samples are available.
         if (typeof this._samples === 'undefined') {
             if (typeof this._dataError !== 'undefined') {
@@ -96,29 +139,29 @@ define([
         if (typeof lastIndex !== 'undefined') {
             var previousIndexDate = dates[lastIndex];
             var nextIndexDate = dates[lastIndex + 1];
-            var isAfterPrevious = previousIndexDate.lessThanOrEquals(dateTai);
+            var isAfterPrevious = previousIndexDate.lessThanOrEquals(date);
             var isAfterLastSample = typeof nextIndexDate === 'undefined';
-            var isBeforeNext = isAfterLastSample || nextIndexDate.greaterThanOrEquals(dateTai);
+            var isBeforeNext = isAfterLastSample || nextIndexDate.greaterThanOrEquals(date);
 
             if (isAfterPrevious && isBeforeNext) {
                 before = lastIndex;
 
-                if (!isAfterLastSample && nextIndexDate.equals(dateTai)) {
+                if (!isAfterLastSample && nextIndexDate.equals(date)) {
                     ++before;
                 }
                 after = before + 1;
 
-                interpolate(this, dates, this._samples, dateTai, before, after, result);
+                interpolate(this, dates, this._samples, date, before, after, result);
                 return result;
             }
         }
 
-        var index = binarySearch(dates, dateTai, JulianDate.compare, this._dateColumn);
+        var index = binarySearch(dates, date, JulianDate.compare, this._dateColumn);
         if (index >= 0) {
             // If the next entry is the same date, use the later entry.  This way, if two entries
             // describe the same moment, one before a leap second and the other after, then we will use
             // the post-leap second data.
-            if (index < dates.length - 1 && dates[index + 1].equals(dateTai)) {
+            if (index < dates.length - 1 && dates[index + 1].equals(date)) {
                 ++index;
             }
             before = index;
@@ -135,7 +178,7 @@ define([
 
         this._lastIndex = before;
 
-        interpolate(this, dates, this._samples, dateTai, before, after, result);
+        interpolate(this, dates, this._samples, date, before, after, result);
         return result;
     };
 
