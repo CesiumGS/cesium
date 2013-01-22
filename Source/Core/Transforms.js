@@ -456,7 +456,7 @@ define([
             rotation1[5] = -y;
             rotation1[8] = 1 - a * (x * x + y * y);
 
-            var rotation2 = Matrix3.fromZRotation(xys.s, rotation2Scratch);
+            var rotation2 = Matrix3.fromRotationZ(-xys.s, rotation2Scratch);
             var matrixQ = rotation1.multiply(rotation2, rotation1Scratch);
 
             // Similar to TT conversions above
@@ -480,7 +480,7 @@ define([
             var era = 0.7790572732640 + fractionOfDay + 0.00273781191135448 * (daysSinceJ2000 + fractionOfDay);
             era = (era % 1.0) * CesiumMath.TWO_PI;
 
-            var earthRotation = Matrix3.fromZRotation(-era, rotation2Scratch);
+            var earthRotation = Matrix3.fromRotationZ(era, rotation2Scratch);
 
             // pseudoFixed to ICRF
             var pfToIcrf = matrixQ.multiply(earthRotation, rotation1Scratch);
