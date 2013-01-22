@@ -185,6 +185,10 @@ defineSuite([
         verifyMaterial('RimLighting');
     });
 
+    it('draws Erosion built-in material', function() {
+        verifyMaterial('Erosion');
+    });
+
     it('gets the material type', function() {
         var material = new Material({
             context : context,

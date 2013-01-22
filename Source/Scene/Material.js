@@ -252,6 +252,17 @@ define([
      *      <li><code>amplitude</code>:  Number that controls the amplitude of water waves.</li>
      *      <li><code>specularIntensity</code>:  Number that controls the intensity of specular reflections.</li>
      *  </ul>
+     *  <li>RimLighting</li>
+     *  <ul>
+     *      <li><code>color</code>:  diffuse color and alpha.</li>
+     *      <li><code>rimColor</code>:  diffuse color and alpha of the rim.</li>
+     *      <li><code>width</code>:  Number that determines the rim's width.</li>
+     *  </ul>
+     *  <li>Erosion</li>
+     *  <ul>
+     *      <li><code>color</code>:  diffuse color and alpha.</li>
+     *      <li><code>time</code>:  Time of erosion.  1.0 is no erosion; 0.0 is fully eroded.</li>
+     *  </ul>
      * </ul>
      * </div>
      *
