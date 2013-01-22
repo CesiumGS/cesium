@@ -22,6 +22,15 @@ defineSuite([
         expect(function() { return new AnimationController(); }).toThrow();
     });
 
+    it('getTypicalSpeed throws if no input speed', function() {
+        var clock = new Clock();
+        var animationController = new AnimationController(clock);
+
+        expect(function() { return animationController.getTypicalSpeed('foo'); }).toThrow();
+        expect(function() { return animationController.getTypicalSpeed(undefined); }).toThrow();
+        expect(function() { return animationController.getTypicalSpeed(1.0); }).not.toThrow();
+    });
+
     it('play, pause, playReverse, playRealtime, reset, and unpause affect isAnimating', function() {
         var clock = new Clock();
         var animationController = new AnimationController(clock);

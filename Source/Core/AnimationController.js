@@ -144,6 +144,10 @@ define([
      * @returns {Number} typicalSpeed - A typical speed close to the supplied speed.
      */
     AnimationController.prototype.getTypicalSpeed = function(speed) {
+        if (typeof speed !== 'number') {
+            throw new DeveloperError('getTypicalSpeed requires a numeric speed input.');
+        }
+
         var index = binarySearch(typicalMultipliers, Math.abs(speed), function(left, right) {
             return left - right;
         });
