@@ -41,6 +41,22 @@ define([
      *
      * @see AnimationController
      * @see Clock
+     *
+     * @example
+     * // In HTML head, include a link to Animation.css stylesheet,
+     * // and in the body, include: &lt;div id="animationWidget"&gt;&lt;/div&gt;
+     *
+     * var clock = new Clock();
+     * var animationController = new AnimationController(clock);
+     * var parentNode = document.getElementById("animationWidget");
+     * var widget = new Animation(parentNode, animationController);
+     *
+     * function tick() {
+     *     animationController.update();
+     *     widget.update();
+     *     Cesium.requestAnimationFrame(tick);
+     * }
+     * Cesium.requestAnimationFrame(tick);
      */
     var Animation = function(parentNode, animationController) {
         this.parentNode = parentNode;
