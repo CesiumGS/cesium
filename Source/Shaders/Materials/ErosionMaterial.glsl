@@ -1,3 +1,4 @@
+uniform vec4 color;
 uniform float time;
 
 czm_material czm_getMaterial(czm_materialInput materialInput)
@@ -14,7 +15,9 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
             alpha = 0.0;
         }
     }
-    material.alpha = alpha;
+    
+    material.diffuse = color.rgb;
+    material.alpha = color.a * alpha;
 
     return material;
 }

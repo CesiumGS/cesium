@@ -1156,6 +1156,7 @@ define([
     Material._materialCache.addMaterial(Material.ErosionType, {
         type : Material.ErosionType,
         uniforms : {
+            color : new Color(1.0, 0.0, 0.0, 0.5),
             time : 1.0
         },
         source : ErosionMaterial
