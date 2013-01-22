@@ -2,17 +2,17 @@
 define([
         './binarySearch',
         './loadJson',
-        './DeveloperError',
         './EarthOrientationParametersSample',
         './JulianDate',
+        './RuntimeError',
         '../ThirdParty/when'
     ],
     function(
         binarySearch,
         loadJson,
-        DeveloperError,
         EarthOrientationParametersSample,
         JulianDate,
+        RuntimeError,
         when) {
     "use strict";
 
@@ -45,6 +45,8 @@ define([
             var that = this;
             this._downloadPromise = when(loadJson(url), function(eopData) {
                 onDataReady(that, eopData);
+            }, function() {
+                that._dataError = 'An error occurred while retrieving the EOP data from the URL ' + url + '.';
             });
         }
     };
@@ -66,6 +68,10 @@ define([
     EarthOrientationParameters.prototype.compute = function(dateTai, result) {
         // We cannot compute until the samples are available.
         if (typeof this._samples === 'undefined') {
+            if (typeof this._dataError !== 'undefined') {
+                throw new RuntimeError(this._dataError);
+            }
+
             return undefined;
         }
 
@@ -135,7 +141,12 @@ define([
 
     function onDataReady(eop, eopData) {
         if (typeof eopData.columnNames === 'undefined') {
-            eop._dataError = 'eopData.columnNames is required.';
+            eop._dataError = 'Error in loaded EOP data: The columnNames property is required.';
+            return;
+        }
+
+        if (typeof eopData.samples  === 'undefined') {
+            eop._dataError = 'Error in loaded EOP data: The samples property is required.';
             return;
         }
 
@@ -148,7 +159,7 @@ define([
         var utcMinusTaiSecondsColumn = eopData.columnNames.indexOf('utcMinusTaiSeconds');
 
         if (dateColumn < 0 || xPoleWanderRadiansColumn < 0 || yPoleWanderRadiansColumn < 0 || ut1MinusUtcSecondsColumn < 0 || xCelestialPoleOffsetRadiansColumn < 0 || yCelestialPoleOffsetRadiansColumn < 0 || utcMinusTaiSecondsColumn < 0) {
-            eop._dataError = 'eopData.columnNames must include dateIso8601, xPoleWanderRadians, yPoleWanderRadians, ut1MinusUtcSeconds, xCelestialPoleOffsetRadians, yCelestialPoleOffsetRadians, and utcMinusTaiSecondsColumn columns';
+            eop._dataError = 'Error in loaded EOP data: The columnNames property must include dateIso8601, xPoleWanderRadians, yPoleWanderRadians, ut1MinusUtcSeconds, xCelestialPoleOffsetRadians, yCelestialPoleOffsetRadians, and utcMinusTaiSecondsColumn columns';
             return;
         }
 
