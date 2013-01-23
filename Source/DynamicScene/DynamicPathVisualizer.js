@@ -6,6 +6,7 @@ define([
         '../Core/Matrix4',
         '../Core/Color',
         '../Core/Transforms',
+        '../Core/ReferenceFrame',
         '../Scene/SceneMode',
         '../Scene/PolylineCollection'
        ], function(
@@ -15,6 +16,7 @@ define([
          Matrix4,
          Color,
          Transforms,
+         ReferenceFrame,
          SceneMode,
          PolylineCollection) {
     "use strict";
@@ -54,7 +56,7 @@ define([
         this._referenceFrame = referenceFrame;
 
         var transform;
-        if (referenceFrame === 'INERTIAL') {
+        if (referenceFrame === ReferenceFrame.INERTIAL) {
             transform = Transforms.computeIcrfToFixedMatrix;
         }
         scene.getPrimitives().add(this._polylineCollection);
@@ -288,7 +290,7 @@ define([
 
                 var lastUpdater = dynamicObject._pathUpdater;
 
-                var frameToVisualize = "FIXED";
+                var frameToVisualize = ReferenceFrame.FIXED;
                 if (this._scene.mode === SceneMode.SCENE3D) {
                     frameToVisualize = positionProperty._getReferenceFrame();
                 }

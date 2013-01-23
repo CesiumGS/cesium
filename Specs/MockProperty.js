@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['Core/ReferenceFrame'], function(ReferenceFrame) {
     "use strict";
 
     function MockProperty(value) {
@@ -19,7 +19,7 @@ define(function() {
     };
 
     MockProperty.prototype._getReferenceFrame = function() {
-        return "FIXED";
+        return ReferenceFrame.FIXED;
     };
 
     MockProperty.prototype.getValueRangeCartesian = function(start, stop, currentTime, result) {

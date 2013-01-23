@@ -9,6 +9,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Matrix3',
+        '../Core/ReferenceFrame',
         '../Core/Transforms',
         './CzmlCartesian3',
         './CzmlCartographic',
@@ -23,6 +24,7 @@ define([
         Cartesian3,
         Cartographic,
         Matrix3,
+        ReferenceFrame,
         Transforms,
         CzmlCartesian3,
         CzmlCartographic,
@@ -32,10 +34,6 @@ define([
     var scratchMatrix3 = new Matrix3();
     var wgs84 = Ellipsoid.WGS84;
     var potentialTypes = [CzmlCartesian3, CzmlCartographic];
-    var ReferenceFrame = {
-        INERTIAL : "INERTIAL",
-        FIXED : "FIXED"
-    };
 
     /**
      * A dynamic property which stores both Cartesian and Cartographic data
@@ -357,7 +355,7 @@ define([
         //We could handle the data, add it to the property.
         if (typeof unwrappedInterval !== 'undefined') {
             if (typeof czmlInterval.referenceFrame !== 'undefined') {
-                existingInterval.referenceFrame = czmlInterval.referenceFrame;
+                existingInterval.referenceFrame = ReferenceFrame[czmlInterval.referenceFrame];
             }
             property._addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
         }
