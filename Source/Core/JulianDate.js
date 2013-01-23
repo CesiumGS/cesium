@@ -848,8 +848,8 @@ define([
     JulianDate.prototype.getSecondsDifference = function(other) {
         var julianDate1 = this;
         var julianDate2 = other;
-        var dayDifference = (julianDate2.getJulianDayNumber() - julianDate1.getJulianDayNumber()) * TimeConstants.SECONDS_PER_DAY;
-        return (dayDifference + (julianDate2.getSecondsOfDay() - julianDate1.getSecondsOfDay()));
+        var dayDifference = (julianDate2._julianDayNumber - julianDate1._julianDayNumber) * TimeConstants.SECONDS_PER_DAY;
+        return (dayDifference + (julianDate2._secondsOfDay - julianDate1._secondsOfDay));
     };
 
     /**
@@ -895,8 +895,8 @@ define([
     JulianDate.prototype.getDaysDifference = function(other) {
         var julianDate1 = this;
         var julianDate2 = other;
-        var dayDifference = (julianDate2.getJulianDayNumber() - julianDate1.getJulianDayNumber());
-        var secondDifference = (julianDate2.getSecondsOfDay() - julianDate1.getSecondsOfDay()) / TimeConstants.SECONDS_PER_DAY;
+        var dayDifference = (julianDate2._julianDayNumber - julianDate1._julianDayNumber);
+        var secondDifference = (julianDate2._secondsOfDay - julianDate1._secondsOfDay) / TimeConstants.SECONDS_PER_DAY;
         return dayDifference + secondDifference;
     };
 
