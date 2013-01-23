@@ -21,7 +21,7 @@ void main()
     vec3 positionMC = (czm_inverseModelView * vec4(positionEC, 1.0)).xyz;
     vec3 geodeticNormal = normalize(czm_geodeticSurfaceNormal(positionMC, vec3(0.0), u_oneOverEllipsoidRadiiSquared));
     vec3 normalMC = hitFrontFace ? geodeticNormal : -geodeticNormal;   // normalized surface normal (always facing the viewer) in model coordinates
-    vec3 normalEC = normalize(czm_normal * normalMC);                    // normalized surface normal in eye coordiantes
+    vec3 normalEC = normalize(czm_normal * normalMC);                  // normalized surface normal in eye coordiantes
     
     vec2 st = czm_ellipsoidWgs84TextureCoordinates(geodeticNormal);
     vec3 positionToEyeEC = -positionEC; 

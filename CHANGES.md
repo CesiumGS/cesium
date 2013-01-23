@@ -8,6 +8,8 @@ Beta Releases
 * Breaking changes:
    * The combined `Cesium.js` file and other required files are now created in `Build/Cesium` and `Build/CesiumUnminified` folders.
    * The Web Worker files needed when using the combined `Cesium.js` file are now in a `Workers` subdirectory.
+   * Removed `erosion` property from `Polygon`, `ComplexConicSensorVolume`, `RectangularPyramidSensorVolume`, and `ComplexConicSensorVolume`.  Use the new `Erosion` material.  See the Sandbox Animation example.
+* Added new `RimLighting` and `Erosion` materials.  See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page.
 * Fixed rendering artifacts in `EllipsoidPrimitive`.
 * Added `JulianDate.getDaysDifference` method.
 
