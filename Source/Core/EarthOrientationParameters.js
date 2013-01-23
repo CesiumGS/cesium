@@ -267,7 +267,8 @@ define([
         var columnCount = eop._columnCount;
 
         // First check the bounds on the EOP data
-        // If we are outside the bounds, return zeros
+        // If we are after the bounds of the data, return zeros.
+        // The 'before' index should never be less than zero.
         if (after > dates.length-1) {
             result.xPoleWander = 0;
             result.yPoleWander = 0;
