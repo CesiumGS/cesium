@@ -14,7 +14,8 @@ defineSuite([
          'Core/TimeConstants',
          'Core/TimeInterval',
          'Core/EarthOrientationParameters',
-         'ThirdParty/when'
+         'ThirdParty/when',
+         'Core/loadJson'
      ], function(
          Transforms,
          DeveloperError,
@@ -30,7 +31,8 @@ defineSuite([
          TimeConstants,
          TimeInterval,
          EarthOrientationParameters,
-         when) {
+         when,
+         loadJson) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -222,6 +224,53 @@ defineSuite([
                 return ready;
             });
         }
+
+        it('works with data from STK Components', function() {
+
+            var componentsData;
+            when(loadJson('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json'), function(dataResult) {
+                componentsData = dataResult;
+            });
+
+            waitsFor(function() {
+                return typeof componentsData !== 'undefined';
+            });
+
+            runs(function() {
+                var start = JulianDate.fromIso8601(componentsData[0].date);
+                var stop = JulianDate.fromIso8601(componentsData[componentsData.length-1].date);
+
+                preloadTransformationData(start, stop, 'Data/EarthOrientationParameters/EOP-2011-July.json');
+            });
+
+            runs(function() {
+
+                for (var i=0; i<componentsData.length; ++i){
+
+                    var time = JulianDate.fromIso8601(componentsData[i].date);
+                    var resultT = new Matrix3();
+                    var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+                    expect(t).toBe(resultT);
+
+                    // rotation matrix determinants are 1.0
+                    var det = t[0] * t[4] * t[8] + t[3] * t[7] * t[2] + t[6] * t[1] * t[5] - t[6] * t[4] * t[2] - t[3] * t[1] * t[8] - t[0] * t[7] * t[5];
+                    expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+
+                    // rotation matrix inverses are equal to its transpose
+                    var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
+                    expect(t4.inverse()).toEqualEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14);
+
+                    var expectedMtx = Matrix3.fromQuaternion(componentsData[i].icrfToFixedQuaternion);
+                    var testInverse = t.transpose().multiply(expectedMtx);
+                    var testDiff = new Matrix3();
+                    for (var k=0; k<9; k++){
+                        testDiff[k] = t[k] - expectedMtx[k];
+                    }
+                    expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
+                    expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+                }
+            });
+        });
 
         it('works with hard-coded data', function() {
             // 2011-07-03 00:00:00 UTC

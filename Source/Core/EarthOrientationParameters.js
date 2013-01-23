@@ -54,7 +54,7 @@ define([
         this._ut1MinusUtcSecondsColumn = -1;
         this._xCelestialPoleOffsetRadiansColumn = -1;
         this._yCelestialPoleOffsetRadiansColumn = -1;
-        this._utcMinusTaiSecondsColumn = -1;
+        this._taiMinusUtcSecondsColumn = -1;
 
         this._columnCount = 0;
         this._lastIndex = -1;
@@ -65,7 +65,7 @@ define([
         if (typeof url === 'undefined') {
             // Use all zeros for EOP data.
             onDataReady(this, {
-                'columnNames' : ['dateIso8601','xPoleWanderRadians','yPoleWanderRadians','ut1MinusUtcSeconds','lengthOfDayCorrectionSeconds','xCelestialPoleOffsetRadians','yCelestialPoleOffsetRadians','utcMinusTaiSeconds'],
+                'columnNames' : ['dateIso8601','xPoleWanderRadians','yPoleWanderRadians','ut1MinusUtcSeconds','lengthOfDayCorrectionSeconds','xCelestialPoleOffsetRadians','yCelestialPoleOffsetRadians','taiMinusUtcSeconds'],
                 'samples' : []
             });
         } else {
@@ -199,10 +199,10 @@ define([
         var ut1MinusUtcSecondsColumn = eopData.columnNames.indexOf('ut1MinusUtcSeconds');
         var xCelestialPoleOffsetRadiansColumn = eopData.columnNames.indexOf('xCelestialPoleOffsetRadians');
         var yCelestialPoleOffsetRadiansColumn = eopData.columnNames.indexOf('yCelestialPoleOffsetRadians');
-        var utcMinusTaiSecondsColumn = eopData.columnNames.indexOf('utcMinusTaiSeconds');
+        var taiMinusUtcSecondsColumn = eopData.columnNames.indexOf('taiMinusUtcSeconds');
 
-        if (dateColumn < 0 || xPoleWanderRadiansColumn < 0 || yPoleWanderRadiansColumn < 0 || ut1MinusUtcSecondsColumn < 0 || xCelestialPoleOffsetRadiansColumn < 0 || yCelestialPoleOffsetRadiansColumn < 0 || utcMinusTaiSecondsColumn < 0) {
-            eop._dataError = 'Error in loaded EOP data: The columnNames property must include dateIso8601, xPoleWanderRadians, yPoleWanderRadians, ut1MinusUtcSeconds, xCelestialPoleOffsetRadians, yCelestialPoleOffsetRadians, and utcMinusTaiSecondsColumn columns';
+        if (dateColumn < 0 || xPoleWanderRadiansColumn < 0 || yPoleWanderRadiansColumn < 0 || ut1MinusUtcSecondsColumn < 0 || xCelestialPoleOffsetRadiansColumn < 0 || yCelestialPoleOffsetRadiansColumn < 0 || taiMinusUtcSecondsColumn < 0) {
+            eop._dataError = 'Error in loaded EOP data: The columnNames property must include dateIso8601, xPoleWanderRadians, yPoleWanderRadians, ut1MinusUtcSeconds, xCelestialPoleOffsetRadians, yCelestialPoleOffsetRadians, and taiMinusUtcSeconds columns';
             return;
         }
 
@@ -215,12 +215,12 @@ define([
         eop._ut1MinusUtcSecondsColumn = ut1MinusUtcSecondsColumn;
         eop._xCelestialPoleOffsetRadiansColumn = xCelestialPoleOffsetRadiansColumn;
         eop._yCelestialPoleOffsetRadiansColumn = yCelestialPoleOffsetRadiansColumn;
-        eop._utcMinusTaiSecondsColumn = utcMinusTaiSecondsColumn;
+        eop._taiMinusUtcSecondsColumn = taiMinusUtcSecondsColumn;
 
         eop._columnCount = eopData.columnNames.length;
         eop._lastIndex = undefined;
 
-        //var lastUtcMinusTai;
+        //var lastTaiMinusUtc;
         var samples = eop._samples;
         var dates = eop._dates;
 
@@ -229,12 +229,12 @@ define([
             dates.push(JulianDate.fromIso8601(samples[i + dateColumn]));
 
             // TODO: populate leap seconds from EOP
-            /*var utcMinusTai = samples[i + utcMinusTaiSecondsColumn];
-            if (utcMinusTai !== lastUtcMinusTai && typeof lastUtcMinusTai !== 'undefined') {
+            /*var taiMinusUtc = samples[i + taiMinusUtcSecondsColumn];
+            if (taiMinusUtc !== lastTaiMinusUtc && typeof lastTaiMinusUtc !== 'undefined') {
                 // We crossed a leap second boundary
 
             }
-            lastUtcMinusTai = utcMinusTai;*/
+            lastTaiMinusUtc = taiMinusUtc;*/
         }
     }
 
@@ -253,6 +253,17 @@ define([
 
     function interpolate(eop, dates, samples, date, before, after, result) {
         var columnCount = eop._columnCount;
+
+        // First check the bounds on the EOP data
+        // If we are outside the bounds, return zeros
+        if (after > dates.length-1) {
+            result.xPoleWander = 0;
+            result.yPoleWander = 0;
+            result.xPoleOffset = 0;
+            result.yPoleOffset = 0;
+            result.ut1MinusUtc = 0;
+            return result;
+        }
 
         var beforeDate = dates[before];
         var afterDate = dates[after];
@@ -280,8 +291,8 @@ define([
             // crossed a leap second.  Check if this is the case and, if so, adjust the
             // afterValue to account for the leap second.  This way, our interpolation will
             // produce reasonable results.
-            var beforeTaiMinusUtc = samples[startBefore + eop._utcMinusTaiSecondsColumn];
-            var afterTaiMinusUtc = samples[startAfter + eop._utcMinusTaiSecondsColumn];
+            var beforeTaiMinusUtc = samples[startBefore + eop._taiMinusUtcSecondsColumn];
+            var afterTaiMinusUtc = samples[startAfter + eop._taiMinusUtcSecondsColumn];
             if (beforeTaiMinusUtc !== afterTaiMinusUtc) {
                 if (afterDate.equals(date)) {
                     // If we are at the end of the leap second interval, take the second value
