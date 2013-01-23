@@ -10,6 +10,8 @@ Beta Releases
    * The Web Worker files needed when using the combined `Cesium.js` file are now in a `Workers` subdirectory.
 * Fixed rendering artifacts in `EllipsoidPrimitive`.
 * Added `JulianDate.getDaysDifference` method.
+* Added `Transforms.computeIcrfToFixedMatrix` and `computeFixedToIcrfMatrix`.
+* CZML now supports the ability to specify positions in the International Celestial Reference Frame (ICRF), and inertial reference frame.
 
 ### b12a - 2013-01-18
 
