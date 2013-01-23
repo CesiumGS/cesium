@@ -25,7 +25,7 @@ define([
      * @alias Iau2006XysData
      * @constructor
      *
-     * @param {String} [description.xysFileUrlTemplate='Assets/IAU2006_XYS/IAU2006_XYS_{0}.dat'] A template URL for obtaining the XYS data.  In the template,
+     * @param {String} [description.xysFileUrlTemplate='Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'] A template URL for obtaining the XYS data.  In the template,
      *                 `{0}` will be replaced with the file index.
      * @param {Number} [description.interpolationOrder=9] The order of interpolation to perform on the XYS data.
      * @param {Number} [description.sampleZeroJulianEphemerisDate=2442396.5] The Julian ephemeris date (JED) of the
@@ -37,7 +37,7 @@ define([
     var Iau2006XysData = function Iau2006XysData(description) {
         description = description || {};
 
-        this._xysFileUrlTemplate = defaultValue(description.xysFileUrlTemplate, buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_{0}.dat'));
+        this._xysFileUrlTemplate = defaultValue(description.xysFileUrlTemplate, buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'));
         this._interpolationOrder = defaultValue(description.interpolationOrder, 9);
         this._sampleZeroJulianEphemerisDate = defaultValue(description.sampleZeroJulianEphemerisDate, 2442396.5);
         this._sampleZeroDateTT = new JulianDate(this._sampleZeroJulianEphemerisDate, 0.0, TimeStandard.TAI);
