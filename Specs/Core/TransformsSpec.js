@@ -226,7 +226,10 @@ defineSuite([
         }
 
         it('works with data from STK Components', function() {
-
+            // This data set represents a set of data encompassing the corresponding EOP data below.
+            // The rotation data from Components span before and after the EOP data so as to test
+            // what happens when we try evaluating at times when we don't have EOP as well as at
+            // times where we do.  The samples are not at exact EOP times, in order to test interpolation.
             var componentsData;
             when(loadJson('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json'), function(dataResult) {
                 componentsData = dataResult;
@@ -388,6 +391,32 @@ defineSuite([
                 // this tolerance represents machine precision
                 expect(error).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON7);
             });
+        });
+
+        it('undefined prior to 1974', function() {
+            // 1970 jan 1 0h UTC
+            var time = new JulianDate(2440587, 43200);
+            // Purposefully do not load EOP!  EOP doesn't make a lot of sense before 1972.
+            // Even though we are trying to load the data for 1970,
+            // we don't have the data in Cesium to load.
+            preloadTransformationData(time, time.addDays(1));
+            var resultT = new Matrix3();
+            var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+            // Check that we get undefined, since we don't have ICRF data
+            expect(t).toEqual(undefined);
+        });
+
+        it('works after 2028', function() {
+            // 2030 jan 1 0h UTC
+            var time = new JulianDate(2462502, 43200);
+            // Purposefully do not load EOP!  EOP doesn't exist yet that far into the future
+            // Even though we are trying to load the data for 2030,
+            // we don't have the data in Cesium to load.
+            preloadTransformationData(time, time.addDays(1));
+            var resultT = new Matrix3();
+            var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+            // Check that we get undefined, since we don't have ICRF data
+            expect(t).toEqual(undefined);
         });
 
         it('works without EOP data loaded', function() {
