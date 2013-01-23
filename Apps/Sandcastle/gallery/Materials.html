@@ -490,6 +490,12 @@ require([
         });        
     }
     
+    function applyRimLightingMaterial(primitive, scene) {
+        Sandcastle.declare(applyRimLightingMaterial);  // For highlighting in Sandcastle.
+        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'RimLighting');
+        primitive.material.uniforms.width = 0.8;
+    }    
+    
     /////////////////////////////////////////
     
     function createButtons(widget) {
@@ -739,7 +745,16 @@ require([
                 applyErosionMaterial(polygon, scene);
                 Sandcastle.highlight(applyErosionMaterial);
             }
-        }));        
+        }));
+
+        miscMaterialMenu.addChild(new MenuItem({
+            label: 'RimLighting',
+            onClick: function() {
+                togglePolygonVisibility(worldPolygon, polygon);
+                applyRimLightingMaterial(worldPolygon, scene);
+                Sandcastle.highlight(applyRimLightingMaterial);
+            }
+        }));
         
         new DropDownButton({
             label : 'Common materials',
