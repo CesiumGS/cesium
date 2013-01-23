@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './binarySearch',
+        './defaultValue',
         './loadJson',
         './EarthOrientationParametersSample',
         './JulianDate',
@@ -9,6 +10,7 @@ define([
     ],
     function(
         binarySearch,
+        defaultValue,
         loadJson,
         EarthOrientationParametersSample,
         JulianDate,
@@ -25,8 +27,13 @@ define([
      * @alias EarthOrientationParameters
      * @constructor
      *
-     * @param {String} [url] The URL from which to obtain EOP data.  If this parameter is not specified
-     *                 all EOP values are assumed to be 0.0.
+     * @param {String} [description.url] The URL from which to obtain EOP data.  If neither this
+     *                 parameter not description.data is specified, all EOP values are assumed
+     *                 to be 0.0.  If description.data is specified, this parameter is
+     *                 ignored.
+     * @param {Object} [description.data] The actual EOP data.  If neither this
+     *                 parameter not description.data is specified, all EOP values are assumed
+     *                 to be 0.0.
      *
      * @example
      * // An example EOP data file, EOP.json:
@@ -41,10 +48,12 @@ define([
      *
      * @example
      * // Loading the EOP data
-     * var eop = new EarthOrientationParameters('Data/EOP.json');
+     * var eop = new EarthOrientationParameters({ url : 'Data/EOP.json' });
      * Transforms.earthOrientationParameters = eop;
      */
-    var EarthOrientationParameters = function EarthOrientationParameters(url) {
+    var EarthOrientationParameters = function EarthOrientationParameters(description) {
+        description = defaultValue(description, {});
+
         this._dates = undefined;
         this._samples = undefined;
 
@@ -62,19 +71,22 @@ define([
         this._downloadPromise = undefined;
         this._dataError = undefined;
 
-        if (typeof url === 'undefined') {
+        if (typeof description.data !== 'undefined') {
+            // Use supplied EOP data.
+            onDataReady(this, description.data);
+        } else if (typeof description.url !== 'undefined') {
+            // Download EOP data.
+            var that = this;
+            this._downloadPromise = when(loadJson(description.url), function(eopData) {
+                onDataReady(that, eopData);
+            }, function() {
+                that._dataError = 'An error occurred while retrieving the EOP data from the URL ' + description.url + '.';
+            });
+        } else {
             // Use all zeros for EOP data.
             onDataReady(this, {
                 'columnNames' : ['dateIso8601','xPoleWanderRadians','yPoleWanderRadians','ut1MinusUtcSeconds','lengthOfDayCorrectionSeconds','xCelestialPoleOffsetRadians','yCelestialPoleOffsetRadians','taiMinusUtcSeconds'],
                 'samples' : []
-            });
-        } else {
-            // Download EOP data.
-            var that = this;
-            this._downloadPromise = when(loadJson(url), function(eopData) {
-                onDataReady(that, eopData);
-            }, function() {
-                that._dataError = 'An error occurred while retrieving the EOP data from the URL ' + url + '.';
             });
         }
     };

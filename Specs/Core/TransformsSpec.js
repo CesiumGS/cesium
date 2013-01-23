@@ -203,12 +203,12 @@ defineSuite([
     });
 
     describe('computeIcrfToFixedMatrix', function() {
-        function preloadTransformationData(start, stop, eopUrl) {
+        function preloadTransformationData(start, stop, eopDescription) {
             var ready = false;
             var failed = false;
 
             runs(function() {
-                Transforms.earthOrientationParameters = new EarthOrientationParameters(eopUrl);
+                Transforms.earthOrientationParameters = new EarthOrientationParameters(eopDescription);
                 var preloadInterval = new TimeInterval(start, stop);
                 when(Transforms.preloadIcrfFixed(preloadInterval), function() {
                     ready = true;
@@ -240,7 +240,7 @@ defineSuite([
                 var start = JulianDate.fromIso8601(componentsData[0].date);
                 var stop = JulianDate.fromIso8601(componentsData[componentsData.length-1].date);
 
-                preloadTransformationData(start, stop, 'Data/EarthOrientationParameters/EOP-2011-July.json');
+                preloadTransformationData(start, stop, { url : 'Data/EarthOrientationParameters/EOP-2011-July.json' });
             });
 
             runs(function() {
@@ -276,7 +276,7 @@ defineSuite([
             // 2011-07-03 00:00:00 UTC
             var time = new JulianDate(2455745, 43200);
 
-            preloadTransformationData(time, time, 'Data/EarthOrientationParameters/EOP-2011-July.json');
+            preloadTransformationData(time, time, { url : 'Data/EarthOrientationParameters/EOP-2011-July.json' });
 
             runs(function() {
                 var resultT = new Matrix3();
@@ -319,7 +319,7 @@ defineSuite([
 
             var time = new JulianDate(2455745, 86395);
 
-            preloadTransformationData(time, time, 'Data/EarthOrientationParameters/EOP-2011-July.json');
+            preloadTransformationData(time, time, { url : 'Data/EarthOrientationParameters/EOP-2011-July.json' });
 
             runs(function() {
                 var resultT = new Matrix3();
@@ -344,7 +344,7 @@ defineSuite([
         it('works over day boundary backwards', function() {
             var time = new JulianDate(2455745, 10);
 
-            preloadTransformationData(time, time, 'Data/EarthOrientationParameters/EOP-2011-July.json');
+            preloadTransformationData(time, time, { url : 'Data/EarthOrientationParameters/EOP-2011-July.json' });
 
             runs(function() {
                 var resultT = new Matrix3();
@@ -375,7 +375,7 @@ defineSuite([
             // 2011-07-03 00:00:00 UTC
             var time = new JulianDate(2455745, 43200);
 
-            preloadTransformationData(time, time, 'Data/EarthOrientationParameters/EOP-2011-July.json');
+            preloadTransformationData(time, time, { url : 'Data/EarthOrientationParameters/EOP-2011-July.json' });
 
             runs(function() {
                 var resultT = new Matrix3();
@@ -418,7 +418,7 @@ defineSuite([
             // 2011-07-03 00:00:00 UTC
             var time = new JulianDate(2455745, 43200);
 
-            preloadTransformationData(time, time, 'Data/EarthOrientationParameters/EOP-Invalid.json');
+            preloadTransformationData(time, time, { url : 'Data/EarthOrientationParameters/EOP-Invalid.json' });
 
             runs(function() {
                 expect(function() {
@@ -431,7 +431,7 @@ defineSuite([
             // 2011-07-03 00:00:00 UTC
             var time = new JulianDate(2455745, 43200);
 
-            preloadTransformationData(time, time, 'Data/EarthOrientationParameters/EOP-DoesNotExist.json');
+            preloadTransformationData(time, time, { url : 'Data/EarthOrientationParameters/EOP-DoesNotExist.json' });
 
             runs(function() {
                 expect(function() {
