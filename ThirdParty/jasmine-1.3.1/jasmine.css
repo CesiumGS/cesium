@@ -77,7 +77,7 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 #HTMLReporter a { text-decoration: none; }
 #HTMLReporter a:hover { text-decoration: underline; }
 #HTMLReporter p, #HTMLReporter h1, #HTMLReporter h2, #HTMLReporter h3, #HTMLReporter h4, #HTMLReporter h5, #HTMLReporter h6 { margin: 0; line-height: 14px; }
-#HTMLReporter .banner, #HTMLReporter .symbolSummary, #HTMLReporter .summary, #HTMLReporter .resultMessage, #HTMLReporter .specDetail .description, #HTMLReporter .alert .bar, #HTMLReporter .stackTrace { padding-left: 9px; padding-right: 9px; }
+#HTMLReporter .banner, #HTMLReporter .symbolSummary, #HTMLReporter .summary, #HTMLReporter .resultMessage, #HTMLReporter .specDetail .description, #HTMLReporter .alert .bar, #HTMLReporter .resultsMenu, #HTMLReporter .stackTrace { padding-left: 9px; padding-right: 9px; }
 #HTMLReporter #jasmine_content { position: fixed; right: 100%; }
 #HTMLReporter .version { color: #aaaaaa; }
 #HTMLReporter .banner { margin-top: 14px; }
@@ -104,12 +104,18 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 #HTMLReporter .failingAlert:first-child { background-color: #b03911; }
 #HTMLReporter .results { margin-top: 14px; }
 #HTMLReporter #details { display: none; }
+#HTMLReporter #skipped { display: none; }
 #HTMLReporter .resultsMenu, #HTMLReporter .resultsMenu a { background-color: #fff; color: #333333; }
 #HTMLReporter.showDetails .summaryMenuItem { font-weight: normal; text-decoration: inherit; }
 #HTMLReporter.showDetails .summaryMenuItem:hover { text-decoration: underline; }
 #HTMLReporter.showDetails .detailsMenuItem { font-weight: bold; text-decoration: underline; }
 #HTMLReporter.showDetails .summary { display: none; }
 #HTMLReporter.showDetails #details { display: block; }
+#HTMLReporter.showSkipped .summaryMenuItem { font-weight: normal; text-decoration: inherit; }
+#HTMLReporter.showSkipped .summaryMenuItem:hover { text-decoration: underline; }
+#HTMLReporter.showSkipped .skippedMenuItem { font-weight: bold; text-decoration: underline; }
+#HTMLReporter.showSkipped .summary { display: none; }
+#HTMLReporter.showSkipped #skipped { display: block; }
 #HTMLReporter .summaryMenuItem { font-weight: bold; text-decoration: underline; }
 #HTMLReporter .summary { margin-top: 14px; }
 #HTMLReporter .summary .suite .suite, #HTMLReporter .summary .specSummary { margin-left: 14px; }

@@ -51,6 +51,21 @@ jasmine.HtmlReporterHelpers.appendToSummary = function(child, childElement) {
   parentDiv.appendChild(childElement);
 };
 
+jasmine.HtmlReporterHelpers.appendToSkipped = function(child, childElement) {
+    var parentDiv = this.dom.skipped;
+    var parentSuite = (typeof child.parentSuite == 'undefined') ? 'suite' : 'parentSuite';
+    var parent = child[parentSuite];
+
+    if (parent) {
+      if (typeof this.views.suites[parent.id] == 'undefined') {
+        this.views.suites[parent.id] = new jasmine.HtmlReporter.SuiteView(parent, this.dom, this.views, 'skipped');
+      }
+      parentDiv = this.views.suites[parent.id].element;
+    }
+
+    parentDiv.appendChild(childElement);
+  };
+
 
 jasmine.HtmlReporterHelpers.addHelpers = function(ctor) {
   for(var fn in jasmine.HtmlReporterHelpers) {
@@ -368,7 +383,8 @@ jasmine.HtmlReporter = function(_doc) {
           self.createDom('input',  { type: 'button', value: 'run with coverage', id: 'runCoverageButton' }, 'run with coverage'))),
       dom.results = self.createDom('div', {className: 'results'},
         dom.summary = self.createDom('div', { className: 'summary' }),
-        dom.details = self.createDom('div', { id: 'details' }))
+        dom.details = self.createDom('div', { id: 'details' }),
+        dom.skipped = self.createDom('div', { id: 'skipped' }))
     );
   }
 
@@ -440,16 +456,26 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
 
   this.createResultsMenu = function() {
     this.resultsMenu = this.createDom('span', {className: 'resultsMenu bar'},
+      'View: ',
       this.summaryMenuItem = this.createDom('a', {className: 'summaryMenuItem', href: "#"}, '0 specs'),
       ' | ',
-      this.detailsMenuItem = this.createDom('a', {className: 'detailsMenuItem', href: "#"}, '0 failing'));
+      this.detailsMenuItem = this.createDom('a', {className: 'detailsMenuItem', href: "#"}, '0 failing'),
+      ' | ',
+      this.skippedMenuItem = this.createDom('a', {className: 'skippedMenuItem', href: "#"}, '0 skipped'));
 
     this.summaryMenuItem.onclick = function() {
-      dom.reporter.className = dom.reporter.className.replace(/ showDetails/g, '');
+      showSpecs();
+      return false;  // Don't append a # to the URL in the address bar.
     };
 
     this.detailsMenuItem.onclick = function() {
       showDetails();
+      return false;  // Don't append a # to the URL in the address bar.
+    };
+
+    this.skippedMenuItem.onclick = function() {
+      showSkipped();
+      return false;  // Don't append a # to the URL in the address bar.
     };
   };
 
@@ -547,16 +573,24 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
     }
 
     var specView = this.views.specs[spec.id];
-	var name = encodeURIComponent(spec.getFullName());
+    var name = encodeURIComponent(spec.getFullName());
 
-	specView.summary.appendChild(this.createDom('span', {className: 'specTime'},
-		this.createDom('a', {className: 'run_spec', href: '?spec=' + name}, 'run'),
-		this.createDom('a', {className: 'run_spec', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
+    var runTime = '', status = specView.status();
+    if (isDefined(spec.runTime)) {
+      runTime = ' (' + (spec.runTime / 1000) + 's)';
+    }
+    if (status === 'skipped') {
+      runTime += ' (skipped)';
+    }
+
+    specView.summary.appendChild(this.createDom('span', {className: 'specTime'},
+        this.createDom('a', {className: 'run_spec', href: '?spec=' + name}, 'run'),
+        this.createDom('a', {className: 'run_spec', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
             window.encodeURIComponent('?baseUrl=../Instrumented&spec=' + name), target: '_top' }, "coverage"),
-		this.createDom('a', {className: 'run_spec', href: '?spec=' + name + '&debug=' + name}, 'debug'),
-	' (' + (spec.runTime / 1000) + 's)'));
+        this.createDom('a', {className: 'run_spec', href: '?spec=' + name + '&debug=' + name}, 'debug'),
+        runTime));
 
-    switch (specView.status()) {
+    switch (status) {
       case 'passed':
         this.passedCount++;
         break;
@@ -586,12 +620,17 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
       return;
     }
 
+    var runTime = '';
+    if (isDefined(suite.runTime)) {
+      runTime = ' (' + (suite.runTime / 1000) + 's)';
+    }
+
 	var name = encodeURIComponent(suite.getFullName());
 	suiteView.element.insertBefore(this.createDom('span', {className: 'suiteTime'},
       this.createDom('a', {className: 'run_spec', href: '?spec=' + name, target: '_top'}, 'run'),
 	  this.createDom('a', {className: 'run_spec', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
                 window.encodeURIComponent('?baseUrl=../Instrumented&spec=' + name), target: '_top' }, "coverage"),
-	' (' + (suite.runTime / 1000) + 's)'), suiteView.element.getElementsByTagName('a')[2].nextSibling);
+	runTime), suiteView.element.getElementsByTagName('a')[2].nextSibling);
 
 
     suiteView.refresh();
@@ -601,6 +640,7 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
 
     if (isUndefined(this.resultsMenu)) {
       this.createResultsMenu();
+      dom.reporter.insertBefore(this.resultsMenu, dom.results);
     }
 
 	if (isUndefined(this.categoryMenu)) {
@@ -643,12 +683,12 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
 
     if (this.failedCount === 1 && isDefined(dom.alert)) {
       dom.alert.appendChild(this.failedAlert);
-      dom.alert.appendChild(this.resultsMenu);
     }
 
     // summary info
-    this.summaryMenuItem.innerHTML = "" + specPluralizedFor(this.runningSpecCount) + " (view summary)";
-    this.detailsMenuItem.innerHTML = "" + this.failedCount + " failing (view detail)";
+    this.summaryMenuItem.innerHTML = "" + specPluralizedFor(this.runningSpecCount);
+    this.detailsMenuItem.innerHTML = "" + this.failedCount + ' failing';
+    this.skippedMenuItem.innerHTML = "" + this.skippedCount + ' skipped';
   };
 
   this.complete = function() {
@@ -656,7 +696,9 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
 
     this.skippedAlert.innerHTML = "Ran " + this.runningSpecCount + " of " + specPluralizedFor(this.totalSpecCount) + " - run all";
 
-    if (this.failedCount === 0) {
+    if (this.failedCount === 0 && this.passedCount === 0) {
+      showSkipped();
+    } else if (this.failedCount === 0) {
       dom.alert.appendChild(this.createDom('span', {className: 'passingAlert bar'}, "Passing " + specPluralizedFor(this.passedCount)));
     } else {
       showDetails();
@@ -667,11 +709,23 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
 
   return this;
 
-  function showDetails() {
-    if (dom.reporter.className.search(/showDetails/) === -1) {
-      dom.reporter.className += " showDetails";
-    }
+  function showSpecs() {
+    dom.reporter.className = dom.reporter.className.replace(/ showDetails/g, '').replace(/ showSkipped/g, '');
   }
+
+  function showDetails() {
+      if (dom.reporter.className.search(/showDetails/) === -1) {
+        dom.reporter.className = dom.reporter.className.replace(/ showSkipped/g, '');
+        dom.reporter.className += " showDetails";
+      }
+    }
+
+  function showSkipped() {
+      if (dom.reporter.className.search(/showSkipped/) === -1) {
+        dom.reporter.className = dom.reporter.className.replace(/ showDetails/g, '');
+        dom.reporter.className += " showSkipped";
+      }
+    }
 
   function isUndefined(obj) {
     return typeof obj === 'undefined';
@@ -728,6 +782,7 @@ jasmine.HtmlReporter.SpecView.prototype.refresh = function() {
 
   switch (this.status()) {
     case 'skipped':
+      this.appendToSkipped(this.spec, this.summary);
       break;
 
     case 'passed':
@@ -774,7 +829,7 @@ jasmine.HtmlReporter.SpecView.prototype.appendFailureDetail = function() {
 
 jasmine.HtmlReporterHelpers.addHelpers(jasmine.HtmlReporter.SpecView);
 
-jasmine.HtmlReporter.SuiteView = function(suite, dom, views) {
+jasmine.HtmlReporter.SuiteView = function(suite, dom, views, skipped) {
   this.suite = suite;
   this.dom = dom;
   this.views = views;
@@ -805,7 +860,11 @@ jasmine.HtmlReporter.SuiteView = function(suite, dom, views) {
 		};
 	}(this.element));
 
-  this.appendToSummary(this.suite, this.element);
+  if (typeof skipped !== 'undefined') {
+    this.appendToSkipped(this.suite, this.element);
+  } else {
+    this.appendToSummary(this.suite, this.element);
+  }
 };
 
 jasmine.HtmlReporter.SuiteView.prototype.status = function() {
