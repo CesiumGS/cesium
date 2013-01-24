@@ -21,34 +21,6 @@ define([
          PolylineCollection) {
     "use strict";
 
-    function samplePositions(currentTime, positionProperty, availability, leadTime, trailTime, referenceFrame, result) {
-        var hasAvailability = typeof availability !== 'undefined';
-        var hasLeadTime = typeof leadTime !== 'undefined';
-        var hasTrailTime = typeof trailTime !== 'undefined';
-
-        if (!hasAvailability && (!hasLeadTime || !hasTrailTime)) {
-            return [];
-        }
-
-        var sampleStart;
-        var sampleStop;
-        if (hasTrailTime) {
-            sampleStart = currentTime.addSeconds(-trailTime);
-        }
-        if (hasAvailability && (!hasTrailTime || availability.start.greaterThan(sampleStart))) {
-            sampleStart = availability.start;
-        }
-
-        if (hasLeadTime) {
-            sampleStop = currentTime.addSeconds(leadTime);
-        }
-        if (hasAvailability && (!hasLeadTime || availability.stop.lessThan(sampleStop))) {
-            sampleStop = availability.stop;
-        }
-
-        return positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, currentTime, referenceFrame, result);
-    }
-
     var PolylineUpdater = function(scene, referenceFrame) {
         this._unusedIndexes = [];
         this._polylineCollection = new PolylineCollection();
@@ -85,9 +57,58 @@ define([
         }
 
         var polyline;
+        var property;
+        var sampleStart;
+        var sampleStop;
         var showProperty = dynamicPath.show;
         var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
         var show = (typeof showProperty === 'undefined' || showProperty.getValue(time));
+
+        //While we want to show the path, there may not actually be anything to show
+        //depending on lead/trail settings.  Compute the interval of the path to
+        //show and check against actual availability.
+        if (show) {
+            property = dynamicPath.leadTime;
+            var leadTime;
+            if (typeof property !== 'undefined') {
+                leadTime = property.getValue(time);
+            }
+
+            property = dynamicPath.trailTime;
+            var trailTime;
+            if (typeof property !== 'undefined') {
+                trailTime = property.getValue(time);
+            }
+
+            var availability = dynamicObject.availability;
+            var hasAvailability = typeof availability !== 'undefined';
+            var hasLeadTime = typeof leadTime !== 'undefined';
+            var hasTrailTime = typeof trailTime !== 'undefined';
+
+            //Objects need to have either defined availability or both a lead and trail time in order to
+            //draw a path (since we can't draw "infinite" paths.
+            show = hasAvailability || (hasLeadTime && hasTrailTime);
+
+            //The final step is to compute the actual start/stop times of the path to show.
+            //If current time is outside of the availability interval, there's a chance that
+            //we won't have to draw anything anyway.
+            if (show) {
+                if (hasTrailTime) {
+                    sampleStart = time.addSeconds(-trailTime);
+                }
+                if (hasAvailability && (!hasTrailTime || availability.start.greaterThan(sampleStart))) {
+                    sampleStart = availability.start;
+                }
+
+                if (hasLeadTime) {
+                    sampleStop = time.addSeconds(leadTime);
+                }
+                if (hasAvailability && (!hasLeadTime || availability.stop.lessThan(sampleStop))) {
+                    sampleStop = availability.stop;
+                }
+                show = sampleStart.lessThan(sampleStop);
+            }
+        }
 
         if (!show) {
             //don't bother creating or updating anything else
@@ -123,20 +144,7 @@ define([
         }
 
         polyline.setShow(true);
-
-        var property = dynamicPath.leadTime;
-        var leadTime;
-        if (typeof property !== 'undefined') {
-            leadTime = property.getValue(time);
-        }
-
-        property = dynamicPath.trailTime;
-        var trailTime;
-        if (typeof property !== 'undefined') {
-            trailTime = property.getValue(time);
-        }
-
-        polyline.setPositions(samplePositions(time, positionProperty, dynamicObject.availability, leadTime, trailTime, this._referenceFrame, polyline.getPositions()));
+        polyline.setPositions(positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, time, this._referenceFrame, polyline.getPositions()));
 
         property = dynamicPath.color;
         if (typeof property !== 'undefined') {

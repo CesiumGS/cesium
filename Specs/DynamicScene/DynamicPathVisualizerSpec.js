@@ -164,6 +164,8 @@ defineSuite([
         testObject.position = new MockProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112)]);
         var path = testObject.path = new DynamicPath();
         path.show = new MockProperty(true);
+        path.leadTime = new MockProperty(5);
+        path.trailTime = new MockProperty(5);
         visualizer.update(time);
 
         var polylineCollection = scene.getPrimitives().get(0);
@@ -190,6 +192,8 @@ defineSuite([
 
         testObject.position = new MockProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112)]);
         path.show = new MockProperty(true);
+        path.leadTime = new MockProperty(5);
+        path.trailTime = new MockProperty(5);
 
         visualizer.update(time);
         var polylineCollection = scene.getPrimitives().get(0);
@@ -204,12 +208,16 @@ defineSuite([
         testObject.position = new MockProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112)]);
         testObject.path = new DynamicPath();
         testObject.path.show = new MockProperty(true);
+        testObject.path.leadTime = new MockProperty(5);
+        testObject.path.trailTime = new MockProperty(5);
 
         var dynamicObjectCollection2 = new DynamicObjectCollection();
         var testObject2 = dynamicObjectCollection2.getOrCreateObject('test2');
         testObject2.position = new MockProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)]);
         testObject2.path = new DynamicPath();
         testObject2.path.show = new MockProperty(true);
+        testObject2.path.leadTime = new MockProperty(5);
+        testObject2.path.trailTime = new MockProperty(5);
 
         visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
 
