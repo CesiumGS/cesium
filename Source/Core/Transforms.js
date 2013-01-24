@@ -42,31 +42,9 @@ define([
      */
     var Transforms = {};
 
-    var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;
-    var gmstConstant1 = 8640184.812866;
-    var gmstConstant2 = 0.093104;
-    var gmstConstant3 = -6.2E-6;
-    var rateCoef = 1.1772758384668e-19;
-    var wgs84WRPrecessing = 7.2921158553E-5;
-    var twoPiOverSecondsInDay = CesiumMath.TWO_PI / 86400.0;
-
     var eastNorthUpToFixedFrameNormal = new Cartesian3();
     var eastNorthUpToFixedFrameTangent = new Cartesian3();
     var eastNorthUpToFixedFrameBitangent = new Cartesian3();
-
-    var northEastDownToFixedFrameNormal = new Cartesian3();
-    var northEastDownToFixedFrameTangent = new Cartesian3();
-    var northEastDownToFixedFrameBitangent = new Cartesian3();
-
-    var pointToWindowCoordinatesTemp = new Cartesian4();
-
-    var ttMinusTai = 32.184;
-    var j2000ttDays = 2451545.0;
-
-    var xysScratch = new Iau2006XysSample(0.0, 0.0, 0.0);
-    var eopScratch = new EarthOrientationParametersSample(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    var rotation1Scratch = new Matrix3();
-    var rotation2Scratch = new Matrix3();
 
     /**
      * Computes a 4x4 transformation matrix from a reference frame with an east-north-up axes
@@ -168,6 +146,10 @@ define([
         return result;
     };
 
+    var northEastDownToFixedFrameNormal = new Cartesian3();
+    var northEastDownToFixedFrameTangent = new Cartesian3();
+    var northEastDownToFixedFrameBitangent = new Cartesian3();
+
     /**
      * Computes a 4x4 transformation matrix from a reference frame with an north-east-down axes
      * centered at the provided origin to the provided ellipsoid's fixed reference frame.
@@ -268,6 +250,14 @@ define([
         return result;
     };
 
+    var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;
+    var gmstConstant1 = 8640184.812866;
+    var gmstConstant2 = 0.093104;
+    var gmstConstant3 = -6.2E-6;
+    var rateCoef = 1.1772758384668e-19;
+    var wgs84WRPrecessing = 7.2921158553E-5;
+    var twoPiOverSecondsInDay = CesiumMath.TWO_PI / 86400.0;
+
     /**
      * Computes a rotation matrix to transform a point or vector from True Equator Mean Equinox (TEME) axes to the
      * pseudo-fixed axes at a given time.  This method treats the UT1 time standard as equivalent to UTC.
@@ -363,6 +353,9 @@ define([
      */
     Transforms.earthOrientationParameters = new EarthOrientationParameters();
 
+    var ttMinusTai = 32.184;
+    var j2000ttDays = 2451545.0;
+
     /**
      * Preloads the data necessary to transform between the ICRF and Fixed axes, in either
      * direction, over a given interval.  This function returns a promise that, when resolved,
@@ -442,6 +435,11 @@ define([
 
         return fixedToIcrfMtx.transpose(result);
     };
+
+    var xysScratch = new Iau2006XysSample(0.0, 0.0, 0.0);
+    var eopScratch = new EarthOrientationParametersSample(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    var rotation1Scratch = new Matrix3();
+    var rotation2Scratch = new Matrix3();
 
     /**
      * Computes a rotation matrix to transform a point or vector from the Earth-Fixed frame axes (ITRF)
@@ -568,6 +566,8 @@ define([
 
         return pfToIcrf.multiply(fToPfMtx, result);
     };
+
+    var pointToWindowCoordinatesTemp = new Cartesian4();
 
     /**
      * Transform a point from model coordinates to window coordinates.
