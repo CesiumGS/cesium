@@ -6,6 +6,7 @@ defineSuite([
          'Core/Cartesian3',
          'Core/Cartesian4',
          'Core/Ellipsoid',
+         'Core/Iau2006XysData',
          'Core/JulianDate',
          'Core/Matrix3',
          'Core/Matrix4',
@@ -23,6 +24,7 @@ defineSuite([
          Cartesian3,
          Cartesian4,
          Ellipsoid,
+         Iau2006XysData,
          JulianDate,
          Matrix3,
          Matrix4,
@@ -224,6 +226,16 @@ defineSuite([
                 return ready;
             });
         }
+
+        it('throws if the date parameter is not specified', function() {
+            expect(function() {
+                Transforms.computeIcrfToFixedMatrix(undefined);
+            }).toThrow();
+
+            expect(function() {
+                Transforms.computeFixedToIcrfMatrix(undefined);
+            }).toThrow();
+        });
 
         it('works with data from STK Components', function() {
             // This data set represents a set of data encompassing the corresponding EOP data below.
@@ -471,6 +483,27 @@ defineSuite([
                 expect(function() {
                     return Transforms.computeIcrfToFixedMatrix(time);
                 }).toThrow();
+            });
+        });
+
+        it('returns undefined before XYS data is loaded.', function() {
+            Transforms.earthOrientationParameters = new EarthOrientationParameters();
+            Transforms.iau2006XysData = new Iau2006XysData();
+
+            var time = new JulianDate(2455745, 43200);
+            expect(Transforms.computeIcrfToFixedMatrix(time)).toBeUndefined();
+        });
+
+        it('returns undefined before EOP data is loaded.', function() {
+            var time = new JulianDate(2455745, 43200);
+            preloadTransformationData(time, time);
+
+            runs(function() {
+                expect(Transforms.computeIcrfToFixedMatrix(time)).not.toBeUndefined();
+                Transforms.earthOrientationParameters = new EarthOrientationParameters({
+                    url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                });
+                expect(Transforms.computeIcrfToFixedMatrix(time)).toBeUndefined();
             });
         });
     });
