@@ -11,6 +11,7 @@ Beta Releases
 * Fixed rendering artifacts in `EllipsoidPrimitive`.
 * Added `JulianDate.getDaysDifference` method.
 * Added `Transforms.computeIcrfToFixedMatrix` and `computeFixedToIcrfMatrix`.
+* Added `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Iau2006XysData`, and `Iau2006XysDataSample` classes to `Core`.
 * CZML now supports the ability to specify positions in the International Celestial Reference Frame (ICRF), and inertial reference frame.
 
 ### b12a - 2013-01-18
