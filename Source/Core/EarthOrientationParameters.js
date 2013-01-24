@@ -41,8 +41,8 @@ define([
      *                 parameter not description.data is specified, all EOP values are assumed
      *                 to be 0.0.
      * @param {Boolean} [description.addNewLeapSeconds=true] True if leap seconds that
-     *                  are specified in the EOP data but not in {@see LeapSecond#getLeapSeconds}
-     *                  should be added to {@see LeapSecond#getLeapSeconds}.  False if
+     *                  are specified in the EOP data but not in {@link LeapSecond#getLeapSeconds}
+     *                  should be added to {@link LeapSecond#getLeapSeconds}.  False if
      *                  new leap seconds should be handled correctly in the context
      *                  of the EOP data but otherwise ignored.
      *
@@ -130,6 +130,8 @@ define([
      * @returns {EarthOrientationParametersSample} The EOP evaluated at the given date, or
      *          undefined if the data necessary to evaluate EOP at the date has not yet been
      *          downloaded.
+     *
+     * @exception {RuntimeError} The loaded EOP data has an error and cannot be used.
      *
      * @see EarthOrientationParameters#getPromiseToLoad
      */
