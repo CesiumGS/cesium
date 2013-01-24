@@ -32,9 +32,9 @@ define([
             description = {};
         }
 
-        this._fpsColor = typeof description.fpsColor !== 'undefined' ? description.fpsColor.toCSSColor() : '#e52';
-        this._frameTimeColor = typeof description.frameTimeColor !== 'undefined' ? description.frameTimeColor.toCSSColor() : '#de3';
-        this._backgroundColor = typeof description.backgroundColor !== 'undefined' ? description.backgroundColor.toCSSColor() : 'rgba(0, 0, 30, 0.9)';
+        this._fpsColor = typeof description.fpsColor !== 'undefined' ? description.fpsColor.toCssColorString() : '#e52';
+        this._frameTimeColor = typeof description.frameTimeColor !== 'undefined' ? description.frameTimeColor.toCssColorString() : '#de3';
+        this._backgroundColor = typeof description.backgroundColor !== 'undefined' ? description.backgroundColor.toCssColorString() : 'rgba(0, 0, 30, 0.9)';
         this._font = typeof description.font !== 'undefined' ? description.font : 'bold 10px Helvetica,Arial,sans-serif';
         this._rectangle = typeof description.rectangle !== 'undefined' ? description.rectangle : new BoundingRectangle(0, 0, 80, 40);
 

@@ -74,7 +74,7 @@ defineSuite([
         expect(BingMapsImageryProvider).toConformToInterface(ImageryProvider);
     });
 
-    it('constructor throws when server is not specified', function() {
+    it('constructor throws when url is not specified', function() {
         function constructWithoutServer() {
             return new BingMapsImageryProvider({
                 mapStyle : BingMapsStyle.AERIAL
@@ -84,9 +84,9 @@ defineSuite([
     });
 
     it('can provide a root tile', function() {
-        var server = 'fake.fake.net';
+        var url = 'http://fake.fake.net';
         var mapStyle = BingMapsStyle.COLLINS_BART;
-        var metadataUrl = 'http://' + server + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
+        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url.indexOf(metadataUrl) === 0).toEqual(true);
@@ -118,11 +118,11 @@ defineSuite([
         };
 
         var provider = new BingMapsImageryProvider({
-            server : server,
+            url : url,
             mapStyle : mapStyle
         });
 
-        expect(provider.getServer()).toEqual(server);
+        expect(provider.getUrl()).toEqual(url);
         expect(provider.getKey()).not.toBeUndefined();
         expect(provider.getMapStyle()).toEqual(mapStyle);
 
@@ -171,9 +171,9 @@ defineSuite([
     });
 
     it('routes requests through a proxy if one is specified', function() {
-        var server = 'foo.bar.net';
+        var url = 'http://foo.bar.net';
         var mapStyle = BingMapsStyle.COLLINS_BART;
-        var metadataUrl = 'http://' + server + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
+        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
         var proxy = new DefaultProxy('/proxy/');
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
@@ -206,12 +206,12 @@ defineSuite([
         };
 
         var provider = new BingMapsImageryProvider({
-            server : 'foo.bar.net',
+            url : 'http://foo.bar.net',
             mapStyle : mapStyle,
             proxy : proxy
         });
 
-        expect(provider.getServer()).toEqual(server);
+        expect(provider.getUrl()).toEqual(url);
 
         waitsFor(function() {
             return provider.isReady();
@@ -242,15 +242,15 @@ defineSuite([
         });
     });
 
-    it('raises error on invalid server', function() {
-        var server = 'invalid.localhost';
+    it('raises error on invalid url', function() {
+        var url = 'invalid.localhost';
         var provider = new BingMapsImageryProvider({
-            server : server
+            url : url
         });
 
         var errorEventRaised = false;
         provider.getErrorEvent().addEventListener(function(error) {
-            expect(error.message.indexOf(server) >= 0).toEqual(true);
+            expect(error.message.indexOf(url) >= 0).toEqual(true);
             errorEventRaised = true;
         });
 
@@ -294,7 +294,7 @@ defineSuite([
         };
 
         var provider = new BingMapsImageryProvider({
-            server : 'invalid.localhost',
+            url : 'invalid.localhost',
             mapStyle : mapStyle
         });
 

@@ -89,6 +89,27 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
+    it('fromUniformScale works without a result parameter', function() {
+        var expected = new Matrix3(
+                2.0, 0.0, 0.0,
+                0.0, 2.0, 0.0,
+                0.0, 0.0, 2.0);
+        var returnedResult = Matrix3.fromUniformScale(2.0);
+        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromUniformScale works with a result parameter', function() {
+        var expected = new Matrix3(
+                2.0, 0.0, 0.0,
+                0.0, 2.0, 0.0,
+                0.0, 0.0, 2.0);
+        var result = new Matrix3();
+        var returnedResult = Matrix3.fromUniformScale(2.0, result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toEqual(expected);
+    });
+
     it('fromRowMajorArray works without a result parameter', function() {
         var expected = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var matrix = Matrix3.fromRowMajorArray([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
@@ -115,6 +136,72 @@ defineSuite([
         var matrix = Matrix3.fromColumnMajorArray([1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0], result);
         expect(matrix).toBe(result);
         expect(matrix).toEqual(expected);
+    });
+
+    it('fromRotationX works without a result parameter', function() {
+        var matrix = Matrix3.fromRotationX(0.0);
+        expect(matrix).toEqual(Matrix3.IDENTITY);
+    });
+
+    it('fromRotationX works with a result parameter', function() {
+        var expected = new Matrix3(
+                1.0, 0.0,  0.0,
+                0.0, 0.0, -1.0,
+                0.0, 1.0,  0.0);
+        var result = new Matrix3();
+        var matrix = Matrix3.fromRotationX(CesiumMath.toRadians(90.0), result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('fromRotationX throws without angle', function() {
+        expect(function() {
+            Matrix3.fromRotationX();
+        }).toThrow();
+    });
+
+    it('fromRotationY works without a result parameter', function() {
+        var matrix = Matrix3.fromRotationY(0.0);
+        expect(matrix).toEqual(Matrix3.IDENTITY);
+    });
+
+    it('fromRotationY works with a result parameter', function() {
+        var expected = new Matrix3(
+                 0.0, 0.0, 1.0,
+                 0.0, 1.0, 0.0,
+                -1.0, 0.0, 0.0);
+        var result = new Matrix3();
+        var matrix = Matrix3.fromRotationY(CesiumMath.toRadians(90.0), result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('fromRotationY throws without angle', function() {
+        expect(function() {
+            Matrix3.fromRotationY();
+        }).toThrow();
+    });
+
+    it('fromRotationZ works without a result parameter', function() {
+        var matrix = Matrix3.fromRotationZ(0.0);
+        expect(matrix).toEqual(Matrix3.IDENTITY);
+    });
+
+    it('fromRotationZ works with a result parameter', function() {
+        var expected = new Matrix3(
+                0.0, -1.0, 0.0,
+                1.0,  0.0, 0.0,
+                0.0,  0.0, 1.0);
+        var result = new Matrix3();
+        var matrix = Matrix3.fromRotationZ(CesiumMath.toRadians(90.0), result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('fromRotationZ throws without angle', function() {
+        expect(function() {
+            Matrix3.fromRotationZ();
+        }).toThrow();
     });
 
     it('clone works without a result parameter', function() {
@@ -697,6 +784,12 @@ defineSuite([
     it('static fromScale throws without scale parameter', function() {
         expect(function() {
             Matrix3.fromScale(undefined);
+        }).toThrow();
+    });
+
+    it('static fromUniformScale throws without scale parameter', function() {
+        expect(function() {
+            Matrix3.fromUniformScale(undefined);
         }).toThrow();
     });
 
