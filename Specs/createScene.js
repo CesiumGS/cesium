@@ -8,9 +8,7 @@ define([
     "use strict";
 
     function createScene() {
-        var canvas = createCanvas();
-        var scene = new Scene(canvas);
-        return scene;
+        return new Scene(createCanvas());
     }
 
     return createScene;

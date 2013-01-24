@@ -76,13 +76,13 @@ require([
 
     function addAlphaAnimation(primitive, scene) {
         Sandcastle.declare(addAlphaAnimation);     // For highlighting in Sandcastle.
-        scene.getAnimations().addAlpha(primitive.material, 0.0, 0.7);
+        scene.getAnimations().addAlpha(primitive.material, 0.0, 0.5);
     }
 
     function addErosionAnimation(primitive, scene) {
         Sandcastle.declare(addErosionAnimation);   // For highlighting in Sandcastle.
-        scene.getAnimations().addProperty(primitive, 'erosion', 0.0, 1.0, {
-            duration: 1000
+        scene.getAnimations().addProperty(primitive.material.uniforms, 'time', 0.0, 1.0, {
+            duration : 1000
         });
     }
 
@@ -99,7 +99,6 @@ require([
     }
 
     function resetPolygonPropeties(polygon) {
-        polygon.erosion = 1.0;
         polygon.height = 0.0;
         polygon.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
     }
@@ -115,7 +114,7 @@ require([
                 Cesium.Math.toRadians(20.0),
                 Cesium.Math.toRadians(-80.0),
                 Cesium.Math.toRadians(50.0)));
-        polygon.material = new Cesium.Material.fromType(scene.getContext(), 'Color');
+        polygon.material = Cesium.Material.fromType(scene.getContext(), 'Erosion');
         primitives.add(polygon);
 
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-45.0, 45.0)));

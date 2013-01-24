@@ -49,7 +49,7 @@ define([
      * @see LabelCollection
      * @see LabelCollection#add
      */
-    var Label = function(description, labelCollection, index) {
+    var Label = function(description, labelCollection) {
         description = defaultValue(description, EMPTY_OBJECT);
 
         this._text = defaultValue(description.text, '');
@@ -66,7 +66,6 @@ define([
         this._scale = defaultValue(description.scale, 1.0);
 
         this._labelCollection = labelCollection;
-        this._index = index;
         this._glyphs = [];
 
         this._rebindAllGlyphs = true;

@@ -956,6 +956,20 @@ function(JulianDate,
         expect(start.getMinutesDifference(end)).toEqualEpsilon(TimeConstants.MINUTES_PER_DAY + 1.0, CesiumMath.EPSILON5);
     });
 
+    it('getDaysDifference works', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00'));
+        var end = JulianDate.fromDate(new Date('July 5, 2011 14:24:00'));
+        var difference = start.getDaysDifference(end);
+        expect(difference).toEqual(1.1);
+    });
+
+    it('getDaysDifference works with negative result', function() {
+        var end = JulianDate.fromDate(new Date('July 4, 2011 12:00:00'));
+        var start = JulianDate.fromDate(new Date('July 5, 2011 14:24:00'));
+        var difference = start.getDaysDifference(end);
+        expect(difference).toEqual(-1.1);
+    });
+
     it('addSeconds works with whole seconds', function() {
         var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:30 UTC'));
         var end = start.addSeconds(95);
