@@ -6,6 +6,8 @@ define([
         './EarthOrientationParametersSample',
         './JulianDate',
         './RuntimeError',
+        './TimeConstants',
+        './TimeStandard',
         '../ThirdParty/when'
     ],
     function(
@@ -15,6 +17,8 @@ define([
         EarthOrientationParametersSample,
         JulianDate,
         RuntimeError,
+        TimeConstants,
+        TimeStandard,
         when) {
     "use strict";
 
@@ -85,7 +89,7 @@ define([
         } else {
             // Use all zeros for EOP data.
             onDataReady(this, {
-                'columnNames' : ['dateIso8601', 'xPoleWanderRadians', 'yPoleWanderRadians', 'ut1MinusUtcSeconds', 'lengthOfDayCorrectionSeconds', 'xCelestialPoleOffsetRadians', 'yCelestialPoleOffsetRadians', 'taiMinusUtcSeconds'],
+                'columnNames' : ['dateIso8601', 'modifiedJulianDateUtc', 'xPoleWanderRadians', 'yPoleWanderRadians', 'ut1MinusUtcSeconds', 'lengthOfDayCorrectionSeconds', 'xCelestialPoleOffsetRadians', 'yCelestialPoleOffsetRadians', 'taiMinusUtcSeconds'],
                 'samples' : []
             });
         }
@@ -205,7 +209,7 @@ define([
             return;
         }
 
-        var dateColumn = eopData.columnNames.indexOf('dateIso8601');
+        var dateColumn = eopData.columnNames.indexOf('modifiedJulianDateUtc');
         var xPoleWanderRadiansColumn = eopData.columnNames.indexOf('xPoleWanderRadians');
         var yPoleWanderRadiansColumn = eopData.columnNames.indexOf('yPoleWanderRadians');
         var ut1MinusUtcSecondsColumn = eopData.columnNames.indexOf('ut1MinusUtcSeconds');
@@ -214,7 +218,7 @@ define([
         var taiMinusUtcSecondsColumn = eopData.columnNames.indexOf('taiMinusUtcSeconds');
 
         if (dateColumn < 0 || xPoleWanderRadiansColumn < 0 || yPoleWanderRadiansColumn < 0 || ut1MinusUtcSecondsColumn < 0 || xCelestialPoleOffsetRadiansColumn < 0 || yCelestialPoleOffsetRadiansColumn < 0 || taiMinusUtcSecondsColumn < 0) {
-            eop._dataError = 'Error in loaded EOP data: The columnNames property must include dateIso8601, xPoleWanderRadians, yPoleWanderRadians, ut1MinusUtcSeconds, xCelestialPoleOffsetRadians, yCelestialPoleOffsetRadians, and taiMinusUtcSeconds columns';
+            eop._dataError = 'Error in loaded EOP data: The columnNames property must include modifiedJulianDateUtc, xPoleWanderRadians, yPoleWanderRadians, ut1MinusUtcSeconds, xCelestialPoleOffsetRadians, yCelestialPoleOffsetRadians, and taiMinusUtcSeconds columns';
             return;
         }
 
@@ -237,8 +241,11 @@ define([
         var dates = eop._dates;
 
         // Convert the ISO8601 dates to JulianDates.
-        for ( var i = 0, len = samples.length; i < len; i += eop._columnCount) {
-            dates.push(JulianDate.fromIso8601(samples[i + dateColumn]));
+        for (var i = 0, len = samples.length; i < len; i += eop._columnCount) {
+            var mjd = samples[i + dateColumn];
+            var taiMinusUtc = samples[i + taiMinusUtcSecondsColumn];
+            var day = mjd + TimeConstants.MODIFIED_JULIAN_DATE_DIFFERENCE;
+            dates.push(new JulianDate(day, taiMinusUtc, TimeStandard.TAI));
 
             // TODO: populate leap seconds from EOP
             /*var taiMinusUtc = samples[i + taiMinusUtcSecondsColumn];
