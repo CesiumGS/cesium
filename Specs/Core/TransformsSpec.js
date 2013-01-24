@@ -241,14 +241,16 @@ defineSuite([
 
             runs(function() {
                 var start = JulianDate.fromIso8601(componentsData[0].date);
-                var stop = JulianDate.fromIso8601(componentsData[componentsData.length-1].date);
+                var stop = JulianDate.fromIso8601(componentsData[componentsData.length - 1].date);
 
-                preloadTransformationData(start, stop, { url : 'Data/EarthOrientationParameters/EOP-2011-July.json' });
+                preloadTransformationData(start, stop, {
+                    url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                });
             });
 
             runs(function() {
 
-                for (var i=0; i<componentsData.length; ++i){
+                for ( var i = 0; i < componentsData.length; ++i) {
 
                     var time = JulianDate.fromIso8601(componentsData[i].date);
                     var resultT = new Matrix3();
@@ -266,7 +268,7 @@ defineSuite([
                     var expectedMtx = Matrix3.fromQuaternion(componentsData[i].icrfToFixedQuaternion);
                     var testInverse = t.transpose().multiply(expectedMtx);
                     var testDiff = new Matrix3();
-                    for (var k=0; k<9; k++){
+                    for ( var k = 0; k < 9; k++) {
                         testDiff[k] = t[k] - expectedMtx[k];
                     }
                     expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
@@ -279,7 +281,9 @@ defineSuite([
             // 2011-07-03 00:00:00 UTC
             var time = new JulianDate(2455745, 43200);
 
-            preloadTransformationData(time, time, { url : 'Data/EarthOrientationParameters/EOP-2011-July.json' });
+            preloadTransformationData(time, time, {
+                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+            });
 
             runs(function() {
                 var resultT = new Matrix3();
@@ -303,14 +307,11 @@ defineSuite([
                 expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
 
                 // The rotation matrix from STK Components corresponding to the time and data inputs above
-                var expectedMtx = new Matrix3(
-                        0.18264414843630006, -0.98317906144315947, -0.00021950336420248503,
-                        0.98317840915224974, 0.18264428011734501, -0.0011325710874539787,
-                        0.0011536112127187594, -0.0000089534866085598909, 0.99999933455028112);
+                var expectedMtx = new Matrix3(0.18264414843630006, -0.98317906144315947, -0.00021950336420248503, 0.98317840915224974, 0.18264428011734501, -0.0011325710874539787, 0.0011536112127187594, -0.0000089534866085598909, 0.99999933455028112);
 
                 var testInverse = t.transpose().multiply(expectedMtx);
                 var testDiff = new Matrix3();
-                for (var i=0; i<9; i++){
+                for ( var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
                 }
                 expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
@@ -322,21 +323,20 @@ defineSuite([
 
             var time = new JulianDate(2455745, 86395);
 
-            preloadTransformationData(time, time, { url : 'Data/EarthOrientationParameters/EOP-2011-July.json' });
+            preloadTransformationData(time, time, {
+                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+            });
 
             runs(function() {
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
                 // The rotation matrix from STK Components corresponding to the time and data inputs above
-                var expectedMtx = new Matrix3(
-                        -0.19073578935932833, 0.98164138366748721, 0.00022919174269963536,
-                        -0.98164073712836186, -0.19073592679333939, 0.0011266944449015753,
-                        0.0011497249933208494, -0.000010082996932331842, 0.99999933901516791);
+                var expectedMtx = new Matrix3(-0.19073578935932833, 0.98164138366748721, 0.00022919174269963536, -0.98164073712836186, -0.19073592679333939, 0.0011266944449015753, 0.0011497249933208494, -0.000010082996932331842, 0.99999933901516791);
 
                 var testInverse = t.transpose().multiply(expectedMtx);
                 var testDiff = new Matrix3();
-                for (var i=0; i<9; i++){
+                for ( var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
                 }
                 expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
@@ -347,21 +347,20 @@ defineSuite([
         it('works over day boundary backwards', function() {
             var time = new JulianDate(2455745, 10);
 
-            preloadTransformationData(time, time, { url : 'Data/EarthOrientationParameters/EOP-2011-July.json' });
+            preloadTransformationData(time, time, {
+                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+            });
 
             runs(function() {
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
                 //The rotation matrix from STK Components corresponding to the time and data inputs above
-                var expectedMtx = new Matrix3(
-                        -0.17489910479510423, 0.984586338811966, 0.00021110831245616662,
-                        -0.98458569065286827, -0.17489923190143036, 0.0011297972845023996,
-                        0.0011493056536445096, -0.00001025368996280683, 0.99999933949547);
+                var expectedMtx = new Matrix3(-0.17489910479510423, 0.984586338811966, 0.00021110831245616662, -0.98458569065286827, -0.17489923190143036, 0.0011297972845023996, 0.0011493056536445096, -0.00001025368996280683, 0.99999933949547);
 
                 var testInverse = t.transpose().multiply(expectedMtx);
                 var testDiff = new Matrix3();
-                for (var i=0; i<9; i++){
+                for ( var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
                 }
                 expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
@@ -378,7 +377,9 @@ defineSuite([
             // 2011-07-03 00:00:00 UTC
             var time = new JulianDate(2455745, 43200);
 
-            preloadTransformationData(time, time, { url : 'Data/EarthOrientationParameters/EOP-2011-July.json' });
+            preloadTransformationData(time, time, {
+                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+            });
 
             runs(function() {
                 var resultT = new Matrix3();
@@ -447,7 +448,9 @@ defineSuite([
             // 2011-07-03 00:00:00 UTC
             var time = new JulianDate(2455745, 43200);
 
-            preloadTransformationData(time, time, { url : 'Data/EarthOrientationParameters/EOP-Invalid.json' });
+            preloadTransformationData(time, time, {
+                url : 'Data/EarthOrientationParameters/EOP-Invalid.json'
+            });
 
             runs(function() {
                 expect(function() {
@@ -460,7 +463,9 @@ defineSuite([
             // 2011-07-03 00:00:00 UTC
             var time = new JulianDate(2455745, 43200);
 
-            preloadTransformationData(time, time, { url : 'Data/EarthOrientationParameters/EOP-DoesNotExist.json' });
+            preloadTransformationData(time, time, {
+                url : 'Data/EarthOrientationParameters/EOP-DoesNotExist.json'
+            });
 
             runs(function() {
                 expect(function() {

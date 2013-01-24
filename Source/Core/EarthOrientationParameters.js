@@ -85,7 +85,7 @@ define([
         } else {
             // Use all zeros for EOP data.
             onDataReady(this, {
-                'columnNames' : ['dateIso8601','xPoleWanderRadians','yPoleWanderRadians','ut1MinusUtcSeconds','lengthOfDayCorrectionSeconds','xCelestialPoleOffsetRadians','yCelestialPoleOffsetRadians','taiMinusUtcSeconds'],
+                'columnNames' : ['dateIso8601', 'xPoleWanderRadians', 'yPoleWanderRadians', 'ut1MinusUtcSeconds', 'lengthOfDayCorrectionSeconds', 'xCelestialPoleOffsetRadians', 'yCelestialPoleOffsetRadians', 'taiMinusUtcSeconds'],
                 'samples' : []
             });
         }
@@ -200,7 +200,7 @@ define([
             return;
         }
 
-        if (typeof eopData.samples  === 'undefined') {
+        if (typeof eopData.samples === 'undefined') {
             eop._dataError = 'Error in loaded EOP data: The samples property is required.';
             return;
         }
@@ -237,7 +237,7 @@ define([
         var dates = eop._dates;
 
         // Convert the ISO8601 dates to JulianDates.
-        for (var i = 0, len = samples.length; i < len; i += eop._columnCount) {
+        for ( var i = 0, len = samples.length; i < len; i += eop._columnCount) {
             dates.push(JulianDate.fromIso8601(samples[i + dateColumn]));
 
             // TODO: populate leap seconds from EOP
@@ -269,7 +269,7 @@ define([
         // First check the bounds on the EOP data
         // If we are after the bounds of the data, return zeros.
         // The 'before' index should never be less than zero.
-        if (after > dates.length-1) {
+        if (after > dates.length - 1) {
             result.xPoleWander = 0;
             result.yPoleWander = 0;
             result.xPoleOffset = 0;
@@ -288,8 +288,7 @@ define([
             return result;
         }
 
-        var factor = beforeDate.getSecondsDifference(date) /
-                     beforeDate.getSecondsDifference(afterDate);
+        var factor = beforeDate.getSecondsDifference(date) / beforeDate.getSecondsDifference(afterDate);
 
         var startBefore = before * columnCount;
         var startAfter = after * columnCount;

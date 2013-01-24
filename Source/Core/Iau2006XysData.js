@@ -55,11 +55,11 @@ define([
 
         var stepN = Math.pow(this._stepSizeDays, order);
 
-        for (var i = 0; i <= order; ++i) {
+        for ( var i = 0; i <= order; ++i) {
             denom[i] = stepN;
             xTable[i] = i * this._stepSizeDays;
 
-            for (var j = 0; j <= order; ++j) {
+            for ( var j = 0; j <= order; ++j) {
                 if (j !== i) {
                     denom[i] *= (i - j);
                 }
@@ -117,7 +117,7 @@ define([
         var stopChunk = (stopIndex / this._samplesPerXysFile) | 0;
 
         var promises = [];
-        for (var i = startChunk; i <= stopChunk; ++i) {
+        for ( var i = startChunk; i <= stopChunk; ++i) {
             promises.push(requestXysChunk(this, i));
         }
 
@@ -207,14 +207,11 @@ define([
             work[i] = x - xTable[i];
         }
 
-        for (i = 0; i <= degree; ++i)
-        {
+        for (i = 0; i <= degree; ++i) {
             coef[i] = 1.0;
 
-            for (j = 0; j <= degree; ++j)
-            {
-                if (j !== i)
-                {
+            for (j = 0; j <= degree; ++j) {
+                if (j !== i) {
                     coef[i] *= work[j];
                 }
             }
@@ -248,7 +245,7 @@ define([
             var newSamples = chunk.samples;
             var startIndex = chunkIndex * xysData._samplesPerXysFile * 3;
 
-            for (var i = 0, len = newSamples.length; i < len; ++i) {
+            for ( var i = 0, len = newSamples.length; i < len; ++i) {
                 samples[startIndex + i] = newSamples[i];
             }
 

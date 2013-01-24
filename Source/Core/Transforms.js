@@ -430,7 +430,7 @@ define([
      * }
      * updateAndRender();
      */
-    Transforms.computeIcrfToFixedMatrix = function (date, result) {
+    Transforms.computeIcrfToFixedMatrix = function(date, result) {
         if (typeof date === 'undefined') {
             throw new DeveloperError('date is required.');
         }
@@ -471,7 +471,7 @@ define([
      *     pointInInertial = fixedToIcrf.multiplyByVector(pointInFixed);
      * }
      */
-    Transforms.computeFixedToIcrfMatrix = function (date, result) {
+    Transforms.computeFixedToIcrfMatrix = function(date, result) {
         if (typeof date === 'undefined') {
             throw new DeveloperError('date is required.');
         }
