@@ -7,12 +7,14 @@ defineSuite(['Core/EarthOrientationParameters',
              'Core/Cartesian4',
              'Core/Ellipsoid',
              'Core/JulianDate',
+             'Core/LeapSecond',
              'Core/Matrix3',
              'Core/Matrix4',
              'Core/Math',
              'Core/Quaternion',
              'Core/TimeConstants',
              'Core/TimeInterval',
+             'Core/TimeStandard',
              'ThirdParty/when',
              'Core/loadJson'
      ], function(
@@ -24,16 +26,96 @@ defineSuite(['Core/EarthOrientationParameters',
              Cartesian4,
              Ellipsoid,
              JulianDate,
+             LeapSecond,
              Matrix3,
              Matrix4,
              CesiumMath,
              Quaternion,
              TimeConstants,
              TimeInterval,
+             TimeStandard,
              when,
              loadJson) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    var officialLeapSeconds;
+
+    beforeAll(function() {
+        officialLeapSeconds = LeapSecond.getLeapSeconds().slice(0);
+    });
+
+    afterEach(function() {
+        LeapSecond.setLeapSeconds(officialLeapSeconds.slice(0));
+    });
+
+    it('adds leap seconds found in the data by default', function() {
+        var eop = new EarthOrientationParameters({
+            data : {
+                'columnNames' : ['dateIso8601',
+                                 'modifiedJulianDateUtc',
+                                 'xPoleWanderRadians',
+                                 'yPoleWanderRadians',
+                                 'xCelestialPoleOffsetRadians',
+                                 'yCelestialPoleOffsetRadians',
+                                 'ut1MinusUtcSeconds',
+                                 'taiMinusUtcSeconds',
+                                 'lengthOfDayCorrectionSeconds'],
+                'samples' : ['2011-08-25T00:00:00Z', 55798.0, 2.117957047295119e-7, 2.111518721609984e-6, 3.393695767766752e-11, 3.3452143996557983e-10, -0.2908948, 34.0, -2.956e-4,
+                             '2011-08-26T00:00:00Z', 55799.0, 2.193297093339541e-7, 2.115460256837405e-6, -8.241832578862112e-11, 5.623838700870617e-10, -0.29065, 34.5, -1.824e-4,
+                             '2011-08-27T00:00:00Z', 55800.0, 2.262286080161428e-7, 2.1191157519929706e-6, -3.490658503988659e-10, 6.981317007977318e-10, -0.2905572, 34.5, 1.9e-6,
+                             '2011-08-28T00:00:00Z', 55801.0, 2.3411652660779493e-7, 2.122751854601292e-6, -6.205615118202061e-10, 7.853981633974483e-10, -0.2907007, 34.5, 2.695e-4]
+            }
+        });
+        expect(eop).not.toBeNull();
+
+        var leapSeconds = LeapSecond.getLeapSeconds();
+        expect(leapSeconds.length).toBe(officialLeapSeconds.length + 1);
+
+        var newDate = new JulianDate(2455799.5, 34.5, TimeStandard.TAI);
+        var foundNew = false;
+        var previousDate;
+
+        for (var i = 0, len = leapSeconds.length; i < len; ++i) {
+            var leapSecond = leapSeconds[i];
+            if (leapSecond.julianDate.equals(newDate)) {
+                foundNew = true;
+            }
+
+            if (typeof previousDate !== 'undefined') {
+                expect(JulianDate.compare(previousDate, leapSecond.julianDate)).toBeLessThan(0);
+            }
+
+            previousDate = leapSecond.julianDate;
+        }
+
+        expect(foundNew).toBe(true);
+    });
+
+    it('does not add leap seconds if told not to do so', function() {
+        var eop = new EarthOrientationParameters({
+            addNewLeapSeconds : false,
+            data : {
+                'columnNames' : ['dateIso8601',
+                                 'modifiedJulianDateUtc',
+                                 'xPoleWanderRadians',
+                                 'yPoleWanderRadians',
+                                 'xCelestialPoleOffsetRadians',
+                                 'yCelestialPoleOffsetRadians',
+                                 'ut1MinusUtcSeconds',
+                                 'taiMinusUtcSeconds',
+                                 'lengthOfDayCorrectionSeconds'],
+                'samples' : ['2011-08-25T00:00:00Z', 55798.0, 2.117957047295119e-7, 2.111518721609984e-6, 3.393695767766752e-11, 3.3452143996557983e-10, -0.2908948, 35.0, -2.956e-4,
+                             '2011-08-26T00:00:00Z', 55799.0, 2.193297093339541e-7, 2.115460256837405e-6, -8.241832578862112e-11, 5.623838700870617e-10, -0.29065, 36.0, -1.824e-4,
+                             '2011-08-27T00:00:00Z', 55800.0, 2.262286080161428e-7, 2.1191157519929706e-6, -3.490658503988659e-10, 6.981317007977318e-10, -0.2905572, 36.0, 1.9e-6,
+                             '2011-08-28T00:00:00Z', 55801.0, 2.3411652660779493e-7, 2.122751854601292e-6, -6.205615118202061e-10, 7.853981633974483e-10, -0.2907007, 36.0, 2.695e-4]
+            }
+        });
+        expect(eop).not.toBeNull();
+
+        var leapSeconds = LeapSecond.getLeapSeconds();
+        expect(leapSeconds.length).toBe(officialLeapSeconds.length);
+    });
 
     describe('loading eop', function() {
 

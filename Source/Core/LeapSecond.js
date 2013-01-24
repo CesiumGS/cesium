@@ -93,7 +93,7 @@ define([
      *
      * @see LeapSecond.setLeapSeconds
      */
-    LeapSecond.getLeapSeconds = function(leapSeconds) {
+    LeapSecond.getLeapSeconds = function() {
         return LeapSecond._leapSeconds;
     };
 

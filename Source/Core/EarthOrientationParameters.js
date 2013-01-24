@@ -5,6 +5,7 @@ define([
         './loadJson',
         './EarthOrientationParametersSample',
         './JulianDate',
+        './LeapSecond',
         './RuntimeError',
         './TimeConstants',
         './TimeStandard',
@@ -16,6 +17,7 @@ define([
         loadJson,
         EarthOrientationParametersSample,
         JulianDate,
+        LeapSecond,
         RuntimeError,
         TimeConstants,
         TimeStandard,
@@ -38,6 +40,11 @@ define([
      * @param {Object} [description.data] The actual EOP data.  If neither this
      *                 parameter not description.data is specified, all EOP values are assumed
      *                 to be 0.0.
+     * @param {Boolean} [description.addNewLeapSeconds=true] True if leap seconds that
+     *                  are specified in the EOP data but not in {@see LeapSecond#getLeapSeconds}
+     *                  should be added to {@see LeapSecond#getLeapSeconds}.  False if
+     *                  new leap seconds should be handled correctly in the context
+     *                  of the EOP data but otherwise ignored.
      *
      * @example
      * // An example EOP data file, EOP.json:
@@ -74,6 +81,8 @@ define([
 
         this._downloadPromise = undefined;
         this._dataError = undefined;
+
+        this._addNewLeapSeconds = defaultValue(description.addNewLeapSeconds, true);
 
         if (typeof description.data !== 'undefined') {
             // Use supplied EOP data.
@@ -198,6 +207,10 @@ define([
         return result;
     };
 
+    function compareLeapSecondDates(leapSecond, dateToFind) {
+        return JulianDate.compare(leapSecond.julianDate, dateToFind);
+    }
+
     function onDataReady(eop, eopData) {
         if (typeof eopData.columnNames === 'undefined') {
             eop._dataError = 'Error in loaded EOP data: The columnNames property is required.';
@@ -236,24 +249,33 @@ define([
         eop._columnCount = eopData.columnNames.length;
         eop._lastIndex = undefined;
 
-        //var lastTaiMinusUtc;
+        var lastTaiMinusUtc;
         var samples = eop._samples;
         var dates = eop._dates;
+
+        var addNewLeapSeconds = eop._addNewLeapSeconds;
 
         // Convert the ISO8601 dates to JulianDates.
         for (var i = 0, len = samples.length; i < len; i += eop._columnCount) {
             var mjd = samples[i + dateColumn];
             var taiMinusUtc = samples[i + taiMinusUtcSecondsColumn];
             var day = mjd + TimeConstants.MODIFIED_JULIAN_DATE_DIFFERENCE;
-            dates.push(new JulianDate(day, taiMinusUtc, TimeStandard.TAI));
+            var date = new JulianDate(day, taiMinusUtc, TimeStandard.TAI);
+            dates.push(date);
 
-            // TODO: populate leap seconds from EOP
-            /*var taiMinusUtc = samples[i + taiMinusUtcSecondsColumn];
-            if (taiMinusUtc !== lastTaiMinusUtc && typeof lastTaiMinusUtc !== 'undefined') {
-                // We crossed a leap second boundary
-
+            if (addNewLeapSeconds) {
+                if (taiMinusUtc !== lastTaiMinusUtc && typeof lastTaiMinusUtc !== 'undefined') {
+                    // We crossed a leap second boundary, so add the leap second
+                    // if it does not already exist.
+                    var leapSeconds = LeapSecond.getLeapSeconds();
+                    var leapSecondIndex = binarySearch(leapSeconds, date, compareLeapSecondDates);
+                    if (leapSecondIndex < 0) {
+                        var leapSecond = new LeapSecond(date, taiMinusUtc);
+                        leapSeconds.splice(~leapSecondIndex, 0, leapSecond);
+                    }
+                }
+                lastTaiMinusUtc = taiMinusUtc;
             }
-            lastTaiMinusUtc = taiMinusUtc;*/
         }
     }
 
