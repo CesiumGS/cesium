@@ -40,10 +40,12 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * A viewport aligned quad.
      *
      * @alias ViewportQuad
      * @constructor
+     *
+     * @param {BoundingRectangle} rectangle The BoundingRectangle defining the quad's position within the viewport.
      *
      * @example
      * var boundingRectangle = new BoundingRectangle(0, 0, 80, 40);
@@ -55,7 +57,7 @@ define([
      *   alpha : 1.0
      * };
      */
-    var ViewportQuad = function(rectangle, vertexShaderSource, fragmentShaderSource) {
+    var ViewportQuad = function(rectangle) {
         /**
          * DOC_TBA
          */
@@ -71,9 +73,6 @@ define([
         this._commandLists = new CommandLists();
         this._commandLists.overlayList.push(this._overlayCommand);
         this._commandLists.pickList.push(this._pickCommand);
-
-        this._vertexShaderSource = defaultValue(vertexShaderSource, ViewportQuadVS);
-        this._fragmentShaderSource = defaultValue(fragmentShaderSource, ViewportQuadFS);
 
         this._framebuffer = undefined;
         this._destroyFramebuffer = false;
@@ -107,19 +106,33 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Get the location of the quad within the viewport.
+     *
      * @memberof ViewportQuad
+     *
+     * @see Polygon#setRectangle
+     *
+     * @return {BoundingRectangle} The quad's position within the viewport.
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     ViewportQuad.prototype.getRectangle = function() {
         return this._rectangle;
     };
 
+
     /**
-     * DOC_TBA
+     * Sets the location of the quad within the viewport.
      *
-     * @memberof ViewportQuad
+     * @see Polygon#getRectangle
      *
-     * @param {BoundingRectangle} value DOC_TBA
+     * @param {BoundingRectangle} value The BoundingRectangle defining the quad's position within the viewport.
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @example
+     * var boundingRectangle = new BoundingRectangle(0, 0, 80, 40);
+     * viewportQuad.setRectangle(boundingRectangle);
      */
     ViewportQuad.prototype.setRectangle = function(value) {
         BoundingRectangle.clone(value, this._rectangle);
@@ -231,7 +244,11 @@ define([
     }
 
     /**
-     * @private
+     * Commits changes to properties before rendering by updating the object's WebGL resources.
+     *
+     * @memberof ViewportQuad
+     *
+     * @exception {DeveloperError} this.material must be defined.
      */
     ViewportQuad.prototype.update = function(context, frameState, commandList) {
 
@@ -267,10 +284,10 @@ define([
                     '#line 0\n' +
                     this._material.shaderSource +
                     '#line 0\n' +
-                    this._fragmentShaderSource;
+                    ViewportQuadFS;
 
                 this._shaderProgram = this._shaderProgram && this._shaderProgram.release();
-                this._shaderProgram = context.getShaderCache().getShaderProgram(this._vertexShaderSource, fsSource, attributeIndices);
+                this._shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fsSource, attributeIndices);
 
             }
 
@@ -282,7 +299,7 @@ define([
 
         if (pass.pick) {
             if (typeof this._pickId === 'undefined') {
-                this._shaderProgramPick = context.getShaderCache().getShaderProgram(this._vertexShaderSource, ViewportQuadFSPick, attributeIndices);
+                this._shaderProgramPick = context.getShaderCache().getShaderProgram(ViewportQuadVS, ViewportQuadFSPick, attributeIndices);
 
                 this._pickId = context.createPickId(this);
 
