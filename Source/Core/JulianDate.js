@@ -838,6 +838,7 @@ define([
      * @return {Number} The number of seconds that have elpased from this Julian date to the other Julian date.
      *
      * @see JulianDate#getMinutesDifference
+     * @see JulianDate#getDaysDifference
      *
      * @example
      * var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00'));
@@ -847,8 +848,8 @@ define([
     JulianDate.prototype.getSecondsDifference = function(other) {
         var julianDate1 = this;
         var julianDate2 = other;
-        var dayDifference = (julianDate2.getJulianDayNumber() - julianDate1.getJulianDayNumber()) * TimeConstants.SECONDS_PER_DAY;
-        return (dayDifference + (julianDate2.getSecondsOfDay() - julianDate1.getSecondsOfDay()));
+        var dayDifference = (julianDate2._julianDayNumber - julianDate1._julianDayNumber) * TimeConstants.SECONDS_PER_DAY;
+        return (dayDifference + (julianDate2._secondsOfDay - julianDate1._secondsOfDay));
     };
 
     /**
@@ -862,6 +863,7 @@ define([
      * @return {Number} The number of seconds that have elpased from this Julian date to the other Julian date.
      *
      * @see JulianDate#getSecondsDifference
+     * @see JulianDate#getDaysDifference
      *
      * @example
      * var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00'));
@@ -870,6 +872,32 @@ define([
      */
     JulianDate.prototype.getMinutesDifference = function(other) {
         return this.getSecondsDifference(other) / TimeConstants.SECONDS_PER_MINUTE;
+    };
+
+    /**
+     * Computes the number of days that have elapsed from this Julian date to the <code>other</code>
+     * Julian date.  A day is always exactly 86400.0 seconds.
+     *
+     * @memberof JulianDate
+     *
+     * @param {JulianDate} other The other Julian date, which is the end of the interval.
+     *
+     * @return {Number} The number of days that have elpased from this Julian date to the other Julian date.
+     *
+     * @see JulianDate#getSecondsDifference
+     * @see JulianDate#getMinutesDifference
+     *
+     * @example
+     * var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00'));
+     * var end = JulianDate.fromDate(new Date('July 5, 2011 14:24:00'));
+     * var difference = start.getDaysDifference(end);    // 1.1 days
+     */
+    JulianDate.prototype.getDaysDifference = function(other) {
+        var julianDate1 = this;
+        var julianDate2 = other;
+        var dayDifference = (julianDate2._julianDayNumber - julianDate1._julianDayNumber);
+        var secondDifference = (julianDate2._secondsOfDay - julianDate1._secondsOfDay) / TimeConstants.SECONDS_PER_DAY;
+        return dayDifference + secondDifference;
     };
 
     /**
