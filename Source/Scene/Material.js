@@ -9,6 +9,7 @@ define([
         '../Core/combine',
         '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/Cartesian2',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -30,7 +31,9 @@ define([
         '../Shaders/Materials/StripeMaterial',
         '../Shaders/Materials/TieDyeMaterial',
         '../Shaders/Materials/Water',
-        '../Shaders/Materials/WoodMaterial'
+        '../Shaders/Materials/WoodMaterial',
+        '../Shaders/Materials/RimLightingMaterial',
+        '../Shaders/Materials/ErosionMaterial'
     ], function(
         when,
         loadImage,
@@ -41,6 +44,7 @@ define([
         combine,
         defaultValue,
         destroyObject,
+        Cartesian2,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -62,7 +66,9 @@ define([
         StripeMaterial,
         TieDyeMaterial,
         WaterMaterial,
-        WoodMaterial) {
+        WoodMaterial,
+        RimLightingMaterial,
+        ErosionMaterial) {
     "use strict";
 
     /**
@@ -245,6 +251,17 @@ define([
      *      <li><code>animationSpeed</code>:  Number that controls the animations speed of the water.</li>
      *      <li><code>amplitude</code>:  Number that controls the amplitude of water waves.</li>
      *      <li><code>specularIntensity</code>:  Number that controls the intensity of specular reflections.</li>
+     *  </ul>
+     *  <li>RimLighting</li>
+     *  <ul>
+     *      <li><code>color</code>:  diffuse color and alpha.</li>
+     *      <li><code>rimColor</code>:  diffuse color and alpha of the rim.</li>
+     *      <li><code>width</code>:  Number that determines the rim's width.</li>
+     *  </ul>
+     *  <li>Erosion</li>
+     *  <ul>
+     *      <li><code>color</code>:  diffuse color and alpha.</li>
+     *      <li><code>time</code>:  Time of erosion.  1.0 is no erosion; 0.0 is fully eroded.</li>
      *  </ul>
      * </ul>
      * </div>
@@ -861,10 +878,7 @@ define([
         type : Material.ImageType,
         uniforms : {
             image : Material.DefaultImageId,
-            repeat : {
-                x : 1,
-                y : 1
-            }
+            repeat : new Cartesian2(1.0, 1.0)
         },
         components : {
             diffuse : 'texture2D(image, fract(repeat * materialInput.st)).rgb',
@@ -878,10 +892,7 @@ define([
         uniforms : {
             image : Material.DefaultImageId,
             channels : 'rgb',
-            repeat : {
-                x : 1,
-                y : 1
-            }
+            repeat : new Cartesian2(1.0, 1.0)
         },
         components : {
             diffuse : 'texture2D(image, fract(repeat * materialInput.st)).channels'
@@ -894,10 +905,7 @@ define([
         uniforms : {
             image : Material.DefaultImageId,
             channel : 'a',
-            repeat : {
-                x : 1,
-                y : 1
-            }
+            repeat : new Cartesian2(1.0, 1.0)
         },
         components : {
             alpha : 'texture2D(image, fract(repeat * materialInput.st)).channel'
@@ -910,10 +918,7 @@ define([
         uniforms : {
             image : Material.DefaultImageId,
             channel : 'r',
-            repeat : {
-                x : 1,
-                y : 1
-            }
+            repeat : new Cartesian2(1.0, 1.0)
         },
         components : {
             specular : 'texture2D(image, fract(repeat * materialInput.st)).channel'
@@ -926,10 +931,7 @@ define([
         uniforms : {
             image : Material.DefaultImageId,
             channels : 'rgb',
-            repeat : {
-                x : 1,
-                y : 1
-            }
+            repeat : new Cartesian2(1.0, 1.0)
         },
         components : {
             emission : 'texture2D(image, fract(repeat * materialInput.st)).channels'
@@ -943,10 +945,7 @@ define([
             image : Material.DefaultImageId,
             channel : 'r',
             strength : 0.8,
-            repeat : {
-                x : 1,
-                y : 1
-            }
+            repeat : new Cartesian2(1.0, 1.0)
         },
         source : BumpMapMaterial
     });
@@ -958,10 +957,7 @@ define([
             image : Material.DefaultImageId,
             channels : 'rgb',
             strength : 0.8,
-            repeat : {
-                x : 1,
-                y : 1
-            }
+            repeat : new Cartesian2(1.0, 1.0)
         },
         source : NormalMapMaterial
     });
@@ -1005,26 +1001,10 @@ define([
     Material._materialCache.addMaterial(Material.BrickType, {
         type : Material.BrickType,
         uniforms : {
-            brickColor : {
-                red : 0.6,
-                green : 0.3,
-                blue : 0.1,
-                alpha : 1.0
-            },
-            mortarColor : {
-                red : 0.8,
-                green : 0.8,
-                blue : 0.7,
-                alpha : 1.0
-            },
-            brickSize : {
-                x : 0.30,
-                y : 0.15
-            },
-            brickPct : {
-                x : 0.90,
-                y : 0.85
-            },
+            brickColor : new Color(0.6, 0.3, 0.1, 1.0),
+            mortarColor : new Color(0.8, 0.8, 0.7, 1.0),
+            brickSize : new Cartesian2(0.3, 0.15),
+            brickPct : new Cartesian2(0.9, 0.85),
             brickRoughness : 0.2,
             mortarRoughness : 0.1
         },
@@ -1035,23 +1015,10 @@ define([
     Material._materialCache.addMaterial(Material.WoodType, {
         type : Material.WoodType,
         uniforms : {
-            lightWoodColor : {
-                red : 0.6,
-                green : 0.3,
-                blue : 0.1,
-                alpha : 1.0
-            },
-            darkWoodColor : {
-                red : 0.4,
-                green : 0.2,
-                blue : 0.07,
-                alpha : 1.0
-            },
+            lightWoodColor : new Color(0.6, 0.3, 0.1, 1.0),
+            darkWoodColor : new Color(0.4, 0.2, 0.07, 1.0),
             ringFrequency : 3.0,
-            noiseScale : {
-                x : 0.7,
-                y : 0.5
-            },
+            noiseScale : new Cartesian2(0.7, 0.5),
             grainFrequency : 27.0
         },
         source : WoodMaterial
@@ -1061,12 +1028,7 @@ define([
     Material._materialCache.addMaterial(Material.AsphaltType, {
         type : Material.AsphaltType,
         uniforms : {
-            asphaltColor : {
-                red : 0.15,
-                green : 0.15,
-                blue : 0.15,
-                alpha : 1.0
-            },
+            asphaltColor : new Color(0.15, 0.15, 0.15, 1.0),
             bumpSize : 0.02,
             roughness : 0.2
         },
@@ -1077,12 +1039,7 @@ define([
     Material._materialCache.addMaterial(Material.CementType, {
         type : Material.CementType,
         uniforms : {
-            cementColor : {
-                red : 0.95,
-                green : 0.95,
-                blue : 0.85,
-                alpha : 1.0
-            },
+            cementColor : new Color(0.95, 0.95, 0.85, 1.0),
             grainScale : 0.01,
             roughness : 0.3
         },
@@ -1093,18 +1050,8 @@ define([
     Material._materialCache.addMaterial(Material.GrassType, {
         type : Material.GrassType,
         uniforms : {
-            grassColor : {
-                red : 0.25,
-                green : 0.4,
-                blue : 0.1,
-                alpha : 1.0
-            },
-            dirtColor : {
-                red : 0.1,
-                green : 0.1,
-                blue : 0.1,
-                alpha : 1.0
-            },
+            grassColor : new Color(0.25, 0.4, 0.1, 1.0),
+            dirtColor : new Color(0.1, 0.1, 0.1, 1.0),
             patchiness : 1.5
         },
         source : GrassMaterial
@@ -1115,18 +1062,8 @@ define([
         type : Material.StripeType,
         uniforms : {
             horizontal : true,
-            lightColor : {
-                red : 1.0,
-                green : 1.0,
-                blue : 1.0,
-                alpha : 0.5
-            },
-            darkColor : {
-                red : 0.0,
-                green : 0.0,
-                blue : 1.0,
-                alpha : 0.5
-            },
+            lightColor : new Color(1.0, 1.0, 1.0, 0.5),
+            darkColor : new Color(0.0, 0.0, 1.0, 0.5),
             offset : 0.0,
             repeat : 5.0
         },
@@ -1137,22 +1074,9 @@ define([
     Material._materialCache.addMaterial(Material.CheckerboardType, {
         type : Material.CheckerboardType,
         uniforms : {
-            lightColor : {
-                red : 1.0,
-                green : 1.0,
-                blue : 1.0,
-                alpha : 0.5
-            },
-            darkColor : {
-                red : 0.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 0.5
-            },
-            repeat : {
-                x : 5.0,
-                y : 5.0
-            }
+            lightColor : new Color(1.0, 1.0, 1.0, 0.5),
+            darkColor : new Color(0.0, 0.0, 0.0, 0.5),
+            repeat : new Cartesian2(5.0, 5.0)
         },
         source : CheckerboardMaterial
     });
@@ -1161,22 +1085,9 @@ define([
     Material._materialCache.addMaterial(Material.DotType, {
         type : Material.DotType,
         uniforms : {
-            lightColor : {
-                red : 1.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 0.75
-            },
-            darkColor : {
-                red : 0.0,
-                green : 1.0,
-                blue : 1.0,
-                alpha : 0.75
-            },
-            repeat : {
-                x : 5.0,
-                y : 5.0
-            }
+            lightColor : new Color(1.0, 1.0, 0.0, 0.75),
+            darkColor : new Color(0.0, 1.0, 1.0, 0.75),
+            repeat : new Cartesian2(5.0, 5.0)
         },
         source : DotMaterial
     });
@@ -1185,18 +1096,8 @@ define([
     Material._materialCache.addMaterial(Material.TyeDyeType, {
         type : Material.TyeDyeType,
         uniforms : {
-            lightColor : {
-                red : 1.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 0.75
-            },
-            darkColor : {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 0.75
-            },
+            lightColor : new Color(1.0, 1.0, 0.0, 0.75),
+            darkColor : new Color(1.0, 0.0, 0.0, 0.75),
             frequency : 5.0
         },
         source : TieDyeMaterial
@@ -1206,18 +1107,8 @@ define([
     Material._materialCache.addMaterial(Material.FacetType, {
         type : Material.FacetType,
         uniforms : {
-            lightColor : {
-                red : 0.25,
-                green : 0.25,
-                blue : 0.25,
-                alpha : 0.75
-            },
-            darkColor : {
-                red : 0.75,
-                green : 0.75,
-                blue : 0.75,
-                alpha : 0.75
-            },
+            lightColor : new Color(0.25, 0.25, 0.25, 0.75),
+            darkColor : new Color(0.75, 0.75, 0.75, 0.75),
             frequency : 10.0
         },
         source : FacetMaterial
@@ -1227,18 +1118,8 @@ define([
     Material._materialCache.addMaterial(Material.BlobType, {
         type : Material.BlobType,
         uniforms : {
-            lightColor : {
-                red : 1.0,
-                green : 1.0,
-                blue : 1.0,
-                alpha : 0.5
-            },
-            darkColor : {
-                red : 0.0,
-                green : 0.0,
-                blue : 1.0,
-                alpha : 0.5
-            },
+            lightColor : new Color(1.0, 1.0, 1.0, 0.5),
+            darkColor : new Color(0.0, 0.0, 1.0, 0.5),
             frequency : 10.0
         },
         source : BlobMaterial
@@ -1269,6 +1150,27 @@ define([
             fadeFactor : 1.0
         },
         source : WaterMaterial
+    });
+
+    Material.RimLightingType = 'RimLighting';
+    Material._materialCache.addMaterial(Material.RimLightingType, {
+        type : Material.RimLightingType,
+        uniforms : {
+            color : new Color(1.0, 0.0, 0.0, 0.7),
+            rimColor : new Color(1.0, 1.0, 1.0, 0.4),
+            width : 0.3
+        },
+        source : RimLightingMaterial
+    });
+
+    Material.ErosionType = 'Erosion';
+    Material._materialCache.addMaterial(Material.ErosionType, {
+        type : Material.ErosionType,
+        uniforms : {
+            color : new Color(1.0, 0.0, 0.0, 0.5),
+            time : 1.0
+        },
+        source : ErosionMaterial
     });
 
     return Material;
