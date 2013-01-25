@@ -14,12 +14,13 @@ define([
         '../Core/Intersect',
         '../Core/Matrix4',
         '../Core/MeshFilters',
+        '../Core/Occluder',
         '../Core/PrimitiveType',
         '../Core/Queue',
+        '../Core/TaskProcessor',
         '../Core/WebMercatorProjection',
         '../Renderer/DrawCommand',
         './ImageryState',
-        './RequestTileGeometryResult',
         './SceneMode',
         './TerrainProvider',
         './TerrainState',
@@ -42,12 +43,13 @@ define([
         Intersect,
         Matrix4,
         MeshFilters,
+        Occluder,
         PrimitiveType,
         Queue,
+        TaskProcessor,
         WebMercatorProjection,
         DrawCommand,
         ImageryState,
-        RequestTileGeometryResult,
         SceneMode,
         TerrainProvider,
         TerrainState,
@@ -648,9 +650,9 @@ define([
             }
 
             if (tile.state === TileState.LOADING) {
-                processTerrainLoad(terrainProvider, tile);
+                processTerrainLoad(this, context, terrainProvider, tile);
                 if (!tile.suspendUpsampling) {
-                    processTerrainUpsample(terrainProvider, tile);
+                    processTerrainUpsample(this, context, terrainProvider, tile);
                 }
             }
 
@@ -749,7 +751,7 @@ define([
         } while (Date.now() < endTime && typeof tile !== 'undefined');
     }
 
-    function processTerrainLoad(terrainProvider, tile) {
+    function processTerrainLoad(surface, context, terrainProvider, tile) {
         var terrainLoad = tile.terrainLoad;
 
         if (terrainLoad.state === TerrainState.UNLOADED) {
@@ -812,11 +814,11 @@ define([
             // the upsampling process.
             tile.suspendUpsampling = true;
 
-            transformTileTerrain(context, terrainProvider, tile);
+            transformTileTerrain(surface, context, terrainProvider, tile, terrainLoad);
         }
 
         if (terrainLoad.state === TerrainState.TRANSFORMED) {
-            createTileTerrainResources(context, terrainProvider, tile);
+            createTileTerrainResources(surface, context, terrainProvider, tile, terrainLoad);
         }
 
         if (terrainLoad.state === TerrainState.READY) {
@@ -829,7 +831,95 @@ define([
         }
     }
 
-    function processTerrainUpsample(terrainProvider, tile) {
+    var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
+
+    function transformTileTerrain(surface, context, terrainProvider, tile, terrain) {
+        // TODO: call the TerrainData instance instead of assuming a heightmap.
+        var terrainData = terrain.data;
+        var heightmap = terrainData.buffer;
+        var width = terrainData.width;
+        var height = terrainData.height;
+        var structure = terrainData.structure;
+
+        var tilingScheme = tile.tilingScheme;
+        var ellipsoid = tilingScheme.getEllipsoid();
+        var extent = tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
+
+        tile.center = ellipsoid.cartographicToCartesian(tile.extent.getCenter());
+
+        var verticesPromise = taskProcessor.scheduleTask({
+            heightmap : heightmap,
+            heightScale : structure.heightScale,
+            heightOffset : structure.heightOffset,
+            stride : structure.stride,
+            width : width,
+            height : height,
+            extent : extent,
+            relativeToCenter : tile.center,
+            radiiSquared : ellipsoid.getRadiiSquared(),
+            oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
+            skirtHeight : Math.min(surface.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
+            isGeographic : true
+        });
+
+        if (typeof verticesPromise === 'undefined') {
+            //postponed
+            terrain.state = TerrainState.RECEIVED;
+            return;
+        }
+
+        ++tile.asyncOperationsInProgress;
+
+        when(verticesPromise, function(result) {
+            --tile.asyncOperationsInProgress;
+
+            terrain.transformedData = {
+                vertices : new Float32Array(result.vertices),
+                statistics : result.statistics,
+                indices : TerrainProvider.getRegularGridIndices(width + 2, height + 2)
+            };
+
+            tile.state = TileState.TRANSFORMED;
+        }, function(e) {
+            --tile.asyncOperationsInProgress;
+        });
+
+    }
+
+    var cartesian3Scratch = new Cartesian3(0.0, 0.0, 0.0);
+
+    function createTileTerrainResources(surface, context, terrainProvider, tile, terrain) {
+        var buffers = terrain.transformedData;
+        tile.transformedData = undefined;
+
+        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers, false);
+        tile.minHeight = buffers.statistics.minHeight;
+        tile.maxHeight = buffers.statistics.maxHeight;
+        tile.boundingSphere3D = BoundingSphere.fromVertices(buffers.vertices, tile.center, 5);
+
+        var ellipsoid = tile.tilingScheme.getEllipsoid();
+        var extent = tile.extent;
+        tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
+        tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast());
+        tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNortheast());
+        tile.northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest());
+
+        tile.westNormal = Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(cartesian3Scratch), cartesian3Scratch).normalize();
+        tile.eastNormal = tile.northeastCornerCartesian.negate(cartesian3Scratch).cross(Cartesian3.UNIT_Z, cartesian3Scratch).normalize();
+        tile.southNormal = ellipsoid.geodeticSurfaceNormal(tile.southeastCornerCartesian).cross(tile.southwestCornerCartesian.subtract(tile.southeastCornerCartesian, cartesian3Scratch)).normalize();
+        tile.northNormal = ellipsoid.geodeticSurfaceNormal(tile.northwestCornerCartesian).cross(tile.northeastCornerCartesian.subtract(tile.northwestCornerCartesian, cartesian3Scratch)).normalize();
+
+        // TODO: we need to take the heights into account when computing the occludee point.
+        var occludeePoint = Occluder.computeOccludeePointFromExtent(tile.extent, ellipsoid);
+        if (typeof occludeePoint !== 'undefined') {
+            Cartesian3.multiplyComponents(occludeePoint, ellipsoid.getOneOverRadii(), occludeePoint);
+        }
+        tile.occludeePointInScaledSpace = occludeePoint;
+
+        terrain.state = TerrainState.READY;
+    }
+
+    function processTerrainUpsample(context, terrainProvider, tile) {
 
     }
 
