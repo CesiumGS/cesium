@@ -11,6 +11,7 @@ Beta Releases
    * Removed `erosion` property from `Polygon`, `ComplexConicSensorVolume`, `RectangularPyramidSensorVolume`, and `ComplexConicSensorVolume`.  Use the new `Erosion` material.  See the Sandbox Animation example.
 * Added new `RimLighting` and `Erosion` materials.  See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page.
 * Fixed rendering artifacts in `EllipsoidPrimitive`.
+* Fixed an issue where streaming CZML would fail when changing material types.
 * Added `JulianDate.getDaysDifference` method.
 
 ### b12a - 2013-01-18
