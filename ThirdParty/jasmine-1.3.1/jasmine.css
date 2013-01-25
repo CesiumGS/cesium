@@ -124,6 +124,9 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 #HTMLReporter .description + .suite { margin-top: 0; }
 #HTMLReporter .suite { margin-top: 14px; }
 #HTMLReporter .suite a { color: #333333; }
+#HTMLReporter .specSkipped { color: #999; }
+#HTMLReporter .suite .specSkipped a { color: #999; }
+#HTMLReporter #skipped .suite a { color: #777; }
 #HTMLReporter #details .specDetail { margin-bottom: 28px; }
 #HTMLReporter #details .specDetail .description { display: block; color: white; background-color: #b03911; }
 #HTMLReporter .resultMessage { padding-top: 14px; color: #333333; }

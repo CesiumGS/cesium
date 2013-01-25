@@ -390,7 +390,7 @@ jasmine.HtmlReporter = function(_doc) {
       dom.results = self.createDom('div', {className: 'results'},
         dom.summary = self.createDom('div', { className: 'summary' }),
         dom.details = self.createDom('div', { id: 'details' }),
-        dom.skipped = self.createDom('div', { id: 'skipped' }))
+        dom.skipped = self.createDom('div', { id: 'skipped', className: 'summary' }))
     );
   }
 
@@ -587,6 +587,7 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
     }
     if (status === 'skipped') {
       runTime += ' (skipped)';
+      specView.summary.className += " specSkipped";
     }
 
     specView.summary.appendChild(this.createDom('span', {className: 'specTime'},
