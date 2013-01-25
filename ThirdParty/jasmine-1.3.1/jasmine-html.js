@@ -693,7 +693,7 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
     }
 
     // summary info
-    this.summaryMenuItem.innerHTML = "" + specPluralizedFor(this.runningSpecCount);
+    this.summaryMenuItem.innerHTML = "" + specPluralizedFor(this.runningSpecCount) + ' summary';
     this.detailsMenuItem.innerHTML = "" + this.failedCount + ' failing';
     this.skippedMenuItem.innerHTML = "" + this.skippedCount + ' skipped';
   };
@@ -772,12 +772,23 @@ jasmine.HtmlReporter.SpecView = function(spec, dom, views) {
   );
 
   this.detail = this.createDom('div', { className: 'specDetail' },
-      this.createDom('a', {
+      this.detailLink = this.createDom('a', {
         className: 'description',
-        href: '?spec=' + encodeURIComponent(this.spec.getFullName()),
-        title: this.spec.getFullName()
-      }, this.spec.getFullName())
+        //href: '?spec=' + encodeURIComponent(this.spec.getFullName()),
+        href: '#',
+        title: 'Show summary'
+      }, this.spec.getFullName() + ' (show summary)')
   );
+
+  var summary = this.summary;
+  this.detailLink.onclick = function () {
+      //from showSpecs()
+      dom.reporter.className = dom.reporter.className.replace(/ showDetails/g, '').replace(/ showSkipped/g, '');
+
+      var rect = summary.getBoundingClientRect();
+      window.scrollTo(rect.left, rect.top);
+      return false;
+  };
 };
 
 jasmine.HtmlReporter.SpecView.prototype.status = function() {
