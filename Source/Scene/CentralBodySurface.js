@@ -485,15 +485,15 @@ define([
     function isTileVisible(surface, frameState, tile) {
         var cullingVolume = frameState.cullingVolume;
 
-        var boundingVolume = tile.terrainRender.boundingSphere3D;
+        var boundingVolume = tile.renderableTerrain.boundingSphere3D;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
-            BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.terrainRender.minHeight, tile.terrainRender.maxHeight, boundingVolume);
+            BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.renderableTerrain.minHeight, tile.renderableTerrain.maxHeight, boundingVolume);
             boundingVolume.center = new Cartesian3(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y);
 
             if (frameState.mode === SceneMode.MORPHING) {
-                boundingVolume = BoundingSphere.union(tile.terrainRender.boundingSphere3D, boundingVolume, boundingVolume);
+                boundingVolume = BoundingSphere.union(tile.renderableTerrain.boundingSphere3D, boundingVolume, boundingVolume);
             }
         }
 
@@ -526,7 +526,7 @@ define([
         var southNormal = tile.southNormal;
         var eastNormal = tile.eastNormal;
         var northNormal = tile.northNormal;
-        var maxHeight = tile.terrainRender.maxHeight;
+        var maxHeight = tile.renderableTerrain.maxHeight;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             southwestCornerCartesian = frameState.scene2D.projection.project(tile.extent.getSouthwest(), southwestCornerScratch);
@@ -753,7 +753,9 @@ define([
 
             // The tile becomes renderable when the terrain and all imagery data are loaded.
             if (i === len && isRenderable) {
-                tile.terrainRender = tile.loadedTerrain.state === TerrainState.READY ? tile.loadedTerrain : tile.upsampledTerrain;
+                tile.renderableTerrain = tile.loadedTerrain.state === TerrainState.READY ?
+                                            tile.loadedTerrain :
+                                            tile.upsampledTerrain;
                 tile.renderable = true;
 
                 if (isDoneLoading) {
@@ -1254,19 +1256,19 @@ define([
                     command.shaderProgram = shaderProgram;
                     command.renderState = renderState;
                     command.primitiveType = TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
-                    command.vertexArray = tile.terrainRender.vertexArray;
+                    command.vertexArray = tile.renderableTerrain.vertexArray;
                     command.uniformMap = uniformMap;
 
-                    var boundingVolume = tile.boundingSphere3D;
+                    var boundingVolume = tile.renderableTerrain.boundingSphere3D;
 
                     if (frameState.mode !== SceneMode.SCENE3D) {
                         // TODO: If we show terrain heights in Columbus View, the bounding sphere
                         //       needs to be expanded to include the heights.
-                        boundingVolume = BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minHeight, tile.maxHeight);
+                        boundingVolume = BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.renderableTerrain.minHeight, tile.renderableTerrain.maxHeight);
                         boundingVolume.center = new Cartesian3(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y);
 
                         if (frameState.mode === SceneMode.MORPHING) {
-                            boundingVolume = BoundingSphere.union(tile.boundingSphere3D, boundingVolume, boundingVolume);
+                            boundingVolume = BoundingSphere.union(tile.renderableTerrain.boundingSphere3D, boundingVolume, boundingVolume);
                         }
                     }
 
