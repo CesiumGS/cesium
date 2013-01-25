@@ -102,7 +102,7 @@ define([
         this._proxy = description.proxy;
 
         this.ready = true;
-        this.hasWaterMask = true;
+        this.hasWaterMask = false; // TODO: change this back to true.
 
         this._allLandTexture = undefined;
         this._allWaterTexture = undefined;

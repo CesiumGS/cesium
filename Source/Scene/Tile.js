@@ -133,7 +133,7 @@ define([
          * The current state of the tile in the tile load pipeline.
          * @type TileState
          */
-        this.state = TileState.UNLOADED;
+        this.state = TileState.START;
 
         /**
          * The previous tile in the {@link TileLoadQueue}.

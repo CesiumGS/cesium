@@ -650,14 +650,16 @@ define([
             }
 
             if (tile.state === TileState.LOADING) {
-                processTerrainLoad(this, context, terrainProvider, tile);
+                processTerrainLoad(surface, context, terrainProvider, tile);
                 if (!tile.suspendUpsampling) {
-                    processTerrainUpsample(this, context, terrainProvider, tile);
+                    processTerrainUpsample(surface, context, terrainProvider, tile);
                 }
             }
 
-            var isRenderable = (typeof tile.terrainLoad !== 'undefined' && tile.terrainLoad.state === TerrainState.READY) ||
-                               (typeof tile.terrainUpsample !== 'undefined' && tile.terrainUpsample.state === TerrainState.READY);
+            var isRenderable = tile.terrainLoad.state === TerrainState.READY ||
+                               tile.terrainUpsample.state === TerrainState.READY;
+            var isDoneLoading = tile.terrainLoad.state === TerrainState.READY ||
+                                (tile.terrainUpsample.state === TerrainState.READY && tile.terrainLoad.state === TerrainState.NOT_AVAILABLE);
 
             var didSomeWork = false;
 
@@ -739,12 +741,17 @@ define([
                 }
 
                 isRenderable = isRenderable && imageryDoneLoading;
+                isDoneLoading = isDoneLoading && imageryDoneLoading;
             }
 
             // The tile becomes renderable when the terrain and all imagery data are loaded.
             if (i === len && isRenderable) {
                 tile.renderable = true;
-                tileLoadQueue.remove(tile);
+
+                if (isDoneLoading) {
+                    tile.doneLoading = true;
+                    tileLoadQueue.remove(tile);
+                }
             }
 
             tile = tile.loadNext;
@@ -775,6 +782,7 @@ define([
 
             if (dataAvailable) {
                 // Request the terrain from the terrain provider.
+                terrainLoad.state = TerrainState.TRANSITIONING;
                 terrainLoad.data = terrainProvider.requestTileGeometry2(tile.x, tile.y, tile.level);
 
                 // If the request method returns undefined (instead of a promise), the request has been deferred.
@@ -814,15 +822,17 @@ define([
             // the upsampling process.
             tile.suspendUpsampling = true;
 
+            terrainLoad.state = TerrainState.TRANSITIONING;
             transformTileTerrain(surface, context, terrainProvider, tile, terrainLoad);
         }
 
         if (terrainLoad.state === TerrainState.TRANSFORMED) {
+            terrainLoad.state = TerrainState.TRANSITIONING;
             createTileTerrainResources(surface, context, terrainProvider, tile, terrainLoad);
         }
 
         if (terrainLoad.state === TerrainState.READY) {
-            tile.terrainUpsample = undefined;
+            // TODO: clean up tile.terrainUpsample.
         }
 
         if (terrainLoad.state === TerrainState.FAILED || terrainLoad.state === TerrainState.NOT_AVAILABLE) {
@@ -858,7 +868,7 @@ define([
             relativeToCenter : tile.center,
             radiiSquared : ellipsoid.getRadiiSquared(),
             oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
-            skirtHeight : Math.min(surface.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
+            skirtHeight : Math.min(terrainProvider.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
             isGeographic : true
         });
 
@@ -879,7 +889,7 @@ define([
                 indices : TerrainProvider.getRegularGridIndices(width + 2, height + 2)
             };
 
-            tile.state = TileState.TRANSFORMED;
+            terrain.state = TerrainState.TRANSFORMED;
         }, function(e) {
             --tile.asyncOperationsInProgress;
         });
@@ -890,9 +900,9 @@ define([
 
     function createTileTerrainResources(surface, context, terrainProvider, tile, terrain) {
         var buffers = terrain.transformedData;
-        tile.transformedData = undefined;
+        terrain.transformedData = undefined;
 
-        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers, false);
+        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers, true);
         tile.minHeight = buffers.statistics.minHeight;
         tile.maxHeight = buffers.statistics.maxHeight;
         tile.boundingSphere3D = BoundingSphere.fromVertices(buffers.vertices, tile.center, 5);
@@ -921,67 +931,6 @@ define([
 
     function processTerrainUpsample(context, terrainProvider, tile) {
 
-    }
-
-    function requestTileGeometry(terrainProvider, tile) {
-        var newMethod = false;
-
-        if (!newMethod) {
-            terrainProvider.requestTileGeometry(tile);
-            return;
-        }
-
-        // We do two things in this state: request the data from the remote server, if it's available,
-        // and start the async process of upsampling from the parent, if this is not a root tile.
-
-        // We don't leave the IMAGERY_SKELETONS_CREATED state until both of these have been accomplished.
-        // We have to make sure we don't initiate either async process more than once, though.
-
-        // Initiate the request.
-        if (typeof tile.requestedTerrain === 'undefined') {
-            // Request not yet initiated - initiate it now if data is available.
-
-        }
-
-        // Initiate the upsample.
-        if (typeof tile.upsampledTerrain === 'undefined') {
-            // Only upsample non-root tiles
-            if (typeof tile.parent !== 'undefined') {
-                // Find the nearest ancestor with data.
-                // This loop is guaranteed to terminate because the root tiles cannot be upsampled (only requested)
-                // and we won't refine past them until they're fully loaded.
-                var sourceTile = tile.parent;
-                while (typeof sourceTile.requestedTerrain === 'undefined') {
-                    sourceTile = sourceTile.parent;
-                }
-
-                var terrainToUpsample = sourceTile.requestedTerrain;
-
-                tile.upsampledTerrain = terrainToUpsample.upsample(
-                        sourceTile.tilingScheme,
-                        sourceTile.x, sourceTile.y, sourceTile.level,
-                        tile.x, tile.y, tile.level);
-
-                if (typeof tile.upsampledTerrain !== 'undefined') {
-                    when(tile.upsampledTerrain, function(terrainData) {
-                        tile.upsampledTerrain = terrainData;
-                        tile.state = TileState.RECEIVED;
-                    });
-                }
-            } else {
-                // This is a root tile, so mark that terrain will never be upsampled for this tile.
-                tile.upsampledTerrain = false;
-            }
-        }
-
-        // Repeat this transition until both the request and upsample async operations
-        // have been initiated.
-        if (tile.state === TileState.TRANSITIONING &&
-            typeof tile.requestedTerrain !== 'undefined' &&
-            typeof tile.upsampledTerrain !== 'undefined') {
-
-            tile.state = TileState.IMAGERY_SKELETONS_CREATED;
-        }
     }
 
     // This is debug code to render the bounding sphere of the tile in
