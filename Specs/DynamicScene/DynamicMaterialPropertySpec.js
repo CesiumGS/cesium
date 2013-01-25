@@ -118,4 +118,4 @@ defineSuite([
         expect(material.type).toEqual(Material.ImageType);
         expect(material.uniforms.image).toEqual(staticImageCzml.image.image);
     });
-});
+}, 'WebGL');
