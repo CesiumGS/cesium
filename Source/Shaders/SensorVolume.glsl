@@ -1,4 +1,3 @@
-uniform float u_erosion;
 uniform vec4 u_intersectionColor;
 
 bool inSensorShadow(vec3 coneVertexWC, czm_ellipsoid ellipsoidEC, vec3 pointEC)
@@ -26,26 +25,8 @@ bool inSensorShadow(vec3 coneVertexWC, czm_ellipsoid ellipsoidEC, vec3 pointEC)
 
 #ifndef RENDER_FOR_PICK
 
-void sensorErode(float sensorRadius, vec3 pointEC)
-{
-    if (u_erosion != 1.0)
-    {
-        vec3 pointMC = (czm_inverseModelView * vec4(pointEC, 1.0)).xyz;
-        pointMC /= sensorRadius;
-        pointMC /= (1.0 / 10.0);
-    
-        float t = 0.5 + (0.5 * czm_snoise(pointMC));   // Scale [-1, 1] to [0, 1]
-    
-        if (t > u_erosion)
-        {
-            discard;
-        }
-    }
-}
-
 vec4 getIntersectionColor(float sensorRadius, vec3 pointEC)
 {
-    sensorErode(sensorRadius, pointEC);
     return u_intersectionColor;
 }
 
