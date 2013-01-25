@@ -135,7 +135,7 @@ defineSuite([
             }
             expect(constructWithoutImageryLayerCollection).toThrow();
         });
-    });
+    }, 'WebGL');
 
     describe('layer updating', function() {
         it('removing a layer removes it from all tiles', function() {
@@ -249,7 +249,7 @@ defineSuite([
                 });
             });
         });
-    });
+    }, 'WebGL');
 
     it('renders in 2D geographic', function() {
         var layerCollection = cb.getImageryLayers();
