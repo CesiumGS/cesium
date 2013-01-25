@@ -656,8 +656,8 @@ define([
                 }
             }
 
-            var isRenderable = tile.terrainLoad.state === TerrainState.READY ||
-                               tile.terrainUpsample.state === TerrainState.READY;
+            var isRenderable = (typeof tile.terrainLoad !== 'undefined' && tile.terrainLoad.state === TerrainState.READY) ||
+                               (typeof tile.terrainUpsample !== 'undefined' && tile.terrainUpsample.state === TerrainState.READY);
 
             var didSomeWork = false;
 
