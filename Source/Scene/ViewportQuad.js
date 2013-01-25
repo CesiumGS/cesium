@@ -44,6 +44,16 @@ define([
      *
      * @alias ViewportQuad
      * @constructor
+     *
+     * @example
+     * var boundingRectangle = new BoundingRectangle(0, 0, 80, 40);
+     * var viewportQuad = new ViewportQuad(boundingRectangle);
+     * viewportQuad.material.uniforms.color = {
+     *   red   : 1.0,
+     *   green : 0.0,
+     *   blue  : 0.0,
+     *   alpha : 1.0
+     * };
      */
     var ViewportQuad = function(rectangle, vertexShaderSource, fragmentShaderSource) {
         /**
@@ -92,7 +102,7 @@ define([
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
         this.material = Material.fromType(undefined, Material.ColorType);
-        this.material.uniforms.color = new Color(1.0, 1.0, 0.0, 0.5);
+        this.material.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
         this._material = undefined;
     };
 
@@ -334,6 +344,7 @@ define([
     ViewportQuad.prototype.destroy = function() {
         this._va = this._va && this._va.release();
         this._overlayCommand.shaderProgram = this._overlayCommand.shaderProgram && this._overlayCommand.shaderProgram.release();
+        this._pickCommand.shaderProgram = this._pickCommand.shaderProgram && this._pickCommand.shaderProgram.release();
         this._framebuffer = this._destroyFramebuffer && this._framebuffer && this._framebuffer.destroy();
 
         return destroyObject(this);
