@@ -763,26 +763,10 @@ czm_raySegment czm_rayEllipsoidIntersectionInterval(czm_ray ray, czm_ellipsoid e
         float difference = q2 - 1.0; // Negatively valued.
         float w2 = dot(w, w);
         float product = w2 * difference; // Negatively valued.
-        if (qw < 0.0) // Looking inward.
-        {
-            float discriminant = qw * qw - product;
-            float temp = qw - sqrt(discriminant); // Avoid cancellation.  Negatively valued.
-            czm_raySegment i = czm_raySegment(0.0, difference / temp);
-            return i;
-        }
-        else if (qw > 0.0) // Looking outward.
-        {
-            float discriminant = qw * qw - product;
-            float temp = qw + sqrt(discriminant); // Avoid cancellation. Positively valued.
-            czm_raySegment i = czm_raySegment(0.0, temp / w2);
-            return i;
-        }
-        else // qw == 0.0 // Looking tangent.
-        {
-            float temp = sqrt(-product);
-            czm_raySegment i = czm_raySegment(0.0, temp / w2);
-            return i;
-        }
+        float discriminant = qw * qw - product;
+        float temp = -qw + sqrt(discriminant); // Positively valued.
+        czm_raySegment i = czm_raySegment(0.0, temp / w2);
+        return i;
     }
     else // q2 == 1.0. On ellipsoid.
     {
