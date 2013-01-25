@@ -591,10 +591,10 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
     }
 
     specView.summary.appendChild(this.createDom('span', {className: 'specTime'},
-        this.createDom('a', {className: 'run_spec', href: '?spec=' + name}, 'run'),
+        this.createDom('a', {className: 'run_spec', href: '?spec=' + name, target: '_top'}, 'run'),
         this.createDom('a', {className: 'run_spec', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
             window.encodeURIComponent('?baseUrl=../Instrumented&spec=' + name), target: '_top' }, "coverage"),
-        this.createDom('a', {className: 'run_spec', href: '?spec=' + name + '&debug=' + name}, 'debug'),
+        this.createDom('a', {className: 'run_spec', href: '?spec=' + name + '&debug=' + name, target: '_top'}, 'debug'),
         runTime));
 
     switch (status) {
