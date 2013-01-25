@@ -485,15 +485,15 @@ define([
     function isTileVisible(surface, frameState, tile) {
         var cullingVolume = frameState.cullingVolume;
 
-        var boundingVolume = tile.boundingSphere3D;
+        var boundingVolume = tile.terrainRender.boundingSphere3D;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
-            BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minHeight, tile.maxHeight, boundingVolume);
+            BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.terrainRender.minHeight, tile.terrainRender.maxHeight, boundingVolume);
             boundingVolume.center = new Cartesian3(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y);
 
             if (frameState.mode === SceneMode.MORPHING) {
-                boundingVolume = BoundingSphere.union(tile.boundingSphere3D, boundingVolume, boundingVolume);
+                boundingVolume = BoundingSphere.union(tile.terrainRender.boundingSphere3D, boundingVolume, boundingVolume);
             }
         }
 
@@ -526,7 +526,7 @@ define([
         var southNormal = tile.southNormal;
         var eastNormal = tile.eastNormal;
         var northNormal = tile.northNormal;
-        var maxHeight = tile.maxHeight;
+        var maxHeight = tile.terrainRender.maxHeight;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             southwestCornerCartesian = frameState.scene2D.projection.project(tile.extent.getSouthwest(), southwestCornerScratch);
@@ -636,15 +636,22 @@ define([
                     }
                 }
 
-                tile.terrainLoad = {
-                        state : TerrainState.UNLOADED,
-                        data : undefined
-                };
+                var ellipsoid = tile.tilingScheme.getEllipsoid();
 
-                tile.terrainUpsample = {
-                        state : TerrainState.UNLOADED,
-                        data : undefined
-                };
+                // Compute the center of the tile for RTC rendering.
+                tile.center = ellipsoid.cartographicToCartesian(tile.extent.getCenter());
+
+                // Compute tile extent boundaries for estimating the distance to the tile.
+                var extent = tile.extent;
+                tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
+                tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast());
+                tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNortheast());
+                tile.northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest());
+
+                tile.westNormal = Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(cartesian3Scratch), cartesian3Scratch).normalize();
+                tile.eastNormal = tile.northeastCornerCartesian.negate(cartesian3Scratch).cross(Cartesian3.UNIT_Z, cartesian3Scratch).normalize();
+                tile.southNormal = ellipsoid.geodeticSurfaceNormal(tile.southeastCornerCartesian).cross(tile.southwestCornerCartesian.subtract(tile.southeastCornerCartesian, cartesian3Scratch)).normalize();
+                tile.northNormal = ellipsoid.geodeticSurfaceNormal(tile.northwestCornerCartesian).cross(tile.northeastCornerCartesian.subtract(tile.northwestCornerCartesian, cartesian3Scratch)).normalize();
 
                 tile.state = TileState.LOADING;
             }
@@ -656,10 +663,10 @@ define([
                 }
             }
 
-            var isRenderable = tile.terrainLoad.state === TerrainState.READY ||
-                               tile.terrainUpsample.state === TerrainState.READY;
-            var isDoneLoading = tile.terrainLoad.state === TerrainState.READY ||
-                                (tile.terrainUpsample.state === TerrainState.READY && tile.terrainLoad.state === TerrainState.NOT_AVAILABLE);
+            var isRenderable = tile.loadedTerrain.state === TerrainState.READY ||
+                               tile.upsampledTerrain.state === TerrainState.READY;
+            var isDoneLoading = tile.loadedTerrain.state === TerrainState.READY ||
+                                (tile.upsampledTerrain.state === TerrainState.READY && tile.loadedTerrain.state === TerrainState.NOT_AVAILABLE);
 
             var didSomeWork = false;
 
@@ -746,6 +753,7 @@ define([
 
             // The tile becomes renderable when the terrain and all imagery data are loaded.
             if (i === len && isRenderable) {
+                tile.terrainRender = tile.loadedTerrain.state === TerrainState.READY ? tile.loadedTerrain : tile.upsampledTerrain;
                 tile.renderable = true;
 
                 if (isDoneLoading) {
@@ -759,9 +767,9 @@ define([
     }
 
     function processTerrainLoad(surface, context, terrainProvider, tile) {
-        var terrainLoad = tile.terrainLoad;
+        var process = tile.loadedTerrain;
 
-        if (terrainLoad.state === TerrainState.UNLOADED) {
+        if (process.state === TerrainState.UNLOADED) {
             // Is data for this tile known to be unavailable?
             // If so, don't try to request it.
             var parent = tile.parent;
@@ -782,14 +790,15 @@ define([
 
             if (dataAvailable) {
                 // Request the terrain from the terrain provider.
-                terrainLoad.state = TerrainState.TRANSITIONING;
-                terrainLoad.data = terrainProvider.requestTileGeometry2(tile.x, tile.y, tile.level);
+                process.state = TerrainState.UNLOADED;
+                process.data = terrainProvider.requestTileGeometry2(tile.x, tile.y, tile.level);
 
                 // If the request method returns undefined (instead of a promise), the request has been deferred.
-                if (typeof terrainLoad.data !== 'undefined') {
-                    when(terrainLoad.data, function(terrainData) {
-                        terrainLoad.data = terrainData;
-                        terrainLoad.state = TerrainState.RECEIVED;
+                if (typeof process.data !== 'undefined') {
+                    process.state = TerrainState.TRANSITIONING;
+                    when(process.data, function(terrainData) {
+                        process.data = terrainData;
+                        process.state = TerrainState.RECEIVED;
 
                         // If there is (or might be) terrain data for any children, reset their state so it gets loaded.
                         if (typeof tile.children !== 'undefined') {
@@ -802,9 +811,9 @@ define([
                                         childTile.state = TileState.LOADING;
                                     }
 
-                                    var childTerrainLoad = childTile.terrainLoad;
+                                    var childTerrainLoad = childTile.loadedTerrain;
                                     if (typeof childTerrainLoad !== 'undefined' && childTerrainLoad.state === TerrainState.NOT_AVAILABLE) {
-                                        childTile.terrainLoad.state = TerrainState.UNLOADED;
+                                        childTile.loadedTerrain.state = TerrainState.UNLOADED;
                                     }
                                 }
                             }
@@ -813,29 +822,29 @@ define([
                 }
             } else {
                 // Data is not available, so mark that terrain will never be requested for this tile.
-                terrainLoad.state = TerrainState.NOT_AVAILABLE;
+                process.state = TerrainState.NOT_AVAILABLE;
             }
         }
 
-        if (terrainLoad.state === TerrainState.RECEIVED) {
+        if (process.state === TerrainState.RECEIVED) {
             // Once terrain data is received, we no longer need to advance
             // the upsampling process.
             tile.suspendUpsampling = true;
 
-            terrainLoad.state = TerrainState.TRANSITIONING;
-            transformTileTerrain(surface, context, terrainProvider, tile, terrainLoad);
+            process.state = TerrainState.TRANSITIONING;
+            transformTileTerrain(surface, context, terrainProvider, tile, process);
         }
 
-        if (terrainLoad.state === TerrainState.TRANSFORMED) {
-            terrainLoad.state = TerrainState.TRANSITIONING;
-            createTileTerrainResources(surface, context, terrainProvider, tile, terrainLoad);
+        if (process.state === TerrainState.TRANSFORMED) {
+            process.state = TerrainState.TRANSITIONING;
+            createTileTerrainResources(surface, context, terrainProvider, tile, process);
         }
 
-        if (terrainLoad.state === TerrainState.READY) {
-            // TODO: clean up tile.terrainUpsample.
+        if (process.state === TerrainState.READY) {
+            // TODO: clean up tile.upsampledTerrain.
         }
 
-        if (terrainLoad.state === TerrainState.FAILED || terrainLoad.state === TerrainState.NOT_AVAILABLE) {
+        if (process.state === TerrainState.FAILED || process.state === TerrainState.NOT_AVAILABLE) {
             // If we had previously suspended up the upsampling process, resume it now.
             tile.suspendUpsampling = false;
         }
@@ -843,9 +852,9 @@ define([
 
     var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
 
-    function transformTileTerrain(surface, context, terrainProvider, tile, terrain) {
+    function transformTileTerrain(surface, context, terrainProvider, tile, process) {
         // TODO: call the TerrainData instance instead of assuming a heightmap.
-        var terrainData = terrain.data;
+        var terrainData = process.data;
         var heightmap = terrainData.buffer;
         var width = terrainData.width;
         var height = terrainData.height;
@@ -854,8 +863,6 @@ define([
         var tilingScheme = tile.tilingScheme;
         var ellipsoid = tilingScheme.getEllipsoid();
         var extent = tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
-
-        tile.center = ellipsoid.cartographicToCartesian(tile.extent.getCenter());
 
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : heightmap,
@@ -874,59 +881,42 @@ define([
 
         if (typeof verticesPromise === 'undefined') {
             //postponed
-            terrain.state = TerrainState.RECEIVED;
+            process.state = TerrainState.RECEIVED;
             return;
         }
 
-        ++tile.asyncOperationsInProgress;
-
         when(verticesPromise, function(result) {
-            --tile.asyncOperationsInProgress;
-
-            terrain.transformedData = {
+            process.transformedData = {
                 vertices : new Float32Array(result.vertices),
                 statistics : result.statistics,
                 indices : TerrainProvider.getRegularGridIndices(width + 2, height + 2)
             };
 
-            terrain.state = TerrainState.TRANSFORMED;
-        }, function(e) {
-            --tile.asyncOperationsInProgress;
+            process.state = TerrainState.TRANSFORMED;
         });
 
     }
 
     var cartesian3Scratch = new Cartesian3(0.0, 0.0, 0.0);
 
-    function createTileTerrainResources(surface, context, terrainProvider, tile, terrain) {
-        var buffers = terrain.transformedData;
-        terrain.transformedData = undefined;
+    function createTileTerrainResources(surface, context, terrainProvider, tile, process) {
+        var buffers = process.transformedData;
+        process.transformedData = undefined;
 
-        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers, true);
-        tile.minHeight = buffers.statistics.minHeight;
-        tile.maxHeight = buffers.statistics.maxHeight;
-        tile.boundingSphere3D = BoundingSphere.fromVertices(buffers.vertices, tile.center, 5);
-
-        var ellipsoid = tile.tilingScheme.getEllipsoid();
-        var extent = tile.extent;
-        tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
-        tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast());
-        tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNortheast());
-        tile.northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest());
-
-        tile.westNormal = Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(cartesian3Scratch), cartesian3Scratch).normalize();
-        tile.eastNormal = tile.northeastCornerCartesian.negate(cartesian3Scratch).cross(Cartesian3.UNIT_Z, cartesian3Scratch).normalize();
-        tile.southNormal = ellipsoid.geodeticSurfaceNormal(tile.southeastCornerCartesian).cross(tile.southwestCornerCartesian.subtract(tile.southeastCornerCartesian, cartesian3Scratch)).normalize();
-        tile.northNormal = ellipsoid.geodeticSurfaceNormal(tile.northwestCornerCartesian).cross(tile.northeastCornerCartesian.subtract(tile.northwestCornerCartesian, cartesian3Scratch)).normalize();
+        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers, process, true);
+        process.minHeight = buffers.statistics.minHeight;
+        process.maxHeight = buffers.statistics.maxHeight;
+        process.boundingSphere3D = BoundingSphere.fromVertices(buffers.vertices, tile.center, 5);
 
         // TODO: we need to take the heights into account when computing the occludee point.
+        var ellipsoid = tile.tilingScheme.getEllipsoid();
         var occludeePoint = Occluder.computeOccludeePointFromExtent(tile.extent, ellipsoid);
         if (typeof occludeePoint !== 'undefined') {
             Cartesian3.multiplyComponents(occludeePoint, ellipsoid.getOneOverRadii(), occludeePoint);
         }
-        tile.occludeePointInScaledSpace = occludeePoint;
+        process.occludeePointInScaledSpace = occludeePoint;
 
-        terrain.state = TerrainState.READY;
+        process.state = TerrainState.READY;
     }
 
     function processTerrainUpsample(context, terrainProvider, tile) {
@@ -1264,7 +1254,7 @@ define([
                     command.shaderProgram = shaderProgram;
                     command.renderState = renderState;
                     command.primitiveType = TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
-                    command.vertexArray = tile.vertexArray;
+                    command.vertexArray = tile.terrainRender.vertexArray;
                     command.uniformMap = uniformMap;
 
                     var boundingVolume = tile.boundingSphere3D;

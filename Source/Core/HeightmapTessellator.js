@@ -182,7 +182,7 @@ define([
                     }
                 }
 
-                heightSample = heightSample / heightScale - heightOffset;
+                heightSample = heightSample * heightScale + heightOffset;
                 if (heightSample === voidIndicator) {
                     heightSample = voidFillValue;
                 }

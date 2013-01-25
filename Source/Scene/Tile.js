@@ -2,11 +2,13 @@
 define([
         '../Core/Cartesian4',
         '../Core/DeveloperError',
-        './TileState'
+        './TileState',
+        './TileTerrain'
     ], function(
         Cartesian4,
         DeveloperError,
-        TileState) {
+        TileState,
+        TileTerrain) {
     "use strict";
 
     /**
@@ -92,42 +94,10 @@ define([
          */
         this.extent = this.tilingScheme.tileXYToExtent(this.x, this.y, this.level);
 
-        /**
-         * The {@link VertexArray} defining the geometry of this tile.  This property
-         * is expected to be set before the tile enter's the {@link TileState.READY}
-         * {@link state}.
-         * @type VertexArray
-         */
-        this.vertexArray = undefined;
+        this.loadedTerrain = new TileTerrain();
+        this.upsampledTerrain = new TileTerrain();
 
-        /**
-         * The center of this tile.  The {@link vertexArray} is rendered
-         * relative-to-center (RTC) using this center.  Note that the center of the
-         * {@link boundingSphere3D} is not necessarily the same as this center.
-         * This property is expected to be set before the tile enter's the
-         * {@link TileState.READY} {@link state}.
-         * @type Cartesian3
-         */
-        this.center = undefined;
-
-        /**
-         * The minimum height of terrain in this tile, in meters above the ellipsoid.
-         * @type Number
-         */
-        this.minHeight = 0.0;
-
-        /**
-         * The maximum height of terrain in this tile, in meters above the ellipsoid.
-         * @type Number
-         */
-        this.maxHeight = undefined;
-
-        /**
-         * A sphere that completely contains this tile on the globe.  This property may be
-         * undefined until the tile's {@link vertexArray} is loaded.
-         * @type BoundingSphere
-         */
-        this.boundingSphere3D = undefined;
+        this.renderableTerrain = undefined;
 
         /**
          * The current state of the tile in the tile load pipeline.
@@ -164,14 +134,6 @@ define([
          * @type Array
          */
         this.imagery = [];
-
-        /**
-         * Transient data stored during the load process.  The exact content
-         * of this property is a function of the tile's current {@link state} and
-         * the {@link TerrainProvider} that is loading the tile.
-         * @type Object
-         */
-        this.transientData = undefined;
 
         /**
          * The distance from the camera to this tile, updated when the tile is selected
@@ -231,25 +193,13 @@ define([
          */
         this.northNormal = undefined;
 
-        /**
-         * A proxy point to use for this tile for horizon culling.  If this point is below the horizon, the
-         * entire tile is below the horizon as well.  The point is expressed in the ellipsoid-scaled
-         * space.  To transform a point from world coordinates centered on the ellipsoid to ellipsoid-scaled
-         * coordinates, multiply the world coordinates by {@link Ellipsoid#getOneOverRadii}.  See
-         * <a href="http://blogs.agi.com/insight3d/index.php/2009/03/25/horizon-culling-2/">http://blogs.agi.com/insight3d/index.php/2009/03/25/horizon-culling-2/</a>
-         * for information the proxy point.
-         *
-         * @type {Cartesian3}
-         */
-        this.occludeePointInScaledSpace = undefined;
-
         this.waterMaskTexture = undefined;
 
         this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
         this.childTileBits = 15;
 
-        this.asyncOperationsInProgress = 0;
+        this.suspendUpsampling = false;
     };
 
     /**
