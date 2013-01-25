@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/combine',
         '../Core/destroyObject',
         '../Core/defaultValue',
         '../Core/DeveloperError',
@@ -16,10 +17,12 @@ define([
         '../Renderer/DrawCommand',
         '../Shaders/Noise',
         '../Shaders/ViewportQuadVS',
-        '../Shaders/ViewportQuadFS',
+        '../Shaders/ViewportQuadFSMaterial',
+        '../Shaders/ViewportQuadFSTexture',
         '../Shaders/ViewportQuadFSPick'
     ], function(
         Color,
+        combine,
         destroyObject,
         defaultValue,
         DeveloperError,
@@ -35,7 +38,8 @@ define([
         DrawCommand,
         Noise,
         ViewportQuadVS,
-        ViewportQuadFS,
+        ViewportQuadFSMaterial,
+        ViewportQuadFSTexture,
         ViewportQuadFSPick) {
     "use strict";
 
@@ -61,7 +65,8 @@ define([
         /**
          * DOC_TBA
          */
-        this._shaderProgram = undefined;
+        this._shaderProgramMaterial = undefined;
+        this._shaderProgramTexture = undefined;
         this._shaderProgramPick = undefined;
         this._pickId = undefined;
 
@@ -74,12 +79,11 @@ define([
         this._commandLists.overlayList.push(this._overlayCommand);
         this._commandLists.pickList.push(this._pickCommand);
 
-        this._framebuffer = undefined;
-        this._destroyFramebuffer = false;
-
         this._rectangle = BoundingRectangle.clone(rectangle);
 
-        this._pickUniforms = undefined;
+        this._texture = undefined;
+        this._destroyTexture = true;
+        this._useMaterial = true;
 
 
         /**
@@ -103,6 +107,15 @@ define([
         this.material = Material.fromType(undefined, Material.ColorType);
         this.material.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
         this._material = undefined;
+
+        var that = this;
+        this._textureUniform = {
+            u_texture : function() {
+                return that._texture;
+            }
+        };
+
+        this._pickUniforms = undefined;
     };
 
     /**
@@ -139,38 +152,39 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Get the texture to be used when rendering the viewport quad.
+     *
      * @memberof ViewportQuad
+     *
+     * @return {Texture} texture The texture to use use when rendering the viewport quad.
+     *
+     * @see Polygon#setTexture
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
-    ViewportQuad.prototype.getFramebuffer = function() {
-        return this._framebuffer;
+    ViewportQuad.prototype.getTexture = function() {
+        return this._texture;
     };
 
     /**
-     * DOC_TBA
+     * Explicitly set the texture to be used when rendering the viewport quad.
+     * Setting the texture explicitly will cause the material settings to be ignored.
+     *
      * @memberof ViewportQuad
+     *
+     * @param {Texture} texture The texture to use use when rendering the viewport quad.
+     *
+     * @see Polygon#getTexture
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
-    ViewportQuad.prototype.setFramebuffer = function(value) {
-        if (this._framebuffer !== value) {
-            this._framebuffer = this._destroyFramebuffer && this._framebuffer && this._framebuffer.destroy();
-            this._framebuffer = value;
+    ViewportQuad.prototype.setTexture = function(texture) {
+        if (this._texture !== texture) {
+            this._texture = this._destroyTexture && this._texture && this._texture.destroy();
+            this._texture = texture;
         }
-    };
 
-    /**
-     * DOC_TBA
-     * @memberof ViewportQuad
-     */
-    ViewportQuad.prototype.getDestroyFramebuffer = function() {
-        return this._destroyFramebuffer;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ViewportQuad
-     */
-    ViewportQuad.prototype.setDestroyFramebuffer = function(value) {
-        this._destroyFramebuffer = value;
+        this._useMaterial = this._texture === 'undefined';
     };
 
     var attributeIndices = {
@@ -272,10 +286,14 @@ define([
         var pass = frameState.passes;
         if (pass.overlay) {
             var materialChanged = typeof this._material === 'undefined' ||
-            this._material !== this.material;
+                this._material !== this.material;
 
-            // Recompile shader when material changes
-            if (materialChanged) {
+
+            if(!this._useMaterial && typeof this._shaderProgramTexture === 'undefined') {
+                this._shaderProgramTexture = context.getShaderCache().getShaderProgram(ViewportQuadVS, ViewportQuadFSTexture, attributeIndices);
+            }
+            else if (materialChanged) {
+             // Recompile shader when material changes
                 this._material = this.material;
 
                 var fsSource =
@@ -284,17 +302,22 @@ define([
                     '#line 0\n' +
                     this._material.shaderSource +
                     '#line 0\n' +
-                    ViewportQuadFS;
+                    ViewportQuadFSMaterial;
 
-                this._shaderProgram = this._shaderProgram && this._shaderProgram.release();
-                this._shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fsSource, attributeIndices);
-
+                this._shaderProgramMaterial = this._shaderProgramMaterial && this._shaderProgramMaterial.release();
+                this._shaderProgramMaterial = context.getShaderCache().getShaderProgram(ViewportQuadVS, fsSource, attributeIndices);
             }
 
             this._overlayCommand.renderState.viewport = this._rectangle;
-            this._overlayCommand.framebuffer = this._framebuffer;
-            this._overlayCommand.shaderProgram = this._shaderProgram;
-            this._overlayCommand.uniformMap = this._material._uniforms;
+
+            if(this._useMaterial) {
+                this._overlayCommand.shaderProgram = this._shaderProgramMaterial;
+                this._overlayCommand.uniformMap = this._material._uniforms;
+            }
+            else {
+                this._overlayCommand.shaderProgram = this._shaderProgramTexture;
+                this._overlayCommand.uniformMap = this._textureUniform;
+            }
         }
 
         if (pass.pick) {
@@ -312,7 +335,6 @@ define([
             }
 
             this._pickCommand.renderState.viewport = this._rectangle;
-            this._pickCommand.framebuffer = this._framebuffer;
             this._pickCommand.shaderProgram = this._shaderProgramPick;
             this._pickCommand.uniformMap = this._pickUniforms;
         }
@@ -360,9 +382,9 @@ define([
      */
     ViewportQuad.prototype.destroy = function() {
         this._va = this._va && this._va.release();
-        this._overlayCommand.shaderProgram = this._overlayCommand.shaderProgram && this._overlayCommand.shaderProgram.release();
-        this._pickCommand.shaderProgram = this._pickCommand.shaderProgram && this._pickCommand.shaderProgram.release();
-        this._framebuffer = this._destroyFramebuffer && this._framebuffer && this._framebuffer.destroy();
+        this._shaderProgramMaterial = this._shaderProgramMaterial && this._shaderProgramMaterial.release();
+        this._shaderProgramTexture = this._shaderProgramTexture && this._shaderProgramTexture.release();
+        this._shaderProgramPick = this._shaderProgramPick && this._shaderProgramPick.release();
 
         return destroyObject(this);
     };

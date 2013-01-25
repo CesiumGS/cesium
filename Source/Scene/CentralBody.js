@@ -748,7 +748,6 @@ define([
             var logoRectangle = new BoundingRectangle(centralBody.logoOffset.x, centralBody.logoOffset.y, width, height);
             if (typeof centralBody._logoQuad === 'undefined') {
                 centralBody._logoQuad = new ViewportQuad(logoRectangle);
-                centralBody._logoQuad.enableBlending = true;
             } else {
                 centralBody._logoQuad.setRectangle(logoRectangle);
             }
