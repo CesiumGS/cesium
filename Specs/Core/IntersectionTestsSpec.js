@@ -128,13 +128,40 @@ defineSuite([
         expect(typeof intersections === 'undefined').toEqual(true);
     });
 
-    it('rayEllipsoid inside intersection', function() {
-        var unitSphere = Ellipsoid.UNIT_SPHERE;
+    it('rayEllipsoid ray inside pointing in intersection', function() {
+        var ellipsoid = Ellipsoid.WGS84;
 
-        var ray = new Ray(Cartesian3.ZERO, new Cartesian3(0.0, 0.0, 1.0));
-        var intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
-        expect(intersections.start).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
-        expect(intersections.stop).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        var origin = new Cartesian3(20000.0, 0.0, 0.0);
+        var direction = origin.normalize().negate();
+        var ray = new Ray(origin, direction);
+
+        var expected = {
+                start : 0.0,
+                stop : ellipsoid.getRadii().x + origin.x
+        };
+        var actual = IntersectionTests.rayEllipsoid(ray, ellipsoid);
+
+        expect(actual).toBeDefined();
+        expect(actual.start).toEqual(expected.start);
+        expect(actual.stop).toEqual(expected.stop);
+    });
+
+    it('rayEllipsoid ray inside pointing out intersection', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+
+        var origin = new Cartesian3(20000.0, 0.0, 0.0);
+        var direction = origin.normalize();
+        var ray = new Ray(origin, direction);
+
+        var expected = {
+                start : 0.0,
+                stop : ellipsoid.getRadii().x - origin.x
+        };
+        var actual = IntersectionTests.rayEllipsoid(ray, ellipsoid);
+
+        expect(actual).toBeDefined();
+        expect(actual.start).toEqual(expected.start);
+        expect(actual.stop).toEqual(expected.stop);
     });
 
     it('rayEllipsoid tangent intersections', function() {
