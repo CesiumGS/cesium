@@ -4,12 +4,12 @@ varying vec2 v_textureCoordinates;
 
 void main()
 {
-    vec4 c = texture2D(u_texture, v_textureCoordinates);
+    czm_materialInput materialInput;
     
-    if (c.a == 0.0)
-    {
-        discard;
-    }
+    materialInput.st = v_textureCoordinates;
+    materialInput.str = vec3(v_textureCoordinates, 0.0);
     
-    gl_FragColor = c;
+    czm_material material = czm_getMaterial(materialInput);
+       
+    gl_FragColor = vec4(material.diffuse, material.alpha);
 }
