@@ -7,6 +7,8 @@ uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 uniform float u_dayTextureBrightness[TEXTURE_UNITS];
 uniform float u_dayTextureContrast[TEXTURE_UNITS];
+uniform float u_dayTextureHue[TEXTURE_UNITS];
+uniform float u_dayTextureSaturation[TEXTURE_UNITS];
 uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
 #endif
@@ -25,6 +27,8 @@ vec3 sampleAndBlend(
     float textureAlpha,
     float textureBrightness,
     float textureContrast,
+    float textureHue,
+    float textureSaturation,
     float textureOneOverGamma)
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
@@ -47,10 +51,25 @@ vec3 sampleAndBlend(
     vec3 color = sample.rgb;
     float alpha = sample.a;
     
+#ifdef APPLY_BRIGHTNESS
     color = mix(vec3(0.0, 0.0, 0.0), color, textureBrightness);
+#endif
+
+#ifdef APPLY_CONTRAST
     color = mix(vec3(0.5, 0.5, 0.5), color, textureContrast);
-    
+#endif
+
+#ifdef APPLY_HUE
+    color = czm_hue(color, textureHue);
+#endif
+
+#ifdef APPLY_SATURATION
+    color = czm_saturation(color, textureSaturation);
+#endif
+
+#ifdef APPLY_GAMMA
     color = pow(color, vec3(textureOneOverGamma));
+#endif
 
 #ifdef SHOW_TEXTURE_BOUNDARIES
     if (textureCoordinates.x < (1.0/256.0) || textureCoordinates.x > (255.0/256.0) ||

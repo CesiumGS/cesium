@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Adjust brightness, contrast, and gamma of an imagery layer.">
+    <meta name="description" content="Adjust brightness, contrast, hue, saturation, and gamma of an imagery layer.">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
@@ -96,6 +96,8 @@ require([
     var imageryLayerCollection;
     var brightnessSlider;
     var contrastSlider;
+    var hueSlider;
+    var saturationSlider;
     var gammaSlider;
     
     function createAdjustmentUserInterface() {
@@ -103,6 +105,8 @@ require([
                 '<table id="layerTable">' +
                   '<tr><td>Brightness</td><td id="brightnessSlider"></td></tr>' +
                   '<tr><td>Contrast</td><td id="contrastSlider"></td></tr>' +
+                  '<tr><td>Hue</td><td id="hueSlider"></td></tr>' +
+                  '<tr><td>Saturation</td><td id="saturationSlider"></td></tr>' +
                   '<tr><td>Gamma</td><td id="gammaSlider"></td></tr>' +
                 '</table>', 'toolbar');
         
@@ -130,6 +134,30 @@ require([
         });
         contrastSlider.placeAt('contrastSlider');
 
+        hueSlider = new HorizontalSlider({
+            value: imageryLayerCollection.get(0).hue,
+            minimum: -Math.PI,
+            maximum: Math.PI,
+            intermediateChanges: true,
+            style: "width:150px;",
+            onChange: function(value) {
+                imageryLayerCollection.get(0).hue = value;
+            }
+        });
+        hueSlider.placeAt('hueSlider');
+        
+        saturationSlider = new HorizontalSlider({
+            value: imageryLayerCollection.get(0).saturation,
+            minimum: 0.0,
+            maximum: 3.0,
+            intermediateChanges: true,
+            style: "width:150px;",
+            onChange: function(value) {
+                imageryLayerCollection.get(0).saturation = value;
+            }
+        });
+        saturationSlider.placeAt('saturationSlider');
+        
         gammaSlider = new HorizontalSlider({
             value: imageryLayerCollection.get(0).gamma,
             minimum: 0.0,
@@ -148,6 +176,8 @@ require([
             var layer = imageryLayerCollection.get(0);
             brightnessSlider.set('value', layer.brightness);
             contrastSlider.set('value', layer.contrast);
+            hueSlider.set('value', layer.hue);
+            saturationSlider.set('value', layer.saturation);
             gammaSlider.set('value', layer.gamma);
         }
     }
