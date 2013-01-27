@@ -277,11 +277,13 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        expect(context.readPixels()).toEqual([127, 127, 0, 255]);
+        // Epsilon of 1 because AMD and Intel HD 4000 gives 128
+        expect(context.readPixels()).toEqualEpsilon([127, 127, 0, 255], 1);
 
         scene.initializeFrame();
         scene.render();
-        expect(context.readPixels()).toEqual([127, 127, 0, 255]);
+        // Epsilon of 1 because AMD and Intel HD 4000 gives 128
+        expect(context.readPixels()).toEqualEpsilon([127, 127, 0, 255], 1);
     });
 
     it('render without a central body or any primitives', function() {
