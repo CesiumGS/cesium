@@ -256,7 +256,6 @@ define([
 
         this.state = TileState.UNLOADED;
         this.doneLoading = false;
-        this.renderable = false;
 
         this.loadedTerrain.freeResources();
         this.upsampledTerrain.freeResources();

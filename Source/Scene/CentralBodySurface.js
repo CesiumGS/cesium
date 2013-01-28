@@ -190,7 +190,7 @@ define([
             }
             // If the base layer has been removed, mark the tile as non-renderable.
             if (layer.isBaseLayer()) {
-                tile.renderable = false;
+                tile.renderableTerrain = undefined;
             }
 
             tile = tile.replacementNext;
@@ -343,7 +343,7 @@ define([
             if (!tile.doneLoading) {
                 queueTileLoad(surface, tile);
             }
-            if (tile.renderable && isTileVisible(surface, frameState, tile)) {
+            if (typeof tile.renderableTerrain !== 'undefined' && isTileVisible(surface, frameState, tile)) {
                 traversalQueue.enqueue(tile);
             } else {
                 ++debug.tilesCulled;
@@ -597,7 +597,7 @@ define([
             if (!child.doneLoading) {
                 queueTileLoad(surface, child);
             }
-            if (!child.renderable) {
+            if (typeof child.renderableTerrain === 'undefined') {
                 allRenderable = false;
             }
         }
@@ -636,6 +636,7 @@ define([
 
             if (tile.state === TileState.LOADING) {
                 processTerrainLoad(surface, context, terrainProvider, tile);
+
                 if (!tile.suspendUpsampling) {
                     processTerrainUpsample(surface, context, terrainProvider, tile);
                 }
@@ -734,7 +735,6 @@ define([
                 tile.renderableTerrain = tile.loadedTerrain.state === TerrainState.READY ?
                                             tile.loadedTerrain :
                                             tile.upsampledTerrain;
-                tile.renderable = true;
 
                 if (isDoneLoading) {
                     tile.doneLoading = true;
