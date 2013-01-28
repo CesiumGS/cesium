@@ -717,7 +717,7 @@ define([
                 }
                 this.animationController = new AnimationController(this.clock);
             } else {
-                this.clock = this.animationController.clock;
+                this.clock = this.animationController.getClock();
             }
             this.animation = new Animation(this.animationWidget, this.animationController);
 

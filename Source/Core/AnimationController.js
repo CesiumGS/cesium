@@ -17,20 +17,27 @@ define([
      *
      * @param {Clock} clock The clock that will be controlled.
      *
+     * @exception {DeveloperError} clock is required.
+     *
      * @see Clock
      * @see Animation
      */
     var AnimationController = function(clock) {
-        this.clock = clock;
-        this._animating = true;
-        if (typeof clock !== 'object') {
-            throw new DeveloperError('Clock parameter required to construct AnimationController.');
+        if (typeof clock === 'undefined') {
+            throw new DeveloperError('clock is required.');
         }
+
+        this._clock = clock;
+        this._animating = true;
     };
 
     var typicalMultipliers = [0.000001, 0.000002, 0.000005, 0.00001, 0.00002, 0.00005, 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005,
                               0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 15.0, 30.0, 60.0, 120.0, 300.0, 600.0, 900.0,
                               1800.0, 3600.0, 7200.0, 14400.0, 21600.0, 43200.0, 86400.0, 172800.0, 345600.0, 604800.0];
+
+    AnimationController.prototype.getClock = function() {
+        return this._clock;
+    };
 
     /**
      * Test if the AnimationController is playing or paused.
@@ -47,7 +54,7 @@ define([
      * @memberof AnimationController
      */
     AnimationController.prototype.reset = function() {
-        this.clock.currentTime = this.clock.startTime;
+        this._clock.currentTime = this._clock.startTime;
         this._animating = false;
     };
 
@@ -61,17 +68,18 @@ define([
      */
     AnimationController.prototype.update = function() {
         var currentTime;
+        var clock = this._clock;
         if (this._animating) {
-            currentTime = this.clock.tick();
-            this._animating = !this.clock.isOutOfRange();
+            currentTime = clock.tick();
+            this._animating = !clock.isOutOfRange();
         } else {
-            currentTime = this.clock.currentTime;
+            currentTime = clock.currentTime;
         }
         return currentTime;
     };
 
     AnimationController.prototype._cancelRealtime = function() {
-        var clock = this.clock;
+        var clock = this._clock;
         if (clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
             clock.clockStep = ClockStep.SPEED_MULTIPLIER;
             clock.multiplier = 1;
@@ -92,9 +100,10 @@ define([
      * @memberof AnimationController
      */
     AnimationController.prototype.unpause = function() {
+        var clock = this._clock;
         this._cancelRealtime();
-        this.clock.tick(0);
-        this._animating = !this.clock.isOutOfRange();
+        clock.tick(0);
+        this._animating = !clock.isOutOfRange();
     };
 
     /**
@@ -102,7 +111,7 @@ define([
      * @memberof AnimationController
      */
     AnimationController.prototype.play = function() {
-        var clock = this.clock;
+        var clock = this._clock;
         this._cancelRealtime();
         if (clock.multiplier < 0) {
             clock.multiplier = -clock.multiplier;
@@ -115,7 +124,7 @@ define([
      * @memberof AnimationController
      */
     AnimationController.prototype.playReverse = function() {
-        var clock = this.clock;
+        var clock = this._clock;
         this._cancelRealtime();
         if (clock.multiplier > 0) {
             clock.multiplier = -clock.multiplier;
@@ -128,12 +137,12 @@ define([
      * @memberof AnimationController
      */
     AnimationController.prototype.playRealtime = function() {
-        var clock = this.clock;
+        var clock = this._clock;
         if (clock.isSystemTimeAvailable()) {
             clock.clockStep = ClockStep.SYSTEM_CLOCK_TIME;
             clock.multiplier = 1.0;
-            this.clock.tick(0);
-            this._animating = !this.clock.isOutOfRange();
+            clock.tick(0);
+            this._animating = !clock.isOutOfRange();
         }
     };
 
@@ -170,7 +179,7 @@ define([
      */
     AnimationController.prototype.slower = function() {
         this._cancelRealtime();
-        var clock = this.clock;
+        var clock = this._clock;
         var multiplier = clock.multiplier > 0 ? clock.multiplier : -clock.multiplier;
         var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
             return left - right;
@@ -196,7 +205,7 @@ define([
      */
     AnimationController.prototype.faster = function() {
         this._cancelRealtime();
-        var clock = this.clock;
+        var clock = this._clock;
         var multiplier = clock.multiplier > 0 ? clock.multiplier : -clock.multiplier;
         var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
             return left - right;
@@ -225,7 +234,7 @@ define([
      */
     AnimationController.prototype.moreForward = function() {
         this._cancelRealtime();
-        var clock = this.clock;
+        var clock = this._clock;
 
         if (clock.multiplier > 0) {
             this.faster();
@@ -245,7 +254,7 @@ define([
      */
     AnimationController.prototype.moreReverse = function() {
         this._cancelRealtime();
-        var clock = this.clock;
+        var clock = this._clock;
 
         if (clock.multiplier < 0) {
             this.faster();

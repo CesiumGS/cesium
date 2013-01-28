@@ -15,7 +15,7 @@ defineSuite([
     it('construct with default clock', function() {
         var clock = new Clock();
         var animationController = new AnimationController(clock);
-        expect(animationController.clock).toEqual(clock);
+        expect(animationController.getClock()).toEqual(clock);
     });
 
     it('construct throws if no clock', function() {
