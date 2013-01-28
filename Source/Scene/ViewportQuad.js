@@ -253,7 +253,6 @@ define([
      * @exception {DeveloperError} this.material must be defined.
      */
     ViewportQuad.prototype.update = function(context, frameState, commandList) {
-
         if (typeof this.material === 'undefined') {
             throw new DeveloperError('this.material must be defined.');
         }

@@ -11,6 +11,20 @@ define([
          SceneMode) {
     "use strict";
 
+    function executeOverlayCommands(context, commandLists, numRendered) {
+        var length = commandLists.length;
+        for (var i = 0; i < length; ++i) {
+            var commandList = commandLists[i].overlayList;
+            var commandListLength = commandList.length;
+            for (var j = 0; j < commandListLength; ++j) {
+                commandList[j].execute(context);
+                numRendered++;
+            }
+        }
+
+        return numRendered;
+    }
+
     function render(context, frameState, primitive, commandLists) {
         commandLists = defaultValue(commandLists, []);
         primitive.update(context, frameState, commandLists);
@@ -42,6 +56,8 @@ define([
                 numRendered++;
             }
         }
+
+        numRendered = executeOverlayCommands(context, commandLists, numRendered);
 
         return numRendered;
     }

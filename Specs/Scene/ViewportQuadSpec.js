@@ -27,9 +27,13 @@ defineSuite([
     var context;
     var viewportQuad;
     var us;
+    var testImage;
 
     beforeAll(function() {
         context = createContext();
+        testImage = new Image();
+        testImage.src = './Data/Images/Red16x16.png';
+
     });
 
     afterAll(function() {
@@ -37,11 +41,11 @@ defineSuite([
     });
 
     beforeEach(function() {
-        var boundRectangle = new BoundingRectangle(0, 0, 10, 10);
+        var boundRectangle = new BoundingRectangle(0, 0, 2, 2);
         viewportQuad = new ViewportQuad(boundRectangle);
 
         us = context.getUniformState();
-        us.update(createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
+        us.update(createFrameState(createCamera(context)));
     });
 
     afterEach(function() {
@@ -50,7 +54,7 @@ defineSuite([
     });
 
     it('gets constructor set rectangle', function() {
-        var boundRectangle = new BoundingRectangle(0, 0, 10, 10);
+        var boundRectangle = new BoundingRectangle(0, 0, 2, 2);
         expect(viewportQuad.getRectangle()).toEqual(boundRectangle);
     });
 
@@ -85,10 +89,7 @@ defineSuite([
     });
 
     it('renders material', function() {
-        var boundRectangle = new BoundingRectangle(0, 0, 2, 2);
-        var vq = new ViewportQuad(boundRectangle);
-
-        vq.material.uniforms.color = {
+        viewportQuad.material.uniforms.color = {
             red : 1.0,
             green : 0.0,
             blue : 0.0,
@@ -98,28 +99,29 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, vq);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-    });
-
-    it('renders texture', function() {
-        var image = new Image();
-        image.src = 'Data/Images/Red16x16.png';
-
-        var texture = context.createTexture2D({
-            source : image
-        });
-        viewportQuad.setTexture(texture);
-
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
         render(context, frameState, viewportQuad);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
-    it('is not picked', function() {
-        expect(render(context, frameState, viewportQuad)).toEqual(0);
+    it('renders texture', function() {
+
+        waitsFor( function() {
+            return testImage.complete;
+        }, 'Load test image for texture test.', 3000);
+
+        runs( function() {
+            var texture = context.createTexture2D({
+                source : testImage
+            });
+
+            viewportQuad.setTexture(texture);
+
+            context.clear();
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            render(context, frameState, viewportQuad);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        });
     });
 
     it('isDestroyed', function() {
