@@ -123,7 +123,7 @@ defineSuite([
         });
 
         expect(provider.getUrl()).toEqual(url);
-        expect(provider.getKey()).not.toBeUndefined();
+        expect(provider.getKey()).toBeDefined();
         expect(provider.getMapStyle()).toEqual(mapStyle);
 
         waitsFor(function() {
