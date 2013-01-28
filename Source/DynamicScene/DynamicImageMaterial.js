@@ -45,6 +45,13 @@ define([
     };
 
     /**
+     * Returns true if the provided CZML interval contains image material data.
+     * @param czmlInterval The CZML interval to check.
+     * @returns {Boolean} true if the interval contains CZML image material data, false otherwise.
+     */
+    DynamicImageMaterial.prototype.isMaterial = DynamicImageMaterial.isMaterial;
+
+    /**
      * Provided a CZML interval containing image material data, processes the
      * interval into a new or existing instance of this class.
      *
