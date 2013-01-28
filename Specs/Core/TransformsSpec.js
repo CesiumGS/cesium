@@ -499,7 +499,7 @@ defineSuite([
             preloadTransformationData(time, time);
 
             runs(function() {
-                expect(Transforms.computeIcrfToFixedMatrix(time)).not.toBeUndefined();
+                expect(Transforms.computeIcrfToFixedMatrix(time)).toBeDefined();
                 Transforms.earthOrientationParameters = new EarthOrientationParameters({
                     url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
                 });

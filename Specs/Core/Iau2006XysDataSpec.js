@@ -26,7 +26,7 @@ defineSuite([
         // Once the data file has been downloaded, later requests
         // within the same chunk return an answer.
         runs(function() {
-            expect(xys.computeXysRadians(2442399, 777.77)).not.toBeUndefined();
+            expect(xys.computeXysRadians(2442399, 777.77)).toBeDefined();
         });
     });
 
