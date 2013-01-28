@@ -757,9 +757,6 @@ define([
 
         var ellipsoid = tile.tilingScheme.getEllipsoid();
 
-        // Compute the center of the tile for RTC rendering.
-        tile.center = ellipsoid.cartographicToCartesian(tile.extent.getCenter());
-
         // Compute tile extent boundaries for estimating the distance to the tile.
         var extent = tile.extent;
         tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
@@ -871,6 +868,9 @@ define([
         var ellipsoid = tilingScheme.getEllipsoid();
         var extent = tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
 
+        // Compute the center of the tile for RTC rendering.
+        process.center = ellipsoid.cartographicToCartesian(tile.extent.getCenter());
+
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : heightmap,
             heightScale : structure.heightScale,
@@ -879,7 +879,7 @@ define([
             width : width,
             height : height,
             extent : extent,
-            relativeToCenter : tile.center,
+            relativeToCenter : process.center,
             radiiSquared : ellipsoid.getRadiiSquared(),
             oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
             skirtHeight : Math.min(terrainProvider.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
@@ -913,7 +913,7 @@ define([
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers, process, true);
         process.minHeight = buffers.statistics.minHeight;
         process.maxHeight = buffers.statistics.maxHeight;
-        process.boundingSphere3D = BoundingSphere.fromVertices(buffers.vertices, tile.center, 5);
+        process.boundingSphere3D = BoundingSphere.fromVertices(buffers.vertices, process.center, 5);
 
         // TODO: we need to take the heights into account when computing the occludee point.
         var ellipsoid = tile.tilingScheme.getEllipsoid();
@@ -976,7 +976,7 @@ define([
                 return;
             }
 
-            var rtc2 = tile.center;
+            var rtc2 = tile.renderableTerrain.center;
 
             var uniformMap2 = createTileUniformMap();
             mergeUniformMap(uniformMap2, centralBodyUniformMap);
@@ -1126,7 +1126,7 @@ define([
             for (var i = 0, len = tileSet.length; i < len; i++) {
                 var tile = tileSet[i];
 
-                var rtc = tile.center;
+                var rtc = tile.renderableTerrain.center;
 
                 // Not used in 3D.
                 var tileExtent = tileExtentScratch;
@@ -1201,7 +1201,7 @@ define([
 
                     mergeUniformMap(uniformMap, centralBodyUniformMap);
 
-                    uniformMap.center3D = tile.center;
+                    uniformMap.center3D = tile.renderableTerrain.center;
 
                     Cartesian4.clone(tileExtent, uniformMap.tileExtent);
                     uniformMap.southAndNorthLatitude.x = southLatitude;
