@@ -2165,17 +2165,23 @@ define([
                     var value;
                     var loc;
 
-                    // On some platforms - Nexus 4 for one - an array of sampler2D ends up being represented
+                    // On some platforms - Nexus 4 in Firefox for one - an array of sampler2D ends up being represented
                     // as separate uniforms, one for each array element.  Check for and handle that case.
                     var indexOfBracket = uniformName.indexOf('[');
                     if (indexOfBracket >= 0) {
                         // We're assuming the array elements show up in numerical order - it seems to be true.
                         uniformArray = allUniforms[uniformName.slice(0, indexOfBracket)];
                         locations = uniformArray._getLocations();
-                        value = uniformArray.value;
-                        loc = gl.getUniformLocation(program, uniformName);
-                        locations.push(loc);
-                        value.push(gl.getUniform(program, loc));
+
+                        // On the Nexus 4 in Chrome, we get one uniform per sampler, just like in Firefox,
+                        // but the size is not 1 like it is in Firefox.  So if we push locations here,
+                        // we'll end up adding too many locations.
+                        if (locations.length <= 1) {
+                            value = uniformArray.value;
+                            loc = gl.getUniformLocation(program, uniformName);
+                            locations.push(loc);
+                            value.push(gl.getUniform(program, loc));
+                        }
                     } else {
                         locations = [];
                         value = [];
