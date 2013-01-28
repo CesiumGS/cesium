@@ -54,12 +54,7 @@ define([
      * @example
      * var boundingRectangle = new BoundingRectangle(0, 0, 80, 40);
      * var viewportQuad = new ViewportQuad(boundingRectangle);
-     * viewportQuad.material.uniforms.color = {
-     *   red   : 1.0,
-     *   green : 0.0,
-     *   blue  : 0.0,
-     *   alpha : 1.0
-     * };
+     * viewportQuad.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
      */
     var ViewportQuad = function(rectangle) {
         /**
