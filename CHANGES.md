@@ -8,8 +8,15 @@ Beta Releases
 * Breaking changes:
    * The combined `Cesium.js` file and other required files are now created in `Build/Cesium` and `Build/CesiumUnminified` folders.
    * The Web Worker files needed when using the combined `Cesium.js` file are now in a `Workers` subdirectory.
+   * Removed `erosion` property from `Polygon`, `ComplexConicSensorVolume`, `RectangularPyramidSensorVolume`, and `ComplexConicSensorVolume`.  Use the new `Erosion` material.  See the Sandbox Animation example.
 * Added a new `Animation` widget, plus related API in `AnimationController` and `Clock`.
+* Added new `RimLighting` and `Erosion` materials.  See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page.
+* Added `hue` and `saturation` properties to `ImageryLayer`.
+* Added `czm_hue` and `czm_saturation` to adjust the hue and saturation of RGB colors.
+* Added `JulianDate.getDaysDifference` method.
 * Fixed rendering artifacts in `EllipsoidPrimitive`.
+* Fixed an issue where streaming CZML would fail when changing material types.
+* Fixed globe rendering on the Nexus 4 running Google Chrome Beta.
 
 ### b12a - 2013-01-18
 

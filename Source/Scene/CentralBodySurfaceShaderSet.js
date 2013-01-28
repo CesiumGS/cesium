@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../Core/destroyObject'
+        '../Core/destroyObject',
+        '../Core/defaultValue'
     ], function(
-        destroyObject) {
+        destroyObject,
+        defaultValue) {
     "use strict";
 
     /**
@@ -15,25 +17,52 @@ define([
         this.baseVertexShaderString = undefined;
         this.baseFragmentShaderString = undefined;
         this._attributeIndices = attributeIndices;
-        this._shadersByTextureCount = [];
+        this._shaders = {};
     }
 
     CentralBodySurfaceShaderSet.prototype.invalidateShaders = function() {
-        var shadersByTextureCount = this._shadersByTextureCount;
-        for (var i = 0, len = shadersByTextureCount.length; i < len; ++i) {
-            var shader = shadersByTextureCount[i];
-            if (typeof shader !== 'undefined') {
-                shader.release();
+        var shaders = this._shaders;
+        for ( var keyword in shaders) {
+            if (shaders.hasOwnProperty(keyword)) {
+                var shader = shaders[keyword];
+                if (shader !== 'undefined') {
+                    shader.release();
+                }
             }
         }
-        this._shadersByTextureCount = [];
+
+        this._shaders = {};
     };
 
-    CentralBodySurfaceShaderSet.prototype.getShaderProgram = function(context, textureCount) {
-        var shader = this._shadersByTextureCount[textureCount];
+    function getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma) {
+        var key = '';
+        key += textureCount;
+        key += applyBrightness ? '_brightness' : '';
+        key += applyContrast ? '_contrast' : '';
+        key += applyHue ? '_hue' : '';
+        key += applySaturation ? '_saturation' : '';
+        key += applyGamma ? '_gamma' : '';
+
+        return key;
+    }
+
+    CentralBodySurfaceShaderSet.prototype.getShaderProgram = function(context, textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma) {
+        applyBrightness = defaultValue(applyBrightness, false);
+        applyContrast = defaultValue(applyContrast, false);
+        applyHue = defaultValue(applyHue, false);
+        applySaturation = defaultValue(applySaturation, false);
+        applyGamma = defaultValue(applyGamma, false);
+
+        var key = getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma);
+        var shader = this._shaders[key];
         if (typeof shader === 'undefined') {
             var vs = this.baseVertexShaderString;
             var fs =
+                (applyBrightness ? '#define APPLY_BRIGHTNESS\n' : '') +
+                (applyContrast ? '#define APPLY_CONTRAST\n' : '') +
+                (applyHue ? '#define APPLY_HUE\n' : '') +
+                (applySaturation ? '#define APPLY_SATURATION\n' : '') +
+                (applyGamma ? '#define APPLY_GAMMA\n' : '') +
                 '#define TEXTURE_UNITS ' + textureCount + '\n' +
                 this.baseFragmentShaderString +
                 'vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)\n' +
@@ -51,6 +80,8 @@ define([
                     '   u_dayTextureAlpha[' + i + '],\n' +
                     '   u_dayTextureBrightness[' + i + '],\n' +
                     '   u_dayTextureContrast[' + i + '],\n' +
+                    '   u_dayTextureHue[' + i + '],\n' +
+                    '   u_dayTextureSaturation[' + i + '],\n' +
                     '   u_dayTextureOneOverGamma[' + i + ']);\n';
             }
 
@@ -62,19 +93,13 @@ define([
                 vs,
                 fs,
                 this._attributeIndices);
-            this._shadersByTextureCount[textureCount] = shader;
+            this._shaders[key] = shader;
         }
         return shader;
     };
 
     CentralBodySurfaceShaderSet.prototype.destroy = function() {
-        var shadersByTextureCount = this._shadersByTextureCount;
-        for (var i = 0, len = shadersByTextureCount.length; i < len; ++i) {
-            var shader = shadersByTextureCount[i];
-            if (typeof shader !== 'undefined') {
-                shader.release();
-            }
-        }
+        this.invalidateShaders();
         return destroyObject(this);
     };
 

@@ -33,8 +33,6 @@ czm_materialInput getMaterialInput(float sensorRadius, vec3 pointEC, vec3 normal
 }
 vec4 getOuterColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
-    sensorErode(sensorRadius, pointEC);
-    
     czm_materialInput materialInput = getMaterialInput(sensorRadius, pointEC, normalEC);
     czm_material material = czm_getOuterMaterial(materialInput);
     
@@ -46,8 +44,6 @@ vec4 getOuterColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 
 vec4 getInnerColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
-    sensorErode(sensorRadius, pointEC);
-    
     czm_materialInput materialInput = getMaterialInput(sensorRadius, pointEC, normalEC);
     czm_material material = czm_getInnerMaterial(materialInput);
     
@@ -59,8 +55,6 @@ vec4 getInnerColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 
 vec4 getCapColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
-    sensorErode(sensorRadius, pointEC);
-    
     czm_materialInput materialInput = getMaterialInput(sensorRadius, pointEC, normalEC);
     czm_material material = czm_getCapMaterial(materialInput);
     
@@ -72,8 +66,6 @@ vec4 getCapColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 
 vec4 getSilhouetteColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
-    sensorErode(sensorRadius, pointEC);
-    
     czm_materialInput materialInput = getMaterialInput(sensorRadius, pointEC, normalEC);
     czm_material material = czm_getSilhouetteMaterial(materialInput);
     

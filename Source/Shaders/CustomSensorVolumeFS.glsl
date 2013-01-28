@@ -16,8 +16,6 @@ varying vec3 v_normalEC;
 
 vec4 getColor(float sensorRadius, vec3 pointEC)
 {
-    sensorErode(sensorRadius, pointEC);
-    
     czm_materialInput materialInput;
     
     vec3 pointMC = (czm_inverseModelView * vec4(pointEC, 1.0)).xyz;                                

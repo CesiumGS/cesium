@@ -481,6 +481,19 @@ require([
         Sandcastle.declare(applyWoodMaterial);  // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Wood');
     }
+
+    function applyErosionMaterial(primitive, scene) {
+        Sandcastle.declare(applyErosionMaterial);  // For highlighting in Sandcastle.
+        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Erosion');
+        scene.getAnimations().addProperty(primitive.material.uniforms, 'time', 0.0, 1.0, {
+            duration : 1500
+        });        
+    }
+    
+    function applyRimLightingMaterial(primitive, scene) {
+        Sandcastle.declare(applyRimLightingMaterial);  // For highlighting in Sandcastle.
+        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'RimLighting');
+    }    
     
     /////////////////////////////////////////
     
@@ -491,6 +504,7 @@ require([
         var commonMaterialMenu = new DropDownMenu({ style: "display: none;"});
         var proceduralTextureMenu = new DropDownMenu({ style: "display: none;"});
         var baseMaterialMenu = new DropDownMenu({ style: "display: none;"});
+        var miscMaterialMenu = new DropDownMenu({ style: "display: none;"});
         var compositeMaterialMenu = new DropDownMenu({ style: "display: none;"});
         
         function togglePolygonVisibility(polygonToShow, polygonToHide) {
@@ -705,7 +719,16 @@ require([
             }
         }));
         
-        commonMaterialMenu.addChild(new MenuItem({
+        proceduralTextureMenu.addChild(new MenuItem({
+            label: 'Wood',
+            onClick: function() {
+                togglePolygonVisibility(polygon, worldPolygon);
+                applyWoodMaterial(polygon, scene);
+                Sandcastle.highlight(applyWoodMaterial);
+            }
+        }));
+        
+        miscMaterialMenu.addChild(new MenuItem({
             label: 'Water',
             onClick: function() {
                 togglePolygonVisibility(worldPolygon, polygon);
@@ -714,12 +737,21 @@ require([
             }
         }));
         
-        proceduralTextureMenu.addChild(new MenuItem({
-            label: 'Wood',
+        miscMaterialMenu.addChild(new MenuItem({
+            label: 'Erosion',
             onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
-                applyWoodMaterial(polygon, scene);
-                Sandcastle.highlight(applyWoodMaterial);
+                applyErosionMaterial(polygon, scene);
+                Sandcastle.highlight(applyErosionMaterial);
+            }
+        }));
+
+        miscMaterialMenu.addChild(new MenuItem({
+            label: 'RimLighting',
+            onClick: function() {
+                togglePolygonVisibility(worldPolygon, polygon);
+                applyRimLightingMaterial(worldPolygon, scene);
+                Sandcastle.highlight(applyRimLightingMaterial);
             }
         }));
         
@@ -740,9 +772,15 @@ require([
             dropDown: baseMaterialMenu,
             maxHeight: -1
         }).placeAt('toolbar');
+
+        new DropDownButton({
+            label : 'Misc materials',
+            dropDown: miscMaterialMenu,
+            maxHeight: -1
+        }).placeAt('toolbar');
         
         new DropDownButton({
-            label : 'Composite materials',
+            label : 'Example composite materials',
             dropDown: compositeMaterialMenu,
             maxHeight: -1
         }).placeAt('toolbar');
