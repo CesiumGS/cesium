@@ -45,32 +45,34 @@ define([
         }
 
         var cartographic = positionProperty.getValueCartographic(time, that._lastCartographic);
-        //We are assigning the position of the camera, not of the object, so modify the height appropriately.
-        cartographic.height = viewDistance;
-        if (objectChanged || modeChanged) {
-            camera.controller.setPositionCartographic(cartographic);
+        if (typeof cartographic !== 'undefined') {
+            //We are assigning the position of the camera, not of the object, so modify the height appropriately.
+            cartographic.height = viewDistance;
+            if (objectChanged || modeChanged) {
+                camera.controller.setPositionCartographic(cartographic);
 
-            //Set rotation to match offset.
-            Cartesian3.normalize(offset, camera.up);
-            Cartesian3.negate(camera.up, camera.up);
-            Cartesian3.cross(camera.direction, camera.up, camera.right);
+                //Set rotation to match offset.
+                Cartesian3.normalize(offset, camera.up);
+                Cartesian3.negate(camera.up, camera.up);
+                Cartesian3.cross(camera.direction, camera.up, camera.right);
 
-            //z is always zero in 2D for up and right
-            camera.up.z = 0;
-            Cartesian3.normalize(camera.up, camera.up);
-            camera.right.z = 0;
-            Cartesian3.normalize(camera.right, camera.right);
+                //z is always zero in 2D for up and right
+                camera.up.z = 0;
+                Cartesian3.normalize(camera.up, camera.up);
+                camera.right.z = 0;
+                Cartesian3.normalize(camera.right, camera.right);
 
-            //Remember what up was when we started, so we
-            //can detect rotation when we are finished.
-            Cartesian2.clone(camera.right, that._first2dUp);
-        } else {
-            camera.position = projection.project(cartographic);
+                //Remember what up was when we started, so we
+                //can detect rotation when we are finished.
+                Cartesian2.clone(camera.right, that._first2dUp);
+            } else {
+                camera.position = projection.project(cartographic);
+            }
+
+            //Store last view distance and up vector.
+            that._lastDistance = camera.frustum.right - camera.frustum.left;
+            Cartesian2.clone(camera.right, that._last2dUp);
         }
-
-        //Store last view distance and up vector.
-        that._lastDistance = camera.frustum.right - camera.frustum.left;
-        Cartesian2.clone(camera.right, that._last2dUp);
     }
 
     var update3DTransform;
@@ -78,12 +80,14 @@ define([
         update3DController(that, camera, objectChanged, offset);
 
         var cartesian = positionProperty.getValueCartesian(time, that._lastCartesian);
-        camera.transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
-        that._screenSpaceCameraController.setEllipsoid(Ellipsoid.UNIT_SPHERE);
+        if (typeof cartesian !== 'undefined') {
+            camera.transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
+            that._screenSpaceCameraController.setEllipsoid(Ellipsoid.UNIT_SPHERE);
 
-        var position = camera.position;
-        Cartesian3.clone(position, that._lastOffset);
-        that._lastDistance = Cartesian3.magnitude(position);
+            var position = camera.position;
+            Cartesian3.clone(position, that._lastOffset);
+            that._lastDistance = Cartesian3.magnitude(position);
+        }
     }
 
     var updateColumbusCartesian4 = new Cartesian4(0.0, 0.0, 0.0, 1.0);
@@ -92,24 +96,26 @@ define([
 
         //The swizzling here is intentional because ColumbusView uses a different coordinate system.
         var cartographic = positionProperty.getValueCartographic(time, that._lastCartographic);
-        var projectedPosition = projection.project(cartographic);
-        updateColumbusCartesian4.x = projectedPosition.z;
-        updateColumbusCartesian4.y = projectedPosition.x;
-        updateColumbusCartesian4.z = projectedPosition.y;
+        if (typeof cartographic !== 'undefined') {
+            var projectedPosition = projection.project(cartographic);
+            updateColumbusCartesian4.x = projectedPosition.z;
+            updateColumbusCartesian4.y = projectedPosition.x;
+            updateColumbusCartesian4.z = projectedPosition.y;
 
-        var tranform = camera.transform;
-        tranform.setColumn(3, updateColumbusCartesian4, tranform);
+            var tranform = camera.transform;
+            tranform.setColumn(3, updateColumbusCartesian4, tranform);
 
-        var controller = that._screenSpaceCameraController;
-        controller.enableTranslate = false;
-        controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
-        controller.columbusViewMode = CameraColumbusViewMode.LOCKED;
+            var controller = that._screenSpaceCameraController;
+            controller.enableTranslate = false;
+            controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
+            controller.columbusViewMode = CameraColumbusViewMode.LOCKED;
 
-        camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
+            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
-        var position = camera.position;
-        Cartesian3.clone(position, that._lastOffset);
-        that._lastDistance = Cartesian3.magnitude(position);
+            var position = camera.position;
+            Cartesian3.clone(position, that._lastOffset);
+            that._lastDistance = Cartesian3.magnitude(position);
+        }
     }
 
     var update3DControllerQuaternion = new Quaternion();
