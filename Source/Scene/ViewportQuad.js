@@ -19,7 +19,6 @@ define([
         '../Shaders/ViewportQuadVS',
         '../Shaders/ViewportQuadFSMaterial',
         '../Shaders/ViewportQuadFSTexture',
-        '../Shaders/ViewportQuadFSPick'
     ], function(
         Color,
         combine,
@@ -39,8 +38,7 @@ define([
         Noise,
         ViewportQuadVS,
         ViewportQuadFSMaterial,
-        ViewportQuadFSTexture,
-        ViewportQuadFSPick) {
+        ViewportQuadFSTexture) {
     "use strict";
 
     /**
@@ -62,17 +60,12 @@ define([
          */
         this._shaderProgramMaterial = undefined;
         this._shaderProgramTexture = undefined;
-        this._shaderProgramPick = undefined;
-        this._pickId = undefined;
 
         this._va = undefined;
         this._overlayCommand = new DrawCommand();
         this._overlayCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
-        this._pickCommand = new DrawCommand();
-        this._pickCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
         this._commandLists = new CommandLists();
         this._commandLists.overlayList.push(this._overlayCommand);
-        this._commandLists.pickList.push(this._pickCommand);
 
         this._rectangle = BoundingRectangle.clone(rectangle);
 
@@ -271,11 +264,6 @@ define([
             this._overlayCommand.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
-
-            this._pickCommand.vertexArray = this._va.vertexArray;
-            this._pickCommand.renderState = context.createRenderState({
-                blending : BlendingState.DISABLED
-            });
         }
 
         var pass = frameState.passes;
@@ -314,26 +302,6 @@ define([
                 this._overlayCommand.uniformMap = this._textureUniform;
             }
         }
-
-        if (pass.pick) {
-            if (typeof this._pickId === 'undefined') {
-                this._shaderProgramPick = context.getShaderCache().getShaderProgram(ViewportQuadVS, ViewportQuadFSPick, attributeIndices);
-
-                this._pickId = context.createPickId(this);
-
-                var that = this;
-                this._pickUniforms = {
-                    u_pickColor : function() {
-                        return that._pickId.normalizedRgba;
-                    }
-                };
-            }
-
-            this._pickCommand.renderState.viewport = this._rectangle;
-            this._pickCommand.shaderProgram = this._shaderProgramPick;
-            this._pickCommand.uniformMap = this._pickUniforms;
-        }
-
 
         if (!this._commandLists.empty()) {
             commandList.push(this._commandLists);
@@ -379,7 +347,6 @@ define([
         this._va = this._va && this._va.release();
         this._shaderProgramMaterial = this._shaderProgramMaterial && this._shaderProgramMaterial.release();
         this._shaderProgramTexture = this._shaderProgramTexture && this._shaderProgramTexture.release();
-        this._shaderProgramPick = this._shaderProgramPick && this._shaderProgramPick.release();
 
         return destroyObject(this);
     };
