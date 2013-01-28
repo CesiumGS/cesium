@@ -254,11 +254,11 @@ define([
             this.waterMaskTexture = undefined;
         }
 
-        this.state = TileState.UNLOADED;
-        this.doneLoading = false;
+        this.state = TileState.START;
 
         this.loadedTerrain.freeResources();
         this.upsampledTerrain.freeResources();
+        this.renderableTerrain = undefined;
 
         var i, len;
 
