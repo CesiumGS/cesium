@@ -15,6 +15,7 @@ Beta Releases
 * Fixed rendering artifacts in `EllipsoidPrimitive`.
 * Fixed an issue where streaming CZML would fail when changing material types.
 * Added `JulianDate.getDaysDifference` method.
+* Fixed globe rendering on the Nexus 4 running Google Chrome Beta.
 
 ### b12a - 2013-01-18
 
