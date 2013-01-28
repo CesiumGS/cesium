@@ -1,10 +1,10 @@
 /*global define*/
 define([
         './ImageryState',
-        './TileState'
+        './TerrainState'
     ], function(
         ImageryState,
-        TileState) {
+        TerrainState) {
     "use strict";
 
     /**
@@ -53,7 +53,8 @@ define([
 
             // Do not remove tiles that are transitioning or that have
             // imagery that is transitioning.
-            var shouldRemoveTile = tileToTrim.state !== TileState.TRANSITIONING && tileToTrim.asyncOperationsInProgress === 0;
+            var shouldRemoveTile = tileToTrim.loadedTerrain.state !== TerrainState.TRANSITIONING &&
+                                   tileToTrim.upsampledTerrain.state !== TerrainState.TRANSITIONING;
             var imagery = tileToTrim.imagery;
             for (var i = 0, len = imagery.length; shouldRemoveTile && i < len; ++i) {
                 var tileImagery = imagery[i];

@@ -49,5 +49,39 @@ define([
        this.occludeePointInScaledSpace = undefined;
    };
 
+   TileTerrain.prototype.freeResources = function() {
+       this.state = TerrainState.UNLOADED;
+       this.center = undefined;
+       this.minHeight = 0.0;
+       this.maxHeight = 0.0;
+       this.boundingSphere3D = undefined;
+       this.boundingSphere2D = undefined;
+       this.occludeePointInScaledSpace = undefined;
+
+       if (typeof this.vertexArray !== 'undefined') {
+           var indexBuffer = this.vertexArray.getIndexBuffer();
+
+           this.vertexArray.destroy();
+           this.vertexArray = undefined;
+
+           if (!indexBuffer.isDestroyed() && typeof indexBuffer.referenceCount !== 'undefined') {
+               --indexBuffer.referenceCount;
+               if (indexBuffer.referenceCount === 0) {
+                   indexBuffer.destroy();
+               }
+           }
+       }
+
+       if (typeof this.data !== 'undefined' && typeof this.data.destroy !== 'undefined') {
+           this.data.destroy();
+       }
+       this.data = undefined;
+
+       if (typeof this.transformedData !== 'undefined' && typeof this.transformedData.destroy !== 'undefined') {
+           this.transformedData.destroy();
+       }
+       this.transformedData = undefined;
+   };
+
    return TileTerrain;
 });

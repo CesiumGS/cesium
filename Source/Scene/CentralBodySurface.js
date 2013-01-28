@@ -630,31 +630,7 @@ define([
             var i, len;
 
             if (tile.state === TileState.START) {
-                var imageryLayerCollection = surface._imageryLayerCollection;
-                for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
-                    var layer = imageryLayerCollection.get(i);
-                    if (layer.show) {
-                        layer._createTileImagerySkeletons(tile, terrainProvider);
-                    }
-                }
-
-                var ellipsoid = tile.tilingScheme.getEllipsoid();
-
-                // Compute the center of the tile for RTC rendering.
-                tile.center = ellipsoid.cartographicToCartesian(tile.extent.getCenter());
-
-                // Compute tile extent boundaries for estimating the distance to the tile.
-                var extent = tile.extent;
-                tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
-                tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast());
-                tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNortheast());
-                tile.northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest());
-
-                tile.westNormal = Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(cartesian3Scratch), cartesian3Scratch).normalize();
-                tile.eastNormal = tile.northeastCornerCartesian.negate(cartesian3Scratch).cross(Cartesian3.UNIT_Z, cartesian3Scratch).normalize();
-                tile.southNormal = ellipsoid.geodeticSurfaceNormal(tile.southeastCornerCartesian).cross(tile.southwestCornerCartesian.subtract(tile.southeastCornerCartesian, cartesian3Scratch)).normalize();
-                tile.northNormal = ellipsoid.geodeticSurfaceNormal(tile.northwestCornerCartesian).cross(tile.northeastCornerCartesian.subtract(tile.northwestCornerCartesian, cartesian3Scratch)).normalize();
-
+                prepareNewTile(surface, terrainProvider, tile);
                 tile.state = TileState.LOADING;
             }
 
@@ -762,12 +738,40 @@ define([
 
                 if (isDoneLoading) {
                     tile.doneLoading = true;
+                    tile.state = TileState.READY;
                     tileLoadQueue.remove(tile);
                 }
             }
 
             tile = tile.loadNext;
         } while (Date.now() < endTime && typeof tile !== 'undefined');
+    }
+
+    function prepareNewTile(surface, terrainProvider, tile) {
+        var imageryLayerCollection = surface._imageryLayerCollection;
+        for (var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
+            var layer = imageryLayerCollection.get(i);
+            if (layer.show) {
+                layer._createTileImagerySkeletons(tile, terrainProvider);
+            }
+        }
+
+        var ellipsoid = tile.tilingScheme.getEllipsoid();
+
+        // Compute the center of the tile for RTC rendering.
+        tile.center = ellipsoid.cartographicToCartesian(tile.extent.getCenter());
+
+        // Compute tile extent boundaries for estimating the distance to the tile.
+        var extent = tile.extent;
+        tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
+        tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast());
+        tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNortheast());
+        tile.northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest());
+
+        tile.westNormal = Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(cartesian3Scratch), cartesian3Scratch).normalize();
+        tile.eastNormal = tile.northeastCornerCartesian.negate(cartesian3Scratch).cross(Cartesian3.UNIT_Z, cartesian3Scratch).normalize();
+        tile.southNormal = ellipsoid.geodeticSurfaceNormal(tile.southeastCornerCartesian).cross(tile.southwestCornerCartesian.subtract(tile.southeastCornerCartesian, cartesian3Scratch)).normalize();
+        tile.northNormal = ellipsoid.geodeticSurfaceNormal(tile.northwestCornerCartesian).cross(tile.northeastCornerCartesian.subtract(tile.northwestCornerCartesian, cartesian3Scratch)).normalize();
     }
 
     function processTerrainLoad(surface, context, terrainProvider, tile) {
