@@ -34,11 +34,11 @@ define([
      * @constructor
      *
      * @param {String} [description.url] The URL from which to obtain EOP data.  If neither this
-     *                 parameter not description.data is specified, all EOP values are assumed
+     *                 parameter nor description.data is specified, all EOP values are assumed
      *                 to be 0.0.  If description.data is specified, this parameter is
      *                 ignored.
      * @param {Object} [description.data] The actual EOP data.  If neither this
-     *                 parameter not description.data is specified, all EOP values are assumed
+     *                 parameter nor description.data is specified, all EOP values are assumed
      *                 to be 0.0.
      * @param {Boolean} [description.addNewLeapSeconds=true] True if leap seconds that
      *                  are specified in the EOP data but not in {@link LeapSecond#getLeapSeconds}
