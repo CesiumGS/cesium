@@ -1,13 +1,13 @@
 /*global define*/
-define([
-    '../Core/DeveloperError',
-    '../Core/ClockStep',
-    '../Core/Color'
-], function(
-    DeveloperError,
-    ClockStep,
-    Color
-) {
+define(['../Core/DeveloperError',
+        '../Core/ClockStep',
+        '../Core/Color',
+        '../ThirdParty/sprintf'
+        ], function(
+         DeveloperError,
+         ClockStep,
+         Color,
+         sprintf) {
     "use strict";
 
     /**
