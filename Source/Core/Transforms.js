@@ -393,7 +393,7 @@ define([
     /**
      * Computes a rotation matrix to transform a point or vector from the International Celestial
      * Reference Frame (GCRF/ICRF) inertial frame axes to the Earth-Fixed frame axes (ITRF)
-     * at a given time.  This function may returned undefined if the data necessary to
+     * at a given time.  This function may return undefined if the data necessary to
      * do the transformation is not yet loaded.
      *
      * @memberof Transforms
@@ -444,7 +444,7 @@ define([
     /**
      * Computes a rotation matrix to transform a point or vector from the Earth-Fixed frame axes (ITRF)
      * to the International Celestial Reference Frame (GCRF/ICRF) inertial frame axes
-     * at a given time.  This function may returned undefined if the data necessary to
+     * at a given time.  This function may return undefined if the data necessary to
      * do the transformation is not yet loaded.
      *
      * @memberof Transforms
