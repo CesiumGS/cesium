@@ -344,6 +344,15 @@ define([
     CesiumMath.DEGREES_PER_RADIAN = 180.0 / Math.PI;
 
     /**
+     * The number of radians in an arc second.
+     *
+     * @constant
+     * @type {Number}
+     * @see czm_radiansPerArcSecond
+     */
+    CesiumMath.RADIANS_PER_ARCSECOND = CesiumMath.RADIANS_PER_DEGREE / 3600.0;
+
+    /**
      * Converts degrees to radians.
      * @param {Number} degrees The angle to convert in degrees.
      * @return {Number} The corresponding angle in radians.

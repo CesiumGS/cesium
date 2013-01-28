@@ -1305,7 +1305,7 @@ defineSuite([
             expect(dimensions.height).toBeLessThan(originalDimensions.height);
             expect(dimensions.descent).toEqual(originalDimensions.descent);
         });
-    });
+    }, 'WebGL');
 
     it('computes bounding sphere in 3D', function() {
         var projection = frameState.scene2D.projection;
