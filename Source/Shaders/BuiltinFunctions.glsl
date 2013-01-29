@@ -457,14 +457,67 @@ vec4 czm_phong(vec3 toEye, czm_material material)
  * @returns {float} The luminance.
  *
  * @example
- * float light = luminance(vec3(0.0)); // 0.0
- * float dark = luminance(vec3(1.0));  // ~1.0 
+ * float light = czm_luminance(vec3(0.0)); // 0.0
+ * float dark = czm_luminance(vec3(1.0));  // ~1.0 
  */
 float czm_luminance(vec3 rgb)
 {
     // Algorithm from Chapter 10 of Graphics Shaders.
     const vec3 W = vec3(0.2125, 0.7154, 0.0721);
     return dot(rgb, W);
+}
+
+/**
+ * Adjusts the hue of a color.
+ * 
+ * @name czm_hue
+ * @glslFunction
+ * 
+ * @param {vec3} rgb The color.
+ * @param {float} adjustment The amount to adjust the hue of the color in radians.
+ *
+ * @returns {float} The color with the hue adjusted.
+ *
+ * @example
+ * vec3 adjustHue = czm_hue(color, czm_pi); // The same as czm_hue(color, -czm_pi)
+ */
+vec3 czm_hue(vec3 rgb, float adjustment)
+{
+    const mat3 toYIQ = mat3(0.299,     0.587,     0.114,
+                            0.595716, -0.274453, -0.321263,
+                            0.211456, -0.522591,  0.311135);
+    const mat3 toRGB = mat3(1.0,  0.9563,  0.6210,
+                            1.0, -0.2721, -0.6474,
+                            1.0, -1.107,   1.7046);
+    
+    vec3 yiq = toYIQ * rgb;
+    float hue = atan(yiq.z, yiq.y) + adjustment;
+    float chroma = sqrt(yiq.z * yiq.z + yiq.y * yiq.y);
+    
+    vec3 color = vec3(yiq.x, chroma * cos(hue), chroma * sin(hue));
+    return toRGB * color;
+}
+
+/**
+ * Adjusts the saturation of a color.
+ * 
+ * @name czm_saturation
+ * @glslFunction
+ * 
+ * @param {vec3} rgb The color.
+ * @param {float} adjustment The amount to adjust the saturation of the color.
+ *
+ * @returns {float} The color with the saturation adjusted.
+ *
+ * @example
+ * vec3 greyScale = czm_saturation(color, 0.0);
+ * vec3 doubleSaturation = czm_saturation(color, 2.0);
+ */
+vec3 czm_saturation(vec3 rgb, float adjustment)
+{
+    // Algorithm from Chapter 16 of OpenGL Shading Language
+    vec3 intensity = vec3(czm_luminance(rgb));
+    return mix(intensity, rgb, adjustment);
 }
 
 /**
@@ -763,26 +816,10 @@ czm_raySegment czm_rayEllipsoidIntersectionInterval(czm_ray ray, czm_ellipsoid e
         float difference = q2 - 1.0; // Negatively valued.
         float w2 = dot(w, w);
         float product = w2 * difference; // Negatively valued.
-        if (qw < 0.0) // Looking inward.
-        {
-            float discriminant = qw * qw - product;
-            float temp = qw - sqrt(discriminant); // Avoid cancellation.  Negatively valued.
-            czm_raySegment i = czm_raySegment(0.0, difference / temp);
-            return i;
-        }
-        else if (qw > 0.0) // Looking outward.
-        {
-            float discriminant = qw * qw - product;
-            float temp = qw + sqrt(discriminant); // Avoid cancellation. Positively valued.
-            czm_raySegment i = czm_raySegment(0.0, temp / w2);
-            return i;
-        }
-        else // qw == 0.0 // Looking tangent.
-        {
-            float temp = sqrt(-product);
-            czm_raySegment i = czm_raySegment(0.0, temp / w2);
-            return i;
-        }
+        float discriminant = qw * qw - product;
+        float temp = -qw + sqrt(discriminant); // Positively valued.
+        czm_raySegment i = czm_raySegment(0.0, temp / w2);
+        return i;
     }
     else // q2 == 1.0. On ellipsoid.
     {

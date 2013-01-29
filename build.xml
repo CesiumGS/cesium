@@ -193,12 +193,12 @@
 		<delete dir="${combineOutputDirectory}" />
 
 		<!-- copy other resources -->
-		<copy todir="${buildOutputDirectory}">
+		<copy todir="${buildOutputDirectory}" includeEmptyDirs="false">
 			<fileset dir="${sourceDirectory}">
-				<include name="**/*.css" />
-				<include name="**/*.jpg" />
-				<include name="**/*.gif" />
-				<include name="**/*.png" />
+				<exclude name="**/*.js" />
+				<exclude name="**/*.glsl" />
+				<exclude name="**/.gitignore" />
+				<exclude name="**/package.json" />
 				<exclude name="Widgets/Dojo/**" />
 			</fileset>
 		</copy>
@@ -223,7 +223,7 @@
 
 	<target name="combineJavaScript.createMinified" if="${build.minification}">
 		<antcall target="combineJavaScript.create">
-			<param name="optimize" value="uglify" />
+			<param name="optimize" value="uglify2" />
 		</antcall>
 	</target>
 
