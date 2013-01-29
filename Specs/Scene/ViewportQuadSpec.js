@@ -1,5 +1,6 @@
 /*global defineSuite*/
 defineSuite([
+         'Scene/Material',
          'Scene/ViewportQuad',
          'Specs/createContext',
          'Specs/destroyContext',
@@ -9,8 +10,10 @@ defineSuite([
          'Specs/pick',
          'Specs/render',
          'Core/BoundingRectangle',
-         'Core/Cartesian3'
+         'Core/Cartesian3',
+         'Core/Color'
      ], function(
+         Material,
          ViewportQuad,
          createContext,
          destroyContext,
@@ -20,7 +23,8 @@ defineSuite([
          pick,
          render,
          BoundingRectangle,
-         Cartesian3) {
+         Cartesian3,
+         Color) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -66,36 +70,11 @@ defineSuite([
     });
 
     it('gets the default color', function() {
-        expect(viewportQuad.material.uniforms.color).toEqual({
-            red : 1.0,
-            green : 1.0,
-            blue : 1.0,
-            alpha : 1.0
-        });
-    });
-
-    it('gets default texture', function() {
-        expect(viewportQuad.getTexture()).not.toBeDefined();
-    });
-
-    it('set texture', function() {
-        var texture = context.createTexture2D({
-            width : 2,
-            height : 2
-        });
-        viewportQuad.setTexture(texture);
-
-        expect(viewportQuad.getTexture()).toEqual(texture);
+        expect(viewportQuad.material.uniforms.color).toEqual(
+            new Color(1.0, 1.0, 1.0, 1.0));
     });
 
     it('renders material', function() {
-        viewportQuad.material.uniforms.color = {
-            red : 1.0,
-            green : 0.0,
-            blue : 0.0,
-            alpha : 1.0
-        };
-
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
@@ -103,7 +82,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
-    it('renders texture', function() {
+    it('renders user created texture', function() {
 
         waitsFor( function() {
             return testImage.complete;
@@ -114,13 +93,14 @@ defineSuite([
                 source : testImage
             });
 
-            viewportQuad.setTexture(texture);
+            viewportQuad.material = Material.fromType(context, Material.ImageType);
+            viewportQuad.material.uniforms.image = texture;
 
             context.clear();
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
             render(context, frameState, viewportQuad);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+            expect(context.readPixels()).toEqual([255, 0, 0, 255]);
         });
     });
 

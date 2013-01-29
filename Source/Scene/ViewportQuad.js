@@ -17,8 +17,7 @@ define([
         '../Renderer/DrawCommand',
         '../Shaders/Noise',
         '../Shaders/ViewportQuadVS',
-        '../Shaders/ViewportQuadFSMaterial',
-        '../Shaders/ViewportQuadFSTexture',
+        '../Shaders/ViewportQuadFS'
     ], function(
         Color,
         combine,
@@ -37,8 +36,7 @@ define([
         DrawCommand,
         Noise,
         ViewportQuadVS,
-        ViewportQuadFSMaterial,
-        ViewportQuadFSTexture) {
+        ViewportQuadFS) {
     "use strict";
 
     /**
@@ -55,11 +53,6 @@ define([
      * viewportQuad.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
      */
     var ViewportQuad = function(rectangle) {
-        /**
-         * DOC_TBA
-         */
-        this._shaderProgramMaterial = undefined;
-        this._shaderProgramTexture = undefined;
 
         this._va = undefined;
         this._overlayCommand = new DrawCommand();
@@ -68,10 +61,6 @@ define([
         this._commandLists.overlayList.push(this._overlayCommand);
 
         this._rectangle = BoundingRectangle.clone(rectangle);
-
-        this._texture = undefined;
-        this._destroyTexture = true;
-        this._useMaterial = true;
 
 
         /**
@@ -95,15 +84,6 @@ define([
         this.material = Material.fromType(undefined, Material.ColorType);
         this.material.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
         this._material = undefined;
-
-        var that = this;
-        this._textureUniform = {
-            u_texture : function() {
-                return that._texture;
-            }
-        };
-
-        this._pickUniforms = undefined;
     };
 
     /**
@@ -137,42 +117,6 @@ define([
      */
     ViewportQuad.prototype.setRectangle = function(value) {
         BoundingRectangle.clone(value, this._rectangle);
-    };
-
-    /**
-     * Get the texture to be used when rendering the viewport quad.
-     *
-     * @memberof ViewportQuad
-     *
-     * @return {Texture} texture The texture to use use when rendering the viewport quad.
-     *
-     * @see Polygon#setTexture
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    ViewportQuad.prototype.getTexture = function() {
-        return this._texture;
-    };
-
-    /**
-     * Explicitly set the texture to be used when rendering the viewport quad.
-     * Setting the texture explicitly will cause the material settings to be ignored.
-     *
-     * @memberof ViewportQuad
-     *
-     * @param {Texture} texture The texture to use use when rendering the viewport quad.
-     *
-     * @see Polygon#getTexture
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    ViewportQuad.prototype.setTexture = function(texture) {
-        if (this._texture !== texture) {
-            this._texture = this._destroyTexture && this._texture && this._texture.destroy();
-            this._texture = texture;
-        }
-
-        this._useMaterial = this._texture === 'undefined';
     };
 
     var attributeIndices = {
@@ -271,11 +215,8 @@ define([
                 this._material !== this.material;
 
 
-            if(!this._useMaterial && typeof this._shaderProgramTexture === 'undefined') {
-                this._shaderProgramTexture = context.getShaderCache().getShaderProgram(ViewportQuadVS, ViewportQuadFSTexture, attributeIndices);
-            }
-            else if (materialChanged) {
-             // Recompile shader when material changes
+            if (materialChanged) {
+                // Recompile shader when material changes
                 this._material = this.material;
 
                 var fsSource =
@@ -284,22 +225,14 @@ define([
                     '#line 0\n' +
                     this._material.shaderSource +
                     '#line 0\n' +
-                    ViewportQuadFSMaterial;
+                    ViewportQuadFS;
 
-                this._shaderProgramMaterial = this._shaderProgramMaterial && this._shaderProgramMaterial.release();
-                this._shaderProgramMaterial = context.getShaderCache().getShaderProgram(ViewportQuadVS, fsSource, attributeIndices);
+                this._overlayCommand.shaderProgram = this._overlayCommand.shaderProgram && this._overlayCommand.shaderProgram.release();
+                this._overlayCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fsSource, attributeIndices);
             }
 
             this._overlayCommand.renderState.viewport = this._rectangle;
-
-            if(this._useMaterial) {
-                this._overlayCommand.shaderProgram = this._shaderProgramMaterial;
-                this._overlayCommand.uniformMap = this._material._uniforms;
-            }
-            else {
-                this._overlayCommand.shaderProgram = this._shaderProgramTexture;
-                this._overlayCommand.uniformMap = this._textureUniform;
-            }
+            this._overlayCommand.uniformMap = this._material._uniforms;
         }
 
         if (!this._commandLists.empty()) {
@@ -344,8 +277,7 @@ define([
      */
     ViewportQuad.prototype.destroy = function() {
         this._va = this._va && this._va.release();
-        this._shaderProgramMaterial = this._shaderProgramMaterial && this._shaderProgramMaterial.release();
-        this._shaderProgramTexture = this._shaderProgramTexture && this._shaderProgramTexture.release();
+        this._overlayCommand.shaderProgram = this._overlayCommand.shaderProgram && this._overlayCommand.shaderProgram.release();
 
         return destroyObject(this);
     };
