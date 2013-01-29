@@ -7,6 +7,7 @@ define([
         './DynamicEllipsoid',
         './DynamicCone',
         './DynamicLabel',
+        './DynamicOverlayQuad',
         './DynamicPath',
         './DynamicPoint',
         './DynamicPolygon',
@@ -16,33 +17,36 @@ define([
         './DynamicEllipsoidVisualizer',
         './DynamicConeVisualizerUsingCustomSensor', //CZML_TODO Replace with './DynamicConeVisualizer', once ComplexConicSensor works.
         './DynamicLabelVisualizer',
+        './DynamicOverlayQuadVisualizer',
         './DynamicPathVisualizer',
         './DynamicPointVisualizer',
         './DynamicPolygonVisualizer',
         './DynamicPolylineVisualizer',
         './DynamicPyramidVisualizer'
-        ], function(
-                DynamicObject,
-                DynamicBillboard,
+       ], function(
+        DynamicObject,
+        DynamicBillboard,
                 DynamicClock,
                 DynamicEllipse,
-                DynamicEllipsoid,
-                DynamicCone,
-                DynamicLabel,
-                DynamicPath,
-                DynamicPoint,
-                DynamicPolygon,
-                DynamicPolyline,
-                DynamicPyramid,
-                DynamicBillboardVisualizer,
-                DynamicEllipsoidVisualizer,
-                DynamicConeVisualizer,
-                DynamicLabelVisualizer,
-                DynamicPathVisualizer,
-                DynamicPointVisualizer,
-                DynamicPolygonVisualizer,
-                DynamicPolylineVisualizer,
-                DynamicPyramidVisualizer) {
+        DynamicEllipsoid,
+        DynamicCone,
+        DynamicLabel,
+        DynamicOverlayQuad,
+        DynamicPath,
+        DynamicPoint,
+        DynamicPolygon,
+        DynamicPolyline,
+        DynamicPyramid,
+        DynamicBillboardVisualizer,
+        DynamicEllipsoidVisualizer,
+        DynamicConeVisualizer,
+        DynamicLabelVisualizer,
+        DynamicOverlayQuadVisualizer,
+        DynamicPathVisualizer,
+        DynamicPointVisualizer,
+        DynamicPolygonVisualizer,
+        DynamicPolylineVisualizer,
+        DynamicPyramidVisualizer) {
     "use strict";
 
     /**
@@ -71,6 +75,7 @@ define([
                     DynamicEllipsoid.processCzmlPacket,
                     DynamicCone.processCzmlPacket,
                     DynamicLabel.processCzmlPacket,
+                    DynamicOverlayQuad.processCzmlPacket,
                     DynamicPath.processCzmlPacket,
                     DynamicPoint.processCzmlPacket,
                     DynamicPolygon.processCzmlPacket,
@@ -94,6 +99,7 @@ define([
                    DynamicEllipsoid.mergeProperties,
                    DynamicCone.mergeProperties,
                    DynamicLabel.mergeProperties,
+                   DynamicOverlayQuad.mergeProperties,
                    DynamicPath.mergeProperties,
                    DynamicPoint.mergeProperties,
                    DynamicPolygon.mergeProperties,
@@ -101,7 +107,7 @@ define([
                    DynamicPyramid.mergeProperties,
                    DynamicObject.mergeProperties],
 
-        /**
+       /**
         * The standard set of cleaners for processing CZML.  This array is the default
         * set of updater methods used by CompositeDynamicObjectCollection.
         *
@@ -109,36 +115,38 @@ define([
         */
         cleaners : [DynamicBillboard.undefineProperties,
                    DynamicEllipse.undefineProperties,
-                   DynamicEllipsoid.undefineProperties,
-                   DynamicCone.undefineProperties,
-                   DynamicLabel.undefineProperties,
-                   DynamicPath.undefineProperties,
-                   DynamicPoint.undefineProperties,
-                   DynamicPolygon.undefineProperties,
-                   DynamicPolyline.undefineProperties,
-                   DynamicPyramid.undefineProperties,
+                    DynamicEllipsoid.undefineProperties,
+                    DynamicCone.undefineProperties,
+                    DynamicLabel.undefineProperties,
+                    DynamicOverlayQuad.undefineProperties,
+                    DynamicPath.undefineProperties,
+                    DynamicPoint.undefineProperties,
+                    DynamicPolygon.undefineProperties,
+                    DynamicPolyline.undefineProperties,
+                    DynamicPyramid.undefineProperties,
                    DynamicObject.undefineProperties,
                    DynamicClock.undefineProperties],
 
-       /**
-        * Creates an array containing the standard CZML visualizers,
-        * configured for the provided scene.
-        *
-        * @param scene The scene being used for visualization.
-        * @returns {Array} The CZML standard visualizers.
-        * @see VisualizerCollection#createCzmlDefaultsCollection
-        */
-       createVisualizers : function(scene) {
-           return [new DynamicBillboardVisualizer(scene),
-                   new DynamicEllipsoidVisualizer(scene),
-                   new DynamicConeVisualizer(scene),
-                   new DynamicLabelVisualizer(scene),
-                   new DynamicPointVisualizer(scene),
-                   new DynamicPolygonVisualizer(scene),
-                   new DynamicPolylineVisualizer(scene),
-                   new DynamicPyramidVisualizer(scene),
-                   new DynamicPathVisualizer(scene)];
-       }
+        /**
+         * Creates an array containing the standard CZML visualizers,
+         * configured for the provided scene.
+         *
+         * @param scene The scene being used for visualization.
+         * @returns {Array} The CZML standard visualizers.
+         * @see VisualizerCollection#createCzmlDefaultsCollection
+         */
+        createVisualizers : function(scene) {
+            return [new DynamicBillboardVisualizer(scene),
+                    new DynamicEllipsoidVisualizer(scene),
+                    new DynamicConeVisualizer(scene),
+                    new DynamicLabelVisualizer(scene),
+                    new DynamicOverlayQuadVisualizer(scene),
+                    new DynamicPointVisualizer(scene),
+                    new DynamicPolygonVisualizer(scene),
+                    new DynamicPolylineVisualizer(scene),
+                    new DynamicPyramidVisualizer(scene),
+                    new DynamicPathVisualizer(scene)];
+        }
     };
 
     return CzmlDefaults;
