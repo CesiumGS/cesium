@@ -4,7 +4,58 @@ Change Log
 Beta Releases
 -------------
 
-### b12 - xx/xx/2013
+### b13 - 2013-xx-xx
+* Breaking changes:
+   * The combined `Cesium.js` file and other required files are now created in `Build/Cesium` and `Build/CesiumUnminified` folders.
+   * The Web Worker files needed when using the combined `Cesium.js` file are now in a `Workers` subdirectory.
+   * Removed `erosion` property from `Polygon`, `ComplexConicSensorVolume`, `RectangularPyramidSensorVolume`, and `ComplexConicSensorVolume`.  Use the new `Erosion` material.  See the Sandbox Animation example.
+* Added new `RimLighting` and `Erosion` materials.  See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page.
+* Added `hue` and `saturation` properties to `ImageryLayer`.
+* Added `czm_hue` and `czm_saturation` to adjust the hue and saturation of RGB colors.
+* Fixed rendering artifacts in `EllipsoidPrimitive`.
+* Fixed an issue where streaming CZML would fail when changing material types.
+* Added `JulianDate.getDaysDifference` method.
+* Added `Transforms.computeIcrfToFixedMatrix` and `computeFixedToIcrfMatrix`.
+* Added `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Iau2006XysData`, and `Iau2006XysDataSample` classes to `Core`.
+* CZML now supports the ability to specify positions in the International Celestial Reference Frame (ICRF), and inertial reference frame.
+* Fixed globe rendering on the Nexus 4 running Google Chrome Beta.
+
+### b12a - 2013-01-18
+
+* Breaking changes:
+   * Renamed the `server` property to `url` when constructing a `BingMapsImageryProvider`.  Likewise, renamed `BingMapsImageryProvider.getServer` to `BingMapsImageryProvider.getUrl`.  Code that looked like
+
+            var bing = new BingMapsImageryProvider({
+                server : 'dev.virtualearth.net'
+            });
+
+        should now look like:
+
+            var bing = new BingMapsImageryProvider({
+                url : 'http://dev.virtualearth.net'
+            });
+
+   * Renamed `toCSSColor` to `toCssColorString`.
+   * Moved `minimumZoomDistance` and `maximumZoomDistance` from the `CameraController` to the `ScreenSpaceCameraController`.
+* Added `fromCssColorString` to `Color` to create a `Color` instance from any CSS value.
+* Added `fromHsl` to `Color` to create a `Color` instance from H, S, L values.
+* Added `Scene.backgroundColor`.
+* Added `textureRotationAngle` parameter to `Polygon.setPositions` and `Polygon.configureFromPolygonHierarchy` to rotate textures on polygons.
+* Added `Matrix3.fromRotationX`, `Matrix3.fromRotationY`, `Matrix3.fromRotationZ`, and `Matrix2.fromRotation`.
+* Added `fromUniformScale` to `Matrix2`, `Matrix3`, and `Matrix4`.
+* Added `fromScale` to `Matrix2`.
+* Added `multiplyByUniformScale` to `Matrix4`.
+* Added `flipY` property when calling `Context.createTexture2D` and `Context.createCubeMap`.
+* Added `MeshFilters.encodePosition` and `EncodedCartesian3.encode`.
+* Fixed jitter artifacts with polygons.
+* Fixed camera tilt close to the `minimumZoomDistance`.
+* Fixed a bug that could lead to blue tiles when zoomed in close to the North and South poles.
+* Fixed a bug where removing labels would remove the wrong label and ultimately cause a crash.
+* Worked around a bug in Firefox 18 preventing typed arrays from being transferred to or from Web Workers.
+* Upgraded RequireJS to version 2.1.2, and Almond to 0.2.3.
+* Updated the default Bing Maps API key.
+
+### b12 - 2013-01-03
 
 * Breaking changes:
    * Renamed `EventHandler` to `ScreenSpaceEventHandler`.
@@ -12,12 +63,18 @@ Beta Releases
    * Renamed `MouseEventType.MOVE` to `ScreenSpaceEventType.MOUSE_MOVE`.
    * Renamed `CameraEventHandler` to `CameraEventAggregator`.
    * Renamed all `*MouseAction` to `*InputAction` (including get, set, remove, etc).
-   * Removed `Camera2DController`, `CameraCentralBodyController`, `CameraColumbusViewController`, `CameraFlightController`, `CameraFreeLookController`, `CameraSpindleController`, and `CameraControllerCollection`. Common ways to modify the camera are through the `CameraController` object of the `Camera` and will work in all scene modes. The default camera handler is the 'ScreenSpaceCameraController` object on the `Scene`.
-* Improved support on Nexus 4.
+   * Removed `Camera2DController`, `CameraCentralBodyController`, `CameraColumbusViewController`, `CameraFlightController`, `CameraFreeLookController`, `CameraSpindleController`, and `CameraControllerCollection`. Common ways to modify the camera are through the `CameraController` object of the `Camera` and will work in all scene modes. The default camera handler is the `ScreenSpaceCameraController` object on the `Scene`.
+   * Changed default Natural Earth imagery to a 2K version of [Natural Earth II with Shaded Relief, Water, and Drainages](http://www.naturalearthdata.com/downloads/10m-raster-data/10m-natural-earth-2/).  The previously used version did not include lakes and rivers.  This replaced `Source/Assets/Textures/NE2_50M_SR_W_2048.jpg` with `Source/Assets/Textures/NE2_LR_LC_SR_W_DR_2048.jpg`.
+* Added pinch-zoom, pinch-twist, and pinch-tilt for touch-enabled browsers (particularly mobile browsers).
+* Improved rendering support on Nexus 4 and Nexus 7 using Firefox.
+* Improved camera flights.
 * Added Sandbox example using NASA's new [Black Marble](http://www.nasa.gov/mission_pages/NPP/news/earth-at-night.html) night imagery.
+* Added constrained z-axis by default to the Cesium widgets.
+* Upgraded Jasmine from version 1.1.0 to 1.3.0.
+* Added `JulianDate.toIso8601`, which creates an ISO8601 compliant representation of a JulianDate.
+* The `Timeline` widget now properly displays leap seconds.
 
-
-### b11 - 12/03/2012
+### b11 - 2012-12-03
 
 * Breaking changes:
    * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
@@ -29,7 +86,7 @@ Beta Releases
    * `Fullscreen.getFullScreenChangeEventName` and `Fullscreen.getFullScreenChangeEventName` now return the proper event name, suitable for use with the `addEventListener` API, instead prefixing them with "on".
    * Removed `Scene.setSunPosition` and `Scene.getSunPosition`.  The sun position used for lighting is automatically computed based on the scene's time.
    * Removed a number of rendering options from `CentralBody`, including the ground atmosphere, night texture, specular map, cloud map, cloud shadows, and bump map.  These features weren't really production ready and had a disproportionate cost in terms of shader complexity and compilation time.  They may return in a more polished form in a future release.
-   * Removed `affectedByLighting` property from `Polygon`, `EllipsoidPrimitive`, `RectangularPyramidSensorVolume`, `CustomSensorVolume`, and `ComplexConicSensorVolume`.  
+   * Removed `affectedByLighting` property from `Polygon`, `EllipsoidPrimitive`, `RectangularPyramidSensorVolume`, `CustomSensorVolume`, and `ComplexConicSensorVolume`.
    * Removed `DistanceIntervalMaterial`.  This was not documented.
    * `Matrix2.getElementIndex`, `Matrix3.getElementIndex`, and `Matrix4.getElementIndex` functions have had their parameters swapped and now take row first and column second.  This is consistent with other class constants, such as Matrix2.COLUMN1ROW2.
    * Replaced `CentralBody.showSkyAtmosphere` with `Scene.skyAtmosphere` and `SkyAtmosphere`.  This has no impact for those using the Cesium widget.
@@ -47,10 +104,10 @@ Beta Releases
 * Added `QuadraticRealPolynomial`, `CubicRealPolynomial`, and `QuarticRealPolynomial` for finding the roots of quadratic, cubic, and quartic polynomials.
 * Added `IntersectionTests.grazingAltitudeLocation` for finding a point on a ray nearest to an ellipsoid.
 * Added `mostOrthogonalAxis` function to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
-* Changed CesiumViewerWidget default behavior so that zooming to an object now requires a single left-click, rather than a double-click. 
+* Changed CesiumViewerWidget default behavior so that zooming to an object now requires a single left-click, rather than a double-click.
 * Updated third-party [Tween.js](https://github.com/sole/tween.js/).
 
-### b10 - 11/02/2012
+### b10 - 2012-11-02
 
 * Breaking changes:
    * Renamed `Texture2DPool` to `TexturePool`.
@@ -69,7 +126,7 @@ Beta Releases
 * Improved middle mouse click behavior to always tilt in the same direction.
 * Added `getElementIndex` to `Matrix2`, `Matrix3`, and `Matrix4`.
 
-### b9 - 10/01/2012
+### b9 - 2012-10-01
 
 * Breaking changes:
    * Removed the `render` and `renderForPick` functions of primitives. The primitive `update` function updates a list of commands for the renderer. For more details, see the [Data Driven Renderer](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Data-Driven-Renderer-Details).
@@ -89,7 +146,7 @@ Beta Releases
 * Improved near/far plane distances and eliminated z-fighting.
 * Added `Matrix4.multiplyByTranslation`, `Matrix4.fromScale`, and `Matrix3.fromScale`.
 
-### b8 - 09/05/2012
+### b8 - 2012-09-05
 
 * Breaking changes:
     * Materials are now created through a centralized Material class using a JSON schema called [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric). For example, change:
@@ -152,7 +209,7 @@ Beta Releases
 * Added a `clampToPixel` property to `BillboardCollection` and `LabelCollection`.  When true, it aligns all billboards and text to a pixel in screen space, providing a crisper image at the cost of jumpier motion.
 * `Ellipsoid` functions now take optional result parameters.
 
-### b7 - 08/01/2012
+### b7 - 2012-08-01
 
 * Breaking changes:
     * Removed keyboard input handling from `EventHandler`.
@@ -251,7 +308,7 @@ Beta Releases
 * Added `computeTemeToPseudoFixedMatrix` function to `Transforms`.
 * Added 'PolylineCollection' to manage numerous polylines. 'PolylineCollection' dramatically improves rendering speed when using polylines.
 
-### b6a - 06/20/2012
+### b6a - 2012-06-20
 
 * Breaking changes:
     * Changed `Tipsify.tipsify` and `Tipsify.calculateACMR` to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
@@ -262,7 +319,7 @@ Beta Releases
 * Added `showThroughEllipsoid` to `CustomSensorVolume` and `RectangularPyramidSensorVolume` to allow sensors to draw through Earth.
 * Added `affectedByLighting` to `CentralBody` and `Polygon` to turn lighting on/off for these objects.
 
-### b5 - 05/15/2012
+### b5 - 2012-05-15
 
 * Breaking changes:
     * Renamed Geoscope to Cesium.  To update your code, change all `Geoscope.*` references to `Cesium.*`, and reference Cesium.js instead of Geoscope.js.
@@ -342,7 +399,7 @@ Beta Releases
 * Added `fileExtension` and `credit` properties to `OpenStreetMapTileProvider` construction.
 * Night lights no longer disappear when `CentralBody.showGroundAtmosphere` is `true`.
 
-### b4 - 03/01/2012
+### b4 - 2012-03-01
 
 * Breaking changes:
     * Replaced `Geoscope.SkyFromSpace` object with `CentralBody.showSkyAtmosphere` property.
@@ -361,7 +418,7 @@ Beta Releases
 * Added `Camera.pickEllipsoid` to get the point on the globe under the mouse cursor.
 * Added `Polygon.height` to draw polygons at a constant altitude above the ellipsoid.
 
-### b3 - 02/06/2012
+### b3 - 2012-02-06
 
 * Breaking changes:
     * Replaced `Geoscope.Constants` and `Geoscope.Trig` with `Geoscope.Math`.
@@ -397,7 +454,7 @@ Beta Releases
     * Added more mouse events.
     * Added Sandbox examples for new features.
 
-### b2 - 12/01/2011
+### b2 - 2011-12-01
 
 * Added complex conic and custom sensor volumes, and various materials to change their appearance.  See the new Sensor folder in the Sandbox.
 * Added modelMatrix property to primitives to render them in a local reference frame.  See the polyline example in the Sandbox.
@@ -421,7 +478,7 @@ Beta Releases
 
                 color : { red : 0.0, green : 1.0, blue : 0.0, alpha : 1.0 }
 
-### b1 - 09/19/2011
+### b1 - 2011-09-19
 
 * Added `Shapes.computeCircleBoundary` to compute circles.  See the Sandbox.
 * Changed the `EventHandler` constructor function to take the Geoscope canvas, which ensures the mouse position is correct regardless of the canvas' position on the page.  Code that previously looked like:
@@ -465,7 +522,7 @@ Beta Releases
         var canvas = document.getElementById("glCanvas");
         var context = new Geoscope.Context(canvas);
 
-### b0 - 08/31/2011
+### b0 - 2011-08-31
 
 * Added new Sandbox and Skeleton examples.  The sandbox contains example code for common tasks.  The skeleton is a bare-bones application for building upon.  Most sandbox code examples can be copy and pasted directly into the skeleton.
 * Added `Geoscope.Polygon` for drawing polygons on the globe.
@@ -479,18 +536,18 @@ Beta Releases
 Alpha Releases
 --------------
 
-### a6 - 08/05/2011
+### a6 - 2011-08-05
 
 * Added support for lines using `Geoscope.Polyline`.  See the Sandbox example.
 * Made `CompositePrimitive`, `LabelCollection`, and `BillboardCollection` have consistent function names, including a new `contains()` function.
 * Improved reference documentation layout.
 
-### a5 - 07/22/2011
+### a5 - 2011-07-22
 
 * Flushed out `CompositePrimitive`, `TimeStandard`, and `LeapSecond` types.
 * Improved support for browsers using ANGLE (Windows Only).
 
-### a4 - 07/15/2011
+### a4 - 2011-07-15
 
 * Added `Geoscope.TimeStandard` for handling TAI and UTC time standards.
 * Added `Geoscope.Quaternion`, which is a foundation for future camera control.
@@ -499,24 +556,24 @@ Alpha Releases
 * See the Sandbox for example code.
 * Added more reference documentation for labels.
 
-### a3 - 07/08/2011
+### a3 - 2011-07-08
 
 * Added `Geoscope.LabelCollection` for drawing text.
 * Added `Geoscope.JulianDate` and `Geoscope.TimeConstants` for proper time handling.
 * See the Sandbox example for how to use the new labels and Julian date.
 
-### a2 - 07/01/2011
+### a2 - 2011-07-01
 
 * Added `Geoscope.ViewportQuad` and `Geoscope.Rectangle` (foundations for 2D map).
 * Improved the visual quality of cloud shadows.
 
-### a1 - 06/24/2011
+### a1 - 2011-06-24
 
 * Added `SunPosition` type to compute the sun position for a julian date.
 * Simplified picking.  See the mouse move event in the Sandbox example.
 * `Cartographic2` and `Cartographic3` are now mutable types.
 * Added reference documentation for billboards.
 
-### a0 - 06/17/2011
+### a0 - 2011-06-17
 
 * Initial Release.

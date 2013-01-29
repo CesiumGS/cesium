@@ -1,24 +1,12 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/Scene',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Ellipsoid',
-         'Core/GeographicProjection',
-         'Core/Math',
-         'Scene/OrthographicFrustum',
-         'Scene/SceneMode',
+         'Core/Color',
          'Specs/createScene',
          'Specs/destroyScene'
      ], function(
          Scene,
-         Cartesian2,
-         Cartesian3,
-         Ellipsoid,
-         GeographicProjection,
-         CesiumMath,
-         OrthographicFrustum,
-         SceneMode,
+         Color,
          createScene,
          destroyScene) {
     "use strict";
@@ -58,10 +46,21 @@ defineSuite([
         expect(scene.getAnimations()).toBeDefined();
     });
 
+    it('draws background color', function() {
+        scene.initializeFrame();
+        scene.render();
+        expect(scene.getContext().readPixels()).toEqual([0, 0, 0, 255]);
+
+        scene.backgroundColor = Color.BLUE;
+        scene.initializeFrame();
+        scene.render();
+        expect(scene.getContext().readPixels()).toEqual([0, 0, 255, 255]);
+    });
+
     it('isDestroyed', function() {
         var s = createScene();
         expect(s.isDestroyed()).toEqual(false);
         destroyScene(s);
         expect(s.isDestroyed()).toEqual(true);
     });
-});
+}, 'WebGL');

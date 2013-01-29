@@ -311,4 +311,4 @@ defineSuite([
             });
         }).toThrow();
     });
-});
+}, 'WebGL');

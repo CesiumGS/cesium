@@ -105,7 +105,6 @@ define([
         this._primitives = scene.getPrimitives();
         this._coneCollection = [];
         this._dynamicObjectCollection = undefined;
-        this._directionsScratch = [];
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
 
@@ -271,6 +270,7 @@ define([
             } else {
                 coneVisualizerIndex = this._coneCollection.length;
                 cone = new CustomSensorVolume();
+                cone._directionsScratch = [];
                 this._coneCollection.push(cone);
                 this._primitives.add(cone);
             }
@@ -328,7 +328,8 @@ define([
             maximumClockAngle !== cone.maximumClockAngle ||
             innerHalfAngle !== cone.innerHalfAngle ||
             outerHalfAngle !== cone.outerHalfAngle) {
-            cone.setDirections(computeDirections(minimumClockAngle, maximumClockAngle, innerHalfAngle, outerHalfAngle, this._directionsScratch));
+
+            cone.setDirections(computeDirections(minimumClockAngle, maximumClockAngle, innerHalfAngle, outerHalfAngle, cone._directionsScratch));
             cone.innerHalfAngle = innerHalfAngle;
             cone.maximumClockAngle = maximumClockAngle;
             cone.outerHalfAngle = outerHalfAngle;

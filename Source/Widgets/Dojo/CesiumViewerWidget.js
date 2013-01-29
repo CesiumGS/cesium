@@ -435,9 +435,9 @@ define([
                     this.onObjectMousedOver(mousedOverObject);
                 }
             }
-            if (typeof this.leftDown !== 'undefined' && this.leftDown && typeof this.onLeftDrag !== 'undefined') {
+            if (true === this.leftDown && typeof this.onLeftDrag !== 'undefined') {
                 this.onLeftDrag(movement);
-            } else if (typeof this.rightDown !== 'undefined' && this.rightDown && typeof this.onZoom !== 'undefined') {
+            } else if (true === this.rightDown && typeof this.onZoom !== 'undefined') {
                 this.onZoom(movement);
             }
         },
@@ -557,10 +557,13 @@ define([
          */
         loadCzml : function(source, lookAt) {
             var widget = this;
+            widget._setLoading(true);
             loadJson(source).then(function(czml) {
                 widget.addCzml(czml, source, lookAt);
+                widget._setLoading(false);
             },
             function(error) {
+                widget._setLoading(false);
                 console.error(error);
                 window.alert(error);
             });
@@ -577,13 +580,16 @@ define([
             event.stopPropagation(); // Stops some browsers from redirecting.
             event.preventDefault();
 
+            var widget = this;
+            widget._setLoading(true);
+            widget.removeAllCzml();
+
             var files = event.dataTransfer.files;
             var f = files[0];
             var reader = new FileReader();
-            var widget = this;
-            widget.removeAllCzml();
             reader.onload = function(evt) {
                 widget.addCzml(JSON.parse(evt.target.result), f.name);
+                widget._setLoading(false);
             };
             reader.readAsText(f);
         },
@@ -632,8 +638,8 @@ define([
                 context.setThrowOnWebGLError(true);
             }
 
-            var imageryUrl = '../../Assets/Textures/';
-            this.dayImageUrl = defaultValue(this.dayImageUrl, require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg'));
+            var imageryUrl = require.toUrl('../../Assets/Textures/');
+            this.dayImageUrl = defaultValue(this.dayImageUrl, imageryUrl + 'NE2_LR_LC_SR_W_DR_2048.jpg');
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
 
@@ -646,12 +652,12 @@ define([
 
             if (this.showSkyBox) {
                 scene.skyBox = new SkyBox({
-                    positiveX: require.toUrl(imageryUrl + 'SkyBox/tycho8_px_80.jpg'),
-                    negativeX: require.toUrl(imageryUrl + 'SkyBox/tycho8_mx_80.jpg'),
-                    positiveY: require.toUrl(imageryUrl + 'SkyBox/tycho8_py_80.jpg'),
-                    negativeY: require.toUrl(imageryUrl + 'SkyBox/tycho8_my_80.jpg'),
-                    positiveZ: require.toUrl(imageryUrl + 'SkyBox/tycho8_pz_80.jpg'),
-                    negativeZ: require.toUrl(imageryUrl + 'SkyBox/tycho8_mz_80.jpg')
+                    positiveX: imageryUrl + 'SkyBox/tycho8_px_80.jpg',
+                    negativeX: imageryUrl + 'SkyBox/tycho8_mx_80.jpg',
+                    positiveY: imageryUrl + 'SkyBox/tycho8_py_80.jpg',
+                    negativeY: imageryUrl + 'SkyBox/tycho8_my_80.jpg',
+                    positiveZ: imageryUrl + 'SkyBox/tycho8_pz_80.jpg',
+                    negativeZ: imageryUrl + 'SkyBox/tycho8_mz_80.jpg'
                 });
             }
 
@@ -659,6 +665,7 @@ define([
 
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
+            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
             var handler = new ScreenSpaceEventHandler(canvas);
             handler.setInputAction(lang.hitch(this, '_handleLeftClick'), ScreenSpaceEventType.LEFT_CLICK);
@@ -721,11 +728,7 @@ define([
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
-                if (typeof widget.endUserOptions.lookAt !== 'undefined') {
-                    widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);
-                } else {
-                    widget.loadCzml(widget.endUserOptions.source);
-                }
+                widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);
             }
 
             if (typeof widget.endUserOptions.stats !== 'undefined' && widget.endUserOptions.stats) {
@@ -899,7 +902,7 @@ define([
             var mode = scene.mode;
 
             var camera = scene.getCamera();
-            camera.controller.constrainedAxis = undefined;
+            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
             var controller = scene.getScreenSpaceCameraController();
             controller.enableTranslate = true;
@@ -1056,6 +1059,7 @@ define([
          * Initialize the current frame.
          * @function
          * @memberof CesiumViewerWidget.prototype
+         * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
         initializeFrame : function(currentTime) {
             this.scene.initializeFrame(currentTime);
@@ -1093,10 +1097,13 @@ define([
          * Render the widget's scene.
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
         render : function() {
             this.scene.render();
+        },
+
+        _setLoading : function(isLoading) {
+            this.loading.style.display = isLoading ? 'block' : 'none';
         },
 
         _configureCentralBodyImagery : function() {
@@ -1116,7 +1123,7 @@ define([
                     existingImagery.getMapStyle() !== this.mapStyle) {
 
                     newLayer = imageLayers.addImageryProvider(new BingMapsImageryProvider({
-                        server : 'dev.virtualearth.net',
+                        url : 'http://dev.virtualearth.net',
                         mapStyle : this.mapStyle,
                         // Some versions of Safari support WebGL, but don't correctly implement
                         // cross-origin image loading, so we need to load Bing imagery using a proxy.

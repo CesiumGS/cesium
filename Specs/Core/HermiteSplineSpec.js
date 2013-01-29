@@ -68,19 +68,19 @@ defineSuite([
     it('evaluate can jump around in time', function() {
         var hs = new HermiteSpline(points);
 
-        expect(hs.evaluate(points[0].time).equals(points[0].point)).toEqual(true);
+        expect(hs.evaluate(points[0].time)).toEqual(points[0].point);
 
         // jump forward
-        expect(hs.evaluate(points[1].time).equals(points[1].point)).toEqual(true);
+        expect(hs.evaluate(points[1].time)).toEqual(points[1].point);
 
         // jump backward
-        expect(hs.evaluate(points[0].time).equals(points[0].point)).toEqual(true);
+        expect(hs.evaluate(points[0].time)).toEqual(points[0].point);
 
         // jump far forward
-        expect(hs.evaluate(points[points.length - 2].time).equals(points[points.length - 2].point)).toEqual(true);
+        expect(hs.evaluate(points[points.length - 2].time)).toEqual(points[points.length - 2].point);
 
         // jump far back
-        expect(hs.evaluate(points[0].time).equals(points[0].point)).toEqual(true);
+        expect(hs.evaluate(points[0].time)).toEqual(points[0].point);
     });
 
     // returns a function for a hermite curve between points p and q
@@ -124,7 +124,7 @@ defineSuite([
 
         var granularity = 0.1;
         for ( var i = points[0].time; i < points[1].time; i = i + granularity) {
-            expect(hs.evaluate(i).equalsEpsilon(interpolate(i), CesiumMath.EPSILON3)).toEqual(true);
+            expect(hs.evaluate(i)).toEqualEpsilon(interpolate(i), CesiumMath.EPSILON3);
         }
     });
 
@@ -153,7 +153,7 @@ defineSuite([
 
         var granularity = 0.1;
         for ( var i = points[0].time; i < points[1].time; i = i + granularity) {
-            expect(hs.evaluate(i).equalsEpsilon(interpolate(i), CesiumMath.EPSILON3)).toEqual(true);
+            expect(hs.evaluate(i)).toEqualEpsilon(interpolate(i), CesiumMath.EPSILON3);
         }
     });
 });

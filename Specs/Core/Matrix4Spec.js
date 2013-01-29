@@ -154,6 +154,28 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
+    it('fromUniformScale works without a result parameter', function() {
+        var expected = new Matrix4(
+                2.0, 0.0, 0.0, 0.0,
+                0.0, 2.0, 0.0, 0.0,
+                0.0, 0.0, 2.0, 0.0,
+                0.0, 0.0, 0.0, 1.0);
+        var returnedResult = Matrix4.fromUniformScale(2.0);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromUniformScale works with a result parameter', function() {
+        var expected = new Matrix4(
+                2.0, 0.0, 0.0, 0.0,
+                0.0, 2.0, 0.0, 0.0,
+                0.0, 0.0, 2.0, 0.0,
+                0.0, 0.0, 0.0, 1.0);
+        var result = new Matrix4();
+        var returnedResult = Matrix4.fromUniformScale(2.0, result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toEqual(expected);
+    });
+
     it('createPerspectiveFieldOfView works without a result parameter', function() {
         var expected = new Matrix4(1, 0,                  0,                  0,
                                    0, 1,                  0,                  0,
@@ -523,6 +545,33 @@ defineSuite([
         var translation = new Cartesian3(17, 18, 19);
         var expected = Matrix4.multiply(m, Matrix4.fromTranslation(translation));
         var returnedResult = m.multiplyByTranslation(translation, m);
+        expect(returnedResult).toBe(m);
+        expect(m).toEqual(expected);
+    });
+
+    it('multiplyByUniformScale works without a result parameter', function() {
+        var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+        var scale = 2.0;
+        var expected = Matrix4.multiply(m, Matrix4.fromUniformScale(scale));
+        var result = m.multiplyByUniformScale(scale);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyByUniformScale works with a result parameter', function() {
+        var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+        var scale = 1.0;
+        var expected = Matrix4.multiply(m, Matrix4.fromUniformScale(scale));
+        var result = new Matrix4();
+        var returnedResult = m.multiplyByUniformScale(scale, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyByUniformScale works with "this" result parameter', function() {
+        var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+        var scale = 2.0;
+        var expected = Matrix4.multiply(m, Matrix4.fromUniformScale(scale));
+        var returnedResult = m.multiplyByUniformScale(scale, m);
         expect(returnedResult).toBe(m);
         expect(m).toEqual(expected);
     });
@@ -912,6 +961,12 @@ defineSuite([
         }).toThrow();
     });
 
+    it('fromUniformScale throws without scale parameter', function() {
+        expect(function() {
+            Matrix4.fromUniformScale(undefined);
+        }).toThrow();
+    });
+
     it('fromCamera throws without camera', function() {
         expect(function() {
             Matrix4.fromCamera(undefined);
@@ -1199,7 +1254,6 @@ defineSuite([
         }).toThrow();
     });
 
-
     it('static multiplyByTranslation throws with no matrix parameter', function() {
         var translation = new Cartesian3();
         expect(function() {
@@ -1211,6 +1265,19 @@ defineSuite([
         var m = new Matrix4();
         expect(function() {
             Matrix4.multiplyByTranslation(m, undefined);
+        }).toThrow();
+    });
+
+    it('static multiplyByUniformScale throws with no matrix parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByUniformScale(undefined, 2.0);
+        }).toThrow();
+    });
+
+    it('static multiplyByUniformScale throws with no scale parameter', function() {
+        var m = new Matrix4();
+        expect(function() {
+            Matrix4.multiplyByUniformScale(m, undefined);
         }).toThrow();
     });
 

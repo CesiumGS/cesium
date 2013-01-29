@@ -7,7 +7,7 @@
     <meta name="description" content="An example of using the &quot;built&quot; Cesium with minimal dependencies (uses static imagery).">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../Build/Unminified/Cesium.js"></script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js"></script>
     <script type="text/javascript" src="../Sandcastle-warn.js"></script>
 </head>
 <body data-sandcastle-bucket="bucket-plain.html" data-sandcastle-title="Cesium (standalone)">
@@ -31,7 +31,6 @@
         border: none;
         width: 100%;
         height: 100%;
-        z-index: -1;
     }
     #toolbar {
         margin: 5px;
@@ -55,7 +54,7 @@
 
     var imageryUrl = '../../../Source/Assets/Textures/';
     var imageryProvider = new Cesium.SingleTileImageryProvider({
-        url : imageryUrl + 'NE2_50M_SR_W_2048.jpg'
+        url : imageryUrl + 'NE2_LR_LC_SR_W_DR_2048.jpg'
     });
 
     var cb = new Cesium.CentralBody(ellipsoid);

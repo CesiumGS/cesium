@@ -89,7 +89,7 @@ defineSuite([
         frustum.top = frustum.right;
         frustum.bottom = -frustum.top;
         frameState.camera.frustum = frustum;
-        frameState.camera.controller.update(frameState);
+        frameState.camera.controller.update(frameState.mode, frameState.scene2D);
         frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
     }
 
@@ -135,7 +135,7 @@ defineSuite([
             }
             expect(constructWithoutImageryLayerCollection).toThrow();
         });
-    });
+    }, 'WebGL');
 
     describe('layer updating', function() {
         it('removing a layer removes it from all tiles', function() {
@@ -249,7 +249,7 @@ defineSuite([
                 });
             });
         });
-    });
+    }, 'WebGL');
 
     it('renders in 2D geographic', function() {
         var layerCollection = cb.getImageryLayers();
@@ -286,9 +286,7 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.mode = SceneMode.COLUMBUS_VIEW;
-        frameState.scene2D.projection = new GeographicProjection(Ellipsoid.WGS84);
-        frameState.camera.controller.update(frameState);
+        frameState.camera.controller.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
         frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
@@ -303,9 +301,7 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.mode = SceneMode.COLUMBUS_VIEW;
-        frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
-        frameState.camera.controller.update(frameState);
+        frameState.camera.controller.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
         frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
@@ -341,9 +337,7 @@ defineSuite([
         runs(function() {
             expect(render(context, frameState, cb)).toBeGreaterThan(0);
 
-            frameState.mode = SceneMode.COLUMBUS_VIEW;
-            frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
-            frameState.camera.controller.update(frameState);
+            frameState.camera.controller.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
             frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
         });
 
@@ -383,6 +377,8 @@ defineSuite([
         layer.brightness = 0.456;
         layer.contrast = 0.654;
         layer.gamma = 0.321;
+        layer.saturation = 0.123;
+        layer.hue = 0.456;
 
         frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
@@ -411,6 +407,8 @@ defineSuite([
                     expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
                     expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
                     expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0/0.321]);
+                    expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
+                    expect(uniforms.u_dayTextureHue()).toEqual([0.456]);
                 }
             }
 
@@ -438,6 +436,8 @@ defineSuite([
         layer.brightness = createFunction(0.456);
         layer.contrast = createFunction(0.654);
         layer.gamma = createFunction(0.321);
+        layer.saturation = createFunction(0.123);
+        layer.hue = createFunction(0.456);
 
         frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
@@ -466,10 +466,12 @@ defineSuite([
                     expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
                     expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
                     expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0/0.321]);
+                    expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
+                    expect(uniforms.u_dayTextureHue()).toEqual([0.456]);
                 }
             }
 
             expect(tileCommandCount).toBeGreaterThan(0);
         });
     });
-});
+}, 'WebGL');

@@ -3,6 +3,7 @@ defineSuite([
          'Scene/CameraFlightPath',
          'Core/Cartesian3',
          'Core/Cartographic',
+         'Core/Ellipsoid',
          'Core/Math',
          'Scene/OrthographicFrustum',
          'Scene/SceneMode',
@@ -11,6 +12,7 @@ defineSuite([
          CameraFlightPath,
          Cartesian3,
          Cartographic,
+         Ellipsoid,
          CesiumMath,
          OrthographicFrustum,
          SceneMode,
@@ -41,25 +43,29 @@ defineSuite([
 
     it('create animation throws without a frameState', function() {
         expect(function() {
-            return CameraFlightPath.createAnimation();
+            CameraFlightPath.createAnimation(undefined, {
+                destination : new Cartesian3(1e9, 1e9, 1e9)
+            });
         }).toThrow();
     });
 
     it('create animation throws without a destination', function() {
         expect(function() {
-            return CameraFlightPath.createAnimation(frameState, {});
+            CameraFlightPath.createAnimation(frameState, {});
         }).toThrow();
     });
 
     it('create animation with cartographic throws without a frameState', function() {
         expect(function() {
-            return CameraFlightPath.createAnimation();
+            CameraFlightPath.createAnimationCartographic(undefined, {
+                destination : new Cartographic(0.0, 0.0, 1e6)
+            });
         }).toThrow();
     });
 
     it('create animation with cartographic throws without a destination', function() {
         expect(function() {
-            return CameraFlightPath.createAnimation(frameState, {});
+            CameraFlightPath.createAnimationCartographic(frameState, {});
         }).toThrow();
     });
 
@@ -322,5 +328,59 @@ defineSuite([
         expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON12);
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
         expect(camera.frustum.right - camera.frustum.left).toEqual(endPosition.z);
+    });
+
+    it('creates a path where the start and end points only differ in height', function() {
+        var camera = frameState.camera;
+        var start = camera.position.clone();
+        var end = Ellipsoid.WGS84.cartesianToCartographic(start);
+        end.height -= 1000000.0;
+
+        var duration = 3000.0;
+        var flight = CameraFlightPath.createAnimationCartographic(frameState, {
+            destination : end,
+            duration : duration
+        });
+
+        flight.onUpdate({ time : 0.0 });
+        expect(camera.position).toEqualEpsilon(start, CesiumMath.EPSILON12);
+
+        var expected = Ellipsoid.WGS84.cartographicToCartesian(end);
+        flight.onUpdate({ time : duration });
+        expect(camera.position).toEqualEpsilon(expected, CesiumMath.EPSILON12);
+    });
+
+    it('creates a path to the same point', function() {
+        var camera = frameState.camera;
+        camera.position = new Cartesian3(7000000.0, 0.0, 0.0);
+        camera.direction = camera.position.normalize().negate();
+        camera.up = Cartesian3.UNIT_Z.clone();
+        camera.right = camera.direction.cross(camera.up).normalize();
+
+        var startPosition = camera.position.clone();
+        var startDirection = camera.direction.clone();
+        var startUp = camera.up.clone();
+
+        var endPosition = startPosition.clone();
+        var endDirection = startDirection.negate();
+        var endUp = startUp.negate();
+
+        var duration = 3000.0;
+        var flight = CameraFlightPath.createAnimation(frameState, {
+            destination : endPosition,
+            direction : endDirection,
+            up : endUp,
+            duration : duration
+        });
+
+        flight.onUpdate({ time : 0.0 });
+        expect(camera.position).toEqualEpsilon(startPosition, CesiumMath.EPSILON12);
+        expect(camera.direction).toEqualEpsilon(startDirection, CesiumMath.EPSILON12);
+        expect(camera.up).toEqualEpsilon(startUp, CesiumMath.EPSILON12);
+
+        flight.onUpdate({ time : duration });
+        expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON12);
+        expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON12);
+        expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
     });
 });

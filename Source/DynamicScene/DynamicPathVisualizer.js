@@ -2,42 +2,191 @@
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/Cartesian3',
+        '../Core/Matrix4',
         '../Core/Color',
+        '../Core/Transforms',
+        '../Core/ReferenceFrame',
+        '../Scene/SceneMode',
         '../Scene/PolylineCollection'
        ], function(
          DeveloperError,
          destroyObject,
+         Cartesian3,
+         Matrix4,
          Color,
+         Transforms,
+         ReferenceFrame,
+         SceneMode,
          PolylineCollection) {
     "use strict";
 
-    function samplePositions(currentTime, positionProperty, availability, leadTime, trailTime, result) {
-        var hasAvailability = typeof availability !== 'undefined';
-        var hasLeadTime = typeof leadTime !== 'undefined';
-        var hasTrailTime = typeof trailTime !== 'undefined';
+    var PolylineUpdater = function(scene, referenceFrame) {
+        this._unusedIndexes = [];
+        this._polylineCollection = new PolylineCollection();
+        this._scene = scene;
+        this._referenceFrame = referenceFrame;
 
-        if (!hasAvailability && (!hasLeadTime || !hasTrailTime)) {
-            return [];
+        var transform;
+        if (referenceFrame === ReferenceFrame.INERTIAL) {
+            transform = Transforms.computeIcrfToFixedMatrix;
+        }
+        scene.getPrimitives().add(this._polylineCollection);
+        this._transformFunction = transform;
+    };
+
+    PolylineUpdater.prototype.update = function(time) {
+        var transform = this._transformFunction;
+        if (typeof transform !== 'undefined') {
+            var toFixed = transform(time);
+            if (typeof toFixed !== 'undefined') {
+                Matrix4.fromRotationTranslation(toFixed, Cartesian3.ZERO, this._polylineCollection.modelMatrix);
+            }
+        }
+    };
+
+    PolylineUpdater.prototype.updateObject = function(time, dynamicObject) {
+        var dynamicPath = dynamicObject.path;
+        if (typeof dynamicPath === 'undefined') {
+            return;
         }
 
+        var positionProperty = dynamicObject.position;
+        if (typeof positionProperty === 'undefined') {
+            return;
+        }
+
+        var polyline;
+        var property;
         var sampleStart;
         var sampleStop;
-        if (hasTrailTime) {
-            sampleStart = currentTime.addSeconds(-trailTime);
-        }
-        if (hasAvailability && (!hasTrailTime || availability.start.greaterThan(sampleStart))) {
-            sampleStart = availability.start;
+        var showProperty = dynamicPath.show;
+        var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
+        var show = (typeof showProperty === 'undefined' || showProperty.getValue(time));
+
+        //While we want to show the path, there may not actually be anything to show
+        //depending on lead/trail settings.  Compute the interval of the path to
+        //show and check against actual availability.
+        if (show) {
+            property = dynamicPath.leadTime;
+            var leadTime;
+            if (typeof property !== 'undefined') {
+                leadTime = property.getValue(time);
+            }
+
+            property = dynamicPath.trailTime;
+            var trailTime;
+            if (typeof property !== 'undefined') {
+                trailTime = property.getValue(time);
+            }
+
+            var availability = dynamicObject.availability;
+            var hasAvailability = typeof availability !== 'undefined';
+            var hasLeadTime = typeof leadTime !== 'undefined';
+            var hasTrailTime = typeof trailTime !== 'undefined';
+
+            //Objects need to have either defined availability or both a lead and trail time in order to
+            //draw a path (since we can't draw "infinite" paths.
+            show = hasAvailability || (hasLeadTime && hasTrailTime);
+
+            //The final step is to compute the actual start/stop times of the path to show.
+            //If current time is outside of the availability interval, there's a chance that
+            //we won't have to draw anything anyway.
+            if (show) {
+                if (hasTrailTime) {
+                    sampleStart = time.addSeconds(-trailTime);
+                }
+                if (hasAvailability && (!hasTrailTime || availability.start.greaterThan(sampleStart))) {
+                    sampleStart = availability.start;
+                }
+
+                if (hasLeadTime) {
+                    sampleStop = time.addSeconds(leadTime);
+                }
+                if (hasAvailability && (!hasLeadTime || availability.stop.lessThan(sampleStop))) {
+                    sampleStop = availability.stop;
+                }
+                show = sampleStart.lessThan(sampleStop);
+            }
         }
 
-        if (hasLeadTime) {
-            sampleStop = currentTime.addSeconds(leadTime);
-        }
-        if (hasAvailability && (!hasLeadTime || availability.stop.lessThan(sampleStop))) {
-            sampleStop = availability.stop;
+        if (!show) {
+            //don't bother creating or updating anything else
+            if (typeof pathVisualizerIndex !== 'undefined') {
+                polyline = this._polylineCollection.get(pathVisualizerIndex);
+                polyline.setShow(false);
+                dynamicObject._pathVisualizerIndex = undefined;
+                this._unusedIndexes.push(pathVisualizerIndex);
+            }
+            return;
         }
 
-        return positionProperty.getValueRangeCartesian(sampleStart, sampleStop, currentTime, result);
-    }
+        if (typeof pathVisualizerIndex === 'undefined') {
+            var unusedIndexes = this._unusedIndexes;
+            var length = unusedIndexes.length;
+            if (length > 0) {
+                pathVisualizerIndex = unusedIndexes.pop();
+                polyline = this._polylineCollection.get(pathVisualizerIndex);
+            } else {
+                pathVisualizerIndex = this._polylineCollection.getLength();
+                polyline = this._polylineCollection.add();
+            }
+            dynamicObject._pathVisualizerIndex = pathVisualizerIndex;
+            polyline.dynamicObject = dynamicObject;
+
+            // CZML_TODO Determine official defaults
+            polyline.setColor(Color.WHITE);
+            polyline.setOutlineColor(Color.BLACK);
+            polyline.setOutlineWidth(1);
+            polyline.setWidth(1);
+        } else {
+            polyline = this._polylineCollection.get(pathVisualizerIndex);
+        }
+
+        polyline.setShow(true);
+        polyline.setPositions(positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, time, this._referenceFrame, polyline.getPositions()));
+
+        property = dynamicPath.color;
+        if (typeof property !== 'undefined') {
+            polyline.setColor(property.getValue(time, polyline.getColor()));
+        }
+
+        property = dynamicPath.outlineColor;
+        if (typeof property !== 'undefined') {
+            polyline.setOutlineColor(property.getValue(time, polyline.getOutlineColor()));
+        }
+
+        property = dynamicPath.outlineWidth;
+        if (typeof property !== 'undefined') {
+            var outlineWidth = property.getValue(time);
+            if (typeof outlineWidth !== 'undefined') {
+                polyline.setOutlineWidth(outlineWidth);
+            }
+        }
+
+        property = dynamicPath.width;
+        if (typeof property !== 'undefined') {
+            var width = property.getValue(time);
+            if (typeof width !== 'undefined') {
+                polyline.setWidth(width);
+            }
+        }
+    };
+
+    PolylineUpdater.prototype.removeObject = function(dynamicObject) {
+        var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
+        if (typeof pathVisualizerIndex !== 'undefined') {
+            var polyline = this._polylineCollection.get(pathVisualizerIndex);
+            polyline.setShow(false);
+            this._unusedIndexes.push(pathVisualizerIndex);
+            dynamicObject._pathVisualizerIndex = undefined;
+        }
+    };
+
+    PolylineUpdater.prototype.destroy = function() {
+        this._scene.getPrimitives().remove(this._polylineCollection);
+        return destroyObject(this);
+    };
 
     /**
      * A DynamicObject visualizer which maps the DynamicPath instance
@@ -71,10 +220,7 @@ define([
             throw new DeveloperError('scene is required.');
         }
         this._scene = scene;
-        this._unusedIndexes = [];
-        this._primitives = scene.getPrimitives();
-        var polylineCollection = this._polylineCollection = new PolylineCollection();
-        scene.getPrimitives().add(polylineCollection);
+        this._updaters = {};
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -128,10 +274,55 @@ define([
         if (typeof time === 'undefined') {
             throw new DeveloperError('time is requied.');
         }
+
         if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var updaters = this._updaters;
+            for ( var key in updaters) {
+                if (updaters.hasOwnProperty(key)) {
+                    updaters[key].update(time);
+                }
+            }
+
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                this._updateObject(time, dynamicObjects[i]);
+                var dynamicObject = dynamicObjects[i];
+
+                if (typeof dynamicObject.path === 'undefined') {
+                    continue;
+                }
+
+                var positionProperty = dynamicObject.position;
+                if (typeof positionProperty === 'undefined') {
+                    continue;
+                }
+
+                var lastUpdater = dynamicObject._pathUpdater;
+
+                var frameToVisualize = ReferenceFrame.FIXED;
+                if (this._scene.mode === SceneMode.SCENE3D) {
+                    frameToVisualize = positionProperty._getReferenceFrame();
+                }
+
+                var currentUpdater = this._updaters[frameToVisualize];
+
+                if ((lastUpdater === currentUpdater) && (typeof currentUpdater !== 'undefined')) {
+                    currentUpdater.updateObject(time, dynamicObject);
+                    continue;
+                }
+
+                if (typeof lastUpdater !== 'undefined') {
+                    lastUpdater.removeObject(dynamicObject);
+                }
+
+                if (typeof currentUpdater === 'undefined') {
+                    currentUpdater = new PolylineUpdater(this._scene, frameToVisualize);
+                    this._updaters[frameToVisualize] = currentUpdater;
+                }
+
+                dynamicObject._pathUpdater = currentUpdater;
+                if (typeof currentUpdater !== 'undefined') {
+                    currentUpdater.updateObject(time, dynamicObject);
+                }
             }
         }
     };
@@ -140,17 +331,21 @@ define([
      * Removes all primitives from the scene.
      */
     DynamicPathVisualizer.prototype.removeAllPrimitives = function() {
-        var i;
-        this._polylineCollection.removeAll();
+        var updaters = this._updaters;
+        for ( var key in updaters) {
+            if (updaters.hasOwnProperty(key)) {
+                updaters[key].destroy();
+            }
+        }
+        this._updaters = {};
 
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for (i = dynamicObjects.length - 1; i > -1; i--) {
+            for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+                dynamicObjects[i]._pathUpdater = undefined;
                 dynamicObjects[i]._pathVisualizerIndex = undefined;
             }
         }
-
-        this._unusedIndexes = [];
     };
 
     /**
@@ -190,113 +385,15 @@ define([
      */
     DynamicPathVisualizer.prototype.destroy = function() {
         this.removeAllPrimitives();
-        this._scene.getPrimitives().remove(this._polylineCollection);
         return destroyObject(this);
     };
 
-    DynamicPathVisualizer.prototype._updateObject = function(time, dynamicObject) {
-        var dynamicPath = dynamicObject.path;
-        if (typeof dynamicPath === 'undefined') {
-            return;
-        }
-
-        var positionProperty = dynamicObject.position;
-        if (typeof positionProperty === 'undefined') {
-            return;
-        }
-
-        var polyline;
-        var showProperty = dynamicPath.show;
-        var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
-        var show = (typeof showProperty === 'undefined' || showProperty.getValue(time));
-
-        if (!show) {
-            //don't bother creating or updating anything else
-            if (typeof pathVisualizerIndex !== 'undefined') {
-                polyline = this._polylineCollection.get(pathVisualizerIndex);
-                polyline.setShow(false);
-                dynamicObject._pathVisualizerIndex = undefined;
-                this._unusedIndexes.push(pathVisualizerIndex);
-            }
-            return;
-        }
-
-        if (typeof pathVisualizerIndex === 'undefined') {
-            var unusedIndexes = this._unusedIndexes;
-            var length = unusedIndexes.length;
-            if (length > 0) {
-                pathVisualizerIndex = unusedIndexes.pop();
-                polyline = this._polylineCollection.get(pathVisualizerIndex);
-            } else {
-                pathVisualizerIndex = this._polylineCollection.getLength();
-                polyline = this._polylineCollection.add();
-            }
-            dynamicObject._pathVisualizerIndex = pathVisualizerIndex;
-            polyline.dynamicObject = dynamicObject;
-
-            // CZML_TODO Determine official defaults
-            polyline.setColor(Color.WHITE);
-            polyline.setOutlineColor(Color.BLACK);
-            polyline.setOutlineWidth(1);
-            polyline.setWidth(1);
-        } else {
-            polyline = this._polylineCollection.get(pathVisualizerIndex);
-        }
-
-        polyline.setShow(true);
-
-        var property = dynamicPath.leadTime;
-        var leadTime;
-        if (typeof property !== 'undefined') {
-            leadTime = property.getValue(time);
-        }
-
-        property = dynamicPath.trailTime;
-        var trailTime;
-        if (typeof property !== 'undefined') {
-            trailTime = property.getValue(time);
-        }
-
-        polyline.setPositions(samplePositions(time, positionProperty, dynamicObject.availability, leadTime, trailTime, polyline.getPositions()));
-
-        property = dynamicPath.color;
-        if (typeof property !== 'undefined') {
-            polyline.setColor(property.getValue(time, polyline.getColor()));
-        }
-
-        property = dynamicPath.outlineColor;
-        if (typeof property !== 'undefined') {
-            polyline.setOutlineColor(property.getValue(time, polyline.getOutlineColor()));
-        }
-
-        property = dynamicPath.outlineWidth;
-        if (typeof property !== 'undefined') {
-            var outlineWidth = property.getValue(time);
-            if (typeof outlineWidth !== 'undefined') {
-                polyline.setOutlineWidth(outlineWidth);
-            }
-        }
-
-        property = dynamicPath.width;
-        if (typeof property !== 'undefined') {
-            var width = property.getValue(time);
-            if (typeof width !== 'undefined') {
-                polyline.setWidth(width);
-            }
-        }
-    };
-
     DynamicPathVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
-        var thisPolylineCollection = this._polylineCollection;
-        var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
-            var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
-            if (typeof pathVisualizerIndex !== 'undefined') {
-                var polyline = thisPolylineCollection.get(pathVisualizerIndex);
-                polyline.setShow(false);
-                thisUnusedIndexes.push(pathVisualizerIndex);
-                dynamicObject._pathVisualizerIndex = undefined;
+            var _pathUpdater = dynamicObject._pathUpdater;
+            if (typeof _pathUpdater !== 'undefined') {
+                _pathUpdater.removeObject(dynamicObject);
             }
         }
     };

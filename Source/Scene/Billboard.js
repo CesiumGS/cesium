@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/Math',
         './HorizontalOrigin',
         './VerticalOrigin',
@@ -17,6 +18,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         CesiumMath,
         HorizontalOrigin,
         VerticalOrigin,
@@ -548,6 +550,7 @@ define([
     };
 
     var tempCartesian4 = new Cartesian4();
+    var tempCartographic = new Cartographic();
     Billboard._computeActualPosition = function(position, frameState, morphTime, modelMatrix) {
         var mode = frameState.mode;
 
@@ -555,29 +558,28 @@ define([
             return position;
         }
 
-        var projection = frameState.scene2D.projection;
-        var cartographic, projectedPosition;
-
         modelMatrix.multiplyByPoint(position, tempCartesian4);
 
-        if (mode === SceneMode.MORPHING) {
-            cartographic = projection.getEllipsoid().cartesianToCartographic(tempCartesian4);
-            projectedPosition = projection.project(cartographic);
+        var projection = frameState.scene2D.projection;
+        var cartographic = projection.getEllipsoid().cartesianToCartographic(tempCartesian4, tempCartographic);
+        if (typeof cartographic === 'undefined') {
+            return undefined;
+        }
 
+        var projectedPosition = projection.project(cartographic);
+        if (mode === SceneMode.MORPHING) {
             var x = CesiumMath.lerp(projectedPosition.z, tempCartesian4.x, morphTime);
             var y = CesiumMath.lerp(projectedPosition.x, tempCartesian4.y, morphTime);
             var z = CesiumMath.lerp(projectedPosition.y, tempCartesian4.z, morphTime);
             return new Cartesian3(x, y, z);
         }
-
-        cartographic = projection.getEllipsoid().cartesianToCartographic(tempCartesian4);
-        projectedPosition = projection.project(cartographic);
-
         if (mode === SceneMode.SCENE2D) {
             return new Cartesian3(0.0, projectedPosition.x, projectedPosition.y);
-        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+        }
+        if (mode === SceneMode.COLUMBUS_VIEW) {
             return new Cartesian3(projectedPosition.z, projectedPosition.x, projectedPosition.y);
         }
+        return undefined;
     };
 
     Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, clampToPixel, uniformState) {

@@ -36,7 +36,7 @@ define([
      * @exception {DeveloperError} d is a required number.
      * @exception {DeveloperError} e is a required number.
      */
-    QuarticRealPolynomial.discriminant = function(a, b, c, d, e){
+    QuarticRealPolynomial.discriminant = function(a, b, c, d, e) {
         if (typeof a !== 'number') {
             throw new DeveloperError('a is a required number.');
         }
@@ -78,7 +78,7 @@ define([
         var r = a0 - a1 * a3 / 4.0 + a2 * a3Squared / 16.0 - 3.0 * a3Squared * a3Squared / 256.0;
 
         // Find the roots of the cubic equations:  h^6 + 2 p h^4 + (p^2 - 4 r) h^2 - q^2 = 0.
-        var cubicRoots = CubicRealPolynomial.realRoots(1.0, 2.0 * p, p * p - 4.0 * r, - q * q);
+        var cubicRoots = CubicRealPolynomial.realRoots(1.0, 2.0 * p, p * p - 4.0 * r, -q * q);
 
         if (cubicRoots.length > 0) {
             var temp = -a3 / 4.0;
@@ -90,23 +90,22 @@ define([
                 // y^4 + p y^2 + r = 0.
                 var roots = QuadraticRealPolynomial.realRoots(1.0, p, r);
 
-                if (roots.length === 2){
+                if (roots.length === 2) {
                     var root0 = roots[0];
                     var root1 = roots[1];
 
                     var y;
-                    if (root0 >= 0.0 && root1 >= 0.0)
-                    {
+                    if (root0 >= 0.0 && root1 >= 0.0) {
                         var y0 = Math.sqrt(root0);
                         var y1 = Math.sqrt(root1);
 
-                        return [ temp - y1, temp - y0, temp + y0, temp + y1 ];
+                        return [temp - y1, temp - y0, temp + y0, temp + y1];
                     } else if (root0 >= 0.0 && root1 < 0.0) {
                         y = Math.sqrt(root0);
-                        return [ temp - y, temp + y ];
+                        return [temp - y, temp + y];
                     } else if (root0 < 0.0 && root1 >= 0.0) {
                         y = Math.sqrt(root1);
-                        return [ temp - y, temp + y ];
+                        return [temp - y, temp + y];
                     }
                 }
                 return [];
@@ -129,17 +128,17 @@ define([
                         roots2[1] += temp;
 
                         if (roots1[1] <= roots2[0]) {
-                            return [ roots1[0], roots1[1], roots2[0], roots2[1] ];
+                            return [roots1[0], roots1[1], roots2[0], roots2[1]];
                         } else if (roots2[1] <= roots1[0]) {
-                            return [ roots2[0], roots2[1], roots1[0], roots1[1] ];
+                            return [roots2[0], roots2[1], roots1[0], roots1[1]];
                         } else if (roots1[0] >= roots2[0] && roots1[1] <= roots2[1]) {
-                            return [ roots2[0], roots1[0], roots1[1], roots2[1] ];
+                            return [roots2[0], roots1[0], roots1[1], roots2[1]];
                         } else if (roots2[0] >= roots1[0] && roots2[1] <= roots1[1]) {
-                            return [ roots1[0], roots2[0], roots2[1], roots1[1] ];
+                            return [roots1[0], roots2[0], roots2[1], roots1[1]];
                         } else if (roots1[0] > roots2[0] && roots1[0] < roots2[1]) {
-                            return [ roots2[0], roots1[0], roots2[1], roots1[1] ];
+                            return [roots2[0], roots1[0], roots2[1], roots1[1]];
                         }
-                        return [ roots1[0], roots2[0], roots1[1], roots2[1] ];
+                        return [roots1[0], roots2[0], roots1[1], roots2[1]];
                     }
                     return roots1;
                 }
@@ -198,8 +197,7 @@ define([
 
             var G;
             var g;
-            if (g1 === 0.0 && g2 === 0.0)
-            {
+            if (g1 === 0.0 && g2 === 0.0) {
                 G = 0.0;
                 g = 0.0;
             } else if (CesiumMath.sign(g1) === CesiumMath.sign(g2)) {
@@ -215,9 +213,7 @@ define([
             if (h1 === 0.0 && h2 === 0.0) {
                 H = 0.0;
                 h = 0.0;
-            }
-            else if (CesiumMath.sign(h1) === CesiumMath.sign(h2))
-            {
+            } else if (CesiumMath.sign(h1) === CesiumMath.sign(h2)) {
                 H = h1 + h2;
                 h = a0 / H;
             } else {
@@ -232,17 +228,17 @@ define([
             if (roots1.length !== 0) {
                 if (roots2.length !== 0) {
                     if (roots1[1] <= roots2[0]) {
-                        return [ roots1[0], roots1[1], roots2[0], roots2[1] ];
+                        return [roots1[0], roots1[1], roots2[0], roots2[1]];
                     } else if (roots2[1] <= roots1[0]) {
-                        return [ roots2[0], roots2[1], roots1[0], roots1[1] ];
+                        return [roots2[0], roots2[1], roots1[0], roots1[1]];
                     } else if (roots1[0] >= roots2[0] && roots1[1] <= roots2[1]) {
-                        return [ roots2[0], roots1[0], roots1[1], roots2[1] ];
+                        return [roots2[0], roots1[0], roots1[1], roots2[1]];
                     } else if (roots2[0] >= roots1[0] && roots2[1] <= roots1[1]) {
-                        return [ roots1[0], roots2[0], roots2[1], roots1[1] ];
+                        return [roots1[0], roots2[0], roots2[1], roots1[1]];
                     } else if (roots1[0] > roots2[0] && roots1[0] < roots2[1]) {
-                        return [ roots2[0], roots1[0], roots2[1], roots1[1] ];
+                        return [roots2[0], roots1[0], roots2[1], roots1[1]];
                     } else {
-                        return [ roots1[0], roots2[0], roots1[1], roots2[1] ];
+                        return [roots1[0], roots2[0], roots1[1], roots2[1]];
                     }
                 }
                 return roots1;
@@ -288,8 +284,7 @@ define([
             throw new DeveloperError('e is a required number.');
         }
 
-        if (Math.abs(a) < CesiumMath.EPSILON15)
-        {
+        if (Math.abs(a) < CesiumMath.EPSILON15) {
             return CubicRealPolynomial.realRoots(b, c, d, e);
         }
         var a3 = b / a;
@@ -303,23 +298,40 @@ define([
         k += (a0 < 0.0) ? k + 1 : k;
 
         switch (k) {
-            case 0: return original(a3, a2, a1, a0);
-            case 1: return neumark(a3, a2, a1, a0);
-            case 2: return neumark(a3, a2, a1, a0);
-            case 3: return original(a3, a2, a1, a0);
-            case 4: return original(a3, a2, a1, a0);
-            case 5: return neumark(a3, a2, a1, a0);
-            case 6: return original(a3, a2, a1, a0);
-            case 7: return original(a3, a2, a1, a0);
-            case 8: return neumark(a3, a2, a1, a0);
-            case 9: return original(a3, a2, a1, a0);
-            case 10: return original(a3, a2, a1, a0);
-            case 11: return neumark(a3, a2, a1, a0);
-            case 12: return original(a3, a2, a1, a0);
-            case 13: return original(a3, a2, a1, a0);
-            case 14: return original(a3, a2, a1, a0);
-            case 15: return original(a3, a2, a1, a0);
-            default: return undefined;
+        case 0:
+            return original(a3, a2, a1, a0);
+        case 1:
+            return neumark(a3, a2, a1, a0);
+        case 2:
+            return neumark(a3, a2, a1, a0);
+        case 3:
+            return original(a3, a2, a1, a0);
+        case 4:
+            return original(a3, a2, a1, a0);
+        case 5:
+            return neumark(a3, a2, a1, a0);
+        case 6:
+            return original(a3, a2, a1, a0);
+        case 7:
+            return original(a3, a2, a1, a0);
+        case 8:
+            return neumark(a3, a2, a1, a0);
+        case 9:
+            return original(a3, a2, a1, a0);
+        case 10:
+            return original(a3, a2, a1, a0);
+        case 11:
+            return neumark(a3, a2, a1, a0);
+        case 12:
+            return original(a3, a2, a1, a0);
+        case 13:
+            return original(a3, a2, a1, a0);
+        case 14:
+            return original(a3, a2, a1, a0);
+        case 15:
+            return original(a3, a2, a1, a0);
+        default:
+            return undefined;
         }
     };
 

@@ -1,13 +1,13 @@
 /*global define*/
 define([
         'require',
+        './buildModuleUrl',
         './defaultValue',
-        './DeveloperError',
         '../ThirdParty/when'
     ], function(
         require,
+        buildModuleUrl,
         defaultValue,
-        DeveloperError,
         when) {
     "use strict";
 
@@ -26,37 +26,10 @@ define([
         delete deferreds[id];
     }
 
-    var cesiumScriptRegex = /(.*\/?)Cesium\w*\.js(?:\W|$)/i;
-    var bootstrapperScript = 'cesiumWorkerBootstrapper.js';
-    var bootstrapperUrl;
-    function getBootstrapperUrl() {
-        /*global CESIUM_BASE_URL*/
-        if (typeof bootstrapperUrl === 'undefined') {
-            if (typeof CESIUM_BASE_URL !== 'undefined') {
-                bootstrapperUrl = CESIUM_BASE_URL + '/' + bootstrapperScript;
-            } else if (typeof require.toUrl !== 'undefined') {
-                bootstrapperUrl = require.toUrl('../Workers/' + bootstrapperScript);
-            } else {
-                var scripts = document.getElementsByTagName('script');
-                for ( var i = 0, len = scripts.length; i < len; ++i) {
-                    var src = scripts[i].getAttribute('src');
-                    var result = cesiumScriptRegex.exec(src);
-                    if (result !== null) {
-                        bootstrapperUrl = result[1] + bootstrapperScript;
-                        break;
-                    }
-                }
-                if (typeof bootstrapperUrl === 'undefined') {
-                    throw new DeveloperError('Unable to determine Cesium base URL automatically, try defining a global variable called CESIUM_BASE_URL.');
-                }
-            }
-        }
-
-        return bootstrapperUrl;
-    }
+    var bootstrapperUrl = buildModuleUrl('Workers/cesiumWorkerBootstrapper.js');
 
     function createWorker(processor) {
-        var worker = new Worker(getBootstrapperUrl());
+        var worker = new Worker(bootstrapperUrl);
         worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
 
         //bootstrap

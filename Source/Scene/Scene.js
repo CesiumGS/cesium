@@ -89,7 +89,7 @@ define([
 
         this._clearColorCommand = new ClearCommand();
         this._clearColorCommand.clearState = context.createClearState({
-            color : Color.BLACK
+            color : new Color()
         });
         this._clearDepthStencilCommand = new ClearCommand();
         this._clearDepthStencilCommand.clearState = context.createClearState({
@@ -103,6 +103,8 @@ define([
          * @type SkyBox
          *
          * @default undefined
+         *
+         * @see Scene#backgroundColor
          */
         this.skyBox = undefined;
 
@@ -114,6 +116,17 @@ define([
          * @default undefined
          */
         this.skyAtmosphere = undefined;
+
+        /**
+         * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
+         *
+         * @type Color
+         *
+         * @default Color.BLACK
+         *
+         * @see Scene#skyBox
+         */
+        this.backgroundColor = Color.BLACK.clone();
 
         /**
          * The current mode of the scene.
@@ -289,6 +302,10 @@ define([
 
             // PERFORMANCE_IDEA: sort bins
             frustumCommands.commands.push(command);
+
+            if (command.executeInClosestFrustum) {
+                break;
+            }
         }
     }
 
@@ -358,8 +375,11 @@ define([
             near = camera.frustum.near;
             far = camera.frustum.far;
         } else {
-            near = Math.max(near, camera.frustum.near);
-            far = Math.min(far, camera.frustum.far);
+            // The computed near plane must be between the user defined near and far planes.
+            // The computed far plane must between the user defined far and computed near.
+            // This will handle the case where the computed near plane is further than the user defined far plane.
+            near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
+            far = Math.max(Math.min(far, camera.frustum.far), near);
         }
 
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
@@ -381,7 +401,9 @@ define([
         var skyBoxCommand = (typeof scene.skyBox !== 'undefined') ? scene.skyBox.update(context, scene._frameState) : undefined;
         var skyAtmosphereCommand = (typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, scene._frameState) : undefined;
 
-        scene._clearColorCommand.execute(context, framebuffer);
+        var clear = scene._clearColorCommand;
+        Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.clearState.color);
+        clear.execute(context, framebuffer);
 
         // Ideally, we would render the sky box and atmosphere last for
         // early-z, but we would have to draw it in each frustum
@@ -452,8 +474,8 @@ define([
         var us = this.getUniformState();
         var frameState = this._frameState;
 
-        this._camera.controller.update(frameState);
-        this._screenSpaceCameraController.update(this._frameState);
+        this._camera.controller.update(this.mode, this.scene2D);
+        this._screenSpaceCameraController.update(this.mode);
 
         var frameNumber = CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0);
         updateFrameState(this, frameNumber, time);

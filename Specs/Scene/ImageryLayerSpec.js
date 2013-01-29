@@ -125,7 +125,7 @@ defineSuite([
         };
 
         var provider = new BingMapsImageryProvider({
-            server : 'invalid.localhost',
+            url : 'http://invalid.localhost',
             tileDiscardPolicy : new NeverTileDiscardPolicy()
         });
 
@@ -182,4 +182,4 @@ defineSuite([
         expect(layer.getExtent()).toEqual(extent);
         expect(layer.isDestroyed()).toEqual(false);
     });
-});
+}, 'WebGL');
