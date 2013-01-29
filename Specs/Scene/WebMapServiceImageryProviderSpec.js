@@ -260,7 +260,7 @@ defineSuite([
             layers : 'someLayer',
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
-        expect(providerWithCredit.getLogo()).not.toBeUndefined();
+        expect(providerWithCredit.getLogo()).toBeDefined();
     });
 
     it('routes requests through a proxy if one is specified', function() {
