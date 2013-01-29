@@ -19,6 +19,7 @@ Beta Releases
 * Added `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Iau2006XysData`, and `Iau2006XysDataSample` classes to `Core`.
 * CZML now supports the ability to specify positions in the International Celestial Reference Frame (ICRF), and inertial reference frame.
 * Fixed globe rendering on the Nexus 4 running Google Chrome Beta.
+* Updated Dojo from 1.7.2 to 1.8.4.  Reminder: Cesium does not depend on Dojo but uses it for reference applications.
 
 ### b12a - 2013-01-18
 
