@@ -20,9 +20,9 @@ define([
     "use strict";
 
     /**
-     * A DynamicObject visualizer which maps the DynamicOverlayQuad instance
-     * in DynamicObject.overlayQuad to a ViewportQuad primitive.
-     * @alias DynamicOverlayQuadVisualizer
+     * A DynamicObject visualizer which maps the DynamicScreenOverlay instance
+     * in DynamicObject.screenOverlay to a ViewportQuad primitive.
+     * @alias DynamicScreenOverlayVisualizer
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
@@ -30,7 +30,7 @@ define([
      *
      * @exception {DeveloperError} scene is required.
      *
-     * @see DynamicOverlayQuad
+     * @see DynamicScreenOverlay
      * @see Scene
      * @see DynamicObject
      * @see DynamicObjectCollection
@@ -44,14 +44,14 @@ define([
      * @see DynamicPolygonVisualizer
      * @see DynamicPolylineVisualizer
      */
-    var DynamicOverlayQuadVisualizer = function(scene, dynamicObjectCollection) {
+    var DynamicScreenOverlayVisualizer = function(scene, dynamicObjectCollection) {
         if (typeof scene === 'undefined') {
             throw new DeveloperError('scene is required.');
         }
         this._scene = scene;
         this._unusedIndexes = [];
         this._primitives = scene.getPrimitives();
-        this._overlayQuadCollection = [];
+        this._screenOverlayCollection = [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -61,7 +61,7 @@ define([
      *
      * @returns {Scene} The scene being used by this visualizer.
      */
-    DynamicOverlayQuadVisualizer.prototype.getScene = function() {
+    DynamicScreenOverlayVisualizer.prototype.getScene = function() {
         return this._scene;
     };
 
@@ -70,7 +70,7 @@ define([
      *
      * @returns {DynamicObjectCollection} The DynamicObjectCollection being visualized.
      */
-    DynamicOverlayQuadVisualizer.prototype.getDynamicObjectCollection = function() {
+    DynamicScreenOverlayVisualizer.prototype.getDynamicObjectCollection = function() {
         return this._dynamicObjectCollection;
     };
 
@@ -79,16 +79,16 @@ define([
      *
      * @param dynamicObjectCollection The DynamicObjectCollection to visualizer.
      */
-    DynamicOverlayQuadVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
+    DynamicScreenOverlayVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
         var oldCollection = this._dynamicObjectCollection;
         if (oldCollection !== dynamicObjectCollection) {
             if (typeof oldCollection !== 'undefined') {
-                oldCollection.objectsRemoved.removeEventListener(DynamicOverlayQuadVisualizer.prototype._onObjectsRemoved);
+                oldCollection.objectsRemoved.removeEventListener(DynamicScreenOverlayVisualizer.prototype._onObjectsRemoved);
                 this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (typeof dynamicObjectCollection !== 'undefined') {
-                dynamicObjectCollection.objectsRemoved.addEventListener(DynamicOverlayQuadVisualizer.prototype._onObjectsRemoved, this);
+                dynamicObjectCollection.objectsRemoved.addEventListener(DynamicScreenOverlayVisualizer.prototype._onObjectsRemoved, this);
             }
         }
     };
@@ -101,7 +101,7 @@ define([
      *
      * @exception {DeveloperError} time is required.
      */
-    DynamicOverlayQuadVisualizer.prototype.update = function(time) {
+    DynamicScreenOverlayVisualizer.prototype.update = function(time) {
         if (typeof time === 'undefined') {
             throw new DeveloperError('time is requied.');
         }
@@ -116,21 +116,21 @@ define([
     /**
      * Removes all primitives from the scene.
      */
-    DynamicOverlayQuadVisualizer.prototype.removeAllPrimitives = function() {
+    DynamicScreenOverlayVisualizer.prototype.removeAllPrimitives = function() {
         var i, len;
-        for (i = 0, len = this._overlayQuadCollection.length; i < len; i++) {
-            this._primitives.remove(this._overlayQuadCollection[i]);
+        for (i = 0, len = this._screenOverlayCollection.length; i < len; i++) {
+            this._primitives.remove(this._screenOverlayCollection[i]);
         }
 
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for (i = dynamicObjects.length - 1; i > -1; i--) {
-                dynamicObjects[i]._overlayQuadVisualizerIndex = undefined;
+                dynamicObjects[i]._screenOverlayVisualizerIndex = undefined;
             }
         }
 
         this._unusedIndexes = [];
-        this._overlayQuadCollection = [];
+        this._screenOverlayCollection = [];
     };
 
     /**
@@ -139,13 +139,13 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof DynamicOverlayQuadVisualizer
+     * @memberof DynamicScreenOverlayVisualizer
      *
      * @return {Boolean} True if this object was destroyed; otherwise, false.
      *
-     * @see DynamicOverlayQuadVisualizer#destroy
+     * @see DynamicScreenOverlayVisualizer#destroy
      */
-    DynamicOverlayQuadVisualizer.prototype.isDestroyed = function() {
+    DynamicScreenOverlayVisualizer.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -157,18 +157,18 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof DynamicOverlayQuadVisualizer
+     * @memberof DynamicScreenOverlayVisualizer
      *
      * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see DynamicOverlayQuadVisualizer#isDestroyed
+     * @see DynamicScreenOverlayVisualizer#isDestroyed
      *
      * @example
      * visualizer = visualizer && visualizer.destroy();
      */
-    DynamicOverlayQuadVisualizer.prototype.destroy = function() {
+    DynamicScreenOverlayVisualizer.prototype.destroy = function() {
         this.removeAllPrimitives();
         return destroyObject(this);
     };
@@ -176,64 +176,64 @@ define([
     var position;
     var width;
     var height;
-    DynamicOverlayQuadVisualizer.prototype._updateObject = function(time, dynamicObject) {
+    DynamicScreenOverlayVisualizer.prototype._updateObject = function(time, dynamicObject) {
         var context = this._scene.getContext();
-        var dynamicOverlayQuad = dynamicObject.overlayQuad;
-        if (typeof dynamicOverlayQuad === 'undefined') {
+        var dynamicScreenOverlay = dynamicObject.screenOverlay;
+        if (typeof dynamicScreenOverlay === 'undefined') {
             return;
         }
 
-        var positionProperty = dynamicOverlayQuad.position;
+        var positionProperty = dynamicScreenOverlay.position;
         if (typeof positionProperty === 'undefined') {
             return;
         }
 
-        var widthProperty = dynamicOverlayQuad.width;
+        var widthProperty = dynamicScreenOverlay.width;
         if (typeof widthProperty === 'undefined') {
             return;
         }
 
-        var heightProperty = dynamicOverlayQuad.height;
+        var heightProperty = dynamicScreenOverlay.height;
         if (typeof heightProperty === 'undefined') {
             return;
         }
 
 
-        var overlayQuad;
-        var showProperty = dynamicOverlayQuad.show;
-        var overlayQuadVisualizerIndex = dynamicObject._overlayQuadVisualizerIndex;
+        var screenOverlay;
+        var showProperty = dynamicScreenOverlay.show;
+        var screenOverlayVisualizerIndex = dynamicObject._screenOverlayVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
-            if (typeof overlayQuadVisualizerIndex !== 'undefined') {
-                overlayQuad = this._overlayQuadCollection[overlayQuadVisualizerIndex];
-                overlayQuad.show = false;
-                dynamicObject._overlayQuadVisualizerIndex = undefined;
-                this._unusedIndexes.push(overlayQuadVisualizerIndex);
+            if (typeof screenOverlayVisualizerIndex !== 'undefined') {
+                screenOverlay = this._screenOverlayCollection[screenOverlayVisualizerIndex];
+                screenOverlay.show = false;
+                dynamicObject._screenOverlayVisualizerIndex = undefined;
+                this._unusedIndexes.push(screenOverlayVisualizerIndex);
             }
             return;
         }
 
-        if (typeof overlayQuadVisualizerIndex === 'undefined') {
+        if (typeof screenOverlayVisualizerIndex === 'undefined') {
             var unusedIndexes = this._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
-                overlayQuadVisualizerIndex = unusedIndexes.pop();
-                overlayQuad = this._overlayQuadCollection[overlayQuadVisualizerIndex];
+                screenOverlayVisualizerIndex = unusedIndexes.pop();
+                screenOverlay = this._screenOverlayCollection[screenOverlayVisualizerIndex];
             } else {
-                overlayQuadVisualizerIndex = this._overlayQuadCollection.length;
-                overlayQuad = new ViewportQuad();
+                screenOverlayVisualizerIndex = this._screenOverlayCollection.length;
+                screenOverlay = new ViewportQuad();
 
-                this._overlayQuadCollection.push(overlayQuad);
-                this._primitives.add(overlayQuad);
+                this._screenOverlayCollection.push(screenOverlay);
+                this._primitives.add(screenOverlay);
             }
-            dynamicObject._overlayQuadVisualizerIndex = overlayQuadVisualizerIndex;
-            overlayQuad.dynamicObject = dynamicObject;
+            dynamicObject._screenOverlayVisualizerIndex = screenOverlayVisualizerIndex;
+            screenOverlay.dynamicObject = dynamicObject;
 
-            overlayQuad.material = Material.fromType(context, Material.ColorType);
+            screenOverlay.material = Material.fromType(context, Material.ColorType);
         } else {
-            overlayQuad = this._overlayQuadCollection[overlayQuadVisualizerIndex];
+            screenOverlay = this._screenOverlayCollection[screenOverlayVisualizerIndex];
         }
 
         position = positionProperty.getValue(time, position);
@@ -242,29 +242,29 @@ define([
 
         if(typeof position !== 'undefined' && typeof width !== 'undefined' && typeof height !== 'undefined') {
             var boundRectangle = new BoundingRectangle(position.x, position.y, width, height);
-            overlayQuad.setRectangle(boundRectangle);
+            screenOverlay.setRectangle(boundRectangle);
         }
 
-        var material = dynamicOverlayQuad.material;
+        var material = dynamicScreenOverlay.material;
         if (typeof material !== 'undefined') {
-            overlayQuad.material = material.getValue(time, context, overlayQuad.material);
+            screenOverlay.material = material.getValue(time, context, screenOverlay.material);
         }
     };
 
-    DynamicOverlayQuadVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
-        var thisOverlayQuadCollection = this._overlayQuadCollection;
+    DynamicScreenOverlayVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
+        var thisOverlayCollection = this._screenOverlayCollection;
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
-            var overlayQuadVisualizerIndex = dynamicObject._overlayQuadVisualizerIndex;
-            if (typeof overlayQuadVisualizerIndex !== 'undefined') {
-                var overlayQuad = thisOverlayQuadCollection[overlayQuadVisualizerIndex];
-                overlayQuad.show = false;
-                thisUnusedIndexes.push(overlayQuadVisualizerIndex);
-                dynamicObject._overlayQuadVisualizerIndex = undefined;
+            var screenOverlayVisualizerIndex = dynamicObject._screenOverlayVisualizerIndex;
+            if (typeof screenOverlayVisualizerIndex !== 'undefined') {
+                var screenOverlay = thisOverlayCollection[screenOverlayVisualizerIndex];
+                screenOverlay.show = false;
+                thisUnusedIndexes.push(screenOverlayVisualizerIndex);
+                dynamicObject._screenOverlayVisualizerIndex = undefined;
             }
         }
     };
 
-    return DynamicOverlayQuadVisualizer;
+    return DynamicScreenOverlayVisualizer;
 });

@@ -7,22 +7,23 @@ define([
         './DynamicEllipsoid',
         './DynamicCone',
         './DynamicLabel',
-        './DynamicOverlayQuad',
         './DynamicPath',
         './DynamicPoint',
         './DynamicPolygon',
         './DynamicPolyline',
         './DynamicPyramid',
+        './DynamicScreenOverlay',
         './DynamicBillboardVisualizer',
         './DynamicEllipsoidVisualizer',
         './DynamicConeVisualizerUsingCustomSensor', //CZML_TODO Replace with './DynamicConeVisualizer', once ComplexConicSensor works.
         './DynamicLabelVisualizer',
-        './DynamicOverlayQuadVisualizer',
         './DynamicPathVisualizer',
         './DynamicPointVisualizer',
         './DynamicPolygonVisualizer',
         './DynamicPolylineVisualizer',
-        './DynamicPyramidVisualizer'
+        './DynamicPyramidVisualizer',
+        './DynamicScreenOverlayVisualizer'
+
        ], function(
         DynamicObject,
         DynamicBillboard,
@@ -31,22 +32,22 @@ define([
         DynamicEllipsoid,
         DynamicCone,
         DynamicLabel,
-        DynamicOverlayQuad,
         DynamicPath,
         DynamicPoint,
         DynamicPolygon,
         DynamicPolyline,
         DynamicPyramid,
+        DynamicScreenOverlay,
         DynamicBillboardVisualizer,
         DynamicEllipsoidVisualizer,
         DynamicConeVisualizer,
         DynamicLabelVisualizer,
-        DynamicOverlayQuadVisualizer,
         DynamicPathVisualizer,
         DynamicPointVisualizer,
         DynamicPolygonVisualizer,
         DynamicPolylineVisualizer,
-        DynamicPyramidVisualizer) {
+        DynamicPyramidVisualizer,
+        DynamicScreenOverlayVisualizer) {
     "use strict";
 
     /**
@@ -75,12 +76,12 @@ define([
                     DynamicEllipsoid.processCzmlPacket,
                     DynamicCone.processCzmlPacket,
                     DynamicLabel.processCzmlPacket,
-                    DynamicOverlayQuad.processCzmlPacket,
                     DynamicPath.processCzmlPacket,
                     DynamicPoint.processCzmlPacket,
                     DynamicPolygon.processCzmlPacket,
                     DynamicPolyline.processCzmlPacket,
                     DynamicPyramid.processCzmlPacket,
+                    DynamicScreenOverlay.processCzmlPacket,
                     DynamicObject.processCzmlPacketPosition,
                     DynamicObject.processCzmlPacketViewFrom,
                     DynamicObject.processCzmlPacketOrientation,
@@ -99,12 +100,12 @@ define([
                    DynamicEllipsoid.mergeProperties,
                    DynamicCone.mergeProperties,
                    DynamicLabel.mergeProperties,
-                   DynamicOverlayQuad.mergeProperties,
                    DynamicPath.mergeProperties,
                    DynamicPoint.mergeProperties,
                    DynamicPolygon.mergeProperties,
                    DynamicPolyline.mergeProperties,
                    DynamicPyramid.mergeProperties,
+                   DynamicScreenOverlay.mergeProperties,
                    DynamicObject.mergeProperties],
 
        /**
@@ -114,18 +115,18 @@ define([
         * @see CompositeDynamicObjectCollection
         */
         cleaners : [DynamicBillboard.undefineProperties,
-                   DynamicEllipse.undefineProperties,
+                    DynamicEllipse.undefineProperties,
                     DynamicEllipsoid.undefineProperties,
                     DynamicCone.undefineProperties,
                     DynamicLabel.undefineProperties,
-                    DynamicOverlayQuad.undefineProperties,
                     DynamicPath.undefineProperties,
                     DynamicPoint.undefineProperties,
                     DynamicPolygon.undefineProperties,
                     DynamicPolyline.undefineProperties,
                     DynamicPyramid.undefineProperties,
-                   DynamicObject.undefineProperties,
-                   DynamicClock.undefineProperties],
+                    DynamicScreenOverlay.undefineProperties,
+                    DynamicObject.undefineProperties
+                    DynamicClock.undefineProperties],
 
         /**
          * Creates an array containing the standard CZML visualizers,
@@ -140,12 +141,12 @@ define([
                     new DynamicEllipsoidVisualizer(scene),
                     new DynamicConeVisualizer(scene),
                     new DynamicLabelVisualizer(scene),
-                    new DynamicOverlayQuadVisualizer(scene),
                     new DynamicPointVisualizer(scene),
                     new DynamicPolygonVisualizer(scene),
                     new DynamicPolylineVisualizer(scene),
                     new DynamicPyramidVisualizer(scene),
-                    new DynamicPathVisualizer(scene)];
+                    new DynamicPathVisualizer(scene),
+                    new DynamicScreenOverlayVisualizer(scene)];
         }
     };
 
