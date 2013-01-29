@@ -12,7 +12,7 @@ define([
         */
        this.state = TerrainState.UNLOADED;
        this.data = undefined;
-       this.transformedData = undefined;
+       this.mesh = undefined;
 
        this.center = undefined;
 
@@ -77,10 +77,10 @@ define([
        }
        this.data = undefined;
 
-       if (typeof this.transformedData !== 'undefined' && typeof this.transformedData.destroy !== 'undefined') {
-           this.transformedData.destroy();
+       if (typeof this.mesh !== 'undefined' && typeof this.mesh.destroy !== 'undefined') {
+           this.mesh.destroy();
        }
-       this.transformedData = undefined;
+       this.mesh = undefined;
    };
 
    return TileTerrain;

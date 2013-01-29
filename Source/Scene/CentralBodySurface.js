@@ -852,71 +852,48 @@ define([
         if (process.state === TerrainState.READY) {
             // TODO: clean up tile.upsampledTerrain.
         }
-
-        if (process.state === TerrainState.FAILED || process.state === TerrainState.NOT_AVAILABLE) {
-            // If we had previously suspended up the upsampling process, resume it now.
-            tile.suspendUpsampling = false;
-        }
     }
-
-    var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
 
     function transformTileTerrain(surface, context, terrainProvider, tile, process) {
         // TODO: call the TerrainData instance instead of assuming a heightmap.
-        var terrainData = process.data;
-        var structure = terrainData.structure;
-
         var tilingScheme = tile.tilingScheme;
         var ellipsoid = tilingScheme.getEllipsoid();
-        var extent = tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
 
-        // Compute the center of the tile for RTC rendering.
-        process.center = ellipsoid.cartographicToCartesian(tile.extent.getCenter());
+        var terrainData = process.data;
+        var meshPromise = terrainData.createMesh(ellipsoid, tilingScheme, tile.x, tile.y, tile.level);
 
-        var verticesPromise = taskProcessor.scheduleTask({
-            heightmap : terrainData.buffer,
-            heightScale : structure.heightScale,
-            heightOffset : structure.heightOffset,
-            stride : structure.stride,
-            width : terrainData.width,
-            height : terrainData.height,
-            extent : extent,
-            relativeToCenter : process.center,
-            radiiSquared : ellipsoid.getRadiiSquared(),
-            oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
-            skirtHeight : Math.min(terrainProvider.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
-            isGeographic : true
-        });
-
-        if (typeof verticesPromise === 'undefined') {
-            //postponed
+        if (typeof meshPromise === 'undefined') {
+            // Postponed.
             return;
         }
 
         process.state = TerrainState.TRANSITIONING;
 
-        when(verticesPromise, function(result) {
-            process.transformedData = {
-                vertices : new Float32Array(result.vertices),
-                statistics : result.statistics,
-                indices : TerrainProvider.getRegularGridIndices(terrainData.width + 2, terrainData.height + 2)
-            };
-
+        when(meshPromise, function(mesh) {
+            process.mesh = mesh;
             process.state = TerrainState.TRANSFORMED;
-        });
+        }, function() {
+            process.state = TerrainState.FAILED;
 
+            // If we previously suspended the upsample operation, resume it now, because
+            // the load may have failed.
+            // If this transformation is of upsampled data, this won't do any harm.
+            tile.suspendUpsampling = false;
+        });
     }
 
     var cartesian3Scratch = new Cartesian3(0.0, 0.0, 0.0);
 
     function createTileTerrainResources(surface, context, terrainProvider, tile, process) {
-        var buffers = process.transformedData;
-        process.transformedData = undefined;
+        var mesh = process.mesh;
+        process.mesh = undefined;
 
-        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers, process, true);
-        process.minHeight = buffers.statistics.minHeight;
-        process.maxHeight = buffers.statistics.maxHeight;
-        process.boundingSphere3D = BoundingSphere.fromVertices(buffers.vertices, process.center, 5);
+        process.center = mesh.center;
+
+        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, mesh, process, true);
+        process.minHeight = mesh.minHeight;
+        process.maxHeight = mesh.maxHeight;
+        process.boundingSphere3D = BoundingSphere.fromVertices(mesh.vertices, process.center, 5);
 
         // TODO: we need to take the heights into account when computing the occludee point.
         var ellipsoid = tile.tilingScheme.getEllipsoid();

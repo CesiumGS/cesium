@@ -1,8 +1,18 @@
 /*global define*/
 define([
-        '../Core/defaultValue'
+        '../Core/defaultValue',
+        '../Core/TaskProcessor',
+        './GeographicTilingScheme',
+        './TerrainMesh',
+        './TerrainProvider',
+        '../ThirdParty/when'
     ], function(
-        defaultValue) {
+        defaultValue,
+        TaskProcessor,
+        GeographicTilingScheme,
+        TerrainMesh,
+        TerrainProvider,
+        when) {
     "use strict";
 
     var defaultStructure = {
@@ -105,6 +115,65 @@ define([
          * @type {Object}
          */
         this.structure = structure;
+    };
+
+    var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
+
+    /**
+     * Creates a {@link TerrainMesh} from this terrain data.
+     *
+     * @memberof HeightmapTerrainData
+     *
+     * @param {Ellipsoid} ellipsoid The ellipsoid to which this terrain data applies.
+     * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
+     * @param {Number} x The X coordinate of the tile for which to create the terrain data.
+     * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
+     * @param {Number} level The level of the tile for which to create the terrain data.
+     * @returns {Promise|TerrainMesh} A promise for the terrain mesh, or undefined if too many
+     *          asynchronous mesh creations are already in progress and the operation should
+     *          be retried later.
+     */
+    HeightmapTerrainData.prototype.createMesh = function(ellipsoid, tilingScheme, x, y, level) {
+        var nativeExtent = tilingScheme.tileXYToNativeExtent(x, y, level);
+        var extent = tilingScheme.tileXYToExtent(x, y, level);
+
+        // Compute the center of the tile for RTC rendering.
+        var center = ellipsoid.cartographicToCartesian(extent.getCenter());
+
+        var structure = this.structure;
+
+        var levelZeroMaxError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, this.width, tilingScheme.getNumberOfXTilesAtLevel(0));
+        var thisLevelMaxError = levelZeroMaxError / (1 << level);
+
+        var verticesPromise = taskProcessor.scheduleTask({
+            heightmap : this.buffer,
+            heightScale : structure.heightScale,
+            heightOffset : structure.heightOffset,
+            stride : structure.stride,
+            width : this.width,
+            height : this.height,
+            extent : nativeExtent,
+            relativeToCenter : center,
+            radiiSquared : ellipsoid.getRadiiSquared(),
+            oneOverCentralBodySemimajorAxis : ellipsoid.getMaximumRadius(),
+            skirtHeight : Math.min(thisLevelMaxError * 10.0, 1000.0),
+            isGeographic : tilingScheme instanceof GeographicTilingScheme
+        });
+
+        if (typeof verticesPromise === 'undefined') {
+            // Postponed
+            return undefined;
+        }
+
+        var that = this;
+        return when(verticesPromise, function(result) {
+            return new TerrainMesh(
+                    center,
+                    new Float32Array(result.vertices),
+                    TerrainProvider.getRegularGridIndices(that.width + 2, that.height + 2),
+                    result.statistics.minHeight,
+                    result.statistics.maxHeight);
+        });
     };
 
     /**
