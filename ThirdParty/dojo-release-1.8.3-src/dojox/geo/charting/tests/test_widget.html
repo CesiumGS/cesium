@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+	<head>
+
+		<link rel="stylesheet" type="text/css" href="../../../../dojo/resources/dojo.css" />
+		<link rel="stylesheet" type="text/css" href="../../../../dijit/themes/claro/claro.css" />
+		<meta name="viewport" content="user-scalable=no, width=device-width" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+
+		<script type="text/javascript">
+			var djConfig = {
+				parseOnLoad : true,
+				gfxRenderer : 'svg,vml,silverlight'
+			};
+		</script>
+
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+		<script type="text/javascript">
+			var isTouchDevice = dojo.isIos || (navigator.userAgent.toLowerCase().indexOf("android") > -1) || (navigator.userAgent.toLowerCase().indexOf("blackberry") > -1);
+			var notIsTouchDevice = !isTouchDevice;
+		</script>
+		<script>
+			dojo.require("dojox.geo.charting.widget.Map");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("dijit.layout.BorderContainer");
+			dojo.require("dojo.parser");
+			dojo.require("dojo.data.ItemFileWriteStore");
+			dojo.requireIf(isTouchDevice, "dojox.geo.charting.TouchInteractionSupport");
+			dojo.requireIf(!isTouchDevice, "dojox.geo.charting.MouseInteractionSupport");
+			dojo.require("dojox.geo.charting.KeyboardInteractionSupport");
+
+			dojo.addOnLoad(function() {
+
+				dijit.byId("centerMap").startup();
+
+			});
+
+			onFeatureOver = function(feature) {
+				var map = dijit.byId("centerMap").getInnerMap();
+				if (!feature.markerText && feature.value) {
+					feature.markerText = map.mapObj.marker.markerData[feature.id] + ": $" + feature.value.toFixed(3) + "M";
+				}
+			};
+
+			onFeatureClick = function(feature) {
+				console.log("Feature click " + feature)
+			};
+		</script>
+
+	</head>
+	<body class="claro">
+		<div dojoType="dojo.data.ItemFileWriteStore" jsId="dataStore" url="datastore/dataStore.json"></div>
+		<div dojoType="dijit.layout.BorderContainer" design="headline" style="height: 500px; width: 650px; ">
+
+			<div dojoType="dijit.layout.ContentPane" region="center">
+				<div id="centerMap" dojoType="dojox.geo.charting.widget.Map" shapeData="../resources/data/USStates.json"
+				adjustMapCenterOnResize="true" adjustMapScaleOnResize="true" markerData="../resources/markers/USStates.json"
+				dataStore="dataStore" dataBindingAttribute="product A" series="series.json"
+				onFeatureOver="onFeatureOver"  onFeatureClick="onFeatureClick" enableMouseSupport="notIsTouchDevice" enableMousePan="true" enableMouseZoom="true"
+				showTooltips="true" enableFeatureZoom="true" enableTouchSupport="isTouchDevice" enableKeyboardSupport="true"></div>
+			</div>
+
+		</div>
+	</body>
+</html>
+

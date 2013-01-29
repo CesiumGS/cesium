@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>domButtonsBadge</title>
+
+	<link href="../themes/common/domButtons/DomButtonRedBadge.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonBlueBadge.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonGreenBadge.css" rel="stylesheet"/>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/window",
+			"dojo/dom",
+			"dojo/ready",
+			"dojox/mobile/iconUtils",
+			"dojox/mobile",
+			"dojox/mobile/parser",
+			"dojox/mobile/compat"
+		], function(win, dom, ready, iconUtils){
+			function setIconValue(id, val){
+				var txt = win.doc.createTextNode(val);
+				dom.byId(id).firstChild.appendChild(txt);
+			}
+			ready(function(){
+				var nodes = win.doc.getElementsByTagName("div");
+				for(var i = 0, c = 0; i < nodes.length; i++){
+					var div = nodes[i];
+					if(div.nodeType != 1 || div.className.indexOf("mblDomButton") == -1){ continue; }
+					div.style.border = "1px solid red";
+					iconUtils.createDomButton(div);
+					setIconValue("btn"+c++, "15");
+				}
+			});
+		});
+	</script>
+</head>
+<body style="background-color:#C5CCD3;font-family:Helvetica;font-size:12px;">
+	<table style="border:none">
+		<tr><td><div id="btn0" class="mblDomButtonRedBadge"></div></td><td>mblDomButtonRedBadge</td></tr>
+		<tr><td><div id="btn1" class="mblDomButtonBlueBadge"></div></td><td>mblDomButtonBlueBadge</td></tr>
+		<tr><td><div id="btn2" class="mblDomButtonGreenBadge"></div></td><td>mblDomButtonGreenBadge</td></tr>
+		<tr><td><div id="btn3" class="mblDomButtonRedBadge" style="font-size:11px;color:pink;"></div></td><td>mblDomButtonRedBadge (small)</td></tr>
+		<tr><td><div id="btn4" class="mblDomButtonBlueBadge" style="font-size:11px;color:pink;"></div></td><td>mblDomButtonBlueBadge (small)</td></tr>
+		<tr><td><div id="btn5" class="mblDomButtonGreenBadge" style="font-size:11px;color:pink;"></div></td><td>mblDomButtonGreenBadge (small)</td></tr>
+	</table>
+</body>
+</html>

@@ -1,0 +1,237 @@
+.mblCube {
+	-webkit-animation-duration: .8s;
+	-webkit-animation-timing-function: linear;
+}
+.mblCube.mblOut {
+	-webkit-animation-name: mblCubeOut;
+	-webkit-transform-origin: 0% 50% !important;
+}
+.mblCube.mblIn {
+	-webkit-animation-name: mblCubeIn;
+	-webkit-transform-origin: 100% 50% !important;
+}
+@-webkit-keyframes mblCubeOut {
+	0% { -webkit-transform: scale(1,1) skew(0deg,0deg); }
+	50% { -webkit-transform: scale(.5,1) skew(0deg,3deg); }
+	100% { -webkit-transform: scale(0,1) skew(0deg,0deg); }
+}
+@-webkit-keyframes mblCubeIn {
+	0% { -webkit-transform: scale(0,1) skew(0deg,0deg); }
+	50% { -webkit-transform: scale(.5,1) skew(0deg,-3deg); }
+	100% { -webkit-transform: scale(1,1) skew(0deg,0deg); }
+}
+.mblCube.mblOut.mblReverse {
+	-webkit-animation-name: mblCubeOutReverse;
+	-webkit-transform-origin: 100% 50% !important;
+}
+.mblCube.mblIn.mblReverse {
+	-webkit-animation-name: mblCubeInReverse;
+	-webkit-transform-origin: 0% 50% !important;
+}
+@-webkit-keyframes mblCubeOutReverse {
+	0% { -webkit-transform: scale(1,1) skew(0deg,0deg); }
+	50% { -webkit-transform: scale(.5,1) skew(0deg,-3deg); }
+	100% { -webkit-transform: scale(0,1) skew(0deg,0deg); }
+}
+@-webkit-keyframes mblCubeInReverse {
+	0% { -webkit-transform: scale(0,1) skew(0deg,0deg); }
+	50% { -webkit-transform: scale(.5,1) skew(0deg,3deg); }
+	100% { -webkit-transform: scale(1,1) skew(0deg,0deg); }
+}
+
+.dj_iphone .mblCube {
+	-webkit-transform-style: preserve-3d !important;
+}
+.dj_iphone .mblCube.mblOut {
+	-webkit-animation-name: mblCubeOut_iphone;
+	-webkit-transform-origin: 50% 50% !important;
+}
+.dj_iphone .mblCube.mblIn {
+	-webkit-animation-name: mblCubeIn_iphone;
+	-webkit-transform-origin: 50% 50% !important;
+}
+@-webkit-keyframes mblCubeOut_iphone {
+	from {
+		-webkit-transform: scale3d(0.835,0.835,0.835) rotateY(0deg) translateZ(160px);
+	}
+	to {
+		-webkit-transform: scale3d(0.835,0.835,0.835) rotateY(-90deg) translateZ(160px);
+	}
+}
+@-webkit-keyframes mblCubeIn_iphone {
+	from {
+		-webkit-transform: scale3d(0.835,0.835,0.835) rotateY(90deg) translateZ(160px);
+	}	
+	to {
+		-webkit-transform: scale3d(0.835,0.835,0.835) rotateY(0deg) translateZ(160px);
+	}
+}
+.dj_iphone.dj_landscape .mblCube.mblOut {
+	-webkit-animation-name: mblCubeOut_iphone_l;
+	-webkit-transform-origin: 50% 50% !important;
+}
+.dj_iphone.dj_landscape .mblCube.mblIn {
+	-webkit-animation-name: mblCubeIn_iphone_l;
+	-webkit-transform-origin: 50% 50% !important;
+}
+@-webkit-keyframes mblCubeOut_iphone_l {
+	from {
+		-webkit-transform: scale3d(0.77,0.77,0.77) rotateY(0deg) translateZ(240px);
+	}
+	to {
+		-webkit-transform: scale3d(0.77,0.77,0.77) rotateY(-90deg) translateZ(240px);
+	}
+}
+@-webkit-keyframes mblCubeIn_iphone_l {
+	from {
+		-webkit-transform: scale3d(0.77,0.77,0.77) rotateY(90deg) translateZ(240px);
+	}	
+	to {
+		-webkit-transform: scale3d(0.77,0.77,0.77) rotateY(0deg) translateZ(240px);
+	}
+}
+.dj_iphone .mblCube.mblOut.mblReverse {
+	-webkit-animation-name: mblCubeOutReverse_iphone;
+	-webkit-transform-origin: 50% 50% !important;
+}
+.dj_iphone .mblCube.mblIn.mblReverse {
+	-webkit-animation-name: mblCubeInReverse_iphone;
+	-webkit-transform-origin: 50% 50% !important;
+}
+@-webkit-keyframes mblCubeOutReverse_iphone {
+	from {
+		-webkit-transform: scale3d(0.835,0.835,0.835) rotateY(0deg) translateZ(160px);
+	}
+	to {
+		-webkit-transform: scale3d(0.835,0.835,0.835) rotateY(90deg) translateZ(160px);
+	}
+}
+@-webkit-keyframes mblCubeInReverse_iphone {
+	from {
+		-webkit-transform: scale3d(0.835,0.835,0.835) rotateY(-90deg) translateZ(160px);
+	}	
+	to {
+		-webkit-transform: scale3d(0.835,0.835,0.835) rotateY(0deg) translateZ(160px);
+	}
+}
+.dj_iphone.dj_landscape .mblCube.mblOut.mblReverse {
+	-webkit-animation-name: mblCubeOutReverse_iphone_l;
+	-webkit-transform-origin: 50% 50% !important;
+}
+.dj_iphone.dj_landscape .mblCube.mblIn.mblReverse {
+	-webkit-animation-name: mblCubeInReverse_iphone_l;
+	-webkit-transform-origin: 50% 50% !important;
+}
+@-webkit-keyframes mblCubeOutReverse_iphone_l {
+	from {
+		-webkit-transform: scale3d(0.77,0.77,0.77) rotateY(0deg) translateZ(240px);
+	}
+	to {
+		-webkit-transform: scale3d(0.77,0.77,0.77) rotateY(90deg) translateZ(240px);
+	}
+}
+@-webkit-keyframes mblCubeInReverse_iphone_l {
+	from {
+		-webkit-transform: scale3d(0.77,0.77,0.77) rotateY(-90deg) translateZ(240px);
+	}	
+	to {
+		-webkit-transform: scale3d(0.77,0.77,0.77) rotateY(0deg) translateZ(240px);
+	}
+}
+
+.dj_ipad.dj_iphone .mblCube.mblOut {
+	-webkit-animation-name: mblCubeOut_ipad;
+	-webkit-transform-origin: 50% 50% !important;
+}
+.dj_ipad.dj_iphone .mblCube.mblIn {
+	-webkit-animation-name: mblCubeIn_ipad;
+	-webkit-transform-origin: 50% 50% !important;
+}
+@-webkit-keyframes mblCubeOut_ipad {
+	from {
+		-webkit-transform: scale3d(0.806,0.806,0.806) rotateY(0deg) translateZ(384px);
+	}
+	to {
+		-webkit-transform: scale3d(0.806,0.806,0.806) rotateY(-90deg) translateZ(384px);
+	}
+}
+@-webkit-keyframes mblCubeIn_ipad {
+	from {
+		-webkit-transform: scale3d(0.806,0.806,0.806) rotateY(90deg) translateZ(384px);
+	}	
+	to {
+		-webkit-transform: scale3d(0.806,0.806,0.806) rotateY(0deg) translateZ(384px);
+	}
+}
+.dj_ipad.dj_iphone.dj_landscape .mblCube.mblOut {
+	-webkit-animation-name: mblCubeOut_ipad_l;
+	-webkit-transform-origin: 50% 50% !important;
+}
+.dj_ipad.dj_iphone.dj_landscape .mblCube.mblIn {
+	-webkit-animation-name: mblCubeIn_ipad_l;
+	-webkit-transform-origin: 50% 50% !important;
+}
+@-webkit-keyframes mblCubeOut_ipad_l {
+	from {
+		-webkit-transform: scale3d(0.758,0.758,0.758) rotateY(0deg) translateZ(512px);
+	}
+	to {
+		-webkit-transform: scale3d(0.758,0.758,0.758) rotateY(-90deg) translateZ(512px);
+	}
+}
+@-webkit-keyframes mblCubeIn_ipad_l {
+	from {
+		-webkit-transform: scale3d(0.758,0.758,0.758) rotateY(90deg) translateZ(512px);
+	}	
+	to {
+		-webkit-transform: scale3d(0.758,0.758,0.758) rotateY(0deg) translateZ(512px);
+	}
+}
+.dj_ipad.dj_iphone .mblCube.mblOut.mblReverse {
+	-webkit-animation-name: mblCubeOutReverse_ipad;
+	-webkit-transform-origin: 50% 50% !important;
+}
+.dj_ipad.dj_iphone .mblCube.mblIn.mblReverse {
+	-webkit-animation-name: mblCubeInReverse_ipad;
+	-webkit-transform-origin: 50% 50% !important;
+}
+@-webkit-keyframes mblCubeOutReverse_ipad {
+	from {
+		-webkit-transform: scale3d(0.806,0.806,0.806) rotateY(0deg) translateZ(384px);
+	}
+	to {
+		-webkit-transform: scale3d(0.806,0.806,0.806) rotateY(90deg) translateZ(384px);
+	}
+}
+@-webkit-keyframes mblCubeInReverse_ipad {
+	from {
+		-webkit-transform: scale3d(0.806,0.806,0.806) rotateY(-90deg) translateZ(384px);
+	}	
+	to {
+		-webkit-transform: scale3d(0.806,0.806,0.806) rotateY(0deg) translateZ(384px);
+	}
+}
+.dj_ipad.dj_iphone.dj_landscape .mblCube.mblOut.mblReverse {
+	-webkit-animation-name: mblCubeOutReverse_ipad_l;
+	-webkit-transform-origin: 50% 50% !important;
+}
+.dj_ipad.dj_iphone.dj_landscape .mblCube.mblIn.mblReverse {
+	-webkit-animation-name: mblCubeInReverse_ipad_l;
+	-webkit-transform-origin: 50% 50% !important;
+}
+@-webkit-keyframes mblCubeOutReverse_ipad_l {
+	from {
+		-webkit-transform: scale3d(0.758,0.758,0.758) rotateY(0deg) translateZ(512px);
+	}
+	to {
+		-webkit-transform: scale3d(0.758,0.758,0.758) rotateY(90deg) translateZ(512px);
+	}
+}
+@-webkit-keyframes mblCubeInReverse_ipad_l {
+	from {
+		-webkit-transform: scale3d(0.758,0.758,0.758) rotateY(-90deg) translateZ(512px);
+	}	
+	to {
+		-webkit-transform: scale3d(0.758,0.758,0.758) rotateY(0deg) translateZ(512px);
+	}
+}

@@ -1,0 +1,1055 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.html.set test</title>
+	<script>
+		var isIE;
+		function fixPngIE6(){
+			if(this.complete && isIE < 7){
+				var r = this.runtimeStyle;
+				if(/.png$/i.test(this.src)){
+					r.height = this.height;
+					r.width = this.width;
+					r.filter="progid:DXImageTransform.Microsoft.AlphaImageLoader(src='"+this.src+"');";
+					this.src = this.currentStyle.backgroundImage.replace(/url\(\s*['"]?(.+?)['"]?\s*\)/, "$1");
+				}
+				this.className = this.className.replace('run_png_fix', "");
+				r.behaviour = 'none';
+			}
+		}
+	</script>
+	<style type='text/css'>
+		.run_png_fix {
+			background-image:url(images/blank.gif);
+			behaviour: expression(fixPngIE6.call(this));
+		}
+	</style>
+	<script src='../../../dojo/dojo.js' djConfig='isDebug:true, parseOnLoad:true, async:true'></script>
+	<script>
+		// used to test if we fire scrips to document scope
+		function documentCallback(){
+			arguments.callee.reached = true;
+			//console.debug('reached');
+		};
+		var unTypedVarInDocScope; // a closure test to make sure we can reach this from evaled scripts
+
+		require([
+			"doh/runner",
+			"dojo/dom",
+			"dojo/dom-geometry",
+			"dojo/dom-style",
+			"dojo/_base/lang",
+			"dojo/parser",
+			"dojo/ready",
+			"dojo/sniff",
+			"dojo/_base/url",
+			"dojo/_base/xhr",
+			"dojox/html",		// the module we are testing
+			"dojo/domReady!"
+		], function(doh, dom, domGeom, domStyle, lang, parser, ready, has, _Url, xhr, html){
+
+			// Used by fixPngIE6() above
+			isIE = has("ie");
+	
+			var node1, setter1, setter2;
+
+			/* 
+				These tests are largely borrowed from dojox.layout.ContentPane's testsuite
+				They provide coverage for the basic use of the:
+				 adjustPaths, renderStyles, executeScripts and referencePath properties
+				
+				We also need to test a couple other scenarios that dojox.html.set allows for: 
+				Reuse of a Setter across different node contexts
+			*/
+
+			node1 = dom.byId('node1');
+			setter1 = new html._ContentSetter({
+				node: node1
+			});
+
+			doh.register("basicChecks", [
+				{
+					name: 'setContent',
+					runTest: function(t){
+						// test that setContent on a simple node does in fact set it
+						console.log("basicChecks: " + this.name);
+						var msg = "Simple Test";
+						
+						html.set(node1, msg);
+						t.assertEqual(msg, node1.innerHTML);
+						console.log("/basicChecks: " + this.name);
+					}
+				}
+			]);
+
+			doh.register("pathAdjustments", [
+				{
+					setUp: function() {
+						// setup text fixture for these pathAdjustments tests
+						// we use a _Setter instance rather than dojox.html.set
+						// as the tests include successive sets and depend on prior settings and results
+						setter2 = new html._ContentSetter({ node: node1 });
+						
+					},
+					name: 'cssPathAdjustments',
+					runTest: function(t){
+						// test that when you setContent, using the adjustPaths and renderStyles options
+						// the paths in the css are corrected for the current document
+						console.log("pathAdjustments: " + this.name);
+
+						// we do this test as one big string to emulate as good as possible, 
+						// but split it later to easily see where we failed
+						var cssText = ".easy{ background-image:url(images/image.png) }\n"
+						+".dontReplaceEasy{ background-image:url(images/images/image.png) }\n"
+						+".hardurl{background-image:url(\t \"../../source/~test/%20t'e(s)t.gif(\"1')?foo=bar11103&bar=baz-foo\"  \t);}body{};\n"
+						+".file{background-image: url(file:///home/nobody/image.png);}\n"
+						+".http{background-image: url(http://dojotoolkit.org/image.png);}\n"
+						+".https{background-image: url(https://dojotoolkit.org/image.png);}\n"
+						+".nonRelative{background-image:url(/toplevelfolder/image.gif);}\n"
+						+'@import "css/main.css";' + "\n@import \t'css/Newbee Url.css'\t;\n"
+						+"@import 'http://dojotoolkit.org/dojo.css';\n"
+						+"  @import 'you/never/thought/' print;\n"
+						+' @import url("it/would/work") tv, screen;'+"\n"
+						+' @import url(/did/you/now.css);'+"\n"
+						+' @import "yes.i.did";';
+						
+						var setParams = {
+							referencePath: "deep/nested/file",
+							adjustPaths: 1,
+							renderStyles: 1
+						};
+						
+						var adjustedCss;
+
+						// hijack internals to snatch the styles before they are inserted to DOM (DOM messes formating)
+						var oldFunc = setter2._renderStyles;
+						console.log("in cssPathAdjustments, returning function");
+
+						setter2._renderStyles = function(styles){
+							adjustedCss = styles.join();
+						};
+						console.log("in cssPathAdjustments, calling set");
+						setter2.set('<style>'+cssText+'</style>', setParams);
+						console.log("in cssPathAdjustments, done calling set");
+						
+						setter2._renderStyles = oldFunc;
+
+						adjustedCss = adjustedCss.split("\n");
+
+						var expectedCss = (".easy{ background-image:url(deep/nested/images/image.png) }\n"
+						+".dontReplaceEasy{ background-image:url(deep/nested/images/images/image.png) }\n"
+						+".hardurl{background-image:url(source/~test/%20t'e(s)t.gif(\"1')?foo=bar11103&bar=baz-foo);}body{};\n"
+						+".file{background-image: url(file:///home/nobody/image.png);}\n"
+						+".http{background-image: url(http://dojotoolkit.org/image.png);}\n"
+						+".https{background-image: url(https://dojotoolkit.org/image.png);}\n"
+						+".nonRelative{background-image:url(/toplevelfolder/image.gif);}\n"
+						+"@import \"deep/nested/css/main.css\";\n@import \"deep/nested/css/Newbee Url.css\"\t;\n"
+						+"@import 'http://dojotoolkit.org/dojo.css';\n"
+						+"  @import \"deep/nested/you/never/thought/\" print;\n"
+						+' @import url(deep/nested/it/would/work) tv, screen;'+"\n"
+						+' @import url(/did/you/now.css);'+"\n"
+						+' @import "deep/nested/yes.i.did";').split("\n");
+
+						// we split and loop to get a faster hint of where it failed
+						for(var i = 0; i < expectedCss.length; i++){
+							t.assertEqual(expectedCss[i], adjustedCss[i]);
+						}
+					},
+					tearDown: function(){
+						delete setter2.adjustPaths; // get back to defaults
+						delete setter2.renderStyles;
+					}
+				},
+				{
+					name: 'htmlPathAdjustments',
+					timeout: 1800,
+					runTest: function(t){
+						console.log("pathAdjustments: " + this.name);
+						var d = new t.Deferred();
+						setTimeout(d.getTestCallback(
+							function(){
+								console.log("pathAdjustments: htmlPathAdjustments, in callback");
+								console.log("executeScripts: %s, cleanContent: %s, referencePath: %s, renderStyles: %s", setter2.executeScripts, setter2.cleanContent, setter2.referencePath, setter2.renderStyles);
+								// check that images and styles have been applied
+								var cb = domGeom.getContentBox(dom.byId('imgTest'));
+										//domStyle.getComputedStyle(dom.byId('imgTest'));
+								t.assertEqual(188, cb.w);
+								t.assertEqual(125, cb.h);
+
+								// make sure we didn't mess up the other inline styles
+								cb = domGeom.getContentBox(dom.byId('inlineStyleTest'));
+								t.assertEqual(188, cb.w);
+								t.assertEqual(125, cb.h);
+
+								// make sure it is the correct image
+								var cs = domStyle.getComputedStyle(dom.byId('inlineStyleTest'));
+								var url = cs.backgroundImage;
+								//remove url(..)
+								url = url.replace(/^\s?url\(['"]?/, "").replace(/['"]?\);?\s?$/, ""); 
+								// compare image url to full path of this document
+								imageUrl = require.toUrl("dojox/html/tests/images/testImage.gif");
+								t.assertEqual(new _Url(document.location, imageUrl).toString(), url);
+
+								// make sure we loaded the <link rel='stylesheet' correctly
+								var mb = domGeom.getMarginBox(dom.byId('linkCssTest'));
+								t.assertEqual(112, mb.w); // 100px  + 2px border + 4px margin = 112px
+								t.assertEqual(112, mb.h);
+
+								// make sure we loaded the <style>@import '...'; correctly
+								mb = domGeom.getMarginBox(dom.byId('importCssTest'));
+								t.assertEqual(110, mb.w); // 100px + 1px border + 4px margin = 110px
+								t.assertEqual(110, mb.h);
+
+								// make sure we didn't render the <link media='print' rel='stylesheet'
+								var mb = domGeom.getMarginBox(dom.byId('linkMediaTest'));
+								t.assertEqual(212, mb.w); // 100px  + 2px border + 4px margin = 112px
+								t.assertEqual(212, mb.h);
+
+								// make sure we didn't render the <style media='print'>@import '...';
+								mb = domGeom.getMarginBox(dom.byId('importMediaTest'));
+								t.assertEqual(210, mb.w); // 100px + 1px border + 4px margin = 110px
+								t.assertEqual(210, mb.h);
+								console.log("/pathAdjustments: htmlPathAdjustments, in callback");
+							}
+						), 1500);
+
+						console.log("pathAdjustments: " + this.name + ": requesting content");
+						var remoteUrl = require.toUrl("dojox/html/tests/remote/getResponse.php?mode=htmlPaths"); 
+						
+						xhr.get({
+							url: remoteUrl, 
+							load: function(data) {
+								console.log("pathAdjustments: htmlPathAdjustments, handling response");
+								setter2.set(data, {
+									adjustPaths: 1, 
+									referencePath: remoteUrl.toString(),
+									renderStyles: 1
+								}); 
+								console.log("/pathAdjustments: htmlPathAdjustments, handling response");
+							}
+						});
+						return d;
+					},
+					tearDown: function(){
+						delete setter2.adjustPaths; // get back to defaults
+						delete setter2.renderStyles;
+					}
+				},
+				{
+					name: 'renderStylesOfByDefaultAndOldDeleted',
+					timeout: 1800,
+					runTest: function(t){
+						var d = new t.Deferred();
+						console.log("pathAdjustments: " + this.name);
+
+						setTimeout(d.getTestCallback(
+							function(){
+								// innerHTML'ing <link tags works in some browser (IE, moz), but not all
+								// we can't test if LINK was loaded this way
+
+								// make sure we didn't load the <link rel='stylesheet'
+								//var mb = domGeom.getMarginBox(dom.byId('linkCssTest'));
+								//t.assertFalse(112 == mb.w);
+								//t.assertFalse(112 == mb.h);
+
+								// make sure we didn't load the <style>@import '...';
+								var mb = domGeom.getMarginBox(dom.byId('importCssTest'));
+								t.assertFalse(110 == mb.w);
+								t.assertFalse(110 == mb.h);
+							}
+						), 1500);
+
+						var remoteUrl = require.toUrl("dojox/html/tests/remote/getResponse.php?mode=htmlPaths"); 
+						xhr.get({
+							url: remoteUrl, 
+							load: function(data) {
+								console.log("pathAdjustments: renderStylesOfByDefaultAndOldDeleted, handling response");
+								setter2.set(data, {
+									adjustPaths: 1, 
+									referencePath: remoteUrl.toString()
+								}); 
+								console.log("/pathAdjustments: htmlPathAdjustments, handling response");
+							}
+						});
+						return d;
+					},
+					tearDown: function(){
+						delete setter2.adjustPaths;
+					}
+				}
+			]);
+
+			doh.register("scriptTests", [
+				{
+					name: 'leaveDojoMethodScriptsAsIs',
+					runTest: function(t){
+						console.log("scriptTests: " + this.name);
+						html.set(node1,
+							"<"
+							+"script type='dojo/method'>unTypedVarInDocScope = 'failure';<"
+							+"/script>", 
+							{
+								executeScripts: true
+							}
+						);
+
+						var d = new t.Deferred();
+						// IE req to async this test
+						setTimeout(d.getTestCallback(function(){
+							t.assertEqual('undefined', typeof unTypedVarInDocScope);
+							t.assertFalse(unTypedVarInDocScope == 'failure');
+						}), 40);
+
+						return d;
+					}
+				},
+				{
+					name: 'scripts_evals_in_global_scope',
+					timeout: 1800, // grabing remote js, wait for that
+					runTest: function(t){
+						console.log("scriptTests: " + this.name);
+						var remoteUrl = require.toUrl("dojox/html/tests/remote/getResponse.php?mode=remoteJsTrue");
+						html.set(
+							node1, 
+							"<"
+							+"script>function scriptsInGlobalClicked(){ documentCallback(); }<"
+							+"/script><"+"script src='" + remoteUrl +"'></"
+							+"script>"+"<a href='javascript:scriptsInGlobalClicked()' "
+								+"onfocus='scriptsInGlobalClicked();' id='anchorTag'>test</a>", 
+							{
+								executeScripts: true
+							}
+						);
+
+						var link = dom.byId('anchorTag');
+						typeof link.click == "function" ? /*others*/ link.click() : /*moz*/ link.focus();
+						var d = new t.Deferred();
+				
+						setTimeout(d.getTestCallback(function(){
+							t.assertEqual('boolean', typeof documentCallback.reached);
+							t.assertTrue(documentCallback.reached);
+							t.assertTrue(unTypedVarInDocScope);
+						}), 400);
+						return d;
+					}
+				},
+				{
+					name:'scriptsEvalsInOrder',
+					timeout: 1800,// grabing remote js, wait for that
+					runTest: function(t){
+						console.log("scriptTests: " + this.name);
+						var remoteUrl = require.toUrl("dojox/html/tests/remote/getResponse.php?mode=remoteJsFalse");
+						html.set(node1, "<"
+							+"script src='"+ remoteUrl +"'><"
+							+"/script><"+"script>unTypedVarInDocScope = 1;<"
+							+"/script>", 
+							{
+								executeScripts: true
+							}); // scripts only test
+
+						// we need to make this async because of IEs strange events loops
+						var d = new t.Deferred();
+						setTimeout(d.getTestCallback(function(){
+							t.assertEqual('number', typeof unTypedVarInDocScope);
+							t.assertEqual(1, unTypedVarInDocScope);
+						}), 40);
+						return d;
+					}
+				},
+				{
+					name: 'scriptsWithTypeTextJavascript',
+					runTest: function(t){
+						console.log("scriptTests: " + this.name);
+						html.set(node1, "<"
+							+"script type='text/javascript'> unTypedVarInDocScope = 'text/javascript'; <"
+							+"/script>", {
+								executeScripts: true
+							}
+						);
+
+						var d = new t.Deferred();
+						// IE needs async here
+						setTimeout(d.getTestCallback(function(){
+							t.assertEqual('text/javascript', unTypedVarInDocScope);
+						}), 40);
+						return d;
+					}
+				},
+				{
+					name:'scriptsWithHtmlComments',
+					runTest: function(t){
+						html.set(node1, "<"
+							+"script><!-- unTypedVarInDocScope = 2; --><"
+							+"/script>", {
+								cleanContent: 1,
+								executeScripts: 1 
+							}
+						);
+
+						var d = new t.Deferred();
+						// IE need a async here
+						setTimeout(d.getTestCallback(function(){
+							t.assertEqual('number', typeof unTypedVarInDocScope);
+							t.assertEqual(2, unTypedVarInDocScope);
+						}), 40);
+
+						return d;
+					},
+					tearDown: function(){
+						node1.innerHTML = "";
+					}
+				},
+				{
+					name:'scriptsWithCData',
+					runTest: function(t){
+						html.set(node1, "<"
+							+"script><![CDATA[ unTypedVarInDocScope = 3; ]]><"
+							+"/script>", {
+								cleanContent: 1,
+								executeScripts: 1 
+							}
+						);
+
+						var d = new t.Deferred();
+						// IE need a async here
+						setTimeout(d.getTestCallback(function(){
+							t.assertEqual('number', typeof unTypedVarInDocScope);
+							t.assertEqual(3, unTypedVarInDocScope);
+						}), 40);
+
+						return d;
+					},
+					tearDown: function(){
+						node1.innerHTML = "";
+					}
+				},
+
+				{
+					name: 'asyncRequire',
+					runTest: function(t){
+						console.log("scriptTests: " + this.name);
+						html.set(node1,
+							"<"
+							+"script>require(['dojo/tests/resources/AMDWidget']);<"
+							+"/script><div data-dojo-type='dojo/tests/resources/AMDWidget' data-dojo-id='AMDWidgetId'>Hi</div>",
+							{
+								executeScripts: true,
+								parseContent: true
+							}
+						);
+
+						// This ready() callback should fire after the require() above completes, and the
+						// parser instantiates the AMDWidget
+						var d = new t.Deferred();
+						ready(d.getTestCallback(function(){
+							t.t(AMDWidgetId, "AMDWidget was loaded and created");
+						}));
+
+						return d;
+					}
+				}
+			]);
+
+			doh.register('regexRegressionAndSpeedtest', [
+				{
+					name: 'cssPathAdjustments',
+					runTest: function(t){
+						// we do this test as one big string to emulate as good as possible, 
+						// but split it later to easily see where we failed
+						var cssText = ".easy{ background-image:url(images/image.png) }\n"
+						+".dontReplaceEasy{ background-image:url(images/images/image.png) }\n"
+						+".hardurl{background-image:url(\t \"../../source/~test/%20t'e(s)t.gif(\"1')?foo=bar11103&bar=baz-foo\"  \t);}body{};\n"
+						+".file{background-image: url(file:///home/nobody/image.png);}\n"
+						+".http{background-image: url(http://dojotoolkit.org/image.png);}\n"
+						+".https{background-image: url(https://dojotoolkit.org/image.png);}\n"
+						+".nonRelative{background-image:url(/toplevelfolder/image.gif);}\n"
+						+'@import "css/main.css";' + "\n@import \t'css/Newbee Url.css'\t;\n"
+						+"@import 'http://dojotoolkit.org/dojo.css';\n"
+						+"  @import 'you/never/thought/' print;\n"
+						+' @import url("it/would/work") tv, screen;'+"\n"
+						+' @import url(/did/you/now.css);'+"\n"
+						+' @import "yes.i.did";';
+
+						var expectedCss = ".easy{ background-image:url(deep/nested/images/image.png) }\n"
+						+".dontReplaceEasy{ background-image:url(deep/nested/images/images/image.png) }\n"
+						+".hardurl{background-image:url(source/~test/%20t'e(s)t.gif(\"1')?foo=bar11103&bar=baz-foo);}body{};\n"
+						+".file{background-image: url(file:///home/nobody/image.png);}\n"
+						+".http{background-image: url(http://dojotoolkit.org/image.png);}\n"
+						+".https{background-image: url(https://dojotoolkit.org/image.png);}\n"
+						+".nonRelative{background-image:url(/toplevelfolder/image.gif);}\n"
+						+"@import \"deep/nested/css/main.css\";\n@import \"deep/nested/css/Newbee Url.css\"\t;\n"
+						+"@import 'http://dojotoolkit.org/dojo.css';\n"
+						+"  @import \"deep/nested/you/never/thought/\" print;\n"
+						+' @import url(deep/nested/it/would/work) tv, screen;'+"\n"
+						+' @import url(/did/you/now.css);'+"\n"
+						+' @import "deep/nested/yes.i.did";';
+
+						for(var i = 0; i < 6; i++){
+							cssText += cssText;
+							expectedCss += expectedCss;
+						}
+
+						expectedCss = expectedCss.split("\n");
+
+						var setParams = {
+							referencePath: "deep/nested/file",
+							adjustPaths:1,
+							renderStyles:1
+						};
+						
+						var adjustedCss;
+
+						// hijack internals to snatch the styles before they are inserted to DOM (DOM messes formating)
+						var oldFunc = html._ContentSetter.prototype._renderStyles;
+						html._ContentSetter.prototype._renderStyles = function(styles){
+							adjustedCss = styles.join();
+						};
+
+						var start = new Date();
+						html.set(node1, '<style>'+cssText+'</style>', setParams);
+						var end = new Date();
+						
+						html._ContentSetter.prototype._renderStyles = oldFunc;
+
+						adjustedCss = adjustedCss.split("\n");
+						console.info('Time used to regex scan css and adjust relative paths within css:'+
+								(end - start)+' ms on '+ cssText.split('\n').length
+								+' css rows, with '+ cssText.length+' characters (roughly '
+								+Math.round(cssText.length/1024)+ 'Kb) of infile css');
+
+						// we split and loop to get a faster hint of where it failed
+						for(var i = 0; i < expectedCss.length; i++){
+							t.assertEqual(expectedCss[i], adjustedCss[i]);
+						}
+					},
+					tearDown: function(){
+					}
+				}
+				,
+				{
+					name:'htmlPathsSpeedTest',
+					runTest: function(t){
+						var htmlText = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">\n"
+							+"<title>should be removed</title>\n"
+							+"<img src=\"images/image.gif\"/>Testing\n"
+							+"<a href=\"../../topmost.html\">\n"
+							+"	<img src=\"/siteroot/top.html\">\n"
+							+"	<p style='background:url(\"images/back.png\")'>\n"
+							+"	testing link\n"
+							+"</p></a>\n"
+							+"<style \ntype='text/css'>\n"
+							+"	@import 'http://dojotoolkit.org/visible.css' tv, screen;\n"
+							+"	@import \"./audio.css\" audio;\n"
+							+"	@import url(/topsite/css/main.css);\n"
+							+"	div.mywidget, #someId {\n"
+							+"		background-color:url(../../css/main.css);"
+							+"		display:none;\n"
+							+"		background:url(../tmp/css)\n"
+							+"	}\n"
+							+"</style>\n"
+							+"<link rel=\"stylesheet\" href=\"../../css/theme.css\" media=\"all\">\n"
+							+"<link media='print' type='text/css' rel='stylesheet' href='../../css/theme2.css'>\n"
+							+"<a style='display:block; background:url(/topmost/css)' href='../above'>above</a>\n"
+							+"<sc"+"ript type=\"text/javascript\"\n src=\"..\\windows\\morons\"></scr"+"ipt>\n"
+							+"<scr"+"ipt type=\"dojo/method\" src=\"/dont/mess/with/this\"></scr"+"ipt>\n"
+							+"<scr"+"ipt src=\"/dont/mess/here/either\" type=\"dojo/method\"></scr"+"ipt>\n"
+							+"<scr"+"ipt event=\"/havent/you/listened\" type=\"dojo/method\"></scr"+"ipt>\n"
+							+"<scr"+"ipt>JS CODE</scr"+"ipt>\n"
+							+"<a href='javascript:void(0)'>void</a>";
+
+
+						var expectedHtml = "\n\n<img src=\"deep/nested/images/image.gif\"/>Testing\n"
+							+"<a href=\"topmost.html\">\n"
+							+"	<img src=\"/siteroot/top.html\">\n"
+							+"	<p style='background:url(deep/nested/images/back.png)'>\n"
+							+"	testing link\n"
+							+"</p></a>\n"
+							+"\n"
+							+"\n\n"
+							+"<a style='display:block; background:url(/topmost/css)' href='deep/above'>above</a>\n\n"
+							+"<scr"+"ipt type=\"dojo/method\" src=\"/dont/mess/with/this\"></scr"+"ipt>\n"
+							+"<scr"+"ipt src=\"/dont/mess/here/either\" type=\"dojo/method\"></scr"+"ipt>\n"
+							+"<scr"+"ipt event=\"/havent/you/listened\" type=\"dojo/method\"></scr"+"ipt>\n\n"
+							+"<a href='javascript:void(0)'>void</a>";
+
+
+						var expectedCss = [
+							"\n	@import 'http://dojotoolkit.org/visible.css' tv, screen;\n"
+							+"	@import \"deep/nested/audio.css\" audio;\n"
+							+"	@import url(/topsite/css/main.css);\n"
+							+"	div.mywidget, #someId {\n"
+							+"		background-color:url(css/main.css);"
+							+"		display:none;\n"
+							+"		background:url(deep/tmp/css)\n"
+							+"	}\n", "@import \"css/theme.css\";", "@import \"css/theme2.css\";"];
+
+						for(var i = 0; i < 6; i++){
+							htmlText += htmlText;
+							expectedHtml += expectedHtml;
+							expectedCss = expectedCss.concat(expectedCss);
+						}
+
+
+						var setParams = {
+							referencePath: "deep/nested/file",
+							executeScripts: 1,
+							adjustPaths: 1,
+							renderStyles: 1,
+							cleanContent: 1
+						};
+						
+						var adjustedCss, adjustedHtml;
+
+						// hijack internals to snatch the styles before they are inserted to DOM (DOM messes formating)
+						var oldFunc = html._ContentSetter.prototype._renderStyles;
+						html._ContentSetter.prototype._renderStyles = function(styles){
+							adjustedCss = styles;
+							this.executeScripts = 0;
+						};
+
+						var oldSetFunc = html._ContentSetter.prototype.setContent;
+						html._ContentSetter.prototype.setContent = function(html){
+							console.log("replaced setContent is called");
+							adjustedHtml = this.content;
+						};
+
+						// TODO: presumably this hack code doesn't work anymore after the AMD conversion of html._ContentSetter
+						var oldXhr = dojo.xhrGet;
+						dojo.xhrGet = function(){}; // kill script download
+
+						var start = new Date();
+
+						html.set(node1, htmlText, setParams);
+
+						console.log("/calling set to clean and adjust paths");
+						var end = new Date();
+
+						// reset back to the way it was
+						html._ContentSetter.prototype._renderStyles = oldFunc;
+						html._ContentSetter.prototype.setContent = oldSetFunc;
+						dojo.xhrGet = oldXhr;
+
+						console.info('Time used to regex scan html/css and\n adjust relative paths (adjustPaths=true),\n copy scripts (executeScripts=true) and copy css innerText (renderStyles=true) and adjust paths in there \nTime:'+
+								(end - start)+' ms on '+ htmlText.split('\n').length
+								+' html rows, with '+ htmlText.length+' characters (roughly '
+								+Math.round(htmlText.length/1024)+ 'Kb)');
+
+						// we split and loop to get a faster hint of where it failed
+						adjustedHtml = adjustedHtml.split("\n");
+						expectedHtml = expectedHtml.split("\n");
+
+						for(var i = 0; i < expectedHtml.length; i++){
+							//console.debug(expectedHtml[i], i);
+							//console.debug(adjustedHtml[i], i);
+							t.assertEqual(expectedHtml[i], adjustedHtml[i]);
+						}
+
+						var exCssBlock, adjCssBlock;
+						for(var i = 0; i < expectedCss.length; i++){
+							t.assertEqual('string', typeof adjustedCss[i]);
+
+							exCssBlock = expectedCss[i].split('\n');
+							adjCssBlock = adjustedCss[i].split('\n');
+
+							for(var j = 0; j < exCssBlock.length;j++){
+								t.assertEqual(lang.trim(exCssBlock[j]), lang.trim(adjCssBlock[j]));
+							}
+							
+						}
+					},
+					tearDown: function(){
+					}
+				},
+				{
+					name:'IE_AlphaImageLoader_PathAdjustments',
+					runTest: function(t){
+						if(!has("ie")){
+							console.info('aborting test IE_AlphaImageLoader_PathAdjustments, you dont use IE');
+							return;
+						}
+						var setParams = {
+							adjustPaths: 1,
+							renderStyles: 1,
+							referencePath: "deep/"
+						};
+
+						var sourceHtml = "<div style='width:10px;height:10px;filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(sizingMethod=\"scale\", src=\"images/alpha(1).png\", nextProperty=\"useless\");'><!-- \n"
+						+" alpha png in IE 6 --></div>\n"
+						+"<style>\n"
+						+"	.ie_menu_png {"
+						+"		filter: \t progid:\n"
+						+"			DXImageTransform.Microsoft.AlphaImageLoader(\n"
+						+"			src='../midlevel/alpha(2).png')\n"
+						+"	}\n"
+						+" #my_transparent_png {filter: progid:DXImageTransform.Microsoft.AlphaImageLoader( src='/images/alpha(3).png') }\n"
+						+" #my_transparent_png1 {filter: progid:DXImageTransform.Microsoft.AlhaImageLoader(src='http://no.se/images/alpha(4).png')}\n"
+						+"</style>\n";
+
+
+						var expectedHtml = "<div style='width:10px;height:10px;filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(sizingMethod=\"scale\", src=\"deep/images/alpha(1).png\", nextProperty=\"useless\");'><!-- \n"
+						+" alpha png in IE 6 --></div>\n\n";
+
+						var expectedCss = "\n"
+						+"	.ie_menu_png {"
+						+"		filter: \t progid:\n"
+						+"			DXImageTransform.Microsoft.AlphaImageLoader(\n"
+						+"			src='midlevel/alpha(2).png')\n"
+						+"	}\n"
+						+" #my_transparent_png {filter: progid:DXImageTransform.Microsoft.AlphaImageLoader( src='/images/alpha(3).png') }\n"
+						+" #my_transparent_png1 {filter: progid:DXImageTransform.Microsoft.AlhaImageLoader(src='http://no.se/images/alpha(4).png')}\n";
+
+
+						for(var i = 0; i < 7; i++){
+							sourceHtml += sourceHtml;
+							expectedHtml += expectedHtml;
+							expectedCss += expectedCss;
+						}
+
+						var adjustedHtml, adjustedCss;
+
+						// hijack internals to snatch the content
+						var oldRenderStyles = html._ContentSetter.prototype._renderStyles;
+						var oldSetContent = html._ContentSetter.prototype.setContent;
+						html._ContentSetter.prototype._renderStyles = function(styles){ adjustedCss = styles.join(''); };
+						html._ContentSetter.prototype.setContent = function(cont){ adjustedHtml = this.content; };
+
+						var start = new Date();
+						html.set(node1, sourceHtml, setParams);
+						var end = new Date();
+
+						console.info('Time used to replace AlphaImageLoader(src="...") '
+									+(end - start) + "ms in HTML with "+html.length
+									+' characters (roughly '+(Math.round(html.length/1024))+'Kb)');
+
+						// reset hijacked
+						html._ContentSetter.prototype._renderStyles = oldRenderStyles;
+						html._ContentSetter.prototype.setContent = oldSetContent;
+
+
+						// split on newline and run a check on each row to help debugging
+						expectedHtml = expectedHtml.split("\n");
+						adjustedHtml = adjustedHtml.split("\n");
+						for(var i = 0; i < expectedHtml.length; i++){
+							t.assertEqual(expectedHtml[i], adjustedHtml[i]);
+						}
+
+						expectedCss = expectedCss.split("\n");
+						adjustedCss = adjustedCss.split("\n");
+						for(var i = 0; i < expectedCss.length; i++){
+							t.assertEqual(expectedCss[i], adjustedCss[i]);
+						}
+						
+					}
+				}
+			]);
+
+			doh.register("A_AlphaImageLoader_inAction", [{
+				name:"AlphaLoaderShowHow",
+				runTest:function(t){
+					// IE filter alphaimageloader paths must be relative to the page
+					// not to the cssFile that declares it
+
+					// demo a much better way of "Fixing" alpha png in IE6 than inlining in html
+					var imgHtml = "<img src='images/dojoLogo.png' class='run_png_fix'/>";
+
+					var showHowHtml = "<pre >\nCode used in IE transparent png example\n"
+								+"code (declared in main page, not through ContentPane)\n"
+								+"&lt;script type='text/javascript'&gt;\n"
+								+fixPngIE6.toString().replace(/\n\t?/g, "\n")
+								+"\n&lt;/script&gt;\n"
+								+"&lt;style type='text/css'&gt;\n"
+								+"	.run_png_fix {\n"
+								+"		background-image:url(images/blank.gif);\n"
+								+"		behaviour: expression(fixPngIE6.call(this));\n"
+								+"	}\n"
+								+"&lt;/style&gt;\n\n...\n\nHtml feeded to ContentPane (or your main page):\n"
+								+"&lt;img src='images/dojoLogo.png' class='run_png_fix'/&gt;\n</pre>";
+
+					html.set(
+						node1, 
+						imgHtml + showHowHtml, {
+							executeScripts: 1,
+							renderStyles: 1
+						}
+					);
+				}
+			}]);
+
+			doh.register("setterReuse", [
+				{
+					// FIXME: finish this test!
+					name: 'renderStyles',
+					setUp: function() {
+						setter2 = new html._ContentSetter({
+							renderStyles: true, 
+							cleanContent: true,
+							node: dom.byId("node2")
+						});
+						setter2.set('<style>#node2 { font-size: 18px }</style>New value');
+					},
+					runTest: function(t){
+						// test the fixture setup ok
+						var node2 = dom.byId("node2"); 
+						t.assertEqual("New value", node2.innerHTML);
+						t.assertEqual("18px", domStyle.get(node2, "fontSize"));
+						
+						// grab the styleNodes in case we need to remove them later - there should be exactly 1
+						// in the reuse scenario, this is what we have to do today
+						var node2_styleNodes = setter2._styleNodes; 
+						setter2._styleNodes = [];
+						t.assertEqual(1, node2_styleNodes.length);
+
+						// now reuse the setter on a different node
+						var node3 = setter2.node = dom.byId("node3");
+						setter2.set('<style>#node3 { font-size: 24px }</style>Another New value');
+
+						// test the old node is still good, 
+						// and the new node got the correct value, style
+						t.assertEqual("New value", node2.innerHTML);
+						t.assertEqual("18px", domStyle.get(node2, "fontSize"));
+
+						t.assertEqual("Another New value", node3.innerHTML);
+						t.assertEqual("24px", domStyle.get(node3, "fontSize"));
+
+						// test the old styleNode is still around
+						t.assertEqual(1, node2_styleNodes.length);
+						// test we have just one in the new collection
+						t.assertEqual(1, setter2._styleNodes.length);
+						
+						// I guess you might want to do this...
+						// remove content and associated styles from the current and previous node
+						setter2.set("");
+						t.assertEqual(0, setter2._styleNodes.length);
+						t.assertFalse("24px" == domStyle.get(node3, "fontSize"));
+						
+						setter2.node = node2;
+						setter2._styleNodes = node2_styleNodes;
+						setter2.set("");
+						t.assertEqual(0, setter2._styleNodes.length);
+						t.assertFalse("18px" == domStyle.get(node2, "fontSize"));
+					}
+				}
+			]);
+
+			var remoteScriptsSetter;
+			var previousContent;
+			doh.register("remoteScripts", [
+				{
+					name: 'testCommentedScriptTag',
+					setUp: function() {
+						remoteScriptsSetter = new html._ContentSetter({
+							renderStyles: true, 
+							cleanContent: true,
+							executeScripts: true,
+							node: dom.byId("node4")
+						});
+						previousContent = dom.byId("node4").innerHTML;
+					},
+					tearDown: function(){
+						dom.byId("node4").innerHTML = previousContent;    
+					},
+					timeout: 10000,
+					runTest: function(t){
+						var deferred = new doh.Deferred(); 
+						var xhrDef = xhr.get({
+							url: "remote/commentedScript.html",
+							preventCache: true,
+							handleAs: "text"
+						});
+						xhrDef.then(
+							function(text){
+								remoteScriptsSetter.set(text);
+								var intv = setInterval(function(){
+									if(window.__remotePaneLoaded){
+										clearInterval(intv);
+										window.__remotePaneLoaded = null;
+										try{
+											//Test that entity characters in a src url for a script
+											//are properly converted to correct form
+											var node = document.getElementById("should_not_be_here");
+											doh.assertTrue(node == null);
+											deferred.callback(true);
+										}catch(e){
+											deferred.errback(new Error(e));
+										}
+									}
+								}, 500);
+							},
+							function(e){
+								deferred.errback(e);
+							}
+						);
+
+						return deferred;
+					}
+				},
+				{
+					name: 'testCommentedStyleTags',
+					setUp: function() {
+						remoteScriptsSetter = new html._ContentSetter({
+							renderStyles: true, 
+							cleanContent: true,
+							executeScripts: true,
+							node: dom.byId("node4")
+						});
+						previousContent = dom.byId("node4").innerHTML;
+					},
+					tearDown: function(){
+						dom.byId("node4").innerHTML = previousContent;    
+					},
+					timeout: 10000,
+					runTest: function(t){
+						var deferred = new doh.Deferred(); 
+						var xhrDef = xhr.get({
+							url: "remote/commentedStyles.html",
+							preventCache: true,
+							handleAs: "text"
+						});
+						xhrDef.then(
+							function(text){
+								remoteScriptsSetter.set(text);
+								var intv = setInterval(function(){
+									if(window.__remotePaneLoaded){
+										clearInterval(intv);
+										window.__remotePaneLoaded = null;
+										try{
+											var n1 = dojo.byId("n1");
+											var n2 = dojo.byId("n2");
+											var n3 = dojo.byId("n3");
+			
+											doh.assertTrue(domStyle.get(n1, "display") === "none", "No commented out inline styles");
+											doh.assertTrue(domStyle.get(n2, "display") === "none", "No commented out inline links");
+											doh.assertTrue(domStyle.get(n3, "display") === "none", "No commented out inline imports");
+											
+											//Test that entity characters in a src url for a script
+											//are properly converted to correct form
+											var node = document.getElementById("should_not_be_here");
+											doh.assertTrue(node == null);
+											deferred.callback(true);
+										}catch(e){
+											deferred.errback(new Error(e));
+										}
+									}
+								}, 500);
+							},
+							function(e){
+								deferred.errback(e);
+							}
+						);
+
+						return deferred;
+					}
+				},				
+				{
+					name: 'testEntityChars',
+					setUp: function() {
+						remoteScriptsSetter = new html._ContentSetter({
+							renderStyles: true, 
+							cleanContent: true,
+							executeScripts: true,
+							node: dom.byId("node4")
+						});
+						previousContent = dom.byId("node4").innerHTML;
+					},
+					tearDown: function(){
+						dom.byId("node4").innerHTML = previousContent;    
+					},
+					timeout: 10000,
+					runTest: function(t){
+						var deferred = new doh.Deferred(); 
+						var xhrDef = xhr.get({
+							url: "remote/commentedScript.html",
+							preventCache: true,
+							handleAs: "text"
+						});
+						xhrDef.then(
+							function(text){
+								remoteScriptsSetter.set(text);
+								var intv = setInterval(function(){
+									if(window.__remotePaneLoaded2){
+										clearInterval(intv);
+										window.__remotePaneLoaded2 = null;
+										try{
+											//Test that entity characters in a src url for a script
+											//are properly converted to correct form
+											var node = document.getElementById("should_not_be_here2");
+											doh.assertTrue(node == null);
+											deferred.callback(true);
+										}catch(e){
+											deferred.errback(new Error(e));
+										}
+									}
+								}, 500);
+							},
+							function(e){
+								deferred.errback(e);
+							}
+						);
+						return deferred;
+					}
+				}
+			]);
+
+			doh.run();
+		});
+	</script>
+	<style>
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+
+		.box {
+			border: 1px solid black;
+			height: 190px;
+			width: 80%;
+			overflow: auto;
+		}
+
+		.red {
+			color: red;
+		}
+
+		.dojoxTestWidget {
+			border: 1px dashed red;
+			background-color: #C0E209 ;
+		}
+		
+		              
+	</style>
+</head>
+<body class='tundra'>
+	<h1>dojox/html</h1>
+	<h3>As dojox/html is derived from dojo/html, make sure that the dojo/html test passes before running this test</h3>
+	<h3 class='red'>Test relies on a php page as backend, so you need php installed on your server</h3>
+
+	<div class='box' id='node1'>
+		Initial value
+	</div>
+
+	<div class='box' id='node2'>
+		Initial value
+	</div>
+
+	<div class='box' id='node3'>
+		Initial value
+	</div>
+
+	<div class='box' id='node4'>
+		Initial value
+	</div>                                        
+
+	<table id='tableTest' class='box'>
+		<thead>
+			<tr>
+				<td></td>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td></td>
+			</tr>
+		<tbody>
+	</table>
+</body>
+</html>

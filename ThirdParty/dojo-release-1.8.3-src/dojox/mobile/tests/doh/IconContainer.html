@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Icon</title>
+		<link href="../../themes/iphone/base.css" rel="stylesheet"/>
+		<link href="../../themes/iphone/IconContainer.css" rel="stylesheet"/>
+
+		<style>
+			.box {
+				border: 1px solid #A7C0E0;
+				width: 300px;
+				height: 250px;
+				background-image: url(../images/widget-bg.png);
+				background-repeat: no-repeat;
+				background-color: white;
+			}
+		</style>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			//dojo.require("dojo.parser"); // Use the lightweight parser.
+			dojo.require("dojox.mobile.parser");
+			dojo.require("dojox.mobile");
+			dojo.require("dojox.mobile.View");
+			dojo.require("dojox.mobile.IconContainer");
+			dojo.requireIf(!dojo.isWebKit, "dojox.mobile.compat");
+		</script>
+		<script type="text/javascript" src="TestUtil.js"></script>
+		<script type="text/javascript" src=IconContainer.js></script>
+	</head>
+	<body>
+		<div id="foo" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">Icon Container</h1>
+			<ul dojoType="dojox.mobile.IconContainer">
+				<li dojoType="dojox.mobile.IconItem" label="app1" icon="../images/icon3.png" lazy="true"><div class="box"></div></li>
+				<li dojoType="dojox.mobile.IconItem" label="app2" icon="../images/icon3.png" lazy="true"><div class="box"></div></li>
+				<li dojoType="dojox.mobile.IconItem" label="app3" icon="../images/icon3.png" lazy="true"><div class="box"></div></li>
+				<li dojoType="dojox.mobile.IconItem" label="moveTo" icon="../images/icon3.png" moveTo="about" transition="slide"></li>
+				<li dojoType="dojox.mobile.IconItem" label="href" icon="../images/icon3.png" href="../test_iPhone-RoundRectList.html" transition="slide"></li>
+				<li dojoType="dojox.mobile.IconItem" label="url" icon="../images/icon3.png" url="../view-sample.html" transition="slide"></li>
+			</ul>
+		</div>
+
+		<div id="about" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading" back="Icon Container" moveTo="foo">About</h1>
+			<h2 dojoType="dojox.mobile.RoundRectCategory">My Phone</h2>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" rightText="AcmePhone">
+					Network											   
+				</li>												   
+				<li dojoType="dojox.mobile.ListItem" rightText="AcmePhone">
+					Line
+				</li>
+				<li dojoType="dojox.mobile.ListItem" rightText="1024">
+					Songs
+				</li>
+			</ul>
+		</div>
+	</body>
+</html>

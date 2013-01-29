@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>dijit/a11y unit test</title>
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "css/dijitTests.css";
+		@import "../themes/claro/claro.css";
+	</style>
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		data-dojo-config="isDebug: true"></script>
+	<script type="text/javascript" src="_testCommon.js"></script>
+
+	<script type="text/javascript">
+		require([
+			"doh/runner", "dojo/dom", "dojo/parser",
+			"dijit/a11y", "dijit/registry", "dojo/domReady!", "dijit/Editor"
+		], function(doh, dom, parser, a11y, registry){
+
+			doh.register("dijit/a11y", [
+				function parse(){
+					parser.parse();
+				},
+
+				function isTabNavigable(t){
+					var d = new doh.Deferred();
+					doh.t(a11y.isTabNavigable(dojo.byId("a-with-href")), "a-with-href");
+					doh.f(a11y.isTabNavigable(dojo.byId("a-without-href")), "a-without-href");
+					doh.t(a11y.isTabNavigable(dojo.byId("area")), "area");
+					doh.t(a11y.isTabNavigable(dojo.byId("button")), "button");
+					doh.t(a11y.isTabNavigable(dojo.byId("input")), "input");
+					doh.t(a11y.isTabNavigable(dojo.byId("object")), "object");
+					doh.t(a11y.isTabNavigable(dojo.byId("select")), "select");
+					doh.t(a11y.isTabNavigable(dojo.byId("textarea")), "textarea");
+					doh.f(a11y.isTabNavigable(dojo.byId("empty")), "empty");
+					doh.t(a11y.isTabNavigable(dojo.byId("zero-tabindex-div")), "zero-tabindex-div");
+					doh.f(a11y.isTabNavigable(dojo.byId("no-tabindex-div")), "no-tabindex-div");
+					doh.f(a11y.isTabNavigable(dojo.byId("iframe")), "iframe");
+
+					registry.byId("editor").onLoadDeferred.then(d.getTestCallback(function(){
+						doh.t(a11y.isTabNavigable(dojo.byId("editor_iframe")), "editor_iframe");
+					}));
+
+					return d;
+				},
+				function findTabNullOnEmpty(t){
+					doh.is(null, a11y.getFirstInTabbingOrder("empty"));
+					doh.is(null, a11y.getLastInTabbingOrder("empty"));
+				},
+				function findTabElements(t){
+					doh.is(null, a11y.getFirstInTabbingOrder("div-container"));
+					doh.is(null, a11y.getFirstInTabbingOrder("a-without-href-container"));
+					doh.is("a-with-href", a11y.getFirstInTabbingOrder("a-with-href-container").id);
+
+					// in WebKit area elements are not in the tab order
+					// and their display style property is "none";
+					// therefore it is expected that this test will fail
+					if(!dojo.isWebKit){
+						doh.is("area", a11y.getFirstInTabbingOrder("area-map").id);
+					}
+
+					doh.is("button", a11y.getFirstInTabbingOrder("button-container").id);
+					doh.is("input", a11y.getFirstInTabbingOrder("input-container").id);
+					doh.is("object", a11y.getFirstInTabbingOrder("object-container").id);
+					doh.is("select", a11y.getFirstInTabbingOrder("select-container").id);
+					doh.is("textarea", a11y.getFirstInTabbingOrder("textarea-container").id);
+					doh.is(null, a11y.getLastInTabbingOrder("div-container"));
+					doh.is(null, a11y.getLastInTabbingOrder("a-without-href-container"));
+					doh.is("a-with-href", a11y.getLastInTabbingOrder("a-with-href-container").id);
+
+					// in WebKit area elements are not in the tab order
+					// and their display style property is "none";
+					// therefore it is expected that this test will fail
+					if(!dojo.isWebKit){
+						doh.is("area", a11y.getLastInTabbingOrder("area-map").id);
+					}
+
+					doh.is("button", a11y.getLastInTabbingOrder("button-container").id);
+					doh.is("input", a11y.getLastInTabbingOrder("input-container").id);
+					doh.is("object", a11y.getLastInTabbingOrder("object-container").id);
+					doh.is("select", a11y.getLastInTabbingOrder("select-container").id);
+					doh.is("textarea", a11y.getLastInTabbingOrder("textarea-container").id);
+				},
+				function findTabOnElementRatherThanString(t){
+					doh.is("a-with-href", a11y.getFirstInTabbingOrder(dojo.byId("a-with-href-container")).id);
+					doh.is("a-with-href", a11y.getLastInTabbingOrder(dojo.byId("a-with-href-container")).id);
+				},
+				function findTabSkipDisabled(t){
+					doh.is("not-disabled-input", a11y.getFirstInTabbingOrder("skip-disabled").id);
+					doh.is("not-disabled-input", a11y.getLastInTabbingOrder("skip-disabled").id);
+				},
+				function findTabZeroTabindex(t){
+					doh.is("zero-tabindex-div", a11y.getFirstInTabbingOrder("zero-tabindex-div-container").id);
+					doh.is("zero-tabindex-input", a11y.getFirstInTabbingOrder("zero-tabindex-input-container").id);
+					doh.is("zero-tabindex-div", a11y.getLastInTabbingOrder("zero-tabindex-div-container").id);
+					doh.is("zero-tabindex-input", a11y.getLastInTabbingOrder("zero-tabindex-input-container").id);
+				},
+				function findTabPositiveTabindex(t){
+					doh.is("positive-tabindex-input1a", a11y.getFirstInTabbingOrder("positive-tabindex-mixed-with-no-tabindex").id);
+					doh.is("positive-tabindex-input3a", a11y.getFirstInTabbingOrder("positive-tabindex").id);
+					doh.is("no-tabindex-input2", a11y.getLastInTabbingOrder("positive-tabindex-mixed-with-no-tabindex").id);
+					doh.is("positive-tabindex-input4b", a11y.getLastInTabbingOrder("positive-tabindex").id);
+				},
+				function findTabSkipMinusOneTabindex(t){
+					doh.is("not-minus-one-input", a11y.getFirstInTabbingOrder("skip-minus-one").id);
+					doh.is("not-minus-one-input", a11y.getLastInTabbingOrder("skip-minus-one").id);
+				},
+				function findTabDescend(t){
+					doh.is("child-input1", a11y.getFirstInTabbingOrder("descend").id);
+					doh.is("child-input2", a11y.getLastInTabbingOrder("descend").id);
+				},
+				function findTabOuterInner(t){
+					doh.is("outer1", a11y.getFirstInTabbingOrder("outer-inner-container").id);
+					doh.is("inner2", a11y.getLastInTabbingOrder("outer-inner-container").id);
+				},
+				function skipNotShown(t){
+					doh.is(null, a11y.getFirstInTabbingOrder("hidden-element-container"));
+					doh.is(null, a11y.getFirstInTabbingOrder("hidden-container-tabindex-zero"));
+					doh.is(null, a11y.getFirstInTabbingOrder("hidden-container-no-tabindex"));
+					doh.is(null, a11y.getFirstInTabbingOrder("container-with-hidden-containers"));
+
+					doh.is(null, a11y.getFirstInTabbingOrder("display-none-element-container"));
+					doh.is(null, a11y.getFirstInTabbingOrder("display-none-container-tabindex-zero"));
+					doh.is(null, a11y.getFirstInTabbingOrder("display-none-container-no-tabindex"));
+					doh.is(null, a11y.getFirstInTabbingOrder("container-with-display-none-containers"));
+				},
+				function multiDigitTabIndex(){
+					doh.is("one", a11y.getFirstInTabbingOrder("multiDigitTabIndex").name, "first");
+					doh.is("eleven", a11y.getLastInTabbingOrder("multiDigitTabIndex").name, "last");
+				}
+			]);
+
+			doh.run();
+		});
+
+	</script>
+</head>
+<body class="claro">
+	<h1>Dijit TabIndex Related Functions Unit Test</h1>
+
+	<div id="empty"></div>
+
+	<div id="div-container">
+		<div id="div"></div>
+	</div>
+	<div id="a-without-href-container">
+		<a id="a-without-href"></a>
+	</div>
+	<div id="a-with-href-container">
+		<a id="a-with-href" href="#a-without-href"></a>
+	</div>
+
+	<div><img src="images/flatScreen.gif" alt="picture of a flat-screen monitor" usemap="#area-map"/></div>
+	<map id="area-map" name="area-map">
+		<area id="area" href="#" alt="example area" shape="rect" coords="0,0,8,8"/>
+	</map>
+
+	<div id="button-container">
+		<button id="button"></button>
+	</div>
+	<div id="input-container">
+		<input id="input"/>
+	</div>
+	<div id="object-container">
+		<object id="object" type="text/javascript"></object>
+	</div>
+	<div id="select-container">
+		<select id="select"></select>
+	</div>
+	<div id="textarea-container">
+		<textarea id="textarea"></textarea>
+	</div>
+
+	<div id="skip-disabled">
+		<input id="disabled-input1" disabled="disabled"/>
+		<input id="not-disabled-input"/>
+		<input id="disabled-input2" disabled="disabled"/>
+	</div>
+
+	<div id="zero-tabindex-div-container">
+		<div id="zero-tabindex-div" tabindex="0"></div>
+	</div>
+
+	<div id="no-tabindex-div-container">
+		<div id="no-tabindex-div"></div>
+	</div>
+
+	<div id="zero-tabindex-input-container">
+		<input id="zero-tabindex-input" tabindex="0"/>
+	</div>
+
+	<div id="iframe-container">
+		<div id="iframe"></div>
+	</div>
+
+	<div id="editor-container">
+		<div id="editor" data-dojo-type="dijit/Editor"></div>
+	</div>
+
+	<div id="positive-tabindex-mixed-with-no-tabindex">
+		<input id="no-tabindex-input1"/>
+		<input id="no-tabindex-input2"/>
+		<input id="positive-tabindex-input1a" tabindex="1"/>
+		<input id="positive-tabindex-input1b" tabindex="1"/>
+		<input id="positive-tabindex-input2a" tabindex="2"/>
+		<input id="positive-tabindex-input2b" tabindex="2"/>
+	</div>
+
+	<div id="positive-tabindex">
+		<input id="positive-tabindex-input3a" tabindex="3"/>
+		<input id="positive-tabindex-input3b" tabindex="3"/>
+		<input id="positive-tabindex-input4a" tabindex="4"/>
+		<input id="positive-tabindex-input4b" tabindex="4"/>
+	</div>
+
+	<div id="skip-minus-one">
+		<input id="minus-one-input1" tabindex="-1"/>
+		<input id="not-minus-one-input"/>
+		<input id="minus-one-input2" tabindex="-1"/>
+	</div>
+
+	<div id="descend">
+		<input disabled="disabled"/>
+		<div>
+			<input disabled="disabled"/>
+			<div>
+				<input disabled="disabled"/>
+			</div>
+		</div>
+		<div>
+			<input disabled="disabled"/>
+			<div>
+				<input disabled="disabled"/>
+			</div>
+			<div>
+				<input id="child-input1"/>
+			</div>
+			<div>
+				<input id="child-input2"/>
+			</div>
+		</div>
+		<div>
+			<div>
+				<input disabled="disabled"/>
+			</div>
+			<input disabled="disabled"/>
+		</div>
+		<input disabled="disabled"/>
+	</div>
+
+	<div id="outer-inner-container">
+		<div id="outer1" tabindex="0">
+			<div id="inner1" tabindex="0"></div>
+		</div>
+		<div id="outer2" tabindex="0">
+			<div id="inner2" tabindex="0"></div>
+		</div>
+	</div>
+
+	<div id="hidden-element-container">
+		<div id="hidden-element" tabindex="0" style="visibility: hidden;">
+		</div>
+	</div>
+
+	<div id="container-with-hidden-containers">
+		<div id="hidden-container-tabindex-zero" tabindex="0" style="visibility: hidden;">
+			<div id="inside-hidden-container-tabindex-zero" tabindex="0">
+			</div>
+		</div>
+
+		<div id="hidden-container-no-tabindex" style="visibility: hidden;">
+			<div id="inside-hidden-container-no-tabindex" tabindex="0">
+			</div>
+		</div>
+	</div>
+
+	<div id="display-none-element-container">
+		<div id="display-none-element" tabindex="0" style="display: none;">
+		</div>
+	</div>
+
+	<div id="container-with-display-none-containers">
+		<div id="display-none-container-tabindex-zero" tabindex="0" style="display: none;">
+			<div id="inside-display-none-container-tabindex-zero" tabindex="0">
+			</div>
+		</div>
+
+		<div id="display-none-container-no-tabindex" style="display: none;">
+			<div id="inside-display-none-container-no-tabindex" tabindex="0">
+			</div>
+		</div>
+	</div>
+
+	<div id="multiDigitTabIndex">
+		<input name="one" tabindex=1>
+		<input name="two" tabindex=2>
+		<input name="three" tabindex=3>
+		<input name="four" tabindex=4>
+		<input name="five" tabindex=5>
+		<input name="six" tabindex=6>
+		<input name="seven" tabindex=7>
+		<input name="eight" tabindex=8>
+		<input name="nine" tabindex=9>
+		<input name="ten" tabindex=10>
+		<input name="eleven" tabindex=11>
+	</div>
+</body>
+</html>

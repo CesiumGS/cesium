@@ -1,0 +1,63 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+		<title>Touch Zoom And Pan</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="user-scalable=no, width=device-width, height=device-height" />
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/tundra/tundra.css";
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojox.mobile.parser");
+
+			dojo.require("dojox.charting.Chart");
+            dojo.require("dojox.charting.axis2d.Default");
+            dojo.require("dojox.charting.plot2d.Lines");
+			dojo.require("dojox.charting.action2d.TouchZoomAndPan");
+			
+			var chart;
+			makeObjects = function(){
+				chart = new dojox.charting.Chart("chart");
+				chart.addAxis("x", {type : "Default", fixLower: "minor", natural: true, stroke: "gray", enableCache: true,
+					htmlLabels: false, majorTick: {color: "red", length: 4}, minorTick: {color: "blue", length: 2}});
+				chart.addAxis("y", {vertical: true, min: 0, max: 100, majorTickStep: 10, minorTickStep: 5, stroke: "gray",
+					majorTick: {stroke: "black", length: 4}, minorTick: {stroke: "gray", length: 2}});
+				chart.addPlot("default", {type: "Default",markers: false, areas: true });
+				chart.addSeries("Series A", [
+					 8,  7,  3,  2,  5,  7,  9, 10,  2, 10,
+					14, 16, 18, 13, 16, 15, 20, 19, 15, 12,
+					24, 20, 20, 26, 28, 26, 28, 29, 24, 29,
+					31, 35, 37, 31, 35, 37, 37, 36, 31, 30,
+					50, 49, 42, 46, 44, 40, 47, 43, 48, 47,
+					51, 52, 52, 51, 54, 57, 58, 50, 54, 51,
+					62, 68, 67, 62, 62, 65, 61, 66, 65, 62,
+					74, 78, 78, 77, 74, 74, 72, 74, 70, 78,
+					84, 83, 85, 86, 86, 89, 89, 85, 86, 86,
+					98, 97, 93, 91, 92, 92, 99, 93, 94, 92
+				]);
+				new dojox.charting.action2d.TouchZoomAndPan(chart, "default", { axis: "x" });
+				chart.render();
+				chart.zoomIn("x", [40, 60]);
+			};
+			dojo.addOnLoad(makeObjects);
+		</script>
+	</head>
+	<body class="tundra" style="height:100%;width:100%">
+		<div id="chart" style="width: 100%; height: 100%;"></div>
+	</body>
+</html>

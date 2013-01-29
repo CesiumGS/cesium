@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>iPhone Shipto-Billto</title>
+		<link href="../../../../../dojox/mobile/themes/iphone/iphone.css" rel="stylesheet"/>
+		<link href="../css/iphone-format.css" rel="stylesheet"/>
+
+	<!-- use links below for android theme		  
+		<link href="../../../../../dojox/mobile/themes/android/android.css" rel="stylesheet">
+		<link href="../css/android-format.css" rel="stylesheet">
+	-->
+	
+		<script type="text/javascript" src="../../../../../dojo/dojo.js" djConfig="parseOnLoad: true, isDebug: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			//dojo.require("dojo.parser"); 
+			dojo.require("dojox.mobile.parser"); 
+			dojo.require("dojox.mobile");
+			dojo.require("dojox.mobile.TextBox");
+			dojo.require("dojox.mobile.Button");
+			dojo.require("dojox.mvc");
+			dojo.require("dojox.mvc.Group");
+			dojo.require("dojox.mvc.Repeat");
+			
+			dojo.requireIf(!dojo.isWebKit, "dojox.mobile.compat");
+
+			// Initial data
+			var names = {
+				"Serial" : "360324",
+				"First"	 : "John",
+				"Last"	 : "Doe",
+				"Email"	 : "jdoe@us.ibm.com",
+				"ShipTo" : {
+					"Street" : "123 Valley Rd",
+					"City"	 : "Katonah",
+					"State"	 : "NY",
+					"Zip"	 : "10536"
+				},
+				"BillTo" : {
+					"Street" : "17 Skyline Dr",
+					"City"	 : "Hawthorne",
+					"State"	 : "NY",
+					"Zip"	 : "10532"
+				}
+			};
+
+			var model = dojox.mvc.newStatefulModel({ data : names });
+			
+		</script>
+	</head>
+	<body>
+		<h1 data-dojo-type="dojox.mobile.Heading">iPhone Data Binding Ex.</h1>
+		<div class="row" data-dojo-type="dojox.mvc.Group" data-dojo-props="ref:'model'">
+			<div>
+				<label for="serialInput">Order #:</label>
+			</div>
+			<div>
+				<input	class="cell" id="serialInput" data-dojo-type="dojox.mobile.TextBox"
+						data-dojo-props="ref:'rel:Serial'"/>
+			</div>
+			<div>
+				<label for="lastnameInput">Last:</label>
+			</div>
+			<div>
+				<input id="lastnameInput" data-dojo-type="dojox.mobile.TextBox"
+					   data-dojo-props="ref:'rel:Last'"/>
+			</div>
+			<div>
+				<label for="emailInput">Email:</label>
+			</div>
+			<div>
+				<input id="emailInput" data-dojo-type="dojox.mobile.TextBox"
+					   data-dojo-props="ref:'rel:Email'"/>
+			</div>
+		</div>
+		<div class="spacer"></div>
+		<button id="shipto" type="button" data-dojo-type="dojox.mobile.Button" class="mblBlueButton" onclick="setRef('addrGroup', model.ShipTo)">Ship To</button>
+		<button id="billto" type="button" data-dojo-type="dojox.mobile.Button" class="mblBlueButton" onclick="setRef('addrGroup', model.BillTo)">Bill To</button>		
+		<br/>
+		<div class="row" id="addrGroup" data-dojo-type="dojox.mvc.Group" data-dojo-props="ref:model.ShipTo">
+			<div>
+				<label for="streetInput">Street:</label>
+			</div>
+			<div>
+				<input	id="streetInput" data-dojo-type="dojox.mobile.TextBox"
+						placeHolder="Street" data-dojo-props="ref:'rel:Street'"/>
+			</div>
+			<div>
+				<label for="cityInput">City:</label>
+			</div>
+			<div>
+				<input id="cityInput" data-dojo-type="dojox.mobile.TextBox"
+					   placeHolder="City" data-dojo-props="ref:'rel:City'"/>
+			</div>
+			<div>
+				<label for="stateInput">State:</label>
+			</div>
+			<div>
+				<input id="stateInput" data-dojo-type="dojox.mobile.TextBox"
+					   placeHolder="State" data-dojo-props="ref:'rel:State'"/>
+			</div>
+			<div>
+				<label for="zipInput">ZIP Code:</label>
+			</div>
+			<div>
+				<input id="zipInput" data-dojo-type="dojox.mobile.TextBox"
+					   placeHolder="ZIP Code" data-dojo-props="ref:'rel:Zip'"/>
+			</div>
+		</div>
+		<div class="spacer"></div>
+		<button id="reset" type="button" data-dojo-type="dojox.mobile.Button" class="mblBlueButton" onclick="model.reset()">Reset</button>
+		<script type="text/javascript">
+			function setRef(id, addrRef) {
+				var widget = dijit.byId(id);
+				widget.set("ref", addrRef);
+			}
+		</script>				 
+	</body>
+</html>

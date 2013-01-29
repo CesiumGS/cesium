@@ -1,0 +1,228 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot Menu iframe Test</title>
+
+		<style>
+			@import "../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+			
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx",
+				"dojo/dom", "dojo/dom-style", "dojo/keys", "dojo/_base/lang", "dojo/query",
+				"dijit/tests/helpers", "dojo/domReady!"
+			], function(doh, robot, dom, domClass, keys, lang, query, helpers){
+
+				robot.initRobot('../test_Menu_iframe.html');
+
+				doh.register(function setup(){
+					// get pointer to registry in the iframe
+					registry = robot.window.require("dijit/registry");
+				});
+
+				var handler, menu;
+				doh.register("TestMenuIFrame", [
+					{
+						name: "detachMenu",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							menu = registry.byId("menu");
+							handler = menu.connect(menu, 'onOpen', function(){ d.errback(new doh._AssertFailure('user context menu should not have opened')); });
+							robot.mouseMoveAt("detachMenu", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("iframe", 1000, 1);
+							robot.sequence(function(){
+								robot.keyPress(keys.ESCAPE, 1000, {}, true);
+							}, 0);
+							robot.mouseClick({right:true}, 500);
+							
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								doh.f(helpers.isVisible(menu.domNode), "menu hidden");
+							})), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							menu.disconnect(handler);
+						}
+					},
+					{
+						name: "reattachMenu",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.window.scrollTo(0,0);
+							robot.mouseMove(30, 30, 500);
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("reattachMenu", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("iframe", 500, 1);
+							robot.mouseClick({right:true}, 500);
+							
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								var menu = registry.byId("menu");
+								doh.t(helpers.isVisible(menu.domNode), "menu visible");
+							})), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "resetToDoc",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("resetToDoc", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("iframe", 500, 1);
+							robot.mouseClick({right:true}, 500);
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								var menu = registry.byId("menu");
+								doh.t(helpers.isVisible(menu.domNode), "menu visible");
+
+								var iframe = dom.byId("iframe");
+								var heading = query("h1", iframe.contentWindow.document)[0];
+								doh.is("Document 0", heading.innerHTML, "heading.innerHTML");
+							})), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "detachMenu2",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							menu = registry.byId("menu");
+							handler = menu.connect(menu, 'onOpen', function(){ d.errback(new doh._AssertFailure('user context menu should not have opened')); });
+							robot.mouseMoveAt("detachMenu", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("iframe", 1000, 1);
+							robot.sequence(function(){
+								robot.keyPress(keys.ESCAPE, 1000, {}, true);
+							}, 0);
+							robot.mouseClick({right:true}, 500);
+							
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								doh.f(helpers.isVisible(menu.domNode), "menu hidden");
+							})), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							menu.disconnect(handler);
+						}
+					},
+					{
+						name: "reattachMenu2",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.window.scrollTo(0,0);
+							robot.mouseMove(30, 30, 500);
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("reattachMenu", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("iframe", 500, 1);
+							robot.mouseClick({right:true}, 500);
+							
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								var menu = registry.byId("menu");
+								doh.t(helpers.isVisible(menu.domNode), "menu visible");
+							})), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "resetToBill",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("resetToBill", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("iframe", 500, 1);
+							robot.mouseClick({right:true}, 500);
+							
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								var menu = registry.byId("menu");
+								doh.t(helpers.isVisible(menu.domNode), "menu visible");
+
+								var iframe = dom.byId("iframe");
+								var div = query("div", iframe.contentWindow.document)[0];
+								doh.is("bill was here", div.innerHTML, "div.innerHTML");
+							})), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "detachMenu3",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							menu = registry.byId("menu");
+							handler = menu.connect(menu, 'onOpen', function(){ d.errback(new doh._AssertFailure('user context menu should not have opened')); });
+							robot.mouseMoveAt("detachMenu", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("iframe", 1000, 1);
+							robot.sequence(function(){
+								robot.keyPress(keys.ESCAPE, 1000, {}, true);
+							}, 0);
+							robot.mouseClick({right:true}, 500);
+							
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								doh.f(helpers.isVisible(menu.domNode), "menu hidden");
+							})), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							menu.disconnect(handler);
+						}
+					},
+					{
+						name: "reattachMenu3",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.window.scrollTo(0,0);
+							robot.mouseMove(30, 30, 500);
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("reattachMenu", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("iframe", 500, 1);
+							robot.mouseClick({right:true}, 500);
+							
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								var menu = registry.byId("menu");
+								doh.t(helpers.isVisible(menu.domNode), "menu visible");
+							})), 1000);
+
+							return d;
+						}
+					}
+				]);
+				
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

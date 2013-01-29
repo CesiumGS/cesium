@@ -98,7 +98,7 @@
 	<property name="documentationImagesDirectory" location="Documentation/Images" />
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
-	<property name="dojoPath" location="${thirdPartyDirectory}/dojo-release-1.7.2-src" />
+	<property name="dojoPath" location="${thirdPartyDirectory}/dojo-release-1.8.3-src" />
 
 	<!-- Outputs -->
 	<property name="buildDirectory" location="Build" />
@@ -303,12 +303,12 @@
 			<include name="index.html" />
 			<include name="*.css" />
 			<replacefilter token="../../" value="" />
-			<replacefilter token="ThirdParty/dojo-release-1.7.2-src/" value="" />
+			<replacefilter token="ThirdParty/dojo-release-1.8.3-src/" value="" />
 			<replacefilter token="Source/" value="" />
 		</replace>
 
 		<replace dir="${buildDirectory}/${app.path}" summary="true">
-			<replacefilter token="ThirdParty/dojo-release-1.7.2-src/" value="" />
+			<replacefilter token="ThirdParty/dojo-release-1.8.3-src/" value="" />
 			<include name="boot.js" />
 			<include name="dojo/dojo.js" />
 		</replace>

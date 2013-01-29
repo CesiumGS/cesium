@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html >
+<head>
+
+		<style type="text/css">
+			@import "../../../../dijit/themes/claro/claro.css";
+		</style>
+	<style type="text/css">
+/* BEGIN .. css :: Things in this section have to be two tabs in */
+	
+        .row { width: 500px; display: inline-block; margin: 5px; }
+        .cell { width: 20%;  display:inline-block; }
+
+/* END .. css :: Things in this section have to be two tabs in */
+</style>
+<script src="../../../../dojo/dojo.js" data-dojo-config='parseOnLoad: false, mvc: {debugBindings: true}'></script><script>var searchRecords;
+
+/* BEGIN .. js :: Things in this section have to be two tabs in */
+
+		var templateString2 = '<div class="row">'
+		+ '<script type="dojo/require">at: "dojox/mvc/at"<\/script>'
+		+ '<label class="cell">Name:</label>'
+		+ '<input id="${parent.id}_textbox${indexAtStartup}" class="cell" data-dojo-type="dijit/form/TextBox" data-dojo-attach-point="firstNode"></input>'
+		+ '<input class="cell" data-dojo-type="dijit/form/TextBox" data-dojo-attach-point="lastNode"></input>'
+		+ '</div>';
+
+
+		require([
+			"dojo/_base/declare",
+			"dojo/when",
+			"dojo/dom",
+			"dojo/parser",
+			"dojo/promise/all",
+			"dojo/store/Memory",
+			"dijit/registry",
+			"dijit/_WidgetBase",
+			"dojox/mvc/at",
+			"dojox/mvc/EditStoreRefListController",
+			"dojox/mvc/WidgetList",
+			"dijit/form/TextBox",
+			"dojox/mvc/Group",
+			"dojo/domReady!"
+		], function(declare, when, ddom, parser, all, Memory, registry, _WidgetBase, at, EditStoreRefListController, WidgetList){
+
+        // Initial data
+		var data = {
+  			"identifier": "Serial",
+   			"items": [ 
+                    {
+                        "Serial"  : "A111",
+                        "First"   : "Anne",
+                        "Last"    : "Ackerman",
+                        "Email"   : "a.a@test.com"
+                    },
+                    {
+                        "Serial"  : "B111",
+                        "First"   : "Ben",
+                        "Last"    : "Beckham",
+                        "Email"   : "b.b@test.com"
+                    },
+                    {
+                        "Serial"  : "I111",
+                        "First"   : "Irene",
+                        "Last"    : "Ira",
+                        "Email"   : "i.i@test.com"
+                    },
+                    {
+                        "Serial"  : "J111",
+                        "First"   : "John",
+                        "Last"    : "Jacklin",
+                        "Email"   : "j.j@test.com"
+                    }
+                ]
+			};
+
+			ctrl = new EditStoreRefListController({store: new Memory({data: data})});
+
+			// Programatic WidgetList using childBindings and a templateString using attach-points
+			(new WidgetList({templateString: templateString2, 
+							children: at(ctrl, "model"),
+							childBindings: {
+								firstNode: {value: at("rel:", "First")},
+								lastNode: {value: at("rel:", "Last")}
+							}},
+							ddom.byId("programmaticRepeat1"))).startup();
+							
+			// Programatic WidgetList using childParams and startup function to setup bindings with templateString using attach-points
+			(new WidgetList({templateString: templateString2, 
+							children: at(ctrl, "model"),
+							childParams: {
+								startup: function(){
+									this.firstNode.set("value", at("rel:", "First"));
+									this.lastNode.set("value", at("rel:", "Last"));
+									this.inherited("startup", arguments);
+							}}},
+							ddom.byId("programmaticRepeat2"))).startup();
+							
+			when(all([parser.parse(), ctrl.queryStore()]), function(a){
+				console.log("parser.parse and queryStore are complete ctrl.model is set to from the query",a[1]);
+			});
+
+        });
+
+/* END .. js :: */
+
+        </script>
+</head>
+<body class="claro">
+
+<!--  BEGIN .. html :: THINGS IN HERE START TWO TABS IN -->	
+		<div id="main">
+        	<h4>Programatic WidgetList using childBindings to setup the bindings with a templateString using attach-points: </h4>
+        	<div id="programmaticRepeat1"></div>
+        	<h4>Programatic WidgetList using childParams and startup function to setup bindings with templateString using attach-points: </h4>
+        	<div id="programmaticRepeat2"></div>
+			<p>In the above example, the TextBoxes inside the WidgetList are bound to the same model, so updates in one list will be reflected in the other.        
+		</div>
+
+<!--  END .. html :: THINGS IN HERE START TWO TABS IN -->	
+</body>
+</html>

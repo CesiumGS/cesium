@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Editor StyleSheet Test</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true"></script>
+
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dijit.dijit");
+		dojo.require("dijit.Editor");
+		dojo.require("dojo.parser");
+		
+		dojo.ready(function(){
+
+			var editor;
+
+			doh.register("setup", [
+				function parse(){
+					dojo.parser.parse();
+					editor = dijit.byId("editor");
+				},
+				{
+					name: "wait for load",
+					timeout: 5000,
+					runTest: function(){
+						// Editor.onLoadDeferred doesn't seem good enough, editor.window is still unset
+						// after it fires
+						var d = new doh.Deferred();
+						console.log("initially, editor.window is", editor.window);
+						editor.onLoadDeferred.then(function(){
+							var handle = setInterval(function(){
+								if(editor.window){
+									clearInterval(handle);
+									d.callback(true);
+								}
+							}, 50);
+						});
+						return d;
+					}
+				}
+			]);
+
+			doh.register("stylesheets", [
+				{
+					name: "add sheet",
+					runTest: function(){
+						editor.addStyleSheet('test_editor.css');
+
+						// Wait for stylesheet to take effect and then check if <h1> has border.
+						// Not checking background color because it could be "red" or #FF0000 or rgb(...
+						var d = new doh.Deferred();
+						setTimeout(d.getTestCallback(function(){
+							var h1styles = dojo.query("h1", editor.window.document).style("borderTopStyle");
+							doh.is(1, h1styles.length, "found h1");
+							doh.is("solid", h1styles[0], "h1 border");
+						}), 250);
+						return d;
+					}
+				},
+				{
+					name: "remove sheet",
+					runTest: function(){
+						editor.removeStyleSheet('test_editor.css');
+
+						var h1styles = dojo.query("h1", editor.window.document).style("borderTopWidth");
+
+						// Wait for stylesheet removal to take effect and then check if <h1> has border.
+						// Not checking background color because it could be "red" or #FF0000 or rgb(...
+						// Not checking border-width because on IE it's 4px, but border-style is none
+						// (which means that there's really no border).
+						var d = new doh.Deferred();
+						setTimeout(d.getTestCallback(function(){
+							var h1styles = dojo.query("h1", editor.window.document).style("borderTopStyle");
+							doh.is(1, h1styles.length, "found h1");
+							doh.is("none", h1styles[0], "h1 border style");
+						}), 250);
+						return d;
+					}
+				}
+			]);
+
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro">
+<p>Turning on the stylesheet should make header red</p>
+<div id="editor" data-dojo-type="dijit/Editor" data-dojo-props='name:"field"'>
+	<h1>Adding stylesheet should make my background red</h1>
+	<h2>I shouldn't change</h2>
+</div>
+<button id="addStyleSheet" onclick="dijit.byId('editor').addStyleSheet('test_editor.css');">add stylesheet</button>
+<button id="removeStyleSheet" onclick="dijit.byId('editor').removeStyleSheet('test_editor.css');">remove stylesheet</button>
+
+</body>
+</html>

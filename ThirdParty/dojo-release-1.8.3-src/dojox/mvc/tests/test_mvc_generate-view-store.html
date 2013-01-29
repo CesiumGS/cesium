@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>View generation -- Model-bound generation example with a store, commit and reset</title>
+		<script>
+			require = {
+				isDebug: 1,
+				parseOnLoad: 0,
+				async: 1, 
+				mvc: {debugBindings: 1}
+			};
+		</script>
+		<script src="../../../dojo/dojo.js" type="text/javascript"></script>
+		<style type="text/css">
+			@import "css/app-format.css";
+			@import "../../../dijit/themes/claro/claro.css";			
+		</style>
+		<script type="text/javascript">
+			require([
+				"dojo/parser",
+				"dojo/store/JsonRest",
+				"dojox/mvc/EditStoreRefController",
+				"dijit/form/Button",
+				"dijit/form/TextArea",
+				"dojox/mvc/Generate"
+			], function(parser, JsonRest, EditStoreRefController){
+				ctrl = new EditStoreRefController({store: new JsonRest({target: require.toUrl("dojox/mvc/tests/regression/_data/mvcGenerateData.json")})});
+				parser.parse();
+				ctrl.queryStore({});
+				console.log("test",ctrl);
+			});
+		</script>
+	</head>
+	<body class="claro">
+		<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<div id="wrapper">
+		<div id="header">
+			<div id="navigation"></div>
+			<div id="headerInsert">
+				<h1>View generation example</h1>
+				<h2>Data Binding - Generate Container, with a store, commit and reset.</h2>
+			</div>
+		</div>
+		<div id="main">
+			<div id="leftNav"></div>
+			<div id="mainContent">
+				<h3>Generated View</h3>
+				<div data-dojo-type="dojox.mvc.Generate" data-dojo-props="children: at(ctrl, 'items')"></div>
+				<div class="row">
+					<div class="spacer"></div>
+					<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){ ctrl.commit(); }">Commit</button>
+					<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){ ctrl.reset(); }">Reset</button>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

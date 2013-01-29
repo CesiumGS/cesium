@@ -1,0 +1,135 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Test Selector plugin of dojox.grid.EnhancedGrid</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<link rel=stylesheet href="support/common.css"/>
+	<style type="text/css">
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+			padding: 0.5em;
+		}
+		.title {
+			text-align:center;
+			margin:1em;
+		}
+ 		#grid{
+ 			width: 100em;
+			height: 40em;
+		}
+		.selectReport {
+			margin: 10px;
+			display: inline-block;
+		}
+		/*Sample - overwrite default cell style
+		.claro .dojoxGridCell{
+			border-color: transparent #D5CDB5 #D5CDB5 transparent !important;
+		}
+		.dj_ie6 .claro .dojoxGridCell{
+			border: 1px solid #F1F1F1 !important;
+		}*/
+	</style>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+	<script type="text/javascript" src="../../../../dijit/tests/_testCommon.js"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojox.grid.EnhancedGrid");
+		dojo.require("dojox.grid.enhanced.plugins.Selector");
+		dojo.require("dojox.grid.enhanced.plugins.IndirectSelection");
+		
+		var layout = [{
+			cells: [
+				{ field: "id", name:"Identity", datatype:"number", width: 4, editable: false},
+				{ field: "Genre", name:"Genre", datatype:"string", width: 10},
+				{ field: "Artist", name:"Artist", datatype:"string", width: 10},
+				{ field: "Year", name:"Year", datatype:"string", width: 2.5},
+				{ field: "Album", name:"Album", datatype:"string", width: 10},
+				{ field: "Name", name:"Name", datatype:"string", width: 8},
+				{ field: "Length", name:"Length", datatype:"string", width: 4},
+				{ field: "Track", name:"Track", datatype:"number", width: 3},
+				{ field: "Composer", name:"Composer", datatype:"string", width: 12},
+				{ field: "Download Date", name:"Download Date", datatype:"date", width: 12},
+				{ field: "Last Played", name:"Last Played", datatype:"time", width: 6},
+				{ field: "Heard", name: "Checked", datatype:"boolean", width: 6}
+			]
+		}];
+		var plugins = {
+			selector: {
+				//col: false,
+				//row: false,
+				//cell: false
+			}
+		}
+		dojo.addOnLoad(function(){
+			var grid = dijit.byId("grid");
+			func = function(type, start, end, selected){
+				fill("col", selected["col"]);
+				fill("row", selected["row"]);
+				fill("cell", selected["cell"]);
+			},
+			fill = function(type, selected){
+				var getString;
+				var cells = grid.layout.cells;
+				switch(type){
+					case "col":
+						getString = function(item){
+							return "Column " + item.col + ": " + dojo.toJson(item.except);
+						}
+						break;
+					case "row":
+						getString = function(item){
+							return "Row " + item.row + ": " + dojo.toJson(item.except);
+						}
+						break;
+					case "cell":
+						getString = function(item){
+							return "Cell " + item.row + " , " + item.col;
+						}
+				}
+				dojo.attr(dojo.byId(type + "s"), "value", dojo.map(selected, function(item){
+					return getString(item);
+				}).join('\n'));
+				dojo.attr(dojo.byId(type + "Cnt"), "value", selected.length);
+			};
+			dojo.connect(grid, "onEndSelect", func);
+			dojo.connect(grid, "onEndDeselect", func);
+		});
+	</script>
+	<script type="text/javascript" src="support/test_write_store_music.js"></script>
+</head>
+<body class="claro">
+	<h1 class="title" tabindex="0"
+		onfocus="console.log('focus a'),this.style.color='red';"
+		onblur="console.log('blur a'),this.style.color='black';">
+		dojox.grid.EnhancedGrid - Selector</h1>
+	<div id="gridContainer">
+		<div id="grid" dojoType="dojox.grid.EnhancedGrid" store="test_store[0]" structure="layout" plugins="plugins"
+			rowSelector="20px"
+		></div>
+	</div><br/>
+	<div>
+		<div class="selectReport">
+			<h2>Selected Cells:&nbsp;&nbsp;&nbsp;
+			Count: <input type="text" id="cellCnt" value="0"/>
+			</h2>
+			<textarea id="cells" rows="10" cols="40"></textarea>
+		</div>
+		<div class="selectReport">
+			<h2>Selected Columns:&nbsp;&nbsp;&nbsp;
+			Count: <input type="text" id="colCnt" value="0"/>
+			</h2>
+			<textarea id="cols" rows="10" cols="40"></textarea>	
+		</div>
+		<div class="selectReport">
+			<h2>Selected Rows:&nbsp;&nbsp;&nbsp;
+			Count: <input type="text" id="rowCnt" value="0"/>
+			</h2>
+			<textarea id="rows" rows="10" cols="40"></textarea>	
+		</div>
+	</div>
+	<p style="float: left;"><strong>Note:</strong> To see the tundra theme, just append <b style="color:blue;">?theme=tundra</b> to the URL.</p>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">	
+		<title>DOH markup containers simple inheritance</title>
+
+		<style type="text/css">
+			@import "../../../../dijit/themes/tundra/tundra.css";
+			@import "../../../../dojo/resources/dojo.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			data-dojo-config="isDebug: true">
+		</script>		
+		
+		<script type="text/javascript">
+			dojo.require("dijit._BidiSupport");
+			dojo.require("dijit.form.TextBox");
+			dojo.require("dijit.form.ComboBox");
+			dojo.require("dijit.layout.AccordionContainer");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("dijit.layout.BorderContainer");
+			dojo.require("dijit.layout.TabContainer");
+			dojo.require("dijit.form.FilteringSelect");
+			dojo.require("dijit.form.Textarea");
+			dojo.require("doh.runner");
+
+			dojo.ready(function(){
+
+				doh.register("parse", function(){
+					dojo.parser.parse();
+				});
+			
+				doh.register("dijit.tests._BidiSupport.inheritance.Inher-MarkupContainers", [
+					function test_ltrFilterSelectInheritAccordion(){
+						dijit.byId("filter1").set("value","1");
+						doh.is("ltr", dijit.byId("filter1").focusNode.dir, "option 1 of filter1"); 
+					},
+					function test_rtlFilterSelectInheritAccordion(){
+						dijit.byId("filter1").set("value","2"); 
+						doh.is("rtl", dijit.byId("filter1").focusNode.dir, "option 2 of filter1"); 
+					},
+					function test_ltrTextareaInheritPane1(){
+						dijit.byId("ltrTextBox1").set("value","Hello!!"); 
+						doh.is("ltr", dijit.byId("ltrTextBox1").focusNode.dir,"ltrTextBox1 : Hello!!"); 
+					},
+					function test_ltrTextareaInheritPane2(){
+						dijit.byId("ltrTextBox1").set("value","\u05e9\u05dc\u05d5\u05dd\u0021\u0021"); 
+						doh.is("ltr", dijit.byId("ltrTextBox1").focusNode.dir,"ltrTextBox1: \u05e9\u05dc\u05d5\u05dd\u0021\u0021"); 
+					},
+					function test_autoComboBoxInheritTableLtr(){
+						dijit.byId("autoTextBox1").set("value","Hello!!"); 
+						doh.is("ltr", dijit.byId("autoTextBox1").focusNode.dir,"autoTextBox1: Hello!!"); 
+					},
+					function test_autoComboBoxInheritTableRtl(){
+						dijit.byId("autoTextBox1").set("value","\u05e9\u05dc\u05d5\u05dd\u0021\u0021"); 
+						doh.is("rtl", dijit.byId("autoTextBox1").focusNode.dir,"autoTextBox1: \u05e9\u05dc\u05d5\u05dd\u0021\u0021"); 
+					},
+					function test_rtlTextareaInheritPane1(){
+						dijit.byId("rtlTextBox1").set("value","\u05e9\u05dc\u05d5\u05dd\u0021\u0021"); 
+						doh.is("rtl", dijit.byId("rtlTextBox1").focusNode.dir,"rtlTextBox1: \u05e9\u05dc\u05d5\u05dd\u0021\u0021"); 
+					},
+					function test_rtlTextareaInheritPane2(){
+						dijit.byId("rtlTextBox1").set("value","\u05e9\u05dc\u05d5\u05dd\u0021\u0021"); 
+						doh.is("rtl", dijit.byId("rtlTextBox1").focusNode.dir,"rtlTextBox1: \u05e9\u05dc\u05d5\u05dd\u0021\u0021"); 
+					},
+					function test_autoSimpleTextareaInheritPane1(){
+						doh.is("ltr", dijit.byId("ltrSimpleTexarea").focusNode.dir, "ltrSimpleTexarea: ltrSimpleTexarea"); 
+					},
+					function test_autoSimpleTextareaInheritPane2(){
+						doh.is("rtl", dijit.byId("autoSimpleTexarea").focusNode.dir, "autoSimpleTexarea: autoSimpleTexarea"); 
+					},
+					function test_RtrSimpleTexBoxInheritTabContainer(){
+						doh.is("rtl", dijit.byId("rtlSimpleTexarea").focusNode.dir, "rtlSimpleTexarea"); 
+						dijit.byId("rtlSimpleTexarea").set("value","Hello!!");
+						doh.is("rtl", dijit.byId("rtlSimpleTexarea").focusNode.dir,"rtlSimpleTexarea: Hello!!"); 
+					},
+					function test_autoSimpleTexBoxInheritTabContainersPaneRtl(){
+						doh.is("rtl", dijit.byId("ltrTexarea").focusNode.dir, "ltrTexarea"); 
+					},
+					function test_autoSimpleTexBoxInheritTabContainersPaneRtl(){
+						doh.is("ltr", dijit.byId("trTexarea").focusNode.dir, "trTexarea"); 
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+	<body class="tundra" data-dojo-textdir="rtl" >
+		<div id="markupAccordion" data-dojo-type="dijit/layout/AccordionContainer" data-dojo-props='style:"width:400px; height:300px;", textDir :"auto"' data-dojo-textdir="auto">
+			
+			<div data-dojo-type="dijit/layout/BorderContainer" id="borderContainerPane" data-dojo-props=' textDir:"rtl",title:"BorderContainer Pane"' data-dojo-textdir="rtl">
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"left", style:"width:100px", splitter:true, textDir:"ltr"'>
+					<input id="ltrTextBox1" data-dojo-type="dijit/form/TextBox" data-dojo-props='name:"ltrTextBox1", type:"text", value:""'/>
+				</div>
+			
+				<div data-dojo-type="dijit/layout/ContentPane"data-dojo-props='region:"center"' data-dojo-textdir="auto" >
+					<input id="autoTextBox1" data-dojo-type="dijit/form/TextBox" data-dojo-props='type:"text", name:"autoTextBox1", value:""'/>
+				</div>
+			
+				<input id="rtlTextBox1" data-dojo-type="dijit/form/TextBox" data-dojo-props='type:"text", name:"rtlTextBox1", value:""'/>
+			</div>
+		
+
+			<div id="pane1" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='selected:"true", title:"A Simple Pane"'>
+				<select data-dojo-type="dijit/form/FilteringSelect" id="filter1">
+					<option value="1" selected>foo.</option>
+					<option value="2">&#1489;&#1512;.</option>
+					<option value="3">baz.</option>
+				</select>
+			</div>
+
+			<div data-dojo-type="dijit/layout/ContentPane" id="embeddedLayoutPane" data-dojo-props='title:"Tags & panes with TextBoxesAreas"'>
+				<p>
+					Here's a BorderContainer: textDir= contextual
+				</p>
+				<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props='style:"height:200px; width:300px", textDir :"auto"' data-dojo-textdir="auto">
+					<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"left", style:"width:125px", splitter:"true"'>
+						Left Pane:
+						<textarea id="ltrSimpleTexarea" data-dojo-type="dijit/form/SimpleTextarea" data-dojo-props='name:"ltrSimpleTexarea", rows:"8", cols:"13"
+							'> Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt.
+						</textarea>
+					</div>
+					<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"center"'>
+						Right Pane:
+						<textarea id="autoSimpleTexarea" data-dojo-type="dijit/form/SimpleTextarea" data-dojo-props='name:"autoSimpleTexarea", rows:"8", cols:"13"
+							'> &#1500;&#1493;&#1512;&#1501; &#1488;&#1497;&#1508;&#1505;&#1493;&#1501; &#1491;&#1493;&#1500;&#1493;&#1512; &#1505;&#1497;&#1496; &#1488;&#1502;&#1496;, &#1511;&#1493;&#1504;&#1505;&#1511;&#1496;&#1493;&#1512;&#1512; &#1488;&#1491;&#1497;&#1508;&#1497;&#1505;&#1497;&#1504;&#1490; &#1488;&#1500;&#1497;&#1514; &#1502;&#1493;&#1505;&#1503; &#1502;&#1504;&#1514;.
+						</textarea>
+					</div>
+				</div>
+				<p>
+					And a TabContainer:
+				</p>
+				<div data-dojo-type="dijit/layout/TabContainer" data-dojo-props='style:"height:200px; width:300px", textDir:"rtl"' data-dojo-textdir="rtl">
+					<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Tab 1 textDir=rtl" ' >
+						<textarea id="rtlSimpleTexarea" data-dojo-type="dijit/form/SimpleTextarea" data-dojo-props='name:"rtlSimpleTexarea", rows:"4", cols:"15"
+							'>&#1500;&#1493;&#1512;&#1501; &#1488;&#1497;&#1508;&#1505;&#1493;&#1501;.
+						</textarea>
+					</div>
+					<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Tab 2 textDir=inherited"' data-dojo-textdir="auto">
+						<textarea id="ltrTexarea" data-dojo-type="dijit/form/Textarea" data-dojo-props='name:"ltrTexarea", rows:"4", cols:"14"
+							'>&#1502;&#1489;&#1495;&#1503;.
+						</textarea>
+						<textarea id="trTexarea" data-dojo-type="dijit/form/Textarea" data-dojo-props='name:"trTexarea", rows:"4", cols:"14"
+							'>Test.
+						</textarea>
+					</div>
+				</div>
+				<p>
+					Text after the widgets.
+				</p>
+			</div>
+		</div>
+	</body>
+</html>

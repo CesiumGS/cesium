@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Test lifecycle</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="isDebug: true, packageMap:[{name:'doh',location:'util/doh'}]"></script>
+		<script type="text/javascript">
+			require([
+			"doh/runner",
+			"dojo/ready",
+			"dojox/gfx",
+			"dojox/gfx/shape",
+			"dojox/gfx/svg"], 
+			function(doh, ready, gfx, gfxshape, svg){
+				
+				ready(function(){
+					var drawing, r,
+						checkSurface = function(){
+							if(!drawing){
+								var dn = dojo.byId("gfxObject");
+								drawing = gfx.createSurface(dn, 300, 300);
+							}
+						};
+					
+					doh.register("GFX: shape lifecycle", [
+						{
+							name: "Shape.destroy",
+							timeout: 1000,
+							setUp: function(){
+								checkSurface();
+								r = drawing.createRect({ 
+									 x: 100,
+									 y: 100
+								}).setFill("black");
+							},
+							runTest: function(){
+								var uid = r.getUID();
+								r.removeShape();
+								r.destroy();
+								doh.assertTrue(!dojox.gfx.shape.byId(uid), "Unexpected shape.byId return value.");
+							},
+							tearDown: function(){
+								drawing.clear();
+							}
+						},{
+							name: "Group.clear",
+							timeout: 1000,
+							setUp: function(){
+								checkSurface();
+								r = drawing.createGroup();
+								r.createRect({ 
+										 x: 100,
+										 y: 100
+									}).setFill("black");
+							},
+							runTest: function(){
+								var c = r.children[0];
+								r.clear(true);
+								doh.assertTrue(r.children.length == 0, "Unexpected children length on disposed group.");
+								doh.assertTrue(!dojox.gfx.shape.byId(c.getUID()), "Unexpected shape.byId return value.");
+							}
+						},{
+							name: "Group.destroy",
+							timeout: 1000,
+							setUp: function(){
+								checkSurface();
+								r = drawing.createGroup();
+								r.createRect({ 
+										 x: 100,
+										 y: 100
+									}).setFill("black");
+							},
+							runTest: function(){
+								var uid = r.getUID();
+								var c = r.children[0];
+								r.removeShape();
+								r.destroy();
+								doh.assertTrue(!dojox.gfx.shape.byId(uid), "Unexpected shape.byId return value.");
+								doh.assertTrue(r.children.length == 0, "Unexpected children length on disposed group.");
+								doh.assertTrue(!dojox.gfx.shape.byId(r.getUID()), "Unexpected shape.byId return value.");
+								
+								r = drawing.createGroup();
+								var t2 = r.createGroup();
+								c = t2.createRect();
+								r.removeShape();
+								r.destroy();
+								doh.assertTrue(!dojox.gfx.shape.byId(r.getUID()), "Unexpected shape.byId return value.");
+								doh.assertTrue(r.children.length == 0, "Unexpected children length on disposed group.");
+								doh.assertTrue(!dojox.gfx.shape.byId(t2.getUID()), "Unexpected shape.byId return value.");
+								doh.assertTrue(t2.children.length == 0, "Unexpected children length on disposed group.");
+								doh.assertTrue(!dojox.gfx.shape.byId(c.getUID()), "Unexpected shape.byId return value.");
+							}
+						},{
+							name: "SVG-specific : shape clean-up",
+							timeout: 1000,
+							setUp: function(){
+								if(drawing){
+									drawing.destroy();
+									drawing = null;
+								}
+								gfx.switchTo(svg);
+								checkSurface();
+								var grad = {
+									type: "linear",
+									x1: 0, y1: 0,
+									x2: 600, y2: 0,
+									colors: [
+										{ offset: 0.2, color: "red" },
+										{ offset: 0.8, color: "yellow" }
+									]
+								};
+								r = drawing.createRect().setFill(grad).setClip({x:0,y:0,width:300,height:300});
+							},
+							runTest: function(){								
+								var defs = drawing.defNode;
+								doh.assertTrue(defs.childNodes.length == 1, "Unexpected defs children count.");
+								var c = drawing.children[0];
+								c.removeShape();
+								c.destroy();
+								doh.assertTrue(defs.childNodes.length == 0, "Unexpected defs children count. Expected: 0.");
+								doh.assertTrue(drawing.rawNode.childNodes.length == 1 && drawing.rawNode.childNodes[0] == defs, "Unexpected surface children nodes.");
+							}
+						},{
+							name: "SVG-specific : Group clean-up",
+							timeout: 1000,
+							setUp: function(){
+								if(drawing){
+									drawing.destroy();
+									drawing = null;
+								}
+								gfx.switchTo(svg);
+								checkSurface();
+								var grad = {
+									type: "linear",
+									x1: 0, y1: 0,
+									x2: 600, y2: 0,
+									colors: [
+										{ offset: 0.2, color: "red" },
+										{ offset: 0.8, color: "yellow" }
+									]
+								};
+								var sub1 = drawing.createGroup();
+								for(var i=0; i<100; ++i){
+									var r = Math.floor(i/10), offs=4,
+										cc = r%2 == 0 ? -offs : offs,
+										x = (i%10)*60+cc, y = r*60+5, w = 50, h = 50;
+									sub1.createRect({x:x, y:y, width:w, height:h}).setFill(grad).setClip({cx:x+w/2, cy:y+w/2, rx:20, ry:20});
+								}
+							},
+							runTest: function(){								
+								var defs = drawing.defNode;
+								doh.assertTrue(defs.childNodes.length == 100, "Unexpected defs children count.");
+								var g = drawing.children[0];
+								g.clear(true);
+								doh.assertTrue(defs.childNodes.length == 0, "Unexpected defs children count. Expected: 0.");
+								doh.assertTrue(g.rawNode.firstChild == null, "Unexpected group children count. Expected: 0.");
+							}
+						}
+					]);
+				doh.run();
+			});
+		});
+		</script>
+	</head>
+	<body>
+		<div id="gfxObject" style="width: 500px; height: 500px;font-weight:bold;"></div>
+	</body>
+</html>

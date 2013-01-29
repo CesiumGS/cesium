@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Editor IE9 in IE8 Compat Mode Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.DeferredList");
+			dojo.require("dojo.window");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../Editor_IE8Compat.html');
+
+				var editor1;
+
+				doh.register("setup", [
+					{
+						name: "wait for editors to load",
+						timeout: 5000,
+						runTest: waitForLoad
+					},
+					function setUp(){
+						dojo.global.require(["dijit/registry"], function(registry){
+							editor1 = registry.byId("editor1");
+						});
+					}
+				]);
+
+				doh.register("general", [
+					{
+						name: "general",
+						timeout: 15000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							dojo.window.scrollIntoView(editor1.domNode);
+
+							// Set contents of editor1
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor1.focus();
+							}), 500);
+							doh.robot.typeKeys("hello", 500, 750);
+							doh.robot.keyPress(dojo.keys.ENTER, 500);
+							doh.robot.typeKeys("world", 500, 1650);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var val = editor1.get('value').replace(/ +/g, "").toLowerCase();
+								doh.is("hello<br/>world", val);
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+
+
+		</script>
+	</head>
+</html>

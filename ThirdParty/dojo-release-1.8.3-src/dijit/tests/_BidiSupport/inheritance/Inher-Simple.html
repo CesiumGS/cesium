@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">	
+		<title>DOH simple inheritance textDir Tests</title>
+
+		<style type="text/css">
+			@import "../../../../dijit/themes/tundra/tundra.css";
+			@import "../../../../dojo/resources/dojo.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			data-dojo-config="isDebug: true">
+		</script>		
+		
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("doh.runner");
+			dojo.require("dijit._BidiSupport");
+			dojo.require("dijit.form.TextBox");
+			dojo.require("dijit.form.ComboBox");
+
+			dojo.ready(function(){
+
+				doh.register("parse", function(){
+					dojo.parser.parse();
+				});
+				
+				doh.register("dijit.tests._BidiSupport.inheritance.Inher-Simple", [
+				 
+					function test_ltrTextBoxInheritFromDiv(){
+						doh.is("ltr", dijit.byId("ltrTextBox").focusNode.dir,"ltrTextBox"); 
+					},
+					function test_rtlTextBoxInheritBody(){
+						doh.is("rtl", dijit.byId("rtlTextBox").focusNode.dir, "rtlTextBox"); 
+					},
+					function test_ltrComboBoxInheritTable(){
+						doh.is("ltr", dijit.byId("fruitLtr").focusNode.dir, "fruitLtr"); 
+					},
+					function test_rtlComboBoxInheritTable(){
+						doh.is("rtl", dijit.byId("fruitRtl").focusNode.dir, "fruitRtl"); 
+					},
+					function test_autoComboBoxInheritTableLtr(){
+						dijit.byId("autoTextBox").set("value","Hello!!");
+						doh.is("ltr", dijit.byId("autoTextBox").focusNode.dir, "autoTextBox: Hello!!"); 
+					},
+					function test_autoComboBoxInheritTableRtl(){
+						dijit.byId("autoTextBox").set("value","\u05e9\u05dc\u05d5\u05dd\u0021\u0021");
+						doh.is("rtl", dijit.byId("autoTextBox").focusNode.dir, "autoTextBox: \u05e9\u05dc\u05d5\u05dd\u0021\u0021"); 
+					}
+				]);
+				
+				doh.run();
+			});
+		</script>
+	</head>
+	<body class="tundra" data-dojo-textdir="rtl">
+		<table data-dojo-textdir="auto">
+			<tr>
+				<td>
+					<div data-dojo-textdir="ltr">
+						<label for="ltrTextBox" >
+							<b>I'm a LTR TexBox </b>
+						</label>
+						<input data-dojo-type="dijit/form/TextBox" id="ltrTextBox" data-dojo-props='name:"ltrTextBox", value:"", type:"text"'/>
+					</div>
+				</td>
+			</tr>		
+			<tr>
+				<td>
+					<label for="autoTextBox" >
+						<b>I'm a Auto TexBox </b>
+					</label>
+					<input data-dojo-type="dijit/form/TextBox" id="autoTextBox" data-dojo-props='name:"autoTextBox", value:"",type:"text"'/>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<select id="fruitLtr" data-dojo-type="dijit/form/ComboBox" data-dojo-props='name:"fruitLtr"'>
+						<option >Apples!</option>
+						<option >Oranges!</option>
+						<option selected>Pears!</option>
+					</select>
+				</td>
+			</tr>		
+			<tr>
+				<td>
+					<select id="fruitRtl" data-dojo-type="dijit/form/ComboBox" data-dojo-props='name:"fruitRtr"'>
+						<option >&#1514;&#1508;&#1493;&#1495;&#1497;&#1501;.</option>
+						<option >&#1488;&#1490;&#1505;&#1497;&#1501;.</option>
+						<option selected>&#1488;&#1508;&#1512;&#1505;&#1511;&#1497;&#1501;.</option>
+					</select>
+				</td>
+			</tr>
+		</table>
+		
+		<label for="rtlTextBox" >
+			<b>I'm a RTL TexBox </b>
+		</label>
+		<input data-dojo-type="dijit/form/TextBox" id="rtlTextBox" data-dojo-props='name:"rtlTextBox", value:"", type:"text"'/>
+	</body>
+</html>

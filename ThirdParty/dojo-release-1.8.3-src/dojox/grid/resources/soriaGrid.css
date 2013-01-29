@@ -1,0 +1,249 @@
+@import url("Grid.css");
+
+.soria .dojoxGrid {
+	background-color: #e9e9e9;
+	font-size: 0.85em; /* inherit font-family from dojo.css */
+}
+
+/* master messages */
+
+.soria .dojoxGridMasterMessages {
+	background-color: #fefefe;
+}
+
+/* header */
+
+.soria .dojoxGridHeader {
+	background-color:  #e9e9e9;
+}
+
+.soria .dojoxGridHeader .dojoxGridCell { 
+	border-width: 1px;
+	padding-bottom: 0px;
+	border-color: transparent #ACA899 #919191 transparent;
+	background: url(../../../dijit/themes/soria/images/titleBar.png) #e9e9e9 repeat-x top;
+	color: #000 !important;
+}
+
+.soria .dojoxGridHeader .dojoxGridCellOver {
+	background: url(../../../dijit/themes/soria/images/titleBarActive.png) #e9e9e9 repeat-x top;
+}
+
+.soria .dojoxGridHeader .dojoxGridCellFocus {
+	border-color: #ACA899 #919191;
+	border-style: dashed;	
+}
+
+.soria .dojoxGridArrowButtonChar {
+	float: right;
+	display: none;
+}
+.soria .dojoxGridArrowButtonNode {
+	display: block !important;
+	padding-left: 0px;
+	float: right;
+	background:url("../../../dijit/themes/soria/images/spriteArrows.png") no-repeat left center;
+	margin-top: 2px;
+	width: 11px;
+	height: 1em;
+}
+.dj_ie6 .soria .dojoxGridArrowButtonNode {
+	background-image:url("../../../dijit/themes/soria/images/spriteArrows.gif");
+	margin-left: 0px;
+}
+
+.soria .dojoxGridSortUp .dojoxGridArrowButtonNode {
+	background-position: -21px;
+}
+.dijit_a11y .soria .dojoxGridArrowButtonNode {
+	display: none !important;
+}
+
+/* content */
+
+.soria .dojoxGridScrollbox {
+	background-color: #fefefe;
+}
+
+/* rowbar */
+
+.soria .dojoxGridRowbar { 
+	border: none;
+	background: url(../../../dijit/themes/soria/images/titleBar.png) #e9e9e9 repeat-y right;
+	border-right: 1px solid #ccc;
+	padding: 0px;
+}
+
+.soria .dojoxGridRowbarInner {
+	border: none;
+	border-bottom: 1px solid #ccc;
+}
+
+.soria .dojoxGridRowbarOver {
+	background: url(../../../dijit/themes/soria/images/titleBarActive.png) #e9e9e9 repeat-y right;
+}
+
+.soria .dojoxGridRowbarSelected {
+	background: url(../../../dijit/themes/soria/images/titleBar.png) #D9E8F9 no-repeat center;
+	border-right: 1px solid #ccc;
+}
+
+/* rows */
+
+.soria .dojoxGridRow {
+	border: none;
+	background-color: white;
+}
+
+.soria .dojoxGridRowOver {
+	border-top-color: #ccc;
+	border-bottom-color: #ccc;
+}
+
+.soria .dojoxGridRowOver .dojoxGridCell {
+	background-color: #60a1ea; 
+	color:#fff;
+}
+
+.soria .dojoxGridRowOver .dojoxGridCell .dijit {
+	color: #000;
+}
+
+.soria .dojoxGridRowOver .dojoxGridCell .dijitDisabled {
+	color: gray;
+}
+
+.soria .dojoxGridRowOdd {
+	background-color: #f2f5f9;
+}
+
+.soria .dojoxGridRowSelected {
+	background-color: #aec7e3;
+}
+
+.dijit_a11y .soria .dojoxGridRowSelected { 
+    background-color: #aec7e3;     
+    border-style: solid;     
+}   
+
+/* cells */
+
+.soria .dojoxGridCell {
+	border: 1px dotted #D5CDB5;
+	border-left-color: transparent;
+	border-top-color: transparent;
+}
+
+.dj_ff2 .soria .dojoxGridCell {
+	border-left-width: 0px;
+	border-top-width: 0px;
+}
+
+.dj_ie6 .soria .dojoxGridCell {
+	border: 1px solid white;
+	border-right: 1px solid #D5CDB5;
+}
+
+.soria .dojoxGridCellFocus {
+	border: 1px dashed darkblue;
+}
+
+.soria .dojoxGridCellOver {
+	border: 1px dotted #a6a6a6;
+}
+
+.soria .dojoxGridCellFocus.dojoxGridCellOver {
+	border: 1px dashed darkblue;
+}
+
+/* editing */
+
+/* FIXME: these colors are off! */
+.soria .dojoxGridRowEditing td {
+	/* background-color: #F4FFF4; */
+	background-color: #60a1ea; 
+	/* padding: 0px 3px 0px 3px; */
+}
+
+.soria .dojoxGridRow-inserting td {
+	background-color: #F4FFF4;
+}
+.soria .dojoxGridRow-inflight td {
+	background-color: #F2F7B7;
+}
+.soria .dojoxGridRow-error td {
+	background-color: #F8B8B6;
+}
+
+/* Drag and Drop */
+
+.soria .dojoxGrid .dojoDndItemBefore {
+	border-left-color: #4B5AAA;
+}
+.soria .dojoxGrid .dojoDndItemAfter {
+	border-right-color: #4B5AAA;
+}
+
+/* Tree Grid */
+.soria .dojoxGridExpando {
+	float: left;
+	height: 18px;
+	width: 18px;
+	text-align: center;
+	margin-top: -3px;
+}
+.dijitRtl .soria .dojoxGridExpando {
+	float: right;
+}
+.soria .dojoxGridExpandoCell {
+	padding-top: 5px;
+}
+.soria .dojoxGridExpandoNode {
+	height: 18px;
+	background-image: url('../../../dijit/themes/soria/images/spriteTree.gif');
+}
+.soria .dojoxGridExpandoOpened .dojoxGridExpandoNode {
+	background: url('../../../dijit/themes/soria/images/spriteTree.gif') no-repeat -18px top;
+}
+.soria .dojoxGridExpandoLoading .dojoxGridExpandoNode {
+	background: url('../../../dijit/themes/soria/images/treeExpand_loading.gif');	
+}
+.soria .dojoxGridTreeModel .dojoxGridNoChildren .dojoxGridExpando {
+	visibility: visible !important;
+	width: 18px !important;
+}
+.soria .dojoxGridTreeModel .dojoxGridNoChildren .dojoxGridExpandoNode {
+	background: url('../../../dijit/themes/soria/images/spriteTree.gif') no-repeat -36px top;
+}
+.soria .dojoxGridExpandoNodeInner {
+	visibility: hidden;
+}
+.dijit_a11y .dojoxGridExpandoNodeInner {
+	visibility: visible;
+}
+		
+.soria .dojoxGridSummaryRow .dojoxGridCell {
+	border-top-color: #999;
+	border-top-style: solid;
+}
+.soria .dojoxGridSpacerCell,
+.soria .dojoxGridExpandoCell,
+.soria .dojoxGridSummaryRow .dojoxGridSpacerCell {
+	border-color: transparent;
+	border-right-color: #D5CDB5;
+}
+.soria .dojoxGridSummaryRow .dojoxGridTotalCell,
+.soria .dojoxGridRowCollapsed .dojoxGridExpandoCell,
+.soria .dojoxGridTreeModel .dojoxGridExpandoCell {
+	border-bottom-color: #D5CDB5;
+}
+.soria .dojoxGridSubRowAlt {
+	background-color: #F8F8F8;
+}
+.soria .dojoxGridRowOdd .dojoxGridSubRowAlt {
+	background-color: #EDEFF3;
+}
+
+.soria .dojoxGridRowTable .dojoDndHorizontal th.dojoDndItem {
+	padding: 3px;
+}

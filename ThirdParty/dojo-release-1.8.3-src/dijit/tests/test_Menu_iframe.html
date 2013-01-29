@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Menu iframe test</title>
+	<style type="text/css">
+		@import "../themes/claro/claro.css";
+	</style>
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad:true, isDebug:true"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+
+		dojo.require("dijit.Menu");
+		dojo.require("dijit.MenuItem");
+
+		function setContents(str){
+			dojo.byId('iframe').src = "javascript:'" + str.replace("'", "\\'") + "'";
+		}
+		function button2(){
+			setContents('<div style="height: 300px; border: solid blue 2px">bill was here</div>');
+		}
+	</script>
+</head>
+<body class="claro">
+	<div id="menu" data-dojo-type="dijit/Menu" data-dojo-props='targetNodeIds:["iframe"], style:"display:none;"'>
+		<div data-dojo-type="dijit/MenuItem">context menu</div>
+	</div>
+	<div style="border: 1px solid gray; height: 150px;">filler div to offset iframe position (for testing)</div>
+	<div style="position: relative; border: 3px solid blue; padding: 10px;">
+		This is a position:relative div containing an iframe.
+		<iframe id="iframe"
+			src="javascript:'&lt;html&gt;&lt;body style=\'margin: 3em;\'&gt;&lt;div style=\'height:300px;border:1px solid red;\'&gt;right click for menu&lt;/div&gt;&lt;body&gt;&lt;/html&gt;'"
+			style="height: 200px; margin: 30px; padding: 20px; border: solid dotted 10px;" onload="console.log('iframe onload');">
+		</iframe>
+		End of div.
+	</div>
+	<br>
+	<button id="resetToDoc" onclick="dojo.byId('iframe').src='layout/doc0.html'">reset contents to doc0.html</button>
+	<button id="resetToBill" onclick="button2();">reset contents to 'bill was here'</button>
+	<button id="detachMenu" onclick="dijit.byId('menu').unBindDomNode('iframe')">detach menu</button>
+	<button id="reattachMenu" onclick="dijit.byId('menu').bindDomNode('iframe')">re-attach menu</button>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<html>
+<head>
+	<script>
+		function userConfigCallback(){
+			console.log("honored user config callback");
+			try{
+				require("dojo/AdapterRegistry");
+				console.log("honored user config");
+			}catch(e){
+				console.log("DID NOT honor user config");
+			}
+		}
+		var require = {
+			deps:["dojo/AdapterRegistry"],
+			callback:userConfigCallback
+		};
+	</script>
+
+	<script src="../../../dojo.js"></script>
+</head>
+<body>
+</body>
+</html>
