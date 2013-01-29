@@ -197,8 +197,6 @@ define([
 
         this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
-        this.childTileBits = 15;
-
         this.suspendUpsampling = false;
     };
 

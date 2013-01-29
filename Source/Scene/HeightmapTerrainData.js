@@ -88,7 +88,7 @@ define([
          * </table>
          * @type {Number}
          */
-        this.childTileMask = childTileMask;
+        this.childTileMask = defaultValue(childTileMask, 15);
 
         if (typeof structure === 'undefined') {
             structure = defaultStructure;
@@ -124,6 +124,32 @@ define([
      * @returns {HeightmapTerrainData} Upsampled heightmap terrain data for the descendant tile.
      */
     HeightmapTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
+    };
+
+    /**
+     * Determines if a given child tile is available, based on the
+     * {@link HeightmapTerrainData#childTileMask}.  The given child tile coordinates are assumed
+     * to be one of the four children of this tile.  If non-child tile coordinates are
+     * given, the availability of the southeast child tile is returned.
+     *
+     * @memberof HeightmapTerrainData
+     *
+     * @param {Number} thisX The tile X coordinate of this (the parent) tile.
+     * @param {Number} thisY The tile Y coordinate of this (the parent) tile.
+     * @param {Number} childX The tile X coordinate of the child tile to check for availability.
+     * @param {Number} childY The tile Y coordinate of the child tile to check for availability.
+     * @returns {Boolean} True if the child tile is available; otherwise, false.
+     */
+    HeightmapTerrainData.prototype.isChildAvailable = function(thisX, thisY, childX, childY) {
+        var bitNumber = 2; // northwest child
+        if (childX !== thisX * 2) {
+            ++bitNumber; // east child
+        }
+        if (childY !== thisY * 2) {
+            bitNumber -= 2; // south child
+        }
+
+        return (this.childTileMask & (1 << bitNumber)) !== 0;
     };
 
     return HeightmapTerrainData;

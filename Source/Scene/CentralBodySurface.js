@@ -635,10 +635,10 @@ define([
             }
 
             if (tile.state === TileState.LOADING) {
-                processTerrainLoad(surface, context, terrainProvider, tile);
+                processTerrainLoadStateMachine(surface, context, terrainProvider, tile);
 
                 if (!tile.suspendUpsampling) {
-                    processTerrainUpsample(surface, context, terrainProvider, tile);
+                    processTerrainUpsampleStateMachine(surface, context, terrainProvider, tile);
                 }
             }
 
@@ -747,6 +747,7 @@ define([
     }
 
     function prepareNewTile(surface, terrainProvider, tile) {
+        // Map imagery tiles to this terrain tile
         var imageryLayerCollection = surface._imageryLayerCollection;
         for (var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
@@ -770,62 +771,69 @@ define([
         tile.northNormal = ellipsoid.geodeticSurfaceNormal(tile.northwestCornerCartesian).cross(tile.northeastCornerCartesian.subtract(tile.northwestCornerCartesian, cartesian3Scratch)).normalize();
     }
 
-    function processTerrainLoad(surface, context, terrainProvider, tile) {
+    function isDataAvailable(tile) {
+        var parent = tile.parent;
+        if (typeof parent === 'undefined') {
+            // Data is assumed to be available for root tiles.
+            return true;
+        }
+
+        var parentLoadedTerrain = parent.loadedTerrain;
+        if (parentLoadedTerrain.state !== TerrainState.READY) {
+            // Parent tile is not yet loaded, so assume (for now) that this child tile is not available.
+            return false;
+        }
+
+        return parentLoadedTerrain.data.isChildAvailable(parent.x, parent.y, tile.x, tile.y);
+    }
+
+    function fillTileWithLoadedTerrain(tile, process, terrainData) {
+        process.data = terrainData;
+        process.state = TerrainState.RECEIVED;
+
+        // If there is (or might be) terrain data for any children, reset their state so it gets loaded.
+        if (typeof tile.children !== 'undefined') {
+            var childMask = terrainData.childTileMask;
+            for (var childIndex = 0; childIndex < 4; ++childIndex) {
+                var bitMaskValue = 1 << childIndex;
+                if ((childMask & bitMaskValue) !== 0) {
+                    var childTile = tile.children[childIndex];
+                    if (childTile.state !== TileState.START) {
+                        childTile.state = TileState.LOADING;
+                    }
+
+                    var childTerrainLoad = childTile.loadedTerrain;
+                    if (typeof childTerrainLoad !== 'undefined' && childTerrainLoad.state === TerrainState.NOT_AVAILABLE) {
+                        childTile.loadedTerrain.state = TerrainState.UNLOADED;
+                    }
+                }
+            }
+        }
+    }
+
+    function processTerrainLoadStateMachine(surface, context, terrainProvider, tile) {
         var process = tile.loadedTerrain;
 
         if (process.state === TerrainState.UNLOADED) {
-            // Is data for this tile known to be unavailable?
-            // If so, don't try to request it.
-            var parent = tile.parent;
-            var dataAvailable = true;
-            if (typeof parent !== 'undefined') {
-                var childBits = parent.childTileBits;
-
-                var bitNumber = 2; // northwest child
-                if (tile.x !== parent.x * 2) {
-                    ++bitNumber; // east child
-                }
-                if (tile.y !== parent.y * 2) {
-                    bitNumber -= 2; // south child
-                }
-
-                dataAvailable = (childBits & (1 << bitNumber)) !== 0;
-            }
-
-            if (dataAvailable) {
+            if (isDataAvailable(tile)) {
                 // Request the terrain from the terrain provider.
-                process.state = TerrainState.UNLOADED;
                 process.data = terrainProvider.requestTileGeometry2(tile.x, tile.y, tile.level);
 
-                // If the request method returns undefined (instead of a promise), the request has been deferred.
+                // If the request method returns undefined (instead of a promise), the request
+                // has been deferred.
                 if (typeof process.data !== 'undefined') {
                     process.state = TerrainState.TRANSITIONING;
+
                     when(process.data, function(terrainData) {
-                        process.data = terrainData;
-                        process.state = TerrainState.RECEIVED;
-
-                        // If there is (or might be) terrain data for any children, reset their state so it gets loaded.
-                        if (typeof tile.children !== 'undefined') {
-                            var childMask = terrainData.childTileMask;
-                            for (var childIndex = 0; childIndex < 4; ++childIndex) {
-                                var bitMaskValue = 1 << childIndex;
-                                if ((childMask & bitMaskValue) !== 0) {
-                                    var childTile = tile.children[childIndex];
-                                    if (childTile.state !== TileState.START) {
-                                        childTile.state = TileState.LOADING;
-                                    }
-
-                                    var childTerrainLoad = childTile.loadedTerrain;
-                                    if (typeof childTerrainLoad !== 'undefined' && childTerrainLoad.state === TerrainState.NOT_AVAILABLE) {
-                                        childTile.loadedTerrain.state = TerrainState.UNLOADED;
-                                    }
-                                }
-                            }
-                        }
+                        fillTileWithLoadedTerrain(tile, process, terrainData);
+                    }, function() {
+                        // TODO: add error reporting and retry logic similar to imagery providers.
+                        process.state = TerrainState.FAILED;
                     });
                 }
             } else {
-                // Data is not available, so mark that terrain will never be requested for this tile.
+                // Data is not available, so mark that terrain will not be requested for this tile.
+                // That might change later if and when the parent tile is loaded.
                 process.state = TerrainState.NOT_AVAILABLE;
             }
         }
@@ -834,13 +842,10 @@ define([
             // Once terrain data is received, we no longer need to advance
             // the upsampling process.
             tile.suspendUpsampling = true;
-
-            process.state = TerrainState.TRANSITIONING;
             transformTileTerrain(surface, context, terrainProvider, tile, process);
         }
 
         if (process.state === TerrainState.TRANSFORMED) {
-            process.state = TerrainState.TRANSITIONING;
             createTileTerrainResources(surface, context, terrainProvider, tile, process);
         }
 
@@ -859,9 +864,6 @@ define([
     function transformTileTerrain(surface, context, terrainProvider, tile, process) {
         // TODO: call the TerrainData instance instead of assuming a heightmap.
         var terrainData = process.data;
-        var heightmap = terrainData.buffer;
-        var width = terrainData.width;
-        var height = terrainData.height;
         var structure = terrainData.structure;
 
         var tilingScheme = tile.tilingScheme;
@@ -872,12 +874,12 @@ define([
         process.center = ellipsoid.cartographicToCartesian(tile.extent.getCenter());
 
         var verticesPromise = taskProcessor.scheduleTask({
-            heightmap : heightmap,
+            heightmap : terrainData.buffer,
             heightScale : structure.heightScale,
             heightOffset : structure.heightOffset,
             stride : structure.stride,
-            width : width,
-            height : height,
+            width : terrainData.width,
+            height : terrainData.height,
             extent : extent,
             relativeToCenter : process.center,
             radiiSquared : ellipsoid.getRadiiSquared(),
@@ -888,15 +890,16 @@ define([
 
         if (typeof verticesPromise === 'undefined') {
             //postponed
-            process.state = TerrainState.RECEIVED;
             return;
         }
+
+        process.state = TerrainState.TRANSITIONING;
 
         when(verticesPromise, function(result) {
             process.transformedData = {
                 vertices : new Float32Array(result.vertices),
                 statistics : result.statistics,
-                indices : TerrainProvider.getRegularGridIndices(width + 2, height + 2)
+                indices : TerrainProvider.getRegularGridIndices(terrainData.width + 2, terrainData.height + 2)
             };
 
             process.state = TerrainState.TRANSFORMED;
@@ -926,7 +929,7 @@ define([
         process.state = TerrainState.READY;
     }
 
-    function processTerrainUpsample(context, terrainProvider, tile) {
+    function processTerrainUpsampleStateMachine(context, terrainProvider, tile) {
 
     }
 
