@@ -70,8 +70,9 @@ define([
      *
      * @param {DynamicObject} dynamicObject The DynamicObject which will contain the screenOverlay data.
      * @param {Object} packet The CZML packet to process.
-     * @param {DynamicObject} dynamicObjectCollection The DynamicObjectCollection to which the DynamicObject belongs.
-     *
+     * @param {DynamicObjectCollection} dynamicObjectCollection The DynamicObjectCollection to which the DynamicObject belongs.
+     * @param {String} [sourceUri] The originating url of the CZML being processed.
+
      * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
      *
      * @see DynamicObject
@@ -79,7 +80,7 @@ define([
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicScreenOverlay.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
+    DynamicScreenOverlay.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var screenOverlayData = packet.screenOverlay;
         if (typeof screenOverlayData === 'undefined') {
             return false;
@@ -139,7 +140,7 @@ define([
                 screenOverlay.material = material = new DynamicMaterialProperty();
                 screenOverlayUpdated = true;
             }
-            material.processCzmlIntervals(screenOverlayData.material, interval);
+            material.processCzmlIntervals(screenOverlayData.material, interval, sourceUri);
         }
 
         return screenOverlayUpdated;
