@@ -182,13 +182,13 @@ require([
 
     function updateAndRender() {
         var currentTime = animationController.update();
-        widget.initializeFrame(currentTime);
+        widget.initializeFrame();
         widget.update(currentTime);
 
         // Update the visualizers...
         visualizers.update(currentTime);
 
-        widget.render();
+        widget.render(currentTime);
         Cesium.requestAnimationFrame(updateAndRender);
     }
 

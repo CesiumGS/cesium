@@ -133,12 +133,12 @@ require([
         // Get the time from the shared controller, then
         // update and render both widgets.
         var currentTime = animationController.update();
-        widget1.initializeFrame(currentTime);
-        widget2.initializeFrame(currentTime);
+        widget1.initializeFrame();
+        widget2.initializeFrame();
         widget1.update(currentTime);
         widget2.update(currentTime);
-        widget1.render();
-        widget2.render();
+        widget1.render(currentTime);
+        widget2.render(currentTime);
         requestAnimationFrame(updateAndRender);
     }
 
