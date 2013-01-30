@@ -223,7 +223,9 @@ require([
             modelMatrix : modelMatrix,
             radius : 20000000.0,
             xHalfAngle : Cesium.Math.toRadians(40.0),
-            yHalfAngle : Cesium.Math.toRadians(20.0)
+            yHalfAngle : Cesium.Math.toRadians(20.0),
+            showIntersection : false,
+            material : Cesium.Material.fromType(scene.getContext(), 'Erosion')
         });
         scene.getPrimitives().add(sensors);
         
@@ -236,7 +238,7 @@ require([
                 if (!eroding && (pickedObject === sensor)) {
                     // Prevent multiple erosions
                     eroding = true;
-                    scene.getAnimations().addProperty(sensor, 'erosion', 1.0, 0.0, {
+                    scene.getAnimations().addProperty(sensor.material.uniforms, 'time', 1.0, 0.0, {
                         onComplete : function() {
                             if (!sensors.isDestroyed()) {
                                 sensors.remove(sensor);
