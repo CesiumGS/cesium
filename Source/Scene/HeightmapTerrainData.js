@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/DeveloperError',
         '../Core/TaskProcessor',
         './GeographicTilingScheme',
         './TerrainMesh',
@@ -8,6 +9,7 @@ define([
         '../ThirdParty/when'
     ], function(
         defaultValue,
+        DeveloperError,
         TaskProcessor,
         GeographicTilingScheme,
         TerrainMesh,
@@ -190,9 +192,31 @@ define([
      * @param {Number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
      *
-     * @returns {HeightmapTerrainData} Upsampled heightmap terrain data for the descendant tile.
+     * @returns {Promise|HeightmapTerrainData} A promise for upsampled heightmap terrain data for the descendant tile,
+     *          or undefined if too many asynchronous upsample operations are in progress and the request has been
+     *          deferred.
      */
     HeightmapTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
+        // TODO: should we upsample the mesh instead of the raw data?
+
+        var levelDifference = descendantLevel - thisLevel;
+        if (levelDifference > 1) {
+            throw new DeveloperError('Upsampling through more than one level at a time is not currently supported.');
+        }
+
+        var result;
+
+        if ((this.width % 2) === 1 && (this.height % 2) === 1) {
+            // We have an odd number of posts greater than 2 in each direction,
+            // so we can upsample by simply dropping half of the posts in each direction.
+            result = upsampleBySubsetting(this, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel);
+        } else {
+            // The number of posts in at least one direction is even, so we must upsample
+            // by interpolating heights.
+            result = upsampleByInterpolating(this, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel);
+        }
+
+        return result;
     };
 
     /**
@@ -220,6 +244,68 @@ define([
 
         return (this.childTileMask & (1 << bitNumber)) !== 0;
     };
+
+    function upsampleBySubsetting(terrainData, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
+        // TODO: allow greater level differences?
+        var levelDifference = 1;
+
+        var width = terrainData.width;
+        var height = terrainData.height;
+
+        // Compute the post indices of the corners of this tile within its own level.
+        var leftPostIndex = descendantX * (width - 1);
+        var rightPostIndex = leftPostIndex + width - 1;
+        var topPostIndex = descendantY * (height - 1);
+        var bottomPostIndex = topPostIndex + height - 1;
+
+        // Transform the post indices to the ancestor's level.
+        var twoToTheLevelDifference = 1 << levelDifference;
+        leftPostIndex /= twoToTheLevelDifference;
+        rightPostIndex /= twoToTheLevelDifference;
+        topPostIndex /= twoToTheLevelDifference;
+        bottomPostIndex /= twoToTheLevelDifference;
+
+        // Adjust the indices to be relative to the northwest corner of the source tile.
+        var sourceLeft = thisX * (width - 1);
+        var sourceTop = thisY * (height - 1);
+        leftPostIndex -= sourceLeft;
+        rightPostIndex -= sourceLeft;
+        topPostIndex -= sourceTop;
+        bottomPostIndex -= sourceTop;
+
+        var leftInteger = leftPostIndex | 0;
+        var rightInteger = rightPostIndex | 0;
+        var topInteger = topPostIndex | 0;
+        var bottomInteger = bottomPostIndex | 0;
+
+        var upsampledWidth = (rightInteger - leftInteger + 1);
+        var upsampledHeight = (bottomInteger - topInteger + 1);
+
+        var sourceHeights = terrainData.buffer;
+        var structure = terrainData.structure;
+
+        // Copy the relevant posts.
+        var numberOfHeights = upsampledWidth * upsampledHeight;
+        var numberOfElements = numberOfHeights * structure.stride;
+        var heights = new sourceHeights.constructor(numberOfElements);
+
+        if (structure.stride > 1) {
+            // TODO: implement this.
+        } else {
+            var outputIndex = 0;
+            for (var j = topInteger; j <= bottomInteger; ++j) {
+                for (var i = leftInteger; i <= rightInteger; ++i) {
+                    heights[outputIndex++] = sourceHeights[j * width + i];
+                }
+            }
+        }
+
+        return new HeightmapTerrainData(heights, upsampledWidth, upsampledHeight, 0, terrainData.structure);
+    }
+
+    function upsampleByInterpolating(terrainData, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
+        throw new DeveloperError('Upsampling by interpolation is not currently supported.');
+    }
 
     return HeightmapTerrainData;
 });

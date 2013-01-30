@@ -782,7 +782,7 @@ define([
                 // If the request method returns undefined (instead of a promise), the request
                 // has been deferred.
                 if (typeof process.data !== 'undefined') {
-                    process.state = TerrainState.TRANSITIONING;
+                    process.state = TerrainState.RECEIVING;
 
                     when(process.data, function(terrainData) {
                         fillTileWithLoadedTerrain(tile, process, terrainData);
@@ -832,7 +832,7 @@ define([
             return;
         }
 
-        process.state = TerrainState.TRANSITIONING;
+        process.state = TerrainState.TRANSFORMING;
 
         when(meshPromise, function(mesh) {
             process.mesh = mesh;
@@ -866,8 +866,54 @@ define([
         process.state = TerrainState.READY;
     }
 
-    function processTerrainUpsampleStateMachine(context, terrainProvider, tile) {
+    function isDataReceived(state) {
+        return state.value >= TerrainState.RECEIVED.value;
+    }
 
+    function processTerrainUpsampleStateMachine(surface, context, terrainProvider, tile) {
+        var process = tile.upsampledTerrain;
+
+        if (process.state === TerrainState.UNLOADED) {
+            // Find the nearest ancestor with loaded terrain.
+            var sourceTile = tile.parent;
+            while (typeof sourceTile !== 'undefined' &&
+                   !isDataReceived(sourceTile.loadedTerrain.state) &&
+                   !isDataReceived(sourceTile.upsampledTerrain.state)) {
+
+                sourceTile = sourceTile.parent;
+            }
+
+            if (typeof sourceTile === 'undefined') {
+                // No ancestors have loaded terrain - try again later.
+                return;
+            }
+
+            var sourceTerrain = isDataReceived(sourceTile.loadedTerrain.state) ? sourceTile.loadedTerrain : sourceTile.upsampledTerrain;
+            var sourceData = sourceTerrain.data;
+
+            process.data = sourceData.upsample(sourceTile.tilingScheme, sourceTile.x, sourceTile.y, sourceTile.level, tile.x, tile.y, tile.level);
+            if (typeof process.data === 'undefined') {
+                // The upsample request has been deferred - try again later.
+                return;
+            }
+
+            process.state = TerrainState.RECEIVING;
+
+            when(process.data, function(terrainData) {
+                process.data = terrainData;
+                process.state = TerrainState.RECEIVED;
+            }, function() {
+                process.state = TerrainState.FAILED;
+            });
+        }
+
+        if (process.state === TerrainState.RECEIVED) {
+            transformTileTerrain(surface, context, terrainProvider, tile, process);
+        }
+
+        if (process.state === TerrainState.TRANSFORMED) {
+            createTileTerrainResources(surface, context, terrainProvider, tile, process);
+        }
     }
 
     function isDataAvailable(tile) {
