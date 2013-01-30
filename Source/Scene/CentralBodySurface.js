@@ -771,46 +771,6 @@ define([
         tile.northNormal = ellipsoid.geodeticSurfaceNormal(tile.northwestCornerCartesian).cross(tile.northeastCornerCartesian.subtract(tile.northwestCornerCartesian, cartesian3Scratch)).normalize();
     }
 
-    function isDataAvailable(tile) {
-        var parent = tile.parent;
-        if (typeof parent === 'undefined') {
-            // Data is assumed to be available for root tiles.
-            return true;
-        }
-
-        var parentLoadedTerrain = parent.loadedTerrain;
-        if (parentLoadedTerrain.state !== TerrainState.READY) {
-            // Parent tile is not yet loaded, so assume (for now) that this child tile is not available.
-            return false;
-        }
-
-        return parentLoadedTerrain.data.isChildAvailable(parent.x, parent.y, tile.x, tile.y);
-    }
-
-    function fillTileWithLoadedTerrain(tile, process, terrainData) {
-        process.data = terrainData;
-        process.state = TerrainState.RECEIVED;
-
-        // If there is (or might be) terrain data for any children, reset their state so it gets loaded.
-        if (typeof tile.children !== 'undefined') {
-            var childMask = terrainData.childTileMask;
-            for (var childIndex = 0; childIndex < 4; ++childIndex) {
-                var bitMaskValue = 1 << childIndex;
-                if ((childMask & bitMaskValue) !== 0) {
-                    var childTile = tile.children[childIndex];
-                    if (childTile.state !== TileState.START) {
-                        childTile.state = TileState.LOADING;
-                    }
-
-                    var childTerrainLoad = childTile.loadedTerrain;
-                    if (typeof childTerrainLoad !== 'undefined' && childTerrainLoad.state === TerrainState.NOT_AVAILABLE) {
-                        childTile.loadedTerrain.state = TerrainState.UNLOADED;
-                    }
-                }
-            }
-        }
-    }
-
     function processTerrainLoadStateMachine(surface, context, terrainProvider, tile) {
         var process = tile.loadedTerrain;
 
@@ -852,10 +812,15 @@ define([
         if (process.state === TerrainState.READY) {
             // TODO: clean up tile.upsampledTerrain.
         }
+
+        if (process.state === TerrainState.FAILED || process.state === TerrainState.NOT_AVAILABLE) {
+            // If we previously suspended the upsample operation, resume it now.
+            // We're going to need it.
+            tile.suspendUpsampling = false;
+        }
     }
 
     function transformTileTerrain(surface, context, terrainProvider, tile, process) {
-        // TODO: call the TerrainData instance instead of assuming a heightmap.
         var tilingScheme = tile.tilingScheme;
         var ellipsoid = tilingScheme.getEllipsoid();
 
@@ -874,11 +839,6 @@ define([
             process.state = TerrainState.TRANSFORMED;
         }, function() {
             process.state = TerrainState.FAILED;
-
-            // If we previously suspended the upsample operation, resume it now, because
-            // the load may have failed.
-            // If this transformation is of upsampled data, this won't do any harm.
-            tile.suspendUpsampling = false;
         });
     }
 
@@ -908,6 +868,46 @@ define([
 
     function processTerrainUpsampleStateMachine(context, terrainProvider, tile) {
 
+    }
+
+    function isDataAvailable(tile) {
+        var parent = tile.parent;
+        if (typeof parent === 'undefined') {
+            // Data is assumed to be available for root tiles.
+            return true;
+        }
+
+        var parentLoadedTerrain = parent.loadedTerrain;
+        if (parentLoadedTerrain.state !== TerrainState.READY) {
+            // Parent tile is not yet loaded, so assume (for now) that this child tile is not available.
+            return false;
+        }
+
+        return parentLoadedTerrain.data.isChildAvailable(parent.x, parent.y, tile.x, tile.y);
+    }
+
+    function fillTileWithLoadedTerrain(tile, process, terrainData) {
+        process.data = terrainData;
+        process.state = TerrainState.RECEIVED;
+
+        // If there is (or might be) terrain data for any children, reset their state so it gets loaded.
+        if (typeof tile.children !== 'undefined') {
+            var childMask = terrainData.childTileMask;
+            for (var childIndex = 0; childIndex < 4; ++childIndex) {
+                var bitMaskValue = 1 << childIndex;
+                if ((childMask & bitMaskValue) !== 0) {
+                    var childTile = tile.children[childIndex];
+                    if (childTile.state !== TileState.START) {
+                        childTile.state = TileState.LOADING;
+                    }
+
+                    var childTerrainLoad = childTile.loadedTerrain;
+                    if (typeof childTerrainLoad !== 'undefined' && childTerrainLoad.state === TerrainState.NOT_AVAILABLE) {
+                        childTile.loadedTerrain.state = TerrainState.UNLOADED;
+                    }
+                }
+            }
+        }
     }
 
     // This is debug code to render the bounding sphere of the tile in
