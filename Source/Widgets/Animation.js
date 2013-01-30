@@ -10,97 +10,6 @@ define(['../Core/DeveloperError',
          sprintf) {
     "use strict";
 
-    /**
-     * <span style="display: block; text-align: center;">
-     * <img src="images/AnimationWidget.png" width="211" height="142" alt="" style="border: none; border-radius: 5px;" />
-     * <br />Animation widget
-     * </span>
-     * <br /><br />
-     * The Animation widget manipulates an {@link AnimationController}.  It provides buttons for play, pause,
-     * and reverse, along with the current time and date, surrounded by a "shuttle ring"
-     * for controlling the speed of animation.
-     * <br /><br />
-     * The "shuttle ring" concept is borrowed from video editing, where typically a
-     * "jog wheel" can be rotated to move past individual animation frames very slowly, and
-     * a surrounding shuttle ring can be twisted to control direction and speed of fast playback.
-     * Cesium typically treats time as continuous (not broken into pre-defined animation frames),
-     * so this widget offers no jog wheel.  Instead, the shuttle ring is capable of both fast and
-     * very slow playback.  Click and drag the shuttle ring pointer itself (shown above in green),
-     * or click in the rest of the ring area to nudge the pointer to the next preset speed in that direction.
-     * <br /><br />
-     * The Animation widget also provides a "realtime" button (in the upper-left) that keeps
-     * animation time in sync with the end user's system clock, typically displaying
-     * "today" or "right now."  This mode is not available in {@link ClockRange.CLAMPED} or
-     * {@link ClockRange.LOOP} mode if the current time is outside of {@link Clock}'s startTime and endTime.
-     *
-     * @alias Animation
-     * @constructor
-     *
-     * @param {DOM Node} parentNode The parent HTML DOM node for this widget.
-     * @param {AnimationController} animationController The animationController that will be manipulated by this widget.
-     *
-     * @exception {DeveloperError} parentNode is required.
-     * @exception {DeveloperError} animationController is required.
-     *
-     * @see AnimationController
-     * @see Clock
-     *
-     * @example
-     * // In HTML head, include a link to Animation.css stylesheet,
-     * // and in the body, include: &lt;div id="animationWidget"&gt;&lt;/div&gt;
-     *
-     * var clock = new Clock();
-     * var animationController = new AnimationController(clock);
-     * var parentNode = document.getElementById("animationWidget");
-     * var widget = new Animation(parentNode, animationController);
-     *
-     * function tick() {
-     *     animationController.update();
-     *     widget.update();
-     *     Cesium.requestAnimationFrame(tick);
-     * }
-     * Cesium.requestAnimationFrame(tick);
-     */
-    var Animation = function(parentNode, viewModel) {
-        if (typeof parentNode === 'undefined') {
-            throw new DeveloperError('parentNode is required.');
-        }
-
-        if (typeof viewModel === 'undefined') {
-            throw new DeveloperError('viewModel is required.');
-        }
-
-        this._viewModel = viewModel;
-        this._centerX = undefined;
-        this._defsElement = undefined;
-        this._isSystemTimeAvailable = undefined;
-        this._knobDate = undefined;
-        this._knobOuter = undefined;
-        this._knobStatus = undefined;
-        this._knobTime = undefined;
-        this._parentNode = parentNode;
-        this._pauseSVG = undefined;
-        this._pauseTooltip = undefined;
-        this._playForwardSVG = undefined;
-        this._playReverseSVG = undefined;
-        this._realtimeSVG = undefined;
-        this._realtimeTooltip = undefined;
-        this._scale = undefined;
-        this._shuttleRingPointer = undefined;
-        this._svgNode = undefined;
-        this._themeDisabled = undefined;
-        this._themeHover = undefined;
-        this._themeKnob = undefined;
-        this._themeNormal = undefined;
-        this._themePointer = undefined;
-        this._themeSelect = undefined;
-        this._themeSwoosh = undefined;
-        this._themeSwooshHover = undefined;
-        this._topG = undefined;
-
-        _createNodes(this, parentNode);
-    };
-
     var _svgNS = "http://www.w3.org/2000/svg";
     var _xlinkNS = "http://www.w3.org/1999/xlink";
 
@@ -167,6 +76,356 @@ define(['../Core/DeveloperError',
         return 'rgb(' + Math.round(red * 255) + ',' + Math.round(green * 255) + ',' + Math.round(blue * 255) + ')';
     }
 
+    function rectButton(x, y, path, toolTip) {
+        var button = {
+            'tagName' : 'g',
+            'class' : 'animation-rectButton',
+            'transform' : 'translate(' + x + ',' + y + ')',
+            'children' : [{
+                'tagName' : 'rect',
+                'class' : 'animation-buttonGlow',
+                'width' : 32,
+                'height' : 32,
+                'rx' : 2,
+                'ry' : 2
+            }, {
+                'tagName' : 'rect',
+                'class' : 'animation-buttonMain',
+                'width' : 32,
+                'height' : 32,
+                'rx' : 4,
+                'ry' : 4
+            }, {
+                'tagName' : 'use',
+                'class' : 'animation-buttonPath',
+                'xlink:href' : path
+            }, {
+                'tagName' : 'title',
+                'textContent' : toolTip
+            }]
+        };
+        return _svgFromObject(button);
+    }
+
+    function wingButton(x, y, path, toolTip) {
+        var button = {
+            'tagName' : 'g',
+            'class' : 'animation-rectButton',
+            'transform' : 'translate(' + x + ',' + y + ')',
+            'children' : [{
+                'tagName' : 'use',
+                'class' : 'animation-buttonGlow',
+                'xlink:href' : '#animation_pathWingButton'
+            }, {
+                'tagName' : 'use',
+                'class' : 'animation-buttonMain',
+                'xlink:href' : '#animation_pathWingButton'
+            }, {
+                'tagName' : 'use',
+                'class' : 'animation-buttonPath',
+                'xlink:href' : path
+            }, {
+                'tagName' : 'title',
+                'textContent' : toolTip
+            }]
+        };
+        return _svgFromObject(button);
+    }
+
+    function setShuttleRingFromMouse(widget, svg, e) {
+        var viewModel = widget._viewModel;
+        var centerX = widget._centerX;
+        if (e.type === 'mousedown' || (widget._shuttleRingDragging && e.type === 'mousemove')) {
+            var rect = svg.getBoundingClientRect();
+            var x = e.clientX - centerX - rect.left;
+            var y = e.clientY - centerX - rect.top;
+            var angle = Math.atan2(y, x) * 180 / Math.PI + 90;
+            if (angle > 180) {
+                angle -= 360;
+            }
+            var shuttleRingAngle = viewModel.getShuttleRingAngle();
+            if (widget._shuttleRingDragging || (Math.abs(shuttleRingAngle - angle) < 15)) {
+                widget._shuttleRingDragging = true;
+                viewModel.setShuttleRingAngle(angle);
+            } else if (angle < shuttleRingAngle) {
+                viewModel.moreReverse();
+            } else if (angle > shuttleRingAngle) {
+                viewModel.moreForward();
+            }
+            e.preventDefault();
+            e.stopPropagation();
+        } else {
+            widget._shuttleRingDragging = false;
+        }
+    }
+
+    var SvgButton = function(svgObject, parentNode) {
+        this.onClick = undefined;
+
+        this.svgObject = svgObject;
+        parentNode.appendChild(svgObject);
+
+        var that = this;
+        svgObject.addEventListener('click', function() {
+            if (typeof that.onClick === 'function') {
+                that.onClick();
+            }
+        }, true);
+
+        this.setSelected(false);
+        this.setEnabled(true);
+    };
+
+    SvgButton.prototype.setEnabled = function(enabled) {
+        this._enabled = enabled;
+
+        if (!enabled) {
+            this.svgObject.setAttribute('class', 'animation-buttonDisabled');
+            return;
+        }
+
+        if (this._selected) {
+            this.svgObject.setAttribute('class', 'animation-rectButton animation-buttonSelected');
+            return;
+        }
+
+        this.svgObject.setAttribute('class', 'animation-rectButton');
+    };
+
+    SvgButton.prototype.setSelected = function(selected) {
+        this._selected = selected;
+
+        if (this._enabled) {
+            if (selected) {
+                this.svgObject.setAttribute('class', 'animation-rectButton animation-buttonSelected');
+            } else {
+                this.svgObject.setAttribute('class', 'animation-rectButton');
+            }
+        }
+    };
+
+    SvgButton.prototype.setToolTip = function(toolTip) {
+        this.svgObject.getElementsByTagName('title')[0] = toolTip;
+    };
+
+    /**
+     * <span style="display: block; text-align: center;">
+     * <img src="images/AnimationWidget.png" width="211" height="142" alt="" style="border: none; border-radius: 5px;" />
+     * <br />Animation widget
+     * </span>
+     * <br /><br />
+     * The Animation widget manipulates an {@link AnimationController}.  It provides buttons for play, pause,
+     * and reverse, along with the current time and date, surrounded by a "shuttle ring"
+     * for controlling the speed of animation.
+     * <br /><br />
+     * The "shuttle ring" concept is borrowed from video editing, where typically a
+     * "jog wheel" can be rotated to move past individual animation frames very slowly, and
+     * a surrounding shuttle ring can be twisted to control direction and speed of fast playback.
+     * Cesium typically treats time as continuous (not broken into pre-defined animation frames),
+     * so this widget offers no jog wheel.  Instead, the shuttle ring is capable of both fast and
+     * very slow playback.  Click and drag the shuttle ring pointer itself (shown above in green),
+     * or click in the rest of the ring area to nudge the pointer to the next preset speed in that direction.
+     * <br /><br />
+     * The Animation widget also provides a "realtime" button (in the upper-left) that keeps
+     * animation time in sync with the end user's system clock, typically displaying
+     * "today" or "right now."  This mode is not available in {@link ClockRange.CLAMPED} or
+     * {@link ClockRange.LOOP} mode if the current time is outside of {@link Clock}'s startTime and endTime.
+     *
+     * @alias Animation
+     * @constructor
+     *
+     * @param {DOM Node} parentNode The parent HTML DOM node for this widget.
+     * @param {AnimationController} animationController The animationController that will be manipulated by this widget.
+     *
+     * @exception {DeveloperError} parentNode is required.
+     * @exception {DeveloperError} animationController is required.
+     *
+     * @see AnimationController
+     * @see Clock
+     *
+     * @example
+     * // In HTML head, include a link to Animation.css stylesheet,
+     * // and in the body, include: &lt;div id="animationWidget"&gt;&lt;/div&gt;
+     *
+     * var clock = new Clock();
+     * var animationController = new AnimationController(clock);
+     * var parentNode = document.getElementById("animationWidget");
+     * var widget = new Animation(parentNode, animationController);
+     *
+     * function tick() {
+     *     animationController.update();
+     *     widget.update();
+     *     Cesium.requestAnimationFrame(tick);
+     * }
+     * Cesium.requestAnimationFrame(tick);
+     */
+    var Animation = function(parentNode, viewModel) {
+        if (typeof parentNode === 'undefined') {
+            throw new DeveloperError('parentNode is required.');
+        }
+
+        if (typeof viewModel === 'undefined') {
+            throw new DeveloperError('viewModel is required.');
+        }
+
+        this._viewModel = viewModel;
+        this._centerX = 0;
+        this._defsElement = undefined;
+        this._scale = 1.0;
+        this._shuttleRingDragging = false;
+        this._svgNode = undefined;
+        this._topG = undefined;
+
+        // Firefox requires SVG references to be included directly, not imported from external CSS.
+        // Also, CSS minifiers get confused by this being in an external CSS file.
+        var cssStyle = document.createElement('style');
+        cssStyle.textContent = '.animation-rectButton .animation-buttonGlow { filter: url(#animation_blurred); }\n' + '.animation-rectButton .animation-buttonMain { fill: url(#animation_buttonNormal); }\n' + '.animation-buttonSelected .animation-buttonMain { fill: url(#animation_buttonSelected); }\n' + '.animation-rectButton:hover .animation-buttonMain { fill: url(#animation_buttonHovered); }\n' + '.animation-buttonDisabled .animation-buttonMain { fill: url(#animation_buttonDisabled); }\n' + '.animation-shuttleRingG .animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshGradient); }\n' + '.animation-shuttleRingG:hover .animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshHovered); }\n' + '.animation-shuttleRingPointer { fill: url(#animation_shuttleRingPointerGradient); }\n' + '.animation-shuttleRingPausePointer { fill: url(#animation_shuttleRingPointerPaused); }\n' + '.animation-knobOuter { fill: url(#animation_knobOuter); }\n' + '.animation-knobInner { fill: url(#animation_knobInner); }\n';
+        document.head.insertBefore(cssStyle, document.head.childNodes[0]);
+
+        var themeEle = document.createElement('div');
+        themeEle.className = 'animation-theme';
+        themeEle.innerHTML = '<div class="animation-themeNormal"></div>' + '<div class="animation-themeHover"></div>' + '<div class="animation-themeSelect"></div>' + '<div class="animation-themeDisabled"></div>' + '<div class="animation-themeKnob"></div>' + '<div class="animation-themePointer"></div>' + '<div class="animation-themeSwoosh"></div>' + '<div class="animation-themeSwooshHover"></div>';
+
+        this._themeNormal = themeEle.childNodes[0];
+        this._themeHover = themeEle.childNodes[1];
+        this._themeSelect = themeEle.childNodes[2];
+        this._themeDisabled = themeEle.childNodes[3];
+        this._themeKnob = themeEle.childNodes[4];
+        this._themePointer = themeEle.childNodes[5];
+        this._themeSwoosh = themeEle.childNodes[6];
+        this._themeSwooshHover = themeEle.childNodes[7];
+
+        var svg = document.createElementNS(_svgNS, 'svg:svg');
+        this._svgNode = svg;
+
+        // Define the XLink namespace that SVG uses
+        svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', _xlinkNS);
+
+        var topG = document.createElementNS(_svgNS, 'g');
+        this._topG = topG;
+
+        var buttonsG = document.createElementNS(_svgNS, 'g');
+
+        this._realtimeSVG = new SvgButton(wingButton(3, 4, '#animation_pathClock', 'Real-time'), buttonsG);
+        this._playReverseSVG = new SvgButton(rectButton(44, 99, '#animation_pathPlayReverse', viewModel.playReverseViewModel.toolTip), buttonsG);
+        this._playForwardSVG = new SvgButton(rectButton(124, 99, '#animation_pathPlay', viewModel.playViewModel.toolTip), buttonsG);
+        this._pauseSVG = new SvgButton(rectButton(84, 99, '#animation_pathPause', viewModel.pauseViewModel.toolTip), buttonsG);
+
+        var shuttleRingBackPanel = _svgFromObject({
+            tagName : 'circle',
+            'class' : 'animation-shuttleRingBack',
+            cx : 100,
+            cy : 100,
+            r : 99
+        });
+
+        var shuttleRingSwooshG = _svgFromObject({
+            tagName : 'g',
+            'class' : 'animation-shuttleRingSwoosh',
+            children : [{
+                tagName : 'use',
+                transform : 'translate(100,97) scale(-1,1)',
+                'xlink:href' : '#animation_pathSwooshFX'
+            }, {
+                tagName : 'use',
+                transform : 'translate(100,97)',
+                'xlink:href' : '#animation_pathSwooshFX'
+            }, {
+                tagName : 'line',
+                x1 : 100,
+                y1 : 8,
+                x2 : 100,
+                y2 : 22
+            }]
+        });
+
+        this._shuttleRingPointer = _svgFromObject({
+            tagName : 'use',
+            'class' : 'animation-shuttleRingPointer',
+            'xlink:href' : '#animation_pathPointer'
+        });
+
+        var knobG = _svgFromObject({
+            tagName : 'g',
+            transform : 'translate(100,100)'
+        });
+
+        this._knobOuter = _svgFromObject({
+            tagName : 'circle',
+            'class' : 'animation-knobOuter',
+            cx : 0,
+            cy : 0,
+            r : 71
+        });
+
+        var knobInnerAndShieldSize = 61;
+
+        var knobInner = _svgFromObject({
+            tagName : 'circle',
+            'class' : 'animation-knobInner',
+            cx : 0,
+            cy : 0,
+            r : knobInnerAndShieldSize
+        });
+
+        this._knobDate = _svgText(0, -24, '');
+        this._knobTime = _svgText(0, -7, '');
+        this._knobStatus = _svgText(0, -41, '');
+
+        // widget shield catches clicks on the knob itself (even while DOM elements underneath are changing).
+        var knobShield = _svgFromObject({
+            tagName : 'circle',
+            'class' : 'animation-blank',
+            cx : 0,
+            cy : 0,
+            r : knobInnerAndShieldSize
+        });
+
+        var shuttleRingBackG = document.createElementNS(_svgNS, 'g');
+        shuttleRingBackG.setAttribute('class', 'animation-shuttleRingG');
+
+        parentNode.appendChild(themeEle);
+        topG.appendChild(shuttleRingBackG);
+        topG.appendChild(knobG);
+        topG.appendChild(buttonsG);
+
+        shuttleRingBackG.appendChild(shuttleRingBackPanel);
+        shuttleRingBackG.appendChild(shuttleRingSwooshG);
+        shuttleRingBackG.appendChild(this._shuttleRingPointer);
+
+        knobG.appendChild(this._knobOuter);
+        knobG.appendChild(knobInner);
+        knobG.appendChild(this._knobDate);
+        knobG.appendChild(this._knobTime);
+        knobG.appendChild(this._knobStatus);
+        knobG.appendChild(knobShield);
+
+        svg.appendChild(topG);
+        parentNode.appendChild(svg);
+
+        //Perform initial calculations for scale and theme.
+        this.setScale(1);
+        this.applyThemeChanges();
+
+        //Wire everything up.
+
+        this._playReverseSVG.onClick = viewModel.playReverseViewModel.command.execute;
+        this._realtimeSVG.onClick = viewModel.playRealtimeViewModel.command.execute;
+        this._playForwardSVG.onClick = viewModel.playViewModel.command.execute;
+        this._pauseSVG.onClick = viewModel.pauseViewModel.command.execute;
+
+        var that = this;
+        var callBack = function(e) {
+            setShuttleRingFromMouse(that, svg, e);
+        };
+        shuttleRingBackPanel.addEventListener('mousedown', callBack, true);
+        shuttleRingSwooshG.addEventListener('mousedown', callBack, true);
+        document.addEventListener('mousemove', callBack, true);
+        document.addEventListener('mouseup', callBack, true);
+        this._shuttleRingPointer.addEventListener('mousedown', callBack, true);
+        this._knobOuter.addEventListener('mousedown', callBack, true);
+    };
+
     /**
      * Get the widget scale last set by {@link Animation#setScale}.
      *
@@ -181,16 +440,23 @@ define(['../Core/DeveloperError',
     /**
      * Adjust the overall size of the widget relative to the rest of the page.
      * The default scale is 1.0.
-     *
      * @function
+     *
      * @memberof Animation.prototype
+     *
      * @param {Number} scale A size modifier for the widget UI
+     *
+     * @exception {DeveloperError} scale must be greater than 0.
      */
     Animation.prototype.setScale = function(scale) {
+        if (scale <= 0) {
+            throw new DeveloperError('scale must be greater than 0.');
+        }
+
         this._scale = scale;
 
         scale *= 0.85; // The default 1.0 scale is smaller than the native SVG as originally designed.
-        this._centerX = Math.max(1, Math.floor(100 * scale));
+        this._centerX = Math.max(1, Math.floor(100.0 * scale));
 
         var svg = this._svgNode;
         var width = Math.max(2, Math.floor(200 * scale));
@@ -212,19 +478,16 @@ define(['../Core/DeveloperError',
      * @memberof Animation.prototype
      */
     Animation.prototype.applyThemeChanges = function() {
-        var widget = this;
-        var svg = this._svgNode;
+        var buttonNormalBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeNormal).getPropertyValue('color'));
+        var buttonHoverBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeHover).getPropertyValue('color'));
+        var buttonSelectedBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeSelect).getPropertyValue('color'));
+        var buttonDisabledBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeDisabled).getPropertyValue('color'));
+        var knobBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeKnob).getPropertyValue('color'));
+        var pointerColor = Color.fromCssColorString(window.getComputedStyle(this._themePointer).getPropertyValue('color'));
+        var swooshColor = Color.fromCssColorString(window.getComputedStyle(this._themeSwoosh).getPropertyValue('color'));
+        var swooshHoverColor = Color.fromCssColorString(window.getComputedStyle(this._themeSwooshHover).getPropertyValue('color'));
 
-        var buttonNormalBackColor = Color.fromCssColorString(window.getComputedStyle(widget._themeNormal).getPropertyValue('color'));
-        var buttonHoverBackColor = Color.fromCssColorString(window.getComputedStyle(widget._themeHover).getPropertyValue('color'));
-        var buttonSelectedBackColor = Color.fromCssColorString(window.getComputedStyle(widget._themeSelect).getPropertyValue('color'));
-        var buttonDisabledBackColor = Color.fromCssColorString(window.getComputedStyle(widget._themeDisabled).getPropertyValue('color'));
-        var knobBackColor = Color.fromCssColorString(window.getComputedStyle(widget._themeKnob).getPropertyValue('color'));
-        var pointerColor = Color.fromCssColorString(window.getComputedStyle(widget._themePointer).getPropertyValue('color'));
-        var swooshColor = Color.fromCssColorString(window.getComputedStyle(widget._themeSwoosh).getPropertyValue('color'));
-        var swooshHoverColor = Color.fromCssColorString(window.getComputedStyle(widget._themeSwooshHover).getPropertyValue('color'));
-
-        var defs = {
+        var defsElement = _svgFromObject({
             tagName : 'defs',
             children : [{
                 id : 'animation_buttonNormal',
@@ -505,257 +768,15 @@ define(['../Core/DeveloperError',
                 tagName : 'path',
                 d : 'm 85,0 c 0,16.617 -4.813944,35.356 -13.131081,48.4508 h 6.099803 c 8.317138,-13.0948 13.13322,-28.5955 13.13322,-45.2124 0,-46.94483 -38.402714,-85.00262 -85.7743869,-85.00262 -1.0218522,0 -2.0373001,0.0241 -3.0506131,0.0589 45.958443,1.59437 82.723058,35.77285 82.723058,81.70532 z'
             }]
-        };
+        });
 
-        var defsElement = _svgFromObject(defs);
-        if (typeof widget._defsElement === 'undefined') {
-            svg.appendChild(defsElement);
+        if (typeof this._defsElement === 'undefined') {
+            this._svgNode.appendChild(defsElement);
         } else {
-            svg.replaceChild(defsElement, widget._defsElement);
+            this._svgNode.replaceChild(defsElement, this._defsElement);
         }
-        widget._defsElement = defsElement;
+        this._defsElement = defsElement;
     };
-
-    function rectButton(x, y, path, tooltip) {
-        var button = {
-            'tagName' : 'g',
-            'class' : 'animation-rectButton',
-            'transform' : 'translate(' + x + ',' + y + ')',
-            'children' : [{
-                'tagName' : 'rect',
-                'class' : 'animation-buttonGlow',
-                'width' : 32,
-                'height' : 32,
-                'rx' : 2,
-                'ry' : 2
-            }, {
-                'tagName' : 'rect',
-                'class' : 'animation-buttonMain',
-                'width' : 32,
-                'height' : 32,
-                'rx' : 4,
-                'ry' : 4
-            }, {
-                'tagName' : 'use',
-                'class' : 'animation-buttonPath',
-                'xlink:href' : path
-            }, {
-                'tagName' : 'title',
-                'textContent' : tooltip
-            }]
-        };
-        return _svgFromObject(button);
-    }
-
-    function wingButton(x, y, path, tooltip) {
-        var button = {
-            'tagName' : 'g',
-            'class' : 'animation-rectButton',
-            'transform' : 'translate(' + x + ',' + y + ')',
-            'children' : [{
-                'tagName' : 'use',
-                'class' : 'animation-buttonGlow',
-                'xlink:href' : '#animation_pathWingButton'
-            }, {
-                'tagName' : 'use',
-                'class' : 'animation-buttonMain',
-                'xlink:href' : '#animation_pathWingButton'
-            }, {
-                'tagName' : 'use',
-                'class' : 'animation-buttonPath',
-                'xlink:href' : path
-            }, {
-                'tagName' : 'title',
-                'textContent' : tooltip
-            }]
-        };
-        return _svgFromObject(button);
-    }
-
-    function _createNodes(widget, parentNode) {
-        // Firefox requires SVG references to be included directly, not imported from external CSS.
-        // Also, CSS minifiers get confused by this being in an external CSS file.
-        var cssStyle = document.createElement('style');
-        cssStyle.textContent = '.animation-rectButton .animation-buttonGlow { filter: url(#animation_blurred); }\n' + '.animation-rectButton .animation-buttonMain { fill: url(#animation_buttonNormal); }\n' + '.animation-buttonSelected .animation-buttonMain { fill: url(#animation_buttonSelected); }\n' + '.animation-rectButton:hover .animation-buttonMain { fill: url(#animation_buttonHovered); }\n' + '.animation-buttonDisabled .animation-buttonMain { fill: url(#animation_buttonDisabled); }\n' + '.animation-shuttleRingG .animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshGradient); }\n' + '.animation-shuttleRingG:hover .animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshHovered); }\n' + '.animation-shuttleRingPointer { fill: url(#animation_shuttleRingPointerGradient); }\n' + '.animation-shuttleRingPausePointer { fill: url(#animation_shuttleRingPointerPaused); }\n' + '.animation-knobOuter { fill: url(#animation_knobOuter); }\n' + '.animation-knobInner { fill: url(#animation_knobInner); }\n';
-        document.head.insertBefore(cssStyle, document.head.childNodes[0]);
-
-        var themeEle = document.createElement('div');
-        themeEle.className = 'animation-theme';
-        themeEle.innerHTML = '<div class="animation-themeNormal"></div>' + '<div class="animation-themeHover"></div>' + '<div class="animation-themeSelect"></div>' + '<div class="animation-themeDisabled"></div>' + '<div class="animation-themeKnob"></div>' + '<div class="animation-themePointer"></div>' + '<div class="animation-themeSwoosh"></div>' + '<div class="animation-themeSwooshHover"></div>';
-        parentNode.appendChild(themeEle);
-        widget._themeNormal = themeEle.childNodes[0];
-        widget._themeHover = themeEle.childNodes[1];
-        widget._themeSelect = themeEle.childNodes[2];
-        widget._themeDisabled = themeEle.childNodes[3];
-        widget._themeKnob = themeEle.childNodes[4];
-        widget._themePointer = themeEle.childNodes[5];
-        widget._themeSwoosh = themeEle.childNodes[6];
-        widget._themeSwooshHover = themeEle.childNodes[7];
-
-        var svg = widget._svgNode = document.createElementNS(_svgNS, 'svg:svg');
-
-        // Define the XLink namespace that SVG uses
-        svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', _xlinkNS);
-
-        var topG = widget._topG = document.createElementNS(_svgNS, 'g');
-
-        widget.setScale(1);
-        widget.applyThemeChanges();
-
-        var buttonsG = document.createElementNS(_svgNS, 'g');
-
-        // Realtime
-        widget._realtimeSVG = wingButton(3, 4, '#animation_pathClock', 'Real-time');
-        widget._realtimeTooltip = widget._realtimeSVG.getElementsByTagName('title')[0];
-        buttonsG.appendChild(widget._realtimeSVG);
-        widget._realtimeSVG.addEventListener('click', function() {
-            widget._viewModel.playRealtime();
-        }, true);
-
-        // Play Reverse
-        widget._playReverseSVG = rectButton(44, 99, '#animation_pathPlayReverse', 'Play Reverse');
-        buttonsG.appendChild(widget._playReverseSVG);
-        widget._playReverseSVG.addEventListener('click', function() {
-            widget._viewModel.playReverse();
-        }, true);
-
-        // Play Forward
-        widget._playForwardSVG = rectButton(124, 99, '#animation_pathPlay', 'Play Forward');
-        buttonsG.appendChild(widget._playForwardSVG);
-        widget._playForwardSVG.addEventListener('click', function() {
-            widget._viewModel.play();
-        }, true);
-
-        // Pause
-        widget._pauseSVG = rectButton(84, 99, '#animation_pathPause', 'Pause');
-        widget._pauseTooltip = widget._pauseSVG.getElementsByTagName('title')[0];
-        buttonsG.appendChild(widget._pauseSVG);
-        widget._pauseSVG.addEventListener('click', function() {
-            if (widget._viewModel.isAnimating()) {
-                widget._viewModel.pause();
-            } else {
-                widget._viewModel.unpause();
-            }
-        }, true);
-
-        var shuttleRingBackG = document.createElementNS(_svgNS, 'g');
-        shuttleRingBackG.setAttribute('class', 'animation-shuttleRingG');
-        topG.appendChild(shuttleRingBackG);
-
-        var shuttleRingBackPanel = _svgFromObject({
-            'tagName' : 'circle',
-            'class' : 'animation-shuttleRingBack',
-            'cx' : 100,
-            'cy' : 100,
-            'r' : 99
-        });
-        shuttleRingBackG.appendChild(shuttleRingBackPanel);
-
-        var shuttleRingSwooshG = _svgFromObject({
-            'tagName' : 'g',
-            'class' : 'animation-shuttleRingSwoosh',
-            'children' : [{
-                'tagName' : 'use',
-                'transform' : 'translate(100,97) scale(-1,1)',
-                'xlink:href' : '#animation_pathSwooshFX'
-            }, {
-                'tagName' : 'use',
-                'transform' : 'translate(100,97)',
-                'xlink:href' : '#animation_pathSwooshFX'
-            }, {
-                'tagName' : 'line',
-                'x1' : 100,
-                'y1' : 8,
-                'x2' : 100,
-                'y2' : 22
-            }]
-        });
-        shuttleRingBackG.appendChild(shuttleRingSwooshG);
-
-        widget._shuttleRingPointer = _svgFromObject({
-            'tagName' : 'use',
-            'class' : 'animation-shuttleRingPointer',
-            'xlink:href' : '#animation_pathPointer'
-        });
-        shuttleRingBackG.appendChild(widget._shuttleRingPointer);
-
-        widget._isSystemTimeAvailable = true;
-        var shuttleRingDragging = false;
-
-        function setShuttleRingFromMouse(e) {
-            var centerX = widget._centerX;
-            if (e.type === 'mousedown' || (shuttleRingDragging && e.type === 'mousemove')) {
-                var rect = svg.getBoundingClientRect();
-                var x = e.clientX - centerX - rect.left;
-                var y = e.clientY - centerX - rect.top;
-                var angle = Math.atan2(y, x) * 180 / Math.PI + 90;
-                if (angle > 180) {
-                    angle -= 360;
-                }
-                if (shuttleRingDragging || (Math.abs(widget._viewModel.shuttleRingAngle - angle) < 15)) {
-                    shuttleRingDragging = true;
-                    widget._viewModel.shuttleRingAngle = angle;
-                }
-                e.preventDefault();
-                e.stopPropagation();
-            } else {
-                shuttleRingDragging = false;
-            }
-        }
-        shuttleRingBackPanel.addEventListener('mousedown', setShuttleRingFromMouse, true);
-        shuttleRingSwooshG.addEventListener('mousedown', setShuttleRingFromMouse, true);
-        document.addEventListener('mousemove', setShuttleRingFromMouse, true);
-        document.addEventListener('mouseup', setShuttleRingFromMouse, true);
-        widget._shuttleRingPointer.addEventListener('mousedown', setShuttleRingFromMouse, true);
-
-        var knobG = _svgFromObject({
-            'tagName' : 'g',
-            'transform' : 'translate(100,100)'
-        });
-
-        widget._knobOuter = _svgFromObject({
-            'tagName' : 'circle',
-            'class' : 'animation-knobOuter',
-            'cx' : 0,
-            'cy' : 0,
-            'r' : 71
-        });
-        knobG.appendChild(widget._knobOuter);
-        widget._knobOuter.addEventListener('mousedown', setShuttleRingFromMouse, true);
-
-        var knobInner = _svgFromObject({
-            'tagName' : 'circle',
-            'class' : 'animation-knobInner',
-            'cx' : 0,
-            'cy' : 0,
-            'r' : 61
-        // Same size as shield
-        });
-        knobG.appendChild(knobInner);
-
-        widget._knobDate = _svgText(0, -24, '');
-        knobG.appendChild(widget._knobDate);
-        widget._knobTime = _svgText(0, -7, '');
-        knobG.appendChild(widget._knobTime);
-        widget._knobStatus = _svgText(0, -41, '');
-        knobG.appendChild(widget._knobStatus);
-
-        // widget shield catches clicks on the knob itself (even while DOM elements underneath are changing).
-        var knobShield = _svgFromObject({
-            'tagName' : 'circle',
-            'class' : 'animation-blank',
-            'cx' : 0,
-            'cy' : 0,
-            'r' : 61
-        // Same size as knobInner
-        });
-
-        knobG.appendChild(knobShield);
-        topG.appendChild(knobG);
-        topG.appendChild(buttonsG);
-        svg.appendChild(topG);
-        parentNode.appendChild(svg);
-    }
 
     /**
      * Update the widget to reflect the current state of its {@link AnimationController}.
@@ -770,52 +791,31 @@ define(['../Core/DeveloperError',
 
         var currentTimeLabel = viewModel.timeLabel;
         var currentDateLabel = viewModel.dateLabel;
-        var angle = viewModel.shuttleRingAngle;
-        var tooltip = viewModel.tooltip;
+        var angle = viewModel.getShuttleRingAngle();
         var speedLabel = viewModel.speedLabel;
-        var pauseChecked = viewModel.pauseChecked;
-        var playChecked = viewModel.playChecked;
-        var playReverseChecked = viewModel.playReverseChecked;
-        var realTimeChecked = viewModel.realTimeChecked;
-        var realTimeEnabled = viewModel.realTimeEnabled;
 
         _updateSvgText(this._knobDate, currentDateLabel);
         _updateSvgText(this._knobTime, currentTimeLabel);
         _updateSvgText(this._knobStatus, speedLabel);
 
-        this._pauseTooltip.textContent = tooltip;
         _setShuttleRingPointer(this._shuttleRingPointer, this._knobOuter, angle);
 
-        if (pauseChecked) {
+        if (viewModel.pauseViewModel.selected) {
             this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPausePointer');
-            this._pauseSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
         } else {
-            this._pauseSVG.setAttribute('class', 'animation-rectButton');
             this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
         }
 
-        if (playChecked) {
-            this._playForwardSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
-        } else {
-            this._playForwardSVG.setAttribute('class', 'animation-rectButton');
+        function updateButton(button, viewModel) {
+            button.setSelected(viewModel.selected);
+            button.setToolTip(viewModel.toolTip);
+            button.setEnabled(viewModel.enabled);
         }
 
-        if (playReverseChecked) {
-            this._playReverseSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
-        } else {
-            this._playReverseSVG.setAttribute('class', 'animation-rectButton');
-        }
-
-        if (realTimeChecked) {
-            this._realtimeSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
-            this._realtimeTooltip.textContent = 'Today (real-time)';
-        } else if (realTimeEnabled) {
-            this._realtimeSVG.setAttribute('class', 'animation-rectButton');
-            this._realtimeTooltip.textContent = 'Today (real-time)';
-        } else {
-            this._realtimeSVG.setAttribute('class', 'animation-buttonDisabled');
-            this._realtimeTooltip.textContent = 'Current time not in range.';
-        }
+        updateButton(this._pauseSVG, viewModel.pauseViewModel);
+        updateButton(this._playForwardSVG, viewModel.playViewModel);
+        updateButton(this._playReverseSVG, viewModel.playReverseViewModel);
+        updateButton(this._realtimeSVG, viewModel.playRealtimeViewModel);
     };
 
     return Animation;

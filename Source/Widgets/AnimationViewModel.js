@@ -3,14 +3,29 @@ define(['../Core/DeveloperError',
         '../Core/ClockStep',
         '../Core/Color',
         '../Core/JulianDate',
+        '../Core/defaultValue',
         '../ThirdParty/sprintf'
         ], function(
          DeveloperError,
          ClockStep,
          Color,
          JulianDate,
+         defaultValue,
          sprintf) {
     "use strict";
+
+    var Command = function() {
+        this.canExecute = false;
+        this.execute = undefined;
+    };
+
+    var ButtonViewModel = function(template) {
+        var t = defaultValue(template, {});
+        this.command = defaultValue(t.command, undefined);
+        this.enabled = defaultValue(t.enabled, false);
+        this.selected = defaultValue(t.selected, false);
+        this.toolTip = defaultValue(t.toolTip, '');
+    };
 
     var _monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -46,62 +61,123 @@ define(['../Core/DeveloperError',
     }
 
     var AnimationViewModel = function(animationController) {
+        this.animationController = animationController;
+
         this.timeLabel = 'time';
         this.dateLabel = 'date';
         this.speedLabel = 'speedLabel';
-        this.toolTip = 'toolTip';
-        this.shuttleRingAngle = 0;
-        this.currentTime = new JulianDate();
 
-        this.playChecked = false;
-        this.pauseChecked = true;
-        this.playReverseChecked = false;
-        this.realTimeChecked = false;
-        this.realTimeEnabled = true;
+        var that = this;
 
-        this.animationController = animationController;
+        this.pauseViewModel = new ButtonViewModel({
+            enabled : true,
+            selected : false,
+            toolTip : 'Pause',
+            command : {
+                canExecute : true,
+                execute : function() {
+                    that.pauseViewModel.selected = !that.pauseViewModel.selected;
+
+                    that.playRealtimeViewModel.selected = false;
+                    that.playViewModel.selected = !that.pauseViewModel.selected && animationController._clock.multiplier > 0;
+                    that.playReverseViewModel.selected = !that.pauseViewModel.selected && animationController._clock.multiplier < 0;
+                    if (that.pauseViewModel.selected) {
+                        animationController.pause();
+                    } else {
+                        animationController.unpause();
+                    }
+                }
+            }
+        });
+
+        this.playReverseViewModel = new ButtonViewModel({
+            enabled : true,
+            selected : false,
+            toolTip : 'Play Reverse',
+            command : {
+                canExecute : true,
+                execute : function() {
+                    that.playRealtimeViewModel.selected = false;
+                    that.playViewModel.selected = false;
+                    that.pauseViewModel.selected = false;
+                    that.playReverseViewModel.selected = true;
+                    animationController.playReverse();
+                }
+            }
+        });
+
+        this.playViewModel = new ButtonViewModel({
+            enabled : true,
+            selected : false,
+            toolTip : 'Play Forward',
+            command : {
+                canExecute : true,
+                execute : function() {
+                    that.playRealtimeViewModel.selected = false;
+                    that.playViewModel.selected = true;
+                    that.pauseViewModel.selected = false;
+                    that.playReverseViewModel.selected = false;
+                    animationController.play();
+                }
+            }
+        });
+
+        this.playRealtimeViewModel = new ButtonViewModel({
+            enabled : true,
+            selected : false,
+            toolTip : 'Play Realtime',
+            command : {
+                canExecute : true,
+                execute : function() {
+                    that.playRealtimeViewModel.selected = true;
+                    that.playViewModel.selected = false;
+                    that.pauseViewModel.selected = false;
+                    that.playReverseViewModel.selected = false;
+                    animationController.playRealtime();
+                }
+            }
+        });
+    };
+
+    AnimationViewModel.prototype.getShuttleRingAngle = function() {
+        return _shuttleSpeedtoAngle(this.animationController._clock.multiplier);
+    };
+
+    AnimationViewModel.prototype.setShuttleRingAngle = function(angle) {
+        var speed = _shuttleAngletoSpeed(this.animationController, angle);
+        if (speed !== 0) {
+            this.animationController._clock.multiplier = speed;
+        }
     };
 
     AnimationViewModel.prototype.update = function() {
-    };
+        var currentTime = this.animationController._clock.currentTime;
+        this.timeLabel = this.makeTimeLabel(currentTime);
+        this.dateLabel = this.makeDateLabel(currentTime);
 
-    AnimationViewModel.prototype.playRealtime = function() {
-        this.realTimeChecked = true;
-        this.playChecked = false;
-        this.pauseChecked = false;
-        this.playReverseChecked = false;
-    };
+        if (this.animationController._clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
+            this.speedLabel = 'Today';
+        } else {
+            this.speedLabel = this.animationController._clock.multiplier + 'x';
+        }
 
-    AnimationViewModel.prototype.playReverse = function() {
-        this.realTimeChecked = false;
-        this.playChecked = false;
-        this.pauseChecked = false;
-        this.playReverseChecked = true;
-    };
-
-    AnimationViewModel.prototype.play = function() {
-        this.realTimeChecked = false;
-        this.playChecked = true;
-        this.pauseChecked = false;
-        this.playReverseChecked = false;
+        if (this.playRealtimeViewModel.enabled) {
+            this.playRealtimeViewModel.toolTip = 'Today (real-time)';
+        } else {
+            this.playRealtimeViewModel.toolTip = 'Current time not in range.';
+        }
     };
 
     AnimationViewModel.prototype.isAnimating = function() {
-        return !this.pauseChecked;
+        return this.pauseViewModel.selected;
     };
 
-    AnimationViewModel.prototype.pause = function() {
-        this.realTimeChecked = false;
-        this.playChecked = false;
-        this.pauseChecked = true;
-        this.playReverseChecked = false;
+    AnimationViewModel.prototype.moreReverse = function() {
+        this.animationController.moreReverse();
     };
 
-    AnimationViewModel.prototype.unpause = function() {
-        this.realTimeChecked = false;
-        this.playChecked = !this.playChecked;
-        this.pauseChecked = false;
-        this.playReverseChecked = !this.playReverseChecked;
+    AnimationViewModel.prototype.moreForward = function() {
+        this.animationController.moreForward();
     };
 
     /**
@@ -128,7 +204,7 @@ define(['../Core/DeveloperError',
     AnimationViewModel.prototype.makeTimeLabel = function(date) {
         var gregorianDate = date.toGregorianDate();
         var millisecond = gregorianDate.millisecond;
-        if (Math.abs(this._clock.multiplier) < 1) {
+        if (Math.abs(this.animationController._clock.multiplier) < 1) {
             return sprintf("%02d:%02d:%02d.%03d", gregorianDate.hour, gregorianDate.minute, gregorianDate.second, millisecond);
         }
         return sprintf("%02d:%02d:%02d UTC", gregorianDate.hour, gregorianDate.minute, gregorianDate.second);

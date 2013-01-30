@@ -173,12 +173,12 @@ define(['dojo',
     function setThemeLight() {
         document.body.className = 'claro';
         dijit.byId('themeSelector').set('label', 'Theme: Light');
-        animation.onThemeChanged();
+        animation.applyThemeChanges();
     }
     function setThemeDark() {
         document.body.className = 'claro cesium-darker';
         dijit.byId('themeSelector').set('label', 'Theme: Dark');
-        animation.onThemeChanged();
+        animation.applyThemeChanges();
     }
     function cycleTheme() {
         if (document.body.className === 'claro') {
