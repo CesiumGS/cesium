@@ -300,15 +300,15 @@ define([
             }
         },
 
-        initializeFrame : function(currentTime) {
-            this.scene.initializeFrame(currentTime);
+        initializeFrame : function() {
+            this.scene.initializeFrame();
         },
 
         update : function(currentTime) {
         },
 
-        render : function() {
-            this.scene.render();
+        render : function(currentTime) {
+            this.scene.render(currentTime);
         },
 
         _configureCentralBodyImagery : function() {
@@ -337,9 +337,9 @@ define([
 
             function updateAndRender() {
                 var currentTime = new JulianDate();
-                widget.initializeFrame(currentTime);
+                widget.initializeFrame();
                 widget.update(currentTime);
-                widget.render();
+                widget.render(currentTime);
                 requestAnimationFrame(updateAndRender);
             }
             updateAndRender();
