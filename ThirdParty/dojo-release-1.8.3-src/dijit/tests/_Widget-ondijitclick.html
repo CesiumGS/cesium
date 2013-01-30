@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+
+	<title>Test Dijit Internal Event: "ondijitclick"</title>
+
+	<style>
+		div {
+			border: 1px solid blue;
+			margin: 1em;
+		}
+	</style>
+
+	<script type="text/javascript" src="../../dojo/dojo.js" data-dojo-config="isDebug: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit._WidgetBase");
+		dojo.require("dijit._OnDijitClickMixin");
+		dojo.require("dojo.parser");
+
+		dojo.ready(function(){
+			dojo.declare("WidgetWithOndijitclick", [dijit._WidgetBase, dijit._OnDijitClickMixin], {
+				clickCount: 0,
+				onClick: function(){
+				},
+				_onClick: function(){
+					this.clickCount++;
+					this.onClick();
+				},
+				postCreate: function(){
+					this.connect(this.domNode, "ondijitclick", "_onClick");
+				}
+			});
+
+			dojo.parser.parse();
+		});
+	</script>
+</head>
+<body class="claro">
+	<h1>_Widget.ondijitclick test</h1>
+	<p>
+		This tests dijit's infrastructure for catching SPACE and ENTER key clicks on nodes
+		that aren't &lt;button&gt; or &lt;a&gt;, and therefore don't normally respond to keyboard
+		"click events".
+	</p>
+	<p>
+		Clicking the first widget moves focus to the plain button,
+		but that button itself shouldn't get a click event.   (There are some subtleties about
+		whether catch clicks on key-down or key-up so this tests to make sure we are doing
+		the right one.)
+	</p>
+	<div id="first" tabIndex="0" data-dojo-type="WidgetWithOndijitclick" data-dojo-props='
+			onClick:function(){ dojo.byId("plainbutton").focus(); }'>
+		click me using space or enter, to focus button below
+	</div>
+	<button id="plainbutton" onclick="console.log('plain button clicked'); window.clicked = true;" type="button" >plain button</button>
+
+	<div id="second" tabIndex="0" data-dojo-type="WidgetWithOndijitclick" data-dojo-props='
+			onClick:function(){ dojo.byId("textarea").focus(); }'>
+		click me using space or enter, to focus textarea below
+	</div>
+	<textarea id="textarea">hello world</textarea>
+
+	<br>
+	<button id="plainbutton2" style="margin-top: 2em;" type="button"
+			onClick="dojo.byId('third').focus();">
+		click me using space or enter, to focus ondijitclick widget below
+	</button>
+	<div id="third" tabIndex="0" data-dojo-type="WidgetWithOndijitclick" data-dojo-props='style:"margin-top: 0px;",
+			onFocus:function(){ console.log("onfocus on third"); window.onDijitClickFocus = true; },
+			onClick:function(){ console.log("onclick on third"); window.spuriousOnDijitClick = true; }'>
+		clicking the button above shouldn't cause my ondijitclick handler to fire
+	</div>
+	<br>
+	<div id="fourth" tabIndex="0" data-dojo-type="WidgetWithOndijitclick" data-dojo-props='style:"margin-top: 0px;",
+			onClick:function(){ alert("make sure can close this alert via keyboard"); }'>
+		Manual Test: Click me using space or enter to launch a JavaScript alert() from element using ondijitclick
+	</div>
+	<br>
+	Clicking this button should produce exactly one click event to console:
+	<button id="widgetbutton" tabIndex="0" data-dojo-type="WidgetWithOndijitclick">
+		button w/ondijitclick
+	</button>
+
+	<div id="outer">
+		Test for bubble of click
+		<div id="inner">
+			<span data-dojo-type="WidgetWithOndijitclick" id="bubbleTestWidget" tabindex="0">click me</span>
+			<span data-dojo-type="WidgetWithOndijitclick" id="bubbleTestWidget2" tabindex="0">click me too</span>
+		</div>
+	</div>
+</body>
+</html>

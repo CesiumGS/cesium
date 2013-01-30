@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>parseOnLoad:true, async: true, auto-require unit test</title>
+		<style type="text/css">
+			@import "../../resources/dojo.css";
+		</style>
+		<script type="text/javascript" src="../../dojo.js"
+				data-dojo-config="isDebug:true, async:true, parseOnLoad: true"></script>
+		<script type="text/javascript">
+			require(["doh", "dojo/ready", "dojo/parser"], function(doh, ready){
+				ready(function(){
+					doh.register("parseOnLoad auto-require", function parseOnLoad(){
+						doh.is(typeof dr1, "object", "object using MID mapped to return var");
+						doh.is(dr1.params.foo, "bar", "parameters set on instantiation");
+						doh.is(typeof dr2, "object", "object using MID mapped to return var");
+						doh.is(dr2.params.foo, "bar", "parameters set on instantiation");
+						doh.is(typeof dr3, "object", "object using fully required");
+						doh.is(dr3.params.foo, "bar", "parameters set on instantiation");
+					});
+
+					doh.run();
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<h1>parseOnLoad:true, async: true, auto-require unit test</h1>
+
+		<p>This page tests that:</p>
+		<ol>
+			<li>parseOnLoad: true parses the page on load</li>
+			<li>auto-require of modules</li>
+			<li>the parse happens before the ready() callback happens, including loading of auto-required modules</li>
+		</ol>
+		<p>See console for test results.</p>
+
+		<div data-dojo-id="dr1" data-dojo-type="dojo/tests/resources/AMDWidget" data-dojo-props="foo: 'bar'"></div>
+		<div data-dojo-id="dr2" data-dojo-type="dojo/tests/resources/AMDWidget2" data-dojo-props="foo: 'bar'"></div>
+		<div data-dojo-id="dr3" data-dojo-type="dojo/tests/resources/AMDWidget3" data-dojo-props="foo: 'bar'"></div>
+
+	</body>
+</html>

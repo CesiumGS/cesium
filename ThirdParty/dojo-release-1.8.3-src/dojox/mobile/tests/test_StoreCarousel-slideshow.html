@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Lazy-loadable Carousel Photo Gallery</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','Carousel','PageIndicator']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/connect",
+			"dojo/store/Memory",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/ScrollableView",
+			"dojox/mobile/StoreCarousel"
+		]);
+
+		var json = [
+			{src:"images/pic1.jpg", alt:"Wally"},
+			{src:"images/pic2.jpg"},
+			{src:"images/pic3.jpg"},
+			{src:"images/pic4.jpg"},
+			{src:"images/pic5.jpg"},
+			{src:"images/pic6.jpg"},
+			{src:"images/pic7.jpg"},
+			{src:"images/pic8.jpg"},
+			{src:"images/pic9.jpg"},
+			{src:"images/pic10.jpg"}
+		];
+	</script>
+</head>
+<body style="visibility:hidden;background-color:#6D6D6D">
+	<div id="foo" data-dojo-type="dojox.mobile.ScrollableView">
+		<span data-dojo-id="store1" data-dojo-type="dojo.store.Memory" data-dojo-props='data:json'></span>
+		<div data-dojo-type="dojox.mobile.StoreCarousel"
+			data-dojo-props='height:"280px", store:store1, numVisible:1, title:"Photo Gallery", selectable:false'></div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Tooltip Mouse Quirks Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="isDebug: true, parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			require([
+				"dojo/dom-class", // dojo.hasClass
+				"dojo/ready", // dojo.ready
+				"doh/runner",	//doh functions
+				"dijit/registry",  // dijit.registry.byId
+				"dijit/robotx"
+			], function(domClass, ready, runner, registry){
+				ready(function(){
+
+					runner.robot.initRobot("../test_EdgeToEdgeList-check.html");
+
+					runner.register("dojox.mobile.ButtonList mouse tests", [
+						{
+							name: "ButtonList mouse tests",
+							timeout: 10000,
+							runTest: function(){
+								var d = new runner.Deferred();
+
+								runner.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_ListItem_0").domNode, 1000);
+								runner.robot.mouseClick({left: true}, 500);
+
+								runner.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_ListItem_1").domNode, 1000);
+								runner.robot.mouseClick({left: true}, 500);
+
+								runner.robot.sequence(d.getTestCallback(function(){
+									doh.assertTrue(domClass.contains(dijit.registry.byId("item1").domNode, "mblListItemUnchecked"), "item1");
+									doh.assertTrue(domClass.contains(dijit.registry.byId("dojox_mobile_ListItem_0").domNode, "mblListItemUnchecked"), "dojox_mobile_ListItem_0");
+									doh.assertTrue(domClass.contains(dijit.registry.byId("dojox_mobile_ListItem_1").domNode, "mblListItemChecked"), "dojox_mobile_ListItem_1");
+								}), 1000);
+								return d;
+							}
+						}
+					]);
+					runner.run();
+				});
+			});
+		</script>
+	</head>
+</html>

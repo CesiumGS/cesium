@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Editor Mouse Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.DeferredList");
+			dojo.require("dojo.window");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			function normalize(str){
+				// try to do some normalization to make all browsers look
+				// the same.   Would be nice if we didn't need this, the normalization should
+				// probably happen as pre and post filters on the editor
+				return str.
+					replace(/\s*\/>/g, "/>").
+					replace(/<br\/>$/, '').		// FF.  Because of EnterKeyHandling plugin?
+					replace(/^<p>/, '').replace(/<\/p>$/, '').		// Safari.  Because of EnterKeyHandling plugin?
+					replace(new RegExp(String.fromCharCode(160), "g"), " ");	// Safari: nbsp (char code 160) to normal space (char code 32)
+			}
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_Editor.html');
+
+				// For some reason the meta key (meta-a for selection, meta-b for bold, etc) isn't working
+				// on mac... use ctrl- instead, just like on windows. (#9553)
+				var metaKey = {ctrl: true};
+
+				var editor0, editor1;
+
+				doh.register("setup", [
+					{
+						name: "wait for editors to load",
+						timeout: 5000,
+						runTest: function(){
+						    return new dojo.DeferredList(
+						        dijit.registry.filter(function(w){ return w.onLoadDeferred; }).map(function(w){ return w.onLoadDeferred; })
+						    );
+						}
+					},
+					function setVars(){
+						editor0 = dijit.byId("editor0");
+						editor1 = dijit.byId("editor1");
+					}
+				]);
+
+				doh.register("toolbar buttons", [
+					{
+						name: "bold/italic",
+						timeout: 20000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var toolbar = editor1.toolbar,
+								boldButton = toolbar.getChildren()[7],
+								italicButton = toolbar.getChildren()[8];
+
+							dojo.window.scrollIntoView(editor1.domNode);
+
+							// Focus the editor
+							doh.robot.mouseMoveAt(editor1.editNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							// select all
+							doh.robot.sequence(function(){
+								editor1.execCommand("SelectAll");
+							}, 500);
+
+							doh.robot.typeKeys("hello ", 1000, 1000);		// and erase (by typing something new)
+
+							// turn on bold
+							doh.robot.mouseMoveAt(boldButton.domNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.typeKeys("world", 1000, 1000);
+
+							// turn off bold
+							doh.robot.mouseMoveAt(boldButton.domNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.typeKeys(". ", 1000, 400);
+
+							// turn on italic
+							doh.robot.mouseMoveAt(italicButton.domNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.typeKeys("how are you", 1000, 2000);
+
+							// turn off italic
+							doh.robot.mouseMoveAt(italicButton.domNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.typeKeys("?", 1000, 200);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Get the value and try to do some normalization to make all browsers look
+								// the same.   Would be nice if we didn't need this, the normalization should
+								// probably happen as pre and post filters on the editor
+								var val = normalize(editor1.get("value"));
+								doh.is("hello <b>world</b>. <i>how are you</i>?", val);
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "delete bold tag",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Find the bolded "world" word in the editor
+							var bold=dojo.query('b', editor1.editNode);
+							if(!bold.length){
+								bold=dojo.query('strong', editor1.editNode)
+							}
+
+							// Double-click "world" to select it
+							doh.robot.mouseMoveAt(bold[0], 500, 1, 5, 5);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseClick({left: true}, 50);
+
+							// Delete "world" and the space before it
+							doh.robot.keyPress(dojo.keys.DELETE, 500);
+							if(!dojo.isSafari && !(dojo.isChrome && dojo.isMac)){
+								// they delete the space too?
+								doh.robot.keyPress(dojo.keys.BACKSPACE, 500);
+							}
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("hello. <i>how are you</i>?", normalize(editor1.get("value")));
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("selection", [
+					{
+						name: "mouseup but no click event",
+						timeout: 10000,
+						runTest: function(){
+							var cutButton = editor1.toolbar.getChildren()[3].domNode;
+							doh.t(dojo.hasClass(cutButton, "dijitButtonDisabled"), "Cut should be disabled " + cutButton.className);
+
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt(editor1.editNode, 500, 1);
+							doh.robot.mousePress({left: true}, 500);
+							doh.robot.mouseMoveAt(editor1.editNode, 500, 500, -10, 0); // move off of editNode
+							doh.robot.mouseRelease({left: true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(dojo.hasClass(cutButton, "dijitButtonDisabled"), "Cut should not be disabled " + cutButton.className);
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+
+
+		</script>
+	</head>
+</html>

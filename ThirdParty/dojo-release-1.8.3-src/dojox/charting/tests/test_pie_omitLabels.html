@@ -1,0 +1,74 @@
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if !(IE 8)]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+	<![endif]>
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="isDebug: true"></script>
+	</head>
+	
+	<body>
+		<script type="text/javascript">
+	    dojo.require("dojox.charting.Chart2D");
+	    dojo.require("dojox.charting.themes.PrimaryColors");
+	
+	    var chartData = [10000,1,10000,1,10000,1];
+	    dojo.ready(function() {
+	        var pieChart1 = new dojox.charting.Chart2D("chartNode1");
+	        pieChart1.setTheme(dojox.charting.themes.PrimaryColors);
+	        pieChart1.addPlot("default", {
+	            type:       "Pie",
+	            omitLabels: true,
+	            radius:     100
+	        });
+	        pieChart1.addSeries("test",chartData);
+	        pieChart1.render();
+	        
+	        var pieChart2 = new dojox.charting.Chart2D("chartNode2");
+	        pieChart2.setTheme(dojox.charting.themes.PrimaryColors);
+	        pieChart2.addPlot("default", {
+	            type:       "Pie",
+	            radius:     100
+	        });
+	        pieChart2.addSeries("test",chartData);
+	        pieChart2.render();
+	        
+	        var pieChart3 = new dojox.charting.Chart2D("chartNode3");
+	        pieChart3.setTheme(dojox.charting.themes.PrimaryColors);
+	        pieChart3.addPlot("default", {
+	            type:       "Pie",
+	        	labelStyle: "columns",
+	        	omitLabels: true,
+	        	radius:     100
+	        });
+	        pieChart3.addSeries("test",chartData);
+	        pieChart3.render();
+	        
+	        var pieChart4 = new dojox.charting.Chart2D("chartNode4");
+	        pieChart4.setTheme(dojox.charting.themes.PrimaryColors);
+	        pieChart4.addPlot("default", {
+	            type:       "Pie",
+	        	labelStyle: "columns",
+	        	radius:     100
+	        });
+	        pieChart4.addSeries("test",chartData);
+	        pieChart4.render();
+	    });
+	    </script>
+		<p>Omit true</p>
+		<div id="chartNode1" style="width: 400px; height: 300px;"></div>
+		<p>Omit false<p>
+		<div id="chartNode2" style="width: 400px; height: 300px;"></div>
+		<p>Omit true</p>
+		<div id="chartNode3" style="width: 400px; height: 300px;"></div>
+		<p>Omit false</p>
+		<div id="chartNode4" style="width: 400px; height: 300px;"></div>
+	
+	</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Transition Animations on ScrollableView</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar:true, mblCSS3Transition: 'dojox/css3/transit'"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/ScrollableView"
+		]);
+	</script>
+
+	<style>
+	html,body {
+		height: 100%;
+		overflow: hidden;
+	}
+	.mblRoundRectCategory {
+		color: black;
+		text-shadow: rgba(192,192,192,1) 1px 1px 0px;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="view1" data-dojo-type="dojox.mobile.ScrollableView" style="background-color:#855AA0;height:100%;">
+		<h1 data-dojo-type="dojox.mobile.Heading" style="background: -webkit-gradient(linear, left top, left bottom, from(#CDB0BC), to(#A26D84), color-stop(0.5, #B3889B), color-stop(0.5, #AF8195));">View 1</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Standard Transitions</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"view2", transition:"slide"'>
+				Slide
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"view3", transition:"slide", transitionDir:-1'>
+				Slide (Reverse)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png", moveTo:"view2", transition:"flip"'>
+				Flip
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"view2", transition:"fade"'>
+				Fade
+			</li>
+		</ul>
+	</div>
+
+	<div id="view2" data-dojo-type="dojox.mobile.ScrollableView" style="background-color:#009BB9;height:100%;">
+		<h1 data-dojo-type="dojox.mobile.Heading">View 2</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Standard Transitions</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"view3", transition:"slide"'>
+				Slide
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"view1", transition:"slide", transitionDir:-1'>
+				Slide (Reverse)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png", moveTo:"view3", transition:"flip"'>
+				Flip
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"view3", transition:"fade"'>
+				Fade
+			</li>
+		</ul>
+	</div>
+
+	<div id="view3" data-dojo-type="dojox.mobile.ScrollableView" style="background-color:#FFCC00;height:100%;">
+		<h1 data-dojo-type="dojox.mobile.Heading" style="background: -webkit-gradient(linear, left top, left bottom, from(#B0CDBC), to(#6DA284), color-stop(0.5, #88B39B), color-stop(0.5, #81AF95));">View 3</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Standard Transitions</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"view1", transition:"slide"'>
+				Slide
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"view2", transition:"slide", transitionDir:-1'>
+				Slide (Reverse)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png", moveTo:"view1", transition:"flip"'>
+				Flip
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"view1", transition:"fade"'>
+				Fade
+			</li>
+		</ul>
+	</div>
+
+</body>
+</html>

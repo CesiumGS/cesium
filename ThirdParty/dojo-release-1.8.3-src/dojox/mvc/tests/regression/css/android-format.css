@@ -1,0 +1,27 @@
+.mobile label { 
+		overflow-x: hidden;
+		-webkit-text-size-adjust: none;
+		background-color: black;
+		color: white;
+		font-family: Helvetica;
+		font-size: 14px;
+		margin-left: 2px;			
+}
+.mobile body {
+    font-family: Helvetica;
+    font-size: 17px;
+    color: white;
+}
+input { 
+		width: 196px;
+		margin-left: 2px;
+}
+.row { 
+		width: 300px; display: inline-block;
+		margin-bottom: 1; margin-top: 3px; 
+}
+.spacer {display: block; margin-bottom:10px; padding-bottom:5px;}
+*[class~="spacer"] {display: block; margin-bottom:10px; padding-bottom:5px; }
+.generate-heading { font-size:1.2em; font-weight:bold; }
+.generate-label-cell { text-align: left; width: 20%;  display:inline-block; }
+.generate-dijit-cell { text-align: left; width: 20%;  display:inline-block; }

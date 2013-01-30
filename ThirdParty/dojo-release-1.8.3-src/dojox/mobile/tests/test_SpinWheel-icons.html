@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>SpinWheel with Icons</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','SpinWheel']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/SpinWheel"
+		]);
+	</script>
+
+	<style>
+	#spin1 {
+		width: 312px;
+		margin: 10px auto;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">SpinWheel with Icons</h1>
+		<div id="spin1" data-dojo-type="dojox.mobile.SpinWheel">
+			<div data-dojo-type="dojox.mobile.SpinWheelSlot"
+				data-dojo-props="labels:[
+					'<img src=images/i-icon-1.png>',
+					'<img src=images/i-icon-2.png>',
+					'<img src=images/i-icon-3.png>',
+					'<img src=images/i-icon-4.png>',
+					'<img src=images/i-icon-5.png>',
+					'<img src=images/i-icon-6.png>',
+					'<img src=images/i-icon-7.png>',
+					'<img src=images/i-icon-8.png>',
+					'<img src=images/i-icon-9.png>',
+					'<img src=images/i-icon-10.png>'
+				]"
+				style="text-align: center;">
+			</div>
+			<div data-dojo-type="dojox.mobile.SpinWheelSlot"
+				data-dojo-props="labels:[
+					'<img src=images/i-icon-1.png>',
+					'<img src=images/i-icon-2.png>',
+					'<img src=images/i-icon-3.png>',
+					'<img src=images/i-icon-4.png>',
+					'<img src=images/i-icon-5.png>',
+					'<img src=images/i-icon-6.png>',
+					'<img src=images/i-icon-7.png>',
+					'<img src=images/i-icon-8.png>',
+					'<img src=images/i-icon-9.png>',
+					'<img src=images/i-icon-10.png>'
+				]"
+				style="text-align: center;">
+			</div>
+			<div data-dojo-type="dojox.mobile.SpinWheelSlot"
+				data-dojo-props="labels:[
+					'<img src=images/i-icon-1.png>',
+					'<img src=images/i-icon-2.png>',
+					'<img src=images/i-icon-3.png>',
+					'<img src=images/i-icon-4.png>',
+					'<img src=images/i-icon-5.png>',
+					'<img src=images/i-icon-6.png>',
+					'<img src=images/i-icon-7.png>',
+					'<img src=images/i-icon-8.png>',
+					'<img src=images/i-icon-9.png>',
+					'<img src=images/i-icon-10.png>'
+				]"
+				style="text-align: center;">
+			</div>
+		</div>
+	</div>
+</body>
+</html>

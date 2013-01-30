@@ -1,0 +1,132 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<title>Templated in IE Popup Test</title>
+		<style>
+			body{
+			font-family:Arial, Helvetica, sans-serif;
+			font-size:12px;
+			}
+		</style>
+		<script type="text/javascript"
+			src="../../../dojo/dojo.js"
+			djConfig="isDebug:true, popup:false, parseOnLoad:false">
+		</script>
+		<script type="text/javascript">
+
+			dojo.require("dijit._Widget");
+			dojo.require("dijit._TemplatedMixin");
+			dojo.require("dojo.parser");
+
+			var w;
+			var popup;
+			var widgetClass;
+			var popwin;
+			var globalDocument;
+			var mainwin = window;
+
+			onPopClose = function(){
+				console.log("setting context back to main window...");
+				dojo.setContext(dojo.global, globalDocument);
+				if(dijit.byId('simple3')){
+					dijit.byId('simple3').destroy();
+				}
+				console.log("Now building the widget in the main window...");
+				var div = dojo.doc.createElement("div");
+				dojo.byId("main").appendChild(div);
+				new widgetClass({id:"simple3"}, div);
+				console.log("There should now be two widgets at the top of the page.");
+			};
+
+			onPopLoad = function(){
+				globalDocument = dojo.doc;
+				dojo.setContext(dojo.global, popwin.document);
+
+				if(dijit.byId('simple2')){
+					dijit.byId('simple2').destroy();
+				}
+				console.log("rendering one widget in popup...");
+
+				var div = dojo.doc.createElement("div");
+				dojo.byId("main").appendChild(div);
+				new widgetClass({id:"simple2"}, div);
+
+				console.log("The widget should have appeared in the popup window.");
+
+				onPopClose();
+			};
+
+			openPopup = function(){
+				popup = window.open('', "mywin", "width=240,height=180");
+				var doc = popup.document;
+
+				var newbcolor = '#FFFFFF';
+				var newfcolor = '$FF0000';
+				var word = "";
+				var HTMLstring = '<HTML><HEAD><TITLE>IE Cross Window</TITLE></HEAD>\n' +
+						'<BODY id="popup" bgColor="' + newbcolor + '">\n' +
+						'<div><div id="main"></div></div>\n' +
+						'</BODY></HTML>';
+
+				doc.write(HTMLstring);
+				doc.close();
+				popup.console = window.console;
+
+
+				// The onload event for IE is written into the above body tag.
+				// This is the onload for Firefox
+				if(dojo.isMoz){
+					popup.onload = onPopLoad;
+				}else{
+					setTimeout(function(){
+						onPopLoad();
+					}, 200);
+				}
+
+				return popup;
+			};
+
+			speedTest = function(){
+				console.log("Speed Test");
+
+				var start = new Date();
+				var amt = 1000;
+
+				var div = dojo.doc.createElement("div");
+				dojo.byId("main").appendChild(div);
+
+				for(var i = 0; i < amt; i++){
+					new widgetClass({id:"simple_" + i}, div);
+				}
+				console.log("Time to render ", amt, " widgets:", (new Date() - start));
+			};
+
+			dojo.ready(function(){
+				widgetClass = dojo.declare(
+					"Simple",
+					[dijit._Widget, dijit._TemplatedMixin], {
+						templateString: '<div> Widget created: ${id} </div>'
+					}
+				);
+
+				speedTest();
+			});
+		</script>
+	</head>
+	<body id="mainpage">
+		<h2>Test for cross window widget building</h2>
+		<p>
+			This test will create a widget in the main window, then in a popup, then another in the main window.
+			Tests issues on IE, namely making sure that nodes are created in the right document, see
+			<a href="http://trac.dojotoolkit.org/ticket/6791">#6791</a>.
+		</p>
+		<p>
+			You must allow popups before running this test.
+			Check console for results.
+		</p>
+		<div id="main"></div>
+		<iframe name="mywin" src="about:blank"></iframe>
+		
+		<a id="popupLink" href="nowhere.html" onclick="popwin = openPopup();return false;">run popup test</a>
+	</body>
+</html>

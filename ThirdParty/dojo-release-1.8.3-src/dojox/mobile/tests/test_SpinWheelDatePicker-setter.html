@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>SpinWheel Date Picker - setter</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','SpinWheel']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/SpinWheelDatePicker",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(ready, registry, SpinWheelDatePicker){
+			ready(function(){
+				registry.byId("picker1").set("value", "2000-10-24");
+				registry.byId("picker2").set("values", [2000,10,24]);
+
+				var picker5 = new SpinWheelDatePicker({value:"2000-10-24"}, "picker5");
+				picker5.startup();
+
+				var picker6 = new SpinWheelDatePicker({values:[2000,10,24]}, "picker6");
+				picker6.startup();
+			});
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div data-dojo-type="dojox.mobile.View">
+		<!-- All these widgets should display the same value. -->
+		<div id="picker1" data-dojo-type="dojox.mobile.SpinWheelDatePicker"></div><br>
+		<div id="picker2" data-dojo-type="dojox.mobile.SpinWheelDatePicker"></div><br>
+		<div id="picker3" data-dojo-type="dojox.mobile.SpinWheelDatePicker" data-dojo-props="value:'2000-10-24'"></div><br>
+		<div id="picker4" data-dojo-type="dojox.mobile.SpinWheelDatePicker" data-dojo-props="values:[2000,10,24]"></div><br>
+		<div id="picker5"></div><br>
+		<div id="picker6"></div><br>
+	</div>
+</body>
+</html>

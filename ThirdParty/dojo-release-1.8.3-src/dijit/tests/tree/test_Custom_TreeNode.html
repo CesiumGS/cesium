@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+    <head>
+        <title>Custom TreeNode Test</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<style type="text/css">		
+            @import "../../../dojo/resources/dojo.css";
+			@import "../../themes/claro/claro.css";
+        </style>  
+		<script src="../../../dojo/dojo.js" type="text/javascript"></script>
+
+        <script type="text/javascript">
+			require([
+				"dojo/_base/declare", "dojo/ready", "dojo/data/ItemFileReadStore",
+				"dijit/_WidgetBase", "dijit/Tree", "dijit/tree/ForestStoreModel"
+			], function(declare, ready, ItemFileReadStore,
+						_WidgetBase, Tree, ForestStoreModel){
+
+				declare("SuperSmartLink", _WidgetBase, {
+					buildRendering: function(){
+						this.domNode = document.createElement("A");
+						this.domNode.href = "http://ibm.com";
+						this.inherited(arguments);
+					}
+				});
+
+				declare("SuperSmartTreeNode", Tree._TreeNode, {
+					postCreate: function(){
+						this.inherited(arguments);
+						this._smartLink = new SuperSmartLink();
+						this.contentNode.appendChild(this._smartLink.domNode);
+						// in real application this is done by template modification tree node class
+						dojo.place(this.labelNode, this._smartLink.domNode, "first");
+					}
+				});
+
+				declare("SuperSmartTree", Tree, {
+					focusNode: function(node){
+						this.inherited(arguments);
+						this.dndController.setSelection([node]);
+					},
+
+					_createTreeNode: function(args){
+						return new SuperSmartTreeNode(args);
+					}
+				});
+
+				var getChildren  = function(depth, parent){
+					var classChildren = [];
+					for (var i = 0; i < 3; i++){
+						var child = {
+							id: parent+"_" + i,
+							name: parent+"_" + i
+						};
+						if (depth < 2 && i === 0){
+							child.children = getChildren(depth+1, child.id);
+						}
+						classChildren.push(child);
+					}
+					return classChildren;
+				};
+
+				var store = new ItemFileReadStore({
+					data: {
+						identifier: 'id',
+						label: 'name',
+						items: [
+							{id:"rrroot", name:"The Root", type:"", children: getChildren(0, "Child")}
+						]
+					}
+				});
+
+				var model = new ForestStoreModel({
+					store: store,
+					query:{type:'*'},
+					childrenAttrs: ["children"]
+				});
+
+				ready(function(){
+					tree = new SuperSmartTree({
+						"model": model,
+						showRoot: false,
+						persist: false
+
+					}).placeAt("AAA");
+
+					tree.startup();
+				});
+			});
+        </script>
+    </head>
+    <body class="claro" role="main"> 
+        <h1 class="title">Please expand Continent node</h1>
+		<div id="AAA" style="overflow: auto; height: 1000px">
+		</div>
+		Footer is here
+    </body>	
+</html>
+

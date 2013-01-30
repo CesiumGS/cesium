@@ -1,0 +1,23 @@
+@import url("base-compat.css");
+
+/* common styles */
+@import url("../common/domButtons-compat.css");
+
+/* widget styles */
+@import url("Accordion-compat.css");
+@import url("Button-compat.css");
+@import url("CheckBox-compat.css");
+@import url("ComboBox-compat.css");
+@import url("IconContainer-compat.css");
+@import url("IconMenu-compat.css");
+@import url("Opener-compat.css");
+@import url("PageIndicator-compat.css");
+@import url("RadioButton-compat.css");
+@import url("SimpleDialog-compat.css");
+@import url("Slider-compat.css");
+@import url("SpinWheel-compat.css");
+@import url("TabBar-compat.css");
+@import url("TextArea-compat.css");
+@import url("TextBox-compat.css");
+@import url("ToggleButton-compat.css");
+@import url("ValuePicker-compat.css");

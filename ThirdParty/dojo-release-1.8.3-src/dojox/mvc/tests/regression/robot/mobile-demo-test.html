@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>doh.robot MVC demo-shipto-billto-simple Declarative Test</title>
+
+		<style>
+			@import "../../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../../dojo/dojo.js"
+			djConfig="isDebug: true, parseOnLoad: true"></script>
+
+		<!-- <script type="text/javascript" src="../helpers.js"></script>  -->
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.addOnLoad(function(){
+				doh.robot.initRobot('../mobile/demo/demo.html');
+
+				doh.register("test_Mobile-Demo", [															   
+					{
+						name: "initial conditions",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							console.debug("dojo.version() is "+dojo.version);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								//"ShipTo" selected 
+								//doh.is("123 Valley Rd", dijit.byId("streetInput").get('value'),"streetInput should be set");
+							}), 1000);
+							return d;
+						}
+					 },
+					 {						
+						name: "testSimpleDataBinding",
+						timeout: 18000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("sdb", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.mouseMoveAt("cityInput", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.keyPress(dojo.keys.TAB, 500, {shift:true});							
+							doh.robot.keyPress(dojo.keys.DELETE, 500, {});							
+							
+							doh.robot.typeKeys("456 Mountain Rd", 300, 800);							
+							doh.robot.keyPress(dojo.keys.TAB, 300, {shift:true});							
+							
+							doh.robot.mouseMoveAt("billto", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.mouseMoveAt("shipto", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt("streetInput", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								var w = dijit.byId("streetInput");
+								var v  = w.get('value');
+								doh.is("456 Mountain Rd", dijit.byId("streetInput").get('value'),"streetInput should be set");
+							}), 1000);
+							
+						//	doh.robot.sequence(d.getTestCallback(function(){
+								//"SendTo" selected 
+								//"BillTo" selected 
+						//		doh.is("123 Valley Rd", dijit.byId("streetInput").get('value'),"streetInput should be set");
+								//doh.is("17 Skyline Dr", dijit.byId("streetInput").get('value'),"streetInput should be set");
+						//	}), 1000);
+							return d;
+						}
+					},
+					 {						
+						name: "testSimpleDataBinding - billTo",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("billto", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								//"BillTo" selected 
+								doh.is("17 Skyline Dr", dijit.byId("streetInput").get('value'),"streetInput should be set");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "shipto",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("shipto", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								//"ShipTo" selected 
+								doh.is("456 Mountain Rd", dijit.byId("streetInput").get('value'),"streetInput should be set");
+							}), 1000);
+							return d;
+						}
+					},					
+/*					{
+						name: "changeShipToAddress",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("cityInput", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.keyPress(dojo.keys.TAB, 500, {shift:true});							
+							doh.robot.keyPress(dojo.keys.DELETE, 500, {});							
+							
+							doh.robot.typeKeys("456 Mountain Rd", 500, 1000);							
+							doh.robot.keyPress(dojo.keys.TAB, 500, {shift:true});							
+							
+							doh.robot.mouseMoveAt("billto", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.mouseMoveAt("shipto", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt("streetInput", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								var w = dijit.byId("streetInput");
+								var v  = w.get('value');
+								doh.is("456 Mountain Rd", dijit.byId("streetInput").get('value'),"streetInput should be set");
+							}), 1000);
+							return d;
+						}
+					 },
+				*/ 
+					 {						
+						name: "testRepeatDataBinding",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							//doh.robot.mouseMoveAt("home", 500, 0);
+							var t1 = dojo.query('.mblToolBarButtonLeftArrow')[0];
+							doh.robot.mouseMoveAt(dojo.query('.mblToolBarButtonLeftArrow')[0], 500);							
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.mouseMoveAt("rdb", 1500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+							doh.is("Chad", dijit.byId("nameInput0").get('value'),"nameInput0 should be Chad");
+							doh.is("Irene", dijit.byId("nameInput1").get('value'),"nameInput1 should be Irene");
+							doh.is("John", dijit.byId("nameInput2").get('value'),"nameInput2 should be John");
+							doh.is("Chad", dijit.byId("firstInput").get('value'),"firstInput should be Chad");
+							doh.is("Chapman", dijit.byId("lastInput").get('value'),"lastInput should be Chapman");
+							doh.is("c.c@test.com", dijit.byId("emailInput2").get('value'),"emailInput2 should be c.c@test.com");
+							}), 1000);
+							
+							return d;
+						}
+					},
+			/*		{
+						name: "selectIrene",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("details1", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Irene", dijit.byId("firstInput").get('value'),"firstInput should be Irene");
+								doh.is("Ira", dijit.byId("lastInput").get('value'),"lastInput should be Ira");
+								doh.is("i.i@test.com", dijit.byId("emailInput2").get('value'),"emailInput2 should be h.h@test.com");
+							}), 1000);
+							return d;
+						}
+					},
+			*/		
+					{
+						name: "selectJohn",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("details2", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("John", dijit.byId("firstInput").get('value'),"firstInput should be John");
+								doh.is("Jacklin", dijit.byId("lastInput").get('value'),"lastInput should be Jacklin");
+								doh.is("j.j@test.com", dijit.byId("emailInput2").get('value'),"emailInput2 should be j.j@test.com");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "changeJohn",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("firstInput", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});						  
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 200, {});						  
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 200, {});						  
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 200, {});						  
+							doh.robot.typeKeys("Johnny", 1000, 2000);													  
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});							
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Johnny", dijit.byId("firstInput").get('value'),"firstInput should be Johnny");
+								doh.is("Johnny", dijit.byId("nameInput2").get('value'),"nameInput2 should be Johnny");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "changeIrene",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("details1", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.mouseMoveAt("nameInput1", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});						  
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 100, {});						  
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 100, {});						  
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 100, {});						  
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 100, {});						  
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 200, {});						  
+							doh.robot.typeKeys("Howard", 300, 800);													 
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});							
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Howard", dijit.byId("firstInput").get('value'),"check for firstInput set to Howard");
+								doh.is("Howard", dijit.byId("nameInput1").get('value'),"check for nameInput1 set to Howard");
+							}), 1500);
+							return d;
+						}
+					},
+					{
+						name: "AddKen",
+						timeout: 20000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							//doh.robot.mouseMoveAt("dijit_form_Button_29", 500, 0);
+							//doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt("add", 1000, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.mouseMoveAt("firstInput", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.typeKeys("Ken", 300, 600);													  
+							doh.robot.keyPress(dojo.keys.TAB, 300, {});	 
+							doh.robot.typeKeys("Kelly", 300, 600);														
+							doh.robot.keyPress(dojo.keys.TAB, 300, {});	 
+							doh.robot.typeKeys("k.k@test.com", 300, 600);													   
+							doh.robot.keyPress(dojo.keys.TAB, 300, {});	 
+							doh.robot.typeKeys("408-764-3454", 300, 600);													   
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Ken", dijit.byId("firstInput").get('value'),"firstInput should be Ken");
+								doh.is("Ken", dijit.byId("nameInput3").get('value'),"nameInput4 should be Ken");
+								doh.is("Kelly", dijit.byId("lastInput").get('value'),"lastInput should be set");
+								doh.is("k.k@test.com", dijit.byId("emailInput2").get('value'),"emailInput2 should be set");
+								doh.is("408-764-3454", dijit.byId("telInput").get('value'),"telInput should be set");
+							}), 1000);
+							return d;
+						}
+				
+					 },
+				
+					 {						
+						name: "testGenerateDataBinding",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// move back to Home
+							doh.robot.mouseMoveAt(dojo.query('.mblToolBarButtonLeftArrow')[1], 500);							
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.mouseMoveAt("sfg", 1000, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.mouseMoveAt("generate1", 1000, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("11111", dijit.byId("TB0").get('value'),"TB0 should be set");
+								doh.is("John", dijit.byId("TB1").get('value'),"TB1 should be set");
+								doh.is("Doe", dijit.byId("TB2").get('value'),"TB2 should be set");
+								doh.is("jdoe@example.com", dijit.byId("TB3").get('value'),"TB3 should be set");			
+							}), 1000);
+							
+							return d;
+						}
+					},
+					{
+						name: "changeJohnGenerate", 
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("TB1", 500, 0); //updateModel
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});						  
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 100, {});						  
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 100, {});						  
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 100, {});						  
+							doh.robot.typeKeys("Johnny", 200, 800);													  
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});							
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});							
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Johnny", dijit.byId("TB1").get('value'),"TB1 should be Johnny");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "updateModelGenerate", 
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("updateModel", 500, 0); 
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.keyPress(dojo.keys.TAB, 1000, {});							
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								var ttt = dijit.byId("modelArea").get('value');
+								var txa = ttt.substring(33,39);
+								if (txa !== "Johnny"){ //IE has a diff offset
+									txa = ttt.substring(35,41);
+								}
+								doh.is("Johnny", txa,"textarea should have Johnny");
+							}), 2000);
+							return d;
+						}
+					},
+					{
+						name: "updateFormGenerate", 
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var ttt2 = dijit.byId("modelArea2").get('value');
+							dijit.byId("modelArea").set('value',ttt2);
+							
+							doh.robot.mouseMoveAt("generate1", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("11111", dijit.byId("TB0").get('value'),"TB0 should be set");
+								doh.is("John", dijit.byId("TB1").get('value'),"TB1 should be set");
+								doh.is("J", dijit.byId("TB2").get('value'),"TB2 should be set");
+								doh.is("Doe", dijit.byId("TB3").get('value'),"TB3 should be set");
+								doh.is("jdoe@example.com", dijit.byId("TB4").get('value'),"TB4 should be set");			
+							}), 1000);
+							return d;
+						}
+					},
+					 {						
+						name: "testBackToHome",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// move back to Home
+							var t = dojo.query('.mblToolBarButtonLeftArrow');
+							doh.robot.mouseMoveAt(dojo.query('.mblToolBarButtonLeftArrow')[2], 500);							
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("11111", dijit.byId("TB0").get('value'),"TB0 should be set");
+							}), 1000);
+							
+							return d;
+						}
+					}
+					
+				]);
+				doh.run();
+			});
+		</script>
+</html>

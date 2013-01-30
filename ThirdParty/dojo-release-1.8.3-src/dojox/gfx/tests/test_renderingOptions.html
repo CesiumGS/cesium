@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<script src="../../../dojo/dojo.js" data-dojo-config="isDebug: true,parseOnLoad: true, async:1, gfxRenderer:'svg'"></script>
+		<script>
+			require([
+				"dojo/_base/array",
+				"dojox/gfx",
+				"dojox/gfx/matrix",
+				"dojo/ready",
+				"dojox/gfx/svgext"],
+				function(array, gfx, matrix, ready){
+
+				var surface = gfx.createSurface("slideTarget", 700, 500), g, parent = surface;
+				array.forEach(["auto","optimizeSpeed","crispEdges","geometricPrecision"], function(opt,idx){
+					g = parent.createGroup().setTransform(matrix.translate(0, 20*idx));
+					g.createLine({
+						x1 : 10,
+						y1 : 10,
+						x2 : 490,
+						y2 : 100
+					}).setStroke("blue").addRenderingOption("shape-rendering", opt);
+					g.createText({
+						x : 490,
+						y : 100,
+						text :opt
+					}).setFill("black");
+				});
+				parent = surface.createGroup().setTransform(matrix.translate(0, 80));
+				array.forEach(["auto","optimizeSpeed","crispEdges","geometricPrecision"], function(opt,idx){
+					g = parent.createGroup().setTransform(matrix.translate(0, 20*idx));
+					g.createLine({
+						x1 : 10,
+						y1 : 100,
+						x2 : 490,
+						y2 : 100
+					}).setStroke("blue").addRenderingOption("shape-rendering", opt);
+					g.createText({
+						x : 490,
+						y : 100,
+						text :opt
+					}).setFill("black");
+				});
+				parent = surface.createGroup().setTransform(matrix.translate(0, 160));
+				array.forEach(["auto","optimizeSpeed","optimizeLegibility","geometricPrecision"], function(opt,idx){
+					g = parent.createGroup().setTransform(matrix.translate(0, 20*idx));
+					g.createText({
+						x : 50,
+						y : 100,
+						text : "LYoWAT	ff fi fl ffl  ("+ opt +")"
+					}).setFill("black").setFont({size:"23px", family:"Calibri, Constantia"}).addRenderingOption("text-rendering" , opt);
+				});
+			});
+
+		</script>
+	</head>
+	<body>
+		This test demonstrates the various SVG rendering options in action. This test only works on browsers supporting SVG.
+		<div id="slideTarget" ></div>
+	</body>
+</html>

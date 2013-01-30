@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>GridLayout</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','Button','GridLayout']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/ScrollableView",
+			"dojox/mobile/GridLayout",
+			"dojox/mobile/Pane",
+			"dojox/mobile/Button"
+		]);
+	</script>
+	<style>
+		.mblButton {
+			width: 150px;
+			height: 100px;
+		}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="view1" data-dojo-type="dojox.mobile.ScrollableView">
+		<div data-dojo-type="dojox.mobile.GridLayout">
+			<div data-dojo-type="dojox.mobile.Pane"><button class="mblBlueButton" data-dojo-type="dojox.mobile.Button">Button 1</button></div>
+			<div data-dojo-type="dojox.mobile.Pane"><button class="mblBlueButton" data-dojo-type="dojox.mobile.Button">Button 2</button></div>
+			<div data-dojo-type="dojox.mobile.Pane"><button class="mblBlueButton" data-dojo-type="dojox.mobile.Button">Button 3</button></div>
+			<div data-dojo-type="dojox.mobile.Pane"><button class="mblBlueButton" data-dojo-type="dojox.mobile.Button">Button 4</button></div>
+			<div data-dojo-type="dojox.mobile.Pane"><button class="mblBlueButton" data-dojo-type="dojox.mobile.Button">Button 5</button></div>
+			<div data-dojo-type="dojox.mobile.Pane"><button class="mblBlueButton" data-dojo-type="dojox.mobile.Button">Button 6</button></div>
+		</div>
+	</div>
+</body>
+</html>
+
