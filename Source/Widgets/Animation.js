@@ -70,20 +70,31 @@ define(['../Core/DeveloperError',
             throw new DeveloperError('animationController is required.');
         }
 
-        this.parentNode = parentNode;
-        this.animationController = animationController;
-        this._clock = animationController.getClock();
-
+        this._animationController = animationController;
         this._centerX = undefined;
+        this._clock = animationController.getClock();
         this._defsElement = undefined;
         this._isSystemTimeAvailable = undefined;
+        this._knobDate = undefined;
+        this._knobOuter = undefined;
+        this._knobStatus = undefined;
+        this._knobTime = undefined;
         this._lastKnobDate = '';
         this._lastKnobSpeed = '';
         this._lastKnobTime = '';
         this._lastPauseTooltip = '';
+        this._parentNode = parentNode;
+        this._pauseSVG = undefined;
+        this._pauseTooltip = undefined;
+        this._playForwardSVG = undefined;
+        this._playReverseSVG = undefined;
         this._realtimeMode = undefined;
+        this._realtimeSVG = undefined;
+        this._realtimeTooltip = undefined;
         this._scale = undefined;
         this._shuttleRingAngle = undefined;
+        this._shuttleRingPointer = undefined;
+        this._svgNode = undefined;
         this._themeDisabled = undefined;
         this._themeHover = undefined;
         this._themeKnob = undefined;
@@ -95,19 +106,6 @@ define(['../Core/DeveloperError',
         this._topG = undefined;
         this._wasAnimating = false;
 
-        this.knobDate = undefined;
-        this.knobOuter = undefined;
-        this.knobStatus = undefined;
-        this.knobTime = undefined;
-        this.pauseSVG = undefined;
-        this.pauseTooltip = undefined;
-        this.playForwardSVG = undefined;
-        this.playReverseSVG = undefined;
-        this.realtimeSVG = undefined;
-        this.realtimeTooltip = undefined;
-        this.shuttleRingPointer = undefined;
-        this.svgNode = undefined;
-
         _createNodes(this, parentNode);
     };
 
@@ -115,6 +113,17 @@ define(['../Core/DeveloperError',
     var _xlinkNS = "http://www.w3.org/1999/xlink";
     var _monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     var _maxShuttleAngle = 105;
+
+    var _gradientEnabledColor0 = Color.fromCssColorString('rgba(247,250,255,0.384)');
+    var _gradientEnabledColor1 = Color.fromCssColorString('rgba(143,191,255,0.216)');
+    var _gradientEnabledColor2 = Color.fromCssColorString('rgba(153,197,255,0.098)');
+    var _gradientEnabledColor3 = Color.fromCssColorString('rgba(255,255,255,0.086)');
+
+    var _gradientDisabledColor0 = Color.fromCssColorString('rgba(255,255,255,0.267)');
+    var _gradientDisabledColor1 = Color.fromCssColorString('rgba(255,255,255,0)');
+
+    var _gradientKnobColor = Color.fromCssColorString('rgba(66,67,68,0.3)');
+    var _gradientPointerColor = Color.fromCssColorString('rgba(0,0,0,0.5)');
 
     function _svgFromObject(obj) {
         var ele = document.createElementNS(_svgNS, obj.tagName);
@@ -188,17 +197,6 @@ define(['../Core/DeveloperError',
         knobOuter.setAttribute('transform', 'rotate(' + angle + ')');
     }
 
-    Animation.prototype.gradientEnabledColor0 = Color.fromCssColorString('rgba(247,250,255,0.384)');
-    Animation.prototype.gradientEnabledColor1 = Color.fromCssColorString('rgba(143,191,255,0.216)');
-    Animation.prototype.gradientEnabledColor2 = Color.fromCssColorString('rgba(153,197,255,0.098)');
-    Animation.prototype.gradientEnabledColor3 = Color.fromCssColorString('rgba(255,255,255,0.086)');
-
-    Animation.prototype.gradientDisabledColor0 = Color.fromCssColorString('rgba(255,255,255,0.267)');
-    Animation.prototype.gradientDisabledColor1 = Color.fromCssColorString('rgba(255,255,255,0)');
-
-    Animation.prototype.gradientKnobColor = Color.fromCssColorString('rgba(66,67,68,0.3)');
-    Animation.prototype.gradientPointerColor = Color.fromCssColorString('rgba(0,0,0,0.5)');
-
     function _makeColorString(background, gradient) {
         var gradientAlpha = gradient.alpha;
         var backgroundAlpha = 1.0 - gradientAlpha;
@@ -213,7 +211,7 @@ define(['../Core/DeveloperError',
      *
      * @function
      * @memberof Animation.prototype
-     * @returns {Number} : The scale of the widget.
+     * @returns {Number} The scale of the widget.
      */
     Animation.prototype.getScale = function() {
         return this._scale;
@@ -228,11 +226,12 @@ define(['../Core/DeveloperError',
      * @param {Number} scale A size modifier for the widget UI
      */
     Animation.prototype.setScale = function(scale) {
-        scale *= 0.85; // The default 1.0 scale is smaller than the native SVG as originally designed.
         this._scale = scale;
+
+        scale *= 0.85; // The default 1.0 scale is smaller than the native SVG as originally designed.
         this._centerX = Math.max(1, Math.floor(100 * scale));
 
-        var svg = this.svgNode;
+        var svg = this._svgNode;
         var width = Math.max(2, Math.floor(200 * scale));
         var height = Math.max(2, Math.floor(132 * scale));
 
@@ -253,7 +252,7 @@ define(['../Core/DeveloperError',
      */
     Animation.prototype.applyThemeChanges = function() {
         var widget = this;
-        var svg = this.svgNode;
+        var svg = this._svgNode;
 
         var buttonNormalBackColor = Color.fromCssColorString(window.getComputedStyle(widget._themeNormal).getPropertyValue('color'));
         var buttonHoverBackColor = Color.fromCssColorString(window.getComputedStyle(widget._themeHover).getPropertyValue('color'));
@@ -278,19 +277,19 @@ define(['../Core/DeveloperError',
                 {
                     tagName : 'stop',
                     offset : '0%',
-                    'stop-color' : _makeColorString(buttonNormalBackColor, widget.gradientEnabledColor0)
+                    'stop-color' : _makeColorString(buttonNormalBackColor, _gradientEnabledColor0)
                 }, {
                     tagName : 'stop',
                     offset : '12%',
-                    'stop-color' : _makeColorString(buttonNormalBackColor, widget.gradientEnabledColor1)
+                    'stop-color' : _makeColorString(buttonNormalBackColor, _gradientEnabledColor1)
                 }, {
                     tagName : 'stop',
                     offset : '46%',
-                    'stop-color' : _makeColorString(buttonNormalBackColor, widget.gradientEnabledColor2)
+                    'stop-color' : _makeColorString(buttonNormalBackColor, _gradientEnabledColor2)
                 }, {
                     tagName : 'stop',
                     offset : '81%',
-                    'stop-color' : _makeColorString(buttonNormalBackColor, widget.gradientEnabledColor3)
+                    'stop-color' : _makeColorString(buttonNormalBackColor, _gradientEnabledColor3)
                 }]
             }, {
                 id : 'animation_buttonHovered',
@@ -302,19 +301,19 @@ define(['../Core/DeveloperError',
                 children : [{
                     tagName : 'stop',
                     offset : '0%',
-                    'stop-color' : _makeColorString(buttonHoverBackColor, widget.gradientEnabledColor0)
+                    'stop-color' : _makeColorString(buttonHoverBackColor, _gradientEnabledColor0)
                 }, {
                     tagName : 'stop',
                     offset : '12%',
-                    'stop-color' : _makeColorString(buttonHoverBackColor, widget.gradientEnabledColor1)
+                    'stop-color' : _makeColorString(buttonHoverBackColor, _gradientEnabledColor1)
                 }, {
                     tagName : 'stop',
                     offset : '46%',
-                    'stop-color' : _makeColorString(buttonHoverBackColor, widget.gradientEnabledColor2)
+                    'stop-color' : _makeColorString(buttonHoverBackColor, _gradientEnabledColor2)
                 }, {
                     tagName : 'stop',
                     offset : '81%',
-                    'stop-color' : _makeColorString(buttonHoverBackColor, widget.gradientEnabledColor3)
+                    'stop-color' : _makeColorString(buttonHoverBackColor, _gradientEnabledColor3)
                 }]
             }, {
                 id : 'animation_buttonSelected',
@@ -326,19 +325,19 @@ define(['../Core/DeveloperError',
                 children : [{
                     tagName : 'stop',
                     offset : '0%',
-                    'stop-color' : _makeColorString(buttonSelectedBackColor, widget.gradientEnabledColor0)
+                    'stop-color' : _makeColorString(buttonSelectedBackColor, _gradientEnabledColor0)
                 }, {
                     tagName : 'stop',
                     offset : '12%',
-                    'stop-color' : _makeColorString(buttonSelectedBackColor, widget.gradientEnabledColor1)
+                    'stop-color' : _makeColorString(buttonSelectedBackColor, _gradientEnabledColor1)
                 }, {
                     tagName : 'stop',
                     offset : '46%',
-                    'stop-color' : _makeColorString(buttonSelectedBackColor, widget.gradientEnabledColor2)
+                    'stop-color' : _makeColorString(buttonSelectedBackColor, _gradientEnabledColor2)
                 }, {
                     tagName : 'stop',
                     offset : '81%',
-                    'stop-color' : _makeColorString(buttonSelectedBackColor, widget.gradientEnabledColor3)
+                    'stop-color' : _makeColorString(buttonSelectedBackColor, _gradientEnabledColor3)
                 }]
             }, {
                 id : 'animation_buttonDisabled',
@@ -350,11 +349,11 @@ define(['../Core/DeveloperError',
                 children : [{
                     tagName : 'stop',
                     offset : '0%',
-                    'stop-color' : _makeColorString(buttonDisabledBackColor, widget.gradientDisabledColor0)
+                    'stop-color' : _makeColorString(buttonDisabledBackColor, _gradientDisabledColor0)
                 }, {
                     tagName : 'stop',
                     offset : '75%',
-                    'stop-color' : _makeColorString(buttonDisabledBackColor, widget.gradientDisabledColor1)
+                    'stop-color' : _makeColorString(buttonDisabledBackColor, _gradientDisabledColor1)
                 }]
             }, {
                 id : 'animation_blurred',
@@ -432,11 +431,11 @@ define(['../Core/DeveloperError',
                 }, {
                     tagName : 'stop',
                     offset : '60%',
-                    'stop-color' : _makeColorString(pointerColor, widget.gradientPointerColor)
+                    'stop-color' : _makeColorString(pointerColor, _gradientPointerColor)
                 }, {
                     tagName : 'stop',
                     offset : '100%',
-                    'stop-color' : _makeColorString(pointerColor, widget.gradientPointerColor)
+                    'stop-color' : _makeColorString(pointerColor, _gradientPointerColor)
                 }]
             }, {
                 id : 'animation_shuttleRingPointerPaused',
@@ -472,15 +471,15 @@ define(['../Core/DeveloperError',
                 children : [{
                     tagName : 'stop',
                     offset : '5%',
-                    'stop-color' : _makeColorString(knobBackColor, widget.gradientEnabledColor0)
+                    'stop-color' : _makeColorString(knobBackColor, _gradientEnabledColor0)
                 }, {
                     tagName : 'stop',
                     offset : '60%',
-                    'stop-color' : _makeColorString(knobBackColor, widget.gradientKnobColor)
+                    'stop-color' : _makeColorString(knobBackColor, _gradientKnobColor)
                 }, {
                     tagName : 'stop',
                     offset : '85%',
-                    'stop-color' : _makeColorString(knobBackColor, widget.gradientEnabledColor1)
+                    'stop-color' : _makeColorString(knobBackColor, _gradientEnabledColor1)
                 }]
             }, {
                 id : 'animation_knobInner',
@@ -492,15 +491,15 @@ define(['../Core/DeveloperError',
                 children : [{
                     tagName : 'stop',
                     offset : '5%',
-                    'stop-color' : _makeColorString(knobBackColor, widget.gradientKnobColor)
+                    'stop-color' : _makeColorString(knobBackColor, _gradientKnobColor)
                 }, {
                     tagName : 'stop',
                     offset : '60%',
-                    'stop-color' : _makeColorString(knobBackColor, widget.gradientEnabledColor0)
+                    'stop-color' : _makeColorString(knobBackColor, _gradientEnabledColor0)
                 }, {
                     tagName : 'stop',
                     offset : '85%',
-                    'stop-color' : _makeColorString(knobBackColor, widget.gradientEnabledColor3)
+                    'stop-color' : _makeColorString(knobBackColor, _gradientEnabledColor3)
                 }]
             }, {
                 id : 'animation_pathReset',
@@ -632,7 +631,7 @@ define(['../Core/DeveloperError',
         widget._themeSwoosh = themeEle.childNodes[6];
         widget._themeSwooshHover = themeEle.childNodes[7];
 
-        var svg = widget.svgNode = document.createElementNS(_svgNS, 'svg:svg');
+        var svg = widget._svgNode = document.createElementNS(_svgNS, 'svg:svg');
 
         // Define the XLink namespace that SVG uses
         svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', _xlinkNS);
@@ -645,36 +644,36 @@ define(['../Core/DeveloperError',
         var buttonsG = document.createElementNS(_svgNS, 'g');
 
         // Realtime
-        widget.realtimeSVG = wingButton(3, 4, '#animation_pathClock', 'Real-time');
-        widget.realtimeTooltip = widget.realtimeSVG.getElementsByTagName('title')[0];
-        buttonsG.appendChild(widget.realtimeSVG);
-        widget.realtimeSVG.addEventListener('click', function() {
-            widget.animationController.playRealtime();
+        widget._realtimeSVG = wingButton(3, 4, '#animation_pathClock', 'Real-time');
+        widget._realtimeTooltip = widget._realtimeSVG.getElementsByTagName('title')[0];
+        buttonsG.appendChild(widget._realtimeSVG);
+        widget._realtimeSVG.addEventListener('click', function() {
+            widget._animationController.playRealtime();
         }, true);
 
         // Play Reverse
-        widget.playReverseSVG = rectButton(44, 99, '#animation_pathPlayReverse', 'Play Reverse');
-        buttonsG.appendChild(widget.playReverseSVG);
-        widget.playReverseSVG.addEventListener('click', function() {
-            widget.animationController.playReverse();
+        widget._playReverseSVG = rectButton(44, 99, '#animation_pathPlayReverse', 'Play Reverse');
+        buttonsG.appendChild(widget._playReverseSVG);
+        widget._playReverseSVG.addEventListener('click', function() {
+            widget._animationController.playReverse();
         }, true);
 
         // Play Forward
-        widget.playForwardSVG = rectButton(124, 99, '#animation_pathPlay', 'Play Forward');
-        buttonsG.appendChild(widget.playForwardSVG);
-        widget.playForwardSVG.addEventListener('click', function() {
-            widget.animationController.play();
+        widget._playForwardSVG = rectButton(124, 99, '#animation_pathPlay', 'Play Forward');
+        buttonsG.appendChild(widget._playForwardSVG);
+        widget._playForwardSVG.addEventListener('click', function() {
+            widget._animationController.play();
         }, true);
 
         // Pause
-        widget.pauseSVG = rectButton(84, 99, '#animation_pathPause', 'Pause');
-        widget.pauseTooltip = widget.pauseSVG.getElementsByTagName('title')[0];
-        buttonsG.appendChild(widget.pauseSVG);
-        widget.pauseSVG.addEventListener('click', function() {
-            if (widget.animationController.isAnimating()) {
-                widget.animationController.pause();
+        widget._pauseSVG = rectButton(84, 99, '#animation_pathPause', 'Pause');
+        widget._pauseTooltip = widget._pauseSVG.getElementsByTagName('title')[0];
+        buttonsG.appendChild(widget._pauseSVG);
+        widget._pauseSVG.addEventListener('click', function() {
+            if (widget._animationController.isAnimating()) {
+                widget._animationController.pause();
             } else {
-                widget.animationController.unpause();
+                widget._animationController.unpause();
             }
         }, true);
 
@@ -712,12 +711,12 @@ define(['../Core/DeveloperError',
         });
         shuttleRingBackG.appendChild(shuttleRingSwooshG);
 
-        widget.shuttleRingPointer = _svgFromObject({
+        widget._shuttleRingPointer = _svgFromObject({
             'tagName' : 'use',
             'class' : 'animation-shuttleRingPointer',
             'xlink:href' : '#animation_pathPointer'
         });
-        shuttleRingBackG.appendChild(widget.shuttleRingPointer);
+        shuttleRingBackG.appendChild(widget._shuttleRingPointer);
 
         widget._realtimeMode = false;
         widget._isSystemTimeAvailable = true;
@@ -735,16 +734,16 @@ define(['../Core/DeveloperError',
                 if (angle > 180) {
                     angle -= 360;
                 }
-                var speed = _shuttleAngletoSpeed(widget.animationController, angle);
+                var speed = _shuttleAngletoSpeed(widget._animationController, angle);
                 if (shuttleRingDragging || (Math.abs(widget._shuttleRingAngle - angle) < 15)) {
                     shuttleRingDragging = true;
                     if (speed !== 0) {
                         widget._clock.multiplier = speed;
                     }
                 } else if (speed < widget._clock.multiplier) {
-                    widget.animationController.moreReverse();
+                    widget._animationController.decreaseMultiplier();
                 } else if (speed > widget._clock.multiplier) {
-                    widget.animationController.moreForward();
+                    widget._animationController.increaseMultiplier();
                 }
                 e.preventDefault();
                 e.stopPropagation();
@@ -756,22 +755,22 @@ define(['../Core/DeveloperError',
         shuttleRingSwooshG.addEventListener('mousedown', setShuttleRingFromMouse, true);
         document.addEventListener('mousemove', setShuttleRingFromMouse, true);
         document.addEventListener('mouseup', setShuttleRingFromMouse, true);
-        widget.shuttleRingPointer.addEventListener('mousedown', setShuttleRingFromMouse, true);
+        widget._shuttleRingPointer.addEventListener('mousedown', setShuttleRingFromMouse, true);
 
         var knobG = _svgFromObject({
             'tagName' : 'g',
             'transform' : 'translate(100,100)'
         });
 
-        widget.knobOuter = _svgFromObject({
+        widget._knobOuter = _svgFromObject({
             'tagName' : 'circle',
             'class' : 'animation-knobOuter',
             'cx' : 0,
             'cy' : 0,
             'r' : 71
         });
-        knobG.appendChild(widget.knobOuter);
-        widget.knobOuter.addEventListener('mousedown', setShuttleRingFromMouse, true);
+        knobG.appendChild(widget._knobOuter);
+        widget._knobOuter.addEventListener('mousedown', setShuttleRingFromMouse, true);
 
         var knobInner = _svgFromObject({
             'tagName' : 'circle',
@@ -783,12 +782,12 @@ define(['../Core/DeveloperError',
         });
         knobG.appendChild(knobInner);
 
-        widget.knobDate = _svgText(0, -24, '');
-        knobG.appendChild(widget.knobDate);
-        widget.knobTime = _svgText(0, -7, '');
-        knobG.appendChild(widget.knobTime);
-        widget.knobStatus = _svgText(0, -41, '');
-        knobG.appendChild(widget.knobStatus);
+        widget._knobDate = _svgText(0, -24, '');
+        knobG.appendChild(widget._knobDate);
+        widget._knobTime = _svgText(0, -7, '');
+        knobG.appendChild(widget._knobTime);
+        widget._knobStatus = _svgText(0, -41, '');
+        knobG.appendChild(widget._knobStatus);
 
         // widget shield catches clicks on the knob itself (even while DOM elements underneath are changing).
         var knobShield = _svgFromObject({
@@ -813,7 +812,7 @@ define(['../Core/DeveloperError',
      *
      * @function
      * @memberof Animation.prototype
-     * @returns {String} : The human-readable version of the current date.
+     * @returns {String} The human-readable version of the current date.
      */
     Animation.prototype.makeDateLabel = function(date) {
         var gregorianDate = date.toGregorianDate();
@@ -826,7 +825,7 @@ define(['../Core/DeveloperError',
      *
      * @function
      * @memberof Animation.prototype
-     * @returns {String} : The human-readable version of the current time.
+     * @returns {String} The human-readable version of the current time.
      */
     Animation.prototype.makeTimeLabel = function(date) {
         var gregorianDate = date.toGregorianDate();
@@ -850,17 +849,17 @@ define(['../Core/DeveloperError',
         var currentDateLabel = this.makeDateLabel(currentTime);
         if (currentDateLabel !== this._lastKnobDate) {
             this._lastKnobDate = currentDateLabel;
-            _updateSvgText(this.knobDate, currentDateLabel);
+            _updateSvgText(this._knobDate, currentDateLabel);
         }
         if (currentTimeLabel !== this._lastKnobTime) {
             this._lastKnobTime = currentTimeLabel;
-            _updateSvgText(this.knobTime, currentTimeLabel);
+            _updateSvgText(this._knobTime, currentTimeLabel);
         }
 
         var speed = this._clock.multiplier;
         var angle = _shuttleSpeedtoAngle(speed);
         var tooltip, speedLabel;
-        if (this.animationController.isAnimating()) {
+        if (this._animationController.isAnimating()) {
             if (this._clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
                 speedLabel = 'Today';
             } else {
@@ -872,39 +871,39 @@ define(['../Core/DeveloperError',
             tooltip = 'Unpause';
         }
 
-        var isAnimating = this.animationController.isAnimating();
+        var isAnimating = this._animationController.isAnimating();
         if (this._lastKnobSpeed !== speedLabel || this._wasAnimating !== isAnimating) {
             this._lastKnobSpeed = speedLabel;
             this._wasAnimating = isAnimating;
             if (!isAnimating) {
-                this.shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPausePointer');
-                this.pauseSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
-                this.playForwardSVG.setAttribute('class', 'animation-rectButton');
-                this.playReverseSVG.setAttribute('class', 'animation-rectButton');
+                this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPausePointer');
+                this._pauseSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
+                this._playForwardSVG.setAttribute('class', 'animation-rectButton');
+                this._playReverseSVG.setAttribute('class', 'animation-rectButton');
             } else if (this._clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-                this.shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
-                this.pauseSVG.setAttribute('class', 'animation-rectButton');
-                this.playForwardSVG.setAttribute('class', 'animation-rectButton');
-                this.playReverseSVG.setAttribute('class', 'animation-rectButton');
+                this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
+                this._pauseSVG.setAttribute('class', 'animation-rectButton');
+                this._playForwardSVG.setAttribute('class', 'animation-rectButton');
+                this._playReverseSVG.setAttribute('class', 'animation-rectButton');
             } else if (speed > 0) {
-                this.shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
-                this.pauseSVG.setAttribute('class', 'animation-rectButton');
-                this.playForwardSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
-                this.playReverseSVG.setAttribute('class', 'animation-rectButton');
+                this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
+                this._pauseSVG.setAttribute('class', 'animation-rectButton');
+                this._playForwardSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
+                this._playReverseSVG.setAttribute('class', 'animation-rectButton');
             } else {
-                this.shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
-                this.pauseSVG.setAttribute('class', 'animation-rectButton');
-                this.playForwardSVG.setAttribute('class', 'animation-rectButton');
-                this.playReverseSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
+                this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
+                this._pauseSVG.setAttribute('class', 'animation-rectButton');
+                this._playForwardSVG.setAttribute('class', 'animation-rectButton');
+                this._playReverseSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
             }
-            _updateSvgText(this.knobStatus, speedLabel);
+            _updateSvgText(this._knobStatus, speedLabel);
         }
 
         if (this._clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
             if (!this._realtimeMode) {
                 this._realtimeMode = true;
-                this.realtimeSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
-                this.realtimeTooltip.textContent = 'Today (real-time)';
+                this._realtimeSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
+                this._realtimeTooltip.textContent = 'Today (real-time)';
             }
         } else {
             var setRealtimeStyle = false;
@@ -922,23 +921,23 @@ define(['../Core/DeveloperError',
 
             if (setRealtimeStyle) {
                 if (!isSystemTimeAvailable) {
-                    this.realtimeSVG.setAttribute('class', 'animation-buttonDisabled');
-                    this.realtimeTooltip.textContent = 'Current time not in range.';
+                    this._realtimeSVG.setAttribute('class', 'animation-buttonDisabled');
+                    this._realtimeTooltip.textContent = 'Current time not in range.';
                 } else {
-                    this.realtimeSVG.setAttribute('class', 'animation-rectButton');
-                    this.realtimeTooltip.textContent = 'Today (real-time)';
+                    this._realtimeSVG.setAttribute('class', 'animation-rectButton');
+                    this._realtimeTooltip.textContent = 'Today (real-time)';
                 }
             }
         }
 
         if (this._shuttleRingAngle !== angle) {
             this._shuttleRingAngle = angle;
-            _setShuttleRingPointer(this.shuttleRingPointer, this.knobOuter, angle);
+            _setShuttleRingPointer(this._shuttleRingPointer, this._knobOuter, angle);
         }
 
         if (this._lastPauseTooltip !== tooltip) {
             this._lastPauseTooltip = tooltip;
-            this.pauseTooltip.textContent = tooltip;
+            this._pauseTooltip.textContent = tooltip;
         }
     };
 
