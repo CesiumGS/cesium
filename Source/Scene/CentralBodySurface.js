@@ -810,7 +810,8 @@ define([
         }
 
         if (process.state === TerrainState.READY) {
-            // TODO: clean up tile.upsampledTerrain.
+            // We no longer need the in-process upsampling results.
+            tile.upsampledTerrain.freeResources();
         }
 
         if (process.state === TerrainState.FAILED || process.state === TerrainState.NOT_AVAILABLE) {
