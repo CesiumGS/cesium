@@ -86,9 +86,9 @@ define([
     /**
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link TerrainProvider#isReady} returns true.  The result must include terrain data and
-     * may optionally include a water mask and an indication of which child tiles are available.
+     * may optionally include an indication of which child tiles are available.
      *
-     * @memberof CesiumTerrainProvider
+     * @memberof EllipsoidTerrainProvider
      *
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
@@ -97,7 +97,7 @@ define([
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
      */
-    EllipsoidTerrainProvider.prototype.requestTileGeometry2 = function(x, y, level) {
+    EllipsoidTerrainProvider.prototype.requestTileGeometry = function(x, y, level) {
         return this._terrainData;
     };
 

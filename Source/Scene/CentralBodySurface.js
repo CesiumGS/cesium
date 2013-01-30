@@ -777,7 +777,7 @@ define([
         if (process.state === TerrainState.UNLOADED) {
             if (isDataAvailable(tile)) {
                 // Request the terrain from the terrain provider.
-                process.data = terrainProvider.requestTileGeometry2(tile.x, tile.y, tile.level);
+                process.data = terrainProvider.requestTileGeometry(tile.x, tile.y, tile.level);
 
                 // If the request method returns undefined (instead of a promise), the request
                 // has been deferred.
@@ -1323,8 +1323,6 @@ define([
                     var boundingVolume = tile.renderableTerrain.boundingSphere3D;
 
                     if (frameState.mode !== SceneMode.SCENE3D) {
-                        // TODO: If we show terrain heights in Columbus View, the bounding sphere
-                        //       needs to be expanded to include the heights.
                         boundingVolume = BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.renderableTerrain.minHeight, tile.renderableTerrain.maxHeight);
                         boundingVolume.center = new Cartesian3(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y);
 

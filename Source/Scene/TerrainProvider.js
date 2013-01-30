@@ -207,49 +207,21 @@ define([
         return this.levelZeroMaximumGeometricError / (1 << level);
     };
 
-    // Is there a limit on 'level' of the tile that can be passed in?  It seems
-    // natural to have a maxLevel, but this would cause problems if we have hi-res imagery
-    // and low-res terrain.  So I'd say we can continue to refine terrain tiles arbitrarily
-    // until both the terrain and all the imagery layers have no more detail to give.  In that
-    // case, this method is expected to be able to produce geometry for an arbitrarily-deep
-    // tile tree.
-
     /**
-     * Request the tile geometry from the remote server.  Once complete, the
-     * tile state should be set to RECEIVED.  Alternatively, tile state can be set to
-     * IMAGERY_SKELETONS_CREATED to indicate that the request should be attempted again next update, if the tile
-     * is still needed.
+     * Requests the geometry for a given tile.  This function should not be called before
+     * {@link TerrainProvider#isReady} returns true.  The result must include terrain data and
+     * may optionally include an indication of which child tiles are available.
      *
-     * @param {Tile} The tile to request geometry for.
-     */
-    TerrainProvider.prototype.requestTileGeometry = function(tile) {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
-
-    /**
-     * Transform the tile geometry from the format requested from the remote server
-     * into a format suitable for resource creation.  Once complete, the tile
-     * state should be set to TRANSFORMED.  Alternatively, tile state can be set to
-     * RECEIVED to indicate that the transformation should be attempted again next update, if the tile
-     * is still needed.
+     * @memberof TerrainProvider
      *
-     * @param {Context} context The context to use to create resources.
-     * @param {Tile} tile The tile to transform geometry for.
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {Promise|TerrainData} A promise for the requested geometry.  If this method
+     *          returns undefined instead of a promise, it is an indication that too many requests are already
+     *          pending and the request will be retried later.
      */
-    TerrainProvider.prototype.transformGeometry = function(context, tile) {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
-
-    /**
-     * Create WebGL resources for the tile using whatever data the transformGeometry step produced.
-     * Once complete, the tile state should be set to READY.  Alternatively, tile state can be set to
-     * TRANSFORMED to indicate that resource creation should be attempted again next update, if the tile
-     * is still needed.
-     *
-     * @param {Context} context The context to use to create resources.
-     * @param {Tile} tile The tile to create resources for.
-     */
-    TerrainProvider.prototype.createResources = function(context, tile) {
+    TerrainProvider.prototype.requestTileGeometry = function(x, y, level) {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 

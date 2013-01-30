@@ -139,7 +139,7 @@ define([
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
      */
-    CesiumTerrainProvider.prototype.requestTileGeometry2 = function(x, y, level) {
+    CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level) {
         var yTiles = this.tilingScheme.getNumberOfYTilesAtLevel(level);
         var url = this.url + '/' + level + '/' + x + '/' + (yTiles - y - 1) + '.terrain';
 
