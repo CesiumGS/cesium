@@ -39,20 +39,6 @@ require({
         location : 'Apps/CesiumViewer'
     }]
 }, [
-    'Widgets/Dojo/checkForChromeFrame',
-    'dojo/parser',
-    'dojo/dom-class',
-    'dojo/_base/window',
-    'CesiumViewer/CesiumViewer',
-    'dojo/domReady!'
-], function(
-    checkForChromeFrame,
-    parser,
-    domClass,
-    win) {
-    "use strict";
-
-    checkForChromeFrame();
-    parser.parse();
-    domClass.remove(win.body(), 'loading');
+    'CesiumViewer/CesiumViewer'
+], function() {
 });
