@@ -772,60 +772,60 @@ define([
     }
 
     function processTerrainLoadStateMachine(surface, context, terrainProvider, tile) {
-        var process = tile.loadedTerrain;
+        var tileTerrain = tile.loadedTerrain;
 
-        if (process.state === TerrainState.UNLOADED) {
+        if (tileTerrain.state === TerrainState.UNLOADED) {
             if (isDataAvailable(tile)) {
                 // Request the terrain from the terrain provider.
-                process.data = terrainProvider.requestTileGeometry(tile.x, tile.y, tile.level);
+                tileTerrain.data = terrainProvider.requestTileGeometry(tile.x, tile.y, tile.level);
 
                 // If the request method returns undefined (instead of a promise), the request
                 // has been deferred.
-                if (typeof process.data !== 'undefined') {
-                    process.state = TerrainState.RECEIVING;
+                if (typeof tileTerrain.data !== 'undefined') {
+                    tileTerrain.state = TerrainState.RECEIVING;
 
-                    when(process.data, function(terrainData) {
-                        fillTileWithLoadedTerrain(tile, process, terrainData);
+                    when(tileTerrain.data, function(terrainData) {
+                        fillTileWithLoadedTerrain(tile, tileTerrain, terrainData);
                     }, function() {
                         // TODO: add error reporting and retry logic similar to imagery providers.
-                        process.state = TerrainState.FAILED;
+                        tileTerrain.state = TerrainState.FAILED;
                     });
                 }
             } else {
                 // Data is not available, so mark that terrain will not be requested for this tile.
                 // That might change later if and when the parent tile is loaded.
-                process.state = TerrainState.NOT_AVAILABLE;
+                tileTerrain.state = TerrainState.NOT_AVAILABLE;
             }
         }
 
-        if (process.state === TerrainState.RECEIVED) {
+        if (tileTerrain.state === TerrainState.RECEIVED) {
             // Once terrain data is received, we no longer need to advance
             // the upsampling process.
             tile.suspendUpsampling = true;
-            transformTileTerrain(surface, context, terrainProvider, tile, process);
+            transformTileTerrain(surface, context, terrainProvider, tile, tileTerrain);
         }
 
-        if (process.state === TerrainState.TRANSFORMED) {
-            createTileTerrainResources(surface, context, terrainProvider, tile, process);
+        if (tileTerrain.state === TerrainState.TRANSFORMED) {
+            createTileTerrainResources(surface, context, terrainProvider, tile, tileTerrain);
         }
 
-        if (process.state === TerrainState.READY) {
+        if (tileTerrain.state === TerrainState.READY) {
             // We no longer need the in-process upsampling results.
             tile.upsampledTerrain.freeResources();
         }
 
-        if (process.state === TerrainState.FAILED || process.state === TerrainState.NOT_AVAILABLE) {
+        if (tileTerrain.state === TerrainState.FAILED || tileTerrain.state === TerrainState.NOT_AVAILABLE) {
             // If we previously suspended the upsample operation, resume it now.
             // We're going to need it.
             tile.suspendUpsampling = false;
         }
     }
 
-    function transformTileTerrain(surface, context, terrainProvider, tile, process) {
+    function transformTileTerrain(surface, context, terrainProvider, tile, tileTerrain) {
         var tilingScheme = tile.tilingScheme;
         var ellipsoid = tilingScheme.getEllipsoid();
 
-        var terrainData = process.data;
+        var terrainData = tileTerrain.data;
         var meshPromise = terrainData.createMesh(ellipsoid, tilingScheme, tile.x, tile.y, tile.level);
 
         if (typeof meshPromise === 'undefined') {
@@ -833,28 +833,28 @@ define([
             return;
         }
 
-        process.state = TerrainState.TRANSFORMING;
+        tileTerrain.state = TerrainState.TRANSFORMING;
 
         when(meshPromise, function(mesh) {
-            process.mesh = mesh;
-            process.state = TerrainState.TRANSFORMED;
+            tileTerrain.mesh = mesh;
+            tileTerrain.state = TerrainState.TRANSFORMED;
         }, function() {
-            process.state = TerrainState.FAILED;
+            tileTerrain.state = TerrainState.FAILED;
         });
     }
 
     var cartesian3Scratch = new Cartesian3(0.0, 0.0, 0.0);
 
-    function createTileTerrainResources(surface, context, terrainProvider, tile, process) {
-        var mesh = process.mesh;
-        process.mesh = undefined;
+    function createTileTerrainResources(surface, context, terrainProvider, tile, tileTerrain) {
+        var mesh = tileTerrain.mesh;
+        tileTerrain.mesh = undefined;
 
-        process.center = mesh.center;
+        tileTerrain.center = mesh.center;
 
-        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, mesh, process, true);
-        process.minHeight = mesh.minHeight;
-        process.maxHeight = mesh.maxHeight;
-        process.boundingSphere3D = BoundingSphere.fromVertices(mesh.vertices, process.center, 5);
+        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, mesh, tileTerrain, true);
+        tileTerrain.minHeight = mesh.minHeight;
+        tileTerrain.maxHeight = mesh.maxHeight;
+        tileTerrain.boundingSphere3D = BoundingSphere.fromVertices(mesh.vertices, tileTerrain.center, 5);
 
         // TODO: we need to take the heights into account when computing the occludee point.
         var ellipsoid = tile.tilingScheme.getEllipsoid();
@@ -862,9 +862,9 @@ define([
         if (typeof occludeePoint !== 'undefined') {
             Cartesian3.multiplyComponents(occludeePoint, ellipsoid.getOneOverRadii(), occludeePoint);
         }
-        process.occludeePointInScaledSpace = occludeePoint;
+        tileTerrain.occludeePointInScaledSpace = occludeePoint;
 
-        process.state = TerrainState.READY;
+        tileTerrain.state = TerrainState.READY;
     }
 
     function isDataReceived(state) {
@@ -872,9 +872,9 @@ define([
     }
 
     function processTerrainUpsampleStateMachine(surface, context, terrainProvider, tile) {
-        var process = tile.upsampledTerrain;
+        var tileTerrain = tile.upsampledTerrain;
 
-        if (process.state === TerrainState.UNLOADED) {
+        if (tileTerrain.state === TerrainState.UNLOADED) {
             // Find the nearest ancestor with loaded terrain.
             var sourceTile = tile.parent;
             while (typeof sourceTile !== 'undefined' &&
@@ -892,28 +892,28 @@ define([
             var sourceTerrain = isDataReceived(sourceTile.loadedTerrain.state) ? sourceTile.loadedTerrain : sourceTile.upsampledTerrain;
             var sourceData = sourceTerrain.data;
 
-            process.data = sourceData.upsample(sourceTile.tilingScheme, sourceTile.x, sourceTile.y, sourceTile.level, tile.x, tile.y, tile.level);
-            if (typeof process.data === 'undefined') {
+            tileTerrain.data = sourceData.upsample(sourceTile.tilingScheme, sourceTile.x, sourceTile.y, sourceTile.level, tile.x, tile.y, tile.level);
+            if (typeof tileTerrain.data === 'undefined') {
                 // The upsample request has been deferred - try again later.
                 return;
             }
 
-            process.state = TerrainState.RECEIVING;
+            tileTerrain.state = TerrainState.RECEIVING;
 
-            when(process.data, function(terrainData) {
-                process.data = terrainData;
-                process.state = TerrainState.RECEIVED;
+            when(tileTerrain.data, function(terrainData) {
+                tileTerrain.data = terrainData;
+                tileTerrain.state = TerrainState.RECEIVED;
             }, function() {
-                process.state = TerrainState.FAILED;
+                tileTerrain.state = TerrainState.FAILED;
             });
         }
 
-        if (process.state === TerrainState.RECEIVED) {
-            transformTileTerrain(surface, context, terrainProvider, tile, process);
+        if (tileTerrain.state === TerrainState.RECEIVED) {
+            transformTileTerrain(surface, context, terrainProvider, tile, tileTerrain);
         }
 
-        if (process.state === TerrainState.TRANSFORMED) {
-            createTileTerrainResources(surface, context, terrainProvider, tile, process);
+        if (tileTerrain.state === TerrainState.TRANSFORMED) {
+            createTileTerrainResources(surface, context, terrainProvider, tile, tileTerrain);
         }
     }
 
@@ -933,9 +933,9 @@ define([
         return parentLoadedTerrain.data.isChildAvailable(parent.x, parent.y, tile.x, tile.y);
     }
 
-    function fillTileWithLoadedTerrain(tile, process, terrainData) {
-        process.data = terrainData;
-        process.state = TerrainState.RECEIVED;
+    function fillTileWithLoadedTerrain(tile, tileTerrain, terrainData) {
+        tileTerrain.data = terrainData;
+        tileTerrain.state = TerrainState.RECEIVED;
 
         // If there is (or might be) terrain data for any children, reset their state so it gets loaded.
         if (typeof tile.children !== 'undefined') {
