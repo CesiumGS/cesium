@@ -223,7 +223,7 @@
 
 	<target name="combineJavaScript.createMinified" if="${build.minification}">
 		<antcall target="combineJavaScript.create">
-			<param name="optimize" value="uglify" />
+			<param name="optimize" value="uglify2" />
 		</antcall>
 	</target>
 
