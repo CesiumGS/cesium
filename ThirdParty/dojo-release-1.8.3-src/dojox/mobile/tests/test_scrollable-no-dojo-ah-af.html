@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html class="mobile">
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>scrollable no-dojo with app header/footer</title>
+
+	<!--
+		scrollable.js is a hybrid module, which can be used with or without dojo.
+		In this example, scrollable.js is used without dojo.
+		scrollable.js has several methods that simulate dojo APIs, which are used
+		when you use scrollable.js without dojo.
+		Note that those methods are surrounded by excludeStart/excludeEnd pragmas,
+		and will be removed if you do typical dojo build.
+		If that is the case, this example does not work.
+	-->
+	<link href="../themes/iphone/base.css" rel="stylesheet"/>
+	<link href="../themes/iphone/TabBar.css" rel="stylesheet"/>
+	<script type="text/javascript" src="dojostub.js"></script>
+	<script type="text/javascript" src="../scrollable.js"></script>
+
+	<script type="text/javascript">
+	function onLoad(){
+		var scrollable = new dojox.mobile.scrollable();
+		scrollable.init({
+			domNode: document.getElementById("outer"),
+			containerNode: document.getElementById("inner"),
+			fixedFooterHeight: document.getElementById("footer1").offsetHeight
+		});
+		dojo.connect(dojo.global, (dojo.global.onorientationchange !== undefined)
+			? "onorientationchange" : "onresize", scrollable, "resize");
+	}
+	</script>
+
+	<style>
+	html, body{
+		height: 100%;
+		overflow: hidden;
+		visibility: visible;
+	}
+	.domNode {
+		position: relative;
+		height: 100%;
+		overflow: hidden;
+	}
+	.containerNode {
+		position: absolute;
+		width: 100%;
+	}
+	#header1 {
+		position: relative;
+		width: 100%;
+	}
+	#footer1 {
+		position: absolute;
+		width: 100%;
+		bottom: 0px;
+	}
+	</style>
+</head>
+<body onload="onLoad()">
+	<h1 id="header1" class="mblHeading">Fixed Header (No-Dojo)</h1>
+
+	<div id="outer" class="domNode">
+		<div id="inner" class="containerNode">
+			<h2 class="mblRoundRectCategory">Transition Effects</h2>
+			<ul class="mblRoundRectList">
+				<li class="mblListItem">
+					<img alt="" class="mblListItemIcon" src="images/i-icon-1.png">
+					<a class="mblListItemAnchor">
+						<div class="mblListItemTextBox">Slide</div>
+					</a>
+				</li>
+				<li class="mblListItem">
+					<img alt="" class="mblListItemIcon" src="images/i-icon-2.png">
+					<a class="mblListItemAnchor">
+						<div class="mblListItemTextBox">Flip</div>
+					</a>
+				</li>
+				<li class="mblListItem">
+					<img alt="" class="mblListItemIcon" src="images/i-icon-3.png">
+					<a class="mblListItemAnchor">
+						<div class="mblListItemTextBox">Fade</div>
+					</a>
+				</li>
+			</ul>
+
+			<div class="mblRoundRect">
+				<ol>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+					<li>Item</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+
+	<div id="footer1" class="mblTabBar">Fixed Footer</div>
+</body>
+</html>

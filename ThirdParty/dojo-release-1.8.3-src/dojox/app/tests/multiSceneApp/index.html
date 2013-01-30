@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/> 
+		<meta name="apple-mobile-web-app-capable" content="yes" /> 
+		<title>Multi Scene App Test</title> 
+		<link href="../../../mobile/themes/iphone/base.css" rel="stylesheet"></link> 
+		<link href="../../../mobile/themes/iphone/TabBar.css" rel="stylesheet"></link> 
+		<link href="../../../mobile/themes/iphone/IconContainer.css" rel="stylesheet"></link> 
+		<link href="../../../mobile/themes/iphone/Button.css" rel="stylesheet"></link> 
+		<link href="../../../mobile/themes/iphone/CheckBox.css" rel="stylesheet"></link> 
+		<link href="../../../mobile/themes/iphone/ComboBox.css" rel="stylesheet"></link> 
+		<link href="../../../mobile/themes/iphone/RadioButton.css" rel="stylesheet"></link> 
+		<link href="../../../mobile/themes/iphone/Slider.css" rel="stylesheet"></link> 
+		<link href="../../../mobile/themes/iphone/TabBar.css" rel="stylesheet"></link> 
+
+		<style>
+			html,body {
+				width: 100%;
+				height: 100%;
+				background: #eee;
+				font-family: arial;
+				color: #333;
+				overflow: hidden;
+				margin: 0px;
+				padding: 0px;
+				visibility: visible;
+			}
+
+			#splash {
+				width: 90%;
+				height: 90%;
+				margin: auto;
+				overflow: hidden;
+				border: 2px solid green;
+				font-color: #333;
+				text-align: center;
+			}
+
+			.mblListItemIcon {
+				top: 7px;
+				-webkit-transform: none;
+			}
+
+		</style>
+		<script type="text/javascript">
+			dojoConfig = {
+				parseOnLoad: false,
+				mblHideAddressBar: false,	
+				mblAndroidWorkaround: false,
+                mblAlwaysHideAddressBar: false,
+				traceSet:{
+					"loader-inject":0,
+					"loader-define":0,
+					"loader-runFactory":0,
+					"loader-execModule":0,
+					"loader-execModule-out":0,
+					"loader-defineModule":0
+				},
+				async:1,
+				app: {debugApp: 1}  // set debugApp to log app transtions and view activate/deactivate 
+			};
+			//console.log("pre dojo");
+		</script>
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+		<script>
+			//console.log("post dojo");
+            // the actual  launcher
+            require(["./multiSceneApp.js"], function(){});
+		</script>
+		
+		<!--script type="text/javascript" src="multiSceneApp.js"></script-->
+	
+	</head>
+	<body>
+		<!-- <div style="width: 100%; height: 100%" id="app1"><div> -->
+	</body>
+</html>

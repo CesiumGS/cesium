@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>View generation -- Model-bound generation example</title>
+		<script>
+			require = {
+				parseOnLoad: 0,
+				isDebug: 1,
+				async: 1, 
+				mvc: {debugBindings: 1}
+			};
+		</script>
+		<script src="../../../dojo/dojo.js" type="text/javascript"></script>
+		<style type="text/css">
+			@import "css/app-format.css";
+			@import "../../../dijit/themes/claro/claro.css";
+		</style>
+		<script type="text/javascript">
+			require([
+				"dojo/parser",
+				"dojo/_base/json",
+				"dijit/form/Textarea",
+				"dojox/mvc/Generate"
+			], function(parser){
+				parser.parse();
+			});
+	   </script>
+	</head>
+	<body class="claro">
+		<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<div id="wrapper">
+			<div id="header">
+				<div id="navigation"></div>
+				<div id="headerInsert">
+				<h1>View generation example</h1>
+				<h2>Data Binding - Generate Container.</h2>
+			</div>
+		</div>
+		<div id="main">
+			<div id="leftNav"></div>
+			<div id="mainContent">
+				<h3>Model</h3>
+				<div class="row">
+					<textarea id="textarea" class="cell" data-dojo-type="dijit.form.Textarea">
+{
+	Serial: "360324",
+	First: "John",
+	Last: "Doe",
+	Email: "jdoe@example.com",
+	Address: {
+		Street: "123 Valley Rd",
+		City: "Katonah",
+		State: "NY",
+		Zip: "10536"
+	},
+	Phones: [
+		{
+			Areacode: "111",
+			Local: "111-1111"
+		},{
+			Areacode: "222",
+			Local: "222-2222"
+		}
+	],
+	Member: {
+		Since: "2010",
+		Type: "Gold"
+	}
+}
+					</textarea>
+				</div>
+				<h3>Generated View</h3>
+				<div data-dojo-type="dojox.mvc.Generate"
+				 data-dojo-props="children: at('widget:textarea', 'value').direction(at.from).transform({format: dojo.fromJson}), idNameMapping: {String: 'view_t'}"></div>
+			</div>
+		</div>
+		</div>
+	</body>
+</html>

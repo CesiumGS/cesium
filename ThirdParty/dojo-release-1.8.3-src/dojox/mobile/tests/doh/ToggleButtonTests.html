@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>ToggleButton Tests</title>
+<script type="text/javascript" src="../../deviceTheme.js"></script>
+<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+<script language="JavaScript" type="text/javascript">
+	var BUTTON_LABEL = "Button";
+	var BUTTON_WIDTH = 73;
+	var BUTTON_WIDTH_IE = 81;
+	var BUTTON_HEIGHT = 27;
+	var BUTTON_HEIGHT_IE = 25;
+
+	require([
+		"dojo/_base/sniff",
+		"dojo/dom-construct", // dojo.place
+		"dojo/ready", // dojo.ready
+		"dijit/registry",  // dijit.byId
+		"doh/runner",	//doh functions
+		"dojox/mobile/ToggleButton",
+		"dojox/mobile",				// This is a mobile app.
+		"dojox/mobile/View",		// This mobile app uses mobile view
+		"dojox/mobile/compat",		// This mobile app supports running on desktop browsers
+		"dojox/mobile/parser"		// This mobile app uses declarative programming with fast mobile parser
+	], function(has, domConst, ready, registry, runner, ToggleButton){
+		function _createToggleButtonDeclaratively(buttonId) {
+			return registry.byId(buttonId);
+		}
+		function _createToggleButtonProgrammatically(placeHolderId){
+			var button = new ToggleButton({label:BUTTON_LABEL});
+			runner.assertNotEqual(null, button, placeHolderId);
+			domConst.place(button.domNode, placeHolderId, "replace");
+			button.startup();
+			return button;
+		}
+		function _createToggleButtonProgrammaticallyWithSourceNodeReference(buttonId){
+			return new ToggleButton({label:BUTTON_LABEL}, buttonId);
+		}
+		function _assertCorrectToggleButton(width, height, button){
+			runner.assertNotEqual(null, button);
+			runner.assertEqual(width, button.domNode.clientWidth, "width id=" + button.domNode.id);
+			runner.assertEqual(height, button.domNode.clientHeight, "height id=" + button.domNode.id);
+		}
+		function _showView2(){
+			var view1 = registry.byId("view1");
+			view1.performTransition("view2", 1, "none");
+		}
+		ready(function(){
+			var buttonWidth = has("ie") ? BUTTON_WIDTH_IE : BUTTON_WIDTH;
+			var buttonHeight = has("ie") ? BUTTON_HEIGHT_IE : BUTTON_HEIGHT;
+			runner.register("dojox.mobile.test.doh.ToggleButtonTests", [
+				function testInView1(){
+					var button1 = _createToggleButtonDeclaratively("view1-button1");
+					var button2 = _createToggleButtonProgrammatically("view1-button2");
+					var button3 = _createToggleButtonProgrammaticallyWithSourceNodeReference("view1-button3");
+			
+					_assertCorrectToggleButton(buttonWidth, buttonHeight, button1);
+					_assertCorrectToggleButton(buttonWidth, buttonHeight, button2);
+					_assertCorrectToggleButton(buttonWidth, buttonHeight, button3);
+				},
+				function testInView2(){
+					var button1 = _createToggleButtonDeclaratively("view2-button1");
+					var button2 = _createToggleButtonProgrammatically("view2-button2");
+					var button3 = _createToggleButtonProgrammaticallyWithSourceNodeReference("view2-button3");
+					
+					_showView2();
+					
+					_assertCorrectToggleButton(buttonWidth, buttonHeight, button1);
+					_assertCorrectToggleButton(buttonWidth, buttonHeight, button2);
+					_assertCorrectToggleButton(buttonWidth, buttonHeight, button3);
+				}
+			]);
+			runner.run();
+		});
+	})
+</script>
+</head>
+<body>
+	<div id="view1" data-dojo-type="dojox.mobile.View" selected="true">
+		<h1>View 1</h1>
+		<button id="view1-button1" data-dojo-type="dojox.mobile.ToggleButton">Button</button>
+		<div id="view1-button2"></div>
+		<button id="view1-button3"></button>
+	</div>
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<h1>View 2</h1>
+		<button id="view2-button1" data-dojo-type="dojox.mobile.ToggleButton">Button</button>
+		<div id="view2-button2"></div>
+		<button id="view2-button3"></button>
+	</div>
+</body>
+</html>

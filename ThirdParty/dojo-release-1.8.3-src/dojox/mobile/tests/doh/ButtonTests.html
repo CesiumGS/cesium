@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Button Tests</title>
+<script type="text/javascript" src="../../deviceTheme.js"></script>
+<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+<script language="JavaScript" type="text/javascript">
+	var BUTTON_LABEL = "Button";
+	var BUTTON_WIDTH = 58;
+	var BUTTON_WIDTH_FF = 64;
+	var BUTTON_WIDTH_IE = 58; // IE9
+	var BUTTON_HEIGHT = 27;
+	var BUTTON_HEIGHT_IE = 27; // IE9
+
+	require([
+		"dojo/_base/sniff",
+		"dojo/dom-construct", // dojo.place
+		"dojo/ready", // dojo.ready
+		"dijit/registry",  // dijit.byId
+		"doh/runner",	//doh functions
+		"dojox/mobile/Button",
+		"dojox/mobile",				// This is a mobile app.
+		"dojox/mobile/View",		// This mobile app uses mobile view
+		"dojox/mobile/compat",		// This mobile app supports running on desktop browsers
+		"dojox/mobile/parser"		// This mobile app uses declarative programming with fast mobile parser
+	], function(has, domConst, ready, registry, runner, Button){
+		function _createButtonDeclaratively(buttonId) {
+			return registry.byId(buttonId);
+		}
+		function _createButtonProgrammatically(placeHolderId){
+			var button = new Button({label:BUTTON_LABEL});
+			runner.assertNotEqual(null, button, placeHolderId);
+			domConst.place(button.domNode, placeHolderId, "replace");
+			button.startup();
+			return button;
+		}
+		function _createButtonProgrammaticallyWithSourceNodeReference(buttonId){
+			return new Button({label:BUTTON_LABEL}, buttonId);
+		}
+		function _assertCorrectButton(width, height, button){
+			if(width < 0){
+				return; // Skip for IE<9 (a negative width is the convention we use for skipping) 
+			}
+			runner.assertNotEqual(null, button);
+			runner.assertEqual(width, button.domNode.clientWidth, "width id=" + button.domNode.id);
+			runner.assertEqual(height, button.domNode.clientHeight, "height id=" + button.domNode.id);
+		}
+		function _showView2(){
+			var view1 = registry.byId("view1");
+			view1.performTransition("view2", 1, "none");
+		}
+		ready(function(){
+			var buttonWidth = has("ie") ? BUTTON_WIDTH_IE : has("ff") ? BUTTON_WIDTH_FF : BUTTON_WIDTH;
+			var buttonHeight = has("ie") ? BUTTON_HEIGHT_IE : BUTTON_HEIGHT;
+			// Skip the checks for IE<9
+			if(has("ie") < 9){
+				buttonWidth = -1; // negative value as convention for skipping tests
+			} 
+			runner.register("dojox.mobile.test.doh.ButtonTests", [
+				function testInView1(){
+					var button1 = _createButtonDeclaratively("view1-button1");
+					var button2 = _createButtonProgrammatically("view1-button2");
+					var button3 = _createButtonProgrammaticallyWithSourceNodeReference("view1-button3");
+			
+					_assertCorrectButton(buttonWidth, buttonHeight, button1);
+					_assertCorrectButton(buttonWidth, buttonHeight, button2);
+					_assertCorrectButton(buttonWidth, buttonHeight, button3);
+				},
+				function testInView2(){
+					var button1 = _createButtonDeclaratively("view2-button1");
+					var button2 = _createButtonProgrammatically("view2-button2");
+					var button3 = _createButtonProgrammaticallyWithSourceNodeReference("view2-button3");
+					
+					_showView2();
+					
+					_assertCorrectButton(buttonWidth, buttonHeight, button1);
+					_assertCorrectButton(buttonWidth, buttonHeight, button2);
+					_assertCorrectButton(buttonWidth, buttonHeight, button3);
+				}
+			]);
+			runner.run();
+		});
+	})
+</script>
+</head>
+<body>
+	<div id="view1" data-dojo-type="dojox.mobile.View" selected="true">
+		<h1>View 1</h1>
+		<button id="view1-button1" data-dojo-type="dojox.mobile.Button">Button</button>
+		<div id="view1-button2"></div>
+		<button id="view1-button3"></button>
+	</div>
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<h1>View 2</h1>
+		<button id="view2-button1" data-dojo-type="dojox.mobile.Button">Button</button>
+		<div id="view2-button2"></div>
+		<button id="view2-button3"></button>
+	</div>
+</body>
+</html>

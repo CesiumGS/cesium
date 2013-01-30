@@ -1,0 +1,6 @@
+.formTable td:first-child {
+	text-align: left;
+	padding-left: 10px;
+	font-size: 0.9em;
+}
+

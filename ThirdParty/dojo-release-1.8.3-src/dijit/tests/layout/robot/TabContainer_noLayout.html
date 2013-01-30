@@ -1,0 +1,559 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot TabContainer No Layout Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx",
+				"dojo/dom", "dojo/dom-geometry", "dojo/json", "dojo/query",
+				"dijit/tests/helpers", "dijit/tests/layout/robot/borderContainerTestFunctions", "dojo/domReady!"
+			], function(doh, robot, dom, geom, json, query, helpers, bcTest){
+
+				function checkInside(childDomNode, parentDomNode){
+					var cp = dojo.position(childDomNode, true),
+						pp = dojo.position(parentDomNode, true);
+	
+					doh.t(
+						cp.y > pp.y && cp.y+cp.h < pp.y+pp.h &&
+						cp.x > pp.x && cp.x+cp.w < pp.x+pp.w,
+						childDomNode.id + "child not inside " + parentDomNode.id + dojo.toJson(cp) + dojo.toJson(pp)
+					);
+				}
+
+				var oldPos, tab, handler;
+			
+				robot.initRobot('../test_TabContainer_noLayout.html');
+
+				var registry;
+
+				doh.register("setup", [
+					function setup(){
+						// get pointers to singletons loaded on test page
+						registry = robot.window.require("dijit/registry");
+					}
+				]);
+
+				doh.register("plain TabContainer",[
+					{
+						name: "tab1",
+						timeout: 8000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = registry.byId('tab1');
+							handler = tab.connect(tab, 'onDownloadEnd', function(){
+								setTimeout(d.getTestCallback(function(){
+									var h1 = query('h1', dom.byId('tab1'))[0];
+									var p1 = query('p', dom.byId('tab1'))[0];
+									var div1 = query('div', dom.byId('tab1'))[0];
+								
+									checkInside(h1, registry.byId("plainTabContainer").domNode);
+									checkInside(p1, registry.byId("plainTabContainer").domNode);
+									checkInside(div1, registry.byId("plainTabContainer").domNode);
+								
+									oldPos = geom.position(dom.byId("textAfterTabContainer1"), true);
+								}), 500);
+							});
+							
+							robot.mouseMoveAt('plainTabContainer_tablist_tab1', 0, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							tab = registry.byId('tab2');
+							handler = tab.connect(tab, 'onDownloadEnd', function(){
+								setTimeout(d.getTestCallback(function(){
+									var h2 = query('h1', dom.byId('tab2'))[0];
+									var p2 = query('p', dom.byId('tab2'))[0];
+								
+									checkInside(h2, registry.byId("plainTabContainer").domNode);
+									checkInside(p2, registry.byId("plainTabContainer").domNode);
+								
+									var newPos = geom.position(dom.byId("textAfterTabContainer1"), true);
+									doh.isNot(oldPos.y, newPos.y, "oldpos y vs. newpos y");
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							robot.mouseMoveAt('plainTabContainer_tablist_tab2', 0, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab3",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = registry.byId('tab3');
+							handler = tab.connect(tab, '_onShow', function(){
+								setTimeout(d.getTestCallback(function(){
+									checkInside(dom.byId("h3"), registry.byId("plainTabContainer").domNode);
+									checkInside(dom.byId("p3"), registry.byId("plainTabContainer").domNode);
+									checkInside(dom.byId("p4"), registry.byId("plainTabContainer").domNode);
+									checkInside(dom.byId("p5"), registry.byId("plainTabContainer").domNode);
+									checkInside(dom.byId("b3"), registry.byId("plainTabContainer").domNode);
+									checkInside(dom.byId("b4"), registry.byId("plainTabContainer").domNode);
+									checkInside(dom.byId("foo"), registry.byId("plainTabContainer").domNode);
+								
+									var newPos = geom.position(dom.byId("textAfterTabContainer1"), true);
+									doh.isNot(oldPos.y, newPos.y, "oldpos y vs. newpos y");
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							robot.mouseMoveAt('plainTabContainer_tablist_tab3', 0, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab4_innerTab1",
+						timeout: 12000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = registry.byId('tab4');
+							handler = tab.connect(tab, '_onShow', function(){
+								tab.disconnect(handler);
+								handler = null;
+								setTimeout(d.getTestErrback(function(){
+									tab = registry.byId('dijit_layout_LinkPane_0');
+									handler = tab.connect(tab, '_onShow', function(){
+										tab.disconnect(handler);
+										handler = null;
+										setTimeout(d.getTestCallback(function(){
+											var h1 = query('h1', dom.byId('dijit_layout_LinkPane_0'))[0];
+											var p1 = query('p', dom.byId('dijit_layout_LinkPane_0'))[0];
+											var div1 = query('div', dom.byId('dijit_layout_LinkPane_0'))[0];
+								
+											checkInside(h1, registry.byId("plainTabContainer").domNode);
+											checkInside(p1, registry.byId("plainTabContainer").domNode);
+											checkInside(div1, registry.byId("plainTabContainer").domNode);
+								
+											var newPos = geom.position(dom.byId("textAfterTabContainer1"), true);
+											doh.isNot(oldPos.y, newPos.y, "oldpos y vs. newpos y");
+											oldPos = newPos;
+										}), 1000);
+									});
+									robot.mouseMoveAt('tab4_tablist_dijit_layout_LinkPane_0', 0, 1);
+									robot.mouseClick({left: true}, 500);
+								}), 1000);
+							});
+
+							robot.mouseMoveAt('plainTabContainer_tablist_tab4', 0, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							if(handler){
+								tab.disconnect(handler);
+							}
+						}
+					},
+					{
+						name: "tab4_innerTab2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = registry.byId('dijit_layout_LinkPane_1');
+							handler = tab.connect(tab, '_onShow', function(){
+								setTimeout(d.getTestCallback(function(){
+									var h2 = query('h1', dom.byId('dijit_layout_LinkPane_1'))[0];
+									var p2 = query('p', dom.byId('dijit_layout_LinkPane_1'))[0];
+
+									checkInside(h2, registry.byId("plainTabContainer").domNode);
+									checkInside(p2, registry.byId("plainTabContainer").domNode);
+								
+									var newPos = geom.position(dom.byId("textAfterTabContainer1"), true);
+									doh.isNot(oldPos.y, newPos.y, "oldpos y vs. newpos y");
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							robot.mouseMoveAt('tab4_tablist_dijit_layout_LinkPane_1', 0, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab5_innerTab1",
+						timeout: 7000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = registry.byId('tab5');
+							handler = tab.connect(tab, 'onDownloadEnd', function(){
+								robot.mouseMoveAt('dijit_layout_TabContainer_0_tablist_dijit_layout_ContentPane_0', 1000, 1);
+								robot.mouseClick({left: true}, 500);
+								robot.sequence(d.getTestCallback(function(){
+									var p = query("p", dom.byId('dijit_layout_ContentPane_0'))[0];
+									checkInside(p, registry.byId("plainTabContainer").domNode);
+
+									var newPos = geom.position(dom.byId("textAfterTabContainer1"), true);
+									doh.isNot(oldPos.y, newPos.y, "oldpos y vs. newpos y");
+									oldPos = newPos;
+								}), 1000);
+							});
+							robot.mouseMoveAt('plainTabContainer_tablist_tab5', 0, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab5_innerTab2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = registry.byId('dijit_layout_ContentPane_1');
+							handler = tab.connect(tab, '_onShow', function(){
+								setTimeout(d.getTestCallback(function(){
+									var p1 = query("p", dom.byId('dijit_layout_ContentPane_1'))[0];
+									var p2 = query("p", dom.byId('dijit_layout_ContentPane_1'))[1];
+									var p3 = query("p", dom.byId('dijit_layout_ContentPane_1'))[2];
+									checkInside(p1, registry.byId("plainTabContainer").domNode);
+									checkInside(p2, registry.byId("plainTabContainer").domNode);
+									checkInside(p3, registry.byId("plainTabContainer").domNode);
+								
+									var newPos = geom.position(dom.byId("textAfterTabContainer1"), true);
+									doh.isNot(oldPos.y, newPos.y, "oldpos y vs. newpos y");
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							robot.mouseMoveAt('dijit_layout_TabContainer_0_tablist_dijit_layout_ContentPane_1', 0, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "addTab",
+						timeout: 8000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = registry.byId('plainTabContainer');
+							handler = tab.connect(tab, 'addChild', function(){
+								setTimeout(function(){
+									robot.mouseMoveAt('plainTabContainer_tablist_newTab6', 0, 1);
+									robot.mouseClick({left: true}, 500);
+									robot.sequence(d.getTestCallback(function(){
+										var newTab = dom.byId("newTab6");
+										doh.is("Contents of Tab 6", newTab.innerHTML);
+										checkInside(newTab, registry.byId("plainTabContainer").domNode);
+
+										var newPos = geom.position(dom.byId("textAfterTabContainer1"), true);
+										doh.isNot(oldPos.y, newPos.y, "oldpos y vs. newpos y");
+									}), 1000);
+								}, 1000)
+							});
+							robot.mouseMoveAt('addTab', 0, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						timeout: 4000,
+						name: "destroy",
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							robot.mouseMoveAt('destroyTabContainer', 0, 1);
+							robot.mouseClick({left: true}, 500);
+								
+							robot.sequence(d.getTestCallback(function(){
+								doh.is(undefined, dom.byId("plainTabContainer"), 'widget was not removed');
+							}), 2000);
+							return d;
+						}
+					}
+				]);
+
+				// Test commented out until #13411 fixed.
+				/*
+				doh.register("TabContainer in table",[
+					function width(){
+						// Make sure the scrolling tabs don't make the width of the table explode to 50,0000px
+						doh.is(400, geom.position(dom.byId("tableTabContainer")).w);
+					},
+					{
+						name: "tab1_t2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = registry.byId('atab1');
+							handler = tab.connect(tab, 'onDownloadEnd', function(){
+								setTimeout(d.getTestCallback(function(){
+									var h1 = query('h1', dom.byId('atab1'))[0];
+									var p1 = query('p', dom.byId('atab1'))[0];
+									var div1 = query('div', dom.byId('atab1'))[0];
+								
+									checkInside(h1, registry.byId("tableTabContainer").domNode);
+									checkInside(p1, registry.byId("tableTabContainer").domNode);
+									checkInside(div1, registry.byId("tableTabContainer").domNode);
+								
+									oldPos = geom.position(dom.byId("textAfterTabContainer2"), true);
+								}), 500);
+							});
+							
+							robot.mouseMoveAt('tableTabContainer_tablist_atab1', 0, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab2_t2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = registry.byId('atab2');
+							handler = tab.connect(tab, 'onDownloadEnd', function(){
+								setTimeout(d.getTestCallback(function(){
+									var h2 = query('h1', dom.byId('atab2'))[0];
+									var p2 = query('p', dom.byId('atab2'))[0];
+								
+									checkInside(h2, registry.byId("tableTabContainer").domNode);
+									checkInside(p2, registry.byId("tableTabContainer").domNode);
+								
+									var newPos = geom.position(dom.byId("textAfterTabContainer2"), true);
+									doh.isNot(oldPos.y, newPos.y, "oldpos y vs. newpos y");
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							robot.mouseMoveAt('tableTabContainer_tablist_atab2', 0, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab3_t2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = registry.byId('atab3');
+							handler = tab.connect(tab, '_onShow', function(){
+								setTimeout(d.getTestCallback(function(){
+									checkInside(dom.byId("h4"), registry.byId("tableTabContainer").domNode);
+									checkInside(dom.byId("p6"), registry.byId("tableTabContainer").domNode);
+									checkInside(dom.byId("p7"), registry.byId("tableTabContainer").domNode);
+									checkInside(dom.byId("p8"), registry.byId("tableTabContainer").domNode);
+									checkInside(dom.byId("b5"), registry.byId("tableTabContainer").domNode);
+									checkInside(dom.byId("b6"), registry.byId("tableTabContainer").domNode);
+									checkInside(dom.byId("foo2"), registry.byId("tableTabContainer").domNode);
+								
+									var newPos = geom.position(dom.byId("textAfterTabContainer2"), true);
+									doh.isNot(oldPos.y, newPos.y, "oldpos y vs. newpos y");
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							robot.mouseMoveAt('tableTabContainer_tablist_atab3', 0, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab4_innerTab1_t2",
+						timeout: 12000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = registry.byId('atab4');
+							handler = tab.connect(tab, '_onShow', function(){
+								tab.disconnect(handler);
+								handler = null;
+								setTimeout(d.getTestErrback(function(){
+									tab = registry.byId('dijit_layout_LinkPane_2');
+									handler = tab.connect(tab, '_onShow', function(){
+										tab.disconnect(handler);
+										handler = null;
+										setTimeout(d.getTestCallback(function(){
+											var h1 = query('h1', dom.byId('dijit_layout_LinkPane_2'))[0];
+											var p1 = query('p', dom.byId('dijit_layout_LinkPane_2'))[0];
+											var div1 = query('div', dom.byId('dijit_layout_LinkPane_2'))[0];
+								
+											checkInside(h1, registry.byId("tableTabContainer").domNode);
+											checkInside(p1, registry.byId("tableTabContainer").domNode);
+											checkInside(div1, registry.byId("tableTabContainer").domNode);
+								
+											var newPos = geom.position(dom.byId("textAfterTabContainer2"), true);
+											doh.isNot(oldPos.y, newPos.y, "oldpos y vs. newpos y");
+											oldPos = newPos;
+										}), 1000);
+									});
+									robot.mouseMoveAt('atab4_tablist_dijit_layout_LinkPane_2', 0, 1);
+									robot.mouseClick({left: true}, 500);
+								}), 1000);
+							});
+
+							robot.mouseMoveAt('tableTabContainer_tablist_atab4', 0, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							if(handler){
+								tab.disconnect(handler);
+							}
+						}
+					},
+					{
+						name: "tab4_innerTab2_t2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = registry.byId('dijit_layout_LinkPane_3');
+							handler = tab.connect(tab, '_onShow', function(){
+								setTimeout(d.getTestCallback(function(){
+									var h2 = query('h1', dom.byId('dijit_layout_LinkPane_3'))[0];
+									var p2 = query('p', dom.byId('dijit_layout_LinkPane_3'))[0];
+
+									checkInside(h2, registry.byId("tableTabContainer").domNode);
+									checkInside(p2, registry.byId("tableTabContainer").domNode);
+								
+									var newPos = geom.position(dom.byId("textAfterTabContainer2"), true);
+									doh.isNot(oldPos.y, newPos.y, "oldpos y vs. newpos y");
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							robot.mouseMoveAt('atab4_tablist_dijit_layout_LinkPane_3', 0, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab5_innerTab1_t2",
+						timeout: 7000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = registry.byId('atab5');
+							handler = tab.connect(tab, 'onDownloadEnd', function(){
+								robot.mouseMoveAt('dijit_layout_TabContainer_1_tablist_dijit_layout_ContentPane_2', 1000, 1);
+								robot.mouseClick({left: true}, 500);
+								robot.sequence(d.getTestCallback(function(){
+									var p = query("p", dom.byId('dijit_layout_ContentPane_2'))[0];
+									checkInside(p, registry.byId("tableTabContainer").domNode);
+
+									var newPos = geom.position(dom.byId("textAfterTabContainer2"), true);
+									doh.isNot(oldPos.y, newPos.y, "oldpos y vs. newpos y");
+									oldPos = newPos;
+								}), 1000);
+							});
+							robot.mouseMoveAt('tableTabContainer_tablist_atab5', 0, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab5_innerTab2_t2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = registry.byId('dijit_layout_ContentPane_3');
+							handler = tab.connect(tab, '_onShow', function(){
+								setTimeout(d.getTestCallback(function(){
+									var p1 = query("p", dom.byId('dijit_layout_ContentPane_3'))[0];
+									var p2 = query("p", dom.byId('dijit_layout_ContentPane_3'))[1];
+									var p3 = query("p", dom.byId('dijit_layout_ContentPane_3'))[2];
+									checkInside(p1, registry.byId("tableTabContainer").domNode);
+									checkInside(p2, registry.byId("tableTabContainer").domNode);
+									checkInside(p3, registry.byId("tableTabContainer").domNode);
+								
+									var newPos = geom.position(dom.byId("textAfterTabContainer2"), true);
+									doh.isNot(oldPos.y, newPos.y, "oldpos y vs. newpos y");
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							robot.mouseMoveAt('dijit_layout_TabContainer_1_tablist_dijit_layout_ContentPane_3', 0, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					}
+				]);
+				*/
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

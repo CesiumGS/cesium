@@ -1,0 +1,124 @@
+{
+	"id": "scrollableTestApp",
+	"name": "Scrollable Test App",
+	"description": "This is a test app for scrollable lists.",
+	"splash": "splash",
+
+	"loaderConfig": {
+		"paths": {
+			"scrollableTestApp": "../dojox/app/tests/scrollableTestApp"
+		}
+	},
+
+	"dependencies": [
+		"dojox/mobile/_base",
+		"dojox/mobile/_compat",
+		"dojox/mobile/TabBar",
+		"dojox/mobile/TabBarButton",
+		"dojox/mobile/TextBox",
+		"dojox/mobile/Button",
+		"dojox/mobile/Heading",
+		"dojox/mobile/ListItem",
+		"dojox/mobile/RoundRectList",
+		"dojox/mobile/RoundRectCategory",
+		"dojox/app/widgets/Container",
+		"dojo/data/ItemFileWriteStore",
+		"dojo/store/DataStore",
+		"dojox/app/utils/mvcModel",
+		"dojox/mvc/EditStoreRefListController",
+		"dojox/mvc/Repeat",
+		"dojox/mvc/WidgetList",
+		"dojox/mvc/Templated",
+		"dojox/mvc/_InlineTemplateMixin",
+		"dojox/mobile/ScrollableView",
+		"dojox/mvc/Group",
+		"dojox/mvc/Output",
+		"dojox/mvc/at"
+	],
+	// Modules for the application.  They are basically used as the second
+	// array of mixins in a dojo.declare().  Modify the top level behavior
+	// of the application, how it processes the config or any other life cycle
+	// by creating and including one or more of these
+	"modules": [
+		"scrollableTestApp/scrollableTestApp"
+	],
+
+	"controllers": [
+		"dojox/app/controllers/History"
+	],
+	//stores we are using
+	"stores": {
+		"repeatStore":{
+			"type": "dojo/data/ItemFileWriteStore",
+			"params": {
+				"url": "./resources/data/repeat.json"
+			}
+	   }
+	   
+	},
+
+	//models and instantiation parameters for the models. Including 'type' as a property allows
+	//one to overide the class that will be used for the model.  By default it is dojox/mvc/model
+	"models": {
+       "repeatmodels": {
+       					"modelLoader": "dojox/app/utils/mvcModel",
+					"type": "dojox/mvc/EditStoreRefListController",
+					"params":{
+						"datastore": {"$ref":"#stores.repeatStore"}
+					}
+        }
+	},
+
+	//the name of the view to load when the app is initialized.
+	"defaultView": "configuration,ScrollableListSelection",
+
+	"defaultTransition": "slide",
+	//views are groups of views and models loaded at once
+	"views": {
+		"configuration": {
+			"defaultView": "ScrollableListSelection",
+			"defaultTransition": "slide",
+			"definition": "none",
+
+			"views": {
+				"ScrollableListSelection": {
+					"template": "scrollableTestApp/templates/configuration/ScrollableListSelection.html"
+				}
+			}
+		},
+
+		
+		"TestInfo": {
+			"template": "scrollableTestApp/templates/TestInfo.html"
+		},
+		"Scrollable1": {
+			"template": "scrollableTestApp/templates/Scrollable1.html"
+		},
+		"Scrollable1P": {
+			"template": "scrollableTestApp/templates/Scrollable1P.html"
+		},
+		"Scrollable2": {
+			"template": "scrollableTestApp/templates/Scrollable2.html"
+		},
+		"Scrollable3": {
+			"template": "scrollableTestApp/templates/Scrollable3.html"
+		},
+		"Scrollable4": {
+			"template": "scrollableTestApp/templates/Scrollable4.html"
+		},
+		"Scrollable5": {
+			"template": "scrollableTestApp/templates/Scrollable5.html"
+		},
+		"ListItem-domButtons": {
+			"template": "scrollableTestApp/templates/ListItem-domButtons.html"
+		},
+		"ListItem-domButtons2": {
+			"template": "scrollableTestApp/templates/ListItem-domButtons2.html"
+		},
+
+		"repeatDetails": {
+			"template": "scrollableTestApp/templates/repeatDetails.html",
+			"defaultTransition": "slide"
+		}
+	}
+}

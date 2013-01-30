@@ -1,0 +1,350 @@
+<html>
+<head profile="http://www.w3.org/2002/12/namespace">
+<link rel="stylesheet" type="text/css" href="../../../../../dijit/themes/dijit.css">
+<link rel="stylesheet" type="text/css" href="../../../../../dijit/themes/tundra/tundra.css">
+<title>Dojo Widget Feature</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+
+<!-- hosted version -->
+<script type="text/javascript" src="http://openlayers.org/api/2/OpenLayers.js"></script>
+
+<script type="text/javascript">
+	var djConfig = {
+		parseOnLoad : true
+	};
+</script>
+
+<script type="text/javascript" src="../../../../../dojo/dojo.js"></script>
+
+<script type="text/javascript">
+	require([	"dojo/ready",
+						"dojo/_base/array",
+						"dojo/dom-construct",
+						"dojox/geo/openlayers/widget/Map",
+						"dojox/geo/openlayers/Layer",
+						"dojox/geo/openlayers/WidgetFeature",
+						"dojox/charting/widget/Chart2D",
+						"dojox/charting/themes/PlotKit/blue",
+						"dijit/form/RadioButton",
+						"dojo/parser"], function(ready, arr, domConstruct, Map, Layer, WidgetFeature, Chart2D, blue, RadioButton, parser){
+
+		var map;
+
+		var paris = {
+			x : 2.3488,
+			y : 48.85341
+		};
+
+		var newyork = {
+			x : -74.0059729,
+			y : 40.7142691
+		};
+
+		var nice = {
+			lng : "07°15'44'' E",
+			lat : " 43°42'22''"
+		};
+
+		var sf = {
+			lat : "37° 46' 30'' ",
+			lng : "122° 25' 5S W"
+		};
+
+		ready(function(){
+			var opts = {
+				baseLayerType : dojox.geo.openlayers.OSM
+			};
+
+			map = new Map({}, "map");
+			map.startup();
+
+			var loc = '{"position" : [2.940673, 47.179259], "extent" : "5"}';
+			map.map.fitTo(loc);
+
+			createCharts();
+
+		});
+
+		function toDeg(r){
+			return r * 180 / Math.PI;
+		}
+
+		var locs = [{
+			name : "Nice",
+			x : 7.262,
+			y : 43.706
+		}, {
+			name : "Aix-en-Provence",
+			x : 5.448,
+			y : 43.528
+		}, {
+			name : "Marseille",
+			x : 5.399,
+			y : 43.297
+		}, {
+			name : "Caen",
+			x : -0.360,
+			y : 49.184
+		}, {
+			name : "Dijon",
+			x : 5.036,
+			y : 47.322
+		}, {
+			name : "Besancon",
+			x : 6.026,
+			y : 47.245
+		}, {
+			name : "Brest",
+			x : -4.490,
+			y : 48.388
+		}, {
+			name : "Nimes",
+			x : 4.361,
+			y : 43.839
+		}, {
+			name : "Toulouse",
+			x : 1.450,
+			y : 43.600
+		}, {
+			name : "Bordeaux",
+			x : -0.575,
+			y : 44.843
+		}, {
+			name : "Montpellier",
+			x : 3.874,
+			y : 43.609
+		}, {
+			name : "Rennes",
+			x : -1.680,
+			y : 48.108
+		}, {
+			name : "Tours",
+			x : 0.684,
+			y : 47.393
+		}, {
+			name : "Grenoble",
+			x : 5.723,
+			y : 45.185
+		}, {
+			name : "Saint-Etienne",
+			x : 4.390,
+			y : 45.441
+		}, {
+			name : "Nantes",
+			x : -1.554,
+			y : 47.219
+		}, {
+			name : "Orleans",
+			x : 1.907,
+			y : 47.904
+		}, {
+			name : "Angers",
+			x : -0.556,
+			y : 47.471
+		}, {
+			name : "Reims",
+			x : 4.031,
+			y : 49.258
+		}, {
+			name : "Nancy",
+			x : 6.174,
+			y : 48.690
+		}, {
+			name : "Metz",
+			x : 6.183,
+			y : 49.109
+		}, {
+			name : "Lille",
+			x : 3.045,
+			y : 50.628
+		}, {
+			name : "Clermont-Ferrand",
+			x : 3.085,
+			y : 45.779
+		}, {
+			name : "Perpignan",
+			x : 2.893,
+			y : 42.698
+		}, {
+			name : "Strasbourg",
+			x : 7.756,
+			y : 48.584
+		}, {
+			name : "Mulhouse",
+			x : 7.333,
+			y : 47.748
+		}, {
+			name : "Lyon",
+			x : 4.835,
+			y : 45.760
+		}, {
+			name : "Villeurbanne",
+			x : 4.882,
+			y : 45.779
+		}, {
+			name : "Le Mans",
+			x : 0.203,
+			y : 47.996
+		}, {
+			name : "Paris",
+			x : 2.346,
+			y : 48.861
+		}, {
+			name : "Le Havre",
+			x : 0.127,
+			y : 49.501
+		}, {
+			name : "Rouen",
+			x : 1.089,
+			y : 49.438
+		}, {
+			name : "Amiens",
+			x : 2.293,
+			y : 49.894
+		}, {
+			name : "Toulon",
+			x : 5.934,
+			y : 43.127
+		}, {
+			name : "Limoges",
+			x : 1.259,
+			y : 45.832
+		}, {
+			name : "Boulogne-Billancourt",
+			x : 2.242,
+			y : 48.840
+		}];
+
+		var locsIE = [{
+			name : "Nice",
+			x : 7.262,
+			y : 43.706
+		}, {
+			name : "Saint-Etienne",
+			x : 4.390,
+			y : 45.441
+		}, {
+			name : "Strasbourg",
+			x : 7.756,
+			y : 48.584
+		}, {
+			name : "Boulogne-Billancourt",
+			x : 2.242,
+			y : 48.840
+		}];
+
+		function createCharts(){
+			var layer = new dojox.geo.openlayers.Layer();
+			map.map.addLayer(layer);
+			var lo;
+			if (dojo.isIE)
+				lo = locsIE;
+			else
+				lo = locs;
+			arr.forEach(lo, function(l){
+				var feature = createChart(l, {});
+				layer.addFeature(feature);
+			});
+
+			setTimeout(function(){
+				layer.redraw();
+			}, 500);
+		}
+
+		function getCoords(loc){
+			var lng = 0;
+			if (loc.hasOwnProperty('x'))
+				lng = loc.x;
+			if (loc.hasOwnProperty('lng'))
+				lng = dojox.geo.openlayers.parseDMS(loc.lng, true);
+
+			var lat = 0;
+			if (loc.hasOwnProperty('y'))
+				lat = loc.y;
+			if (loc.hasOwnProperty('lat'))
+				lat = dojox.geo.openlayers.parseDMS(loc.lat, true);
+			return [lng, lat];
+		}
+
+		function createButton(loc){
+
+			var db = domConstruct.create("div", {}, dojo.body());
+
+			var b = new dijit.form.RadioButton({
+				checked : false
+			}, db);
+			var c = getCoords(loc);
+			var f = {
+				longitude : c[0],
+				latitude : c[1],
+				widget : b,
+				width : 15,
+				height : 15
+			};
+			return new dojox.geo.openlayers.WidgetFeature(f);
+		}
+
+		function createChart(loc, params){
+			var feature = null;
+			var co = getCoords(loc);
+
+			if (params.dijitId) {
+				var descr = {
+					longitude : co[0],
+					latitude : co[1],
+					dijitId : params.dijitId,
+					width : 50,
+					height : 50
+				};
+				feature = new dojox.geo.openlayers.WidgetFeature(descr);
+			} else {
+				var chartSize = 50;
+				var descr = {
+					// location of the widget
+					longitude : co[0],
+					latitude : co[1],
+					// the function which creates the widget
+					createWidget : function(){
+						var div = domConstruct.create("div", {}, dojo.body());
+						var chart = new dojox.charting.widget.Chart({
+							margins : {
+								l : 0,
+								r : 0,
+								t : 0,
+								b : 0
+							}
+						}, div);
+						var c = chart.chart;
+						c.addPlot("default", {
+							type : "Pie",
+							radius : chartSize / 2,
+							labelOffset : chartSize,
+							fontColor : "black"
+						});
+
+						var ser = [2, 8, 12, 43, 56, 23, 43, 1, 33];
+						c.addSeries("Series", ser);
+						c.setTheme(dojox.charting.themes.PlotKit.blue);
+						c.render();
+						c.theme.plotarea.fill = undefined;
+						return chart;
+					},
+					width : chartSize,
+					height : chartSize
+				};
+				feature = new dojox.geo.openlayers.WidgetFeature(descr);
+			}
+
+			return feature;
+		}
+	});
+</script>
+
+</head>
+
+<body class="tundra">
+
+	<div id="map" style="background-color: #b5d0d0; width: 100%; height: 100%;"></div>
+
+</body>
+</html>

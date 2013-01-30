@@ -1,0 +1,311 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot GUI Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx",
+				"dojo/dom",
+				"dijit/tests/helpers", "dijit/tests/layout/robot/borderContainerTestFunctions", "dojo/domReady!"
+			], function(doh, robot, dom, helpers, bcTest){
+	
+				robot.initRobot('../test_Gui.html');
+
+				var registry;
+
+				doh.register("setup", [
+					function setup(){
+						// get pointers to singletons loaded on test page
+						registry = robot.window.require("dijit/registry");
+					}
+				]);
+
+				doh.register("API", [
+					function initialConditions(){
+						bcTest.checkBCpanes(registry.byId("main"), "main checkBCpanes"); // This test will fail in opera because it thinks that the center content is taller than the border container.  However, it displays fine.
+						bcTest.checkBCpanes(registry.byId("mainSplit"), "mainSplit bcTest.checkBCpanes");
+						bcTest.checkBCpanes(registry.byId("embeddedBC"), "embeddedBC bcTest.checkBCpanes");
+						bcTest.checkBCpanes(registry.byId("bottomSplit"), "bottomSplit bcTest.checkBCpanes");
+						bcTest.checkInside(registry.byId("topTabs1"), registry.byId("centerSplit"), "topTabs1 inside centerSplit");
+						doh.t(helpers.isVisible(registry.byId("basicFormTab").domNode), "basicFormTab visible");
+					}
+				]);
+
+				doh.register("test_left_accordion", [
+					{
+						name: "open ac pane 2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+														
+							robot.mouseMoveAt("ac_pane2_button", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(helpers.isVisible(registry.byId("leftAccordion").domNode), "Accordion container is not visible");
+								doh.t(helpers.isVisible(registry.byId("ac_pane2").domNode), "accordion container pane2 is not visible");
+								doh.t(helpers.isHidden(registry.byId("ac_pane3").domNode), "accordion container pane3 is not hidden");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("test_Top_Tab_Container", [
+					{
+						name: "open top tab 2",
+						timeout: 9000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							//Drag splitter to the left to make more room for the tab container
+							robot.mouseMoveAt("leftAccordion_splitter", 500, 1);
+							robot.mousePress({left: true}, 500);
+							robot.mouseMoveAt("leftAccordion_splitter", 500, 100, -100, 100);
+							robot.mouseRelease({left: true}, 500);
+							
+							robot.mouseMoveAt("topTabs1_tablist_tabAccordion", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("dijit_layout_ContentPane_2_button", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(helpers.isVisible(registry.byId("dijit_layout_ContentPane_2")), "Accordion tab 2 is not visible");
+								doh.t(helpers.isHidden(registry.byId("dijit_layout_ContentPane_4").domNode), "Accordion tab 4 is not hidden");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "open top tab 3",
+						timeout: 9000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							robot.mouseMoveAt("topTabs1_tablist_textareaTab", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("dijit_layout_ContentPane_6_button", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(helpers.isVisible(registry.byId("tabAccordionContainer").domNode), "Accordion container is not visible");
+								doh.t(helpers.isVisible(registry.byId("dijit_layout_ContentPane_6")), "Accordion tab 4 is not visible");
+								doh.t(helpers.isHidden(registry.byId("dijit_layout_ContentPane_7").domNode), "Accordion tab 3 is not hidden");
+								doh.t(helpers.isVisible(registry.byId("bbtab1").domNode), "Nested tab1 is not visible");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "open top tab 3 and close nested tab",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							robot.mouseMoveAt(registry.byId("accTabs_tablist_bbtab3").closeNode, 500, 1);
+							robot.mouseClick({left:true}, 500);
+														
+							robot.sequence(d.getTestCallback(function(){
+								doh.is(undefined, registry.byId("accTabs_tablist_bbtab3"), "accTabs_tablist_bbtab3 undefined");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "open top tab 4",
+						timeout: 5000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							robot.mouseMoveAt("topTabs1_tablist_titlePaneCP", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							
+							robot.sequence(d.getTestCallback(function(){
+								var children = registry.byId("titlePaneCP").domNode.childNodes;
+								doh.t(children.length == 3);
+								doh.t(helpers.isVisible(children[1]), "The title pane child node is not visible");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "open top tab 4 and close title pane",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							robot.mouseMoveAt(registry.byId("tp").focusNode, 500, 1);
+							robot.mouseClick({left:true}, 500);
+							
+							robot.sequence(d.getTestCallback(function(){
+								var titlePane = registry.byId("tp");
+								doh.f(titlePane.open);
+								doh.t(helpers.isHidden(dom.byId("tp_pane")), "Title pane is not hidden");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "open top tab 5",
+						timeout: 5000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							robot.mouseMoveAt("topTabs1_tablist_tabContainerInTabCP", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("tabContainerInTabCP_tablist_basicFormTab2", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(helpers.isVisible(registry.byId("basicFormTab2").domNode), "The embedded tab content is not visible");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "close top tab 5",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							robot.mouseMoveAt(registry.byId("topTabs1_tablist_tabContainerInTabCP").closeNode, 500, 1);
+							robot.mouseClick({left:true}, 500);
+							
+							robot.sequence(d.getTestCallback(function(){
+								doh.is(undefined, registry.byId("topTabs1_tablist_tabContainerInTabCP"), "topTabs1_tablist_tabContainerInTabCP undefined");
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+				
+				doh.register("test_Center_tab_containers", [
+					{
+						name: "open tab 2",
+						timeout: 7000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+														
+							//Drag splitter up to make more room for the tab container
+							robot.mouseMoveAt("topTabs1_splitter", 500, 1);
+							robot.mousePress({left: true}, 500);
+							robot.mouseMoveAt("topTabs1_splitter", 500, 100, 100, -200);
+							robot.mouseRelease({left: true}, 500);
+							
+							robot.mouseMoveAt("bottomTabs1_tablist_btabB", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							
+							robot.sequence(d.getTestCallback(function(){
+								bcTest.checkInside(registry.byId("bottomTabs1"), registry.byId("embeddedBC"), "bottomTabs1 inside embeddedBC");
+								bcTest.checkInside(registry.byId("bottomTabs2"), registry.byId("embeddedBC"), "bottomTabs2 inside embeddedBC");
+								doh.t(helpers.isVisible(registry.byId("btabB").domNode), "Tab 2 is not visible");
+								doh.t(helpers.isHidden(registry.byId("btabA").domNode), "Tab 1 is not hidden");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "close tab 3",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+														
+							robot.mouseMoveAt(registry.byId("bottomTabs1_tablist_btabC").closeNode, 500, 1);
+							robot.mouseClick({left:true}, 500);
+							
+							robot.sequence(d.getTestCallback(function(){
+								doh.is(undefined, registry.byId("bottomTabs1_tablist_btabC"), "bottomTabs1_tablist_btabC undefined");
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+				
+				doh.register("test_Bottom_tab_containers", [
+					{
+						name: "test1",
+						timeout: 5000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+														
+							//Drag splitter up to make more room for the tab container
+							robot.mouseMoveAt("bottomTabs_splitter", 500, 1);
+							robot.mousePress({left: true}, 500);
+							robot.mouseMoveAt("bottomTabs_splitter", 500, 100, 100, -200);
+							robot.mouseRelease({left: true}, 500);
+														
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(helpers.isVisible(registry.byId("dijit_layout_ContentPane_9").domNode), "dijit_layout_ContentPane_9 visible");
+								doh.t(helpers.isVisible(registry.byId("dijit_layout_ContentPane_9_splitter").domNode), "dijit_layout_ContentPane_9_splitter visible");
+								doh.t(helpers.isVisible(registry.byId("btabAA").domNode), "btabAA visible");
+								doh.t(helpers.isVisible(registry.byId("dijit_layout_ContentPane_10").domNode), "dijit_layout_ContentPane_10 visible");
+								doh.t(helpers.isVisible(registry.byId("dijit_layout_ContentPane_10_splitter").domNode), "dijit_layout_ContentPane_10_splitter visible");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "test2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							robot.mouseMoveAt("bottomTabs_tablist_btab2", 500, 1);
+							robot.mouseClick({left:true}, 500);
+							
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(helpers.isVisible(registry.byId("btab2").domNode), "btab2 visible");
+								doh.t(helpers.isHidden(registry.byId("dijit_layout_ContentPane_9").domNode), "dijit_layout_ContentPane_9 visible");
+								doh.t(helpers.isHidden(registry.byId("dijit_layout_ContentPane_9_splitter").domNode), "dijit_layout_ContentPane_9_splitter visible");
+								doh.t(helpers.isHidden(registry.byId("btabAA").domNode), "btabAA visible");
+								doh.t(helpers.isHidden(registry.byId("dijit_layout_ContentPane_10").domNode), "dijit_layout_ContentPane_10 visible");
+								doh.t(helpers.isHidden(registry.byId("dijit_layout_ContentPane_10_splitter").domNode), "dijit_layout_ContentPane_10_splitter visible");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "test3",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							robot.mouseMoveAt(registry.byId("bottomTabs_tablist_btab3").closeNode, 500, 1);
+							robot.mouseClick({left:true}, 500);
+							
+							robot.sequence(d.getTestCallback(function(){
+								doh.is(undefined, registry.byId("bottomTabs_tablist_btab3"), "bottomTabs_tablist_btab3 undefined");
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

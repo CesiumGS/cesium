@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Dynamic Items</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','Button','IconContainer']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: false, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/connect",
+			"dojo/_base/declare",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/ListItem",
+			"dojox/mobile/ProgressIndicator",
+			"dojox/mobile/View",
+			"dojox/mobile/parser",
+			"dojox/mobile/Button",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(connect, declare, ready, registry, ListItem, ProgressIndicator, View, parser){
+			var counter = 4;
+			ready(function(){
+				var btnWidget = registry.byId("btn1");
+				connect.connect(btnWidget.domNode, "onclick", onBtnClicked);
+				function onBtnClicked(e){
+					var listWidget = registry.byId("list1");
+					for(var i = 1; i <= 3; i++){
+						var itemWidget = new ListItem({
+							icon: "images/i-icon-"+i+".png",
+							moveTo: "#view2&myParam=000"+counter,
+							label: "Document 000"+counter
+						});
+						listWidget.addChild(itemWidget);
+						counter++;
+					}
+				}
+			});
+			function loadPage(moveTo){
+				if(!(moveTo.match(/#(\w+)/))){ return; }
+				moveTo.match(/#(\w+)(.*)/);
+				var id = RegExp.$1;
+				var param = RegExp.$2;
+				if(!param){ return; }
+				var container = dojo.byId(id);
+				container.innerHTML = "";
+				var prog = ProgressIndicator.getInstance();
+				container.appendChild(prog.domNode);
+				prog.start();
+				setTimeout(function(){ // network latency simulation
+					prog.stop();
+					container.innerHTML = '<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props=\'back:"Home", moveTo:"#home"\'>'+param+'</h1>\n'+param;
+					parser.parse(container);
+				}, 5000);
+			}
+			dojox.mobile.ViewEx = declare(
+				"dojox.mobile.ViewEx",
+				View,
+			{
+				onStartView: function(){
+					loadPage(location.hash);
+				},
+				onBeforeTransitionIn: function(moveTo, dir, transition, context, method){
+					loadPage("#"+moveTo);
+				}
+			});
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="home" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">Dynamic Items</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">External Documents</h2>
+		<ul id="list1" data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"#view2&amp;myParam=0001"'>
+				Document 0001
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png", moveTo:"#view2&amp;myParam=0002"'>
+				Document 0002
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"#view2&amp;myParam=0003"'>
+				Document 0003
+			</li>
+		</ul>
+		<button id="btn1" data-dojo-type="dojox.mobile.Button" class="mblBlueButton" style="width:80px;margin-left:10px">More...</button>
+	</div>
+
+	<div id="view2" data-dojo-type="dojox.mobile.ViewEx"></div>
+</body>
+</html>

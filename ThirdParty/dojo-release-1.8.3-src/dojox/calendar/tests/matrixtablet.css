@@ -1,0 +1,14 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#calendarNode {
+	position:absolute; 
+	left:5px; 
+	right:5px; 
+	top:5px; 
+	bottom:5px;
+}

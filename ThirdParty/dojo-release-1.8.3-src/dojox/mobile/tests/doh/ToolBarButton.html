@@ -1,0 +1,89 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>ToolBarButton</title>
+		<link href="../../themes/iphone/base.css" rel="stylesheet"/>
+		<link href="../../themes/iphone/TabBar.css" rel="stylesheet"/>
+		<link href="../../themes/common/domButtons.css" rel="stylesheet"/>
+
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			//dojo.require("dojo.parser"); // Use the lightweight parser.
+			dojo.require("dojox.mobile.parser");
+			dojo.require("dojox.mobile");
+			dojo.require("dojox.mobile.TabBar");
+			dojo.requireIf(!dojo.isWebKit, "dojox.mobile.compat");
+
+			dojo.require("doh.runner");
+		</script>
+		<script type="text/javascript" src="TestUtil.js"></script>
+		<script type="text/javascript" src="ToolBarButton.js"></script>
+	</head>
+	<body>
+		<h1 dojoType="dojox.mobile.Heading" label="World Clock">
+			<div id="btn1" dojoType="dojox.mobile.ToolBarButton" style="padding: 0px 14px">Edit</div>
+			<div dojoType="dojox.mobile.ToolBarButton" icon="mblDomButtonWhitePlus" style="float:right;" onclick="console.log('+ was clicked')"></div>
+
+		</h1><br>
+
+
+		<h1 dojoType="dojox.mobile.Heading">
+			<div dojoType="dojox.mobile.ToolBarButton" style="padding: 0px 14px">Edit</div>
+			<div dojoType="dojox.mobile.ToolBarButton" icon="mblDomButtonWhitePlus" style="float:right;"></div>
+			Alarm Clock
+		</h1><br>
+
+
+		<h1 dojoType="dojox.mobile.Heading" label="Voice Memos">
+			<div dojoType="dojox.mobile.ToolBarButton" label="Speaker"></div>
+			<div dojoType="dojox.mobile.ToolBarButton" label="Done" class="mblColorBlue" style="float:right;"></div>
+		</h1><br>
+
+
+		<h1 dojoType="dojox.mobile.Heading" label="Updates">
+			<div dojoType="dojox.mobile.ToolBarButton" label="Update All" style="float:right;"></div>
+		</h1><br>
+
+
+		<h1 dojoType="dojox.mobile.Heading" label="News" back="Bookmarks" moveTo="bookmarks">
+			<div dojoType="dojox.mobile.ToolBarButton" label="Done" class="mblColorBlue" style="float:right;"></div>
+		</h1><br>
+
+
+		<h1 dojoType="dojox.mobile.Heading">
+			<div dojoType="dojox.mobile.ToolBarButton" label="Done" class="mblColorBlue"></div>
+			<div dojoType="dojox.mobile.ToolBarButton" label="New Folder" style="float:right;"></div>
+		</h1><br>
+
+
+		<div dojoType="dojox.mobile.Heading">
+			<div dojoType="dojox.mobile.ToolBarButton" toggle="true">New</div>
+			<div dojoType="dojox.mobile.ToolBarButton" toggle="true">Toggle</div>
+			<div dojoType="dojox.mobile.ToolBarButton" icon="../images/a-icon-12.png" moveTo="view3"></div>
+			<div dojoType="dojox.mobile.ToolBarButton" icon="../images/tab-icons.png" iconPos="29,0,29,29" moveTo="view3"></div>
+			<div dojoType="dojox.mobile.ToolBarButton" icon="mblDomButtonWhitePlus" moveTo="view3" style="float:right;"></div>
+		</div><br>
+
+
+		<h1 dojoType="dojox.mobile.Heading">
+			<div dojoType="dojox.mobile.ToolBarButton" icon="mblDomButtonWhiteSearch" style="float:right;"></div>
+		</h1><br>
+
+
+		<h1 dojoType="dojox.mobile.Heading" align="center">
+		  <table cellpadding="0" cellspacing="0" style="width:100%;"><tr>
+			<td><div dojoType="dojox.mobile.ToolBarButton" icon="mblDomButtonWhitePlus"></div></td>
+			<td align="right"><div dojoType="dojox.mobile.ToolBarButton" icon="../images/tab-icon-15h.png" style="float:right;"></div></td>
+		  </tr></table>
+		</h1><br>
+
+		<h1 dojoType="dojox.mobile.Heading" back="Top" label="Inbox(32)">
+			<div dojoType="dojox.mobile.ToolBarButton" icon="mblDomButtonWhiteSearch" style="float:right;"></div>
+			<div dojoType="dojox.mobile.ToolBarButton" icon="mblDomButtonWhiteUpArrow" style="float:right;"></div>
+			<div dojoType="dojox.mobile.ToolBarButton" icon="mblDomButtonWhiteDownArrow" style="float:right;"></div>
+		</h1><br>
+	</body>
+</html>

@@ -1,0 +1,77 @@
+.tundra .dijitMenu,
+.tundra .dijitMenuBar {
+	border: 1px solid #7eabcd;
+	margin: 0;
+	padding: 0;
+	background-color: #f7f7f7;
+}
+
+.tundra .dijitBorderContainer .dijitMenuBar {
+	border:1px solid #ccc;
+}
+
+.tundra .dijitMenuItem {
+	font-family: sans-serif;
+	margin: 0;
+}
+
+.tundra .dijitMenuItem {
+	padding: 4px 5px;
+}
+
+.tundra .dijitMenuPreviousButton, .tundra .dijitMenuNextButton {
+	font-style: italic;
+}
+.tundra .dijitMenuItem td {
+	padding: 2px;
+}
+
+.tundra .dijitMenuPassive .dijitMenuItemHover,
+.tundra .dijitComboBoxMenu .dijitMenuItemHover,
+.tundra .dijitMenuItemSelected {
+	background-color: #3559ac;
+	color:#fff;
+}
+
+.tundra .dijitMenuItemIcon {
+	width: 16px;
+	height: 16px;
+}
+
+.tundra .dijitMenuExpand {
+	/* arrow to indicate this MenuItem opens a sub-menu */
+	width: 7px;
+	height: 7px;
+	background-image: url('images/spriteArrows.png');
+	background-position: -14px 0;
+}
+.dj_ie6 .tundra .dijitMenuExpand {
+	background-image: url('images/spriteArrows.gif');
+}
+
+/* separator can be two pixels -- set border of either one to 0 to have only one */
+.tundra .dijitMenuSeparatorTop {
+	border-bottom: 1px solid #9b9b9b;
+}
+
+.tundra .dijitMenuSeparatorBottom {
+	border-top: 1px solid #e8e8e8;
+}
+
+/* the checked menu item */
+.tundra .dijitCheckedMenuItemIconChar {
+	display: none;
+}
+
+.tundra .dijitCheckedMenuItemIcon {
+	background-image: url('images/checkmark.png');
+	background-position: -80px;
+}
+
+.dj_ie6 .tundra .dijitCheckedMenuItemIcon {
+	background-image: url('images/checkmark.gif');
+}
+
+.tundra .dijitCheckedMenuItemChecked .dijitCheckedMenuItemIcon {
+	background-position: -64px;
+}

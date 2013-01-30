@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Test DateTextBox</title>
+
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true, extraLocale: ['zh-cn','fr-fr','ja-jp','ru-ru','en-us','de-de','es-es','it-it','pt-br','ko-kr','zh-tw']"></script>
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit.form.NumberTextBox");
+			dojo.require("dijit.form.CurrencyTextBox");
+			dojo.require("dijit.form.DateTextBox");
+			dojo.require("dijit.form.ValidationTextBox");
+			dojo.require("dojo.date.locale");
+			dojo.require("dojo.date.stamp");
+			dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+			dojo.require("doh.runner");
+		</script>
+		<script src="test_i18n.js"></script>
+		<script type="text/javascript">
+			dojo.ready(function(){
+				doh.register("parse", function(){
+					dojo.parser.parse();
+				});
+				doh.register("t", getAllTestCases());
+				doh.run();
+			});
+		</script>
+
+		<style type="text/css">
+			@import "../../themes/claro/document.css";
+			@import "../../themes/claro/claro.css";
+			@import "../css/dijitTests.css";
+
+			.title {
+				background-color:#ddd;
+			}
+
+			.hint {
+				background-color:#eee;
+			}
+
+			.testExample {
+				background-color:#fbfbfb;
+				padding:1em;
+				margin-bottom:1em;
+				border:1px solid #bfbfbf;
+			}
+
+			.dojoTitlePaneLabel label {
+				font-weight:bold;
+			}
+
+			td {white-space:nowrap}
+		</style>
+		<script>
+			function gen4DateFormat(testCases, language, locale, date, short, shortCmt, medium, mediumCmt, long, longCmt, full, fullCmt){
+				testCases.push({
+				  attrs: {constraints: "{formatLength:'short'}", lang: language},
+				  desc: "Locale: <b>" + locale + "</b> Format: <b>Short</b>",
+				  value: date,
+				  expValue: short,
+				  comment: shortCmt
+				});
+				testCases.push({
+				  attrs: {constraints: "{formatLength:'medium'}", lang: language},
+				  desc: "Locale: <b>" + locale + "</b> Format: <b>Medium</b>",
+				  value: date,
+				  expValue: medium,
+				  comment: mediumCmt
+				});
+				testCases.push({
+				  attrs: {constraints: "{formatLength:'long'}", lang: language},
+				  desc: "Locale: <b>" + locale + "</b> Format: <b>Long</b>",
+				  value: date,
+				  expValue: long,
+				  comment: longCmt
+				});
+				testCases.push({
+				  attrs: {constraints: "{formatLength:'full'}", lang: language},
+				  desc: "Locale: <b>" + locale + "</b> Format: <b>Full</b>",
+				  value: date,
+				  expValue: full,
+				  comment: fullCmt
+				});
+			}
+		</script>
+	</head>
+
+	<body class="claro">
+		<h1 class="testTitle">Dijit TextBox Globalization Test for Date</h1>
+
+<!--		<h2 class="testTitle">Press the following button to start all test after this page is loaded.</h2>
+		<button id="startButton" onclick="startTest()">Start Test</button>-->
+		<p>
+			Before start this test, make sure the <b>dojo/cldr/nls</b> contains the data for "zh-cn", "fr-fr", "ja-jp", "ru-ru", "hi-in", "en-us" and "ar-eg". If not, convert these CLDR data and put them there.
+		</p>
+
+		<script>
+		(function(){
+			var testCases = [];
+			gen4DateFormat(testCases, "ru-ru", "ru_RU", "2005-07-31",
+				"31.07.05", "", "31.07.2005", "", "31 июля 2005 г.", "Failed in Firefox. <a href='currency.html#cmt_1'>See #1 (currency.html).</a>", "31 июля 2005 г.", "Failed in Firefox. <a href='currency.html#cmt_1'>See #1 (currency.html).</a>");
+			gen4DateFormat(testCases, "zh-cn", "zh_CN", "2005-07-31",
+				"05-7-31", "", "2005-7-31", "", "2005年7月31日", "", "2005年7月31日星期日", "");
+			gen4DateFormat(testCases, "en-us", "en_US", "2005-07-31",
+				"7/31/05", "", "Jul 31, 2005", "", "July 31, 2005", "", "Sunday, July 31, 2005", "");
+			gen4DateFormat(testCases, "fr-fr", "fr_FR", "2005-07-31",
+				"31/07/05", "", "31 juil. 2005", "", "31 juillet 2005", "", "dimanche 31 juillet 2005", "");
+			gen4DateFormat(testCases, "ja-jp", "ja_JP", "2005-07-31",
+				"05/07/31", "", "2005/07/31", "", "2005年7月31日", "", "2005年7月31日日曜日", "");
+			gen4DateFormat(testCases, "de-de", "de_DE", "2005-07-31",
+				"31.07.05", "", "31.07.2005", "", "31. Juli 2005", "", "Sonntag, 31. Juli 2005", "");
+			gen4DateFormat(testCases, "es-es", "es_ES", "2005-07-31",
+				"31/07/05", "", "31/07/2005", "", "31 de julio de 2005", "", "domingo 31 de julio de 2005", "");
+			gen4DateFormat(testCases, "pt-br", "pt-BR", "2005-07-31",
+				"31/07/05", "", "31/07/2005", "", "31 de julho de 2005", "", "domingo, 31 de julho de 2005", "");
+			gen4DateFormat(testCases, "it-it", "it-IT", "2005-07-31",
+				"31/07/05", "", "31/lug/2005", "", "31 luglio 2005", "", "domenica 31 luglio 2005", "");
+			gen4DateFormat(testCases, "ko-kr", "ko-KR", "2005-07-31",
+				"05. 7. 31.", "", "2005. 7. 31.", "", "2005년 7월 31일", "", "2005년 7월 31일 일요일", "");
+			gen4DateFormat(testCases, "zh-tw", "zh-TW", "2005-07-31",
+				"2005/7/31", "", "2005/7/31", "", "2005年7月31日", "", "2005年7月31日星期日", "");
+			genFormatTestCases("Date Format", "dijit.form.DateTextBox", testCases);
+
+			testCases = [];
+			gen4DateFormat(testCases, "ru-ru", "ru_RU", new Date(2005, 6, 31),
+				"31.07.05", "", "31.07.2005", "", "31 июля 2005&nbsp;г.", "Failed in Firefox. <a href='currency.html#cmt_1'>See #1 (currency.html).</a>", "31 июля 2005&nbsp;г.", "Failed in Firefox. <a href='currency.html#cmt_1'>See #1 (currency.html).</a>");
+			gen4DateFormat(testCases, "zh-cn", "zh_CN", new Date(2005, 6, 31),
+				"05-7-31", "", "2005-7-31", "", "2005年7月31日", "", "2005年7月31日星期日", "");
+			gen4DateFormat(testCases, "en-us", "en_US", new Date(2005, 6, 31),
+				"7/31/05", "", "Jul 31, 2005", "", "July 31, 2005", "", "Sunday, July 31, 2005", "");
+			gen4DateFormat(testCases, "fr-fr", "fr_FR", new Date(2005, 6, 31),
+				"31/07/05", "", "31 juil. 2005", "", "31 juillet 2005", "", "dimanche 31 juillet 2005", "");
+			gen4DateFormat(testCases, "ja-jp", "ja_JP", new Date(2005, 6, 31),
+				"05/07/31", "", "2005/07/31", "", "2005年7月31日", "", "2005年7月31日日曜日", "");
+			gen4DateFormat(testCases, "de-de", "de_DE", new Date(2005, 6, 31),
+				"31.07.05", "", "31.07.2005", "", "31. Juli 2005", "", "Sonntag, 31. Juli 2005", "");
+			gen4DateFormat(testCases, "es-es", "es_ES", new Date(2005, 6, 31),
+				"31/07/05", "", "31/07/2005", "", "31 de julio de 2005", "", "domingo 31 de julio de 2005", "");
+			gen4DateFormat(testCases, "pt-br", "pt-BR", new Date(2005, 6, 31),
+				"31/07/05", "", "31/07/2005", "", "31 de julho de 2005", "", "domingo, 31 de julho de 2005", "");
+			gen4DateFormat(testCases, "it-it", "it-IT", new Date(2005, 6, 31),
+				"31/07/05", "", "31/lug/2005", "", "31 luglio 2005", "", "domenica 31 luglio 2005", "");
+			gen4DateFormat(testCases, "ko-kr", "ko-KR", new Date(2005, 6, 31),
+				"05. 7. 31.", "", "2005. 7. 31.", "", "2005년 7월 31일", "", "2005년 7월 31일 일요일", "");
+			gen4DateFormat(testCases, "zh-tw", "zh-TW", new Date(2005, 6, 31),
+				"2005/7/31", "", "2005/7/31", "", "2005年7月31日", "", "2005年7月31日星期日", "");
+			genValidateTestCases("Date Validate", "dijit.form.DateTextBox", testCases);
+		})();
+		</script>
+	</body>
+</html>

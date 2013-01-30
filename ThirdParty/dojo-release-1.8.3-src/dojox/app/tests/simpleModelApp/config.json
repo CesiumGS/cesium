@@ -1,0 +1,216 @@
+{
+	"id": "simpleModelApp",
+	"name": "Simple Model App",
+	"description": "A simple app to show how to use different types of Stores and Models",
+	"splash": "splash",
+
+	"dependencies": [
+		"dojox/mobile/_base",
+		"dojox/mobile/TabBar",
+		"dojox/mobile/RoundRect",
+		"dojox/mobile/TabBarButton",
+		"dojox/mobile/Button",
+		"dojox/mobile/RoundRect",
+		"dojox/mobile/Heading",
+		"dojo/store/Memory",
+		"dijit/form/Textbox",
+		"dojo/store/JsonRest",
+		"dojo/store/Memory",
+		"dojo/data/ItemFileWriteStore",
+		"dojo/store/DataStore",
+		"dojox/app/utils/mvcModel",
+		"dojox/mvc/EditStoreRefListController",
+		"dojox/mobile/deviceTheme"
+	],
+	// Modules for the application.  The are basically used as the second
+	// array of mixins in a dojo.declare().  Modify the top level behavior
+	// of the application, how it processes the config or any other life cycle
+	// by creating and including one or more of these
+	"modules": [],
+	
+	// If noAutoLoadControllers is set to true a Load, Transition, and Layout controller 
+	// should be included in the list of controllers.  
+	// If noAutoLoadControllers is set to false (or not set) the default Load, Transition, and Layout  
+	// controllers will be added automatically.  
+	"noAutoLoadControllers" : true,  
+	
+	"controllers": [
+		"dojox/app/controllers/Load",
+		"dojox/app/controllers/Transition",
+		"dojox/app/controllers/Layout",
+		"dojox/app/controllers/History"
+	],
+
+	//stores we are using 
+	"stores": {
+		"namesStore":{
+			"type": "dojo/store/Memory",
+			"params": {
+				"data": "modelApp.names"
+			}
+		},
+		"repeatStore":{
+			"type": "dojo/store/Memory",
+			"params": {
+				"data": "modelApp.repeatData"
+			}
+		},
+		"repeatItemStore":{
+			"type": "dojo/data/ItemFileWriteStore",
+			"params": {
+				"url": "./resources/data/repeat.json"
+			}
+		},
+		// note that a jsonRest store requires the data be in a different format...
+		"jsonStore":{
+			"type": "dojo/store/JsonRest",
+			"params": {
+				"target": "./resources/data/jsonRestRepeatData.json"
+			}
+		}
+	},
+
+	//models and instantiation parameters for the models. Including 'type' as a property allows
+	//one to overide the class that will be used for the model.  By default it is dojox/mvc/mvcModel
+	"models": {
+		"namesXUnused": {
+					"modelLoader": "dojox/app/utils/mvcModel",
+					"type": "dojox/mvc/EditStoreRefListController",
+					"params":{
+						"store": {"$ref":"#stores.namesStore"}
+					}
+		},
+		"repeatmodels3": {
+					"modelLoader": "dojox/app/utils/mvcModel",
+					"type": "dojox/mvc/EditStoreRefListController",
+					"params":{
+						"datastore": {"$ref":"#stores.repeatItemStore"}
+					}
+		},
+		"jsonRestModel": {
+					"modelLoader": "dojox/app/utils/mvcModel",
+					"type": "dojox/mvc/EditStoreRefListController",
+					"params":{
+						"store": {"$ref":"#stores.jsonStore"},
+						"query": {"Location": "NY"}
+					}
+		}
+	},
+
+	//the name of the scene to load when the app is initialized.
+	"defaultView": "home",
+
+	"defaultTransition": "slide",
+	//scenes are groups of views and models loaded at once	
+	"views": {
+
+		"home": {
+			"definition" : "none",
+			"dependencies":["dojox/mobile/ListItem","dojox/mobile/RoundRectList","dojox/mobile/RoundRectCategory","dojox/mobile/Heading"],
+			"template": "./templates/main.html"
+		},
+
+		"simple":{
+			"models": {
+				"names": {
+					"modelLoader": "dojox/app/utils/mvcModel",
+					"type": "dojox/mvc/ModelRefController",
+					"params":{
+						"data": "modelApp.names"
+					}
+				}
+			},
+			"definition" : "./views/simple.js",
+			"template": "./templates/simple.html",
+			"dependencies":["dojox/mobile/TextBox","dojox/mvc/Group","dojox/mvc/Repeat","dojox/mvc/Output"]
+		},
+
+		"simple2":{
+			"models": {
+				"names": {
+					"modelLoader": "dojox/app/utils/mvcModel",
+					"type": "dojox/mvc/EditModelRefController",
+					"params":{
+						"data": "modelApp.names"
+					}
+				},
+				"repeatmodelsXUnused": {
+					"modelLoader": "dojox/app/utils/mvcModel",
+					"type": "dojox/mvc/EditStoreRefListController",
+					"params":{
+						"datastore": {"$ref":"#stores.repeatItemStore"}
+					}
+				}
+			},
+			"definition" : "./views/simple2.js",
+			"template": "./templates/simple2.html",
+			"dependencies":["dojox/mobile/TextBox","dojox/mvc/Group","dojox/mvc/Repeat","dojox/mvc/Output"]
+		},
+
+		"simple3":{
+			"models": {
+				"namesXUnused": {
+					"modelLoader": "dojox/app/utils/simpleModel",
+					"params":{
+						"store": {"$ref":"#stores.namesStore"}
+					}
+				},
+				"names3": {
+					"modelLoader": "dojox/app/utils/simpleModel",
+					"params":{
+						"store": {"$ref":"#stores.namesStore"}
+					}
+				}
+			},
+			"definition" : "./views/simple3.js",
+			"template": "./templates/simple3.html",
+			"dependencies":["dojox/mobile/TextBox"]
+		},
+
+		"repeat": {
+			"models": {
+				"repeatmodels": {
+					"modelLoader": "dojox/app/utils/mvcModel",
+					"type": "dojox/mvc/EditStoreRefListController",
+					"params":{
+						"store": {"$ref":"#stores.repeatStore"}
+					}
+				},
+				"repeatmodelsXUnused": {
+					"modelLoader": "dojox/app/utils/mvcModel",
+					"type": "dojox/mvc/EditStoreRefListController",
+					"params":{
+						"datastore": {"$ref":"#stores.repeatItemStore"}
+					}
+				}
+			},
+			"template": "./templates/repeat.html",
+			"dependencies":["dojox/mobile/TextBox","dojox/mvc/Group","dojox/mvc/Repeat","dojox/mvc/Output"]
+		},
+
+		"repeat2": {
+			"models": {
+				"repeatmodels2": {
+					"modelLoader": "dojox/app/utils/mvcModel",
+					"type": "dojox/mvc/EditStoreRefListController",
+					"params":{
+						"datastore": {"$ref":"#stores.repeatItemStore"},
+						"query": {"Location": "NY"}
+					}
+				}
+			},
+			"template": "./templates/repeat2.html",
+			"dependencies":["dojox/mobile/TextBox","dojox/mvc/Group","dojox/mvc/Repeat","dojox/mvc/Output"]
+		},
+
+		"repeat3": {
+			"template": "./templates/repeat3.html",
+			"dependencies":["dojox/mobile/TextBox","dojox/mvc/Group","dojox/mvc/Repeat","dojox/mvc/Output"]
+		},
+
+		"generate": {
+			"template": "./templates/generate.html",
+			"dependencies":["dojox/mobile/TextBox", "dojox/mobile/TextArea", "dojox/mvc/Generate"]
+		}
+	}
+}

@@ -1,0 +1,182 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Badge (IconContainer) Tests</title>
+<link href="../../themes/common/domButtons/DomButtonRedBadge.css" rel="stylesheet"/>
+<link href="../../themes/common/domButtons/DomButtonGreenBadge.css" rel="stylesheet"/>
+<link href="../../themes/common/domButtons/DomButtonBlueBadge.css" rel="stylesheet"/>
+<link href="css/test.css" rel="stylesheet"/>
+<script type="text/javascript" src="../../deviceTheme.js" data-dojo-config="mblThemeFiles:['base','IconContainer']"></script>
+<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+<script language="JavaScript" type="text/javascript">
+	var ICON_ITEM_CLASSNAME1 = "mblIconItem";
+	var ICON_ITEM_CLASSNAME2 = "mblIconArea";
+	var ICON_BADGE_CLASSNAME1 = "mblBadge";
+	var ICON_BADGE_CLASSNAME2 = "mblDomButton";
+	var ICON_BADGE_CLASSNAME3 = "mblDomButtonRedBadge";
+	var ICON_BADGE_CLASSNAME4 = "mblDomButtonBlueBadge";
+	var ICON_BADGE_CLASSNAME5 = "mblDomButtonGreenBadge";
+	var ICON_BADGE_VALUE = "55";
+	var WIDGET_CLASSNAME = "mblIconContainer";
+	var ICON_ITEM_SRC_REGEXP = /icon3.png/i;
+	var CHILD_ITEM_PROPS = [{label:"app1", icon:"../images/icon3.png", lazy:"true", badge:"55"}, 
+						    {label:"app2", icon:"../images/icon2.png", lazy:"true", badge:"2350", badgeClass:"mblDomButtonBlueBadge"},
+						    {label:"app3", iconPos:"0,0,65,65", lazy:true, badge:"001", badgeClass:"mblDomButtonGreenBadge"}];
+
+	var CHILD_ITEM_CONTAINERS = ['<div class="box"></div>', 
+							  	 '<div class="box"></div>',
+							  	 '<div class="box"></div>'];
+
+	require([
+		"dojo/_base/array", // dojo.forEach
+		"dojo/_base/sniff",
+		"dojo/dom-construct", // dojo.place
+		"dojo/dom-class", // dojo.hasClass
+		"dojo/ready", // dojo.ready
+		"dijit/registry",  // dijit.byId
+		"doh/runner",	//doh functions
+		"dojox/mobile/IconContainer",
+		"dojox/mobile/IconItem",
+		"dojox/mobile",				// This is a mobile app.
+		"dojox/mobile/compat",		// This mobile app supports running on desktop browsers
+		"dojox/mobile/parser",		// This mobile app uses declarative programming with fast mobile parser
+		"dojox/mobile/View"		// This mobile app uses mobile view
+	], function(array, has, domConst, domClass, ready, registry, runner, IconContainer, IconItem){
+		function _createIconContainerDeclaratively(widgetId) {
+			return registry.byId(widgetId);
+		}
+		function _createIconContainerProgrammatically(placeHolderId, widgetId){
+			// Create IconContainer
+			var r = new IconContainer({id:widgetId, iconBase:"../images/icon-all.png"});
+			runner.assertNotEqual(null, r);
+			domConst.place(r.domNode, placeHolderId, "replace");
+
+			// Create IconItems
+			for(var i = 0, len = CHILD_ITEM_PROPS.length; i < len; i++){
+				var childWidget = new IconItem(CHILD_ITEM_PROPS[i]);
+				r.addChild(childWidget);
+				if(CHILD_ITEM_CONTAINERS[i]){
+					childWidget.set("content", CHILD_ITEM_CONTAINERS[i]);
+				}
+			}
+			r.startup();
+			return r;
+		}
+		function _createIconContainerProgrammaticallyWithSourceNodeReference(widgetId){
+			// Create IconContainer
+			var r = new IconContainer({iconBase:"../images/icon-all.png"}, widgetId);
+
+			// Create IconItems
+			var index = 0;
+			for(var i = 0, len = r.domNode.childNodes.length; i < len; i++){
+				var n = r.domNode.childNodes[i];
+				if(n.nodeType === 1 && n.id){
+					new IconItem(CHILD_ITEM_PROPS[index++], n.id);
+				}
+			}
+			r.startup();
+			return r;
+		}
+		function _setBadges(Ids){
+			array.forEach(Ids, function(Id){
+				registry.byId(Id).set("badge", "55");
+			});			
+		}
+		function _assertCorrectIconContainer(widget){
+			runner.assertNotEqual(null, widget, "IconContainer: Did not instantiate.");
+			runner.assertEqual(WIDGET_CLASSNAME, widget.domNode.className, "id=" + widget.domNode.id);
+			var index = 0;
+			array.forEach(widget.getChildren(), function(iconItem){
+				_assertCorrectIconItem(iconItem, CHILD_ITEM_PROPS[index++]);
+			});
+			
+		}
+		function _assertCorrectIconItem(widget, props){
+			runner.assertNotEqual(null, widget, "IconItem: Did not instantiate.");
+			runner.assertEqual(ICON_ITEM_CLASSNAME1, widget.domNode.className, "id=" + widget.domNode.id);
+			runner.assertEqual(ICON_ITEM_CLASSNAME2, widget.domNode.childNodes[0].className, "id=" + widget.domNode.id);
+			runner.assertNotEqual(null, widget.badgeObj, "IconItem badgeObj: Did not instantiate. id=" + widget.domNode.id);
+			runner.assertTrue(domClass.contains(widget.badgeObj.domNode, ICON_BADGE_CLASSNAME1), ICON_BADGE_CLASSNAME1 + " id=" + widget.domNode.id + " value=" + widget.domNode.className);
+			runner.assertTrue(domClass.contains(widget.badgeObj.domNode, ICON_BADGE_CLASSNAME2), ICON_BADGE_CLASSNAME2 + " id=" + widget.domNode.id + " value=" + widget.domNode.className);
+			var badgeClass = props.badgeClass || ICON_BADGE_CLASSNAME3;
+			runner.assertTrue(domClass.contains(widget.badgeObj.domNode, badgeClass), badgeClass + " id=" + widget.domNode.id + " value=" + widget.domNode.className);
+			var badgeValue = props.badge;
+			runner.assertEqual(badgeValue, widget.badgeObj.domNode.childNodes[0].innerHTML, "id=" + widget.domNode.id);
+			runner.assertEqual(badgeValue, widget.badgeObj.getValue(), "id=" + widget.domNode.id);
+			if((!has("ie") || has("ie") > 6) && props.icon === "../images/icon3.png"){
+				runner.assertTrue(widget.domNode.childNodes[0].childNodes[0].childNodes[0].src.search(ICON_ITEM_SRC_REGEXP) != -1, ICON_ITEM_SRC_REGEXP.toString() + " id=" + widget.domNode.id);
+			}
+			runner.assertEqual(widget.label, widget.domNode.childNodes[0].childNodes[1].childNodes[0].nodeValue, "id=" + widget.domNode.id);
+		}
+		function _showView2(){
+			var view1 = registry.byId("view1");
+			view1.performTransition("view2", 1, "none");
+		}
+		dojo.ready(function(){
+			doh.register("dojox.mobile.test.doh.IconContainerTests", [
+				function testInView1(){
+					var widget1 = _createIconContainerDeclaratively("dojox_mobile_IconContainer_0");
+					var widget2 = _createIconContainerProgrammatically("view1-IconContainer2place", "view1-IconContainer2");
+					var widget3 = _createIconContainerProgrammaticallyWithSourceNodeReference("view1-IconContainer3");
+
+//					_setBadges(["dojox_mobile_IconItem_1","dojox_mobile_IconItem_5", "view1-IconContainer3-IconItem2"]);
+					_assertCorrectIconContainer(widget1);
+					_assertCorrectIconContainer(widget2);
+					_assertCorrectIconContainer(widget3);
+				},
+				function testInView2(){
+					var widget1 = _createIconContainerDeclaratively("dojox_mobile_IconContainer_1");
+					var widget2 = _createIconContainerProgrammatically("view2-IconContainer2place", "view2-IconContainer2");
+					var widget3 = _createIconContainerProgrammaticallyWithSourceNodeReference("view2-IconContainer3");
+
+					_showView2();
+
+//					_setBadges(["dojox_mobile_IconItem_3","dojox_mobile_IconItem_7", "view2-IconContainer3-IconItem2"]);
+					_assertCorrectIconContainer(widget1);
+					_assertCorrectIconContainer(widget2);
+					_assertCorrectIconContainer(widget3);
+				}
+			]);
+			runner.run();
+		});
+	})
+</script>
+</head>
+<body>
+	<div id="view1" data-dojo-type="dojox.mobile.View" selected="true">
+		<h1>View 1</h1>
+		<ul data-dojo-type="dojox.mobile.IconContainer" data-dojo-props='iconBase:"../images/icon-all.png"'>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app1", icon:"../images/icon3.png", lazy:true, badge:"55"'><div class="box"></div></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app2", icon:"../images/icon2.png", lazy:true, badge:"2350", badgeClass:"mblDomButtonBlueBadge"'><div class="box"></div></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app3", iconPos:"0,0,65,65", lazy:true, badge:"001", badgeClass:"mblDomButtonGreenBadge"'><div class="box"></div></li>
+		</ul>
+		<br/>
+		<div id="view1-IconContainer2place"></div>
+		<br/>
+		<ul id="view1-IconContainer3">
+			<li id="view1-IconContainer3-IconItem1"><div class="box"></div></li>
+			<li id="view1-IconContainer3-IconItem2"><div class="box"></div></li>
+			<li id="view1-IconContainer3-IconItem3"><div class="box"></div></li>
+		</ul>
+	</div>
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<h1>View 2</h1>
+		<ul data-dojo-type="dojox.mobile.IconContainer" data-dojo-props='iconBase:"../images/icon-all.png"'>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app1", icon:"../images/icon3.png", lazy:true, badge:"55"'><div class="box"></div></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app2", icon:"../images/icon2.png", lazy:true, badge:"2350", badgeClass:"mblDomButtonBlueBadge"'><div class="box"></div></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app3", iconPos:"0,0,65,65", lazy:true, badge:"001", badgeClass:"mblDomButtonGreenBadge"'><div class="box"></div></li>
+		</ul>
+		<br/>
+		<div id="view2-IconContainer2place"></div>
+		<br/>
+		<ul id="view2-IconContainer3">
+			<li id="view2-IconContainer3-IconItem1"><div class="box"></div></li>
+			<li id="view2-IconContainer3-IconItem2"><div class="box"></div></li>
+			<li id="view2-IconContainer3-IconItem3"><div class="box"></div></li>
+		</ul>
+	</div>
+</body>
+</html>

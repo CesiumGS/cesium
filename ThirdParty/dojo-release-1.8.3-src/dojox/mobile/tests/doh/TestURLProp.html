@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Ajax</title>
+
+	<script type="text/javascript" src="../../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','SpinWheel']"></script>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+	var timeoutInterval = 3000;
+		require([
+			"dojo/dom-construct", // dojo.place
+			"dojo/ready", // dojo.ready
+			"dijit/registry",  // dijit.byId
+			"dojox/mobile/tests/doh/TestHelper",
+			"doh/runner",	//doh functions
+			"dojox/mobile",				// This is a mobile app.
+			"dojox/mobile/View",		// This mobile app uses mobile view
+			"dojox/mobile/compat",		// This mobile app supports running on desktop browsers
+			"dojox/mobile/parser",		// This mobile app uses declarative programming with fast mobile parser
+			"dojox/mobile/SpinWheel"
+		], function(domConst, ready, registry, TestHelper, runner){
+			ready(function(){
+				runner.register("dojox.mobile.test.doh.DataHandler", [
+					{
+						name: "DataHandlerding Verification1",
+						timeout: 4000,
+						runTest: function(){
+							var d = new runner.Deferred();
+							TestHelper.fireOnClick("dojox_mobile_ListItem_0");
+							setTimeout(d.getTestCallback(function(){
+
+								var demoWidget = registry.byId("view1");
+								var v = demoWidget.declaredClass;
+								runner.assertEqual('visible', demoWidget.domNode.style.visibility);
+								demoWidget = registry.byId("dojox_mobile_EdgeToEdgeList_0");
+								runner.assertNotEqual(null, demoWidget);
+
+								//Back to Home
+								TestHelper.fireOnClick("dojox_mobile_ToolBarButton_0");
+							}), timeoutInterval);
+							return d;
+						}
+					},
+					{
+						name: "Home",
+						timeout: 4000,
+						runTest: function(){
+							var d = new runner.Deferred();
+							setTimeout(d.getTestCallback(function(){
+
+								var demoWidget = registry.byId("home");
+								var v = demoWidget.declaredClass;
+								runner.assertEqual('visible', demoWidget.domNode.style.visibility);
+
+								TestHelper.fireOnClick("dojox_mobile_ListItem_1");
+							}), timeoutInterval);
+							return d;
+						}
+					},
+					{
+						name: "DataHandlerding Verification2",
+						timeout: 4000,
+						runTest: function(){
+							var d = new runner.Deferred();
+							setTimeout(d.getTestCallback(function(){
+
+								var demoWidget = registry.byId("view2");
+								var v = demoWidget.declaredClass;
+								runner.assertEqual('visible', demoWidget.domNode.style.visibility);
+								demoWidget = registry.byId("dojox_mobile_RoundRectCategory_1");
+								runner.assertNotEqual(null, demoWidget);
+
+								//Back to Home
+								TestHelper.fireOnClick("dojox_mobile_ListItem_8");
+							}), timeoutInterval);
+							return d;
+						}
+					},
+					{
+						name: "Home2",
+						timeout: 4000,
+						runTest: function(){
+							var d = new runner.Deferred();
+							setTimeout(d.getTestCallback(function(){
+
+								var demoWidget = registry.byId("home");
+								var v = demoWidget.declaredClass;
+								runner.assertEqual('visible', demoWidget.domNode.style.visibility);
+
+								TestHelper.fireOnClick("dojox_mobile_ListItem_2");
+							}), timeoutInterval);
+							return d;
+						}
+					},
+					{
+						name: "DataHandlerding Verification3",
+						timeout: 4000,
+						runTest: function(){
+							var d = new runner.Deferred();
+							setTimeout(d.getTestCallback(function(){
+
+								var demoWidget = registry.byId("view3");
+								var v = demoWidget.declaredClass;
+								runner.assertEqual('visible', demoWidget.domNode.style.visibility);
+								demoWidget = registry.byId("dojox_mobile_RoundRectList_2");
+								runner.assertNotEqual(null, demoWidget);
+
+								//Back to Home
+								TestHelper.fireOnClick("dojox_mobile_ListItem_13");
+							}), timeoutInterval);
+							return d;
+						}
+					},
+					{
+						name: "Home3",
+						timeout: 4000,
+						runTest: function(){
+							var d = new runner.Deferred();
+							setTimeout(d.getTestCallback(function(){
+
+								var demoWidget = registry.byId("home");
+								var v = demoWidget.declaredClass;
+								runner.assertEqual('visible', demoWidget.domNode.style.visibility);
+
+								TestHelper.fireOnClick("dojox_mobile_ListItem_3");
+							}), timeoutInterval);
+							return d;
+						}
+					},
+					{
+						name: "DataHandlerding Verification4",
+						timeout: 4000,
+						runTest: function(){
+							var d = new runner.Deferred();
+							setTimeout(d.getTestCallback(function(){
+
+								var demoWidget = registry.byId("view4");
+								var v = demoWidget.declaredClass;
+								runner.assertEqual('visible', demoWidget.domNode.style.visibility);
+								demoWidget = registry.byId("dojox_mobile_RoundRectCategory_3");
+								runner.assertNotEqual(null, demoWidget);
+
+								//Back to Home
+								TestHelper.fireOnClick("dojox_mobile_ToolBarButton_2");
+							}), timeoutInterval);
+							return d;
+						}
+					},
+					{
+						name: "Home4",
+						timeout: 4000,
+						runTest: function(){
+							var d = new runner.Deferred();
+							setTimeout(d.getTestCallback(function(){
+
+								var demoWidget = registry.byId("home");
+								var v = demoWidget.declaredClass;
+								runner.assertEqual('visible', demoWidget.domNode.style.visibility);
+
+								TestHelper.fireOnClick("dojox_mobile_ListItem_4");
+							}), timeoutInterval);
+							return d;
+						}
+					},
+					{
+						name: "DataHandlerding Verification5",
+						timeout: 4000,
+						runTest: function(){
+							var d = new runner.Deferred();
+							setTimeout(d.getTestCallback(function(){
+
+								var demoWidget = registry.byId("view5");
+								var v = demoWidget.declaredClass;
+								runner.assertEqual('visible', demoWidget.domNode.style.visibility);
+								demoWidget = registry.byId("spin1");
+								runner.assertNotEqual(null, demoWidget);
+							}), timeoutInterval);
+							return d;
+						}
+					}
+				]);
+				runner.run();
+			});
+		})
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="home" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">Ajax (HTML)</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">External Views</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"../images/i-icon-1.png", transition:"slide", url:"data/view1.html"'>
+				External View #1
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"../images/i-icon-2.png", transition:"flip", url:"data/view2.html"'>
+				External View #2
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"../images/i-icon-3.png", transition:"fade", url:"data/view3.html"'>
+				External View #3
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"../images/i-icon-4.png", transition:"slide", url:"data/view4.html"'>
+				External View #4
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"../images/i-icon-5.png", transition:"slide", url:"data/view5.html"'>
+				External View #5
+			</li>
+		</ul>
+	</div>
+</body>
+</html>
