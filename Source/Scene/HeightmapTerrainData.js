@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/DeveloperError',
+        '../Core/Math',
         '../Core/TaskProcessor',
         './GeographicTilingScheme',
         './TerrainMesh',
@@ -10,6 +11,7 @@ define([
     ], function(
         defaultValue,
         DeveloperError,
+        CesiumMath,
         TaskProcessor,
         GeographicTilingScheme,
         TerrainMesh,
@@ -27,7 +29,7 @@ define([
 
     /**
      * Terrain data for a single {@link Tile} where the terrain data is represented as a heightmap.  A heightmap
-     * is a rectangular array of heights in row-major order.
+     * is a rectangular array of heights in row-major order from south to north and west to east.
      *
      * @alias HeightmapTerrainData
      * @constructor
@@ -304,7 +306,86 @@ define([
     }
 
     function upsampleByInterpolating(terrainData, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
-        throw new DeveloperError('Upsampling by interpolation is not currently supported.');
+        var width = terrainData.width;
+        var height = terrainData.height;
+
+        // TODO: account for the stride
+
+        var sourceHeights = terrainData.buffer;
+        var heights = new sourceHeights.constructor(width * height);
+
+        // PERFORMANCE_IDEA: don't recompute these extents - the caller already knows them.
+        var sourceExtent = tilingScheme.tileXYToExtent(thisX, thisY, thisLevel);
+        var destinationExtent = tilingScheme.tileXYToExtent(descendantX, descendantY, descendantLevel);
+
+        for (var j = 0; j < height; ++j) {
+            var latitude = CesiumMath.lerp(destinationExtent.north, destinationExtent.south, j / (height - 1));
+            for (var i = 0; i < width; ++i) {
+                var longitude = CesiumMath.lerp(destinationExtent.west, destinationExtent.east, i / (width - 1));
+                setHeight(heights, j * width + i, interpolateHeight(sourceHeights, sourceExtent, width, height, longitude, latitude));
+            }
+        }
+
+        return new HeightmapTerrainData(heights, width, height, 0, terrainData.structure);
+    }
+
+    function interpolateHeight(sourceHeights, sourceExtent, width, height, longitude, latitude) {
+        var fromWest = (longitude - sourceExtent.west) * (width - 1) / (sourceExtent.east - sourceExtent.west);
+        var fromSouth = (latitude - sourceExtent.south) * (height - 1) / (sourceExtent.north - sourceExtent.south);
+
+        var westInteger = fromWest | 0;
+        var eastInteger = westInteger + 1;
+        if (eastInteger >= width) {
+            eastInteger = width - 1;
+            westInteger = width - 2;
+        }
+
+        var southInteger = fromSouth | 0;
+        var northInteger = southInteger + 1;
+        if (northInteger >= height) {
+            northInteger = height - 1;
+            southInteger = height - 2;
+        }
+
+        var dx = fromWest - westInteger;
+        var dy = fromSouth - southInteger;
+
+        southInteger = height - 1 - southInteger;
+        northInteger = height - 1 - northInteger;
+
+        var southwestHeight = getHeight(sourceHeights, southInteger * width + westInteger);
+        var southeastHeight = getHeight(sourceHeights, southInteger * width + eastInteger);
+        var northwestHeight = getHeight(sourceHeights, northInteger * width + westInteger);
+        var northeastHeight = getHeight(sourceHeights, northInteger * width + eastInteger);
+
+        return triangleInterpolateHeight(dx, dy, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
+    }
+
+    function triangleInterpolateHeight(dX, dY, southwestHeight, southeastHeight, northwestHeight, northeastHeight) {
+        // The HeightmapTessellator bisects the quad from southwest to northeast.
+        if (dY < dX) {
+            // Lower right triangle
+            return southwestHeight + (dX * (southeastHeight - southwestHeight)) + (dY * (northeastHeight - southeastHeight));
+        }
+
+        // Upper left triangle
+        return southwestHeight + (dX * (northeastHeight - northwestHeight)) + (dY * (northwestHeight - southwestHeight));
+    }
+
+    function getHeight(heights, index) {
+        return heights[index];
+//        index *= 4;
+//        return (heights[index] << 16) |
+//               (heights[index + 1] << 8) |
+//               heights[index + 1];
+    }
+
+    function setHeight(heights, index, height) {
+        heights[index] = height;
+//        index *= 4;
+//        heights[index] = height >> 16;
+//        heights[index + 1] = (height >> 8) & 0xFF;
+//        heights[index + 2] = height & 0xFF;
     }
 
     return HeightmapTerrainData;
