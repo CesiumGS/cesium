@@ -16,6 +16,7 @@ define([
         'dijit/TooltipDialog',
         './TimelineWidget',
         '../Animation',
+        '../AnimationViewModel',
         '../../Core/defaultValue',
         '../../Core/loadJson',
         '../../Core/BoundingRectangle',
@@ -75,6 +76,7 @@ define([
         TooltipDialog,
         TimelineWidget,
         Animation,
+        AnimationViewModel,
         defaultValue,
         loadJson,
         BoundingRectangle,
@@ -719,7 +721,7 @@ define([
             } else {
                 this.clock = this.animationController.getClock();
             }
-            this.animation = new Animation(this.animationWidget, this.animationController);
+            this.animation = new Animation(this.animationWidget, new AnimationViewModel(this.animationController));
 
             var animationController = this.animationController;
             var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();

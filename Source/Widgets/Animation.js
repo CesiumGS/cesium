@@ -61,38 +61,31 @@ define(['../Core/DeveloperError',
      * }
      * Cesium.requestAnimationFrame(tick);
      */
-    var Animation = function(parentNode, animationController) {
+    var Animation = function(parentNode, viewModel) {
         if (typeof parentNode === 'undefined') {
             throw new DeveloperError('parentNode is required.');
         }
 
-        if (typeof animationController === 'undefined') {
-            throw new DeveloperError('animationController is required.');
+        if (typeof viewModel === 'undefined') {
+            throw new DeveloperError('viewModel is required.');
         }
 
-        this._animationController = animationController;
+        this._viewModel = viewModel;
         this._centerX = undefined;
-        this._clock = animationController.getClock();
         this._defsElement = undefined;
         this._isSystemTimeAvailable = undefined;
         this._knobDate = undefined;
         this._knobOuter = undefined;
         this._knobStatus = undefined;
         this._knobTime = undefined;
-        this._lastKnobDate = '';
-        this._lastKnobSpeed = '';
-        this._lastKnobTime = '';
-        this._lastPauseTooltip = '';
         this._parentNode = parentNode;
         this._pauseSVG = undefined;
         this._pauseTooltip = undefined;
         this._playForwardSVG = undefined;
         this._playReverseSVG = undefined;
-        this._realtimeMode = undefined;
         this._realtimeSVG = undefined;
         this._realtimeTooltip = undefined;
         this._scale = undefined;
-        this._shuttleRingAngle = undefined;
         this._shuttleRingPointer = undefined;
         this._svgNode = undefined;
         this._themeDisabled = undefined;
@@ -104,15 +97,12 @@ define(['../Core/DeveloperError',
         this._themeSwoosh = undefined;
         this._themeSwooshHover = undefined;
         this._topG = undefined;
-        this._wasAnimating = false;
 
         _createNodes(this, parentNode);
     };
 
     var _svgNS = "http://www.w3.org/2000/svg";
     var _xlinkNS = "http://www.w3.org/1999/xlink";
-    var _monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    var _maxShuttleAngle = 105;
 
     var _gradientEnabledColor0 = Color.fromCssColorString('rgba(247,250,255,0.384)');
     var _gradientEnabledColor1 = Color.fromCssColorString('rgba(143,191,255,0.216)');
@@ -161,35 +151,6 @@ define(['../Core/DeveloperError',
 
     function _updateSvgText(svgText, msg) {
         svgText.childNodes[0].textContent = msg;
-    }
-
-    function _shuttleAngletoSpeed(animationController, angle) {
-        if (Math.abs(angle) < 5) {
-            return 0;
-        }
-        angle = Math.max(Math.min(angle, _maxShuttleAngle), -_maxShuttleAngle);
-        var speed = Math.exp(((Math.abs(angle) - 15.0) * 0.15));
-        if (speed > 10.0) {
-            var scale = Math.pow(10, Math.floor((Math.log(speed) / Math.LN10) + 0.0001) - 1.0);
-            speed = Math.round(Math.round(speed / scale) * scale);
-        } else if (speed > 0.8) {
-            speed = Math.round(speed);
-        } else {
-            speed = animationController.getTypicalSpeed(speed);
-        }
-        if (angle < 0) {
-            speed *= -1.0;
-        }
-        return speed;
-    }
-
-    function _shuttleSpeedtoAngle(speed) {
-        var angle = Math.log(Math.abs(speed)) / 0.15 + 15;
-        angle = Math.max(Math.min(angle, _maxShuttleAngle), 0);
-        if (speed < 0) {
-            angle *= -1.0;
-        }
-        return angle;
     }
 
     function _setShuttleRingPointer(shuttleRingPointer, knobOuter, angle) {
@@ -648,21 +609,21 @@ define(['../Core/DeveloperError',
         widget._realtimeTooltip = widget._realtimeSVG.getElementsByTagName('title')[0];
         buttonsG.appendChild(widget._realtimeSVG);
         widget._realtimeSVG.addEventListener('click', function() {
-            widget._animationController.playRealtime();
+            widget._viewModel.playRealtime();
         }, true);
 
         // Play Reverse
         widget._playReverseSVG = rectButton(44, 99, '#animation_pathPlayReverse', 'Play Reverse');
         buttonsG.appendChild(widget._playReverseSVG);
         widget._playReverseSVG.addEventListener('click', function() {
-            widget._animationController.playReverse();
+            widget._viewModel.playReverse();
         }, true);
 
         // Play Forward
         widget._playForwardSVG = rectButton(124, 99, '#animation_pathPlay', 'Play Forward');
         buttonsG.appendChild(widget._playForwardSVG);
         widget._playForwardSVG.addEventListener('click', function() {
-            widget._animationController.play();
+            widget._viewModel.play();
         }, true);
 
         // Pause
@@ -670,10 +631,10 @@ define(['../Core/DeveloperError',
         widget._pauseTooltip = widget._pauseSVG.getElementsByTagName('title')[0];
         buttonsG.appendChild(widget._pauseSVG);
         widget._pauseSVG.addEventListener('click', function() {
-            if (widget._animationController.isAnimating()) {
-                widget._animationController.pause();
+            if (widget._viewModel.isAnimating()) {
+                widget._viewModel.pause();
             } else {
-                widget._animationController.unpause();
+                widget._viewModel.unpause();
             }
         }, true);
 
@@ -718,15 +679,12 @@ define(['../Core/DeveloperError',
         });
         shuttleRingBackG.appendChild(widget._shuttleRingPointer);
 
-        widget._realtimeMode = false;
         widget._isSystemTimeAvailable = true;
-        widget._shuttleRingAngle = 0;
         var shuttleRingDragging = false;
 
         function setShuttleRingFromMouse(e) {
             var centerX = widget._centerX;
             if (e.type === 'mousedown' || (shuttleRingDragging && e.type === 'mousemove')) {
-                widget._clock.clockStep = ClockStep.SPEED_MULTIPLIER;
                 var rect = svg.getBoundingClientRect();
                 var x = e.clientX - centerX - rect.left;
                 var y = e.clientY - centerX - rect.top;
@@ -734,16 +692,9 @@ define(['../Core/DeveloperError',
                 if (angle > 180) {
                     angle -= 360;
                 }
-                var speed = _shuttleAngletoSpeed(widget._animationController, angle);
-                if (shuttleRingDragging || (Math.abs(widget._shuttleRingAngle - angle) < 15)) {
+                if (shuttleRingDragging || (Math.abs(widget._viewModel.shuttleRingAngle - angle) < 15)) {
                     shuttleRingDragging = true;
-                    if (speed !== 0) {
-                        widget._clock.multiplier = speed;
-                    }
-                } else if (speed < widget._clock.multiplier) {
-                    widget._animationController.decreaseMultiplier();
-                } else if (speed > widget._clock.multiplier) {
-                    widget._animationController.increaseMultiplier();
+                    widget._viewModel.shuttleRingAngle = angle;
                 }
                 e.preventDefault();
                 e.stopPropagation();
@@ -807,36 +758,6 @@ define(['../Core/DeveloperError',
     }
 
     /**
-     * Override this function to change the format of the date label on the widget.
-     * The returned string will be displayed as the middle line of text on the widget.
-     *
-     * @function
-     * @memberof Animation.prototype
-     * @returns {String} The human-readable version of the current date.
-     */
-    Animation.prototype.makeDateLabel = function(date) {
-        var gregorianDate = date.toGregorianDate();
-        return _monthNames[gregorianDate.month - 1] + ' ' + gregorianDate.day + ' ' + gregorianDate.year;
-    };
-
-    /**
-     * Override this function to change the format of the time label on the widget.
-     * The returned string will be displayed as the bottom line of text on the widget.
-     *
-     * @function
-     * @memberof Animation.prototype
-     * @returns {String} The human-readable version of the current time.
-     */
-    Animation.prototype.makeTimeLabel = function(date) {
-        var gregorianDate = date.toGregorianDate();
-        var millisecond = gregorianDate.millisecond;
-        if (Math.abs(this._clock.multiplier) < 1) {
-            return sprintf("%02d:%02d:%02d.%03d", gregorianDate.hour, gregorianDate.minute, gregorianDate.second, millisecond);
-        }
-        return sprintf("%02d:%02d:%02d UTC", gregorianDate.hour, gregorianDate.minute, gregorianDate.second);
-    };
-
-    /**
      * Update the widget to reflect the current state of its {@link AnimationController}.
      * Typically, call this function once per animation frame, after the clock has ticked.
      *
@@ -844,100 +765,56 @@ define(['../Core/DeveloperError',
      * @memberof Animation.prototype
      */
     Animation.prototype.update = function() {
-        var currentTime = this._clock.currentTime;
-        var currentTimeLabel = this.makeTimeLabel(currentTime);
-        var currentDateLabel = this.makeDateLabel(currentTime);
-        if (currentDateLabel !== this._lastKnobDate) {
-            this._lastKnobDate = currentDateLabel;
-            _updateSvgText(this._knobDate, currentDateLabel);
-        }
-        if (currentTimeLabel !== this._lastKnobTime) {
-            this._lastKnobTime = currentTimeLabel;
-            _updateSvgText(this._knobTime, currentTimeLabel);
-        }
+        var viewModel = this._viewModel;
+        viewModel.update();
 
-        var speed = this._clock.multiplier;
-        var angle = _shuttleSpeedtoAngle(speed);
-        var tooltip, speedLabel;
-        if (this._animationController.isAnimating()) {
-            if (this._clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-                speedLabel = 'Today';
-            } else {
-                speedLabel = speed + 'x';
-            }
-            tooltip = 'Pause';
+        var currentTimeLabel = viewModel.timeLabel;
+        var currentDateLabel = viewModel.dateLabel;
+        var angle = viewModel.shuttleRingAngle;
+        var tooltip = viewModel.tooltip;
+        var speedLabel = viewModel.speedLabel;
+        var pauseChecked = viewModel.pauseChecked;
+        var playChecked = viewModel.playChecked;
+        var playReverseChecked = viewModel.playReverseChecked;
+        var realTimeChecked = viewModel.realTimeChecked;
+        var realTimeEnabled = viewModel.realTimeEnabled;
+
+        _updateSvgText(this._knobDate, currentDateLabel);
+        _updateSvgText(this._knobTime, currentTimeLabel);
+        _updateSvgText(this._knobStatus, speedLabel);
+
+        this._pauseTooltip.textContent = tooltip;
+        _setShuttleRingPointer(this._shuttleRingPointer, this._knobOuter, angle);
+
+        if (pauseChecked) {
+            this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPausePointer');
+            this._pauseSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
         } else {
-            speedLabel = speed + 'x';
-            tooltip = 'Unpause';
+            this._pauseSVG.setAttribute('class', 'animation-rectButton');
+            this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
         }
 
-        var isAnimating = this._animationController.isAnimating();
-        if (this._lastKnobSpeed !== speedLabel || this._wasAnimating !== isAnimating) {
-            this._lastKnobSpeed = speedLabel;
-            this._wasAnimating = isAnimating;
-            if (!isAnimating) {
-                this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPausePointer');
-                this._pauseSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
-                this._playForwardSVG.setAttribute('class', 'animation-rectButton');
-                this._playReverseSVG.setAttribute('class', 'animation-rectButton');
-            } else if (this._clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-                this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
-                this._pauseSVG.setAttribute('class', 'animation-rectButton');
-                this._playForwardSVG.setAttribute('class', 'animation-rectButton');
-                this._playReverseSVG.setAttribute('class', 'animation-rectButton');
-            } else if (speed > 0) {
-                this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
-                this._pauseSVG.setAttribute('class', 'animation-rectButton');
-                this._playForwardSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
-                this._playReverseSVG.setAttribute('class', 'animation-rectButton');
-            } else {
-                this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
-                this._pauseSVG.setAttribute('class', 'animation-rectButton');
-                this._playForwardSVG.setAttribute('class', 'animation-rectButton');
-                this._playReverseSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
-            }
-            _updateSvgText(this._knobStatus, speedLabel);
-        }
-
-        if (this._clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-            if (!this._realtimeMode) {
-                this._realtimeMode = true;
-                this._realtimeSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
-                this._realtimeTooltip.textContent = 'Today (real-time)';
-            }
+        if (playChecked) {
+            this._playForwardSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
         } else {
-            var setRealtimeStyle = false;
-
-            if (this._realtimeMode) {
-                this._realtimeMode = false;
-                setRealtimeStyle = true;
-            }
-
-            var isSystemTimeAvailable = this._clock.isSystemTimeAvailable();
-            if (this._isSystemTimeAvailable !== isSystemTimeAvailable) {
-                this._isSystemTimeAvailable = isSystemTimeAvailable;
-                setRealtimeStyle = true;
-            }
-
-            if (setRealtimeStyle) {
-                if (!isSystemTimeAvailable) {
-                    this._realtimeSVG.setAttribute('class', 'animation-buttonDisabled');
-                    this._realtimeTooltip.textContent = 'Current time not in range.';
-                } else {
-                    this._realtimeSVG.setAttribute('class', 'animation-rectButton');
-                    this._realtimeTooltip.textContent = 'Today (real-time)';
-                }
-            }
+            this._playForwardSVG.setAttribute('class', 'animation-rectButton');
         }
 
-        if (this._shuttleRingAngle !== angle) {
-            this._shuttleRingAngle = angle;
-            _setShuttleRingPointer(this._shuttleRingPointer, this._knobOuter, angle);
+        if (playReverseChecked) {
+            this._playReverseSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
+        } else {
+            this._playReverseSVG.setAttribute('class', 'animation-rectButton');
         }
 
-        if (this._lastPauseTooltip !== tooltip) {
-            this._lastPauseTooltip = tooltip;
-            this._pauseTooltip.textContent = tooltip;
+        if (realTimeChecked) {
+            this._realtimeSVG.setAttribute('class', 'animation-rectButton animation-buttonSelected');
+            this._realtimeTooltip.textContent = 'Today (real-time)';
+        } else if (realTimeEnabled) {
+            this._realtimeSVG.setAttribute('class', 'animation-rectButton');
+            this._realtimeTooltip.textContent = 'Today (real-time)';
+        } else {
+            this._realtimeSVG.setAttribute('class', 'animation-buttonDisabled');
+            this._realtimeTooltip.textContent = 'Current time not in range.';
         }
     };
 

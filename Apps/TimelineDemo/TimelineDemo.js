@@ -8,6 +8,7 @@ define(['dojo',
         'Core/AnimationController',
         'Core/requestAnimationFrame',
         'Widgets/Animation',
+        'Widgets/AnimationViewModel',
         'Widgets/Timeline'
     ], function(
          dojo,
@@ -19,6 +20,7 @@ define(['dojo',
          AnimationController,
          requestAnimationFrame,
          Animation,
+         AnimationViewModel,
          Timeline) {
     "use strict";
 
@@ -90,7 +92,7 @@ define(['dojo',
         timeline.addTrack(new TimeInterval(startJulian.addSeconds(middle), startJulian.addSeconds(middle * 3)), 8, Color.DEEPSKYBLUE, new Color(0.55, 0.55, 0.55, 0.25));
 
         animationController = new AnimationController(clock);
-        animation = new Animation(dojo.byId('animationWidget'), animationController);
+        animation = new Animation(dojo.byId('animationWidget'), new AnimationViewModel(animationController));
 
         function tick() {
             var currentTime = animationController.update();
