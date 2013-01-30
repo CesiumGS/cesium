@@ -821,6 +821,52 @@ define([
         }
     }
 
+    function processTerrainUpsampleStateMachine(surface, context, terrainProvider, tile) {
+        var tileTerrain = tile.upsampledTerrain;
+
+        if (tileTerrain.state === TerrainState.UNLOADED) {
+            // Find the nearest ancestor with loaded terrain.
+            var sourceTile = tile.parent;
+            while (typeof sourceTile !== 'undefined' &&
+                   !isDataReceived(sourceTile.loadedTerrain.state) &&
+                   !isDataReceived(sourceTile.upsampledTerrain.state)) {
+
+                sourceTile = sourceTile.parent;
+            }
+
+            if (typeof sourceTile === 'undefined') {
+                // No ancestors have loaded terrain - try again later.
+                return;
+            }
+
+            var sourceTerrain = isDataReceived(sourceTile.loadedTerrain.state) ? sourceTile.loadedTerrain : sourceTile.upsampledTerrain;
+            var sourceData = sourceTerrain.data;
+
+            tileTerrain.data = sourceData.upsample(sourceTile.tilingScheme, sourceTile.x, sourceTile.y, sourceTile.level, tile.x, tile.y, tile.level);
+            if (typeof tileTerrain.data === 'undefined') {
+                // The upsample request has been deferred - try again later.
+                return;
+            }
+
+            tileTerrain.state = TerrainState.RECEIVING;
+
+            when(tileTerrain.data, function(terrainData) {
+                tileTerrain.data = terrainData;
+                tileTerrain.state = TerrainState.RECEIVED;
+            }, function() {
+                tileTerrain.state = TerrainState.FAILED;
+            });
+        }
+
+        if (tileTerrain.state === TerrainState.RECEIVED) {
+            transformTileTerrain(surface, context, terrainProvider, tile, tileTerrain);
+        }
+
+        if (tileTerrain.state === TerrainState.TRANSFORMED) {
+            createTileTerrainResources(surface, context, terrainProvider, tile, tileTerrain);
+        }
+    }
+
     function transformTileTerrain(surface, context, terrainProvider, tile, tileTerrain) {
         var tilingScheme = tile.tilingScheme;
         var ellipsoid = tilingScheme.getEllipsoid();
@@ -869,52 +915,6 @@ define([
 
     function isDataReceived(state) {
         return state.value >= TerrainState.RECEIVED.value;
-    }
-
-    function processTerrainUpsampleStateMachine(surface, context, terrainProvider, tile) {
-        var tileTerrain = tile.upsampledTerrain;
-
-        if (tileTerrain.state === TerrainState.UNLOADED) {
-            // Find the nearest ancestor with loaded terrain.
-            var sourceTile = tile.parent;
-            while (typeof sourceTile !== 'undefined' &&
-                   !isDataReceived(sourceTile.loadedTerrain.state) &&
-                   !isDataReceived(sourceTile.upsampledTerrain.state)) {
-
-                sourceTile = sourceTile.parent;
-            }
-
-            if (typeof sourceTile === 'undefined') {
-                // No ancestors have loaded terrain - try again later.
-                return;
-            }
-
-            var sourceTerrain = isDataReceived(sourceTile.loadedTerrain.state) ? sourceTile.loadedTerrain : sourceTile.upsampledTerrain;
-            var sourceData = sourceTerrain.data;
-
-            tileTerrain.data = sourceData.upsample(sourceTile.tilingScheme, sourceTile.x, sourceTile.y, sourceTile.level, tile.x, tile.y, tile.level);
-            if (typeof tileTerrain.data === 'undefined') {
-                // The upsample request has been deferred - try again later.
-                return;
-            }
-
-            tileTerrain.state = TerrainState.RECEIVING;
-
-            when(tileTerrain.data, function(terrainData) {
-                tileTerrain.data = terrainData;
-                tileTerrain.state = TerrainState.RECEIVED;
-            }, function() {
-                tileTerrain.state = TerrainState.FAILED;
-            });
-        }
-
-        if (tileTerrain.state === TerrainState.RECEIVED) {
-            transformTileTerrain(surface, context, terrainProvider, tile, tileTerrain);
-        }
-
-        if (tileTerrain.state === TerrainState.TRANSFORMED) {
-            createTileTerrainResources(surface, context, terrainProvider, tile, tileTerrain);
-        }
     }
 
     function isDataAvailable(tile) {
