@@ -214,7 +214,8 @@ define([
     };
 
     /**
-     * Gets state information about the current scene.
+     * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
+     * function, the previous frame's state is returned.
      *
      * @memberof Scene
      */
