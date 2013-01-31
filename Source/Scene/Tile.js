@@ -292,6 +292,10 @@ define([
             this.children = undefined;
         }
 
+        this.freeVertexArray();
+    };
+
+    Tile.prototype.freeVertexArray = function() {
         if (typeof this.vertexArray !== 'undefined') {
             var indexBuffer = this.vertexArray.getIndexBuffer();
 

@@ -788,21 +788,7 @@ define([
             }
 
             if (loaded.state === TerrainState.READY) {
-                // Copy mesh information to the tile in preparation for rendering.
-                mesh = loaded.mesh;
-                Cartesian3.clone(mesh.center, tile.center);
-                tile.minHeight = mesh.minHeight;
-                tile.maxHeight = mesh.maxHeight;
-                BoundingSphere.clone(mesh.boundingSphere2D, tile.boundingSphere2D);
-                BoundingSphere.clone(mesh.boundingSphere3D, tile.boundingSphere3D);
-
-                if (typeof mesh.occludeePointInScaledSpace !== 'undefined') {
-                    Cartesian3.clone(mesh.occludeePointInScaledSpace, tile.occludeePointInScaledSpace);
-                } else {
-                    tile.occludeePointInScaledSpace = undefined;
-                }
-
-                tile.vertexArray = loaded.vertexArray;
+                publishTileTerrain(tile, loaded);
 
                 // No further loading or upsampling is necessary.
                 tile.loadedTerrain = undefined;
@@ -827,21 +813,7 @@ define([
             }
 
             if (upsampled.state === TerrainState.READY) {
-                // Copy mesh information to the tile in preparation for rendering.
-                mesh = upsampled.mesh;
-                Cartesian3.clone(mesh.center, tile.center);
-                tile.minHeight = mesh.minHeight;
-                tile.maxHeight = mesh.maxHeight;
-                BoundingSphere.clone(mesh.boundingSphere2D, tile.boundingSphere2D);
-                BoundingSphere.clone(mesh.boundingSphere3D, tile.boundingSphere3D);
-
-                if (typeof mesh.occludeePointInScaledSpace !== 'undefined') {
-                    Cartesian3.clone(mesh.occludeePointInScaledSpace, tile.occludeePointInScaledSpace);
-                } else {
-                    tile.occludeePointInScaledSpace = undefined;
-                }
-
-                tile.vertexArray = upsampled.vertexArray;
+                publishTileTerrain(tile, upsampled);
 
                 // No further upsampling is necessary.  We need to continue loading, though.
                 tile.upsampledTerrain = undefined;
@@ -1015,17 +987,44 @@ define([
                         } else if (childTile.loadedTerrain.state === TerrainState.NOT_AVAILABLE) {
                             // The load process has concluded terrain data is not available,
                             // which is not true.  Reboot the load process.
-                            childTile.loadedTerrain.state = TerrainState.UNLOADED;
+                            childTile.loadedTerrain.freeResources();
                             childTile.state = TileState.LOADING;
                         }
                     } else {
                         // Restart the upsampling process, no matter its current state.
+                        // We create a new instance rather than just restarting the existing one
+                        // because there could be an asynchronous operation pending on the existing one.
+                        if (typeof childTile.upsampledTerrain !== 'undefined') {
+                            childTile.upsampledTerrain.freeResources();
+                        }
                         childTile.upsampledTerrain = new TileTerrain();
                         childTile.state = TileState.LOADING;
                     }
                 }
             }
         }
+    }
+
+    function publishTileTerrain(tile, tileTerrain) {
+        var mesh = tileTerrain.mesh;
+        Cartesian3.clone(mesh.center, tile.center);
+        tile.minHeight = mesh.minHeight;
+        tile.maxHeight = mesh.maxHeight;
+        BoundingSphere.clone(mesh.boundingSphere2D, tile.boundingSphere2D);
+        BoundingSphere.clone(mesh.boundingSphere3D, tile.boundingSphere3D);
+
+        if (typeof mesh.occludeePointInScaledSpace !== 'undefined') {
+            Cartesian3.clone(mesh.occludeePointInScaledSpace, tile.occludeePointInScaledSpace);
+        } else {
+            tile.occludeePointInScaledSpace = undefined;
+        }
+
+        // Free the existing vertex array, if any.
+        tile.freeVertexArray();
+
+        // Transfer ownership of the vertex array to the tile itself.
+        tile.vertexArray = tileTerrain.vertexArray;
+        tileTerrain.vertexArray = undefined;
     }
 
     // This is debug code to render the bounding sphere of the tile in
