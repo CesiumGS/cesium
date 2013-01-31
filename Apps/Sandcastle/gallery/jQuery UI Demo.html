@@ -11,34 +11,12 @@
     <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.23/jquery-ui.min.js"></script>
     <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js"></script>
     <script type="text/javascript" src="../Sandcastle-warn.js"></script>
-    <link rel="Stylesheet" href="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.23/themes/ui-darkness/jquery-ui.css" type="text/css">
+    <link rel="stylesheet" href="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.23/themes/ui-darkness/jquery-ui.css" type="text/css">
 </head>
 <body data-sandcastle-bucket="bucket-jqueryui.html" data-sandcastle-title="Cesium + jQuery UI">
 <style>
-    body {
-        background: #000;
-        color: #eee;
-        font-family: sans-serif;
-        font-size: 9pt;
-        padding: 0;
-        margin: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-    }
-    .fullSize {
-        display: block;
-        position: absolute;
-        top: 0;
-        left: 0;
-        border: none;
-        width: 100%;
-        height: 100%;
-    }
+    @import url(../templates/bucket.css);
     #toolbar {
-        margin: 5px;
-        padding: 2px 5px;
-        position: absolute;
         opacity: 0.85;
     }
     .ui-dialog {
@@ -82,14 +60,14 @@
 
     primitives.setCentralBody(cb);
     scene.skyAtmosphere = new Cesium.SkyAtmosphere();
-    var imageryUrl = '../../../Source/Assets/Textures/';
+    var skyBoxBaseUrl = '../../../Source/Assets/Textures/SkyBox/tycho2t3_80';
     scene.skyBox = new Cesium.SkyBox({
-        positiveX: imageryUrl + 'SkyBox/tycho8_px_80.jpg',
-        negativeX: imageryUrl + 'SkyBox/tycho8_mx_80.jpg',
-        positiveY: imageryUrl + 'SkyBox/tycho8_py_80.jpg',
-        negativeY: imageryUrl + 'SkyBox/tycho8_my_80.jpg',
-        positiveZ: imageryUrl + 'SkyBox/tycho8_pz_80.jpg',
-        negativeZ: imageryUrl + 'SkyBox/tycho8_mz_80.jpg'
+        positiveX : skyBoxBaseUrl + '_px.jpg',
+        negativeX : skyBoxBaseUrl + '_mx.jpg',
+        positiveY : skyBoxBaseUrl + '_py.jpg',
+        negativeY : skyBoxBaseUrl + '_my.jpg',
+        positiveZ : skyBoxBaseUrl + '_pz.jpg',
+        negativeZ : skyBoxBaseUrl + '_mz.jpg'
     });
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 
