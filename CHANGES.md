@@ -19,6 +19,7 @@ Beta Releases
 * Added `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Iau2006XysData`, and `Iau2006XysDataSample` classes to `Core`.
 * CZML now supports the ability to specify positions in the International Celestial Reference Frame (ICRF), and inertial reference frame.
 * Fixed globe rendering on the Nexus 4 running Google Chrome Beta.
+* `ViewportQuad` now supports the material system. See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page.
 
 ### b12a - 2013-01-18
 
