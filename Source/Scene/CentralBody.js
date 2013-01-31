@@ -21,6 +21,7 @@ define([
         '../Core/Occluder',
         '../Core/PrimitiveType',
         '../Core/Transforms',
+        './Material',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
         '../Renderer/CommandLists',
@@ -29,6 +30,7 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/PixelFormat',
         '../Renderer/BlendingState',
+        '../Renderer/Texture',
         './CentralBodySurface',
         './CentralBodySurfaceShaderSet',
         './EllipsoidTerrainProvider',
@@ -63,6 +65,7 @@ define([
         Occluder,
         PrimitiveType,
         Transforms,
+        Material,
         BufferUsage,
         ClearCommand,
         CommandLists,
@@ -71,6 +74,7 @@ define([
         DrawCommand,
         PixelFormat,
         BlendingState,
+        Texture,
         CentralBodySurface,
         CentralBodySurfaceShaderSet,
         EllipsoidTerrainProvider,
@@ -747,25 +751,26 @@ define([
             var height = logoData.totalLogoHeight;
             var logoRectangle = new BoundingRectangle(centralBody.logoOffset.x, centralBody.logoOffset.y, width, height);
             if (typeof centralBody._logoQuad === 'undefined') {
-                centralBody._logoQuad = new ViewportQuad(logoRectangle);
-                centralBody._logoQuad.enableBlending = true;
+                centralBody._logoQuad = new ViewportQuad();
+                centralBody._logoQuad.rectangle = BoundingRectangle.clone(logoRectangle);
             } else {
-                centralBody._logoQuad.setRectangle(logoRectangle);
+                centralBody._logoQuad.rectangle = BoundingRectangle.clone(logoRectangle);
             }
 
-            var texture = centralBody._logoQuad.getTexture();
-            if (typeof texture === 'undefined' || texture.getWidth() !== width || texture.getHeight() !== height) {
+            var texture = centralBody._logoQuad.material.uniforms.image;
+            if (typeof texture === 'undefined' || !(texture instanceof Texture) ||texture.getWidth() !== width || texture.getHeight() !== height) {
                 if (width === 0 || height === 0) {
-                    if (typeof texture !== 'undefined') {
-                        centralBody._logoQuad.destroy();
-                        centralBody._logoQuad = undefined;
-                    }
+                    centralBody._logoQuad.material.destroy();
+                    centralBody._logoQuad.destroy();
+                    centralBody._logoQuad = undefined;
                 } else {
                     texture = context.createTexture2D({
                         width : width,
                         height : height
                     });
-                    centralBody._logoQuad.setTexture(texture);
+                    centralBody._logoQuad.material.destroy();
+                    centralBody._logoQuad.material = Material.fromType(context, Material.ImageType);
+                    centralBody._logoQuad.material.uniforms.image = texture;
                 }
             }
 
