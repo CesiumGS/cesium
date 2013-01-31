@@ -1,0 +1,147 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+    <title>Drawing GFX Toolbar Test</title>
+	<style>
+		@import url("../../../dijit/themes/dijit.css");
+		@import url("../../../dojox/drawing/resources/drawing.css");
+		@import url("../../../dojox/drawing/resources/toolbar.css");
+		@import url("../../../dojox/drawing/resources/GreekPalette.css");
+		href, body{
+		}
+		.drawing{
+			width:800px;
+			height:500px;
+			border:1px solid #ccc;
+			cursor:crosshair;
+		}
+		#data{
+			display:block;
+			height:100px;
+			width:800px;
+			margin-top:5px;
+		}
+		button{
+			border:2px solid #ccc;
+			border-color:#D9E1F9 #B5BCD0 #878E9D #C6CEE4;
+			background-color:#CDDCF3;
+			cursor:pointer;
+		}
+		.gfxToolbar{
+			width:800px;
+			height:50px;
+			margin-bottom:10px;
+			border:1px solid #ccc;
+		}
+	</style>
+
+	<script src="../../../dojo/dojo.js" data-dojo-config="async:1"></script>
+	<script>
+		require(["dojo/parser", "dojox/drawing", 
+			// custom Tools and Plugins need to be required
+			"dojox/drawing/tools/TextBlock",
+			"dojox/drawing/tools/Rect",
+			"dojox/drawing/tools/Ellipse",
+			"dojox/drawing/tools/Line",
+			"dojox/drawing/tools/Path",
+			"dojox/drawing/tools/Pencil",
+			"dojox/drawing/tools/custom/Vector",
+			"dojox/drawing/tools/custom/Axes",
+			"dojox/drawing/tools/Arrow",
+			"dojox/drawing/plugins/tools/Pan",
+			"dojox/drawing/plugins/tools/Zoom",
+			"dojox/drawing/plugins/tools/Iconize",
+			"dojox/drawing/plugins/drawing/GreekPalette",
+			"dojox/drawing/plugins/drawing/Grid",
+			"dojox/drawing/ui/Toolbar",
+			"dojox/drawing/ui/Button",
+			"dojo/domReady!"], function(parser){
+				parser.parse();
+				var doExport = function(){
+					var o = myDrawing.exporter();
+					console.log("EXPORT:")
+					console.dir(o)
+					console.log(dojo.toJson(o));
+					dojo.byId("data").value = dojo.toJson(o, true);
+				}
+
+				var doImport = function(){
+					myDrawing.importer(dojo.fromJson(dojo.byId("data").value));
+				}
+
+				var doClear = function(){
+					myDrawing.removeAll();
+				}
+
+				dojo.connect(myDrawing, "onSurfaceReady", function(){
+					new dojox.drawing.ui.Toolbar({
+						drawing:myDrawing,
+						tools:"all",
+						plugs:"all",
+						selected:"",
+						size:30,
+						radius:2,
+						margin:5
+					});
+
+				});
+
+				dojo.connect(dojo.byId("import"), "click", doImport);
+				dojo.connect(dojo.byId("export"), "click", doExport);
+				dojo.connect(dojo.byId("clear"), "click", doClear);
+				dojo.connect(dojo.byId("selectall"), "click", function(){
+					myDrawing.selectAll();
+				});
+
+				dojo.connect(dojo.byId("red"), "click", function(){
+					myDrawing.changeDefaults({
+						norm:{
+							fill:"#ff0000",
+							width:5,
+							color:"#ff00ff"
+						}
+					});
+				});
+				dojo.connect(dojo.byId("blue"), "click", function(){
+					myDrawing.changeDefaults({
+						norm:{
+							fill:"#0000ff",
+							width:5,
+							color:"#ffff00"
+						}
+					});
+				});
+				dojo.connect(dojo.byId("yellow"), "click", function(){
+					myDrawing.toSelected("attr", {
+						fill:"#ffff00"
+					});
+				});
+			});
+
+	</script>
+
+</head>
+<body>
+    <h2>Drawing Test</h2>
+	<div id="conEdit" contenteditable="true"></div>
+	<div id="wrapper">
+		<div dojoType="dojox.drawing.Drawing" id="drawingNode" jsId="myDrawing" class="drawing"
+			 plugins="[{'name':'dojox.drawing.plugins.drawing.Grid', 'options':{minor:20, major:100}}]">
+		</div>
+	</div>
+
+	<br/>
+	<button id="import">Import</button>
+	<button id="export">Export</button>
+	<button id="selectall">Select All</button>
+	<button id="clear">Clear Drawing</button>
+	&nbsp;&nbsp;&nbsp;
+	<button id="blue">Change defaults to Blue</button>
+	<button id="red">Change defaults to Red</button>
+	<button id="yellow">Change selected to Yellow</button>
+	<br/>
+	<br/>
+
+	<textarea id="data"></textarea>
+	<div dojoType="dojox.drawing.plugins.drawing.GreekPalette" id="greekPalette"></div>
+</body>
+</html>

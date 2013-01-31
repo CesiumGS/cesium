@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Accordion Widget Demo</title>
+
+	<!-- only needed for test files: -->
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, parseOnLoad: true"></script>
+
+	<!-- only needed for alternate theme testing: -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<!-- uncomment for profiling
+		<script type="text/javascript"
+			src="../../../dojo/_base/html.js"></script>
+		<script type="text/javascript"
+			src="../../base/Layout.js"></script>
+	-->
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.layout.AccordionContainer");
+		dojo.require("dijit.layout.AccordionPane");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.form.ComboBox");
+	 	dojo.require("dijit.form.Button");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+		dojo.ready(function(){
+			dojo.subscribe("focusNode", function(node){ console.log("focused on " + (node?(node.id||node.tagName):"nothing"));});
+		});
+		
+		function createAccordion(){
+			var html='<div data-dojo-type="dijit/layout/AccordionContainer" id="Accordion">' +
+				 	'<div data-dojo-type="dijit/layout/ContentPane" title="first" id="first">first</div>' +
+				 	'<div data-dojo-type="dijit/layout/ContentPane" title="second" id="second">second</div>' +
+					'</div>';
+			dijit.byId("accPane").set("content",html);
+		}
+	</script>
+
+	<style type="text/css">
+		.somePadding .dijitAccordionBody {
+			padding: 5px;
+		}
+		.extremePadding .dijitAccordionBody {
+			padding: 50px;
+		}
+	</style>
+</head>
+<body class="claro" style="padding: 50px;">
+
+	<h1 class="testTitle">AccordionContainer Tests</h1>
+
+	<h2>Accordion from markup:</h2>
+
+	<input id="beforeMarkupAccordion" value="for tabIndex testing"/>
+	<div id="markupAccordion" data-dojo-type="dijit/layout/AccordionContainer" data-dojo-props='style:"width: 400px; height: 300px; overflow: hidden"'>
+		<div id="pane1" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='selected:true,
+			title:"A Simple Pane", iconClass:"dijitEditorIcon dijitEditorIconSave", tooltip:"tooltip for simple pane" '>
+				<select>
+					<option>red</option>
+					<option>blue</option>
+					<option>green</option>
+				</select>
+				<p>
+				Nunc consequat nisi vitae quam. Suspendisse sed nunc. Proin
+				suscipit porta magna. Duis accumsan nunc in velit. Nam et nibh.
+				Nulla facilisi. Cras venenatis urna et magna. Aenean magna mauris,
+				bibendum sit amet, semper quis, aliquet nec, sapien.  Aliquam
+				aliquam odio quis erat. Etiam est nisi, condimentum non, lacinia
+				ac, vehicula laoreet, elit. Sed interdum augue sit amet quam
+				dapibus semper. Nulla facilisi. Pellentesque lobortis erat nec
+				quam.
+				</p>
+				<p>
+				Sed arcu magna, molestie at, <input value="fringilla in, sodales"/> fringilla in, sodales eu, elit.
+				Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+				vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+				augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+				metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+				ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+				euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+				risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+				porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+				faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+				consequat quis, varius interdum, nulla. Donec neque tortor,
+				sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+				ut eros sit amet ante pharetra interdum.
+				</p>
+		</div>
+
+		<!-- test lazy loading.   margin style for testing size calculations. -->
+		<div id="lazyLoadPane" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Lazy Load Pane", iconClass:"dijitEditorIcon dijitEditorIconCopy", href:"tab1.html",
+			style:"margin: 5px;"'></div>
+
+		<div id="borderContainerPane" data-dojo-type="dijit/layout/BorderContainer" data-dojo-props='title:"BorderContainer Pane", iconClass:"dijitEditorIcon dijitEditorIconPaste"'>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"left", style:"width:50%", splitter:true'>
+			1Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+			Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+			vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+			augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+			metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+			ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+			euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+			risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+			porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+			faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+			consequat quis, varius interdum, nulla. Donec neque tortor,
+			sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+			ut eros sit amet ante pharetra interdum.
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"center"'>
+			2Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+			Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+			vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+			augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+			metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+			ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+			euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+			risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+			porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+			faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+			consequat quis, varius interdum, nulla. Donec neque tortor,
+			sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+			ut eros sit amet ante pharetra interdum.
+			</div>
+		</div>
+
+		<div id="embeddedLayoutPane" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Embedded layout widgets", iconClass:"dijitEditorIcon dijitEditorIconCut"'>
+			<p>
+				The pane has some text, plus two embedded layout widgets, which should
+				appear correctly even though the pane is initially hidden.
+			</p>
+			<p>
+				Here's a BorderContainer:
+			</p>
+			<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props='style:"height:200px; width:300px"'>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"left", style:"width:100px", splitter:true'>
+					1Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+					Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+					vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+					augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+					metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+					ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+					euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+					risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+					porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+					faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+					consequat quis, varius interdum, nulla. Donec neque tortor,
+					sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+					ut eros sit amet ante pharetra interdum.
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"center"'>
+					2Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+					Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+					vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+					augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+					metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+					ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+					euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+					risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+					porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+					faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+					consequat quis, varius interdum, nulla. Donec neque tortor,
+					sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+					ut eros sit amet ante pharetra interdum.
+				</div>
+			</div>
+			<p>
+				And a TabContainer:
+			</p>
+			<div data-dojo-type="dijit/layout/TabContainer" data-dojo-props='style:"height:200px; width:300px"'>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Tab 1"'>
+					1Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+					Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+					vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+					augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+					metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+					ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+					euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+					risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+					porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+					faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+					consequat quis, varius interdum, nulla. Donec neque tortor,
+					sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+					ut eros sit amet ante pharetra interdum.
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Tab 2"'>
+					2Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+					Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+					vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+					augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+					metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+					ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+					euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+					risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+					porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+					faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+					consequat quis, varius interdum, nulla. Donec neque tortor,
+					sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+					ut eros sit amet ante pharetra interdum.
+				</div>
+			</div>
+			<p>
+				Text after the widgets.
+			</p>
+		</div>
+	</div>
+	<input id="afterMarkupAccordion" value="for tabIndex testing"/>
+	<button onclick="dijit.byId('pane1').set('title', 'My First Pane');">Change title of first pane</button>
+	<button onclick="dijit.byId('pane1').set('iconClass', 'plusIcon');">Change icon of first pane</button>
+	<button onclick="dijit.byId('markupAccordion').removeChild(dijit.byId('lazyLoadPane'));">Remove lazy-load pane</button>
+
+	<p></p>
+	<h2>Accordion with padding</h2>
+	<div data-dojo-type="dijit/layout/AccordionContainer"
+		data-dojo-props='style:"width: 400px; height: 300px; overflow: hidden"'>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='"class":"somePadding", title:"Some Padding"'>
+			<p>
+				Nunc consequat nisi vitae quam. Suspendisse sed nunc. Proin
+				suscipit porta magna. Duis accumsan nunc in velit. Nam et nibh.
+				Nulla facilisi. Cras venenatis urna et magna. Aenean magna mauris,
+				bibendum sit amet, semper quis, aliquet nec, sapien.  Aliquam
+				aliquam odio quis erat. Etiam est nisi, condimentum non, lacinia
+				ac, vehicula laoreet, elit. Sed interdum augue sit amet quam
+				dapibus semper. Nulla facilisi. Pellentesque lobortis erat nec
+				quam.
+			</p>
+			<p>
+				Sed arcu magna, molestie at, <input value="fringilla in, sodales"/> eu, elit.
+				Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+				vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+				augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+				metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+				ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+				euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+				risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+				porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+				faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+				consequat quis, varius interdum, nulla. Donec neque tortor,
+				sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+				ut eros sit amet ante pharetra interdum.
+			</p>
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"No Padding"'>
+			<p>
+				Nunc consequat nisi vitae quam. Suspendisse sed nunc. Proin
+				suscipit porta magna. Duis accumsan nunc in velit. Nam et nibh.
+				Nulla facilisi. Cras venenatis urna et magna. Aenean magna mauris,
+				bibendum sit amet, semper quis, aliquet nec, sapien.  Aliquam
+				aliquam odio quis erat. Etiam est nisi, condimentum non, lacinia
+				ac, vehicula laoreet, elit. Sed interdum augue sit amet quam
+				dapibus semper. Nulla facilisi. Pellentesque lobortis erat nec
+				quam.
+			</p>
+			<p>
+				Sed arcu magna, molestie at, <input value="fringilla in, sodales"/> eu, elit.
+				Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+				vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+				augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+				metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+				ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+				euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+				risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+				porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+				faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+				consequat quis, varius interdum, nulla. Donec neque tortor,
+				sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+				ut eros sit amet ante pharetra interdum.
+			</p>
+		</div>
+		<div data-dojo-type="dijit/layout/AccordionPane" data-dojo-props='"class":"extremePadding", title:"AccordionPane w/ Extreme Padding"'>
+			<p>(Leaving one AccordionPane to test deprecation)</p>
+			<p>
+				Nunc consequat nisi vitae quam. Suspendisse sed nunc. Proin
+				suscipit porta magna. Duis accumsan nunc in velit. Nam et nibh.
+				Nulla facilisi. Cras venenatis urna et magna. Aenean magna mauris,
+				bibendum sit amet, semper quis, aliquet nec, sapien.  Aliquam
+				aliquam odio quis erat. Etiam est nisi, condimentum non, lacinia
+				ac, vehicula laoreet, elit. Sed interdum augue sit amet quam
+				dapibus semper. Nulla facilisi. Pellentesque lobortis erat nec
+				quam.
+			</p>
+			<p>
+				Sed arcu magna, molestie at, <input value="fringilla in, sodales"/> eu, elit.
+				Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+				vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+				augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+				metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+				ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+				euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+				risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+				porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+				faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+				consequat quis, varius interdum, nulla. Donec neque tortor,
+				sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+				ut eros sit amet ante pharetra interdum.
+			</p>
+		</div>
+	</div>
+	
+	<br><br>
+	<h2>Accordion container destroy</h2>
+	<div id="accPane" data-dojo-type="dijit/layout/ContentPane" >
+	</div>
+	Click the button twice - it will work correctly unless there was a problem destroying the accordion, in which case the second time
+	the Accordion will not be created and you will see an error like <b>Tried to register widget with id==first_button but that id is already registered</b><br/>
+	<button type="button" onclick="createAccordion()">create Accordion</button>
+</body>
+</html>

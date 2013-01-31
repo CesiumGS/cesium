@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Edge To Edge List Tests</title>
+<script type="text/javascript" src="../../deviceTheme.js"></script>
+<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+<script language="JavaScript" type="text/javascript">
+var IsEdgeToEdgeList = false;
+</script>
+<script type="text/javascript" src="ListTests.js"></script>
+</head>
+<body>
+	<div id="view1" data-dojo-type="dojox.mobile.View" selected="true">
+		<h1>View 1</h1>
+		<ul id="view1-list1" data-dojo-type="dojox.mobile.RoundRectList" select="single">
+			<li data-dojo-type="dojox.mobile.ListItem" checked="true">Round Rect 1</li>
+			<li data-dojo-type="dojox.mobile.ListItem">Round Rect 2</li>
+		</ul>		
+		<div id="view1-list2"></div>
+		<ul id="view1-list3"></ul>
+	</div>	
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<h1>View 2</h1>
+		<ul id="view2-list1" data-dojo-type="dojox.mobile.RoundRectList" select="single">
+			<li data-dojo-type="dojox.mobile.ListItem" checked="true">Round Rect 1</li>
+			<li data-dojo-type="dojox.mobile.ListItem">Round Rect 2</li>
+		</ul>		
+		<div id="view2-list2"></div>
+		<ul id="view2-list3"></ul>
+	</div>
+</body>
+</html>

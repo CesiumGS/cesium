@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>html utility tests</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true"></script>
+
+	<script type="text/javascript">
+		require(["doh/runner", "dojo/dom", "dojo/_base/lang", "dojo/sniff", "dijit/_editor/html", "dojo/domReady!"],
+				function(doh, dom, lang, has, htmlAPI){
+
+			doh.register("getNodeHtml", [
+				function general(){
+					var html = htmlAPI.getNodeHtml(dom.byId("general"));
+					html = html.replace(/\s+/g, " ").replace(/>\s*</g, "><").replace(/10%;"/, '10%"');
+					doh.is('<div id="general"><img base="foo" style="width: 10%; height: 10%" /><span><i>hello<b>world</b></i></span></div>', html);
+				},
+				function tagClose(){
+					var html = htmlAPI.getNodeHtml(dom.byId("tagclosure"));
+					html = html.replace(/\s+/g, " ").replace(/>\s*</g, "><");
+					doh.is('<div id="tagclosure"><span><span></span><br /><hr /></span></div>', html);
+				},
+				function djrealurl(){
+					var html = htmlAPI.getNodeHtml(dom.byId("djrealurl"));
+					html = html.replace(/\s+/g, " ").replace(/>\s*</g, "><");
+					doh.is('<div id="djrealurl"><a href="real">hi</a><img src="real" /></div>', html);
+				}
+			]);
+
+			doh.register("getChildrenHtml", [
+				function general(){
+					var html = htmlAPI.getChildrenHtml(dom.byId("general"));
+					html = lang.trim(html.replace(/\s+/g, " ").replace(/>\s*</g, "><").replace(/10%;"/, '10%"'));
+					doh.is('<img base="foo" style="width: 10%; height: 10%" /><span><i>hello<b>world</b></i></span>', html);
+				},
+				function tagClose(){
+					var html = htmlAPI.getChildrenHtml(dom.byId("tagclosure"));
+					html = lang.trim(html.replace(/\s+/g, " ").replace(/>\s*</g, "><"));
+					doh.is('<span><span></span><br /><hr /></span>', html);
+				},
+				function djrealurl(){
+					var html = htmlAPI.getChildrenHtml(dom.byId("djrealurl"));
+					html = lang.trim(html.replace(/\s+/g, " ").replace(/>\s*</g, "><"));
+					doh.is('<a href="real">hi</a><img src="real" />', html);
+				},
+				function specialchars(){
+					var html = htmlAPI.getChildrenHtml(dom.byId("specialchars"));
+					html = lang.trim(html.replace(/\s+/g, " ").replace(/>\s*</g, "><"));
+					doh.is('hello&amp;goodbye<span>3&gt;2</span>', html);
+				},
+				function image(){
+					var html = htmlAPI.getChildrenHtml(dom.byId("image"));
+					html = lang.trim(html.replace(/\s+/g, " ").replace(/>\s*</g, "><"));
+					doh.is('<img alt="alt text" height="88" id="bibli_WR4479" src="http://acme.com/logo.png" title="test" width="150" />', html)
+				}
+			]);
+
+			// This is testing a bug with IE and malformed HTML.   Since the HTML is malformed different
+			// browsers get different results (but still results that can't be considered errors).   The
+			// only browsers that get error results are IE.   Thus limiting the test to IE6-8.
+			if(has("ie") < 9){
+				doh.register("IE6-8", [
+					function graph(){
+						var html = htmlAPI.getChildrenHtml(dom.byId("graph"));
+						html = lang.trim(html.replace(/\s+/g, " ").replace(/>\s*</g, "><")).toUpperCase();
+						doh.is('<FONT SIZE="2"><P>123<FONT SIZE="6">456</FONT><FONT SIZE="2">789</FONT></P></FONT>', html);
+					}
+				]);
+			}
+
+			doh.register("escapeXML", [
+				function regular(){
+					var escaped = htmlAPI.escapeXml("hello<b>\"&'</b>goodbye");
+					doh.is("hello&lt;b&gt;&quot;&amp;&#39;&lt;/b&gt;goodbye", escaped);
+				},
+				function noSingleQuote(){
+					var escaped = htmlAPI.escapeXml("hello<b>\"&'</b>goodbye", true);
+					doh.is("hello&lt;b&gt;&quot;&amp;'&lt;/b&gt;goodbye", escaped);
+				}
+			]);
+			doh.run();
+		});
+	</script>
+</head>
+<body>
+
+<!--
+this tests that tag case is normalized, and that attributes are sorted
+(the style vs. base attributes for the <img>
+-->
+<div id="general">
+	<imG style="width: 10%; height: 10%" base="foo">
+	<SPAN><i>hello<b>world</b></i></SPAN>
+</div>
+
+<!--
+testing tag closure: br, hr, etc close with /> but others like <span> close with </span>
+-->
+<div id="tagclosure">
+<span><span></span><br><hr></span>
+</div>
+
+<!--
+src and href attributes get converted to _djrealurl, which is dropped
+-->
+<div id="djrealurl">
+<a href="javascript:1" _djrealurl="real">hi</a>
+<img src="javascript:1" _djrealurl="real">
+</div>
+
+<div id="specialchars">
+	hello&amp;goodbye<span>3&gt;2</span>
+</div>
+</body>
+
+<!--
+image tag (was problem on IE9, see #15032)
+-->
+<div id="image">
+	<img alt="alt text"  width="150" height="88" id="bibli_WR4479" src="http://acme.com/logo.png" title="test" />
+</div>
+
+<!--
+Graph test, for bug where IE has nodes with multiple parents, see #8363
+-->
+<div id="graph">
+<FONT size=2><P>123</FONT><FONT size=6>456</FONT><FONT size=2>789</P></FONT>
+</div>
+
+</html>

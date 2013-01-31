@@ -1,0 +1,190 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	
+	<head>
+		
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		
+		<title>MatrixView Sample: Tablet</title>				
+		<style type="text/css">
+			@import "../themes/iphone/MatrixView.css";
+			@import "matrixtablet.css";
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/dijit.css";
+			@import "../../../dijit/themes/claro/claro.css";
+		</style>
+	</head>
+	
+	<body>
+			<script type="text/javascript" 
+						data-dojo-config="async: true, parseOnLoad: true"
+		 				src="../../../dojo/dojo.js"></script>
+		
+			<script type="text/javascript">
+
+			require(["dojo/ready", "dojo/_base/declare", "dojo/on", "dojo/date/locale", "dojo/parser", "dojo/date", "dojo/_base/lang",
+					"dojo/dom", "dojo/dom-construct", "dojo/dom-class", "dojo/_base/window",
+					"dijit/registry", "dojo/query", "dojox/calendar/MatrixView", "dojox/calendar/Touch", 
+					"dojox/calendar/MobileHorizontalRenderer", "dojox/calendar/LabelRenderer", "dojox/calendar/ExpandRenderer", "dojo/store/Memory", "dojo/store/Observable",
+					 "dojo/_base/fx"],
+
+				function(ready, declare, on, locale, parser, date, lang, dom, domConstruct, domClass, win, registry, query,
+					MatrixView, CalendarTouch, HorizontalRenderer, LabelRenderer, ExpandRenderer, Memory, Observable, fx){
+
+					ready(function(){
+
+						// Calendar model creation
+						
+						var dateClassObj = Date;
+						
+						var modelBase = [
+							{day: 0, start: [0,0], duration: 1440, allDay:true},
+							{day: 1, start: [6,0], duration: 240},
+							{day: 1, start: [10,0], duration: 240},
+							{day: 1, start: [16,0], duration: 60},
+							{day: 2, start: [8,0], duration: 120},
+							{day: 2, start: [10,0], duration: 120},
+							{day: 2, start: [16,0], duration: 120},
+							{day: 3, start: [8,0], duration: 1440*2},
+							{day: 5, start: [0,0], duration: 1440, allDay:true},
+							{day: 6, start: [0,0], duration: 2*1440, allDay:true}
+						];
+																
+						// TODO manage first day of week
+						floorToWeek= function(d){
+							d.setHours(0);
+							d.setMinutes(0);
+							d.setSeconds(0);
+							d.setMilliseconds(0);
+							d = date.add(d, "day", -d.getDay());
+							return d;
+						}
+						
+						var someData = [];
+						
+						var startOfWeek = new dateClassObj();
+						startOfWeek = floorToWeek(startOfWeek);
+												
+						var id;
+						for (var w=0; w<5; w++) {
+							for (var i=0; i<modelBase.length; i++) {
+								id = (w*modelBase.length)+i;
+								var newObj = {
+									id: id,
+									summary: "New Event " + id,
+									startTime: new dateClassObj(startOfWeek.getTime()),
+									endTime: new dateClassObj(startOfWeek.getTime())
+								}
+	
+								newObj.startTime = date.add(newObj.startTime, "day", Math.floor(Math.random()*7));
+								newObj.startTime.setHours(modelBase[i].start[0]);
+								newObj.startTime.setMinutes(modelBase[i].start[1]);
+	
+								newObj.endTime = date.add(newObj.startTime, "minute", modelBase[i].duration);
+								
+								if(modelBase[i].allDay != undefined){
+									newObj.allDay = modelBase[i].allDay; 
+								}
+	
+								someData.push(newObj);
+							}
+							startOfWeek = date.add(startOfWeek, "day", 7);
+						}
+						
+						id++;
+						
+						// Calendar creation & configuration
+						
+						matrixView = declare([MatrixView, CalendarTouch])({
+							startDate: startOfWeek,
+							store: new Observable(new Memory({data: someData})),		
+							horizontalRenderer: HorizontalRenderer,
+							horizontalRendererHeight: 20,
+							labelRenderer: LabelRenderer,
+							labelRendererHeight: 15,
+							expandRenderer: ExpandRenderer,
+							expandRendererHeight: 20,
+							verticalGap:2							
+						}, "calendarNode");
+						
+						setRowWidth = function(value){
+							matrixView.grid.style.left = value + "px";
+							matrixView.yearColumnHeader.style.width = value + "px";
+							matrixView.columnHeader.style.left = value + "px";
+							matrixView.rowHeader.style.width = value + "px";
+							matrixView.itemContainer.style.left = value + "px";							
+						}
+						
+						window.onresize = window.onorientationchange = function(e){
+							var n = matrixView.domNode;
+							if(n.offsetWidth > n.offsetHeight){
+								matrixView.columnHeaderLabelLength = "wide";
+								matrixView.set("rowCount", 2);								
+								setRowWidth(50);
+							}else{
+								matrixView.columnHeaderLabelLength = "abbr";
+								matrixView.set("rowCount", 4);
+								setRowWidth(20);
+								
+							}
+						};
+						
+						window.onresize();
+
+						// Events management
+						
+						matrixView.on("gridDoubleClick", function(e){
+
+							// create a event when double-clicking on grid.
+							var d = matrixView.floorToDay(e.date, true);
+
+							var item = {
+								id: id,
+								summary: "New event " + id,
+								startTime: d,
+								endTime: date.add(d, "day", 1)
+							};
+							id++;
+							matrixView.store.add(item);
+							
+							matrixView.set("selectedItem", item);
+							matrixView.set("focusedItem", item);
+							onMatrixViewChange(item);
+						});
+
+						matrixView.on("rowHeaderClick", function(e){
+							var expIndex = matrixView.getExpandedRowIndex();
+							if(expIndex == e.index){
+								matrixView.collapseRow();
+							}else if(expIndex == -1){
+								matrixView.expandRow(e.index);
+							}else{
+								var h = matrixView.on("expandAnimationEnd", function(){
+									h.remove();
+									matrixView.expandRow(e.index);
+								});
+								matrixView.collapseRow();
+							}
+						});																																				
+																													
+						fx.fadeOut({
+							node:"loadingPanel", 
+							onEnd: function(node){
+								node.parentNode.removeChild(node)
+							}}).play(500);
+
+					});
+			});
+			</script>
+			
+			<div id="loadingPanel" style="position:absolute;z-index:10;width:100%;height:100%;background:#ffffff;text-align: center">
+				<span style="background: #DBEB8F">Loading...</span>
+			</div>
+						
+			<div id="calendarNode"></div>					
+
+	</body>
+</html>

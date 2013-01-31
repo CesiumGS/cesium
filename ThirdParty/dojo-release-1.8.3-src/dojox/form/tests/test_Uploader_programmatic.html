@@ -1,0 +1,213 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 5//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+    <title>Test dojox.form.Uploader Programmatic</title>
+	<link href="../../../dijit/themes/dijit.css" rel="stylesheet" />
+	<link href="../../../dijit/themes/claro/Common.css" rel="stylesheet" />
+	<link href="../../../dijit/themes/claro/form/Common.css" rel="stylesheet" />
+	<link href="../../../dijit/themes/claro/Dialog.css" rel="stylesheet" />
+	<link href="../../../dijit/themes/claro/form/Button.css" rel="stylesheet" />
+	<link href="../../../dijit/themes/claro/layout/TabContainer.css" rel="stylesheet" />
+	<link href="../../../dijit/themes/claro/Dialog.css" rel="stylesheet" />
+
+	<link href="../resources/UploaderFileList.css" rel="stylesheet" />
+	<style>
+		@import "../../../dijit/tests/css/dijitTests.css";
+		html, body{
+			font-family:sans-serif;
+		}
+		.browseButton{
+			width:300px;
+			font-weight:bold;
+			margin:10px 0 2px 0;
+		}
+		.dijitTabPane{
+			padding:20px;
+		}
+		form{
+			width:315px;
+			margin-right:10px;
+		}
+		fieldset{
+			text-align:right;
+		}
+		input[type=text]{
+			width:140px;
+		}
+		.dijitButton{
+			margin-top:15px;
+		}
+		.dojoxUploaderFileList{
+			text-align:left;
+			margin-top:10px;
+		}
+		.pageTable{
+			width:100%;
+		}
+		.pageTable td{
+			vertical-align:top;
+		}
+		#colForm{
+			width:330px;
+		}
+		#colImages{
+			padding-top:7px;
+		}
+		.thumb{
+			border:1px solid #ccc;
+			padding:5px;
+			width:123px;
+			background:#eee;
+			float:left;
+			margin:0 5px 5px 0;
+		}
+		.thumbbk{
+			background:#fff;
+			display:block;
+		}
+		.thumb img{
+			border:1px solid #ccc;
+			width:120px;
+		}
+		.form, .html5, .iframe, .flash{
+			display:none;
+		}
+		.Form .form, .HTML5 .html5, .IFrame .iframe, .Flash .flash{
+			display:block;
+		}
+		#dialog p{
+			width:310px;
+		}
+		.claro .attachButton{
+			width:350px;
+			height:60px;
+			border:0;
+		}
+		.claro .attachButton .dijitButton .dijitButtonNode{
+			background-color:#ffffff;
+			background-image:url(images/attach.png);
+			background-position:left top;
+			background-repeat:no-repeat;
+			height:56px;
+			border:0;
+			-moz-box-shadow:0 0 0;
+			-webkit-box-shadow:0 0 0;
+		}
+		.claro .attachButton .dijitButtonHover .dijitButtonNode{
+			background-position:0px -60px;
+		}
+		code{
+			font-family:monospace;
+			white-space:nowrap;
+		}
+	</style>
+	<script>
+		djConfig = {
+			async:1,
+			isDebug:true
+		}
+	</script>
+	<script src="../../../dojo/dojo.js"></script>
+	<script>
+		require(['dojo', 'dojo/domReady!', 'dojo/parser', 'dijit/form/Button', 'dijit/Dialog', 'dojox/form/Uploader', 'dojox/form/uploader/FileList', 'dojox/form/uploader/plugins/Flash'],
+				function(dojo, dr, parser, Button, Dialog, Uploader, FileList, uFlash){
+					console.log('ready')
+					parser.parse();
+
+					makeSKP = function(){
+
+						var div = dojo.create('div',{innerHTML:'<p>This dialog will not upload. Only testing that it parses correctly.</p>'});
+						myUploadDialog = new Dialog({
+							title: "Upload Video",
+							style: "width: 400px;height:300px;",
+							content: div
+						});
+						myUploadDialog.show();
+
+						//
+						// IMPORTANT NOTE!
+						// When using the Uploader programmatically, you cannot use the ref
+						// from the require() - you must use the global. In other words:
+						//
+						// require(['dojox/form/Uploader'], function(Uploader){
+						// 	myUploader = Uploader(...);
+						// })
+						// ... will NOT work!!
+						// You must use:
+						// require(['dojox/form/Uploader'], function(Uploader){
+						//	 myUploader = new dojox.form.Uploader(...);
+						// })
+
+
+						myUploader = new dojox.form.Uploader({
+							label: 'Prog Browse',
+							url:"abc.php",
+							id:"programmatic",
+							multiple: true
+						});
+						div.appendChild(myUploader.domNode);
+						myUploader.startup();
+						var b = new Button({label:"Upload"});
+
+						div.appendChild(b.domNode);
+
+						dojo.connect(b, "onClick", function(){
+							console.log(myUploader.upload)
+							myUploader.upload();
+						});
+					}
+
+					var handleUpload = function(upl, node){
+
+						dojo.connect(upl, "onComplete", function(dataArray){
+
+							dojo.forEach(dataArray, function(file){
+								console.log("display:", file)
+
+								var div = dojo.create('div', {className:'thumb'});
+								var span = dojo.create('span', {className:'thumbbk'}, div);
+								var img = dojo.create('img', {src:file.file}, span);
+								node.appendChild(div);
+							});
+						});
+					}
+					var u = new dojox.form.Uploader({label:"Programmatic Uploader", multiple:true, uploadOnSelect:true, url:"UploadFile.php"});
+					dojo.byId("parent").appendChild(u.domNode);
+					u.startup();
+
+					handleUpload(u, dojo.byId('colImages'));
+					handleUpload(dijit.byId("uploader"), dojo.byId('colImages'));
+					handleUpload(dijit.byId("uploader2"), dojo.byId('colImages'));
+
+					makeSKP();
+
+				});
+
+
+
+	</script>
+</head>
+<body class="claro">
+    <h1>Test dojox.form.Uploader Programmatic</h1>
+
+	<div id="parent"></div>
+
+	<form method="post" action="UploadFile.php" id="myForm" enctype="multipart/form-data" >
+		<input class="browseButton" name="uploadedfile" multiple="false" type="file" dojoType="dojox.form.Uploader" uploadOnSelect="true" label="Upload via Markup" isDebug="true" id="uploader">
+	</form>
+
+	<form method="post" action="UploadFile.php" id="parent" enctype="multipart/form-data" ></form>
+
+	<form method="post" action="UploadFile.php" id="myForm2" enctype="multipart/form-data" >
+		<fieldset>
+			<legend>Form Post Test</legend>
+			<input class="browseButton" name="uploadedfile" multiple="true" type="file" dojoType="dojox.form.Uploader" label="Select Some Files" isDebug="true" id="uploader2">
+			<input type="submit" label="Submit" dojoType="dijit.form.Button" />
+			<div id="files" dojoType="dojox.form.uploader.FileList" uploaderId="uploader2"></div>
+		</fieldset>
+	</form>
+	<div id="skp"></div>
+	<div id="colImages"></div>
+
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html dir="ltr">
+<head>
+	<title>Test Filter plugin of dojox.grid.EnhancedGrid</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<link rel=stylesheet href="support/common.css"/>
+	<style type="text/css">
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+			padding-right: 10em;
+		}
+		.title {
+			text-align:center;
+			margin:1em;
+		}
+ 		#grid{
+			width: 100em;
+			height: 30em;
+		}
+	</style>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug:false, parseOnLoad: true"></script>
+	<script type="text/javascript" src="../../../../dijit/tests/_testCommon.js"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojox.grid.EnhancedGrid");
+		dojo.require("dojox.grid.enhanced.plugins.Filter");
+		
+		var layout = [{//--------------------------------------------------------------------------0
+			defaultCell: {
+				editable: true, sortDesc: true, type: dojox.grid.cells._Widget,
+				//Use ComboBox instead of TextBox when setting filter for string columns
+				autoComplete:true
+			},
+			cells:
+			[
+				//5 kinds of datatype: string, number, date, time, boolean
+				{ field: "id", name:"Index", datatype:"number", width: 2.5, editable: false},
+				{ field: "Genre", name:"Genre", datatype:"string", width: 10},
+				{ field: "Artist", name:"Artist", datatype:"string", width: 10},
+				{ field: "Year", name:"Year", datatype:"string", width: 2.5},
+				{ field: "Album", name:"Album", datatype:"string", width: 10,
+					dataTypeArgs: {
+					//turn off autoComplete for the ComboBox, but still use the suggestions.
+						autoComplete: false
+					}
+				},
+				{ field: "Name", name:"Name", datatype:"string", width: 8,
+					//Disable some filter conditions for this column 
+					disabledConditions: [
+						"contains", "notcontains"
+					]
+				},
+				{ field: "Length", name:"Length", datatype:"string", width: 4},
+				{ field: "Track", name:"Track", datatype:"number", width: 3},
+				{ field: "Composer", name:"Composer", datatype:"string", width: 12},
+				{ field: "Download Date", name:"Download Date", datatype:"date", width: 8, editable: false,
+					dataTypeArgs: {
+					//Tell the DateTextBox how to parse the store data
+						datePattern: "yyyy/M/d"
+					}
+				},
+				{ field: "Last Played", name:"Last Played", datatype:"time", width: 6, editable: false,
+					dataTypeArgs: {
+					//Tell the TimeTextBox how to parse the store data
+						timePattern: "HH:mm:ss"
+					}
+				},
+				{ field: "Heard", name: "Checked", datatype:"boolean", width: 6,
+					type: dojox.grid.cells._Widget, 
+					widgetClass: dijit.form.CheckBox
+				},
+				{ field: "Checked", name:"Checked (Customized Label)", 
+					type: dojox.grid.cells._Widget, 
+					widgetClass:dijit.form.CheckBox,
+					datatype:"boolean", width: 15, 
+					dataTypeArgs: {
+					//Define what does true/false mean here
+						trueLabel: "This sounds like a very old song.",
+						falseLabel: "Never heard of this song."
+					}
+				}
+			]
+		}];
+		var plugins = {
+			filter: {
+				itemsName: 'songs',
+				closeFilterbarButton: true,
+				ruleCount: 8
+			}
+		};
+		dojo.ready(function(){
+			dojo.connect(dijit.byId("grid"), "onFilterDefined", function(rules, rel){
+				console.log("Filter changed: ", rules, rel);
+			});
+		});
+	</script>
+	<script type="text/javascript" src="support/test_write_store_music.js"></script>
+</head>
+<body class="claro">
+	<h1 class="title">dojox.grid.EnhancedGrid - Filter</h1>
+	<div id="gridContainer">
+		<div id="grid" dojoType="dojox.grid.EnhancedGrid" store="test_store[0]" structure="layout" plugins="plugins"></div>
+	</div><br/>
+	<p><strong>Note:</strong> To see the tundra theme, just append <b style="color:blue;">?theme=tundra</b> to the URL.</p>
+</body>
+</html>

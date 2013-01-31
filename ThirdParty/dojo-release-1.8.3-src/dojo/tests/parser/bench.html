@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Parser scan() Performance Test</title>
+		<style type="text/css">     
+			@import "../../resources/dojo.css";
+		</style>
+		<script type="text/javascript" src="../../dojo.js" data-dojo-config="isDebug:true, async:true"></script>
+		<script type="text/javascript">
+		require([
+			"dojo/_base/declare",
+			"dojo/dom",
+			"dojo/dom-construct",
+			"dojo/_base/lang",
+			"dojo/parser",
+			"dojo/query",
+			"doh",
+			"dojo/domReady!"
+		], function(declare, dom, domConstruct, lang, parser, query, doh){
+
+			declare("TabContainer", null, {
+				numberProp1: 1,
+				numberProp2: 2,
+				booleanProp1: false,
+				booleanProp2: true,
+				strProp1: "original1",
+				strProp2: "original2",
+				funcProp: function(){}
+			});
+			declare("ContentPane", null, {
+				stopParser: true,
+				numberProp1: 1,
+				numberProp2: 2,
+				booleanProp1: false,
+				booleanProp2: true,
+				strProp1: "original1",
+				strProp2: "original2",
+				funcProp: function(){}
+			});
+			declare("TextBox", null, {
+				numberProp1: 1,
+				numberProp2: 2,
+				booleanProp1: false,
+				booleanProp2: true,
+				strProp1: "original1",
+				strProp2: "original2",
+				funcProp: function(){}
+			});
+
+			function generateDom(/*String[]*/ nodes, /*Number*/ fan, /*DOMNode*/ parent){
+				// summary:
+				//		Generate large DOM tree based on nodes in nodes[] array, with fan nodes at each level
+				var markup = nodes.shift();
+				for(var i=0; i<fan; i++){
+					var child = domConstruct.place(markup, parent);
+					if(nodes.length){
+						generateDom([].concat(nodes), fan, child);	// concat() to clone array
+					}
+				}
+			}
+
+			doh.register("parser performance tests", [
+				// Test scan of DOM without any widgets
+				{
+					name: "scan() with no widgets",
+					testType: "perf",
+					trialIterations: 20,
+					setUp: function(){
+						dom.byId("status").innerHTML = "Running scan() with no widgets test...";
+						var rows = query("tr", "tbody");
+						for(var i=0; i<55; i++){
+							domConstruct.place(rows[i%2 + 1].cloneNode(true), "tbody");
+						}
+					},
+					tearDown: function(){
+						domConstruct.empty("scan");
+					},
+					runTest: function(){
+						parser._clearCache();
+						parser.parse("scan");
+					}
+				},
+
+				{
+					name: "scan() with lots of widgets",
+					testType: "perf",
+					trialIterations: 20,
+					setUp: function(){
+						dom.byId("status").innerHTML = "Running scan() with lots of widgets test...";
+						generateDom([
+							"<div data-dojo-type=TabContainer></div>",
+							"<div data-dojo-type=TabContainer></div>",
+							"<div></div>",
+							"<input data-dojo-type=TextBox strProp1=name/>"
+						], 4, "scan");
+					},
+					tearDown: function(){
+						domConstruct.empty("scan");
+					},
+					runTest: function(){
+						parser._clearCache();
+						parser.parse("scan");
+					}
+				},
+
+				{
+					name: "scan() with lots of widgets but _stopParser",
+					testType: "perf",
+					trialIterations: 20,
+					setUp: function(){
+						dom.byId("status").innerHTML = "Running scan() with lots of widgets and _stopParser test...";
+						generateDom([
+							"<div data-dojo-type=TabContainer></div>",
+							"<div data-dojo-type=ContentPane></div>",
+							"<div></div>",
+							"<input data-dojo-type=TextBox strProp1=name/>"
+						], 4, "scan");
+					},
+					tearDown: function(){
+						domConstruct.empty("scan");
+					},
+					runTest: function(){
+						parser._clearCache();
+						parser.parse("scan");
+					}
+				},
+
+				{
+					name: "instantiate()",
+					testType: "perf",
+					trialIterations: 20,
+					setUp: function(){
+						dom.byId("status").innerHTML = "Running instantiate() test...";
+						nodes = [];
+						for(var i=0; i<100; i++){
+							nodes.push(domConstruct.place("<input data-dojo-type=TextBox numberProp1=1 numberProp2=2 stringProp1=hi booleanProp1=true funcProp='console.log(12345);'/>", "instantiate"));
+						}
+					},
+					tearDown: function(){
+						domConstruct.empty("instantiate");
+					},
+					runTest: function(){
+						parser._clearCache();
+						parser.instantiate(nodes);
+					}
+				},
+
+				function results(){
+					dom.byId("status").innerHTML = "Graphing results...";
+				}
+			]);
+
+			doh.run();
+		});
+		</script>
+	</head>
+	<body>
+		<h1>Parser Performance Test</h1>
+
+		<!-- Display progress messages so test doesn't seem hung -->
+		<h2 id="status"></h2>
+
+		<!-- Test results are displayed here -->
+		<div id="perfTestsBody"></div>
+
+		<!-- for generating markup to scan (no widgets, just nodes) -->
+		<div id="scan" style="display: none">
+ 		<table width="100%" cellspacing="0" cellpadding="0" border="0" class="datatable" id="reportTable">
+	 	<tbody id="tbody">
+			<tr class="hr">
+				<td width="1px" style="display: none;">
+					<input type="checkbox" onclick="" name="cbSelectItem" ignore="true">
+				</td>
+				<td class="left">
+				    <span id="_0">
+						Name
+					</span>
+				</td>
+
+				<td class="left">
+				    <span id="_1">
+                        RIC
+                     </span>
+                </td>
+
+				<td class="right">
+    				<span id="_2">
+                        PE
+                     </span>
+				</td>
+
+				<td class="right">
+					Est. PE
+                </td>
+
+                <td class="right">
+    				<span id="_4">
+                        EPS
+                     </span>
+				</td>
+
+				<td class="normaltext left">
+				    Ccy
+				</td>
+
+				<td class="right">
+    				<span id="_6">
+                        DPS
+                     </span>
+				</td>
+
+				<td class="normaltext left">
+				    Ccy
+				</td>
+
+				<td class="right">
+    				<span id="_8">
+                        Div. Yld (%)
+                     </span>
+				</td>
+
+				<td class="right">
+    				<span id="_9">
+                        ROE (%)
+                     </span>
+				</td>
+
+				<td class="right">
+    				<span id="_10">
+                        P/Book
+                     </span>
+				</td>
+
+				<td class="right">
+    				<span id="_11">
+                        P/Sales
+                     </span>
+				</td>
+
+				<td class="normaltext right">
+					Weight %
+				</td>
+
+				<td class="right">
+    				<span id="_12">
+                        Market Cap (USD)
+                     </span>
+				</td>
+
+			</tr>
+
+
+			<tr headrow="true" class="dr  row-o">
+				<td width="1px" style="display: none;">
+					<input type="checkbox" value="IBM.N" name="cbSelectItem" ignore="">
+				</td>
+    			<td class="normaltext left">
+					    International Business Machines Corp
+				    </td>
+    			<td class="normaltext left"><span style="">
+					<a href="#" class="CCFDATA CCF.Entity[COMP]:RIC=RIC">
+					RIC
+					</a>
+					</span><span style="visibility: hidden; display: none;">-</span></td>
+    			<td class="normaltext right">xx,xx</td>
+    			<td class="normaltext right">xx,xx</td>
+    			<td class="normaltext right">x,xx</td>
+    			<td class="normaltext left nowrap">XXX</td>
+    			<td class="normaltext right">xx.xx,xx</td>
+    			<td class="normaltext left nowrap">XXX</td>
+    			<td class="normaltext right">x,xx</td>
+    			<td class="normaltext right">xx,xx</td>
+    			<td class="normaltext right">x,xx</td>
+    			<td class="normaltext right">x,xx</td>
+    			<td class="normaltext right">-</td>
+    			<td class="normaltext right">xxx,xxx</td>
+			</tr>
+
+
+			<tr headrow="true" class="dr  row-e">
+				<td width="1px" style="display: none;">
+					<input type="checkbox" value="&nbsp;" name="cbSelectItem" ignore="true">
+				</td>
+    			<td class="normaltext left">
+				    Index average (Mean)</td>
+    			<td class="normaltext left"><span style="visibility: hidden; display: none;">
+					<a href="/Explorer/Default.aspx?s=%26nbsp&amp;amp;st=RIC" class="CCFDATA CCF.Entity[COMP]:RIC=&amp;nbsp">
+					&nbsp;
+					</a>
+					</span><span style="">-</span></td>
+    			<td class="normaltext right">xx,xx</td>
+    			<td class="normaltext right">xx,xx</td>
+    			<td class="normaltext right">n/a</td>
+    			<td class="normaltext left nowrap">n/a</td>
+    			<td class="normaltext right">n/a</td>
+    			<td class="normaltext left nowrap">n/a</td>
+    			<td class="normaltext right">xx,xx</td>
+    			<td class="normaltext right">xx,xx</td>
+    			<td class="normaltext right">x,xx</td>
+    			<td class="normaltext right">x,xx</td>
+    			<td class="normaltext right">-</td>
+    			<td class="normaltext right">xx,xxx</td>
+			</tr>
+		</tbody>
+		</table>
+		</div>
+
+		<!-- for testing widget instantiation speed -->
+		<div id="instantiate" style="display: none"></div>
+	</body>
+</html>

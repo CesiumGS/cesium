@@ -10,17 +10,19 @@ Beta Releases
    * The Web Worker files needed when using the combined `Cesium.js` file are now in a `Workers` subdirectory.
    * Removed `erosion` property from `Polygon`, `ComplexConicSensorVolume`, `RectangularPyramidSensorVolume`, and `ComplexConicSensorVolume`.  Use the new `Erosion` material.  See the Sandbox Animation example.
    * Removed `setRectangle` and `getRectangle` methods from `ViewportQuad`. Use the new `rectangle` property.
+   * Removed `time` parameter from `Scene.initializeFrame`. Instead, pass the time to `Scene.render`. 
 * Added new `RimLighting` and `Erosion` materials.  See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page.
 * Added `hue` and `saturation` properties to `ImageryLayer`.
 * Added `czm_hue` and `czm_saturation` to adjust the hue and saturation of RGB colors.
-* Fixed rendering artifacts in `EllipsoidPrimitive`.
-* Fixed an issue where streaming CZML would fail when changing material types.
 * Added `JulianDate.getDaysDifference` method.
 * Added `Transforms.computeIcrfToFixedMatrix` and `computeFixedToIcrfMatrix`.
 * Added `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Iau2006XysData`, and `Iau2006XysDataSample` classes to `Core`.
 * CZML now supports the ability to specify positions in the International Celestial Reference Frame (ICRF), and inertial reference frame.
 * Fixed globe rendering on the Nexus 4 running Google Chrome Beta.
 * `ViewportQuad` now supports the material system. See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page.
+* Fixed rendering artifacts in `EllipsoidPrimitive`.
+* Fixed an issue where streaming CZML would fail when changing material types.
+* Updated Dojo from 1.7.2 to 1.8.4.  Reminder: Cesium does not depend on Dojo but uses it for reference applications.
 
 ### b12a - 2013-01-18
 

@@ -1,21 +1,30 @@
 /*global define*/
 define([
-    'dojo/dom',
-    'dojo/on',
-    'dojo/ready',
-    'dojo/io-query',
-    'Widgets/Dojo/CesiumViewerWidget'
-], function(
-    dom,
-    on,
-    ready,
-    ioQuery,
-    CesiumViewerWidget
-) {
+        'dojo/_base/window',
+        'dojo/dom',
+        'dojo/dom-class',
+        'dojo/io-query',
+        'dojo/parser',
+        'dojo/ready',
+        'Widgets/Dojo/checkForChromeFrame',
+        'Widgets/Dojo/CesiumViewerWidget'
+    ], function(
+        win,
+        dom,
+        domClass,
+        ioQuery,
+        parser,
+        ready,
+        checkForChromeFrame,
+        CesiumViewerWidget) {
     "use strict";
     /*global console*/
 
     ready(function() {
+        parser.parse();
+
+        checkForChromeFrame();
+
         var endUserOptions = {};
         if (window.location.search) {
             endUserOptions = ioQuery.queryToObject(window.location.search.substring(1));
@@ -27,5 +36,7 @@ define([
         });
         widget.placeAt(dom.byId('cesiumContainer'));
         widget.startup();
+
+        domClass.remove(win.body(), 'loading');
     });
 });

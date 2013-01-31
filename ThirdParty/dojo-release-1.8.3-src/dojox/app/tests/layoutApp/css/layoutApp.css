@@ -1,0 +1,117 @@
+html,body {
+	width: 100%;
+	height: 100%;
+}
+
+button.baseBtn {
+	-webkit-background-clip: padding-box;
+	-webkit-box-align: center;
+	background-clip: padding-box;
+	border-style: solid;
+	border-width: 1px;
+	color: black;
+	font-family: 'Helvetica Neue', HelveticaNeue, Helvetica-Neue, Helvetica, 'BBAlpha Sans';
+	font-size: 18px;
+	font-weight: bold;
+	vertical-align: middle;
+	margin: 10px;
+	height: 34px;
+	border-bottom-left-radius: 7px;
+	border-bottom-right-radius: 7px;
+	border-top-left-radius: 7px;
+	border-top-right-radius: 7px;
+	width: 240px;
+}
+
+button.whiteBtn{
+	background-image: -webkit-gradient(linear, 0% 0, 0% 100%, from(white), color-stop(0.06, #f2f2f2), to(#b7b7b7));
+	border-color: #979797;
+	border-bottom-color: #727272;
+}
+
+button.whiteBtnSelected{
+	background-image: -webkit-gradient(linear, 0% 0, 0% 100%, from(#ffffff), color-stop(0.06, #bbbbbb), to(#fcfcfc));
+	border-color: #979797;
+	border-bottom-color: #727272;
+}
+
+#header button {
+	position:absolute;
+	margin:0px;
+}
+
+#navButton {
+	width:60px;
+}
+
+#loadDiv {
+	position:absolute;
+	left:0px;
+	top:0px;
+	width:100%;
+	height:100%;
+	z-index:999;
+}
+#loadDiv {
+	display:table;
+	font-size: 20px;
+	text-align:center;
+	background-color:white;
+}
+#loadDiv span {
+	display:table-cell;
+	vertical-align:middle;
+}
+
+body .mblProgContainer {
+	top:45%;
+	height: 45px;
+	width: 140px;
+	margin-left:-70px;
+	background-color: #2A2A28;
+	border-style: solid;
+	border-width: 2px;
+	border-color: #666666;
+	border-radius: 0.4em;
+	-webkit-border-radius: 0.4em;
+	-moz-border-radius: 0.4em;
+}
+
+body .mblProgContainer > div {
+	height: 100%;
+	width: 100%;
+	line-height: 45px;
+	vertical-align: middle;
+	font-size: 20px;
+	color: #c2c2c2;
+}
+
+body .mblProg {
+	left: 3px;
+	top: 3px;
+}
+
+body .mblProgContainer > div::after {
+	padding-left: 42px;
+	content: "Updating...";
+}
+
+#jsContent, #htmlContent {
+	padding-left:2px;
+}
+
+@media screen and (max-width: 600px) {
+	#jsContent, #htmlContent {
+		font-size: 14px;
+	}
+}
+
+.hidden {
+	display:none;
+}
+
+div .navPane {
+	width:250px;
+	border-right:1px solid black;
+	background-color: #C5CCD3;
+}

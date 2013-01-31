@@ -7,14 +7,14 @@
     <meta name="description" content="Use the mouse to select and manipulate objects in the scene.">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
     <script type="text/javascript">
     require({
         baseUrl : '../../..',
         packages: [
-            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
-            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
-            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'dojo', location: 'ThirdParty/dojo-release-1.8.3-src/dojo' },
+            { name: 'dijit', location: 'ThirdParty/dojo-release-1.8.3-src/dijit' },
+            { name: 'dojox', location: 'ThirdParty/dojo-release-1.8.3-src/dojox' },
             { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
@@ -27,7 +27,7 @@
         ]
     });
     </script>
-    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
     <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
@@ -223,7 +223,9 @@ require([
             modelMatrix : modelMatrix,
             radius : 20000000.0,
             xHalfAngle : Cesium.Math.toRadians(40.0),
-            yHalfAngle : Cesium.Math.toRadians(20.0)
+            yHalfAngle : Cesium.Math.toRadians(20.0),
+            showIntersection : false,
+            material : Cesium.Material.fromType(scene.getContext(), 'Erosion')
         });
         scene.getPrimitives().add(sensors);
         
@@ -236,7 +238,7 @@ require([
                 if (!eroding && (pickedObject === sensor)) {
                     // Prevent multiple erosions
                     eroding = true;
-                    scene.getAnimations().addProperty(sensor, 'erosion', 1.0, 0.0, {
+                    scene.getAnimations().addProperty(sensor.material.uniforms, 'time', 1.0, 0.0, {
                         onComplete : function() {
                             if (!sensors.isDestroyed()) {
                                 sensors.remove(sensor);

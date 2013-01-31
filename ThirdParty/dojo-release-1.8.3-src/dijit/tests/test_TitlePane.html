@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>TitlePane Test</title>
+
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: false, isDebug: true"></script>
+
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.TitlePane");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+
+		// widgets used inside subpage loaded via href=
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.layout.AccordionContainer");
+		dojo.require("dijit.layout.LinkPane");
+
+		function randomMessageId(){
+			return Math.floor(Math.random() * 3) + 3;
+		}
+
+	    dojo.ready(function(){
+	
+			dojo.declare("TestTitlePane", dijit.TitlePane, {
+				templateString: '<div class="dijitTitlePane">' +
+								'    <div class="dijitTitlePaneTitle" data-dojo-attach-point="titleBarNode" style="cursor: default;" id="${id}_titleBarNode">' +
+								        '<span data-dojo-attach-event="onclick:toggle,onkeypress: _onTitleKey" tabindex="0"' +
+								                'role="button" data-dojo-attach-point="focusNode,arrowNode" style="cursor: pointer;">' +
+											'<img src="${_blankGif}" alt="" class="dijitArrowNode" role="presentation"/>' +
+											'<span data-dojo-attach-point="arrowNodeInner" class="dijitArrowNodeInner"></span>' +
+										 '</span>' +
+								        '<span data-dojo-attach-point="titleNode" class="dijitTitlePaneTextNode"></span>' +
+								    '</div>' +
+								    '<div class="dijitTitlePaneContentOuter" data-dojo-attach-point="hideNode">' +
+								        '<div class="dijitReset" data-dojo-attach-point="wipeNode">' +
+								            '<div class="dijitTitlePaneContentInner" data-dojo-attach-point="containerNode" id="${id}_pane" aria-labelledby="${id}_titleBarNode" role="region" tabindex="-1">' +
+								            '</div>' +
+								        '</div>' +
+								    '</div>' +
+								'</div>'
+			});
+	
+		    dojo.parser.parse();
+	    });
+	</script>
+</head>
+<body class="claro" role="main">
+	<h1 class="testTitle">Dijit TitlePane Test</h1>
+
+	<label for="input">input:</label><input id="input" value="for tab testing"/>
+
+	<h1>Test #1: plain title pane, width=300px</h1>
+	<div id="testPane1" data-dojo-id="pane1" data-dojo-type="dijit/TitlePane" data-dojo-props='title:"Title Pane #1",
+		tooltip:"I\"m the tooltip for Title Pane #1\"s title bar",
+		style:"width: 300px;" '>
+		Lorem Ipsum Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Quisque
+		iaculis, nulla id semper faucibus, pede tellus nonummy magna, vitae adipiscing
+		orci arcu ut augue. Nunc condimentum, magna a vestibulum convallis, libero purus
+		pulvinar orci, sed vestibulum urna sem ut pede. More Ipsum...
+		Sed sollicitudin suscipit risus. Nam ullamcorper. Sed nisl lectus, pellentesque
+		nec, malesuada eget, ornare a, libero. Lorem ipsum dolor sit amet,
+		consectetuer adipiscing elit.
+	</div>
+	<button id="titleButton" onclick="pane1.set('title', 'New Title')">change title</button>
+	<button id="closeButton" onclick="pane1.set('open', false)">close pane</button>
+	<h1>Test #2: title pane with form, width=300px</h1>
+
+	<div id="pane_2" data-dojo-type="dijit/TitlePane" data-dojo-props='title:"Title Pane #2", style:"width: 300px;"'>
+		<form>
+			<label for="age">Age: </label> <input id="age"/><br>
+			<input id="disc" type="checkbox"/><label for="disc">Discount card </label><br>
+			<button>Submit</button><br>
+		</form>
+	</div>
+	<br>
+
+	<h1>Test #3: initially closed pane</h1>
+	<div id="closed" data-dojo-type="dijit/TitlePane" data-dojo-props='title:"Initially closed pane", open:false, style:"width:500px;"'>
+		<form>
+			<label for="age2">Age: </label><input id="age2"/><br>
+			<label for="discount">Discount card </label><input type="checkbox" id="discount"/><br>
+			<button>Submit</button><br>
+		</form>
+
+		<p>And a TabContainer, to make sure it lays out correctly:</p>
+		<div id="tabContainer" data-dojo-type="dijit/layout/TabContainer" data-dojo-props='style:"width: 400px; height: 250px;"'>
+			<a data-dojo-type="dijit/layout/LinkPane" data-dojo-props='href:"layout/tab1.html", onLoad:function(){ console.log("load of SubTab 1"); }'>SubTab 1</a>
+			<a data-dojo-type="dijit/layout/LinkPane" data-dojo-props='href:"layout/tab2.html",  onLoad:function(){ console.log("load of SubTab 2"); }, selected:true'>SubTab 2</a>
+		</div>
+	</div>
+	<button onclick="dijit.byId('closed').set('content', 'hello world! (' + new Date() + ')');">reset content</button>
+
+	<h1>Test #4: title pane with href (initially closed)</h1>
+	<p>The pane should open to "Loading..." message and then 3 seconds later it should slide open more to show loaded data.</p>
+	<div id="href1" data-dojo-type="dijit/TitlePane" data-dojo-props='duration:1000, title:"Pane from href", open:false,
+		href:"layout/getResponse.php?delay=3000&amp;messId=3", preventCache:true,
+		style:"width: 400px;"'>
+		Loading...
+	</div>
+
+	<h1>Test #5: title pane with href (initially closed)</h1>
+	<p>The pane should start to open to "Loading..." but halfway through href data will be loaded, and it should expand correctly.</p>
+	<div id="href2" data-dojo-type="dijit/TitlePane" data-dojo-props='duration:1000, title:"Pane from href", open:false,
+		href:"layout/getResponse.php?delay=500&amp;messId=3", preventCache:true,
+		style:"width: 400px;"'>
+		Loading...
+	</div>
+
+	<h1>Test #6: nested title pane</h1>
+	<div id="outer" data-dojo-type="dijit/TitlePane" data-dojo-props='title:"Outer pane", style:"width:300px;"'>
+		<p>This is a title pane, containing another title pane ...
+		<p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Quisque iaculis, nulla id semper faucibus, pede tellus nonummy magna, vitae adipiscing orci arcu ut augue. Nunc condimentum, magna a vestibulum convallis, libero purus pulvinar orci, sed vestibulum urna sem ut pede.
+More Ipsum...
+
+		<div id="inner" data-dojo-type="dijit/TitlePane" data-dojo-props='title:"Inner pane", style:"width:250px;"'>
+			<p>And this is the inner title pane...
+			<p>Sed sollicitudin suscipit risus. Nam ullamcorper. Sed nisl lectus, pellentesque nec, malesuada eget, ornare a, libero. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.
+		</div>
+
+		<p>And this is the closing line for the outer title pane.
+	</div>
+
+	<h1>Test #7: subclassed title pane (only arrow is selectable and focusable)</h1>
+	<div id="ttp" data-dojo-type="TestTitlePane" data-dojo-props='title:"Title Pane #7", style:"width: 300px;" '>
+		Lorem Ipsum Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Quisque
+		iaculis, nulla id semper faucibus, pede tellus nonummy magna, vitae adipiscing
+		orci arcu ut augue. Nunc condimentum, magna a vestibulum convallis, libero purus
+		pulvinar orci, sed vestibulum urna sem ut pede. More Ipsum...
+		Sed sollicitudin suscipit risus. Nam ullamcorper. Sed nisl lectus, pellentesque
+		nec, malesuada eget, ornare a, libero. Lorem ipsum dolor sit amet,
+		consectetuer adipiscing elit.
+	</div>
+
+	<table style="border: solid blue 2px; margin-top: 1em;">
+		<tr>
+			<td>
+				Here's some text below the title panes (to make sure that closing a title pane releases the space that the content was taking up)
+			</td>
+		</tr>
+	</table>
+	<h1>Test #8: locked open title pane</h1>
+	<div id="locked" data-dojo-type="dijit/TitlePane" data-dojo-props='title:"Title Pane #8", style:"width: 300px;", toggleable:false '>
+		Lorem Ipsum Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Quisque
+		iaculis, nulla id semper faucibus, pede tellus nonummy magna, vitae adipiscing
+		orci arcu ut augue. Nunc condimentum, magna a vestibulum convallis, libero purus
+		pulvinar orci, sed vestibulum urna sem ut pede. More Ipsum...
+		Sed sollicitudin suscipit risus. Nam ullamcorper. Sed nisl lectus, pellentesque
+		nec, malesuada eget, ornare a, libero. Lorem ipsum dolor sit amet,
+		consectetuer adipiscing elit.
+	</div>
+
+	<h1>Test #9: TitlePane in AccordionContainer</h1>
+	<div id="ac" data-dojo-type="dijit/layout/AccordionContainer" data-dojo-props='style:"width: 400px; height: 300px;" '>
+		<div id="accp1" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"pane 1", selected:true'>
+			Here's a closed title pane:
+			<div id="actp1" data-dojo-type="dijit/TitlePane" data-dojo-props='title:"Title Pane #9", style:"width: 300px;", open:false,
+					href:"layout/tab1.html", onLoad:function(){ console.log("load of actp1"); actp1Loaded = true; }'>
+			</div>
+			and an open one:
+			<div id="actp2" data-dojo-type="dijit/TitlePane" data-dojo-props='title:"Title Pane #10", style:"width: 300px;", open:true,
+					href:"layout/tab2.html", onLoad:function(){ console.log("load of actp2"); actp2Loaded = true; }'>
+			</div>
+		</div>
+		<div id="accp2" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"pane 2" '>
+			Here's a closed title pane:
+			<div id="actp3" data-dojo-type="dijit/TitlePane" data-dojo-props='title:"Title Pane #11", style:"width: 300px;", open:false,
+					href:"layout/tab1.html", onLoad:function(){ console.log("load of actp3"); actp3Loaded = true; }'>
+			</div>
+			and an open one:
+			<div id="actp4" data-dojo-type="dijit/TitlePane" data-dojo-props='title:"Title Pane #12", style:"width: 300px;", open:true,
+					href:"layout/tab2.html", onLoad:function(){ console.log("load of actp4"); actp4Loaded = true; }'>
+			</div>
+		</div>
+	</div>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>FixedSplitter Test</title>
+<link href="css/FixedSplitterTest.css" rel="stylesheet"/>
+<script type="text/javascript" src="../../deviceTheme.js"></script>
+<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+<script language="JavaScript" type="text/javascript">
+var WIDGET_PROGRAMMATICALLY =0;
+</script>
+<script type="text/javascript" src="FixedSplitterTests.js"></script>
+</head>
+<body>
+	<div dojoType="dojox.mobile.FixedSplitter" style="width:100%;height:100%;" orientation="V">
+		<div dojoType="dojox.mobile.Container" style="background-color:yellow;height:20%">
+			pane #1
+		</div>
+
+		<div dojoType="dojox.mobile.FixedSplitter" style="width:100%;height:100%;" orientation="H">
+			<div dojoType="dojox.mobile.Container" style="background-color:pink;width:20%;">
+				pane #2
+			</div>
+			<div dojoType="dojox.mobile.Container" style="background-color:cyan;">
+				pane #3
+			</div>
+		</div>
+	</div>
+</body>
+</html>

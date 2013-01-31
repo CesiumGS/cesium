@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>SimpleTextarea with _BidiSupport</title>
+
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/themes/claro/claro.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			data-dojo-config="parseOnLoad: true, isDebug: true">
+		</script>		
+ 
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit.form.SimpleTextarea");
+			dojo.require("dijit._BidiSupport");
+		</script>
+	</head>
+
+	<body class="claro" style="padding:20px">
+
+		<h1 class="testTitle">SimpleTextarea with _BidiSupport</h1>
+		<p>The value of the textDir setted in all examples, in the text box widget itself.</p>
+		<label for="ltrSimpleTexarea" >
+			<b>I'm a LTR SimpleTextarea </b>
+		</label>
+		<br>
+		<textarea id="ltrSimpleTexarea" data-dojo-type="dijit/form/SimpleTextarea"
+			data-dojo-props='name:"ltrSimpleTexarea",rows:"4", cols:"50",
+			textDir:"ltr"'>Lorem ipsum dolor sit amet, consectetuer adipiscing elit!
+		</textarea>
+		<br>
+		<br>
+		<label for="rtlSimpleTexarea" >
+			<b>I'm a RTL SimpleTextarea </b>
+		</label>
+		<br>
+		<textarea id="rtlSimpleTexarea" data-dojo-type="dijit/form/SimpleTextarea"
+			data-dojo-props='name:"rtlSimpleTexarea",rows:"4", cols:"50",
+			textDir:"rtl"'>Lorem ipsum dolor sit amet, consectetuer adipiscing elit!
+		</textarea>
+		<br>
+		<br>
+		<label for="contextualSimpleTexarea" >
+			<b>I'm a contextual SimpleTexarea </b>
+		</label>
+		<br>
+		<textarea id="contextualSimpleTexarea" data-dojo-type="dijit/form/SimpleTextarea"
+			data-dojo-props='name:"contextualSimpleTexarea",rows:"4", cols:"50",
+			textDir:"auto"
+			'> &#1492;&#1496;&#1511;&#1505;&#1496; &#1502;&#1493;&#1510;&#1490; &#1499;&#1502;&#1493; &#1513;&#1510;&#1512;&#1497;&#1498;
+&#1493;&#1488;&#1504;&#1497; &#1511;&#1493;&#1504;&#1496;&#1511;&#1505;&#1496;&#1493;&#1488;&#1500;&#1497;!</textarea>
+		<br>
+		<h2>Initially empty and programmatically created - Simple Textareas</h2>
+
+		<label>textDir="ltr":</label>
+		<textarea id="programmaticLTR"></textarea>
+
+		<br>
+		<label>textDir="rtl":</label>		
+		<textarea id="programmaticRTL"></textarea>
+
+		<br>
+		<label>textDir="auto":</label>		
+		<textarea id="programmaticAuto"></textarea>
+
+		<script type="text/javascript">
+			// See if we can make a widget in script
+			dojo.ready(function(){
+				programmaticTextareaLTR = new dijit.form.SimpleTextarea({
+					id: "programmaticLTR",
+					name: "programmaticTextAreaLTR",
+					cols: "60",
+					textDir:"ltr",
+					value: "", 
+					style: "border:5px solid gray;padding:11px;margin:7px;"
+				}, "programmaticLTR");
+
+				programmaticTextareaRTL = new dijit.form.SimpleTextarea({
+					id: "programmaticRTL",
+					name: "programmaticTextAreaRTL",
+					cols: "60",
+					textDir:"rtl",
+					value: "",
+					style: "border:5px solid gray;padding:11px;margin:7px;"
+				}, "programmaticRTL");
+
+				programmaticTextareaAuto = new dijit.form.SimpleTextarea({
+					id: "programmaticAuto",
+					name: "programmaticTextAreaAuto",
+					cols: "60",
+					textDir:"auto",
+					value: "",
+					style: "border:5px solid gray;padding:11px;margin:7px;"
+				}, "programmaticAuto");
+
+			});
+		</script>		
+		
+	</body>
+</html>

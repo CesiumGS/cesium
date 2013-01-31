@@ -1,0 +1,168 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Test TextBox for Time</title>
+
+		<style type="text/css">
+			@import "../../themes/claro/document.css";
+			@import "../../themes/claro/claro.css";
+			@import "../css/dijitTests.css";
+
+			.title {
+				background-color:#ddd;
+			}
+
+			.hint {
+				background-color:#eee;
+			}
+
+			.testExample {
+				background-color:#fbfbfb;
+				padding:1em;
+				margin-bottom:1em;
+				border:1px solid #bfbfbf;
+			}
+
+			.dojoTitlePaneLabel label {
+				font-weight:bold;
+			}
+
+			td {white-space:nowrap}
+		</style>
+
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true, extraLocale: ['zh-cn','fr-fr','ja-jp','ar-eg','ru-ru','hi-in','en-us']"></script>
+		<script type="text/javascript" src="test_i18n.js"></script>
+		<script type="text/javascript">
+			dojo.require("dijit.form.ValidationTextBox");
+			dojo.require("dojo.date.locale");
+			dojo.require("dojo.date.stamp");
+			dojo.require("dojo.date");
+			dojo.require("dojo.string");
+			dojo.require("dojo.number");
+			dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+			dojo.require("doh.runner");
+
+			dojo.ready(function(){
+				var tz_s = dojo.date.getTimezoneName(new Date());
+				if(!tz_s){
+					var offset = new Date().getTimezoneOffset();
+					var tz = [
+						(offset <= 0 ? "+" : "-"),
+						dojo.string.pad(Math.floor(Math.abs(offset) / 60), 2),
+						dojo.string.pad(Math.abs(offset) % 60, 2)
+					];
+					tz.splice(0, 0, "GMT");
+					tz.splice(3, 0, ":");
+					tz_s = tz.join("");
+				}
+	
+				function gen4DateFormat(testCases, language, locale, date, shortFmt, shortCmt, mediumFmt, mediumCmt, longFmt, longCmt, full, fullCmt){
+					var tz_l = language.indexOf("hi") == 0 && dojo.number.normalizeDigitChars ?
+						dojo.number.normalizeDigitChars(tz_s, language) : tz_s;
+	
+					shortFmt = shortFmt.replace(/UTC/, tz_l);
+					mediumFmt = mediumFmt.replace(/UTC/, tz_l);
+					longFmt = longFmt.replace(/UTC/g, tz_l);
+					full = full.replace(/UTC/, tz_l);
+	
+					var shortDate = null;
+					testCases.push({
+					  attrs: {constraints: language.indexOf("hi") == 0 ? "{formatLength:'short', selector:'time', localeDigit:true}" : "{formatLength:'short', selector:'time'}",
+					  		lang: language},
+					  desc: "Locale: <b>" + locale + "</b> Format: <b>short</b>",
+					  value: typeof(date) == "string" ? date : shortDate = new Date(date.getYear(), date.getMonth(), date.getDay() - 5, date.getHours(), date.getMinutes()),
+					  expValue: shortFmt,
+					  comment: shortCmt
+					});
+					testCases.push({
+					  attrs: {constraints: language.indexOf("hi") == 0 ? "{formatLength:'medium', selector:'time', localeDigit:true}" : "{formatLength:'medium', selector:'time'}",
+					  		lang: language},
+					  desc: "Locale: <b>" + locale + "</b> Format: <b>medium</b>",
+					  value: date,
+					  expValue: mediumFmt,
+					  comment: mediumCmt
+					});
+					testCases.push({
+					  attrs: {constraints: language.indexOf("hi") == 0 ? "{formatLength:'long', selector:'time', localeDigit:true}" : "{formatLength:'long', selector:'time'}",
+					  		lang: language},
+					  desc: "Locale: <b>" + locale + "</b> Format: <b>long</b>",
+					  value: date,
+					  expValue: longFmt,
+					  comment: longCmt
+					});
+					testCases.push({
+					  attrs: {constraints: language.indexOf("hi") == 0 ? "{formatLength:'full', selector:'time', localeDigit:true}" : "{formatLength:'full', selector:'time'}",
+					  		lang: language},
+					  desc: "Locale: <b>" + locale + "</b> Format: <b>Full</b>",
+					  //value: typeof(date) == "string" || language.indexOf("fr") ? date : shortDate,
+					  value: date,
+					  expValue: full,
+					  comment: fullCmt
+					});
+	
+					date.processValue = function(value){
+						return value ? new Date(1970, 0, 1, value.getHours(), value.getMinutes(), value.getSeconds()) : value;
+					};
+					if(shortDate){
+						shortDate.processValue = date.processValue;
+					}
+				}
+
+				var testCases = [];
+				gen4DateFormat(testCases, "ru-ru", "ru_RU", "1970-01-01T15:25:35",
+					"15:25", "", "15:25:35", "", "15:25:35 UTC", "", "15:25:35 UTC", "");
+				gen4DateFormat(testCases, "zh-cn", "zh_CN", "1970-01-01T15:25:35",
+					"下午3:25", "", "下午03:25:35", "", "下午03时25分35秒", "", "下午03时25分35秒 UTC", "");
+				gen4DateFormat(testCases, "en-us", "en_US", "1970-01-01T15:25:35",
+					"3:25 PM", "", "3:25:35 PM", "", "3:25:35 PM UTC", "", "3:25:35 PM UTC", "");
+				gen4DateFormat(testCases, "fr-fr", "fr_FR", "1970-01-01T15:25:35",
+					"15:25", "", "15:25:35", "", "15:25:35 UTC", "", "15:25:35 UTC", "");
+				gen4DateFormat(testCases, "ja-jp", "ja_JP", "1970-01-01T15:25:35",
+					"15:25", "", "15:25:35", "", "15:25:35:UTC", "", "15時25分35秒UTC", "");
+				gen4DateFormat(testCases, "ar-eg", "ar_EG", "1970-01-01T15:25:35",
+					"3:25 \u0645", "", "3:25:35 \u0645", "", "UTC 3:25:35 \u0645", "", "UTC 3:25:35 \u0645", "");
+				gen4DateFormat(testCases, "hi-in", "hi_IN", "1970-01-01T15:25:35",
+					"१५:२५", "", "१५:२५:३५", "", "१५:२५:३५ UTC", " ", "१५:२५:३५ UTC", " ");
+
+				genFormatTestCases("Time Format", "dijit.form.TimeTextBox", testCases);
+	
+				testCases = [];
+				gen4DateFormat(testCases, "ru-ru", "ru_RU", new Date(1970, 0, 1, 15, 25, 35),
+					"15:25", "", "15:25:35", "", "15:25:35 UTC", "", "15:25:35 UTC", "");
+				gen4DateFormat(testCases, "zh-cn", "zh_CN", new Date(1970, 0, 1, 15, 25, 35),
+					"下午3:25", "", "下午03:25:35", "", "下午03时25分35秒", "", "下午03时25分35秒 UTC", "");
+				gen4DateFormat(testCases, "en-us", "en_US", new Date(1970, 0, 1, 15, 25, 35),
+					"3:25 PM", "", "3:25:35 PM", "", "3:25:35 PM UTC", "", "3:25:35 PM UTC", "");
+				gen4DateFormat(testCases, "fr-fr", "fr_FR", new Date(1970, 0, 1, 15, 25, 35),
+					"15:25", "", "15:25:35", "", "15:25:35 UTC", "", "15:25:35 UTC", "");
+				gen4DateFormat(testCases, "ja-jp", "ja_JP", new Date(1970, 0, 1, 15, 25, 35),
+					"15:25", "", "15:25:35", "", "15:25:35:UTC", "", "15時25分35秒UTC", "");
+				gen4DateFormat(testCases, "ar-eg", "ar_EG", new Date(1970, 0, 1, 15, 25, 35),
+					"3:25 \u0645", "", "3:25:35 \u0645", "", "UTC 3:25:35 \u0645", "", "UTC 3:25:35 \u0645", "");
+				gen4DateFormat(testCases, "hi-in", "hi_IN", new Date(1970, 0, 1, 15, 25, 35),
+					"१५:२५", "", "१५:२५:३५", "", "१५:२५:३५ UTC", " ", "१५:२५:३५ UTC", " ");
+				genValidateTestCases("Time Validate", "dijit.form.TimeTextBox", testCases);
+
+				doh.register("parse", function(){
+					dojo.parser.parse();
+				});
+
+				doh.register("t", getAllTestCases());
+
+				doh.run();
+			});
+		</script>
+	</head>
+
+	<body class="claro">
+		<h1 class="testTitle">Dijit TextBox Globalization Test for Time</h1>
+
+		<p>
+			Before start this test, make sure the <b>dojo/cldr/nls</b> contains the data for "zh-cn", "fr-fr", "ja-jp", "ru-ru", "hi-in", "en-us" and "ar-eg". If not, convert these CLDR data and put them there.
+		</p>
+	</body>
+</html>
+

@@ -98,7 +98,7 @@
 	<property name="documentationImagesDirectory" location="Documentation/Images" />
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
-	<property name="dojoPath" location="${thirdPartyDirectory}/dojo-release-1.7.2-src" />
+	<property name="dojoPath" location="${thirdPartyDirectory}/dojo-release-1.8.3-src" />
 
 	<!-- Outputs -->
 	<property name="buildDirectory" location="Build" />
@@ -276,12 +276,17 @@
 		<antcall target="combine">
 			<param name="build.minification" value="true" />
 		</antcall>
+
 		<antcall target="buildApp">
 			<param name="app.path" value="Apps/CesiumViewer" />
+			<param name="app.name" value="CesiumViewer" />
 		</antcall>
 	</target>
 
 	<target name="buildApp">
+		<local name="appStartupScript" />
+		<property name="appStartupScript" value="${app.name}Startup.js" />
+
 		<java classname="org.mozilla.javascript.tools.shell.Main" fork="true">
 			<classpath>
 				<pathelement location="${dojoPath}/util/shrinksafe/js.jar" />
@@ -291,46 +296,102 @@
 			<arg line="${dojoPath}/dojo/dojo.js" />
 			<arg line="baseUrl=${dojoPath}/dojo" />
 			<arg line="load=build" />
-			<arg line="--require ${app.path}/boot.js" />
-			<arg line="--profile ${app.path}/CesiumViewer.profile.js" />
+			<arg line="--require ${app.path}/${appStartupScript}" />
+			<arg line="--profile ${app.path}/${app.name}.profile.js" />
 		</java>
 
-		<delete>
-			<fileset dir="${buildDirectory}/${app.path}" includes="**/*.uncompressed.js" />
+		<local name="appOutputDirectory" />
+		<property name="appOutputDirectory" location="${buildDirectory}/${app.path}" />
+
+		<!-- move the build-report file elsewhere -->
+		<move file="${appOutputDirectory}/build-report.txt" tofile="${buildDirectory}/${app.name}-build-report.txt" />
+
+		<delete includeemptydirs="true">
+			<fileset dir="${appOutputDirectory}">
+				<!-- get rid of the unneeded unminified copies of the files -->
+				<include name="**/*.uncompressed.js" />
+
+				<!-- get rid of leftover junk -->
+				<include name="**/package.json" />
+				<include name="**/*.profile.js" />
+				<include name="dojo/_firebug/**" />
+			</fileset>
 		</delete>
 
-		<replace dir="${buildDirectory}/${app.path}" summary="true">
+		<delete includeemptydirs="true">
+			<fileset dir="${appOutputDirectory}">
+				<!-- delete individual files on the assumption that the app layer includes them all -->
+				<!-- delete individual css on the assumption that the css in the root directory includes them all -->
+				<include name="**" />
+				<exclude name="*.css" />
+				<exclude name="*.html" />
+				<exclude name="*.ico" />
+				<exclude name="dojo/dojo.js" />
+				<exclude name="${app.name}.js" />
+				<exclude name="${appStartupScript}" />
+
+				<!-- keep some necessary dojo stuff -->
+				<exclude name="**/nls/**" />
+				<exclude name="dojo/resources/blank.gif" />
+				<exclude name="dijit/**/*.png" />
+				<exclude name="dijit/**/*.gif" />
+				<exclude name="Widgets/**/*.png" />
+				<exclude name="Widgets/**/*.gif" />
+
+				<!-- always keep assets -->
+				<exclude name="Assets/**" />
+				<exclude name="**/*.czml" />
+			</fileset>
+		</delete>
+
+		<!-- rewrite the paths to the files in Source that are now under app.path -->
+		<replace dir="${appOutputDirectory}" summary="true">
+			<replacefilter token="../../" value="" />
+			<replacefilter token="Source/" value="" />
 			<include name="index.html" />
 			<include name="*.css" />
-			<replacefilter token="../../" value="" />
-			<replacefilter token="ThirdParty/dojo-release-1.7.2-src/" value="" />
-			<replacefilter token="Source/" value="" />
 		</replace>
 
-		<replace dir="${buildDirectory}/${app.path}" summary="true">
-			<replacefilter token="ThirdParty/dojo-release-1.7.2-src/" value="" />
-			<include name="boot.js" />
-			<include name="dojo/dojo.js" />
+		<!-- rewrite the paths to the dojo packages that are now directly under app.path -->
+		<replace dir="${appOutputDirectory}" summary="true">
+			<replacefilter token="ThirdParty/dojo-release-1.8.3-src/" value="" />
+			<include name="${appStartupScript}" />
+			<include name="index.html" />
+			<include name="*.css" />
 		</replace>
 
-		<fileset dir="${buildDirectory}/${app.path}" id="jsFiles">
-			<include name="boot.js" />
-			<include name="dojo/dojo.js" />
-		</fileset>
-
+		<!-- remove the Source/ prefix on the packages in the startup script -->
 		<replaceregexp match="(location\s*:\s*[&quot;'])Source/" flags="g" replace="\1">
-			<fileset refid="jsFiles" />
+			<fileset dir="${appOutputDirectory}" includes="${appStartupScript}" />
 		</replaceregexp>
 
+		<!-- replace the Apps/AppName prefix with '.' on the packages in the startup script -->
 		<replaceregexp match="(location\s*:\s*[&quot;'])${app.path}" flags="g" replace="\1.">
-			<fileset refid="jsFiles" />
+			<fileset dir="${appOutputDirectory}" includes="${appStartupScript}" />
 		</replaceregexp>
 
-		<replaceregexp match="(baseUrl\s*:\s*[&quot;'])../.." flags="g" replace="\1.">
-			<fileset refid="jsFiles" />
+		<!-- change the baseUrl from '../..' to '.' in the startup script -->
+		<replaceregexp match="(baseUrl\s*:\s*[&quot;'])\.\./\.\." flags="g" replace="\1.">
+			<fileset dir="${appOutputDirectory}" includes="${appStartupScript}" />
 		</replaceregexp>
 
-		<copy todir="${buildDirectory}/${app.path}/Workers" overwrite="true">
+		<!-- replace '.' with 'dojo' in packages in dojo.js -->
+		<replaceregexp match="(location\s*:\s*[&quot;'])\.([&quot;'])" flags="g" replace="\1dojo\2">
+			<fileset dir="${appOutputDirectory}" includes="dojo/dojo.js" />
+		</replaceregexp>
+
+		<!-- replace ../../AppName prefix with '.' in packages in dojo.js -->
+		<replaceregexp match="(location\s*:\s*[&quot;'])\.\./\.\./${app.name}" flags="g" replace="\1.">
+			<fileset dir="${appOutputDirectory}" includes="dojo/dojo.js" />
+		</replaceregexp>
+
+		<!-- remove ../ prefix from packages '.' in dojo.js -->
+		<replaceregexp match="(location\s*:\s*[&quot;'])\.\./" flags="g" replace="\1">
+			<fileset dir="${appOutputDirectory}" includes="dojo/dojo.js" />
+		</replaceregexp>
+
+		<!-- Copy the r.js built versions of the worker files over top of the dojo built ones -->
+		<copy todir="${appOutputDirectory}/Workers" overwrite="true">
 			<fileset dir="${buildOutputDirectory}/Workers" includes="*.js" />
 		</copy>
 	</target>

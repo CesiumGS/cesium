@@ -1,0 +1,50 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>UpgradeBar Test</title>
+	<style type="text/css">
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	<link href="../UpgradeBar/UpgradeBar.css" rel="stylesheet" />
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djconfig="parseOnLoad:true, isDebug: false, popup:true"></script>
+
+	<script type="text/javascript">
+		require(["dojo/parser", "dojo/domReady", "dojox/widget/UpgradeBar", "dojox/embed/Flash", "dojo/sniff"], function(parser, domReady, UpgradeBar, flashModule, hasModule){
+			// globalize these; eww, yes, but useful for demo purposes,
+			// for the inline functions in the validate attributes
+			has = hasModule;
+			flash = flashModule;
+			domReady(dojo.hitch(parser, "parse"));
+		});
+	</script>
+
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">dojox.widget.UpgradeBar</h1>
+
+	<div data-dojo-type="dojox.widget.UpgradeBar" id="upgradeBar">
+		<div validate="has('ie')&lt;10">
+			<span>Your browser sucks. Download a good one.</span>
+			<a href="http://www.getfirefox.net/">Get Firefox</a>
+		</div>
+
+		<div validate="has('ff')&lt;20">
+			<span>Your version of Firefox needs to be upgraded to version 20.</span>
+			<a href="http://www.getfirefox.net/">Get Firefox</a>
+		</div>
+
+		<div validate="flash.available&lt;14">
+			<span>This app needs a version of Flash that does not yet exist.</span>
+			<a href="http://www.adobe.com/downloads/">Download Flash 14</a>
+		</div>
+
+		<div validate="!google.gears">
+			<span>This app will perform better with Google Gears.</span>
+			<a href="http://gears.google.com/download.html">Download Google Gears</a>
+		</div>
+	</div>
+</body>
+</html>

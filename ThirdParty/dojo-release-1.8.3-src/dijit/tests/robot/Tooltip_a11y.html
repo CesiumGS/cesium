@@ -1,0 +1,390 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot Tooltip A11Y Test</title>
+
+		<style>
+			@import "../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx",
+				"dojo/dom", "dojo/dom-geometry", "dojo/keys", "dojo/_base/lang", "dojo/_base/window", "dojo/window",
+				"dijit/tests/helpers", "dojo/domReady!"
+			], function(doh, robot, dom, domGeom, keys, lang, win, winUtils, helpers){
+
+				robot.initRobot('../test_Tooltip.html');
+
+				doh.register("setup", function(){
+					// get pointer to registry in the iframe
+					registry = robot.window.require("dijit/registry");
+					Tooltip = robot.window.require("dijit/Tooltip");
+
+					// Avoid the page being scrolled when you run the test twice (via browser's refresh button)
+					win.body().parentNode.scrollTop = 0;	// works on FF
+					win.body().scrollTop = 0;	// works on safari
+				});
+
+				// Pointer to master tooltip.  This gets set in the first test when the
+				// first tooltip is shown
+				var masterTT;
+
+				doh.register("dijit.Tooltip keyboard tests", [
+					{
+						name: "show on focus",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								around = dom.byId("four");
+
+							robot.sequence(function(){
+								around.focus();
+								masterTT = Tooltip._masterTT;
+								doh.t(!masterTT || helpers.isHidden(masterTT.domNode), "tooltip either hidden or doesn't exist yet");
+							}, 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								// At this point the master tooltip should have been created, so save in
+								// global variable
+								masterTT = Tooltip._masterTT;
+
+								doh.t(masterTT && helpers.isVisible(masterTT.domNode), "tooltip shown");
+
+								// make sure tooltip is in right place (but note that it could be to the
+								// left of the right depending on page BIDI setting)
+								var aroundCoords = domGeom.position(around),
+									tooltipCoords = domGeom.position(masterTT.domNode);
+								doh.t((aroundCoords.y + aroundCoords.h) <= (tooltipCoords.y + tooltipCoords.h), "lower aligned");
+								doh.t(aroundCoords.y  >= tooltipCoords.y, "upper aligned");
+
+								// Make sure it has right content
+								doh.is("tooltip on a button", lang.trim(helpers.innerText(masterTT.domNode)), "tooltip text");
+							}), 2000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "hide on blur",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Tab off of the "button w/tooltip" to the "remove button",
+							// which doesn't have a tooltip
+							robot.keyPress(keys.TAB, 500, {});
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isHidden(masterTT.domNode), "tooltip hidden");
+							}), 2000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "show another tooltip",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								around = dom.byId("seven");
+
+							// Tab off of the "remove button" to the <select>
+							robot.keyPress(keys.TAB, 500, {});
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isVisible(masterTT.domNode), "tooltip shown");
+
+								// make sure tooltip is on the screen (in LTR mode it needs to go to the
+								// left of the <select>, not to the right like it usually does)
+								var viewportCoords = winUtils.getBox(),
+									tooltipCoords = domGeom.position(masterTT.domNode);
+								console.log("viewport coords: ", viewportCoords, "tooltip coords: ", tooltipCoords);
+								doh.t(tooltipCoords.x > 0, "x > 0");
+								doh.t(tooltipCoords.x + tooltipCoords.w <= viewportCoords.w, "t.x + t.w");
+								doh.t(tooltipCoords.y > 0, "y > 0");
+								doh.t(tooltipCoords.y + tooltipCoords.h <= viewportCoords.h, "t.y + t.h");
+
+								// Make sure it has the new content.
+								// There's a newline in this tooltip text, so to make comparison easier do substr()
+								doh.is("tooltip on a select", lang.trim(helpers.innerText(masterTT.domNode)).substr(0, 19), "tooltip text");
+							}), 2000);
+
+							return d;
+						}
+					}
+
+				]);
+
+				doh.register("dijit.Tooltip negative keyboard tests", [
+					// Test that quickly going over a node doesn't cause the tooltip
+					// to show up
+ 					{
+						name: "jump over",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								around = dom.byId("one");
+
+							// Focus onto something w/out a tooltip to make currently displayed tooltip disappear
+							robot.sequence(d.getTestErrback(function(){
+								dom.byId("removeButton").focus();
+							}), 50);
+
+							// Focus on a node w/a tooltip
+							robot.sequence(d.getTestErrback(function(){
+								around.focus();
+							}), 500);
+
+							robot.sequence(d.getTestErrback(function(){
+								doh.t(helpers.isHidden(masterTT.domNode), "tooltip should be hidden on initial focus, but text shown is: " +
+										lang.trim(helpers.innerText(masterTT.domNode)));
+							}), 50);
+
+							// But then tab away after 100ms, before tooltip is shown
+							robot.keyPress(keys.TAB, 50, {shift: true});
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(helpers.isHidden(masterTT.domNode), "tooltip still hidden after tabbing away");
+							}), 1000);
+
+							return d;
+						}
+					}
+            	]);
+
+				doh.register("dijit.Tooltip API tests", [
+
+					// These tests are for a tooltip attached to multiple nodes,
+					// and for dynamically changing the nodes that a tooltip is attached to.
+
+					// Initially, the tooltip is attached to "t1 text" and "t3 text".
+					// It should show for either of them.
+					// "t2 text" shouldn't show until we connect the tooltip to that node.
+
+					{
+						name: "setup",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								tooltip = registry.byId("t_tooltip");
+
+							// While we are at it, test set('label', ...) too
+							tooltip.set('label', 'bill was here');
+
+							var connectIds = tooltip.get("connectId");
+							doh.is(2, connectIds.length, "2 connect ids initially");
+							doh.is("t1", connectIds[0]);
+							doh.is("t3", connectIds[1]);
+						}
+					},
+
+					{
+						name: "tooltip connected to 't1 text'",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								around = dom.byId("t1");
+
+							robot.sequence(function(){
+								winUtils.scrollIntoView(around);
+								around.focus();
+							}, 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isVisible(masterTT.domNode), "tooltip shown");
+
+								// Make sure it has right content
+								doh.is("bill was here", lang.trim(helpers.innerText(masterTT.domNode)), "tooltip text");
+							}), 2000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "tooltip *not* connected to 't2 text'",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								around = dom.byId("t2");
+
+							robot.sequence(function(){
+								winUtils.scrollIntoView(around);
+								around.focus();
+							}, 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isHidden(masterTT.domNode), "tooltip hidden");
+							}), 2000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "'t3 text' is connected to the tooltip",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								around = dom.byId("t3");
+
+							robot.sequence(function(){
+								winUtils.scrollIntoView(around);
+								around.focus();
+							}, 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isVisible(masterTT.domNode), "tooltip visible");
+							}), 2000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "connect to 't2 text'",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								tooltip = registry.byId("t_tooltip"),
+								around = dom.byId("t2");
+
+							tooltip.addTarget("t2");
+
+							var connectIds = tooltip.get("connectId");
+							doh.is(3, connectIds.length, "3 connect ids");
+							doh.is("t1", connectIds[0]);
+							doh.is("t3", connectIds[1]);
+							doh.is("t2", connectIds[2]);
+
+							// Focus "t2 text" and make sure tooltip shows
+							winUtils.scrollIntoView(around);
+							around.focus();
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isVisible(masterTT.domNode), "tooltip shown");
+							}), 2000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "disconnect from 't3 text'",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								tooltip = registry.byId("t_tooltip"),
+								around = dom.byId("t3");
+
+							tooltip.removeTarget("t3");
+							var connectIds = tooltip.get("connectId");
+							doh.is(2, connectIds.length, "2 connect ids");
+							doh.is("t1", connectIds[0]);
+							doh.is("t2", connectIds[1]);
+
+							// Focus "t3 text" and make sure tooltip doesn't show
+							winUtils.scrollIntoView(around);
+							around.focus();
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isHidden(masterTT.domNode), "tooltip hidden");
+							}), 2000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "reset connectId array",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								tooltip = registry.byId("t_tooltip"),
+								around = dom.byId("t2");
+
+							// Move focus somewhere out of the way
+							dom.byId("t5").focus();
+
+							// Disconnecting from "t2 text", and adding "t4 text"
+							tooltip.set("connectId", ["t3", "t4"]);
+
+							// Focus "t2 text" and make sure tooltip doesn't show anymore
+							winUtils.scrollIntoView(around);
+							around.focus();
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isHidden(masterTT.domNode), "tooltip hidden");
+							}), 2000);
+
+							return d;
+						}
+					},
+					{
+						name: "further testing connectId array reset worked",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								tooltip = registry.byId("t_tooltip"),
+								around = dom.byId("t4");
+
+							// Focus "t4 text" and make sure tooltip shows
+							winUtils.scrollIntoView(around);
+							around.focus();
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isVisible(masterTT.domNode), "tooltip visible");
+							}), 2000);
+
+							return d;
+						}
+					},
+
+					// Nominal tests for old dojoType syntax, remove in 2.0
+					function oldDojoTypeSyntax(){
+						var tooltip = registry.byId("oldmulti1,oldmulti2_tooltip");
+						doh.is(2, tooltip.get("connectId").length);
+						doh.is("oldmulti1", tooltip.get("connectId")[0]);
+						doh.is("oldmulti2", tooltip.get("connectId")[1]);
+					}
+				]);
+
+				doh.register("Focus on nested element", [
+					{
+						name: "Focus on nested element",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus an input where the containing div has a tooltip.
+							// Should show a tooltip on the div.
+							dom.byId("nestedInput").focus();
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isVisible(masterTT.domNode), "tooltip shown");
+
+								var tooltipPos = domGeom.position(masterTT.domNode),
+									anchorPos = domGeom.position("nested");
+								doh.t(tooltipPos.x >= anchorPos.x + anchorPos.w,
+										"tooltip pos " + tooltipPos.x + " > anchor right edge at " +
+												anchorPos.x + " + " + anchorPos.w);
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

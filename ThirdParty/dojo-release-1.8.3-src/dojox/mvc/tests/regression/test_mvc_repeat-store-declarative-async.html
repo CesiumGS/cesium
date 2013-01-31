@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Static Master/Detail Pattern -- Search Results example, using a store with save, commit and reset</title>
+
+		<script src="../../../../dojo/dojo.js"
+			type="text/javascript"
+			djConfig="parseOnLoad: false, isDebug: true">
+		</script>
+		<style type="text/css">
+			@import "css/app-format.css";
+			@import "../../../../dijit/themes/claro/claro.css";
+		</style>
+		<script type="text/javascript" >
+			dojo.require("dojox.mvc");
+			dojo.require("dojox.mvc.Group");
+			dojo.require("dojox.mvc.Repeat");
+			dojo.require("dijit.form.TextBox");
+			dojo.require("dijit.form.Button");
+			dojo.require("dojo.data.ItemFileWriteStore");
+			dojo.require("dojo.store.DataStore");
+			dojo.require("dojo.parser");
+			
+			var results, selectedIndex = 0;
+
+			function setup() {				
+				var storeNodes = dojo.byId("storeNodes");
+				// this is necessary to parse the declarative stores without parsing the rest of the html with the refs.				
+				dojo.parser.parse(storeNodes);
+				// writeStore and dataStore are created declaratively in the html below.
+				var modelPromise = dojox.mvc.newStatefulModel({store: theDataStore}); 
+				modelPromise.then(function(model){ 
+					results = model;
+					var wrapperNodes = dojo.byId("wrapper");
+					dojo.parser.parse(wrapperNodes); // parse the part of the html with the refs
+				});
+			};
+
+			dojo.addOnLoad(setup);
+		</script>
+	</head>
+	<body class="claro" style="background-image: url(images/master_detail.png)">
+        <div id="storeNodes">
+			<div data-dojo-id="theWriteStore" data-dojo-type="dojo.data.ItemFileWriteStore" data-dojo-props="url: '../../../../dojox/mvc/tests/regression/_data/mvcRepeatData.json'"></div>	
+			<div data-dojo-id="theDataStore" data-dojo-type="dojo.store.DataStore" data-dojo-props="store: theWriteStore"></div>
+        </div>
+		<div id="wrapper">
+			<div id="header">
+				<div id="navigation">
+				</div>
+				<div id="headerInsert">
+				<h2>Master Detail Example - With repeat container, using a store, with save, commit and reset.</h2>
+				</div>
+			</div>
+			<div id="main">
+				<div id="leftNav">
+				</div>
+				<div id="mainContent">
+					<div id="searchBanner">Search Results for term: </div>         
+					<!--
+						The repeat container denotes a templated UI that operates over a collection
+						of data records.
+						The UI can be customized for each iteration using properties such as
+						${this.index} for the iteration index.
+					-->
+					<div id="repeatId" data-dojo-type="dojox.mvc.Repeat" data-dojo-props="ref: 'results'">
+						<div class="row" data-dojo-type="dojox.mvc.Group" data-dojo-props="ref: '${this.index}'">
+							<label class="cell" for="nameInput${this.index}">Name:</label>
+							<input class="cell" data-dojo-type="dijit.form.TextBox" id="nameInput${this.index}" data-dojo-props="ref: 'First'"></input>
+							<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){setDetailsContext('${this.index}');}">Details</button>
+						</div>
+					</div>
+					<div class="spacer"></div>
+
+					<div data-dojo-type="dojox.mvc.Group" data-dojo-props="ref: 'results'">
+						<div id="detailsBanner">Details for selected index:</div>
+
+						<div id="detailsGroup" data-dojo-type="dojox.mvc.Group" data-dojo-props="ref: '0'">
+							<div class="row">
+								<label class="cell" for="firstInput">First Name:</label>
+								<input class="cell" id="firstInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'First'"></input>
+							</div>
+							<div class="row">
+								<label class="cell" for="lastInput">Last Name:</label>
+								<input class="cell" id="lastInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'Last'"></input>
+							</div>
+							<div class="row">
+								<label class="cell" for="locationInput">Location:</label>
+								<input class="cell" id="locationInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'Location'"></input>
+							</div>
+							<div class="row">
+								<label class="cell" for="officeInput">Office:</label>
+								<input class="cell" id="officeInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'Office'"></input>
+							</div>
+							<div class="row">
+								<label class="cell" for="emailInput">Email:</label>
+								<input class="cell" id="emailInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'Email'"></input>
+							</div>
+							<div class="row">
+								<label class="cell" for="telInput">Telephone:</label>
+								<input class="cell" id="telInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'Tel'"></input>
+							</div>
+							<div class="row">
+								<label class="cell" for="faxInput">Fax:</label>
+								<input class="cell" id="faxInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'Fax'"></input>
+							</div>
+							<div class="row">
+							<div class="spacer"></div>
+								<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){console.log(results[selectedIndex].toPlainObject());results[selectedIndex].commit();}">Save Item</button>        
+								<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){console.log(results.toPlainObject());results.commit();;}">Commit All</button>        
+								<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){results.reset();}">Reset to last saved</button>        
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+        </div>
+        <script type="text/javascript">
+			// called to change the selected item
+			function setDetailsContext(index) {
+				selectedIndex = index;
+				var widget = dijit.byId("detailsGroup");
+				widget.set("ref", index);
+			};
+        </script>
+    </body>
+</html>

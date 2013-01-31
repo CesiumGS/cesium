@@ -1,0 +1,1 @@
+dojo._getText() test data

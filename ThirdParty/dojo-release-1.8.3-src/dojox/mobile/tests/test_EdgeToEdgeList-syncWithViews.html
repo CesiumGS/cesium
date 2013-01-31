@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>EdgeToEdgeList - syncWithViews</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','FixedSplitter']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/FixedSplitter"
+		]);
+	</script>
+
+	<style>
+	html, body{
+		height: 100%;
+		overflow: hidden;
+		position: relative;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div data-dojo-type="dojox.mobile.FixedSplitter" data-dojo-props='orientation:"H"'>
+		<div data-dojo-type="dojox.mobile.Container" style="width:300px;border-right:1px solid black;">
+			<div id="settings" data-dojo-type="dojox.mobile.View">
+				<h1 data-dojo-type="dojox.mobile.Heading">Settings</h1>
+				<ul data-dojo-type="dojox.mobile.EdgeToEdgeList" data-dojo-props='transition:"flip", stateful:true, syncWithViews:true'>
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"wifi"'>
+						Wi-Fi
+					</li>
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png", moveTo:"bright"'>
+						Brightness &amp; Wallpaper
+					</li>
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"picture"'>
+						Picture Frame
+					</li>
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-4.png", moveTo:"general"'>
+						General
+					</li>
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-5.png", moveTo:"mail"'>
+						Mail, Contacts, Calendars
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<div data-dojo-type="dojox.mobile.Container">
+
+			<div id="wifi" data-dojo-type="dojox.mobile.View">
+				<h1 data-dojo-type="dojox.mobile.Heading">Wi-Fi Networks</h1>
+				<ul data-dojo-type="dojox.mobile.RoundRectList">
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"bright"'>
+						Next View
+					</li>
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"mail", transitionDir:-1'>
+						Previous View
+					</li>
+				</ul>
+			</div>
+
+			<div id="bright" data-dojo-type="dojox.mobile.View">
+				<h1 data-dojo-type="dojox.mobile.Heading">Brightness &amp; Wallpaper</h1>
+				<ul data-dojo-type="dojox.mobile.RoundRectList">
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"picture"'>
+						Next View
+					</li>
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"wifi", transitionDir:-1'>
+						Previous View
+					</li>
+				</ul>
+			</div>
+
+			<div id="picture" data-dojo-type="dojox.mobile.View">
+				<h1 data-dojo-type="dojox.mobile.Heading">Picture Frame</h1>
+				<ul data-dojo-type="dojox.mobile.RoundRectList">
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"general"'>
+						Next View
+					</li>
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"bright", transitionDir:-1'>
+						Previous View
+					</li>
+				</ul>
+			</div>
+
+			<div id="general" data-dojo-type="dojox.mobile.View">
+				<h1 data-dojo-type="dojox.mobile.Heading">General</h1>
+				<ul data-dojo-type="dojox.mobile.RoundRectList">
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"mail"'>
+						Next View
+					</li>
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"picture", transitionDir:-1'>
+						Previous View
+					</li>
+				</ul>
+			</div>
+
+			<div id="mail" data-dojo-type="dojox.mobile.View">
+				<h1 data-dojo-type="dojox.mobile.Heading">Mail, Contacts, Calendars</h1>
+				<ul data-dojo-type="dojox.mobile.RoundRectList">
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"wifi"'>
+						Next View
+					</li>
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"general", transitionDir:-1'>
+						Previous View
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
