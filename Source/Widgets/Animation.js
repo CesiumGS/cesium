@@ -1,9 +1,11 @@
 /*global define*/
-define(['../Core/DeveloperError',
+define(['../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/ClockStep',
         '../Core/Color',
         '../ThirdParty/sprintf'
         ], function(
+         destroyObject,
          DeveloperError,
          ClockStep,
          Color,
@@ -78,30 +80,30 @@ define(['../Core/DeveloperError',
 
     function rectButton(x, y, path, toolTip) {
         var button = {
-            'tagName' : 'g',
+            tagName : 'g',
             'class' : 'animation-rectButton',
-            'transform' : 'translate(' + x + ',' + y + ')',
-            'children' : [{
-                'tagName' : 'rect',
+            transform : 'translate(' + x + ',' + y + ')',
+            children : [{
+                tagName : 'rect',
                 'class' : 'animation-buttonGlow',
-                'width' : 32,
-                'height' : 32,
-                'rx' : 2,
-                'ry' : 2
+                width : 32,
+                height : 32,
+                rx : 2,
+                ry : 2
             }, {
-                'tagName' : 'rect',
+                tagName : 'rect',
                 'class' : 'animation-buttonMain',
-                'width' : 32,
-                'height' : 32,
-                'rx' : 4,
-                'ry' : 4
+                width : 32,
+                height : 32,
+                rx : 4,
+                ry : 4
             }, {
-                'tagName' : 'use',
+                tagName : 'use',
                 'class' : 'animation-buttonPath',
                 'xlink:href' : path
             }, {
-                'tagName' : 'title',
-                'textContent' : toolTip
+                tagName : 'title',
+                textContent : toolTip
             }]
         };
         return _svgFromObject(button);
@@ -109,31 +111,31 @@ define(['../Core/DeveloperError',
 
     function wingButton(x, y, path, toolTip) {
         var button = {
-            'tagName' : 'g',
+            tagName : 'g',
             'class' : 'animation-rectButton',
-            'transform' : 'translate(' + x + ',' + y + ')',
-            'children' : [{
-                'tagName' : 'use',
+            transform : 'translate(' + x + ',' + y + ')',
+            children : [{
+                tagName : 'use',
                 'class' : 'animation-buttonGlow',
                 'xlink:href' : '#animation_pathWingButton'
             }, {
-                'tagName' : 'use',
+                tagName : 'use',
                 'class' : 'animation-buttonMain',
                 'xlink:href' : '#animation_pathWingButton'
             }, {
-                'tagName' : 'use',
+                tagName : 'use',
                 'class' : 'animation-buttonPath',
                 'xlink:href' : path
             }, {
-                'tagName' : 'title',
-                'textContent' : toolTip
+                tagName : 'title',
+                textContent : toolTip
             }]
         };
         return _svgFromObject(button);
     }
 
     function setShuttleRingFromMouse(widget, svg, e) {
-        var viewModel = widget._viewModel;
+        var viewModel = widget.viewModel;
         var centerX = widget._centerX;
         if (e.type === 'mousedown' || (widget._shuttleRingDragging && e.type === 'mousemove')) {
             var rect = svg.getBoundingClientRect();
@@ -159,54 +161,63 @@ define(['../Core/DeveloperError',
         }
     }
 
-    var SvgButton = function(svgObject, parentNode, viewModel) {
-        this.onClick = undefined;
-
-        this.svgObject = svgObject;
-        parentNode.appendChild(svgObject);
+    //This is a private class for treating an SVG element like a button.
+    //If we ever need a general purpose SVG button, we can make this generic.
+    var SvgButton = function(svgElement, viewModel) {
+        this.viewModel = viewModel;
+        this.svgElement = svgElement;
 
         var that = this;
-        svgObject.addEventListener('click', function() {
-            if (typeof that.onClick === 'function') {
-                that.onClick();
+        svgElement.addEventListener('click', function() {
+            if (that.viewModel.command.canExecute()) {
+                that.viewModel.command.execute();
             }
         }, true);
 
-        this.setSelected(false);
-        this.setEnabled(true);
+        this._subscriptions = [];
 
-        this._viewModel = viewModel;
-
-        viewModel.selected.subscribe(function(value) {
+        this._subscriptions.push(viewModel.selected.subscribe(function(value) {
             that.setSelected(value);
-        });
+        }));
         this.setSelected(viewModel.selected());
 
-        viewModel.toolTip.subscribe(function(value) {
+        this._subscriptions.push(viewModel.toolTip.subscribe(function(value) {
             that.setToolTip(value);
-        });
+        }));
         this.setToolTip(viewModel.toolTip());
 
-        viewModel.enabled.subscribe(function(value) {
+        this._subscriptions.push(viewModel.command.canExecute.subscribe(function(value) {
             that.setEnabled(value);
-        });
-        this.setEnabled(viewModel.enabled());
+        }));
+        this.setEnabled(viewModel.command.canExecute());
+    };
+
+    SvgButton.prototype.destroy = function() {
+        var subscriptions = this._subscriptions;
+        for ( var i = 0, len = subscriptions.length; i < len; i++) {
+            subscriptions[i].destroy();
+        }
+        destroyObject(this);
+    };
+
+    SvgButton.prototype.isDestroyed = function() {
+        return false;
     };
 
     SvgButton.prototype.setEnabled = function(enabled) {
         this._enabled = enabled;
 
         if (!enabled) {
-            this.svgObject.setAttribute('class', 'animation-buttonDisabled');
+            this.svgElement.setAttribute('class', 'animation-buttonDisabled');
             return;
         }
 
         if (this._selected) {
-            this.svgObject.setAttribute('class', 'animation-rectButton animation-buttonSelected');
+            this.svgElement.setAttribute('class', 'animation-rectButton animation-buttonSelected');
             return;
         }
 
-        this.svgObject.setAttribute('class', 'animation-rectButton');
+        this.svgElement.setAttribute('class', 'animation-rectButton');
     };
 
     SvgButton.prototype.setSelected = function(selected) {
@@ -214,15 +225,15 @@ define(['../Core/DeveloperError',
 
         if (this._enabled) {
             if (selected) {
-                this.svgObject.setAttribute('class', 'animation-rectButton animation-buttonSelected');
+                this.svgElement.setAttribute('class', 'animation-rectButton animation-buttonSelected');
             } else {
-                this.svgObject.setAttribute('class', 'animation-rectButton');
+                this.svgElement.setAttribute('class', 'animation-rectButton');
             }
         }
     };
 
     SvgButton.prototype.setToolTip = function(toolTip) {
-        this.svgObject.getElementsByTagName('title')[0].textContent = toolTip;
+        this.svgElement.getElementsByTagName('title')[0].textContent = toolTip;
     };
 
     /**
@@ -285,7 +296,7 @@ define(['../Core/DeveloperError',
             throw new DeveloperError('viewModel is required.');
         }
 
-        this._viewModel = viewModel;
+        this.viewModel = viewModel;
         this._centerX = 0;
         this._defsElement = undefined;
         this._scale = 1.0;
@@ -340,12 +351,16 @@ define(['../Core/DeveloperError',
         var topG = document.createElementNS(_svgNS, 'g');
         this._topG = topG;
 
-        var buttonsG = document.createElementNS(_svgNS, 'g');
+        this._realtimeSVG = new SvgButton(wingButton(3, 4, '#animation_pathClock', viewModel.playRealtimeViewModel.toolTip()), viewModel.playRealtimeViewModel);
+        this._playReverseSVG = new SvgButton(rectButton(44, 99, '#animation_pathPlayReverse', viewModel.playReverseViewModel.toolTip()), viewModel.playReverseViewModel);
+        this._playForwardSVG = new SvgButton(rectButton(124, 99, '#animation_pathPlay', viewModel.playViewModel.toolTip()), viewModel.playViewModel);
+        this._pauseSVG = new SvgButton(rectButton(84, 99, '#animation_pathPause', viewModel.pauseViewModel.toolTip()), viewModel.pauseViewModel);
 
-        this._realtimeSVG = new SvgButton(wingButton(3, 4, '#animation_pathClock', viewModel.playRealtimeViewModel.toolTip()), buttonsG, viewModel.playRealtimeViewModel);
-        this._playReverseSVG = new SvgButton(rectButton(44, 99, '#animation_pathPlayReverse', viewModel.playReverseViewModel.toolTip()), buttonsG, viewModel.playReverseViewModel);
-        this._playForwardSVG = new SvgButton(rectButton(124, 99, '#animation_pathPlay', viewModel.playViewModel.toolTip()), buttonsG, viewModel.playViewModel);
-        this._pauseSVG = new SvgButton(rectButton(84, 99, '#animation_pathPause', viewModel.pauseViewModel.toolTip()), buttonsG, viewModel.pauseViewModel);
+        var buttonsG = document.createElementNS(_svgNS, 'g');
+        buttonsG.appendChild(this._realtimeSVG.svgElement);
+        buttonsG.appendChild(this._playReverseSVG.svgElement);
+        buttonsG.appendChild(this._playForwardSVG.svgElement);
+        buttonsG.appendChild(this._pauseSVG.svgElement);
 
         var shuttleRingBackPanel = _svgFromObject({
             tagName : 'circle',
@@ -445,11 +460,6 @@ define(['../Core/DeveloperError',
 
         //Wire everything up.
 
-        this._playReverseSVG.onClick = viewModel.playReverseViewModel.command.execute;
-        this._realtimeSVG.onClick = viewModel.playRealtimeViewModel.command.execute;
-        this._playForwardSVG.onClick = viewModel.playViewModel.command.execute;
-        this._pauseSVG.onClick = viewModel.pauseViewModel.command.execute;
-
         var that = this;
         var callBack = function(e) {
             setShuttleRingFromMouse(that, svg, e);
@@ -493,6 +503,18 @@ define(['../Core/DeveloperError',
             _updateSvgText(that._knobStatus, viewModel.speedLabel());
         });
         _updateSvgText(this._knobStatus, viewModel.speedLabel());
+    };
+
+    Animation.prototype.destroy = function() {
+        this._realtimeSVG.destroy();
+        this._playReverseSVG.destroy();
+        this._playForwardSVG.destroy();
+        this._pauseSVG.destroy();
+        destroyObject(this);
+    };
+
+    Animation.prototype.isDestroyed = function() {
+        return false;
     };
 
     /**
@@ -855,7 +877,7 @@ define(['../Core/DeveloperError',
      * @memberof Animation.prototype
      */
     Animation.prototype.update = function() {
-        this._viewModel.update();
+        this.viewModel.update();
     };
 
     return Animation;

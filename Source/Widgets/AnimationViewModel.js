@@ -32,9 +32,7 @@ define(['../Core/DeveloperError',
         var isSystemTimeAvailable = this.isSystemTimeAvailable = ko.observable(animationController._clock.isSystemTimeAvailable());
 
         var timeObs = this.timeObs = ko.observable(animationController._clock.currentTime);
-        timeObs.equalityComparer = function(a, b) {
-            return (a === b) || ((typeof a !== 'undefined') && a.equals(b)) || ((typeof b !== 'undefined') && b.equals(a));
-        };
+        timeObs.equalityComparer = JulianDate.equals;
 
         var clockStep = this.clockStep = ko.observable(animationController._clock.clockStep);
         clockStep.equalityComparer = function(a, b) {
@@ -110,12 +108,11 @@ define(['../Core/DeveloperError',
             return clockStep() === ClockStep.SYSTEM_CLOCK_TIME;
         });
 
-        var playRealtimeEnabled = ko.computed(function() {
+        var playRealtimeCanExecute = ko.computed(function() {
             return isSystemTimeAvailable();
         });
 
         this.playRealtimeViewModel = new ButtonViewModel({
-            enabled : playRealtimeEnabled,
             selected : playRealtimeSelected,
             toolTip : ko.computed(function() {
                 if (isSystemTimeAvailable()) {
@@ -127,7 +124,7 @@ define(['../Core/DeveloperError',
                 if (!playRealtimeSelected()) {
                     animationController.playRealtime();
                 }
-            })
+            }, playRealtimeCanExecute)
         });
 
         this.shuttleRingAngle = ko.computed({
