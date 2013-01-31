@@ -759,6 +759,7 @@ define([
             var texture = centralBody._logoQuad.material.uniforms.image;
             if (typeof texture === 'undefined' || !(texture instanceof Texture) ||texture.getWidth() !== width || texture.getHeight() !== height) {
                 if (width === 0 || height === 0) {
+                    centralBody._logoQuad.material.destroy();
                     centralBody._logoQuad.destroy();
                     centralBody._logoQuad = undefined;
                 } else {
@@ -766,6 +767,7 @@ define([
                         width : width,
                         height : height
                     });
+                    centralBody._logoQuad.material.destroy();
                     centralBody._logoQuad.material = Material.fromType(context, Material.ImageType);
                     centralBody._logoQuad.material.uniforms.image = texture;
                 }

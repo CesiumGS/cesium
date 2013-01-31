@@ -10,8 +10,6 @@ define([
         '../Core/PrimitiveType',
         './Material',
         '../Renderer/BufferUsage',
-        '../Renderer/BlendEquation',
-        '../Renderer/BlendFunction',
         '../Renderer/BlendingState',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
@@ -29,8 +27,6 @@ define([
         PrimitiveType,
         Material,
         BufferUsage,
-        BlendEquation,
-        BlendFunction,
         BlendingState,
         CommandLists,
         DrawCommand,
@@ -211,11 +207,7 @@ define([
 
         var pass = frameState.passes;
         if (pass.overlay) {
-            var materialChanged = typeof this._material === 'undefined' ||
-                this._material !== this.material;
-
-
-            if (materialChanged) {
+            if (this._material !== this.material) {
                 // Recompile shader when material changes
                 this._material = this.material;
 
@@ -233,9 +225,6 @@ define([
 
             this._overlayCommand.renderState.viewport = this._rectangle;
             this._overlayCommand.uniformMap = this._material._uniforms;
-        }
-
-        if (!this._commandLists.empty()) {
             commandList.push(this._commandLists);
         }
     };

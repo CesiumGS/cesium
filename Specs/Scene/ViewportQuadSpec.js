@@ -74,6 +74,14 @@ defineSuite([
             new Color(1.0, 1.0, 1.0, 1.0));
     });
 
+    it('throws when rendered with without a material', function() {
+        viewportQuad.material = undefined;
+
+        expect(function() {
+            render(context, frameState, viewportQuad);
+        }).toThrow();
+    });
+
     it('renders material', function() {
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
