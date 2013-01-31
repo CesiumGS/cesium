@@ -67,7 +67,7 @@ defineSuite([
 
         expect(function() {
             render(context, frameState, viewportQuad);
-        }).not.toThrow();
+        }).toThrow();
     });
 
     it('throws when rendered with without a material', function() {
