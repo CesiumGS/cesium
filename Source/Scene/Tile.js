@@ -1,10 +1,14 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
+        '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/DeveloperError',
         './TileState',
         './TileTerrain'
     ], function(
+        BoundingSphere,
+        Cartesian3,
         Cartesian4,
         DeveloperError,
         TileState,
@@ -94,11 +98,6 @@ define([
          */
         this.extent = this.tilingScheme.tileXYToExtent(this.x, this.y, this.level);
 
-        this.loadedTerrain = new TileTerrain();
-        this.upsampledTerrain = new TileTerrain();
-
-        this.renderableTerrain = undefined;
-
         /**
          * The current state of the tile in the tile load pipeline.
          * @type TileState
@@ -148,14 +147,14 @@ define([
          *
          * @type Cartesian3
          */
-        this.southwestCornerCartesian = undefined;
+        this.southwestCornerCartesian = new Cartesian3(0.0, 0.0, 0.0);
 
         /**
          * The world coordinates of the northeast corner of the tile's extent.
          *
          * @type Cartesian3
          */
-        this.northeastCornerCartesian = undefined;
+        this.northeastCornerCartesian = new Cartesian3(0.0, 0.0, 0.0);
 
         /**
          * A normal that, along with southwestCornerCartesian, defines a plane at the western edge of
@@ -163,7 +162,7 @@ define([
          *
          * @type Cartesian3
          */
-        this.westNormal = undefined;
+        this.westNormal = new Cartesian3(0.0, 0.0, 0.0);
 
         /**
          * A normal that, along with southwestCornerCartesian, defines a plane at the southern edge of
@@ -173,7 +172,7 @@ define([
          *
          * @type Cartesian3
          */
-        this.southNormal = undefined;
+        this.southNormal = new Cartesian3(0.0, 0.0, 0.0);
 
         /**
          * A normal that, along with northeastCornerCartesian, defines a plane at the eastern edge of
@@ -181,7 +180,7 @@ define([
          *
          * @type Cartesian3
          */
-        this.eastNormal = undefined;
+        this.eastNormal = new Cartesian3(0.0, 0.0, 0.0);
 
         /**
          * A normal that, along with northeastCornerCartesian, defines a plane at the eastern edge of
@@ -191,13 +190,25 @@ define([
          *
          * @type Cartesian3
          */
-        this.northNormal = undefined;
+        this.northNormal = new Cartesian3(0.0, 0.0, 0.0);
 
         this.waterMaskTexture = undefined;
 
         this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
-        this.suspendUpsampling = false;
+        this.terrainData = undefined;
+        this.center = new Cartesian3(0.0, 0.0, 0.0);
+        this.vertexArray = undefined;
+        this.minHeight = 0.0;
+        this.maxHeight = 0.0;
+        this.boundingSphere3D = new BoundingSphere();
+        this.boundingSphere2D = new BoundingSphere();
+        this.occludeePointInScaledSpace = new Cartesian3(0.0, 0.0, 0.0);
+
+        this.isRenderable = false;
+
+        this.loadedTerrain = undefined;
+        this.upsampledTerrain = undefined;
     };
 
     /**
@@ -253,10 +264,18 @@ define([
         }
 
         this.state = TileState.START;
+        this.isRenderable = false;
+        this.terrainData = undefined;
 
-        this.loadedTerrain.freeResources();
-        this.upsampledTerrain.freeResources();
-        this.renderableTerrain = undefined;
+        if (typeof this.loadedTerrain !== 'undefined') {
+            this.loadedTerrain.freeResources();
+            this.loadedTerrain = undefined;
+        }
+
+        if (typeof this.upsampledTerrain !== 'undefined') {
+            this.upsampledTerrain.freeResources();
+            this.upsampledTerrain = undefined;
+        }
 
         var i, len;
 
@@ -269,6 +288,21 @@ define([
         if (typeof this.children !== 'undefined') {
             for (i = 0, len = this.children.length; i < len; ++i) {
                 this.children[i].freeResources();
+            }
+            this.children = undefined;
+        }
+
+        if (typeof this.vertexArray !== 'undefined') {
+            var indexBuffer = this.vertexArray.getIndexBuffer();
+
+            this.vertexArray.destroy();
+            this.vertexArray = undefined;
+
+            if (!indexBuffer.isDestroyed() && typeof indexBuffer.referenceCount !== 'undefined') {
+                --indexBuffer.referenceCount;
+                if (indexBuffer.referenceCount === 0) {
+                    indexBuffer.destroy();
+                }
             }
         }
     };

@@ -28,6 +28,7 @@ define([
         './TileLoadQueue',
         './TileReplacementQueue',
         './TileState',
+        './TileTerrain',
         '../ThirdParty/when'
     ], function(
         defaultValue,
@@ -58,6 +59,7 @@ define([
         TileLoadQueue,
         TileReplacementQueue,
         TileState,
+        TileTerrain,
         when) {
     "use strict";
 
@@ -190,7 +192,7 @@ define([
             }
             // If the base layer has been removed, mark the tile as non-renderable.
             if (layer.isBaseLayer()) {
-                tile.renderableTerrain = undefined;
+                tile.isRenderable = false;
             }
 
             tile = tile.replacementNext;
@@ -343,7 +345,7 @@ define([
             if (tile.state !== TileState.READY) {
                 queueTileLoad(surface, tile);
             }
-            if (typeof tile.renderableTerrain !== 'undefined' && isTileVisible(surface, frameState, tile)) {
+            if (tile.isRenderable && isTileVisible(surface, frameState, tile)) {
                 traversalQueue.enqueue(tile);
             } else {
                 ++debug.tilesCulled;
@@ -487,15 +489,15 @@ define([
     function isTileVisible(surface, frameState, tile) {
         var cullingVolume = frameState.cullingVolume;
 
-        var boundingVolume = tile.renderableTerrain.boundingSphere3D;
+        var boundingVolume = tile.boundingSphere3D;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
-            BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.renderableTerrain.minHeight, tile.renderableTerrain.maxHeight, boundingVolume);
+            BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minHeight, tile.maxHeight, boundingVolume);
             boundingVolume.center = new Cartesian3(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y);
 
             if (frameState.mode === SceneMode.MORPHING) {
-                boundingVolume = BoundingSphere.union(tile.renderableTerrain.boundingSphere3D, boundingVolume, boundingVolume);
+                boundingVolume = BoundingSphere.union(tile.boundingSphere3D, boundingVolume, boundingVolume);
             }
         }
 
@@ -528,7 +530,7 @@ define([
         var southNormal = tile.southNormal;
         var eastNormal = tile.eastNormal;
         var northNormal = tile.northNormal;
-        var maxHeight = tile.renderableTerrain.maxHeight;
+        var maxHeight = tile.maxHeight;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             southwestCornerCartesian = frameState.scene2D.projection.project(tile.extent.getSouthwest(), southwestCornerScratch);
@@ -597,7 +599,7 @@ define([
             if (child.state !== TileState.READY) {
                 queueTileLoad(surface, child);
             }
-            if (typeof child.renderableTerrain === 'undefined') {
+            if (!child.isRenderable) {
                 allRenderable = false;
             }
         }
@@ -635,17 +637,11 @@ define([
             }
 
             if (tile.state === TileState.LOADING) {
-                processTerrainLoadStateMachine(surface, context, terrainProvider, tile);
-
-                if (!tile.suspendUpsampling) {
-                    processTerrainUpsampleStateMachine(surface, context, terrainProvider, tile);
-                }
+                processTerrainStateMachine(surface, context, terrainProvider, tile);
             }
 
-            var isRenderable = tile.loadedTerrain.state === TerrainState.READY ||
-                               tile.upsampledTerrain.state === TerrainState.READY;
-            var isDoneLoading = tile.loadedTerrain.state === TerrainState.READY ||
-                                (tile.upsampledTerrain.state === TerrainState.READY && tile.loadedTerrain.state === TerrainState.NOT_AVAILABLE);
+            var isRenderable = typeof tile.vertexArray !== 'undefined';
+            var isDoneLoading = typeof tile.loadedTerrain === 'undefined' && typeof tile.upsampledTerrain === 'undefined';
 
             var didSomeWork = false;
 
@@ -732,9 +728,7 @@ define([
 
             // The tile becomes renderable when the terrain and all imagery data are loaded.
             if (i === len && isRenderable) {
-                tile.renderableTerrain = tile.loadedTerrain.state === TerrainState.READY ?
-                                            tile.loadedTerrain :
-                                            tile.upsampledTerrain;
+                tile.isRenderable = true;
 
                 if (isDoneLoading) {
                     tile.state = TileState.READY;
@@ -747,6 +741,9 @@ define([
     }
 
     function prepareNewTile(surface, terrainProvider, tile) {
+        tile.loadedTerrain = new TileTerrain();
+        tile.upsampledTerrain = new TileTerrain();
+
         // Map imagery tiles to this terrain tile
         var imageryLayerCollection = surface._imageryLayerCollection;
         for (var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
@@ -757,6 +754,8 @@ define([
         }
 
         var ellipsoid = tile.tilingScheme.getEllipsoid();
+
+        // TODO: copy into these fields on the tile instead of clobbering them.
 
         // Compute tile extent boundaries for estimating the distance to the tile.
         var extent = tile.extent;
@@ -769,6 +768,88 @@ define([
         tile.eastNormal = tile.northeastCornerCartesian.negate(cartesian3Scratch).cross(Cartesian3.UNIT_Z, cartesian3Scratch).normalize();
         tile.southNormal = ellipsoid.geodeticSurfaceNormal(tile.southeastCornerCartesian).cross(tile.southwestCornerCartesian.subtract(tile.southeastCornerCartesian, cartesian3Scratch)).normalize();
         tile.northNormal = ellipsoid.geodeticSurfaceNormal(tile.northwestCornerCartesian).cross(tile.northeastCornerCartesian.subtract(tile.northwestCornerCartesian, cartesian3Scratch)).normalize();
+    }
+
+    function processTerrainStateMachine(surface, context, terrainProvider, tile) {
+        var mesh;
+        var loaded = tile.loadedTerrain;
+        var upsampled = tile.upsampledTerrain;
+        var suspendUpsampling = false;
+
+        if (typeof loaded !== 'undefined') {
+            processTerrainLoadStateMachine(surface, context, terrainProvider, tile);
+
+            // Publish the terrain data on the tile as soon as it is available.
+            // We'll potentially need it to upsample child tiles.
+            if (loaded.state.value > TerrainState.RECEIVED.value) {
+                tile.terrainData = loaded.data;
+                suspendUpsampling = true;
+            }
+
+            if (loaded.state === TerrainState.READY) {
+                // Copy mesh information to the tile in preparation for rendering.
+                mesh = loaded.mesh;
+                Cartesian3.clone(mesh.center, tile.center);
+                tile.minHeight = mesh.minHeight;
+                tile.maxHeight = mesh.maxHeight;
+                BoundingSphere.clone(mesh.boundingSphere2D, tile.boundingSphere2D);
+                BoundingSphere.clone(mesh.boundingSphere3D, tile.boundingSphere3D);
+
+                if (typeof mesh.occludeePointInScaledSpace !== 'undefined') {
+                    Cartesian3.clone(mesh.occludeePointInScaledSpace, tile.occludeePointInScaledSpace);
+                } else {
+                    tile.occludeePointInScaledSpace = undefined;
+                }
+
+                tile.vertexArray = loaded.vertexArray;
+
+                // No further loading or upsampling is necessary.
+                tile.loadedTerrain = undefined;
+                tile.upsampledTerrain = undefined;
+            } else if (loaded.state === TerrainState.FAILED || loaded.state === TerrainState.NOT_AVAILABLE) {
+                // Loading failed for some reason, or data is simply not available,
+                // so no need to continue trying to load.  Any retrying will happen before we
+                // reach this point.
+                tile.loadedTerrain = undefined;
+            }
+        }
+
+        if (!suspendUpsampling && typeof upsampled !== 'undefined') {
+            processTerrainUpsampleStateMachine(surface, context, terrainProvider, tile);
+
+            // Publish the terrain data on the tile as soon as it is available.
+            // We'll potentially need it to upsample child tiles.
+            // It's safe to overwrite terrainData because we won't get here after
+            // loaded terrain data has been received.
+            if (upsampled.state.value > TerrainState.RECEIVED.value) {
+                tile.terrainData = upsampled.data;
+            }
+
+            if (upsampled.state === TerrainState.READY) {
+                // Copy mesh information to the tile in preparation for rendering.
+                mesh = upsampled.mesh;
+                Cartesian3.clone(mesh.center, tile.center);
+                tile.minHeight = mesh.minHeight;
+                tile.maxHeight = mesh.maxHeight;
+                BoundingSphere.clone(mesh.boundingSphere2D, tile.boundingSphere2D);
+                BoundingSphere.clone(mesh.boundingSphere3D, tile.boundingSphere3D);
+
+                if (typeof mesh.occludeePointInScaledSpace !== 'undefined') {
+                    Cartesian3.clone(mesh.occludeePointInScaledSpace, tile.occludeePointInScaledSpace);
+                } else {
+                    tile.occludeePointInScaledSpace = undefined;
+                }
+
+                tile.vertexArray = upsampled.vertexArray;
+
+                // No further upsampling is necessary.  We need to continue loading, though.
+                tile.upsampledTerrain = undefined;
+            } else if (upsampled.state === TerrainState.FAILED || upsampled.state === TerrainState.NOT_AVAILABLE) {
+                // Upsampling failed for some reason.  This is pretty much a catastrophic failure,
+                // but maybe we'll be saved by loading.
+                tile.upsampledTerrain = undefined;
+            }
+        }
     }
 
     function processTerrainLoadStateMachine(surface, context, terrainProvider, tile) {
@@ -808,17 +889,6 @@ define([
         if (tileTerrain.state === TerrainState.TRANSFORMED) {
             createTileTerrainResources(surface, context, terrainProvider, tile, tileTerrain);
         }
-
-        if (tileTerrain.state === TerrainState.READY) {
-            // We no longer need the in-process upsampling results.
-            tile.upsampledTerrain.freeResources();
-        }
-
-        if (tileTerrain.state === TerrainState.FAILED || tileTerrain.state === TerrainState.NOT_AVAILABLE) {
-            // If we previously suspended the upsample operation, resume it now.
-            // We're going to need it.
-            tile.suspendUpsampling = false;
-        }
     }
 
     function processTerrainUpsampleStateMachine(surface, context, terrainProvider, tile) {
@@ -827,10 +897,7 @@ define([
         if (tileTerrain.state === TerrainState.UNLOADED) {
             // Find the nearest ancestor with loaded terrain.
             var sourceTile = tile.parent;
-            while (typeof sourceTile !== 'undefined' &&
-                   !isDataReceived(sourceTile.loadedTerrain.state) &&
-                   !isDataReceived(sourceTile.upsampledTerrain.state)) {
-
+            while (typeof sourceTile !== 'undefined' && typeof sourceTile.terrainData === 'undefined') {
                 sourceTile = sourceTile.parent;
             }
 
@@ -839,8 +906,7 @@ define([
                 return;
             }
 
-            var sourceTerrain = isDataReceived(sourceTile.loadedTerrain.state) ? sourceTile.loadedTerrain : sourceTile.upsampledTerrain;
-            var sourceData = sourceTerrain.data;
+            var sourceData = sourceTile.terrainData;
 
             tileTerrain.data = sourceData.upsample(sourceTile.tilingScheme, sourceTile.x, sourceTile.y, sourceTile.level, tile.x, tile.y, tile.level);
             if (typeof tileTerrain.data === 'undefined') {
@@ -864,6 +930,10 @@ define([
 
         if (tileTerrain.state === TerrainState.TRANSFORMED) {
             createTileTerrainResources(surface, context, terrainProvider, tile, tileTerrain);
+        }
+
+        if (tileTerrain.state === TerrainState.READY) {
+            tile.upsampledTerrain = undefined;
         }
     }
 
@@ -893,22 +963,9 @@ define([
 
     function createTileTerrainResources(surface, context, terrainProvider, tile, tileTerrain) {
         var mesh = tileTerrain.mesh;
-        tileTerrain.mesh = undefined;
 
-        tileTerrain.center = mesh.center;
-
+        // Create the vertex array.
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, mesh, tileTerrain, true);
-        tileTerrain.minHeight = mesh.minHeight;
-        tileTerrain.maxHeight = mesh.maxHeight;
-        tileTerrain.boundingSphere3D = BoundingSphere.fromVertices(mesh.vertices, tileTerrain.center, 5);
-
-        // TODO: we need to take the heights into account when computing the occludee point.
-        var ellipsoid = tile.tilingScheme.getEllipsoid();
-        var occludeePoint = Occluder.computeOccludeePointFromExtent(tile.extent, ellipsoid);
-        if (typeof occludeePoint !== 'undefined') {
-            Cartesian3.multiplyComponents(occludeePoint, ellipsoid.getOneOverRadii(), occludeePoint);
-        }
-        tileTerrain.occludeePointInScaledSpace = occludeePoint;
 
         tileTerrain.state = TerrainState.READY;
     }
@@ -924,34 +981,43 @@ define([
             return true;
         }
 
-        var parentLoadedTerrain = parent.loadedTerrain;
-        if (parentLoadedTerrain.state !== TerrainState.READY) {
-            // Parent tile is not yet loaded, so assume (for now) that this child tile is not available.
+        if (typeof parent.terrainData === 'undefined') {
+            // Parent tile data is not yet received or upsampled, so assume (for now) that this
+            // child tile is not available.
             return false;
         }
 
-        return parentLoadedTerrain.data.isChildAvailable(parent.x, parent.y, tile.x, tile.y);
+        return parent.terrainData.isChildAvailable(parent.x, parent.y, tile.x, tile.y);
     }
 
     function fillTileWithLoadedTerrain(tile, tileTerrain, terrainData) {
         tileTerrain.data = terrainData;
         tileTerrain.state = TerrainState.RECEIVED;
 
-        // If there is (or might be) terrain data for any children, reset their state so it gets loaded.
-        if (typeof tile.children !== 'undefined') {
-            var childMask = terrainData.childTileMask;
-            for (var childIndex = 0; childIndex < 4; ++childIndex) {
-                var bitMaskValue = 1 << childIndex;
-                if ((childMask & bitMaskValue) !== 0) {
-                    var childTile = tile.children[childIndex];
-                    if (childTile.state !== TileState.START) {
-                        childTile.state = TileState.LOADING;
-                    }
+        // Now that there's new data for this tile:
+        //  - child tiles that were previously upsampled need to be re-upsampled based on the new data.
+        //  - child tiles that were previously deemed unavailable may now be available.
+        // In short, all child tiles need to reload _except_ those that were already loaded from
+        // real (non-upsampled) data.
 
-                    var childTerrainLoad = childTile.loadedTerrain;
-                    if (typeof childTerrainLoad !== 'undefined' && childTerrainLoad.state === TerrainState.NOT_AVAILABLE) {
-                        childTile.loadedTerrain.state = TerrainState.UNLOADED;
+        // A tile that is loaded (or loading) from real data will have its
+        // suspendUpsampling property set to true.  All others
+
+        if (typeof tile.children !== 'undefined') {
+            for (var childIndex = 0; childIndex < 4; ++childIndex) {
+                var childTile = tile.children[childIndex];
+                if (childTile.state !== TileState.START) {
+                    childTile.state = TileState.LOADING;
+
+                    if (!childTile.suspendUpsampling) {
+                        childTile.loadedTerrain = new TileTerrain();
+                        childTile.upsampledTerrain = new TileTerrain();
                     }
+                }
+
+                var childTerrainLoad = childTile.loadedTerrain;
+                if (typeof childTerrainLoad !== 'undefined' && childTerrainLoad.state === TerrainState.NOT_AVAILABLE) {
+                    childTile.loadedTerrain.state = TerrainState.UNLOADED;
                 }
             }
         }
@@ -1003,7 +1069,7 @@ define([
                 return;
             }
 
-            var rtc2 = tile.renderableTerrain.center;
+            var rtc2 = tile.center;
 
             var uniformMap2 = createTileUniformMap();
             mergeUniformMap(uniformMap2, centralBodyUniformMap);
@@ -1153,7 +1219,7 @@ define([
             for (var i = 0, len = tileSet.length; i < len; i++) {
                 var tile = tileSet[i];
 
-                var rtc = tile.renderableTerrain.center;
+                var rtc = tile.center;
 
                 // Not used in 3D.
                 var tileExtent = tileExtentScratch;
@@ -1228,7 +1294,7 @@ define([
 
                     mergeUniformMap(uniformMap, centralBodyUniformMap);
 
-                    uniformMap.center3D = tile.renderableTerrain.center;
+                    uniformMap.center3D = tile.center;
 
                     Cartesian4.clone(tileExtent, uniformMap.tileExtent);
                     uniformMap.southAndNorthLatitude.x = southLatitude;
@@ -1317,17 +1383,17 @@ define([
                     command.shaderProgram = shaderSet.getShaderProgram(context, tileSetIndex, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma);
                     command.renderState = renderState;
                     command.primitiveType = TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
-                    command.vertexArray = tile.renderableTerrain.vertexArray;
+                    command.vertexArray = tile.vertexArray;
                     command.uniformMap = uniformMap;
 
-                    var boundingVolume = tile.renderableTerrain.boundingSphere3D;
+                    var boundingVolume = tile.boundingSphere3D;
 
                     if (frameState.mode !== SceneMode.SCENE3D) {
-                        boundingVolume = BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.renderableTerrain.minHeight, tile.renderableTerrain.maxHeight);
+                        boundingVolume = BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minHeight, tile.maxHeight);
                         boundingVolume.center = new Cartesian3(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y);
 
                         if (frameState.mode === SceneMode.MORPHING) {
-                            boundingVolume = BoundingSphere.union(tile.renderableTerrain.boundingSphere3D, boundingVolume, boundingVolume);
+                            boundingVolume = BoundingSphere.union(tile.boundingSphere3D, boundingVolume, boundingVolume);
                         }
                     }
 

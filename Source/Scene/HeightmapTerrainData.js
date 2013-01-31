@@ -1,8 +1,11 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/BoundingSphere',
+        '../Core/Cartesian3',
         '../Core/DeveloperError',
         '../Core/Math',
+        '../Core/Occluder',
         '../Core/TaskProcessor',
         './GeographicTilingScheme',
         './TerrainMesh',
@@ -10,8 +13,11 @@ define([
         '../ThirdParty/when'
     ], function(
         defaultValue,
+        BoundingSphere,
+        Cartesian3,
         DeveloperError,
         CesiumMath,
+        Occluder,
         TaskProcessor,
         GeographicTilingScheme,
         TerrainMesh,
@@ -171,12 +177,26 @@ define([
 
         var that = this;
         return when(verticesPromise, function(result) {
+            // TODO: compute the bounding spheres and occludee point in the worker instead of here.
+            var vertices = new Float32Array(result.vertices);
+            var boundingSphere3D = BoundingSphere.fromVertices(vertices, center, 5);
+            var boundingSphere2D = boundingSphere3D; // TODO: compute this correctly
+
+            // TODO: we need to take the heights into account when computing the occludee point.
+            var occludeePointInScaledSpace = Occluder.computeOccludeePointFromExtent(extent, ellipsoid);
+            if (typeof occludeePointInScaledSpace !== 'undefined') {
+                Cartesian3.multiplyComponents(occludeePointInScaledSpace, ellipsoid.getOneOverRadii(), occludeePointInScaledSpace);
+            }
+
             return new TerrainMesh(
                     center,
-                    new Float32Array(result.vertices),
+                    vertices,
                     TerrainProvider.getRegularGridIndices(that.width + 2, that.height + 2),
                     result.statistics.minHeight,
-                    result.statistics.maxHeight);
+                    result.statistics.maxHeight,
+                    boundingSphere2D,
+                    boundingSphere3D,
+                    occludeePointInScaledSpace);
         });
     };
 
