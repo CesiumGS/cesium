@@ -1,0 +1,97 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<![endif]>
+    <title>Gradient: Bars #2</title>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+    <script>
+		dojo.require("dojox.charting.Chart");
+        dojo.require("dojox.charting.axis2d.Default");
+        dojo.require("dojox.charting.plot2d.Bars");
+        dojo.require("dojox.charting.plot2d.ClusteredBars");
+        dojo.require("dojox.charting.plot2d.StackedBars");
+		dojo.require("dojox.charting.Theme");
+
+        run = function(){
+            dojo.attr("start", "disabled", true);
+            
+            var theme1 = new dojox.charting.Theme({
+                    seriesThemes: [
+                        {
+                            fill: {
+                                type: "linear", space: "plot", x1: 0, y1: 0, x2: 100, y2: 100,
+                                colors: [{ offset: 0, color: "white" }, { offset: 1, color: "red" }]
+                            }
+                        },
+                        {
+                            fill: {
+                                type: "linear", space: "plot", x1: 0, y1: 100, x2: 100, y2: 0,
+                                colors: [{ offset: 0, color: "white" }, { offset: 1, color: "blue" }]
+                            }
+                        },
+                        {
+                            fill: {
+                                type: "linear", space: "plot", x1: 0, y1: 0, x2: 100, y2: 100,
+                                colors: [{ offset: 0, color: "white" }, { offset: 1, color: "green" }]
+                            }
+                        }
+                    ]
+                });
+
+            var chart1 = new dojox.charting.Chart("c1").
+                setTheme(theme1).
+                addAxis("x", {fixLower: "major", fixUpper: "major", includeZero: true,  minorTickStep: 0.2}).
+                addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", natural: true}).
+                addPlot("default", {type: "Bars"}).
+                addSeries("Series A", [1, 2, 3, 4, 5]).
+                addSeries("Series B", [5, 4, 3, 2, 1]).
+                render();
+
+            var chart2 = new dojox.charting.Chart("c2").
+                setTheme(theme1).
+                addAxis("x", {fixLower: "major", fixUpper: "major", includeZero: true,  minorTickStep: 0.5}).
+                addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", natural: true}).
+                addPlot("default", {type: "StackedBars"}).
+                addSeries("Series A", [2, 3, 3, 3, 5]).
+                addSeries("Series B", [1, 4, 5, 2, 1]).
+                addSeries("Series C", [2, 1, 2, 1, 3]).
+                render();
+
+            var chart3 = new dojox.charting.Chart("c3").
+                setTheme(theme1).
+                addAxis("x", {fixLower: "major", fixUpper: "major", includeZero: true,  minorTickStep: 0.5}).
+                addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", natural: true}).
+                addPlot("default", {type: "ClusteredBars", gap: 5}).
+                addSeries("Series A", [2, 3, 3, 3, 5]).
+                addSeries("Series B", [1, 4, 5, 2, 1]).
+                addSeries("Series C", [2, 1, 2, 1, 3]).
+                render();
+        };
+        
+        dojo.addOnLoad(run);
+    </script>
+</head>
+<body>
+    <p><button id="start" onclick="run();">Start!</button></p>
+	<h1>plot-space diagonal gradient</h1>
+	<p>Bars</p>
+    <div id="c1" style="position: relative; width: 600px; height: 400px;"></div>
+	<p>Stacked Bars</p>
+    <div id="c2" style="position: relative; width: 600px; height: 400px;"></div>
+	<p>Clustered Bars</p>
+    <div id="c3" style="position: relative; width: 600px; height: 400px;"></div>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+
+<!--
+    Test case for dijit/_base/place.
+    Remove in 2.0 in favor of dijit/tests/place.html
+-->
+
+<html>
+<head>
+	<title>dijit/_base/place unit test</title>
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+
+		html {
+			overflow: hidden; /* ie6 needs this */
+		}
+		body {
+			height: 100%;
+			padding: 0;
+			margin: 0;
+			border: 0;
+		}
+
+		.aroundNode {
+			position: absolute;
+			width: 20px;
+			height: 20px;
+			background: yellow;
+		}
+
+		#popup {
+			position: absolute;
+			width: 75px;
+			background: blue;
+			color: white;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="isDebug: true, parseOnLoad: false"></script>
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dojo.window");
+		dojo.require("dijit.dijit");
+
+
+		dojo.ready(function(){
+
+			// The around nodes
+			var aroundTop = dojo.byId("aroundTop"),
+				aroundBottom = dojo.byId("aroundBottom"),
+				aroundLeft = dojo.byId("aroundLeft"),
+				aroundRight = dojo.byId("aroundRight");
+
+			// The popup (aka dropdown)
+			var popup = dojo.byId("popup");
+
+			doh.register("dijit/_base/place",
+				[
+					function placeOnScreenTL(t){
+						// Place popup at (10,7)... dijit.placeOnScreen() should choose the top-left corner, because
+						// any of the other corner would make the popup go partially off the screen
+						var ret = dijit.placeOnScreen(popup, {x: 10, y:7}, ["TR", "BR", "BL", "TL"]);
+
+						doh.is("TL", ret.corner, "top left corner chosen");
+						doh.is("10px", popup.style.left, "x coord");
+						doh.is("7px", popup.style.top, "y coord");
+						doh.is(75, ret.w, "it's 75px wide");
+					},
+					function placeOnScreenTR(t){
+						// Place popup at top right... dijit.placeOnScreen() should choose the top-right corner, because
+						// any of the other corner would make the popup go partially off the screen
+						var viewport = dojo.window.getBox(),
+							ret = dijit.placeOnScreen(popup, {x: viewport.w-10, y:7}, ["TL", "BR", "TR", "BL"]),
+							popupCoords = dojo.position(popup);
+
+						doh.is("TR", ret.corner, "top left corner chosen");
+						doh.is(viewport.w-10, popupCoords.x + popupCoords.w, "x coord");
+						doh.is("7px", popup.style.top, "y coord");
+						doh.is(75, ret.w, "it's 75px wide");
+					},
+					function placeOnScreenAroundNodeT(t){
+						// Dropdown from "aroundTop" node. Should pick the second choice, since the first
+						// goes offscreen.
+						var ret = dijit.placeOnScreenAroundNode(popup, aroundTop, {
+							"TL": "BL",	// aroundTop's top-left corner with the popup's bottom-left corner (fails)
+							"BL": "TL",	// aroundTop's bottom-left corner with the popup's top-left corner (works)
+							"BR": "TR"	// aroundTop's bottom-right corner with the popup's top-right corner (works)
+						});
+
+						doh.is("BL", ret.aroundCorner, "around corner");
+						doh.is("TL", ret.corner, "popup's corner");
+						doh.is("20px", popup.style.top, "underneath around node");
+						doh.is(dojo.position(aroundTop).x+"px", popup.style.left, "left sides aligned");
+					},
+					function placeOnScreenAroundNodeTooltip(t){
+						// Same as above test except that shape of drop down changes depending on where it's positioned.
+						// Simulates tooltip placement (tooltip shape changes b/c of the arrow).
+						// Should pick the third choice this time
+
+						function layoutNode(node, aroundCorner, nodeCorner){
+							node.style.width = (nodeCorner == "TL" ? "5000px" : "75px");
+						}
+						var ret = dijit.placeOnScreenAroundNode(popup, aroundTop, {
+							"TL": "BL",	// aroundTop's top-left corner with the popup's bottom-left corner (fails)
+							"BL": "TL",	// aroundTop's bottom-left corner with the popup's top-left corner (works)
+							"BR": "TR"	// aroundTop's bottom-right corner with the popup's top-right corner (works)
+						}, layoutNode);
+
+						doh.is("BR", ret.aroundCorner, "around corner");
+						doh.is("TR", ret.corner, "popup's corner");
+						doh.is("20px", popup.style.top, "underneath around node");
+						doh.is(dojo.position(aroundTop).x+dojo.position(aroundTop).w,
+							dojo.position(popup).x+dojo.position(popup).w,
+							"right sides aligned");
+					},
+					function placeOnScreenAroundNodeB(t){
+						// Dropdown from "aroundBottom" node. Should go above aroundNode so that
+						// popup doesn't go offscreen
+						var ret = dijit.placeOnScreenAroundNode(popup, aroundBottom, {
+							"BL": "TL",	// aroundBottom's bottom-left corner with the popup's top-left corner (fails)
+							"TL": "BL",	// aroundBottom's top-left corner with the popup's bottom-left corner (works)
+							"BR": "TR"	// aroundBottom's bottom-right corner with the popup's top-right corner (fails)
+						});
+
+						doh.is("TL", ret.aroundCorner, "around corner");
+						doh.is("BL", ret.corner, "popup's corner");
+						doh.is(dojo.position(aroundBottom).y, dojo.position(popup).y + dojo.position(popup).h, "above around node");
+					},
+					function placeOnScreenAroundNodeBM(t){
+						// bottom middle popup from "aroundBottom" node
+						var ret = dijit.placeOnScreenAroundNode(popup, aroundBottom, {
+							"TR": "TL",	// aroundBottom's top-right corner with the popup's top-left corner (fails)
+							"TM": "BM",	// aroundBottom's top-middle with the popup's bottom-middle (works)
+							"BM": "TM",	// aroundBottom's bottom-middle with the popup's top-middle (fails)
+							"TL": "TR"	// aroundBottom's top-left corner with the popup's top-right corner (fails)
+						});
+
+						doh.is("TM", ret.aroundCorner, "around middle");
+						doh.is("BM", ret.corner, "popup's middle");
+						var popupPos = dojo.position(popup);
+						var aroundPos = dojo.position(aroundBottom);
+						doh.is(aroundPos.y, popupPos.y + popupPos.h, "above around node");
+						doh.t(aroundPos.x > popupPos.x, "starts before around node");
+						doh.t(aroundPos.x < (popupPos.x + popupPos.w), "ends after around node");
+					},
+					function placeOnScreenAroundNodeTM(t){
+						// top middle popup from "aroundTop" node
+						var ret = dijit.placeOnScreenAroundNode(popup, aroundTop, {
+							"BL": "BR",	// aroundTop's bottom-left corner with the popup's bottom-right corner (fails)
+							"TM": "BM",	// aroundTop's top-middle with the popup's bottom-middle (fails)
+							"BM": "TM",	// aroundTop's bottom-middle with the popup's top-middle (works)
+							"BR": "BL"	// aroundTop's bottom-right corner with the popup's bottom-left corner (fails)
+						});
+
+						doh.is("BM", ret.aroundCorner, "around middle");
+						doh.is("TM", ret.corner, "popup's middle");
+						var popupPos = dojo.position(popup);
+						var aroundPos = dojo.position(aroundTop);
+						doh.is(Math.round(aroundPos.y + aroundPos.h), Math.round(popupPos.y), "below around node");
+						doh.t(aroundPos.x > popupPos.x, "starts before around node");
+						doh.t(aroundPos.x < (popupPos.x + popupPos.w), "ends after around node");
+					},
+					function placeOnScreenAroundNodeML(t){
+						// middle left popup from "aroundLeft" node
+						var ret = dijit.placeOnScreenAroundNode(popup, aroundLeft, {
+							"BR": "TR",	// aroundLeft's bottom-right corner with the popup's top-right corner (fails)
+							"MR": "ML",	// aroundLeft's middle-right with the popup's middle-left (works)
+							"ML": "MR",	// aroundLeft's middle-left with the popup's middle-right (fails)
+							"TR": "BR"	// aroundLeft's top-right corner with the popup's bottom-right corner (fails)
+						});
+
+						doh.is("MR", ret.aroundCorner, "around middle");
+						doh.is("ML", ret.corner, "popup's middle");
+						var popupPos = dojo.position(popup);
+						var aroundPos = dojo.position(aroundLeft);
+						doh.is(aroundPos.x + aroundPos.w, popupPos.x, "after around node");
+						doh.t(aroundPos.y > popupPos.y, "starts before around node");
+						doh.t(aroundPos.y < (popupPos.y + popupPos.h), "ends after around node");
+					},
+					function placeOnScreenAroundNodeMR(t){
+						// middle left popup from "aroundRight" node
+						var ret = dijit.placeOnScreenAroundNode(popup, aroundRight, {
+							"BL": "TL",	// aroundRight's bottom-left corner with the popup's top-left corner (fails)
+							"MR": "ML",	// aroundRight's middle-right with the popup's middle-left (fails)
+							"ML": "MR",	// aroundRight's middle-left with the popup's middle-right (works)
+							"TL": "BL"	// aroundRight's top-left corner with the popup's bottom-left corner (fails)
+						});
+
+						doh.is("ML", ret.aroundCorner, "around middle");
+						doh.is("MR", ret.corner, "popup's middle");
+						var popupPos = dojo.position(popup);
+						var aroundPos = dojo.position(aroundRight);
+						doh.is(popupPos.x + popupPos.w, aroundPos.x, "before around node");
+						doh.t(aroundPos.y > popupPos.y, "starts before around node");
+						doh.t(aroundPos.y < (popupPos.y + popupPos.h), "ends after around node");
+					},
+					function placeOnScreenAroundNodeMLB(t){
+						// bottom middle popup from "aroundLeft" node
+						var ret = dijit.placeOnScreenAroundNode(popup, aroundLeft, {
+							"BR": "TR",	// aroundLeft's bottom-right corner with the popup's top-right corner (fails)
+							"BM": "TM",	// aroundLeft's bottom-middle with the popup's top-middle (works, sort of)
+							"TR": "BR"	// aroundLeft's top-right corner with the popup's bottom-right corner (fails)
+						});
+
+						doh.is("BM", ret.aroundCorner, "around middle");
+						doh.is("TM", ret.corner, "popup's middle");
+						var popupPos = dojo.position(popup);
+						var aroundPos = dojo.position(aroundLeft);
+						doh.is(Math.round(aroundPos.y + aroundPos.h), Math.round(popupPos.y), "below around node");
+						doh.is(aroundPos.x, popupPos.x, "left aligned with around node");
+					},
+					function placeOnScreenAroundNodeMRT(t){
+						// top middle popup from "aroundRight" node
+						var ret = dijit.placeOnScreenAroundNode(popup, aroundRight, {
+							"BL": "TL",	// aroundRight's bottom-left corner with the popup's top-left corner (fails)
+							"TM": "BM",	// aroundRight's top-middle with the popup's bottom-middle (works)
+							"TL": "BL"	// aroundRight's top-left corner with the popup's bottom-left corner (fails)
+						});
+
+						doh.is("TM", ret.aroundCorner, "around middle");
+						doh.is("BM", ret.corner, "popup's middle");
+						var popupPos = dojo.position(popup);
+						var aroundPos = dojo.position(aroundRight);
+						doh.is(popupPos.x + popupPos.w, aroundPos.x + aroundPos.w + 1/*right:1px*/, "right aligned with around node");
+						doh.is(popupPos.y + popupPos.h, aroundPos.y, "above around node");
+					},
+					function placeOnScreenAroundNodeTML(t){
+						// middle left popup from "aroundTop" node
+						var ret = dijit.placeOnScreenAroundNode(popup, aroundTop, {
+							"BL": "BR",	// aroundTop's bottom-left corner with the popup's bottom-right corner (fails)
+							"ML": "MR",	// aroundTop's middle-left with the popup's middle-right (works)
+							"BR": "BL"	// aroundTop's bottom-right corner with the popup's bottom-left corner (fails)
+						});
+
+						doh.is("ML", ret.aroundCorner, "around middle");
+						doh.is("MR", ret.corner, "popup's middle");
+						var popupPos = dojo.position(popup);
+						var aroundPos = dojo.position(aroundTop);
+						doh.is(aroundPos.x, popupPos.x + popupPos.w, "before around node");
+						doh.is(aroundPos.y, popupPos.y, "top aligned with around node");
+					},
+					function placeOnScreenAroundNodeBMR(t){
+						// middle right popup from "aroundBottom" node
+						var ret = dijit.placeOnScreenAroundNode(popup, aroundBottom, {
+							"TL": "TR",	// aroundBottom's top-left corner with the popup's top-right corner (fails)
+							"MR": "ML",	// aroundBottom's middle-right with the popup's middle-left (works)
+							"TR": "TL"	// aroundBottom's top-right corner with the popup's top-left corner (fails)
+						});
+
+						doh.is("MR", ret.aroundCorner, "around middle");
+						doh.is("ML", ret.corner, "popup's middle");
+						var popupPos = dojo.position(popup);
+						var aroundPos = dojo.position(aroundBottom);
+						doh.is(aroundPos.x + aroundPos.w, popupPos.x, "after around node");
+						doh.is(aroundPos.y + aroundPos.h + 5/*bottom:5px*/, popupPos.y + popupPos.h, "bottom aligned with around node");
+					}
+				]
+			);
+			doh.run();
+		});
+
+	</script>
+</head>
+<body>
+	<h1>Dijit/_base/place Unit Test</h1>
+	<div id="aroundTop" class="aroundNode" style="top: 0; left: 50%;">T</div>
+	<div id="aroundLeft" class="aroundNode" style="bottom: 30%; left: 0;">L</div>
+	<div id="aroundRight" class="aroundNode" style="bottom: 30%; right: 1px;">R</div>
+	<div id="aroundBottom" class="aroundNode" style="bottom: 5px; left: 50%;">B</div>
+
+	<div id="popup">
+		I'm a drop down, wider and taller than the around nodes I'm placed next to.
+	</div>
+</body>
+</html>

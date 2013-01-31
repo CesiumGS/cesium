@@ -1,0 +1,64 @@
+<div class="view mblView">
+	<script type="dojo/require">at: "dojox/mvc/at"</script>
+    <h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home"'>repeat</h1>
+    <form name="repeatTestForm" id="repeatTestForm">    
+    <div class="field-title">repeat - Using an mvcModel (dojox/mvc/EditStoreRefListController) with a dojo.store.JsonRest.</div>
+        <div id="repeatWidget" class="fieldset" data-dojo-type="dojox/mvc/Repeat" 
+        	data-dojo-props="exprchar: '#', children: this.loadedModels.jsonRestModel.model" >
+           <div class="row">            
+                    <input data-dojo-type="dojox.mobile.TextBox"
+                        id="nameInput#{this.index}" data-dojo-props="value: at('rel:#{this.index}','First')" placeHolder="First Name"></input>
+                    <button type="button" id="detail#{this.index}" data-dojo-type="dojox/mobile/Button" class="mblBlueButton">
+                        Details
+                    </button>
+                    <button type="button" id="insert#{this.index}" data-dojo-type="dojox/mobile/Button" class="mblBlueButton">
+                        +
+                    </button>
+                    <button type="button" id="delete#{this.index}" data-dojo-type="dojox/mobile/Button" class="mblBlueButton">
+                        -
+                    </button>
+                </div>
+        </div>
+        <div class="spacer"></div>
+		<div data-dojo-type="dojox/mvc/Group" 
+			data-dojo-props="target: at(this.loadedModels.jsonRestModel, 'cursor')">
+					<div class="field-title">
+						<div style="display: inline-block;" id="detailsBanner">Details for selected index:</div>
+						<span class="cell" id="indexOutput"
+							data-dojo-type="dojox/mvc/Output"
+							data-dojo-props="value: at(this.loadedModels.jsonRestModel, 'cursorIndex')"></span>
+					</div>
+					<table id="table" cellspacing="10"  style="width: 100%">
+						<tr>
+							<td style="width: 100px;" class="layout">First Name</td>
+							<td class="layout">							
+								<input  id="firstInput" data-dojo-type="dojox.mobile.TextBox" 
+									data-dojo-props="value: at('rel:', 'First'), placeholder:'First Name'">
+							</td>
+						</tr>
+						<tr>
+							<td style="width: 100px;" class="layout">Last Name</td>
+							<td class="layout">
+								<input id="lastInput" data-dojo-type="dojox.mobile.TextBox"
+									 
+									data-dojo-props="placeholder:'Last Name', value: at('rel:', 'Last')">
+							</td>
+						</tr>
+						<tr>
+							<td style="width: 100px;" class="layout">Email</td>
+							<td class="layout">
+								<input  id="emailInput2" data-dojo-type="dojox.mobile.TextBox"
+									data-dojo-props="value: at('rel:', 'Email'), placeholder:'Email'">
+							</td>
+						</tr>
+						<tr>
+							<td style="width: 100px;" class="layout">Telephone</td>
+							<td class="layout">
+								<input  id="telInput" data-dojo-type="dojox.mobile.TextBox"
+									data-dojo-props="value: at('rel:', 'Tel'), placeholder:'Telephone'">
+							</td>
+						</tr>
+					</table>
+		</div>
+		</form>
+</div>

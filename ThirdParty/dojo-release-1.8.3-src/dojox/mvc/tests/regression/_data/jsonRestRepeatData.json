@@ -1,0 +1,29 @@
+[ 
+                    {
+                        "Serial"  : "A111",
+                        "First"   : "Anne",
+                        "Last"    : "Ackerman",
+                        "Location": "NY",
+                        "Office"  : "1S76",
+                        "Email"   : "a.a@test.com",
+                        "Tel"     : [{"name":"Home", "number" : "123-764-8227"}, {"name":"Fax", "number" : "123-764-8228"}]
+                    },
+                    {
+                        "Serial"  : "H111",
+                        "First"   : "Hunter",
+                        "Last"    : "Huffman",
+                        "Location": "CA",
+                        "Office"  : "6532",
+                        "Email"   : "h.h@test.com",
+                        "Tel"     : [{"name":"Home", "number" : "408-874-8228"}, {"name":"Fax", "number" : "408-874-8229"}]
+                    },
+                    {
+                        "Serial"  : "J111",
+                        "First"   : "John",
+                        "Last"    : "Jacklin",
+                        "Location": "CA",
+                        "Office"  : "6701",
+                        "Email"   : "j.j@test.com",
+                        "Tel"     : [{"name":"Home", "number" : "408-764-4321"}, {"name":"Fax", "number" : "408-764-4322"}]
+                    }
+]

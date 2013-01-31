@@ -1,0 +1,199 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<title>View</title>
+	<link href="../../themes/iphone/iphone.css" rel="stylesheet"/>
+	<style>
+	html,body{
+		height: 100%;
+		overflow: hidden;
+	}
+	.list1 li{
+		border-style: solid;
+		border-width: 1px 0px 1px 0px;
+		border-top-color: #BABABC;
+		border-bottom-color: #89898C;
+		background-color: #ACACAF;
+		line-height: 0px;
+	}
+	.list1 li table{
+		line-height: normal;
+	}
+	.list1 li:nth-child(even){
+		background-color: #97979B;
+	}
+	#list2 li:nth-child(even){
+		background-color: #eeeeee;
+	}
+	#categ1 {
+		font-size: 18px;
+	}
+	#categ1 li{
+		line-height: 70px;
+	}
+	.lnk {
+		font-size: 14px;
+		color: #0B5199;
+		text-decoration: none;
+	}
+	.content {
+		padding:0px 10px;
+		background-color: white;
+	}
+	p {
+		font-family: Helvetica;
+		font-size: 12px;
+	}
+	.title {
+		color: blue;
+		margin-bottom: 4px;
+	}
+	.subtitle {
+		font-style: italic;
+		color: gray;
+		margin: 0px;
+		margin-bottom: 4px;
+	}
+	.subsubtitle {
+		margin: 16px 0px 0px 0px;
+	}
+	.lst {
+		margin: 0px;
+		padding: 0px 14px;
+	}
+	.lst li {
+		font-family: Helvetica;
+		font-size: 12px;
+		margin: 0px;
+		list-style-type: square;
+	}
+	</style>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+	<script language="JavaScript" type="text/javascript">
+		//dojo.require("dojo.parser"); // Use the lightweight parser.
+		dojo.require("dojox.mobile.parser");
+		dojo.require("dojox.mobile");
+		dojo.require("dojox.mobile.ScrollableView");
+		dojo.require("dojox.mobile.TabBar");
+		dojo.requireIf(!dojo.isWebKit, "dojox.mobile.compat");
+		dojo.requireIf(!dojo.isWebKit, "dojo.fx");
+		dojo.requireIf(!dojo.isWebKit, "dojo.fx.easing");
+
+        dojo.require("doh.runner");
+		dojo.addOnLoad(function(){
+
+			doh.register("dojox.mobile.test.doh.View", [
+				{
+					name: "test View Verification",
+					timeout: 4000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						setTimeout(d.getTestCallback(function(){
+							demoWidget = dijit.byId("dojox_mobile_ScrollableView_0");
+							demoWidget.set({scrollDir:"hv"});
+							doh.assertEqual('hv', demoWidget.get("scrollDir"));
+							doh.assertEqual('mblView mblScrollableView', demoWidget.domNode.className);
+							doh.assertEqual('', demoWidget.domNode.style.display);
+						}));
+						return d;
+					}
+				}
+			]);
+			doh.run();
+		});
+	</script>
+</head>
+<body>
+		<div dojoType="dojox.mobile.ScrollableView" selected="true">
+			<h1 dojoType="dojox.mobile.Heading" fixed="top">View Header Bar</h1>
+			<table border="1" cellpadding="2" cellspacing="0" style="margin:4px;background-color:white;">
+<tr><td>a-icon-1-41x41.png</td><td>2010/03/23</td><td>13:03</td><td>3,886</td><td>mobile/tests/images</td></tr>
+<tr><td>a-icon-1.png</td><td>2010/03/23</td><td>13:03</td><td>550</td><td>mobile/tests/images</td></tr>
+<tr><td>a-icon-10.png</td><td>2010/05/06</td><td>08:57</td><td>332</td><td>mobile/tests/images</td></tr>
+<tr><td>a-icon-11.png</td><td>2010/05/06</td><td>08:57</td><td>343</td><td>mobile/tests/images</td></tr>
+<tr><td>a-icon-12.png</td><td>2010/05/06</td><td>08:57</td><td>613</td><td>mobile/tests/images</td></tr>
+<tr><td>a-icon-13.png</td><td>2010/05/06</td><td>08:57</td><td>278</td><td>mobile/tests/images</td></tr>
+<tr><td>a-icon-14.png</td><td>2010/05/06</td><td>08:57</td><td>612</td><td>mobile/tests/images</td></tr>
+<tr><td>a-icon-15.png</td><td>2010/05/06</td><td>08:57</td><td>765</td><td>mobile/tests/images</td></tr>
+<tr><td>a-icon-16.png</td><td>2010/05/06</td><td>08:57</td><td>597</td><td>mobile/tests/images</td></tr>
+<tr><td>a-icon-17.png</td><td>2010/05/06</td><td>08:57</td><td>942</td><td>mobile/tests/images</td></tr>
+<tr><td>a-icon-18.png</td><td>2010/05/06</td><td>08:57</td><td>832</td><td>mobile/tests/images</td></tr>
+<tr><td>a-icon-2-41x41.png</td><td>2010/03/23</td><td>13:03</td><td>923</td><td>mobile/tests/images</td></tr>
+<tr><td>a-icon-2.png</td><td>2010/03/23</td><td>13:03</td><td>644</td><td>mobile/tests/images</td></tr>
+<tr><td>a-icon-3.png</td><td>2010/04/13</td><td>06:37</td><td>1,346</td><td>mobile/tests/images</td></tr>
+<tr><td>a-icon-4.png</td><td>2010/03/23</td><td>13:03</td><td>695</td><td>mobile/tests/images</td></tr>
+<tr><td>i-icon-1.png</td><td>2010/03/23</td><td>13:03</td><td>677</td><td>mobile/tests/images</td></tr>
+<tr><td>i-icon-10.png</td><td>2010/03/23</td><td>13:03</td><td>689</td><td>mobile/tests/images</td></tr>
+<tr><td>i-icon-2.png</td><td>2010/03/23</td><td>13:03</td><td>680</td><td>mobile/tests/images</td></tr>
+<tr><td>i-icon-3.png</td><td>2010/03/23</td><td>13:03</td><td>682</td><td>mobile/tests/images</td></tr>
+<tr><td>i-icon-4.png</td><td>2010/03/23</td><td>13:03</td><td>697</td><td>mobile/tests/images</td></tr>
+<tr><td>i-icon-5.png</td><td>2010/03/23</td><td>13:03</td><td>693</td><td>mobile/tests/images</td></tr>
+<tr><td>i-icon-6.png</td><td>2010/03/23</td><td>13:03</td><td>694</td><td>mobile/tests/images</td></tr>
+<tr><td>i-icon-7.png</td><td>2010/03/23</td><td>13:03</td><td>691</td><td>mobile/tests/images</td></tr>
+<tr><td>i-icon-8.png</td><td>2010/03/23</td><td>13:03</td><td>695</td><td>mobile/tests/images</td></tr>
+<tr><td>i-icon-9.png</td><td>2010/03/23</td><td>13:03</td><td>689</td><td>mobile/tests/images</td></tr>
+<tr><td>i-icon-all.png</td><td>2010/03/23</td><td>13:03</td><td>4,450</td><td>mobile/tests/images</td></tr>
+<tr><td>icon-1.png</td><td>2010/05/06</td><td>08:57</td><td>2,626</td><td>mobile/tests/images</td></tr>
+<tr><td>not-images.png</td><td>2010/04/13</td><td>06:37</td><td>18,459</td><td>mobile/tests/images</td></tr>
+<tr><td>red-button-bg.png</td><td>2010/04/13</td><td>06:37</td><td>178</td><td>mobile/tests/images</td></tr>
+<tr><td>red-button-sel-bg.png</td><td>2010/04/13</td><td>06:37</td><td>185</td><td>mobile/tests/images</td></tr>
+<tr><td>test_Android-ButtonList.html</td><td>2010/10/05</td><td>21:09</td><td>2,750</td><td>mobile/tests</td></tr>
+<tr><td>test_Android-EdgeToEdge.html</td><td>2010/10/05</td><td>21:08</td><td>1,835</td><td>mobile/tests</td></tr>
+<tr><td>test_Android-EdgeToEdgeCategory.html</td><td>2010/10/05</td><td>21:08</td><td>1,615</td><td>mobile/tests</td></tr>
+<tr><td>test_Android-Icon.html</td><td>2010/10/05</td><td>21:09</td><td>2,634</td><td>mobile/tests</td></tr>
+<tr><td>test_Android-RoundRectList.html</td><td>2010/10/05</td><td>21:08</td><td>2,142</td><td>mobile/tests</td></tr>
+<tr><td>test_Android-Settings.html</td><td>2010/10/05</td><td>21:08</td><td>4,375</td><td>mobile/tests</td></tr>
+<tr><td>test_Android-Switch.html</td><td>2010/10/05</td><td>21:09</td><td>1,000</td><td>mobile/tests</td></tr>
+<tr><td>test_Android-TabContainer.html</td><td>2010/10/05</td><td>21:09</td><td>5,031</td><td>mobile/tests</td></tr>
+<tr><td>test_Android-VariableHeightList.html</td><td>2010/10/05</td><td>21:09</td><td>3,570</td><td>mobile/tests</td></tr>
+<tr><td>test_FixedSplitter-H2-prog.html</td><td>2010/10/03</td><td>22:28</td><td>1,089</td><td>mobile/tests</td></tr>
+<tr><td>test_FixedSplitter-H2.html</td><td>2010/10/03</td><td>22:28</td><td>872</td><td>mobile/tests</td></tr>
+<tr><td>test_FixedSplitter-V2H2.html</td><td>2010/10/03</td><td>22:28</td><td>1,088</td><td>mobile/tests</td></tr>
+<tr><td>test_FixedSplitter-V3.html</td><td>2010/10/03</td><td>22:28</td><td>996</td><td>mobile/tests</td></tr>
+<tr><td>test_ajax-html.html</td><td>2010/10/05</td><td>21:09</td><td>1,505</td><td>mobile/tests</td></tr>
+<tr><td>test_ajax-json.html</td><td>2010/10/05</td><td>21:08</td><td>1,505</td><td>mobile/tests</td></tr>
+<tr><td>test_anchor-label.html</td><td>2010/10/05</td><td>21:08</td><td>2,959</td><td>mobile/tests</td></tr>
+<tr><td>test_bookmarkable.html</td><td>2010/10/05</td><td>21:09</td><td>4,443</td><td>mobile/tests</td></tr>
+<tr><td>test_buttons.html</td><td>2010/10/05</td><td>21:08</td><td>972</td><td>mobile/tests</td></tr>
+<tr><td>test_css-sprite.html</td><td>2010/10/05</td><td>21:09</td><td>5,779</td><td>mobile/tests</td></tr>
+<tr><td>test_dynamic-icons.html</td><td>2010/10/05</td><td>21:08</td><td>2,080</td><td>mobile/tests</td></tr>
+<tr><td>test_dynamic-items.html</td><td>2010/10/05</td><td>21:08</td><td>3,375</td><td>mobile/tests</td></tr>
+<tr><td>test_dynamic-view.html</td><td>2010/10/05</td><td>21:09</td><td>1,657</td><td>mobile/tests</td></tr>
+<tr><td>test_hash-parameter.html</td><td>2010/10/05</td><td>21:09</td><td>2,679</td><td>mobile/tests</td></tr>
+<tr><td>test_iPad-Settings-fixed.html</td><td>2010/10/03</td><td>22:28</td><td>8,866</td><td>mobile/tests</td></tr>
+<tr><td>test_iPad-Settings.html</td><td>2010/10/03</td><td>22:28</td><td>6,904</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-Animation.html</td><td>2010/10/05</td><td>21:08</td><td>3,343</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-Button.html</td><td>2010/10/05</td><td>21:09</td><td>1,766</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-ButtonList.html</td><td>2010/10/05</td><td>21:09</td><td>2,135</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-EdgeToEdge.html</td><td>2010/10/05</td><td>21:08</td><td>1,809</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-EdgeToEdgeCategory.html</td><td>2010/10/05</td><td>21:08</td><td>1,613</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-Heading.html</td><td>2010/10/05</td><td>21:08</td><td>1,136</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-Icon.html</td><td>2010/10/05</td><td>21:09</td><td>2,588</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-IconMulti.html</td><td>2010/10/05</td><td>21:08</td><td>1,863</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-IconSingle.html</td><td>2010/10/05</td><td>21:09</td><td>1,814</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-IconSingleBelow.html</td><td>2010/10/05</td><td>21:08</td><td>1,815</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-ResultList.html</td><td>2010/10/05</td><td>21:08</td><td>2,708</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-RoundRect.html</td><td>2010/10/05</td><td>21:08</td><td>1,155</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-RoundRectList.html</td><td>2010/10/05</td><td>21:08</td><td>2,136</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-Settings.html</td><td>2010/10/05</td><td>21:09</td><td>5,666</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-Switch.html</td><td>2010/10/05</td><td>21:09</td><td>998</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-TabContainer.html</td><td>2010/10/05</td><td>21:09</td><td>5,262</td><td>mobile/tests</td></tr>
+<tr><td>test_iPhone-VariableHeightList.html</td><td>2010/10/05</td><td>21:09</td><td>3,550</td><td>mobile/tests</td></tr>
+<tr><td>test_progress-indicator.html</td><td>2010/10/05</td><td>21:08</td><td>3,124</td><td>mobile/tests</td></tr>
+<tr><td>test_transition-to-dynamic-view.html</td><td>2010/10/05</td><td>21:08</td><td>2,525</td><td>mobile/tests</td></tr>
+<tr><td>view-sample.html</td><td>2010/05/06</td><td>20:30</td><td>1,724</td><td>mobile/tests</td></tr>
+<tr><td>view1.html</td><td>2010/05/06</td><td>20:28</td><td>378</td><td>mobile/tests</td></tr>
+<tr><td>view1.json</td><td>2010/05/28</td><td>00:30</td><td>371</td><td>mobile/tests</td></tr>
+<tr><td>view2.html</td><td>2010/05/06</td><td>21:20</td><td>619</td><td>mobile/tests</td></tr>
+<tr><td>view2.json</td><td>2010/05/28</td><td>00:30</td><td>737</td><td>mobile/tests</td></tr>
+<tr><td>view3.html</td><td>2010/10/05</td><td>21:09</td><td>963</td><td>mobile/tests</td></tr>
+<tr><td>view3.json</td><td>2010/10/05</td><td>21:09</td><td>1,054</td><td>mobile/tests</td></tr>
+<tr><td>widget-bg.png</td><td>2010/03/23</td><td>13:03</td><td>26,234</td><td>mobile/tests/images</td></tr>
+			</table>
+			<h1 dojoType="dojox.mobile.Heading" fixed="bottom" style="border-bottom:none;">View Footer Bar</h1>
+		</div>
+</body>
+</html>

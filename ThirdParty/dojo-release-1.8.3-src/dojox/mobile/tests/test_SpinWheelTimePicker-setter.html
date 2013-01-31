@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>SpinWheel Time Picker - setter</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','SpinWheel']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/SpinWheelTimePicker",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(ready, registry, SpinWheelTimePicker){
+			ready(function(){
+				registry.byId("picker1").set("values", ["22","06"]);
+
+				var picker3 = new SpinWheelTimePicker({values:["22","06"]}, "picker3");
+				picker3.startup();
+			});
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div data-dojo-type="dojox.mobile.View">
+		<!-- All these widgets should display the same value. -->
+		<div id="picker1" data-dojo-type="dojox.mobile.SpinWheelTimePicker"></div><br>
+		<div id="picker2" data-dojo-type="dojox.mobile.SpinWheelTimePicker" data-dojo-props="values:['22','06']"></div><br>
+		<div id="picker3"></div><br>
+	</div>
+</body>
+</html>

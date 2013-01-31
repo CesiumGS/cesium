@@ -1,0 +1,184 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Form Valid/Invalid State Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			// Some of these tests are duplicated in Form.html, maybe the Form.html watch(state) and validate()
+			// tests groups should be moved here.
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_Form_state.html');
+
+				doh.register("FormValidationState", [
+					{
+						name: "formLoadInvalid",
+						runTest: function(){
+							doh.t(dijit.byId("submitButton").get("disabled"));
+						}
+					},
+					{
+						name: "initialFormInvalid",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(function(){ dojo.byId("notes").focus(); });
+							doh.robot.typeKeys("my notes", 1, 1200);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(dijit.byId("submitButton").get("disabled"));
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "initialFormInvalid2",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(function(){ dojo.byId("name").focus(); });
+							doh.robot.typeKeys("my name", 1, 1000);
+
+							doh.robot.sequence(function(){
+								dojo.byId("birth").focus();
+								dijit.byId('birth').set('value', null);
+							}, 500); 
+							doh.robot.typeKeys("1/1/2010", 1, 1200);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(dijit.byId("submitButton").get("disabled"));
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "initialFormValid",
+						timeout: 3000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dojo.byId("reset").focus();
+							dojo.byId("reset").click();
+
+							setTimeout(d.getTestCallback(function(){
+								doh.f(dijit.byId("submitButton").get("disabled"));
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "initialFormValid2",
+						timeout: 8000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(function(){
+								dojo.byId("birth").focus();
+								dijit.byId('birth').set('value', null); 
+							});
+							doh.robot.typeKeys("1/1/2010", 1, 1200);
+
+							doh.robot.sequence(function(){
+								dojo.byId("disable").focus();
+								dojo.byId("disable").click();
+							}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(dijit.byId("submitButton").get("disabled"));
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "initialFormInvalid3",
+						timeout: 3000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dojo.byId("enable").focus();
+							dojo.byId("enable").click();
+
+							setTimeout(d.getTestCallback(function(){
+								doh.t(dijit.byId("submitButton").get("disabled"));
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "moreFieldsInvalid",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dojo.byId("reset").focus();
+							dojo.byId("reset").click();
+
+							dojo.byId("addMoreFields").focus();
+							dijit.byId("addMoreFields").onClick();
+
+							setTimeout(d.getTestCallback(function(){
+								doh.t(dijit.byId("submitButton").get("disabled"));
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "moreFieldsValid",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(function(){ dojo.byId("lastName").focus(); });
+							doh.robot.typeKeys("my last name", 1, 1800);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(dijit.byId("submitButton").get("disabled"));
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "moreFieldsInvalid2",
+						timeout: 8000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(function(){
+								dojo.byId("color").focus();
+								dijit.byId('color').set('value', null); 
+							});
+							doh.robot.keyPress(dojo.keys.TAB, 1, {});
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(dijit.byId("submitButton").get("disabled"));
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

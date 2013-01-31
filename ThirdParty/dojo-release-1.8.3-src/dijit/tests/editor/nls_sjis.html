@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Editor Test</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=Shift-JIS"/>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true"></script>
+
+	<script type="text/javascript" src="../_testCommon.js"></script>
+		
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dijit.dijit");
+		dojo.require("dijit.Editor");
+		dojo.require("dojo.parser");
+		
+		dojo.ready(function(){
+
+			doh.register("parse", function(){
+				dojo.parser.parse();
+			});
+
+
+			 doh.register("test value", [
+				{
+					name: "test value",
+					timeout: 10000,
+					runTest: function(){
+						var d = new doh.Deferred();
+
+						
+						setTimeout(d.getTestCallback(function(){
+							var value = dijit.byId('editor').get('value');
+							doh.is("日本語", value );
+							
+							dijit.byId('editor').set('value', 'こんにちは');
+							value = dijit.byId('editor').get('value');
+							doh.is("こんにちは", value );
+
+							dijit.byId('editor').set('value', '日本語');
+						}), 2000);
+
+						return d;
+					}
+				}
+			]);
+
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro">
+<form method="get">
+<p>
+Plain text: 日本語
+</p>
+
+<p>
+Same text should show up in the Editor:
+</p>
+<div id="editor" data-dojo-type="dijit/Editor" data-dojo-props='name:"field"'>日本語</div>
+<input type="submit" value="Save" />
+<button type=button onclick="console.log(dijit.byId('editor').get('value'))">getValue</button>
+<button type=button onclick="dijit.byId('editor').set('value', 'こんにちは')">set value to こんにちは</button>
+
+</form>
+</body>
+</html>

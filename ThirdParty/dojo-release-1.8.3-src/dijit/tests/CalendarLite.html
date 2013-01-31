@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>CalendarLite Widget Test</title>
+
+		<!-- for tests -->
+		<style type="text/css">
+			@import "../themes/claro/document.css";
+			@import "css/dijitTests.css";
+		</style>
+
+		<!-- required: a default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../dojo/dojo.js"
+			data-dojo-config="isDebug: true"></script>
+
+		<!-- not needed, for testing alternate themes -->
+		<script type="text/javascript" src="_testCommon.js"></script>
+
+		<script type="text/javascript">
+			require(["doh/runner", "dojo/date/stamp", "dojo/dom", "dijit/CalendarLite", "dojo/domReady!"],
+					function(doh, stamp, dom, CalendarLite){
+
+				doh.register("CalendarLite", [
+					function create(){
+						var cal = new CalendarLite({
+							id: "cal",
+							value: "1999-12-31",
+							onChange: function myHandler(id,newValue){
+								console.debug("onChange for id = " + id + ", value: " + newValue);
+							}
+						}, dom.byId("calendar1"));
+
+						doh.is("1999-12-31", stamp.toISOString(cal.get("value"), {selector: "date"}), "value");
+					}
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+	<body class="claro">
+
+		<h1 class="testTitle">Dijit CalendarLite Test</h1>
+
+		<input value="input before" id="before"/>
+		<input id="calendar1"/>
+		<input value="input after" id="after"/>
+	</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes"/>		
+		<META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+		<META HTTP-EQUIV="PRAGMA" CONTENT="NO-CACHE">		
+		<title>Scrollable Test App</title>
+		<link rel="stylesheet" type="text/css" href="css/tablet.css">
+		<link type="text/css" href="css/demo.css" rel="stylesheet">
+	<style>
+	.subject {
+		font: bold 16px Helvetica;
+	}
+	.textBox {
+		font-size: 12px; 
+		font-weight: normal;
+		overflow: hidden;
+	}
+	</style>
+	
+		
+		<script type="text/javascript" src="../../../../dojox/mobile/deviceTheme.js"
+   					data-dojo-config="mblThemeFiles:['@theme',['dojox/app/tests/scrollableTestApp','todo']]"></script>
+
+		<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="parseOnLoad: false,
+				mblHideAddressBar: true,
+				mblAndroidWorkaround: false,
+				mblAlwaysHideAddressBar: true,
+				app: {debugApp: 1},  // set debugApp to log app transtions and view activate/deactivate
+				mvc: {debugBindings: 0},  // set on to debug mvc data bindings
+				async: 1">
+		</script>
+		<script>
+			require(["./src.js"], function(){
+			});
+		</script>
+		
+	</head>
+	<body style="overflow-y:hidden; overflow-x:hidden;">
+	</body>
+</html>

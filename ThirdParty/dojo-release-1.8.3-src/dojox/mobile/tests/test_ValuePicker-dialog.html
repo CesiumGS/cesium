@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>ValuePicker on SimpleDialog</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','SimpleDialog','ValuePicker']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/date/locale",
+			"dojo/dom",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/ProgressIndicator",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/SimpleDialog",
+			"dojox/mobile/Button",
+			"dojox/mobile/ValuePickerDatePicker",
+			"dojox/mobile/ValuePickerTimePicker"
+		], function(locale, dom, ready, registry, ProgressIndicator){
+			var date;
+			show = function(dlg){
+				if(dlg == "dlg1"){
+					date = registry.byId("picker1").get("values");
+				}else if(dlg == "dlg2"){
+					date = registry.byId("picker2").get("values");
+				}
+				registry.byId(dlg).show();
+			};
+			hide = function(dlg){
+				registry.byId(dlg).hide();
+			};
+			cancel = function(dlg){
+				if(dlg == "dlg1"){
+					registry.byId("picker1").set("values", date);
+				}else if(dlg == "dlg2"){
+					registry.byId("picker2").set("values", date);
+				}
+				registry.byId(dlg).show();
+				hide(dlg);
+			};
+
+			// Dialog Box
+			updateDateDialog = function(){
+				var d = registry.byId("picker1").get("date");
+				if(d){
+					dom.byId("msg1").innerHTML =
+						locale.format(d, {formatLength:"full",selector:"date"});
+				}
+			};
+			updateTimeDialog = function(){
+				var d = registry.byId("picker2").get("date");
+				if(d){
+					dom.byId("msg2").innerHTML =
+						locale.format(d, {timePattern:is24h?"H:mm":"h:mm a",selector:"time"});
+				}
+			};
+			onValueChanged1 = function(){
+				updateDateDialog();
+			};
+			onValueChanged2 = function(){
+				updateTimeDialog();
+			};
+
+
+			// ListItem
+			updateDateListItem = function(){
+				var d = registry.byId("picker1").get("date");
+				if(d){
+					dom.byId("dateMsg").innerHTML =
+						locale.format(d, {formatLength:"short",selector:"date"});
+				}
+			};
+			updateTimeListItem = function(){
+				var d = registry.byId("picker2").get("date");
+				if(d){
+					dom.byId("timeMsg").innerHTML =
+						locale.format(d, {timePattern:is24h?"H:mm":"h:mm a",selector:"time"});
+				}
+			};
+
+			setDate = function(){
+				updateDateListItem();
+				hide('dlg1');
+			};
+			setTime = function(){
+				updateTimeListItem();
+				hide('dlg2');
+			};
+
+			is24h = true;
+			use24h = function(){
+				var listItem = registry.byId("item1")
+				if(is24h){
+					listItem.set("rightIcon", "mblDomButtonCheckboxOff");
+					dom.byId("use24hMsg").innerHTML = "1:00 pm";
+					registry.byId("picker2").set("is24h", false);
+				}else{
+					listItem.set("rightIcon", "mblDomButtonCheckboxOn");
+					dom.byId("use24hMsg").innerHTML = "13:00";
+					registry.byId("picker2").set("is24h", true);
+				}
+				is24h = !is24h;
+				updateTimeDialog();
+				updateTimeListItem();
+			};
+
+			ready(function(){
+				updateDateListItem();
+				updateTimeListItem();
+//				show("dlg1");
+			})
+		});
+
+	</script>
+
+	<style>
+	.mblValuePicker {
+		display: inline-block; /* to align center */
+	}
+	#dlg1, #dlg2 {
+		width: 300px;
+		padding: 0;
+	}
+	span.dlgBtn {
+		padding: 0;
+		width: 130px;
+	}
+	.subtitle {
+		color: #00e7e6;
+		font-size: 12px;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="dlg1" data-dojo-type="dojox.mobile.SimpleDialog">
+		<div style="text-align:left;margin:6px">
+			<img src="images/tab-icon-19.png" style="vertical-align:middle">
+			<span id="msg1"></span>
+		</div>
+		<div id="picker1" data-dojo-type="dojox.mobile.ValuePickerDatePicker" data-dojo-props="onValueChanged:onValueChanged1"></div>
+		<div style="background-color:#bdbabd;margin-top:6px;">
+			<span data-dojo-type="dojox.mobile.ToolBarButton" class="dlgBtn" onclick="setDate()">Set</span>
+			<span data-dojo-type="dojox.mobile.ToolBarButton" class="dlgBtn" onclick="cancel('dlg1')">Cancel</span>
+		</div>
+	</div>
+
+	<div id="dlg2" data-dojo-type="dojox.mobile.SimpleDialog">
+		<div style="text-align:left;margin:6px">
+			<img src="images/tab-icon-19.png" style="vertical-align:middle">
+			<span id="msg2"></span>
+		</div>
+		<div id="picker2" data-dojo-type="dojox.mobile.ValuePickerTimePicker" data-dojo-props="is24h:true,onValueChanged:onValueChanged2"></div>
+		<div style="background-color:#bdbabd;margin-top:6px;">
+			<span data-dojo-type="dojox.mobile.ToolBarButton" class="dlgBtn" onclick="setTime()">Set</span>
+			<span data-dojo-type="dojox.mobile.ToolBarButton" class="dlgBtn" onclick="cancel('dlg2')">Cancel</span>
+		</div>
+	</div>
+
+	<div id="view" data-dojo-type="dojox.mobile.View">
+		<ul data-dojo-type="dojox.mobile.EdgeToEdgeList" data-dojo-props='variableHeight:true'>
+			<li data-dojo-type="dojox.mobile.ListItem"
+				data-dojo-props='clickable:true,noArrow:true,onClick:function(){show("dlg1")}'>
+				Set date
+				<div id="dateMsg" class="subtitle">2012/02/23</div>
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem"
+				data-dojo-props='clickable:true,noArrow:true,onClick:function(){show("dlg2")}'>
+				Set time
+				<div id="timeMsg" class="subtitle">22:34</div>
+			</li>
+			<li id="item1" data-dojo-type="dojox.mobile.ListItem"
+				data-dojo-props='clickable:true,noArrow:true,rightIcon:"mblDomButtonCheckboxOn",onClick:function(){use24h()}'>
+				Use 24-hour format
+				<div id="use24hMsg" class="subtitle">13:00</div>
+			</li>
+		</ul>
+	</div>
+</body>
+</html>

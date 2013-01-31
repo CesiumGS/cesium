@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Tree_v1 Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_Tree_v1.html');
+
+				doh.register("_setup", [
+					{
+						name: "wait for widgets to load",
+						timeout: 10000,
+						runTest: waitForLoad
+					},
+					function setVars(){
+						registry = dojo.global.require("dijit/registry");
+					}
+				]);
+							
+				doh.register("Test tree 1", [
+					{
+						name: "expand first child",
+						timeout: 7000,
+						runTest: function(){
+							var d = new doh.Deferred();
+														
+							var myTree = registry.byId("mytree");
+							var children = myTree.rootNode.getChildren();
+								
+							doh.robot.mouseMoveAt(children[0].contentNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(children[4].contentNode, 1000, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(children[0].isExpanded, "failed to expand africa child node");
+								doh.t(children[4].isExpanded, "failed to expand north america child node");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "click Africa's first child",
+						timeout: 7000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var myTree = registry.byId("mytree");
+							var rootChildren = myTree.rootNode.getChildren();
+							var africaChildren = rootChildren[0].getChildren();
+							var naChildren = rootChildren[4].getChildren();
+							doh.robot.mouseMoveAt(naChildren[0].contentNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							doh.robot.mouseMoveAt(africaChildren[0].contentNode, 1000, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Egypt was clicked", africaChildren[0].labelNode.innerHTML);
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "click Mexico's first child",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var myTree = registry.byId("mytree");
+							var rootChildren = myTree.rootNode.getChildren();
+							var naChildren = rootChildren[4].getChildren();
+							var mexicoChildren = naChildren[0].getChildren();
+							
+							doh.robot.mouseMoveAt(mexicoChildren[0].contentNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Mexico City was clicked", mexicoChildren[0].labelNode.innerHTML);
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "close tree nodes",
+						timeout: 7000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var myTree = registry.byId("mytree");
+							var rootChildren = myTree.rootNode.getChildren();
+							var naChildren = rootChildren[4].getChildren();
+							
+							doh.robot.mouseMoveAt(naChildren[0].contentNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							doh.robot.mouseMoveAt(rootChildren[4].contentNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							doh.robot.mouseMoveAt(rootChildren[0].contentNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(naChildren[0].isExpanded, "failed to close Mexico child node");
+								doh.f(rootChildren[0].isExpanded, "failed to close Africa child node");
+								doh.f(rootChildren[4].isExpanded, "failed to close North America child node");
+							}), 500);
+							return d;
+						}
+					},
+					{
+						name: "Destroy tree",
+						timeout: 4000,
+						runTest: function(){
+							registry.byId("mytree").destroy();
+
+							doh.is(undefined, registry.byId("mytree"), "tree was not destroyed");
+							doh.is(undefined, dojo.byId("mytree"), 'widget was removed');
+						}
+					}
+				]);
+				
+				doh.register("Test tree 2", [
+					{
+						name: "expand first node",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var myTree = registry.byId("tree2");
+							var children = myTree.rootNode.getChildren();
+							
+							var ex = children[0].expandoNode;
+							doh.robot.mouseMoveAt(children[0].expandoNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(isVisible(myTree.rootNode.labelNode), "root node is visible");
+								doh.t(children[0].isExpanded, "failed to expand first node");
+								
+								var style = dojo.getComputedStyle(children[0].iconNode);
+								doh.t(style.backgroundImage.indexOf("folderIcons.")>0, "custom icon was not used");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "click Africa",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var myTree = registry.byId("tree2");
+							var rootChildren = myTree.rootNode.getChildren();
+														
+							doh.robot.mouseMoveAt(rootChildren[0].contentNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Africa (population: 900 million)", rootChildren[0].labelNode.innerHTML);
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+				
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

@@ -159,6 +159,13 @@ define([
          */
         dayImageUrl : undefined,
         /**
+         * The base URL for the sky box.
+         *
+         * @type {String}
+         * @memberof CesiumViewerWidget.prototype
+         */
+        skyBoxBaseUrl : undefined,
+        /**
          * Determines if a sky box with stars is drawn around the globe.  This is read-only after construction.
          *
          * @type {Boolean}
@@ -642,6 +649,7 @@ define([
 
             var imageryUrl = require.toUrl('../../Assets/Textures/');
             this.dayImageUrl = defaultValue(this.dayImageUrl, imageryUrl + 'NE2_LR_LC_SR_W_DR_2048.jpg');
+            this.skyBoxBaseUrl = defaultValue(this.skyBoxBaseUrl, imageryUrl + 'SkyBox/tycho2t3_80');
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
 
@@ -653,12 +661,12 @@ define([
 
             if (this.showSkyBox) {
                 scene.skyBox = new SkyBox({
-                    positiveX: imageryUrl + 'SkyBox/tycho8_px_80.jpg',
-                    negativeX: imageryUrl + 'SkyBox/tycho8_mx_80.jpg',
-                    positiveY: imageryUrl + 'SkyBox/tycho8_py_80.jpg',
-                    negativeY: imageryUrl + 'SkyBox/tycho8_my_80.jpg',
-                    positiveZ: imageryUrl + 'SkyBox/tycho8_pz_80.jpg',
-                    negativeZ: imageryUrl + 'SkyBox/tycho8_mz_80.jpg'
+                    positiveX: this.skyBoxBaseUrl + '_px.jpg',
+                    negativeX: this.skyBoxBaseUrl + '_mx.jpg',
+                    positiveY: this.skyBoxBaseUrl + '_py.jpg',
+                    negativeY: this.skyBoxBaseUrl + '_my.jpg',
+                    positiveZ: this.skyBoxBaseUrl + '_pz.jpg',
+                    negativeZ: this.skyBoxBaseUrl + '_mz.jpg'
                 });
             }
 
@@ -1011,10 +1019,9 @@ define([
          * Initialize the current frame.
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
-        initializeFrame : function(currentTime) {
-            this.scene.initializeFrame(currentTime);
+        initializeFrame : function() {
+            this.scene.initializeFrame();
         },
 
         /**
@@ -1042,9 +1049,10 @@ define([
          * Render the widget's scene.
          * @function
          * @memberof CesiumViewerWidget.prototype
+         * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
-        render : function() {
-            this.scene.render();
+        render : function(currentTime) {
+            this.scene.render(currentTime);
         },
 
         _setLoading : function(isLoading) {
@@ -1117,9 +1125,9 @@ define([
          * var animationController = widget.animationController;
          * function updateAndRender() {
          *     var currentTime = animationController.update();
-         *     widget.initializeFrame(currentTime);
+         *     widget.initializeFrame();
          *     widget.update(currentTime);
-         *     widget.render();
+         *     widget.render(currentTime);
          *     requestAnimationFrame(updateAndRender);
          * }
          * requestAnimationFrame(updateAndRender);
@@ -1130,12 +1138,12 @@ define([
          *
          * function updateAndRender() {
          *     var currentTime = animationController.update();
-         *     widget1.initializeFrame(currentTime);
-         *     widget2.initializeFrame(currentTime);
+         *     widget1.initializeFrame();
+         *     widget2.initializeFrame();
          *     widget1.update(currentTime);
          *     widget2.update(currentTime);
-         *     widget1.render();
-         *     widget2.render();
+         *     widget1.render(currentTime);
+         *     widget2.render(currentTime);
          *     requestAnimationFrame(updateAndRender);
          * }
          * requestAnimationFrame(updateAndRender);
@@ -1146,12 +1154,12 @@ define([
          * function updateAndRender() {
          *     var time1 = widget1.animationController.update();
          *     var time2 = widget2.animationController.update();
-         *     widget1.initializeFrame(time1);
-         *     widget2.initializeFrame(time2);
+         *     widget1.initializeFrame();
+         *     widget2.initializeFrame();
          *     widget1.update(time1);
          *     widget2.update(time2);
-         *     widget1.render();
-         *     widget2.render();
+         *     widget1.render(time1);
+         *     widget2.render(time2);
          *     requestAnimationFrame(updateAndRender);
          * }
          * requestAnimationFrame(updateAndRender);
@@ -1162,9 +1170,9 @@ define([
 
             function updateAndRender() {
                 var currentTime = animationController.update();
-                widget.initializeFrame(currentTime);
+                widget.initializeFrame();
                 widget.update(currentTime);
-                widget.render();
+                widget.render(currentTime);
                 requestAnimationFrame(updateAndRender);
             }
 

@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Tooltip Mouse Quirks Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<!-- functions to help test -->
+		<!-- script type="text/javascript" src="../helpers.js"></script -->
+
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("dijit.robotx");
+			dojo.require("dojox.mobile");
+			dojo.require("dojox.mobile.IconContainer");
+	        dojo.require("doh.runner");
+
+			dojo.addOnLoad(function(){
+				doh.robot.initRobot("../test_ScrollableView-v-vh-af.html");
+
+				doh.register("dojox.mobile.ScrollableView mouse tests", [
+					{
+						name: "ScrollableView mouse tests",
+						timeout: 40000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("view1").domNode, 1000,100,100,150);
+							doh.robot.mousePress({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("view1").domNode, 1000,100,100,50);
+							doh.robot.mouseRelease({left: true}, 0,5000);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								var pos = dijit.registry.byId("view1").getPos();
+								doh.assertTrue(pos.y<0);
+							}), 500);
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

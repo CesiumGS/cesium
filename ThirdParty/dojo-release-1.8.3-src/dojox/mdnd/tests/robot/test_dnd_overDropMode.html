@@ -1,0 +1,136 @@
+<html>	
+	<head>
+		<title>OverDropMode</title>
+		
+		<script type="text/javascript" 
+			src="../../../../dojo/dojo.js" 
+			djConfig="isDebug: true">
+		</script>
+		
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");	
+			
+			dojo.addOnLoad(function(){
+				
+				doh.robot.initRobot('../functionalTests/test_dnd_overDropMode.html');
+				
+				doh.register("test_dnd_overDropMode", 
+					[
+						{
+							name: "horizontalMovement",
+							timeout:10000,
+							runTest: function(){
+
+								// Tries to drag and drop an item between 
+								// horizontal Dnd areas.
+
+								var d = new doh.Deferred();
+
+								var topLefArea = dojo.byId('topLeftArea');
+								var topRightArea = dojo.byId('topRightArea');
+
+								var itemA = dojo.query('#itemA > .dragHandle')[0];
+								
+								var sizeA = topLefArea.childNodes.length;
+	                			var sizeB = topRightArea.childNodes.length;
+	                			
+	                			doh.robot.mouseMoveAt(itemA,200);
+	                			doh.robot.mousePress({left:true}, 200);
+	                			doh.robot.mouseMoveAt(topRightArea,200);
+	                			doh.robot.mouseRelease({left:true}, 200);
+	                			
+	                			doh.robot.sequence(function(){
+	                				try{
+	                					doh.assertEqual(topRightArea.childNodes.length, sizeB + 1, 'Item should be drop on top right area.');
+	                					doh.assertEqual(topLefArea.childNodes.length, sizeA - 1, 'Item should be remove from top left area.');
+	                					d.callback(true);
+	                				}
+	                				catch(e){
+	                					d.errback(e);
+	                				}
+	               				}, 200);
+	               				return d;
+							}
+						},
+						{
+							name: "verticalMovement",
+							timeout:10000,
+							runTest: function(){
+
+								// Tries to drag and drop an item between 
+								// vertical Dnd areas.
+
+								var d = new doh.Deferred();
+
+								var topLefArea = dojo.byId('topLeftArea');
+								var bottomLeftArea = dojo.byId('bottomLeftArea');
+
+								var itemB = dojo.query('#itemB > .dragHandle')[0];
+								
+								var sizeA = bottomLeftArea.childNodes.length;
+	                			var sizeB = topLefArea.childNodes.length;
+	                			
+	                			doh.robot.mouseMoveAt(itemB,200);
+	                			doh.robot.mousePress({left:true}, 200);
+	                			doh.robot.mouseMoveAt(topLefArea,200);
+	                			doh.robot.mouseRelease({left:true}, 200);
+	                			
+	                			doh.robot.sequence(function(){
+	                				try{
+	                					doh.assertEqual(topLefArea.childNodes.length, sizeB + 1, "Item should be drop on top left area.");
+	                					doh.assertEqual(bottomLeftArea.childNodes.length, sizeA - 1, "Item should be remove from botton left area.");
+	                					d.callback(true);
+	                				}
+	                				catch(e){
+	                					d.errback(e);
+	                				}
+	               				}, 200);
+	               				return d;
+							}
+						},
+						{
+							name: "dropIndicator",
+							timeout:10000,
+							runTest: function(){
+							
+								// Checks if the the dropIndicator is displayed.
+							
+								var d = new doh.Deferred();
+
+								var topLefArea = dojo.byId('topLeftArea');
+								var topRightArea = dojo.byId('topRightArea');
+
+								var itemB = dojo.query('#itemB > .dragHandle')[0];
+								
+	                			var sizeA = topLefArea.childNodes.length;
+	                			var sizeB = topRightArea.childNodes.length;
+	                			
+	                			doh.robot.mouseMoveAt(itemB, 200);
+	                			doh.robot.mousePress({left:true}, 200);
+	                			doh.robot.mouseMoveAt(topRightArea, 200);
+	                			
+	    			 			doh.robot.sequence(function(){
+	    			 				try{
+	    			 					doh.assertEqual(topLefArea.childNodes.length, sizeA - 1, "Item should be remove from top left area.");
+	    								doh.assertEqual(topRightArea.childNodes.length, sizeB + 1, "An item should be add to top right area.");
+	    								doh.assertEqual(dojo.query('.dropIndicator').length, 1, "Item added should be a drop indicator.");
+	    								d.callback(true);
+	    							}
+	    							catch(e){
+	    								d.errback(e);
+	    							}
+	   								}, 
+	   							200);
+	    			 			doh.robot.mouseRelease({left:true}, 200);
+	               				return d;
+							}
+						}
+					]
+				);
+				doh.run();
+			});
+		</script>
+	</head>
+	<body>
+	</body>
+</html>

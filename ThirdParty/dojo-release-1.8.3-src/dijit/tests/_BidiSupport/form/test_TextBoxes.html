@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+
+<html >
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>TextBox with _BidiSupport</title>
+		
+		<style type="text/css">
+			@import "../../../../dijit/themes/tundra/tundra.css";
+			@import "../../../../dojo/resources/dojo.css";	
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			data-dojo-config="parseOnLoad: true, isDebug: true">
+		</script>		
+		
+		<script type="text/JavaScript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit.form.TextBox");
+			dojo.require("dijit._BidiSupport");
+			dojo.require("dojo.parser");
+		</script>
+		
+	</head>
+	<body class="tundra">
+		<label for="ltrTextBox" >
+			<b> I'm a LTR TexBox</b>
+		</label><br>
+		<input data-dojo-type="dijit/form/TextBox" id="ltrTextBox" data-dojo-props='name:"ltrTextBox", value:"", textDir:"ltr"'/>
+
+		<br>
+		<label for="rtlTextBox" >
+			<b>I'm a RTL TexBox </b>
+		</label><br>
+		<input data-dojo-type="dijit/form/TextBox" id="rtlTextBox" data-dojo-props='name:"rtlTextBox", value:"",textDir:"rtl"'/>
+		
+		<br>
+		<label for="contextualTextBox" >
+			<b> And I'm a suprising contextual TexBox!!! </b>
+		</label><br>
+		<input data-dojo-type="dijit/form/TextBox" id="contextualTextBox" data-dojo-props='name:"contextualTextBox", value:"",textDir:"auto"'/>
+
+		<br>
+		<br>
+
+		<label for="programmatic1">dijit.form.Textarea programmatically created with custom styling:</label><br>
+		<input id="programmatic1"/>
+		<label for="programmatic2">dijit.form.Textarea programmatically created with custom styling:</label><br>
+		<input id="programmatic2"/>
+		<label for="programmatic3">dijit.form.Textarea programmatically created with custom styling:</label><br>
+		<input id="programmatic3"/>
+
+		<input id="changeValue" type="button" onclick="programmaticTextBox1.set('value', '&#1506;&#1512;&#1498; &#1495;&#1491;&#1513;!');programmaticTextBox2.set('value', '&#1506;&#1512;&#1498; &#1495;&#1491;&#1513;!');programmaticTextBox3.set('value', '&#1506;&#1512;&#1498; &#1495;&#1491;&#1513;!');" value="change value"/>
+
+		<script type="text/javascript">
+			dojo.ready(function(){
+				programmaticTextBox1 = new dijit.form.TextBox({
+					id: "programmatic1",
+					name: "programmaticTextbox1",
+					textDir: "ltr",
+					value: "created programatically with custom border, padding, margin! textDir=auto!",
+					style: {border:"5px solid gray", padding:"11px", margin:"7px"}
+				}, "programmatic1");
+				
+				programmaticTextBox2 = new dijit.form.TextBox({
+					id: "programmatic2",
+					name: "programmaticTextbox2",
+					textDir: "rtl",
+					value: "created programatically with custom border, padding, margin! textDir=auto!",
+					style: {border:"5px solid gray", padding:"11px", margin:"7px"}
+				}, "programmatic2");
+
+				
+				programmaticTextBox3 = new dijit.form.TextBox({
+					id: "programmatic3",
+					name: "programmaticTextbox3",
+					textDir: "auto",
+					value: "created programatically with custom border, padding, margin! textDir=auto!",
+					style: {border:"5px solid gray", padding:"11px", margin:"7px"}
+				}, "programmatic3");
+
+			});
+		</script>
+	</body>
+</html>

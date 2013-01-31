@@ -1,0 +1,179 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>doh.robot DataGrid tests</title>
+
+	<style>
+		@import "../../../../util/doh/robot/robot.css";
+	</style>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
+		djConfig="isDebug: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.robotx");
+		dojo.require("dijit.tests.helpers");	// functions to help test
+
+		dojo.addOnLoad(function(){
+
+			doh.robot.initRobot('_DataGrid.html');
+
+			doh.register("dojo.data integration",
+			[
+				{
+					name: "user sort",
+					grid: null,
+					timeout:15000,
+					setUp: function(){
+						var params = new dojo.global.Object();
+						params.id = 'prog_grid_1';
+						params.structure = dojo.global.structure1;
+						params.store = dojo.global.structure1_store1;
+						params.query = { id: '*' };
+						this.grid = new dojo.global.dojox.grid.DataGrid(params,dojo.byId('prog_grid_1'));
+						this.grid.startup();
+					},
+					runTest: function(){
+						var d = new doh.Deferred();
+						var _this=this;
+						var initialFocus = dojo.byId('initialfocus');
+						initialFocus.focus();
+						// now move focus to ID header of prog grid
+						var tabCount = dojo.isIE? 2:(dojo.isFF?3:5);
+						for(var i=0; i<tabCount; i++){
+							doh.robot.keyPress(dojo.keys.TAB,500);
+						}
+						doh.robot.keyPress(dojo.keys.SPACE,500);
+						doh.robot.keyPress(dojo.keys.SPACE,500);
+						doh.robot.sequence(d.getTestCallback(function(){
+							var item=_this.grid.getItem(0);
+							doh.is(99,item.id,"first item should have had id==99 due to reverse sort");
+						}),7000);
+						return d;
+					},
+					tearDown: function(){
+						var node = dojo.create('div',{id:this.grid.domNode.id, rowSelector:"20px"});
+						dojo.style(node,{width: "100%",height:"100px"});
+						var parent = this.grid.domNode.parentNode;
+						this.grid.destroyRecursive();
+						parent.appendChild(node);
+						this.grid = null;
+					}
+				}
+			]);
+			doh.register("UI verification",[
+				{
+					name: "edit columns",
+					timeout:60000,
+					grid: null,
+					setUp:function(){
+						this.grid = dijit.byId('markup_grid_1');
+					},
+					runTest: function(){
+						// see also "edit reordered columns" test below
+						var d = new doh.Deferred();
+						var grid=this.grid;
+						var initialFocus = dojo.byId('initialfocus');
+						initialFocus.focus();
+						// now move focus to first ID cell of markup grid
+						var tabCount = dojo.isIE? 3:(dojo.isFF?4:6);
+						for(var i=0; i<tabCount; i++){
+							doh.robot.keyPress(dojo.keys.TAB,500);
+						}
+						// precondition: cells still arranged to id date priority mark status message amount amount
+						var editorids=[null,'dijit_form_DateTextBox_0','dijit_form_ComboBox_0','dijit_form_CheckBox_0',null,'dijit_Editor_0','dijit_form_CurrencyTextBox_0','dijit_form_HorizontalSlider_0'];
+						function nextTest(i){
+							if(i==editorids.length){
+								d.callback(true);
+								return;
+							}
+							if(!editorids[i]){
+								doh.robot.keyPress(dojo.keys.RIGHT_ARROW,500);
+								doh.robot.sequence(function(){
+									nextTest(i+1);
+								},500);
+								return;
+							}
+							doh.robot.sequence(function(){
+								var cells=dojo.query("td.dojoxGridCell",grid.views.views[1].scrollboxNode);
+								doh.robot.keyPress(dojo.keys.ENTER,500);
+								doh.robot.sequence(function(){
+									try{
+										// this better have opened the expected editor or something very bad happened
+										doh.isNot(undefined,dijit.byId(editorids[i]),"Editing the "+i+" field of the 1st row did not open the expected editor.");
+										doh.t(dijit.byId(editorids[i]).focused);
+										grid.edit.cancel();
+										doh.robot.keyPress(dojo.keys.RIGHT_ARROW,500);
+										doh.robot.sequence(function(){
+											nextTest(i+1);
+										},500);
+									}catch(e){
+										d.callback(e);
+									}
+								},2000);
+							},500);
+						}
+						nextTest(0);
+						return d;
+					},
+					tearDown:function(){
+						// done editing
+						
+						this.grid.edit.cancel();
+						this.grid = null;
+					}
+				}
+			]);
+			doh.register("Context Menu",[
+				{
+					name: "invoke context menu",
+					timeout:10000,
+					grid: null,
+					setUp:function(){
+						this.grid = dijit.byId('markup_grid_1');
+					},
+					runTest: function(){
+						
+						var d = new doh.Deferred();
+						var grid=this.grid;
+						var initialFocus = dojo.byId('initialfocus');
+						initialFocus.focus();
+						// now move focus to first header cell of markup grid
+						var tabCount = dojo.isIE? 2:(dojo.isFF?3:5);
+						for(var i=0; i<tabCount; i++){
+							doh.robot.keyPress(dojo.keys.TAB,500);
+						}
+						// move to Date Column Header
+						doh.robot.keyPress(dojo.keys.RIGHT_ARROW,500);
+							// open context menu via keyboard
+							if (dojo.isMac) {
+								doh.robot.keyPress(dojo.keys.SPACE, 500, {
+									ctrl: true
+								});
+							}else {
+								doh.robot.keyPress(dojo.keys.F10, 500, {
+									shift: true
+								});
+							}
+
+						doh.robot.sequence(d.getTestCallback(function(){
+							var menu = dijit.byId("gridMenu"); 
+							doh.t(isVisible(menu), "menu is now shown");
+							doh.robot.keyPress(dojo.keys.ESCAPE,0, {}, true); // close context menu
+						}), 1500);
+						
+						return d;
+
+					},
+					tearDown:function(){
+						this.grid = null;
+					}
+				}
+			]);
+			doh.run();
+		});
+	</script>
+</head>
+</html>

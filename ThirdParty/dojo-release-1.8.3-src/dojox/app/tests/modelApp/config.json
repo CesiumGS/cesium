@@ -1,0 +1,123 @@
+{
+	"id": "modelApp",
+	"name": "Model App",
+	"description": "A modelApp",
+	"splash": "splash",
+
+	"dependencies": [
+		"dojox/mobile/_base",
+		"dojox/mobile/compat",
+		"dojox/mobile/TabBar",
+		"dojox/mobile/RoundRect",
+		"dojox/mobile/TabBarButton",
+		"dojox/mobile/Button",
+		"dojox/mobile/RoundRect",
+		"dojox/mobile/Heading",
+		"dojo/store/Memory",
+		"dojox/mvc/Group",
+        "dojox/mvc/Repeat",
+        "dojox/mvc/Output",
+		"dojox/mobile/deviceTheme"
+	],
+	// Modules for the application.  The are basically used as the second
+	// array of mixins in a dojo.declare().  Modify the top level behavior
+	// of the application, how it processes the config or any other life cycle
+	// by creating and including one or more of these
+	"modules": [
+		//"dojox/app/module/env",
+		//"dojox/app/module/lifecycle"
+	],
+	
+	// If noAutoLoadControllers is set to true a Load, Transition, and Layout controller 
+	// should be included in the list of controllers.  
+	// If noAutoLoadControllers is set to false (or not set) the default Load, Transition, and Layout  
+	// controllers will be added automatically.  
+	"noAutoLoadControllers" : false,  
+
+	"controllers": [
+		"dojox/app/controllers/History"
+	],
+
+	//stores we are using 
+	"stores": {
+	   "namesStore":{
+	       "type": "dojo/store/Memory",
+		   "params": {
+		      "data": "modelApp.names"
+		   }
+	   },
+       "repeatStore":{
+           "type": "dojo/store/Memory",
+           "params": {
+                "data": "modelApp.repeatData"
+           }
+       }
+	},
+
+	//models and instantiation parameters for the models. Including 'type' as a property allows
+	//one to overide the class that will be used for the model.  By default it is dojox/mvc/model
+	"models": {
+       "repeatmodels": {
+					"modelLoader": "dojox/app/utils/mvcModel",
+					"type": "dojox/mvc/EditStoreRefListController",
+					"params":{
+						"store": {"$ref":"#stores.repeatStore"}
+					}
+		}
+	}, 
+
+	//the name of the scene to load when the app is initialized.
+	"defaultView": "home", 
+	"defaultParameters": {"cursor":"0"}, 
+
+	"defaultTransition": "slide",
+	//scenes are groups of views and models loaded at once	
+	"views": {
+
+		"home": { 
+			"definition" : "none",
+			"dependencies":["dojox/mobile/ListItem","dojox/mobile/RoundRectList","dojox/mobile/RoundRectCategory","dojox/mobile/Heading"],
+			"template": "./templates/main.html"
+		},
+
+		//repeat scene, include list view and date view
+		"repeat": {
+			"defaultView": "repeatList",
+			"defaultTransition": "slide",
+			"definition": "none",
+
+			"views": {
+				"repeatList":{
+					"definition" : "./views/repeat.js",
+					"template": "./templates/repeat.html",
+					"dependencies":["dojox/mobile/TextBox"]
+				},
+				"repeatDetails":{
+					"definition" : "./views/repeatDetails.js",
+					"template": "./templates/repeatDetails.html",
+					"dependencies":["dojox/mobile/TextBox"]
+				}
+			}
+		},
+
+		"simple":{
+            "models": {
+				"names": {
+					"modelLoader": "dojox/app/utils/mvcModel",
+					"type": "dojox/mvc/EditStoreRefListController",
+					"params":{
+						"store": {"$ref":"#stores.namesStore"}
+					}	       
+				}
+			},
+			"definition" : "./views/simple.js",
+			"template": "./templates/simple.html",
+			"dependencies":["dojox/mobile/TextBox"]
+		},
+
+		"generate": {
+            "template": "./templates/generate.html",
+            "dependencies":["dojox/mobile/TextBox", "dojox/mobile/TextArea", "dojox/mvc/Generate"]
+		}
+	}	
+}
