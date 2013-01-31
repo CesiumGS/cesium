@@ -740,6 +740,9 @@ define([
         } while (Date.now() < endTime && typeof tile !== 'undefined');
     }
 
+    var southeastScratch = new Cartesian3(0.0, 0.0, 0.0);
+    var northwestScratch = new Cartesian3(0.0, 0.0, 0.0);
+
     function prepareNewTile(surface, terrainProvider, tile) {
         tile.loadedTerrain = new TileTerrain();
         tile.upsampledTerrain = new TileTerrain();
@@ -755,19 +758,17 @@ define([
 
         var ellipsoid = tile.tilingScheme.getEllipsoid();
 
-        // TODO: copy into these fields on the tile instead of clobbering them.
-
         // Compute tile extent boundaries for estimating the distance to the tile.
         var extent = tile.extent;
-        tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
-        tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast());
-        tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNortheast());
-        tile.northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest());
+        ellipsoid.cartographicToCartesian(extent.getSouthwest(), tile.southwestCornerCartesian);
+        var southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast(), southeastScratch);
+        ellipsoid.cartographicToCartesian(extent.getNortheast(), tile.northeastCornerCartesian);
+        var northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest(), northwestScratch);
 
-        tile.westNormal = Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(cartesian3Scratch), cartesian3Scratch).normalize();
-        tile.eastNormal = tile.northeastCornerCartesian.negate(cartesian3Scratch).cross(Cartesian3.UNIT_Z, cartesian3Scratch).normalize();
-        tile.southNormal = ellipsoid.geodeticSurfaceNormal(tile.southeastCornerCartesian).cross(tile.southwestCornerCartesian.subtract(tile.southeastCornerCartesian, cartesian3Scratch)).normalize();
-        tile.northNormal = ellipsoid.geodeticSurfaceNormal(tile.northwestCornerCartesian).cross(tile.northeastCornerCartesian.subtract(tile.northwestCornerCartesian, cartesian3Scratch)).normalize();
+        Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(cartesian3Scratch), cartesian3Scratch).normalize(tile.westNormal);
+        tile.northeastCornerCartesian.negate(cartesian3Scratch).cross(Cartesian3.UNIT_Z, cartesian3Scratch).normalize(tile.eastNormal);
+        ellipsoid.geodeticSurfaceNormal(southeastCornerCartesian, cartesian3Scratch).cross(tile.southwestCornerCartesian.subtract(southeastCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(tile.southNormal);
+        ellipsoid.geodeticSurfaceNormal(northwestCornerCartesian, cartesian3Scratch).cross(tile.northeastCornerCartesian.subtract(northwestCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(tile.northNormal);
     }
 
     function processTerrainStateMachine(surface, context, terrainProvider, tile) {
@@ -957,6 +958,7 @@ define([
     }
 
     var cartesian3Scratch = new Cartesian3(0.0, 0.0, 0.0);
+    var cartesian3Scratch2 = new Cartesian3(0.0, 0.0, 0.0);
 
     function createTileTerrainResources(surface, context, terrainProvider, tile, tileTerrain) {
         var mesh = tileTerrain.mesh;
@@ -999,24 +1001,27 @@ define([
             for (var childIndex = 0; childIndex < 4; ++childIndex) {
                 var childTile = tile.children[childIndex];
                 if (childTile.state !== TileState.START) {
-                    if (childTile.terrainData !== 'undefined' && childTile.terrainData.createByUpsampling) {
+                    if (childTile.terrainData !== 'undefined' && !childTile.terrainData.createdByUpsampling) {
                         // Data for the child tile has already been loaded.
                         continue;
                     }
 
-                    if (isDataAvailable(childTile)) {
+                    if (terrainData.isChildAvailable(tile.x, tile.y, childTile.x, childTile.y)) {
                         // Data is available for the child now.  It might have been before, too.
                         if (typeof childTile.loadedTerrain === 'undefined') {
                             // No load process is in progress, so start one.
                             childTile.loadedTerrain = new TileTerrain();
+                            childTile.state = TileState.LOADING;
                         } else if (childTile.loadedTerrain.state === TerrainState.NOT_AVAILABLE) {
                             // The load process has concluded terrain data is not available,
                             // which is not true.  Reboot the load process.
                             childTile.loadedTerrain.state = TerrainState.UNLOADED;
+                            childTile.state = TileState.LOADING;
                         }
                     } else {
                         // Restart the upsampling process, no matter its current state.
                         childTile.upsampledTerrain = new TileTerrain();
+                        childTile.state = TileState.LOADING;
                     }
                 }
             }
