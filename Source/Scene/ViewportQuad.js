@@ -44,8 +44,8 @@ define([
      * @param {BoundingRectangle} rectangle The BoundingRectangle defining the quad's position within the viewport.
      *
      * @example
-     * var boundingRectangle = new BoundingRectangle(0, 0, 80, 40);
-     * var viewportQuad = new ViewportQuad(boundingRectangle);
+     * var viewportQuad = new ViewportQuad();
+     * var viewportQuad = new BoundingRectangle(0, 0, 80, 40);
      * viewportQuad.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
      */
     var ViewportQuad = function(rectangle) {
@@ -56,7 +56,16 @@ define([
         this._commandLists = new CommandLists();
         this._commandLists.overlayList.push(this._overlayCommand);
 
-        this._rectangle = BoundingRectangle.clone(rectangle);
+
+        /**
+         * The BoundingRectangle defining the quad's position within the viewport.
+         *
+         * @type BoundingRectangle
+         *
+         * @example
+         * viewportQuad.rectangle = new BoundingRectangle(0, 0, 80, 40);
+         */
+        this.rectangle = new BoundingRectangle(0, 0, 10, 10);
 
 
         /**
@@ -70,49 +79,16 @@ define([
          *
          * @example
          * // 1. Change the color of the default material to yellow
-         * polygon.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+         * viewportQuad.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * polygon.material = Material.fromType(scene.getContext(), Material.StripeType);
+         * viewportQuad.material = Material.fromType(scene.getContext(), Material.StripeType);
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
         this.material = Material.fromType(undefined, Material.ColorType);
         this.material.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
         this._material = undefined;
-    };
-
-    /**
-     * Get the location of the quad within the viewport.
-     *
-     * @memberof ViewportQuad
-     *
-     * @see Polygon#setRectangle
-     *
-     * @return {BoundingRectangle} The quad's position within the viewport.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    ViewportQuad.prototype.getRectangle = function() {
-        return this._rectangle;
-    };
-
-
-    /**
-     * Sets the location of the quad within the viewport.
-     *
-     * @see Polygon#getRectangle
-     *
-     * @param {BoundingRectangle} value The BoundingRectangle defining the quad's position within the viewport.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @example
-     * var boundingRectangle = new BoundingRectangle(0, 0, 80, 40);
-     * viewportQuad.setRectangle(boundingRectangle);
-     */
-    ViewportQuad.prototype.setRectangle = function(value) {
-        BoundingRectangle.clone(value, this._rectangle);
     };
 
     var attributeIndices = {
@@ -197,6 +173,10 @@ define([
             throw new DeveloperError('this.material must be defined.');
         }
 
+        if (typeof this.rectangle === 'undefined') {
+            throw new DeveloperError('this.rectangle must be defined.');
+        }
+
         if (typeof this._va === 'undefined') {
             this._va = getVertexArray(context);
             this._overlayCommand.vertexArray = this._va.vertexArray;
@@ -223,7 +203,7 @@ define([
                 this._overlayCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fsSource, attributeIndices);
             }
 
-            this._overlayCommand.renderState.viewport = this._rectangle;
+            this._overlayCommand.renderState.viewport = this.rectangle;
             this._overlayCommand.uniformMap = this._material._uniforms;
             commandList.push(this._commandLists);
         }

@@ -751,9 +751,10 @@ define([
             var height = logoData.totalLogoHeight;
             var logoRectangle = new BoundingRectangle(centralBody.logoOffset.x, centralBody.logoOffset.y, width, height);
             if (typeof centralBody._logoQuad === 'undefined') {
-                centralBody._logoQuad = new ViewportQuad(logoRectangle);
+                centralBody._logoQuad = new ViewportQuad();
+                centralBody._logoQuad.rectangle = BoundingRectangle.clone(logoRectangle);
             } else {
-                centralBody._logoQuad.setRectangle(logoRectangle);
+                centralBody._logoQuad.rectangle = BoundingRectangle.clone(logoRectangle);
             }
 
             var texture = centralBody._logoQuad.material.uniforms.image;

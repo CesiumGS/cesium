@@ -1,6 +1,5 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Material',
          'Scene/ViewportQuad',
          'Specs/createContext',
          'Specs/destroyContext',
@@ -11,9 +10,9 @@ defineSuite([
          'Specs/render',
          'Core/BoundingRectangle',
          'Core/Cartesian3',
-         'Core/Color'
+         'Core/Color',
+         'Scene/Material'
      ], function(
-         Material,
          ViewportQuad,
          createContext,
          destroyContext,
@@ -24,7 +23,8 @@ defineSuite([
          render,
          BoundingRectangle,
          Cartesian3,
-         Color) {
+         Color,
+         Material) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -45,8 +45,8 @@ defineSuite([
     });
 
     beforeEach(function() {
-        var boundRectangle = new BoundingRectangle(0, 0, 2, 2);
-        viewportQuad = new ViewportQuad(boundRectangle);
+        viewportQuad = new ViewportQuad();
+        viewportQuad.rectangle = new BoundingRectangle(0, 0, 2, 2);
 
         us = context.getUniformState();
         us.update(createFrameState(createCamera(context)));
@@ -57,21 +57,17 @@ defineSuite([
         us = undefined;
     });
 
-    it('gets constructor set rectangle', function() {
-        var boundRectangle = new BoundingRectangle(0, 0, 2, 2);
-        expect(viewportQuad.getRectangle()).toEqual(boundRectangle);
-    });
-
-    it('sets rectangle', function() {
-        var boundRectangle = new BoundingRectangle(22, 22, 22, 22);
-
-        viewportQuad.setRectangle(boundRectangle);
-        expect(viewportQuad.getRectangle()).toEqual(boundRectangle);
-    });
-
     it('gets the default color', function() {
         expect(viewportQuad.material.uniforms.color).toEqual(
             new Color(1.0, 1.0, 1.0, 1.0));
+    });
+
+    it('throws when rendered with without a rectangle', function() {
+        viewportQuad.rectangle = undefined;
+
+        expect(function() {
+            render(context, frameState, viewportQuad);
+        }).not.toThrow();
     });
 
     it('throws when rendered with without a material', function() {
