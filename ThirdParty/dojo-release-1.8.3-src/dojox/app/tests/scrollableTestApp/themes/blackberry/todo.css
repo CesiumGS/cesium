@@ -1,0 +1,21 @@
+/* dojox.mobile.TextArea */
+.mblTextArea {
+  font-size: 18px;
+
+  padding-top: 16px;
+  padding-bottom: 16px;
+  padding-left: 7px;
+  
+  border: 1px solid #c6c7c6;
+  border-radius: 6px;
+  background-color: white;
+}
+/* dojox.mobile.ExpandingTextArea */
+.mblExpandingTextArea {
+  margin: 0px;
+}
+button.baseBtn {
+  font-size: 18px;
+  height: 48px;
+  margin-bottom: 8px;
+}

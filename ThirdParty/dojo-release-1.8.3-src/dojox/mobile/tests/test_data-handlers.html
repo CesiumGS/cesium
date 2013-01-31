@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Data Handlers</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','Button','SpinWheel']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/window",
+			"dojo/_base/Deferred",
+			"dijit/registry",
+			"dojox/mobile/ViewController",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/Button"
+		], function(win, Deferred, registry, ViewController){
+			var vc = ViewController.getInstance();
+			onBtn1Clicked = function(e){
+				vc.openExternalView({url:"data/view1.html", transition:"slide"}, win.body());
+			};
+			onBtn2Clicked = function(e){
+				vc.openExternalView({url:"data/view2.html", noTransition:true}, win.body());
+			};
+			onBtn3Clicked = function(e){
+				vc.openExternalView({url:"data/view3.html", transition:"none"}, registry.byId("container").containerNode);
+			};
+			onBtn4Clicked = function(e){
+				vc.openExternalView({url:"data/view4.json", transition:"flip"}, registry.byId("container").containerNode);
+			};
+			onBtn5Clicked = function(e){
+				Deferred.when(vc.openExternalView({url:"data/view5.json", transition:"flip"}, win.body()), function(){
+					console.log("view5 is ready");
+				});
+			};
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="home" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">Data Handlers</h1>
+		<div>
+			Load HTML fragment as a child of body, and perform slide transition<br/>
+			<button id="btn1" data-dojo-type="dojox.mobile.Button" data-dojo-props='onClick:onBtn1Clicked'>Load view1</button>
+		</div>
+		<hr>
+		<div>
+			Load HTML fragment as a child of body, but do not perform transition<br/>
+			Note that this child is automatically hidden by ViewController,<br/>
+			so nothing will be shown.</br>
+			<button id="btn2" data-dojo-type="dojox.mobile.Button" data-dojo-props='onClick:onBtn2Clicked'>Load view2</button>
+		</div>
+		<hr>
+		<div>
+			Load HTML fragment as a child of "container" view, and perform transition without animation<br/>
+			<button id="btn3" data-dojo-type="dojox.mobile.Button" data-dojo-props='onClick:onBtn3Clicked'>Load view3</button>
+		</div>
+		<hr>
+		<div>
+			Load JSON as a child of "container" view, and perform flip transition<br/>
+			<button id="btn4" data-dojo-type="dojox.mobile.Button" data-dojo-props='onClick:onBtn4Clicked'>Load view4</button>
+		</div>
+		<hr>
+		<div>
+			Load JSON as a child of "container" view, and write a console message when the view is ready<br/>
+			<button id="btn5" data-dojo-type="dojox.mobile.Button" data-dojo-props='onClick:onBtn5Clicked'>Load view5</button>
+		</div>
+	</div>
+	<div id="container" data-dojo-type="dojox.mobile.View">
+	</div>
+</body>
+</html>

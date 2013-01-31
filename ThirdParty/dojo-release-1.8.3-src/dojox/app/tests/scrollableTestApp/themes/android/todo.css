@@ -1,0 +1,25 @@
+/* dojox.mobile.TextArea */
+.mblTextArea {
+  padding-left: 5px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  padding-right: 1px;
+
+  font-size: 21px;
+  color: white;
+
+  border: 1px solid #ADAAAD;
+  border-radius: 8px;
+  background-color: black;
+}
+div .navPane {
+	background-color: black !important;
+	border-right: 1px solid #ADAAAD !important;
+}
+button.baseBtn {
+  font-family: Helvetica;
+  font-size: 17px;
+  font-weight: bold;
+  height: 48px;
+  margin-bottom: 6px;
+}

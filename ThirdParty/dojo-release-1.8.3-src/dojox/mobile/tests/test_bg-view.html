@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Background image (View)</title>
+
+	<link href="../themes/common/domButtons/DomButtonRedBadge.css" rel="stylesheet"/>
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','IconContainer']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/IconContainer"
+		]);
+	</script>
+
+	<style>
+	html,body{
+		height: 100%;
+		overflow: hidden;
+	}
+	#home{
+		height: 100%;
+		background-image: url("images/Mountain.jpg");
+		background-size: cover;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="home" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">Home</h1>
+		<ul id="iconContainer" data-dojo-type="dojox.mobile.IconContainer" data-dojo-props='transition:"slide", single:true'>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app1", moveTo:"about", icon:"images/icon1.png", badge:"55"'></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app2", moveTo:"about", icon:"images/icon2.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app3", moveTo:"about", icon:"images/icon3.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app4", moveTo:"about", icon:"images/icon4.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app5", moveTo:"about", icon:"images/icon5.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app6", moveTo:"about", icon:"images/icon6.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app7", moveTo:"about", icon:"images/icon7.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app8", moveTo:"about", icon:"images/icon8.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app9", moveTo:"about", icon:"images/icon9.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app10", moveTo:"about", icon:"images/icon10.png"'></li>
+		</ul>
+	</div>
+	<div id="about" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"home"'>About</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">My Phone</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"AcmePhone"'>
+				Network
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"AcmePhone"'>
+				Line
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"1024"'>
+				Songs
+			</li>
+		</ul>
+	</div>
+</body>
+</html>

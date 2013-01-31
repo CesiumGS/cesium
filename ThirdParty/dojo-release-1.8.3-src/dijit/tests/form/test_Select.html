@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>dijit.form.Select test</title>
+
+		<!-- required: the default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+		<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro_rtl.css"/>
+
+		<style>
+			@import url(../../themes/claro/document.css);
+			@import url(../css/dijitTests.css);
+			.ark { text-decoration: underline; }
+			form {
+				margin:  10px 0px;
+				border:  solid gray 2px;
+			}
+			.area {
+				border: 1px solid gray;
+				padding: 2px;
+				display: inline;
+				white-space: nowrap;
+			}
+			h3 {
+				margin: 0;
+			}
+			body .customStyled .dijitSelect,
+			body .customStyled .dijitSelect .dijitButtonContents {
+				border-width: 2px;
+				border-color: blue;
+			}
+			body .customStyled .dijitSelect .dijitInputField {
+				padding: 5px;
+				font-family: Arial;
+				font-size: 150%;
+			}
+			.dj_a11y .dijitSelect,
+			.dj_a11y .dijitSelect .dijitButtonContents {
+				border-width: medium !important;
+			}
+			.dj_a11y .dijitSelect,
+			.dj_a11y .customStyled .dijitSelect,
+			.dj_a11y .dijitSelect *,
+			.dj_a11y .customStyled .dijitSelect * {
+				background-color: white !important;
+				background-image: none !important;
+				border-color: black !important;
+				color: black !important;
+			}
+		</style>
+	
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			data-dojo-config="isDebug: true, parseOnLoad: true"></script>
+	
+		<!-- only needed for alternate theme testing: -->
+		<script type="text/javascript" src="../_testCommon.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("doh.runner");
+			dojo.require("dojo.parser");
+			dojo.require("dijit.form.Select");
+			dojo.require("dijit.form.Button");
+			dojo.require("dijit.form.Form");
+			dojo.require("dojo.data.ItemFileWriteStore");	// for testing old API (remove for 2.0)
+			dojo.require("dojo.store.Memory");
+			dojo.require("dojo.store.Observable");
+			dojo.require("dijit.Dialog");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			var numOptions = 0;
+			var numChanges = 0;
+			var addNum = 10;
+
+			// Add test=true to the URL to run unit tests.
+			// Add testPerformance=true to the URL to run performance tests - note SLOW to run
+			var test = /mode=test/i.test(window.location.href),
+				testPerformance = /mode=benchmark/i.test(window.location.href);
+
+			// dojo.data (legacy) data stores
+			var data = {
+				identifier: "value",
+				label: "label",
+				items: [
+					{value: "AL", label: "Alabama"},
+					{value: "AK", label: "Alaska"},
+					{value: "AZ", label: "Arizona"},
+					{value: "AR", label: "Arkansas"},
+					{value: "CA", label: "California"},
+					{value: "CO", label: "Colorado"},
+					{value: "CT", label: "Connecticut"}
+				]
+			};
+			var data2 = {
+				identifier: "value",
+				label: "label",
+				items: [
+					{value: "DE", label: "Delaware"},
+					{value: "FL", label: "Florida"},
+					{value: "GA", label: "Georgia"},
+					{value: "HI", label: "Hawaii"},
+					{value: "ID", label: "Idaho"},
+					{value: "IL", label: "Illinois"},
+					{value: "IN", label: "Indiana"}
+				]
+			};
+
+			var readStore = new dojo.data.ItemFileReadStore({data:dojo.clone(data)});
+			var store2 = new dojo.data.ItemFileReadStore({data:dojo.clone(data2)});
+			var writeStore = new dojo.data.ItemFileWriteStore({data:dojo.clone(data)});
+
+			// dojo.store (new API) data stores
+			var vals = [
+				{value: "AL", label: "Alabama"},
+				{value: "AK", label: "Alaska"},
+				{value: "AZ", label: "Arizona"},
+				{value: "AR", label: "Arkansas"},
+				{value: "CA", label: "California"},
+				{value: "CO", label: "Colorado"},
+				{value: "CT", label: "Connecticut"}
+			];
+			var vals2 = [
+				{value: "DE", label: "Delaware"},
+				{value: "FL", label: "Florida"},
+				{value: "GA", label: "Georgia"},
+				{value: "HI", label: "Hawaii"},
+				{value: "ID", label: "Idaho"},
+				{value: "IL", label: "Illinois"},
+				{value: "IN", label: "Indiana"}
+			];
+			var memoryStore = new dojo.store.Memory({
+				idProperty: "value",
+				data: dojo.clone(vals)
+			});
+			var memoryStore2 = new dojo.store.Memory({
+				idProperty: "value",
+				data: dojo.clone(vals2)
+			});
+			var memoryStore3 = new dojo.store.Observable(new dojo.store.Memory({	// updates will reflect to select
+				idProperty: "value",
+				data: dojo.clone(vals)
+			}));
+
+			dojo.ready(function(){
+				dojo.connect(s1, "onChange", function(val){
+					console.log("First Select Changed to " + val);
+					numChanges++;
+				});
+
+				var programmatic = new dijit.form.Select({
+					options: [
+						{ label: 'foo', value: 'foo', selected: true },
+						{ label: 'bar', value: 'bar' }
+					],
+					"aria-label":"programmatic"
+				});
+				programmatic.placeAt('testProgramatic');
+
+				var programmaticDisabled = new dijit.form.Select({
+					disabled: true,
+					options: [
+						{ label: 'foo', value: 'foo', selected: true },
+						{ label: 'bar', value: 'bar' }
+					],
+					"aria-label":"programmatic disabled"
+				});
+				programmaticDisabled.placeAt('testProgramatic');
+
+				if(test){
+					doh.register("API", [
+						{
+							name: "test_set",
+							timeout: 5000,
+							runTest: function(t){
+								var d = new doh.Deferred();
+								t.is("VA", form.get("value").s1, "initial value");
+								s1.set("value", "WA"); // set s1 to a valid value
+								t.is("WA", s1.value);
+
+								setTimeout(function(){ try{ // allow onChange to fire
+
+									// set s1 to non-existing value, which (currently) makes the Select pick
+									// the first option in the drop down
+									s1.set("value", "UT");
+									t.is("TN", s1.value);
+
+									setTimeout(function(){ try{ // allow onChange to fire
+										t.is(2, numChanges);
+										
+										// prevent onChange from firing
+										s1.set("value", "FL", false);
+										
+										setTimeout(function(){ try{ // allow onChange to fire if it's wrong
+											t.is(2, numChanges);
+											d.callback(true);
+										}catch(e){ d.errback(e); }}, 0)
+									}catch(e){ d.errback(e); }}, 0);
+								}catch(e){ d.errback(e); }}, 0);
+								return d;
+							}
+						},
+						{
+							name: 'test_disabled',
+							runTest: function(t){
+								t.is(testDisabled.disabled, true);
+							}
+						},
+						{
+							name: 'test_programmatic',
+							runTest: function(t){
+								t.is(programmatic.options.length, 2);
+								t.is(programmaticDisabled.options.length, 2);
+								t.is(programmaticDisabled.disabled, true);
+							}
+						},
+						function test_setOptions(t){
+							programmatic.set('options', data2.items);
+							programmatic.reset();
+							t.is(7, programmatic.getOptions().length);
+							t.is("DE", programmatic.value);
+						},
+						// Test that destroying a Select destroys the internal Menu and MenuItems too
+						{
+							name: "test_destroy",
+							timeout: 5000,
+							runTest: function(t){
+								var oldCnt = dijit.registry.length;
+									
+								s1.destroy();
+
+								var newCnt = dijit.registry.length;
+								t.t(newCnt < oldCnt + 3, "should have destroyed many widgets, went from " + oldCnt + " to " + newCnt);
+							}
+						}
+					]);
+
+					// Test legacy dojo.data API, remove for 2.0
+					doh.register("dojo.data store", [
+						// Tests that when the currently selected item is changed in the data store,
+						// the change is reflected in the Select widget
+						function test_changeSelected(t){
+							t.is("AL", s11.value);
+							t.t(/<span.*>Alabama<\/span>/i.test(s11.containerNode.innerHTML));
+							s11.set("value", "AK");
+							t.is("AK", s11.value);
+							t.t(/<span.*>Alaska<\/span>/i.test(s11.containerNode.innerHTML));
+							var d = new doh.Deferred();
+							writeStore.fetchItemByIdentity({
+								identity: "AK",
+								onItem: d.getTestCallback(function(item){
+									writeStore.setValue(item, "label", "North Pole");
+									t.t(/<span.*>North Pole<\/span>/i.test(s11.containerNode.innerHTML), "select displayed value updated");
+								})
+							});
+							return d;
+						},
+
+						// Test that a delete of the non-selected item will remove that item from the Select's
+						// list of options.
+						function test_deleteNonSelected(t){
+							t.is(7, s11.getOptions().length);
+							t.is("AK", s11.value);
+							var d = new doh.Deferred();
+							writeStore.fetchItemByIdentity({
+								identity: "AZ",
+								onItem: d.getTestCallback(function(item){
+									writeStore.deleteItem(item);
+									t.is(6, s11.getOptions().length);
+								})
+							});
+							return d;
+						},
+
+						// Test that a delete of the selected item will remove that item from the Select's
+						// list of options, and switch to a new selected item
+						function test_deleteSelected(t){
+							t.is(6, s11.getOptions().length);
+							t.is("AK", s11.value);
+							var d = new doh.Deferred();
+							writeStore.fetchItemByIdentity({
+								identity: "AK",
+								onItem: d.getTestCallback(function(item){
+									writeStore.deleteItem(item);
+									t.is("AL", s11.value);
+									t.is(5, s11.getOptions().length);
+								})
+							});
+							return d;
+						},
+
+						// Test that new items added to the data store appear in the select's options
+						function test_newItem(t){
+							t.is(5, s11.getOptions().length);
+							t.is("AL", s11.value);	
+
+							var d = new doh.Deferred();
+							writeStore.newItem({value: "NY", label: "New York"});
+							setTimeout(d.getTestCallback(function(){
+									t.is(6, s11.getOptions().length);
+									s11.set("value", "NY");
+									t.is("NY", s11.value);
+							}), 100);
+
+							return d;
+						},
+
+						// Test that a Select's store can be changed
+						// TODO: should be supported/tested through set("store", ...), although
+						// I guess that wouldn't allow setting the selected item at the same time.
+						function test_setStore(t){
+							t.is("AL", s12.value);
+							s12.setStore(store2, "FL");
+							t.is("FL", s12.value);
+							s12.setStore(readStore, "CA");
+							t.is("CA", s12.value);
+							s12.setStore(store2);
+							t.is("DE", s12.value);
+							t.is(7, s12.getOptions().length);
+						}
+					]);
+
+					doh.register("dojo.store", [
+						// Tests that when the currently selected item is changed in the data store,
+						// the change is reflected in the Select widget
+						function test_changeSelected(t){
+							t.is("AL", ds11.value);
+							t.t(/<span.*>Alabama<\/span>/i.test(ds11.containerNode.innerHTML));
+							ds11.set("value", "AK");
+							t.is("AK", ds11.value);
+							t.t(/<span.*>Alaska<\/span>/i.test(ds11.containerNode.innerHTML));
+
+							var item = memoryStore3.get("AK");
+							item.label = "North Pole";
+							memoryStore3.put(item);
+							t.t(/<span.*>North Pole<\/span>/i.test(ds11.containerNode.innerHTML), "select displayed value updated");
+						},
+
+						// Test that a delete of the non-selected item will remove that item from the Select's
+						// list of options.
+						function test_deleteNonSelected(t){
+							t.is(7, ds11.getOptions().length);
+							t.is("AK", ds11.value);
+
+							memoryStore3.remove("AZ");
+							t.is(6, ds11.getOptions().length);
+						},
+
+						// Test that a delete of the selected item will remove that item from the Select's
+						// list of options, and switch to a new selected item
+						function test_deleteSelected(t){
+							t.is(6, ds11.getOptions().length);
+							t.is("AK", ds11.value);
+
+							memoryStore3.remove("AK");
+							t.is("AL", ds11.value);
+							t.is(5, ds11.getOptions().length);
+						},
+
+						// Test that new items added to the data store appear in the select's options
+						function test_newItem(t){
+							t.is(5, ds11.getOptions().length);
+							t.is("AL", ds11.value);	
+
+							memoryStore3.add({value: "NY", label: "New York"});
+
+							// TODO: try w/out the timeout
+							var d = new doh.Deferred();
+							setTimeout(d.getTestCallback(function(){
+									t.is(6, ds11.getOptions().length);
+									ds11.set("value", "NY");
+									t.is("NY", ds11.value);
+							}), 100);
+							return d;
+						},
+
+						// Test that a Select's store can be changed
+						// TODO: should be supported/tested through set("store", ...), although
+						// I guess that wouldn't allow setting the selected item at the same time.
+						function test_setStore(t){
+							t.is("AL", ds12.value);
+							ds12.setStore(memoryStore2, "FL");
+							t.is("FL", ds12.value);
+							ds12.setStore(memoryStore, "CA");
+							t.is("CA", ds12.value);
+							ds12.setStore(memoryStore2);
+							t.is("DE", ds12.value);
+							t.is(7, ds12.getOptions().length);
+						}
+					]);
+					
+					doh.register("validation", [
+						function required(){
+							var s3 = dijit.byId("s3");
+							doh.is("Incomplete", s3.get("state"), "incomplete because required but no value");
+
+							var stateWatch = "no notification";
+							s3.watch("state", function(name, oval, nval){
+								stateWatch = nval;
+							});
+
+							s3.set("required", false);
+							doh.is("", stateWatch, "watch fired after set requried=true");
+
+							s3.set("required", true);
+							doh.is("Incomplete", stateWatch, "watch fired after set required=false''");
+
+							s3.set("value", "AK");
+							doh.is("", stateWatch, "watch fired after set value=AK''");
+						}
+					]);
+					doh.register("validation in dialog1", [
+						function showDialog(){
+							// Show dialog, returning Deferred that fires when show dialog is finished.
+							// Before showing, focus the open button, so that Dialog knows where to return focus to.
+							dijit.byId("dlg1OpenBtn").focus();
+							return dijit.byId("dlg1").show();
+						},
+						function validateDialog(){
+							// Clicking validate button should show "required but empty" tooltip on the Select
+							var d = new doh.Deferred();
+							dijit.byId("dlg1ValidateBtn").focus();
+							dijit.byId("dlg1").validate();
+							setTimeout(d.getTestCallback(function(){
+								doh.is("dlg1Select", dijit._curFocus && dijit._curFocus.id, "focused on select");
+								masterTT = dojo.global.dijit._masterTT;
+								doh.t(masterTT && isVisible(masterTT.domNode), "tooltip shown");
+							}), 300);
+							return d;
+						},
+						function hideDialog(){
+							// Hiding the dialog should make the validation tooltip disappear
+							var d = new doh.Deferred();
+							dijit.byId("dlg1").hide().then(function(){
+								setTimeout(d.getTestCallback(function(){
+									doh.t(isHidden(masterTT.domNode), "tooltip hidden");
+								}), 300);
+							});
+							return d;
+						},
+						function showDialogAgain(){
+							// Show dialog, returning Deferred that fires when show dialog is finished.
+							// Before showing, focus the open button, so that Dialog knows where to return focus to.
+							dijit.byId("dlg1OpenBtn").focus();
+							return dijit.byId("dlg1").show();
+						},
+						function tooltipAppears(){
+							// Opening the dialog focuses the select, which is invalid since it's got no value.
+							// Since this is the second time it's being focused, it should popup the tooltip
+							// immediately.
+							var d = new doh.Deferred();
+							dijit.byId("dlg1ValidateBtn").focus();
+							dijit.byId("dlg1").validate();
+							setTimeout(d.getTestCallback(function(){
+								doh.is("dlg1Select", dijit._curFocus && dijit._curFocus.id, "focused on select");
+								masterTT = dojo.global.dijit._masterTT;
+								doh.t(masterTT && isVisible(masterTT.domNode), "tooltip shown");
+							}), 300);
+							return d;
+						},
+						function tearDown(){
+							return dijit.byId("dlg1").hide();
+						}
+					]);
+
+					doh.register("validation in dialog2", [
+						function showDialog(){
+							// Show dialog, returning Deferred that fires when show dialog is finished.
+							// Before showing, focus the open button, so that Dialog knows where to return focus to.
+							dijit.byId("dlg2OpenBtn").focus();
+							return dijit.byId("dlg2").show();
+						},
+						function validateDialog(){
+							// Clicking validate button should show "required but empty" tooltip on the Select
+							var d = new doh.Deferred();
+							dijit.byId("dlg2ValidateBtn").focus();
+							dijit.byId("dlg2").validate();
+							setTimeout(d.getTestCallback(function(){
+								doh.is("dlg2Select1", dijit._curFocus && dijit._curFocus.id, "focused on select");
+								masterTT = dojo.global.dijit._masterTT;
+								doh.t(masterTT && isVisible(masterTT.domNode), "tooltip shown");
+							}), 300);
+							return d;
+						},
+						function hideDialog(){
+							// Hiding the dialog should make the validation tooltip disappear
+							var d = new doh.Deferred();
+							dijit.byId("dlg2").hide().then(function(){
+								setTimeout(d.getTestCallback(function(){
+									doh.t(isHidden(masterTT.domNode), "tooltip hidden");
+								}), 300);
+							});
+							return d;
+						}
+					]);
+				}
+
+				if(testPerformance){			
+					doh.register("performance", [
+						{
+							name: "test_performance_single",
+							testType: "perf",
+							trialDuration: 100,
+							trialIterations: 100,
+							trialDelay: 100,
+							runTest: function(t){
+								var opt = {value: "Test", label: "Test Option"};
+								s6.addOption(opt);
+								s6.removeOption(opt);
+							}
+						},
+						{
+							name: "test_performance_separate",
+							testType: "perf",
+							trialDuration: 100,
+							trialIterations: 100,
+							trialDelay: 100,
+							setUp: function(t){
+								var opts = (t.options = []);
+								for(var i = 0; i < addNum; i++){
+									opts.push({value: i + "", label: "Option " + (i + 1)});
+								}
+							},
+							runTest: function(t){
+								dojo.forEach(t.options, function(opt){
+									s6.addOption(opt);
+								});
+								dojo.forEach(t.options, function(opt){
+									s6.removeOption(opt);
+								});
+							},
+							tearDown: function(t){
+								delete t.options;
+							}
+						},
+						{
+							name: "test_performance_batch",
+							testType: "perf",
+							trialDuration: 100,
+							trialIterations: 100,
+							trialDelay: 100,
+							setUp: function(t){
+								var opts = (t.options = []);
+								for(var i = 0; i < addNum; i++){
+									opts.push({value: i + "", label: "Option " + (i + 1)});
+								}
+							},
+							runTest: function(t){
+								s6.addOption(t.options);
+								s6.removeOption(t.options);
+							},
+							tearDown: function(t){
+								delete t.options;
+							}
+						}
+					]);
+				}
+
+				if(test || testPerformance){
+					doh.run();
+				}
+			});
+		</script>
+	</head>
+	<body class="claro" role="main">
+		<h1 class="testTitle">Test: dijit.form.Select</h1>
+
+		<p>
+			Note: load <a href="test_Select.html?mode=test">test_Select.html?mode=test</a> to run unit tests, or
+			<a href="test_Select.html?mode=benchmark">test_Select.html?mode=benchmark</a> to run performance tests.
+		</p>
+
+		<form method="get" id="htmlForm" action="get">
+			<h2>HTML select for comparison</h2>
+			<label for="htmlSelect">Four options:</label>
+			<select id="htmlSelect" title="native title">
+				<option value="one">one</option>
+				<option value="two">two</option>
+				<option value="three">three</option>
+				<option value="four">four</option>
+			</select>
+			<label for="htmlSelect2">Empty:</label>
+			<select id="htmlSelect2">
+			</select>
+		</form>
+		<form id="form" data-dojo-id="form" data-dojo-type="dijit/form/Form" method="get"
+				onSubmit="return this.validate();">
+			<h2>dijit.form.Select form</h2>
+			<h4 class="testSubtitle">Setting Defaults</h4>
+			<label for="s1">Test One: </label>
+			<select id="s1" data-dojo-id="s1" data-dojo-type="dijit/form/Select" data-dojo-props='name:"s1" '>
+				<option value="TN">Tennessee</option>
+				<option value="VA" selected="selected">Virginia</option>
+				<option value="WA">Washington</option>
+				<option value="FL">Florida</option>
+				<option value="CA">California</option>
+			</select>
+			<button id="s1button" data-dojo-type="dijit/form/Button" data-dojo-props='type:"button", onClick:function(){ console.log(s1.get("displayedValue")); }'>
+				Get Displayed Value
+			</button>
+			<label for="s2">Test Two: </label>
+			<select id="s2" data-dojo-id="s2" data-dojo-type="dijit/form/Select" data-dojo-props='name:"s2", value:"CA", title: "widget title" '>
+				<option value="AL">Alabama</option>
+				<option value="AK">Alaska</option>
+				<option value="AZ">Arizona</option>
+				<option value="AR">Arkansas</option>
+				<option value="CA">California</option>
+			</select>
+			<label for="s3">Test Three (required): </label>
+			<select id="s3" data-dojo-id="s3" data-dojo-type="dijit/form/Select" data-dojo-props='name:"s3", style:{width:"150px"},
+					required:true,
+					onChange: function(){
+						if(!this.options[0].value){
+							this.removeOption(0);
+						}
+					}
+				'>
+				<option>&nbsp;</option>
+				<option value="AL">Alabama</option>
+				<option value="AK">Alaska</option>
+				<option></option>
+				<option value="AZ">Arizona</option>
+				<option value="AR">Arkansas</option>
+				<option></option>
+				<option value="CA">California</option>
+			</select>
+		<hr>
+			<h4 class="testSubtitle">Rich Text (Need to use divs and spans - since browsers hack selects to pieces)</h4>
+			<label id="ls4">Rich text One:</label>
+			<span id="s4" data-dojo-id="s4" data-dojo-type="dijit/form/Select" data-dojo-props='name:"s4", value:"AK", "aria-labelledby":"ls4" '>
+				<span data-dojo-value="AL"><b>Alabama</b></span>
+				<span data-dojo-value="AK"><span style="color:red;">A</span><span style="color:orange;">l</span><span style="color:yellow;">a</span><span style="color:green;">s</span><span style="color:blue;">k</span><span style="color:purple;">a</span></span>
+				<span data-dojo-value="AZ"><i>Arizona</i></span>
+				<span data-dojo-value="AR"><span class="ark">Arkansas</span></span>
+				<span data-dojo-value="CA"><span style="font-size:25%">C</span><span style="font-size:50%">a</span><span style="font-size:75%">l</span><span style="font-size:90%">i</span><span style="font-size:100%">f</span><span style="font-size:125%">o</span><span style="font-size:133%">r</span><span style="font-size:150%">n</span><span style="font-size:175%">i</span><span style="font-size:200%">a</span></span>
+				<button value="NM" disabled="disabled">New<br>&nbsp;&nbsp;Mexico</button>
+			</span>
+			<button data-dojo-type="dijit/form/Button" data-dojo-props='type:"button", onClick:function(){ s4.set("disabled", !s4.get("disabled")); }'>
+				Toggle Disabled
+			</button>
+			<label for="s5">Rich text two: </label>
+			<span id="s5" data-dojo-id="s5" data-dojo-type="dijit/form/Select" data-dojo-props='name:"s5", value:"move"'>
+				<span data-dojo-value="copy"><img style="vertical-align: middle;margin-top: 1px;margin-bottom:1px;" src="../../../dijit/themes/tundra/images/dndCopy.png" alt="copy" /> Copy</span>
+				<span data-dojo-value="move"><img  style="vertical-align: middle;margin-top: 1px;margin-bottom:1px;" src="../../../dijit/themes/tundra/images/dndMove.png" alt="move" /> Move</span>
+				<span data-dojo-value="nocopy"><img  style="vertical-align: middle;margin-top: 1px;margin-bottom:1px;" src="../../../dijit/themes/tundra/images/dndNoCopy.png" alt="no copy" /> No Copy</span>
+				<span data-dojo-value="nomove"><img  style="vertical-align: middle;margin-top: 1px;margin-bottom:1px;" src="../../../dijit/themes/tundra/images/dndNoMove.png" alt="no move" /> No Move</span>
+				<span data-dojo-value="long"><img  style="vertical-align: middle;margin-top: 1px;margin-bottom:1px;" src="../../../dijit/themes/tundra/images/dndNoMove.png" alt="very long menu" /> Very Long Menu Entry</span>
+			</span>
+		<hr>
+			<h4 class="testSubtitle"><label for="s6">Initially Empty</label></h4>
+			<select id="s6" data-dojo-id="s6" data-dojo-type="dijit/form/Select" data-dojo-props='name:"s6", maxHeight:100 '>
+			</select>
+			<button data-dojo-type="dijit/form/Button" data-dojo-props='type:"button", onClick:function(){ numOptions++; s6.addOption({value: numOptions + "", label: "Option " + numOptions}); }'>
+				Add Option
+			</button>
+			<button data-dojo-type="dijit/form/Button" data-dojo-props='type:"button", onClick:function(){ s6.removeOption(0); }'>
+				Remove Top Option
+			</button>
+			<button data-dojo-type="dijit/form/Button" data-dojo-props='type:"button", onClick:function(){ s6.set("disabled", !s6.get("disabled")); }'>
+				Toggle Disabled
+			</button>
+			<hr>
+		<h4 class="testSubtitle"><label for="s7">Single Item</label></h4>
+			<select id="s7" data-dojo-id="s7" data-dojo-type="dijit/form/Select" data-dojo-props='name:"s7" '>
+				<option value="NY">New York</option>
+			</select>
+		<hr>
+		<h4 class="testSubtitle">Long lists</h4>
+			<label for="s8a">maxHeight=200:</label>
+			<select id="s8a" data-dojo-id="s8a" data-dojo-type="dijit/form/Select" data-dojo-props='name:"s8a", maxHeight:200 '>
+				<option value="AL">Alabama</option>
+				<option value="AK">Alaska</option>
+				<option value="AZ">Arizona</option>
+				<option value="AR">Arkansas</option>
+				<option value="CA">California</option>
+				<option value="CO">Colorado</option>
+				<option value="CT">Connecticut</option>
+				<option value="DE">Delaware</option>
+				<option value="DC">Dist of Columbia</option>
+				<option value="FL">Florida</option>
+				<option value="GA">Georgia</option>
+				<option value="HI">Hawaii</option>
+				<option value="ID">Idaho</option>
+				<option value="IL">Illinois</option>
+				<option value="IN">Indiana</option>
+				<option value="IA">Iowa</option>
+				<option value="KS">Kansas</option>
+				<option value="KY">Kentucky</option>
+				<option value="LA">Louisiana</option>
+				<option value="ME">Maine</option>
+				<option value="MD">Maryland</option>
+				<option value="MA">Massachusetts</option>
+				<option value="MI">Michigan</option>
+				<option value="MN">Minnesota</option>
+				<option value="MS">Mississippi</option>
+				<option value="MO">Missouri</option>
+				<option value="MT">Montana</option>
+				<option value="NE">Nebraska</option>
+				<option value="NV">Nevada</option>
+				<option value="NH">New Hampshire</option>
+				<option value="NJ">New Jersey</option>
+				<option value="NM">New Mexico</option>
+				<option value="NY">New York</option>
+				<option value="NC">North Carolina</option>
+				<option value="ND">North Dakota</option>
+				<option value="OH">Ohio</option>
+				<option value="OK">Oklahoma</option>
+				<option value="OR">Oregon</option>
+				<option value="PA">Pennsylvania</option>
+				<option value="RI">Rhode Island</option>
+				<option value="SC">South Carolina</option>
+				<option value="SD">South Dakota</option>
+				<option value="TN">Tennessee</option>
+				<option value="TX">Texas</option>
+				<option value="UT">Utah</option>
+				<option value="VT">Vermont</option>
+				<option value="VA">Virginia</option>
+				<option value="WA">Washington</option>
+				<option value="WV">West Virginia</option>
+				<option value="WI">Wisconsin</option>
+				<option value="WY">Wyoming</option>
+			</select>
+			<label for="s8b">no maxHeight:</label>
+			<select id="s8b" data-dojo-id="s8b" data-dojo-type="dijit/form/Select" data-dojo-props='name:"s8b" '>
+				<option value="AL">Alabama</option>
+				<option value="AK">Alaska</option>
+				<option value="AZ">Arizona</option>
+				<option value="AR">Arkansas</option>
+				<option value="CA">California</option>
+				<option value="CO">Colorado</option>
+				<option value="CT">Connecticut</option>
+				<option value="DE">Delaware</option>
+				<option value="DC">Dist of Columbia</option>
+				<option value="FL">Florida</option>
+				<option value="GA">Georgia</option>
+				<option value="HI">Hawaii</option>
+				<option value="ID">Idaho</option>
+				<option value="IL">Illinois</option>
+				<option value="IN">Indiana</option>
+				<option value="IA">Iowa</option>
+				<option value="KS">Kansas</option>
+				<option value="KY">Kentucky</option>
+				<option value="LA">Louisiana</option>
+				<option value="ME">Maine</option>
+				<option value="MD">Maryland</option>
+				<option value="MA">Massachusetts</option>
+				<option value="MI">Michigan</option>
+				<option value="MN">Minnesota</option>
+				<option value="MS">Mississippi</option>
+				<option value="MO">Missouri</option>
+				<option value="MT">Montana</option>
+				<option value="NE">Nebraska</option>
+				<option value="NV">Nevada</option>
+				<option value="NH">New Hampshire</option>
+				<option value="NJ">New Jersey</option>
+				<option value="NM">New Mexico</option>
+				<option value="NY">New York</option>
+				<option value="NC">North Carolina</option>
+				<option value="ND">North Dakota</option>
+				<option value="OH">Ohio</option>
+				<option value="OK">Oklahoma</option>
+				<option value="OR">Oregon</option>
+				<option value="PA">Pennsylvania</option>
+				<option value="RI">Rhode Island</option>
+				<option value="SC">South Carolina</option>
+				<option value="SD">South Dakota</option>
+				<option value="TN">Tennessee</option>
+				<option value="TX">Texas</option>
+				<option value="UT">Utah</option>
+				<option value="VT">Vermont</option>
+				<option value="VA">Virginia</option>
+				<option value="WA">Washington</option>
+				<option value="WV">West Virginia</option>
+				<option value="WI">Wisconsin</option>
+				<option value="WY">Wyoming</option>
+			</select>
+
+			<hr>
+			<h4 class="testSubtitle">dojo.data store (legacy API) based</h4>
+			<label for="s9">Example 1</label>
+			<select id="s9" data-dojo-id="s9" data-dojo-type="dijit/form/Select" data-dojo-props='name:"s9", store:readStore, value:"CT" '>
+			</select>
+			<label for="s10">Example 2</label>
+			<select id="s10" data-dojo-id="s10" data-dojo-type="dijit/form/Select" data-dojo-props='name:"s10", store:readStore '>
+			</select>
+			<label for="s11">Example 3</label>
+			<select id="s11" data-dojo-id="s11" data-dojo-type="dijit/form/Select" data-dojo-props='name:"s11", store:writeStore '>
+			</select>
+			<label for="s12">Example 4</label>
+			<select id="s12" data-dojo-id="s12" data-dojo-type="dijit/form/Select" data-dojo-props='name:"s12", store:readStore '>
+			</select>
+
+			<hr>
+			<h4 class="testSubtitle">dojo.store based</h4>
+			<label for="ds9">Example 1</label>
+			<select id="ds9" data-dojo-id="ds" data-dojo-type="dijit/form/Select"
+					data-dojo-props='name:"ds", store:memoryStore, value:"CT", labelAttr:"label" '>
+			</select>
+			<label for="ds10">Example 2</label>
+			<select id="ds10" data-dojo-id="ds10"
+					data-dojo-type="dijit/form/Select" data-dojo-props='name:"ds10", store:memoryStore, labelAttr:"label" '>
+			</select>
+			<label for="ds11">Example 3</label>
+			<select id="ds11" data-dojo-id="ds11" data-dojo-type="dijit/form/Select"
+					data-dojo-props='name:"ds11", store:memoryStore3, labelAttr:"label" '>
+			</select>
+			<label for="ds12">Example 4</label>
+			<select id="ds12" data-dojo-id="ds12" data-dojo-type="dijit/form/Select"
+					data-dojo-props='name:"ds12", store:memoryStore, labelAttr:"label" '>
+			</select>
+
+			<hr>
+			<h4 class="testSubtitle">Inlined with text (all IE modes except for IE8 Standards)</h4>
+			<label for="txtPrompt">Text Prompt:</label>
+			<select id="txtPrompt" data-dojo-type="dijit/form/Select" >
+				<option value="SEL" selected="selected">Select</option>
+				<option value="OTHER">Other</option>
+			</select>
+
+			<hr>
+			<h4 class="testSubtitle">More required but blank selects</h4>
+			<label for="s13">required s13:</label>
+			<select id="s13" data-dojo-id="s13" data-dojo-type="dijit/form/Select"
+					name="s13" style="width: 150px;" required="true">
+				<option>&nbsp;</option>
+				<option value="AL">Alabama</option>
+				<option value="AK">Alaska</option>
+				<option></option>
+				<option value="AZ">Arizona</option>
+				<option value="AR">Arkansas</option>
+				<option></option>
+				<option value="CA">California</option>
+			</select>
+			<label for="s14">required s14:</label>
+			<select id="s14" data-dojo-id="s14" data-dojo-type="dijit/form/Select"
+					name="s14" style="width: 150px;" required="true">
+				<option>&nbsp;</option>
+				<option value="AL">Alabama</option>
+				<option value="AK">Alaska</option>
+				<option></option>
+				<option value="AZ">Arizona</option>
+				<option value="AR">Arkansas</option>
+				<option></option>
+				<option value="CA">California</option>
+			</select>
+
+			<hr>
+			<button data-dojo-type="dijit/form/Button" data-dojo-props='type:"button", onClick:function(){ console.dir(form.getValues()); }'>
+				Get Values
+			</button>
+			<button data-dojo-type="dijit/form/Button" data-dojo-props='id:"submit", type:"submit"'>Submit</button>
+		</form>
+
+		<h4 class="testSubtitle">Disabled</h4>
+		<label for="testDisabled">Disabled:</label>
+		<select id='testDisabled' data-dojo-id='testDisabled' data-dojo-type="dijit/form/Select" data-dojo-props='disabled:true, name:"testDisabled" '>
+			<option value="foo">foo</option>
+			<option value="bar">bar</option>
+		</select>
+		<hr>
+		<h4 class="testSubtitle">Programmatic and other tests</h4>
+		<div id="testProgramatic"></div>
+
+		<!-- testing that tooltip disappears when dialog is closed -->
+		<div dojoType="dijit.Dialog" id="dlg1">
+			<div dojoType="dijit.form.Select" id="dlg1Select"required="true"></div>
+			<div dojoType="dijit.form.Button" id="dlg1ValidateBtn">
+				<script type=dojo/method event="onClick">
+					var dlg1 = dijit.byId("dlg1");
+					if(dlg1.validate()){
+						dlg1.hide();
+					}
+				</script>
+				validate and close
+			</div>
+		</div>
+		<button dojoType="dijit.form.Button" id="dlg1OpenBtn"
+				onclick="dijit.byId('dlg1').show();">show one select dialog</button>
+
+		<div dojoType="dijit.Dialog" id="dlg2">
+			<div dojoType="dijit.form.Select" id="dlg2Select1"required="true"></div>
+			<div dojoType="dijit.form.Select" id="dlg2Select2"required="true"></div>
+			<div dojoType="dijit.form.Button" id="dlg2ValidateBtn">
+				<script type=dojo/method event="onClick">
+					var dlg2 = dijit.byId("dlg2");
+					if(dlg2.validate()){
+						dlg2.hide();
+					}
+				</script>
+				validate and close
+			</div>
+		</div>
+		<button dojoType="dijit.form.Button" id="dlg2OpenBtn"
+				onclick="dijit.byId('dlg2').show();">show two select dialog</button>
+		<br>
+		<fieldset class="area">
+			<legend>Rendering tests</legend>
+			<fieldset class="area">
+				<legend>unstyled widget</legend>
+				<fieldset class="area">
+					<legend id="lr1">normal</legend>
+					<select aria-labelledby="lr1" id="r1" data-dojo-type="dijit/form/Select">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area">
+					<legend id="lr2">disabled</legend>
+					<select aria-labelledby="lr2" id="r2" data-dojo-type="dijit/form/Select" disabled>
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area">
+					<legend id="lr3">error</legend>
+					<select id="r3" aria-labelledby="lr3" data-dojo-type="dijit/form/Select" class="dijitError dijitSelectError dijitValidationTextBoxError" data-dojo-props="required:true">
+						<option data-dojo-value=""></option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area">
+					<legend id="lr4">hover</legend>
+					<select id="r4" aria-labelledby="lr4" data-dojo-type="dijit/form/Select" class="dijitHover dijitSelectHover">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area">
+					<legend id="lr5">focused</legend>
+					<select id="r5" aria-labelledby="lr5" data-dojo-type="dijit/form/Select" class="dijitFocused dijitSelectFocused">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area">
+					<legend id="lr6">RTL</legend>
+					<select id="r6" aria-labelledby="lr6" data-dojo-type="dijit/form/Select" dir="rtl">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area">
+					<legend id="lr7">RTL error</legend>
+					<select id="r7" aria-labelledby="lr7" data-dojo-type="dijit/form/Select" class="dijitError dijitSelectError dijitValidationTextBoxError" dir="rtl" data-dojo-props="required:true">
+						<option data-dojo-value=""></option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area">
+					<legend id="lr8">styled option</legend>
+					<span id="r8" aria-labelledby="lr8" data-dojo-type="dijit/form/Select">
+						<span data-dojo-value="1"><span style="font-size:200%;color:pink;">Large</span></span>
+						<span data-dojo-value="2">2</span>
+					</span>
+				</fieldset>
+			</fieldset>
+			<br>
+			<fieldset class="area">
+				<legend>width:60px;font-family:Arial;font-size:150%;border:2px blue;padding:5px;color:red</legend>
+				<fieldset class="area customStyled">
+					<legend id="lcs1">normal</legend>
+					<select id="cs1" aria-labelledby="lcs1" data-dojo-type="dijit/form/Select" style="color:red;width:60px;">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area customStyled">
+					<legend id="lcs2">disabled</legend>
+					<select id="cs2" aria-labelledby="lcs2" data-dojo-type="dijit/form/Select" style="color:red;width:60px;" disabled>
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area customStyled">
+					<legend id="lcs3">error</legend>
+					<select id="cs3" aria-labelledby="lcs3" data-dojo-type="dijit/form/Select" class="dijitError dijitSelectError dijitValidationTextBoxError" style="color:red;width:60px;" data-dojo-props="required:true">
+						<option data-dojo-value=""></option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area customStyled">
+					<legend id="lcs4">hover</legend>
+					<select id="cs4" aria-labelledby="lcs4" data-dojo-type="dijit/form/Select" class="dijitHover dijitSelectHover" style="color:red;width:60px;">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area customStyled">
+					<legend id="lcs5">focused</legend>
+					<select id="cs5" data-dojo-type="dijit/form/Select" aria-labelledby="lcs5" class="dijitFocused dijitSelectFocused" style="color:red;width:60px;">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area customStyled">
+					<legend id="lcs6">RTL</legend>
+					<select id="cs6" aria-labelledby="lcs6" data-dojo-type="dijit/form/Select" dir="rtl" style="color:red;width:60px;">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area customStyled">
+					<legend id="lcs7">RTL error</legend>
+					<select id="cs7" aria-labelledby="lcs7" data-dojo-type="dijit/form/Select" class="dijitError dijitSelectError dijitValidationTextBoxError" style="color:red;width:60px;" dir="rtl" data-dojo-props="required:true">
+						<option data-dojo-value=""></option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area customStyled">
+					<legend id="lcs8">styled option</legend>
+					<span id="cs8" aria-labelledby="lcs8" data-dojo-type="dijit/form/Select" style="color:red;width:120px;">
+						<span data-dojo-value="1"><span style="font-size:200%;color:pink;">Large</span></span>
+						<span data-dojo-value="2">2</span>
+					</span>
+				</fieldset>
+			</fieldset>
+			<br>
+			<fieldset class="area dj_a11y">
+				<legend>a11y, unstyled</legend>
+				<fieldset class="area">
+					<legend id="la1">normal</legend>
+					<select id="a1" aria-labelledby="la1" data-dojo-type="dijit/form/Select">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area">
+					<legend id="la2">disabled</legend>
+					<select id="a2" aria-labelledby="la2" data-dojo-type="dijit/form/Select" disabled>
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area">
+					<legend id="la3">error</legend>
+					<select id="a3" aria-labelledby="la3" data-dojo-type="dijit/form/Select" class="dijitError dijitSelectError dijitValidationTextBoxError" data-dojo-props="required:true">
+						<option data-dojo-value=""></option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area">
+					<legend id="la4">hover</legend>
+					<select id="a4" aria-labelledby="la4" data-dojo-type="dijit/form/Select" class="dijitHover dijitSelectHover">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area">
+					<legend id="la5">focused</legend>
+					<select id="a5" aria-labelledby="la5" data-dojo-type="dijit/form/Select" class="dijitFocused dijitSelectFocused">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area">
+					<legend id="la6">RTL</legend>
+					<select id="a6" aria-labelledby="la6" data-dojo-type="dijit/form/Select" dir="rtl">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area">
+					<legend id="la7">RTL error</legend>
+					<select id="a7" aria-labelledby="la7" data-dojo-type="dijit/form/Select" class="dijitError dijitSelectError dijitValidationTextBoxError" dir="rtl" data-dojo-props="required:true">
+						<option data-dojo-value=""></option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area">
+					<legend id="la8">styled option</legend>
+					<span id="a8" aria-labelledby="la8" data-dojo-type="dijit/form/Select">
+						<span data-dojo-value="1"><span style="font-size:200%;color:pink;">Large</span></span>
+						<span data-dojo-value="2">2</span>
+					</span>
+				</fieldset>
+			</fieldset>
+			<br>
+			<fieldset class="area dj_a11y">
+				<legend>a11y styled</legend>
+				<fieldset class="area customStyled">
+					<legend id="lacs1">normal</legend>
+					<select id="acs1" aria-labelledby="lacs1" data-dojo-type="dijit/form/Select" style="color:red;width:60px;">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area customStyled">
+					<legend id="lacs2">disabled</legend>
+					<select id="acs2" aria-labelledby="lacs2" data-dojo-type="dijit/form/Select" style="color:red;width:60px;" disabled>
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area customStyled">
+					<legend id="lacs3">error</legend>
+					<select id="acs3" aria-labelledby="lacs3" data-dojo-type="dijit/form/Select" class="dijitError dijitSelectError dijitValidationTextBoxError" style="color:red;width:60px;" data-dojo-props="required:true">
+						<option data-dojo-value=""></option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area customStyled">
+					<legend id="lacs4">hover</legend>
+					<select id="acs4" aria-labelledby="lacs5" data-dojo-type="dijit/form/Select" class="dijitHover dijitSelectHover" style="color:red;width:60px;">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area customStyled">
+					<legend id="lacs5">focused</legend>
+					<select id="acs5" aria-labelledby="lacs5" data-dojo-type="dijit/form/Select" class="dijitFocused dijitSelectFocused" style="color:red;width:60px;">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area customStyled">
+					<legend id="lacs6">RTL</legend>
+					<select id="acs6" aria-labelledby="lacs6" data-dojo-type="dijit/form/Select" dir="rtl" style="color:red;width:60px;">
+						<option data-dojo-value="1">1</option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area customStyled">
+					<legend id="lacs7">RTL error</legend>
+					<select id="acs7" aria-labelledby="lacs7" data-dojo-type="dijit/form/Select" class="dijitError dijitSelectError dijitValidationTextBoxError" style="color:red;width:60px;" dir="rtl" data-dojo-props="required:true">
+						<option data-dojo-value=""></option>
+						<option data-dojo-value="2">2</option>
+					</select>
+				</fieldset>
+				<fieldset class="area customStyled">
+					<legend id="lacs8">styled option</legend>
+					<span id="acs8" aria-labelledby="lacs8" data-dojo-type="dijit/form/Select" style="color:red;width:120px;">
+						<span data-dojo-value="1"><span style="font-size:200%;color:pink;">Large</span></span>
+						<span data-dojo-value="2">2</span>
+					</span>
+				</fieldset>
+			</fieldset>
+		</fieldset>
+	</body>
+</html>

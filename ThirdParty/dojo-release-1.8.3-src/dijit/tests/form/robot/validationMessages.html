@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Validation Message Test</title>
+
+		<style>
+			@import "../../../themes/claro/document.css";
+			@import "../../css/dijitTests.css";
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+		<link id="themeStyles" rel="stylesheet" href="../../../themes/dijit.css"/>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			data-dojo-config="isDebug: true"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+
+			dojo.require("dijit.form.NumberTextBox");
+			dojo.require("dijit.Tooltip");
+			dojo.require("dijit.robot");
+
+			dojo.ready(function(){
+
+			// track tooltip currently being displayed (if any)
+			var tooltip;
+			dojo.connect(dijit.Tooltip, "show", function(msg){ tooltip = msg; });
+			dojo.connect(dijit.Tooltip, "hide", function(msg){ tooltip = ""; });
+
+			function testOn(evt, widget, deferred, callback, delay){
+				var handler = widget.connect(widget.focusNode, "on"+evt,
+					function(){
+						widget.disconnect(handler); 
+						setTimeout(deferred.getTestCallback(callback), delay||250);
+					});
+			}
+
+			doh.register("parse", function parse(){
+				dojo.parser.parse();
+			});
+
+			dojo.forEach([false, true], function(rangeBound){
+				dojo.forEach([false, true], function(required){
+					dojo.forEach(["", "p"], function(promptMessage){
+						dojo.forEach(["", "i"], function(invalidMessage){
+							dojo.forEach(["", "m"], function(missingMessage){
+								var name = "t" + (rangeBound?1:0) + (required?1:0) + (promptMessage?1:0) + (invalidMessage?1:0) + (missingMessage?1:0);
+								var textbox;
+
+								doh.register(name, [
+								{
+									name: name + " first focus, empty value",
+									timeout: 5000,
+									setUp:function(){
+										textbox = dijit.byId(name);
+										textbox.focusNode.scrollIntoView();
+									},
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('mouseup', textbox, d, function(){
+											doh.is(!required, textbox.isValid(false), "isValid");
+											doh.is(required ? "Incomplete" : "", textbox.state, "state");
+											doh.is(promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.mouseMoveAt(textbox.focusNode, 0, 1);
+										doh.robot.mouseClick({left: true}, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " first valid character",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(!rangeBound, textbox.isValid(false), "isValid");
+											doh.is(rangeBound ? "Incomplete" : "", textbox.state, "state");
+											doh.is(rangeBound? promptMessage : "", tooltip, "tooltip");
+										});
+										doh.robot.typeKeys("1", 0, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " second valid character",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(true, textbox.isValid(false), "isValid");
+											doh.is("", textbox.state, "state");
+											doh.is("", tooltip, "tooltip");
+										});
+										doh.robot.typeKeys("2", 0, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " first invalid character",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(false, textbox.isValid(false), "isValid");
+											doh.is("Error", textbox.state, "state");
+											doh.is(invalidMessage||promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.typeKeys("a", 0, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " delete invalid character",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(true, textbox.isValid(false), "isValid");
+											doh.is("", textbox.state, "state");
+											doh.is("", tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.BACKSPACE, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " period",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(false, textbox.isValid(false), "isValid");
+											doh.is("Incomplete", textbox.state, "state");
+											doh.is(promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.typeKeys(".", 0, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " invalid pre-fractional character",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(false, textbox.isValid(false), "isValid");
+											doh.is("Error", textbox.state, "state");
+											doh.is(invalidMessage||promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.typeKeys("a", 0, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " delete invalid pre-fractional character",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(false, textbox.isValid(false), "isValid");
+											doh.is("Incomplete", textbox.state, "state");
+											doh.is(promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.BACKSPACE, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " valid fractional digit",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(true, textbox.isValid(false), "isValid");
+											doh.is("", textbox.state, "state");
+											doh.is("", tooltip, "tooltip");
+										});
+										doh.robot.typeKeys("1", 0, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " invalid fractional character",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(false, textbox.isValid(false), "isValid");
+											doh.is("Error", textbox.state, "state");
+											doh.is(invalidMessage||promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.typeKeys("a", 0, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " delete invalid fractional character",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(true, textbox.isValid(false), "isValid");
+											doh.is("", textbox.state, "state");
+											doh.is("", tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.BACKSPACE, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " delete valid fractional digit",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(false, textbox.isValid(false), "isValid");
+											doh.is("Incomplete", textbox.state, "state");
+											doh.is(promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.BACKSPACE, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " delete period",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(true, textbox.isValid(false), "isValid");
+											doh.is("", textbox.state, "state");
+											doh.is("", tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.BACKSPACE, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " delete right-most valid character",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(!rangeBound, textbox.isValid(false), "isValid");
+											doh.is(rangeBound ? "Incomplete" : "", textbox.state, "state");
+											doh.is(rangeBound? promptMessage : "", tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.BACKSPACE, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " delete remaining valid character",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(!required, textbox.isValid(false), "isValid");
+											doh.is(required ? "Incomplete" : "", textbox.state, "state");
+											doh.is(promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.BACKSPACE, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " tab from empty",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('blur', textbox, d, function(){
+											doh.is(!required, textbox.isValid(false), "isValid");
+											doh.is(required ? "Error" : "", textbox.state, "state");
+											doh.is("", tooltip, "no tooltip");
+											doh.is(required? (missingMessage||invalidMessage||promptMessage) : promptMessage, textbox.message, "message");
+										});
+										doh.robot.keyPress(dojo.keys.TAB, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " tab back to empty",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('focus', textbox, d, function(){
+											doh.is(!required, textbox.isValid(false), "isValid");
+											doh.is(required ? "Error" : "", textbox.state, "state");
+											doh.is(required? (missingMessage||invalidMessage||promptMessage) : promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.TAB, 0, { shift:true });
+										return d;
+									}
+								},
+								{
+									name: name + " first valid character after refocus",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(!rangeBound, textbox.isValid(false), "isValid");
+											doh.is(rangeBound ? "Incomplete" : "", textbox.state, "state");
+											doh.is(rangeBound? promptMessage : "", tooltip, "tooltip");
+										});
+										doh.robot.typeKeys("1", 0, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " 2nd valid character after refocus",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is("", textbox.state, "state");
+											doh.is("", tooltip, "tooltip");
+										});
+										doh.robot.typeKeys("2", 0, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " out of range after refocus",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(!rangeBound, textbox.isValid(false), "isValid");
+											doh.is(rangeBound ? "Error" : "", textbox.state, "state");
+											doh.is(rangeBound? textbox.rangeMessage : "", tooltip, "tooltip");
+										});
+										doh.robot.typeKeys("3", 0, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " tab from out of range",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('blur', textbox, d, function(){
+											doh.is(!rangeBound, textbox.isValid(false), "isValid");
+											doh.is(rangeBound ? "Error" : "", textbox.state, "state");
+											doh.is("", tooltip, "no tooltip");
+											doh.is(rangeBound? textbox.rangeMessage : "", textbox.message, "message");
+										});
+										doh.robot.keyPress(dojo.keys.TAB, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " tab back to out of range",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('focus', textbox, d, function(){
+											doh.is(!rangeBound, textbox.isValid(false), "isValid");
+											doh.is(rangeBound ? "Error" : "", textbox.state, "state");
+											doh.is(rangeBound? textbox.rangeMessage : "", tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.TAB, 0, { shift:true });
+										return d;
+									}
+								},
+								{
+									name: name + " position input caret to end",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(!rangeBound, textbox.isValid(false), "isValid");
+											doh.is(rangeBound ? "Error" : "", textbox.state, "state");
+											doh.is(rangeBound? textbox.rangeMessage : "", tooltip, "tooltip");
+										});
+										if(dojo.isMac){
+											doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 0, {meta:true});
+											doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 0); // trigger keyup
+										}else{
+											doh.robot.keyPress(dojo.keys.END, 0);
+										}
+										return d;
+									}
+								},
+								{
+									name: name + " delete out of range character",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(true, textbox.isValid(false), "isValid");
+											doh.is("", textbox.state, "state");
+											doh.is("", tooltip, "tooltip");
+
+										});
+										doh.robot.keyPress(dojo.keys.BACKSPACE, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " period after refocus",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(false, textbox.isValid(false), "isValid");
+											doh.is("Incomplete", textbox.state, "state");
+											doh.is(promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.typeKeys(".", 0, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " invalid pre-fractional character after refocus",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(false, textbox.isValid(false), "isValid");
+											doh.is("Error", textbox.state, "state");
+											doh.is(invalidMessage||promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.typeKeys("a", 0, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " delete invalid pre-fractional character after refocus",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(false, textbox.isValid(false), "isValid");
+											doh.is("Error", textbox.state, "state");
+											doh.is(invalidMessage||promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.BACKSPACE, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " valid fractional digit after refocus",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(true, textbox.isValid(false), "isValid");
+											doh.is("", textbox.state, "state");
+											doh.is("", tooltip, "tooltip");
+										});
+										doh.robot.typeKeys("1", 0, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " invalid fractional character after refocus",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(false, textbox.isValid(false), "isValid");
+											doh.is("Error", textbox.state, "state");
+											doh.is(invalidMessage||promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.typeKeys("a", 0, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " delete invalid fractional character after refocus",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(true, textbox.isValid(false), "isValid");
+											doh.is("", textbox.state, "state");
+											doh.is("", tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.BACKSPACE, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " delete valid fractional digit after refocus",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(false, textbox.isValid(false), "isValid");
+											doh.is("Incomplete", textbox.state, "state");
+											doh.is(promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.BACKSPACE, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " delete period after refocus",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(true, textbox.isValid(false), "isValid");
+											doh.is("", textbox.state, "state");
+											doh.is("", tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.BACKSPACE, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " delete last in-range character",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(rangeBound ? "Incomplete" : "", textbox.state, "state");
+											doh.is(rangeBound? promptMessage : "", tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.BACKSPACE, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " delete remaining character",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('keyup', textbox, d, function(){
+											doh.is(!required, textbox.isValid(false), "isValid");
+											doh.is(required ? "Incomplete" : "", textbox.state, "state");
+											doh.is(promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.BACKSPACE, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " tab from empty 2",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('blur', textbox, d, function(){
+											doh.is(!required, textbox.isValid(false), "isValid");
+											doh.is(required ? "Error" : "", textbox.state, "state");
+											doh.is("", tooltip, "no tooltip");
+											doh.is(required? (missingMessage||invalidMessage||promptMessage) : promptMessage, textbox.message, "message");
+										});
+										doh.robot.keyPress(dojo.keys.TAB, 0);
+										return d;
+									}
+								},
+								{
+									name: name + " tab back to empty 2",
+									timeout: 2000,
+									runTest: function(){
+										var d = new doh.Deferred();
+										testOn('focus', textbox, d, function(){
+											doh.is(!required, textbox.isValid(false), "isValid");
+											doh.is(required ? "Error" : "", textbox.state, "state");
+											doh.is(required? (missingMessage||invalidMessage||promptMessage) : promptMessage, tooltip, "tooltip");
+										});
+										doh.robot.keyPress(dojo.keys.TAB, 0, { shift:true });
+										return d;
+									}
+								}]);
+							});
+						});
+					});
+				});
+			});
+
+			doh.run();
+			});
+		</script>
+	</head>
+	<body>
+		<label for="t00000">not required, no min/max, no prompt message, no invalid message, no missing message</label><br>
+		<input id="t00000" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:false, promptMessage:"", invalidMessage:"", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t00000"/><br>
+
+		<label for="t00001">not required, no min/max, no prompt message, no invalid message, missing message</label><br>
+		<input id="t00001" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:false, promptMessage:"", invalidMessage:"", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t00001"/><br>
+
+		<label for="t00010">not required, no min/max, no prompt message, invalid message, no missing message</label><br>
+		<input id="t00010" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:false, promptMessage:"", invalidMessage:"i", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t00010"/><br>
+
+		<label for="t00011">not required, no min/max, no prompt message, invalid message, missing message</label><br>
+		<input id="t00011" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:false, promptMessage:"", invalidMessage:"i", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t00011"/><br>
+
+		<label for="t00100">not required, no min/max, prompt message, no invalid message, no missing message</label><br>
+		<input id="t00100" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:false, promptMessage:"p", invalidMessage:"", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t00100"/><br>
+
+		<label for="t00101">not required, no min/max, prompt message, no invalid message, missing message</label><br>
+		<input id="t00101" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:false, promptMessage:"p", invalidMessage:"", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t00101"/><br>
+
+		<label for="t00110">not required, no min/max, prompt message, invalid message, no missing message</label><br>
+		<input id="t00110" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:false, promptMessage:"p", invalidMessage:"i", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t00110"/><br>
+
+		<label for="t00111">not required, no min/max, prompt message, invalid message, missing message</label><br>
+		<input id="t00111" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:false, promptMessage:"p", invalidMessage:"i", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t00111"/><br>
+
+		<label for="t01000">required, no min/max, no prompt message, no invalid message, no missing message</label><br>
+		<input id="t01000" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:true, promptMessage:"", invalidMessage:"", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t01000"/><br>
+
+		<label for="t01001">required, no min/max, no prompt message, no invalid message, missing message</label><br>
+		<input id="t01001" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:true, promptMessage:"", invalidMessage:"", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t01001"/><br>
+
+		<label for="t01010">required, no min/max, no prompt message, invalid message, no missing message</label><br>
+		<input id="t01010" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:true, promptMessage:"", invalidMessage:"i", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t01010"/><br>
+
+		<label for="t01011">required, no min/max, no prompt message, invalid message, missing message</label><br>
+		<input id="t01011" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:true, promptMessage:"", invalidMessage:"i", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t01011"/><br>
+
+		<label for="t01100">required, no min/max, prompt message, no invalid message, no missing message</label><br>
+		<input id="t01100" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:true, promptMessage:"p", invalidMessage:"", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t01100"/><br>
+
+		<label for="t01101">required, no min/max, prompt message, no invalid message, missing message</label><br>
+		<input id="t01101" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:true, promptMessage:"p", invalidMessage:"", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t01101"/><br>
+
+		<label for="t01110">required, no min/max, prompt message, invalid message, no missing message</label><br>
+		<input id="t01110" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:true, promptMessage:"p", invalidMessage:"i", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t01110"/><br>
+
+		<label for="t01111">required, no min/max, prompt message, invalid message, missing message</label><br>
+		<input id="t01111" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false] }, required:true, promptMessage:"p", invalidMessage:"i", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t01111"/><br>
+
+		<label for="t10000">not required, min=10, max=100, no prompt message, no invalid message, no missing message</label><br>
+		<input id="t10000" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:false, promptMessage:"", invalidMessage:"", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t10000"/><br>
+
+		<label for="t10001">not required, min=10, max=100, no prompt message, no invalid message, missing message</label><br>
+		<input id="t10001" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:false, promptMessage:"", invalidMessage:"", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t10001"/><br>
+
+		<label for="t10010">not required, min=10, max=100, no prompt message, invalid message, no missing message</label><br>
+		<input id="t10010" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:false, promptMessage:"", invalidMessage:"i", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t10010"/><br>
+
+		<label for="t10011">not required, min=10, max=100, no prompt message, invalid message, missing message</label><br>
+		<input id="t10011" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:false, promptMessage:"", invalidMessage:"i", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t10011"/><br>
+
+		<label for="t10100">not required, min=10, max=100, prompt message, no invalid message, no missing message</label><br>
+		<input id="t10100" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:false, promptMessage:"p", invalidMessage:"", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t10100"/><br>
+
+		<label for="t10101">not required, min=10, max=100, prompt message, no invalid message, missing message</label><br>
+		<input id="t10101" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:false, promptMessage:"p", invalidMessage:"", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t10101"/><br>
+
+		<label for="t10110">not required, min=10, max=100, prompt message, invalid message, no missing message</label><br>
+		<input id="t10110" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:false, promptMessage:"p", invalidMessage:"i", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t10110"/><br>
+
+		<label for="t10111">not required, min=10, max=100, prompt message, invalid message, missing message</label><br>
+		<input id="t10111" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:false, promptMessage:"p", invalidMessage:"i", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t10111"/><br>
+
+		<label for="t11000">required, min=10, max=100, no prompt message, no invalid message, no missing message</label><br>
+		<input id="t11000" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:true, promptMessage:"", invalidMessage:"", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t11000"/><br>
+
+		<label for="t11001">required, min=10, max=100, no prompt message, no invalid message, missing message</label><br>
+		<input id="t11001" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:true, promptMessage:"", invalidMessage:"", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t11001"/><br>
+
+		<label for="t11010">required, min=10, max=100, no prompt message, invalid message, no missing message</label><br>
+		<input id="t11010" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:true, promptMessage:"", invalidMessage:"i", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t11010"/><br>
+
+		<label for="t11011">required, min=10, max=100, no prompt message, invalid message, missing message</label><br>
+		<input id="t11011" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:true, promptMessage:"", invalidMessage:"i", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t11011"/><br>
+
+		<label for="t11100">required, min=10, max=100, prompt message, no invalid message, no missing message</label><br>
+		<input id="t11100" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:true, promptMessage:"p", invalidMessage:"", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t11100"/><br>
+
+		<label for="t11101">required, min=10, max=100, prompt message, no invalid message, missing message</label><br>
+		<input id="t11101" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:true, promptMessage:"p", invalidMessage:"", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t11101"/><br>
+
+		<label for="t11110">required, min=10, max=100, prompt message, invalid message, no missing message</label><br>
+		<input id="t11110" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:true, promptMessage:"p", invalidMessage:"i", missingMessage:"", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t11110"/><br>
+
+		<label for="t11111">required, min=10, max=100, prompt message, invalid message, missing message</label><br>
+		<input id="t11111" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='constraints:{ fractional:[true,false], min:10, max:100 }, required:true, promptMessage:"p", invalidMessage:"i", missingMessage:"m", rangeMessage:"r"'/>
+		<input style="border:0;" size="6" value="t11111"/><br>
+
+	</body>
+</html>
+

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>TabBar</title>
+
+	<link href="../themes/common/domButtons/DomButtonYellowStar.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonGrayStar.css" rel="stylesheet"/>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','TabBar']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/TabBar"
+		]);
+	</script>
+
+	<style>
+	h3 {
+		font-style: italic;
+		margin: 20px 0px 3px 8px;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<h3>tabBar</h3>
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='iconBase:"images/tab-icons.png"'>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='
+			icon1:"images/tab-icon-16.png",
+			icon2:"images/tab-icon-16h.png",
+			selected:true'>Image</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='
+			iconPos1:"0,29,29,29",
+			iconPos2:"29,29,29,29"'>Sprite</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='
+			icon1:"mblDomButtonGrayStar",
+			icon2:"mblDomButtonYellowStar"'>DOM Button</li>
+	</ul>
+
+
+
+
+	<h3>segmentedControl</h3>
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"segmentedControl"'>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='selected:true, icon1:"images/tab-icon-21.png", icon2:"images/tab-icon-21h.png"'>New</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton">Dramatic</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton">Insight</li>
+	</ul>
+
+	<div class="label">(in a Heading)</div>
+	<div data-dojo-type="dojox.mobile.Heading">
+		<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"segmentedControl"'>
+			<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='selected:true'>Catalog</li>
+			<li data-dojo-type="dojox.mobile.TabBarButton">Share</li>
+			<li data-dojo-type="dojox.mobile.TabBarButton">Download</li>
+		</ul>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props=''>MMMM</span>
+	</div><br>
+
+
+
+	<h3>standardTab</h3>
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"standardTab"'>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='selected:true'>Dashboard</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton">Plan</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton">Today's Main Event</li>
+	</ul><br>
+
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"standardTab", closable:true, center:false'>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='selected:true'>Dashboard</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton">Plan</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton">Today's Main Event</li>
+	</ul><br>
+
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='
+		barType:"standardTab", center:false, iconBase:"images/tab-icons.png"'>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='
+			icon1:"images/tab-icon-21.png",
+			icon2:"images/tab-icon-21h.png",
+			selected:true'>Image</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='
+			iconPos1:"0,29,29,29",
+			iconPos2:"29,29,29,29"'>Sprite</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='
+			icon1:"mblDomButtonGrayStar",
+			icon2:"mblDomButtonYellowStar"'>DOM Button</li>
+	</ul>
+
+
+
+	<h3>slimTab</h3>
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"slimTab"'>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='selected:true'>Dashboard</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton">Plan</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton">Event</li>
+	</ul><br>
+
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"slimTab", closable:true, center:false'>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='selected:true'>Dashboard</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton">Plan</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton">Today's Main Event</li>
+	</ul><br>
+
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='
+		barType:"slimTab", center:false, iconBase:"images/tab-icons.png"'>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='
+			icon1:"images/tab-icon-21.png",
+			icon2:"images/tab-icon-21h.png",
+			selected:true'>Image</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='
+			iconPos1:"0,29,29,29",
+			iconPos2:"29,29,29,29"'>Sprite</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='
+			icon1:"mblDomButtonGrayStar",
+			icon2:"mblDomButtonYellowStar"'>DOM Button</li>
+	</ul>
+
+
+
+	<h3>flatTab</h3>
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"flatTab"'>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='selected:true'>Dashboard</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton">Plan</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton">Event</li>
+	</ul><br>
+
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"flatTab", closable:true, center:false'>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='selected:true'>Dashboard</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton">Plan</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton">Today's Main Event</li>
+	</ul><br>
+
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='
+		barType:"flatTab", center:false, iconBase:"images/tab-icons.png"'>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='
+			icon1:"images/tab-icon-21.png",
+			icon2:"images/tab-icon-21h.png",
+			selected:true'>Image</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='
+			iconPos1:"0,29,29,29",
+			iconPos2:"29,29,29,29"'>Sprite</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='
+			icon1:"mblDomButtonGrayStar",
+			icon2:"mblDomButtonYellowStar"'>DOM Button</li>
+	</ul>
+
+
+
+	<h3>tallTab</h3>
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='
+		barType:"tallTab", iconBase:"images/tab-icons.png"'>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='
+			icon1:"images/tab-icon-21.png",
+			icon2:"images/tab-icon-21h.png",
+			selected:true'>Image</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='
+			iconPos1:"0,29,29,29",
+			iconPos2:"29,29,29,29"'>Sprite</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='
+			icon1:"mblDomButtonGrayStar",
+			icon2:"mblDomButtonYellowStar"'>DOM Button</li>
+	</ul><br>
+</body>
+</html>

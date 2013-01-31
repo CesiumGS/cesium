@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Anchor Label</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: false, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/declare",
+			"dojox/mobile/ListItem",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(declare, ListItem){
+			dojox.mobile.ListItemEx = declare(
+				"dojox.mobile.ListItemEx",
+				ListItem,
+			{
+				onAnchorLabelClicked: function(e){
+					if(this.id == "item1" || this.id == "item2"){
+						// go to a different html page
+						var href = "test_IconContainer.html";
+						this.transitionTo(null, href);
+					}else if(this.id == "item3" || this.id == "item4"){
+						// load an external view into the current html page
+						var url = "data/view2.html";
+						this.transitionTo(null, null, url);
+					}
+				}
+			});
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="home" data-dojo-type="dojox.mobile.View" data-dojo-props='selected:true'>
+		<h1 data-dojo-type="dojox.mobile.Heading">Anchor Label</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Items</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li id="item1" data-dojo-type="dojox.mobile.ListItemEx" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"bar", anchorLabel:true'>
+				Different page
+			</li>
+			<li id="item2" data-dojo-type="dojox.mobile.ListItemEx" data-dojo-props='icon:"images/i-icon-2.png", moveTo:"bar", anchorLabel:true'>
+				Different page
+			</li>
+			<li id="item3" data-dojo-type="dojox.mobile.ListItemEx" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"bar", anchorLabel:true'>
+				External view
+			</li>
+			<li id="item4" data-dojo-type="dojox.mobile.ListItemEx" data-dojo-props='icon:"images/i-icon-4.png", moveTo:"bar", anchorLabel:true'>
+				External view
+			</li>
+		</ul>
+		<div data-dojo-type="dojox.mobile.RoundRect">
+			Tapping on an item label text opens a different page (test_IconContainer.html) or loads an external view (view2.html), while tapping on right-hand side of the label text shows another view in the same page.
+		</div>
+	</div>
+
+	<div id="bar" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Spaces", moveTo:"home"'>u1space</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Applications</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"Off"'>
+				Video
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", rightText:"VPN"'>
+				Maps
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"Off"'>
+				Phone Number
+			</li>
+		</ul>
+	</div>
+</body>
+</html>

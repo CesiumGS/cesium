@@ -207,6 +207,7 @@ define([
 
             var imageryUrl = require.toUrl('../../Assets/Textures/');
             this.dayImageUrl = defaultValue(this.dayImageUrl, imageryUrl + 'NE2_LR_LC_SR_W_DR_2048.jpg');
+            this.skyBoxBaseUrl = defaultValue(this.skyBoxBaseUrl, imageryUrl + 'SkyBox/tycho2t3_80');
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
             centralBody.logoOffset = new Cartesian2(125, 0);
@@ -217,12 +218,12 @@ define([
 
             if (this.showSkyBox) {
                 scene.skyBox = new SkyBox({
-                    positiveX: imageryUrl + 'SkyBox/tycho8_px_80.jpg',
-                    negativeX: imageryUrl + 'SkyBox/tycho8_mx_80.jpg',
-                    positiveY: imageryUrl + 'SkyBox/tycho8_py_80.jpg',
-                    negativeY: imageryUrl + 'SkyBox/tycho8_my_80.jpg',
-                    positiveZ: imageryUrl + 'SkyBox/tycho8_pz_80.jpg',
-                    negativeZ: imageryUrl + 'SkyBox/tycho8_mz_80.jpg'
+                    positiveX : this.skyBoxBaseUrl + '_px.jpg',
+                    negativeX : this.skyBoxBaseUrl + '_mx.jpg',
+                    positiveY : this.skyBoxBaseUrl + '_py.jpg',
+                    negativeY : this.skyBoxBaseUrl + '_my.jpg',
+                    positiveZ : this.skyBoxBaseUrl + '_pz.jpg',
+                    negativeZ : this.skyBoxBaseUrl + '_mz.jpg'
                 });
             }
 
@@ -300,15 +301,15 @@ define([
             }
         },
 
-        initializeFrame : function(currentTime) {
-            this.scene.initializeFrame(currentTime);
+        initializeFrame : function() {
+            this.scene.initializeFrame();
         },
 
         update : function(currentTime) {
         },
 
-        render : function() {
-            this.scene.render();
+        render : function(currentTime) {
+            this.scene.render(currentTime);
         },
 
         _configureCentralBodyImagery : function() {
@@ -337,9 +338,9 @@ define([
 
             function updateAndRender() {
                 var currentTime = new JulianDate();
-                widget.initializeFrame(currentTime);
+                widget.initializeFrame();
                 widget.update(currentTime);
-                widget.render();
+                widget.render(currentTime);
                 requestAnimationFrame(updateAndRender);
             }
             updateAndRender();

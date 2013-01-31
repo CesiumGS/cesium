@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Switch setter/getter</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','FixedSplitter']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/connect",
+			"dojo/dom",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(connect, dom, ready, registry){
+			swOn = function(){
+				var w = registry.byId("sw");
+				w.set("value", "on");
+			}
+			swOff = function(){
+				var w = registry.byId("sw");
+				w.set("value", "off");
+			}
+			ready(function(){
+				var w = registry.byId("sw");
+				connect.connect(w, "onStateChanged", null, function(value){
+					var span = dom.byId("msgArea");
+					span.innerHTML = "onStateChanged: "+value;
+					setTimeout(function(){
+						span.innerHTML = "";
+					}, 1000);
+				});
+			});
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div data-dojo-type="dojox.mobile.View" data-dojo-props='selected:true' style="padding:10px">
+		<br>
+		<input type="checkbox" id="sw" name="swName" data-dojo-type="dojox.mobile.Switch" value="off"><br>
+		<input type="button" onclick="swOn()" value="on">
+		<input type="button" onclick="swOff()" value="off">
+		<span id="msgArea"></span>
+	</div>
+</body>
+</html>

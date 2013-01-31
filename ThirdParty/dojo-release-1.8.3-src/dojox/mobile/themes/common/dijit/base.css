@@ -1,0 +1,14 @@
+/* base dijit stylesheets with styles to override.
+   in future releases, split these out */
+@import url("../../../../../dijit/themes/dijit.css");
+@import url("../../../../../dijit/icons/commonIcons.css");/*sprite containing common icons to be used by all themes*/
+@import url("../../../../../dijit/themes/claro/Common.css");
+
+/* needed in IconContainerMulti tests
+ @import url("../../../../../dijit/themes/claro/ProgressBar.css");
+*/
+@import url("../../../../../dijit/themes/claro/claro_rtl.css");
+
+/* mobile styling variants of dijit and dojox desktop widgets */
+@import url("ColorPalette.css");
+@import url("ColorPicker.css");

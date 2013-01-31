@@ -1,0 +1,6 @@
+{
+  "items" : [
+    { label: "Coverage Options", icon: "images/i-icon-1.png", url: "data/insurance-car-coverage.html" },
+    { label: "Safe Driving Bonus", icon: "images/i-icon-1.png", url: "data/insurance-car-safe.html" }
+  ]
+}

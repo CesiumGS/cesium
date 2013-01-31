@@ -1,0 +1,5 @@
+define(
+({
+	"blockquote": "Blok citátu"
+})
+);

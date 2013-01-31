@@ -1,0 +1,345 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>doh.robot Slider Test</title>
+
+	<style>
+		@import "../../../../util/doh/robot/robot.css";
+	</style>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dojo.window");
+		dojo.require("dijit.robotx");
+
+		var arrowSliders = ['slider1','slider2','programaticSlider'];
+		var arrowSliderInit_min = [0.2,10,1200];
+		var arrowSliderInit_max = [99.8,90,2800];
+		var sliderIds = ["slider1", "slider2", "slider3", "sliderH2", "programaticSlider"];
+
+		var onChange = {slider1: 'slider1input', slider2: 'slider2input', programaticSlider: 'sliderProgInput'};
+
+		var boundaryTest = function(slider, initValue, finalValue){
+			// summary:
+			//		Sets slider to initValue, which should be either one below the
+			//		max, or one above the min.
+			//
+			//		Click the arrow button once to get to the final value, and
+			//		then click the arrow button again (value shouldn't change second time)
+			var d = new doh.Deferred();
+			slider.set('value', initValue);
+			var button = slider._descending ?
+				(initValue<finalValue?slider.decrementButton: slider.incrementButton) :
+				(initValue<finalValue?slider.incrementButton: slider.decrementButton);
+			doh.robot.sequence(function(){
+				dojo.window.scrollIntoView(slider.domNode);
+			},500);
+			doh.robot.mouseMoveAt(button, 500);
+			doh.robot.mouseClick({left: true}, 500);
+			doh.robot.sequence(d.getTestErrback(function(){
+				doh.is(Number(finalValue).toFixed(2), Number(slider.get('value')).toFixed(2));
+				if(onChange[slider.id]){
+					doh.is(Number(finalValue).toFixed(1), Number(parseFloat(dojo.byId(onChange[slider.id]).value)).toFixed(1));
+				}
+				doh.robot.mouseMoveAt(button, 500);
+				doh.robot.mouseClick({left: true}, 500);
+				doh.robot.sequence(d.getTestCallback(function(){
+					doh.is(Number(finalValue).toFixed(2), Number(slider.get('value')).toFixed(2));
+					if(onChange[slider.id]){
+						doh.is(Number(finalValue).toFixed(1), Number(parseFloat(dojo.byId(onChange[slider.id]).value)).toFixed(1));
+					}
+				}), 500);
+			}), 500);
+			return d;
+		};
+
+		var buttonHeldTest = function(slider, initValue, finalValue){
+			var d = new doh.Deferred();
+			slider.set('value', initValue);
+			var button = slider._descending?(initValue<finalValue?slider.decrementButton: slider.incrementButton): (initValue<finalValue?slider.incrementButton: slider.decrementButton);
+			doh.robot.sequence(function(){
+				dojo.window.scrollIntoView(slider.domNode);
+			},500);
+			doh.robot.mouseMoveAt(button, 500);
+			doh.robot.mousePress({left: true}, 500);
+			doh.robot.mouseRelease({left: true}, 5000);
+			doh.robot.sequence(d.getTestCallback(function(){
+				doh.is(finalValue, new Number(slider.get('value')).toFixed(1));
+				if(onChange[slider.id]){
+					doh.is(finalValue, parseFloat(dojo.byId(onChange[slider.id]).value));
+				}
+			}), 500);
+			return d;
+		};
+
+		var mouseWheelTest = function(slider, initValue, finalValue){
+			if(slider.discreteValues != Infinity){
+				var d = new doh.Deferred();
+				slider.set('value', initValue);
+				var direction = (finalValue-initValue)/Math.abs(finalValue-initValue);
+				var delta = Math.ceil((slider.discreteValues-1)*Math.abs(doh.robot.mouseWheelSize)/doh.robot.mouseWheelSize);
+				doh.robot.sequence(function(){
+					dojo.window.scrollIntoView(slider.domNode);
+				},500);
+				doh.robot.mouseMoveAt(slider.focusNode, 500);
+				doh.robot.mouseClick({left: true}, 500);
+				doh.robot.mouseWheel(delta*direction, 500, Math.abs(delta)*200);
+				doh.robot.sequence(d.getTestCallback(function(){
+					doh.is(finalValue, new Number(slider.get('value')).toFixed(1));
+					if(onChange[slider.id]){
+						doh.is(finalValue, parseFloat(dojo.byId(onChange[slider.id]).value));
+					}
+				}), 500);
+				return d;
+			}
+		};
+
+		dojo.ready(function(){
+			doh.robot.initRobot('../test_Slider.html');
+
+			// Test initial values
+			doh.register("initial values", function initialValues(){
+				var slider = dijit.byId(arrowSliders[0]),
+					bar = slider.valueNode.parentNode,
+					barWidth = bar.offsetWidth;
+				arrowSliderInit_min[0] = 100 / (barWidth-1); // discover slider smallest non min value
+				arrowSliderInit_max[0] = 100 - arrowSliderInit_min[0]; // discover slider largest non max value
+				doh.is(10, dijit.byId("slider1").get("value"), "horizontal1");
+				doh.is(10, dijit.byId("slider2").get("value"), "vertical1");
+				doh.is(2, dijit.byId("slider3").get("value"), "horizontal2");
+				doh.is(10, dijit.byId("sliderH2").get("value"), "sliderH2");
+				doh.is(1400, dijit.byId("programaticSlider").get("value"), "programaticSlider");
+				doh.t(dijit.byId("programmaticSliderNoSrc"),
+					"programmaticSliderNoSrc (containing RuleLabels w/o srcNodeRef) was initialized (see #13815)");
+				doh.is(1400, dijit.byId("programmaticSliderNoSrc").get("value"), "programmaticSliderNoSrc");
+			});
+
+			doh.register("set('value', ...)", [
+				function valid(){
+					var slider = dijit.byId(arrowSliders[0]);
+					slider.set('value', 50);
+					var d = new doh.Deferred();
+					doh.robot.sequence(d.getTestCallback(function(){
+						doh.is(50, parseFloat(dojo.byId(onChange[slider.id]).value));
+					}), 500);
+					return d;
+				},
+				function setToNull(){
+					// No idea why setting to null makes it go to 0 but apparently that's expected behavior
+					var slider = dijit.byId(arrowSliders[0]);
+					slider.set('value', null);
+					var d = new doh.Deferred();
+					doh.robot.sequence(d.getTestCallback(function(){
+						doh.is(0, parseFloat(dojo.byId(onChange[slider.id]).value));
+					}), 500);
+					return d;
+				}
+			]);
+
+			// Test that disabled sliders don't respond to mouse clicks (or at least,
+			// the left/right arrow buttons don't)
+			doh.register("disabledTest", [
+				{
+					name: arrowSliders[0]+'_setUp',
+					slider: arrowSliders[0],
+					timeout: 30000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						doh.robot.mouseMoveAt('disableButton',500);
+						doh.robot.mouseClick({left: true}, 500);
+						if(dojo.isMac){
+							// Workaround mac/FF bug where first click doesn't register
+							doh.robot.mouseClick({
+								left: true
+							}, 500);
+						}
+						doh.robot.sequence(function(){ d.callback(true); },500);
+						return d;
+					}
+				},
+				{
+					name: arrowSliders[0]+'_min',
+					slider: arrowSliders[0],
+					timeout: 30000,
+					runTest: function(){
+						this.slider = dijit.byId(this.slider);
+						var value = arrowSliderInit_min[0];
+						return boundaryTest(this.slider, value, value);
+					}
+				},
+				{
+					name: arrowSliders[0]+'_tearDown',
+					slider: arrowSliders[0],
+					timeout: 30000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						doh.robot.mouseMoveAt('enableButton',500);
+						doh.robot.mouseClick({left: true}, 500);
+						doh.robot.sequence(function(){ d.callback(true); },500);
+						return d;
+					}
+				}
+			]);
+
+			doh.register("buttonBoundaryTest", [
+				{
+					name: arrowSliders[0]+'_min',
+					slider: arrowSliders[0],
+					timeout: 30000,
+					runTest: function(){
+						this.slider = dijit.byId(this.slider);
+						return boundaryTest(this.slider, arrowSliderInit_min[0], this.slider.minimum);
+					}
+				},
+				{
+					name: arrowSliders[0]+'_max',
+					slider: arrowSliders[0],
+					timeout: 30000,
+					runTest: function(){
+						this.slider = dijit.byId(this.slider);
+						return boundaryTest(this.slider, arrowSliderInit_max[0], this.slider.maximum);
+					}
+				}
+			]);
+
+			doh.register("buttonHeldTest", [
+				{
+					name: arrowSliders[1]+'_minToMax',
+					slider: arrowSliders[1],
+					timeout: 30000,
+					runTest: function(){
+						this.slider = dijit.byId(this.slider);
+						return buttonHeldTest(this.slider, this.slider.minimum, this.slider.maximum);
+					}
+				},
+				{
+					name: arrowSliders[1]+'_maxToMin',
+					slider: arrowSliders[1],
+					timeout: 30000,
+					runTest: function(){
+						this.slider = dijit.byId(this.slider);
+						return buttonHeldTest(this.slider, this.slider.maximum, this.slider.minimum);
+					}
+				}
+			]);
+
+			doh.register("mouseWheelTest", [
+				{
+					name: arrowSliders[1]+'_minToMax',
+					slider: arrowSliders[1],
+					timeout: 30000,
+					runTest: function(){
+						this.slider = dijit.byId(this.slider);
+						return mouseWheelTest(this.slider, this.slider.minimum, this.slider.maximum);
+					}
+				},
+				{
+					name: arrowSliders[1]+'_maxToMin',
+					slider: arrowSliders[1],
+					timeout: 30000,
+					runTest: function(){
+						this.slider = dijit.byId(this.slider);
+						return mouseWheelTest(this.slider, this.slider.maximum, this.slider.minimum);
+					}
+				}
+			]);
+
+			doh.register("general tests", [
+				{
+					name: "slider1",
+					timeout: 5000, // this is the animated slider so there is a 500ms delay
+					runTest: function(){
+						var d = new doh.Deferred();
+						var slider = dijit.byId("slider1");
+						slider.set('value', 10);
+						dojo.window.scrollIntoView(slider.domNode);
+						doh.robot.mouseMoveAt(slider.focusNode, 1, 0);
+						doh.robot.mousePress({left: true}, 500);
+						// drag to 20% marker
+						var marker = dojo.query("div[style*='20%']", dojo.byId('dijit_form_HorizontalRule_0'))[0];
+						doh.robot.mouseMoveAt(marker, 500, 0);
+						doh.robot.mouseRelease({left: true}, 500);
+						doh.robot.sequence(d.getTestCallback(function(){
+							var value = slider.get('value');
+							doh.t(value >= 19 && value <= 21, "Expected 20-ish, got "+value);
+						}), 1000);
+						return d;
+					}
+				},
+
+				{
+					name: "slider2",
+					timeout: 5000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						var slider = dijit.byId("slider2");
+						slider.set('value', 10);
+						dojo.window.scrollIntoView(slider.domNode);
+						doh.robot.mouseMoveAt(slider.focusNode, 1, 0);
+						doh.robot.mousePress({left: true}, 500);
+						// drag to 20% marker (Slider is in descending order so it's 100-20=80%)
+						var marker = dojo.query("div[style*='80%']", dojo.byId('dijit_form_VerticalRule_1'))[0];
+						doh.robot.mouseMoveAt(marker, 500, 0);
+						doh.robot.mouseRelease({left: true}, 500);
+						doh.robot.sequence(d.getTestCallback(function(){
+							var value = slider.get('value');
+							doh.is(20, value);
+						}), 1000);
+						return d;
+					}
+				},
+
+				{
+					name: "slider3",
+					timeout: 5000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						var slider = dijit.byId("programaticSlider");
+						slider.set('value', 1000);
+						dojo.window.scrollIntoView(slider.domNode);
+						doh.robot.mouseMoveAt(slider.focusNode, 1, 0);
+						doh.robot.mousePress({left: true}, 500);
+						// drag to the top
+						var marker = dojo.query("div[style*='0%']", dojo.byId('dijit_form_VerticalRule_2'))[0];
+						doh.robot.mouseMoveAt(marker, 500, 0);
+						doh.robot.mouseRelease({left: true}, 500);
+						doh.robot.sequence(d.getTestCallback(function(){
+							var value = slider.get('value');
+							doh.is(3000, value);
+						}), 1000);
+						return d;
+					}
+				}
+			]);
+
+			doh.register("drag tests", [
+				{
+					name: "horizontal",
+					timeout: 10000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						var slider = dijit.byId("slider1");
+						slider.set('value', 50);
+						dojo.window.scrollIntoView(slider.domNode);
+						doh.robot.mouseMoveAt(slider.focusNode, 1, 0);
+						doh.robot.mousePress({left: true}, 500);
+						doh.robot.mouseMoveAt(slider.incrementButton, 1000, 0);
+						doh.robot.mouseRelease({left: true}, 500);
+						doh.robot.mouseMoveAt(slider.decrementButton, 1000, 0);
+						doh.robot.sequence(d.getTestCallback(function(){
+							var value = slider.get('value');
+							doh.is(value, 100, "Expected max value of 100, got "+value);
+						}), 1000);
+						return d;
+					}
+				}
+			]);
+
+			doh.run();
+		});
+	</script>
+</head>
+</html>

@@ -1,0 +1,8 @@
+/* === WhiteDownArrow16 ==*/
+.mblDomButtonWhiteDownArrow16 {
+	background-image: url(compat/mblDomButtonWhiteDownArrow16.png);
+	background-repeat: no-repeat;
+}
+.mblDomButtonWhiteDownArrow16 > div {
+	display: none;
+}

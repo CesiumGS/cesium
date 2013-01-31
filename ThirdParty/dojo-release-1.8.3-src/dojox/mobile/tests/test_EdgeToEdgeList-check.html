@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Selectable Edge-To-Edge List</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/connect",
+			"dojo/dom",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(connect, dom, ready, registry){
+			check = function(){
+				registry.byId("item1").set("checked", true);
+			};
+			uncheck = function(){
+				registry.byId("item1").set("checked", false);
+			};
+			callback = function(item, state){
+				var span = dom.byId("msgArea");
+				span.innerHTML += "onCheckStateChanged: "+item.labelNode.innerHTML+", "+state+"<br>";
+				setTimeout(function(){
+					span.innerHTML = "";
+				}, 1000);
+			};
+			ready(function(){
+				connect.connect(registry.byId("list1"), "onCheckStateChanged", null, callback);
+				connect.connect(registry.byId("list2"), "onCheckStateChanged", null, callback);
+			});
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">Selectable List</h1>
+		<h2 data-dojo-type="dojox.mobile.EdgeToEdgeCategory">Single Select</h2>
+		<ul id="list1" data-dojo-type="dojox.mobile.EdgeToEdgeList" data-dojo-props='select:"single"'>
+			<li id="item1" data-dojo-type="dojox.mobile.ListItem" data-dojo-props='checked:true'>
+				Cube
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				Dissolve
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				Ripple
+			</li>
+		</ul>
+		<input type="button" onclick="check()" value="check">
+		<input type="button" onclick="uncheck()" value="uncheck">
+
+		<h2 data-dojo-type="dojox.mobile.EdgeToEdgeCategory">Multiple Select</h2>
+		<ul id="list2" data-dojo-type="dojox.mobile.EdgeToEdgeList" data-dojo-props='select:"multiple"'>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='checked:true'>
+				Cube
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				Dissolve
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				Ripple
+			</li>
+		</ul>
+
+		<div id="msgArea" style="margin-left:10px;"></div><br><br>
+	</div>
+</body>
+</html>

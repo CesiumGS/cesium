@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>ProgressBar</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','ProgressBar']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/connect",
+			"dojo/dom",
+			"dojo/dom-class",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/ProgressBar"
+		], function(connect, dom, domClass, ready, registry){
+			update = function(v){
+				var prog1 = registry.byId("prog1");
+				prog1.set("value", v);
+				prog1.set("label", v);
+			};
+			onChange = function(value, max, percent){
+				var msg = percent + "% " + value + "/" + max;
+				dom.byId("statusMsg").innerHTML = msg;
+			};
+			ready(function(){
+				var prog1 = registry.byId("prog1");
+				var v = 0;
+				var timer = setInterval(function(){
+					prog1.set("value", v);
+					prog1.set("label", v);
+					if(v >= 200){ clearTimeout(timer); }
+					v += 40;
+				}, 1000);
+			});
+		});
+	</script>
+	<style>
+#statusMsg {
+	color: #adaead;
+	font-family: Helvetica;
+	font-size: 14px;
+	font-weight: bold;
+	margin-top: 4px;
+}
+	</style>
+</head>
+<body style="visibility:hidden;xbackground-color:#212021;padding:10px;">
+	<div id="foo" data-dojo-type="dojox.mobile.View">
+		<div id="prog1" data-dojo-type="dojox.mobile.ProgressBar"
+		     data-dojo-props='maximum:200, onChange:onChange'
+		     style="width:275px"></div>
+		<div id="statusMsg"></div>
+	</div>
+	<input type="button" onclick="update('0')" value="0">
+	<input type="button" onclick="update('70')" value="70">
+	<input type="button" onclick="update('100')" value="100">
+	<input type="button" onclick="update('200')" value="200">
+</body>
+</html>
