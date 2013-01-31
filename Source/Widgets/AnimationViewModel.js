@@ -4,180 +4,192 @@ define(['../Core/DeveloperError',
         '../Core/Color',
         '../Core/JulianDate',
         '../Core/defaultValue',
-        '../ThirdParty/sprintf'
+        './Command',
+        './ButtonViewModel',
+        '../ThirdParty/sprintf',
+        '../ThirdParty/knockout-2.2.1'
         ], function(
          DeveloperError,
          ClockStep,
          Color,
          JulianDate,
          defaultValue,
-         sprintf) {
+         Command,
+         ButtonViewModel,
+         sprintf,
+         ko) {
     "use strict";
-
-    var Command = function() {
-        this.canExecute = false;
-        this.execute = undefined;
-    };
-
-    var ButtonViewModel = function(template) {
-        var t = defaultValue(template, {});
-        this.command = defaultValue(t.command, undefined);
-        this.enabled = defaultValue(t.enabled, false);
-        this.selected = defaultValue(t.selected, false);
-        this.toolTip = defaultValue(t.toolTip, '');
-    };
 
     var _monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     var _maxShuttleAngle = 105;
 
-    function _shuttleAngletoSpeed(animationController, angle) {
-        if (Math.abs(angle) < 5) {
-            return 0;
-        }
-        angle = Math.max(Math.min(angle, _maxShuttleAngle), -_maxShuttleAngle);
-        var speed = Math.exp(((Math.abs(angle) - 15.0) * 0.15));
-        if (speed > 10.0) {
-            var scale = Math.pow(10, Math.floor((Math.log(speed) / Math.LN10) + 0.0001) - 1.0);
-            speed = Math.round(Math.round(speed / scale) * scale);
-        } else if (speed > 0.8) {
-            speed = Math.round(speed);
-        } else {
-            speed = animationController.getTypicalSpeed(speed);
-        }
-        if (angle < 0) {
-            speed *= -1.0;
-        }
-        return speed;
-    }
-
-    function _shuttleSpeedtoAngle(speed) {
-        var angle = Math.log(Math.abs(speed)) / 0.15 + 15;
-        angle = Math.max(Math.min(angle, _maxShuttleAngle), 0);
-        if (speed < 0) {
-            angle *= -1.0;
-        }
-        return angle;
-    }
-
     var AnimationViewModel = function(animationController) {
         this.animationController = animationController;
 
-        this.timeLabel = 'time';
-        this.dateLabel = 'date';
-        this.speedLabel = 'speedLabel';
+        var isAnimatingObs = this.isAnimatingObs = ko.observable(animationController.isAnimating());
+        var multiplierObs = this.multiplierObs = ko.observable(animationController._clock.multiplier);
+        var isSystemTimeAvailable = this.isSystemTimeAvailable = ko.observable(animationController._clock.isSystemTimeAvailable());
+
+        var timeObs = this.timeObs = ko.observable(animationController._clock.currentTime);
+        timeObs.equalityComparer = function(a, b) {
+            return (a === b) || ((typeof a !== 'undefined') && a.equals(b)) || ((typeof b !== 'undefined') && b.equals(a));
+        };
+
+        var clockStep = this.clockStep = ko.observable(animationController._clock.clockStep);
+        clockStep.equalityComparer = function(a, b) {
+            return a === b;
+        };
 
         var that = this;
+        this.timeLabel = ko.computed(function() {
+            return that.makeTimeLabel(timeObs());
+        });
 
-        this.pauseViewModel = new ButtonViewModel({
-            enabled : true,
-            selected : false,
-            toolTip : 'Pause',
-            command : {
-                canExecute : true,
-                execute : function() {
-                    that.pauseViewModel.selected = !that.pauseViewModel.selected;
+        this.dateLabel = ko.computed(function() {
+            return that.makeDateLabel(timeObs());
+        });
 
-                    that.playRealtimeViewModel.selected = false;
-                    that.playViewModel.selected = !that.pauseViewModel.selected && animationController._clock.multiplier > 0;
-                    that.playReverseViewModel.selected = !that.pauseViewModel.selected && animationController._clock.multiplier < 0;
-                    if (that.pauseViewModel.selected) {
-                        animationController.pause();
-                    } else {
-                        animationController.unpause();
-                    }
+        this.speedLabel = ko.computed(function() {
+            if (clockStep() === ClockStep.SYSTEM_CLOCK_TIME) {
+                return 'Today';
+            }
+            return multiplierObs() + 'x';
+        });
+
+        var pauseSelected = ko.computed({
+            read : function() {
+                return !isAnimatingObs();
+            },
+            write : function(value) {
+                if (value && isAnimatingObs()) {
+                    animationController.pause();
+                } else if (!value && !isAnimatingObs()) {
+                    animationController.unpause();
                 }
             }
+        });
+
+        this.pauseViewModel = new ButtonViewModel({
+            selected : pauseSelected,
+            toolTip : ko.observable('Pause'),
+            command : new Command(function() {
+                pauseSelected(!pauseSelected());
+            })
+        });
+
+        var playReverseSelected = ko.computed(function() {
+            return isAnimatingObs() && (multiplierObs() < 0);
         });
 
         this.playReverseViewModel = new ButtonViewModel({
-            enabled : true,
-            selected : false,
-            toolTip : 'Play Reverse',
-            command : {
-                canExecute : true,
-                execute : function() {
-                    that.playRealtimeViewModel.selected = false;
-                    that.playViewModel.selected = false;
-                    that.pauseViewModel.selected = false;
-                    that.playReverseViewModel.selected = true;
+            selected : playReverseSelected,
+            toolTip : ko.observable('Play Reverse'),
+            command : new Command(function() {
+                if (!playReverseSelected()) {
                     animationController.playReverse();
                 }
-            }
+            })
+        });
+
+        var playSelected = ko.computed(function() {
+            return isAnimatingObs() && multiplierObs() > 0 && clockStep() !== ClockStep.SYSTEM_CLOCK_TIME;
         });
 
         this.playViewModel = new ButtonViewModel({
-            enabled : true,
-            selected : false,
-            toolTip : 'Play Forward',
-            command : {
-                canExecute : true,
-                execute : function() {
-                    that.playRealtimeViewModel.selected = false;
-                    that.playViewModel.selected = true;
-                    that.pauseViewModel.selected = false;
-                    that.playReverseViewModel.selected = false;
+            selected : playSelected,
+            toolTip : ko.observable('Play Forward'),
+            command : new Command(function() {
+                if (!playSelected()) {
                     animationController.play();
                 }
-            }
+            })
+        });
+
+        var playRealtimeSelected = ko.computed(function() {
+            return clockStep() === ClockStep.SYSTEM_CLOCK_TIME;
+        });
+
+        var playRealtimeEnabled = ko.computed(function() {
+            return isSystemTimeAvailable();
         });
 
         this.playRealtimeViewModel = new ButtonViewModel({
-            enabled : true,
-            selected : false,
-            toolTip : 'Play Realtime',
-            command : {
-                canExecute : true,
-                execute : function() {
-                    that.playRealtimeViewModel.selected = true;
-                    that.playViewModel.selected = false;
-                    that.pauseViewModel.selected = false;
-                    that.playReverseViewModel.selected = false;
+            enabled : playRealtimeEnabled,
+            selected : playRealtimeSelected,
+            toolTip : ko.computed(function() {
+                if (isSystemTimeAvailable()) {
+                    return 'Today (real-time)';
+                }
+                return 'Current time not in range';
+            }),
+            command : new Command(function() {
+                if (!playRealtimeSelected()) {
                     animationController.playRealtime();
                 }
-            }
+            })
         });
-    };
 
-    AnimationViewModel.prototype.getShuttleRingAngle = function() {
-        return _shuttleSpeedtoAngle(this.animationController._clock.multiplier);
-    };
+        this.shuttleRingAngle = ko.computed({
+            read : function() {
+                var speed = multiplierObs();
+                var angle = Math.log(Math.abs(speed)) / 0.15 + 15;
+                angle = Math.max(Math.min(angle, _maxShuttleAngle), 0);
+                if (speed < 0) {
+                    angle *= -1.0;
+                }
+                return angle;
+            },
+            write : function(angle) {
+                if (Math.abs(angle) < 5) {
+                    return 0;
+                }
 
-    AnimationViewModel.prototype.setShuttleRingAngle = function(angle) {
-        var speed = _shuttleAngletoSpeed(this.animationController, angle);
-        if (speed !== 0) {
-            this.animationController._clock.multiplier = speed;
-        }
+                angle = Math.max(Math.min(angle, _maxShuttleAngle), -_maxShuttleAngle);
+                var speed = Math.exp(((Math.abs(angle) - 15.0) * 0.15));
+                if (speed > 10.0) {
+                    var scale = Math.pow(10, Math.floor((Math.log(speed) / Math.LN10) + 0.0001) - 1.0);
+                    speed = Math.round(Math.round(speed / scale) * scale);
+                } else if (speed > 0.8) {
+                    speed = Math.round(speed);
+                } else {
+                    speed = this.animationController.getTypicalSpeed(speed);
+                }
+                if (angle < 0) {
+                    speed *= -1.0;
+                }
+
+                that.animationController._clock.multiplier = speed;
+                that.animationController._clock.clockStep = ClockStep.SPEED_MULTIPLIER;
+                if (speed !== 0) {
+                    multiplierObs(speed);
+                    clockStep(ClockStep.SPEED_MULTIPLIER);
+                }
+            },
+            owner : this
+        });
+
+        this.moreReverse = {
+            canExecute : true,
+            execute : function() {
+                that.animationController.moreReverse();
+            }
+        };
+
+        this.moreForward = {
+            canExecute : true,
+            execute : function() {
+                that.animationController.moreForward();
+            }
+        };
     };
 
     AnimationViewModel.prototype.update = function() {
-        var currentTime = this.animationController._clock.currentTime;
-        this.timeLabel = this.makeTimeLabel(currentTime);
-        this.dateLabel = this.makeDateLabel(currentTime);
-
-        if (this.animationController._clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-            this.speedLabel = 'Today';
-        } else {
-            this.speedLabel = this.animationController._clock.multiplier + 'x';
-        }
-
-        if (this.playRealtimeViewModel.enabled) {
-            this.playRealtimeViewModel.toolTip = 'Today (real-time)';
-        } else {
-            this.playRealtimeViewModel.toolTip = 'Current time not in range.';
-        }
-    };
-
-    AnimationViewModel.prototype.isAnimating = function() {
-        return this.pauseViewModel.selected;
-    };
-
-    AnimationViewModel.prototype.moreReverse = function() {
-        this.animationController.moreReverse();
-    };
-
-    AnimationViewModel.prototype.moreForward = function() {
-        this.animationController.moreForward();
+        this.timeObs(this.animationController._clock.currentTime);
+        this.multiplierObs(this.animationController._clock.multiplier);
+        this.clockStep(this.animationController._clock.clockStep);
+        this.isAnimatingObs(this.animationController.isAnimating());
+        this.isSystemTimeAvailable(this.animationController._clock.isSystemTimeAvailable());
     };
 
     /**

@@ -143,14 +143,14 @@ define(['../Core/DeveloperError',
             if (angle > 180) {
                 angle -= 360;
             }
-            var shuttleRingAngle = viewModel.getShuttleRingAngle();
+            var shuttleRingAngle = viewModel.shuttleRingAngle();
             if (widget._shuttleRingDragging || (Math.abs(shuttleRingAngle - angle) < 15)) {
                 widget._shuttleRingDragging = true;
-                viewModel.setShuttleRingAngle(angle);
+                viewModel.shuttleRingAngle(angle);
             } else if (angle < shuttleRingAngle) {
-                viewModel.moreReverse();
+                viewModel.moreReverse.execute();
             } else if (angle > shuttleRingAngle) {
-                viewModel.moreForward();
+                viewModel.moreForward.execute();
             }
             e.preventDefault();
             e.stopPropagation();
@@ -159,7 +159,7 @@ define(['../Core/DeveloperError',
         }
     }
 
-    var SvgButton = function(svgObject, parentNode) {
+    var SvgButton = function(svgObject, parentNode, viewModel) {
         this.onClick = undefined;
 
         this.svgObject = svgObject;
@@ -174,6 +174,23 @@ define(['../Core/DeveloperError',
 
         this.setSelected(false);
         this.setEnabled(true);
+
+        this._viewModel = viewModel;
+
+        viewModel.selected.subscribe(function(value) {
+            that.setSelected(value);
+        });
+        this.setSelected(viewModel.selected());
+
+        viewModel.toolTip.subscribe(function(value) {
+            that.setToolTip(value);
+        });
+        this.setToolTip(viewModel.toolTip());
+
+        viewModel.enabled.subscribe(function(value) {
+            that.setEnabled(value);
+        });
+        this.setEnabled(viewModel.enabled());
     };
 
     SvgButton.prototype.setEnabled = function(enabled) {
@@ -205,7 +222,7 @@ define(['../Core/DeveloperError',
     };
 
     SvgButton.prototype.setToolTip = function(toolTip) {
-        this.svgObject.getElementsByTagName('title')[0] = toolTip;
+        this.svgObject.getElementsByTagName('title')[0].textContent = toolTip;
     };
 
     /**
@@ -279,12 +296,31 @@ define(['../Core/DeveloperError',
         // Firefox requires SVG references to be included directly, not imported from external CSS.
         // Also, CSS minifiers get confused by this being in an external CSS file.
         var cssStyle = document.createElement('style');
-        cssStyle.textContent = '.animation-rectButton .animation-buttonGlow { filter: url(#animation_blurred); }\n' + '.animation-rectButton .animation-buttonMain { fill: url(#animation_buttonNormal); }\n' + '.animation-buttonSelected .animation-buttonMain { fill: url(#animation_buttonSelected); }\n' + '.animation-rectButton:hover .animation-buttonMain { fill: url(#animation_buttonHovered); }\n' + '.animation-buttonDisabled .animation-buttonMain { fill: url(#animation_buttonDisabled); }\n' + '.animation-shuttleRingG .animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshGradient); }\n' + '.animation-shuttleRingG:hover .animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshHovered); }\n' + '.animation-shuttleRingPointer { fill: url(#animation_shuttleRingPointerGradient); }\n' + '.animation-shuttleRingPausePointer { fill: url(#animation_shuttleRingPointerPaused); }\n' + '.animation-knobOuter { fill: url(#animation_knobOuter); }\n' + '.animation-knobInner { fill: url(#animation_knobInner); }\n';
+        cssStyle.textContent = //
+        '.animation-rectButton .animation-buttonGlow { filter: url(#animation_blurred); }\n' + //
+        '.animation-rectButton .animation-buttonMain { fill: url(#animation_buttonNormal); }\n' + //
+        '.animation-buttonSelected .animation-buttonMain { fill: url(#animation_buttonSelected); }\n' + //
+        '.animation-rectButton:hover .animation-buttonMain { fill: url(#animation_buttonHovered); }\n' + //
+        '.animation-buttonDisabled .animation-buttonMain { fill: url(#animation_buttonDisabled); }\n' + //
+        '.animation-shuttleRingG .animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshGradient); }\n' + //
+        '.animation-shuttleRingG:hover .animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshHovered); }\n' + //
+        '.animation-shuttleRingPointer { fill: url(#animation_shuttleRingPointerGradient); }\n' + //
+        '.animation-shuttleRingPausePointer { fill: url(#animation_shuttleRingPointerPaused); }\n' + //
+        '.animation-knobOuter { fill: url(#animation_knobOuter); }\n' + //
+        '.animation-knobInner { fill: url(#animation_knobInner); }\n';
+
         document.head.insertBefore(cssStyle, document.head.childNodes[0]);
 
         var themeEle = document.createElement('div');
         themeEle.className = 'animation-theme';
-        themeEle.innerHTML = '<div class="animation-themeNormal"></div>' + '<div class="animation-themeHover"></div>' + '<div class="animation-themeSelect"></div>' + '<div class="animation-themeDisabled"></div>' + '<div class="animation-themeKnob"></div>' + '<div class="animation-themePointer"></div>' + '<div class="animation-themeSwoosh"></div>' + '<div class="animation-themeSwooshHover"></div>';
+        themeEle.innerHTML = '<div class="animation-themeNormal"></div>' + //
+        '<div class="animation-themeHover"></div>' + //
+        '<div class="animation-themeSelect"></div>' + //
+        '<div class="animation-themeDisabled"></div>' + //
+        '<div class="animation-themeKnob"></div>' + //
+        '<div class="animation-themePointer"></div>' + //
+        '<div class="animation-themeSwoosh"></div>' + //
+        '<div class="animation-themeSwooshHover"></div>';
 
         this._themeNormal = themeEle.childNodes[0];
         this._themeHover = themeEle.childNodes[1];
@@ -306,10 +342,10 @@ define(['../Core/DeveloperError',
 
         var buttonsG = document.createElementNS(_svgNS, 'g');
 
-        this._realtimeSVG = new SvgButton(wingButton(3, 4, '#animation_pathClock', 'Real-time'), buttonsG);
-        this._playReverseSVG = new SvgButton(rectButton(44, 99, '#animation_pathPlayReverse', viewModel.playReverseViewModel.toolTip), buttonsG);
-        this._playForwardSVG = new SvgButton(rectButton(124, 99, '#animation_pathPlay', viewModel.playViewModel.toolTip), buttonsG);
-        this._pauseSVG = new SvgButton(rectButton(84, 99, '#animation_pathPause', viewModel.pauseViewModel.toolTip), buttonsG);
+        this._realtimeSVG = new SvgButton(wingButton(3, 4, '#animation_pathClock', viewModel.playRealtimeViewModel.toolTip()), buttonsG, viewModel.playRealtimeViewModel);
+        this._playReverseSVG = new SvgButton(rectButton(44, 99, '#animation_pathPlayReverse', viewModel.playReverseViewModel.toolTip()), buttonsG, viewModel.playReverseViewModel);
+        this._playForwardSVG = new SvgButton(rectButton(124, 99, '#animation_pathPlay', viewModel.playViewModel.toolTip()), buttonsG, viewModel.playViewModel);
+        this._pauseSVG = new SvgButton(rectButton(84, 99, '#animation_pathPause', viewModel.pauseViewModel.toolTip()), buttonsG, viewModel.pauseViewModel);
 
         var shuttleRingBackPanel = _svgFromObject({
             tagName : 'circle',
@@ -424,6 +460,39 @@ define(['../Core/DeveloperError',
         document.addEventListener('mouseup', callBack, true);
         this._shuttleRingPointer.addEventListener('mousedown', callBack, true);
         this._knobOuter.addEventListener('mousedown', callBack, true);
+
+        viewModel.pauseViewModel.selected.subscribe(function(value) {
+            if (value) {
+                that._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPausePointer');
+            } else {
+                that._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
+            }
+        });
+        if (viewModel.pauseViewModel.selected()) {
+            this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPausePointer');
+        } else {
+            this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
+        }
+
+        viewModel.shuttleRingAngle.subscribe(function(value) {
+            _setShuttleRingPointer(that._shuttleRingPointer, that._knobOuter, value);
+        });
+        _setShuttleRingPointer(this._shuttleRingPointer, this._knobOuter, viewModel.shuttleRingAngle());
+
+        viewModel.dateLabel.subscribe(function(value) {
+            _updateSvgText(that._knobDate, value);
+        });
+        _updateSvgText(this._knobDate, viewModel.dateLabel());
+
+        viewModel.timeLabel.subscribe(function(value) {
+            _updateSvgText(that._knobTime, value);
+        });
+        _updateSvgText(this._knobTime, viewModel.timeLabel());
+
+        viewModel.speedLabel.subscribe(function(value) {
+            _updateSvgText(that._knobStatus, viewModel.speedLabel());
+        });
+        _updateSvgText(this._knobStatus, viewModel.speedLabel());
     };
 
     /**
@@ -786,36 +855,7 @@ define(['../Core/DeveloperError',
      * @memberof Animation.prototype
      */
     Animation.prototype.update = function() {
-        var viewModel = this._viewModel;
-        viewModel.update();
-
-        var currentTimeLabel = viewModel.timeLabel;
-        var currentDateLabel = viewModel.dateLabel;
-        var angle = viewModel.getShuttleRingAngle();
-        var speedLabel = viewModel.speedLabel;
-
-        _updateSvgText(this._knobDate, currentDateLabel);
-        _updateSvgText(this._knobTime, currentTimeLabel);
-        _updateSvgText(this._knobStatus, speedLabel);
-
-        _setShuttleRingPointer(this._shuttleRingPointer, this._knobOuter, angle);
-
-        if (viewModel.pauseViewModel.selected) {
-            this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPausePointer');
-        } else {
-            this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
-        }
-
-        function updateButton(button, viewModel) {
-            button.setSelected(viewModel.selected);
-            button.setToolTip(viewModel.toolTip);
-            button.setEnabled(viewModel.enabled);
-        }
-
-        updateButton(this._pauseSVG, viewModel.pauseViewModel);
-        updateButton(this._playForwardSVG, viewModel.playViewModel);
-        updateButton(this._playReverseSVG, viewModel.playReverseViewModel);
-        updateButton(this._realtimeSVG, viewModel.playRealtimeViewModel);
+        this._viewModel.update();
     };
 
     return Animation;
