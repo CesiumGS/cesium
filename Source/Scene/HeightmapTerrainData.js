@@ -74,8 +74,10 @@ define([
      * @param {Boolean} [structure.isBigEndian=false] Indicates endianness of the elements in the buffer when the
      *                  stride property is greater than 1.  If this property is false, the first element is the
      *                  low-order element.  If it is true, the first element is the high-order element.
+     * @param {Boolean} [createdByUpsampling=false] True if this instance was created by upsampling another instance;
+     *                  otherwise, false.
      */
-    var HeightmapTerrainData = function HeightmapTerrainData(buffer, width, height, childTileMask, structure) {
+    var HeightmapTerrainData = function HeightmapTerrainData(buffer, width, height, childTileMask, structure, createdByUpsampling) {
         /**
          * The buffer containing the height data.
          * @type {TypedArray}
@@ -125,6 +127,12 @@ define([
          * @type {Object}
          */
         this.structure = structure;
+
+        /**
+         * True if this data was created by upsampling another instance; otherwise, false.
+         * @type {Boolean}
+         */
+        this.createdByUpsampling = defaultValue(createdByUpsampling, false);
     };
 
     var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
@@ -322,7 +330,7 @@ define([
             }
         }
 
-        return new HeightmapTerrainData(heights, upsampledWidth, upsampledHeight, 0, terrainData.structure);
+        return new HeightmapTerrainData(heights, upsampledWidth, upsampledHeight, 0, terrainData.structure, true);
     }
 
     function upsampleByInterpolating(terrainData, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
@@ -346,7 +354,7 @@ define([
             }
         }
 
-        return new HeightmapTerrainData(heights, width, height, 0, terrainData.structure);
+        return new HeightmapTerrainData(heights, width, height, 0, terrainData.structure, true);
     }
 
     function interpolateHeight(sourceHeights, sourceExtent, width, height, longitude, latitude) {
