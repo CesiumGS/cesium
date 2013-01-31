@@ -1,0 +1,262 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot ColorPalette Test</title>
+
+		<style>
+			@import "../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx",
+				"dojo/dom", "dojo/dom-class", "dojo/keys", "dojo/_base/lang", "dojo/query", "dojo/sniff",
+				"dojo/domReady!"
+			], function(doh, robot, dom, domClass, keys, lang, query, has){
+
+				robot.initRobot('../test_ColorPalette.html');
+
+				var big, small, prog;
+
+				// log of calls to onChange handler
+				var changes = [];
+
+				doh.register(function setup(){
+					// get pointer to registry in the iframe
+					registry = robot.window.require("dijit/registry");
+					dfocus = robot.window.require("dijit/focus");
+
+					// refs to ColorPalette widgets
+					big = registry.byId("big");
+					small = registry.byId("small");
+					prog = registry.byId("prog");
+
+					// setup onChange handler to monitor onChange calls
+					big.on("change", function(val){
+						console.log('onchange w/value: ', val);
+						changes.push(val);
+					});
+				});
+
+				doh.register("dijit.ColorPalette tests", [
+					{
+						name: "initial conditions",
+						runTest: function(){
+							doh.f(big.get('value'), "no value for big");
+							doh.f(small.get('value'), "no value for small");
+							doh.f(prog.get('value'), "no value for prog");
+						}
+					},
+					
+					// TODO: when attr() is implemented as a setter, add tests like big.set("value", "#ffc0cb")
+
+					{
+						name: "focus",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							big.focus();
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.is(0, changes.length, "no onchange events yet");
+								
+								// test that focus is on top left cell
+								var focus = dfocus.curNode;
+								doh.t(focus, "something is focused");
+								var imgNode = focus.getElementsByTagName("img")[0];
+								doh.t(imgNode, "found image node");
+
+								var dye = big._getDye(focus);
+								doh.is("#ffffff", dye.getValue(), "focused on white");
+							}), 500);
+							
+							return d;
+						}
+					},
+
+					{
+						name: "arrow navigation",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								enterPressed = false;
+
+							// Move around some
+							robot.keyPress(keys.RIGHT_ARROW, 500, {});
+							robot.keyPress(keys.RIGHT_ARROW, 500, {});
+							robot.keyPress(keys.DOWN_ARROW, 500, {});
+							robot.keyPress(keys.LEFT_ARROW, 500, {});
+							
+							// Focus should follow the current position for the benefit of screen readers.
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								var focus = dfocus.curNode;
+								doh.t(focus, "something is focused");
+								
+								var imgNode = focus.getElementsByTagName("img")[0];
+								doh.t(imgNode, "found image node");
+
+								var dye = big._getDye(focus);
+								doh.is("#ffc0cb", dye.getValue(), "focused on right color");
+							})), 1000);
+
+							// Setup handler to catch onChange event from ENTER keypress below
+							handle = big.on("change", d.getTestCallback(lang.hitch(this, function(val){
+								handle.remove();
+								handle = null;
+
+								doh.is("#ffc0cb", val, "onChange() argument");
+								doh.is("#ffc0cb", big.get("value"), "get('value')");
+
+								doh.is(1, changes.length, 'just one onchange event');
+								doh.t(enterPressed, "onChange event didn't come until enter key was pressed");
+								
+								big.set('value', null);
+								doh.is(big.get('value'), null, "value has been cleared");
+							})));
+
+							// Select the current value
+							robot.sequence(function(){
+								enterPressed = true;
+							}, 0);
+							robot.keyPress(keys.ENTER, 500, {});
+
+							return d;
+						},
+						tearDown: function(){
+							if(handle){
+								handle.remove();
+							}
+						}
+					},
+
+					{
+						name: "tab stops",
+						timeout: 10000,
+						runTest: function(){
+							// After the navigation above, make sure that there's (still) exactly one
+							// tab stop associated w/the color picker
+							var d = new doh.Deferred();
+
+							dom.byId("beforeBig").focus();
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestErrback(function(){
+								doh.is("pink", dfocus.curNode.title, "tab into colorpalette, focus goes to pink (last focused cell)")
+							}), 1000);
+
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestErrback(function(){
+								doh.is("afterBig", dfocus.curNode.id, "another tab, went to input after ColorPalette")
+							}), 1000);
+
+							robot.keyPress(keys.TAB, 500, {shift: true});
+							robot.sequence(d.getTestErrback(function(){
+								doh.is("pink", dfocus.curNode.title, "shift-tab back into colorpalette")
+							}), 1000);
+
+							robot.keyPress(keys.TAB, 500, {shift: true});
+							robot.sequence(d.getTestCallback(function(){
+								doh.is("beforeBig", dfocus.curNode.id, "another shift-tab, to input before ColorPalette")
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "small palette (keyboard)",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// go to small colorpalette
+							dom.byId("beforeSmall").focus();
+							robot.keyPress(keys.TAB, 500, {});
+
+							// select a value
+							robot.keyPress(keys.DOWN_ARROW, 500, {});
+							robot.keyPress(keys.RIGHT_ARROW, 500, {});
+							robot.keyPress(keys.SPACE, 500, {});
+
+							robot.sequence(d.getTestCallback(function(){
+								var value = small.get('value');
+								doh.is("#ffff00", value);
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "small palette (mouse)",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Testing nls too...
+							var red = query("td[title=rojo]", small.domNode);
+							doh.is(1, red.length, "found rojo (red)");
+
+							robot.mouseMoveAt(red[0], 500);
+							robot.mouseClick({left: true}, 500);
+							if(has("mozilla")){
+								// workaround robot bug where first mouse click doesn't happen occasionally :-(
+								robot.mouseClick({left: true}, 500);
+							}
+							
+							var green = query("td[title=verde]", small.domNode);
+							doh.is(1, green.length, "found verde (green)");
+
+							// Make sure <img> alt and title are translated.  Not sure why they are being set at all though.
+							var greenImg = query("img", green[0]);
+							doh.is(1, greenImg.length, "found <img> inside of <td>");
+							doh.is("verde", greenImg[0].getAttribute("alt"), "img.alt");
+							doh.is("verde", greenImg[0].getAttribute("title"), "img.title");
+
+							robot.mouseMoveAt(green[0], 500);
+							robot.mouseClick({left: true}, 500);
+							if(has("mozilla")){
+								// workaround robot bug where first mouse click doesn't happen occasionally :-(
+								robot.mouseClick({left: true}, 500);
+							}
+
+							robot.sequence(d.getTestCallback(function(){
+								// test that value set
+								var value = small.get('value');
+								doh.is("#008000", value, "value");
+								
+								// test that focus also got set
+								var focus = dfocus.curNode;
+								doh.t(focus, "something is focused");
+								var imgNode = focus.getElementsByTagName("img")[0];
+								doh.t(imgNode, "found image node");
+								var dye = small._getDye(focus);
+								doh.is("#008000", dye.getValue(), "focused");
+								
+								// test that selected style was removed from previously selected cell and added to new selection
+								doh.f(domClass.contains(red[0], "dijitPaletteCellSelected"),
+									"Red swatch should not have selected class, actual class is: " + red[0].className);
+								doh.t(domClass.contains(green[0], "dijitPaletteCellSelected"),
+									"Green swatch should have selected class, actual class is: " + green[0].className);
+							}), 1000);
+							
+							
+							return d;
+						}
+					},
+					function valuePreselected(){
+						var cp = registry.byId("valuePreselected");
+						doh.is("#0000ff", cp.get("value"), "get('value')");
+						doh.is("blue", query(".dijitPaletteCellSelected img", cp.domNode)[0].alt, "marked");
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

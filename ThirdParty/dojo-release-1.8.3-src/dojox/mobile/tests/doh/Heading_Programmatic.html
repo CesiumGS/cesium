@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Heading</title>
+		<link href="../../themes/android/base.css" rel="stylesheet"/>
+		<link href="../../themes/common/domButtons.css" rel="stylesheet"/>
+
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			//dojo.require("dojo.parser"); // Use the lightweight parser.
+			dojo.require("dojox.mobile.parser");
+			dojo.require("dojox.mobile");
+			dojo.requireIf(!dojo.isWebKit, "dojox.mobile.compat");
+			dojo.require("dojo.window");
+			
+	        dojo.require("doh.runner");
+			dojo.addOnLoad(function(){
+				var view = dijit.byId("general");
+				var demoWidget = new dojox.mobile.Heading({back:"Settings", moveTo:"settings", label:"General"});
+//				view.addChild(demoWidget);
+				demoWidget.placeAt(view.containerNode);
+				demoWidget.startup();
+
+				demoWidget = new dojox.mobile.Heading({back:"Long Button", moveTo:"settings"});
+				demoWidget.set({label:"Very Very Long Title May Not Be Displayed in the Narrow Space"});
+//				view.addChild(demoWidget);
+				demoWidget.placeAt(view.containerNode);
+				demoWidget.startup();
+
+				demoWidget = new dojox.mobile.Heading({label:"World Clock"});
+				dojo.doc.body.appendChild(demoWidget.containerNode);
+				demoWidget.startup();
+
+				demoWidget = new dojox.mobile.Heading();
+				dojo.doc.body.appendChild(demoWidget.containerNode);
+				demoWidget.startup();
+				var childWidget = new dojox.mobile.ToolBarButton({label:"Edit"});
+				childWidget.domNode.style.padding = "0px 14px";
+//				demoWidget.addChild(childWidget);
+				childWidget.placeAt(demoWidget.containerNode);
+				childWidget.startup();
+				childWidget = new dojox.mobile.ToolBarButton({icon:"mblDomButtonWhitePlus"});
+				childWidget.domNode.style.float = "right";
+//				demoWidget.addChild(childWidget);
+				childWidget.placeAt(demoWidget.containerNode);
+				childWidget.startup();
+				demoWidget.domNode.appendChild(dojo.doc.createTextNode("Alarm Clock"));
+
+				// Test case for #16275
+				demoWidget = new dojox.mobile.Heading();
+				dojo.doc.body.appendChild(demoWidget.containerNode);
+				
+				demoWidget.set("moveTo", "view1");
+				demoWidget.set("back", "Back");
+				demoWidget.set("moveTo", "view2");
+				// If #16275 is not fixed, this is needed for changing the moveTo afterwards:
+				// demoWidget.backButton.set("moveTo", "view2");
+				
+				demoWidget.startup();
+				
+				doh.register("dojox.mobile.test.doh.Heading1", [
+					function test_Heading_Verification(){
+						var demoWidget = dijit.byId("dojox_mobile_Heading_0");
+						doh.assertTrue('mblHeading mblHeadingCenterTitle' == demoWidget.domNode.className || 'mblHeading' == demoWidget.domNode.className);
+						doh.assertEqual('General', demoWidget.domNode.childNodes[1].childNodes[0].nodeValue);
+
+						demoWidget = dijit.byId("dojox_mobile_Heading_1");
+						doh.assertTrue('mblHeading mblHeadingCenterTitle' == demoWidget.domNode.className || 'mblHeading' == demoWidget.domNode.className);
+						doh.assertEqual('Very Very Long Title May Not Be Displayed in the Narrow Space', demoWidget.domNode.childNodes[1].childNodes[0].nodeValue);
+						
+						demoWidget = dijit.byId("dojox_mobile_Heading_2");
+						doh.assertTrue('mblHeading mblHeadingCenterTitle' == demoWidget.domNode.className || 'mblHeading' == demoWidget.domNode.className);
+						doh.assertEqual('World Clock', demoWidget.domNode.childNodes[0].childNodes[0].nodeValue);
+
+						demoWidget = dijit.byId("dojox_mobile_Heading_3");
+						doh.assertTrue('mblHeading mblHeadingCenterTitle' == demoWidget.domNode.className || 'mblHeading' == demoWidget.domNode.className);
+						
+						demoWidget = dijit.byId("dojox_mobile_Heading_4");
+						doh.assertTrue(demoWidget.backButton.get("moveTo") == "view2", "when changing Heading.moveTo afterwards");
+					}
+				]);
+				doh.run();
+			});
+
+		</script>
+	</head>
+	<body>
+		<div id="general" dojoType="dojox.mobile.View" selected="true">
+		</div>
+	</body>
+</html>

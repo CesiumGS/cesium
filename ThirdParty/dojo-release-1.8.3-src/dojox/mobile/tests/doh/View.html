@@ -1,0 +1,122 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<title>View</title>
+	<link href="../../themes/iphone/base.css" rel="stylesheet"/>
+	<style>
+	html,body{
+		height: 100%;
+		overflow: hidden;
+	}
+	.list1 li{
+		border-style: solid;
+		border-width: 1px 0px 1px 0px;
+		border-top-color: #BABABC;
+		border-bottom-color: #89898C;
+		background-color: #ACACAF;
+		line-height: 0px;
+	}
+	.list1 li table{
+		line-height: normal;
+	}
+	.list1 li:nth-child(even){
+		background-color: #97979B;
+	}
+	#list2 li:nth-child(even){
+		background-color: #eeeeee;
+	}
+	#categ1 {
+		font-size: 18px;
+	}
+	#categ1 li{
+		line-height: 70px;
+	}
+	.lnk {
+		font-size: 14px;
+		color: #0B5199;
+		text-decoration: none;
+	}
+	.content {
+		padding:0px 10px;
+		background-color: white;
+	}
+	p {
+		font-family: Helvetica;
+		font-size: 12px;
+	}
+	.title {
+		color: blue;
+		margin-bottom: 4px;
+	}
+	.subtitle {
+		font-style: italic;
+		color: gray;
+		margin: 0px;
+		margin-bottom: 4px;
+	}
+	.subsubtitle {
+		margin: 16px 0px 0px 0px;
+	}
+	.lst {
+		margin: 0px;
+		padding: 0px 14px;
+	}
+	.lst li {
+		font-family: Helvetica;
+		font-size: 12px;
+		margin: 0px;
+		list-style-type: square;
+	}
+	</style>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+	<script language="JavaScript" type="text/javascript">
+		//dojo.require("dojo.parser"); // Use the lightweight parser.
+		dojo.require("dojox.mobile.parser");
+		dojo.require("dojox.mobile");
+		dojo.require("dojox.mobile.ScrollableView");
+		dojo.require("dojox.mobile.TabBar");
+		dojo.requireIf(!dojo.isWebKit, "dojox.mobile.compat");
+		dojo.requireIf(!dojo.isWebKit, "dojo.fx");
+		dojo.requireIf(!dojo.isWebKit, "dojo.fx.easing");
+
+        dojo.require("doh.runner");
+
+		dojo.addOnLoad(function(){
+			doh.register("dojox.mobile.test.doh.View", [
+				{
+					name: "test View Verification",
+					timeout: 3000,
+					runTest: function (){
+						var demoWidget = dijit.byId("group1");
+						doh.assertEqual('mblView', demoWidget.domNode.className);
+						doh.assertEqual('visible', demoWidget.domNode.style.visibility);
+
+						demoWidget = dijit.byId("categ");
+						doh.assertEqual('mblView mblScrollableView', demoWidget.domNode.className);
+						doh.assertEqual('none', demoWidget.domNode.style.display);
+					}
+				}
+			]);
+			setTimeout(function(){ // to get the correct dimension
+				doh.run();
+			}, 500);
+		});
+	</script>
+</head>
+<body>
+	<div id="group1" dojoType="dojox.mobile.View" selected="true">
+	aaa
+
+	</div>
+
+	<div id="categ" dojoType="dojox.mobile.ScrollableView">
+		<h1 dojoType="dojox.mobile.Heading" fixed="top">Categories</h1>
+		bbb
+	</div>
+
+
+</body>
+</html>

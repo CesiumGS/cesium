@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Test TimeTextBox Widget</title>
+
+		<style type="text/css">
+			@import "../../themes/claro/document.css";
+			@import "../css/dijitTests.css";
+
+			.testExample {
+				background-color:#fbfbfb;
+				padding:1em;
+				margin-bottom:1em;
+				border:1px solid #bfbfbf;
+			}
+
+			.noticeMessage {
+				color:#093669;
+				font-size:0.95em;
+				margin-left:0.5em;
+			}
+
+			.dojoTitlePaneLabel label {
+				font-weight:bold;
+			}
+
+			.dijitDownArrowActive,
+			.dijitUpArrowActive {
+				opacity:0.5 !important; /* just to test effect of clicking the up or down arrows */
+			}
+		</style>
+
+		<!-- required: the default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			data-dojo-config="isDebug: true, parseOnLoad: true"></script>
+
+		<!-- only needed for alternate theme testing: -->
+		<script type="text/javascript" src="../_testCommon.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit.form.TextBox");
+			dojo.require("dijit.form.ValidationTextBox");
+			dojo.require("dijit.form.NumberTextBox");
+			dojo.require("dijit.form.CurrencyTextBox");
+			dojo.require("dijit.form.DateTextBox");
+			dojo.require("dijit.form.TimeTextBox");
+			dojo.require("dojo.currency");
+			dojo.require("dojo.date.locale");
+			dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+
+			formValue = null;
+	
+			function displayData(){
+				var f = document.getElementById("form1");
+				var s = "";
+				for(var i = 0; i < f.elements.length; i++){
+						var elem = f.elements[i];
+						if(elem.name == "button")  { continue; }
+						s += elem.name + ": " + elem.value + "\n";
+				}
+				console.log(s);
+				formValue = s;
+			}
+		</script>
+	</head>
+
+	<body class="claro" role="main">
+		<h1 class="testTitle">Test TimeTextBox Widget</h1>
+		<!--
+			To really test form submission, you'll need to create an action handler similar to
+			http://www.utexas.edu/teamweb/cgi-bin/generic.cgi.   This just logs the form values
+			to the console.
+		 -->
+		<form id="form1" action="" name="example" method="GET" onsubmit="displayData(); return false;">
+
+			<div>
+				<input type="submit" name="submit" value="fake submit"/>
+			</div>
+			<br/>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q1">Time using local conventions with seconds</label>
+				<span class="noticeMessage">TimeTextBox class,
+					Attributes: {formatLength:'medium'}</span>
+			</div>
+			<div class="testExample">
+				<input id="q1" data-dojo-type="dijit/form/TimeTextBox"
+					data-dojo-props='type:"text", name:"time1", value:"T17:45:00",
+					constraints:{formatLength:"medium"},
+					required:true,
+					onChange:function(val){ dojo.byId("oc1").value = val; },
+					invalidMessage:"Invalid time." '/>
+				<label for="oc1">onChange:</label><input id="oc1" size="34" disabled value="not fired yet!" autocomplete="off"/>
+			</div>
+		
+			<div class="dojoTitlePaneLabel">
+				<label for="q2">Time using local conventions without seconds, required, no invalid message tooltip</label>
+				<span class="noticeMessage">TimeTextBox class,
+					Attributes: {formatLength:'short'}</span>
+			</div>
+			<div class="testExample">
+				<input id="q2" data-dojo-type="dijit/form/TimeTextBox"
+					data-dojo-props='type:"text", name:"time1a", value:"T17:45:00",
+					constraints:{formatLength:"short"},
+					required:true,
+					invalidMessage:"" '/>
+			</div>
+		
+			<div class="dojoTitlePaneLabel">
+				<label for="q3"> 12 Hour Time </label>
+				<span class="noticeMessage">TimeTextBox class,
+					Attributes: {timePattern:'h:mm:ss a'}</span>
+			</div>
+			<div class="testExample">
+				<input id="q3" data-dojo-type="dijit/form/TimeTextBox"
+					data-dojo-props='type:"text", name:"time1b", value:"T17:45:00",
+					constraints:{timePattern:"h:mm:ss a"},
+					required:true,
+					invalidMessage:"Invalid time." '/>
+			</div>
+		
+			<div class="dojoTitlePaneLabel">
+				<label for="q4"> 24 Hour Time</label>
+				<span class="noticeMessage">TimeTextBox class,
+					Attributes: {timePattern:'HH:mm:ss'}</span>
+			</div>
+			<div class="testExample">
+				<input id="q4" data-dojo-type="dijit/form/TimeTextBox"
+					data-dojo-props='type:"text", name:"time2", value:"T17:45:00",
+					constraints:{timePattern:"HH:mm:ss"},
+					required:true,
+					invalidMessage:"Invalid time. Use HH:mm:ss where HH is 00 - 23 hours."'/>
+			</div>
+		
+			<div class="dojoTitlePaneLabel">
+				<label for="q5">24 Hour Time with 1 Hour TimePicker</label>
+				<span class="noticeMessage">TimeTextBox class,
+					Attributes: {timePattern:'HH:mm:ss', clickableIncrement:'T00:15:00', visibleIncrement:'T00:15:00', visibleRange:'T01:00:00'}</span>
+			</div>
+			<div class="testExample">
+				<input id="q5" data-dojo-type="dijit/form/TimeTextBox"
+					data-dojo-props='type:"text", name:"time2", value:"T17:45:00",
+					constraints:{timePattern:"HH:mm:ss", clickableIncrement:"T00:15:00", visibleIncrement:"T00:15:00", visibleRange:"T01:00:00"},
+					required:true,
+					invalidMessage:"Invalid time. Use HH:mm:ss where HH is 00 - 23 hours."'/>
+			</div>
+		
+			<div class="dojoTitlePaneLabel">
+				<label for="q6">Initially empty time text box</label>
+				<span class="noticeMessage">TimeTextBox class,
+					Attributes: {formatLength:'medium',min:'T00:00:00',max:'T12:00:00'}</span>
+			</div>
+			<div class="testExample">
+				<input id="q6" data-dojo-type="dijit/form/TimeTextBox"
+					data-dojo-props='type:"text", name:"time6",
+					constraints:{formatLength:"medium",min:"T00:00:00",max:"T12:00:00"},
+					required:true,
+					onChange:function(val){ dojo.byId("oc6").value = val; },
+					invalidMessage:"Invalid time." '/>
+				<label for="oc6">onChange:</label><input id="oc6" size="34" disabled value="not fired yet!" autocomplete="off"/>
+			</div>
+			<div class="dojoTitlePaneLabel">
+				<strong>Using title attribute for label.</strong>
+				<span class="noticeMessage">TimeTextBox class,
+					Attributes: {formatLength:'short'} Time using local conventions without seconds, required, no invalid message tooltip</span>
+			</div>
+			<div class="testExample">
+				<input id="q20" data-dojo-type="dijit/form/TimeTextBox"
+					data-dojo-props='type:"text", name:"q20", value:"T17:45:00",
+					title:"title: Time using local conventions",
+					constraints:{formatLength:"short"},
+					required:true,
+					invalidMessage:"" '/>
+			</div>
+		</form>
+		<input id="ro" type="button" onclick="dijit.byId('q20').set('readOnly',true);" value="Set readOnly" tabIndex="-1"/>
+		<input id="rw" type="button" onclick="dijit.byId('q20').set('readOnly',false);" value="Clear readOnly" tabIndex="-1"/>
+		<input id="disable" type="button" onclick="dijit.byId('q20').set('disabled',true);" value="Disable" tabIndex="-1"/>
+		<input id="enable" type="button" onclick="dijit.byId('q20').set('disabled',false);" value="Enable" tabIndex="-1"/>
+	</body>
+</html>

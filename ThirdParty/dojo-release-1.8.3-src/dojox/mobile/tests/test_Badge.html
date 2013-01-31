@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Badge</title>
+
+	<link href="../themes/common/domButtons/DomButtonRedBadge.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonGreenBadge.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonBlueBadge.css" rel="stylesheet"/>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/dom",
+			"dojox/mobile/Badge",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(dom, Badge){
+			dojo.ready(function(){
+				var b1 = new Badge();
+				b1.setValue("33");
+				dom.byId("container1").appendChild(b1.domNode);
+
+				var b2 = new Badge({value:"22"});
+				dom.byId("container1").appendChild(b2.domNode);
+
+				var b3 = new Badge({value:"33",className:"mblDomButtonBlueBadge"});
+				dom.byId("container1").appendChild(b3.domNode);
+
+				var b4 = new Badge({value:"44",className:"mblDomButtonBlueBadge",fontSize:11});
+				dom.byId("container1").appendChild(b4.domNode);
+
+				var c = 0;
+				var id = setInterval(function() {
+					c += 7;
+					if(c >= 100){
+						clearInterval(id);
+					}
+					btn1.setValue(c);
+				}, 500);
+			});
+		});
+	</script>
+</head>
+<body style="background-color:#9E9EA0;padding:30px;">
+	<div data-dojo-type="dojox.mobile.Badge" class="mblDomButtonRedBadge" data-dojo-props='value:"6"'></div>
+	<div data-dojo-type="dojox.mobile.Badge" class="mblDomButtonBlueBadge" data-dojo-props='value:"48"'></div>
+	<div data-dojo-type="dojox.mobile.Badge" class="mblDomButtonGreenBadge" data-dojo-props='value:"320"'></div>
+	<hr>
+ 	<div id="container1"></div>
+	<hr>
+	<div data-dojo-id="btn1" data-dojo-type="dojox.mobile.Badge" class="mblDomButtonRedBadge"></div>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+/* Progress Bar */
+.mblProgressBarProgress {
+  background-color: #cee7ff;
+}
+.dj_gecko .mblProgressBarProgress {
+  -moz-transition-property: width;
+  -moz-transition-duration: 0.25s;
+  background-image: -moz-linear-gradient(top, #e7f7ff 0%, #cee7ff 50%, #add7ff 100%);
+}

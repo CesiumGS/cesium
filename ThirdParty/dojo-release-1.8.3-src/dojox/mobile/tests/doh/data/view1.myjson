@@ -1,0 +1,41 @@
+{
+  "dojox.mobile.View": {
+    "@id": "view1",
+    "dojox.mobile.Heading": {
+      "@label": "view1.myjson"
+    },
+    "dojox.mobile.RoundRectList": [{
+      "dojox.mobile.ListItem": [{
+        "@icon": "../images/i-icon-1.png",
+        "@label": "Airplane Mode",
+        "dojox.mobile.Switch": {
+        }
+      }, {
+        "@moveTo": "test_iPhone-Icon.html",
+        "@icon": "../images/i-icon-2.png",
+        "@label": "Wi-Fi",
+        "@rightText": "mac"
+      }, {
+        "@icon": "../images/i-icon-3.png",
+        "@label": "Carrier",
+        "@moveTo": "home",
+        "@rightText": "AcmePhone"
+      }]
+    }, {
+      "dojox.mobile.ListItem": [{
+        "@icon": "../images/i-icon-4.png",
+        "@label": "Sounds",
+        "@moveTo": "home"
+      }, {
+        "@icon": "../images/i-icon-5.png",
+        "@label": "Brightness",
+        "@moveTo": "home"
+      }, {
+        "@icon": "../images/i-icon-6.png",
+        "@label": "Wallpaper",
+        "@moveTo": "home"
+      }]
+    }]
+  }
+}
+

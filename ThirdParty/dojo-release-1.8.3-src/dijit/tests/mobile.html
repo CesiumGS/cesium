@@ -1,0 +1,183 @@
+<!DOCTYPE>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>General widgets mobile test page</title>
+		<link href="../themes/claro/claro.css" rel="stylesheet"/>
+		<link href="../icons/commonIcons.css" rel="stylesheet"/>
+		<script type="text/javascript" src="../../dojo/dojo.js" data-dojo-config="async: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			require([
+				"dojo/_base/kernel",
+				"dojo/_base/json",
+				"dijit",
+				"dojo/parser",
+
+				"dijit/MenuBar",
+				"dijit/PopupMenuBarItem",
+				"dijit/DropDownMenu",
+				"dijit/MenuItem",
+				"dijit/MenuSeparator",
+				"dijit/PopupMenuItem",
+				"dijit/Menu",
+
+				"dijit/Toolbar",
+				"dijit/ToolbarSeparator",
+				"dijit/form/Button",
+				"dijit/form/ComboButton",
+				"dijit/form/DropDownButton",
+				"dijit/form/ToggleButton",
+				"dijit/ColorPalette",
+				"dijit/TooltipDialog",
+				"dijit/form/TextBox",
+				"dijit/Dialog",
+
+				"dijit/ProgressBar",
+				"dijit/InlineEditBox",
+				"dijit/TitlePane",
+
+				"dijit/Tree",
+				"dojo/data/ItemFileReadStore",
+				"dijit/tree/ForestStoreModel",
+				"dojo/domReady!"
+			], function(dojo, dijit){
+				dojo.parser.parse();
+			});
+		</script>
+	</head>
+	<body class="claro">
+		<div id="menubar" data-dojo-type="dijit/MenuBar">
+			<div id="file" data-dojo-type="dijit/PopupMenuBarItem" >
+				<span>File</span>
+				<div id="fileMenu" data-dojo-type="dijit/DropDownMenu" >
+					<div id="new" data-dojo-type="dijit/MenuItem" >New</div>
+					<div id="open" data-dojo-type="dijit/MenuItem" >Open</div>
+					<div id="separator" data-dojo-type="dijit/MenuSeparator" ></div>
+					<div id="save" data-dojo-type="dijit/MenuItem" data-dojo-props='iconClass:"dijitEditorIconSave"'>Save</div>
+					<div id="saveas" data-dojo-type="dijit/MenuItem" >Save As...</div>
+				</div>
+			</div>
+			<div id="edit" data-dojo-type="dijit/PopupMenuBarItem" >
+				<span>Edit</span>
+				<div id="editMenu" data-dojo-type="dijit/DropDownMenu" >
+					<div id="cut" data-dojo-type="dijit/MenuItem" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconCut",
+						onClick:function(){ console.log("not actually cutting anything, just a test!"); }, accelKey:"Ctrl+X"'>Cut</div>
+					<div id="copy" data-dojo-type="dijit/MenuItem" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconCopy",
+						onClick:function(){ console.log("not actually copying anything, just a test!") }, accelKey:"Ctrl+C"'>Copy</div>
+					<div id="paste" data-dojo-type="dijit/MenuItem" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconPaste",
+						onClick:function(){ console.log("not actually pasting anything, just a test!") }, accelKey:"Ctrl+V"'>Paste</div>
+				</div>
+			</div>
+			<div id="view" data-dojo-type="dijit/PopupMenuBarItem" >
+				<span>View</span>
+				<div id="viewMenu" data-dojo-type="dijit/DropDownMenu" >
+					<div data-dojo-type="dijit/MenuItem">Normal</div>
+					<div data-dojo-type="dijit/MenuItem">Outline</div>
+					<div data-dojo-type="dijit/PopupMenuItem">
+						<span>Zoom</span>
+						<div id="zoomMenu" data-dojo-type="dijit/DropDownMenu" >
+							<div data-dojo-type="dijit/MenuItem">50%</div>
+							<div data-dojo-type="dijit/MenuItem">75%</div>
+							<div data-dojo-type="dijit/MenuItem">100%</div>
+							<div data-dojo-type="dijit/MenuItem">150%</div>
+							<div data-dojo-type="dijit/MenuItem">200%</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="toolbar1" data-dojo-type="dijit/Toolbar">
+			<div id="toolbar1.cut" data-dojo-type="dijit/form/Button" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconCut", showLabel:false'>Cut</div>
+			<div id="toolbar1.bold" data-dojo-type="dijit/form/ToggleButton" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconBold", showLabel:false'>Bold2</div>
+			<span data-dojo-type="dijit/ToolbarSeparator"></span>
+			<div id="toolbar1.ttdialog" data-dojo-type="dijit/form/DropDownButton" data-dojo-props='iconClass:"plusIcon", showLabel:true'>
+				<span>TD</span>
+				<div id="tooltipDlg" data-dojo-type="dijit/TooltipDialog" data-dojo-props='title:"Enter Login information",
+					execute:function(args){ console.log("submitted w/args:\n" + dojo.toJson(args, true)); }'>
+					<table>
+						<tr>
+							<td><label for="user">User:</label></td>
+							<td><input id="user" data-dojo-type=dijit.form.TextBox data-dojo-props='type:"text", name:"user" '/></td>
+						</tr>
+						<tr>
+							<td><label for="password">Password:</label></td>
+							<td><input id="password" data-dojo-type=dijit.form.TextBox data-dojo-props='type:"password", name:"pwd"'/></td>
+						</tr>
+						<tr>
+							<td colspan="2" style="text-align:center;">
+								<button data-dojo-type=dijit.form.Button data-dojo-props='type:"submit", name:"submit"'>Login</button></td>
+						</tr>
+					</table>
+				</div
+			></div>
+			<div id="toolbar1.backcolor" data-dojo-type="dijit/form/DropDownButton" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconBackColor", showLabel:true'>
+				<span>CP</span>
+				<div id="toolbar1.colorPalette" data-dojo-type="dijit/ColorPalette" data-dojo-props='style:"display: none", palette:"7x10", onChange:function(){ console.log(this.value); }'></div>
+			</div
+			><div id="toolbar1.combo" data-dojo-type="dijit/form/ComboButton" data-dojo-props='optionsTitle:"save options", iconClass:"plusIcon", showLabel:true,
+				onClick:function(){ console.log("clicked combo save") }'>
+				<span>Menu</span>
+				<div id="saveMenu" data-dojo-type="dijit/Menu" data-dojo-props='style:"display: none;"'>
+					<div data-dojo-type="dijit/MenuItem"  data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconSave",
+						onClick:function(){ console.log("not actually saving anything, just a test!") }'>Save</div>
+					<div data-dojo-type="dijit/MenuItem"
+						data-dojo-props='onClick:function(){ console.log("not actually saving anything, just a test!") }'>Save As</div>
+				</div>
+			</div>
+			<div id="toolbar1.dialog" data-dojo-type="dijit/form/Button" onclick="dijit.byId('dialog').show();"
+				 data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconCreateLink"'>Dialog</div>
+		</div>
+
+		<div id="dialog" data-dojo-type="dijit/Dialog" data-dojo-props='title:"My Dialog",
+				onExecute:function(){ console.log("OK button pressed") },
+				onCancel:function(){ console.log("Cancel button pressed") },
+				"aria-describedby":"intro",
+				execute:function(args){ console.log("submitted w/args:\n" + dojo.toJson(args, true)); }'>
+			<div class="dijitDialogPaneContentArea">
+				<table>
+					<tr>
+						<td><label for="user2">User:</label></td>
+						<td><input id="user2" style="width: 100px" data-dojo-type=dijit.form.TextBox data-dojo-props='type:"text", name:"user" '/></td>
+					</tr>
+					<tr>
+						<td><label for="password2">Password:</label></td>
+						<td><input id="password2" style="width: 100px" data-dojo-type=dijit.form.TextBox data-dojo-props='type:"password", name:"pwd"'/></td>
+					</tr>
+				</table>
+			</div>
+			<div class="dijitDialogPaneActionBar">
+				<button id="dialogbutton1" data-dojo-type="dijit/form/Button" data-dojo-props='type:"submit" '>OK</button>
+				<button id="dialogbutton2" data-dojo-type="dijit/form/Button" data-dojo-props='type:"button", onClick:function(){ dijit.byId("dialog").onCancel(); }
+						'>Cancel</button>
+			</div>
+		</div>
+
+		<br>
+		<div id="tp" data-dojo-type="dijit/TitlePane" data-dojo-props='title:"Title Pane #2"'>
+			<form>
+				<label for="age">Age: </label> <input id="age"/><br>
+				<label for="disc">Discount card </label><input id="disc" type="checkbox"/><br>
+				<button>Submit</button><br>
+			</form>
+		</div>
+
+		<br>
+		<div id="setTestBar" data-dojo-type="dijit/ProgressBar" data-dojo-props='style:"width:90%",
+			maximum:200, value:"20" '></div>
+
+		<br>
+		<div data-dojo-id="continentStore" data-dojo-type="dojo/data/ItemFileReadStore" data-dojo-props='url:"_data/countries.json"'></div>
+		<div data-dojo-id="continentModel" data-dojo-type="dijit/tree/ForestStoreModel" data-dojo-props='store:continentStore, query:{type:"continent"},
+			rootId:"continentRoot", rootLabel:"Continents", childrenAttrs:["children"]'></div>
+
+		<div id="mytree" data-dojo-type="dijit/Tree" data-dojo-props='model:continentModel, openOnClick:true'>
+		</div>
+
+		<br>
+		InlineEditBox: <span id="ieb" data-dojo-type="dijit/InlineEditBox" data-dojo-props='width:"200px", title:"recipient name"'></span>
+
+	</body>
+</html>

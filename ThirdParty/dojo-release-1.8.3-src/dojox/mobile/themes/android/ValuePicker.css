@@ -1,0 +1,54 @@
+@import url("../common/domButtons/DomButtonGrayPlus.css");
+
+@import url("../common/domButtons/DomButtonGrayMinus.css");
+/* dojox.mobile.ValuePicker */
+.mblValuePicker {
+  height: 126px;
+}
+/* dojox.mobile.ValuePickerSlot */
+.mblValuePicker > .mblValuePickerSlot {
+  float: left;
+  margin: 0 5px;
+}
+.mblValuePickerSlotButton {
+  position: relative;
+  height: 38px;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#f7f7f7), to(#d6d7d6), color-stop(0.5, #d6d3d6), color-stop(0.9, #bdbebd));
+}
+.mblValuePickerSlotPlusButton {
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+}
+.mblValuePickerSlotMinusButton {
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+.mblValuePickerSlotButtonSelected {
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#306ea1), to(#266093), color-stop(0.06, #4090d3), color-stop(0.5, #306ea1));
+}
+.mblValuePickerSlotIcon {
+  top: 5px;
+  margin: 0 auto;
+}
+.mblValuePickerSlotInputArea {
+  position: relative;
+  height: 48px;
+  border-top: 1px solid #7b797b;
+  border-bottom: 1px solid #c6c3c6;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#adaead), to(#e7e3e7), color-stop(0.1, #d6d7d6), color-stop(0.5, #f7f7f7), color-stop(0.9, #f7f3f7));
+}
+.mblValuePickerSlotInput {
+  display: block;
+  width: 90%;
+  height: 90%;
+  margin: 5% auto;
+  padding: 0;
+  text-align: center;
+  border-style: none;
+  background-color: transparent;
+  font-size: 28px;
+}
+/* dojox.mobile.ValuePickerTimePicker */
+.mblValuePickerTimePicker > .mblToolBarButton {
+  top: 45px;
+}

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Editor Test: FullScreen Plugin</title>
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.Editor");
+		dojo.require("dijit._editor.plugins.FullScreen");
+		dojo.require("dijit._editor.plugins.ViewSource");
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dijit.layout.AccordionContainer");
+		dojo.require("dijit.layout.StackContainer");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+	</script>
+</head>
+<body class="claro">
+	<br>
+	<br>
+	<div>Content before the editor.</div>
+	<br>
+	<br>
+	<div id="editor0" data-dojo-type="dijit/Editor"
+		data-dojo-props='extraPlugins:["fullscreen"], style:"background-color: white; width: 800px; height: 400px;" '>
+		<h1>Full Screen Plugin details</h1>
+		<ol>
+			<li>The Fullscreen plugin provides an extra button on the toolbar to allow switching the
+				editor into 'full screen' mode, meaning the editor takes over the viewport of the
+				browser.   This plugin is particularly useful when editing large documents.</li>
+			<li>The mode can also be toggled by entering the key command: CTRL-SHIFT-F11
+				in the editor pane.</li>
+			<li>When it toggled to full screen, it makes
+				the editor text pane opaque white so that the contents behind it are not visible.</li>
+			<li>When in full screen mode, the plugin attempts to capture the TAB key and allow navigation only between
+				the editor toolbar and the editing area, as when in full screen mode, the rest of the page is hidden
+				behind the editor.</li>
+		</ol>
+
+		<h2>Things to test:</h2>
+		<ol>
+			<li>Verify that clicking the full screen icon highlights the button appropriately and toggles the full screen mode on.</li>
+			<li>Verify that clicking the full screen icon again dehighlites the button and toggles the full screen mode off.</li>
+			<li>Click in the editing pane and verify that CTRL-SHIFT-F11 toggles the full screen mode on and off.</li>
+			<li>Verify while in full screen mode that TAB seems to behave appropriately.  Please note that FireFox and Internet
+				Explorer work the best here.  There are still a few tab control issues in Safari and Chrome.</li>
+		</ol>
+	</div>
+	<br>
+	<br>
+	<div>Content after the editor.</div>
+	<br>
+	<h1>BorderContainer with center region containing editor.</h1>
+	<div id="bc" data-dojo-type="dijit/layout/BorderContainer" data-dojo-props='style:"width: 600px; height: 500px;"'>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"left", style:"width: 50px;"'>left</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"top", style:"height: 50px;"'>top</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"right", style:"width: 50px;"'>right</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"bottom", style:"height: 50px;"'>bottom</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"center"'>
+			<div id="editor1" data-dojo-type="dijit/Editor" data-dojo-props='extraPlugins:["fullscreen","viewsource"], height:"100%"'>
+				<h1>Full Screen Plugin details</h1>
+				<ol>
+					<li>The Fullscreen plugin provides an extra button on the toolbar to allow switching the
+						editor into 'full screen' mode, meaning the editor takes over the viewport of the
+						browser.   This plugin is particularly useful when editing large documents.</li>
+					<li>The mode can also be toggled by entering the key command: CTRL-SHIFT-F11
+						in the editor pane.</li>
+					<li>When it toggled to full screen, it makes
+						the editor text pane opaque white so that the contents behind it are not visible.</li>
+					<li>When in full screen mode, the plugin attempts to capture the TAB key and allow navigation only between
+						the editor toolbar and the editing area, as when in full screen mode, the rest of the page is hidden
+						behind the editor.</li>
+				</ol>
+		
+				<h2>Things to test:</h2>
+				<ol>
+					<li>Verify that clicking the full screen icon highlights the button appropriately and toggles the full screen mode on.</li>
+					<li>Verify that clicking the full screen icon again dehighlites the button and toggles the full screen mode off.</li>
+					<li>Click in the editing pane and verify that CTRL-SHIFT-F11 toggles the full screen mode on and off.</li>
+					<li>Verify while in full screen mode that TAB seems to behave appropriately.  Please note that FireFox and Internet
+						Explorer work the best here.  There are still a few tab control issues in Safari and Chrome.</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+	<br>
+	<h1>TabContainer with tab containing editor.</h1>
+	<div id="tc" data-dojo-type="dijit/layout/TabContainer" data-dojo-props='style:"width: 600px; height: 500px; border-style: solid; border-width: 1px; padding: 0px; margin: 0px;"'>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Editor Tab"'>
+			<div id="editor2" data-dojo-type="dijit/Editor" data-dojo-props='extraPlugins:["fullscreen","viewsource"], height:"100%"'>
+				<h1>Full Screen Plugin details</h1>
+				<ol>
+					<li>The Fullscreen plugin provides an extra button on the toolbar to allow switching the
+						editor into 'full screen' mode, meaning the editor takes over the viewport of the
+						browser.   This plugin is particularly useful when editing large documents.</li>
+					<li>The mode can also be toggled by entering the key command: CTRL-SHIFT-F11
+						in the editor pane.</li>
+					<li>When it toggled to full screen, it makes
+						the editor text pane opaque white so that the contents behind it are not visible.</li>
+					<li>When in full screen mode, the plugin attempts to capture the TAB key and allow navigation only between
+						the editor toolbar and the editing area, as when in full screen mode, the rest of the page is hidden
+						behind the editor.</li>
+				</ol>
+		
+				<h2>Things to test:</h2>
+				<ol>
+					<li>Verify that clicking the full screen icon highlights the button appropriately and toggles the full screen mode on.</li>
+					<li>Verify that clicking the full screen icon again dehighlites the button and toggles the full screen mode off.</li>
+					<li>Click in the editing pane and verify that CTRL-SHIFT-F11 toggles the full screen mode on and off.</li>
+					<li>Verify while in full screen mode that TAB seems to behave appropriately.  Please note that FireFox and Internet
+						Explorer work the best here.  There are still a few tab control issues in Safari and Chrome.</li>
+				</ol>
+			</div>
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Blank Tab 1"'>
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Blank Tab 2"'>
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Blank Tab 3"'>
+		</div>
+	</div>
+	<br>
+	<h1>AccordionContainer with pane containing editor.</h1>
+	<div id="ac" data-dojo-type="dijit/layout/AccordionContainer" data-dojo-props='style:"width: 600px; height: 500px; border-style: solid; border-width: 1px; padding: 0px; margin: 0px;"'>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Editor Pane"'>
+			<div id="editor3" data-dojo-type="dijit/Editor" data-dojo-props='extraPlugins:["fullscreen","viewsource"], height:"100%"'>
+				<h1>Full Screen Plugin details</h1>
+				<ol>
+					<li>The Fullscreen plugin provides an extra button on the toolbar to allow switching the
+						editor into 'full screen' mode, meaning the editor takes over the viewport of the
+						browser.   This plugin is particularly useful when editing large documents.</li>
+					<li>The mode can also be toggled by entering the key command: CTRL-SHIFT-F11
+						in the editor pane.</li>
+					<li>When it toggled to full screen, it makes
+						the editor text pane opaque white so that the contents behind it are not visible.</li>
+					<li>When in full screen mode, the plugin attempts to capture the TAB key and allow navigation only between
+						the editor toolbar and the editing area, as when in full screen mode, the rest of the page is hidden
+						behind the editor.</li>
+				</ol>
+		
+				<h2>Things to test:</h2>
+				<ol>
+					<li>Verify that clicking the full screen icon highlights the button appropriately and toggles the full screen mode on.</li>
+					<li>Verify that clicking the full screen icon again dehighlites the button and toggles the full screen mode off.</li>
+					<li>Click in the editing pane and verify that CTRL-SHIFT-F11 toggles the full screen mode on and off.</li>
+					<li>Verify while in full screen mode that TAB seems to behave appropriately.  Please note that FireFox and Internet
+						Explorer work the best here.  There are still a few tab control issues in Safari and Chrome.</li>
+				</ol>
+			</div>
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Blank Pane 1"'>
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Blank Pane 2"'>
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Blank Pane 3"'>
+		</div>
+	</div>
+	<br>
+	<h1>StackContainer with pane containing editor.</h1>
+	<div id="sc" data-dojo-type="dijit/layout/StackContainer" data-dojo-props='style:"width: 600px; height: 500px; border-style: solid; border-width: 1px; padding: 0px; margin: 0px;"'>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Editor Pane"'>
+			<div id="editor4" data-dojo-type="dijit/Editor" data-dojo-props='extraPlugins:["fullscreen","viewsource"], height:"100%"'>
+				<h1>Full Screen Plugin details</h1>
+				<ol>
+					<li>The Fullscreen plugin provides an extra button on the toolbar to allow switching the
+						editor into 'full screen' mode, meaning the editor takes over the viewport of the
+						browser.   This plugin is particularly useful when editing large documents.</li>
+					<li>The mode can also be toggled by entering the key command: CTRL-SHIFT-F11
+						in the editor pane.</li>
+					<li>When it toggled to full screen, it makes
+						the editor text pane opaque white so that the contents behind it are not visible.</li>
+					<li>When in full screen mode, the plugin attempts to capture the TAB key and allow navigation only between
+						the editor toolbar and the editing area, as when in full screen mode, the rest of the page is hidden
+						behind the editor.</li>
+				</ol>
+		
+				<h2>Things to test:</h2>
+				<ol>
+					<li>Verify that clicking the full screen icon highlights the button appropriately and toggles the full screen mode on.</li>
+					<li>Verify that clicking the full screen icon again dehighlites the button and toggles the full screen mode off.</li>
+					<li>Click in the editing pane and verify that CTRL-SHIFT-F11 toggles the full screen mode on and off.</li>
+					<li>Verify while in full screen mode that TAB seems to behave appropriately.  Please note that FireFox and Internet
+						Explorer work the best here.  There are still a few tab control issues in Safari and Chrome.</li>
+				</ol>
+			</div>
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Blank Pane 1"'>
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Blank Pane 2"'>
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Blank Pane 3"'>
+		</div>
+	</div>
+</body>
+</html>

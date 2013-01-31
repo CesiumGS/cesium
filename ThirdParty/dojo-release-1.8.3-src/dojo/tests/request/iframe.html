@@ -1,0 +1,205 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Testing dojo/request/iframe</title>
+		<style type="text/css">
+			@import "../../resources/dojo.css";
+		</style>
+		<script>
+			var dojoConfig = {
+				async: true
+			};
+		</script>
+		<script type="text/javascript" src="../../dojo.js"></script>
+		<script type="text/javascript">
+			require(["doh", "dojo/request/iframe", "dojo/dom", "dojo/domReady!"], function(doh, iframe, dom){
+				doh.register("dojo/request/iframe", [
+					function ioIframeGetText(t){
+						var d = new doh.Deferred();
+						var td = iframe.get("iframeDummyMethod.php?type=text", {
+							preventCache: true
+						});
+						td.then(d.getTestErrback(function(data){
+							t.is("iframe succeeded", data);
+
+							return td.response.then(d.getTestCallback(function(response){
+								t.is("iframe succeeded", response.data);
+							}));
+						}));
+						return d;
+					},
+
+					function ioIframePostJson(t){
+						var d = new doh.Deferred();
+						var td = iframe.post("iframeDummyMethod.php?type=json", {
+							preventCache: true,
+							form: "contentArrayTest",
+							data: {
+								color: "blue"
+							},
+							handleAs: "json"
+						});
+						td.then(d.getTestCallback(function(data){
+							t.is("json", data.query.type);
+							t.is("blue", data.post.color);
+							t.is("42", data.post.size);
+						}));
+						return d;
+					},
+
+					function ioIframePostWithoutForm(t){
+						var d = new doh.Deferred();
+						var td = iframe.post("iframeDummyMethod.php?type=json", {
+							preventCache: true,
+							data: {
+								color: "blue"
+							},
+							handleAs: "json"
+						});
+						td.then(d.getTestCallback(function(data){
+							t.is("json", data.query.type);
+							t.is("blue", data.post.color);
+						}));
+						return d;
+					},
+
+					function ioIframeGetJson(t){
+						var d = new doh.Deferred();
+						var td = iframe.get("iframeDummyMethod.php?type=json", {
+							preventCache: true,
+							data: {
+								color: "blue"
+							},
+							handleAs: "json"
+						});
+						td.then(d.getTestCallback(function(data){
+							t.is("json", data.query.type);
+							t.is("blue", data.query.color);
+						}));
+						return d;
+					},
+
+					function ioIframeGetWithForm(t){
+						var d = new doh.Deferred();
+						var td = iframe.get("iframeDummyMethod.php?type=json", {
+							preventCache: true,
+							form: "contentArrayTest",
+							data: {
+								color: "blue"
+							},
+							handleAs: "json"
+						});
+						td.then(d.getTestCallback(function(data){
+							t.is("json", data.query.type);
+							t.is("blue", data.query.color);
+							t.is("42", data.query.size);
+						}));
+						return d;
+					},
+
+					function ioIframeGetJavascript(t){
+						var d = new doh.Deferred();
+						var td = iframe.get("iframeDummyMethod.php?type=javascript", {
+							preventCache: true,
+							handleAs: "javascript"
+						});
+						td.then(d.getTestCallback(function(){
+							t.is(42, window.iframeTestingFunction());
+						}));
+						return d;
+					},
+
+					function ioIframeGetHtml(t){
+						var d = new doh.Deferred();
+						var td = iframe.get("iframeDummyMethod.php?type=html", {
+							preventCache: true,
+							handleAs: "html"
+						});
+						td.then(d.getTestCallback(function(data){
+							t.is("SUCCESSFUL HTML response",
+								data.getElementsByTagName("h1")[0].innerHTML);
+						}));
+						return d;
+					},
+
+					function ioIframeGetXml(t){
+						var d = new doh.Deferred();
+						var td = iframe.get("iframeDummyMethod.php?type=xml", {
+							preventCache: true,
+							handleAs: "xml"
+						});
+						td.then(d.getTestCallback(function(data){
+							t.is(4, data.documentElement.getElementsByTagName("child").length);
+						}));
+						return d;
+					},
+					function ioIframeDataArray(t){
+						//Tests if an array passed in content causes as an error on cleanup.
+						var d = new doh.Deferred();
+						var td = iframe.post("iframeDummyMethod.php?type=json", {
+							form: "contentArrayTest",
+							data: {"tag": ["value1","value2"]},
+							handleAs: "json"
+						});
+						td.then(d.getTestCallback(function(data){
+							t.is("json", data.query.type);
+							t.is("value2", data.post.tag);
+							t.is("42", data.post.size);
+
+							/* Test to make sure the form still exists and it hasn't moved */
+							var form = dom.byId("contentArrayTest");
+							t.t(form);
+							t.isNot("absolute", dom.byId("contentArrayTest").style.position);
+						}));
+						return d;
+					},
+					{
+						name: "iframeQueue",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							iframe.get("iframeDummyMethod.php",{
+								query: {
+									type: "text",
+									delay: 2,
+									text: "one"
+								}
+							}).then(d.getTestErrback(function(data){
+								t.is("one", data);
+							}));
+							iframe.get("iframeDummyMethod.php",{
+								query: {
+									type: "text",
+									text: "two"
+								}
+							}).then(d.getTestErrback(function(data){
+								t.is("two", data);
+							}));
+							iframe.get("iframeDummyMethod.php",{
+								query: {
+									type: "text",
+									text: "three"
+								}
+							}).then(d.getTestCallback(function(data){
+								t.is("three", data);
+							}));
+
+							t.is(3, iframe._dfdQueue.length);
+
+							return d;
+						}
+					}
+				]);
+				doh.run();
+			});
+
+		</script>
+	</head>
+	<body>
+		<form id="contentArrayTest" method="get" enctype="multipart/form-data">
+			<input type="hidden" name="size" value="42"/>
+		</form>
+	</body>
+</html>

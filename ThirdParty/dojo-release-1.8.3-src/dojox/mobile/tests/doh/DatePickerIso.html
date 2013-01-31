@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>ValuePickerDatePicker (ISO)</title>
+
+	<script type="text/javascript" src="../../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','ValuePicker']"></script>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/kernel"
+		], function(dojo){
+			var lang = location.search.match(/lang=(\w*)/) ? RegExp.$1 : null;
+			if(lang){ dojo.locale = lang; }
+			require([
+				"dojo/_base/window",
+				"dojo/dom",
+				"dojo/ready",
+				"dijit/registry",
+				"dojo/date/stamp",
+				"doh/runner",
+				"dojo/_base/xhr",
+				"dojox/mobile/parser",
+				"dojox/mobile",
+				"dojox/mobile/compat",
+				"dojox/mobile/ValuePickerDatePicker"
+			], function(win, dom, ready, registry, datestamp, doh){
+				changeLocale = function(){
+					win.doc.forms[0].submit();
+				}
+				gotoToday = function(){
+					registry.byId("picker1").set("value", datestamp.toISOString(new Date(), { selector: "date" }));
+				}
+				showSelectedValue = function(){
+					var w = registry.byId("picker1");
+					document.getElementById("msg").innerHTML = w.get("value");
+				}
+				ready(function(){
+					doh.register("dojox.mobile.test.doh.DatePickerIso", [
+					function test_DatePickerIso(){
+						
+					// Test getter:
+					var v = registry.byId("picker1").get("value");
+					var today = datestamp.toISOString(new Date(), { selector: "date" });
+					doh.assertEqual(today, v);
+					
+					// Test setter:
+					var b = new Date(2000, 0, 1, 0, 0, 0, 0);
+					registry.byId("picker1").set("value", datestamp.toISOString(b, { selector: "date" }));
+					v = registry.byId("picker1").get("date");
+					doh.assertEqual(b.getFullYear(), v.getFullYear());
+					doh.assertEqual(b.getMonth(), v.getMonth());
+					doh.assertEqual(b.getDate(), v.getDate());
+					
+					// Test error thrown on invalid date:
+					var errThrown;
+					try {
+						registry.byId("picker1").set("value", "not a date");
+					} catch(err){
+						errThrown = true;
+					}
+					doh.assertTrue(errThrown);
+					
+					}]);
+					doh.run();
+				});
+			});
+		});
+	</script>
+
+	<style>
+	#picker1 {
+		margin: 20px;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;background-color:#424142;">
+	<div data-dojo-type="dojox.mobile.View">
+		<form>
+			<div data-dojo-type="dojox.mobile.Heading">
+				<span data-dojo-type="dojox.mobile.ToolBarButton" onClick="showSelectedValue()" data-dojo-props='label:"OK"'></span>
+				<span data-dojo-type="dojox.mobile.ToolBarButton" onClick="gotoToday()" data-dojo-props='label:"Today"'></span>
+				<select id="sel" name="lang" onchange="changeLocale()" style="float:left;margin-top:10px;">
+					<option value=""></option>
+					<option value="ar">ar</option>
+					<option value="ca">ca</option>
+					<option value="cs">cs</option>
+					<option value="da">da</option>
+					<option value="de">de</option>
+					<option value="el">el</option>
+					<option value="en">en</option>
+					<option value="en-au">en-au</option>
+					<option value="en-ca">en-ca</option>
+					<option value="en-gb">en-gb</option>
+					<option value="es">es</option>
+					<option value="fi">fi</option>
+					<option value="fr">fr</option>
+					<option value="fr-ch">fr-ch</option>
+					<option value="he">he</option>
+					<option value="hu">hu</option>
+					<option value="it">it</option>
+					<option value="ja">ja</option>
+					<option value="ko">ko</option>
+					<option value="nb">nb</option>
+					<option value="nl">nl</option>
+					<option value="pl">pl</option>
+					<option value="pt">pt</option>
+					<option value="pt-pt">pt-pt</option>
+					<option value="ro">ro</option>
+					<option value="ru">ru</option>
+					<option value="sk">sk</option>
+					<option value="sl">sl</option>
+					<option value="sv">sv</option>
+					<option value="th">th</option>
+					<option value="tr">tr</option>
+					<option value="zh">zh</option>
+					<option value="zh-hant">zh-hant</option>
+					<option value="zh-hk">zh-hk</option>
+					<option value="zh-tw">zh-tw</option>
+				</select>
+			</div>
+		</form>
+		<div id="picker1" data-dojo-type="dojox.mobile.ValuePickerDatePicker"></div>
+		<div id="msg"></div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+		<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="async: true, isDebug: true"></script>
+	 <script type="text/javascript">
+	require(["dojo/ready", "dojox/charting/Chart", "dojox/charting/axis2d/Default",
+		"dojox/charting/plot2d/Markers", "dojox/charting/themes/PlotKit/blue"], function(ready, Chart, Default, Markers,
+																						  blue){
+		ready(function(){
+			var chart = new Chart("chartDiv").
+				setTheme(blue).
+	 			addAxis("x", {fixLower: "major", fixUpper: "major", natural: true, includeZero: true,
+					majorTickStep: 0.5, minorTickStep: 0.1, dropLabels: true }).
+				addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", natural: true, includeZero: true,
+						labels: [{ value: 0, text: "0" }, { value: 1, text: "long label1" }, { value: 2, text: "long label2" },
+							{ value: 3, text: "long label3" }, { value: 4, text: "4" } ]
+					}).
+				addPlot("default", {type: Markers}).
+				addSeries("Series A", [{x: 1, y: 1}, {x: 2, y: 2}, {x: 3, y: 1}]).
+				addSeries("Series B", [{x: 5, y: 2}, {x: 6, y: 3}, {x: 7, y: 2}]).
+				addSeries("Series C", [{x: 9, y: 3}, {x: 10, y: 4}, {x: 11, y: 3}]).
+				render();
+		});
+	});
+    </script>
+	</head>
+<body>
+	<div id="chartDiv" style="width: 400px; height: 250px;"></div>
+</body>
+</html>

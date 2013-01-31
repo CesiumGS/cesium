@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>DOH Async Simple Input - Output Group example</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+			@import "../../../dijit/themes/claro/claro.css";
+		</style>
+		<script type="text/javascript" data-dojo-config="parseOnLoad:0,isDebug:1,async:1" src="../../../dojo/dojo.js"></script>
+		<script type="text/javascript">
+			require([
+				"doh/runner",
+				"dojo/dom",
+				"dojo/parser",
+				"dojo/when",
+				"dojo/Stateful",
+				"dijit/registry",
+				"dojox/mvc/Group",
+				"dojox/mvc/Output",
+				"dojo/parser",
+				"dijit/form/Form",
+				"dijit/form/TextBox",
+				"dijit/form/Button",
+				"dojo/domReady!"
+			], function(doh, ddom, parser, when, Stateful, registry){
+				models = new Stateful;
+
+				when(parser.parse(), function(){
+					models.set("model", new Stateful({First: 0}));
+
+					doh.register("Check values and bindings", [{
+						name: "Initial",
+						runTest: function(){
+							doh.is("Priority: 0", ddom.byId("one").innerHTML, "One should be set to Priority: 0");
+							doh.is("0", ddom.byId("two").innerHTML, "One should be set to Priority: 0");
+							doh.is("0", registry.byId("FirstWork").get("value"), "FirstWork should be 0");
+							doh.is("0", registry.byId("First").get("value"), "First should be 0");
+						}
+					}, {
+						name: "Update-First-Name",
+						runTest: function(){
+							var first1;
+							first1 = registry.byId("First");
+							first1.set("value", 2);
+							if (first1) {
+								doh.is("Priority: 2", ddom.byId("one").innerHTML, "One should be set to Priority: 2");
+								doh.is("2", ddom.byId("two").innerHTML, "One should be set to Priority: 2");
+								doh.is("2",  registry.byId("FirstWork").get("value"), "FirstWork should be 2");
+								doh.is("2",  registry.byId("First").get("value"), "First should be 2");
+							}
+						}
+					}, {
+						name: "Test-ref-set-0",
+						runTest: function(){
+							var first1;
+							//test first relevant false
+							first1 = registry.byId("First");
+							first1.set("value", 0);
+							if (first1) {
+								doh.is("Priority: 0", ddom.byId("one").innerHTML, "One should be set to Priority: 0");
+								doh.is("0", ddom.byId("two").innerHTML, "One should be set to Priority: 0");
+								doh.is("0", registry.byId("FirstWork").get("value"), "FirstWork should be 0");
+								doh.is("0", registry.byId("First").get("value"), "First should be 0");
+							}
+						}
+					}]);
+
+					doh.run();
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<div data-dojo-type="dijit.form.Form" data-dojo-mixins="dojox.mvc.Group" data-dojo-props="target: at(models, 'model')">
+			Working sample
+			<span> There should be "Priority : zero" here ===></span>
+			<span id="one" data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at('rel:', 'First')">Priority: ${this.value}</span>
+			<span><== there should be "Priority : zero" here.</span>
+			<br>
+			Working sample 2
+			<span> There should be a zero here ===></span>
+			<span id="two" data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at('rel:', 'First')"></span>
+			<span><== there should be a zero here.</span>
+			<br>
+			<br>
+			<ul>
+				<li>
+				<label for="FirstWork">Working</label>
+				<input name="FirstWork" id="FirstWork" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'First')" /></li>
+			</ul>
+			Here, id is the same as ref, this was not working before the fix for 14491
+			<ul>
+				<li>
+				<label for="First">Not working</label>
+				<input name="First" id="First" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'First')" /></li>
+				<!--	<input name="First" id="First" data-dojo-type="dijit.form.TextBox" /></li> -->
+			</ul>
+		</div>
+	</body>
+</html>

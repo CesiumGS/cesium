@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>TabContainerLite in StackContainer</title>
+	<link href="../../themes/claro/claro.css" rel="stylesheet" type="text/css"/>
+	<link href="../../themes/claro/document.css" rel="stylesheet" type="text/css"/>
+	<script type="text/javascript"
+			src="../../../dojo/dojo.js"
+			data-dojo-config="isDebug: true">
+	</script>
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dojo.parser");
+		dojo.require("dijit.layout._LayoutWidget");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.layout.StackContainer");
+		dojo.require("dijit.layout.StackController");
+		dojo.require("dijit.form.Button");
+
+		// This keeps track of which panes were resized, and their hidden/visible state
+		// when they were resized.
+		var resizeLog = {};
+
+		// This keeps track of how many times each pane was resized
+		var resizeCnt = {};
+
+		function onResize(widget){
+			// called when a ContentPane or TabContainer is resized
+			console.log("resize on " + widget.id + ", display is " + dojo.style(widget.domNode, "display"));
+			resizeLog[widget.id] = dojo.style(widget.domNode, "style");
+			resizeCnt[widget.id] = (resizeCnt[widget.id] || 0) + 1;
+		}
+	
+		dojo.ready(function(){
+			dojo.declare("TestLayoutContained",
+				dijit.layout._LayoutWidget, {
+					startup: function(){
+						this.inherited(arguments);
+						this._started = true;
+					},
+					resize: function(){
+						this.inherited(arguments);
+						this._contentBox = dojo.contentBox(this.domNode);
+						this._resized = true;
+					}
+				}
+			);
+
+			doh.register("parse", function(){
+				dojo.parser.parse();
+			});
+
+			doh.registerGroup("after load",
+				[
+					{
+						name: "TabContainer 1 visible and resized",
+						runTest: function(t){
+							doh.is(1, resizeCnt["tab1"], "TabContainer 1 was resized once");
+							doh.is("block", dojo.style(dijit.byId("tab1").domNode, "display"), "TabContainer 1 is visible");
+							doh.t(resizeLog["tab1"] != "none", "TabContainer 1 was visible when it was resized");
+						}
+					},
+					{
+						name: "TabContainer 1 content pane 1 visible and resized",
+						runTest: function(t){
+							doh.is(1, resizeCnt["tab1cp1"], "Tab 1 was resized once");
+							doh.is("block", dojo.style(dijit.byId("tab1cp1").domNode, "display"), "TabContainer1 Tab 1 is visible");
+							doh.t(resizeLog["tab1cp1"] != "none", "Tab 1 was visible when it was resized");
+						}
+					},
+					{
+						name: "TabContainer 1 content pane 2 hidden",
+						runTest: function(t){
+							doh.f(!"tab1cp2" in resizeCnt, "tab 2 hasn't been resized");
+							doh.is("none", dojo.style(dijit.byId("tab1cp2").domNode, "display"), "TabContainer1 Tab 2 is hidden");
+						}
+					},
+					{
+						name: "TabContainer 2 hidden and unsized",
+						runTest: function(t){
+							doh.f(!"tab2" in resizeCnt, "TabContainer 2 hasn't been resized");
+							doh.is("none", dojo.style(dijit.byId("tab2").domNode, "display"), "TabContainer 2 is hidden");
+						}
+					},
+					{
+						name: "TabContainer 2 content pane 1 unsized",
+						runTest: function(t){
+							doh.f(!"tab2cp1" in resizeCnt, "TabContainer 2 tab 1 hasn't been resized");
+						}
+					}
+				]);
+			doh.registerGroup("selecting TabContainer 2",
+				[
+					function setUp(){
+						dijit.byId("myStackContainerPR").selectChild("tab2");
+					},
+					{
+						name: "TabContainer 1 hidden",
+						runTest: function(t){
+							doh.is("none", dojo.style(dijit.byId("tab1").domNode, "display"), "TabContainer1 is hidden");
+						}
+					},
+					{
+						name: "TabContainer 2 visible and resized",
+						runTest: function(t){
+							doh.is(1, resizeCnt["tab2"], "TabContainer 2 was resized once");
+							doh.is("block", dojo.style(dijit.byId("tab2").domNode, "display"), "TabContainer 2 is visible");
+							doh.t(resizeLog["tab2"] != "none", "TabContainer 2 was visible when it was resized");
+						}
+					},
+					{
+						name: "TabContainer 2 content pane 1 visible and resized",
+						runTest: function(t){
+							doh.is(1, resizeCnt["tab2cp1"], "Tab 2 was resized once");
+							doh.is("block", dojo.style(dijit.byId("tab2cp1").domNode, "display"), "TabContainer2 Tab 1 is visible");
+							doh.t(resizeLog["tab2cp1"] != "none", "Tab 2 was visible when it was resized");
+						}
+					}
+				]);
+			doh.registerGroup("resize of ContentPane contents",
+				[
+					{
+						name: "nested layout widgets haven't been resized yet",
+						runTest: function(t){
+							doh.f(deferredOne._resized, "nested layout widget not yet resized");
+						}
+					},
+					{
+						name: "select tab 2 of TabContainer 2",
+						runTest: function(t){
+							dijit.byId("tab2").selectChild("tab2cp2");
+						}
+					},
+					{
+						name: "resize was called on nested layout widgets after tab was made visible",
+						runTest: function(t){
+							doh.is(1, resizeCnt["tab2cp2"], "Tab 2 was resized once");
+							doh.t(deferredOne._resized, "deferredOne nested layout widget was resized");
+
+							var sizeAtResize = deferredOne._contentBox;
+							doh.t(sizeAtResize.w > 50, "content box has measurable width of " + sizeAtResize.w);
+							doh.t(sizeAtResize.h > 10, "content box has measurable height of " + sizeAtResize.h);
+						}
+					}
+				]);
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro">
+	<h1>Integration: TabContainer in StackContainer</h1>
+	<br>
+	<button id="previousPR" data-dojo-type="dijit/form/Button" data-dojo-props='onClick:function(){ dijit.byId("myStackContainerPR").back() }'>&lt;</button>
+	<span data-dojo-type="dijit/layout/StackController" data-dojo-props='containerId:"myStackContainerPR"'></span>
+	<button id="nextPR" data-dojo-type="dijit/form/Button" data-dojo-props='onClick:function(){ dijit.byId("myStackContainerPR").forward() }'>&gt;</button>
+	<div id="myStackContainerPR" data-dojo-type="dijit/layout/StackContainer"
+		data-dojo-props='style:"height:150px; width: 400px;"'>
+			<div id="tab1" data-dojo-type="dijit/layout/TabContainer" data-dojo-props='title:"tab container 1"'>
+				<script type="dojo/connect" data-dojo-event="resize">
+					onResize(this);
+				</script>
+				<div id="tab1cp1" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"TC1/tab1", href:"tab1.html"'>
+					<script type="dojo/connect" data-dojo-event="resize">
+						onResize(this);
+					</script>
+				</div>
+				<div id="tab1cp2" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"TC1/tab2", href:"tab2.html"'>
+					<script type="dojo/connect" data-dojo-event="resize">
+						onResize(this);
+					</script>
+				</div>
+			</div>
+			<div id="tab2" data-dojo-type="dijit/layout/TabContainer" data-dojo-props='title:"tab container 2"'>
+				<script type="dojo/connect" data-dojo-event="resize">
+					onResize(this);
+				</script>
+				<div id="tab2cp1" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"TC2/tab 1", href:"tab1.html"'>
+					<script type="dojo/connect" data-dojo-event="resize">
+						onResize(this);
+					</script>
+				</div>
+				<div id="tab2cp2" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"TC2/tab 2"'>
+					<script type="dojo/connect" data-dojo-event="resize">
+						onResize(this);
+					</script>
+					<div><div>
+						<div data-dojo-id="deferredZero" data-dojo-type="TestLayoutContained">test nested layout widget</div>
+						<div data-dojo-id="deferredOne" data-dojo-type="TestLayoutContained">another test nested layout widget</div>
+					</div></div>
+				</div>
+			</div>
+	</div>
+</body>
+</html>

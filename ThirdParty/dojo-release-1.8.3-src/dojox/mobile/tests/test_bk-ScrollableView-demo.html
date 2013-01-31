@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Bookmarkable - ScrollableView demo</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','TabBar']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/bookmarkable",
+			"dojox/mobile/ScrollableView",
+			"dojox/mobile/TabBar"
+		]);
+	</script>
+
+	<style>
+	html,body{
+		height: 100%;
+		overflow: hidden;
+	}
+	.list1 li{
+		border-style: solid;
+		border-width: 1px 0px 1px 0px;
+		border-top-color: #BABABC;
+		border-bottom-color: #89898C;
+		background-color: #ACACAF;
+		line-height: 0px;
+	}
+	.list1 li table{
+		line-height: normal;
+	}
+	.list1 li:nth-child(even){
+		background-color: #97979B;
+	}
+	#list2 li:nth-child(even){
+		background-color: #eeeeee;
+	}
+	#categ1 {
+		font-size: 18px;
+	}
+	#categ1 li{
+		line-height: 70px;
+	}
+	.lnk {
+		font-size: 14px;
+		color: #0B5199;
+		text-decoration: none;
+	}
+	.content {
+		padding:0px 10px;
+		background-color: white;
+	}
+	p {
+		font-family: Helvetica;
+		font-size: 12px;
+	}
+	.title {
+		color: blue;
+		margin-bottom: 4px;
+	}
+	.subtitle {
+		font-style: italic;
+		color: gray;
+		margin: 0px;
+		margin-bottom: 4px;
+	}
+	.subsubtitle {
+		margin: 16px 0px 0px 0px;
+	}
+	.lst {
+		margin: 0px;
+		padding: 0px 14px;
+	}
+	.lst li {
+		font-family: Helvetica;
+		font-size: 12px;
+		margin: 0px;
+		list-style-type: square;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="group1" data-dojo-type="dojox.mobile.View" data-dojo-props='keepScrollPos:false'><!-- keepScrollPos=false is to improve performance -->
+		<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"segmentedControl", fixed:"top", syncWithViews:true'>
+			<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='moveTo:"#view1", selected:true'>New</li>
+			<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='moveTo:"#view2"'>What's Hot</li>
+			<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='moveTo:"#view3"'>Genius</li>
+		</ul>
+
+		<div id="view1" data-dojo-type="dojox.mobile.ScrollableView">
+			<ul data-dojo-type="dojox.mobile.EdgeToEdgeList" class="list1">
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true' style="font-size:10px">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+									<img alt="" src="images/icon-1.png">
+								</td>
+								<td>
+									<a class="lnk" href="#">Dojo: Traditional Karate-do Spirit</a><br>
+									Sarah Connor Hardcover<br>
+									Eligible for FREE Super Saver Shipping
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true' style="font-size:10px">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+									<img alt="" src="images/icon-1.png">
+								</td>
+								<td>
+									<a class="lnk" href="#">Japanese Martial Arts Dojo</a><br>
+									Martin Parker Hardcover<br>
+									Eligible for FREE Super Saver Shipping<br>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true' style="font-size:10px">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+									<img alt="" src="images/icon-1.png">
+								</td>
+								<td>
+									<a class="lnk" href="#">Total Solar Eclipse</a><br>
+									Steven Young Hardcover<br>
+									Eligible for FREE Super Saver Shipping<br>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true' style="font-size:10px">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+									<img alt="" src="images/icon-1.png">
+								</td>
+								<td>
+									<a class="lnk" href="#">The History of Java Coffee</a><br>
+									Marco Rodriguez Hardcover<br>
+									Eligible for FREE Super Saver Shipping<br>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true' style="font-size:10px">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+									<img alt="" src="images/icon-1.png">
+								</td>
+								<td>
+									<a class="lnk" href="#">The Principles of Spider's Web</a><br>
+									Melissa Morgan Hardcover<br>
+									Eligible for FREE Super Saver Shipping<br>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</li>
+			</ul>
+		</div>
+
+		<div id="view2" data-dojo-type="dojox.mobile.ScrollableView">
+			<ul data-dojo-type="dojox.mobile.EdgeToEdgeList" id="list2">
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true' style="font-size:10px">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+									<img alt="" src="images/a-icon-2-41x41.png">
+								</td>
+								<td>
+									<a class="lnk" href="#">The Principles of Spider's Web</a><br>
+									Melissa Morgan Hardcover<br>
+									Eligible for FREE Super Saver Shipping<br>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true' style="font-size:10px">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+									<img alt="" src="images/a-icon-2-41x41.png">
+								</td>
+								<td>
+									<a class="lnk" href="#">The History of Java Coffee</a><br>
+									Marco Rodriguez Hardcover<br>
+									Eligible for FREE Super Saver Shipping<br>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true' style="font-size:10px">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+									<img alt="" src="images/a-icon-2-41x41.png">
+								</td>
+								<td>
+									<a class="lnk" href="#">Dojo: Traditional Karate-do Spirit</a><br>
+									Sarah Connor Hardcover<br>
+									Eligible for FREE Super Saver Shipping
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true' style="font-size:10px">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+									<img alt="" src="images/a-icon-2-41x41.png">
+								</td>
+								<td>
+									<a class="lnk" href="#">Total Solar Eclipse</a><br>
+									Steven Young Hardcover<br>
+									Eligible for FREE Super Saver Shipping<br>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</li>
+			</ul>
+		</div>
+
+		<div id="view3" data-dojo-type="dojox.mobile.ScrollableView">
+			<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Generic Mobile Device</h2>
+			<ul data-dojo-type="dojox.mobile.RoundRectList">
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"AcmePhone"'>
+					Network											   
+				</li>												   
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"AcmePhone"'>
+					Line
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"1024"'>
+					Songs
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"10"'>
+					Videos
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"96"'>
+					Photos
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"2"'>
+					Applications
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"29.3 BG"'>
+					Capacity
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"28.0 BG"'>
+					Available
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"3.0 (7A341)"'>
+					Version
+				</li>
+			</ul>
+		</div>
+	</div>
+
+	<div id="categ" data-dojo-type="dojox.mobile.ScrollableView">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='fixed:"top"'>Categories</h1>
+		<ul data-dojo-type="dojox.mobile.EdgeToEdgeList" class="list1" id="categ1">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>Category 1</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>Category 2</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>Category 3</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>Category 4</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>Category 5</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>Category 6</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>Category 7</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>Category 8</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>Category 9</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>Category 10</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>Category 11</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>Category 12</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>Category 13</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>Category 14</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>Category 15</li>
+		</ul>
+	</div>
+
+	<div id="top25" data-dojo-type="dojox.mobile.View">
+		<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"segmentedControl", fixed:"top", syncWithViews:true'>
+			<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon1:"images/tab-icon-16.png", icon2:"images/tab-icon-16h.png", moveTo:"#news1", selected:true'>News1</li>
+			<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon1:"images/tab-icon-15.png", icon2:"images/tab-icon-15h.png", moveTo:"#news2"'>News2</li>
+			<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon1:"images/tab-icon-10.png", icon2:"images/tab-icon-10h.png", moveTo:"#news3"'>News3</li>
+		</ul>
+
+		<div id="news1" data-dojo-type="dojox.mobile.ScrollableView">
+			<h1 data-dojo-type="dojox.mobile.Heading">News 1</h1>
+			<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Top Stories</h2>
+			<ul data-dojo-type="dojox.mobile.RoundRectList">
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>
+					Top 10 news stories of the decade
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>
+					Create client-side diagrammatic interaction in Web applications with GFX
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>
+					Explores advanced topics in the new Java framework for implementing and consuming REST-based Web services, Part 3
+				</li>
+			</ul>
+		</div>
+
+		<div id="news2" data-dojo-type="dojox.mobile.ScrollableView">
+			<h1 data-dojo-type="dojox.mobile.Heading">News 2</h1>
+			<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Top Stories</h2>
+			<ul data-dojo-type="dojox.mobile.RoundRectList">
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>
+					Top 10 news stories of the decade
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>
+					Create client-side diagrammatic interaction in Web applications with GFX
+				</li>
+			</ul>
+		</div>
+
+		<div id="news3" data-dojo-type="dojox.mobile.ScrollableView">
+			<h1 data-dojo-type="dojox.mobile.Heading">News 3</h1>
+			<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Top Stories</h2>
+			<ul data-dojo-type="dojox.mobile.RoundRectList">
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true'>
+					Top 10 news stories of the decade
+				</li>
+			</ul>
+		</div>
+
+	</div>
+
+	<div id="search" data-dojo-type="dojox.mobile.ScrollableView">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='fixed:"top"'>Search Result</h1>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true' style="font-size:10px">
+				1. <a href="#" class="lnk">Dojo: Traditional Karate-do Spirit</a><br>
+				Sarah Connor Hardcover<br>
+				Eligible for FREE Super Saver Shipping<br>
+				<span style="color:red">$14.50 (50%)</span> In Stock<br>
+				# (531)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true' style="font-size:10px">
+				2. <a href="#" class="lnk">Japanese Martial Arts Dojo</a><br>
+				Martin Parker Hardcover<br>
+				<span style="color:red">$14.00 (60%)</span> In Stock<br>
+				# (173)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true' style="font-size:10px">
+				3. <a href="#" class="lnk">Total Solar Eclipse</a><br>
+				Steven Young Hardcover<br>
+				Get it by Mar. 2 if you order in the next <span style="color:green"><b>16 hours</b></span><br>
+				Eligible for FREE Super Saver Shipping<br>
+				<span style="color:red">$9.50 (62%)</span> In Stock<br>
+				# (1199)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true' style="font-size:10px">
+				4. <a href="#" class="lnk">The History of Java Coffee</a><br>
+				Marco Rodriguez Hardcover<br>
+				<span style="color:blue">Not Available</span>
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='variableHeight:true' style="font-size:10px">
+				5. <a href="#" class="lnk">The Principles of Spider's Web</a><br>
+				Melissa Morgan Hardcover<br>
+				Eligible for FREE Super Saver Shipping<br>
+				<span style="color:red">$12.00 (60%)</span> In Stock<br>
+				# (1847)
+			</li>
+		</ul>
+	</div>
+
+	<div id="article" data-dojo-type="dojox.mobile.ScrollableView" style="color:black;background-color:white;height:100%">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='fixed:"top"'>Article</h1>
+		<div class="content">
+			<h3 class="title">Did you know?</h3>
+			<h4 class="subtitle">Features of dojox.mobile</h4>
+			<h5 class="subsubtitle">No images are used</h5>
+			<ul class="lst">
+				<li>UI parts consist of DOM and CSS3.</li>
+				<li>Only application icons are images.</li>
+			</ul>
+
+			<h5 class="subsubtitle">Removed dependencies on the dojo modules as much as possible</h5>
+			<ul class="lst">
+				<li>No dependencies even on some of the essential core modules like Templated, Container, Contained, dojo.query, or dojo.parser.</li>
+			</ul>
+
+			<h5 class="subsubtitle">Support for CSS sprite</h5>
+			<ul class="lst">
+				<li>Application icon images can be aggregated into a single file to reduce the number of http requests.</li>
+			</ul>
+
+			<h5 class="subsubtitle">Possible to use the webkitMobile build option (when PC browser support is unnecessary)</h5>
+			<ul class="lst">
+				<li>Drops IE and Firefox-specific code at build time, and thus reduces the dojo core size</li>
+			</ul>
+		</div>
+	</div>
+
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='fixed:"bottom", syncWithViews:true' style="border-bottom:none;">
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon1:"images/tab-icon-16.png", icon2:"images/tab-icon-16h.png", selected:true, moveTo:"#group1"'>Featured</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon1:"images/tab-icon-15.png", icon2:"images/tab-icon-15h.png", moveTo:"#categ"'>Categories</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon1:"images/tab-icon-10.png", icon2:"images/tab-icon-10h.png", moveTo:"#top25"'>Top 25</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon1:"images/tab-icon-11.png", icon2:"images/tab-icon-11h.png", moveTo:"#search"'>Search</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon1:"images/tab-icon-13.png", icon2:"images/tab-icon-13h.png", moveTo:"#article"'>Updates</li>
+	</ul>
+</body>
+</html>

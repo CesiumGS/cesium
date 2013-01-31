@@ -1,0 +1,84 @@
+<html>
+	<head>
+		<title>DojoX GFX: Vector Text test: load and display a font</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" 
+			djConfig="isDebug: false"></script>
+		<script type="text/javascript">
+			dojo.require("dojox.gfx");
+			dojo.require("dojox.gfx.VectorText");
+
+			var bg="#181818", fill="#464b44", padding=32;
+			
+			function makeShapes(surface){
+				var url = dojo.moduleUrl("dojox", "gfx/resources/Gillius.svg");
+				var f = new dojox.gfx.VectorFont(url);
+
+				//		draw out the glyphs for testing.
+				var rect = surface.createRect({ x: 0, y: 0, width: 500, height: 560 })
+					.setFill(bg);
+				var g = surface.createGroup(), cx=0, count=0;
+				for(var gl in f.glyphs){
+					var glyph = f.glyphs[gl];
+					var t = g.createGroup();
+					if(glyph.path){
+						var p = t.createPath(glyph.path).setFill(fill);
+					}
+					t.setTransform([
+						dojox.gfx.matrix.flipY,
+						dojox.gfx.matrix.translate(cx, -f.viewbox.height-f.descent)
+					]);
+					cx += glyph.xAdvance, count++;
+					g.createLine({ 
+						x1: cx, x2: cx, y1: 0, y2: f.viewbox.height 
+					}).setStroke({color:"#409953", style:"Dash", width:1 });
+				}
+				cx -= glyph.xAdvance;
+				var factor = (500/f.viewbox.height)/2;
+				g.setTransform(dojox.gfx.matrix.scale(factor));
+				surface.setDimensions(cx*factor, (f.viewbox.height*factor)+padding*2);
+				rect.setShape({ x:0, y:0, width:cx*factor, height: (f.viewbox.height*factor)+padding*2 });
+				dojo.byId("test").style.height = Math.round(f.viewbox.height*factor)+padding*2+"px";
+				
+				//		try to find the baseline
+				surface.createLine({ x1: 0, x2: cx*factor, 
+						y1: factor*(f.viewbox.height+f.descent), y2:factor*(f.viewbox.height+f.descent) 
+				}).setStroke({ color: "#a36e2c" });
+
+				//		lets do some measuring lines.
+				var s = "#70657e", axis = surface.createGroup();
+				//		measurement axis
+				axis.createLine({ x1: 0, x2: cx*factor, y1: factor*f.viewbox.height+padding*2-1, y2: factor*f.viewbox.height+padding*2-1 })
+					.setStroke(s);
+
+				var major=50, minor=10, yMajor=20, yMinor=10, tick=5, steps=Math.floor(cx/minor);
+				for(var i=0; i<steps; i++){
+					//		ticks
+					var xpos = i*minor, y2 = padding*2+factor*f.viewbox.height, y1 = (xpos%major==0)?y2-yMajor:y2-yMinor;
+					axis.createLine({ x1: xpos, x2: xpos, y1: y1, y2: y2 }).setStroke(s);
+					if(xpos%major==0){
+						axis.createText({ x: xpos, y: y1-4, text: xpos.toString(), align: "middle" })
+							.setFont({ family: "sans-serif", size:"8pt"})
+							.setFill(s);
+					}
+				}
+			}
+			
+			function createSurface(){
+				var surface = dojox.gfx.createSurface("test", 500, 560);
+				surface.whenLoaded(makeShapes);
+			}
+
+			dojo.ready(createSurface);
+		</script>
+	</head>
+	<body>
+		<h1>dojox.gfx Vector Text test: loading a font</h1>
+		<p>This is a test of the new VectorText functionality; we load up an SVG Font definition and use it to render text (as opposed to tapping into a browser's native text capability).</p>
+		<div id="test" style="width: 500px; height: 560px;"></div>
+	</body>
+</html>

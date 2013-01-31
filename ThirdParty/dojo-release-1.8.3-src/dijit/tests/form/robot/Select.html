@@ -1,0 +1,605 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>doh.robot Select Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+			dojo.require("dojo.date");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_Select.html');
+
+				// refs to parts of s1 Select
+				var s1, s1menu, Tenessee, Virginia, Washington,	// s1 select
+					s8a, s8a_menu, s8b, s8b_menu, s3, s3_menu;				// long list selects
+
+				// log of calls to onChange handler
+				var changes = [];
+
+				doh.register("setup",
+					function setUp(){
+				    	s1 = dijit.byId('s1');
+						s1_menu = dijit.byId('s1_menu');
+						doh.t(s1, "s1 select exists");
+						doh.t(s1_menu, "s1 menu exists");
+						
+						s8a = dijit.byId('s8a');
+						s8a_menu = dijit.byId('s8a_menu');
+						s8b = dijit.byId('s8b');
+						s8b_menu = dijit.byId('s8b_menu');
+						s3 = dijit.byId('s3');
+						s3_menu = dijit.byId('s3_menu');
+						s13 = dijit.byId('s13');
+						s13_menu = dijit.byId('s13_menu');
+						s14 = dijit.byId('s14');
+						s14_menu = dijit.byId('s14_menu');
+
+						form = dijit.byId('form');
+
+						// preload menus since first load can take a while
+						var doNothing = function(){};
+						s1.loadDropDown(doNothing);
+						dijit.byId('s5').loadDropDown(doNothing);
+						dijit.byId('s6').loadDropDown(doNothing);
+						s8a.loadDropDown(doNothing);
+						s8b.loadDropDown(doNothing);
+				    }
+				);
+
+				doh.register("mouse", [
+					{
+						name: "two clicks to select",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// click to open drop down
+							doh.robot.mouseMoveAt(s1.domNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isVisible(s1_menu), "drop down menu displayed after click");
+								doh.is("true", s1.domNode.getAttribute('aria-expanded'), 'aria-expanded');
+								doh.is("listbox", s1_menu.domNode.firstChild.getAttribute('role'), 'menu role');
+								doh.is(5, dojo.query("tr", s1_menu.domNode).length, "5 options in menu");
+								
+								var selectedOptions = dojo.query(".dijitSelectSelectedOption .dijitMenuItemLabel", s1_menu.domNode);
+								doh.is(1, selectedOptions.length, "one selected option");
+								doh.is("Virginia", innerText(selectedOptions[0]), "Virginia highlighted");
+
+								Washington = dojo.query("tr", s1_menu.domNode)[2];
+								doh.t(Washington, "Washington is another menu choice");
+							}), 1000);
+
+							// select an option in the drop down
+							doh.robot.mouseMoveAt(function(){
+								// function wrapper because Washington isn't defined until about sequence() runs
+								return Washington;
+							}, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isHidden(s1_menu), "clicking choice hides menu");
+								doh.is("false", s1.domNode.getAttribute('aria-expanded'), 'aria-expanded');
+								
+								doh.is("Washington", innerText(s1.containerNode), "select shows selected option");
+								doh.is("WA", s1.get("value"), "get(value) after selecting Washington");
+							}), 1000);
+
+							// click to open drop down again
+							doh.robot.mouseMoveAt(s1.domNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isVisible(s1_menu), "drop down menu displayed after third click");
+								
+								var selectedOptions = dojo.query(".dijitSelectSelectedOption .dijitMenuItemLabel", s1_menu.domNode);
+								doh.is(1, selectedOptions.length, "one selected option");
+								doh.is("Washington", innerText(selectedOptions[0]), "Washington highlighted");
+							}), 1000);
+
+							// clicking away should close the drop down
+							doh.robot.mouseMove(10, 10, 500);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden(s1_menu), "clicking away hides menu");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "mouse down, slide, mouse up",
+						timeout: 15000,
+						setUp: function(){
+							s1.set("value", "VA");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// mouse-down to open drop down
+							doh.robot.mouseMoveAt(s1.domNode, 0, 1);
+							doh.robot.mousePress({left:true}, 500);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isVisible(s1_menu), "drop down menu displayed after mouse down");
+								doh.is(5, dojo.query("tr", s1_menu.domNode).length, "5 options in menu");
+								
+								var selectedOptions = dojo.query(".dijitSelectSelectedOption .dijitMenuItemLabel", s1_menu.domNode);
+								doh.is(1, selectedOptions.length, "one selected option");
+								doh.is("Virginia", innerText(selectedOptions[0]), "Virginia highlighted");
+
+								Washington = dojo.query("tr", s1_menu.domNode)[2];
+								doh.t(Washington, "Washington is another menu choice");
+							}), 1000);
+
+							// select an option in the drop down
+							doh.robot.mouseMoveAt(function(){
+								// function wrapper because Washington isn't defined until above sequence() runs
+								return Washington;
+							}, 0, 1);
+							doh.robot.mouseRelease({left:true}, 500);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isHidden(s1_menu), "clicking choice hides menu");
+								
+								doh.is("Washington", innerText(s1.containerNode), "select shows selected option");
+								doh.is("WA", s1.get("value"), "get(value) after selecting Washington");
+							}), 1000);
+
+							// mouse down to open drop down again
+							doh.robot.mouseMoveAt(s1.domNode, 0, 1);
+							doh.robot.mousePress({left:true}, 500);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isVisible(s1_menu), "drop down menu displayed after second mouse down");
+								
+								var selectedOptions = dojo.query(".dijitSelectSelectedOption .dijitMenuItemLabel", s1_menu.domNode);
+								doh.is(1, selectedOptions.length, "one selected option");
+								doh.is("Washington", innerText(selectedOptions[0]), "Washington highlighted");
+							}), 1000);
+
+							// mouse up away from node should leave drop down open
+							doh.robot.mouseMove(10, 10, 500);
+							doh.robot.mouseRelease({left:true}, 500);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isVisible(s1_menu), "mouse up away from menu leaves menu open");
+							}), 500);
+
+							// then another mouse click should close it
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden(s1_menu), "clicking on blank screen hides menu");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "maxHeight",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// open drop down
+							doh.robot.mouseMoveAt(s8a.domNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isVisible(s8a_menu.domNode), "drop down menu displayed after mouse down");
+								
+								var pos = dojo.position(s8a_menu.domNode);
+								doh.t(pos.h >= 200, "height at least 200: " + pos.h);
+								doh.t(pos.h < 220, "height including borders not much more than 200: " + pos.h);
+							}), 1000);
+
+							// close drop down
+							doh.robot.mouseMove(10, 10, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden(s8a_menu), "clicking on blank screen hides menu");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					// Not sure if this is good or not, but sometimes menu can overlap
+					// the select itself.  In this case, mouse up should leave the menu open						
+					{
+						name: "menu overlaps select",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								overlapping = false;
+
+							// open drop down
+							doh.robot.mouseMoveAt(s8b.domNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isVisible(s8b_menu.domNode), "drop down menu displayed after mouse click");
+
+								var select = dojo.position(s8b.domNode),
+									menu = dojo.position(s8b_menu.domNode);
+								doh.t(menu.h >= 220, "menu has big height: " + menu.h);
+
+								// Sometimes the menu overlaps and (at least on chrome/win) sometimes it doesn't.
+								// Not sure why the behavior changes but not treating it as a bug.
+								overlapping = menu.y < select.y && menu.y+menu.h > select.y+select.h;
+							}), 1000);
+
+							// clicking again should select the option from the menu
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								if(overlapping){
+									doh.t(isHidden(s8b_menu), "clicking again selects something from menu");
+								}
+							}), 1000);
+
+							return d;
+						}
+					}
+
+				]);
+
+				doh.register("keyboard", [
+					{
+						name: "tabIndex",
+						timeout: 10000,
+						setUp: function(){
+							dojo.byId("htmlSelect2").focus();
+							dijit.byId("s2").set("disabled", true);
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// tab to s1
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.is("s1", dojo.global.dijit.focus.curNode.id)
+							}), 1000);
+
+							// tab to button after s1
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.is("s1button", dojo.global.dijit.focus.curNode.id)
+							}), 1000);
+
+							// tab again should skip disabled s2, and go to s3
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("s3", dojo.global.dijit.focus.curNode.id)
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							dijit.byId("s2").set("disabled", false);
+						}
+					},
+					{
+						name: "selecting",
+						timeout: 9000,
+						setUp: function(){
+							dojo.byId("htmlSelect2").focus();
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+							var nextFocused, previousSelectionFocused, wasVisible, stillVisible, widgetFocused;
+
+							// tab to s1
+							doh.robot.keyPress(dojo.keys.TAB, 1000, {});
+							doh.robot.sequence(function(){
+								widgetFocused = dojo.global.dijit.focus.curNode.id == "s1";
+							}, 1000);
+
+							// down arrow to open drop down and focus first item
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+							doh.robot.sequence(function(){
+								wasVisible = isVisible(s1_menu);
+								previousSelectionFocused = dojo.query("tr", s1_menu.domNode)[2] == dojo.global.dijit.focus.curNode;
+							}, 1000);
+
+							// down arrow to next menu choice
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+							doh.robot.sequence(function(){
+								stillVisible = isVisible(s1_menu);
+								nextFocused = dojo.query("tr", s1_menu.domNode)[3] == dojo.global.dijit.focus.curNode;
+							}, 500);
+
+							// ENTER to select option
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(widgetFocused, "widget focus");
+								doh.t(wasVisible, "drop down menu displayed after down arrow");
+								doh.t(previousSelectionFocused, "focused on previously selected item")
+								doh.t(stillVisible, "drop down menu still displayed");
+								doh.t(nextFocused, "focused on next menu item")
+								doh.t(isHidden(s1_menu), "drop down menu closes after ENTER key");
+								doh.is("FL", s1.get("value"));
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							dijit.byId("s1").set("value", "VA");
+						}
+					},
+					{
+						name: "ESC to close menu",
+						timeout: 90000,
+						setUp: function(){
+							dojo.byId("htmlSelect2").focus();
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+							var nextFocused, wasVisible, widgetFocused;
+
+							// tab to s1
+							doh.robot.keyPress(dojo.keys.TAB, 1000, {});
+							doh.robot.sequence(function(){
+								widgetFocused = dojo.global.dijit.focus.curNode.id == "s1";
+							}, 1000);
+
+							// down arrow to open drop down and focus first item
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+							doh.robot.sequence(function(){
+								wasVisible = isVisible(s1_menu);
+							}, 1000);
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+							doh.robot.sequence(function(){
+								nextFocused = dojo.query("tr", s1_menu.domNode)[2] == dojo.global.dijit.focus.curNode;
+							}, 500);
+
+							// ESC to close menu
+							doh.robot.keyPress(dojo.keys.ESCAPE, 500, {});
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(widgetFocused, "widget focus");
+								doh.t(wasVisible, "drop down menu displayed after down arrow");
+								doh.t(nextFocused, "focused next menu item")
+								doh.t(isHidden(s1_menu), "drop down menu closes after ENTER key");
+								doh.is("VA", s1.get("value"), "value unchanged");
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							dijit.byId("s1").set("value", "VA");
+						}
+					}
+				]);
+
+				doh.register("display", [
+					{
+						name: "empty drop down",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Open widget w/no choices
+							var s6 = dijit.byId("s6");
+							doh.robot.mouseMoveAt(s6.domNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								var menu = dijit.byId("s6_menu"),
+									trs = dojo.query("tr", menu.domNode);
+								doh.is(1, trs.length, "one entry in menu");
+								doh.is("", innerText(dojo.query(".dijitMenuItemLabel", trs[0])), "blank");
+							}), 500);
+
+							return d;
+						}
+					},
+
+					// Currently (for better or worse) the select's width changes based on which option
+					// is selected.   Make sure that the drop down is wide enough to show all entries,
+					// even when a narrow entry is selected.
+					{
+						name: "width",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var s5 = dijit.byId("s5"),
+								s5_menu = dijit.byId("s5_menu"),
+								menuSize;
+
+							// originally s5 is narrow
+							var s5origSize = dojo.position(s5.domNode);
+
+							// Open drop down menu and make sure it's wider than the select
+							// (to display "no move" and "no copy" choices)
+							doh.robot.mouseMoveAt(s5.domNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestErrback(function(){
+								menuSize = dojo.position(s5_menu.domNode);
+								doh.t(menuSize.w > s5origSize.w, "menu (" + menuSize.w + ") wider than select (" + s5origSize.w + ")");
+							}), 1000);
+
+							// Select last entry in the drop down.   Should make the select wider.
+							doh.robot.mouseMoveAt(function(){
+								return dojo.query("tr", s5_menu.domNode)[4];
+							}, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								var s5newSize = dojo.position(s5.domNode);
+								doh.t(s5newSize.w > s5origSize.w, "select changed width from " + s5origSize.w + " to " + s5newSize.w);
+							}), 500);
+				
+							return d;
+						}
+					}
+				]);
+
+				doh.register("required", [
+					function initial_value(){
+						doh.t(!s3.get('value'), "initial blank value");
+						doh.t(!s3.options[0].value, "blank option");
+						doh.t(s3.get('required'), "required");
+						doh.f(s3.isValid(), "should not be valid");
+					},
+					{
+						name: "select blank option",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Open drop down menu
+							doh.robot.mouseMoveAt(s3.domNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							// Select blank option
+							doh.robot.mouseMoveAt(function(){
+								return dojo.query("tr", s3_menu.domNode)[0];
+							}, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden(s3_menu), "drop down menu closes after selection");
+								doh.t(!s3.get('value'), "blank value");
+								doh.t(!s3.options[0].value, "blank option");
+								doh.f(s3.isValid(), "should not be valid");
+							}), 1000);
+				
+							return d;
+						}
+					},
+					{
+						name: "select option w/ blank present",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Open drop down menu
+							doh.robot.mouseMoveAt(s3.domNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							// Select 4th option
+							doh.robot.mouseMoveAt(function(){
+								return dojo.query("tr", s3_menu.domNode)[4];
+							}, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden(s3_menu), "drop down menu closes after selection");
+								doh.is("AZ", s3.get('value'), "Arizona");
+								doh.f(!s3.options[0].value, "no blank option");
+								doh.t(s3.isValid(), "should be valid");
+							}), 1000);
+				
+							return d;
+						}
+					},
+					{
+						name: "select option w/o blank present",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Open drop down menu
+							doh.robot.mouseMoveAt(s3.domNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							// Select 4th option
+							doh.robot.mouseMoveAt(function(){
+								return dojo.query("tr", s3_menu.domNode)[4];
+							}, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden(s3_menu), "drop down menu closes after selection");
+								doh.is("AR", s3.get('value'), "Arkansas");
+								doh.t(s3.isValid(), "should be valid");
+							}), 1000);
+				
+							return d;
+						}
+					}
+				]);
+
+				doh.register("form submit", [
+					{
+						name: "first validate",
+						timeout: 5000,
+						runTest: function(){
+							// First validate() should focus s13 and display a tooltip.
+							// (s13 is also required, but has a value from previous tests)
+							var d = new doh.Deferred();
+
+							 var handle = dijit.focus.watch("curNode", d.getTestErrback(function(name, oval, nval){
+								if(!nval){ return; }	// ignore spurious event on IE
+								console.log("focused on", nval && (nval.id || nval.innerHTML));
+								doh.is("s13", nval.id, "focused on first required select");
+								handle.unwatch();
+								setTimeout(d.getTestCallback(function(){
+									// Tooltip should appear with error message
+									masterTT = dojo.global.dijit._masterTT;
+									doh.t(masterTT && isVisible(masterTT.domNode), "visible");
+									doh.is("s13", masterTT.aroundNode.id, "tooltip for s13");
+									doh.is("This value is required.", dojo.trim(innerText(masterTT.domNode)));
+								}), 750);
+							}));
+
+							// Validate the form programatically
+							dijit.byId("form").validate();
+
+							return d;
+						}
+					},
+					{
+						name: "select non-blank option for s13",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Open drop down menu
+							doh.robot.mouseMoveAt(s13.domNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							// Select 4th option
+							doh.robot.mouseMoveAt(function(){
+								return dojo.query("tr", s13_menu.domNode)[4];
+							}, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden(s13_menu), "drop down menu closes after selection");
+								doh.is("AZ", s13.get('value'), "Arizona");
+								doh.t(s13.isValid(), "should be valid");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "revalidate",
+						timeout: 5000,
+						runTest: function(){
+							// Second validate() should focus s14 and display a tooltip
+							var d = new doh.Deferred();
+
+							var handle = dijit.focus.watch("curNode", d.getTestErrback(function(name, oval, nval){
+								if(!nval){ return; }	// ignore spurious event on IE
+								if(nval.id == "submit"){ return; }	// ignore focus onto submit button
+								doh.is("s14", nval.id, "focused on second required select");
+								handle.unwatch();
+								setTimeout(d.getTestCallback(function(){
+									// Tooltip should appear with error message
+									masterTT = dojo.global.dijit._masterTT;
+									doh.t(masterTT && isVisible(masterTT.domNode), "visible");
+									doh.is("s14", masterTT.aroundNode.id, "tooltip for s14");
+									doh.is("This value is required.", dojo.trim(innerText(masterTT.domNode)));
+								}), 750);
+							}));
+
+							// Press button to submit the form
+							doh.robot.mouseMoveAt("submit", 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

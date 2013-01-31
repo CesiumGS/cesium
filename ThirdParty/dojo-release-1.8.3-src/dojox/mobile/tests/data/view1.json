@@ -1,0 +1,19 @@
+{
+  "dojox.mobile.View": {
+    "@id": "view1",
+    "dojox.mobile.Heading": {
+      "@back": "Home",
+      "@moveTo": "home",
+      "@label": "view1.json"
+    },
+    "dojox.mobile.EdgeToEdgeList": {
+      "dojox.mobile.ListItem": [{
+        "@label": "Jack Coleman"
+      }, {
+        "@label": "James Evans"
+      }, {
+        "@label": "Jason Griffin"
+      }]
+    }
+  }
+}

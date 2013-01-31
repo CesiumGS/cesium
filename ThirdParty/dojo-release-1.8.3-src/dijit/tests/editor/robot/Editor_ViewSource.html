@@ -1,0 +1,841 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Editor View Source Plugin Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.DeferredList");
+			dojo.require("dojo.window");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_ViewSource.html');
+
+				var editor0, editor1, editor2, editor3;
+				var fsPlugin;
+				var vsPlugin;
+
+				doh.register("ViewSource_Tests", [
+					{
+						name: "wait for editors to load",
+						timeout: 5000,
+						runTest: function(){
+						    return new dojo.DeferredList(
+						        dijit.registry.filter(function(w){ return w.onLoadDeferred; }).map(function(w){ return w.onLoadDeferred; })
+						    );
+						}
+					},
+					{
+						name: "Keyboard: Go to view source (CTRL-SHIFT-F12)",
+						timeout: 20000,
+						setUp: function(){
+							editor0 = dijit.byId("editor0");
+							var edPlugins = editor0._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.ViewSource"){
+									vsPlugin = p;
+								}
+								if(vsPlugin){
+									break;
+								}
+							}
+							doh.t(vsPlugin != null, "Checking for VS plugin.");
+							if(vsPlugin){ vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							//Timing gets wonky here, so we need to do this on a timeout
+							//so the browser has time  to shift focus.
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor0.focus();
+							}), 500);
+
+							doh.robot.keyPress(dojo.keys.F12, 1000, {ctrl:true,shift:true});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								doh.t(vsPlugin._sourceShown, "Verifying the plugin believes the source is shown.");
+								doh.is("none", dojo.style(editor0.iframe, "display"), "Verifying iframe is invisible");
+								doh.is("block", dojo.style(vsPlugin.sourceArea, "display"), "Verifying source view node is visible");
+								doh.is(vsPlugin.sourceArea.nextSibling, editor0.iframe, "Verifying source view node's next sibling is the hidden iframe node.");
+							}), 3000);
+
+							return d;
+						},
+						tearDown: function(){
+							 if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+							 fsPlugin = null;
+							 vsPlugin = null;
+						}
+					},
+					{
+						name: "Keyboard: Go to source mode and back",
+						timeout: 20000,
+						setUp: function(){
+							editor0 = dijit.byId("editor0");
+							var edPlugins = editor0._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.ViewSource"){
+									vsPlugin = p;
+								}
+								if(vsPlugin){
+									break;
+								}
+							}
+							doh.t(vsPlugin != null, "Checking that the view source plugin was found.");
+							if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor0.focus();
+							}), 1000);
+
+							//Find the view source plugin, we'll need it.
+							doh.robot.keyPress(dojo.keys.F12, 500, {ctrl:true,shift:true});
+							doh.robot.keyPress(dojo.keys.F12, 1000, {ctrl:true,shift:true});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								doh.f(vsPlugin._sourceShown, "Verifying the plugin states the source is not shown.");
+								doh.is("block", dojo.style(editor0.iframe, "display"), "Verifying iframe is visible");
+								doh.is("none", dojo.style(vsPlugin.sourceArea, "display"), "Verifying source view node is invisible");
+								doh.is(vsPlugin.sourceArea.nextSibling, editor0.iframe, "Verifying source view node's next sibling is the hidden iframe node.");
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							 if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+						}
+					},
+					{
+						name: "Mouse Click: Go to View Source",
+						timeout: 20000,
+						setUp: function(){
+							editor0 = dijit.byId("editor0");
+							var edPlugins = editor0._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.ViewSource"){
+									vsPlugin = p;
+									break;
+								}
+							}
+							doh.t(vsPlugin != null, "Checking that the view source plugin was found.");
+							if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor0.focus();
+							}), 1000);
+
+							doh.robot.mouseMoveAt(vsPlugin.button.domNode, 500);
+							doh.robot.mouseClick({left: true}, 750);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								doh.t(vsPlugin._sourceShown, "Verifying the plugin believes the source is shown.");
+								doh.is("none", dojo.style(editor0.iframe, "display"), "Verifying iframe is invisible");
+								doh.is("block", dojo.style(vsPlugin.sourceArea, "display"), "Verifying source view node is visible");
+								doh.is(vsPlugin.sourceArea.nextSibling, editor0.iframe, "Verifying source view node's next sibling is the hidden iframe node.");
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							 if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+							 fsPlugin = null;
+							 vsPlugin = null;
+						}
+					},
+					{
+						name: "Mouse Click: Go to View Source, then mouseclick twice (open/close sourceview)",
+						timeout: 20000,
+						setUp: function(){
+							editor0 = dijit.byId("editor0");
+							var edPlugins = editor0._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.ViewSource"){
+									vsPlugin = p;
+									break;
+								}
+							}
+							doh.t(vsPlugin != null);
+							if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor0.focus();
+							}), 500);
+
+							doh.robot.mouseMoveAt(vsPlugin.button.domNode, 500);
+							doh.robot.mouseClick({left: true}, 750);
+							doh.robot.mouseMoveAt(vsPlugin.button.domNode, 500);
+							doh.robot.mouseClick({left: true}, 750);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								doh.t(!vsPlugin._sourceShown, "Verifying the plugin believes the source is not shown.");
+								doh.is("block", dojo.style(editor0.iframe, "display"), "Verifying iframe is visible");
+								doh.is("none", dojo.style(vsPlugin.sourceArea, "display"), "Verifying source view node is invisible");
+								doh.is(vsPlugin.sourceArea.nextSibling, editor0.iframe, "Verifying source view node's next sibling is the hidden iframe node.");
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							 if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+							 fsPlugin = null;
+							 vsPlugin = null;
+						}
+					},
+					{
+						name: "Combination Test:  FullScreen + ViewSource (Verify view source works in fullscreen mode)",
+						timeout: 20000,
+						setUp: function(){
+							editor1 = dijit.byId("editor1");
+							var edPlugins = editor1._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.FullScreen"){
+									fsPlugin = p;
+								}
+								if(p.declaredClass === "dijit._editor.plugins.ViewSource"){
+									vsPlugin = p;
+								}
+								if(vsPlugin && fsPlugin){
+									break;
+								}
+							}
+							doh.t(vsPlugin != null, "Checking for viewSource plugin.");
+							doh.t(fsPlugin != null, "Checking for fullScreen plugin.");
+							if(fsPlugin){fsPlugin.button.set("checked", false);}
+							if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor1.focus();
+							}), 1000);
+
+							doh.robot.mouseMoveAt(fsPlugin.button.domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(vsPlugin.button.domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								doh.t(fsPlugin.isFullscreen, "Verifying the plugin believes the editor is in full screen mode.");
+								doh.t(vsPlugin._sourceShown, "Verifying the plugin believes the source is shown.");
+								doh.is("none", dojo.style(editor1.iframe, "display"), "Verifying iframe is invisible");
+								doh.is("block", dojo.style(vsPlugin.sourceArea, "display"), "Verifying source view node is visible");
+								doh.is(vsPlugin.sourceArea.nextSibling, editor1.iframe, "Verifying source view node's next sibling is the hidden iframe node.");
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							 if(fsPlugin){fsPlugin.button.set("checked", false);}
+							 if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+							 fsPlugin = null;
+							 vsPlugin = null;
+						}
+					},
+					{
+						name: "Combination Test:  FullScreen + ViewSource (toggle on and off)",
+						timeout: 20000,
+						setUp: function(){
+							editor1 = dijit.byId("editor1");
+							var edPlugins = editor1._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.FullScreen"){
+									fsPlugin = p;
+								}
+								if(p.declaredClass === "dijit._editor.plugins.ViewSource"){
+									vsPlugin = p;
+								}
+								if(vsPlugin && fsPlugin){
+									break;
+								}
+							}
+							doh.t(vsPlugin != null, "Checking for viewSource plugin.");
+							doh.t(fsPlugin != null, "Checking for fullScreen plugin.");
+							if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+							if(fsPlugin){fsPlugin.button.set("checked", false);}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								//Focus on the editor window
+								dojo.window.scrollIntoView(editor1.domNode);
+								editor1.focus();
+							}), 1000);
+
+							//Toggle fs on, the source on.
+							doh.robot.mouseMoveAt(fsPlugin.button.domNode, 500);
+							doh.robot.mouseClick({left: true}, 750);
+							doh.robot.mouseMoveAt(vsPlugin.button.domNode, 1000);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.mouseMoveAt(vsPlugin.button.domNode, 500);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.mouseMoveAt(fsPlugin.button.domNode, 500);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								doh.t(!fsPlugin.isFullscreen, "Verifying the plugin believes the editor is not in full screen mode.");
+								doh.t(!vsPlugin._sourceShown, "Verifying the plugin believes the source is not shown.");
+								doh.is("block", dojo.style(editor1.iframe, "display"), "Verifying iframe is visible");
+								doh.is("none", dojo.style(vsPlugin.sourceArea, "display"), "Verifying source view node is invisible");
+								doh.is(vsPlugin.sourceArea.nextSibling, editor1.iframe, "Verifying source view node's next sibling is the hidden iframe node.");
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							 if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+							 if(fsPlugin){fsPlugin.button.set("checked", false);}
+							 fsPlugin = null;
+							 vsPlugin = null;
+						}
+					},
+					{
+						name: "XSS: Verify simple script tags get stripped.",
+						timeout: 30000,
+						setUp: function(){
+							editor0 = dijit.byId("editor0");
+							var edPlugins = editor0._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.ViewSource"){
+									vsPlugin = p;
+								}
+								if(vsPlugin){
+									break;
+								}
+							}
+							doh.t(vsPlugin != null, "Checking for VS plugin.");
+							if(vsPlugin){ vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var oldValue = editor0.get("value");
+
+							//Timing gets wonky here, so we need to do this on a timeout
+							//so the browser has time  to shift focus.
+							doh.robot.sequence(d.getTestErrback(function(){
+								//Focus on the editor window
+								dojo.window.scrollIntoView(editor0.domNode);
+								editor0.focus();
+							}), 500);
+
+							var simpleScript0 = '<scr' + 'ipt type="text/javascript">var foo = "Hack!"</scr' + 'ipt>';
+							var simpleScript1 = '<scr' + 'ipt type="text/javascript" src="http://example.com/hack.js"></scr' + 'ipt>';
+
+							//Type in some script stuff.
+
+							doh.robot.keyPress(dojo.keys.F12, 1000, {ctrl:true,shift:true});
+							doh.robot.sequence(d.getTestErrback(function(){
+								vsPlugin.sourceArea.value = "\n\n" +
+										simpleScript0 +
+										"\n\n" +
+										simpleScript1 +
+										"\n" +
+										vsPlugin.sourceArea.value;
+							}), 1000);
+							doh.robot.keyPress(dojo.keys.F12, 1000, {ctrl:true,shift:true});
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								var val = editor0.get("value");
+								doh.is(-1, val.indexOf("Hack!"), "Validating inline script tag was stripped");
+								doh.is(-1, val.indexOf("hack.js"), "Validating import script tag was stripped");
+								editor0.set("value", oldValue);
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							 if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+							 fsPlugin = null;
+							 vsPlugin = null;
+						}
+					},
+					{
+						name: "XSS: Verify complex/odd script tags get stripped.",
+						timeout: 30000,
+						setUp: function(){
+							editor0 = dijit.byId("editor0");
+							var edPlugins = editor0._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.ViewSource"){
+									vsPlugin = p;
+								}
+								if(vsPlugin){
+									break;
+								}
+							}
+							doh.t(vsPlugin != null, "Checking for VS plugin.");
+							if(vsPlugin){ vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var oldValue = editor0.get("value");
+
+							//Timing gets wonky here, so we need to do this on a timeout
+							//so the browser has time  to shift focus.
+							doh.robot.sequence(d.getTestErrback(function(){
+								//Focus on the editor window
+								dojo.window.scrollIntoView(editor0.domNode);
+								editor0.focus();
+							}), 500);
+
+							var complexScript = '< scr' + 'IPt type="text/javascript"            \n>\n   var foo = "Hack!"  \n</SCr' + 'ipt  >';
+							doh.robot.keyPress(dojo.keys.F12, 500, {ctrl:true,shift:true});
+							doh.robot.sequence(d.getTestErrback(function(){
+								vsPlugin.sourceArea.value = "\n\n" +
+										complexScript +
+										"\n\n" +
+										vsPlugin.sourceArea.value;
+							}), 1000);
+							doh.robot.keyPress(dojo.keys.F12, 500, {ctrl:true,shift:true});
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								var val = editor0.get("value");
+								doh.is(-1, val.indexOf("< scrIPt "), "Validating script tag was stripped");
+								editor0.set("value", oldValue);
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							 if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+							 fsPlugin = null;
+							 vsPlugin = null;
+						}
+					},
+					{
+						name: "XSS: Verify single line comment blocks are stripped.",
+						timeout: 30000,
+						setUp: function(){
+							editor0 = dijit.byId("editor0");
+							var edPlugins = editor0._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.ViewSource"){
+									vsPlugin = p;
+								}
+								if(vsPlugin){
+									break;
+								}
+							}
+							doh.t(vsPlugin != null, "Checking for VS plugin.");
+							if(vsPlugin){ vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+							var oldValue = editor0.get("value");
+
+							//Timing gets wonky here, so we need to do this on a timeout
+							//so the browser has time  to shift focus.
+							doh.robot.sequence(d.getTestErrback(function(){
+								//Focus on the editor window
+								dojo.window.scrollIntoView(editor0.domNode);
+								editor0.focus();
+							}), 500);
+
+							var simpleComment = '<!--  Hello, this is a comment! -->';
+
+							//Type in some script stuff.
+							doh.robot.keyPress(dojo.keys.F12, 500, {ctrl:true,shift:true});
+							doh.robot.sequence(d.getTestErrback(function(){
+								vsPlugin.sourceArea.value = "\n\n" +
+										simpleComment +
+										"\n\n" +
+										vsPlugin.sourceArea.value;
+							}), 1000);
+							doh.robot.keyPress(dojo.keys.F12, 500, {ctrl:true,shift:true});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								var val = editor0.get("value");
+								doh.is(-1, val.indexOf("Hello, this is a comment!"), "Validating comment block was stripped");
+								editor0.set("value", oldValue);
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							 if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+							 fsPlugin = null;
+							 vsPlugin = null;
+						}
+					},
+					{
+						name: "XSS: Verify multi line comment blocks are stripped.",
+						timeout: 30000,
+						setUp: function(){
+							editor0 = dijit.byId("editor0");
+							var edPlugins = editor0._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.ViewSource"){
+									vsPlugin = p;
+								}
+								if(vsPlugin){
+									break;
+								}
+							}
+							doh.t(vsPlugin != null, "Checking for VS plugin.");
+							if(vsPlugin){ vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var oldValue = editor0.get("value");
+
+							//Timing gets wonky here, so we need to do this on a timeout
+							//so the browser has time  to shift focus.
+							doh.robot.sequence(d.getTestErrback(function(){
+								//Focus on the editor window
+								dojo.window.scrollIntoView(editor0.domNode);
+								editor0.focus();
+							}), 500);
+
+							//Type in some script stuff.
+							doh.robot.keyPress(dojo.keys.F12, 1000, {ctrl:true,shift:true});
+							doh.robot.sequence(d.getTestErrback(function(){
+								vsPlugin.sourceArea.value = "\n\n" +
+										"<!--\n" +
+										"Hello, this is a comment!\n" +
+										"-->\n" +
+										"\n\n" +
+										vsPlugin.sourceArea.value;
+							}), 1000);
+							doh.robot.keyPress(dojo.keys.F12, 1000, {ctrl:true,shift:true});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								var val = editor0.get("value");
+								doh.is(-1, val.indexOf("Hello, this is a comment!"), "Validating multiline comment block was stripped");
+								editor0.set("value", oldValue);
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							 if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+							 fsPlugin = null;
+							 vsPlugin = null;
+						}
+					},
+					{
+						//This is probably paranoia, but I think there's a chance iframes
+						//can be used to pull in hack scripts, so check that we can strip those too.
+						name: "XSS: Verify iframe tags are stripped.",
+						timeout: 30000,
+						setUp: function(){
+							editor0 = dijit.byId("editor0");
+							var edPlugins = editor0._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.ViewSource"){
+									vsPlugin = p;
+								}
+								if(vsPlugin){
+									break;
+								}
+							}
+							doh.t(vsPlugin != null, "Checking for VS plugin.");
+							if(vsPlugin){ vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+						},
+						runTest: function(){
+							 var d = new doh.Deferred();
+
+								var oldValue = editor0.get("value");
+
+
+							//Timing gets wonky here, so we need to do this on a timeout
+							//so the browser has time  to shift focus.
+							doh.robot.sequence(d.getTestErrback(function(){
+								//Focus on the editor window
+								dojo.window.scrollIntoView(editor0.domNode);
+								editor0.focus();
+							}), 500);
+
+							var simpleIFrame = '<iframe src="http://example.com/hack.html" width=0 height=0 style="display: none;"></iframe>';
+
+							//Type in some script stuff.
+							doh.robot.keyPress(dojo.keys.F12, 1000, {ctrl:true,shift:true});
+							doh.robot.sequence(d.getTestErrback(function(){
+								vsPlugin.sourceArea.value = "\n\n" +
+									simpleIFrame +
+									"\n\n" +
+									vsPlugin.sourceArea.value;
+							}), 1000);
+							doh.robot.keyPress(dojo.keys.F12, 1000, {ctrl:true,shift:true});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								var val = editor0.get("value");
+								doh.is(-1, val.indexOf("<iframe"), "Validating iframe tag was stripped stripped");
+								editor0.set("value", oldValue);
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							 if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+							 fsPlugin = null;
+							 vsPlugin = null;
+						}
+					},
+					{
+						name: "XSS Disabled: Verify script, comment, and iframes are not stripped.",
+						timeout: 30000,
+						setUp: function(){
+							editor3 = dijit.byId("editor3");
+							var edPlugins = editor3._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.ViewSource"){
+									vsPlugin = p;
+								}
+								if(vsPlugin){
+									break;
+								}
+							}
+							doh.t(vsPlugin != null, "Checking for VS plugin.");
+							if(vsPlugin){ vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+							var oldValue = editor3.get("value");
+
+							//Timing gets wonky here, so we need to do this on a timeout
+							//so the browser has time  to shift focus.
+							doh.robot.sequence(d.getTestErrback(function(){
+								//Focus on the editor window
+								dojo.window.scrollIntoView(editor3.domNode);
+								editor3.focus();
+							}), 500);
+
+							var simpleScript0 = '<scr' + 'ipt type="text/javascript">var foo = "Hack!"</scr' + 'ipt>';
+							var simpleScript1 = '<scr' + 'ipt type="text/javascript" src="http://example.com/hack.js"></scr' + 'ipt>';
+							var simpleiFrame = '<iframe src="http://example.com/hack.html" width=0 height=0 style="display: none;"></iframe>';
+							var simpleComment = '<!--  Hello, this is a comment! -->';
+
+							//Type in some script stuff.
+							doh.robot.keyPress(dojo.keys.F12, 1000, {ctrl:true,shift:true});
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								vsPlugin.sourceArea.value = "\n\n" +
+										"<div>\n" +
+										simpleScript0 +
+										"\n\n" +
+										simpleScript1 +
+										"\n" +
+										"</div>" +
+										"\n\n" +
+										simpleiFrame +
+										"\n\n" +
+										simpleComment +
+										"\n\n" +
+										vsPlugin.sourceArea.value;
+							}), 1000);
+							doh.robot.keyPress(dojo.keys.F12, 1000, {ctrl:true,shift:true});
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								var val = editor3.get("value");
+								// IE strips scripts anyway, need to look more at this sometime.
+								// It's not the plugin doing it.
+								doh.t((0 <= val.indexOf("Hack!")) || dojo.isIE, "Validating inline script tag was left");
+								doh.t((0 <= val.indexOf("hack.js") || dojo.isIE), "Validating import script tag was left");
+								doh.t(0 <= val.indexOf("<iframe"), "Validating iframe tag was left");
+								doh.t(0 <= val.indexOf("Hello, this is a comment!"), "Validating comment was left");
+								editor3.set("value", oldValue);
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							 if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+							 fsPlugin = null;
+							 vsPlugin = null;
+						}
+					},
+					{
+						name: "ReadOnly:  Verify View Source can be put in ReadOnly mode.",
+						timeout: 30000,
+						setUp: function(){
+							editor2 = dijit.byId("editor2");
+							var edPlugins = editor2._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.ViewSource"){
+									vsPlugin = p;
+								}
+								if(vsPlugin){
+									break;
+								}
+							}
+							if(vsPlugin){ vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+						},
+						runTest: function(){
+							 var d = new doh.Deferred();
+
+							//Timing gets wonky here, so we need to do this on a timeout
+							//so the browser has time  to shift focus.
+							doh.robot.sequence(d.getTestErrback(function(){
+								//Focus on the editor window
+								dojo.window.scrollIntoView(editor2.domNode);
+								editor2.focus();
+							}), 500);
+
+							doh.robot.mouseMoveAt(vsPlugin.button.domNode, 500);
+							doh.robot.mouseClick({left: true}, 750);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								doh.is(true, dojo.attr(vsPlugin.sourceArea, "readOnly"), "Verify the source area is read only.");
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							 if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+							 fsPlugin = null;
+							 vsPlugin = null;
+						}
+					},
+					{
+						name: "ViewSource:  GetValue",
+						timeout: 20000,
+						setUp: function(){
+							editor0 = dijit.byId("editor0");
+							value = editor0.get("value");
+							var edPlugins = editor0._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.ViewSource"){
+									vsPlugin = p;
+								}
+								if(vsPlugin){
+									break;
+								}
+							}
+							doh.t(vsPlugin != null, "Checking for VS plugin.");
+							if(vsPlugin){ vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							//Timing gets wonky here, so we need to do this on a timeout
+							//so the browser has time  to shift focus.
+							doh.robot.sequence(d.getTestErrback(function(){
+								//Focus on the editor window
+								dojo.window.scrollIntoView(editor0.domNode);
+								editor0.focus();
+							}), 500);
+
+							doh.robot.keyPress(dojo.keys.F12, 1000, {ctrl:true,shift:true});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								doh.t(vsPlugin._sourceShown, "Verifying the plugin believes the source is shown.");
+								doh.is("none", dojo.style(editor0.iframe, "display"), "Verifying iframe is invisible");
+								doh.is("block", dojo.style(vsPlugin.sourceArea, "display"), "Verifying source view node is visible");
+								doh.is(vsPlugin.sourceArea.nextSibling, editor0.iframe, "Verifying source view node's next sibling is the hidden iframe node.");
+								vsPlugin.sourceArea.value = "FOO";
+								doh.is("FOO", editor0.get("value"), "Verifying the source area returns foo when getValue is called.");
+							}), 3000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+							editor0.set("value", value); 
+							fsPlugin = null;
+							vsPlugin = null;
+						}
+					},
+					{
+						name: "ViewSource:  SetValue",
+						timeout: 20000,
+						setUp: function(){
+							editor0 = dijit.byId("editor0");
+							value = editor0.get("value");
+							var edPlugins = editor0._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.ViewSource"){
+									vsPlugin = p;
+								}
+								if(vsPlugin){
+									break;
+								}
+							}
+							doh.t(vsPlugin != null, "Checking for VS plugin.");
+							if(vsPlugin){ vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							//Timing gets wonky here, so we need to do this on a timeout
+							//so the browser has time  to shift focus.
+							doh.robot.sequence(d.getTestErrback(function(){
+								//Focus on the editor window
+								dojo.window.scrollIntoView(editor0.domNode);
+								editor0.focus();
+							}), 500);
+
+							doh.robot.keyPress(dojo.keys.F12, 1000, {ctrl:true,shift:true});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								doh.t(vsPlugin._sourceShown, "Verifying the plugin believes the source is shown.");
+								doh.is("none", dojo.style(editor0.iframe, "display"), "Verifying iframe is invisible");
+								doh.is("block", dojo.style(vsPlugin.sourceArea, "display"), "Verifying source view node is visible");
+								doh.is(vsPlugin.sourceArea.nextSibling, editor0.iframe, "Verifying source view node's next sibling is the hidden iframe node.");
+								editor0.set("value", "FOO");
+								doh.is("FOO", editor0.get("value"), "Verifying the source area returns FOO when getValue is called.");
+							}), 3000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(vsPlugin){vsPlugin.button.focus(); vsPlugin.button.set("checked", false);}
+							editor0.set("value", value); 
+							fsPlugin = null;
+							vsPlugin = null;
+						}
+					}
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

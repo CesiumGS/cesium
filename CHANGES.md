@@ -21,6 +21,7 @@ Beta Releases
 * Fixed globe rendering on the Nexus 4 running Google Chrome Beta.
 * Fixed rendering artifacts in `EllipsoidPrimitive`.
 * Fixed an issue where streaming CZML would fail when changing material types.
+* Updated Dojo from 1.7.2 to 1.8.4.  Reminder: Cesium does not depend on Dojo but uses it for reference applications.
 
 ### b12a - 2013-01-18
 

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Async Simple Input - Output Group example</title>
+		<style type="text/css">
+			@import "css/app-format.css";
+			@import "../../../dijit/themes/claro/claro.css";
+		</style>
+		<script type="text/javascript">
+			require = {
+				async: 1,
+				parseOnLoad: 0,
+				isDebug: 1, 
+				mvc: {debugBindings: 1}
+			};
+		</script>
+		<script type="text/javascript" src="../../../dojo/dojo.js"></script>
+		<script type="text/javascript">
+			require([
+				"dojo/parser",
+				"dojo/Stateful",
+				"dojox/mvc/EditModelRefController",
+				"dojox/mvc/EditStoreRefController",
+				"dojo/store/Memory",
+				"dojox/mvc/getStateful",
+				"dijit/form/Button",
+				"dijit/form/TextBox",
+				"dojox/mvc/Group",
+				"dojox/mvc/parserExtension",
+				"dojo/domReady!"
+			], function(parser, Stateful, EditModelRefController, EditStoreRefController, Memory, getStateful){
+				var testmem = new Memory({data: {First: "John", Last: "Doe", Email: "jdoe@example.com"}});
+				var testdata = testmem.query();
+				console.log("testdata = ",testdata);
+				var testmem2 = new Memory({data: {identifier: "id", items: [{id: "emp0", First: "John", Last: "Doe", Email: "jdoe@example.com"}]}});
+				var testdata2 = testmem2.query();
+				console.log("testdata2 = ",testdata2);
+				
+				ctrl1 = new EditStoreRefController({sourceModel: new Stateful({First: "John", Last: "Doe", Email: "jdoe@example.com"})});
+				ctrl2 = new EditStoreRefController({sourceModel: new Stateful(testdata)});
+				console.log("ctrl2 = ",ctrl2);
+				ctrl3 = new EditStoreRefController({store: new Memory({data: {items: [{id: "emp0", First: "John", Last: "Doe", Email: "jdoe@example.com"}]}})});
+				ctrl3.queryStore({});
+				ctrl = new EditStoreRefController({store: new Memory({data: {identifier: "id", items: [{id: "emp0", First: "John", Last: "Doe", Email: "jdoe@example.com"}]}})});
+				ctrl.getStore("emp0");				
+				console.log("ctrl = ",ctrl);
+				parser.parse();
+			});
+		</script>
+	</head>
+	<body class="claro">
+		<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<div id="wrapper">
+			<div id="header">
+				<div id="navigation"></div>
+				<div id="headerInsert">
+					<h1>Input Ouput Sync</h1>
+					<h2>Data Binding Example</h2>
+				</div>
+			</div>
+			<div id="main">
+				<div id="leftNav"></div>
+				<div id="mainContent" data-dojo-type="dojox.mvc.Group" data-dojo-props="target: at(ctrl, 'model')">
+					<div class="row">
+						<label class="cell" for="firstnameInput">First:</label>
+						<input class="cell" id="firstnameInput" data-dojo-type="dijit.form.TextBox" 
+								data-dojo-props="value: at('rel:', 'First')">
+						<!-- Content in output below will always be in sync with value of textbox above -->
+						(first name is: <span data-mvc-bindings="innerText: at('rel:', 'First')"></span>)
+					</div>
+					<div class="row">
+						<label class="cell" for="lastnameInput">Last:</label>
+						<input class="cell" id="lastnameInput" data-dojo-type="dijit.form.TextBox" 
+								data-dojo-props="value: at('rel:', 'Last')">
+						(last name is: <span data-mvc-bindings="innerText: at('rel:', 'Last')"></span>)
+					</div>
+					<div class="row">
+						<label class="cell" for="emailInput">Email:</label>
+						<input class="cell" id="emailInput" data-dojo-type="dijit.form.TextBox" 
+								data-dojo-props="value: at('rel:', 'Email')">
+						(email is: <span data-mvc-bindings="innerText: at('rel:', 'Email')"></span>)
+					</div>
+					<br/>Model:
+					<button id="reset" type="button" data-dojo-type="dijit.form.Button" 
+								data-dojo-props="onClick: function(){ ctrl.reset(); }">Reset</button>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

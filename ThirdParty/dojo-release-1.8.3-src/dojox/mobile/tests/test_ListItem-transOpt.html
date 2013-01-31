@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Animation</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		]);
+	</script>
+
+	<style>
+	.lnk {
+		font-size: 14px;
+		color: #0B5199;
+		text-decoration: none;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="foo" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">Animations</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Transition Effects</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png",
+				transitionOptions:{moveTo:"bar", transition:"slide"}'>
+				Slide
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png",
+				transitionOptions:{moveTo:"bar", transition:"flip"}'>
+				Flip
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png",
+				transitionOptions:{moveTo:"bar", transition:"fade"}'>
+				Fade
+			</li>
+		</ul>
+	</div>
+
+	<div id="bar" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"foo"'>Search Result</h1>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+				1. <a href="#" class="lnk">Dojo: Traditional Karate-do Spirit</a><br>
+				Sarah Connor Hardcover<br>
+				Eligible for FREE Super Saver Shipping<br>
+				<span style="color:red">$14.50 (50%)</span> In Stock<br>
+				# (531)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+				2. <a href="#" class="lnk">Japanese Martial Arts Dojo</a><br>
+				Martin Parker Hardcover<br>
+				<span style="color:red">$14.00 (60%)</span> In Stock<br>
+				# (173)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+				3. <a href="#" class="lnk">Total Solar Eclipse</a><br>
+				Steven Young Hardcover<br>
+				Get it by Mar. 2 if you order in the next <span style="color:green"><b>16 hours</b></span><br>
+				Eligible for FREE Super Saver Shipping<br>
+				<span style="color:red">$9.50 (62%)</span> In Stock<br>
+				# (1199)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+				4. <a href="#" class="lnk">The History of Java Coffee</a><br>
+				Marco Rodriguez Hardcover<br>
+				<span style="color:blue">Not Available</span>
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+				5. <a href="#" class="lnk">The Principles of Spider's Web</a><br>
+				Melissa Morgan Hardcover<br>
+				Eligible for FREE Super Saver Shipping<br>
+				<span style="color:red">$12.00 (60%)</span> In Stock<br>
+				# (1847)
+			</li>
+		</ul>
+	</div>
+</body>
+</html>

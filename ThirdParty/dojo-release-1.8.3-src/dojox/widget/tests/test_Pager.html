@@ -1,0 +1,86 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Testing the DataPager</title>
+	<style type="text/css">
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../Pager/Pager.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djconfig="parseOnLoad:true, isDebug: true"></script>
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dojo.data.ItemFileReadStore");
+		dojo.require("dojox.widget.Pager");
+	</script>
+
+	<style type="text/css">
+		body {
+			font-family: Arial;
+		}
+
+		ol li, ul li {
+			font-size:1em;
+			line-height:1.5em;
+			margin:0;
+		}
+		#result {
+			font-size: 12px;
+			margin-bottom: 15px;
+		}
+	</style>
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">dojox.widget.Pager</h1>
+
+	<div style="clear: both" id="result">Click on one of the menu items</div>
+
+	<!-- the datastore -->
+	<div dojoType="dojo.data.ItemFileReadStore" jsId="pagerStore" id="pagerStore" url="_pager-data.json"></div>
+
+	<h2>Horizontal</h2>
+
+	<div style="padding:8px">
+		<div dojoType="dojox.widget.Pager" id="dojoxMenu1" 
+			store="pagerStore" style="width: 410px; height: 150px"></div>
+	</div>
+	<div style="padding:8px">
+		<div dojoType="dojox.widget.Pager" id="dojoxMenu2" itemsPage="4" 
+			store="pagerStore" statusPos="trailing" style="width: 410px; height: 150px"></div>
+	</div>
+	<div style="padding:8px">
+		<div dojoType="dojox.widget.Pager" id="dojoxMenu1s" store="pagerStore" pagerPos="none" 
+			style="width: 410px; height: 150px"></div>
+		</div>
+	<div style="padding:8px">
+		<div dojoType="dojox.widget.Pager" id="dojoxMenu2s" itemsPage="4" pagerPos="none" 
+			store="pagerStore" statusPos="trailing" style="width: 410px; height: 150px"></div>
+	</div>
+
+	<h2>Vertical</h2>
+
+	<div style="padding:8px; float:left;">
+		<div dojoType="dojox.widget.Pager" id="dojoxMenu3" itemsPage="2" orientation="vertical" 
+			store="pagerStore" style="width: 150px; height: 400px"></div>
+	</div>
+	<div style="padding:8px; float:left;">
+		<div dojoType="dojox.widget.Pager" id="dojoxMenu4" itemsPage="5" orientation="vertical" 
+			statusPos="trailing" store="pagerStore" style="width: 150px; height: 600px"></div>
+	</div>
+	<div style="padding:8px;float:left;">
+		<div dojoType="dojox.widget.Pager" id="dojoxMenus3" itemsPage="2" pagerPos="none" 
+			orientation="vertical" store="pagerStore" style="width: 150px; height: 400px"></div>
+	</div>
+	<div style="padding:8px; float:left;">
+		<div dojoType="dojox.widget.Pager" id="dojoxMenus4" itemsPage="5" pagerPos="none" 
+			orientation="vertical" statusPos="trailing" store="pagerStore" style="width: 150px; height: 600px"></div>
+	</div>
+
+	<div style="clear: both" id="result2">That's all folks.</div>
+
+</body>
+</html>
