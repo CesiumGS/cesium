@@ -1034,7 +1034,7 @@ define([
          */
         update : function(currentTime) {
 
-            this.animation.update();
+            this.animation.viewModel.update();
             this.timelineControl.updateFromClock();
             this.visualizers.update(currentTime);
 

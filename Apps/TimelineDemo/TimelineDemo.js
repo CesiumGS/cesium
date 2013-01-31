@@ -96,7 +96,7 @@ define(['dojo',
 
         function tick() {
             var currentTime = animationController.update();
-            animation.update();
+            animation.viewModel.update();
             timeline.updateFromClock();
             updateScrubTime(currentTime);
             requestAnimationFrame(tick);

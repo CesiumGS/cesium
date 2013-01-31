@@ -26,6 +26,7 @@ define(['../Core/destroyObject',
     var _gradientKnobColor = Color.fromCssColorString('rgba(66,67,68,0.3)');
     var _gradientPointerColor = Color.fromCssColorString('rgba(0,0,0,0.5)');
 
+    //Dynamically builds an SVG element from a JSON object.
     function _svgFromObject(obj) {
         var ele = document.createElementNS(_svgNS, obj.tagName);
         for ( var field in obj) {
@@ -60,10 +61,6 @@ define(['../Core/destroyObject',
         return text;
     }
 
-    function _updateSvgText(svgText, msg) {
-        svgText.childNodes[0].textContent = msg;
-    }
-
     function _setShuttleRingPointer(shuttleRingPointer, knobOuter, angle) {
         shuttleRingPointer.setAttribute('transform', 'translate(100,100) rotate(' + angle + ')');
         knobOuter.setAttribute('transform', 'rotate(' + angle + ')');
@@ -78,7 +75,7 @@ define(['../Core/destroyObject',
         return 'rgb(' + Math.round(red * 255) + ',' + Math.round(green * 255) + ',' + Math.round(blue * 255) + ')';
     }
 
-    function rectButton(x, y, path, toolTip) {
+    function _rectButton(x, y, path, toolTip) {
         var button = {
             tagName : 'g',
             'class' : 'animation-rectButton',
@@ -109,7 +106,7 @@ define(['../Core/destroyObject',
         return _svgFromObject(button);
     }
 
-    function wingButton(x, y, path, toolTip) {
+    function _wingButton(x, y, path, toolTip) {
         var button = {
             tagName : 'g',
             'class' : 'animation-rectButton',
@@ -134,7 +131,7 @@ define(['../Core/destroyObject',
         return _svgFromObject(button);
     }
 
-    function setShuttleRingFromMouse(widget, svg, e) {
+    function _setShuttleRingFromMouse(widget, svg, e) {
         var viewModel = widget.viewModel;
         var centerX = widget._centerX;
         if (e.type === 'mousedown' || (widget._shuttleRingDragging && e.type === 'mousemove')) {
@@ -174,19 +171,25 @@ define(['../Core/destroyObject',
             }
         }, true);
 
-        this._subscriptions = [];
+        //TODO: Since the animation widget uses SVG and has no HTML backing,
+        //we need to wire everything up manually.  Knockout can supposedly
+        //bind to SVG, so we we figure that out we can modify our SVG
+        //to include the binding information directly.
 
-        this._subscriptions.push(viewModel.selected.subscribe(function(value) {
+        var subscriptions = [];
+        this._subscriptions = subscriptions;
+
+        subscriptions.push(viewModel.selected.subscribe(function(value) {
             that.setSelected(value);
         }));
         this.setSelected(viewModel.selected());
 
-        this._subscriptions.push(viewModel.toolTip.subscribe(function(value) {
+        subscriptions.push(viewModel.toolTip.subscribe(function(value) {
             that.setToolTip(value);
         }));
         this.setToolTip(viewModel.toolTip());
 
-        this._subscriptions.push(viewModel.command.canExecute.subscribe(function(value) {
+        subscriptions.push(viewModel.command.canExecute.subscribe(function(value) {
             that.setEnabled(value);
         }));
         this.setEnabled(viewModel.command.canExecute());
@@ -195,7 +198,7 @@ define(['../Core/destroyObject',
     SvgButton.prototype.destroy = function() {
         var subscriptions = this._subscriptions;
         for ( var i = 0, len = subscriptions.length; i < len; i++) {
-            subscriptions[i].destroy();
+            subscriptions[i].dispose();
         }
         destroyObject(this);
     };
@@ -242,9 +245,8 @@ define(['../Core/destroyObject',
      * <br />Animation widget
      * </span>
      * <br /><br />
-     * The Animation widget manipulates an {@link AnimationController}.  It provides buttons for play, pause,
-     * and reverse, along with the current time and date, surrounded by a "shuttle ring"
-     * for controlling the speed of animation.
+     * The Animation widget provides buttons for play, pause, and reverse, along with the
+     * current time and date, surrounded by a "shuttle ring" for controlling the speed of animation.
      * <br /><br />
      * The "shuttle ring" concept is borrowed from video editing, where typically a
      * "jog wheel" can be rotated to move past individual animation frames very slowly, and
@@ -266,7 +268,7 @@ define(['../Core/destroyObject',
      * @param {AnimationController} animationController The animationController that will be manipulated by this widget.
      *
      * @exception {DeveloperError} parentNode is required.
-     * @exception {DeveloperError} animationController is required.
+     * @exception {DeveloperError} viewModel is required.
      *
      * @see AnimationController
      * @see Clock
@@ -351,10 +353,10 @@ define(['../Core/destroyObject',
         var topG = document.createElementNS(_svgNS, 'g');
         this._topG = topG;
 
-        this._realtimeSVG = new SvgButton(wingButton(3, 4, '#animation_pathClock', viewModel.playRealtimeViewModel.toolTip()), viewModel.playRealtimeViewModel);
-        this._playReverseSVG = new SvgButton(rectButton(44, 99, '#animation_pathPlayReverse', viewModel.playReverseViewModel.toolTip()), viewModel.playReverseViewModel);
-        this._playForwardSVG = new SvgButton(rectButton(124, 99, '#animation_pathPlay', viewModel.playViewModel.toolTip()), viewModel.playViewModel);
-        this._pauseSVG = new SvgButton(rectButton(84, 99, '#animation_pathPause', viewModel.pauseViewModel.toolTip()), viewModel.pauseViewModel);
+        this._realtimeSVG = new SvgButton(_wingButton(3, 4, '#animation_pathClock', viewModel.playRealtimeViewModel.toolTip()), viewModel.playRealtimeViewModel);
+        this._playReverseSVG = new SvgButton(_rectButton(44, 99, '#animation_pathPlayReverse', viewModel.playReverseViewModel.toolTip()), viewModel.playReverseViewModel);
+        this._playForwardSVG = new SvgButton(_rectButton(124, 99, '#animation_pathPlay', viewModel.playViewModel.toolTip()), viewModel.playViewModel);
+        this._pauseSVG = new SvgButton(_rectButton(84, 99, '#animation_pathPause', viewModel.pauseViewModel.toolTip()), viewModel.pauseViewModel);
 
         var buttonsG = document.createElementNS(_svgNS, 'g');
         buttonsG.appendChild(this._realtimeSVG.svgElement);
@@ -458,11 +460,14 @@ define(['../Core/destroyObject',
         this.setScale(1);
         this.applyThemeChanges();
 
-        //Wire everything up.
+        //TODO: Since the animation widget uses SVG and has no HTML backing,
+        //we need to wire everything up manually.  Knockout can supposedly
+        //bind to SVG, so we we figure that out we can modify our SVG
+        //to include the binding information directly.
 
         var that = this;
         var callBack = function(e) {
-            setShuttleRingFromMouse(that, svg, e);
+            _setShuttleRingFromMouse(that, svg, e);
         };
         shuttleRingBackPanel.addEventListener('mousedown', callBack, true);
         shuttleRingSwooshG.addEventListener('mousedown', callBack, true);
@@ -471,57 +476,77 @@ define(['../Core/destroyObject',
         this._shuttleRingPointer.addEventListener('mousedown', callBack, true);
         this._knobOuter.addEventListener('mousedown', callBack, true);
 
-        viewModel.pauseViewModel.selected.subscribe(function(value) {
+        //Keep track of the manual subscriptions so that we can unsubscribe later.
+        var subscriptions = [];
+        this.subscriptions = subscriptions;
+
+        subscriptions.push(viewModel.pauseViewModel.selected.subscribe(function(value) {
             if (value) {
                 that._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPausePointer');
             } else {
                 that._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
             }
-        });
+        }));
+
         if (viewModel.pauseViewModel.selected()) {
             this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPausePointer');
         } else {
             this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
         }
 
-        viewModel.shuttleRingAngle.subscribe(function(value) {
+        subscriptions.push(viewModel.shuttleRingAngle.subscribe(function(value) {
             _setShuttleRingPointer(that._shuttleRingPointer, that._knobOuter, value);
-        });
+        }));
         _setShuttleRingPointer(this._shuttleRingPointer, this._knobOuter, viewModel.shuttleRingAngle());
 
-        viewModel.dateLabel.subscribe(function(value) {
-            _updateSvgText(that._knobDate, value);
-        });
-        _updateSvgText(this._knobDate, viewModel.dateLabel());
+        subscriptions.push(viewModel.dateLabel.subscribe(function(value) {
+            that._knobDate.childNodes[0].textContent = value;
+        }));
+        this._knobDate.childNodes[0].textContent = viewModel.dateLabel();
 
-        viewModel.timeLabel.subscribe(function(value) {
-            _updateSvgText(that._knobTime, value);
-        });
-        _updateSvgText(this._knobTime, viewModel.timeLabel());
+        subscriptions.push(viewModel.timeLabel.subscribe(function(value) {
+            that._knobTime.childNodes[0].textContent = value;
+        }));
+        this._knobTime.childNodes[0].textContent = viewModel.timeLabel();
 
-        viewModel.speedLabel.subscribe(function(value) {
-            _updateSvgText(that._knobStatus, viewModel.speedLabel());
-        });
-        _updateSvgText(this._knobStatus, viewModel.speedLabel());
+        subscriptions.push(viewModel.speedLabel.subscribe(function(value) {
+            that._knobStatus.childNodes[0].textContent = value;
+        }));
+        this._knobStatus.childNodes[0].textContent = viewModel.speedLabel();
     };
 
+    /**
+     * Destroys the animation widget.  Should be called if permanently
+     * removing the widget from layout.
+     * @memberof Animation
+     */
     Animation.prototype.destroy = function() {
         this._realtimeSVG.destroy();
         this._playReverseSVG.destroy();
         this._playForwardSVG.destroy();
         this._pauseSVG.destroy();
-        destroyObject(this);
+
+        var subscriptions = this._subscriptions;
+        for ( var i = 0, len = subscriptions.length; i < len; i++) {
+            subscriptions[i].dispose();
+        }
+
+        return destroyObject(this);
     };
 
+    /**
+     * @memberof Animation
+     *
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
     Animation.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
      * Get the widget scale last set by {@link Animation#setScale}.
+     * @memberof Animation
      *
-     * @function
-     * @memberof Animation.prototype
      * @returns {Number} The scale of the widget.
      */
     Animation.prototype.getScale = function() {
@@ -531,9 +556,7 @@ define(['../Core/destroyObject',
     /**
      * Adjust the overall size of the widget relative to the rest of the page.
      * The default scale is 1.0.
-     * @function
-     *
-     * @memberof Animation.prototype
+     * @memberof Animation
      *
      * @param {Number} scale A size modifier for the widget UI
      *
@@ -562,11 +585,13 @@ define(['../Core/destroyObject',
     };
 
     /**
-     * Call this after changing the CSS rules that affect the color theme of the widget.
-     * It updates the SVG gradients to match the new rules.
+     * Updates the widget to reflect any modified CSS fules for themeing.
+     * @memberof Animation
      *
-     * @function
-     * @memberof Animation.prototype
+     * @example
+     * //Switch to the cesium-darker theme.
+     * document.body.className = ' cesium-darker';
+     * animation.applyThemeChanges();
      */
     Animation.prototype.applyThemeChanges = function() {
         var buttonNormalBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeNormal).getPropertyValue('color'));
@@ -867,17 +892,6 @@ define(['../Core/destroyObject',
             this._svgNode.replaceChild(defsElement, this._defsElement);
         }
         this._defsElement = defsElement;
-    };
-
-    /**
-     * Update the widget to reflect the current state of its {@link AnimationController}.
-     * Typically, call this function once per animation frame, after the clock has ticked.
-     *
-     * @function
-     * @memberof Animation.prototype
-     */
-    Animation.prototype.update = function() {
-        this.viewModel.update();
     };
 
     return Animation;
