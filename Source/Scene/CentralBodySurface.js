@@ -782,7 +782,48 @@ define([
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.
             if (loaded.state.value >= TerrainState.RECEIVED.value) {
-                tile.terrainData = loaded.data;
+                if (tile.terrainData !== loaded.data) {
+                    tile.terrainData = loaded.data;
+
+                    // Now that there's new data for this tile:
+                    //  - child tiles that were previously upsampled need to be re-upsampled based on the new data.
+                    //  - child tiles that were previously deemed unavailable may now be available.
+
+                    if (typeof tile.children !== 'undefined') {
+                        for (var childIndex = 0; childIndex < 4; ++childIndex) {
+                            var childTile = tile.children[childIndex];
+                            if (childTile.state !== TileState.START) {
+                                if (childTile.terrainData !== 'undefined' && !childTile.terrainData.createdByUpsampling) {
+                                    // Data for the child tile has already been loaded.
+                                    continue;
+                                }
+
+                                if (tile.terrainData.isChildAvailable(tile.x, tile.y, childTile.x, childTile.y)) {
+                                    // Data is available for the child now.  It might have been before, too.
+                                    if (typeof childTile.loadedTerrain === 'undefined') {
+                                        // No load process is in progress, so start one.
+                                        childTile.loadedTerrain = new TileTerrain();
+                                        childTile.state = TileState.LOADING;
+                                    } else if (childTile.loadedTerrain.state === TerrainState.NOT_AVAILABLE) {
+                                        // The load process has concluded terrain data is not available,
+                                        // which is not true.  Reboot the load process.
+                                        childTile.loadedTerrain.freeResources();
+                                        childTile.state = TileState.LOADING;
+                                    }
+                                } else {
+                                    // Restart the upsampling process, no matter its current state.
+                                    // We create a new instance rather than just restarting the existing one
+                                    // because there could be an asynchronous operation pending on the existing one.
+                                    if (typeof childTile.upsampledTerrain !== 'undefined') {
+                                        childTile.upsampledTerrain.freeResources();
+                                    }
+                                    childTile.upsampledTerrain = new TileTerrain();
+                                    childTile.state = TileState.LOADING;
+                                }
+                            }
+                        }
+                    }
+                }
                 suspendUpsampling = true;
             }
 
@@ -959,45 +1000,6 @@ define([
     function fillTileWithLoadedTerrain(tile, tileTerrain, terrainData) {
         tileTerrain.data = terrainData;
         tileTerrain.state = TerrainState.RECEIVED;
-
-        // Now that there's new data for this tile:
-        //  - child tiles that were previously upsampled need to be re-upsampled based on the new data.
-        //  - child tiles that were previously deemed unavailable may now be available.
-
-        if (typeof tile.children !== 'undefined') {
-            for (var childIndex = 0; childIndex < 4; ++childIndex) {
-                var childTile = tile.children[childIndex];
-                if (childTile.state !== TileState.START) {
-                    if (childTile.terrainData !== 'undefined' && !childTile.terrainData.createdByUpsampling) {
-                        // Data for the child tile has already been loaded.
-                        continue;
-                    }
-
-                    if (terrainData.isChildAvailable(tile.x, tile.y, childTile.x, childTile.y)) {
-                        // Data is available for the child now.  It might have been before, too.
-                        if (typeof childTile.loadedTerrain === 'undefined') {
-                            // No load process is in progress, so start one.
-                            childTile.loadedTerrain = new TileTerrain();
-                            childTile.state = TileState.LOADING;
-                        } else if (childTile.loadedTerrain.state === TerrainState.NOT_AVAILABLE) {
-                            // The load process has concluded terrain data is not available,
-                            // which is not true.  Reboot the load process.
-                            childTile.loadedTerrain.freeResources();
-                            childTile.state = TileState.LOADING;
-                        }
-                    } else {
-                        // Restart the upsampling process, no matter its current state.
-                        // We create a new instance rather than just restarting the existing one
-                        // because there could be an asynchronous operation pending on the existing one.
-                        if (typeof childTile.upsampledTerrain !== 'undefined') {
-                            childTile.upsampledTerrain.freeResources();
-                        }
-                        childTile.upsampledTerrain = new TileTerrain();
-                        childTile.state = TileState.LOADING;
-                    }
-                }
-            }
-        }
     }
 
     // This is debug code to render the bounding sphere of the tile in
