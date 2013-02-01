@@ -1,7 +1,6 @@
 /*global define*/
 define([
         'dojo/_base/window',
-        'dojo/dom',
         'dojo/dom-class',
         'dojo/io-query',
         'dojo/parser',
@@ -10,7 +9,6 @@ define([
         'Widgets/Dojo/CesiumViewerWidget'
     ], function(
         win,
-        dom,
         domClass,
         ioQuery,
         parser,
@@ -34,7 +32,7 @@ define([
             endUserOptions : endUserOptions,
             enableDragDrop : true
         });
-        widget.placeAt(dom.byId('cesiumContainer'));
+        widget.placeAt('cesiumContainer');
         widget.startup();
 
         domClass.remove(win.body(), 'loading');

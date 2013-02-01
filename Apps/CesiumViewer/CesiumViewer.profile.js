@@ -18,6 +18,10 @@ var profile = {
         'CesiumViewer/CesiumViewerStartup' : {
             include : ['CesiumViewer/CesiumViewer', 'CesiumViewer/CesiumViewerStartup'],
             copyright : 'Source/copyrightHeader.js'
+        },
+        'Widgets/Dojo/CesiumViewerWidget' : {
+            include : ['Widgets/Dojo/CesiumViewerWidget'],
+            copyright : 'Source/copyrightHeader.js'
         }
     },
 
