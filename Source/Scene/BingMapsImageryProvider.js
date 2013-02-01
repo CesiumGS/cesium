@@ -8,7 +8,7 @@ define([
         './BingMapsStyle',
         './DiscardMissingTileImagePolicy',
         './ImageryProvider',
-        './ImageryProviderError',
+        './TileProviderError',
         './WebMercatorTilingScheme',
         '../ThirdParty/when'
     ], function(
@@ -20,7 +20,7 @@ define([
         BingMapsStyle,
         DiscardMissingTileImagePolicy,
         ImageryProvider,
-        ImageryProviderError,
+        TileProviderError,
         WebMercatorTilingScheme,
         when) {
     "use strict";
@@ -130,12 +130,12 @@ define([
             }
 
             that._ready = true;
-            ImageryProviderError.handleSuccess(metadataError);
+            TileProviderError.handleSuccess(metadataError);
         }
 
         function metadataFailure(e) {
             var message = 'An error occurred while accessing ' + metadataUrl + '.';
-            metadataError = ImageryProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+            metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
         }
 
         function requestMetadata() {
@@ -294,7 +294,7 @@ define([
     /**
      * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
      * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
-     * are passed an instance of {@link ImageryProviderError}.
+     * are passed an instance of {@link TileProviderError}.
      *
      * @memberof BingMapsImageryProvider
      *
