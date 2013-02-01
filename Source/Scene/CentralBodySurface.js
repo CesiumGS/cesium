@@ -744,8 +744,11 @@ define([
     var northwestScratch = new Cartesian3(0.0, 0.0, 0.0);
 
     function prepareNewTile(surface, terrainProvider, tile) {
-        tile.loadedTerrain = new TileTerrain();
         tile.upsampledTerrain = new TileTerrain();
+
+        if (isDataAvailable(tile)) {
+            tile.loadedTerrain = new TileTerrain();
+        }
 
         // Map imagery tiles to this terrain tile
         var imageryLayerCollection = surface._imageryLayerCollection;
@@ -869,27 +872,21 @@ define([
         var tileTerrain = tile.loadedTerrain;
 
         if (tileTerrain.state === TerrainState.UNLOADED) {
-            if (isDataAvailable(tile)) {
-                // Request the terrain from the terrain provider.
-                tileTerrain.data = terrainProvider.requestTileGeometry(tile.x, tile.y, tile.level);
+            // Request the terrain from the terrain provider.
+            tileTerrain.data = terrainProvider.requestTileGeometry(tile.x, tile.y, tile.level);
 
-                // If the request method returns undefined (instead of a promise), the request
-                // has been deferred.
-                if (typeof tileTerrain.data !== 'undefined') {
-                    tileTerrain.state = TerrainState.RECEIVING;
+            // If the request method returns undefined (instead of a promise), the request
+            // has been deferred.
+            if (typeof tileTerrain.data !== 'undefined') {
+                tileTerrain.state = TerrainState.RECEIVING;
 
-                    when(tileTerrain.data, function(terrainData) {
-                        tileTerrain.data = terrainData;
-                        tileTerrain.state = TerrainState.RECEIVED;
-                    }, function() {
-                        // TODO: add error reporting and retry logic similar to imagery providers.
-                        tileTerrain.state = TerrainState.FAILED;
-                    });
-                }
-            } else {
-                // Data is not available, so mark that terrain will not be requested for this tile.
-                // That might change later if and when the parent tile is loaded.
-                tileTerrain.state = TerrainState.NOT_AVAILABLE;
+                when(tileTerrain.data, function(terrainData) {
+                    tileTerrain.data = terrainData;
+                    tileTerrain.state = TerrainState.RECEIVED;
+                }, function() {
+                    // TODO: add error reporting and retry logic similar to imagery providers.
+                    tileTerrain.state = TerrainState.FAILED;
+                });
             }
         }
 
