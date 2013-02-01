@@ -60,32 +60,6 @@ defineSuite([
         expect(tile.extent).toEqual(extent);
     });
 
-    it('destroys transientData property if it has a destroy function', function() {
-        var isDestroyed = false;
-        var data = {
-                destroy : function() {
-                    isDestroyed = true;
-                }
-        };
-
-        var tile = new Tile({
-            x : 0,
-            y : 0,
-            level : 0,
-            tilingScheme : {
-                tileXYToExtent : function() {
-                    return undefined;
-                }
-            }
-        });
-
-        tile.transientData = data;
-
-        tile.freeResources();
-
-        expect(isDestroyed).toEqual(true);
-    });
-
     it('throws if constructed improperly', function() {
         expect(function() {
             return new Tile();
