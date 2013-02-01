@@ -7,94 +7,59 @@
     <meta name="description" content="Apply animation effects to primitives such as polygons and sensors.">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
     <script type="text/javascript">
-    require({
-        baseUrl : '../../..',
+    var dojoConfig = {
+        baseUrl : '../../../Source',
         packages: [
-            { name: 'dojo', location: 'ThirdParty/dojo-release-1.8.3-src/dojo' },
-            { name: 'dijit', location: 'ThirdParty/dojo-release-1.8.3-src/dijit' },
-            { name: 'dojox', location: 'ThirdParty/dojo-release-1.8.3-src/dojox' },
-            { name: 'Assets', location: 'Source/Assets' },
-            { name: 'Core', location: 'Source/Core' },
-            { name: 'DynamicScene', location: 'Source/DynamicScene' },
-            { name: 'Renderer', location: 'Source/Renderer' },
-            { name: 'Scene', location: 'Source/Scene' },
-            { name: 'Shaders', location: 'Source/Shaders' },
-            { name: 'ThirdParty', location: 'Source/ThirdParty' },
-            { name: 'Widgets', location: 'Source/Widgets' },
-            { name: 'Workers', location: 'Source/Workers' }
+            { name: 'dojo', location: '../ThirdParty/dojo-release-1.8.3-src/dojo' },
+            { name: 'dijit', location: '../ThirdParty/dojo-release-1.8.3-src/dijit' },
+            { name: 'dojox', location: '../ThirdParty/dojo-release-1.8.3-src/dojox' }
         ]
-    });
+    };
     </script>
-    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
+    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
-<body class="claro" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
+<body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
-    body {
-        background: #000;
-        color: #eee;
-        font-family: sans-serif;
-        font-size: 9pt;
-        padding: 0;
-        margin: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-    }
-    .fullSize {
-        display: block;
-        position: absolute;
-        top: 0;
-        left: 0;
-        border: none;
-        width: 100%;
-        height: 100%;
-    }
-    #toolbar {
-        margin: 5px;
-        padding: 2px 5px;
-        position: absolute;
-    }
+    @import url(../templates/bucket.css);
 </style>
-
 <div id="cesiumContainer" class="fullSize"></div>
-<div id="toolbar">Loading...</div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 require([
-    'Source/Cesium', 'Widgets/Dojo/CesiumWidget',
-    'dojo/on', 'dojo/dom', 'dijit/form/Button'
+    'Cesium', 'Widgets/Dojo/CesiumWidget', 'dijit/form/Button'
 ], function(
-    Cesium, CesiumWidget,
-    on, dom, Button)
+    Cesium, CesiumWidget, Button)
 {
     "use strict";
-    
+
     var polygon;
     var rectangularSensor;
 
     function addAlphaAnimation(primitive, scene) {
-        Sandcastle.declare(addAlphaAnimation);     // For highlighting in Sandcastle.
+        Sandcastle.declare(addAlphaAnimation); // For highlighting in Sandcastle.
         scene.getAnimations().addAlpha(primitive.material, 0.0, 0.5);
     }
 
     function addErosionAnimation(primitive, scene) {
-        Sandcastle.declare(addErosionAnimation);   // For highlighting in Sandcastle.
+        Sandcastle.declare(addErosionAnimation); // For highlighting in Sandcastle.
         scene.getAnimations().addProperty(primitive.material.uniforms, 'time', 0.0, 1.0, {
             duration : 1000
         });
     }
 
     function addHeightAnimation(primitive, scene) {
-        Sandcastle.declare(addHeightAnimation);    // For highlighting in Sandcastle.
+        Sandcastle.declare(addHeightAnimation); // For highlighting in Sandcastle.
         scene.getAnimations().addProperty(primitive, 'height', 5000000.0, 0.0, {
-            duration: 1000
+            duration : 1000
         });
     }
 
     function addStripeAnimation(primitive, scene) {
-        Sandcastle.declare(addStripeAnimation);    // For highlighting in Sandcastle.
+        Sandcastle.declare(addStripeAnimation); // For highlighting in Sandcastle.
         scene.getAnimations().addOffsetIncrement(primitive.material);
     }
 
@@ -107,7 +72,7 @@ require([
         var ellipsoid = widget.ellipsoid;
         var scene = widget.scene;
         var primitives = scene.getPrimitives();
-        
+
         polygon = new Cesium.Polygon();
         polygon.configureExtent(new Cesium.Extent(
                 Cesium.Math.toRadians(-120.0),
@@ -117,11 +82,15 @@ require([
         polygon.material = Cesium.Material.fromType(scene.getContext(), 'Erosion');
         primitives.add(polygon);
 
-        var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-45.0, 45.0)));
-        modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(200000.0, 0.0, -3000000.0)));
+        var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(
+                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-45.0, 45.0)));
+        modelMatrix = modelMatrix.multiply(
+                Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(200000.0, 0.0, -3000000.0)),
+                modelMatrix);
+
         var material = Cesium.Material.fromType(scene.getContext(), 'Stripe'); // Use default colors
         material.uniforms.repeat = 10;
-        var sensors = new Cesium.SensorVolumeCollection(undefined);
+        var sensors = new Cesium.SensorVolumeCollection();
         rectangularSensor = sensors.addRectangularPyramid({
             modelMatrix : modelMatrix,
             radius : 10000000.0,
@@ -134,8 +103,8 @@ require([
 
     function createButtons(scene) {
         new Button({
-            label: 'Alpha Animation',
-            onClick: function() {
+            label : 'Alpha Animation',
+            onClick : function() {
                 scene.getAnimations().removeAll();
                 resetPolygonPropeties(polygon);
                 addAlphaAnimation(polygon, scene);
@@ -144,8 +113,8 @@ require([
         }).placeAt('toolbar');
 
         new Button({
-            label: 'Erosion Animation',
-            onClick: function() {
+            label : 'Erosion Animation',
+            onClick : function() {
                 scene.getAnimations().removeAll();
                 resetPolygonPropeties(polygon);
                 addErosionAnimation(polygon, scene);
@@ -154,8 +123,8 @@ require([
         }).placeAt('toolbar');
 
         new Button({
-            label: 'Height Animation',
-            onClick: function() {
+            label : 'Height Animation',
+            onClick : function() {
                 scene.getAnimations().removeAll();
                 resetPolygonPropeties(polygon);
                 addHeightAnimation(polygon, scene);
@@ -164,8 +133,8 @@ require([
         }).placeAt('toolbar');
 
         new Button({
-            label: 'Stripe Animation',
-            onClick: function() {
+            label : 'Stripe Animation',
+            onClick : function() {
                 scene.getAnimations().removeAll();
                 addStripeAnimation(rectangularSensor, scene);
                 Sandcastle.highlight(addStripeAnimation);
@@ -174,12 +143,13 @@ require([
     }
 
     var widget = new CesiumWidget();
-    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.placeAt('cesiumContainer');
     widget.startup();
-    dom.byId('toolbar').innerHTML = '';
 
     createPrimitives(widget);
     createButtons(widget.scene);
+
+    Sandcastle.finishedLoading();
 });
 </script>
 </body>

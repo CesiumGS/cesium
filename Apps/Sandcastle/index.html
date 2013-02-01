@@ -115,6 +115,7 @@
             <input data-dojo-type="dijit.form.TextBox" type="text" id="search" name="search" data-dojo-props="trim:true, placeHolder:'Search Gallery', intermediateChanges:true" />            
         </div>
         <div id="codeContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'leading', splitter: true">
+            <script type='dojo/method' event='_onKeyPress'></script>
             <div id="jsContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'JavaScript code'">
 	            <textarea id="code" name="code">// Select a demo from the gallery to load.
 	            </textarea>
