@@ -259,7 +259,7 @@ define(['../Core/destroyObject',
      * The Animation widget also provides a "realtime" button (in the upper-left) that keeps
      * animation time in sync with the end user's system clock, typically displaying
      * "today" or "right now."  This mode is not available in {@link ClockRange.CLAMPED} or
-     * {@link ClockRange.LOOP} mode if the current time is outside of {@link Clock}'s startTime and endTime.
+     * {@link ClockRange.LOOP_STOP} mode if the current time is outside of {@link Clock}'s startTime and endTime.
      *
      * @alias Animation
      * @constructor

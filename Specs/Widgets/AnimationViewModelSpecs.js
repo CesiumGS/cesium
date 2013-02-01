@@ -1,39 +1,51 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/AnimationController',
+             'Widgets/AnimationViewModel',
              'Core/Clock',
              'Core/ClockStep',
              'Core/Math'
             ], function(
-              AnimationController,
+              AnimationViewModel,
               Clock,
               ClockStep,
               CesiumMath) {
     "use strict";
-    /*global it,expect,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    it('Constructing without arguments produces expected defaults', function() {
+        return new AnimationViewModel();
+    });
 
     it('construct with default clock', function() {
         var clock = new Clock();
-        var animationController = new AnimationController(clock);
+        var animationController = new AnimationViewModel(clock);
         expect(animationController.getClock()).toEqual(clock);
     });
 
     it('construct throws if no clock', function() {
-        expect(function() { return new AnimationController(); }).toThrow();
+        expect(function() {
+            return new AnimationViewModel();
+        }).toThrow();
     });
 
     it('getTypicalSpeed throws if no input speed', function() {
         var clock = new Clock();
-        var animationController = new AnimationController(clock);
+        var animationController = new AnimationViewModel(clock);
 
-        expect(function() { return animationController.getTypicalSpeed('foo'); }).toThrow();
-        expect(function() { return animationController.getTypicalSpeed(undefined); }).toThrow();
-        expect(function() { return animationController.getTypicalSpeed(1.0); }).not.toThrow();
+        expect(function() {
+            return animationController.getTypicalSpeed('foo');
+        }).toThrow();
+        expect(function() {
+            return animationController.getTypicalSpeed(undefined);
+        }).toThrow();
+        expect(function() {
+            return animationController.getTypicalSpeed(1.0);
+        }).not.toThrow();
     });
 
     it('play, pause, playReverse, playRealtime, reset, and unpause affect isAnimating', function() {
         var clock = new Clock();
-        var animationController = new AnimationController(clock);
+        var animationController = new AnimationViewModel(clock);
         expect(animationController.isAnimating()).toEqual(true);
         animationController.pause();
         expect(animationController.isAnimating()).toEqual(false);
@@ -54,7 +66,7 @@ defineSuite([
 
     it('clock changes only when animating', function() {
         var clock = new Clock();
-        var animationController = new AnimationController(clock);
+        var animationController = new AnimationViewModel(clock);
 
         animationController.pause();
         var time1 = animationController.update();
@@ -71,7 +83,7 @@ defineSuite([
 
     it('faster makes it go faster', function() {
         var clock = new Clock();
-        var animationController = new AnimationController(clock);
+        var animationController = new AnimationViewModel(clock);
 
         var speed = clock.multiplier;
         animationController.faster();
@@ -88,7 +100,7 @@ defineSuite([
         expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_TIME);
         expect(clock.multiplier).toEqual(1);
         animationController.faster();
-        expect(clock.clockStep).toEqual(ClockStep.SPEED_MULTIPLIER);
+        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_DEPENDENT);
         expect(clock.multiplier).toBeGreaterThan(1);
         clock.multiplier = 1.0001;
         animationController.faster();
@@ -97,7 +109,7 @@ defineSuite([
 
     it('slower makes it go slower', function() {
         var clock = new Clock();
-        var animationController = new AnimationController(clock);
+        var animationController = new AnimationViewModel(clock);
 
         var speed = clock.multiplier;
         animationController.slower();
@@ -116,14 +128,14 @@ defineSuite([
         expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_TIME);
         expect(clock.multiplier).toEqual(1);
         animationController.slower();
-        expect(clock.clockStep).toEqual(ClockStep.SPEED_MULTIPLIER);
+        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_DEPENDENT);
         expect(clock.multiplier).toBeLessThan(1);
         expect(clock.multiplier).toBeGreaterThan(0);
     });
 
     it('typical speeds are reasonable', function() {
         var clock = new Clock();
-        var animationController = new AnimationController(clock);
+        var animationController = new AnimationViewModel(clock);
 
         expect(animationController.getTypicalSpeed(60.001)).toEqualEpsilon(60.0, CesiumMath.EPSILON14);
         expect(animationController.getTypicalSpeed(304.0)).toEqualEpsilon(300.0, CesiumMath.EPSILON14);
@@ -133,7 +145,7 @@ defineSuite([
 
     it('moreReverse slows and goes backwards', function() {
         var clock = new Clock();
-        var animationController = new AnimationController(clock);
+        var animationController = new AnimationViewModel(clock);
 
         clock.multiplier = 0.0025;
         animationController.moreReverse();
@@ -148,7 +160,7 @@ defineSuite([
 
     it('moreForward slows reverse and goes forwards', function() {
         var clock = new Clock();
-        var animationController = new AnimationController(clock);
+        var animationController = new AnimationViewModel(clock);
 
         clock.multiplier = -0.0025;
         animationController.moreForward();

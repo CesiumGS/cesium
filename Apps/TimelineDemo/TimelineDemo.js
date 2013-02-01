@@ -2,30 +2,32 @@
 define(['dojo',
         'dijit/dijit',
         'Core/Clock',
+        'Core/ClockRange',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
-        'Core/AnimationController',
         'Core/requestAnimationFrame',
         'Widgets/Animation',
+        'Widgets/ClockViewModel',
         'Widgets/AnimationViewModel',
         'Widgets/Timeline'
     ], function(
          dojo,
          dijit,
          Clock,
+         ClockRange,
          Color,
          JulianDate,
          TimeInterval,
-         AnimationController,
          requestAnimationFrame,
          Animation,
+         ClockViewModel,
          AnimationViewModel,
          Timeline) {
     "use strict";
 
     var startDatePart, endDatePart, startTimePart, endTimePart;
-    var timeline, clock, endBeforeStart, containerElement, animationController, animation;
+    var timeline, clock, endBeforeStart, containerElement, animationViewModel, animation;
 
     function updateScrubTime(julianDate) {
         document.getElementById('mousePos').innerHTML = timeline.makeLabel(julianDate) + ' UTC';
@@ -33,7 +35,9 @@ define(['dojo',
 
     function handleSetTime(e) {
         if (typeof timeline !== 'undefined') {
-            animationController.pause();
+            if (!animationViewModel.pauseViewModel.selected()) {
+                animationViewModel.pauseViewModel.command.execute();
+            }
             var scrubJulian = e.timeJulian;
             clock.currentTime = scrubJulian;
             updateScrubTime(scrubJulian);
@@ -79,6 +83,7 @@ define(['dojo',
             startTime : startJulian,
             currentTime : scrubJulian,
             stopTime : endJulian,
+            clockRange: ClockRange.LOOP_STOP,
             multiplier : 60
         });
 
@@ -91,14 +96,16 @@ define(['dojo',
         var middle = startJulian.getSecondsDifference(endJulian) / 4;
         timeline.addTrack(new TimeInterval(startJulian.addSeconds(middle), startJulian.addSeconds(middle * 3)), 8, Color.DEEPSKYBLUE, new Color(0.55, 0.55, 0.55, 0.25));
 
-        animationController = new AnimationController(clock);
-        animation = new Animation(dojo.byId('animationWidget'), new AnimationViewModel(animationController));
+        animationViewModel = new AnimationViewModel(new ClockViewModel(clock));
+        animation = new Animation(dojo.byId('animationWidget'), animationViewModel);
+
+        //'press' the play button
+        animationViewModel.playViewModel.command.execute();
 
         function tick() {
-            var currentTime = animationController.update();
-            animation.viewModel.update();
+            animationViewModel.update();
             timeline.updateFromClock();
-            updateScrubTime(currentTime);
+            updateScrubTime(clock.currentTime);
             requestAnimationFrame(tick);
         }
         tick();

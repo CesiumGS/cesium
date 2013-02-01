@@ -17,6 +17,7 @@ define([
         './TimelineWidget',
         '../Animation',
         '../AnimationViewModel',
+        '../ClockViewModel',
         '../../Core/defaultValue',
         '../../Core/loadJson',
         '../../Core/BoundingRectangle',
@@ -24,7 +25,6 @@ define([
         '../../Core/ClockStep',
         '../../Core/ClockRange',
         '../../Core/Extent',
-        '../../Core/AnimationController',
         '../../Core/Ellipsoid',
         '../../Core/Iso8601',
         '../../Core/Fullscreen',
@@ -77,6 +77,7 @@ define([
         TimelineWidget,
         Animation,
         AnimationViewModel,
+        ClockViewModel,
         defaultValue,
         loadJson,
         BoundingRectangle,
@@ -84,7 +85,6 @@ define([
         ClockStep,
         ClockRange,
         Extent,
-        AnimationController,
         Ellipsoid,
         Iso8601,
         Fullscreen,
@@ -506,7 +506,7 @@ define([
                 clock.startTime = availability.start;
                 clock.stopTime = availability.stop;
                 if (typeof this.endUserOptions.loop === 'undefined' || this.endUserOptions.loop === '1') {
-                    clock.clockRange = ClockRange.LOOP;
+                    clock.clockRange = ClockRange.LOOP_STOP;
                 } else {
                     clock.clockRange = ClockRange.CLAMPED;
                 }
@@ -715,25 +715,18 @@ define([
             }
 
             var currentTime = new JulianDate();
-            if (typeof this.animationController === 'undefined') {
-                if (typeof this.clock === 'undefined') {
-                    this.clock = new Clock({
-                        startTime : currentTime.addDays(-0.5),
-                        stopTime : currentTime.addDays(0.5),
-                        currentTime : currentTime,
-                        clockStep : ClockStep.SPEED_MULTIPLIER,
-                        multiplier : 1
-                    });
-                }
-                this.animationController = new AnimationController(this.clock);
-            } else {
-                this.clock = this.animationController.getClock();
-            }
-            this.animation = new Animation(this.animationWidget, new AnimationViewModel(this.animationController));
+            this.clock = new Clock({
+                startTime : currentTime.addDays(-0.5),
+                stopTime : currentTime.addDays(0.5),
+                currentTime : currentTime,
+                clockStep : ClockStep.SYSTEM_CLOCK_DEPENDENT,
+                multiplier : 1
+            });
 
-            var animationController = this.animationController;
-            var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
             var clock = this.clock;
+            this.animation = new Animation(this.animationWidget, new AnimationViewModel(new ClockViewModel(clock)));
+
+            var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
@@ -747,7 +740,9 @@ define([
 
             function onTimelineScrub(e) {
                 widget.clock.currentTime = e.timeJulian;
-                animationController.pause();
+                if (!widget.animation.viewModel.pauseViewModel.selected()) {
+                    widget.animation.viewModel.pauseViewModel.command.execute();
+                }
             }
 
             var timelineWidget = widget.timelineWidget;
@@ -1166,10 +1161,10 @@ define([
          */
         startRenderLoop : function() {
             var widget = this;
-            var animationController = widget.animationController;
 
             function updateAndRender() {
-                var currentTime = animationController.update();
+                widget.animation.viewModel.update();
+                var currentTime = widget.clock.currentTime;
                 widget.initializeFrame();
                 widget.update(currentTime);
                 widget.render(currentTime);

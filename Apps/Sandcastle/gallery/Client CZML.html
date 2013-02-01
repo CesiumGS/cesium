@@ -160,7 +160,7 @@ require([
         clock.startTime = availability.start.clone();
         clock.currentTime = availability.start.clone();
         clock.stopTime = availability.stop.clone();
-        clock.clockRange = Cesium.ClockRange.LOOP;
+        clock.clockRange = Cesium.ClockRange.LOOP_STOP;
 
         return visualizers;
     }
