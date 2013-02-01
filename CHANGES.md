@@ -4,6 +4,8 @@ Change Log
 Beta Releases
 -------------
 
+### b14 - 2013-xx-xx
+
 ### b13 - 2013-02-01
 * Breaking changes:
    * The combined `Cesium.js` file and other required files are now created in `Build/Cesium` and `Build/CesiumUnminified` folders.
