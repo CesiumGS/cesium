@@ -879,7 +879,8 @@ define([
                     tileTerrain.state = TerrainState.RECEIVING;
 
                     when(tileTerrain.data, function(terrainData) {
-                        fillTileWithLoadedTerrain(tile, tileTerrain, terrainData);
+                        tileTerrain.data = terrainData;
+                        tileTerrain.state = TerrainState.RECEIVED;
                     }, function() {
                         // TODO: add error reporting and retry logic similar to imagery providers.
                         tileTerrain.state = TerrainState.FAILED;
@@ -995,11 +996,6 @@ define([
         }
 
         return parent.terrainData.isChildAvailable(parent.x, parent.y, tile.x, tile.y);
-    }
-
-    function fillTileWithLoadedTerrain(tile, tileTerrain, terrainData) {
-        tileTerrain.data = terrainData;
-        tileTerrain.state = TerrainState.RECEIVED;
     }
 
     // This is debug code to render the bounding sphere of the tile in
