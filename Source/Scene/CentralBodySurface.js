@@ -740,6 +740,8 @@ define([
         } while (Date.now() < endTime && typeof tile !== 'undefined');
     }
 
+    var cartesian3Scratch = new Cartesian3(0.0, 0.0, 0.0);
+    var cartesian3Scratch2 = new Cartesian3(0.0, 0.0, 0.0);
     var southeastScratch = new Cartesian3(0.0, 0.0, 0.0);
     var northwestScratch = new Cartesian3(0.0, 0.0, 0.0);
 
@@ -895,9 +897,6 @@ define([
             level : sourceTile.level
         };
     }
-
-    var cartesian3Scratch = new Cartesian3(0.0, 0.0, 0.0);
-    var cartesian3Scratch2 = new Cartesian3(0.0, 0.0, 0.0);
 
     function isDataAvailable(tile) {
         var parent = tile.parent;
