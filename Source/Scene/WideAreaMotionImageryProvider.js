@@ -131,10 +131,8 @@ define([
         this._ready = true;
 
         this._tileUrl = this.url + '?';
-        this._tileUrl += 'SERVICE=IS&VERSION=1.0.0&REQUEST=GetMap&CRS=EPSG:4326';
-        this._tileUrl += '&WIDTH=' + 1024 + '&HEIGHT=' + 1024;
         this._tileUrl += '&CID=' + this.cid;
-        this._tileUrl += '&TRANSPARENT=TRUE&BGCOLOR=0xFFFFFF&FORMAT=image/png';
+        this._tileUrl += '&Request=GetMap&Service=IS&Version=1.0.1&Transparent=TRUE&BGCOLOR=0xFFFFFFFF&CRS=EPSG:4326&Options.jpeg_quality=70&Format=image/png&Exceptions=IMAGE&Width=1024&Height=1024&Time=F0';
     };
 
     /**

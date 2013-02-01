@@ -634,7 +634,8 @@ define([
                 mapStyle : this.mapStyle,
                 // Some versions of Safari support WebGL, but don't correctly implement
                 // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
+                proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/'),
+                key : 'Auc5O1omLRY_ub2safz0m2vJbzhYhSfTkO9eRDtLOauonIVoAiy6BV8c-L4jl1MT'
             });
             var bingLayer = imageryLayerCollection.addImageryProvider(bing);
 
@@ -646,7 +647,7 @@ define([
 
             var wamiImageryProvider = this.wamiImageryProvider = new WideAreaMotionImageryProvider({
                 url : 'http://release.pixia.com/wami-soa-server/wami/IS',
-                cid : 'Whitby_Downtown_nmv_nui',
+                cid : '62a117e6224d44088b30eaf65d20d7ed',
                 extent : extent,
                 proxy : new DefaultProxy('/proxy/')
             });
