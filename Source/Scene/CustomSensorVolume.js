@@ -13,8 +13,8 @@ define([
         '../Core/BoundingSphere',
         '../Renderer/BufferUsage',
         '../Renderer/BlendingState',
-        '../Renderer/Command',
         '../Renderer/CommandLists',
+        '../Renderer/DrawCommand',
         './Material',
         '../Shaders/Noise',
         '../Shaders/SensorVolume',
@@ -35,8 +35,8 @@ define([
         BoundingSphere,
         BufferUsage,
         BlendingState,
-        Command,
         CommandLists,
+        DrawCommand,
         Material,
         ShadersNoise,
         ShadersSensorVolume,
@@ -64,8 +64,8 @@ define([
         this._pickId = undefined;
         this._pickIdThis = t._pickIdThis || this;
 
-        this._colorCommand = new Command();
-        this._pickCommand = new Command();
+        this._colorCommand = new DrawCommand();
+        this._pickCommand = new DrawCommand();
         this._commandLists = new CommandLists();
 
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = PrimitiveType.TRIANGLES;
@@ -126,19 +126,6 @@ define([
         this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY.clone();
 
         /**
-         * <p>
-         * Determines if the sensor is affected by lighting, i.e., if the sensor is bright on the
-         * day side of the globe, and dark on the night side.  When <code>true</code>, the sensor
-         * is affected by lighting; when <code>false</code>, the sensor is uniformly shaded regardless
-         * of the sun position.
-         * </p>
-         * <p>
-         * The default is <code>true</code>.
-         * </p>
-         */
-        this.affectedByLighting = this._affectedByLighting = (typeof t.affectedByLighting !== 'undefined') ? t.affectedByLighting : true;
-
-        /**
          * DOC_TBA
          *
          * @type BufferUsage
@@ -187,13 +174,6 @@ define([
          */
         this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : Color.clone(Color.WHITE);
 
-        /**
-         * DOC_TBA
-         *
-         * @type Number
-         */
-        this.erosion = (typeof t.erosion === 'undefined') ? 1.0 : t.erosion;
-
         var that = this;
         this._uniforms = {
             u_showThroughEllipsoid : function() {
@@ -207,9 +187,6 @@ define([
             },
             u_intersectionColor : function() {
                 return that.intersectionColor;
-            },
-            u_erosion : function() {
-                return that.erosion;
             }
         };
 
@@ -385,13 +362,11 @@ define([
 
         if (pass.color) {
             var materialChanged = typeof this._material === 'undefined' ||
-                this._material !== this.material ||
-                this._affectedByLighting !== this.affectedByLighting;
+                this._material !== this.material;
 
             // Recompile shader when material changes
             if (materialChanged) {
                 this._material = this.material;
-                this._affectedByLighting = this.affectedByLighting;
 
                 var fsSource =
                     '#line 0\n' +
@@ -400,7 +375,6 @@ define([
                     ShadersSensorVolume +
                     '#line 0\n' +
                     this._material.shaderSource +
-                    (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
                     '#line 0\n' +
                     CustomSensorVolumeFS;
 

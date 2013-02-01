@@ -3,23 +3,29 @@ define([
         '../Core/defaultValue',
         '../Core/jsonp',
         '../Core/writeTextToCanvas',
-        '../Core/DeveloperError',
         '../Core/Cartesian2',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        '../Core/RuntimeError',
         './DiscardMissingTileImagePolicy',
-        './ImageryProvider',
-        './WebMercatorTilingScheme',
         './GeographicTilingScheme',
+        './ImageryProvider',
+        './ImageryProviderError',
+        './WebMercatorTilingScheme',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         jsonp,
         writeTextToCanvas,
-        DeveloperError,
         Cartesian2,
+        DeveloperError,
+        Event,
+        RuntimeError,
         DiscardMissingTileImagePolicy,
-        ImageryProvider,
-        WebMercatorTilingScheme,
         GeographicTilingScheme,
+        ImageryProvider,
+        ImageryProviderError,
+        WebMercatorTilingScheme,
         when) {
     "use strict";
 
@@ -50,9 +56,10 @@ define([
      *
      * @exception {DeveloperError} <code>description.url</code> is required.
      *
-     * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
      * @see OpenStreetMapImageryProvider
+     * @see SingleTileImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
      * @see <a href='http://resources.esri.com/help/9.3/arcgisserver/apis/rest/'>ArcGIS Server REST API</a>
@@ -79,23 +86,19 @@ define([
         this._maximumLevel = undefined;
         this._tilingScheme = undefined;
         this._logo = undefined;
-		this._useTiles = defaultValue(description.usePreCachedTilesIfAvailable, true);
+        this._useTiles = defaultValue(description.usePreCachedTilesIfAvailable, true);
+
+        this._errorEvent = new Event();
 
         this._ready = false;
 
         // Grab the details of this MapServer.
-        var metadata = jsonp(this._url, {
-            parameters : {
-                f : 'json'
-            },
-            proxy : this._proxy
-        });
-
         var that = this;
-        when(metadata, function(data) {
+        var metadataError;
+
+        function metadataSuccess(data) {
             var tileInfo = data.tileInfo;
             if (!that._useTiles || typeof tileInfo === 'undefined') {
-                // TODO: read the extent and maybe tiling scheme from the service.
                 that._tileWidth = 256;
                 that._tileHeight = 256;
                 that._tilingScheme = new GeographicTilingScheme();
@@ -104,12 +107,14 @@ define([
                 that._tileWidth = tileInfo.rows;
                 that._tileHeight = tileInfo.cols;
 
-                // TODO: support non-default tiling schemes, because ArcGIS does: http://webhelp.esri.com/arcgisserver/9.3/java/index.htm#what_is_map_caching.htm
-
                 if (tileInfo.spatialReference.wkid === 102100) {
                     that._tilingScheme = new WebMercatorTilingScheme();
                 } else if (data.tileInfo.spatialReference.wkid === 4326) {
                     that._tilingScheme = new GeographicTilingScheme();
+                } else {
+                    var message = 'Tile spatial reference WKID ' + data.tileInfo.spatialReference.wkid + ' is not supported.';
+                    metadataError = ImageryProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                    return;
                 }
                 that._maximumLevel = data.tileInfo.lods.length - 1;
 
@@ -125,7 +130,6 @@ define([
                 that._useTiles = true;
             }
 
-            // Create the copyright message.
             if (typeof data.copyrightText !== 'undefined' && data.copyrightText.length > 0) {
                 that._logo = writeTextToCanvas(data.copyrightText, {
                     font : '12px sans-serif'
@@ -133,10 +137,25 @@ define([
             }
 
             that._ready = true;
-        }, function(e) {
-            /*global console*/
-            console.error('failed to load metadata: ' + e);
-        });
+            ImageryProviderError.handleSuccess(metadataError);
+        }
+
+        function metadataFailure(e) {
+            var message = 'An error occurred while accessing ' + that._url + '.';
+            metadataError = ImageryProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+        }
+
+        function requestMetadata() {
+            var metadata = jsonp(that._url, {
+                parameters : {
+                    f : 'json'
+                },
+                proxy : that._proxy
+            });
+            when(metadata, metadataSuccess, metadataFailure);
+        }
+
+        requestMetadata();
     };
 
     function buildImageUrl(imageryProvider, x, y, level) {
@@ -192,11 +211,14 @@ define([
      *
      * @memberof ArcGisMapServerImageryProvider
      *
-     * @memberof ArcGisMapServerImageryProvider
-     *
      * @returns {Number} The width.
+     *
+     * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
      */
     ArcGisMapServerImageryProvider.prototype.getTileWidth = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTileWidth must not be called before the imagery provider is ready.');
+        }
         return this._tileWidth;
     };
 
@@ -206,11 +228,14 @@ define([
      *
      * @memberof ArcGisMapServerImageryProvider
      *
-     * @memberof ArcGisMapServerImageryProvider
-     *
      * @returns {Number} The height.
+     *
+     * @exception {DeveloperError} <code>getTileHeight</code> must not be called before the imagery provider is ready.
      */
     ArcGisMapServerImageryProvider.prototype.getTileHeight = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTileHeight must not be called before the imagery provider is ready.');
+        }
         return this._tileHeight;
     };
 
@@ -221,8 +246,13 @@ define([
      * @memberof ArcGisMapServerImageryProvider
      *
      * @returns {Number} The maximum level, or undefined if there is no maximum level.
+     *
+     * @exception {DeveloperError} <code>getMaximumLevel</code> must not be called before the imagery provider is ready.
      */
     ArcGisMapServerImageryProvider.prototype.getMaximumLevel = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getMaximumLevel must not be called before the imagery provider is ready.');
+        }
         return this._maximumLevel;
     };
 
@@ -232,13 +262,16 @@ define([
      *
      * @memberof ArcGisMapServerImageryProvider
      *
-     * @memberof ArcGisMapServerImageryProvider
-     *
      * @returns {TilingScheme} The tiling scheme.
      * @see WebMercatorTilingScheme
      * @see GeographicTilingScheme
+     *
+     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
      */
     ArcGisMapServerImageryProvider.prototype.getTilingScheme = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTilingScheme must not be called before the imagery provider is ready.');
+        }
         return this._tilingScheme;
     };
 
@@ -248,11 +281,14 @@ define([
      *
      * @memberof ArcGisMapServerImageryProvider
      *
-     * @memberof ArcGisMapServerImageryProvider
-     *
      * @returns {Extent} The extent.
+     *
+     * @exception {DeveloperError} <code>getExtent</code> must not be called before the imagery provider is ready.
      */
     ArcGisMapServerImageryProvider.prototype.getExtent = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getExtent must not be called before the imagery provider is ready.');
+        }
         return this._tilingScheme.getExtent();
     };
 
@@ -268,9 +304,27 @@ define([
      *
      * @see DiscardMissingTileImagePolicy
      * @see NeverTileDiscardPolicy
+     *
+     * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
      */
     ArcGisMapServerImageryProvider.prototype.getTileDiscardPolicy = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTileDiscardPolicy must not be called before the imagery provider is ready.');
+        }
         return this._tileDiscardPolicy;
+    };
+
+    /**
+     * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link ImageryProviderError}.
+     *
+     * @memberof ArcGisMapServerImageryProvider
+     *
+     * @returns {Event} The event.
+     */
+    ArcGisMapServerImageryProvider.prototype.getErrorEvent = function() {
+        return this._errorEvent;
     };
 
     /**
@@ -290,8 +344,6 @@ define([
      *
      * @memberof ArcGisMapServerImageryProvider
      *
-     * @memberof ArcGisMapServerImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
@@ -300,8 +352,13 @@ define([
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
+     *
+     * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     ArcGisMapServerImageryProvider.prototype.requestImage = function(x, y, level) {
+        if (!this._ready) {
+            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
+        }
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(url);
     };
@@ -313,8 +370,13 @@ define([
      * @memberof ArcGisMapServerImageryProvider
      *
      * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     *
+     * @exception {DeveloperError} <code>getLogo</code> must not be called before the imagery provider is ready.
      */
     ArcGisMapServerImageryProvider.prototype.getLogo = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getLogo must not be called before the imagery provider is ready.');
+        }
         return this._logo;
     };
 

@@ -1,4 +1,4 @@
-@import url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css');
+@import url('../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css');
 
 html, body {
     height: 100%;
@@ -82,6 +82,17 @@ html, body {
 .demoTileTitle {
     margin: 0 auto 2px auto;
     font-size: 0.9em;
+}
+
+.demoTooltipType {
+    text-align: center;
+    color: #888;
+    margin-bottom: 5px;
+    padding-right: 10px;
+}
+
+.subInfo {
+    font-size: 11px;
 }
 
 .galleryError {

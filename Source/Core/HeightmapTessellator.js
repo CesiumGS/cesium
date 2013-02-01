@@ -56,6 +56,7 @@ define([
         description = defaultValue(description, {});
 
         var heightmap = description.heightmap;
+        //var waterMask = description.waterMask;
         var heightScale = description.heightScale;
         var heightOffset = description.heightOffset;
         var bytesPerHeight = description.bytesPerHeight;
@@ -68,6 +69,7 @@ define([
         var granularityY = (extent.north - extent.south) / (height - 1);
         var generateTextureCoordinates = description.generateTextureCoordinates;
         var interleaveTextureCoordinates = description.interleaveTextureCoordinates;
+        var includeHeightsInVertexData = description.includeHeightsInVertexData;
         var relativeToCenter = description.relativeToCenter;
         var isGeographic = description.isGeographic;
         var voidIndicator = defaultValue(description.voidIndicator, -32768);
@@ -180,7 +182,7 @@ define([
                     }
                 }
 
-                heightSample = heightSample / heightScale - heightOffset;
+                heightSample = heightSample * heightScale + heightOffset;
                 if (heightSample === voidIndicator) {
                     heightSample = voidFillValue;
                 }
@@ -208,6 +210,10 @@ define([
                 vertices[vertexArrayIndex++] = rSurfaceY + nY * heightSample - relativeToCenter.y;
                 vertices[vertexArrayIndex++] = rSurfaceZ + nZ * heightSample - relativeToCenter.z;
 
+                if (includeHeightsInVertexData) {
+                    vertices[vertexArrayIndex++] = heightSample;
+                }
+
                 if (generateTextureCoordinates) {
                     var u = (longitude - geographicWest) / (geographicEast - geographicWest);
 
@@ -219,6 +225,8 @@ define([
                         textureCoordinates[textureCoordinatesIndex++] = v;
                     }
                 }
+
+                //vertices[vertexArrayIndex++] = waterMask[terrainOffset];
             }
         }
 

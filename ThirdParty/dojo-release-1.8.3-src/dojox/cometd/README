@@ -1,0 +1,29 @@
+-------------------------------------------------------------------------------
+Cometd (client)
+-------------------------------------------------------------------------------
+Version 2.5
+Release date: June 13, 2012
+-------------------------------------------------------------------------------
+Project state: beta 
+-------------------------------------------------------------------------------
+Project authors
+	Simone Bordet
+	Greg Wilkins
+-------------------------------------------------------------------------------
+Project description
+
+Low-latency data transfer from servers to clients. dojox.cometd implements a
+Bayeux protocol client for use with most Bayeux servers. See cometd.com for
+details on Cometd or on the Bayeux protocol.
+-------------------------------------------------------------------------------
+Dependencies:
+
+Needs a cooperating Bayeux server
+-------------------------------------------------------------------------------
+Documentation
+
+See http://cometd.com
+-------------------------------------------------------------------------------
+Installation instructions
+
+Use this library with (preferably through) an existing Cometd server.

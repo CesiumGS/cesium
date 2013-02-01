@@ -18,17 +18,9 @@ void main()
     vec2 webMercatorUV = geographicUV;
     
     float currentLatitude = mix(u_southLatitude, u_northLatitude, geographicUV.y);
-    float sinLatitude = sin(currentLatitude);
-    float mercatorY = 0.5 * log((1.0 + sinLatitude) / (1.0 - sinLatitude));
+    float fraction = czm_latitudeToWebMercatorFraction(currentLatitude, u_southMercatorYLow, u_southMercatorYHigh, u_oneOverMercatorHeight);
     
-    // mercatorY - u_southMercatorY in simulated double precision.
-    float t1 = 0.0 - u_southMercatorYLow;
-    float e = t1 - 0.0;
-    float t2 = ((-u_southMercatorYLow - e) + (0.0 - (t1 - e))) + mercatorY - u_southMercatorYHigh;
-    float highDifference = t1 + t2;
-    float lowDifference = t2 - (highDifference - t1);
-    
-    webMercatorUV = vec2(geographicUV.x, highDifference * u_oneOverMercatorHeight + lowDifference * u_oneOverMercatorHeight);
+    webMercatorUV = vec2(geographicUV.x, fraction);
     
     gl_FragColor = texture2D(u_texture, webMercatorUV);
 }

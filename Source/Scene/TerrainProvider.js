@@ -18,6 +18,7 @@ define([
      *
      * @alias TerrainProvider
      * @constructor
+     * @private
      *
      * @see EllipsoidTerrainProvider
      */
@@ -41,7 +42,8 @@ define([
      */
     TerrainProvider.attributeIndices = {
         position3D : 0,
-        textureCoordinates : 1
+        height : 1,
+        textureCoordinates : 2
     };
 
     TerrainProvider.wireframe = false;
@@ -107,11 +109,16 @@ define([
         return lines;
     }
 
-    TerrainProvider.createTileEllipsoidGeometryFromBuffers = function(context, tile, buffers) {
+    TerrainProvider.createTileEllipsoidGeometryFromBuffers = function(context, buffers, tileTerrain, includesHeights) {
         var datatype = ComponentDatatype.FLOAT;
         var typedArray = buffers.vertices;
         var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
         var stride = 5 * datatype.sizeInBytes;
+
+        if (includesHeights) {
+            stride += datatype.sizeInBytes;
+        }
+
         var attributes = [{
             index : TerrainProvider.attributeIndices.position3D,
             vertexBuffer : buffer,
@@ -119,14 +126,36 @@ define([
             componentsPerAttribute : 3,
             offsetInBytes : 0,
             strideInBytes : stride
-        }, {
+        }];
+
+        var textureCoordinatesOffset = 3;
+        if (includesHeights) {
+            attributes.push({
+                index : TerrainProvider.attributeIndices.height,
+                vertexBuffer : buffer,
+                componentDatatype : datatype,
+                componentsPerAttribute : 1,
+                offsetInBytes : 3 * datatype.sizeInBytes,
+                strideInBytes : stride
+            });
+            ++textureCoordinatesOffset;
+        } else {
+            attributes.push({
+                index : TerrainProvider.attributeIndices.height,
+                value : [0.0],
+                componentDatatype : datatype,
+                componentsPerAttribute : 1
+            });
+        }
+
+        attributes.push({
             index : TerrainProvider.attributeIndices.textureCoordinates,
             vertexBuffer : buffer,
             componentDatatype : datatype,
             componentsPerAttribute : 2,
-            offsetInBytes : 3 * datatype.sizeInBytes,
+            offsetInBytes : textureCoordinatesOffset * datatype.sizeInBytes,
             strideInBytes : stride
-        }];
+        });
 
         var indexBuffers = buffers.indices.indexBuffers || {};
         var indexBuffer = indexBuffers[context.getId()];
@@ -144,7 +173,7 @@ define([
             ++indexBuffer.referenceCount;
         }
 
-        tile.vertexArray = context.createVertexArray(attributes, indexBuffer);
+        tileTerrain.vertexArray = context.createVertexArray(attributes, indexBuffer);
     };
 
     /**
@@ -179,57 +208,20 @@ define([
     };
 
     /**
-     * Gets the level with the specified quantity of geometric error or less.
+     * Requests the geometry for a given tile.  This function should not be called before
+     * {@link TerrainProvider#isReady} returns true.  The result must include terrain data and
+     * may optionally include an indication of which child tiles are available.
      *
-     * @memberof TilingScheme
+     * @memberof TerrainProvider
      *
-     * @param {Number} geometricError The geometric error for which to find a corresponding level.
-     * @returns {Number} The level with the specified geometric error or less.
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {Promise|TerrainData} A promise for the requested geometry.  If this method
+     *          returns undefined instead of a promise, it is an indication that too many requests are already
+     *          pending and the request will be retried later.
      */
-
-    // Is there a limit on 'level' of the tile that can be passed in?  It seems
-    // natural to have a maxLevel, but this would cause problems if we have hi-res imagery
-    // and low-res terrain.  So I'd say we can continue to refine terrain tiles arbitrarily
-    // until both the terrain and all the imagery layers have no more detail to give.  In that
-    // case, this method is expected to be able to produce geometry for an arbitrarily-deep
-    // tile tree.
-
-    /**
-     * Request the tile geometry from the remote server.  Once complete, the
-     * tile state should be set to RECEIVED.  Alternatively, tile state can be set to
-     * UNLOADED to indicate that the request should be attempted again next update, if the tile
-     * is still needed.
-     *
-     * @param {Tile} The tile to request geometry for.
-     */
-    TerrainProvider.prototype.requestTileGeometry = function(tile) {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
-
-    /**
-     * Transform the tile geometry from the format requested from the remote server
-     * into a format suitable for resource creation.  Once complete, the tile
-     * state should be set to TRANSFORMED.  Alternatively, tile state can be set to
-     * RECEIVED to indicate that the transformation should be attempted again next update, if the tile
-     * is still needed.
-     *
-     * @param {Context} context The context to use to create resources.
-     * @param {Tile} tile The tile to transform geometry for.
-     */
-    TerrainProvider.prototype.transformGeometry = function(context, tile) {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
-
-    /**
-     * Create WebGL resources for the tile using whatever data the transformGeometry step produced.
-     * Once complete, the tile state should be set to READY.  Alternatively, tile state can be set to
-     * TRANSFORMED to indicate that resource creation should be attempted again next update, if the tile
-     * is still needed.
-     *
-     * @param {Context} context The context to use to create resources.
-     * @param {Tile} tile The tile to create resources for.
-     */
-    TerrainProvider.prototype.createResources = function(context, tile) {
+    TerrainProvider.prototype.requestTileGeometry = function(x, y, level) {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 

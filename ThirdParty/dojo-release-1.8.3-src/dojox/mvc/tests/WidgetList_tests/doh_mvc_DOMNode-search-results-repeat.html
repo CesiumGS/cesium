@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>MVC DOH Search Results Repeat Test</title>
+		<style>
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../css/app-format.css";
+		</style>
+		<script src="../../../../dojo/dojo.js" type="text/javascript" data-dojo-config="isDebug: true, mvc: {debugBindings: true}"></script>
+		<script type="text/javascript" src="../helpers.js"></script>
+		<script type="text/javascript">
+
+			require([
+				"doh/runner",
+				"dojo/parser",
+				"dijit/registry",
+				"dojo/dom",
+				"dojo/when",
+				"dojox/mvc/getStateful",
+				"dojox/mvc/_atBindingExtension",
+				"dojox/mvc/ListController",
+				"dojox/mvc/StatefulArray",
+				"dojox/mvc/Group",
+				"dojox/mvc/Output",
+				"dojox/mvc/Repeat",
+				"dojox/mvc/parserExtension",
+				"dojo/domReady!"
+			], function(doh, parser, registry, dom, when, getStateful){
+				function runTests(){
+					// should be able to verify all of the inputs 
+					doh.register("Check initial values and bindings", [
+						{
+							name: "initial",
+							runTest: function(){
+								var name1, bind1, firstInput; 
+								name1 = dom.byId("nameInput0");
+								if (name1) {
+										doh.is("Anne",name1.value,"name1.value should be set");
+								}
+
+								firstInput = dom.byId("firstInput");
+								if (firstInput) {
+										doh.is("Anne",firstInput.value,"firstInput.value should be set");
+								}
+							}
+						}
+					]);
+
+					doh.register("select Ben", [
+						{
+							name: "testBen",
+							runTest: function(){
+								setDetailsContext(1);
+								var name1, bind1, firstInput; 
+								name1 = dom.byId("nameInput1");
+								if (name1) {
+										doh.is("Ben",name1.value,"name1.value is wrong");
+								}
+
+								firstInput = registry.byId("firstInput");
+								if (firstInput) {
+										doh.is("Ben",firstInput.value,"firstInput value is wrong");
+										firstInput.set("value","Benjamin");
+										doh.is("Benjamin",firstInput.value,"firstInput value is wrong after update");
+										doh.is("Benjamin",name1.value,"name1.get(value) is wrong after update");
+								}
+							}					
+						}
+					]);
+
+					doh.run();
+				}
+
+				setDetailsContext = function(index){
+					var ctl = registry.byId("listCtl");
+					ctl.set("cursorIndex", index);
+				};
+
+				searchRecords = getStateful(
+					{
+						"Query" : "Engineers",
+						"Results" : [
+							{
+								"First"	  : "Anne",
+								"Last"	  : "Ackerman",
+								"Location": "NY",
+								"Office"  : "1S76",
+								"Email"	  : "a.a@test.com",
+								"Tel"	  : "123-764-8237",
+								"Fax"	  : "123-764-8228"
+							},
+							{
+								"First"	  : "Ben",
+								"Last"	  : "Beckham",
+								"Location": "NY",
+								"Office"  : "5N47",
+								"Email"	  : "b.b@test.com",
+								"Tel"	  : "123-764-8599",
+								"Fax"	  : "123-764-8600"
+							},
+							{
+								"First"	  : "Chad",
+								"Last"	  : "Chapman",
+								"Location": "CA",
+								"Office"  : "1278",
+								"Email"	  : "c.c@test.com",
+								"Tel"	  : "408-764-8237",
+								"Fax"	  : "408-764-8228"
+							},
+							{
+								"First"	  : "David",
+								"Last"	  : "Durham",
+								"Location": "NJ",
+								"Office"  : "C12",
+								"Email"	  : "d.d@test.com",
+								"Tel"	  : "514-764-8237",
+								"Fax"	  : "514-764-8228"
+							},
+							{
+								"First"	  : "Emma",
+								"Last"	  : "Eklof",
+								"Location": "NY",
+								"Office"  : "4N76",
+								"Email"	  : "e.e@test.com",
+								"Tel"	  : "123-764-1234",
+								"Fax"	  : "123-764-4321"
+							},
+							{
+								"First"	  : "Fred",
+								"Last"	  : "Fisher",
+								"Location": "NJ",
+								"Office"  : "V89",
+								"Email"	  : "f.f@test.com",
+								"Tel"	  : "514-764-8567",
+								"Fax"	  : "514-764-8000"
+							},
+							{
+								"First"	  : "George",
+								"Last"	  : "Garnett",
+								"Location": "NY",
+								"Office"  : "7S11",
+								"Email"	  : "gig@test.com",
+								"Tel"	  : "123-999-8599",
+								"Fax"	  : "123-999-8600"
+							},
+							{
+								"First"	  : "Hunter",
+								"Last"	  : "Huffman",
+								"Location": "CA",
+								"Office"  : "6532",
+								"Email"	  : "h.h@test.com",
+								"Tel"	  : "408-874-8237",
+								"Fax"	  : "408-874-8228"
+							},
+							{
+								"First"	  : "Irene",
+								"Last"	  : "Ira",
+								"Location": "NJ",
+								"Office"  : "F09",
+								"Email"	  : "i.i@test.com",
+								"Tel"	  : "514-764-6532",
+								"Fax"	  : "514-764-7300"
+							},
+							{
+								"First"	  : "John",
+								"Last"	  : "Jacklin",
+								"Location": "CA",
+								"Office"  : "6701",
+								"Email"	  : "j.j@test.com",
+								"Tel"	  : "408-764-1234",
+								"Fax"	  : "408-764-4321"
+							}
+						]
+					});
+
+				when(parser.parse(), function(){
+					registry.byId("listCtl").set("model", searchRecords.Results);
+					runTests();
+				});
+			});
+		</script>
+	</head>
+<body class="claro" style="width:100%;height:100%;margin:0;padding:0;">
+	<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<span id="listCtl"  data-dojo-type="dojox.mvc.ListController" 
+							data-dojo-props="cursorIndex: 0"></span>
+		<div id="header">
+		  <div id="navigation">
+		  </div>
+		  <div id="headerInsert">
+			<h1>Employee Search</h1>
+			<h2>Master Detail Example - With repeat container.</h2>
+		  </div>
+		</div>
+		<div id="main">
+		 <div id="leftNav">
+		 </div>
+		 <div id="mainContent">
+		 <!--
+			 The group container denotes some logical grouping of widgets and also serves
+			 to establish a parent data binding context for its children.
+			 The target attribute for the outermost container obtains the binding from the
+			 "page scope" itself.
+		 -->
+	   <div> 	
+			<div id="searchBanner">Search Results for term: Engineers</div>
+
+			<!--
+				The repeat container denotes a templated UI that operates over a collection
+				of data records.
+				The UI can be customized for each iteration using properties such as
+				${this.index} for the iteration index.
+			-->
+			<div data-dojo-type="dojox/mvc/WidgetList"
+				data-dojo-mixins="dojox/mvc/_InlineTemplateMixin"
+				data-dojo-props="children: at('widget:listCtl', 'model')">
+				<script type="dojox/mvc/InlineTemplate">
+					<div>
+						<label class="cell" for="nameInput${indexAtStartup}">Name:</label>
+						<input class="cell" id="nameInput${indexAtStartup}" 
+							data-mvc-bindings="value: at('rel:', 'First')">
+						<button type="button" onclick="setDetailsContext('${indexAtStartup}')">Details</button>
+					</div>
+				</script>
+			</div>
+			<div class="spacer"></div>
+
+			<div data-dojo-type="dojox.mvc.Group" 
+								data-dojo-props="target: at('widget:listCtl', 'cursor')">
+				<div class="row">
+					<div style="display: inline-block;" id="detailsBanner">Details for result index: </div>
+					<span class="cell" id="indexOutput"  
+							data-mvc-bindings="innerText: at('widget:listCtl', 'cursorIndex')"></span>
+				</div>
+				<div class="row">
+					<label class="cell" for="firstInput">First Name:</label>
+					<input class="cell" id="firstInput"  
+										data-mvc-bindings="value: at('rel:', 'First')">
+				</div>
+				<div class="row">
+					<label class="cell" for="lastInput">Last Name:</label>
+					<input class="cell" id="lastInput"  
+									data-mvc-bindings="value: at('rel:', 'Last')">
+				</div>
+				<div class="row">
+					<label class="cell" for="locationInput">Location:</label>
+					<input class="cell" id="locationInput"  
+									data-mvc-bindings="value: at('rel:', 'Location')">
+				</div>
+				<div class="row">
+					<label class="cell" for="officeInput">Office:</label>
+					<input class="cell" id="officeInput"  
+									data-mvc-bindings="value: at('rel:', 'Office')">
+				</div>
+				<div class="row">
+					<label class="cell" for="emailInput">Email:</label>
+					<input class="cell" id="emailInput"  
+									data-mvc-bindings="value: at('rel:', 'Email')">
+				</div>
+				<div class="row">
+					<label class="cell" for="telInput">Telephone:</label>
+					<input class="cell" id="telInput"  
+									data-mvc-bindings="value: at('rel:', 'Tel')">
+				</div>
+				<div class="row">
+					<label class="cell" for="faxInput">Fax:</label>
+					<input class="cell" id="faxInput"  
+								data-mvc-bindings="value: at('rel:', 'Fax')">
+				</div>
+			</div>
+		   </div>
+		 </div>
+		</div>
+</body>
+</html>

@@ -7,6 +7,12 @@ define([
         ImageryState) {
     "use strict";
 
+    /**
+     * Stores details about a tile of imagery.
+     *
+     * @alias Imagery
+     * @private
+     */
     var Imagery = function(imageryLayer, x, y, level, extent) {
         this.imageryLayer = imageryLayer;
         this.x = x;
@@ -26,8 +32,8 @@ define([
         this.texture = undefined;
         this.referenceCount = 0;
 
-        if (typeof extent === 'undefined' && imageryLayer.imageryProvider.isReady()) {
-            var tilingScheme = imageryLayer.imageryProvider.getTilingScheme();
+        if (typeof extent === 'undefined' && imageryLayer.getImageryProvider().isReady()) {
+            var tilingScheme = imageryLayer.getImageryProvider().getTilingScheme();
             extent = tilingScheme.tileXYToExtent(x, y, level);
         }
 

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Calendar Widget Test</title>
+
+		<!-- for tests -->
+		<style type="text/css">
+			@import "../themes/claro/document.css";
+			@import "css/dijitTests.css";
+		</style>
+
+		<style>
+			#calendar5 .dijitCalendarDateTemplate { height: 50px; width: 50px; border: 1px solid #ccc; vertical-align: top }
+			#calendar5 .dijitCalendarDateLabel, #calendar5 .dijitCalendarDateTemplate { text-align: inherit }
+			#calendar5 .dijitCalendarDayLabel { font-weight: bold }
+			#calendar5 .dijitCalendarSelectedYear { font-size: 1.5em }
+			#calendar5 .dijitCalendarMonthLabel { font-family: serif; letter-spacing: 0.2em; font-size: 2em }
+			.blue { color: blue }
+		</style>
+
+		<!-- required: a default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../dojo/dojo.js"
+			data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+		<!-- not needed, for testing alternate themes -->
+		<script type="text/javascript" src="_testCommon.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit.Calendar");
+			dojo.require("dojo.date.locale");
+			dojo.require("dojo.parser"); // scan page for widgets
+
+			dojo.ready(function(){
+				//Need to declare BigCalendar here in an addOnLoad block so that it works
+				//with xdomain loading, where the dojo.require for dijit.Calendar
+				//may load asynchronously. This also means we cannot have HTML
+				//markup in the body tag for BigCalendar, but instead inject it in this
+				//onload handler after BigCalendar is defined.
+				dojo.declare("BigCalendar", dijit.Calendar, {
+					templateString: dojo.cache("dijit.tests", "_altCalendar.html"),
+					isDisabledDate: dojo.date.locale.isWeekend,
+					getClassForDate: function(date){
+						if(!(date.getDate() % 10)){ return "blue"; } // apply special style to all days divisible by 10
+					}
+				});
+
+				var bigCalendar = dojo.byId("calendar5");
+				bigCalendar.setAttribute("data-dojo-type", "BigCalendar");
+				dojo.parser.parse(bigCalendar.parentNode);
+			});
+
+			function myHandler(id,newValue){
+				console.debug("onChange for id = " + id + ", value: " + newValue);
+			}
+		</script>
+	</head>
+	<body class="claro">
+
+		<h1 class="testTitle">Dijit Calendar Test</h1>
+
+		<input value="input before" id="before"/>
+		<input id="calendar1" data-dojo-type="dijit/Calendar" data-dojo-props='onChange:function(v){ myHandler(this.id, v) }'/>
+		<input value="input after" id="after"/>
+		<p>
+			<a href="#"
+			   onClick="dijit.registry.forEach(function(c){
+			   		if(c.isDisabledDate){
+						c.isDisabledDate = dojo.date.locale.isWeekend;
+						c._populateGrid();
+					}
+				});">disable weekends</a>
+		</p>
+
+		<p>Customized template with "today" button</p>
+		<div>
+			<!-- Parent div used so we have a handle to use for dojo.parser.parse after BigCalendar gets defined. -->
+			<!-- The input below will be replaced by BigCalendar which is defined in a dojo.ready block. -->
+			<input id="calendar5" data-dojo-props='dayWidth:"abbr"' value="2008-03-14"/>
+		</div>
+	</body>
+</html>

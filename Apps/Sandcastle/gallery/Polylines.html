@@ -6,26 +6,16 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Construct and style polylines.">
     <title>Cesium Demo</title>
-    <script>
-    var Sandcastle = {};
-    Sandcastle.declare = function () {};
-    Sandcastle.highlight = function () {};
-    Sandcastle.registered = [];
-    if (window.location.protocol === 'file:') {
-        if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
-            window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
-        }
-    }
-    </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
     <script type="text/javascript">
     require({
         baseUrl : '../../..',
         packages: [
-            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
-            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
-            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
-            { name: 'Source', location: 'Source' },
+            { name: 'dojo', location: 'ThirdParty/dojo-release-1.8.3-src/dojo' },
+            { name: 'dijit', location: 'ThirdParty/dojo-release-1.8.3-src/dijit' },
+            { name: 'dojox', location: 'ThirdParty/dojo-release-1.8.3-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -37,42 +27,40 @@
         ]
     });
     </script>
-    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
     <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
-<body class="claro">
+<body class="claro" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
-body {
-    background: #000;
-    color: #eee;
-    font-family: sans-serif;
-    font-size: 9pt;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-.fullSize {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    border: none;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-}
-#toolbar {
-    margin: 5px;
-    padding: 2px 5px;
-    position: absolute;
-}
+    body {
+        background: #000;
+        color: #eee;
+        font-family: sans-serif;
+        font-size: 9pt;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    .fullSize {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        border: none;
+        width: 100%;
+        height: 100%;
+    }
+    #toolbar {
+        margin: 5px;
+        padding: 2px 5px;
+        position: absolute;
+    }
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="toolbar">Loading...</div>
-
 <script id="cesium_sandcastle_script">
 require([
     'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
@@ -89,20 +77,20 @@ require([
         var primitives = widget.scene.getPrimitives();
         var polylines = new Cesium.PolylineCollection();
 
-        // A simple polyline with two points. 
+        // A simple polyline with two points.
         var polyline = polylines.add();
         Sandcastle.declare(polyline);   // For highlighting on mouseover in Sandcastle.
         polyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-            new Cesium.Cartographic.fromDegrees(-120.0, 40.0),
-            new Cesium.Cartographic.fromDegrees(-110.0, 30.0)
+            Cesium.Cartographic.fromDegrees(-120.0, 40.0),
+            Cesium.Cartographic.fromDegrees(-110.0, 30.0)
         ]));
-        
+
         // Set a polyline's color
         var coloredPolyline = polylines.add();
         Sandcastle.declare(coloredPolyline);    // For highlighting on mouseover in Sandcastle.
         coloredPolyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-            new Cesium.Cartographic.fromDegrees(-95.0, 30.0),
-            new Cesium.Cartographic.fromDegrees(-85.0, 40.0)
+            Cesium.Cartographic.fromDegrees(-95.0, 30.0),
+            Cesium.Cartographic.fromDegrees(-85.0, 40.0)
         ]));
         coloredPolyline.setColor({
             red   : 1.0,
@@ -110,16 +98,16 @@ require([
             blue  : 0.0,
             alpha : 0.75
         });
-        
+
         // Set a polyline's width and outline width
         // (Note that wide lines don't work with ANGLE enabled)
         var widePolyline = polylines.add();
         Sandcastle.declare(widePolyline);   // For highlighting on mouseover in Sandcastle.
         widePolyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-            new Cesium.Cartographic.fromDegrees(-105.0, 40.0),
-            new Cesium.Cartographic.fromDegrees(-100.0, 38.0),
-            new Cesium.Cartographic.fromDegrees(-105.0, 35.0),
-            new Cesium.Cartographic.fromDegrees(-100.0, 32.0)            
+            Cesium.Cartographic.fromDegrees(-105.0, 40.0),
+            Cesium.Cartographic.fromDegrees(-100.0, 38.0),
+            Cesium.Cartographic.fromDegrees(-105.0, 35.0),
+            Cesium.Cartographic.fromDegrees(-100.0, 32.0)
         ]));
         widePolyline.setWidth(5); // Request 5 pixels interior
         widePolyline.setOutlineWidth(10); // Request 10 pixels total
@@ -129,9 +117,9 @@ require([
             blue : 0.0,
             alpha : 1.0
         });
-        
+
         primitives.add(polylines);
-                
+
         // Draw a line in a local reference frame
         // The arrow points to the east, i.e. along the local x-axis.
         var localPolylines = new Cesium.PolylineCollection();
@@ -149,20 +137,18 @@ require([
         primitives.add(localPolylines);
     }
 
-    var cesiumViewerWidget = new CesiumViewerWidget({
+    var widget = new CesiumViewerWidget({
         onObjectMousedOver : function(mousedOverObject) {
-            cesiumViewerWidget.highlightObject(mousedOverObject);
+            widget.highlightObject(mousedOverObject);
             Sandcastle.highlight(mousedOverObject);
-        },
-        postSetup : function(widget) {
-            createPrimitives(widget);
-            widget.startRenderLoop();
         }
-    }).placeAt(dom.byId('cesiumContainer'));
-    
+    });
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
-});
 
+    createPrimitives(widget);
+});
 </script>
 </body>
 </html>

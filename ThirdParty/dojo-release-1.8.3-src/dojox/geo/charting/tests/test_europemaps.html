@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="user-scalable=no, width=device-width" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		
+		<title>Simple Maps,support pan and zoom navigation</title>
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+			@import "../../../../dijit/themes/tundra/tundra.css";
+			@import "../resources/Map.css";
+			.mapContainer {
+				display: none;
+				width: 680px;
+				height: 600px;
+				border: solid 1px;
+			}
+			
+			.mapVerticalContainer {
+				display: none;
+				width: 405px;
+				height: 500px;
+				border: solid 1px;
+			}
+		</style>
+		<script type="text/javascript" data-dojo-config="parseOnLoad:true, async: true"
+				src="../../../../dojo/dojo.js"></script>
+		<script type="text/javascript">
+			require(["dojo/ready", "dojo/on", "dojox/geo/charting/Map",
+					"dojo/has!touch?dojox/geo/charting/TouchInteractionSupport:dojox/geo/charting/MouseInteractionSupport",
+					"dojox/geo/charting/KeyboardInteractionSupport"], function(ready, on, Map, Interaction, Keyboard){
+
+				ready(function(){
+					var map = new Map("Europe", "../resources/data/ContinentalEurope.json");
+					var interaction = new Interaction(map,{enablePan:true,enableZoom:true});
+					interaction.connect();
+					var keyboard = new Keyboard(map, {enableZoom: true});
+        			keyboard.connect();
+					on(window, "resize", function(){map.resize(true,true);});
+				});
+			});
+		</script>
+	</head>
+	<body class="tundra">
+	  <p>Keyboard Tips: Use <b>TAB</b> to focus the map, then use <b>up/down/left/right</b> to go around the map, zoom in by <b>SPACE</b> and zoom out by <b>ESC</b>.</p>
+		<div class="mapContainer" style="display:block;" id="Europe"></div>
+	</body>
+</html>

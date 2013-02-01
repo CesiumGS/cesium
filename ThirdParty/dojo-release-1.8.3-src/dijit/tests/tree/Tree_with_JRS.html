@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+	<title>dijit.Tree Automatic Tests</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../../../dojo/resources/dnd.css";
+		@import "../../../dojo/tests/dnd/dndDefault.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="isDebug: true"></script>
+	
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dojo.parser");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dojox.data.JsonRestStore");
+		dojo.require("dijit.Tree");
+		dojo.require("dijit.tree.ForestStoreModel");
+		dojo.require("dijit.tree.dndSource");
+		dojo.require("dijit.tests.helpers");	// functions to help test
+
+		dojo.ready(function(){
+			var handler, myTree;
+
+			doh.register("parse", function(){
+				dojo.parser.parse();
+			});
+
+			doh.register("Tree tests",
+				[
+					{
+						timeout: 3000,
+						name: "create",
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+			 					myStore = new dojox.data.JsonRestStore({target:"./", labelAttribute:"name"}),
+								myModel = new dijit.tree.ForestStoreModel({
+									store: myStore,
+									deferItemLoadingUntilExpand: true,
+									query: "treeTestRoot",
+									childrenAttrs: ["children"]
+								});
+							myTree = new dijit.Tree({
+								id: "myTree",
+								model: myModel,
+								"label": "Example",
+								persist: false,		// persist==true is too hard to test
+								dndController: "dijit.tree.dndSource" 
+							});
+							doh.t(myTree, "tree created");
+
+							dojo.byId("container").appendChild(myTree.domNode);
+							handler = myTree.connect(myTree, "onOpen",
+								d.getTestCallback(function(){
+									// Give the tree time to load, and the do checks that it
+									// loaded correctly
+									doh.t(myTree.rootNode, "root node exists");
+									doh.t(myTree.rootNode.isExpanded, "root node is expanded");
+
+									var children = myTree.rootNode.getChildren();
+									doh.is(5, children.length, "six children");
+									doh.is("node1", children[0].label, "first child");
+									doh.f(children[0].isExpanded, "first child not expanded");
+								})
+							);
+							myTree.startup();
+							return d;
+						},
+						tearDown: function(){
+							myTree.disconnect(handler);
+						}
+					},
+					{
+						timeout: 2000,
+						name: "open a node",
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								first = myTree.rootNode.getChildren()[0],
+								runNext = function(){
+									var firstFirst = first.getChildren()[0];
+									runNext = d.getTestCallback(function(){
+										var children = firstFirst.getChildren();
+										doh.is(2, children.length, "two children");
+										doh.is("node1.1.1", children[0].label, "first child");
+									});
+									myTree._onExpandoClick({
+										node: firstFirst
+									});
+								};
+							handler = myTree.connect(myTree, "onOpen",
+								function(){ runNext(); });
+
+							myTree._onExpandoClick({
+								node: first
+							});
+
+							return d;
+						},
+						tearDown: function(){
+							myTree.disconnect(handler);
+						}
+					}
+				]
+			);
+
+			doh.run();
+		});
+	</script>
+
+</head>
+<body class="claro" role="main">
+
+	<h1 class="testTitle">Dijit.Tree automated tests</h1>
+	<div id="container"> <!--  tree will go here --></div>
+	<div id="container2"> <!--  tree2 will go here --></div>
+</body>
+</html>

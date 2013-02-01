@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Editor Back/Forward Button Test</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.Editor");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+	</script>
+</head>
+
+<body class="claro">
+	<h1>Editor back/forward button value restore tests</h1>
+	<p>
+		Try typing something into the editors below, and then click the page refrsh link or the back then forward buttons.
+		The editor should not lose the value.
+	</p>
+	<p>Notes:</p>
+	<ol>
+		<li>Editor must have a "name" attribute for this to work (not sure why)
+		<li>If in XD mode must set dojo.config.allowXdRichTextSave or manually create the hidden
+			&lt;textarea&gt; node used to preserve the data.
+	</ol>
+	<p><a href="BackForwardStateHelper.html" id="away">Navigate to another page</a></p>
+
+	<div id="editor0" data-dojo-type="dijit/Editor" data-dojo-props='name:"editor0", height:"100", plugins:[]'>editor0 original contents</div>
+	<div id="editor1" data-dojo-type="dijit/Editor" data-dojo-props='name:"editor1", height:"100", plugins:[]'>editor1 original contents</div>
+	<textarea id="dijit._editor.RichText.value" style="display:none;position:absolute;top:-100px;left:-100px;height:3px;width:3px;overflow:hidden;"></textarea>
+</body>
+</html>

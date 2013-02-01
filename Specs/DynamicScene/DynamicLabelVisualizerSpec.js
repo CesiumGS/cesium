@@ -283,4 +283,4 @@ defineSuite([
         l = labelCollection.get(0);
         expect(l.dynamicObject).toEqual(testObject2);
     });
-});
+}, 'WebGL');

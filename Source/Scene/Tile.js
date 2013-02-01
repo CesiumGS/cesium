@@ -1,28 +1,18 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/Cartesian2',
-        '../Core/Ellipsoid',
-        '../Core/Extent',
-        '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
-        '../Core/Occluder',
-        './TileState'
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/DeveloperError',
+        './TileState',
+        './TileTerrain'
     ], function(
-        defaultValue,
-        destroyObject,
-        DeveloperError,
-        CesiumMath,
-        Cartesian2,
-        Ellipsoid,
-        Extent,
-        BoundingRectangle,
         BoundingSphere,
-        Occluder,
-        TileState) {
+        Cartesian3,
+        Cartesian4,
+        DeveloperError,
+        TileState,
+        TileTerrain) {
     "use strict";
 
     /**
@@ -32,6 +22,7 @@ define([
      *
      * @alias Tile
      * @constructor
+     * @private
      *
      * @param {TilingScheme} description.tilingScheme The tiling scheme of which the new tile is a part, such as a
      *                                                {@link WebMercatorTilingScheme} or a {@link GeographicTilingScheme}.
@@ -108,41 +99,10 @@ define([
         this.extent = this.tilingScheme.tileXYToExtent(this.x, this.y, this.level);
 
         /**
-         * The {@link VertexArray} defining the geometry of this tile.  This property
-         * is expected to be set before the tile enter's the {@link TileState.READY}
-         * {@link state}.
-         * @type VertexArray
-         */
-        this.vertexArray = undefined;
-
-        /**
-         * The center of this tile.  The {@link vertexArray} is rendered
-         * relative-to-center (RTC) using this center.  Note that the center of the
-         * {@link boundingSphere3D} is not necessarily the same as this center.
-         * This property is expected to be set before the tile enter's the
-         * {@link TileState.READY} {@link state}.
-         * @type Cartesian3
-         */
-        this.center = undefined;
-
-        /**
-         * The maximum height of terrain in this tile, in meters above the ellipsoid.
-         * @type Number
-         */
-        this.maxHeight = undefined;
-
-        /**
-         * A sphere that completely contains this tile on the globe.  This property may be
-         * undefined until the tile's {@link vertexArray} is loaded.
-         * @type BoundingSphere
-         */
-        this.boundingSphere3D = undefined;
-
-        /**
          * The current state of the tile in the tile load pipeline.
          * @type TileState
          */
-        this.state = TileState.UNLOADED;
+        this.state = TileState.START;
 
         /**
          * The previous tile in the {@link TileLoadQueue}.
@@ -175,31 +135,80 @@ define([
         this.imagery = [];
 
         /**
-         * Transient data stored during the load process.  The exact content
-         * of this property is a function of the tile's current {@link state} and
-         * the {@link TerrainProvider} that is loading the tile.
-         * @type Object
-         */
-        this.transientData = undefined;
-
-        /**
          * The distance from the camera to this tile, updated when the tile is selected
-         * for rendering.  TODO: can we get rid of this?
+         * for rendering.  We can get rid of this if we have a better way to sort by
+         * distance - for example, by using the natural ordering of a quadtree.
          * @type Number
          */
         this.distance = 0.0;
 
-        // TODO: acknowledge or remove these properties:
-        // southwestCornerCartesian
-        // northeastCornerCartesian
-        // westNormal
-        // southNormal
-        // eastNormal
-        // northNormal
+        /**
+         * The world coordinates of the southwest corner of the tile's extent.
+         *
+         * @type Cartesian3
+         */
+        this.southwestCornerCartesian = new Cartesian3(0.0, 0.0, 0.0);
 
-        // TODO: write doc for these.
-        this.occludeePoint = undefined;
-        this.occludeePointComputed = false;
+        /**
+         * The world coordinates of the northeast corner of the tile's extent.
+         *
+         * @type Cartesian3
+         */
+        this.northeastCornerCartesian = new Cartesian3(0.0, 0.0, 0.0);
+
+        /**
+         * A normal that, along with southwestCornerCartesian, defines a plane at the western edge of
+         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
+         *
+         * @type Cartesian3
+         */
+        this.westNormal = new Cartesian3(0.0, 0.0, 0.0);
+
+        /**
+         * A normal that, along with southwestCornerCartesian, defines a plane at the southern edge of
+         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
+         * Because points of constant latitude do not necessary lie in a plane, positions below this
+         * plane are not necessarily inside the tile, but they are close.
+         *
+         * @type Cartesian3
+         */
+        this.southNormal = new Cartesian3(0.0, 0.0, 0.0);
+
+        /**
+         * A normal that, along with northeastCornerCartesian, defines a plane at the eastern edge of
+         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
+         *
+         * @type Cartesian3
+         */
+        this.eastNormal = new Cartesian3(0.0, 0.0, 0.0);
+
+        /**
+         * A normal that, along with northeastCornerCartesian, defines a plane at the eastern edge of
+         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
+         * Because points of constant latitude do not necessary lie in a plane, positions below this
+         * plane are not necessarily inside the tile, but they are close.
+         *
+         * @type Cartesian3
+         */
+        this.northNormal = new Cartesian3(0.0, 0.0, 0.0);
+
+        this.waterMaskTexture = undefined;
+
+        this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+
+        this.terrainData = undefined;
+        this.center = new Cartesian3(0.0, 0.0, 0.0);
+        this.vertexArray = undefined;
+        this.minHeight = 0.0;
+        this.maxHeight = 0.0;
+        this.boundingSphere3D = new BoundingSphere();
+        this.boundingSphere2D = new BoundingSphere();
+        this.occludeePointInScaledSpace = new Cartesian3(0.0, 0.0, 0.0);
+
+        this.isRenderable = false;
+
+        this.loadedTerrain = undefined;
+        this.upsampledTerrain = undefined;
     };
 
     /**
@@ -245,54 +254,28 @@ define([
         return this.children;
     };
 
-    /**
-     * Computes a point that when visible means the geometry for this tile is visible.
-     *
-     * @memberof Tile
-     *
-     * @return {Cartesian3} The occludee point or undefined.
-     */
-    Tile.prototype.getOccludeePointInScaledSpace = function() {
-        if (!this.occludeePointComputed) {
-            var ellipsoid = this.tilingScheme.getEllipsoid();
-            var occludeePoint = Occluder.computeOccludeePointFromExtent(this.extent, ellipsoid);
-            if (typeof occludeePoint !== 'undefined') {
-                occludeePoint.multiplyComponents(ellipsoid.getOneOverRadii(), occludeePoint);
-            }
-            this.occludeePoint = occludeePoint;
-            this.occludeePointComputed = true;
-        }
-        return this.occludeePoint;
-    };
-
     Tile.prototype.freeResources = function() {
-        this.state = TileState.UNLOADED;
-        this.doneLoading = false;
-        this.renderable = false;
-
-        if (typeof this.vertexArray !== 'undefined') {
-            var indexBuffer = this.vertexArray.getIndexBuffer();
-
-            this.vertexArray.destroy();
-            this.vertexArray = undefined;
-
-            if (!indexBuffer.isDestroyed() && typeof indexBuffer.referenceCount !== 'undefined') {
-                --indexBuffer.referenceCount;
-                if (indexBuffer.referenceCount === 0) {
-                    indexBuffer.destroy();
-                }
+        if (typeof this.waterMaskTexture !== 'undefined') {
+            --this.waterMaskTexture.referenceCount;
+            if (this.waterMaskTexture.referenceCount === 0) {
+                this.waterMaskTexture.destroy();
             }
+            this.waterMaskTexture = undefined;
         }
 
-        if (typeof this.geometry !== 'undefined' && typeof this.geometry.destroy !== 'undefined') {
-            this.geometry.destroy();
-        }
-        this.geometry = undefined;
+        this.state = TileState.START;
+        this.isRenderable = false;
+        this.terrainData = undefined;
 
-        if (typeof this.transformedGeometry !== 'undefined' && typeof this.transformedGeometry.destroy !== 'undefined') {
-            this.transformedGeometry.destroy();
+        if (typeof this.loadedTerrain !== 'undefined') {
+            this.loadedTerrain.freeResources();
+            this.loadedTerrain = undefined;
         }
-        this.transformedGeometry = undefined;
+
+        if (typeof this.upsampledTerrain !== 'undefined') {
+            this.upsampledTerrain.freeResources();
+            this.upsampledTerrain = undefined;
+        }
 
         var i, len;
 
@@ -305,6 +288,25 @@ define([
         if (typeof this.children !== 'undefined') {
             for (i = 0, len = this.children.length; i < len; ++i) {
                 this.children[i].freeResources();
+            }
+            this.children = undefined;
+        }
+
+        this.freeVertexArray();
+    };
+
+    Tile.prototype.freeVertexArray = function() {
+        if (typeof this.vertexArray !== 'undefined') {
+            var indexBuffer = this.vertexArray.getIndexBuffer();
+
+            this.vertexArray.destroy();
+            this.vertexArray = undefined;
+
+            if (!indexBuffer.isDestroyed() && typeof indexBuffer.referenceCount !== 'undefined') {
+                --indexBuffer.referenceCount;
+                if (indexBuffer.referenceCount === 0) {
+                    indexBuffer.destroy();
+                }
             }
         }
     };

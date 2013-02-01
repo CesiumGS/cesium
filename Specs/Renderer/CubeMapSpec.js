@@ -6,6 +6,7 @@ defineSuite([
          'Core/PrimitiveType',
          'Core/Color',
          'Renderer/BufferUsage',
+         'Renderer/ClearCommand',
          'Renderer/PixelDatatype',
          'Renderer/PixelFormat',
          'Renderer/TextureWrap',
@@ -18,6 +19,7 @@ defineSuite([
          PrimitiveType,
          Color,
          BufferUsage,
+         ClearCommand,
          PixelDatatype,
          PixelFormat,
          TextureWrap,
@@ -134,6 +136,16 @@ defineSuite([
 
         expect(cubeMap.getWidth()).toEqual(16);
         expect(cubeMap.getHeight()).toEqual(16);
+    });
+
+    it('gets flip Y', function() {
+        cubeMap = context.createCubeMap({
+            width : 16,
+            height : 16,
+            flipY : true
+        });
+
+        expect(cubeMap.getFlipY()).toEqual(true);
     });
 
     it('draws with a cube map', function() {
@@ -655,9 +667,9 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         // Clear framebuffer to red and copy to +X face
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : new Color (1.0, 0.0, 0.0, 1.0)
-        }));
+        })));
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
         cubeMap.getPositiveX().copyFromFramebuffer();
 
@@ -712,8 +724,7 @@ defineSuite([
         texture = texture.destroy();
     });
 
-    // Fails on firefox.  Should be fixed soon: https://bugzilla.mozilla.org/show_bug.cgi?id=685156
-    xit('generates mipmaps', function() {
+    it('generates mipmaps', function() {
         cubeMap = context.createCubeMap({
             source : {
                 positiveX : blueImage,
@@ -1025,4 +1036,4 @@ defineSuite([
             c.destroy();
         }).toThrow();
     });
-});
+}, 'WebGL');

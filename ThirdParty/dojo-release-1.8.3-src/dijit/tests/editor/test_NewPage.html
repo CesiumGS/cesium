@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Editor Test: New Page Plugin</title>
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.Editor");
+		dojo.require("dijit._editor.plugins.NewPage");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+	</script>
+</head>
+<body class="claro">
+	<br>
+	<br>
+	<div>Content before the editor.</div>
+	<br>
+	<br>
+	<div id="editor0" data-dojo-type="dijit/Editor"
+		data-dojo-props='extraPlugins:["newpage"], style:"background-color: white; width: 800px;", height:"400px" '>
+		<h1>New Page Plugin details</h1>
+		<ol>
+			<li>The new page plugin is a small plugin that adds the capability of making a 'new page'.  In other words
+			replacing all the content of the editor with some default text.  This also usually kills any undo that had been saved.</li>
+		</ol>
+
+		<h2>Things to test:</h2>
+		<ol>
+			<li>Verify that clicking the new page button clears the editor contents.</li>
+		</ol>
+	</div>
+	<br>
+	<br>
+	<div id="editor1" data-dojo-type="dijit/Editor"
+		data-dojo-props='extraPlugins:[{name: "newpage", content: "&lt;p&gt;This page intentionally left blank&lt;/p&gt;"}], style:"background-color: white; width: 800px;", height:"400px" '>
+		<h1>New Page Plugin details</h1>
+		<ol>
+			<li>The new page plugin is a small plugin that adds the capability of making a 'new page'.  In other words
+			replacing all the content of the editor with some default text.  This also usually kills any undo that had been saved.</li>
+		</ol>
+
+		<h2>Things to test:</h2>
+		<ol>
+			<li>Verify that clicking the new page button sets the content to: &lt;p&gt;This page intentionally left blank&lt;/p&gt;</li>
+		</ol>
+	</div>
+	<br>
+	<br>
+	<div>Content after the editor.</div>
+</body>
+</html>

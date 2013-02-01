@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Static Master/Detail Pattern -- Multiple Address Detail example</title>
+		<style type="text/css">
+			@import "css/app-format.css";
+			@import "../../../dijit/themes/claro/claro.css";
+			.row { width: 500px; display: inline-block; margin: 5px; }
+			.cell { width: 20%;  display:inline-block; }
+			.textcell { width: 30%;  display:inline-block; }
+		</style>
+		<script type="text/javascript" data-dojo-config="parseOnLoad:0,isDebug:1,async:1,mvc:{debugBindings:1}" src="../../../dojo/dojo.js"></script>
+		<script type="text/javascript">
+			require([
+				"dojo/parser",
+				"dojo/Stateful",
+				"dojox/mvc/EditModelRefController",
+				"dijit/registry",
+				"dijit/form/TextBox",
+				"dijit/form/Button",
+				"dojox/mvc/Group",
+				"dojox/mvc/Output"
+			], function(parser, Stateful, EditModelRefController){
+				ctrl = new EditModelRefController({sourceModel: new Stateful({First: "John", Last: "Doe", Email: "jdoe@example.com"})});
+				parser.parse();
+			});
+		</script>
+	</head>
+	<body class="claro">
+		<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<div id="wrapper">
+			<div id="header">
+				<div id="navigation"></div>
+				<div id="headerInsert">
+					<h1>Input Ouput Sync</h1>
+					<h2>Data Binding Example</h2>
+				</div>
+			</div>
+			<div id="main">
+				<div id="leftNav"></div>
+				<div id="mainContent">
+					<div class="row">
+						<label class="cell" for="firstnameInput">First:</label>
+						<input id="firstId" class="cell" id="firstnameInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at(ctrl, 'First')">
+						<!-- Content in output below will always be in sync with value of textbox above -->
+						(first name is: <span data-dojo-type="dijit._WidgetBase" data-dojo-props="_setValueAttr: {node: 'domNode', type: 'innerText'}, value: at(ctrl, 'First')"></span>)
+					</div>
+					<div class="row">
+						<label class="cell" for="lastnameInput">Last:</label>
+						<input class="cell" id="lastnameInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at(ctrl, 'Last')">
+						(last name is: <span data-dojo-type="dijit._WidgetBase" data-dojo-props="_setValueAttr: {node: 'domNode', type: 'innerText'}, value: at(ctrl, 'Last')"></span>)
+					</div>
+					<div class="row">
+						<label class="cell" for="emailInput">Email:</label>
+						<input class="cell" id="emailInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at(ctrl, 'Email')">
+						(email is: <span data-dojo-type="dijit._WidgetBase" data-dojo-props="_setValueAttr: {node: 'domNode', type: 'innerText'}, value: at(ctrl, 'Email')"></span>)
+					</div>
+					<br/>Model:
+					<button id="reset" type="button" data-dojo-type="dijit.form.Button"  data-dojo-props="onClick: function(){ ctrl.reset(); }">Reset</button>
+					<button id="fromModel" type="button" data-dojo-type="dijit.form.Button" 
+					 data-dojo-props="onClick: function(){ ctrl.set('First','Updated in Model'); }">Update First from Model</button>
+					<button id="fromWidget" type="button" data-dojo-type="dijit.form.Button" 
+					 data-dojo-props="onClick: function(){ dijit.registry.byId('firstId').set('value', 'Updated Widget'); }">Update First from Widget</button>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

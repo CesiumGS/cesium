@@ -5,6 +5,7 @@ define([
         'dojo/ready',
         'dojo/_base/lang',
         'dojo/_base/event',
+        'dojo/dom-style',
         'dojo/on',
         'dijit/_WidgetBase',
         'dijit/_TemplatedMixin',
@@ -13,8 +14,9 @@ define([
         'dijit/form/ToggleButton',
         'dijit/form/DropDownButton',
         'dijit/TooltipDialog',
-        './getJson',
         './TimelineWidget',
+        '../../Core/defaultValue',
+        '../../Core/loadJson',
         '../../Core/BoundingRectangle',
         '../../Core/Clock',
         '../../Core/ClockStep',
@@ -23,11 +25,11 @@ define([
         '../../Core/AnimationController',
         '../../Core/Ellipsoid',
         '../../Core/Iso8601',
-        '../../Core/FullScreen',
+        '../../Core/Fullscreen',
         '../../Core/computeSunPosition',
-        '../../Core/EventHandler',
+        '../../Core/ScreenSpaceEventHandler',
         '../../Core/FeatureDetection',
-        '../../Core/MouseEventType',
+        '../../Core/ScreenSpaceEventType',
         '../../Core/Cartesian2',
         '../../Core/Cartesian3',
         '../../Core/JulianDate',
@@ -40,6 +42,7 @@ define([
         '../../Scene/PerspectiveFrustum',
         '../../Scene/Material',
         '../../Scene/Scene',
+        '../../Scene/CameraColumbusViewMode',
         '../../Scene/CentralBody',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
@@ -52,6 +55,8 @@ define([
         '../../Scene/ImageryLayerCollection',
         '../../Scene/TerrainProvider',
         '../../Scene/SceneMode',
+        '../../Scene/SkyBox',
+        '../../Scene/SkyAtmosphere',
         '../../DynamicScene/processCzml',
         '../../DynamicScene/DynamicObjectView',
         '../../DynamicScene/DynamicObjectCollection',
@@ -64,6 +69,7 @@ define([
         ready,
         lang,
         event,
+        domStyle,
         on,
         _WidgetBase,
         _TemplatedMixin,
@@ -72,8 +78,9 @@ define([
         ToggleButton,
         DropDownButton,
         TooltipDialog,
-        getJson,
         TimelineWidget,
+        defaultValue,
+        loadJson,
         BoundingRectangle,
         Clock,
         ClockStep,
@@ -82,11 +89,11 @@ define([
         AnimationController,
         Ellipsoid,
         Iso8601,
-        FullScreen,
+        Fullscreen,
         computeSunPosition,
-        EventHandler,
+        ScreenSpaceEventHandler,
         FeatureDetection,
-        MouseEventType,
+        ScreenSpaceEventType,
         Cartesian2,
         Cartesian3,
         JulianDate,
@@ -99,6 +106,7 @@ define([
         PerspectiveFrustum,
         Material,
         Scene,
+        CameraColumbusViewMode,
         CentralBody,
         BingMapsImageryProvider,
         BingMapsStyle,
@@ -111,6 +119,8 @@ define([
         ImageryLayerCollection,
         TerrainProvider,
         SceneMode,
+        SkyBox,
+        SkyAtmosphere,
         processCzml,
         DynamicObjectView,
         DynamicObjectCollection,
@@ -157,33 +167,21 @@ define([
          */
         dayImageUrl : undefined,
         /**
-         * The URL for a nighttime image on the globe.
+         * The base URL for the sky box.
          *
          * @type {String}
          * @memberof CesiumViewerWidget.prototype
          */
-        nightImageUrl : undefined,
+        skyBoxBaseUrl : undefined,
         /**
-         * The URL for a specular map on the globe, typically with white for oceans and black for landmass.
+         * Determines if a sky box with stars is drawn around the globe.  This is read-only after construction.
          *
-         * @type {String}
+         * @type {Boolean}
          * @memberof CesiumViewerWidget.prototype
+         * @default true
+         * @see SkyBox
          */
-        specularMapUrl : undefined,
-        /**
-         * The URL for the clouds image on the globe.
-         *
-         * @type {String}
-         * @memberof CesiumViewerWidget.prototype
-         */
-        cloudsMapUrl : undefined,
-        /**
-         * The URL for a bump map on the globe, showing mountain ranges.
-         *
-         * @type {String}
-         * @memberof CesiumViewerWidget.prototype
-         */
-        bumpMapUrl : undefined,
+        showSkyBox : true,
         /**
          * An object containing settings supplied by the end user, typically from the query string
          * of the URL of the page with the widget.
@@ -246,25 +244,23 @@ define([
          * @see CesiumViewerWidget#resize
          */
         resizeWidgetOnWindowResize: true,
+        /**
+         * The HTML element to place into fullscreen mode when the corresponding
+         * button is pressed.  If undefined, only the widget itself will
+         * go into fullscreen mode.  By specifying another container, such
+         * as document.body, this property allows an application to retain
+         * any overlaid or surrounding elements when in fullscreen.
+         *
+         * @type {Object}
+         * @memberof CesiumViewerWidget.prototype
+         * @default undefined
+         */
+        fullscreenElement : undefined,
 
         // for Dojo use only
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
         },
-
-        // for Dojo use only
-        postCreate : function() {
-            ready(this, '_setupCesium');
-        },
-
-        /**
-         * If supplied, this function will be called at the end of widget setup.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @see CesiumViewerWidget#startRenderLoop
-         */
-        postSetup : undefined,
 
         /**
          * This function will get a callback in the event of setup failure, likely indicating
@@ -336,21 +332,6 @@ define([
                 }
             } else {
                 this._viewFromTo = undefined;
-
-                var scene = this.scene;
-                var mode = scene.mode;
-                var camera = scene.getCamera();
-                var controllers = camera.getControllers();
-                if (mode === SceneMode.SCENE2D) {
-                    controllers.removeAll();
-                    controllers.add2D(scene.scene2D.projection);
-                } else if (mode === SceneMode.SCENE3D) {
-                    //For now just rename at the last location
-                    //camera will stay in spindle/rotate mode.
-                } else if (mode === SceneMode.COLUMBUS_VIEW) {
-                    controllers.removeAll();
-                    controllers.addColumbusView();
-                }
             }
         },
 
@@ -473,9 +454,9 @@ define([
                     this.onObjectMousedOver(mousedOverObject);
                 }
             }
-            if (typeof this.leftDown !== 'undefined' && this.leftDown && typeof this.onLeftDrag !== 'undefined') {
+            if (true === this.leftDown && typeof this.onLeftDrag !== 'undefined') {
                 this.onLeftDrag(movement);
-            } else if (typeof this.rightDown !== 'undefined' && this.rightDown && typeof this.onZoom !== 'undefined') {
+            } else if (true === this.rightDown && typeof this.onZoom !== 'undefined') {
                 this.onZoom(movement);
             }
         },
@@ -547,6 +528,63 @@ define([
         },
 
         /**
+         * Removes all CZML data from the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
+        removeAllCzml : function() {
+            this.centerCameraOnObject(undefined);
+            //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
+            //cache data indefinitely and removeAll is the only way to get rid of it.
+            //while there are no visual differences, removeAll cleans the cache and improves performance
+            this.visualizers.removeAllPrimitives();
+            this.dynamicObjectCollection.clear();
+        },
+
+        /**
+         * Add CZML data to the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {CZML} czml - The CZML (as objects) to be processed and added to the viewer.
+         * @param {string} source - The filename or URI that was the source of the CZML collection.
+         * @param {string} lookAt - Optional.  The ID of the object to center the camera on.
+         * @see CesiumViewerWidget#loadCzml
+         */
+        addCzml : function(czml, source, lookAt) {
+            processCzml(czml, this.dynamicObjectCollection, source);
+            this.setTimeFromBuffer();
+            if (typeof lookAt !== 'undefined') {
+                var lookAtObject = this.dynamicObjectCollection.getObject(lookAt);
+                this.centerCameraOnObject(lookAtObject);
+            }
+        },
+
+        /**
+         * Asynchronously load and add CZML data to the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {string} source - The URI to load the CZML from.
+         * @param {string} lookAt - Optional.  The ID of the object to center the camera on.
+         * @see CesiumViewerWidget#addCzml
+         */
+        loadCzml : function(source, lookAt) {
+            var widget = this;
+            widget._setLoading(true);
+            loadJson(source).then(function(czml) {
+                widget.addCzml(czml, source, lookAt);
+                widget._setLoading(false);
+            },
+            function(error) {
+                widget._setLoading(false);
+                console.error(error);
+                window.alert(error);
+            });
+        },
+
+        /**
          * This function is called when files are dropped on the widget, if drag-and-drop is enabled.
          *
          * @function
@@ -557,23 +595,35 @@ define([
             event.stopPropagation(); // Stops some browsers from redirecting.
             event.preventDefault();
 
+            var widget = this;
+            widget._setLoading(true);
+            widget.removeAllCzml();
+
             var files = event.dataTransfer.files;
             var f = files[0];
             var reader = new FileReader();
-            var widget = this;
             reader.onload = function(evt) {
-                //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
-                //cache data indefinitely and removeAll is the only way to get rid of it.
-                //while there are no visual differences, removeAll cleans the cache and improves performance
-//                widget.visualizers.removeAllPrimitives();
-//                widget.dynamicObjectCollection.clear();
-                processCzml(JSON.parse(evt.target.result), widget.extraObjectCollection, f.name);
-//                widget.setTimeFromBuffer();
+                widget.addCzml(JSON.parse(evt.target.result), f.name);
+                widget._setLoading(false);
             };
             reader.readAsText(f);
         },
 
-        _setupCesium : function() {
+        _started : false,
+
+        /**
+         * Call this after placing the widget in the DOM, to initialize the WebGL context,
+         * wire up event callbacks, begin requesting CZML, imagery, etc.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @see CesiumViewerWidget#autoStartRenderLoop
+         */
+        startup : function() {
+            if (this._started) {
+                return;
+            }
+
             var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
             try {
@@ -584,6 +634,7 @@ define([
                 }
                 return;
             }
+            this._started = true;
 
             this.resize();
 
@@ -602,19 +653,9 @@ define([
                 context.setThrowOnWebGLError(true);
             }
 
-            var maxTextureSize = context.getMaximumTextureSize();
-            if (maxTextureSize < 4095) {
-                // Mobile, or low-end card
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_2048.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_512.jpg');
-            } else {
-                // Desktop
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_4096.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_2048.jpg');
-                this.specularMapUrl = this.specularMapUrl || require.toUrl('Images/earthspec1k.jpg');
-                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl('Images/earthcloudmaptrans.jpg');
-                this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images/earthbump1k.jpg');
-            }
+            var imageryUrl = require.toUrl('../../Assets/Textures/');
+            this.dayImageUrl = defaultValue(this.dayImageUrl, imageryUrl + 'NE2_LR_LC_SR_W_DR_2048.jpg');
+            this.skyBoxBaseUrl = defaultValue(this.skyBoxBaseUrl, imageryUrl + 'SkyBox/tycho2t3_80');
 
             var imageryLayerCollection = new ImageryLayerCollection();
 
@@ -696,26 +737,37 @@ define([
             centralBody.cloudsMapSource = this.cloudsMapUrl;
             centralBody.bumpMapSource = this.bumpMapUrl;
 
+            this._configureCentralBodyImagery();
 
             scene.getPrimitives().setCentralBody(centralBody);
 
+            if (this.showSkyBox) {
+                scene.skyBox = new SkyBox({
+                    positiveX: this.skyBoxBaseUrl + '_px.jpg',
+                    negativeX: this.skyBoxBaseUrl + '_mx.jpg',
+                    positiveY: this.skyBoxBaseUrl + '_py.jpg',
+                    negativeY: this.skyBoxBaseUrl + '_my.jpg',
+                    positiveZ: this.skyBoxBaseUrl + '_pz.jpg',
+                    negativeZ: this.skyBoxBaseUrl + '_mz.jpg'
+                });
+            }
+
+            scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
+
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
+            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
-            scene.viewExtent(extent, ellipsoid);
-
-            this.centralBodyCameraController = camera.getControllers().addCentralBody();
-
-            var handler = new EventHandler(canvas);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), MouseEventType.LEFT_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleRightClick'), MouseEventType.RIGHT_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftDoubleClick'), MouseEventType.LEFT_DOUBLE_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleMouseMove'), MouseEventType.MOVE);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftDown'), MouseEventType.LEFT_DOWN);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftUp'), MouseEventType.LEFT_UP);
-            handler.setMouseAction(lang.hitch(this, '_handleWheel'), MouseEventType.WHEEL);
-            handler.setMouseAction(lang.hitch(this, '_handleRightDown'), MouseEventType.RIGHT_DOWN);
-            handler.setMouseAction(lang.hitch(this, '_handleRightUp'), MouseEventType.RIGHT_UP);
+            var handler = new ScreenSpaceEventHandler(canvas);
+            handler.setInputAction(lang.hitch(this, '_handleLeftClick'), ScreenSpaceEventType.LEFT_CLICK);
+            handler.setInputAction(lang.hitch(this, '_handleRightClick'), ScreenSpaceEventType.RIGHT_CLICK);
+            handler.setInputAction(lang.hitch(this, '_handleLeftDoubleClick'), ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+            handler.setInputAction(lang.hitch(this, '_handleMouseMove'), ScreenSpaceEventType.MOUSE_MOVE);
+            handler.setInputAction(lang.hitch(this, '_handleLeftDown'), ScreenSpaceEventType.LEFT_DOWN);
+            handler.setInputAction(lang.hitch(this, '_handleLeftUp'), ScreenSpaceEventType.LEFT_UP);
+            handler.setInputAction(lang.hitch(this, '_handleWheel'), ScreenSpaceEventType.WHEEL);
+            handler.setInputAction(lang.hitch(this, '_handleRightDown'), ScreenSpaceEventType.RIGHT_DOWN);
+            handler.setInputAction(lang.hitch(this, '_handleRightUp'), ScreenSpaceEventType.RIGHT_UP);
 
             //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -728,13 +780,14 @@ define([
                 this.highlightMaterial.uniforms.color = this.highlightColor;
             }
 
-            if (typeof this.onObjectLeftDoubleClickSelected === 'undefined') {
-                this.onObjectLeftDoubleClickSelected = function(selectedObject) {
+            if (typeof this.onObjectSelected === 'undefined') {
+                this.onObjectSelected = function(selectedObject) {
                     if (typeof selectedObject !== 'undefined' && typeof selectedObject.dynamicObject !== 'undefined') {
                         this.centerCameraOnPick(selectedObject);
                     }
                 };
-                                }
+            }
+
             if (this.enableDragDrop) {
                 var dropBox = this.cesiumNode;
                 on(dropBox, 'drop', lang.hitch(widget, 'handleDrop'));
@@ -775,16 +828,7 @@ define([
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, compositeCollection);
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
-                getJson(widget.endUserOptions.source).then(function(czmlData) {
-                    processCzml(czmlData, widget.dynamicObjectCollection, widget.endUserOptions.source);
-                    widget.setTimeFromBuffer();
-                    if (typeof widget.endUserOptions.lookAt !== 'undefined') {
-                        widget.centerCameraOnObject(widget.dynamicObjectCollection.getObject(widget.endUserOptions.lookAt));
-                    }
-                },
-                function(error) {
-                    window.alert(error);
-                });
+                widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);
             }
 
             if (typeof widget.endUserOptions.stats !== 'undefined' && widget.endUserOptions.stats) {
@@ -856,19 +900,27 @@ define([
             var view2D = widget.view2D;
             var view3D = widget.view3D;
             var viewColumbus = widget.viewColumbus;
-            var viewFullScreen = widget.viewFullScreen;
+            var viewFullscreen = widget.viewFullscreen;
 
             view2D.set('checked', false);
             view3D.set('checked', true);
             viewColumbus.set('checked', false);
 
-            on(viewFullScreen, 'Click', function() {
-                if (FullScreen.isFullscreenEnabled()) {
-                    FullScreen.exitFullscreen();
-                } else {
-                    FullScreen.requestFullScreen(document.body);
-                }
-            });
+            if (Fullscreen.isFullscreenEnabled()) {
+                on(document, Fullscreen.getFullscreenChangeEventName(), function() {
+                    widget.resize();
+                });
+
+                on(viewFullscreen, 'Click', function() {
+                    if (Fullscreen.isFullscreen()) {
+                        Fullscreen.exitFullscreen();
+                    } else {
+                        Fullscreen.requestFullscreen(defaultValue(widget.fullscreenElement, widget.cesiumNode));
+                    }
+                });
+            } else {
+                domStyle.set(viewFullscreen.domNode, 'display', 'none');
+            }
 
             on(viewHomeButton, 'Click', function() {
                 widget.viewHome();
@@ -877,8 +929,6 @@ define([
                 view2D.set('checked', true);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', false);
-                widget.showSkyAtmosphere(false);
-                widget.showGroundAtmosphere(false);
                 transitioner.morphTo2D();
             });
             on(view3D, 'Click', function() {
@@ -886,23 +936,12 @@ define([
                 view3D.set('checked', true);
                 viewColumbus.set('checked', false);
                 transitioner.morphTo3D();
-                widget.showSkyAtmosphere(true);
-                widget.showGroundAtmosphere(true);
             });
             on(viewColumbus, 'Click', function() {
                 view2D.set('checked', false);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', true);
-                widget.showSkyAtmosphere(false);
-                widget.showGroundAtmosphere(false);
                 transitioner.morphToColumbusView();
-            });
-
-            var cbLighting = widget.cbLighting;
-            on(cbLighting, 'Change', function(value) {
-                widget.centralBody.affectedByLighting = !value;
-                widget.centralBody.showSkyAtmosphere = widget._showSkyAtmosphere && !value;
-                widget.centralBody.showGroundAtmosphere = widget._showGroundAtmosphere && !value;
             });
 
             var imagery = widget.imagery;
@@ -946,8 +985,8 @@ define([
 
             this._camera3D = this.scene.getCamera().clone();
 
-            if (typeof this.postSetup !== 'undefined') {
-                this.postSetup(this);
+            if (this.autoStartRenderLoop) {
+                this.startRenderLoop();
             }
         },
 
@@ -961,15 +1000,19 @@ define([
 
             var scene = this.scene;
             var mode = scene.mode;
+
             var camera = scene.getCamera();
-            var controllers = camera.getControllers();
-            controllers.removeAll();
+            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
+
+            var controller = scene.getScreenSpaceCameraController();
+            controller.enableTranslate = true;
+            controller.enableTilt = true;
+            controller.setEllipsoid(Ellipsoid.WGS84);
+            controller.columbusViewMode = CameraColumbusViewMode.FREE;
 
             if (mode === SceneMode.SCENE2D) {
-                controllers.add2D(scene.scene2D.projection);
-                scene.viewExtent(Extent.MAX_VALUE);
+                camera.controller.viewExtent(Extent.MAX_VALUE);
             } else if (mode === SceneMode.SCENE3D) {
-                this.centralBodyCameraController = controllers.addCentralBody();
                 var camera3D = this._camera3D;
                 camera3D.position.clone(camera.position);
                 camera3D.direction.clone(camera.direction);
@@ -986,8 +1029,10 @@ define([
                 var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
                 var position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
                 var direction = Cartesian3.ZERO.subtract(position).normalize();
-                var right = direction.cross(Cartesian3.UNIT_Z).normalize();
+                var right = direction.cross(Cartesian3.UNIT_Z);
                 var up = right.cross(direction);
+                right = direction.cross(up);
+                direction = up.cross(right);
 
                 var frustum = new PerspectiveFrustum();
                 frustum.fovy = CesiumMath.toRadians(60.0);
@@ -996,35 +1041,9 @@ define([
                 camera.position = position;
                 camera.direction = direction;
                 camera.up = up;
+                camera.right = right;
                 camera.frustum = frustum;
                 camera.transform = transform;
-
-                controllers.addColumbusView();
-            }
-        },
-
-        /**
-         * Test if the clouds are configured and available for display.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @returns {Boolean} <code>true</code> if the <code>cloudsMapSource</code> is defined.
-         */
-        areCloudsAvailable : function() {
-            return typeof this.centralBody.cloudsMapSource !== 'undefined';
-        },
-
-        /**
-         * Enable or disable the display of clouds.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @param {Boolean} useClouds - <code>true</code> to enable clouds, if configured.
-         */
-        enableClouds : function(useClouds) {
-            if (this.areCloudsAvailable()) {
-                this.centralBody.showClouds = useClouds;
-                this.centralBody.showCloudShadows = useClouds;
             }
         },
 
@@ -1054,21 +1073,7 @@ define([
          * @param {Boolean} show - <code>true</code> to enable the effect.
          */
         showSkyAtmosphere : function(show) {
-            this._showSkyAtmosphere = show;
-            this.centralBody.showSkyAtmosphere = show && this.centralBody.affectedByLighting;
-        },
-
-        /**
-         * Enable or disable the "ground atmosphere" effect, which makes the surface of
-         * the globe look pale at a distance.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @param {Boolean} show - <code>true</code> to enable the effect.
-         */
-        showGroundAtmosphere : function(show) {
-            this._showGroundAtmosphere = show;
-            this.centralBody.showGroundAtmosphere = show && this.centralBody.affectedByLighting;
+            this.scene.skyAtmosphere.show = show;
         },
 
         /**
@@ -1093,9 +1098,8 @@ define([
          * @see CesiumViewerWidget#mapStyle
          */
         setStreamingImageryMapStyle : function(value) {
-            this.useStreamingImagery = true;
-
-            if (this.mapStyle !== value) {
+            if (!this.useStreamingImagery || this.mapStyle !== value) {
+                this.useStreamingImagery = true;
                 this.mapStyle = value;
                 this._configureCentralBodyImagery();
             }
@@ -1151,7 +1155,14 @@ define([
             }
         },
 
-        _sunPosition : new Cartesian3(),
+        /**
+         * Initialize the current frame.
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
+        initializeFrame : function() {
+            this.scene.initializeFrame();
+        },
 
         /**
          * Call this function prior to rendering each animation frame, to prepare
@@ -1169,7 +1180,6 @@ define([
 
             this._updateSpeedIndicator();
             this.timelineControl.updateFromClock();
-            this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
             this.visualizers.update(currentTime);
 
             if ((Math.abs(currentTime.getSecondsDifference(this._lastTimeLabelClock)) >= 1.0) ||
@@ -1190,9 +1200,14 @@ define([
          * Render the widget's scene.
          * @function
          * @memberof CesiumViewerWidget.prototype
+         * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
-        render : function() {
-            this.scene.render();
+        render : function(currentTime) {
+            this.scene.render(currentTime);
+        },
+
+        _setLoading : function(isLoading) {
+            this.loading.style.display = isLoading ? 'block' : 'none';
         },
 
         _configureCentralBodyImagery : function() {
@@ -1205,12 +1220,14 @@ define([
                 existingImagery = imageLayers.get(0).imageryProvider;
             }
 
+            var newLayer;
+
             if (this.useStreamingImagery) {
                 if (!(existingImagery instanceof BingMapsImageryProvider) ||
                     existingImagery.getMapStyle() !== this.mapStyle) {
 
-                    imageLayers.addImageryProvider(new BingMapsImageryProvider({
-                        server : 'dev.virtualearth.net',
+                    newLayer = imageLayers.addImageryProvider(new BingMapsImageryProvider({
+                        url : 'http://dev.virtualearth.net',
                         mapStyle : this.mapStyle,
                         // Some versions of Safari support WebGL, but don't correctly implement
                         // cross-origin image loading, so we need to load Bing imagery using a proxy.
@@ -1219,42 +1236,52 @@ define([
                     if (imageLayers.getLength() > 1) {
                         imageLayers.remove(imageLayers.get(0));
                     }
+                    imageLayers.lowerToBottom(newLayer);
                 }
             } else {
                 if (!(existingImagery instanceof SingleTileImageryProvider) ||
                     existingImagery.getUrl() !== this.dayImageUrl) {
 
-                    imageLayers.addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
+                    newLayer = imageLayers.addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
                     if (imageLayers.getLength() > 1) {
                         imageLayers.remove(imageLayers.get(0));
                     }
+                    imageLayers.lowerToBottom(newLayer);
                 }
             }
-
-            centralBody.nightImageSource = this.nightImageUrl;
-            centralBody.specularMapSource = this.specularMapUrl;
-            centralBody.cloudsMapSource = this.cloudsMapUrl;
-            centralBody.bumpMapSource = this.bumpMapUrl;
         },
 
         /**
+         * If true, {@link CesiumViewerWidget#startRenderLoop} will be called automatically
+         * at the end of {@link CesiumViewerWidget#startup}.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default true
+         */
+        autoStartRenderLoop : true,
+
+        /**
          * This is a simple render loop that can be started if there is only one <code>CesiumViewerWidget</code>
-         * on your page.  Typically it is started from {@link CesiumViewerWidget.postSetup}.  If you wish to
-         * customize your render loop, avoid this function and instead use code similar to the following example.
+         * on your page.  If you wish to customize your render loop, avoid this function and instead
+         * use code similar to one of the following examples.
+         *
          * @function
          * @memberof CesiumViewerWidget.prototype
          * @see requestAnimationFrame
+         * @see CesiumViewerWidget#autoStartRenderLoop
          * @example
          * // This takes the place of startRenderLoop for a single widget.
          *
          * var animationController = widget.animationController;
          * function updateAndRender() {
          *     var currentTime = animationController.update();
+         *     widget.initializeFrame();
          *     widget.update(currentTime);
-         *     widget.render();
+         *     widget.render(currentTime);
          *     requestAnimationFrame(updateAndRender);
          * }
-         * updateAndRender();
+         * requestAnimationFrame(updateAndRender);
          * @example
          * // This example requires widget1 and widget2 to share an animationController
          * // (for example, widget2's constructor was called with a copy of widget1's
@@ -1262,27 +1289,31 @@ define([
          *
          * function updateAndRender() {
          *     var currentTime = animationController.update();
+         *     widget1.initializeFrame();
+         *     widget2.initializeFrame();
          *     widget1.update(currentTime);
          *     widget2.update(currentTime);
-         *     widget1.render();
-         *     widget2.render();
+         *     widget1.render(currentTime);
+         *     widget2.render(currentTime);
          *     requestAnimationFrame(updateAndRender);
          * }
-         * updateAndRender();
+         * requestAnimationFrame(updateAndRender);
          * @example
          * // This example uses separate animationControllers for widget1 and widget2.
          * // These widgets can animate at different rates and pause individually.
          *
          * function updateAndRender() {
-         *     var currentTime = widget1.animationController.update();
-         *     widget1.update(currentTime);
-         *     widget1.render();
-         *     currentTime = widget2.animationController.update();
-         *     widget2.update(currentTime);
-         *     widget2.render();
+         *     var time1 = widget1.animationController.update();
+         *     var time2 = widget2.animationController.update();
+         *     widget1.initializeFrame();
+         *     widget2.initializeFrame();
+         *     widget1.update(time1);
+         *     widget2.update(time2);
+         *     widget1.render(time1);
+         *     widget2.render(time2);
          *     requestAnimationFrame(updateAndRender);
          * }
-         * updateAndRender();
+         * requestAnimationFrame(updateAndRender);
          */
         startRenderLoop : function() {
             var widget = this;
@@ -1290,11 +1321,13 @@ define([
 
             function updateAndRender() {
                 var currentTime = animationController.update();
+                widget.initializeFrame();
                 widget.update(currentTime);
-                widget.render();
+                widget.render(currentTime);
                 requestAnimationFrame(updateAndRender);
             }
-            updateAndRender();
+
+            requestAnimationFrame(updateAndRender);
         }
     });
 });

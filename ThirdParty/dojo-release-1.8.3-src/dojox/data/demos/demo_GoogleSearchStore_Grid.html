@@ -1,0 +1,72 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/themes/tundra/tundra_rtl.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../../../dojox/grid/resources/tundraGrid.css";
+	</style>
+
+	<title>Google Search Store with Grid</title>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dijit.form.TextBox");
+		dojo.require("dijit.form.Button");
+		dojo.require("dojox.wire.ml.Invocation");
+		dojo.require("dojox.wire.ml.Transfer");
+		dojo.require("dojox.wire.ml.Action");
+		dojo.require("dojox.data.GoogleSearchStore");
+
+		var href = function(value) {
+			return "<a href=\"" + value + "\" target=\"_blank\">" + value + "</a>";  
+		}
+		var layoutResults = [
+				[
+					{ name: "Title", field: "title", width: 10 },
+					{ name: "Summary", field: "content", width: "auto"},
+					{ name: "URL", field: "url", width: 20, formatter: href }
+				]
+		];
+		var newQuery = {text: 'dojo ajax' }; 
+	</script>
+</head>
+<body class="tundra" style="margin:20px;">
+	<h1>dojox.data.GoogleSearchStore:</h1>
+	<i>Displays a list of results from a google query.</i>
+	<div dojoType="dojox.data.GoogleSearchStore" jsId="googleStore"></div>
+	<br>
+	<br>
+	<div dojoType="dijit.form.TextBox" id="searchText" value="dojo ajax"></div> 
+	<button dojoType="dijit.form.Button" id="searchButton">Search</button>
+	<br>
+	<br>
+	<br>
+
+	<div dojoType="dojox.grid.DataGrid" 
+		rowsPerPage="8"
+		store="googleStore" 
+		structure="layoutResults" 
+		escapeHTMLInData="false"
+		query="{ text: 'dojo ajax' }"
+		jsId="grid"
+		style="width: 800px; height: 500px;"
+		>
+	</div>
+	
+	<!-- 
+		Link the button to updating the query, then triggering the refresh of the grid. 
+		Handy use of dojox.wire!
+	-->    
+	<div dojoType="dojox.wire.ml.Action"
+		trigger="searchButton"
+		triggerEvent="onClick">
+		<div dojoType="dojox.wire.ml.Transfer" source="searchText.value" target="newQuery.text"></div>
+		<div dojoType="dojox.wire.ml.Invocation" object="grid" method="setQuery" parameters="newQuery"></div>
+	</div>    
+</body>
+</html>

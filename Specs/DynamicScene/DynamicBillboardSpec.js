@@ -115,6 +115,15 @@ defineSuite([
     });
 
     it('mergeProperties does not change a fully configured billboard', function() {
+        var expectedImage = 'image';
+        var expectedScale = 'scale';
+        var expectedHorizontalOrigin = 'horizontalOrigin';
+        var expectedVerticalOrigin = 'verticalOrigin';
+        var expectedColor = 'color';
+        var expectedEyeOffset = 'eyeOffset';
+        var expectedPixelOffset = 'pixelOffset';
+        var expectedShow = 'show';
+
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.billboard = new DynamicBillboard();
         objectToMerge.billboard.image = 1;
@@ -128,25 +137,25 @@ defineSuite([
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.billboard = new DynamicBillboard();
-        targetObject.billboard.image = 'image';
-        targetObject.billboard.scale = 'scale';
-        targetObject.billboard.horizontalOrigin = 'horizontalOrigin';
-        targetObject.billboard.verticalOrigin = 'verticalOrigin';
-        targetObject.billboard.color = 'color';
-        targetObject.billboard.eyeOffset = 'eyeOffset';
-        targetObject.billboard.pixelOffset = 'pixelOffset';
-        targetObject.billboard.show = 'show';
+        targetObject.billboard.image = expectedImage;
+        targetObject.billboard.scale = expectedScale;
+        targetObject.billboard.horizontalOrigin = expectedHorizontalOrigin;
+        targetObject.billboard.verticalOrigin = expectedVerticalOrigin;
+        targetObject.billboard.color = expectedColor;
+        targetObject.billboard.eyeOffset = expectedEyeOffset;
+        targetObject.billboard.pixelOffset = expectedPixelOffset;
+        targetObject.billboard.show = expectedShow;
 
         DynamicBillboard.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.billboard.image).toEqual(targetObject.billboard.image);
-        expect(targetObject.billboard.scale).toEqual(targetObject.billboard.scale);
-        expect(targetObject.billboard.horizontalOrigin).toEqual(targetObject.billboard.horizontalOrigin);
-        expect(targetObject.billboard.verticalOrigin).toEqual(targetObject.billboard.verticalOrigin);
-        expect(targetObject.billboard.color).toEqual(targetObject.billboard.color);
-        expect(targetObject.billboard.eyeOffset).toEqual(targetObject.billboard.eyeOffset);
-        expect(targetObject.billboard.pixelOffset).toEqual(targetObject.billboard.pixelOffset);
-        expect(targetObject.billboard.show).toEqual(targetObject.billboard.show);
+        expect(targetObject.billboard.image).toEqual(expectedImage);
+        expect(targetObject.billboard.scale).toEqual(expectedScale);
+        expect(targetObject.billboard.horizontalOrigin).toEqual(expectedHorizontalOrigin);
+        expect(targetObject.billboard.verticalOrigin).toEqual(expectedVerticalOrigin);
+        expect(targetObject.billboard.color).toEqual(expectedColor);
+        expect(targetObject.billboard.eyeOffset).toEqual(expectedEyeOffset);
+        expect(targetObject.billboard.pixelOffset).toEqual(expectedPixelOffset);
+        expect(targetObject.billboard.show).toEqual(expectedShow);
     });
 
     it('mergeProperties creates and configures an undefined billboard', function() {
@@ -176,29 +185,38 @@ defineSuite([
     });
 
     it('mergeProperties does not change when used with an undefined billboard', function() {
+        var expectedImage = 'image';
+        var expectedScale = 'scale';
+        var expectedHorizontalOrigin = 'horizontalOrigin';
+        var expectedVerticalOrigin = 'verticalOrigin';
+        var expectedColor = 'color';
+        var expectedEyeOffset = 'eyeOffset';
+        var expectedPixelOffset = 'pixelOffset';
+        var expectedShow = 'show';
+
         var objectToMerge = new DynamicObject('objectToMerge');
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.billboard = new DynamicBillboard();
-        targetObject.billboard.image = 'image';
-        targetObject.billboard.scale = 'scale';
-        targetObject.billboard.horizontalOrigin = 'horizontalOrigin';
-        targetObject.billboard.verticalOrigin = 'verticalOrigin';
-        targetObject.billboard.color = 'color';
-        targetObject.billboard.eyeOffset = 'eyeOffset';
-        targetObject.billboard.pixelOffset = 'pixelOffset';
-        targetObject.billboard.show = 'show';
+        targetObject.billboard.image = expectedImage;
+        targetObject.billboard.scale = expectedScale;
+        targetObject.billboard.horizontalOrigin = expectedHorizontalOrigin;
+        targetObject.billboard.verticalOrigin = expectedVerticalOrigin;
+        targetObject.billboard.color = expectedColor;
+        targetObject.billboard.eyeOffset = expectedEyeOffset;
+        targetObject.billboard.pixelOffset = expectedPixelOffset;
+        targetObject.billboard.show = expectedShow;
 
         DynamicBillboard.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.billboard.image).toEqual(targetObject.billboard.image);
-        expect(targetObject.billboard.scale).toEqual(targetObject.billboard.scale);
-        expect(targetObject.billboard.horizontalOrigin).toEqual(targetObject.billboard.horizontalOrigin);
-        expect(targetObject.billboard.verticalOrigin).toEqual(targetObject.billboard.verticalOrigin);
-        expect(targetObject.billboard.color).toEqual(targetObject.billboard.color);
-        expect(targetObject.billboard.eyeOffset).toEqual(targetObject.billboard.eyeOffset);
-        expect(targetObject.billboard.pixelOffset).toEqual(targetObject.billboard.pixelOffset);
-        expect(targetObject.billboard.show).toEqual(targetObject.billboard.show);
+        expect(targetObject.billboard.image).toEqual(expectedImage);
+        expect(targetObject.billboard.scale).toEqual(expectedScale);
+        expect(targetObject.billboard.horizontalOrigin).toEqual(expectedHorizontalOrigin);
+        expect(targetObject.billboard.verticalOrigin).toEqual(expectedVerticalOrigin);
+        expect(targetObject.billboard.color).toEqual(expectedColor);
+        expect(targetObject.billboard.eyeOffset).toEqual(expectedEyeOffset);
+        expect(targetObject.billboard.pixelOffset).toEqual(expectedPixelOffset);
+        expect(targetObject.billboard.show).toEqual(expectedShow);
     });
 
     it('undefineProperties works', function() {

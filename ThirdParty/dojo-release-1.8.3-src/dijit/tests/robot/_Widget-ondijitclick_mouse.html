@@ -1,0 +1,116 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+	<title>Test Dijit Internal Event: "ondijitclick"</title>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+	<script type="text/javascript">
+		require([
+			"doh/runner", "dojo/robotx",
+			"dojo/aspect", "dojo/dom", "dojo/on", "dojo/domReady!"
+		], function(doh, robot, aspect, dom, on){
+
+			robot.initRobot('../_Widget-ondijitclick.html');
+
+			// Event monitoring
+			var widgetClicks = 0, buttonClicks = 0;
+			var w;
+
+			doh.register(function setup(){
+				// get pointer to registry in the iframe
+				registry = robot.window.require("dijit/registry");
+			});
+
+			doh.register("ondijitclick w/mouse", {
+				timeout:5000,
+				runTest:function(){
+					var d = new doh.Deferred();
+
+					robot.sequence(function(){
+						w = registry.byId("first");
+						aspect.after(w, "_onClick", function(){
+							widgetClicks++;
+						}, true);
+						on(dom.byId("plainbutton", robot.doc), "click", function(){
+							buttonClicks++;
+						});
+						w.domNode.focus();
+					}, 100);
+
+					// click the widget
+					robot.mouseMoveAt("first", 500);
+					robot.mouseClick({left: true}, 500);
+
+					robot.sequence(d.getTestCallback(function(){
+						doh.is(1, widgetClicks, "ondijitclick handler fired once");
+					}), 1000);
+
+					return d;
+				}
+			});
+
+			// Test clicking on a <button> with an ondijitclick handler.
+			doh.register("click ondijitclick button", [
+				{
+					name: "click",
+					timeout: 5000,
+					runTest: function(){
+
+						var d = new doh.Deferred(),
+							buttonWidget = registry.byId("widgetbutton");
+
+						buttonWidget.clickCount = 0;
+
+						robot.mouseMoveAt("widgetbutton", 500);
+						robot.mouseClick({left: true}, 500);
+
+						// Check that ondijitclick fired exactly once
+						robot.sequence(d.getTestCallback(function(){
+							doh.is(1, buttonWidget.clickCount, "one click event");
+						}), 500);
+
+						return d;
+					}
+				}
+			]);
+
+			doh.register("bubbling", [
+				{
+					name: "bubbling",
+					timeout: 5000,
+					runTest: function(){
+
+						var d = new doh.Deferred(),
+							outerDiv = dom.byId("outer", robot.doc),
+							buttonNode = dom.byId("bubbleTestWidget", robot.doc),
+							buttonWidget = registry.byId("bubbleTestWidget");
+
+						// Listen for click events on the outer DOMNode.
+						var clicks = 0;
+						on(outerDiv, "click", function(){
+							clicks++;
+						});
+
+						// click the widget button
+						robot.mouseMoveAt("bubbleTestWidget", 500);
+						robot.mouseClick({left: true}, 500);
+
+						// Check that one click event bubbled
+						robot.sequence(d.getTestCallback(function(){
+							doh.is(1, buttonWidget.clickCount, "one click event");
+							doh.is(1, clicks, "one click event bubbled");
+						}), 500);
+
+						return d;
+					}
+				}
+			]);
+
+			doh.run();
+		});
+
+	</script>
+</head>
+</html>

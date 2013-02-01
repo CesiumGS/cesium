@@ -21,10 +21,10 @@ void main()
     vec3 positionMC = (czm_inverseModelView * vec4(positionEC, 1.0)).xyz;
     vec3 geodeticNormal = normalize(czm_geodeticSurfaceNormal(positionMC, vec3(0.0), u_oneOverEllipsoidRadiiSquared));
     vec3 normalMC = hitFrontFace ? geodeticNormal : -geodeticNormal;   // normalized surface normal (always facing the viewer) in model coordinates
-    vec3 normalEC = normalize(czm_normal * normalMC);                    // normalized surface normal in eye coordiantes
+    vec3 normalEC = normalize(czm_normal * normalMC);                  // normalized surface normal in eye coordiantes
     
     vec2 st = czm_ellipsoidWgs84TextureCoordinates(geodeticNormal);
-    vec3 positionToEyeEC = normalize(-positionEC); 
+    vec3 positionToEyeEC = -positionEC; 
                 
     czm_materialInput materialInput;
     materialInput.s = st.s;
@@ -36,9 +36,5 @@ void main()
     materialInput.positionMC = positionMC;
     czm_material material = czm_getMaterial(materialInput);
 
-#ifdef AFFECTED_BY_LIGHTING
-	gl_FragColor = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
-#else
-	gl_FragColor = vec4(material.diffuse, material.alpha);
-#endif
+	gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
 }

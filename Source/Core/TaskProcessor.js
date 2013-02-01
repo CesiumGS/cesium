@@ -1,13 +1,13 @@
 /*global define*/
 define([
         'require',
+        './buildModuleUrl',
         './defaultValue',
-        './DeveloperError',
         '../ThirdParty/when'
     ], function(
         require,
+        buildModuleUrl,
         defaultValue,
-        DeveloperError,
         when) {
     "use strict";
 
@@ -26,37 +26,10 @@ define([
         delete deferreds[id];
     }
 
-    var cesiumScriptRegex = /(.*)\/?Cesium\w*\.js(?:\W|$)/i;
-    var bootstrapperScript = 'cesiumWorkerBootstrapper.js';
-    var bootstrapperUrl;
-    function getBootstrapperUrl() {
-        /*global CESIUM_BASE_URL*/
-        if (typeof bootstrapperUrl === 'undefined') {
-            if (typeof CESIUM_BASE_URL !== 'undefined') {
-                bootstrapperUrl = CESIUM_BASE_URL + '/' + bootstrapperScript;
-            } else if (typeof require.toUrl !== 'undefined') {
-                bootstrapperUrl = require.toUrl('../Workers/' + bootstrapperScript);
-            } else {
-                var scripts = document.getElementsByTagName('script');
-                for ( var i = 0, len = scripts.length; i < len; ++i) {
-                    var src = scripts[i].getAttribute('src');
-                    var result = cesiumScriptRegex.exec(src);
-                    if (result !== null) {
-                        bootstrapperUrl = result[1] + '/' + bootstrapperScript;
-                        break;
-                    }
-                }
-                if (typeof bootstrapperUrl === 'undefined') {
-                    throw new DeveloperError('Unable to determine Cesium base URL automatically, try defining a global variable called CESIUM_BASE_URL.');
-                }
-            }
-        }
-
-        return bootstrapperUrl;
-    }
+    var bootstrapperUrl = buildModuleUrl('Workers/cesiumWorkerBootstrapper.js');
 
     function createWorker(processor) {
-        var worker = new Worker(getBootstrapperUrl());
+        var worker = new Worker(bootstrapperUrl);
         worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
 
         //bootstrap
@@ -83,7 +56,7 @@ define([
     }
 
     /**
-     * An wrapper around a web worker that allows scheduling tasks for a given worker,
+     * A wrapper around a web worker that allows scheduling tasks for a given worker,
      * returning results asynchronously via a promise.
      *
      * The Worker is not constructed until a task is scheduled.
@@ -93,13 +66,13 @@ define([
      *
      * @param {String} workerName The name of the worker.  This is expected to be a script
      *                            in the Workers folder.
-     * @param {Number} [maxActiveTasks=5] The maximum number of active tasks.  Once exceeded,
-     *                                    scheduleTask will not queue any more tasks, allowing
-     *                                    work to be rescheduled in future frames.
+     * @param {Number} [maximumActiveTasks=5] The maximum number of active tasks.  Once exceeded,
+     *                                        scheduleTask will not queue any more tasks, allowing
+     *                                        work to be rescheduled in future frames.
      */
-    var TaskProcessor = function(workerName, maxActiveTasks) {
+    var TaskProcessor = function(workerName, maximumActiveTasks) {
         this._workerName = workerName;
-        this._maxActiveTasks = defaultValue(maxActiveTasks, 5);
+        this._maximumActiveTasks = defaultValue(maximumActiveTasks, 5);
         this._activeTasks = 0;
         this._deferreds = {};
         this._nextID = 0;
@@ -116,13 +89,27 @@ define([
      *                                      transferred to the worker instead of copied.
      * @returns {Promise} Either a promise that will resolve to the result when available, or undefined
      *                    if there are too many active tasks,
+     *
+     * @example
+     * var taskProcessor = new TaskProcessor('myWorkerName');
+     * var promise = taskProcessor.scheduleTask({
+     *     someParameter : true,
+     *     another : 'hello'
+     * });
+     * if (typeof promise === 'undefined') {
+     *     // too many active tasks - try again later
+     * } else {
+     *     when(promise, function(result) {
+     *         // use the result of the task
+     *     });
+     * }
      */
     TaskProcessor.prototype.scheduleTask = function(parameters, transferableObjects) {
         if (typeof this._worker === 'undefined') {
             createWorker(this);
         }
 
-        if (this._activeTasks >= this._maxActiveTasks) {
+        if (this._activeTasks >= this._maximumActiveTasks) {
             return undefined;
         }
 

@@ -2,15 +2,23 @@
 define([
         '../Core/defaultValue',
         '../Core/loadImage',
+        '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../Core/Extent',
-        './GeographicTilingScheme'
+        './GeographicTilingScheme',
+        './ImageryProviderError',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         loadImage,
+        writeTextToCanvas,
         DeveloperError,
+        Event,
         Extent,
-        GeographicTilingScheme) {
+        GeographicTilingScheme,
+        ImageryProviderError,
+        when) {
     "use strict";
 
     /**
@@ -30,6 +38,7 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see OpenStreetMapImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      */
     var SingleTileImageryProvider = function(description) {
@@ -45,8 +54,6 @@ define([
         var proxy = description.proxy;
         this._proxy = proxy;
 
-        this._maximumLevel = 0;
-
         var extent = defaultValue(description.extent, Extent.MAX_VALUE);
         var tilingScheme = new GeographicTilingScheme({
             extent : extent,
@@ -57,6 +64,10 @@ define([
 
         this._image = undefined;
         this._texture = undefined;
+        this._tileWidth = 0;
+        this._tileHeight = 0;
+
+        this._errorEvent = new Event();
 
         this._ready = false;
 
@@ -65,19 +76,39 @@ define([
             imageUrl = proxy.getURL(imageUrl);
         }
 
-        // Create the credit message.
         if (typeof description.credit !== 'undefined') {
-            // Create the copyright message.
             this._logo = writeTextToCanvas(description.credit, {
                 font : '12px sans-serif'
             });
         }
 
         var that = this;
-        loadImage(imageUrl).then(function(image) {
+        var error;
+
+        function success(image) {
             that._image = image;
+            that._tileWidth = image.width;
+            that._tileHeight = image.height;
             that._ready = true;
-        });
+            ImageryProviderError.handleSuccess(that._errorEvent);
+        }
+
+        function failure(e) {
+            var message = 'Failed to load image ' + imageUrl + '.';
+            error = ImageryProviderError.handleError(
+                    error,
+                    that,
+                    that._errorEvent,
+                    message,
+                    0, 0, 0,
+                    doRequest);
+        }
+
+        function doRequest() {
+            when(loadImage(imageUrl), success, failure);
+        }
+
+        doRequest();
     };
 
     /**
@@ -98,8 +129,13 @@ define([
      * @memberof SingleTileImageryProvider
      *
      * @returns {Number} The width.
+     *
+     * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
      */
     SingleTileImageryProvider.prototype.getTileWidth = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTileWidth must not be called before the imagery provider is ready.');
+        }
         return this._tileWidth;
     };
 
@@ -110,8 +146,13 @@ define([
      * @memberof SingleTileImageryProvider
      *
      * @returns {Number} The height.
+     *
+     * @exception {DeveloperError} <code>getTileHeight</code> must not be called before the imagery provider is ready.
      */
     SingleTileImageryProvider.prototype.getTileHeight = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTileHeight must not be called before the imagery provider is ready.');
+        }
         return this._tileHeight;
     };
 
@@ -122,9 +163,14 @@ define([
      * @memberof SingleTileImageryProvider
      *
      * @returns {Number} The maximum level.
+     *
+     * @exception {DeveloperError} <code>getMaximumLevel</code> must not be called before the imagery provider is ready.
      */
     SingleTileImageryProvider.prototype.getMaximumLevel = function() {
-        return this._maximumLevel;
+        if (!this._ready) {
+            throw new DeveloperError('getMaximumLevel must not be called before the imagery provider is ready.');
+        }
+        return 0;
     };
 
     /**
@@ -136,8 +182,13 @@ define([
      * @returns {TilingScheme} The tiling scheme.
      * @see WebMercatorTilingScheme
      * @see GeographicTilingScheme
+     *
+     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
      */
     SingleTileImageryProvider.prototype.getTilingScheme = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTilingScheme must not be called before the imagery provider is ready.');
+        }
         return this._tilingScheme;
     };
 
@@ -165,9 +216,27 @@ define([
      *
      * @see DiscardMissingTileImagePolicy
      * @see NeverTileDiscardPolicy
+     *
+     * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
      */
     SingleTileImageryProvider.prototype.getTileDiscardPolicy = function() {
-        return this._tileDiscardPolicy;
+        if (!this._ready) {
+            throw new DeveloperError('getTileDiscardPolicy must not be called before the imagery provider is ready.');
+        }
+        return undefined;
+    };
+
+    /**
+     * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link ImageryProviderError}.
+     *
+     * @memberof SingleTileImageryProvider
+     *
+     * @returns {Event} The event.
+     */
+    SingleTileImageryProvider.prototype.getErrorEvent = function() {
+        return this._errorEvent;
     };
 
     /**
@@ -195,8 +264,13 @@ define([
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
+     *
+     * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     SingleTileImageryProvider.prototype.requestImage = function(x, y, level) {
+        if (!this._ready) {
+            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
+        }
         return this._image;
     };
 
@@ -207,8 +281,13 @@ define([
      * @memberof SingleTileImageryProvider
      *
      * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     *
+     * @exception {DeveloperError} <code>getLogo</code> must not be called before the imagery provider is ready.
      */
     SingleTileImageryProvider.prototype.getLogo = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getLogo must not be called before the imagery provider is ready.');
+        }
         return this._logo;
     };
 

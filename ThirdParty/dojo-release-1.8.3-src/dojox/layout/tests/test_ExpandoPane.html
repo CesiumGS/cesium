@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>dojox.layout.ExpandoPane</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/claro/claro.css">
+	<!-- test file style rollup, you need resources/ExpandoPane.css exclusively -->
+	<link rel="stylesheet" href="_expando.css">	
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true, popup:true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dojox.layout.ExpandoPane");
+		dojo.require("dojo.data.ItemFileReadStore");
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.Tree");
+		dojo.require("dijit.layout.AccordionContainer");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dojox.layout.FloatingPane");
+		dojo.require("dojo.fx.easing");
+		dojo.require("dojox.rpc.Service");
+		dojo.require("dojo.io.script");
+	</script>
+
+	<script type="text/javascript">
+		dojo.declare("demo.DemoPane",dijit.layout.ContentPane,{
+
+			startup: function(){
+				this.inherited(arguments);
+				this.rpc.get({ name: this.title, 
+					attributes:["summary","type","source","description","examples"]			 
+				}).addCallback(dojo.hitch(this,"_setSelf"));
+			},
+			_setSelf:function(data){
+				var out = "";
+				dojo.forEach(data,function(d){
+					console.log(d);
+					if(d.name){
+						out += "<h2>" + d.name + " <span class='itemType'>" + d.type +"</span></h2>";
+					}
+					if(d.summary){
+						out += "<div class='summary'>" + d.summary + "</div>";
+					}
+				});
+				this.setContent(out);
+
+			}
+			
+		});
+		
+		var togglePane = function(e){
+			
+				var lp = dijit.byId("leftPane");
+				var sel = dojo.byId("easingSelect");
+				var o = dojo.getObject("dojo.fx.easing."+sel.value);
+			
+				lp.easeIn = o;
+				lp.easeOut = o;
+				lp.duration = parseInt(dojo.byId("durationBox").value) || 1000;
+				lp._setupAnims();
+				lp.toggle();
+		};
+		
+		var easeSelectionCode = function(){
+			var sel = dojo.byId("easingSelect");
+			dojo.connect(sel,"onchange",togglePane);
+			dojo.connect(dojo.byId("durationBox"),"onchange",togglePane);
+			var opt = dojo.query("#easingSelect option")[0];
+			for(var i in dojo.fx.easing){
+				var n = dojo.clone(opt);
+				n.value = i;
+				n.innerHTML = i;
+				sel.appendChild(n);
+			}
+		};
+
+		var _clearSearch = function(){
+			dojo.query("li","searchResults").forEach(dojo.destroy);
+		};
+		
+		var shifter = function(input){
+			// convert an array to a object, just that deep
+			var last, output;
+			last = output = {};
+			for(var i = 0; i < input.length; i++){
+			  if(i == input.length - 2){
+			   last[input[i]] = input[i + 1];
+			   break;
+			 }
+			 last = last[input[i]] = {};
+			}
+			return output;
+		};
+		
+		var makeTree = function(data){
+			var undata = {
+				dojo:{}, dijit:{}, dojox:{}
+			};
+			var items = [];
+			dojo.forEach(data,function(item){
+				var foo = item.name.split(".");
+				foo.push("_meta");
+				foo.push(item);
+				//var ns = foo.shift();
+				var obj = shifter(foo);
+				items.push(obj);
+			});
+			return items;
+		};
+		
+		var runSearch = function(e){
+			dijit.byId("centerPane").selectChild(dijit.byId("resultsPane"));
+			var val = dojo.byId("searchBox").value;
+			var li = dojo.doc.createElement('li');
+			_clearSearch();
+			li.appendChild(dojo.clone(dojo.query(".cloneNode")[0]));
+			dojo.byId("searchResults").appendChild(li);
+			searchHistory.push(val);
+			api.get({ name:val }).addCallback(function(data){
+				var tree = makeTree(data);
+		
+				_clearSearch();
+				
+				dojo.forEach(data,function(item){
+					console.log(item);
+					var list = dojo.byId("")
+					var nli = dojo.doc.createElement('li');
+					nli.innerHTML = "<div class='inner'>"
+						+"<a"+" hre"+"f='#"+ item.name +"'>"+item.name +"</a>"
+						+"- <span class='itemType'>"+ item.type +"</span>"
+						+"<div class='itty'>"+item.summary+"</div></div>";
+					dojo.byId("searchResults").appendChild(nli);
+				});
+			})
+		};
+
+		var searchInteract = function(e){
+			e.preventDefault();
+			var v;
+			if((v = dojo.attr(e.target,"href"))){
+				var tabs = dijit.byId("centerPane");
+				v = v.replace(/#/g,"");
+				var cp = dijit.byId(v);
+				if(!cp){
+					var cp = new demo.DemoPane({
+						title:v,
+						closable:true,
+						id:v,
+						rpc:api
+					});
+					cp.startup();
+					tabs.addChild(cp);
+				}
+				tabs.selectChild(cp);
+			}
+		};
+
+		var searchHistory = [];
+		var rpc = null;
+		var apiData = {};
+		var _clone = null;
+		var searchCode = function(){
+			_clone = dojo.query(".cloneLoading")[0];
+			api = new dojox.rpc.Service(dojo.moduleUrl("dojox.rpc", "SMDLibrary/dojo-api.smd"));
+			dojo.connect(dojo.byId("searchBox"),"onchange",runSearch);
+			dojo.connect(dojo.byId("runSearchIcon"),"onclick",runSearch);
+			dojo.connect(dojo.byId("searchResults"),"onclick",searchInteract);
+		}
+
+		dojo.addOnLoad(easeSelectionCode);
+		dojo.addOnLoad(searchCode);
+
+	</script>
+</head>
+<body class="claro" role="main">
+		<div id="bc" style="width:100%; height:100%; padding: 5px;" dojoType="dijit.layout.BorderContainer">
+			<div id="header" dojoType="dijit.layout.ContentPane" region="top" splitter="true">Dojo Expando Pane Test</div>
+			<div dojoType="dojox.layout.ExpandoPane" 
+				splitter="true" 
+				duration="125" 
+				region="left" 
+				title="Left Section" 
+				previewOnDblClick="true"
+				id="leftPane" 
+				maxWidth="275" 
+				style="width: 275px;">
+				<div dojoType="dijit.layout.TabContainer" attachParent="true" tabPosition="bottom" tabStrip="true">
+					<div dojoType="dijit.layout.ContentPane" title="Search">
+						<div class="searchBar">
+							<p>
+								<label for="searchBox" style="float: left;">Search:</label>
+								<input id="searchBox" name="searchBox" style="float: left;">
+								<span id="runSearchIcon" style="border: none; floast: left; padding: 3px;">
+									<img src="../../presentation/resources/icons/next.png" alt="run search" style="height:12px; width:12px;">
+								</span>
+							</p>
+						</div>
+						
+					</div>
+					<div dojoType="dijit.layout.AccordionContainer" title="Panes" style="width:275px;" attachParent="true">
+						<div dojoType="dijit.layout.ContentPane" title="Dojo">
+							<ul id="dojoList"></ul>
+						</div>
+						<div dojoType="dijit.layout.ContentPane" title="Dijit">
+							<ul id="dijitList"></ul>
+						</div>
+						<div dojoType="dijit.layout.ContentPane" title="DojoX">
+							<ul id="dojoxList"></ul>
+						</div>
+					</div>
+					<div dojoType="dijit.layout.ContentPane" title="Tree View">
+						<div dojoType="dojo.data.ItemFileReadStore" jsId="continentStore"
+							url="../../../dijit/tests/_data/countries.json"></div>
+						<div dojoType="dijit.Tree" store="continentStore" query="{type:'continent'}"
+							labelAttr="name" typeAttr="type" label="Toolkit API"></div>
+					</div>
+				</div>
+			</div>
+			<div dojoType="dijit.layout.TabContainer" region="center" id="centerPane" tabStrip="true">
+				<div dojoType="dijit.layout.ContentPane" title="tab 1">a</div>
+				<div dojoType="dijit.layout.ContentPane" title="tab 2">
+					<button dojoType="dijit.form.Button">Preview left
+						<script type="dojo/method" event="onClick">
+							dijit.byId("leftPane").preview();
+						</script>
+				</div>
+				<div dojoType="dijit.layout.ContentPane" title="Results" id="resultsPane">
+					<div class="wrap">
+						<div class="searchStuff">
+							<ul id="searchResults"></ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div dojoType="dojox.layout.ExpandoPane" 
+				splitter="true" 
+				title="Right Section" 
+				region="right" 
+				id="rightPane" 
+				maxWidth="275" 
+				style="width:275px" 
+				easeIn="dojo.fx.easing.backOut" 
+				easeOut="dojo.fx.easing.backInOut">
+
+				<div dojoType="dijit.layout.AccordionContainer" id="rightAccordion" style="width:275px;" attachParent="true">
+					<div dojoType="dijit.layout.ContentPane" title="Easing Selection">
+						<div class="wrap">
+							<p id="easingSelectLabel">This select modifies the left Expando's easing function. An Expando can have an easeIn and an easeOut parameter. This sets both.</p> 
+							<select id="easingSelect" name="easingSelect" aria-labelledby="easingSelectLabel">
+								<option value="dojo._DefaultEasing">Default</option>
+							</select>
+							<p><label for="durationBox">Duration: </label> <input id="durationBox" name="durationBox" value="1000" /></p>
+							<p>Some easing functions break when used with width: (negative width? but how?). <em>Be warned.</em></p>
+						</div>
+					</div>
+					<div dojoType="dijit.layout.ContentPane" title="Children">
+						<div class="wrap">
+							<p>This is a BorderContainer (the window). Each of the panes is set to one of
+							"left", "right", or "center". The left and right panes are ExpandoPanes (they collapse).
+							</p>
+							<p>What does a FloatingPane look like here?</p>
+							<p>
+							<button dojoType="dijit.form.Button">
+								Make Floater
+								<script type="dojo/connect" event="onClick">
+									var div = dojo.doc.createElement('div');
+									dojo.body().appendChild(div);
+									var fp = new dojox.layout.FloatingPane({
+										title:"A Winder.",
+										closeable:true, dockable:false,
+										href:"_floating.html"
+									},div);
+									dojo.style(fp.domNode,{
+										width:"350px",
+										height:"255px",
+										top:"75px", left:"75px",
+										position:"absolute",
+										zIndex:"980"
+									});
+									fp.startup();
+									fp.show();
+								</script>
+							</button>
+							</p>
+							<p>the end</p>
+						</div>
+					</div>
+					<div dojoType="dijit.layout.ContentPane" title="Acc 3">c</div>
+				</div>
+			</div>
+			<div dojoType="dojox.layout.ExpandoPane" 
+				splitter="true" 
+				duration="125" 
+				region="bottom" 
+				title="Bottom Section" 
+				id="bottomPane" 
+				maxWidth="275" 
+				style="height: 100px;">
+				<div dojoType="dijit.layout.TabContainer" attachParent="true" tabPosition="bottom" tabStrip="true">
+					<div dojoType="dijit.layout.ContentPane" title="Search">
+						<button dojoType="dijit.form.Button">
+							Change Title
+							<script type="dojo/method" event="onClick">
+								dijit.byId("bottomPane").set("title", new Date())
+							</script>
+						</button>
+					</div>
+					<div dojoType="dijit.layout.AccordionContainer" title="Panes" style="width:275px;" attachParent="true">
+						
+					</div>
+					<div dojoType="dijit.layout.ContentPane" title="Tree View">
+						
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="cloneNode">Loading <img style="width:17px; height:17px" src="../../image/resources/images/loading.gif" alt="progress" /></div>
+
+</body>
+</html>

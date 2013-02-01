@@ -424,6 +424,34 @@ define([
         return Math.acos(Cartesian2.dot(angleBetweenScratch, angleBetweenScratch2));
     };
 
+    var mostOrthogonalAxisScratch = new Cartesian2();
+    /**
+     * Returns the axis that is most orthogonal to the provided Cartesian.
+     * @memberof Cartesian2
+     *
+     * @param {Cartesian2} cartesian The Cartesian on which to find the most orthogonal axis.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Cartesian2} The most orthogonal axis.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian2.mostOrthogonalAxis = function(cartesian, result) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required.');
+        }
+
+        var f = Cartesian2.normalize(cartesian, mostOrthogonalAxisScratch);
+        Cartesian2.abs(f, f);
+
+        if (f.x <= f.y) {
+            result = Cartesian2.clone(Cartesian2.UNIT_X, result);
+        } else {
+            result = Cartesian2.clone(Cartesian2.UNIT_Y, result);
+        }
+
+        return result;
+    };
+
     /**
      * Compares the provided Cartesians componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -679,6 +707,17 @@ define([
      */
     Cartesian2.prototype.angleBetween = function(right) {
         return Cartesian2.angleBetween(this, right);
+    };
+
+    /**
+     * Returns the axis that is most orthogonal to the this Cartesian.
+     * @memberof Cartesian2
+     *
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Cartesian2} The most orthogonal axis.
+     */
+    Cartesian2.prototype.mostOrthogonalAxis = function(result) {
+        return Cartesian2.mostOrthogonalAxis(this, result);
     };
 
     /**

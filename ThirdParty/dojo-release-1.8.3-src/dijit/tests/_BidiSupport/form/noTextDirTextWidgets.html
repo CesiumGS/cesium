@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+
+<html dir="ltr" data-dojo-textdir="rtl">
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>DOH input fields witout textDir support Tests</title>
+
+		<style type="text/css">
+			@import "../../../../dijit/themes/tundra/tundra.css";
+			@import "../../../../dojo/resources/dojo.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			data-dojo-config="isDebug: true">
+		</script>		
+
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit.form.DateTextBox");
+			dojo.require("dijit.form.NumberSpinner");
+			dojo.require("dijit.form.CurrencyTextBox");
+			dojo.require("dijit.form.TimeTextBox");
+			dojo.require("dojo.currency");			
+			dojo.require("dojo.date.locale");
+			dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+			dojo.require("doh.runner");
+			dojo.require("dijit._BidiSupport");
+			
+			dojo.ready(function(){
+
+				doh.register("parse", function(){
+					dojo.parser.parse();
+				});
+
+				doh.register("initial direction of the textBoxes", [
+					{
+						name:"Group 1",
+
+						runTest:function(){
+
+							var textBox1 = dijit.byId("local_1"),
+								textBox2 = dijit.byId("local_12"),
+								textBox3 = dijit.byId("local_2"),
+								textBox4 = dijit.byId("local_22");
+
+							doh.is("rtl", textBox1.textDir, "textDir of - " + textBox1.id);
+							doh.is("ltr", textBox1.dir, "dir of - " + textBox1.id);
+							doh.t(textBox1.focusNode.dir != textBox1.textDir, "textDir != dir of - " + textBox1.id);
+																				
+							doh.is("ltr", textBox2.textDir, "textDir of - " + textBox2.id);
+							doh.is("ltr", textBox2.dir, "dir of - " + textBox2.id);
+							doh.t(textBox2.focusNode.dir != textBox2.textDir, "textDir != dir of - " + textBox2.id);
+
+							doh.is("rtl", textBox3.textDir, "textDir of - " + textBox3.id);
+							doh.is("rtl", textBox3.dir, "dir of - " + textBox3.id);
+							doh.t(textBox3.focusNode.dir != textBox3.textDir, "textDir != dir of - " + textBox3.id);
+
+							doh.is("ltr", textBox4.textDir, "textDir of - " + textBox4.id);
+							doh.is("rtl", textBox4.dir, "dir of - " + textBox4.id);
+							doh.t(textBox4.focusNode.dir != textBox4.textDir, "textDir != dir of - " + textBox4.id);
+						}
+					},			
+					{
+						name:"Group 2",
+
+						runTest:function(){
+							
+							var textBox1 = dijit.byId("localLong_1"),
+								textBox2 = dijit.byId("localLong_12"),
+								textBox3 = dijit.byId("localLong_2"),
+								textBox4 = dijit.byId("localLong_22");
+						
+							doh.is("rtl", textBox1.textDir, "textDir of - " + textBox1.id);
+							doh.is("ltr", textBox1.dir, "dir of - " + textBox1.id);
+							doh.t(textBox1.focusNode.dir != textBox1.textDir, "textDir != dir of - " + textBox1.id);
+																		
+							doh.is("ltr", textBox2.textDir, "textDir of - " + textBox2.id);
+							doh.is("ltr", textBox2.dir, "dir of - " + textBox2.id);
+							doh.t(textBox2.focusNode.dir != textBox2.textDir, "textDir != dir of - " + textBox2.id);
+
+							doh.is("rtl", textBox3.textDir, "textDir of - " + textBox3.id);
+							doh.is("rtl", textBox3.dir, "dir of - " + textBox3.id);
+							doh.t(textBox3.focusNode.dir != textBox3.textDir, "textDir != dir of - " + textBox3.id);
+
+							doh.is("ltr", textBox4.textDir, "textDir of - " + textBox4.id);
+							doh.is("rtl", textBox4.dir, "dir of - " + textBox4.id);
+							doh.t(textBox4.focusNode.dir != textBox4.textDir, "textDir != dir of - " + textBox4.id);
+						}
+					},
+					{
+						name:"Group 3",
+
+						runTest:function(){
+
+							var textBox1 = dijit.byId("integerspinner_1"),
+								textBox2 = dijit.byId("integerspinner_12"),
+								textBox3 = dijit.byId("integerspinner_2"),
+								textBox4 = dijit.byId("integerspinner_22");
+							
+							doh.is("rtl", textBox1.textDir, "textDir of - " + textBox1.id);
+							doh.is("ltr", textBox1.dir, "dir of - " + textBox1.id);
+							doh.t(textBox1.focusNode.dir != textBox1.textDir, "textDir != dir of - " + textBox1.id);
+																		
+							doh.is("ltr", textBox2.textDir, "textDir of - " + textBox2.id);
+							doh.is("ltr", textBox2.dir, "dir of - " + textBox2.id);
+							doh.t(textBox2.focusNode.dir != textBox2.textDir, "textDir != dir of - " + textBox2.id);
+
+							doh.is("rtl", textBox3.textDir, "textDir of - " + textBox3.id);
+							doh.is("rtl", textBox3.dir, "dir of - " + textBox3.id);
+							doh.t(textBox3.focusNode.dir != textBox3.textDir, "textDir != dir of - " + textBox3.id);
+
+							doh.is("ltr", textBox4.textDir, "textDir of - " + textBox4.id);
+							doh.is("rtl", textBox4.dir, "dir of - " + textBox4.id);
+							doh.t(textBox4.focusNode.dir != textBox4.textDir, "textDir != dir of - " + textBox4.id);
+						}
+					},
+					{
+						name:"Group 4",
+
+						runTest:function(){
+
+							var textBox1 = dijit.byId("curren_1"),
+								textBox2 = dijit.byId("curren_12"),
+								textBox3 = dijit.byId("curren_2"),
+								textBox4 = dijit.byId("curren_22");
+								
+							doh.is("rtl", textBox1.textDir, "textDir of - " + textBox1.id);
+							doh.is("ltr", textBox1.dir, "dir of - " + textBox1.id);
+							doh.t(textBox1.focusNode.dir != textBox1.textDir, "textDir != dir of - " + textBox1.id);
+																		
+							doh.is("ltr", textBox2.textDir, "textDir of - " + textBox2.id);
+							doh.is("ltr", textBox2.dir, "dir of - " + textBox2.id);
+							doh.t(textBox2.focusNode.dir != textBox2.textDir, "textDir != dir of - " + textBox2.id);
+
+							doh.is("rtl", textBox3.textDir, "textDir of - " + textBox3.id);
+							doh.is("rtl", textBox3.dir, "dir of - " + textBox3.id);
+							doh.t(textBox3.focusNode.dir != textBox3.textDir, "textDir != dir of - " + textBox3.id);
+
+							doh.is("ltr", textBox4.textDir, "textDir of - " + textBox4.id);
+							doh.is("rtl", textBox4.dir, "dir of - " + textBox4.id);
+							doh.t(textBox4.focusNode.dir != textBox4.textDir, "textDir != dir of - " + textBox4.id);
+						}
+					},
+					{
+						name:"Group 5",
+
+						runTest:function(){
+	
+							var textBox1 = dijit.byId("q1"),
+								textBox2 = dijit.byId("q2"),
+								textBox3 = dijit.byId("q3"),
+								textBox4 = dijit.byId("q4");
+	
+							doh.is("rtl", textBox1.textDir, "textDir of - " + textBox1.id);
+							doh.is("ltr", textBox1.dir, "dir of - " + textBox1.id);
+							doh.t(textBox1.focusNode.dir != textBox1.textDir, "textDir != dir of - " + textBox1.id);
+																		
+							doh.is("ltr", textBox2.textDir, "textDir of - " + textBox2.id);
+							doh.is("ltr", textBox2.dir, "dir of - " + textBox2.id);
+							doh.t(textBox2.focusNode.dir != textBox2.textDir, "textDir != dir of - " + textBox2.id);
+
+							doh.is("rtl", textBox3.textDir, "textDir of - " + textBox3.id);
+							doh.is("rtl", textBox3.dir, "dir of - " + textBox3.id);
+							doh.t(textBox3.focusNode.dir != textBox3.textDir, "textDir != dir of - " + textBox3.id);
+
+							doh.is("ltr", textBox4.textDir, "textDir of - " + textBox4.id);
+							doh.is("rtl", textBox4.dir, "dir of - " + textBox4.id);
+							doh.t(textBox4.focusNode.dir != textBox4.textDir, "textDir != dir of - " + textBox4.id);
+						}
+					}
+				]);			
+
+				doh.run();
+			});
+		</script>
+	</head>
+
+	<body class="tundra">
+		<h2 class="testTitle"><b>As you can see, for the following widgets, the textDir is disabled, it's overridden by dijit.form.RangeBoundTextBox</b></h2>
+		<h1 class="testTitle">Test DateTextBox Widget with _BidiSupport</h1>
+		<div class="dojoTitlePaneLabel">
+			<label for="local_1">Group 1: Date (local format) </label>
+		</div>
+		<div class="testExample">
+			<table>
+				<tr>
+					<th>
+						<label for="local_1"><b>dir = </b>ltr, <b>textDir = </b>rtl</label><br>
+						<input id="local_1" data-dojo-type="dijit/form/DateTextBox"
+							data-dojo-props='name:"noDOMvalue", value:"2008-12-31", type:"text"'/>
+					</th>
+					<th>
+						<label for="local_12"><b>dir = </b>ltr, <b>textDir = </b>ltr</label><br>
+						<input id="local_12" data-dojo-type="dijit/form/DateTextBox"
+							data-dojo-props='name:"noDOMvalue12", value:"2008-12-31", type:"text", textDir:"ltr"'/>	
+					</th>
+				</tr>
+				<tr>
+					<th>
+						<label for="local_2"><b>dir = </b>rtl, <b>textDir = </b>rtl</label><br>
+						<input id="local_2" data-dojo-type="dijit/form/DateTextBox"
+							data-dojo-props='name:"noDOMvalue2", value:"2008-12-31", type:"text", dir:"rtl"'/>	
+					</th>
+					<th>
+						<label for="local_22"><b>dir = </b>rtl, <b>textDir = </b>ltr</label><br>
+						<input id="local_22" data-dojo-type="dijit/form/DateTextBox"
+							data-dojo-props='name:"noDOMvalue22", value:"2008-12-31", type:"text", dir:"rtl", textDir:"ltr"'/>	
+					</th>
+				</tr>
+			</table>
+		</div>
+		<div class="dojoTitlePaneLabel">
+			<label for="localLong_1">Group 2: Date (local format - long) </label>
+		</div>
+		<div class="testExample">
+			<table>
+				<tr>
+					<th>
+						<label for="localLong_1"><b>dir = </b>ltr, <b>textDir = </b>rtl</label><br>
+						<input id="localLong_1" data-dojo-id="localLong_1" data-dojo-type="dijit/form/DateTextBox"
+							data-dojo-props='type:"text", name:"date1", value:"2005-12-30",
+							constraints:{min:"2004-01-01",max:"2006-12-31",formatLength:"long"},
+							required:true,
+							trim:true,
+							invalidMessage:"Invalid date."'/>
+					</th>
+					<th>
+						<label for="localLong_12"><b>dir = </b>ltr, <b>textDir = </b>ltr</label><br>
+						<input id="localLong_12" data-dojo-id="localLong_12" data-dojo-type="dijit/form/DateTextBox"
+							data-dojo-props='type:"text", name:"date12", value:"2005-12-30",
+							constraints:{min:"2004-01-01",max:"2006-12-31",formatLength:"long"},
+							required:true,
+							trim:true,
+							invalidMessage:"Invalid date." ,
+							textDir:"ltr"'/>
+					</th>
+				</tr>							
+				<tr>
+					<th>		
+						<label for="localLong_2"><b>dir = </b>rtl, <b>textDir = </b>rtl</label><br>
+						<input id="localLong_2" data-dojo-id="localLong_2" data-dojo-type="dijit/form/DateTextBox"
+							data-dojo-props='type:"text", name:"date2", value:"2005-12-30",
+							constraints:{min:"2004-01-01",max:"2006-12-31",formatLength:"long"},
+							required:true,
+							trim:true,
+							invalidMessage:"Invalid date." ,
+							dir:"rtl"'/>
+					</th>
+					<th>							
+						<label for="localLong_22"><b>dir = </b>rtl, <b>textDir = </b>ltr</label><br>
+						<input id="localLong_22" data-dojo-id="localLong_12" data-dojo-type="dijit/form/DateTextBox"
+							data-dojo-props='type:"text", name:"date12", value:"2005-12-30",
+							constraints:{min:"2004-01-01",max:"2006-12-31",formatLength:"long"},
+							required:true,
+							trim:true,
+							invalidMessage:"Invalid date." ,
+							dir:"rtl",
+							textDir:"ltr"'/>
+					</th>
+				</tr>
+			</table>
+		</div>
+	
+		<br>
+		<h1 class="testTitle">Test NumberSpinner Widget with _BidiSupport</h1>
+		<div class="dojoTitlePaneLabel">
+			<label >Group 3 </label>
+		</div>
+
+		Try typing values, and use the up/down arrow keys and/or the arrow push	buttons
+
+		<div class="testExample">
+			<table>
+				<tr>
+					<th>			
+						<label for="integerspinner_1"><b>dir = </b>ltr, <b>textDir = </b>rtl </label><br>
+						<input id="integerspinner_1" data-dojo-type="dijit/form/NumberSpinner"
+							data-dojo-props='
+							value:900,
+							"class":"bigFont",
+							constraints:{max:1550,places:0},
+							name:"integerspinner_1",
+							textDir:"rtl"'/>
+					</th>
+					<th>
+						<label for="integerspinner_12"><b>dir = </b>ltr, <b>textDir = </b>ltr </label><br>
+						<input id="integerspinner_12" data-dojo-type="dijit/form/NumberSpinner"
+							data-dojo-props='
+							value:900,
+							"class":"bigFont",
+							constraints:{max:1550,places:0},
+							name:"integerspinner_12",
+							textDir:"ltr"'/>
+					</th>
+				</tr>							
+				<tr>
+					<th>		
+						<label for="integerspinner_2"><b>dir = </b>rtl, <b>textDir = </b>rtl </label><br>
+						<input id="integerspinner_2" data-dojo-type="dijit/form/NumberSpinner"
+							data-dojo-props='
+							value:900,
+							"class":"bigFont",
+							constraints:{max:1550,places:0},
+							dir:"rtl",
+							name:"integerspinner_2"'/>
+					</th>
+					<th>	
+						<label for="integerspinner_22"><b>dir = </b>rtl, <b>textDir = </b>ltr </label><br>
+						<input id="integerspinner_22" data-dojo-type="dijit/form/NumberSpinner"
+							data-dojo-props='
+							value:900,
+							"class":"bigFont",
+							constraints:{max:1550,places:0},
+							dir:"rtl",
+							textDir:"ltr",
+							name:"integerspinner_22"'/>						
+					</th>
+				</tr>
+			</table>					
+		</div>
+
+		<br>
+		<br>
+
+		<h1 class="testTitle">Test CurrencyTextBox Widget with _BidiSupport</h1>
+		<div class="dojoTitlePaneLabel">
+			<label >Group 4</label>
+		</div>
+		<div class="testExample">
+			<table>
+				<tr>
+					<th>
+						<label for="curren_1"><b>dir = </b>ltr, <b>textDir = </b>rtl </label><br>
+						<input id="curren_1" data-dojo-type="dijit/form/CurrencyTextBox"
+							data-dojo-props='name:"curren_1", "class":"medium", value:54775.53,
+							required:true,
+							constraints:{fractional:true},
+							currency:"USD",
+							invalidMessage:"Invalid amount. Cents are MANDATORY."'/>
+					</th> 
+					<th>
+						<label for="curren_12"><b>dir = </b>ltr, <b>textDir = </b>ltr</label><br>
+						<input id="curren_12" data-dojo-type="dijit/form/CurrencyTextBox"
+							data-dojo-props='name:"curren_12", "class":"medium", value:54775.53,
+							required:true,
+							constraints:{fractional:true},
+							currency:"USD",
+							invalidMessage:"Invalid amount. Cents are MANDATORY.",
+							textDir:"ltr"'/>
+					</th>
+				</tr>
+				<tr>
+					<th>
+						<label for="curren_2"><b>dir = </b>rtl, <b>textDir = </b>rtl </label><br>	
+						<input id="curren_2" data-dojo-type="dijit/form/CurrencyTextBox"
+							data-dojo-props='name:"curren_2", "class":"medium", value:54775.53,
+								required:true,
+								constraints:{fractional:true},
+								currency:"USD",
+								invalidMessage:"Invalid amount. Cents are MANDATORY.",
+								textDir:"rtl",
+								dir:"rtl"'/>
+					</th>
+					<th>
+						<label for="curren_22"><b>dir = </b>rtl, <b>textDir = </b>ltr </label><br>	
+						<input id="curren_22" data-dojo-type="dijit/form/CurrencyTextBox"
+								data-dojo-props='name:"curren_22", "class":"medium", value:54775.53,
+								required:true,
+								constraints:{fractional:true},
+								currency:"USD",
+								invalidMessage:"Invalid amount. Cents are MANDATORY.",
+								textDir:"ltr",
+								dir:"rtl"'/>
+					</th>
+				</tr>
+			</table>
+		</div>
+	
+		<h1 class="testTitle">Test TimeTextBox Widget with _BidiSupport</h1>
+		<div class="dojoTitlePaneLabel">
+			<label >Group 5 </label>
+		</div>
+		<div class="testExample">
+			<table>
+				<tr>
+					<th>
+						<label for="q1"><b>dir = </b>ltr, <b>textDir = </b>rtl </label><br>
+						<input id="q1" data-dojo-type="dijit/form/TimeTextBox"
+							data-dojo-props='type:"text", name:"time1", value:"T17:45:00",
+							constraints:{formatLength:"medium"},
+							required:true,
+							invalidMessage:"Invalid time.",
+							textDir:"rtl",
+							dir:"ltr"'/>					
+					</th>
+					<th>
+						<label for="q2"><b>dir = </b>ltr, <b>textDir = </b>ltr</label><br>
+						<input id="q2" data-dojo-type="dijit/form/TimeTextBox"
+							data-dojo-props='type:"text", name:"time2", value:"T17:45:00",
+							constraints:{formatLength:"medium"},
+							required:true,
+							invalidMessage:"Invalid time.", 
+							textDir:"ltr",
+							dir:"ltr"'/>		
+					</th>
+				</tr>
+				<tr>
+					<th>
+						<label for="q3"><b>dir = </b>rtl, <b>textDir = </b>rtl </label><br>	
+						<input id="q3" data-dojo-type="dijit/form/TimeTextBox"
+							data-dojo-props='type:"text", name:"time3", value:"T17:45:00",
+							constraints:{formatLength:"medium"},
+							required:true,
+							invalidMessage:"Invalid time.",
+							textDir:"rtl",
+							dir:"rtl"'/>		
+					</th>
+					<th>
+						<label for="q4"><b>dir = </b>rtl, <b>textDir = </b>ltr </label><br>	
+						<input id="q4" data-dojo-type="dijit/form/TimeTextBox"
+							data-dojo-props='type:"text", name:"time4", value:"T17:45:00",
+							constraints:{formatLength:"medium"},
+							required:true,
+							invalidMessage:"Invalid time.",
+							textDir:"ltr",
+							dir:"rtl"'/>		
+					</th>
+				</tr>
+			</table>
+		</div>
+	</body>
+</html>

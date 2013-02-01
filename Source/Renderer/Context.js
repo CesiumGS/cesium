@@ -248,7 +248,7 @@ define([
         this._defaultClearDepth = this._clearDepth;
         this._defaultClearStencil = this._clearStencil;
 
-        this._us = new UniformState(this);
+        this._us = new UniformState();
         this._currentFramebuffer = undefined;
         this._currentSp = undefined;
 
@@ -1210,13 +1210,13 @@ define([
      * // Example 1. Create a stream index buffer of unsigned shorts that is
      * // 16 bytes in size.
      * var buffer = context.createIndexBuffer(16, BufferUsage.STREAM_DRAW,
-     *     IndexType.unsignedShort);
+     *     IndexDatatype.UNSIGNED_SHORT);
      *
      * ////////////////////////////////////////////////////////////////////////////////
      *
      * // Example 2. Create a static index buffer containing three unsigned shorts.
      * var buffer = context.createIndexBuffer(new Uint16Array([0, 1, 2]),
-     *     BufferUsage.STATIC_DRAW, IndexType.unsignedShort)
+     *     BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT)
      */
     Context.prototype.createIndexBuffer = function(typedArrayOrSizeInBytes, usage, indexDatatype) {
         var bytesPerIndex;
@@ -1393,12 +1393,12 @@ define([
             throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + this._maximumTextureSize + ').  Check getMaximumTextureSize().');
         }
 
-        var pixelFormat = description.pixelFormat || PixelFormat.RGBA;
+        var pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid description.pixelFormat.');
         }
 
-        var pixelDatatype = description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE;
+        var pixelDatatype = defaultValue(description.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
         if (!PixelDatatype.validate(pixelDatatype)) {
             throw new DeveloperError('Invalid description.pixelDatatype.');
         }
@@ -1425,6 +1425,7 @@ define([
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
         // http://media.tojicode.com/webglCamp4/#20
         var preMultiplyAlpha = description.preMultiplyAlpha || pixelFormat === PixelFormat.RGB || pixelFormat === PixelFormat.LUMINANCE;
+        var flipY = defaultValue(description.flipY, true);
 
         var gl = this._gl;
         var textureTarget = gl.TEXTURE_2D;
@@ -1436,7 +1437,7 @@ define([
         if (source) {
             // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
             gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
 
             if (source.arrayBufferView) {
                 // Source: typed array
@@ -1450,7 +1451,7 @@ define([
         }
         gl.bindTexture(textureTarget, null);
 
-        return new Texture(gl, this._textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, width, height, preMultiplyAlpha);
+        return new Texture(gl, this._textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, width, height, preMultiplyAlpha, flipY);
     };
 
     /**
@@ -1617,7 +1618,7 @@ define([
             throw new DeveloperError('Width and height must be less than or equal to the maximum cube map size (' + this._maximumCubeMapSize + ').  Check getMaximumCubeMapSize().');
         }
 
-        var pixelFormat = description.pixelFormat || PixelFormat.RGBA;
+        var pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid description.pixelFormat.');
         }
@@ -1626,7 +1627,7 @@ define([
             throw new DeveloperError('description.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
 
-        var pixelDatatype = description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE;
+        var pixelDatatype = defaultValue(description.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
         if (!PixelDatatype.validate(pixelDatatype)) {
             throw new DeveloperError('Invalid description.pixelDatatype.');
         }
@@ -1634,6 +1635,7 @@ define([
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
         // http://media.tojicode.com/webglCamp4/#20
         var preMultiplyAlpha = description.preMultiplyAlpha || ((pixelFormat === PixelFormat.RGB) || (pixelFormat === PixelFormat.LUMINANCE));
+        var flipY = defaultValue(description.flipY, true);
 
         var gl = this._gl;
         var textureTarget = gl.TEXTURE_CUBE_MAP;
@@ -1653,7 +1655,7 @@ define([
         if (source) {
             // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
             gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
 
             createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X, source.positiveX);
             createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, source.negativeX);
@@ -1671,7 +1673,7 @@ define([
         }
         gl.bindTexture(textureTarget, null);
 
-        return new CubeMap(gl, this._textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, size, preMultiplyAlpha);
+        return new CubeMap(gl, this._textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
     };
 
     /**
@@ -2171,15 +2173,26 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Executes the specified clear command.
      *
-     * clearState is optional.
+     * @memberof Context
+     *
+     * @param {ClearCommand} [clearCommand] The command with which to clear.  If this parameter is undefined
+     *        or its clearState property is undefined, a default clear state is used.
+     * @param {Framebuffer} [framebuffer] The framebuffer to clear if one is not specified by the command.
      *
      * @memberof Context
      *
      * @see Context#createClearState
      */
-    Context.prototype.clear = function(clearState) {
+    Context.prototype.clear = function(clearCommand, framebuffer) {
+        var clearState;
+        if (typeof clearCommand !== 'undefined' && typeof clearCommand.clearState !== 'undefined') {
+            clearState = clearCommand.clearState;
+        } else {
+            clearState = this.createClearState();
+        }
+
         var gl = this._gl;
         var bitmask = 0;
 
@@ -2218,7 +2231,7 @@ define([
         this._applyStencilMask(clearState.stencilMask);
         this._applyDither(clearState.dither);
 
-        var framebuffer = clearState.framebuffer;
+        framebuffer = defaultValue(clearState.framebuffer, framebuffer);
 
         if (framebuffer) {
             framebuffer._bind();
@@ -2233,16 +2246,20 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Executes the specified draw command.
+     *
      * @memberof Context
      *
-     * @param {Command} command The command to execute.
+     * @param {DrawCommand} drawCommand The command with which to draw.
+     * @param {Framebuffer} [framebuffer] The framebuffer to which to draw if one is not specified by the command.
      *
-     * @exception {DeveloperError} command is required.
-     * @exception {DeveloperError} command.primitiveType is required and must be valid.
-     * @exception {DeveloperError} command.shaderProgram is required.
-     * @exception {DeveloperError} command.vertexArray is required.
-     * @exception {DeveloperError} command.offset must be omitted or greater than or equal to zero.
+     * @memberof Context
+     *
+     * @exception {DeveloperError} drawCommand is required.
+     * @exception {DeveloperError} drawCommand.primitiveType is required and must be valid.
+     * @exception {DeveloperError} drawCommand.shaderProgram is required.
+     * @exception {DeveloperError} drawCommand.vertexArray is required.
+     * @exception {DeveloperError} drawCommand.offset must be omitted or greater than or equal to zero.
      * @exception {DeveloperError} Program validation failed.
      * @exception {DeveloperError} Framebuffer is not complete.
      *
@@ -2272,9 +2289,9 @@ define([
      * @see Context#createFramebuffer
      * @see Context#createRenderState
      */
-    Context.prototype.draw = function(command) {
-        this.beginDraw(command);
-        this.continueDraw(command);
+    Context.prototype.draw = function(drawCommand, framebuffer) {
+        this.beginDraw(drawCommand, framebuffer);
+        this.continueDraw(drawCommand);
         this.endDraw();
     };
 
@@ -2283,7 +2300,7 @@ define([
      *
      * @memberof Context
      */
-    Context.prototype.beginDraw = function(command) {
+    Context.prototype.beginDraw = function(command, framebuffer) {
         if (typeof command === 'undefined') {
             throw new DeveloperError('command is required.');
         }
@@ -2292,7 +2309,7 @@ define([
             throw new DeveloperError('command.shaderProgram is required.');
         }
 
-        var framebuffer = command.framebuffer;
+        framebuffer = defaultValue(command.framebuffer, framebuffer);
         var sp = command.shaderProgram;
         var rs = command.renderState || this.createRenderState();
 

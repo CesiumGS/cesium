@@ -19,32 +19,32 @@ define([
             // define the class only when needed, so we can use modern
             // language features without breaking legacy browsers at setup time.
             PooledTexture = function(texture, textureTypeKey, pool) {
-        this._texture = texture;
-        this._textureTypeKey = textureTypeKey;
-        this._pool = pool;
+                this._texture = texture;
+                this._textureTypeKey = textureTypeKey;
+                this._pool = pool;
             };
 
             // pass through all methods to the underlying texture
-    Object.keys(Texture.prototype).forEach(function(methodName) {
-        PooledTexture.prototype[methodName] = function() {
-            var texture = this._texture;
-            return texture[methodName].apply(texture, arguments);
-        };
-    });
+            Object.keys(Texture.prototype).forEach(function(methodName) {
+                PooledTexture.prototype[methodName] = function() {
+                    var texture = this._texture;
+                    return texture[methodName].apply(texture, arguments);
+                };
+            });
 
             // except for destroy, which releases back into the pool
-    PooledTexture.prototype.destroy = function() {
-        var freeList = this._pool._free[this._textureTypeKey];
-        if (typeof freeList === 'undefined') {
-            freeList = this._pool._free[this._textureTypeKey] = [];
-        }
+            PooledTexture.prototype.destroy = function() {
+                var freeList = this._pool._free[this._textureTypeKey];
+                if (typeof freeList === 'undefined') {
+                    freeList = this._pool._free[this._textureTypeKey] = [];
+                }
 
-        if (freeList.length >= 8) {
-            this._texture.destroy();
-        } else {
-        freeList.push(this);
-        }
-    };
+                if (freeList.length >= 8) {
+                    this._texture.destroy();
+                } else {
+                    freeList.push(this);
+                }
+            };
         }
 
         return new PooledTexture(texture, textureTypeKey, pool);

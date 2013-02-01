@@ -1,0 +1,905 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Editor LinkDialog Plugin Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.DeferredList");
+			dojo.require("dojo.window");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_LinkDialog.html');
+
+				var editor;
+				var ldPlugin;
+				var value;
+				var node;
+
+				doh.register("Setup", [
+					{
+						name: "wait for editors to load",
+						timeout: 5000,
+						runTest: function(){
+						    return new dojo.DeferredList(
+							// TODO: test if this is working
+						        dijit.registry.filter(function(w){ return w.onLoadDeferred; }).map(function(w){ return w.onLoadDeferred; })
+						    );
+						}
+					}
+				]);
+
+				doh.register("LinkDialog_tests", [
+					function setUp(){
+						editor = dijit.byId("editor");
+						ldPlugin = null;
+						var edPlugins = editor._plugins, i;
+						for(i = 0; i < edPlugins.length; i++){
+							var p = edPlugins[i];
+							if(p.declaredClass === "dijit._editor.plugins.LinkDialog"){
+								ldPlugin = p;
+								break;
+							}
+						}
+						doh.t(ldPlugin != null, "found link dialog.");
+					},
+
+					{
+						name: "Anchor Tag: Create a new link",
+						timeout: 20000,
+						setUp: function(){
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt(ldPlugin.button.domNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							var url, desc;
+							doh.robot.sequence(d.getTestErrback(function(){
+								url = dijit.byId(ldPlugin._uniqueId + "_urlInput");
+								desc = dijit.byId(ldPlugin._uniqueId + "_textInput");
+								url.set("value", "http://example.com/");
+								desc.set("value", "This is my example link.");
+							}),2000);
+
+							doh.robot.mouseMoveAt(function(){return dijit.byId(ldPlugin._uniqueId + "_setButton").domNode;}, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Now check the state!
+								var newVal = editor.get("value");
+								doh.isNot(value, newVal, "Verify the contents have changed.");
+								doh.t(new RegExp("href=(\"|\')http://example.com/(\"|\')").test(newVal), "Verifying URL has been inserted.");
+								doh.f(new RegExp("<li><a").test(newVal), "Verifying insert did not occur in the top li (IE test for selection restore.), newVal =" + newVal);
+								doh.t(new RegExp("target=(\"|\')_self(\"|\')").test(newVal), "Verifying target has been inserted.");
+								doh.t(new RegExp(">This is my example link.<").test(newVal), "Verifying description has been inserted.");
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Anchor Tag: Create a new link with alternate target",
+						timeout: 20000,
+						setUp: function(){
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt(ldPlugin.button.domNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							var url, target, desc;
+							doh.robot.sequence(d.getTestErrback(function(){
+								url = dijit.byId(ldPlugin._uniqueId + "_urlInput");
+								desc = dijit.byId(ldPlugin._uniqueId + "_textInput");
+								target = dijit.byId(ldPlugin._uniqueId + "_targetSelect");
+								url.set("value", "http://example.com/");
+								desc.set("value", "This is my example link.");
+								target.set("value", "_blank");
+							}),2000);
+							doh.robot.mouseMoveAt(function(){return dijit.byId(ldPlugin._uniqueId + "_setButton").domNode;}, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Now check the state!
+								var newVal = editor.get("value");
+								doh.isNot(value, newVal, "Verify the contents have changed.");
+								doh.f(new RegExp("<li><a").test(newVal), "Verifying insert did not occur in the top li (IE test for selection restore.)");
+								doh.t(new RegExp("href=(\"|\')http://example.com/(\"|\')").test(newVal), "Verifying URL has been inserted.");
+								doh.t(new RegExp("target=(\"|\')_blank(\"|\')").test(newVal), "Verifying target has been inserted.");
+								doh.t(new RegExp(">This is my example link.<").test(newVal), "Verifying description has been inserted.");
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Anchor Tag: Test auto insertion of http:// for urls.",
+						timeout: 20000,
+						setUp: function(){
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt(ldPlugin.button.domNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							var url, desc, target;
+							doh.robot.sequence(d.getTestErrback(function(){
+								url = dijit.byId(ldPlugin._uniqueId + "_urlInput");
+								desc = dijit.byId(ldPlugin._uniqueId + "_textInput");
+								target = dijit.byId(ldPlugin._uniqueId + "_targetSelect");
+								url.set("value", "example.com/");
+								desc.set("value", "This is my example link.");
+								target.set("value", "_blank");
+							}),2000);
+							doh.robot.mouseMoveAt(function(){return dijit.byId(ldPlugin._uniqueId + "_setButton").domNode;}, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Now check the state!
+								var newVal = editor.get("value");
+								doh.isNot(value, newVal, "Verify the contents have changed.");
+								doh.f(new RegExp("<li><a").test(newVal), "Verifying insert did not occur in the top li (IE test for selection restore.)");
+								doh.t(new RegExp("href=(\"|\')http://example.com/(\"|\')").test(newVal), "Verifying URL has been inserted.");
+								doh.t(new RegExp("target=(\"|\')_blank(\"|\')").test(newVal), "Verifying target has been inserted.");
+								doh.t(new RegExp(">This is my example link.<").test(newVal), "Verifying description has been inserted.");
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Anchor Tag: Test insertion 'relative' urls (./)",
+						timeout: 20000,
+						setUp: function(){
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt(ldPlugin.button.domNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							var url, desc, target;
+							doh.robot.sequence(d.getTestErrback(function(){
+								url = dijit.byId(ldPlugin._uniqueId + "_urlInput");
+								desc = dijit.byId(ldPlugin._uniqueId + "_textInput");
+								target = dijit.byId(ldPlugin._uniqueId + "_targetSelect");
+								url.set("value", "./myDirectory/myfile.html");
+								desc.set("value", "This is my example relative link.");
+								target.set("value", "_blank");
+							}),2000);
+							doh.robot.mouseMoveAt(function(){return dijit.byId(ldPlugin._uniqueId + "_setButton").domNode;}, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Now check the state!
+								var newVal = editor.get("value");
+								doh.isNot(value, newVal, "Verify the contents have changed.");
+								doh.f(new RegExp("<li><a").test(newVal), "Verifying insert did not occur in the top li (IE test for selection restore.)");
+								doh.t(new RegExp("href=(\"|\')\./myDirectory/myfile.html(\"|\')").test(newVal), "Verifying URL has been inserted.");
+								doh.t(new RegExp("target=(\"|\')_blank(\"|\')").test(newVal), "Verifying target has been inserted.");
+								doh.t(new RegExp(">This is my example relative link.<").test(newVal), "Verifying description has been inserted.");
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Anchor Tag: Test insertion 'relative' url (../)",
+						timeout: 20000,
+						setUp: function(){
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt(ldPlugin.button.domNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							var url, desc, target;
+							doh.robot.sequence(d.getTestErrback(function(){
+								url = dijit.byId(ldPlugin._uniqueId + "_urlInput");
+								desc = dijit.byId(ldPlugin._uniqueId + "_textInput");
+								target = dijit.byId(ldPlugin._uniqueId + "_targetSelect");
+								url.set("value", "../myDirectory/myfile.html");
+								desc.set("value", "This is my example relative link.");
+								target.set("value", "_blank");
+							}),2000);
+							doh.robot.mouseMoveAt(function(){return dijit.byId(ldPlugin._uniqueId + "_setButton").domNode;}, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Now check the state!
+								var newVal = editor.get("value");
+								doh.isNot(value, newVal, "Verify the contents have changed.");
+								doh.f(new RegExp("<li><a").test(newVal), "Verifying insert did not occur in the top li (IE test for selection restore.)");
+								doh.t(new RegExp("href=(\"|\')\.\./myDirectory/myfile.html(\"|\')").test(newVal), "Verifying URL has been inserted.");
+								doh.t(new RegExp("target=(\"|\')_blank(\"|\')").test(newVal), "Verifying target has been inserted.");
+								doh.t(new RegExp(">This is my example relative link.<").test(newVal), "Verifying description has been inserted.");
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Anchor Tag: Update existing anchor tag",
+						timeout: 20000,
+						setUp: function(){
+							node = dojo.byId("exampleLink", editor.document);
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								// Okay, select the text of the hyperlink so we can then perform an edit on it.
+								editor._sCall("selectElement", [node]);
+							}),500);
+							doh.robot.mouseMoveAt(ldPlugin.button.domNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							var url, desc, target, oldUrl, oldDesc;
+							doh.robot.sequence(d.getTestErrback(function(){
+								url = dijit.byId(ldPlugin._uniqueId + "_urlInput");
+								desc = dijit.byId(ldPlugin._uniqueId + "_textInput");
+								target = dijit.byId(ldPlugin._uniqueId + "_targetSelect");
+
+								oldUrl = url.get("value");
+								doh.is("http://www.example.com/example.html", oldUrl, "old url");
+								oldDesc = desc.get("value");
+								doh.is("This is an example link in the page.", oldDesc, "old desc");
+
+								url.set("value", oldUrl + "_2");
+								desc.set("value", oldDesc + "_2");
+								target.set("value", "_blank");
+							}), 2000);
+							doh.robot.mouseMoveAt(function(){ return dijit.byId(ldPlugin._uniqueId + "_setButton").domNode; }, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Now check the state!
+								var newVal = editor.get("value");
+								doh.isNot(value, newVal, "Verify the contents have changed.");
+								doh.t(new RegExp("href=(\"|\')"+ oldUrl + "_2" + "(\"|\')").test(newVal), "Verifying URL has been inserted.");
+								doh.f(new RegExp("href=(\"|\')"+ oldUrl + "(\"|\')").test(newVal), "Verifying old URL is gone.");
+								doh.f(new RegExp("<li><a").test(newVal), "Verifying insert did not occur in the top li (IE test for selection restore.)");
+								doh.t(new RegExp("target=(\"|\')_blank(\"|\')").test(newVal), "Verifying target has been inserted.");
+								doh.f(new RegExp("target=(\"|\')_self(\"|\')").test(newVal), "Verifying old target is removed.");
+								doh.t(new RegExp(">" + oldDesc + "_2<").test(newVal), "Verifying description has been inserted.");
+								doh.f(new RegExp(">" + oldDesc + "<").test(newVal), "Verifying old desc is gone.");
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Anchor Tag: Blank description invalid.",
+						timeout: 20000,
+						setUp: function(){
+							node = dojo.byId("exampleLink", editor.document);
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								// Okay, select the text of the hyperlink so we can then perform an edit on it.
+								editor._sCall("selectElement", [node]);
+							}),500);
+							doh.robot.mouseMoveAt(ldPlugin.button.domNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							var url, desc, target, oldDesc;
+							doh.robot.sequence(d.getTestErrback(function(){
+								url = dijit.byId(ldPlugin._uniqueId + "_urlInput");
+								desc = dijit.byId(ldPlugin._uniqueId + "_textInput");
+								target = dijit.byId(ldPlugin._uniqueId + "_targetSelect");
+								oldDesc = desc.get("value");
+								desc.set("value", "");
+								target.set("value", "_blank");
+							}), 2000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								// Verify setting the content is disabled.
+								var setButton = dijit.byId(ldPlugin._uniqueId + "_setButton");
+								doh.t(setButton.get("disabled"));
+							}), 500);
+							doh.robot.mouseMoveAt(function(){ return dijit.byId(ldPlugin._uniqueId + "_cancelButton").domNode; }, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Now check the state!
+								var newVal = editor.get("value");
+								doh.is(value, newVal, "Verify the contents have not changed.");
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Anchor Tag: Test invalid url.",
+						timeout: 20000,
+						setUp: function(){
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt(ldPlugin.button.domNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							var url, desc, target;
+							doh.robot.sequence(d.getTestErrback(function(){
+								url = dijit.byId(ldPlugin._uniqueId + "_urlInput");
+								desc = dijit.byId(ldPlugin._uniqueId + "_textInput");
+								target = dijit.byId(ldPlugin._uniqueId + "_targetSelect");
+								url.set("value", "http://this is not/valid/bad.html");
+								desc.set("value", "This is my example relative link.");
+								target.set("value", "_blank");
+								url.validate();
+							}),2000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								var setButton = dijit.byId(ldPlugin._uniqueId + "_setButton");
+								doh.t(setButton.get("disabled"), "set button disabled");
+							}), 500);
+							doh.robot.mouseMoveAt(function(){ return dijit.byId(ldPlugin._uniqueId + "_cancelButton").domNode; }, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.mouseMoveAt(editor.iframe, 500, 0, 0, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Now check the state!
+								var newVal = editor.get("value");
+								doh.is(value, newVal, "Verify the contents have not changed.");
+								doh.f(url.isValid(), "url.isValid");
+							}), 2000);
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Anchor Tag: Test mailto url.",
+						timeout: 20000,
+						setUp: function(){
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt(ldPlugin.button.domNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							var url, desc, target;
+							doh.robot.sequence(d.getTestErrback(function(){
+								url = dijit.byId(ldPlugin._uniqueId + "_urlInput");
+								desc = dijit.byId(ldPlugin._uniqueId + "_textInput");
+								target = dijit.byId(ldPlugin._uniqueId + "_targetSelect");
+								url.set("value", "mailto:johndoe@example.com");
+								desc.set("value", "Send a message to John.");
+								target.set("value", "_blank");
+								url.isValid();
+							}),2000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								var setButton = dijit.byId(ldPlugin._uniqueId + "_setButton");
+								doh.t(!setButton.get("disabled"));
+							}), 500);
+							doh.robot.mouseMoveAt(function(){ return dijit.byId(ldPlugin._uniqueId + "_setButton").domNode; }, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.mouseMoveAt(editor.iframe, 500, 0, 0, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Now check the state!
+								var newVal = editor.get("value");
+								doh.t((newVal.indexOf("mailto:johndoe@example.com") > -1), "Verify the contents have the mailto url present, newVal=" + newVal);
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Anchor Tag: Test mailto url prepend.",
+						timeout: 20000,
+						setUp: function(){
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt(ldPlugin.button.domNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							var url, desc, target;
+							doh.robot.sequence(d.getTestErrback(function(){
+								url = dijit.byId(ldPlugin._uniqueId + "_urlInput");
+								desc = dijit.byId(ldPlugin._uniqueId + "_textInput");
+								target = dijit.byId(ldPlugin._uniqueId + "_targetSelect");
+								url.set("value", "johndoe@example.com");
+								desc.set("value", "Send a message to John.");
+								target.set("value", "_blank");
+								url.isValid();
+							}),2000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								var setButton = dijit.byId(ldPlugin._uniqueId + "_setButton");
+								doh.t(!setButton.get("disabled"));
+							}), 500);
+							doh.robot.mouseMoveAt(function(){ return dijit.byId(ldPlugin._uniqueId + "_setButton").domNode; }, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.mouseMoveAt(editor.iframe, 500, 0, 0, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Now check the state!
+								var newVal = editor.get("value");
+								doh.t((newVal.indexOf("mailto:johndoe@example.com") > -1), "Verify the contents have the mailto url present, newVal=" + newVal);
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Anchor Tag: Test invalid mailto url.",
+						timeout: 20000,
+						setUp: function(){
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt(ldPlugin.button.domNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							var url, desc, target;
+							doh.robot.sequence(d.getTestErrback(function(){
+								url = dijit.byId(ldPlugin._uniqueId + "_urlInput");
+								desc = dijit.byId(ldPlugin._uniqueId + "_textInput");
+								target = dijit.byId(ldPlugin._uniqueId + "_targetSelect");
+								url.set("value", "mailto:john doe@example.com");
+								desc.set("value", "Send a message to John.");
+								target.set("value", "_blank");
+								url.isValid();
+							}),2000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								var setButton = dijit.byId(ldPlugin._uniqueId + "_setButton");
+								doh.t(setButton.get("disabled"));
+							}), 500);
+							doh.robot.mouseMoveAt(function(){ return dijit.byId(ldPlugin._uniqueId + "_cancelButton").domNode; }, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.mouseMoveAt(editor.iframe, 500, 0, 0, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								var newVal = editor.get("value");
+								doh.t(newVal === value, "Verify the contents have not changed.");
+								doh.f(url.isValid());
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Anchor Tag: Double-Click opens TooltipDialog.",
+						timeout: 20000,
+						setUp: function(){
+							node = dojo.byId("exampleLink", editor.document);
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(ldPlugin && ldPlugin.dropDown && ldPlugin.dropDown.domNode, "found TooltipDialog");
+								doh.t(isHidden(ldPlugin.dropDown.domNode),  "tooltip dialog is hidden");
+							}));
+
+							// Double click
+							doh.robot.mouseMoveAt(node, 500, 1);
+							doh.robot.mouseClick({left:true}, 100);
+							doh.robot.mouseClick({left:true}, 100);
+
+							var f;
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isVisible(ldPlugin.dropDown.domNode),  "tooltip dialog is visible");
+								f = dijit.getFocus();
+								doh.isNot(null, f && f.node, "is focus");
+								var w = dijit.getEnclosingWidget(f.node);
+								doh.isNot(null, w, "focused on widget");
+								var val = w.get("value");
+								doh.t(new RegExp("http://www.example.com/example.html").test(val), "Verifying the contents contained link url");
+							}), 2000);
+
+							// Clicking the <input> shouldn't close TooltipDialog (#14395)
+							doh.robot.mouseMoveAt(function(){ return f.node; }, 500, 1);
+							doh.robot.mouseClick({left:true}, 100);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible(ldPlugin.dropDown.domNode),  "tooltip dialog still visible");
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							ldPlugin.dropDown.onCancel();
+							if(editor){editor.set("value", value);}
+						}
+					}
+				]);
+
+				doh.register("ImgDialog_tests", [
+					function setUp(){
+						editor = dijit.byId("editor");
+						ldPlugin = null;
+						var edPlugins = editor._plugins, i;
+						for(i = 0; i < edPlugins.length; i++){
+							var p = edPlugins[i];
+							if(p.declaredClass === "dijit._editor.plugins.ImgLinkDialog"){
+								ldPlugin = p;
+								break;
+							}
+						}
+						doh.t(ldPlugin != null, "found image dialog.");
+						value = editor.get("value");
+					},
+
+					{
+						name: "Image Tag: Create a new image",
+						timeout: 20000,
+						setUp: function(){
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt(ldPlugin.button.domNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							var url, desc;
+							doh.robot.sequence(d.getTestErrback(function(){
+								url = dijit.byId(ldPlugin._uniqueId + "_urlInput");
+								desc = dijit.byId(ldPlugin._uniqueId + "_textInput");
+								url.set("value", "./sample2.jpg");
+								desc.set("value", "This is my example image 2.");
+							}),2000);
+							doh.robot.mouseMoveAt(function(){ return dijit.byId(ldPlugin._uniqueId + "_setButton").domNode; }, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Now check the state!
+								var newVal = editor.get("value");
+								doh.isNot(value, newVal, "Verify the contents have changed.");
+								doh.f(new RegExp("<li><img").test(newVal), "Verifying insert did not occur in the top li (IE test for selection restore.): " + newVal);
+								doh.t(new RegExp("src=(\"|\').*/sample2.jpg(\"|\')").test(newVal), "Verifying URL has been inserted: " + newVal);
+								doh.t(new RegExp("alt=(\"|\')This is my example image 2.(\"|\')").test(newVal), "Verifying alt description has been inserted: " + newVal);
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Image Tag: Verify http:// is prepended",
+						timeout: 20000,
+						setUp: function(){
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt(ldPlugin.button.domNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							var url, desc;
+							doh.robot.sequence(d.getTestErrback(function(){
+								url = dijit.byId(ldPlugin._uniqueId + "_urlInput");
+								desc = dijit.byId(ldPlugin._uniqueId + "_textInput");
+								url.set("value", "example.com/example.jpg");
+								desc.set("value", "This is my example image.");
+							}),2000);
+							doh.robot.mouseMoveAt(function(){ return dijit.byId(ldPlugin._uniqueId + "_setButton").domNode; }, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Now check the state!
+								var newVal = editor.get("value");
+								doh.isNot(value, newVal, "Verify the contents have changed.");
+								doh.f(new RegExp("<li><img").test(newVal), "Verifying insert did not occur in the top li (IE test for selection restore.)");
+								doh.t(new RegExp("src=(\"|\')http://example.com/example.jpg(\"|\')").test(newVal), "Verifying URL has been inserted.");
+								doh.t(new RegExp("alt=(\"|\')This is my example image.(\"|\')").test(newVal), "Verifying alt description has been inserted.");
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Image Tag: Update existing image tag",
+						timeout: 20000,
+						setUp: function(){
+							node = dojo.byId("exampleImage", editor.document);
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestErrback(function(){editor._sCall("selectElement", [node]);}), 500);
+							doh.robot.mouseMoveAt(ldPlugin.button.domNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							var url, desc, oldDesc;
+							doh.robot.sequence(d.getTestErrback(function(){
+								url = dijit.byId(ldPlugin._uniqueId + "_urlInput");
+								desc = dijit.byId(ldPlugin._uniqueId + "_textInput");
+								doh.t(new RegExp(".*/sample.jpg").test(url.get("value")), "original URL");
+								oldDesc = desc.get("value");
+								doh.is("Sample Image", oldDesc, "original alt-text");
+								url.set("value", "./sample2.jpg");
+								desc.set("value", oldDesc + "_2");
+							}), 2000);
+							doh.robot.mouseMoveAt(function(){ return dijit.byId(ldPlugin._uniqueId + "_setButton").domNode; }, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Now check the state!
+								var newVal = editor.get("value");
+								doh.isNot(value, newVal, "Verify the contents have changed.");
+								doh.f(new RegExp("<li><img").test(newVal), "Verifying insert did not occur in the top li (IE test for selection restore.)");
+								doh.t(new RegExp("src=(\"|\')"+ ".*/sample2.jpg" + "(\"|\')").test(newVal), "Verifying URL has been inserted.");
+								doh.f(new RegExp("src=(\"|\')"+ ".*/sample.jpg" + "(\"|\')").test(newVal), "Verifying old URL is gone.");
+								doh.t(new RegExp("alt=(\"|\")" + oldDesc + "_2" + "(\"|\')").test(newVal), "Verifying description has been inserted.");
+								doh.f(new RegExp("alt=(\"|\")" + oldDesc + "(\"|\')").test(newVal), "Verifying old desc is gone.");
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Image Tag: Blank description valid.",
+						timeout: 20000,
+						setUp: function(){
+							node = dojo.byId("exampleImage", editor.document);
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestErrback(function(){editor._sCall("selectElement", [node]);}), 500);
+							doh.robot.mouseMoveAt(ldPlugin.button.domNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							var url, desc, oldDesc;
+							doh.robot.sequence(d.getTestErrback(function(){
+								url = dijit.byId(ldPlugin._uniqueId + "_urlInput");
+								desc = dijit.byId(ldPlugin._uniqueId + "_textInput");
+								oldDesc = desc.get("value");
+								url.set("value", "./sample2.jpg");
+								desc.set("value", "");
+							}), 2000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								// Verify setting the content is disabled.
+								var setButton = dijit.byId(ldPlugin._uniqueId + "_setButton");
+								doh.f(setButton.get("disabled"));
+							}), 500);
+							doh.robot.mouseMoveAt(function(){ return dijit.byId(ldPlugin._uniqueId + "_setButton").domNode; }, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Now check the state!
+								var newVal = editor.get("value");
+								doh.isNot(value, newVal, "Verify the contents have changed.");
+								doh.f(new RegExp("<li><img").test(newVal), "Verifying insert did not occur in the top li (IE test for selection restore.), newVal=" + newVal);
+								doh.t(new RegExp("src=(\"|\')"+ ".*/sample2.jpg" + "(\"|\')").test(newVal), "Verifying URL has been inserted.");
+								doh.f(new RegExp("src=(\"|\')"+ ".*/sample.jpg" + "(\"|\')").test(newVal), "Verifying old URL is gone.");
+								doh.t(new RegExp("alt=(\"|\")(\"|\')").test(newVal), "Verifying description has been cleared.");
+								doh.f(new RegExp("alt=(\"|\")" + oldDesc + "(\"|\')").test(newVal), "Verifying old desc is gone.");
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Image Tag: Single click selects image.",
+						timeout: 20000,
+						setUp: function(){
+							node = dojo.byId("exampleImage", editor.document);
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt(node, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								var selectedElement = editor._sCall("getSelectedElement", [null]);
+								doh.t(selectedElement != null);
+								var tag = selectedElement.tagName? selectedElement.tagName.toLowerCase() : "";
+								doh.is("img", tag);
+								doh.is("exampleImage", selectedElement.getAttribute("id"));
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "Image Tag: Double-Click opens TooltipDialog.",
+						timeout: 20000,
+						setUp: function(){
+							node = dojo.byId("exampleImage", editor.document);
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(ldPlugin && ldPlugin.dropDown && ldPlugin.dropDown.domNode, "found TooltipDialog");
+								doh.t(isHidden(ldPlugin.dropDown.domNode),  "tooltip dialog is hidden");
+							}));
+
+							// Double click
+							doh.robot.mouseMoveAt(node, 500, 1);
+							doh.robot.mouseClick({left:true}, 100);
+							doh.robot.mouseClick({left:true}, 100);
+
+							var f;
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isVisible(ldPlugin.dropDown.domNode),  "tooltip dialog is visible");
+
+								f = dijit.getFocus();
+								doh.t(f.node, "got focus");
+
+								var w = dijit.getEnclosingWidget(f.node);
+								doh.t(w, "found enclosing widget");
+
+								var val = w.get("value");
+								doh.t(new RegExp(".*/sample.jpg").test(val), "Verifying the contents contained image name");
+							}), 2000);
+
+							// Clicking the <input> shouldn't close TooltipDialog (#14395)
+							doh.robot.mouseMoveAt(function(){ return f.node; }, 500, 1);
+							doh.robot.mouseClick({left:true}, 100);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible(ldPlugin.dropDown.domNode),  "tooltip dialog still visible");
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							ldPlugin.dropDown.onCancel();
+							if(editor){editor.set("value", value);}
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

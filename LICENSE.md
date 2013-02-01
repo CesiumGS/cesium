@@ -43,7 +43,7 @@ http://hg.grauw.nl/grauw-lib
 >
 > Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-### when
+### when.js
 
 https://github.com/cujojs/when
 
@@ -74,7 +74,7 @@ https://github.com/ashima/webgl-noise
 
 ### proceduraltextures
 
-http://openglinsights.git.sourceforge.net/git/gitweb.cgi?p=openglinsights/openglinsights;a=tree;f=proceduraltextures
+https://github.com/OpenGLInsights/OpenGLInsightsCode/tree/master/Chapter%2007%20Procedural%20Textures%20in%20GLSL/library
 
 > Copyright (C) 2011 by Stefan Gustavson and Ian McEwan
 >
@@ -100,6 +100,22 @@ https://github.com/sole/tween.js
 >
 > THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+### php.js
+
+https://github.com/kvz/phpjs
+
+> php.js is copyright 2012 Kevin van Zonneveld.
+>
+> Portions copyright Brett Zamir (http://brett-zamir.me), Kevin van Zonneveld (http://kevin.vanzonneveld.net), Onno Marsman, Theriault, Michael White (http://getsprink.com), Waldo Malqui Silva, Paulo Freitas, Jack, Jonas Raoni Soares Silva (http://www.jsfromhell.com), Philip Peterson, Legaev Andrey, Ates Goral (http://magnetiq.com), Alex, Ratheous, Martijn Wieringa, Rafa? Kukawski (http://blog.kukawski.pl), lmeyrick (https://sourceforge.net/projects/bcmath-js/), Nate, Philippe Baumann, Enrique Gonzalez, Webtoolkit.info (http://www.webtoolkit.info/), Carlos R. L. Rodrigues (http://www.jsfromhell.com), Ash Searle (http://hexmen.com/blog/), Jani Hartikainen, travc, Ole Vrijenhoek, Erkekjetter, Michael Grier, Rafa? Kukawski (http://kukawski.pl), Johnny Mast (http://www.phpvrouwen.nl), T.Wild, d3x, http://stackoverflow.com/questions/57803/how-to-convert-decimal-to-hex-in-javascript, Rafa? Kukawski (http://blog.kukawski.pl/), stag019, pilus, WebDevHobo (http://webdevhobo.blogspot.com/), marrtins, GeekFG (http://geekf  blogspot.com), Andrea Giammarchi (http://webreflection.blogspot.com), Arpad Ray (mailto:arpad@php.net), gorthaur, Paul Smith, Tim de Koning (http://www.kingsquare.nl), Joris, Oleg Eremeev, Steve Hilder, majak, gettimeofday, KELAN, Josh Fraser (http://onlineaspect.com/2007/06/08/auto-detect-a-time-zone-with-javascript/), Marc Palau, Martin (http://www.erlenwiese.de/), Breaking Par Consulting Inc (http://www.breakingpar.com/bkp/home.nsf/0/87256B280015193F87256CFB006C45F7), Chris, Mirek Slugen, saulius, Alfonso Jimenez (http://www.alfonsojimenez.com), Diplom@t (http://difane.com/), felix, Mailfaker (http://www.weedem.fr/), Tyler Akins (http://rumkin.com), Caio Ariede (http://caioariede.com), Robin, Kankrelune (http://www.webfaktory.info/), Karol Kowalski, Imgen Tata (http://www.myipdf.com/), mdsjack (http://www.mdsjack.bo.it), Dreamer, Felix Geisendoerfer (http://www.debuggable.com/felix), Lars Fischer, AJ, David, Aman Gupta, Michael White, Public Domain (http://www.json.org/json2.js), Steven Levithan (http://b  g.stevenlevithan.com), Sakimori, Pellentesque Malesuada, Thunder.m, Dj (http://phpjs.org/functions/htmlentities:425#comment_134018), Steve Clay, David James, Francois, class_exists, nobbler, T. Wild, Itsacon (http://www.itsacon.net/), date, Ole Vrijenhoek (http://www.nervous.nl/), Fox, Raphael (Ao RUDLER), Marco, noname, Mateusz "loonquawl" Zalega, Frank Forte, Arno, ger, mktime, john (http://www.jd-tech.net), Nick Kolosov (http://sammy.ru), marc andreu, Scott Cariss, Douglas Crockford (http://javascript.crockford.com), madipta, Slawomir Kaniecki, ReverseSyntax, Nathan, Alex Wilson, kenneth, Bayron Guevara, Adam Wallner (http://web2.bitbaro.hu/), paulo kuong, jmweb, Lincoln Ramsay, djmix, Pyerre, Jon Hohle, Thiago Mata (http://thiagomata.blog.com), lmeyrick (https://sourceforge.net/projects/bcmath-js/this.), Linuxworld, duncan, Gilbert, Sanjoy Roy, Shingo, sankai, Oskar Larsson H?gfeldt (http://oskar-lh.name/), Denny Wardhana, 0m3r, Everlasto, Subhasis Deb, josh, jd, Pier Paolo Ramon (http://www.mastersoup.c  /), P, merabi, Soren Hansen, Eugene Bulkin (http://doubleaw.com/), Der Simon (http://innerdom.sourceforge.net/), echo is bad, Ozh, XoraX (http://www.xorax.info), EdorFaus, JB, J A R, Marc Jansen, Francesco, LH, Stoyan Kyosev (http://www.svest.org/), nord_ua, omid (http://phpjs.org/functions/380:380#comment_137122), Brad Touesnard, MeEtc (http://yass.meetcweb.com), Peter-Paul Koch (http://www.quirksmode.org/js/beat.html), Olivier Louvignes (http://mg-crea.com/), T0bsn, Tim Wiel, Bryan Elliott, Jalal Berrami, Martin, JT, David Randall, Thomas Beaucourt (http://www.webapp.fr), taith, vlado houba, Pierre-Luc Paour, Kristof Coomans (SCK-CEN Belgian Nucleair Research Centre), Martin Pool, Kirk Strobeck, Rick Waldron, Brant Messenger (http://www.brantmessenger.com/), Devan Penner-Woelk, Saulo Vallory, Wagner B. Soares, Artur Tchernychev, Valentina De Rosa, Jason Wong (http://carrot.org/), Christoph, Daniel Esteban, strftime, Mick@el, rezna, Simon Willison (http://simonwillison.net), Anton Ongson, Gabriel Paderni, M rco van Oort, penutbutterjelly, Philipp Lenssen, Bjorn Roesbeke (http://www.bjornroesbeke.be/), Bug?, Eric Nagel, Tomasz Wesolowski, Evertjan Garretsen, Bobby Drake, Blues (http://tech.bluesmoon.info/), Luke Godfrey, Pul, uestla, Alan C, Ulrich, Rafal Kukawski, Yves Sucaet, sowberry, Norman "zEh" Fuchs, hitwork, Zahlii, johnrembo, Nick Callen, Steven Levithan (stevenlevithan.com), ejsanders, Scott Baker, Brian Tafoya (http://www.premasolutions.com/), Philippe Jausions (http://pear.php.net/user/jausions), Aidan Lister (http://aidanlister.com/), Rob, e-mike, HKM, ChaosNo1, metjay, strcasecmp, strcmp, Taras Bogach, jpfle, Alexander Ermolaev (http://snippets.dzone.com/user/AlexanderErmolaev), DxGx, kilops, Orlando, dptr1988, Le Torbi, James (http://www.james-bell.co.uk/), Pedro Tainha (http://www.pedrotainha.com), James, Arnout Kazemier (http://www.3rd-Eden.com), Chris McMacken, gabriel paderni, Yannoo, FGFEmperor, baris ozdil, Tod Gentille, Greg Frazier, jakes, 3D-GRAF, Allan Jensen (http://www.winternet.no), Ho ard Yeend, Benjamin Lupton, davook, daniel airton wermann (http://wermann.com.br), Atli T¨®r, Maximusya, Ryan W Tenney (http://ryan.10e.us), Alexander M Beedie, fearphage (http://http/my.opera.com/fearphage/), Nathan Sepulveda, Victor, Matteo, Billy, stensi, Cord, Manish, T.J. Leahy, Riddler (http://www.frontierwebdev.com/), Rafa? Kukawski, FremyCompany, Matt Bradley, Tim de Koning, Luis Salazar (http://www.freaky-media.com/), Diogo Resende, Rival, Andrej Pavlovic, Garagoth, Le Torbi (http://www.letorbi.de/), Dino, Josep Sanz (http://www.ws3.es/), rem, Russell Walker (http://www.nbill.co.uk/), Jamie Beck (http://www.terabit.ca/), setcookie, Michael, YUI Library: http://developer.yahoo.com/yui/docs/YAHOO.util.DateLocale.html, Blues at http://hacks.bluesmoon.info/strftime/strftime.js, Ben (http://benblume.co.uk/), DtTvB (http://dt.in.th/2008-09-16.string-length-in-bytes.html), Andreas, William, meo, incidence, Cagri Ekin, Amirouche, Amir Habibi (http://www.residence-mixte.com/), Luke Smith (http://lucassmith.na  ), Kheang Hok Chin (http://www.distantia.ca/), Jay Klehr, Lorenzo Pisani, Tony, Yen-Wei Liu, Greenseed, mk.keck, Leslie Hoare, dude, booeyOH, Ben Bryan
+>
+> Licensed under the MIT (MIT-LICENSE.txt) license.
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL KEVIN VAN ZONNEVELD BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OROTHER DEALINGS IN THE SOFTWARE.
+
 ### fontmetrics.js
 
 https://github.com/Pomax/fontmetrics.js
@@ -111,48 +127,6 @@ https://github.com/Pomax/fontmetrics.js
 > The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 >
 > THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-### Microsoft
-
-http://msdn.microsoft.com/en-us/library/bb259689.aspx
-
-http://msdn.microsoft.com/en-us/cc300389.aspx#O
-
-> Copyright (c) 2006-2009 Microsoft Corporation.  All rights reserved.
->
-> MICROSOFT LIMITED PUBLIC LICENSE
->
-> This license governs use of code marked as "sample" or "example" available on this web site without a license agreement, as provided under the section above titled "NOTICE SPECIFIC TO SOFTWARE AVAILABLE ON THIS WEB SITE." If you use such code (the "software"), you accept this license. If you do not accept the license, do not use the software.
->
-> 1. Definitions
->
-> The terms "reproduce," "reproduction," "derivative works," and "distribution" have the same meaning here as under U.S. copyright law.
->
-> A "contribution" is the original software, or any additions or changes to the software.
->
-> A "contributor" is any person that distributes its contribution under this license.
->
-> "Licensed patents" are a contributor's patent claims that read directly on its contribution.
->
-> 2. Grant of Rights
->
-> (A) Copyright Grant - Subject to the terms of this license, including the license conditions and limitations in section 3, each contributor grants you a non-exclusive, worldwide, royalty-free copyright license to reproduce its contribution, prepare derivative works of its contribution, and distribute its contribution or any derivative works that you create.
->
-> (B) Patent Grant - Subject to the terms of this license, including the license conditions and limitations in section 3, each contributor grants you a non-exclusive, worldwide, royalty-free license under its licensed patents to make, have made, use, sell, offer for sale, import, and/or otherwise dispose of its contribution in the software or derivative works of the contribution in the software.
->
-> 3. Conditions and Limitations
->
-> (A) No Trademark License- This license does not grant you rights to use any contributors' name, logo, or trademarks.
->
-> (B) If you bring a patent claim against any contributor over patents that you claim are infringed by the software, your patent license from such contributor to the software ends automatically.
->
-> (C) If you distribute any portion of the software, you must retain all copyright, patent, trademark, and attribution notices that are present in the software.
->
-> (D) If you distribute any portion of the software in source code form, you may do so only under this license by including a complete copy of this license with your distribution. If you distribute any portion of the software in compiled or object code form, you may only do so under a license that complies with this license.
->
-> (E) The software is licensed "as-is." You bear the risk of using it. The contributors give no express warranties, guarantees or conditions. You may have additional consumer rights under your local laws which this license cannot change. To the extent permitted under your local laws, the contributors exclude the implied warranties of merchantability, fitness for a particular purpose and non-infringement.
->
-> (F) Platform Limitation - The licenses granted in sections 2(A) and 2(B) extend only to the software or derivative works that you create that run on a Microsoft Windows operating system product.
 
 ### almond
 
@@ -195,184 +169,22 @@ http://pivotal.github.com/jasmine/
 >
 > THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+### es5-shim
+
+https://github.com/kriskowal/es5-shim
+
+> Copyright 2009, 2010 Kristopher Michael Kowal. All rights reserved.
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 Example Applications
 ====================
 
 The Cesium example applications include the following third-party libraries and data.
-
-### Ace Ajax.org Cloud9 Editor
-
-http://ace.ajax.org/
-
-> Licensed under the tri-license MPL/LGPL/GPL.
->
-> MOZILLA PUBLIC LICENSE Version 1.1
->
-> ---------------
->
-> 1. Definitions.
->
-> 1.0.1. "Commercial Use" means distribution or otherwise making the Covered Code available to a third party.
->
-> 1.1. "Contributor" means each entity that creates or contributes to the creation of Modifications.
->
-> 1.2. "Contributor Version" means the combination of the Original Code, prior Modifications used by a Contributor, and the Modifications made by that particular Contributor.
->
-> 1.3. "Covered Code" means the Original Code or Modifications or the combination of the Original Code and Modifications, in each case including portions thereof.
->
-> 1.4. "Electronic Distribution Mechanism" means a mechanism generally accepted in the software development community for the electronic transfer of data.
->
-> 1.5. "Executable" means Covered Code in any form other than Source Code.
->
-> 1.6. "Initial Developer" means the individual or entity identified as the Initial Developer in the Source Code notice required by Exhibit A.
->
-> 1.7. "Larger Work" means a work which combines Covered Code or portions thereof with code not governed by the terms of this License.
->
-> 1.8. "License" means this document.
->
-> 1.8.1. "Licensable" means having the right to grant, to the maximum extent possible, whether at the time of the initial grant or subsequently acquired, any and all of the rights conveyed herein.
->
-> 1.9. "Modifications" means any addition to or deletion from the substance or structure of either the Original Code or any previous Modifications. When Covered Code is released as a series of files, a Modification is: A. Any addition to or deletion from the contents of a file containing Original Code or previous Modifications.
->
-> B. Any new file that contains any part of the Original Code or previous Modifications.
->
-> 1.10. "Original Code" means Source Code of computer software code which is described in the Source Code notice required by Exhibit A as Original Code, and which, at the time of its release under this License is not already Covered Code governed by this License.
->
-> 1.10.1. "Patent Claims" means any patent claim(s), now owned or hereafter acquired, including without limitation, method, process, and apparatus claims, in any patent Licensable by grantor.
->
-> 1.11. "Source Code" means the preferred form of the Covered Code for making modifications to it, including all modules it contains, plus any associated interface definition files, scripts used to control compilation and installation of an Executable, or source code differential comparisons against either the Original Code or another well known, available Covered Code of the Contributor's choice. The Source Code can be in a compressed or archival form, provided the appropriate decompression or de-archiving software is widely available for no charge.
->
-> 1.12. "You" (or "Your") means an individual or a legal entity exercising rights under, and complying with all of the terms of, this License or a future version of this License issued under Section 6.1. For legal entities, "You" includes any entity which controls, is controlled by, or is under common control with You. For purposes of this definition, "control" means (a) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (b) ownership of more than fifty percent (50%) of the outstanding shares or beneficial ownership of such entity.
->
-> 2. Source Code License.
->
-> 2.1. The Initial Developer Grant. The Initial Developer hereby grants You a world-wide, royalty-free, non-exclusive license, subject to third party intellectual property claims: (a) under intellectual property rights (other than patent or trademark) Licensable by Initial Developer to use, reproduce, modify, display, perform, sublicense and distribute the Original Code (or portions thereof) with or without Modifications, and/or as part of a Larger Work; and
->
-> (b) under Patents Claims infringed by the making, using or selling of Original Code, to make, have made, use, practice, sell, and offer for sale, and/or otherwise dispose of the Original Code (or portions thereof).
->
-> (c) the licenses granted in this Section 2.1(a) and (b) are effective on the date Initial Developer first distributes Original Code under the terms of this License.
->
-> (d) Notwithstanding Section 2.1(b) above, no patent license is granted: 1) for code that You delete from the Original Code; 2) separate from the Original Code; or 3) for infringements caused by: i) the modification of the Original Code or ii) the combination of the Original Code with other software or devices.
->
-> 2.2. Contributor Grant. Subject to third party intellectual property claims, each Contributor hereby grants You a world-wide, royalty-free, non-exclusive license
->
-> (a) under intellectual property rights (other than patent or trademark) Licensable by Contributor, to use, reproduce, modify, display, perform, sublicense and distribute the Modifications created by such Contributor (or portions thereof) either on an unmodified basis, with other Modifications, as Covered Code and/or as part of a Larger Work; and
->
-> (b) under Patent Claims infringed by the making, using, or selling of Modifications made by that Contributor either alone and/or in combination with its Contributor Version (or portions of such combination), to make, use, sell, offer for sale, have made, and/or otherwise dispose of: 1) Modifications made by that Contributor (or portions thereof); and 2) the combination of Modifications made by that Contributor with its Contributor Version (or portions of such combination).
->
-> (c) the licenses granted in Sections 2.2(a) and 2.2(b) are effective on the date Contributor first makes Commercial Use of the Covered Code.
->
-> (d) Notwithstanding Section 2.2(b) above, no patent license is granted: 1) for any code that Contributor has deleted from the Contributor Version; 2) separate from the Contributor Version; 3) for infringements caused by: i) third party modifications of Contributor Version or ii) the combination of Modifications made by that Contributor with other software (except as part of the Contributor Version) or other devices; or 4) under Patent Claims infringed by Covered Code in the absence of Modifications made by that Contributor.
->
-> 3. Distribution Obligations.
->
-> 3.1. Application of License. The Modifications which You create or to which You contribute are governed by the terms of this License, including without limitation Section 2.2. The Source Code version of Covered Code may be distributed only under the terms of this License or a future version of this License released under Section 6.1, and You must include a copy of this License with every copy of the Source Code You distribute. You may not offer or impose any terms on any Source Code version that alters or restricts the applicable version of this License or the recipients' rights hereunder. However, You may include an additional document offering the additional rights described in Section 3.5.
->
-> 3.2. Availability of Source Code. Any Modification which You create or to which You contribute must be made available in Source Code form under the terms of this License either on the same media as an Executable version or via an accepted Electronic Distribution Mechanism to anyone to whom you made an Executable version available; and if made available via Electronic Distribution Mechanism, must remain available for at least twelve (12) months after the date it initially became available, or at least six (6) months after a subsequent version of that particular Modification has been made available to such recipients. You are responsible for ensuring that the Source Code version remains available even if the Electronic Distribution Mechanism is maintained by a third party.
->
-> 3.3. Description of Modifications. You must cause all Covered Code to which You contribute to contain a file documenting the changes You made to create that Covered Code and the date of any change. You must include a prominent statement that the Modification is derived, directly or indirectly, from Original Code provided by the Initial Developer and including the name of the Initial Developer in (a) the Source Code, and (b) in any notice in an Executable version or related documentation in which You describe the origin or ownership of the Covered Code.
->
-> 3.4. Intellectual Property Matters (a) Third Party Claims. If Contributor has knowledge that a license under a third party's intellectual property rights is required to exercise the rights granted by such Contributor under Sections 2.1 or 2.2, Contributor must include a text file with the Source Code distribution titled "LEGAL" which describes the claim and the party making the claim in sufficient detail that a recipient will know whom to contact. If Contributor obtains such knowledge after the Modification is made available as described in Section 3.2, Contributor shall promptly modify the LEGAL file in all copies Contributor makes available thereafter and shall take other steps (such as notifying appropriate mailing lists or newsgroups) reasonably calculated to inform those who received the Covered Code that new knowledge has been obtained.
->
-> (b) Contributor APIs. If Contributor's Modifications include an application programming interface and Contributor has knowledge of patent licenses which are reasonably necessary to implement that API, Contributor must also include this information in the LEGAL file.
->
-> (c) Representations. Contributor represents that, except as disclosed pursuant to Section 3.4(a) above, Contributor believes that Contributor's Modifications are Contributor's original creation(s) and/or Contributor has sufficient rights to grant the rights conveyed by this License.
->
-> 3.5. Required Notices. You must duplicate the notice in Exhibit A in each file of the Source Code. If it is not possible to put such notice in a particular Source Code file due to its structure, then You must include such notice in a location (such as a relevant directory) where a user would be likely to look for such a notice. If You created one or more Modification(s) You may add your name as a Contributor to the notice described in Exhibit A. You must also duplicate this License in any documentation for the Source Code where You describe recipients' rights or ownership rights relating to Covered Code. You may choose to offer, and to charge a fee for, warranty, support, indemnity or liability obligations to one or more recipients of Covered Code. However, You may do so only on Your own behalf, and not on behalf of the Initial Developer or any Contributor. You must make it absolutely clear than any such warranty, support, indemnity or liability obligation is offered by You alone, and You hereby agree to indemnify the Initial Developer and every Contributor for any liability incurred by the Initial Developer or such Contributor as a result of warranty, support, indemnity or liability terms You offer.
->
-> 3.6. Distribution of Executable Versions. You may distribute Covered Code in Executable form only if the requirements of Section 3.1-3.5 have been met for that Covered Code, and if You include a notice stating that the Source Code version of the Covered Code is available under the terms of this License, including a description of how and where You have fulfilled the obligations of Section 3.2. The notice must be conspicuously included in any notice in an Executable version, related documentation or collateral in which You describe recipients' rights relating to the Covered Code. You may distribute the Executable version of Covered Code or ownership rights under a license of Your choice, which may contain terms different from this License, provided that You are in compliance with the terms of this License and that the license for the Executable version does not attempt to limit or alter the recipient's rights in the Source Code version from the rights set forth in this License. If You distribute the Executable version under a different license You must make it absolutely clear that any terms which differ from this License are offered by You alone, not by the Initial Developer or any Contributor. You hereby agree to indemnify the Initial Developer and every Contributor for any liability incurred by the Initial Developer or such Contributor as a result of any such terms You offer.
->
-> 3.7. Larger Works. You may create a Larger Work by combining Covered Code with other code not governed by the terms of this License and distribute the Larger Work as a single product. In such a case, You must make sure the requirements of this License are fulfilled for the Covered Code.
->
-> 4. Inability to Comply Due to Statute or Regulation.
->
-> If it is impossible for You to comply with any of the terms of this License with respect to some or all of the Covered Code due to statute, judicial order, or regulation then You must: (a) comply with the terms of this License to the maximum extent possible; and (b) describe the limitations and the code they affect. Such description must be included in the LEGAL file described in Section 3.4 and must be included with all distributions of the Source Code. Except to the extent prohibited by statute or regulation, such description must be sufficiently detailed for a recipient of ordinary skill to be able to understand it.
->
-> 5. Application of this License.
->
-> This License applies to code to which the Initial Developer has attached the notice in Exhibit A and to related Covered Code.
->
-> 6. Versions of the License.
->
-> 6.1. New Versions. Netscape Communications Corporation ("Netscape") may publish revised and/or new versions of the License from time to time. Each version will be given a distinguishing version number.
->
-> 6.2. Effect of New Versions. Once Covered Code has been published under a particular version of the License, You may always continue to use it under the terms of that version. You may also choose to use such Covered Code under the terms of any subsequent version of the License published by Netscape. No one other than Netscape has the right to modify the terms applicable to Covered Code created under this License.
->
-> 6.3. Derivative Works. If You create or use a modified version of this License (which you may only do in order to apply it to code which is not already Covered Code governed by this License), You must (a) rename Your license so that the phrases "Mozilla", "MOZILLAPL", "MOZPL", "Netscape", "MPL", "NPL" or any confusingly similar phrase do not appear in your license (except to note that your license differs from this License) and (b) otherwise make it clear that Your version of the license contains terms which differ from the Mozilla Public License and Netscape Public License. (Filling in the name of the Initial Developer, Original Code or Contributor in the notice described in Exhibit A shall not of themselves be deemed to be modifications of this License.)
->
-> 7. DISCLAIMER OF WARRANTY.
->
-> COVERED CODE IS PROVIDED UNDER THIS LICENSE ON AN "AS IS" BASIS, WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, WITHOUT LIMITATION, WARRANTIES THAT THE COVERED CODE IS FREE OF DEFECTS, MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE OR NON-INFRINGING. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE COVERED CODE IS WITH YOU. SHOULD ANY COVERED CODE PROVE DEFECTIVE IN ANY RESPECT, YOU (NOT THE INITIAL DEVELOPER OR ANY OTHER CONTRIBUTOR) ASSUME THE COST OF ANY NECESSARY SERVICING, REPAIR OR CORRECTION. THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE. NO USE OF ANY COVERED CODE IS AUTHORIZED HEREUNDER EXCEPT UNDER THIS DISCLAIMER.
->
-> 8. TERMINATION.
->
-> 8.1. This License and the rights granted hereunder will terminate automatically if You fail to comply with terms herein and fail to cure such breach within 30 days of becoming aware of the breach. All sublicenses to the Covered Code which are properly granted shall survive any termination of this License. Provisions which, by their nature, must remain in effect beyond the termination of this License shall survive.
->
-> 8.2. If You initiate litigation by asserting a patent infringement claim (excluding declatory judgment actions) against Initial Developer or a Contributor (the Initial Developer or Contributor against whom You file such action is referred to as "Participant") alleging that:
->
-> (a) such Participant's Contributor Version directly or indirectly infringes any patent, then any and all rights granted by such Participant to You under Sections 2.1 and/or 2.2 of this License shall, upon 60 days notice from Participant terminate prospectively, unless if within 60 days after receipt of notice You either: (i) agree in writing to pay Participant a mutually agreeable reasonable royalty for Your past and future use of Modifications made by such Participant, or (ii) withdraw Your litigation claim with respect to the Contributor Version against such Participant. If within 60 days of notice, a reasonable royalty and payment arrangement are not mutually agreed upon in writing by the parties or the litigation claim is not withdrawn, the rights granted by Participant to You under Sections 2.1 and/or 2.2 automatically terminate at the expiration of the 60 day notice period specified above.
->
-> (b) any software, hardware, or device, other than such Participant's Contributor Version, directly or indirectly infringes any patent, then any rights granted to You by such Participant under Sections 2.1(b) and 2.2(b) are revoked effective as of the date You first made, used, sold, distributed, or had made, Modifications made by that Participant.
->
-> 8.3. If You assert a patent infringement claim against Participant alleging that such Participant's Contributor Version directly or indirectly infringes any patent where such claim is resolved (such as by license or settlement) prior to the initiation of patent infringement litigation, then the reasonable value of the licenses granted by such Participant under Sections 2.1 or 2.2 shall be taken into account in determining the amount or value of any payment or license.
->
-> 8.4. In the event of termination under Sections 8.1 or 8.2 above, all end user license agreements (excluding distributors and resellers) which have been validly granted by You or any distributor hereunder prior to termination shall survive termination.
->
-> 9. LIMITATION OF LIABILITY.
->
-> UNDER NO CIRCUMSTANCES AND UNDER NO LEGAL THEORY, WHETHER TORT (INCLUDING NEGLIGENCE), CONTRACT, OR OTHERWISE, SHALL YOU, THE INITIAL DEVELOPER, ANY OTHER CONTRIBUTOR, OR ANY DISTRIBUTOR OF COVERED CODE, OR ANY SUPPLIER OF ANY OF SUCH PARTIES, BE LIABLE TO ANY PERSON FOR ANY INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES OF ANY CHARACTER INCLUDING, WITHOUT LIMITATION, DAMAGES FOR LOSS OF GOODWILL, WORK STOPPAGE, COMPUTER FAILURE OR MALFUNCTION, OR ANY AND ALL OTHER COMMERCIAL DAMAGES OR LOSSES, EVEN IF SUCH PARTY SHALL HAVE BEEN INFORMED OF THE POSSIBILITY OF SUCH DAMAGES. THIS LIMITATION OF LIABILITY SHALL NOT APPLY TO LIABILITY FOR DEATH OR PERSONAL INJURY RESULTING FROM SUCH PARTY'S NEGLIGENCE TO THE EXTENT APPLICABLE LAW PROHIBITS SUCH LIMITATION. SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OR LIMITATION OF INCIDENTAL OR CONSEQUENTIAL DAMAGES, SO THIS EXCLUSION AND LIMITATION MAY NOT APPLY TO YOU.
->
-> 10. U.S. GOVERNMENT END USERS.
->
-> The Covered Code is a "commercial item," as that term is defined in 48 C.F.R. 2.101 (Oct. 1995), consisting of "commercial computer software" and "commercial computer software documentation," as such terms are used in 48 C.F.R. 12.212 (Sept. 1995). Consistent with 48 C.F.R. 12.212 and 48 C.F.R. 227.7202-1 through 227.7202-4 (June 1995), all U.S. Government End Users acquire Covered Code with only those rights set forth herein.
->
-> 11. MISCELLANEOUS.
->
-> This License represents the complete agreement concerning subject matter hereof. If any provision of this License is held to be unenforceable, such provision shall be reformed only to the extent necessary to make it enforceable. This License shall be governed by California law provisions (except to the extent applicable law, if any, provides otherwise), excluding its conflict-of-law provisions. With respect to disputes in which at least one party is a citizen of, or an entity chartered or registered to do business in the United States of America, any litigation relating to this License shall be subject to the jurisdiction of the Federal Courts of the Northern District of California, with venue lying in Santa Clara County, California, with the losing party responsible for costs, including without limitation, court costs and reasonable attorneys' fees and expenses. The application of the United Nations Convention on Contracts for the International Sale of Goods is expressly excluded. Any law or regulation which provides that the language of a contract shall be construed against the drafter shall not apply to this License.
->
-> 12. RESPONSIBILITY FOR CLAIMS.
->
-> As between Initial Developer and the Contributors, each party is responsible for claims and damages arising, directly or indirectly, out of its utilization of rights under this License and You agree to work with Initial Developer and Contributors to distribute such responsibility on an equitable basis. Nothing herein is intended or shall be deemed to constitute any admission of liability.
->
-> 13. MULTIPLE-LICENSED CODE.
->
-> Initial Developer may designate portions of the Covered Code as "Multiple-Licensed". "Multiple-Licensed" means that the Initial Developer permits you to utilize portions of the Covered Code under Your choice of the NPL or the alternative licenses, if any, specified by the Initial Developer in the file described in Exhibit A.
->
->     EXHIBIT A -Mozilla Public License.
->
->          ``The contents of this file are subject to the Mozilla Public License
->          Version 1.1 (the "License"); you may not use this file except in
->          compliance with the License. You may obtain a copy of the License at
->          http://www.mozilla.org/MPL/
->
->          Software distributed under the License is distributed on an "AS IS"
->          basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
->          License for the specific language governing rights and limitations
->          under the License.
->
->          The Original Code is ______________________________________.
->
->          The Initial Developer of the Original Code is ________________________.
->          Portions created by ______________________ are Copyright (C) ______
->          _______________________. All Rights Reserved.
->
->          Contributor(s): ______________________________________.
->
->          Alternatively, the contents of this file may be used under the terms
->          of the _____ license (the  "[___] License"), in which case the
->          provisions of [______] License are applicable instead of those
->          above.  If you wish to allow use of your version of this file only
->          under the terms of the [____] License and not to allow others to use
->          your version of this file under the MPL, indicate your decision by
->          deleting  the provisions above and replace  them with the notice and
->          other provisions required by the [___] License.  If you do not delete
->          the provisions above, a recipient may use your version of this file
->          under either the MPL or the [___] License."
->
->          [NOTE: The text of this Exhibit A may differ slightly from the text of
->          the notices in the Source Code files of the Original Code. You should
->          use the text of this Exhibit A rather than the text found in the
->          Original Code Source Code for Your Modifications.]
 
 ### Dojo Toolkit
 
@@ -390,17 +202,39 @@ http://dojotoolkit.org/
 >
 > THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-### JS Beautifier
+### CodeMirror
 
-https://github.com/einars/js-beautify
+http://codemirror.net/
 
-> Copyright (c) 2009 - 2011, Einar Lielmanis
+> Copyright (C) 2012 by Marijn Haverbeke <marijnh@gmail.com>
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 >
 > The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 >
 > THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+>
+> Please note that some subdirectories of the CodeMirror distribution include their own LICENSE files, and are released under different licences.
+
+### JSHint
+
+http://www.jshint.com/
+
+> JSHint, by JSHint Community.
+>
+> Licensed under the same slightly modified MIT license that JSLint is. It stops evil-doers everywhere.
+>
+> JSHint is a derivative work of JSLint:
+>
+> Copyright (c) 2002 Douglas Crockford (www.JSLint.com)
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+>
+> The Software shall be used for Good, not Evil.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. JSHint was forked from the 2010-12-16 edition of JSLint.
 
 ### Public domain data from Natural Earth
 
@@ -415,3 +249,12 @@ Copyright (c) by James Hastings-Trew
 http://planetpixelemporium.com/
 
 Copyright Information:  http://planetpixelemporium.com/planets.html
+
+### Sky box images from NASA
+
+http://maps.jpl.nasa.gov/stars.html
+
+http://svs.gsfc.nasa.gov/vis/a000000/a003500/a003572/
+
+Terms of use: http://www.nasa.gov/audience/formedia/features/MP_Photo_Guidelines.html
+

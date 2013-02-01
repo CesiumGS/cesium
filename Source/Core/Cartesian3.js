@@ -455,6 +455,42 @@ define([
         return Math.atan2(sine, cosine);
     };
 
+    var mostOrthogonalAxisScratch = new Cartesian3();
+    /**
+     * Returns the axis that is most orthogonal to the provided Cartesian.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} cartesian The Cartesian on which to find the most orthogonal axis.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The most orthogonal axis.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian3.mostOrthogonalAxis = function(cartesian, result) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required.');
+        }
+
+        var f = Cartesian3.normalize(cartesian, mostOrthogonalAxisScratch);
+        Cartesian3.abs(f, f);
+
+        if (f.x <= f.y) {
+            if (f.x <= f.z) {
+                result = Cartesian3.clone(Cartesian3.UNIT_X, result);
+            } else {
+                result = Cartesian3.clone(Cartesian3.UNIT_Z, result);
+            }
+        } else {
+            if (f.y <= f.z) {
+                result = Cartesian3.clone(Cartesian3.UNIT_Y, result);
+            } else {
+                result = Cartesian3.clone(Cartesian3.UNIT_Z, result);
+            }
+        }
+
+        return result;
+    };
+
     /**
      * Compares the provided Cartesians componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -757,6 +793,17 @@ define([
      */
     Cartesian3.prototype.angleBetween = function(right) {
         return Cartesian3.angleBetween(this, right);
+    };
+
+    /**
+     * Returns the axis that is most orthogonal to the this Cartesian.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The most orthogonal axis.
+     */
+    Cartesian3.prototype.mostOrthogonalAxis = function(result) {
+        return Cartesian3.mostOrthogonalAxis(this, result);
     };
 
     /**

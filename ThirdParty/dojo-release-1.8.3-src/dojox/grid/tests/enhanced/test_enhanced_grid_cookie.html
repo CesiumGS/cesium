@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Test Cookie plugin of dojox.grid.EnhancedGrid</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<link rel=stylesheet href="support/common.css"/>
+	<style type="text/css">
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+			padding: 0.5em;
+		}
+		.title {
+			text-align:center;
+			margin:1em;
+		}
+ 		#grid{
+ 			width: 100em;
+			height: 30em;
+		}
+		/*Sample - overwrite default cell style
+		.claro .dojoxGridCell{
+			border-color: transparent #D5CDB5 #D5CDB5 transparent !important;
+		}
+		.dj_ie6 .claro .dojoxGridCell{
+			border: 1px solid #F1F1F1 !important;
+		}*/
+	</style>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+	<script type="text/javascript" src="../../../../dijit/tests/_testCommon.js"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojox.grid.EnhancedGrid");
+		dojo.require("dojox.grid.enhanced.plugins.NestedSorting");
+		dojo.require("dojox.grid.enhanced.plugins.DnD");
+		dojo.require("dojox.grid.enhanced.plugins.Cookie");
+		
+		var layout = [
+			{//first view
+				defaultCell: {editable: true, type: dojox.grid.cells._Widget},
+				cells:
+				[
+					{ field: "id", width: 4},
+					{ field: "Genre", width: '5'},
+					{ field: "Artist", width: '5'},
+					{ field: "Year", width: '5'},
+					{ field: "Album", width: '5'}
+				]
+			},
+			{//second view
+				cells:
+				[
+					{ field: "Name", width: '17'},
+					{ field: "Length", width: '6'},
+					{ field: "Track", width: '6'},
+					{ field: "Composer", width: '15'}
+				]
+			}
+		];
+		var plugins = {
+			cookie: true,
+			nestedSorting: true,
+			dnd: true
+		};
+		function enableCookie(key, toEnable){
+			console.log(key,toEnable);
+			dijit.byId("grid").setCookieEnabled(key || toEnable, toEnable);
+		}
+		
+	</script>
+	<script type="text/javascript" src="support/test_write_store_music.js"></script>
+</head>
+<body class="claro">
+	<h1 class="title">dojox.grid.EnhancedGrid - Cookie</h1>
+	<div style="margin:10px;">
+		<h3>Options to persist preferences when refreshing the page:</h3><br/>
+		<input type="checkbox" onclick="enableCookie(null, !this.checked)"> Do not persist anything<br />
+		<input type="checkbox" onclick="enableCookie('columnWidth',!this.checked)" /> Do not persist column width<br />
+		<input type="checkbox" onclick="enableCookie('sortOrder',!this.checked)" /> Do not persist sorting order<br />
+		<input type="checkbox" onclick="enableCookie('columnOrder',!this.checked)" /> Do not persist column arrangement<br />
+		<input type="checkbox" onclick="(dijit.byId('grid')).layout.setColumnVisibility(1, !this.checked)" /> Hide column with idx = 1<br /> 
+	</div>
+	<div id="gridContainer">
+		<div id="grid" dojoType="dojox.grid.EnhancedGrid" store="test_store[0]" structure="layout" plugins="plugins"></div>
+	</div><br/>
+	<p><strong>Note:</strong> To see the tundra theme, just append <b style="color:blue;">?theme=tundra</b> to the URL.</p>
+</body>
+</html>

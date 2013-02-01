@@ -136,4 +136,118 @@ defineSuite([
         expect(layer2.isBaseLayer()).toEqual(false);
         expect(layer3.isBaseLayer()).toEqual(false);
     });
+
+    it('add throws when layer is undefined', function() {
+        var collection = new ImageryLayerCollection();
+
+        expect(function() {
+            collection.add(undefined);
+        }).toThrow();
+    });
+
+    it('addImageryProvider throws when imageryProvider is undefined', function() {
+        var collection = new ImageryLayerCollection();
+
+        expect(function() {
+            collection.addImageryProvider(undefined);
+        }).toThrow();
+    });
+
+    it('add throws when index is outside valid range', function() {
+        var collection = new ImageryLayerCollection();
+        var layer1 = new ImageryLayer(fakeProvider);
+        var layer2 = new ImageryLayer(fakeProvider);
+
+        expect(function() {
+            collection.add(layer1, 1);
+        }).toThrow();
+
+        expect(function() {
+            collection.add(layer1, -1);
+        }).toThrow();
+
+        expect(function() {
+            collection.add(layer1, 0);
+        }).not.toThrow();
+
+        expect(function() {
+            collection.add(layer2, -1);
+        }).toThrow();
+
+        expect(function() {
+            collection.add(layer2, 2);
+        }).toThrow();
+
+        expect(function() {
+            collection.add(layer2, 0);
+        }).not.toThrow();
+    });
+
+    it('remove ignores request to remove a layer that does not exist in the collection', function() {
+        var collection = new ImageryLayerCollection();
+        var layer1 = new ImageryLayer(fakeProvider);
+        expect(function() {
+            collection.remove(layer1);
+        }).not.toThrow();
+    });
+
+    it('contains works as expected', function() {
+        var collection = new ImageryLayerCollection();
+        var layer1 = new ImageryLayer(fakeProvider);
+        var layer2 = new ImageryLayer(fakeProvider);
+
+        expect(collection.contains(layer1)).toEqual(false);
+        expect(collection.contains(layer2)).toEqual(false);
+
+        collection.add(layer1);
+
+        expect(collection.contains(layer1)).toEqual(true);
+        expect(collection.contains(layer2)).toEqual(false);
+
+        collection.add(layer2);
+
+        expect(collection.contains(layer1)).toEqual(true);
+        expect(collection.contains(layer2)).toEqual(true);
+
+        collection.remove(layer1);
+
+        expect(collection.contains(layer1)).toEqual(false);
+        expect(collection.contains(layer2)).toEqual(true);
+
+        collection.remove(layer2);
+
+        expect(collection.contains(layer1)).toEqual(false);
+        expect(collection.contains(layer2)).toEqual(false);
+    });
+
+    it('get throws if index is not provided', function() {
+        var collection = new ImageryLayerCollection();
+        expect(function() {
+            collection.get();
+        }).toThrow();
+    });
+
+    it('throws when raising an undefined layer', function() {
+        var collection = new ImageryLayerCollection();
+
+        expect(function() {
+            collection.raise(undefined);
+        }).toThrow();
+    });
+
+    it('throws when raising a layer not in the collection', function() {
+        var collection = new ImageryLayerCollection();
+        var layer1 = new ImageryLayer(fakeProvider);
+
+        expect(function() {
+            collection.raise(layer1);
+        }).toThrow();
+    });
+
+    it('reports whether or not it is destroyed', function() {
+        var collection = new ImageryLayerCollection();
+        expect(collection.isDestroyed()).toEqual(false);
+        collection.destroy();
+        expect(collection.isDestroyed()).toEqual(true);
+    });
 });

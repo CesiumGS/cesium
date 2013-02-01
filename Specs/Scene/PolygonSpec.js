@@ -3,6 +3,8 @@ defineSuite([
          'Scene/Polygon',
          'Specs/createContext',
          'Specs/destroyContext',
+         'Specs/createCamera',
+         'Specs/createFrameState',
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
@@ -14,12 +16,15 @@ defineSuite([
          'Core/Extent',
          'Core/Matrix4',
          'Core/Math',
+         'Core/JulianDate',
          'Renderer/BufferUsage',
          'Scene/SceneMode'
      ], function(
          Polygon,
          createContext,
          destroyContext,
+         createCamera,
+         createFrameState,
          frameState,
          pick,
          render,
@@ -31,6 +36,7 @@ defineSuite([
          Extent,
          Matrix4,
          CesiumMath,
+         JulianDate,
          BufferUsage,
          SceneMode) {
     "use strict";
@@ -51,15 +57,8 @@ defineSuite([
     beforeEach(function() {
         polygon = new Polygon();
 
-        var camera = {
-            eye : new Cartesian3(1.02, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z
-        };
-
         us = context.getUniformState();
-        us.setView(Matrix4.fromCamera(camera));
-        us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
+        us.update(createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
     });
 
     afterEach(function() {
@@ -122,21 +121,18 @@ defineSuite([
                             new Cartographic.fromDegrees(-112.0, 36.0, 0.0)
                         ]),
                         holes : [{
-                                positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                                    new Cartographic.fromDegrees(-120.0, 36.5, 0.0),
-                                    new Cartographic.fromDegrees(-114.0, 36.5, 0.0),
-                                    new Cartographic.fromDegrees(-114.0, 38.5, 0.0),
-                                    new Cartographic.fromDegrees(-120.0, 38.5, 0.0)
-                                ])
+                            positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                                new Cartographic.fromDegrees(-120.0, 36.5, 0.0),
+                                new Cartographic.fromDegrees(-114.0, 36.5, 0.0),
+                                new Cartographic.fromDegrees(-114.0, 38.5, 0.0),
+                                new Cartographic.fromDegrees(-120.0, 38.5, 0.0)
+                            ])
                         }]
                 }]
         };
 
         polygon.configureFromPolygonHierarchy(hierarchy);
-        expect(polygon._polygonHierarchy).toBeDefined();
-        expect(function() {
-            polygon._vertices.update(context, polygon._createMeshes(), polygon.bufferUsage);
-        }).not.toThrow();
+        expect(polygon.getPositions()).not.toBeDefined();
     });
 
     it('configure polygon from clockwise hierarchy', function() {
@@ -155,21 +151,18 @@ defineSuite([
                             new Cartographic.fromDegrees(-122.0, 39.0, 0.0)
                         ]),
                         holes : [{
-                                positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                                    new Cartographic.fromDegrees(-120.0, 36.5, 0.0),
-                                    new Cartographic.fromDegrees(-120.0, 38.5, 0.0),
-                                    new Cartographic.fromDegrees(-114.0, 38.5, 0.0),
-                                    new Cartographic.fromDegrees(-114.0, 36.5, 0.0)
-                                ])
+                            positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                                new Cartographic.fromDegrees(-120.0, 36.5, 0.0),
+                                new Cartographic.fromDegrees(-120.0, 38.5, 0.0),
+                                new Cartographic.fromDegrees(-114.0, 38.5, 0.0),
+                                new Cartographic.fromDegrees(-114.0, 36.5, 0.0)
+                            ])
                         }]
                 }]
         };
 
         polygon.configureFromPolygonHierarchy(hierarchy);
-        expect(polygon._polygonHierarchy).toBeDefined();
-        expect(function() {
-            polygon._vertices.update(context, polygon._createMeshes(), polygon.bufferUsage);
-        }).not.toThrow();
+        expect(polygon.getPositions()).not.toBeDefined();
     });
 
     it('configureFromPolygonHierarchy throws with less than three positions', function() {
@@ -193,7 +186,6 @@ defineSuite([
 
         polygon.configureExtent(extent);
         expect(polygon.getPositions()).not.toBeDefined();
-
     });
 
     it('gets the default color', function() {
@@ -234,18 +226,6 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
-    it('renders without lighting', function() {
-        // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
-        polygon = createPolygon();
-        polygon.affectedByLighting = false;
-
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, polygon);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-    });
-
     it('renders extent', function() {
         // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
 
@@ -272,7 +252,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
-    it('does not render', function() {
+    it('does not render when show is false', function() {
         polygon = createPolygon();
         polygon.material.uniforms.color = {
             red : 1.0,
@@ -289,6 +269,59 @@ defineSuite([
         polygon = new Polygon();
         polygon.ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.granularity = CesiumMath.toRadians(20.0);
+        expect(render(context, frameState, polygon)).toEqual(0);
+    });
+
+    it('does not render without positions due to duplicates', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+
+        polygon = new Polygon();
+        polygon.ellipsoid = ellipsoid;
+        polygon.setPositions([
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0))
+        ]);
+
+        expect(render(context, frameState, polygon)).toEqual(0);
+    });
+
+    it('does not render without hierarchy positions due to duplicates', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var hierarchy = {
+                positions : ellipsoid.cartographicArrayToCartesianArray([
+                    new Cartographic.fromDegrees(1.0, 1.0, 0.0),
+                    new Cartographic.fromDegrees(1.0, 1.0, 0.0),
+                    new Cartographic.fromDegrees(1.0, 1.0, 0.0)
+                ]),
+                holes : [{
+                        positions : ellipsoid.cartographicArrayToCartesianArray([
+                            new Cartographic.fromDegrees(0.0, 0.0, 0.0),
+                            new Cartographic.fromDegrees(0.0, 0.0, 0.0),
+                            new Cartographic.fromDegrees(0.0, 0.0, 0.0)
+                        ])
+                }]
+        };
+
+        polygon = new Polygon();
+        polygon.ellipsoid = ellipsoid;
+        polygon.configureFromPolygonHierarchy(hierarchy);
+
+        expect(render(context, frameState, polygon)).toEqual(0);
+    });
+
+    it('does not render with empty extent', function() {
+        var extent = new Extent(
+            0.0,
+            0.0,
+            0.0,
+            0.0
+        );
+
+        polygon = new Polygon();
+        polygon.ellipsoid = Ellipsoid.UNIT_SPHERE;
+        polygon.configureExtent(extent);
+
         expect(render(context, frameState, polygon)).toEqual(0);
     });
 
@@ -343,7 +376,7 @@ defineSuite([
 
         var sphere = BoundingSphere.fromPoints(projectedPositions);
         sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
-        expect(boundingVolume.center.equalsEpsilon(sphere.center, CesiumMath.EPSILON9)).toEqual(true);
+        expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON9);
         expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON9);
     }
 
@@ -439,4 +472,4 @@ defineSuite([
             render(context, frameState, polygon);
         }).toThrow();
     });
-});
+}, 'WebGL');

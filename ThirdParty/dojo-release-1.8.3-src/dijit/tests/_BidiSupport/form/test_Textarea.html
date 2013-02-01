@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">	
+		<title>Textarea with _BidiSupport</title>
+
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/themes/claro/claro.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			data-dojo-config="parseOnLoad: true, isDebug: true">
+		</script>		
+
+		<script type="text/javascript">
+			dojo.require("dijit.dijit");
+			dojo.require("dijit.form.Textarea");
+//			dojo.require("dijit.layout.ContentPane");
+//			dojo.require("dijit.layout.TabContainer");
+			dojo.require("dojo.parser");
+			dojo.require("dijit._BidiSupport");
+		</script>
+
+	</head>
+	<body class="claro" >
+		<h1 class="testTitle">Textarea Widget Test with _BidiSupport</h1>
+		<h2>Various dijit.form.Textarea widgets. Type something inside</h2>
+		<label for="blankL">dijit.form.Textarea, initially blank, textDir="ltr":</label>
+		<br>
+		<textarea data-dojo-type="dijit/form/Textarea" id="blankL" data-dojo-props='textDir:"ltr", style:{width:"50em"}'></textarea>
+		<br>
+		<label for="blankR">dijit.form.Textarea, initially blank, textDir="rtl":</label>
+		<br>
+		<textarea data-dojo-type="dijit/form/Textarea" id="blankR" data-dojo-props='textDir:"rtl", style:{width:"50em"}'></textarea>
+		<br>
+		<label for="blankA">dijit.form.Textarea, initially blank, textDir="auto":</label>
+		<br>
+		<textarea data-dojo-type="dijit/form/Textarea" id="blankA" data-dojo-props='textDir:"auto", style:{width:"50em"}'></textarea>
+		<br>
+
+		<label for="programmaticLTR">dijit.form.Textarea in TabContainer, programmatically created with custom styling:</label><br>
+
+		<label>textDir="ltr":</label>
+		<textarea id="programmaticLTR"></textarea><br>
+			
+		<label >textDir="rtl":</label>
+		<textarea id="programmaticRTL"></textarea><br>
+			
+		<label >textDir="auto":</label>
+		<textarea id="programmaticAuto"></textarea>
+
+		<br>
+		<input id="buttonHebrew" type="button" value="change value - Hebrew"
+			onclick="programmaticTextareaLTR.set('value', '&#1506;&#1512;&#1498; &#1495;&#1491;&#1513;!'); programmaticTextareaRTL.set('value', '&#1506;&#1512;&#1498; &#1495;&#1491;&#64298;!'); programmaticTextareaAuto.set('value', '&#1506;&#1512;&#1498; &#1495;&#1491;&#64298;!');"
+		/>
+
+		<br>
+		<input id="buttonEnglish" type="button" value="change value - English"
+			onclick="programmaticTextareaLTR.set('value', 'New Value!'); programmaticTextareaRTL.set('value', 'New Value!'); programmaticTextareaAuto.set('value', 'New Value!');"
+		/>
+
+		<br>
+		<script type="text/javascript">
+			// See if we can make a widget in script
+			dojo.ready(function(){
+				programmaticTextareaLTR = new dijit.form.Textarea({
+					id: "programmaticLTR",
+					name: "programmaticTextAreaLTR",
+					cols: "60",
+					textDir:"ltr",
+					value: "created programatically!", 
+					style: "border:5px solid gray;padding:11px;margin:7px;"
+				}, "programmaticLTR");
+
+				programmaticTextareaRTL = new dijit.form.Textarea({
+					id: "programmaticRTL",
+					name: "programmaticTextAreaRTL",
+					cols: "60",
+					textDir:"rtl",
+					value: "created programatically!",
+					style: "border:5px solid gray;padding:11px;margin:7px;"
+				}, "programmaticRTL");
+
+				programmaticTextareaAuto = new dijit.form.Textarea({
+					id: "programmaticAuto",
+					name: "programmaticTextAreaAuto",
+					cols: "60",
+					textDir:"auto",
+					value: "created programatically!",
+					style: "border:5px solid gray;padding:11px;margin:7px;"
+				}, "programmaticAuto");
+
+			});
+		</script>
+		<br>
+
+		<label for="largeTextAreaLTR">dijit.form.Textarea, initially full with English text <b>textDir = "ltr"</b>:</label>
+		<br>
+		<textarea data-dojo-type="dijit/form/Textarea" id="largeTextAreaLTR" data-dojo-props='name:"largeTextAreaLTR",
+			textDir:"ltr", style:{width:"50em"}'> This is a textarea with a LOT of content.
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla &#8234;facilisi.&#8236;
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla &#8234;facilisi.&#8236;
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla &#8234;facilisi.&#8236;
+
+This is the end.</textarea>
+		<br>
+		<br>
+		<label for="largeTextAreaRTL">dijit.form.Textarea, initially full with Hebrew text <b>textDir = "rtl"</b>:</label>
+		<br>
+		<textarea data-dojo-type="dijit/form/Textarea" id="largeTextAreaRTL" data-dojo-props='name:"largeTextAreaRTL",
+			textDir:"rtl", style:{width:"50em"}'> &#1494;&#1492;&#1493; &#1496;&#1511;&#1505;&#1496; &#1488;&#1512;&#1493;&#1498; &#1489;&#1506;&#1497;&#1489;&#1512;&#1497;&#1514;!!!		
+		
+&#1500;&#1493;&#1512;&#1501; &#1488;&#1497;&#1508;&#1505;&#1493;&#1501; &#1491;&#1493;&#1500;&#1493;&#1512; &#1505;&#1497;&#1496; &#1488;&#1502;&#1496;, &#1511;&#1493;&#1504;&#1505;&#1511;&#1496;&#1493;&#1512;&#1512; &#1488;&#1491;&#1497;&#1508;&#1497;&#1505;&#1497;&#1504;&#1490; &#1488;&#1500;&#1497;&#1514; &#1505;&#1495;&#1496;&#1497;&#1512; &#1489;&#1500;&#1493;&#1489;&#1511;. &#1514;&#1510;&#1496;&#1504;&#1508;&#1500; &#1489;&#1500;&#1497;&#1504;&#1491;&#1493; &#1500;&#1502;&#1512;&#1511;&#1500; &#1488;&#1505; &#1500;&#1499;&#1497;&#1502;&#1508;&#1493;, &#1491;&#1493;&#1500;, &#1510;&#1493;&#1496; &#1493;&#1502;&#1506;&#1497;&#1493;&#1496; - &#1500;&#1508;&#1514;&#1497;&#1506;&#1501; &#1489;&#1512;&#1513;&#1490; - &#1493;&#1500;&#1514;&#1497;&#1506;&#1501; &#1490;&#1491;&#1491;&#1497;&#1513;. &#1511;&#1493;&#1493;&#1497;&#1494; &#1491;&#1493;&#1502;&#1493;&#1512; &#1500;&#1497;&#1488;&#1502;&#1493;&#1501; &#1489;&#1500;&#1497;&#1504;&#1498; &#1512;&#1493;&#1490;&#1510;&#1492;. &#1500;&#1508;&#1502;&#1506;&#1496; &#1502;&#1493;&#1505;&#1503; &#1502;&#1504;&#1514;. &#1490;&#1493;&#1500;&#1512; &#1502;&#1493;&#1504;&#1508;&#1512;&#1512; &#1505;&#1493;&#1489;&#1512;&#1496; &#1500;&#1493;&#1512;&#1501; &#1513;&#1489;&#1510;&#1511; &#1497;&#1492;&#1493;&#1500;, &#1500;&#1499;&#1504;&#1493;&#1509; &#1489;&#1506;&#1512;&#1497;&#1512; &#1490;&#1511; &#1500;&#1497;&#1509;, &#1493;&#1513;&#1489;&#1506;&#1490;&#1496; &#1500;&#1497;&#1489;&#1501; &#1505;&#1493;&#1500;&#1490;&#1511;. &#1489;&#1512;&#1488;&#1497;&#1496; &#1493;&#1500;&#1495;&#1514; &#1510;&#1493;&#1512;&#1511; &#1502;&#1493;&#1504;&#1495;&#1507;, &#1489;&#1490;&#1493;&#1512;&#1502;&#1497; &#1502;&#1490;&#1502;&#1513;. &#1514;&#1512;&#1489;&#1504;&#1498; &#1493;&#1505;&#1514;&#1506;&#1491; &#1500;&#1499;&#1504;&#1493; &#1505;&#1514;&#1513;&#1501; &#1492;&#1513;&#1502;&#1492; - &#1500;&#1514;&#1499;&#1497; &#1502;&#1493;&#1512;&#1490;&#1501; &#1489;&#1493;&#1512;&#1511;? &#1500;&#1514;&#1497;&#1490; &#1497;&#1513;&#1489;&#1506;&#1505;.
+
+&#1500;&#1493;&#1512;&#1501; &#1488;&#1497;&#1508;&#1505;&#1493;&#1501; &#1491;&#1493;&#1500;&#1493;&#1512; &#1505;&#1497;&#1496; &#1488;&#1502;&#1496;, &#1511;&#1493;&#1504;&#1505;&#1511;&#1496;&#1493;&#1512;&#1512; &#1488;&#1491;&#1497;&#1508;&#1497;&#1505;&#1497;&#1504;&#1490; &#1488;&#1500;&#1497;&#1514; &#1505;&#1495;&#1496;&#1497;&#1512; &#1489;&#1500;&#1493;&#1489;&#1511;. &#1514;&#1510;&#1496;&#1504;&#1508;&#1500; &#1489;&#1500;&#1497;&#1504;&#1491;&#1493; &#1500;&#1502;&#1512;&#1511;&#1500; &#1488;&#1505; &#1500;&#1499;&#1497;&#1502;&#1508;&#1493;, &#1491;&#1493;&#1500;, &#1510;&#1493;&#1496; &#1493;&#1502;&#1506;&#1497;&#1493;&#1496; - &#1500;&#1508;&#1514;&#1497;&#1506;&#1501; &#1489;&#1512;&#1513;&#1490; - &#1493;&#1500;&#1514;&#1497;&#1506;&#1501; &#1490;&#1491;&#1491;&#1497;&#1513;. &#1511;&#1493;&#1493;&#1497;&#1494; &#1491;&#1493;&#1502;&#1493;&#1512; &#1500;&#1497;&#1488;&#1502;&#1493;&#1501; &#1489;&#1500;&#1497;&#1504;&#1498; &#1512;&#1493;&#1490;&#1510;&#1492;. &#1500;&#1508;&#1502;&#1506;&#1496; &#1502;&#1493;&#1505;&#1503; &#1502;&#1504;&#1514;. &#1490;&#1493;&#1500;&#1512; &#1502;&#1493;&#1504;&#1508;&#1512;&#1512; &#1505;&#1493;&#1489;&#1512;&#1496; &#1500;&#1493;&#1512;&#1501; &#1513;&#1489;&#1510;&#1511; &#1497;&#1492;&#1493;&#1500;, &#1500;&#1499;&#1504;&#1493;&#1509; &#1489;&#1506;&#1512;&#1497;&#1512; &#1490;&#1511; &#1500;&#1497;&#1509;, &#1493;&#1513;&#1489;&#1506;&#1490;&#1496; &#1500;&#1497;&#1489;&#1501; &#1505;&#1493;&#1500;&#1490;&#1511;. &#1489;&#1512;&#1488;&#1497;&#1496; &#1493;&#1500;&#1495;&#1514; &#1510;&#1493;&#1512;&#1511; &#1502;&#1493;&#1504;&#1495;&#1507;, &#1489;&#1490;&#1493;&#1512;&#1502;&#1497; &#1502;&#1490;&#1502;&#1513;. &#1514;&#1512;&#1489;&#1504;&#1498; &#1493;&#1505;&#1514;&#1506;&#1491; &#1500;&#1499;&#1504;&#1493; &#1505;&#1514;&#1513;&#1501; &#1492;&#1513;&#1502;&#1492; - &#1500;&#1514;&#1499;&#1497; &#1502;&#1493;&#1512;&#1490;&#1501; &#1489;&#1493;&#1512;&#1511;? &#1500;&#1514;&#1497;&#1490; &#1497;&#1513;&#1489;&#1506;&#1505;.
+
+&#1500;&#1493;&#1512;&#1501; &#1488;&#1497;&#1508;&#1505;&#1493;&#1501; &#1491;&#1493;&#1500;&#1493;&#1512; &#1505;&#1497;&#1496; &#1488;&#1502;&#1496;, &#1511;&#1493;&#1504;&#1505;&#1511;&#1496;&#1493;&#1512;&#1512; &#1488;&#1491;&#1497;&#1508;&#1497;&#1505;&#1497;&#1504;&#1490; &#1488;&#1500;&#1497;&#1514; &#1505;&#1495;&#1496;&#1497;&#1512; &#1489;&#1500;&#1493;&#1489;&#1511;. &#1514;&#1510;&#1496;&#1504;&#1508;&#1500; &#1489;&#1500;&#1497;&#1504;&#1491;&#1493; &#1500;&#1502;&#1512;&#1511;&#1500; &#1488;&#1505; &#1500;&#1499;&#1497;&#1502;&#1508;&#1493;, &#1491;&#1493;&#1500;, &#1510;&#1493;&#1496; &#1493;&#1502;&#1506;&#1497;&#1493;&#1496; - &#1500;&#1508;&#1514;&#1497;&#1506;&#1501; &#1489;&#1512;&#1513;&#1490; - &#1493;&#1500;&#1514;&#1497;&#1506;&#1501; &#1490;&#1491;&#1491;&#1497;&#1513;. &#1511;&#1493;&#1493;&#1497;&#1494; &#1491;&#1493;&#1502;&#1493;&#1512; &#1500;&#1497;&#1488;&#1502;&#1493;&#1501; &#1489;&#1500;&#1497;&#1504;&#1498; &#1512;&#1493;&#1490;&#1510;&#1492;. &#1500;&#1508;&#1502;&#1506;&#1496; &#1502;&#1493;&#1505;&#1503; &#1502;&#1504;&#1514;. &#1490;&#1493;&#1500;&#1512; &#1502;&#1493;&#1504;&#1508;&#1512;&#1512; &#1505;&#1493;&#1489;&#1512;&#1496; &#1500;&#1493;&#1512;&#1501; &#1513;&#1489;&#1510;&#1511; &#1497;&#1492;&#1493;&#1500;, &#1500;&#1499;&#1504;&#1493;&#1509; &#1489;&#1506;&#1512;&#1497;&#1512; &#1490;&#1511; &#1500;&#1497;&#1509;, &#1493;&#1513;&#1489;&#1506;&#1490;&#1496; &#1500;&#1497;&#1489;&#1501; &#1505;&#1493;&#1500;&#1490;&#1511;. &#1489;&#1512;&#1488;&#1497;&#1496; &#1493;&#1500;&#1495;&#1514; &#1510;&#1493;&#1512;&#1511; &#1502;&#1493;&#1504;&#1495;&#1507;, &#1489;&#1490;&#1493;&#1512;&#1502;&#1497; &#1502;&#1490;&#1502;&#1513;. &#1514;&#1512;&#1489;&#1504;&#1498; &#1493;&#1505;&#1514;&#1506;&#1491; &#1500;&#1499;&#1504;&#1493; &#1505;&#1514;&#1513;&#1501; &#1492;&#1513;&#1502;&#1492; - &#1500;&#1514;&#1499;&#1497; &#1502;&#1493;&#1512;&#1490;&#1501; &#1489;&#1493;&#1512;&#1511;? &#1500;&#1514;&#1497;&#1490; &#1497;&#1513;&#1489;&#1506;&#1505;.
+
+&#1500;&#1493;&#1512;&#1501; &#1488;&#1497;&#1508;&#1505;&#1493;&#1501; &#1491;&#1493;&#1500;&#1493;&#1512; &#1505;&#1497;&#1496; &#1488;&#1502;&#1496;, &#1511;&#1493;&#1504;&#1505;&#1511;&#1496;&#1493;&#1512;&#1512; &#1488;&#1491;&#1497;&#1508;&#1497;&#1505;&#1497;&#1504;&#1490; &#1488;&#1500;&#1497;&#1514; &#1505;&#1495;&#1496;&#1497;&#1512; &#1489;&#1500;&#1493;&#1489;&#1511;. &#1514;&#1510;&#1496;&#1504;&#1508;&#1500; &#1489;&#1500;&#1497;&#1504;&#1491;&#1493; &#1500;&#1502;&#1512;&#1511;&#1500; &#1488;&#1505; &#1500;&#1499;&#1497;&#1502;&#1508;&#1493;, &#1491;&#1493;&#1500;, &#1510;&#1493;&#1496; &#1493;&#1502;&#1506;&#1497;&#1493;&#1496; - &#1500;&#1508;&#1514;&#1497;&#1506;&#1501; &#1489;&#1512;&#1513;&#1490; - &#1493;&#1500;&#1514;&#1497;&#1506;&#1501; &#1490;&#1491;&#1491;&#1497;&#1513;. &#1511;&#1493;&#1493;&#1497;&#1494; &#1491;&#1493;&#1502;&#1493;&#1512; &#1500;&#1497;&#1488;&#1502;&#1493;&#1501; &#1489;&#1500;&#1497;&#1504;&#1498; &#1512;&#1493;&#1490;&#1510;&#1492;. &#1500;&#1508;&#1502;&#1506;&#1496; &#1502;&#1493;&#1505;&#1503; &#1502;&#1504;&#1514;. &#1490;&#1493;&#1500;&#1512; &#1502;&#1493;&#1504;&#1508;&#1512;&#1512; &#1505;&#1493;&#1489;&#1512;&#1496; &#1500;&#1493;&#1512;&#1501; &#1513;&#1489;&#1510;&#1511; &#1497;&#1492;&#1493;&#1500;, &#1500;&#1499;&#1504;&#1493;&#1509; &#1489;&#1506;&#1512;&#1497;&#1512; &#1490;&#1511; &#1500;&#1497;&#1509;, &#1493;&#1513;&#1489;&#1506;&#1490;&#1496; &#1500;&#1497;&#1489;&#1501; &#1505;&#1493;&#1500;&#1490;&#1511;. &#1489;&#1512;&#1488;&#1497;&#1496; &#1493;&#1500;&#1495;&#1514; &#1510;&#1493;&#1512;&#1511; &#1502;&#1493;&#1504;&#1495;&#1507;, &#1489;&#1490;&#1493;&#1512;&#1502;&#1497; &#1502;&#1490;&#1502;&#1513;. &#1514;&#1512;&#1489;&#1504;&#1498; &#1493;&#1505;&#1514;&#1506;&#1491; &#1500;&#1499;&#1504;&#1493; &#1505;&#1514;&#1513;&#1501; &#1492;&#1513;&#1502;&#1492; - &#1500;&#1514;&#1499;&#1497; &#1502;&#1493;&#1512;&#1490;&#1501; &#1489;&#1493;&#1512;&#1511;? &#1500;&#1514;&#1497;&#1490; &#1497;&#1513;&#1489;&#1506;&#1505;.
+
+&#1505;&#1493;&#1507; &#1492;&#1496;&#1511;&#1505;&#1496;.</textarea>
+	</body>
+</html>

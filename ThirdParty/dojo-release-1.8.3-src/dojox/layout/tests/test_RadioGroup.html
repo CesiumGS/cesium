@@ -1,0 +1,185 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+	<title>RadioGroup (Animated StackContainer) Widget Test</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/claro/claro.css">
+	<link rel="stylesheet" href="../resources/RadioGroup.css">	
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<script language="JavaScript" type="text/javascript">
+		dojo.require("dojox.layout.RadioGroup");
+		dojo.require("dojo.parser"); 
+		dojo.require("dijit.layout.ContentPane"); 
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.form.Button");
+	</script>
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+
+		body { background:#a0a0a0 !important; }
+
+		.dojoPane {
+			background:#eee url('../../../util/resources/logo/positive/dojo.logo.png') no-repeat center center !important;
+		}
+		.dojoxPane {
+			background:#ededed url('../../../util/resources/logo/positive/dojox.logo.png') no-repeat center center !important;
+		}
+		.dijitPane {
+			background:#fefefe url('../../../util/resources/logo/positive/dijit.logo.png') no-repeat center center !important;
+		}
+
+		#newestone .dijitContentPane {
+			background:#fff;
+		}
+		#newestone .dijitContentPane p {
+			padding:20px;
+			font-size:200%;
+		}
+	</style>
+
+</head>
+<body class="claro">
+
+	<h1 class="testTitle">dojox.layout.RadioGroup test</h1>
+
+	<div style="width:915px; margin:0 auto; height:300px;">
+		<div id="firstGroup" dojoType="dojox.layout.RadioGroup" style="width:300px; height:300px; float:left;" hasButtons="true">
+			<div dojoType="dijit.layout.ContentPane" title="Dojo" class="dojoPane" style="width:300px; height:300px; "></div>
+			<div dojoType="dijit.layout.ContentPane" title="Dijit" class="dijitPane" style="width:300px; height:300px; "></div>
+			<div dojoType="dijit.layout.ContentPane" title="Dojox" class="dojoxPane" style="width:300px; height:300px; "></div>
+		</div>
+	
+		<div id="firstFade" dojoType="dojox.layout.RadioGroupFade" style="width:300px; height:300px; float:left" hasButtons="true">
+			<div dojoType="dijit.layout.ContentPane" title="Dojo" class="dojoPane" style="width:300px; height:300px; "></div>
+			<div dojoType="dijit.layout.ContentPane" title="Dijit" class="dijitPane" style="width:300px; height:300px; "></div>
+			<div dojoType="dijit.layout.ContentPane" title="Dojox" class="dojoxPane" style="width:300px; height:300px; "></div>
+		</div>
+	
+		<div id="firstSlide" dojoType="dojox.layout.RadioGroupSlide" style="width:300px; height:300px;" hasButtons="true">
+			<div dojoType="dijit.layout.ContentPane" title="Dojo" class="dojoPane" style="width:300px; height:300px; "></div>
+			<div dojoType="dijit.layout.ContentPane" title="Dijit" class="dijitPane" style="width:300px; height:300px; "></div>
+			<div dojoType="dijit.layout.ContentPane" title="Dojox" class="dojoxPane" style="width:300px; height:300px; "></div>
+		</div>
+	</div>
+	
+	<br style="margin-top:30px; clear:both">
+
+	<div>
+		<button dojoType="dijit.form.Button">add children
+			<script type="dojo/method" event="onClick">
+				dojo.forEach(["firstGroup","firstFade","firstSlide"], function(id){
+					var w = dijit.byId(id);
+					w.addChild(
+						new dijit.layout.ContentPane({
+							title:"Added", href:"_lorem.html",
+							style:"padding:8px; background-color:#fff"
+						})
+					);
+				})
+			</script>
+		</button>
+		
+		<button dojoType="dijit.form.Button">remove one from each
+			<script type="dojo/method" event="onClick">
+				dijit.registry.filter(function(w){
+					return w.declaredClass.match(/dojox\.layout\.RadioGroup/);
+				}).forEach(function(w){
+					var child = w.selectedChildWidget;
+					if(child){
+						w.removeChild(child);
+					}
+				});
+			</script>
+		</button>
+	</div>
+
+	<div id="proggy" style="width:915px; margin:0 auto; height:300px;">
+		<div dojoType="dojox.layout.RadioGroupSlide" style="width:300px; height:300px; float:left" hasButtons="true">
+			<div dojoType="dijit.layout.ContentPane" slideFrom="top" title="Dojo" class="dojoPane" style="width:300px; height:300px; "><p>1</p></div>
+			<div dojoType="dijit.layout.ContentPane" slideFrom="top" title="Dijit" class="dijitPane" style="width:300px; height:300px; "><p>2</p></div>
+			<div dojoType="dijit.layout.ContentPane" slideFrom="top" title="Dojox" class="dojoxPane" style="width:300px; height:300px; "><p>3</p></div>
+		</div>
+	
+		<div dojoType="dojox.layout.RadioGroupSlide" style="width:300px; height:300px;" hasButtons="true">
+			<div dojoType="dijit.layout.ContentPane" slideFrom="left" title="Dojo" class="dojoPane" style="width:300px; height:300px; "><p>1</p></div>
+			<div dojoType="dijit.layout.ContentPane" slideFrom="bottom" title="Dijit" class="dijitPane" style="width:300px; height:300px; "><p>2</p></div>
+			<div dojoType="dijit.layout.ContentPane" slideFrom="right" title="Dojox" class="dojoxPane" style="width:300px; height:300px; "><p>3</p></div>
+		</div>
+	</div>
+	
+	<script>
+		dojo.addOnLoad(function(){
+			
+			var x = 0, lorem = function(){ 
+				return "<p>Pane" + (++x) + " Content!</p>";
+			};
+			
+			// basic programatic instantiation
+			var g = new dojox.layout.RadioGroupSlide({
+				style:"width:300px; height:300px; float:left",
+				hasButtons:true,
+				id:"newestone"
+			}).placeAt("proggy");
+			
+			new dijit.layout.ContentPane({ title:"one", content:lorem() }).placeAt(g);
+			new dijit.layout.ContentPane({ title:"two", content:lorem() }).placeAt(g);
+			
+			g.startup();
+			
+			// testing addchild after startup
+			new dijit.layout.ContentPane({ title:"after", content:lorem() }).placeAt(g);
+			
+		});
+	</script>
+
+	<br style="margin-top:30px; clear:both">
+	
+	<h2>Has no buttons (auto rotating via code)</h2>
+
+	<div id="hasnobuttons" style="width:915px; margin:0 auto; height:300px;">
+		<div id="bfirstGroup" dojoType="dojox.layout.RadioGroup" style="width:300px; height:300px; float:left;">
+			<div dojoType="dijit.layout.ContentPane" href="doc0.html" title="Dojo" class="dojoPane" style="width:300px; height:300px;"></div>
+			<div dojoType="dijit.layout.ContentPane" href="_lorem.html" title="Dijit" class="dijitPane" style="width:300px; height:300px;"></div>
+			<div dojoType="dijit.layout.ContentPane" href="doc0.html" title="Dojox" class="dojoxPane" style="width:300px; height:300px;"></div>
+		</div>
+	
+		<div id="bfirstFade" dojoType="dojox.layout.RadioGroupFade" style="width:300px; height:300px; float:left">
+			<div dojoType="dijit.layout.ContentPane" href="_lorem.html" title="Dojo" class="dojoPane" style="width:300px; height:300px;"></div>
+			<div dojoType="dijit.layout.ContentPane" href="_lorem.html" title="Dijit" class="dijitPane" style="width:300px; height:300px;"></div>
+			<div dojoType="dijit.layout.ContentPane" href="_lorem.html" title="Dojox" class="dojoxPane" style="width:300px; height:300px;"></div>
+		</div>
+	
+		<div id="bfirstSlide" dojoType="dojox.layout.RadioGroupSlide" style="width:300px; height:300px;">
+			<div dojoType="dijit.layout.ContentPane" href="_lorem.html" title="Dojo" class="dojoPane" style="width:300px; height:300px;"></div>
+			<div dojoType="dijit.layout.ContentPane" href="_lorem.html" title="Dijit" class="dijitPane" style="width:300px; height:300px;"></div>
+			<div dojoType="dijit.layout.ContentPane" href="_lorem.html" title="Dojox" class="dojoxPane" style="width:300px; height:300px;"></div>
+		</div>
+	</div>
+	<script>
+		// make all the 3 RadioGroups above loop through their children.
+		dojo.ready(function(){
+			var rnd = 500; 
+			dojo.query("#hasnobuttons > div").forEach(function(n){
+				var widget = dijit.byNode(n);
+				setTimeout(function(){
+					setInterval(function(){
+						widget.forward();
+					}, 3000);
+				}, rnd);
+				rnd += 500;
+			});
+		});
+	</script>
+	
+</body>
+</html>

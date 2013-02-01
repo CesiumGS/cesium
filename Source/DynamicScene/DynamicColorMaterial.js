@@ -32,6 +32,13 @@ define([
     };
 
     /**
+     * Returns true if the provided CZML interval contains color material data.
+     * @param czmlInterval The CZML interval to check.
+     * @returns {Boolean} true if the interval contains CZML color material data, false otherwise.
+     */
+    DynamicColorMaterial.prototype.isMaterial = DynamicColorMaterial.isMaterial;
+
+    /**
      * Provided a CZML interval containing color material data, processes the
      * interval into a new or existing instance of this class.
      *

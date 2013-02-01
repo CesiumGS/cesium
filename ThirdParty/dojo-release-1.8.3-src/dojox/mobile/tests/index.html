@@ -1,0 +1,156 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<title>dojox.mobile</title>
+	<style>
+	body {
+		font-family: Helvetica;
+		font-size: 17px;
+	}
+	.section {
+		font-weight: bold;
+		color: #008080;
+	}
+	.titleBar {
+		padding: 10px 0;
+	}
+	.contents {
+		margin-left: 30px;
+		font-weight: normal;
+		color: #000000;
+	}
+	.item {
+		position: relative;
+		border-bottom: 1px solid gray;
+	}
+	.anchor {
+		display: block;
+		padding: 10px 0;
+		text-decoration: none;
+	}
+	</style>
+	<script src="index.js"></script>
+	<script>
+		function setRightIcon(icon){
+			icon.src = "../themes/common/domButtons/compat/mblDomButtonBlackRightArrow16.png";
+		}
+		function setDownIcon(icon){
+			icon.src = "../themes/common/domButtons/compat/mblDomButtonBlackDownArrow16.png";
+		}
+		function isRightIcon(icon){
+			return (icon.src && icon.src.indexOf("Right") !== -1);
+		}
+
+		function sort(keys){
+			var data = [];
+			for(var i = 0; i < keys.length; i++){
+				var key = keys[i];
+				var items = [];
+				items.label = key.label;
+				for(var j = 0; j < tests.length; j++){
+					var item = tests[j];
+					var url = item.url;
+					var label = item.label || item.url;
+					var tags = item.tags ? item.tags.split(/,/) : [];
+					for(var k = 0; k < tags.length; k++){
+						if(tags[k] === key.tag){
+							items.push(item);
+						}
+					}
+				}
+				data.push(items);
+			}
+			return data;
+		}
+		function init(){
+			var theme = document.getElementById("sel1").value;
+			var container = document.getElementById("container");
+			container.innerHTML = "";
+			var data = sort(categories);
+			for(var i = 0; i < data.length; i++){
+				var items = data[i];
+				if(items.length == 0){ continue; }
+
+				var section = document.createElement("div");
+				section.className = "section";
+				container.appendChild(section);
+
+				var titleBar = document.createElement("div");
+				titleBar.className = "titleBar";
+				titleBar.onclick = toggleSection;
+				section.appendChild(titleBar);
+
+				var icon = document.createElement("img");
+				icon.className = "icon";
+				setRightIcon(icon);
+				titleBar.appendChild(icon);
+
+				var title = document.createElement("label");
+				title.className = "title";
+				title.innerHTML = items.label + " (" + items.length + ")";
+				titleBar.appendChild(title);
+
+				var contents = document.createElement("div");
+				contents.className = "contents";
+				contents.style.display = "none";
+				section.appendChild(contents);
+
+				for(var j = 0; j < items.length; j++){
+					var item = items[j];
+					var url = item.url;
+					var label = item.label || item.url;
+
+					var item = document.createElement("div");
+					item.className = "item";
+					contents.appendChild(item);
+
+					var anchor = document.createElement("a");
+					anchor.className = "anchor";
+					anchor.href = url + (theme ? "?theme=" + theme : "");
+					anchor.target = "_blank";
+					anchor.innerHTML = label;
+					item.appendChild(anchor);
+				}
+			}
+		}
+
+		function toggleSection(e) {
+			e = e || event;
+			var node = e.srcElement ? e.srcElement : e.target;
+			var titleBar = (node.className == "titleBar") ? node : node.parentNode;
+			var img = titleBar.childNodes[0];
+			var label = titleBar.childNodes[1];
+			var contents = titleBar.nextSibling;
+			if (isRightIcon(img)){
+				setDownIcon(img);
+				contents.style.display = "block";
+			}
+			else {
+				setRightIcon(img);
+				contents.style.display = "none";
+			}
+			e.cancelBubble = true;
+		}
+
+		function onThemeChange(){
+			var theme = document.getElementById("sel1").value;
+			var nodes = document.getElementsByTagName("a");
+			for(var i = 0; i < nodes.length; i++){
+				var a = nodes[i];
+				a.href = a.href.replace(/(\?theme=.*)?$/, theme ? "?theme=" + theme : "");
+			}
+		}
+	</script>
+</head>
+<body onload="init()">
+	<select id="sel1" onchange="onThemeChange()">
+		<option value=""></option>
+		<option value="iPhone">iPhone</option>
+		<option value="Android">Android</option>
+		<option value="BlackBerry">BlackBerry</option>
+		<option value="Custom">Custom</option>
+	</select><br>
+	<div id="container"></div>
+</body>
+</html>

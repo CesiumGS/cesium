@@ -111,30 +111,30 @@ defineSuite([
     it('mergeProperties does not change a fully configured pyramid', function() {
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.pyramid = new DynamicPyramid();
-        objectToMerge.material = 1;
-        objectToMerge.directions = 2;
-        objectToMerge.intersectionColor = 3;
-        objectToMerge.radius = 4;
-        objectToMerge.show = 5;
-        objectToMerge.showIntersection = 6;
+        objectToMerge.pyramid.material = 1;
+        objectToMerge.pyramid.directions = 2;
+        objectToMerge.pyramid.intersectionColor = 3;
+        objectToMerge.pyramid.radius = 4;
+        objectToMerge.pyramid.show = 5;
+        objectToMerge.pyramid.showIntersection = 6;
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.pyramid = new DynamicPyramid();
-        targetObject.material = 7;
-        targetObject.directions = 8;
-        targetObject.intersectionColor = 9;
-        targetObject.radius = 10;
-        targetObject.show = 11;
-        targetObject.showIntersection = 12;
+        targetObject.pyramid.material = 7;
+        targetObject.pyramid.directions = 8;
+        targetObject.pyramid.intersectionColor = 9;
+        targetObject.pyramid.radius = 10;
+        targetObject.pyramid.show = 11;
+        targetObject.pyramid.showIntersection = 12;
 
         DynamicPyramid.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.pyramid.material).toEqual(targetObject.pyramid.material);
-        expect(targetObject.pyramid.directions).toEqual(targetObject.pyramid.directions);
-        expect(targetObject.pyramid.intersectionColor).toEqual(targetObject.pyramid.intersectionColor);
-        expect(targetObject.pyramid.radius).toEqual(targetObject.pyramid.radius);
-        expect(targetObject.pyramid.show).toEqual(targetObject.pyramid.show);
-        expect(targetObject.pyramid.showIntersection).toEqual(targetObject.pyramid.showIntersection);
+        expect(targetObject.pyramid.material).toEqual(7);
+        expect(targetObject.pyramid.directions).toEqual(8);
+        expect(targetObject.pyramid.intersectionColor).toEqual(9);
+        expect(targetObject.pyramid.radius).toEqual(10);
+        expect(targetObject.pyramid.show).toEqual(11);
+        expect(targetObject.pyramid.showIntersection).toEqual(12);
     });
 
     it('mergeProperties creates and configures an undefined pyramid', function() {
@@ -164,21 +164,21 @@ defineSuite([
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.pyramid = new DynamicPyramid();
-        objectToMerge.material = 1;
-        objectToMerge.directions = 2;
-        objectToMerge.intersectionColor = 3;
-        objectToMerge.radius = 4;
-        objectToMerge.show = 5;
-        objectToMerge.showIntersection = 6;
+        targetObject.pyramid.material = 7;
+        targetObject.pyramid.directions = 8;
+        targetObject.pyramid.intersectionColor = 9;
+        targetObject.pyramid.radius = 10;
+        targetObject.pyramid.show = 11;
+        targetObject.pyramid.showIntersection = 12;
 
         DynamicPyramid.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.pyramid.material).toEqual(targetObject.pyramid.material);
-        expect(targetObject.pyramid.directions).toEqual(targetObject.pyramid.directions);
-        expect(targetObject.pyramid.intersectionColor).toEqual(targetObject.pyramid.intersectionColor);
-        expect(targetObject.pyramid.radius).toEqual(targetObject.pyramid.radius);
-        expect(targetObject.pyramid.show).toEqual(targetObject.pyramid.show);
-        expect(targetObject.pyramid.showIntersection).toEqual(targetObject.pyramid.showIntersection);
+        expect(targetObject.pyramid.material).toEqual(7);
+        expect(targetObject.pyramid.directions).toEqual(8);
+        expect(targetObject.pyramid.intersectionColor).toEqual(9);
+        expect(targetObject.pyramid.radius).toEqual(10);
+        expect(targetObject.pyramid.show).toEqual(11);
+        expect(targetObject.pyramid.showIntersection).toEqual(12);
     });
 
     it('undefineProperties works', function() {

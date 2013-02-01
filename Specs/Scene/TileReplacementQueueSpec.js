@@ -1,9 +1,11 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/TileReplacementQueue',
+         'Scene/ImageryState',
          'Scene/TileState'
      ], function(
          TileReplacementQueue,
+         ImageryState,
          TileState) {
     "use strict";
     /*global document,describe,it,expect,beforeEach*/
@@ -12,6 +14,7 @@ defineSuite([
     {
         this._num = num;
         this.state = transitioning ? TileState.TRANSITIONING : TileState.READY;
+        this.imagery = [];
     }
 
     Tile.prototype.freeResources = function() {
@@ -98,6 +101,24 @@ defineSuite([
            queue.trimTiles(0);
            expect(queue.count).toEqual(1);
            expect(queue.head).toEqual(transitioning);
+       });
+
+       it('does not remove a tile with transitioning imagery.', function() {
+           queue.markTileRendered(one);
+           queue.markTileRendered(two);
+           queue.markTileRendered(three);
+
+           two.imagery.push({
+               imagery : {
+                   state : ImageryState.TRANSITIONING
+               }
+           });
+
+           queue.markStartOfRenderFrame();
+
+           queue.trimTiles(0);
+           expect(queue.count).toEqual(1);
+           expect(queue.head).toEqual(two);
        });
 
        it('does not remove a transitioning tile at the end of the last render frame.', function() {

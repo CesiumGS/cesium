@@ -224,7 +224,6 @@ define([
             } else {
                 ellipsoidVisualizerIndex = this._ellipsoidCollection.length;
                 ellipsoid = new EllipsoidPrimitive();
-                ellipsoid.affectedByLighting = false;
 
                 this._ellipsoidCollection.push(ellipsoid);
                 this._primitives.add(ellipsoid);
@@ -248,9 +247,9 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(ellipsoid._visualizerPosition) ||
              !orientation.equals(ellipsoid._visualizerOrientation))) {
-            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, ellipsoid.modelMatrix);
-            position.clone(ellipsoid._visualizerPosition);
-            orientation.clone(ellipsoid._visualizerOrientation);
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, ellipsoid.modelMatrix);
+            ellipsoid._visualizerPosition = position.clone(ellipsoid._visualizerPosition);
+            ellipsoid._visualizerOrientation = orientation.clone(ellipsoid._visualizerOrientation);
         }
 
         var material = dynamicEllipsoid.material;

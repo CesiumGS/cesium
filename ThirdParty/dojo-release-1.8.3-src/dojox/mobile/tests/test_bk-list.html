@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Bookmarkable - list</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/bookmarkable"
+		]);
+	</script>
+
+	<style>
+	.lnk {
+		font-size: 14px;
+		color: #0B5199;
+		text-decoration: none;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="home" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">Bookmarkable</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Transition Effects</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"#page1", transition:"slide"'>
+				Slide
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png", moveTo:"#page2", transition:"flip"'>
+				Flip
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"#page3", transition:"fade"'>
+				Fade
+			</li>
+		</ul>
+		<div data-dojo-type="dojox.mobile.RoundRect">
+			After you move to other views, you should also be able to navigate through the views with browser's back and forward buttons. Also, views should be bookmarkable.
+		</div>
+	</div>
+
+	<div id="page1" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"#home", transition:"slide"'>Page 1</h1>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"#result1"'>
+				Item 1
+			</li>
+		</ul>
+	</div>
+
+	<div id="page2" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"#home", transition:"flip"'>Page 2</h1>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png", moveTo:"#result2"'>
+				Item 2
+			</li>
+		</ul>
+	</div>
+
+	<div id="page3" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"#home", transition:"fade"'>Page 3</h1>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"#result3"'>
+				Item 3
+			</li>
+		</ul>
+	</div>
+
+	<div id="result1" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Page 1", moveTo:"#page1"'>Search Result 1</h1>
+		<ul data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='variableHeight:true'>
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px">
+				1. <span class="lnk">Dojo: Traditional Karate-do Spirit</span><br>
+				Sarah Connor Hardcover<br>
+				Eligible for FREE Super Saver Shipping<br>
+				<span style="color:red">$14.50 (50%)</span> In Stock<br>
+				# (531)
+			</li>
+		</ul>
+	</div>
+
+	<div id="result2" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Page 2", moveTo:"#page2"'>Search Result 2</h1>
+		<ul data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='variableHeight:true'>
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px">
+				2. <span class="lnk">Japanese Martial Arts Dojo</span><br>
+				Martin Parker Hardcover<br>
+				<span style="color:red">$14.00 (60%)</span> In Stock<br>
+				# (173)
+			</li>
+		</ul>
+	</div>
+
+	<div id="result3" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Page 3", moveTo:"#page3"'>Search Result 3</h1>
+		<ul data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='variableHeight:true'>
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px">
+				3. <span class="lnk">Total Solar Eclipse</span><br>
+				Steven Young Hardcover<br>
+				Get it by Mar. 2 if you order in the next <span style="color:green"><b>16 hours</b></span><br>
+				Eligible for FREE Super Saver Shipping<br>
+				<span style="color:red">$9.50 (62%)</span> In Stock<br>
+				# (1199)
+			</li>
+		</ul>
+	</div>
+</body>
+</html>

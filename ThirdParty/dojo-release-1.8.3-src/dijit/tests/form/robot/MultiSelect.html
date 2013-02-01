@@ -1,0 +1,265 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot MultiSelect Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			function testInverted(allOptions, selected, newSelected){
+				doh.is(allOptions.length, selected.length+newSelected.length); //newSelected + the no longer selected list size should be the same as the length of the whole list
+				dojo.forEach(allOptions, function(option){ //verify the selections were inverted
+					var found;
+					if(option.selected){
+						//it must be in the newSelectedList
+						found=false;
+						dojo.forEach(newSelected, function(ns){
+							if(option.value===ns){
+								found=true;
+							}
+						});
+						doh.t(found);
+					}else{
+						//it better be in the origional selected list
+						found=false;
+						dojo.forEach(selected, function(s){
+							if(option.value===s){
+								found=true;
+							}
+						});
+						doh.t(found);
+					}
+				});
+			}
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_MultiSelect.html');
+
+				doh.register("dijit.form.MultiSelect", [
+					{
+						name: "tabInSelect",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var changed = false;
+							dijit.byId("select").set("onChange", function(e){changed = true; });
+
+							dojo.global.scrollTo(0,0);
+							doh.robot.mouseMove(30,30);
+							doh.robot.mouseClick({left:true}, 1000); //tabbing in doesn't work in FF unless we first click on the page first
+
+							doh.robot.keyPress(dojo.keys.TAB, 1000, {});
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 1000, {}); //Arrowing down will select the element for IE, FF, Safari, & chrome
+							doh.robot.keyPress(dojo.keys.SPACE, 1000, {}); //Space is needed to select the element in opera
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(changed);
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "switchRight",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(function(){ 
+								dijit.byId('select').set('value', ['16']);
+							}, 500);
+
+							doh.robot.mouseMoveAt("right", 1000);
+							doh.robot.mouseClick({left:true}, 500);
+
+							var selectedValue2 = "";
+							doh.robot.sequence(function(){ selectedValue2 = dijit.byId('select2').get('value');}, 1000); 
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("16", dijit.byId('select2').value.toString());
+								doh.is("16", selectedValue2[0]);
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "switchLeft",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(function(){ 
+								dijit.byId('select2').set('value', ['3','7','19','47']);
+							}, 500);
+
+							doh.robot.mouseMoveAt("left", 1000);
+							doh.robot.mouseClick({left:true}, 500);
+
+							var selectedValue = "";
+							doh.robot.sequence(function(){ selectedValue = dijit.byId('select').get('value');}, 1000); 
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("3", selectedValue[0]);
+								doh.is("7", selectedValue[1]);
+								doh.is("19", selectedValue[2]);
+								doh.is("47", selectedValue[3]);
+								doh.is("3 7 19 47", dijit.byId('select').value.join(' '));
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "invertSelected",
+						timeout: 8000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							//select a block in the first list
+							doh.robot.sequence(function(){ 
+								dijit.byId('select').set('value', ['18','14','12','10']);
+							}, 500);
+
+							//get the selected list
+							var allOptions = "";
+							var selected = "";
+							var newSelected = "";
+							doh.robot.sequence(function(){ 
+								selected = dijit.byId('select').get('value'); 
+								allOptions = dijit.byId('select').domNode.options;
+							}, 1000); 
+
+							doh.robot.mouseMoveAt("i1", 1000);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(function(){ 
+								newSelected = dijit.byId('select').get('value'); 
+							}, 1000); 
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								testInverted(allOptions, selected, newSelected);
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "invertSelected2",
+						timeout: 8000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							//select random options
+							doh.robot.sequence(function(){ 
+								dijit.byId('select').set('value', ['2','8','14','20','22','32']);
+							}, 500);
+
+							//get the selected list
+							var allOptions = "";
+							var selected = "";
+							var newSelected = "";
+							doh.robot.sequence(function(){ 
+								selected = dijit.byId('select').get('value'); 
+								allOptions = dijit.byId('select').domNode.options;
+							}, 1000); 
+
+							doh.robot.mouseMoveAt("i1", 1000);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(function(){ 
+								newSelected = dijit.byId('select').get('value'); 
+							}, 1000); 
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								testInverted(allOptions, selected, newSelected);
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "invertSelected3",
+						timeout: 8000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							//Select the first thing in the list and then invert it
+							//select random options
+							doh.robot.sequence(function(){ 
+								dijit.byId('select3').set('value', ['TN']);
+							}, 500);
+
+							//get the selected list
+							var allOptions = "";
+							var selected = "";
+							var newSelected = "";
+							doh.robot.sequence(function(){ 
+								selected = dijit.byId('select3').get('value'); 
+								allOptions = dijit.byId('select3').domNode.options;
+							}, 1000); 
+
+							doh.robot.mouseMoveAt("i3", 1000);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(function(){ 
+								newSelected = dijit.byId('select3').get('value'); 
+							}, 1000); 
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								testInverted(allOptions, selected, newSelected);
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "setValue",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							//Select only one thing in the list to make sure we don't start with the values that we are going to select
+							doh.robot.sequence(function(){ 
+								dijit.byId('select3').set('value', ['CA']);
+							}, 500);
+
+							doh.robot.mouseMoveAt("s1", 1000);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var selected = dijit.byId('select3').get('value');
+								doh.is(2, selected.length);
+								doh.is(selected[0], 'VA');
+								doh.is(selected[1], 'WA');
+								doh.is("VA WA", dijit.byId('select3').value.join(' '));
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "formSubmit",
+						timeout: 1500,
+						runTest: function(){
+							var d=new doh.Deferred();
+							dijit.byId('select3').set('value', ['TN','FL']);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+									var vals = dojo.fromJson(dojo.formToJson("test"));
+									doh.is("TN,FL", vals.select3);
+							}), 500);
+							return d;
+						}
+					}
+
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

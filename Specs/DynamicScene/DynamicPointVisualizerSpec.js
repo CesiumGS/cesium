@@ -229,4 +229,4 @@ defineSuite([
         bb = billboardCollection.get(0);
         expect(bb.dynamicObject).toEqual(testObject2);
     });
-});
+}, 'WebGL');

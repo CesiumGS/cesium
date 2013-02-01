@@ -2,8 +2,8 @@
 define([
         '../Core/destroyObject',
         '../Core/Math',
-        '../Core/EventHandler',
-        '../Core/MouseEventType',
+        '../Core/ScreenSpaceEventHandler',
+        '../Core/ScreenSpaceEventType',
         '../Core/Ellipsoid',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -17,8 +17,8 @@ define([
     ], function(
         destroyObject,
         CesiumMath,
-        EventHandler,
-        MouseEventType,
+        ScreenSpaceEventHandler,
+        ScreenSpaceEventType,
         Ellipsoid,
         Cartesian2,
         Cartesian3,
@@ -139,6 +139,14 @@ define([
 
         var centralBody = primitives.getCentralBody();
         centralBody.morphTime = morphTime;
+
+        if (typeof scene.skyBox !== 'undefined') {
+            scene.skyBox.morphTime = morphTime;
+        }
+
+        if (typeof scene.skyAtmosphere !== 'undefined') {
+            scene.skyAtmosphere.morphTime = morphTime;
+        }
     }
 
     //in the future the animations will be more complicated
@@ -146,7 +154,7 @@ define([
         //for now, all objects morph at the same rate
         var template = {
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut
+            easingFunction : Tween.Easing.Quartic.Out
         };
 
         var primitives = scene.getPrimitives();
@@ -163,6 +171,16 @@ define([
         var centralBody = primitives.getCentralBody();
         animation = sceneAnimations.addProperty(centralBody, 'morphTime', start, stop, template);
         transitioner._currentAnimations.push(animation);
+
+        if (typeof scene.skyBox !== 'undefined') {
+            animation = sceneAnimations.addProperty(scene.skyBox, 'morphTime', start, stop, template);
+            transitioner._currentAnimations.push(animation);
+        }
+
+        if (typeof scene.skyAtmosphere !== 'undefined') {
+            animation = sceneAnimations.addProperty(scene.skyAtmosphere, 'morphTime', start, stop, template);
+            transitioner._currentAnimations.push(animation);
+        }
 
         if (typeof onComplete !== 'undefined') {
             template.onComplete = function() {
@@ -223,10 +241,6 @@ define([
             var camera = scene.getCamera();
             camera.transform = this._camera2D.transform.clone();
 
-            var controllers = camera.getControllers();
-            controllers.removeAll();
-            controllers.add2D(scene.scene2D.projection);
-
             // TODO: Match incoming columbus-view or 3D position
             camera.position = this._camera2D.position.clone();
             camera.direction = this._camera2D.direction.clone();
@@ -251,10 +265,6 @@ define([
             updateFrustums(this);
             var camera = scene.getCamera();
             camera.transform = this._cameraCV.transform.clone();
-
-            var controllers = camera.getControllers();
-            controllers.removeAll();
-            controllers.addColumbusView();
 
             if (previousMode !== SceneMode.MORPHING || this._morphCancelled) {
                 this._morphCancelled = false;
@@ -282,13 +292,9 @@ define([
 
             this._destroyMorphHandler();
 
-            var camera = scene.getCamera();
-            var controllers = camera.getControllers();
-            controllers.removeAll();
-            controllers.addCentralBody();
-
             updateFrustums(this);
-            camera.transform = Matrix4.IDENTITY;
+            var camera = scene.getCamera();
+            camera.transform = Matrix4.IDENTITY.clone();
 
             if (previousMode !== SceneMode.MORPHING || this._morphCancelled) {
                 this._morphCancelled = false;
@@ -304,20 +310,17 @@ define([
     SceneTransitioner.prototype._createMorphHandler = function(endMorphFunction) {
         var that = this;
 
-        var controllers = this._scene.getCamera().getControllers();
-        controllers.removeAll();
-
         if (this.endMorphOnMouseInput) {
-            this._morphHandler = new EventHandler(this._scene.getCanvas());
+            this._morphHandler = new ScreenSpaceEventHandler(this._scene.getCanvas());
 
             var cancelMorph = function() {
                 that._morphCancelled = true;
                 endMorphFunction.call(that);
             };
-            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.LEFT_DOWN);
-            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.MIDDLE_DOWN);
-            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.RIGHT_DOWN);
-            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.WHEEL);
+            this._morphHandler.setInputAction(cancelMorph, ScreenSpaceEventType.LEFT_DOWN);
+            this._morphHandler.setInputAction(cancelMorph, ScreenSpaceEventType.MIDDLE_DOWN);
+            this._morphHandler.setInputAction(cancelMorph, ScreenSpaceEventType.RIGHT_DOWN);
+            this._morphHandler.setInputAction(cancelMorph, ScreenSpaceEventType.WHEEL);
         }
     };
 
@@ -370,7 +373,7 @@ define([
 
         var animation = scene.getAnimations().add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
+            easingFunction : Tween.Easing.Quartic.Out,
             startValue : {
                 time : 0.0
             },
@@ -417,7 +420,7 @@ define([
         duration = duration * 0.5;
         var animation = scene.getAnimations().add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
+            easingFunction : Tween.Easing.Quartic.Out,
             startValue : {
                 time : 0.0
             },
@@ -489,14 +492,23 @@ define([
         }
 
         var partialDuration = (endTime - startTime) * duration;
-        if (partialDuration === 0 && Cartesian2.magnitude(Cartesian2.subtract(startPos, endPos2D, startPos)) !== 0) {
-            partialDuration = duration;
-            startTime = 0.0;
-            endTime = 1.0;
+        if (partialDuration < CesiumMath.EPSILON6) {
+            if (!startPos.equalsEpsilon(endPos2D, CesiumMath.EPSILON6)) {
+                partialDuration = duration;
+                startTime = 0.0;
+                endTime = 1.0;
+            } else {
+                // If the camera and frustum are already in position for the switch to
+                // a perspective projection, nothing needs to be animated.
+                camera.position = endPos2D;
+                camera.frustum = frustumCV.clone();
+                onComplete.call(that);
+                return;
+            }
         }
 
         var animation = scene.getAnimations().add({
-            easingFunction : Tween.Easing.Quartic.EaseOut,
+            easingFunction : Tween.Easing.Quartic.Out,
             duration : partialDuration,
             startValue : {
                 time : startTime
@@ -539,7 +551,7 @@ define([
 
             var animation = scene.getAnimations().add({
                 duration : duration,
-                easingFunction : Tween.Easing.Quartic.EaseOut,
+                easingFunction : Tween.Easing.Quartic.Out,
                 startValue : {
                     time : 0.0
                 },
@@ -583,7 +595,7 @@ define([
 
         var animation = scene.getAnimations().add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
+            easingFunction : Tween.Easing.Quartic.Out,
             startValue : {
                 time : 0.0
             },
@@ -642,7 +654,7 @@ define([
 
         var animation = scene.getAnimations().add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
+            easingFunction : Tween.Easing.Quartic.Out,
             startValue : {
                 time : 0.0
             },

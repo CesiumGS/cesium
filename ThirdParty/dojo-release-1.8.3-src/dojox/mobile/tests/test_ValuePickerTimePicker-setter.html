@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>ValuePicker Time Picker - setter</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','ValuePicker']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/ValuePickerTimePicker",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(ready, registry, ValuePickerTimePicker){
+			ready(function(){
+				registry.byId("picker1").set("values", ["22","06"]);
+
+				var picker3 = new ValuePickerTimePicker({values:["22","06"]}, "picker3");
+				picker3.startup();
+
+				var picker4 = new ValuePickerTimePicker({values12:["10","06","PM"]}, "picker4");
+				picker4.startup();
+			});
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div data-dojo-type="dojox.mobile.View">
+		<!-- All these widgets should display the same value. -->
+		<div id="picker1" data-dojo-type="dojox.mobile.ValuePickerTimePicker"></div><br>
+		<div id="picker2" data-dojo-type="dojox.mobile.ValuePickerTimePicker" data-dojo-props="values:['22','06']"></div><br>
+		<div id="picker3"></div><br>
+		<div id="picker4"></div><br>
+	</div>
+</body>
+</html>

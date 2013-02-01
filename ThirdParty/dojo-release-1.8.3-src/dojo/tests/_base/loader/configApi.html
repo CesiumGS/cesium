@@ -1,0 +1,93 @@
+<html>
+<head>
+	<script type="text/javascript" src="../../../dojo.js" data-dojo-config="isDebug:1, async:1"></script>
+	<script type="text/javascript">
+		require(["dojo", "doh"], function(dojo, doh) {
+			dojo.ready(function(){
+				doh.register("config-event", [
+					function expectDojoConfig(t) {
+						var 
+							expectedConfig1, expectedConfig2,
+							called1, called2,
+							savedRawConfig,
+							configListener1= function(config, rawConfig){
+								called1= true;
+								savedRawConfig= rawConfig;
+								t.is(config, expectedConfig1);
+							},
+							configListener2= function(config, rawConfig){
+								called2= true;
+								savedRawConfig= rawConfig;
+								t.is(config, expectedConfig2);
+							};
+						var configListeners = require.listenerQueues.config || (require.listenerQueues.config = []);
+							listenerCount= configListeners.length,
+							h1= require.on("config", configListener1),
+							h2= require.on("config", configListener2);
+						t.is(configListeners.length, listenerCount+2);
+						t.is(configListeners[listenerCount], configListener1);
+						t.is(configListeners[listenerCount+1], configListener2);
+						expectedConfig1= expectedConfig2= {
+							someFeature:1
+						};						
+						called1= called2= 0;
+						require(expectedConfig1);
+						t.t(called1);
+						t.t(called2);
+
+						h1.remove();
+						t.is(configListeners.length, listenerCount+1);
+						t.is(configListeners[listenerCount], configListener2);
+						expectedConfig1= expectedConfig2= {
+							someFeature:0,
+							someOtherFeature:1
+						};						
+						called1= called2= 0;
+						require(expectedConfig1);
+						t.is(called1, 0);
+						t.t(called2);
+						t.is(savedRawConfig.someFeature, 0);
+						t.is(savedRawConfig.someOtherFeature, 1);
+						h2.remove();
+
+						require({async:1});
+						t.is(require.async, true);
+						t.is(require.legacyMode, false);
+
+						require({async:true});
+						t.is(require.async, true);
+						t.is(require.legacyMode, false);
+
+						require({async:2});
+						t.is(require.async, true);
+						t.is(require.legacyMode, false);
+
+						require({async:"nonsense"});
+						t.is(require.async, true);
+						t.is(require.legacyMode, false);
+
+						require({async:0});
+						t.is(require.async, false);
+						t.is(require.legacyMode, "sync");
+
+						require({async:false});
+						t.is(require.async, false);
+						t.is(require.legacyMode, "sync");
+
+						require({async:"sync"});
+						t.is(require.async, false);
+						t.is(require.legacyMode, "sync");
+
+						require({async:"legacyAsync"});
+						t.is(require.async, false);
+						t.is(require.legacyMode, "legacyAsync");
+					}
+				]);
+				doh.runOnLoad();
+			});
+		});
+	</script>
+</head>
+<body>
+</body>
+</html>

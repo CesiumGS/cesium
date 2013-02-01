@@ -21,11 +21,14 @@ define([
      * @constructor
      *
      * @param {String} description.missingImageUrl The URL of the known missing image.
-     * @param {Array} description.pixelsToCheck An array of Cartesian2 pixel positions to
+     * @param {Array} description.pixelsToCheck An array of {@link Cartesian2} pixel positions to
      *        compare against the missing image.
-     * @param {Boolean} [description.disableCheckIfAllPixelsAreTransparent] If true, the discard check will be disabled
+     * @param {Boolean} [description.disableCheckIfAllPixelsAreTransparent=false] If true, the discard check will be disabled
      *                  if all of the pixelsToCheck in the missingImageUrl have an alpha value of 0.  If false, the
      *                  discard check will proceed no matter the values of the pixelsToCheck.
+     *
+     * @exception {DeveloperError} <code>description.missingImageUrl</code> is required.
+     * @exception {DeveloperError} <code>pixelsToCheck</code> is required.
      */
     var DiscardMissingTileImagePolicy = function(description) {
         description = defaultValue(description, {});
@@ -43,7 +46,8 @@ define([
         this._isReady = false;
 
         var that = this;
-        when(loadImage(description.missingImageUrl), function(image) {
+
+        function success(image) {
             var pixels = getImagePixels(image);
 
             if (description.disableCheckIfAllPixelsAreTransparent) {
@@ -68,7 +72,16 @@ define([
 
             that._missingImagePixels = pixels;
             that._isReady = true;
-        });
+        }
+
+        function failure() {
+            // Failed to download "missing" image, so assume that any truly missing tiles
+            // will also fail to download and disable the discard check.
+            that._missingImagePixels = undefined;
+            that._isReady = true;
+        }
+
+        when(loadImage(description.missingImageUrl), success, failure);
     };
 
     /**
@@ -85,6 +98,8 @@ define([
      * @param {Image} image An image to test.
      *
      * @returns True if the image should be discarded; otherwise, false.
+     *
+     * @exception {DeveloperError} <code>shouldDiscardImage</code> must not be called before the discard policy is ready.
      */
     DiscardMissingTileImagePolicy.prototype.shouldDiscardImage = function(image) {
         if (!this._isReady) {

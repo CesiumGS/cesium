@@ -12,6 +12,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Extent',
+        '../Core/Occluder',
         '../Core/TaskProcessor',
         './Projections',
         './TileState',
@@ -32,6 +33,7 @@ define([
         Cartesian3,
         Cartographic,
         Extent,
+        Occluder,
         TaskProcessor,
         Projections,
         TileState,
@@ -85,7 +87,7 @@ define([
         });
         this.maxLevel = 25;
         this.heightmapWidth = 64;
-        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.ellipsoid, this.heightmapWidth, this.tilingScheme.numberOfLevelZeroTilesX);
+        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.getEllipsoid(), this.heightmapWidth, this.tilingScheme.getNumberOfXTilesAtLevel(0));
 
         this._proxy = description.proxy;
 
@@ -165,14 +167,14 @@ define([
     /**
      * Request the tile geometry from the remote server.  Once complete, the
      * tile state should be set to RECEIVED.  Alternatively, tile state can be set to
-     * UNLOADED to indicate that the request should be attempted again next update, if the tile
+     * IMAGERY_SKELETONS_CREATED to indicate that the request should be attempted again next update, if the tile
      * is still needed.
      *
      * @param {Tile} The tile to request geometry for.
      */
     ArcGisImageServerTerrainProvider.prototype.requestTileGeometry = function(tile) {
         if (requestsInFlight > 6) {
-            tile.state = TileState.UNLOADED;
+            tile.state = TileState.IMAGERY_SKELETONS_CREATED;
             return;
         }
 
@@ -234,11 +236,12 @@ define([
         var pixels = getImagePixels(image);
 
         var tilingScheme = this.tilingScheme;
-        var ellipsoid = tilingScheme.ellipsoid;
+        var ellipsoid = tilingScheme.getEllipsoid();
         var extent = tile.extent;
 
-        var southwest = tilingScheme.cartographicToWebMercator(extent.west, extent.south);
-        var northeast = tilingScheme.cartographicToWebMercator(extent.east, extent.north);
+        var projection = tilingScheme.getProjection();
+        var southwest = projection.project(new Cartographic(extent.west, extent.south));
+        var northeast = projection.project(new Cartographic(extent.east, extent.north));
         var webMercatorExtent = {
             west : southwest.x,
             south : southwest.y,
@@ -260,7 +263,8 @@ define([
             relativeToCenter : tile.center,
             radiiSquared : ellipsoid.getRadiiSquared(),
             oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
-            skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0)
+            skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
+            isGeographic : false
         }, [pixels.buffer]);
 
         if (typeof verticesPromise === 'undefined') {
@@ -272,7 +276,7 @@ define([
         when(verticesPromise, function(result) {
             tile.geometry = undefined;
             tile.transformedGeometry = {
-                vertices : result.vertices,
+                vertices : new Float32Array(result.vertices),
                 statistics : result.statistics,
                 indices : TerrainProvider.getRegularGridIndices(width + 2, height + 2)
             };
@@ -299,11 +303,11 @@ define([
         var buffers = tile.transformedGeometry;
         tile.transformedGeometry = undefined;
 
-        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
+        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers, true);
         tile.maxHeight = buffers.statistics.maxHeight;
-        tile.boundingSphere3D = BoundingSphere.fromPointsAsFlatArray(buffers.vertices, tile.center, 5);
+        tile.boundingSphere3D = BoundingSphere.fromVertices(buffers.vertices, tile.center, 5);
 
-        var ellipsoid = this.tilingScheme.ellipsoid;
+        var ellipsoid = this.tilingScheme.getEllipsoid();
         var extent = tile.extent;
         tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
         tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast());
@@ -315,23 +319,14 @@ define([
         tile.southNormal = ellipsoid.geodeticSurfaceNormal(tile.southeastCornerCartesian).cross(tile.southwestCornerCartesian.subtract(tile.southeastCornerCartesian, scratch)).normalize();
         tile.northNormal = ellipsoid.geodeticSurfaceNormal(tile.northwestCornerCartesian).cross(tile.northeastCornerCartesian.subtract(tile.northwestCornerCartesian, scratch)).normalize();
 
-        tile.state = TileState.READY;
-    };
+        // TODO: we need to take the heights into account when computing the occludee point.
+        var occludeePoint = Occluder.computeOccludeePointFromExtent(tile.extent, ellipsoid);
+        if (typeof occludeePoint !== 'undefined') {
+            Cartesian3.multiplyComponents(occludeePoint, ellipsoid.getOneOverRadii(), occludeePoint);
+        }
+        tile.occludeePointInScaledSpace = occludeePoint;
 
-    /**
-     * Populates a {@link Tile} with plane-mapped surface geometry from this
-     * tile provider.
-     *
-     * @memberof ArcGisImageServerTerrainProvider
-     *
-     * @param {Context} context The rendered context to use to create renderer resources.
-     * @param {Tile} tile The tile to populate with surface geometry.
-     * @param {Projection} projection The map projection to use.
-     * @returns {Boolean|Promise} A boolean value indicating whether the tile was successfully
-     * populated with geometry, or a promise for such a value in the future.
-     */
-    ArcGisImageServerTerrainProvider.prototype.createTilePlaneGeometry = function(context, tile, projection) {
-        throw new DeveloperError('Not supported yet.');
+        tile.state = TileState.READY;
     };
 
     /**

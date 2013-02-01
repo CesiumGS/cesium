@@ -6,26 +6,16 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Fly to a specified location or view a geographic extent.">
     <title>Cesium Demo</title>
-    <script>
-    var Sandcastle = {};
-    Sandcastle.declare = function () {};
-    Sandcastle.highlight = function () {};
-    Sandcastle.registered = [];
-    if (window.location.protocol === 'file:') {
-        if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
-            window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
-        }
-    }
-    </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
     <script type="text/javascript">
     require({
         baseUrl : '../../..',
         packages: [
-            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
-            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
-            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
-            { name: 'Source', location: 'Source' },
+            { name: 'dojo', location: 'ThirdParty/dojo-release-1.8.3-src/dojo' },
+            { name: 'dijit', location: 'ThirdParty/dojo-release-1.8.3-src/dijit' },
+            { name: 'dojox', location: 'ThirdParty/dojo-release-1.8.3-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -37,42 +27,40 @@
         ]
     });
     </script>
-    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
     <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
-<body class="claro">
+<body class="claro" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
-body {
-    background: #000;
-    color: #eee;
-    font-family: sans-serif;
-    font-size: 9pt;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-.fullSize {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    border: none;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-}
-#toolbar {
-    padding: 2px 5px;
-    border-radius: 5px;
-    position: absolute;
-}
+    body {
+        background: #000;
+        color: #eee;
+        font-family: sans-serif;
+        font-size: 9pt;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    .fullSize {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        border: none;
+        width: 100%;
+        height: 100%;
+    }
+    #toolbar {
+        padding: 2px 5px;
+        border-radius: 5px;
+        position: absolute;
+    }
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="toolbar">Loading...</div>
-
 <script id="cesium_sandcastle_script">
 require([
     'Source/Cesium', 'Widgets/Dojo/CesiumWidget',
@@ -82,29 +70,64 @@ require([
     on, dom, ToggleButton)
 {
     "use strict";
-
+    
+    function disableInput(scene) {
+        var controller = scene.getScreenSpaceCameraController();
+        controller.enableTranslate = false;
+        controller.enableZoom = false;
+        controller.enableRotate = false;
+        controller.enableTilt = false;
+        controller.enableLook = false;
+    }
+    
+    function enableInput(scene) {
+        var controller = scene.getScreenSpaceCameraController();
+        controller.enableTranslate = true;
+        controller.enableZoom = true;
+        controller.enableRotate = true;
+        controller.enableTilt = true;
+        controller.enableLook = true;
+    }
+    
     function flyToSanDiego(scene) {
         Sandcastle.declare(flyToSanDiego);    // For highlighting in Sandcastle.
-        scene.getCamera().getControllers().addFlight({
-            destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-                Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0)),
-            duration: 3.0
-        });        
+        var destination = Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0);
+        
+        // only fly there if it is not the camera's current position
+        if (!Cesium.Ellipsoid.WGS84.cartographicToCartesian(destination).equalsEpsilon(scene.getCamera().getPositionWC(), Cesium.Math.EPSILON6)) {
+            disableInput(scene);
+            var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
+                destination : destination,
+                onComplete : function() {
+                    enableInput(scene);
+                }
+            });
+            scene.getAnimations().add(flight);
+        }
     }
     
     function flyToMyLocation(scene) {
         Sandcastle.declare(flyToMyLocation);    // For highlighting in Sandcastle.
         function fly(position) {
-            scene.getCamera().getControllers().addFlight({
-                destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-                    Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 100000.0)),
-                duration: 3.0
-            });        
+            var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
+            destination = Cesium.Ellipsoid.WGS84.cartographicToCartesian(destination);
+            
+            // only fly there if it is not the camera's current position
+            if (!destination.equalsEpsilon(scene.getCamera().getPositionWC(), Cesium.Math.EPSILON6)) {
+                disableInput(scene);
+                var flight = Cesium.CameraFlightPath.createAnimation(scene.getFrameState(), {
+                    destination : destination,
+                    onComplete : function() {
+                        enableInput(scene);
+                    }
+                });
+                scene.getAnimations().add(flight);
+            }
         }
         
         navigator.geolocation.getCurrentPosition(fly);
     }
-    
+
     function viewAnExtent(scene) {
         Sandcastle.declare(viewAnExtent);   // For highlighting in Sandcastle.
         var west = Cesium.Math.toRadians(-77.0);
@@ -113,57 +136,145 @@ require([
         var north = Cesium.Math.toRadians(42.0);
         
         var extent = new Cesium.Extent(west, south, east, north);
-        scene.viewExtent(extent, Cesium.Ellipsoid.WGS84);
+        scene.getCamera().controller.viewExtent(extent, Cesium.Ellipsoid.WGS84);
         
         // Show the extent.  Not required; just for show.
         var polylines = new Cesium.PolylineCollection();
         polylines.add({
             positions: Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                new Cesium.Cartographic(west, south), 
-                new Cesium.Cartographic(west, north), 
-                new Cesium.Cartographic(east, north), 
-                new Cesium.Cartographic(east, south), 
+                new Cesium.Cartographic(west, south),
+                new Cesium.Cartographic(west, north),
+                new Cesium.Cartographic(east, north),
+                new Cesium.Cartographic(east, south),
                 new Cesium.Cartographic(west, south)])
         });
-        scene.getPrimitives().add(polylines);        
+        scene.getPrimitives().add(polylines);
+    }
+    
+    function eastNorthUp(scene) {
+        Sandcastle.declare(eastNorthUp);   // For highlighting in Sandcastle.
+        var center = Cesium.Ellipsoid.WGS84.cartographicToCartesian(
+            Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+        var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+
+        // View in east-north-up frame
+        var camera = scene.getCamera();
+        camera.transform = transform;
+        camera.controller.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
+        
+        var controller = scene.getScreenSpaceCameraController();
+        controller.setEllipsoid(Cesium.Ellipsoid.UNIT_SPHERE);
+        controller.enableTilt = false;
+
+        // Zoom in
+        camera.controller.lookAt(
+            new Cesium.Cartesian3(120000.0, 120000.0, 120000.0),
+            Cesium.Cartesian3.ZERO,
+            Cesium.Cartesian3.UNIT_Z);
+
+        // Show reference frame.  Not required.
+        var primitives = scene.getPrimitives();
+        var polylines = new Cesium.PolylineCollection();
+        polylines.modelMatrix = transform;
+        
+        var xAxis = {
+                color : new Cesium.Color(1.0, 0.0, 0.0, 1.0),
+                positions : [
+                    Cesium.Cartesian3.ZERO,
+                    new Cesium.Cartesian3(100000.0, 0.0, 0.0)
+                ]
+        };
+        polylines.add(xAxis);
+        
+        var yAxis = {
+                color : new Cesium.Color(0.0, 1.0, 0.0, 1.0),
+                positions : [
+                    Cesium.Cartesian3.ZERO,
+                    new Cesium.Cartesian3(0.0, 100000.0, 0.0)
+                ]
+        };
+        polylines.add(yAxis);
+        
+        var zAxis = {
+                color : new Cesium.Color(0.0, 0.0, 1.0, 1.0),
+                positions : [
+                    Cesium.Cartesian3.ZERO,
+                    new Cesium.Cartesian3(0.0, 0.0, 100000.0)
+                ]
+        };
+        polylines.add(zAxis);
+        
+        primitives.add(polylines);
+    }
+    
+    function reset(scene) {
+        scene.getPrimitives().removeAll();
+        scene.getAnimations().removeAll();
+        enableInput(scene);
+        
+        var camera = scene.getCamera();
+        if (camera.transform.equals(Cesium.Matrix4.IDENTITY)) {
+            return;
+        }
+        
+        camera.transform = Cesium.Matrix4.IDENTITY;
+        camera.controller.constrainedAxis = undefined;
+        camera.controller.lookAt(
+            new Cesium.Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.0 * Cesium.Ellipsoid.WGS84.getMaximumRadius()),
+            Cesium.Cartesian3.ZERO,
+            Cesium.Cartesian3.UNIT_Z);
+        
+        var controller = scene.getScreenSpaceCameraController();
+        controller.setEllipsoid(Cesium.Ellipsoid.WGS84);
+        controller.enableTilt = true;
     }
     
     function createButtons(scene) {
         new ToggleButton({
             label: "Fly to San Diego",
-            onClick: function() { 
+            onClick: function() {
+                reset(scene);
                 flyToSanDiego(scene);
                 Sandcastle.highlight(flyToSanDiego);
             }
         }).placeAt('toolbar');
-        
+
         new ToggleButton({
             label: "Fly to My Location",
-            onClick: function() { 
+            onClick: function() {
+                reset(scene);
                 flyToMyLocation(scene);
                 Sandcastle.highlight(flyToMyLocation);
             }
         }).placeAt('toolbar');
-
+        
         new ToggleButton({
             label: "View an Extent",
-            onClick: function() { 
+            onClick: function() {
+                reset(scene);
                 viewAnExtent(scene);
                 Sandcastle.highlight(viewAnExtent);
             }
         }).placeAt('toolbar');
+        
+        new ToggleButton({
+            label: "Set camera reference frame",
+            onClick: function() {
+                reset(scene);
+                eastNorthUp(scene);
+                Sandcastle.highlight(eastNorthUp);
+            }
+        }).placeAt('toolbar');
     }
+
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            createButtons(widget.scene);
-            widget.startRenderLoop();
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
-
     dom.byId('toolbar').innerHTML = '';
-});
 
+    createButtons(widget.scene);
+});
 </script>
 </body>
 </html>

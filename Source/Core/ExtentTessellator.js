@@ -31,15 +31,16 @@ define([
     var ExtentTessellator = {};
 
     /**
-     * Compute vertices from a cartographic extent.  This function is lower-level than the other
-     * functions on this class.
+     * Compute vertices from a cartographic extent.  This function is different from
+     * {@link ExtentTessellator#compute} and {@link ExtentTessellator#computeBuffers}
+     * in that it assumes that you have already allocated output arrays of the correct size.
      *
      * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
      * @param {Number} description.width The number of vertices in the longitude direction.
      * @param {Number} description.height The number of vertices in the latitude direction.
      * @param {Number} description.granularityX The distance, in radians, between each longitude.
      * @param {Number} description.granularityY The distance, in radians, between each latitude.
-     * @param {Number} description.altitude The height from the surface of the ellipsoid.
+     * @param {Number} description.surfaceHeight The height from the surface of the ellipsoid.
      * @param {Boolean} description.generateTextureCoordinates Whether to generate texture coordinates.
      * @param {Boolean} description.interleaveTextureCoordinates Whether to interleave the texture coordinates into the vertex array.
      * @param {Cartesian3} description.relativetoCenter The positions will be computed as <code>worldPosition.subtract(relativeToCenter)</code>.
@@ -52,7 +53,7 @@ define([
         description = defaultValue(description, {});
 
         var extent = description.extent;
-        var altitude = description.altitude;
+        var surfaceHeight = description.surfaceHeight;
         var width = description.width;
         var height = description.height;
 
@@ -107,9 +108,9 @@ define([
                 var rSurfaceY = kY / gamma;
                 var rSurfaceZ = kZ / gamma;
 
-                vertices[vertexArrayIndex++] = rSurfaceX + nX * altitude - relativeToCenter.x;
-                vertices[vertexArrayIndex++] = rSurfaceY + nY * altitude - relativeToCenter.y;
-                vertices[vertexArrayIndex++] = rSurfaceZ + nZ * altitude - relativeToCenter.z;
+                vertices[vertexArrayIndex++] = rSurfaceX + nX * surfaceHeight - relativeToCenter.x;
+                vertices[vertexArrayIndex++] = rSurfaceY + nY * surfaceHeight - relativeToCenter.y;
+                vertices[vertexArrayIndex++] = rSurfaceZ + nZ * surfaceHeight - relativeToCenter.z;
 
                 if (generateTextureCoordinates) {
                     var geographicU = (longitude - extent.west) * lonScalar;
@@ -157,7 +158,7 @@ define([
      * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
      * @param {Number} [description.granularity=0.1] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number} [description.altitude=0.0] The height from the surface of the ellipsoid.
+     * @param {Number} [description.surfaceHeight=0.0] The height from the surface of the ellipsoid.
      * @param {Cartesian3} [description.relativetoCenter=Cartesian3.ZERO] The positions will be computed as <code>worldPosition.subtract(relativeToCenter)</code>.
      * @param {Boolean} [description.generateTextureCoordinates=false] Whether to generate texture coordinates.
      *
@@ -174,8 +175,8 @@ define([
      * from the extent for creating a vertex array.
      *
      * @see Context#createVertexArrayFromMesh
-     * @see MeshFilters#createAttributeIndices
-     * @see MeshFilters#toWireframeInPlace
+     * @see MeshFilters.createAttributeIndices
+     * @see MeshFilters.toWireframeInPlace
      * @see Extent
      *
      * @example
@@ -189,7 +190,7 @@ define([
      *         CesiumMath.toRadians(42.0)
      *     ),
      *     granularity : 0.01,
-     *     altitude : 10000.0
+     *     surfaceHeight : 10000.0
      * });
      * mesh = MeshFilters.toWireframeInPlace(mesh);
      * var va = context.createVertexArrayFromMesh({
@@ -205,11 +206,10 @@ define([
 
         var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
         description.radiiSquared = ellipsoid.getRadiiSquared();
-        description.oneOverCentralBodySemimajorAxis = ellipsoid.getOneOverRadii().x;
         description.relativeToCenter = defaultValue(description.relativeToCenter, Cartesian3.ZERO);
 
         var granularity = defaultValue(description.granularity, 0.1);
-        description.altitude = defaultValue(description.altitude, 0.0);
+        description.surfaceHeight = defaultValue(description.surfaceHeight, 0.0);
 
         description.width = Math.ceil((extent.east - extent.west) / granularity) + 1;
         description.height = Math.ceil((extent.north - extent.south) / granularity) + 1;
@@ -259,7 +259,7 @@ define([
      * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
      * @param {Number} [description.granularity=0.1] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number} [description.altitude=0.0] The height from the surface of the ellipsoid.
+     * @param {Number} [description.surfaceHeight=0.0] The height from the surface of the ellipsoid.
      * @param {Cartesian3} [description.relativetoCenter=Cartesian3.ZERO] The positions will be computed as <code>worldPosition.subtract(relativeToCenter)</code>.
      * @param {Boolean} [description.generateTextureCoordinates=false] Whether to generate texture coordinates.
      * @param {Boolean} [description.interleaveTextureCoordinates=false] If texture coordinates are generated, whether to interleave the positions and texture coordinates in a single buffer.
@@ -344,11 +344,10 @@ define([
 
         var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
         description.radiiSquared = ellipsoid.getRadiiSquared();
-        description.oneOverCentralBodySemimajorAxis = ellipsoid.getOneOverRadii().x;
         description.relativeToCenter = defaultValue(description.relativeToCenter, Cartesian3.ZERO);
 
         var granularity = defaultValue(description.granularity, 0.1);
-        description.altitude = defaultValue(description.altitude, 0.0);
+        description.surfaceHeight = defaultValue(description.surfaceHeight, 0.0);
 
         description.width = Math.ceil((extent.east - extent.west) / granularity) + 1;
         description.height = Math.ceil((extent.north - extent.south) / granularity) + 1;

@@ -6,26 +6,16 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Draw circles and ellipses contoured to the globe.">
     <title>Cesium Demo</title>
-    <script>
-    var Sandcastle = {};
-    Sandcastle.declare = function () {};
-    Sandcastle.highlight = function () {};
-    Sandcastle.registered = [];
-    if (window.location.protocol === 'file:') {
-        if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
-            window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
-        }
-    }
-    </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
     <script type="text/javascript">
     require({
         baseUrl : '../../..',
         packages: [
-            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
-            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
-            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
-            { name: 'Source', location: 'Source' },
+            { name: 'dojo', location: 'ThirdParty/dojo-release-1.8.3-src/dojo' },
+            { name: 'dijit', location: 'ThirdParty/dojo-release-1.8.3-src/dijit' },
+            { name: 'dojox', location: 'ThirdParty/dojo-release-1.8.3-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -37,42 +27,40 @@
         ]
     });
     </script>
-    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
     <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
-<body class="claro">
+<body class="claro" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
-body {
-    background: #000;
-    color: #eee;
-    font-family: sans-serif;
-    font-size: 9pt;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-.fullSize {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    border: none;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-}
-#toolbar {
-    margin: 5px;
-    padding: 2px 5px;
-    position: absolute;
-}
+    body {
+        background: #000;
+        color: #eee;
+        font-family: sans-serif;
+        font-size: 9pt;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    .fullSize {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        border: none;
+        width: 100%;
+        height: 100%;
+    }
+    #toolbar {
+        margin: 5px;
+        padding: 2px 5px;
+        position: absolute;
+    }
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="toolbar">Loading...</div>
-
 <script id="cesium_sandcastle_script">
 require([
     'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
@@ -95,7 +83,7 @@ require([
         Sandcastle.declare(circle); // For highlighting on mouseover in Sandcastle.
         circle.setPositions(Cesium.Shapes.computeCircleBoundary(
             ellipsoid, ellipsoid.cartographicToCartesian(
-                new Cesium.Cartographic.fromDegrees(-75.0, 40.0)), 300000.0));
+                Cesium.Cartographic.fromDegrees(-75.0, 40.0)), 300000.0));
         primitives.add(circle);
 
         // Outline circle
@@ -103,7 +91,7 @@ require([
         Sandcastle.declare(outline);    // For highlighting on mouseover in Sandcastle.
         outline.setPositions(Cesium.Shapes.computeCircleBoundary(
             ellipsoid, ellipsoid.cartographicToCartesian(
-                new Cesium.Cartographic.fromDegrees(-82.0, 37.0)), 300000.0));
+                Cesium.Cartographic.fromDegrees(-82.0, 37.0)), 300000.0));
         primitives.add(polylines);
 
         // Apply a material to a filled circle
@@ -111,7 +99,7 @@ require([
         Sandcastle.declare(circle2);    // For highlighting on mouseover in Sandcastle.
         circle2.setPositions(Cesium.Shapes.computeCircleBoundary(
             ellipsoid, ellipsoid.cartographicToCartesian(
-                new Cesium.Cartographic.fromDegrees(-90.0, 35.0)), 400000.0));
+                Cesium.Cartographic.fromDegrees(-90.0, 35.0)), 400000.0));
         // Any polygon-compatible material can be used
         circle2.material = Cesium.Material.fromType(scene.getContext(), Cesium.Material.TyeDyeType);
         primitives.add(circle2);
@@ -121,26 +109,24 @@ require([
         Sandcastle.declare(ellipse);    // For highlighting on mouseover in Sandcastle.
         ellipse.setPositions(Cesium.Shapes.computeEllipseBoundary(
             ellipsoid, ellipsoid.cartographicToCartesian(
-                new Cesium.Cartographic.fromDegrees(-78.0, 32.5)), 500000.0,
+                Cesium.Cartographic.fromDegrees(-78.0, 32.5)), 500000.0,
                     250000.0, Cesium.Math.toRadians(60)));
         primitives.add(ellipse);
 
     }
 
-    var cesiumViewerWidget = new CesiumViewerWidget({
+    var widget = new CesiumViewerWidget({
         onObjectMousedOver : function(mousedOverObject) {
-            cesiumViewerWidget.highlightObject(mousedOverObject);
+            widget.highlightObject(mousedOverObject);
             Sandcastle.highlight(mousedOverObject);
-        },
-        postSetup : function(widget) {
-            createPrimitives(widget);
-            widget.startRenderLoop();
         }
-    }).placeAt(dom.byId("cesiumContainer"));
-    
+    });
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
-});
 
+    createPrimitives(widget);
+});
 </script>
 </body>
 </html>

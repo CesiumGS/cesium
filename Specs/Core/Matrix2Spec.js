@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
          'Core/Matrix2',
-         'Core/Cartesian2'
+         'Core/Cartesian2',
+         'Core/Math'
      ], function(
          Matrix2,
-         Cartesian2) {
+         Cartesian2,
+         CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -52,6 +54,63 @@ defineSuite([
         expect(matrix).toEqual(expected);
     });
 
+    it('fromScale works without a result parameter', function() {
+        var expected = new Matrix2(
+                7.0, 0.0,
+                0.0, 8.0);
+        var returnedResult = Matrix2.fromScale(new Cartesian2(7.0, 8.0));
+        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromScale works with a result parameter', function() {
+        var expected = new Matrix2(
+                7.0, 0.0,
+                0.0, 8.0);
+        var result = new Matrix2();
+        var returnedResult = Matrix2.fromScale(new Cartesian2(7.0, 8.0), result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromUniformScale works without a result parameter', function() {
+        var expected = new Matrix2(
+                2.0, 0.0,
+                0.0, 2.0);
+        var returnedResult = Matrix2.fromUniformScale(2.0);
+        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromUniformScale works with a result parameter', function() {
+        var expected = new Matrix2(
+                2.0, 0.0,
+                0.0, 2.0);
+        var result = new Matrix2();
+        var returnedResult = Matrix2.fromUniformScale(2.0, result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromRotation works without a result parameter', function() {
+        var matrix = Matrix2.fromRotation(0.0);
+        expect(matrix).toEqual(Matrix2.IDENTITY);
+    });
+
+    it('fromRotation works with a result parameter', function() {
+        var expected = new Matrix2(0.0, -1.0, 1.0, 0.0);
+        var result = new Matrix2();
+        var matrix = Matrix2.fromRotation(CesiumMath.toRadians(90.0), result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('fromRotation throws without angle', function() {
+        expect(function() {
+            Matrix2.fromRotation();
+        }).toThrow();
+    });
+
     it('clone works without a result parameter', function() {
         var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var returnedResult = expected.clone();
@@ -68,7 +127,6 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
-
     it('toArray works without a result parameter', function() {
         var expected = [1.0, 2.0, 3.0, 4.0];
         var returnedResult = Matrix2.fromColumnMajorArray(expected).toArray();
@@ -83,6 +141,17 @@ defineSuite([
         expect(returnedResult).toBe(result);
         expect(returnedResult).toNotBe(expected);
         expect(returnedResult).toEqual(expected);
+    });
+
+    it('getElementIndex works', function() {
+        var i = 0;
+        for ( var col = 0; col < 2; col++) {
+            for ( var row = 0; row < 2; row++) {
+                var index = Matrix2.getElementIndex(col, row);
+                expect(index).toEqual(i);
+                i++;
+            }
+        }
     });
 
     it('getColumn works without a result parameter', function() {
@@ -383,6 +452,18 @@ defineSuite([
         }).toThrow();
     });
 
+    it('static fromScale throws without scale parameter', function() {
+        expect(function() {
+            Matrix2.fromScale(undefined);
+        }).toThrow();
+    });
+
+    it('static fromUniformScale throws without scale parameter', function() {
+        expect(function() {
+            Matrix2.fromUniformScale(undefined);
+        }).toThrow();
+    });
+
     it('static clone throws without matrix parameter', function() {
         expect(function() {
             Matrix2.clone(undefined);
@@ -398,6 +479,22 @@ defineSuite([
     it('static getColumn throws without matrix parameter', function() {
         expect(function() {
             Matrix2.getColumn(undefined, 1);
+        }).toThrow();
+    });
+
+    it('static getElement throws without row parameter', function() {
+        var row;
+        var col = 0.0;
+        expect(function() {
+            Matrix2.getElementIndex(col, row);
+        }).toThrow();
+    });
+
+    it('static getElement throws without column parameter', function() {
+        var row = 0.0;
+        var col;
+        expect(function() {
+            Matrix2.getElementIndex(col, row);
         }).toThrow();
     });
 

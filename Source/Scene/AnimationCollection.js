@@ -21,12 +21,18 @@ define([
     /**
      * DOC_TBA
      * @memberof AnimationCollection
+     *
+     * @exception {DeveloperError} duration is required.
      */
     AnimationCollection.prototype.add = function(template) {
         var t = template || {};
-        t.duration = (typeof t.duration === 'undefined') ? 3000 : t.duration;
+
+        if (typeof t.duration === 'undefined') {
+            throw new DeveloperError('duration is required.');
+        }
+
         t.delayDuration = (typeof t.delayDuration === 'undefined') ? 0 : t.delayDuration;
-        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.EaseNone : t.easingFunction;
+        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.None : t.easingFunction;
 
         var value = clone(t.startValue);
         var tween = new Tween.Tween(value);
@@ -79,7 +85,7 @@ define([
         var t = template || {};
         t.duration = (typeof t.duration === 'undefined') ? 3000 : t.duration;
         t.delayDuration = (typeof t.delayDuration === 'undefined') ? 0 : t.delayDuration;
-        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.EaseNone : t.easingFunction;
+        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.None : t.easingFunction;
 
         var value = {
             alpha : start
@@ -107,6 +113,10 @@ define([
     /**
      * DOC_TBA
      * @memberof AnimationCollection
+     *
+     * @exception {DeveloperError} object is required.
+     * @exception {DeveloperError} property is required.
+     * @exception {DeveloperError} pbject must have the specified property.
      */
     AnimationCollection.prototype.addProperty = function(object, property, start, stop, template) {
         if (typeof object === 'undefined') {
@@ -124,7 +134,7 @@ define([
         var t = template || {};
         t.duration = (typeof t.duration === 'undefined') ? 3000 : t.duration;
         t.delayDuration = (typeof t.delayDuration === 'undefined') ? 0 : t.delayDuration;
-        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.EaseNone : t.easingFunction;
+        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.None : t.easingFunction;
 
         var value = {
             value : start
@@ -165,7 +175,7 @@ define([
         var t = template || {};
         t.duration = (typeof t.duration === 'undefined') ? 3000 : t.duration;
         t.delayDuration = (typeof t.delayDuration === 'undefined') ? 0 : t.delayDuration;
-        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.EaseNone : t.easingFunction;
+        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.None : t.easingFunction;
 
         var value = {
             offset : material.uniforms.offset
@@ -222,7 +232,7 @@ define([
      */
     AnimationCollection.prototype.contains = function(animation) {
         if (typeof animation !== 'undefined') {
-            return Tween.getAll().indexOf(animation) !== -1;
+            return Tween.getAll().indexOf(animation._tween) !== -1;
         }
         return false;
     };

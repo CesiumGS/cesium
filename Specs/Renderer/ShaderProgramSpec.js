@@ -513,4 +513,4 @@ defineSuite([
             s.destroy();
         }).toThrow();
     });
-});
+}, 'WebGL');

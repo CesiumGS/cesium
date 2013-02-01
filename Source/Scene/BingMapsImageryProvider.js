@@ -1,92 +1,26 @@
-/*!
-   Portions Copyright (c) 2006-2009 Microsoft Corporation.  All rights reserved.
-
-   http://msdn.microsoft.com/en-us/library/bb259689.aspx
-   http://msdn.microsoft.com/en-us/cc300389.aspx#O
-
-   MICROSOFT LIMITED PUBLIC LICENSE
-
-   This license governs use of code marked as 'sample' or 'example' available on
-   this web site without a license agreement, as provided under the section above
-   titled 'NOTICE SPECIFIC TO SOFTWARE AVAILABLE ON THIS WEB SITE.' If you use
-   such code (the 'software'), you accept this license. If you do not accept the
-   license, do not use the software.
-
-   1. Definitions
-
-   The terms 'reproduce,' 'reproduction,' 'derivative works,' and 'distribution'
-   have the same meaning here as under U.S. copyright law.
-
-   A 'contribution' is the original software, or any additions or changes to the software.
-
-   A 'contributor' is any person that distributes its contribution under this license.
-
-   'Licensed patents' are a contributor's patent claims that read directly on its contribution.
-
-   2. Grant of Rights
-
-   (A) Copyright Grant - Subject to the terms of this license, including the license
-   conditions and limitations in section 3, each contributor grants you a non-exclusive,
-   worldwide, royalty-free copyright license to reproduce its contribution, prepare
-   derivative works of its contribution, and distribute its contribution or any
-   derivative works that you create.
-
-   (B) Patent Grant - Subject to the terms of this license, including the license
-   conditions and limitations in section 3, each contributor grants you a
-   non-exclusive, worldwide, royalty-free license under its licensed patents to
-   make, have made, use, sell, offer for sale, import, and/or otherwise dispose
-   of its contribution in the software or derivative works of the contribution
-   in the software.
-
-   3. Conditions and Limitations
-
-   (A) No Trademark License- This license does not grant you rights to use any
-   contributors' name, logo, or trademarks.
-
-   (B) If you bring a patent claim against any contributor over patents that
-   you claim are infringed by the software, your patent license from such
-   contributor to the software ends automatically.
-
-   (C) If you distribute any portion of the software, you must retain all
-   copyright, patent, trademark, and attribution notices that are present in
-   the software.
-
-   (D) If you distribute any portion of the software in source code form, you
-   may do so only under this license by including a complete copy of this license
-   with your distribution. If you distribute any portion of the software in
-   compiled or object code form, you may only do so under a license that
-   complies with this license.
-
-   (E) The software is licensed 'as-is.' You bear the risk of using it. The
-   contributors give no express warranties, guarantees or conditions. You may
-   have additional consumer rights under your local laws which this license
-   cannot change. To the extent permitted under your local laws, the contributors
-   exclude the implied warranties of merchantability, fitness for a particular
-   purpose and non-infringement.
-
-   (F) Platform Limitation - The licenses granted in sections 2(A) and 2(B)
-   extend only to the software or derivative works that you create that run
-   on a Microsoft Windows operating system product.
- */
 /*global define*/
 define([
         '../Core/defaultValue',
         '../Core/jsonp',
-        '../Core/DeveloperError',
         '../Core/Cartesian2',
+        '../Core/DeveloperError',
+        '../Core/Event',
         './BingMapsStyle',
         './DiscardMissingTileImagePolicy',
         './ImageryProvider',
+        './ImageryProviderError',
         './WebMercatorTilingScheme',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         jsonp,
-        DeveloperError,
         Cartesian2,
+        DeveloperError,
+        Event,
         BingMapsStyle,
         DiscardMissingTileImagePolicy,
         ImageryProvider,
+        ImageryProviderError,
         WebMercatorTilingScheme,
         when) {
     "use strict";
@@ -97,7 +31,7 @@ define([
      * @alias BingMapsImageryProvider
      * @constructor
      *
-     * @param {String} description.server The name of the Bing Maps server hosting the imagery.
+     * @param {String} description.url The url of the Bing Maps server hosting the imagery.
      * @param {String} [description.key] An optional Bing Maps key, which can be created at
      *        <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
      * @param {Enumeration} [description.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
@@ -115,11 +49,12 @@ define([
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
-     * @exception {DeveloperError} <code>description.server</code> is required.
+     * @exception {DeveloperError} <code>description.url</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
-     * @see SingleTileImageryProvider
      * @see OpenStreetMapImageryProvider
+     * @see SingleTileImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
      * @see <a href='http://msdn.microsoft.com/en-us/library/ff701713.aspx'>Bing Maps REST Services</a>
@@ -127,22 +62,35 @@ define([
      *
      * @example
      * var bing = new BingMapsImageryProvider({
-     *     server : 'dev.virtualearth.net',
+     *     url : 'http://dev.virtualearth.net',
      *     mapStyle : BingMapsStyle.AERIAL
      * });
      */
     var BingMapsImageryProvider = function BingMapsImageryProvider(description) {
         description = defaultValue(description, {});
 
-        if (typeof description.server === 'undefined') {
-            throw new DeveloperError('description.server is required.');
+        if (typeof description.url === 'undefined') {
+            throw new DeveloperError('description.url is required.');
         }
 
-        this._server = description.server;
-        this._key = defaultValue(description.key, 'AquXz3981-1ND5jGs8qQn7R7YUP8qkWi77yZSVM7o3nIvzb-Mg0W2Ta57xuUyywX');
+        this._url = description.url;
+        this._key = defaultValue(description.key, 'Auc5O1omLRY_ub2safz0m2vJbzhYhSfTkO9eRDtLOauonIVoAiy6BV8c-L4jl1MT');
         this._mapStyle = defaultValue(description.mapStyle, BingMapsStyle.AERIAL);
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
+
+        /**
+         * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
+         * By default, this is set to 1.3 for the "aerial" and "aerial with labels" map styles and 1.0 for
+         * all others.  Changing this value after creating an {@link ImageryLayer} for this provider will have
+         * no effect.  Instead, set the layer's {@link ImageryLayer#gamma} property.
+         *
+         * @type {Number}
+         */
+        this.defaultGamma = 1.0;
+        if (this._mapStyle === BingMapsStyle.AERIAL || this._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) {
+            this.defaultGamma = 1.3;
+        }
 
         this._tilingScheme = new WebMercatorTilingScheme({
             numberOfLevelZeroTilesX : 2,
@@ -155,14 +103,15 @@ define([
         this._imageUrlTemplate = undefined;
         this._imageUrlSubdomains = undefined;
 
+        this._errorEvent = new Event();
+
         this._ready = false;
 
-        var metadataUrl = 'http://' + this._server + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?key=' + this._key;
+        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?key=' + this._key;
         var that = this;
-        when(jsonp(metadataUrl, {
-            callbackParameterName : 'jsonp',
-            proxy : this._proxy
-        }), function(data) {
+        var metadataError;
+
+        function metadataSuccess(data) {
             var resource = data.resourceSets[0].resources[0];
 
             that._tileWidth = resource.imageWidth;
@@ -181,36 +130,34 @@ define([
             }
 
             that._ready = true;
-        });
-    };
-
-    function buildImageUrl(imageryProvider, x, y, level) {
-        var imageUrl = imageryProvider._imageUrlTemplate;
-
-        var quadkey = BingMapsImageryProvider.tileXYToQuadKey(x, y, level);
-        imageUrl = imageUrl.replace('{quadkey}', quadkey);
-
-        var subdomains = imageryProvider._imageUrlSubdomains;
-        var subdomainIndex = (x + y + level) % subdomains.length;
-        imageUrl = imageUrl.replace('{subdomain}', subdomains[subdomainIndex]);
-
-        var proxy = imageryProvider._proxy;
-        if (typeof proxy !== 'undefined') {
-            imageUrl = proxy.getURL(imageUrl);
+            ImageryProviderError.handleSuccess(metadataError);
         }
 
-        return imageUrl;
-    }
+        function metadataFailure(e) {
+            var message = 'An error occurred while accessing ' + metadataUrl + '.';
+            metadataError = ImageryProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+        }
+
+        function requestMetadata() {
+            var metadata = jsonp(metadataUrl, {
+                callbackParameterName : 'jsonp',
+                proxy : that._proxy
+            });
+            when(metadata, metadataSuccess, metadataFailure);
+        }
+
+        requestMetadata();
+    };
 
     /**
-     * Gets the name of the Bing Maps server hosting the imagery.
+     * Gets the name of the Bing Maps server url hosting the imagery.
      *
      * @memberof BingMapsImageryProvider
      *
-     * @returns {String} The server name.
+     * @returns {String} The url.
      */
-    BingMapsImageryProvider.prototype.getServer = function() {
-        return this._server;
+    BingMapsImageryProvider.prototype.getUrl = function() {
+        return this._url;
     };
 
     /**
@@ -242,8 +189,13 @@ define([
      * @memberof BingMapsImageryProvider
      *
      * @returns {Number} The width.
+     *
+     * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
      */
     BingMapsImageryProvider.prototype.getTileWidth = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTileWidth must not be called before the imagery provider is ready.');
+        }
         return this._tileWidth;
     };
 
@@ -254,8 +206,13 @@ define([
      * @memberof BingMapsImageryProvider
      *
      * @returns {Number} The height.
+     *
+     * @exception {DeveloperError} <code>getTileHeight</code> must not be called before the imagery provider is ready.
      */
     BingMapsImageryProvider.prototype.getTileHeight = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTileHeight must not be called before the imagery provider is ready.');
+        }
         return this._tileHeight;
     };
 
@@ -266,8 +223,13 @@ define([
      * @memberof BingMapsImageryProvider
      *
      * @returns {Number} The maximum level.
+     *
+     * @exception {DeveloperError} <code>getMaximumLevel</code> must not be called before the imagery provider is ready.
      */
     BingMapsImageryProvider.prototype.getMaximumLevel = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getMaximumLevel must not be called before the imagery provider is ready.');
+        }
         return this._maximumLevel;
     };
 
@@ -280,8 +242,13 @@ define([
      * @returns {TilingScheme} The tiling scheme.
      * @see WebMercatorTilingScheme
      * @see GeographicTilingScheme
+     *
+     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
      */
     BingMapsImageryProvider.prototype.getTilingScheme = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTilingScheme must not be called before the imagery provider is ready.');
+        }
         return this._tilingScheme;
     };
 
@@ -292,8 +259,13 @@ define([
      * @memberof BingMapsImageryProvider
      *
      * @returns {Extent} The extent.
+     *
+     * @exception {DeveloperError} <code>getExtent</code> must not be called before the imagery provider is ready.
      */
     BingMapsImageryProvider.prototype.getExtent = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getExtent must not be called before the imagery provider is ready.');
+        }
         return this._tilingScheme.getExtent();
     };
 
@@ -309,9 +281,27 @@ define([
      *
      * @see DiscardMissingTileImagePolicy
      * @see NeverTileDiscardPolicy
+     *
+     * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
      */
     BingMapsImageryProvider.prototype.getTileDiscardPolicy = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTileDiscardPolicy must not be called before the imagery provider is ready.');
+        }
         return this._tileDiscardPolicy;
+    };
+
+    /**
+     * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link ImageryProviderError}.
+     *
+     * @memberof BingMapsImageryProvider
+     *
+     * @returns {Event} The event.
+     */
+    BingMapsImageryProvider.prototype.getErrorEvent = function() {
+        return this._errorEvent;
     };
 
     /**
@@ -339,8 +329,13 @@ define([
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
+     *
+     * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
      */
     BingMapsImageryProvider.prototype.requestImage = function(x, y, level) {
+        if (!this._ready) {
+            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
+        }
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(url);
     };
@@ -352,8 +347,13 @@ define([
      * @memberof BingMapsImageryProvider
      *
      * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     *
+     * @exception {DeveloperError} <code>getLogo</code> must not be called before the imagery provider is ready.
      */
     BingMapsImageryProvider.prototype.getLogo = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getLogo must not be called before the imagery provider is ready.');
+        }
         if (typeof BingMapsImageryProvider._logo === 'undefined') {
             var image = new Image();
             image.loaded = false;
@@ -366,36 +366,6 @@ define([
 
         var logo = BingMapsImageryProvider._logo;
         return (logo && logo.loaded) ? logo : undefined;
-    };
-
-    /**
-     * Gets the ambient lighting intensity to use when this imagery provider is the base layer.  This can
-     * be used to lighten dark imagery or darken light imagery.
-     *
-     * @memberof BingMapsImageryProvider
-     *
-     * @param {Number} x The imagery tile X coordinate.
-     * @param {Number} y The imagery tile Y coordinate.
-     * @param {Number} level The imagery tile level-of-detail.
-     * @returns {Number} The ambient light intensity to use for this tile.
-     */
-    BingMapsImageryProvider.prototype.getIntensity = function(x, y, level) {
-        if ((this._mapStyle === BingMapsStyle.AERIAL || this._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) && level <= 7.0) {
-            return 1.0;
-        }
-        return 0.1;
-    };
-
-    /**
-     * Gets the ambient lighting intensity to use for the poles when this imagery provider is the base
-     * layer.  This can be used to lighten dark imagery or darken light imagery.
-     *
-     * @memberof BingMapsImageryProvider
-     *
-     * @returns {Number} The ambient light intensity to use for the poles.
-     */
-    BingMapsImageryProvider.prototype.getPoleIntensity = function() {
-        return 1.0;
     };
 
     BingMapsImageryProvider._logo = undefined;
@@ -416,18 +386,20 @@ define([
      * @see BingMapsImageryProvider#quadKeyToTileXY
      */
     BingMapsImageryProvider.tileXYToQuadKey = function(x, y, level) {
-        ++level;
         var quadkey = '';
-        for ( var i = level; i > 0; --i) {
-            var digit = '0'.charCodeAt(0);
-            var mask = 1 << (i - 1);
-            if ((x & mask) !== 0) {
-                digit++;
+        for ( var i = level; i >= 0; --i) {
+            var bitmask = 1 << i;
+            var digit = 0;
+
+            if ((x & bitmask) !== 0) {
+                digit |= 1;
             }
-            if ((y & mask) !== 0) {
-                digit += 2;
+
+            if ((y & bitmask) !== 0) {
+                digit |= 2;
             }
-            quadkey += String.fromCharCode(digit);
+
+            quadkey += digit;
         }
         return quadkey;
     };
@@ -444,29 +416,45 @@ define([
      * @see BingMapsImageryProvider#tileXYToQuadKey
      */
     BingMapsImageryProvider.quadKeyToTileXY = function(quadkey) {
-        var result = {
-            x : 0,
-            y : 0,
-            level : quadkey.length
-        };
+        var x = 0;
+        var y = 0;
+        var level = quadkey.length - 1;
+        for ( var i = level; i >= 0; --i) {
+            var bitmask = 1 << i;
+            var digit = +quadkey[level - i];
 
-        for ( var i = result.level; i > 0; --i) {
-            var mask = 1 << (i - 1);
-            var c = quadkey[result.level - i];
-            if (c === '1') {
-                result.x |= mask;
-            } else if (c === '2') {
-                result.y |= mask;
-            } else if (c === '3') {
-                result.x |= mask;
-                result.y |= mask;
+            if ((digit & 1) !== 0) {
+                x |= bitmask;
+            }
+
+            if ((digit & 2) !== 0) {
+                y |= bitmask;
             }
         }
-
-        --result.level;
-
-        return result;
+        return {
+            x : x,
+            y : y,
+            level : level
+        };
     };
+
+    function buildImageUrl(imageryProvider, x, y, level) {
+        var imageUrl = imageryProvider._imageUrlTemplate;
+
+        var quadkey = BingMapsImageryProvider.tileXYToQuadKey(x, y, level);
+        imageUrl = imageUrl.replace('{quadkey}', quadkey);
+
+        var subdomains = imageryProvider._imageUrlSubdomains;
+        var subdomainIndex = (x + y + level) % subdomains.length;
+        imageUrl = imageUrl.replace('{subdomain}', subdomains[subdomainIndex]);
+
+        var proxy = imageryProvider._proxy;
+        if (typeof proxy !== 'undefined') {
+            imageUrl = proxy.getURL(imageUrl);
+        }
+
+        return imageUrl;
+    }
 
     return BingMapsImageryProvider;
 });

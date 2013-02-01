@@ -3,6 +3,8 @@ defineSuite([
          'Scene/CompositePrimitive',
          'Specs/createContext',
          'Specs/destroyContext',
+         'Specs/createCamera',
+         'Specs/createFrameState',
          'Specs/equals',
          'Specs/frameState',
          'Specs/pick',
@@ -21,6 +23,8 @@ defineSuite([
          CompositePrimitive,
          createContext,
          destroyContext,
+         createCamera,
+         createFrameState,
          equals,
          frameState,
          pick,
@@ -54,25 +58,18 @@ defineSuite([
     beforeEach(function() {
         primitives = new CompositePrimitive();
 
-        camera = new Camera(context.getCanvas());
+        camera = createCamera(context);
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.up = Cartesian3.UNIT_Z;
         camera.direction = camera.position.normalize().negate();
-        camera.frustum.near = 0.01;
-        camera.frustum.far = 10.0;
-        camera.frustum.fovy = CesiumMath.toRadians(60.0);
-        camera.frustum.aspectRatio = 1.0;
 
         us = context.getUniformState();
-        us.setView(camera.getViewMatrix());
-        us.setProjection(camera.frustum.getProjectionMatrix());
-        us.setSunPosition(new Cartesian3(-2.0, 0.0, 0.0));
+        us.update(createFrameState(camera));
     });
 
     afterEach(function() {
         primitives = primitives && primitives.destroy();
         us = undefined;
-        camera = camera && camera.destroy();
     });
 
     function createLabels(position) {
@@ -359,97 +356,97 @@ defineSuite([
         expect(pickedObject).toEqual(p0);
     });
 
-    it('picks a primitive added with bringForward (0)', function() {
+    it('picks a primitive added with raise (0)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
         primitives.add(p0);
         primitives.add(p1);
-        primitives.bringForward(p1); // Already on top
+        primitives.raise(p1); // Already on top
 
         var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
-    it('picks a primitive added with bringForward (1)', function() {
+    it('picks a primitive added with raise (1)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
         primitives.add(p0);
         primitives.add(p1);
-        primitives.bringForward(p0); // Moved to top
+        primitives.raise(p0); // Moved to top
 
         var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
-    it('picks a primitive added with bringToFront (0)', function() {
+    it('picks a primitive added with raiseToTop (0)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
         primitives.add(p0);
         primitives.add(p1);
-        primitives.bringToFront(p1); // Already on top
+        primitives.raiseToTop(p1); // Already on top
 
         var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
-    it('picks a primitive added with bringToFront (1)', function() {
+    it('picks a primitive added with raiseToTop (1)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
         primitives.add(p0);
         primitives.add(p1);
-        primitives.bringToFront(p0); // Moved to top
+        primitives.raiseToTop(p0); // Moved to top
 
         var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
-    it('picks a primitive added with sendBackward (0)', function() {
+    it('picks a primitive added with lower (0)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
         primitives.add(p0);
         primitives.add(p1);
-        primitives.sendBackward(p1); // Moved back
+        primitives.lower(p1); // Moved back
 
         var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
-    it('picks a primitive added with sendBackward (1)', function() {
+    it('picks a primitive added with lower (1)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
         primitives.add(p0);
         primitives.add(p1);
-        primitives.sendBackward(p0); // Already on bottom
+        primitives.lower(p0); // Already on bottom
 
         var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
-    it('picks a primitive added with sendToBack (0)', function() {
+    it('picks a primitive added with lowerToBottom (0)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
         primitives.add(p0);
         primitives.add(p1);
-        primitives.sendToBack(p1); // Moved back
+        primitives.lowerToBottom(p1); // Moved back
 
         var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
-    it('picks a primitive added with sendToBack (1)', function() {
+    it('picks a primitive added with lowerToBottom (1)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
         primitives.add(p0);
         primitives.add(p1);
-        primitives.sendToBack(p0); // Already on bottom
+        primitives.lowerToBottom(p0); // Already on bottom
 
         var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
@@ -606,35 +603,35 @@ defineSuite([
         }).toThrow();
     });
 
-    it('bringForward throws when primitive is not in composite', function() {
+    it('raise throws when primitive is not in composite', function() {
         var p = createLabels();
 
         expect(function() {
-            primitives.bringForward(p);
+            primitives.raise(p);
         }).toThrow();
     });
 
-    it('bringToFront throws when primitive is not in composite', function() {
+    it('raiseToTop throws when primitive is not in composite', function() {
         var p = createLabels();
 
         expect(function() {
-            primitives.bringToFront(p);
+            primitives.raiseToTop(p);
         }).toThrow();
     });
 
-    it('sendBackward throws when primitive is not in composite', function() {
+    it('lower throws when primitive is not in composite', function() {
         var p = createLabels();
 
         expect(function() {
-            primitives.sendBackward(p);
+            primitives.lower(p);
         }).toThrow();
     });
 
-    it('sendToBack throws when primitive is not in composite', function() {
+    it('lowerToBottom throws when primitive is not in composite', function() {
         var p = createLabels();
 
         expect(function() {
-            primitives.sendToBack(p);
+            primitives.lowerToBottom(p);
         }).toThrow();
     });
-});
+}, 'WebGL');

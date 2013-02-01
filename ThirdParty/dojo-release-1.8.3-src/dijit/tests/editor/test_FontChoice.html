@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Editor Test: FontChoice Plugin</title>
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.Editor");
+		dojo.require("dijit._editor.plugins.FontChoice");
+		dojo.require("dijit._editor.plugins.ViewSource");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+	</script>
+</head>
+<body class="claro">
+	<br>
+	<br>
+	<div>Content before the editor.</div>
+	<br>
+	<br>
+	<p>Editor with default drop down lists:</p>
+	<div id="editor0" data-dojo-type="dijit/Editor"
+		data-dojo-props='extraPlugins:["fontName", "fontSize", "formatBlock", "viewSource"], height: "400px", style:"background-color: white; width: 100%;"'>
+		<h1>Font Choice Plugin details</h1>
+		<ol>
+			<li>The Fontchoice plugin provides three dropdown menus for manipulating font information, such as
+				font name, font size, and the format of the block containing the text (such as P, PRE, H1, and so on)</li>
+			<li>It auto-updates itself based on the caret and selection position in the document.</li>
+		</ol>
+
+		<h2>Things to test:</h2>
+		<ol>
+			<li>Verify clicking in a P tag shows Paragraph in the dropdown.</li>
+			<li>Verify clicking in a a font-sized tag that the size dropdown indicates the current size (via a name).</li>
+			<li>Verify clicking in a a font-nameed tag that the name dropdown indicates the current font name.</li>
+			<li>Verify that you can set/manipulate all the above via the menu.</li>
+		</ol>
+		<br>
+		<p id="para0">
+			This is a pararaph.
+		</p>
+		<br>
+		<pre id="pre0">
+			This is preformatted text.
+		</pre>
+		<br>
+		<h1 id="h10">
+			This is a heading.
+		</h1>
+		<h2 id="h20">
+			This is a sub-heading.
+		</h2>
+		<h3 id="h30">
+			This is a sub-sub-heading.
+		</h3>
+        <br>
+		<p id="text">This is some text in a 'p' for styling.</p>
+		<p id="text1">This is some more text in a 'p' for styling.</p>
+		<br>
+		<font id="sizedText1" size="1">This is some small text.</font>
+		<br>
+		<font id="sizedText4" size="4">This is some mediumish text.</font>
+		<br>
+		<font id="sizedText7" size="7">This is some xx-large text.</font>
+		<br>
+		<font face="'Comic Sans MS'" id="comicText">This is some text in 'Comic Sans MS'</font>.
+		<br>
+		<br>
+		<br>
+		<h1 style="background-color: lightgray">Selection format removal test</h1>
+		<div id="selectionContainer">
+			<h3>
+				Some H3 formatted content.
+			</h3>
+			<pre>
+				Some PRE formatted content.
+			</pre>
+			<p>
+				Some P formatted content.
+			</p>
+		</div>
+
+	</div>
+	<br>
+	<br>
+	<div>Content after the editor.</div>
+	<br>
+	<br>
+	<div>Content before the editor.</div>
+	<br>
+	<br>
+	<p>Editor w/ plain text dropdown values:</p>
+	<div id="editor1" data-dojo-type="dijit/Editor"
+		data-dojo-props='extraPlugins:[{name: "fontName", plainText: true}, {name: "fontSize", plainText: true}, {name: "formatBlock", plainText: true}, "viewSource"], style:"background-color: white; width: 100%;", height: "400px"'>
+		<h1>Font Choice Plugin details</h1>
+		<ol>
+			<li>This instance of the FontChoice plugin just turns off formatted content in the dropdowns.  Everything should be the same font and size.</li>
+		</ol>
+
+		<h2>Things to test:</h2>
+		<ol>
+			<li>Verify that each of the dropdowns have values that are all the same size and font.</li>
+		</ol>
+	</div>
+	<br>
+	<br>
+	<div>Content after the editor.</div>
+	<br>
+	<br>
+	<p>Editor w/ generic (web font names) font selector, traditional font name selector, font size selector, and format block selector:</p>
+	<div id="generic" data-dojo-type="dijit/Editor" data-dojo-props='height:"10em",
+		plugins:["bold", "italic", "underline", {name: "dijit/_editor/plugins/FontChoice", command: "fontName", generic: true}, "fontName", "fontSize", "formatBlock"]'>hello world</div>
+	<br>
+	<br>
+	<div>Content after the editor.</div>
+	<br>
+	<br>
+	<div>Content before the editor.</div>
+	<br>
+	<br>
+	<p>Editor w/ custom font drop down list:</p>
+	<div id="custom" data-dojo-type="dijit/Editor" data-dojo-props='height:"10em",
+		plugins:["bold", "italic", "underline", {name: "dijit/_editor/plugins/FontChoice", command: "fontName", custom:["Verdana","Myriad","Garamond"]}]'>
+			This editor should let you set the fonts to
+			<span style="font-family:Verdana;">Verdana</span>, <span style="font-family:Myriad;">Myriad</span>, and <span style="font-family:Garamond;">Garamond</span>.
+	</div>
+	<br>
+	<br>
+	<div>Content after the editor.</div>
+	<br>
+	<br>
+</body>
+</html>

@@ -22,9 +22,9 @@ define([
      * @see OpenStreetMapImageryProvider
      * @see WebMapServiceImageryProvider
      */
-    function ImageryProvider() {
+    var ImageryProvider = function ImageryProvider() {
         throw new DeveloperError('This type should not be instantiated directly.');
-    }
+    };
 
     /**
      * Gets a value indicating whether or not the provider is ready for use.
@@ -40,6 +40,8 @@ define([
      * not be called before {@link ImageryProvider#isReady} returns true.
      *
      * @returns {Extent} The extent.
+     *
+     * @exception {DeveloperError} <code>getExtent</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getExtent = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
@@ -50,6 +52,8 @@ define([
      * not be called before {@link ImageryProvider#isReady} returns true.
      *
      * @returns {Number} The width.
+     *
+     * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getTileWidth = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
@@ -60,6 +64,8 @@ define([
      * not be called before {@link ImageryProvider#isReady} returns true.
      *
      * @returns {Number} The height.
+     *
+     * @exception {DeveloperError} <code>getTileHeight</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getTileHeight = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
@@ -70,6 +76,8 @@ define([
      * not be called before {@link ImageryProvider#isReady} returns true.
      *
      * @returns {Number} The maximum level, or undefined if there is no maximum level.
+     *
+     * @exception {DeveloperError} <code>getMaximumLevel</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getMaximumLevel = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
@@ -82,6 +90,8 @@ define([
      * @returns {TilingScheme} The tiling scheme.
      * @see WebMercatorTilingScheme
      * @see GeographicTilingScheme
+     *
+     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getTilingScheme = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
@@ -99,8 +109,23 @@ define([
      *
      * @see DiscardMissingTileImagePolicy
      * @see NeverTileDiscardPolicy
+     *
+     * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getTileDiscardPolicy = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link ImageryProviderError}.
+     *
+     * @memberof ImageryProvider
+     *
+     * @returns {Event} The event.
+     */
+    ImageryProvider.prototype.getErrorEvent = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 
@@ -111,6 +136,8 @@ define([
      * @memberof ImageryProvider
      *
      * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     *
+     * @exception {DeveloperError} <code>getLogo</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getLogo = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
@@ -130,6 +157,8 @@ define([
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
+     *
+     * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
         throw new DeveloperError('This type should not be instantiated directly.');

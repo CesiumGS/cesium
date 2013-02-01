@@ -1,0 +1,123 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Heading</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet"/>
+		<link href="../themes/iphone/TabBar.css" rel="stylesheet"/>
+		<link href="../themes/common/domButtons.css" rel="stylesheet"/>
+		<link href="../themes/common/FixedSplitter.css" rel="stylesheet"/>
+		<link href="../themes/common/SpinWheel.css" rel="stylesheet"/>
+
+		<link href="../themes/iphone/SpinWheel.css" rel="stylesheet"/>
+
+		<style type="text/css">
+			@import "../themes/common/FixedSplitter.css";
+			@import "../themes/common/SpinWheel.css";
+		</style>
+
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.TabBar");
+			dojo.require("dojox.mobile.Heading");
+			dojo.require("dojox.mobile.Switch");
+			dojo.require("dojox.mobile.FixedSplitter");
+			dojo.require("dojox.mobile.View");
+			dojo.require("dojox.mobile.EdgeToEdgeCategory");
+			dojo.require("dojox.mobile.SpinWheel");
+			dojo.require("dojox.mobile.SpinWheelSlot");
+			dojo.require("dojox.mobile.migrationAssist");
+			dojo.ready(function(){
+				widget = new dojox.mobile.Heading();
+				dojo.place(widget.domNode, "Heading2-placeHolder", "replace");
+				var childWidget = new dojox.mobile.ToolBarButton({label:"Edit"});
+				childWidget.domNode.style.padding = "0px 14px";
+				widget.addChild(childWidget);
+				childWidget = new dojox.mobile.ToolBarButton({icon:"mblDomButtonWhitePlus"});
+				childWidget.domNode.style.float = "right";
+				widget.addChild(childWidget);
+				widget.domNode.appendChild(dojo.doc.createTextNode("Alarm Clock"));
+				widget.startup();
+				
+				widget.getIndexOfChild(childWidget);
+				console.log('Retun value of getIndexOfChild = ' + widget.getIndexOfChild(childWidget) + " (It should be 1.)");
+				
+				var roundRect = dijit.byId("dojox_mobile_RoundRect_0");
+				var sw2= new dojox.mobile.Switch();
+				roundRect.addChild(sw2);
+				
+				var button1 = dijit.byId("dojox_mobile_ToolBarButton_1");
+				button1.select();
+				
+				var button2 = dijit.byId("dojox_mobile_TabBarButton_2");
+				button2.select();
+				
+				var view = dijit.byId("bar");
+				ecat = new dojox.mobile.EdgeToEdgeCategory({label:"EdgeToEdgeCategory"});
+				view.addChild(ecat);
+
+				dojox.mobile.createDomButton(dojo.byId("addBtn"));
+				dojox.mobile.createDomButton(dojo.byId("delBtn"));
+
+			});
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div data-dojo-type="dojox.mobile.FixedSplitter" data-dojo-props='orientation:"V"'>
+			<div data-dojo-type="dojox.mobile.FixedSplitterPane">
+				<div id="bar" dojoType="dojox.mobile.View">
+					<h1 dojoType="dojox.mobile.Heading" label="Voice Memos">
+						<span dojoType="dojox.mobile.ToolBarButton" class="mblDomButtonWhitePlus"></span>
+						<span dojoType="dojox.mobile.ToolBarButton" label="Speaker" style="float:left"></span>
+						<span dojoType="dojox.mobile.ToolBarButton" label="Done" class="mblColorBlue" style="width:45px;float:right;"></span>
+					</h1><br>
+					<div id="Heading2-placeHolder"></div>
+
+					<ul dojoType="dojox.mobile.RoundRectList">
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png">
+							Airplane Mode
+							<div class="mblItemSwitch" dojoType="dojox.mobile.Switch"></div>
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-2.png" rightText="mac" href="test_IconContainer.html" sync="false">
+							Wi-Fi
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-3.png" rightText="AcmePhone" moveTo="general">
+							Carrier
+						</li>
+					</ul>
+					<ul dojoType="dojox.mobile.RoundRect">
+					</ul>
+					<ul dojoType="dojox.mobile.TabBar">
+						<li dojoType="dojox.mobile.TabBarButton" icon1="images/tab-icon-16.png" icon2="images/tab-icon-16h.png" selected="true">New</li>
+						<li dojoType="dojox.mobile.TabBarButton" icon1="images/tab-icon-15.png" icon2="images/tab-icon-15h.png">What's Hot</li>
+						<li dojoType="dojox.mobile.TabBarButton" icon1="images/tab-icon-10.png" icon2="images/tab-icon-10h.png">Genius</li>
+					</ul>
+					<div style="float:right;padding-right:16px;">
+						<div id="delBtn" class="mblDomButtonRedMinus" style="float:right;"></div>
+						<div id="addBtn" class="mblDomButtonBluePlus" style="float:right;"></div>
+					</div>
+				</div>
+			</div>
+			<div dojoType="dojox.mobile.FixedSplitterPane" style="background-color:pink;height:200px;">
+				pane #2
+				<div id="spin1" dojoType="dojox.mobile.SpinWheel" style="width:312px;">
+					<div dojoType="dojox.mobile.SpinWheelSlot"
+						labels="[10,20,30,40,50,60,70,80,90,00]"
+						style="text-align:center;width:100px;"></div>
+					<div dojoType="dojox.mobile.SpinWheelSlot"
+						labels="['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']"
+						style="text-align:center;width:100px;"></div>
+					<div dojoType="dojox.mobile.SpinWheelSlot"
+						labelFrom="3000" labelTo="3100"
+						style="text-align:center;width:100px;"></div>
+				</div>
+			</div>
+		</div>
+
+	</body>
+</html>

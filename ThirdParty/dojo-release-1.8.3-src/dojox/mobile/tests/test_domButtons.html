@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>domButtons</title>
+
+	<link href="../themes/common/domButtons.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonGrayArrow.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonWhiteArrow.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonDarkBlueCheck.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonWhiteCheck.css" rel="stylesheet"/>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/window",
+			"dojo/dom",
+			"dojo/ready",
+			"dojox/mobile/iconUtils",
+			"dojox/mobile",
+			"dojox/mobile/parser",
+			"dojox/mobile/compat"
+		], function(win, dom, ready, iconUtils){
+			function setIconValue(id, val){
+				var txt = win.doc.createTextNode(val);
+				dom.byId(id).firstChild.appendChild(txt);
+			}
+			ready(function(){
+				var nodes = dojo.doc.getElementsByTagName("div");
+				for(var i = 0; i < nodes.length; i++){
+					var div = nodes[i];
+					if(div.nodeType != 1 || div.className.indexOf("mblDomButton") == -1){ continue; }
+					div.style.border = "1px solid red";
+					iconUtils.createDomButton(div);
+				}
+				setIconValue("btn1", "32");
+			});
+		});
+	</script>
+</head>
+<body style="visibility:hidden;background-color:#C5CCD3;font-family:Helvetica;font-size:12px;">
+	<table style="border:none">
+		<tr><td><div class="mblDomButtonWhiteUpArrow"></div></td><td>mblDomButtonWhiteUpArrow</td></tr>
+		<tr><td><div class="mblDomButtonWhiteDownArrow"></div></td><td>mblDomButtonWhiteDownArrow</td></tr>
+		<tr><td><div class="mblDomButtonWhitePlus"></div></td><td>mblDomButtonWhitePlus</td></tr>
+		<tr><td><div class="mblDomButtonWhiteMinus"></div></td><td>mblDomButtonWhiteMinus</td></tr>
+		<tr><td><div class="mblDomButtonWhiteSearch"></div></td><td>mblDomButtonWhiteSearch</td></tr>
+		<tr><td><div class="mblDomButtonDarkBlueCheck"></div></td><td>mblDomButtonDarkBlueCheck</td></tr>
+		<tr><td><div class="mblDomButtonWhiteCheck"></div></td><td>mblDomButtonWhiteCheck</td></tr>
+		<tr><td><div class="mblDomButtonGrayArrow"></div></td><td>mblDomButtonGrayArrow</td></tr>
+		<tr><td><div class="mblDomButtonWhiteArrow"></div></td><td>mblDomButtonWhiteArrow</td></tr>
+		<tr><td><div class="mblDomButtonBlueMinus"></div></td><td>mblDomButtonBlueMinus</td></tr>
+		<tr><td><div class="mblDomButtonBluePlus"></div></td><td>mblDomButtonBluePlus</td></tr>
+		<tr><td><div class="mblDomButtonDarkBlueMinus"></div></td><td>mblDomButtonDarkBlueMinus</td></tr>
+		<tr><td><div class="mblDomButtonDarkBluePlus"></div></td><td>mblDomButtonDarkBluePlus</td></tr>
+		<tr><td><div class="mblDomButtonRedMinus"></div></td><td>mblDomButtonRedMinus</td></tr>
+		<tr><td><div class="mblDomButtonRedPlus"></div></td><td>mblDomButtonRedPlus</td></tr>
+		<tr><td><div class="mblDomButtonCheckboxOn"></div></td><td>mblDomButtonCheckboxOn</td></tr>
+		<tr><td><div class="mblDomButtonCheckboxOff"></div></td><td>mblDomButtonCheckboxOff</td></tr>
+
+		<tr><td><div class="mblDomButtonBlueCircleMinus"></div></td><td>mblDomButtonBlueCircleMinus</td></tr>
+		<tr><td><div class="mblDomButtonBlueCirclePlus"></div></td><td>mblDomButtonBlueCirclePlus</td></tr>
+		<tr><td><div class="mblDomButtonBlueCircleArrow"></div></td><td>mblDomButtonBlueCircleArrow</td></tr>
+
+		<tr><td><div class="mblDomButtonRedCircleMinus"></div></td><td>mblDomButtonRedCircleMinus</td></tr>
+		<tr><td><div class="mblDomButtonRedCirclePlus"></div></td><td>mblDomButtonRedCirclePlus</td></tr>
+		<tr><td><div class="mblDomButtonRedCircleArrow"></div></td><td>mblDomButtonRedCircleArrow</td></tr>
+
+		<tr><td><div class="mblDomButtonGreenCircleMinus"></div></td><td>mblDomButtonGreenCircleMinus</td></tr>
+		<tr><td><div class="mblDomButtonGreenCirclePlus"></div></td><td>mblDomButtonGreenCirclePlus</td></tr>
+		<tr><td><div class="mblDomButtonGreenCircleArrow"></div></td><td>mblDomButtonGreenCircleArrow</td></tr>
+		<tr><td><div class="mblDomButtonBlackCircleCross"></div></td><td>mblDomButtonBlackCircleCross</td></tr>
+
+		<tr><td><div id="btn1" class="mblDomButtonGrayRoundRect"></div></td><td>mblDomButtonGrayRoundRect</td></tr>
+
+
+		<tr><td><div class="mblDomButtonSilverCircleDownArrow"></div></td><td>mblDomButtonSilverCircleDownArrow</td></tr>
+		<tr><td><div class="mblDomButtonSilverCircleGreenButton"></div></td><td>mblDomButtonSilverCircleGreenButton</td></tr>
+		<tr><td><div class="mblDomButtonSilverCircleGrayButton"></div></td><td>mblDomButtonSilverCircleGrayButton</td></tr>
+		<tr><td><div class="mblDomButtonSilverCircleOrangeButton"></div></td><td>mblDomButtonSilverCircleOrangeButton</td></tr>
+		<tr><td><div class="mblDomButtonSilverCircleGreenPlus"></div></td><td>mblDomButtonSilverCircleGreenPlus</td></tr>
+		<tr><td><div class="mblDomButtonSilverCircleRedCross"></div></td><td>mblDomButtonSilverCircleRedCross</td></tr>
+
+		<tr><td><div class="mblDomButtonBlueBall"></div></td><td>mblDomButtonBlueBall</td></tr>
+		<tr><td><div class="mblDomButtonGreenBall"></div></td><td>mblDomButtonGreenBall</td></tr>
+		<tr><td><div class="mblDomButtonOrangeBall"></div></td><td>mblDomButtonOrangeBall</td></tr>
+		<tr><td><div class="mblDomButtonRedBall"></div></td><td>mblDomButtonRedBall</td></tr>
+
+		<tr><td><div class="mblDomButtonYellowStar"></div></td><td>mblDomButtonYellowStar</td></tr>
+		<tr><td><div class="mblDomButtonGrayStar"></div></td><td>mblDomButtonGrayStar</td></tr>
+		<tr><td><div class="mblDomButtonGrayCross"></div></td><td>mblDomButtonGrayCross</td></tr>
+
+		<tr><td><div class="mblDomButtonGrayKnob"></div></td><td>mblDomButtonGrayKnob</td></tr>
+
+		<tr><td><div class="mblDomButtonGrayPlus"></div></td><td>mblDomButtonGrayPlus</td></tr>
+		<tr><td><div class="mblDomButtonGrayMinus"></div></td><td>mblDomButtonGrayMinus</td></tr>
+	</table>
+</body>
+</html>
