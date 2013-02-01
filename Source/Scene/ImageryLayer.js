@@ -507,9 +507,9 @@ define([
     };
 
     ImageryLayer.prototype.updateTiles = function(context, frameState, tilesToRenderByTextureCount) {
-        var currentExtent = this.imageryProvider.currentExtent;
+        var currentExtent = this._imageryProvider.currentExtent;
         if (typeof currentExtent !== 'undefined') {
-            var imageryProvider = this.imageryProvider;
+            var imageryProvider = this._imageryProvider;
 
             if (typeof imageryProvider.update !== 'undefined') {
                 imageryProvider.update(context, frameState, tilesToRenderByTextureCount);
@@ -533,7 +533,7 @@ define([
                         }
 
                         imagery.extent = currentExtent.clone();
-                        tileImagery.textureTranslationAndScale = this.calculateTextureTranslationAndScale(tile, tileImagery);
+                        tileImagery.textureTranslationAndScale = this._calculateTextureTranslationAndScale(tile, tileImagery);
 
                         var imageryExtent = imagery.extent;
                         var terrainExtent = tile.extent;

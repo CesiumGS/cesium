@@ -220,7 +220,7 @@ define([
 
                 //if (typeof texture === 'undefined') {
                     for (var imageryIndex = 0; imageryIndex < tile.imagery.length; ++imageryIndex) {
-                        if (tile.imagery[imageryIndex].imagery.imageryLayer.imageryProvider === this) {
+                        if (tile.imagery[imageryIndex].imagery.imageryLayer._imageryProvider === this) {
                             if (typeof texture !== 'undefined' && texture !== tile.imagery[imageryIndex].imagery.texture) {
                                 console.log('wtf');
                             }

@@ -657,7 +657,8 @@ define([
             this.dayImageUrl = defaultValue(this.dayImageUrl, imageryUrl + 'NE2_LR_LC_SR_W_DR_2048.jpg');
             this.skyBoxBaseUrl = defaultValue(this.skyBoxBaseUrl, imageryUrl + 'SkyBox/tycho2t3_80');
 
-            var imageryLayerCollection = new ImageryLayerCollection();
+            var centralBody = this.centralBody = new CentralBody(ellipsoid);
+            var imageryLayerCollection = centralBody.getImageryLayers();
 
 //            imageryLayerCollection.addImageryProvider(new BingMapsImageryProvider({
 //                server : 'dev.virtualearth.net',
@@ -671,12 +672,11 @@ define([
             //var singleLayer = imageryLayerCollection.addImageryProvider(single);
 
             var bing = new BingMapsImageryProvider({
-                server : 'dev.virtualearth.net',
+                url : 'http://dev.virtualearth.net',
                 mapStyle : this.mapStyle,
                 // Some versions of Safari support WebGL, but don't correctly implement
                 // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/'),
-                key : 'Auc5O1omLRY_ub2safz0m2vJbzhYhSfTkO9eRDtLOauonIVoAiy6BV8c-L4jl1MT'
+                proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
             });
             var bingLayer = imageryLayerCollection.addImageryProvider(bing);
 
@@ -721,12 +721,6 @@ define([
 
             }, false);
 
-            var centralBody = this.centralBody = new CentralBody(ellipsoid, undefined, imageryLayerCollection);
-            centralBody.showSkyAtmosphere = true;
-            centralBody.showGroundAtmosphere = true;
-            centralBody.showNight = false;
-            centralBody.affectedByLighting = false;
-
 //            // This logo is replicated by the imagery selector button, so it's hidden here.
 //            centralBody.logoOffset = new Cartesian2(-100, -100);
 //
@@ -755,8 +749,7 @@ define([
             scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
 
             var camera = scene.getCamera();
-            camera.position = camera.position.multiplyByScalar(1.5);
-            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
+            camera.controller.viewExtent(extent);
 
             var handler = new ScreenSpaceEventHandler(canvas);
             handler.setInputAction(lang.hitch(this, '_handleLeftClick'), ScreenSpaceEventType.LEFT_CLICK);
