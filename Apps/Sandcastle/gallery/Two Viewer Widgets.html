@@ -40,12 +40,12 @@ require([
     "use strict";
 
     // This example shows two widgets that share a single
-    // animationController.  It is also possible to use
-    // separate animationControllers to show a scene at
+    // animation view model.  It is also possible to use
+    // separate view models  to show a scene at
     // different times.
 
     var endUserOptions = {
-        source : '../../CesiumViewer/Gallery/simple.czml'
+        'source' : '../../CesiumViewer/Gallery/simple.czml'
     };
 
     // First, create widget1 (the top widget).
@@ -53,20 +53,20 @@ require([
         endUserOptions : endUserOptions,
         autoStartRenderLoop : false
     });
-    widget1.placeAt("cesiumContainerTop");
+    widget1.placeAt('cesiumContainerTop');
     widget1.startup();
 
-    // Save off a copy of widget1's animationController
-    var animationController = widget1.animationController;
+    // Save off a copy of widget1's animation view model
+    var animationViewModel = widget1.animation.viewModel;
 
     // Now create widget2, passing in the
-    // existing animationController to be shared.
+    // existing animation view model to be shared.
     var widget2 = new CesiumViewerWidget({
-        animationController : animationController,
+        animationViewModel : animationViewModel,
         endUserOptions : endUserOptions,
         autoStartRenderLoop : false
     });
-    widget2.placeAt("cesiumContainerBottom");
+    widget2.placeAt('cesiumContainerBottom');
     widget2.startup();
 
     // Switch widget2 to Columbus View.
@@ -77,13 +77,8 @@ require([
     function updateAndRender() {
         // Get the time from the shared controller, then
         // update and render both widgets.
-        var currentTime = animationController.update();
-        widget1.initializeFrame();
-        widget2.initializeFrame();
-        widget1.update(currentTime);
-        widget2.update(currentTime);
-        widget1.render(currentTime);
-        widget2.render(currentTime);
+        widget1.updateAndRender();
+        widget2.updateAndRender();
         requestAnimationFrame(updateAndRender);
     }
 

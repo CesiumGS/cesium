@@ -143,11 +143,10 @@ require([
     widget.clock.multiplier = 300.0;
 
     // Custom render loop adapted from CesiumViewerWidget.startRenderLoop()
-    var animationController = widget.animationController;
-
     function updateAndRender() {
-        var currentTime = animationController.update();
         widget.initializeFrame();
+        widget.animation.viewModel.update();
+        var currentTime = widget.clock.currentTime;
         widget.update(currentTime);
 
         // Update the visualizers...
