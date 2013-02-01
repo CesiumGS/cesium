@@ -772,7 +772,6 @@ define([
     }
 
     function processTerrainStateMachine(surface, context, terrainProvider, tile) {
-        var mesh;
         var loaded = tile.loadedTerrain;
         var upsampled = tile.upsampledTerrain;
         var suspendUpsampling = false;
@@ -788,7 +787,7 @@ define([
             }
 
             if (loaded.state === TerrainState.READY) {
-                publishTileTerrain(tile, loaded);
+                loaded.publishToTile(tile);
 
                 // No further loading or upsampling is necessary.
                 tile.loadedTerrain = undefined;
@@ -813,7 +812,7 @@ define([
             }
 
             if (upsampled.state === TerrainState.READY) {
-                publishTileTerrain(tile, upsampled);
+                upsampled.publishToTile(tile);
 
                 // No further upsampling is necessary.  We need to continue loading, though.
                 tile.upsampledTerrain = undefined;
@@ -900,10 +899,6 @@ define([
 
         if (tileTerrain.state === TerrainState.TRANSFORMED) {
             createTileTerrainResources(surface, context, terrainProvider, tile, tileTerrain);
-        }
-
-        if (tileTerrain.state === TerrainState.READY) {
-            tile.upsampledTerrain = undefined;
         }
     }
 
@@ -1003,28 +998,6 @@ define([
                 }
             }
         }
-    }
-
-    function publishTileTerrain(tile, tileTerrain) {
-        var mesh = tileTerrain.mesh;
-        Cartesian3.clone(mesh.center, tile.center);
-        tile.minHeight = mesh.minHeight;
-        tile.maxHeight = mesh.maxHeight;
-        BoundingSphere.clone(mesh.boundingSphere2D, tile.boundingSphere2D);
-        BoundingSphere.clone(mesh.boundingSphere3D, tile.boundingSphere3D);
-
-        if (typeof mesh.occludeePointInScaledSpace !== 'undefined') {
-            Cartesian3.clone(mesh.occludeePointInScaledSpace, tile.occludeePointInScaledSpace);
-        } else {
-            tile.occludeePointInScaledSpace = undefined;
-        }
-
-        // Free the existing vertex array, if any.
-        tile.freeVertexArray();
-
-        // Transfer ownership of the vertex array to the tile itself.
-        tile.vertexArray = tileTerrain.vertexArray;
-        tileTerrain.vertexArray = undefined;
     }
 
     // This is debug code to render the bounding sphere of the tile in

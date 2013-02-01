@@ -1,7 +1,11 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
+        '../Core/Cartesian3',
         './TerrainState'
     ], function(
+        BoundingSphere,
+        Cartesian3,
         TerrainState) {
    "use strict";
 
@@ -34,6 +38,28 @@ define([
                }
            }
        }
+   };
+
+   TileTerrain.prototype.publishToTile = function(tile) {
+       var mesh = this.mesh;
+       Cartesian3.clone(mesh.center, tile.center);
+       tile.minHeight = mesh.minHeight;
+       tile.maxHeight = mesh.maxHeight;
+       BoundingSphere.clone(mesh.boundingSphere2D, tile.boundingSphere2D);
+       BoundingSphere.clone(mesh.boundingSphere3D, tile.boundingSphere3D);
+
+       if (typeof mesh.occludeePointInScaledSpace !== 'undefined') {
+           Cartesian3.clone(mesh.occludeePointInScaledSpace, tile.occludeePointInScaledSpace);
+       } else {
+           tile.occludeePointInScaledSpace = undefined;
+       }
+
+       // Free the existing vertex array, if any.
+       tile.freeVertexArray();
+
+       // Transfer ownership of the vertex array to the tile itself.
+       tile.vertexArray = this.vertexArray;
+       this.vertexArray = undefined;
    };
 
    return TileTerrain;
