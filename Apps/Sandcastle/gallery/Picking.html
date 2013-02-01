@@ -7,74 +7,39 @@
     <meta name="description" content="Use the mouse to select and manipulate objects in the scene.">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
     <script type="text/javascript">
-    require({
-        baseUrl : '../../..',
+    var dojoConfig = {
+        baseUrl : '../../../Source',
         packages: [
-            { name: 'dojo', location: 'ThirdParty/dojo-release-1.8.3-src/dojo' },
-            { name: 'dijit', location: 'ThirdParty/dojo-release-1.8.3-src/dijit' },
-            { name: 'dojox', location: 'ThirdParty/dojo-release-1.8.3-src/dojox' },
-            { name: 'Assets', location: 'Source/Assets' },
-            { name: 'Core', location: 'Source/Core' },
-            { name: 'DynamicScene', location: 'Source/DynamicScene' },
-            { name: 'Renderer', location: 'Source/Renderer' },
-            { name: 'Scene', location: 'Source/Scene' },
-            { name: 'Shaders', location: 'Source/Shaders' },
-            { name: 'ThirdParty', location: 'Source/ThirdParty' },
-            { name: 'Widgets', location: 'Source/Widgets' },
-            { name: 'Workers', location: 'Source/Workers' }
+            { name: 'dojo', location: '../ThirdParty/dojo-release-1.8.3-src/dojo' },
+            { name: 'dijit', location: '../ThirdParty/dojo-release-1.8.3-src/dijit' },
+            { name: 'dojox', location: '../ThirdParty/dojo-release-1.8.3-src/dojox' }
         ]
-    });
+    };
     </script>
-    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
+    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
-<body class="claro" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
+<body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
-    body {
-        background: #000;
-        color: #eee;
-        font-family: sans-serif;
-        font-size: 9pt;
-        padding: 0;
-        margin: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-    }
-    .fullSize {
-        display: block;
-        position: absolute;
-        top: 0;
-        left: 0;
-        border: none;
-        width: 100%;
-        height: 100%;
-    }
-    #toolbar {
-        margin: 5px;
-        padding: 2px 5px;
-        position: absolute;
-    }
+    @import url(../templates/bucket.css);
 </style>
-
 <div id="cesiumContainer" class="fullSize"></div>
-<div id="toolbar">Loading...</div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 require([
-    'Source/Cesium', 'Widgets/Dojo/CesiumWidget',
-    'dojo/on', 'dojo/dom', 'dijit/form/Button'
+    'Cesium', 'Widgets/Dojo/CesiumWidget', 'dijit/form/Button'
 ], function(
-    Cesium, CesiumWidget,
-    on, dom, Button)
+    Cesium, CesiumWidget, Button)
 {
     "use strict";
-    
+
     var handler;
     var label;
     var billboard;
-    
+
     function addBillboard(scene, ellipsoid) {
         var primitives = scene.getPrimitives();
         var image = new Image();
@@ -90,19 +55,19 @@ require([
         };
         image.src = '../images/Cesium_Logo_overlay.png';
     }
-    
+
     function cleanup() {
         widget.scene.getPrimitives().removeAll();
         handler = handler && handler.destroy();
     }
-    
+
     function pickCartographicPosition(scene, ellipsoid) {
         Sandcastle.declare(pickCartographicPosition);   // For highlighting in Sandcastle.
 
-        var labels = new Cesium.LabelCollection(undefined);
+        var labels = new Cesium.LabelCollection();
         label = labels.add();
         scene.getPrimitives().add(labels);
-        
+
         // Mouse over the globe to see the cartographic position
         handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(function(movement) {
@@ -139,13 +104,13 @@ require([
             Cesium.ScreenSpaceEventType.MOUSE_MOVE
         );
     }
-    
+
     function animateBillboardOnPick(scene, ellipsoid) {
         Sandcastle.declare(animateBillboardOnPick); // For highlighting in Sandcastle.
         addBillboard(scene, ellipsoid);
-        
+
         var animation;
-        
+
         function update(value) {
             billboard.setScale(value.scale);
             billboard.setColor({ red : value.red, blue : value.blue, green : value.green, alpha : value.alpha });
@@ -211,14 +176,14 @@ require([
         },
         Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     }
-    
+
     function erodeSensorOnClick(scene, ellipsoid) {
         Sandcastle.declare(erodeSensorOnClick); // For highlighting in Sandcastle.
-        
+
         // Setup - Add the sensor.
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
         modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
-        var sensors = new Cesium.SensorVolumeCollection(undefined);
+        var sensors = new Cesium.SensorVolumeCollection();
         var sensor = sensors.addRectangularPyramid({
             modelMatrix : modelMatrix,
             radius : 20000000.0,
@@ -228,7 +193,7 @@ require([
             material : Cesium.Material.fromType(scene.getContext(), 'Erosion')
         });
         scene.getPrimitives().add(sensors);
-        
+
         // If the mouse is over the sensor, change start the erosion animation.
         var eroding = false;
         handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
@@ -248,7 +213,7 @@ require([
                 }
             }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     }
-    
+
     function layerCompositePrimitive(scene, ellipsoid) {
         Sandcastle.declare(layerCompositePrimitive);    // For highlighting in Sandcastle.
         var primitives = scene.getPrimitives();
@@ -262,7 +227,7 @@ require([
             }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
         // Construct the primitives.
-        var redPolygon = new Cesium.Polygon(undefined);
+        var redPolygon = new Cesium.Polygon();
         redPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-70.0, 30.0), Cesium.Cartographic.fromDegrees(-60.0, 30.0), Cesium.Cartographic.fromDegrees(-60.0, 40.0), Cesium.Cartographic.fromDegrees(-70.0, 40.0)]));
         redPolygon.material.uniforms.color = {
             red : 1.0,
@@ -271,7 +236,7 @@ require([
             alpha : 0.5
         };
 
-        var bluePolygon = new Cesium.Polygon(undefined);
+        var bluePolygon = new Cesium.Polygon();
         bluePolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-75.0, 34.0), Cesium.Cartographic.fromDegrees(-63.0, 34.0), Cesium.Cartographic.fromDegrees(-63.0, 40.0), Cesium.Cartographic.fromDegrees(-75.0, 40.0)]));
         bluePolygon.material.uniforms.color = {
             red : 0.0,
@@ -280,7 +245,7 @@ require([
             alpha : 0.5
         };
 
-        var greenPolygon = new Cesium.Polygon(undefined);
+        var greenPolygon = new Cesium.Polygon();
         greenPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-67.0, 36.0), Cesium.Cartographic.fromDegrees(-55.0, 36.0), Cesium.Cartographic.fromDegrees(-55.0, 30.0), Cesium.Cartographic.fromDegrees(-67.0, 30.0)]));
         greenPolygon.material.uniforms.color = {
             red : 0.0,
@@ -294,11 +259,11 @@ require([
         primitives.add(bluePolygon);
         primitives.add(greenPolygon);
     }
-    
+
     function createButtons(widget) {
         var ellipsoid = widget.ellipsoid;
         var scene = widget.scene;
-        
+
         new Button({
             label: 'Show Cartographic Position on Mouse Over',
             onClick: function() {
@@ -307,7 +272,7 @@ require([
                 Sandcastle.highlight(pickCartographicPosition);
             }
         }).placeAt('toolbar');
-        
+
         new Button({
             label: 'Pick Billboard',
             onClick: function() {
@@ -317,7 +282,7 @@ require([
                 Sandcastle.highlight(pickBillboard);
             }
         }).placeAt('toolbar');
-        
+
         new Button({
             label: 'Animate Billboard on Pick',
             onClick: function() {
@@ -327,7 +292,7 @@ require([
                 Sandcastle.highlight(animateBillboardOnPick);
             }
         }).placeAt('toolbar');
-        
+
         new Button({
             label: 'Erode Sensor on Click',
             onClick: function() {
@@ -337,7 +302,7 @@ require([
                 Sandcastle.highlight(erodeSensorOnClick);
             }
         }).placeAt('toolbar');
-        
+
         new Button({
             label: 'Layer Primitives',
             onClick: function() {
@@ -350,12 +315,13 @@ require([
     }
 
     var widget = new CesiumWidget();
-    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.placeAt('cesiumContainer');
     widget.startup();
-    dom.byId('toolbar').innerHTML = '';
 
     createButtons(widget);
     pickCartographicPosition(widget.scene, widget.ellipsoid);
+
+    Sandcastle.finishedLoading();
 });
 </script>
 </body>
