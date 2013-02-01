@@ -4,14 +4,16 @@ Change Log
 Beta Releases
 -------------
 
-### b13 - 2013-xx-xx
+### b14 - 2013-xx-xx
+* Added a new `Animation` widget, plus related API in `AnimationController` and `Clock`.
+
+### b13 - 2013-02-01
 * Breaking changes:
    * The combined `Cesium.js` file and other required files are now created in `Build/Cesium` and `Build/CesiumUnminified` folders.
    * The Web Worker files needed when using the combined `Cesium.js` file are now in a `Workers` subdirectory.
    * Removed `erosion` property from `Polygon`, `ComplexConicSensorVolume`, `RectangularPyramidSensorVolume`, and `ComplexConicSensorVolume`.  Use the new `Erosion` material.  See the Sandbox Animation example.
    * Removed `setRectangle` and `getRectangle` methods from `ViewportQuad`. Use the new `rectangle` property.
    * Removed `time` parameter from `Scene.initializeFrame`. Instead, pass the time to `Scene.render`. 
-* Added a new `Animation` widget, plus related API in `AnimationController` and `Clock`.
 * Added new `RimLighting` and `Erosion` materials.  See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page.
 * Added `hue` and `saturation` properties to `ImageryLayer`.
 * Added `czm_hue` and `czm_saturation` to adjust the hue and saturation of RGB colors.
