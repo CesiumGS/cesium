@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>dijit.layout.BorderContainer DOH Test</title>
+
+	<!-- only needed for test files: -->
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true"></script>
+
+	<!-- only needed for alternate theme testing: -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.form.FilteringSelect");
+
+		dojo.require("dijit.MenuBar");
+		dojo.require("dijit.PopupMenuBarItem");
+		dojo.require("dijit.Menu");
+		dojo.require("dijit.MenuItem");
+
+		dojo.require("doh.runner");
+		dojo.require("dijit.tests.helpers");	// functions to help test
+		dojo.require("dijit.tests.layout.robot.borderContainerTestFunctions");
+
+		var bc, cp1, cp2, cp3;
+        dojo.ready(function(){
+
+			doh.register("markup", [
+				function parse(){
+					dojo.parser.parse();
+				},
+				function initialConditions(){
+					dijit.tests.layout.robot.borderContainerTestFunctions.checkBCpanes(dijit.byId("border1"));
+					dijit.tests.layout.robot.borderContainerTestFunctions.checkBCpanes(dijit.byId("border2"));
+					doh.is("auto", dojo.style("border1-left", "overflow"), "overflow on ContentPane should be auto");
+					doh.t("layoutPriority" in dijit.byId("menu"),
+							"make sure layoutPriority flag added to _WidgetBase is visible in MenuBar");
+				},
+
+				function resize(){
+					// current size of panes
+					var oTop = dojo.position(dojo.byId("border1-top")),
+						oLeft = dojo.position(dojo.byId("border1-left")),
+						oCenter = dojo.position(dojo.byId("border1-center")),
+						oRight = dojo.position(dojo.byId("border1-right")),
+						oBottom = dojo.position(dojo.byId("border1-bottom"));
+
+					// make whole BorderContainer 100px bigger (width and height)
+					var mb = dojo.marginBox("border1");
+					dijit.byId("border1").resize({w: mb.w + 100, h: mb.h + 100});
+
+					// new size of panes
+					var nTop = dojo.position(dojo.byId("border1-top")),
+						nLeft = dojo.position(dojo.byId("border1-left")),
+						nCenter = dojo.position(dojo.byId("border1-center")),
+						nRight = dojo.position(dojo.byId("border1-right")),
+						nBottom = dojo.position(dojo.byId("border1-bottom"));
+
+					doh.is(oTop.w + 100, nTop.w, "top width + 100");
+					doh.is(oTop.h, nTop.h, "top height unchanged");
+					doh.is(oCenter.w + 100, nCenter.w, "center width + 100");
+					doh.is(oCenter.h + 100, nCenter.h, "center height + 100");
+					doh.is(oBottom.w + 100, nBottom.w, "bottom width + 100");
+					doh.is(oBottom.h, nBottom.h, "bottom height unchanged");
+					doh.is(oLeft.w, nLeft.w, "left width unchanged");
+					doh.is(oLeft.h + 100, nLeft.h, "left height + 100");
+					doh.is(oRight.w, nRight.w, "right width unchanged");
+					doh.is(oRight.h + 100, nRight.h, "right height + 100");
+
+					// size BorderContainer back to original size
+					dijit.byId("border1").resize({w: mb.w, h: mb.h});
+
+					var nnTop = dojo.position(dojo.byId("border1-top")),
+						nnLeft = dojo.position(dojo.byId("border1-left")),
+						nnCenter = dojo.position(dojo.byId("border1-center")),
+						nnRight = dojo.position(dojo.byId("border1-right")),
+						nnBottom = dojo.position(dojo.byId("border1-bottom"));
+
+					doh.is(dojo.toJson(oTop), dojo.toJson(nnTop), "top after second resize");
+					doh.is(dojo.toJson(oCenter), dojo.toJson(nnCenter), "center after second resize");
+					doh.is(dojo.toJson(oBottom), dojo.toJson(nnBottom), "bottom after second resize");
+					doh.is(dojo.toJson(oLeft), dojo.toJson(nnLeft), "left after second resize");
+					doh.is(dojo.toJson(oRight), dojo.toJson(nnRight), "right after second resize");
+				},
+
+				function addRemovePanes(){
+					// current size of panes
+					var oLeft = dojo.position(dojo.byId("border1-left")),
+						oCenter = dojo.position(dojo.byId("border1-center")),
+						oRight = dojo.position(dojo.byId("border1-right")),
+						oBottom = dojo.position(dojo.byId("border1-bottom"));
+
+					// remove top pane... should expand left/center/right
+					dijit.byId("border1").removeChild(dijit.byId("border1-top"));
+					doh.is("auto", dijit.byId("border1-top").domNode.style.top, "border1-topremove, style.top-->auto");
+					doh.is("auto", dijit.byId("border1-top").domNode.style.left, "border1-topremove, style.left-->auto");
+					doh.is("static", dijit.byId("border1-top").domNode.style.position, "border1-topremove, style.position");
+
+					// new size of panes
+					var nLeft = dojo.position(dojo.byId("border1-left")),
+						nCenter = dojo.position(dojo.byId("border1-center")),
+						nRight = dojo.position(dojo.byId("border1-right")),
+						nBottom = dojo.position(dojo.byId("border1-bottom"));
+
+					doh.t(nLeft.h > oLeft.h, "left height increased");
+					doh.t(nCenter.h > oCenter.h, "center height increased");
+					doh.t(nRight.h > oRight.h, "left height increased");
+					doh.is(oBottom.h, nBottom.h, "bottom height didn't change");
+
+					// remove left pane... should just expand center pane
+					dijit.byId("border1").removeChild(dijit.byId("border1-left"));
+
+					// new size of panes
+					var nnCenter = dojo.position(dojo.byId("border1-center")),
+						nnRight = dojo.position(dojo.byId("border1-right")),
+						nnBottom = dojo.position(dojo.byId("border1-bottom"));
+
+					doh.t(nnCenter.w > nCenter.w, "center width increased");
+					doh.is(dojo.toJson(nRight), dojo.toJson(nnRight), "right stayed same");
+					doh.is(dojo.toJson(nBottom), dojo.toJson(nnBottom), "bottom stayed same");
+
+					// check that all panes sane
+					dijit.tests.layout.robot.borderContainerTestFunctions.checkBCpanes(dijit.byId("border1"));
+
+					// put back left pane as the top pane
+					dijit.byId("border1").addChild(dijit.byId("border1-left"));
+
+					// check that all panes sane
+					dijit.tests.layout.robot.borderContainerTestFunctions.checkBCpanes(dijit.byId("border1"));
+				}
+			]);
+
+			doh.register("programmatic creation", [
+				function createProgramatically(){
+					originalWidgetCnt = dijit.registry.length;
+
+					bc = new dijit.layout.BorderContainer({style:'height:400px;width:500px;border:1px solid black'}).
+							placeAt("programmatic", "after");
+		
+					cp1 = new dijit.layout.ContentPane({region:'top',style:'height:100px;background-color:red',splitter:true, id:"cp1"});
+					cp1.domNode.innerHTML = "top pane";
+					bc.addChild(cp1);
+		
+					cp2 = new dijit.layout.ContentPane({region:'center',style:'background-color:green', id:'cp2'});
+					cp2.domNode.innerHTML = "center pane";
+					bc.addChild(cp2);
+		
+					cp3 = new dijit.layout.ContentPane({region:'left', splitter: true, style:'width: 100px;', id:'cp3'});
+					cp3.domNode.innerHTML = "left pane";
+					
+					bc.startup();
+
+					dijit.tests.layout.robot.borderContainerTestFunctions.checkBCpanes(bc);
+				},
+				function addLeftPane(){
+					var nWidgetsBefore = dijit.registry.length;
+					bc.addChild(cp3);
+					dijit.tests.layout.robot.borderContainerTestFunctions.checkBCpanes(bc);
+					doh.t(isVisible(cp3));
+					doh.is(nWidgetsBefore + 1, dijit.registry.length, "splitter widget created");
+				},
+				function removeTopPane(){
+					var nWidgetsBefore = dijit.registry.length;
+					bc.removeChild(cp1);
+					dijit.tests.layout.robot.borderContainerTestFunctions.checkBCpanes(bc);
+					doh.f(isVisible(cp1));
+					doh.is(nWidgetsBefore - 1, dijit.registry.length, "splitter widget destroyed");
+				},
+				function removeLeftPane(){
+					bc.removeChild(cp3);
+					dijit.tests.layout.robot.borderContainerTestFunctions.checkBCpanes(bc);
+					doh.f(isVisible(cp3));
+				},
+				function addLeftPane2(){
+					bc.addChild(cp3);
+					dijit.tests.layout.robot.borderContainerTestFunctions.checkBCpanes(bc);
+					doh.t(isVisible(cp3));
+				},
+				function addTopPane(){
+					bc.addChild(cp1);
+					dijit.tests.layout.robot.borderContainerTestFunctions.checkBCpanes(bc);
+					doh.t(isVisible(cp3));
+				},
+				function destroyAll(){
+					bc.destroyRecursive();
+					doh.is(originalWidgetCnt, dijit.registry.length, "BorderContainer and all contained widgets destroyed");
+				}
+			]);
+
+			doh.register("exceptions", [
+				function createProgramatically(){
+					bc = new dijit.layout.BorderContainer({style:'height:400px;width:500px;border:1px solid black'}, dojo.byId('main'));
+					doh.isNot(null, bc.domNode.parentNode, "has parent");
+
+					cp1 = new dijit.layout.ContentPane({region:'top',style:'height:100px;background-color:red',splitter:true, id:"cp1"});
+					cp1.domNode.innerHTML = "top pane";
+					bc.addChild(cp1);
+
+					cp2 = new dijit.layout.ContentPane({region:'center',style:'background-color:green', id:'cp2'});
+					cp2.domNode.innerHTML = "center pane";
+					bc.addChild(cp2);
+
+					var exception;
+					try{
+						cp3 = new dijit.layout.ContentPane({splitter: true, style:'width: 100px;', id:'cp3'});
+						cp3.domNode.innerHTML = "left pane";
+						bc.addChild(cp3);
+						bc.startup();
+					}catch(e){
+						doh.t(/No region setting for cp3/.test(e.message), "check exception: " + e);
+						exception = true;
+					}
+					doh.t(exception, "exception was fired");
+				}
+			]);
+
+			doh.run();
+        });
+
+	</script>
+</head>
+<body class="claro">
+	<p>Headline layout (default), left is constrained - min:150, max:250</p>
+	<div id="border1" data-dojo-type="dijit/layout/BorderContainer"
+		data-dojo-props='style:"width: 1000px; height: 300px; border: 2px solid blue;"'>
+		<div role="banner" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"border1-top", region:"top", style:"background-color: #b39b86; border: 15px black solid; height: 50px;", splitter:true'>
+			top bar (resizable)
+		</div>
+		<div role="navigation" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"border1-left", region:"left", style:"background-color: #acb386; border: 10px green solid; width: 100px;",
+		splitter:true, minSize:150, maxSize:250'>
+			left (resizable b/w 150 &rarr; 250)
+		</div>
+		<div role="main" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"border1-center", region:"center", style:"background-color: #f5ffbf; padding: 30px;"'>
+			main panel with <a href="http://www.dojotoolkit.org/">a link</a>.<br />
+			(to check we're copying children around properly).<br />
+			<select data-dojo-type="dijit/form/FilteringSelect">
+				<option value="1">foo</option>
+				<option value="2">bar</option>
+				<option value="3">baz</option>
+			</select>
+			Here's some text that comes AFTER the combo box.
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"border1-right", region:"right", style:"background-color: #acb386; width: 100px;"'>
+			right (fixed size)
+		</div>
+		<div role="contentinfo" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"border1-bottom", region:"bottom", style:"background-color: #b39b86; height: 50px;", splitter:true'>
+			bottom bar (resizable)
+		</div>
+	</div>
+
+	<p>Sidebar layout, BiDi sensitive, liveSplitters: false</p>
+	<div id="border2" data-dojo-type="dijit/layout/BorderContainer" data-dojo-props='design:"sidebar", liveSplitters:false,
+		style:"border: 20px solid black; width: 1000px; height: 300px;"'>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"border2-leading", region:"leading", style:"background-color: #acb386; width: 100px;"'>
+			leading (fixed size)
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"border2-top", region:"top", style:"background-color: #b39b86; height: 80px;"'>
+			top bar (fixed size)
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"border2-center", region:"center", style:"background-color: #f5ffbf; padding: 10px;"'>
+			main panel with <a href="http://www.dojotoolkit.org/">a link</a>.<br />
+			(to check we're copying children around properly).<br />
+			<select data-dojo-type="dijit/form/FilteringSelect">
+				<option value="1">foo</option>
+				<option value="2">bar</option>
+				<option value="3">baz</option>
+			</select>
+			Here's some text that comes AFTER the combo box.
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"border2-bottom", region:"bottom", style:"background-color: #b39b86; height: 80px;", splitter:true'>
+			bottom bar (resizable)
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"border2-trailing", region:"trailing", style:"background-color: #acb386; width: 100px;", splitter:true'>
+			trailing (resizable)
+		</div>
+	</div>
+
+	<p id="programmatic">Programatically created, then destroyed</p>
+	<div id='main'></div>
+
+	<p>BorderContainer with MenuBar</p>
+	<div id="menuBorder" data-dojo-type="dijit/layout/BorderContainer"
+		data-dojo-props='style:"width: 1000px; height: 300px; border: 2px solid blue;"'>
+		<div id="menu" data-dojo-type="dijit/MenuBar" data-dojo-props='region:"top", splitter:true'>
+			<div id="file" data-dojo-type="dijit/PopupMenuBarItem" >
+				<span>File</span>
+				<div id="fileMenu" data-dojo-type="dijit/Menu" >
+					<div id="new" data-dojo-type="dijit/MenuItem" >New</div>
+					<div id="open" data-dojo-type="dijit/MenuItem" >Open</div>
+				</div>
+			</div>
+			<div id="edit" data-dojo-type="dijit/PopupMenuBarItem" >
+				<span>Edit</span>
+				<div id="editMenu" data-dojo-type="dijit/Menu" >
+					<div id="cut" data-dojo-type="dijit/MenuItem" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconCut",
+						onClick:function(){ console.log("not actually cutting anything, just a test!"); }, accelKey:"Ctrl+X"'>Cut</div>
+					<div id="copy" data-dojo-type="dijit/MenuItem" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconCopy",
+						onClick:function(){ console.log("not actually copying anything, just a test!") }, accelKey:"Ctrl+C"'>Copy</div>
+					<div id="paste" data-dojo-type="dijit/MenuItem" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconPaste",
+						onClick:function(){ console.log("not actually pasting anything, just a test!") }, accelKey:"Ctrl+V"'>Paste</div>
+				</div>
+			</div>
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region: "center", splitter:true'>
+			content pane under menu
+		</div>
+	</div>
+
+</body>
+</html>

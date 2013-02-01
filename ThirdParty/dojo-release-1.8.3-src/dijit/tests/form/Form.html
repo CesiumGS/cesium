@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+
+	<title>Form unit test</title>
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+		TD { border:2px outset; padding:2px; }
+		TH { border:2px solid; font-weight: bold; padding:1px; }
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true"></script>
+
+	<!-- only needed for alternate theme testing: -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dojo.date");
+		dojo.require("dojo.parser");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.focus");
+		dojo.require("dijit.form.Form");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.form.CheckBox");
+		dojo.require("dijit.form.RadioButton");
+		dojo.require("dijit.form.DateTextBox");
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.form.MultiSelect");
+		dojo.require("dijit.form.Select");
+		dojo.require("dijit.form.Textarea");
+		dojo.require("dijit.form.SimpleTextarea");
+		dojo.require("dijit.Editor");
+
+		var obj;
+		function getValues(){
+			obj = dijit.byId('myForm').get('value');
+			console.log("Object is: " + dojo.toJson(obj, true));
+		}
+
+		function setValues(){
+			if(!obj){
+		 		obj = {testF: 'testi'};
+			}
+			console.log("Object is: " + dojo.toJson(obj, true));
+			dijit.byId('myForm').set('value', obj);
+		}
+
+		function validate(){
+			console.log(dijit.byId('myForm').validate());
+		}
+
+		function defaultSubmitHandler(values){
+			console.log('actual submitted values: ' + dojo.toJson(values));
+		}
+		submittedValues = defaultSubmitHandler;
+		// make dojo.toJson() print dates correctly (this feels a bit dirty)
+		Date.prototype.json = function(){ return dojo.date.stamp.toISOString(this, {selector: 'date'});};
+
+		var d = dojo.date.stamp.fromISOString;
+
+		// These are the values assigned to the widgets in the page's HTML
+		var original =	{
+							foo: {bar: {baz: {quux: d("2007-12-30")} } },
+							available: {from: d("2005-01-02"), to: d("2006-01-02")},
+							plop: {combo: "one"},
+							cb: ["2", "3"],
+							r: "2",
+							ms1: ["VA", "WA"],
+							s1: "VA",
+							h1: "hidden",
+							t1: "line 1\nline 2",
+							st1: "simple line 1\nsimple line 2",
+							richtext: "<h1>original</h1><p>This is the default content</p>",
+							filename: "",
+							requiredWidget: "",
+							readOnlyWidget: "Should be returned",
+							duplicate: ["first", "second", "third"]
+						};
+
+		// we change the form to these values
+		var changed =	{
+							foo: {bar: {baz: {quux: d("2005-01-01")} } },
+							available: {from: d("2005-11-02"), to: d("2006-11-02")},
+							plop: {combo: "three"},
+							cb: ["4"],
+							r: "1",
+							ms1: ["FL", "CA"],
+							s1: "FL",
+							h1: "still hidden",
+							t1: "new line 1\nnew line 2",
+							st1: "new simple line 1\nnew simple line 2",
+							richtext: "<h1>changed</h1><p>This is the changed content set by set('value', ...')</p>",
+							filename: "",
+							requiredWidget: "abc",
+							readOnlyWidget: "Should be returned",
+							duplicate: ["1", "2", "3"]
+						};
+		var partialChange = {
+							foo: {bar: {baz: {quux: d("2006-01-01")} } },
+							available: {from: d("2006-11-02"), to: d("2007-11-02")},
+							plop: {combo: "two"},
+							cb: ["2"]
+		};
+
+		dojo.ready(function(){
+
+			doh.register("parse", function(){
+				dojo.parser.parse();
+
+				formWidget = dijit.byId("myForm");
+			});
+
+			// should be able to query for all of the inputs, including hidden ones
+			doh.register("query input by checked state", [
+				{
+					name: "all",
+					runTest: function(){
+						var queried=dojo.query("input[checked]");
+						doh.t(queried.length>0,"dojo.query could not find checked widgets.");
+						doh.is(3,queried.length,"expected: 3 checked widgets, got: "+queried.length);
+						doh.is(dojo.byId('cb_2'),queried[0],"Expected 2nd checkbox.");
+						doh.is(dojo.byId('cb_3'),queried[1],"Expected 3rd checkbox.");
+						doh.is(dojo.byId('r_2'),queried[2],"Expected 2nd radio button.");
+					}
+				}
+			]);
+
+			doh.register("query input by name",
+				dojo.map(
+					[
+						"foo.bar.baz.quux","available.from","available.to", // DateTextBox
+						"plop.combo", // ComboBox
+						"cb", // CheckBox
+						"r", // RadioButton
+						//"ms1", // MultiSelect
+						"h1", // plain hidden input
+						//"t1", "st1", // TextArea
+						//"richtext", // Editor
+						"filename", // TextBox set to file input
+						"disabledWidget" // disabled TextBox
+					],
+					function(name){
+						return {
+							name: name,
+							widgetName: name,
+							runTest: function(){
+								var queried = dojo.query("input[name="+this.widgetName+"]");
+								doh.t(queried.length > 0, "dojo.query could not find form widget: '"+this.widgetName+"'");
+							}
+						};
+					}
+				)
+			);
+
+			var resetready=false;
+			var testSubmittedValues = function(deferred, testValues, formValues){
+				deferred.getTestCallback(function(){
+					doh.is(testValues.foo.bar.baz.quux.json(), formValues['foo.bar.baz.quux']);
+					doh.is(testValues.available.from.json(), formValues['available.from']);
+					doh.is(testValues.available.to.json(), formValues['available.to']);
+					doh.is(testValues.plop.combo, formValues['plop.combo']);
+					doh.is(testValues.cb, formValues.cb);
+					doh.is(testValues.r, formValues.r);
+					doh.is(testValues.ms1, formValues.ms1);
+					doh.is(testValues.s1, formValues.s1);
+					doh.is(testValues.h1, formValues.h1);
+					doh.is(testValues.t1, formValues.t1);
+					doh.is(testValues.st1, formValues.st1);
+					doh.is(testValues.filename, formValues.filename || '');
+					doh.is(testValues.readOnlyWidget, formValues.readOnlyWidget);
+				})();
+			};
+			doh.register("general tests",
+				[
+					{
+						name: "setUp",
+						timeout: 5000,
+						runTest: function(){
+							var d=new doh.Deferred();
+
+							var defer=function(){
+								if(dijit.byId('t1')._resetValue!==undefined &&
+									!dijit.byId('editor').disabled){
+									doh.t(true);
+									d.callback(true);
+								}else{
+									setTimeout(defer,100);
+								}
+							};
+							setTimeout(defer,1000);
+							return d;
+						}
+					},
+					function getValues(){
+						var values = formWidget.get('value');
+
+						// FF3 sticks in some tabs and newlines that mess up the equality check
+						// Need better way to compare two HTML trees but for now do this.
+						values.richtext = values.richtext.replace(/[\n\t]/, "", "g");
+
+						doh.is( dojo.toJson(original), dojo.toJson(values) );
+					},
+					{
+						name:"testSubmit",
+					        timeout:5000,
+					        runTest:function(){
+							var d=new doh.Deferred();
+							submittedValues = function(values){
+								testSubmittedValues(d, original, values);
+							};
+							setTimeout(function(){ formWidget.containerNode.submit(); }, 1000);
+							return d;
+						},
+						tearDown: function(){
+							submittedValues = defaultSubmitHandler;
+						}
+					},
+					function setValues(){
+						formWidget.set('value', changed);
+						doh.is( dojo.toJson(changed), dojo.toJson(formWidget.get('value')) );
+
+						formWidget.set('value', partialChange);
+						doh.is( dojo.toJson(dojo.mixin(changed,partialChange)), dojo.toJson(formWidget.get('value')) );
+					},
+					function nameAttributeSurvived(){  // ticket:4753
+						var radios = dojo.query("INPUT[type=radio]", "radio-cells").forEach(
+							function(r){
+								doh.is( r.name, "r" );
+							});
+					},
+					{
+					        name:"postSubmit",
+					        timeout:5000,
+					        runTest:function(){
+							var d=new doh.Deferred();
+							submittedValues = function(values){
+								testSubmittedValues(d, dojo.mixin(changed,partialChange), values);
+							};
+							setTimeout(function(){ formWidget.containerNode.submit(); }, 1000);
+							return d;
+						},
+						tearDown: function(){
+							submittedValues = defaultSubmitHandler;
+						}
+					},
+					function resetTest(){
+						formWidget._onResetReturn = false;
+						formWidget.reset();
+						doh.isNot( dojo.toJson(original), dojo.toJson(formWidget.get('value')), "onReset false");
+						formWidget._onResetReturn = true;
+						formWidget.reset();
+						delete formWidget._onResetReturn;
+						doh.is( dojo.toJson(original), dojo.toJson(formWidget.get('value')), "onReset true" );
+					}
+				]
+			);
+
+			doh.register("watch('value')", [
+				// Set() calls fire onChange() on a timer, so set calls from above may have unfired onChange events.
+				// Avoid spurious watch() notifications by waiting for lingering onChange() events to fire.
+				function coolDown(){
+					var d = new doh.Deferred();
+					setTimeout(function(){ d.callback(true); }, 100);
+					return d;
+				},
+
+				// Setup watch("value", ...)
+				function setUp(){
+					// Setup globals to reflect return from watch("value"), ...
+					calls = 0;
+					oldVal = null;
+					newVal = null;
+
+					handle = formWidget.watch("value", function(name, oldV, newV){
+						calls++;
+						oldVal = oldV;
+						newVal = newV;
+					});
+				},
+
+				// Change the DateTextBox values through Form.set("value", ...)
+				// and see if Form.watch("value", ...) does the right thing					
+				function formSet(){
+					var d = new doh.Deferred();
+					calls = 0;
+					formWidget.set("value", {
+						foo: {bar: {baz: {quux: "1967-10-20"} } },
+						available: {from: "1967-11-09"}
+					});
+					
+					setTimeout(d.getTestCallback(function(){
+						doh.is(1, calls, "exactly one watch(value) call");
+						doh.is('2007-12-30', dojo.date.stamp.toISOString(oldVal.foo.bar.baz.quux, {selector: 'date'}), "old value");
+						doh.is('1967-10-20', dojo.date.stamp.toISOString(newVal.foo.bar.baz.quux, {selector: 'date'}), "new value");
+						doh.is('1967-11-09', dojo.date.stamp.toISOString(newVal.available.from, {selector: 'date'}), "new value2");
+					}), 500);
+					
+					return d;
+				},
+
+				// Change the DateTextBox value directly
+				// and see if Form.watch("value", ...) does the right thing					
+				function directSet(){
+					var d = new doh.Deferred();
+
+					calls = 0;
+					dijit.byId("dtb1").set("value", "1981-10-12");
+					
+					setTimeout(d.getTestCallback(function(){
+						doh.is(1, calls, "exactly one watch(value) call");
+						doh.is('1967-10-20', dojo.date.stamp.toISOString(oldVal.foo.bar.baz.quux, {selector: 'date'}), "old value");
+						doh.is('1981-10-12', dojo.date.stamp.toISOString(newVal.foo.bar.baz.quux, {selector: 'date'}), "new value");
+					}), 500);
+					
+					return d;
+				},
+
+				// Change the CheckBox values through Form.set("value", ...)
+				// and see if Form.watch("value", ...) does the right thing					
+				function checkboxSet(){
+					var d = new doh.Deferred();
+
+					calls = 0;
+					formWidget.set("value", {cb: [1,4]});
+					
+					setTimeout(d.getTestCallback(function(){
+						doh.is(1, calls, "exactly one watch(value) call");
+
+						doh.is(2, oldVal.cb.length, "number of checkboxes previously checked");
+						doh.is(2, oldVal.cb[0], "old checkboxes, first checked");
+						doh.is(3, oldVal.cb[1], "old checkboxes, second checked");
+
+						doh.is(2, newVal.cb.length, "number of checkboxes currently checked");
+						doh.is(1, newVal.cb[0], "new checkboxes, first checked");
+						doh.is(4, newVal.cb[1], "new checkboxes, second checked");
+					}), 500);
+					
+					return d;
+				},
+
+				// Uncheck a CheckBox directly
+				// and see if Form.watch("value", ...) does the right thing					
+				function directCheckBoxUncheck(){
+					var d = new doh.Deferred();
+
+					calls = 0;
+					dijit.byId("cb_1").set("checked", false);
+					
+					setTimeout(d.getTestCallback(function(){
+						doh.is(1, calls, "exactly one watch(value) call");
+
+						doh.is(2, oldVal.cb.length, "number of checkboxes previously checked");
+						doh.is(1, oldVal.cb[0], "old checkboxes, first checked");
+						doh.is(4, oldVal.cb[1], "old checkboxes, second checked");
+
+						doh.is(1, newVal.cb.length, "number of checkboxes currently checked");
+						doh.is(4, newVal.cb[0], "new checkboxes, first checked");
+					}), 500);
+					
+					return d;
+				},
+
+				// Check a CheckBox directly
+				// and see if Form.watch("value", ...) does the right thing					
+				function directCheckBoxCheck(){
+					var d = new doh.Deferred();
+
+					calls = 0;
+					dijit.byId("cb_2").set("checked", true);
+					
+					setTimeout(d.getTestCallback(function(){
+						doh.is(1, calls, "exactly one watch(value) call");
+
+						doh.is(1, oldVal.cb.length, "number of checkboxes previously checked");
+						doh.is(4, oldVal.cb[0], "old checkboxes, first checked");
+
+						// the new array should be [2,4] not [4,2] because the order the checkboxes
+						// were checked shouldn't matter; the value needs to be canonical
+						doh.is(2, newVal.cb.length, "number of checkboxes currently checked");
+						doh.is(2, newVal.cb[0], "new checkboxes, first checked");
+						doh.is(4, newVal.cb[1], "new checkboxes, second checked");
+					}), 500);
+					
+					return d;
+				},
+
+				// Change the selected RadioButton through Form.set("value", ...)
+				// and see if Form.watch("value", ...) does the right thing					
+				function radioSet(){
+					var d = new doh.Deferred();
+
+					calls = 0;
+					formWidget.set("value", {r: 3});
+					
+					setTimeout(d.getTestCallback(function(){
+						doh.is(1, calls, "exactly one watch(value) call");
+						doh.is(2, oldVal.r, "old selected radio button");
+						doh.is(3, newVal.r, "new selected radio button");
+					}), 500);
+
+					return d;
+				},
+
+				// Change the selected RadioButton directly
+				// and see if Form.watch("value", ...) does the right thing					
+				function radioDirectSet(){
+					var d = new doh.Deferred();
+
+					calls = 0;
+					dijit.byId("r_1").set("checked", true);
+
+					setTimeout(d.getTestCallback(function(){
+						doh.is(1, calls, "exactly one watch(value) call");
+						doh.is(3, oldVal.r, "old selected radio button");
+						doh.is(1, newVal.r, "new selected radio button");
+					}), 500);
+					
+					return d;
+				},
+
+				// Disabling a widget should remove it from the value
+				function disableWidget(){
+					var d = new doh.Deferred();
+
+					calls = 0;
+					dijit.byId("dtb1").set("disabled", true);
+					
+					setTimeout(d.getTestCallback(function(){
+						doh.is(1, calls, "one watch(value) call");
+						doh.t(dojo.getObject("foo.bar.baz.quux", false, oldVal) !== undefined, "attribute used to exist");
+						doh.t(dojo.getObject("foo.bar.baz.quux", false, newVal) === undefined, "attribute no longer exists");
+					}), 500);
+					
+					return d;
+				},
+
+				// Enabling a widget should add it back to the value
+				function enableWidget(){
+					var d = new doh.Deferred();
+
+					calls = 0;
+					dijit.byId("dtb1").set("disabled", false);
+					
+					setTimeout(d.getTestCallback(function(){
+						doh.is(1, calls, "one watch(value) call");
+						doh.t(dojo.getObject("foo.bar.baz.quux", false, oldVal) === undefined, "attribute didn't used to exist");
+						doh.t(dojo.getObject("foo.bar.baz.quux", false, newVal) !== undefined, "attribute now exists");
+					}), 500);
+					
+					return d;
+				},
+
+				function tearDown(){
+					handle.unwatch();
+				}
+			]);
+
+			doh.register("watch('state')", [
+				// fill in something in required field so that form is valid
+				function makeValid(){
+					doh.f(formWidget.isValid(), "form isn't valid (due to required but empty)");
+					dijit.byId("rw").set("value", "abc");
+					doh.t(formWidget.isValid(), "form is now valid");
+				},
+
+				// Setup watch("state", ...)
+				function setUp(){
+					// Setup globals to reflect return from watch("value"), ...
+					calls = 0;
+					oldVal = null;
+					newVal = null;
+
+					handle = formWidget.watch("state", function(name, oldV, newV){
+						calls++;
+						oldVal = oldV;
+						newVal = newV;
+					});
+
+					validState = true;
+					dojo.connect(formWidget, "onValidStateChange", function(val){
+						validState = val;
+					});
+				},
+
+				// Start typing a value into the DateTextBox while it's focused.
+				// The incomplete value should trigger a change of the Form to Incomplete state even though
+				// user is still focused
+				function partialInput(){
+					var d = new doh.Deferred();
+
+					// Simulate the typing and validation checking since this isn't a robot test
+					dojo.byId("dtb1").focus();
+					dojo.byId("dtb1").value = "12/";
+					dijit.byId("dtb1").validate(true);
+					
+					setTimeout(d.getTestCallback(function(){
+						doh.is(1, calls, "one watch(state) calls");
+						doh.is("", oldVal, "old state");
+						doh.is("Incomplete", newVal, "new state");
+					}), 50);
+					
+					return d;
+				},
+
+				// Finishing the input will change state back to ""
+				function finishInput(){
+					var d = new doh.Deferred();
+
+					calls = 0;
+
+					// Simulate the typing and validation checking since this isn't a robot test
+					dojo.byId("dtb1").value = "12/31/2012";
+					dijit.byId("dtb1").validate(true);
+					
+					setTimeout(d.getTestCallback(function(){
+						doh.is(1, calls, "another watch(state) calls");
+						doh.is("Incomplete", oldVal, "old state");
+						doh.is("", newVal, "new state");
+					}), 50);
+					
+					return d;
+				},
+
+				// An error value should trigger the Form.state change, even before blur		
+				function errorInput(){
+					var d = new doh.Deferred();
+
+					calls = 0;
+
+					// Simulate the typing and validation checking since this isn't a robot test
+					dojo.byId("dtb1").value = "12/a";
+					dijit.byId("dtb1").validate(true);
+					
+					setTimeout(d.getTestCallback(function(){
+						doh.is(1, calls, "another watch(state) call");
+						doh.is("", oldVal, "old state");
+						doh.is("Error", newVal, "new state");
+						doh.f(validState, "onValidStateChange(false) called")
+					}), 50);
+					
+					return d;
+				},
+
+				// Disabling the widget in error state should make the form valid
+				function disableErrorWidget(){
+					var d = new doh.Deferred();
+
+					calls = 0;
+					dijit.byId("dtb1").set("disabled", true);
+					
+					setTimeout(d.getTestCallback(function(){
+						doh.is(1, calls, "one watch(state) call");
+						doh.is("Error", oldVal, "old state");
+						doh.is("", newVal, "new state");
+						doh.t(formWidget.isValid(), "isValid");
+					}), 50);
+					
+					return d;
+				},
+
+				// Enabling the widget in error state should make the form invalid again
+				function enableErrorWidget(){
+					var d = new doh.Deferred();
+
+					calls = 0;
+					dijit.byId("dtb1").set("disabled", false);
+					
+					setTimeout(d.getTestCallback(function(){
+						doh.is(1, calls, "one watch(state) call");
+						doh.is("", oldVal, "old state");
+						doh.is("Error", newVal, "new state");
+						doh.f(formWidget.isValid(), "isValid");
+					}), 50);
+					
+					return d;
+				},
+
+				function tearDown(){
+					handle.unwatch();
+				}
+			]);
+
+			doh.register("validate()", function validate(){
+				formWidget.set("value", original);
+
+				// make the second and third DateTextBoxes invalid
+				dojo.byId("dtb2").value = "12/a";
+				dijit.byId("dtb2").validate(true);
+				dojo.byId("dtb3").value = "12/a";
+				dijit.byId("dtb3").validate(true);
+
+				// Since the required but empty ValidationTextBox has never been focused,
+				// it's not yet marked in an error state
+				doh.f(dojo.hasClass(dojo.byId("widget_rw"), "dijitValidationTextBoxError"), "required but empty not yet marked as error");
+
+				// validate() should focus the first DateTextBox and highlight
+				// the two invalid DateTextBoxes and the required but empty ValidationTextBox.
+				formWidget.validate();
+				
+				doh.t(dojo.hasClass(dojo.byId("widget_rw"), "dijitValidationTextBoxError"), "required but empty marked as error");
+				doh.is("dtb2", dijit.focus.curNode.id, "focused on first invalid DateTextBox");
+			});
+
+			if(dojo.isFF >= 4 || dojo.isIE >= 10 || dojo.isWebKit){
+				// only works for HTML5 compliant browsers where novalidate is understood
+				// (also, hasAttribute() is not available on IE6/7)
+				doh.register("novalidate", function noValidate(){
+					// Making sure the parser picks up the flag and _WidgetBase copies it to this.domNode
+					doh.t(dijit.byId("noValidateForm").domNode.hasAttribute("novalidate"), "novalidate");
+				});
+			}
+
+			doh.run();
+		});
+
+	</script>
+</head>
+<body class="claro" role="main">
+	<h1>Form Widget Unit Test</h1>
+	<p>
+		The form widget takes data in a form and serializes/deserializes it, so
+		it can be submitted as a JSON string of nested objects.
+	</p>
+	<div style="color:red">Currently only widgets are supported, not raw elements.</div>
+	<!--    to test form submission, you'll need to create an action handler similar to
+			http://www.utexas.edu/teamweb/cgi-bin/generic.cgi
+		http://www.tipjar.com/cgi-bin/test -->
+	<form id="myForm" data-dojo-type="dijit/form/Form" data-dojo-props='encType:"multipart/form-data", action:"../formAction.html", method:"", target:"formSubmitIframe"'>
+		<script type="dojo/method" data-dojo-event="onReset">
+			return ("_onResetReturn" in this)? this._onResetReturn : confirm('Press OK to reset widget values');
+		</script>
+		<script type="dojo/method" data-dojo-event="onSubmit">
+			console.debug('Attempting to submit form w/values:\n',
+				dojo.toJson(this.get('value'),true)
+			);
+			if(this.validate()){
+				return confirm('Form is valid, press OK to submit');
+			}else{
+				alert('Form contains invalid data.  Please correct first');
+				return false;
+			}
+			return true;
+		</script>
+		<p>Just HTML text</p>
+		<table style="border: 1px solid #9f9f9f;">
+			<thead>
+				<tr>
+					<th>Description</th>
+					<th>Name</th>
+					<th>Form node/widget</th>
+				</tr>
+			</thead>
+			<tbody>
+				<!--
+				<tr><td>text</td><td>testF</td><td><input type="text" name="testF" value="bar1" /></td></tr>
+				<tr><td>password</td><td>passwordF</td><td><input type="password" name="passwordF" value="bar4" /></td></tr>
+				<tr><td>hidden</td><td>hiddenF</td><td><input type="hidden" name="hiddenF" value="bar4" /></td></tr>
+				<tr><td>select</td><td>plop.noncombo</td><td>
+				<div class="group">
+					<select name="plop.noncombo">
+					 <option value="1">one</option>
+					 <option value="2">two</option>
+					 <option value="3">three</option>
+					</select>
+				</div>
+
+				</td></tr>
+				-->
+
+				<tr>
+					<td>DateTextBox inside contentpane</td>
+					<td><label for="dtb1">foo.bar.baz.quux</label></td>
+					<td>
+						<div data-dojo-type="dijit/layout/ContentPane">
+						<input data-dojo-type="dijit/form/DateTextBox" data-dojo-props='id:"dtb1", name:"foo.bar.baz.quux", value:"2007-12-30" '/>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>DateTextBox 2</td>
+					<td><label for="dtb2">available.from</label></td>
+					<td>
+						<input data-dojo-type="dijit/form/DateTextBox" data-dojo-props='id:"dtb2", name:"available.from", value:"2005-01-02" '/>
+					</td>
+				</tr>
+				<tr>
+					<td>DateTextBox 3</td>
+					<td><label for="dtb3">available.to</label></td>
+					<td>
+						<input data-dojo-type="dijit/form/DateTextBox" data-dojo-props='id:"dtb3", name:"available.to", value:"2006-01-02" '/>
+					</td>
+				</tr>
+				<tr>
+					<td>ComboBox</td>
+					<td><label for="plopcombo">plop.combo</label></td>
+					<td>
+						<select data-dojo-type="dijit/form/ComboBox" id="plopcombo" data-dojo-props='name:"plop.combo" '>
+							<option value="one">one</option>
+							<option value="two">two</option>
+							<option value="three">three</option>
+						</select>
+					</td>
+				</tr>
+
+				<!--
+				<tr>
+					<td>textarea</td>
+					<td>myTextArea</td>
+					<td>
+						<textarea name="myTextArea">
+							text text text """ \\\/
+						</textarea>
+					</td>
+				</tr>
+				-->
+
+				<!--
+				<tr>
+					<td>CheckBox</td>
+					<td>cb1</td>
+					<td>
+						<input type="checkbox" name="cb1" value="1" /> 1
+						<input type="checkbox" name="cb1" value="2" checked="checked" /> 2
+						<input type="checkbox" name="cb1" value="3" checked="checked" /> 3
+						<input type="checkbox" name="cb1" value="4" /> 4
+					</td>
+				</tr>
+				-->
+
+				<tr>
+					<td>CheckBox widget</td>
+					<td>cb</td>
+					<td>
+						<input data-dojo-type="dijit/form/CheckBox" data-dojo-props='"aria-label":"cb_1", id: "cb_1", name:"cb", value:"1" '/> 1
+						<input data-dojo-type="dijit/form/CheckBox" data-dojo-props='"aria-label":"cb_2", id: "cb_2", name:"cb", value:"2", checked:true '/> 2
+						<input data-dojo-type="dijit/form/CheckBox" data-dojo-props='"aria-label":"cb_3", id: "cb_3", name:"cb", value:"3", checked:true '/> 3
+						<input data-dojo-type="dijit/form/CheckBox" data-dojo-props='"aria-label":"cb_4", id: "cb_4", name:"cb", value:"4" '/> 4
+					</td>
+				</tr>
+
+				<!--
+				<tr>
+					<td>radio</td>
+					<td>r1</td>
+					<td>
+						<input type="radio" name="r1" value="1" /> 1
+						<input type="radio" name="r1" value="2" /> 2
+						<input type="radio" name="r1" value="3" /> 3
+						<input type="radio" name="r1" value="4" /> 4
+					</td>
+				</tr>
+				-->
+
+				<tr>
+				<td>Radio widget</td><td>r</td>
+				<td id="radio-cells">
+				<input data-dojo-type="dijit/form/RadioButton" data-dojo-props='"aria-label":"r_1", id:"r_1", name:"r", value:"1" '/> 1
+				<input data-dojo-type="dijit/form/RadioButton" data-dojo-props='"aria-label":"r_2", id:"r_2", name:"r", value:"2", checked:true '/> 2
+				<input data-dojo-type="dijit/form/RadioButton" data-dojo-props='"aria-label":"r_3", id:"r_3", name:"r", value:"3"'/> 3
+				<input data-dojo-type="dijit/form/RadioButton" data-dojo-props='"aria-label":"r_4", id:"r_4", name:"r", value:"4" '/> 4
+				<input type="button" onclick="dojo.query('INPUT[type=radio]','radio-cells').forEach(function(n){dijit.getEnclosingWidget(n).set('checked',false);});return true;" value="Unset all radio buttons"/>
+				</td>
+				</tr>
+
+				<tr>
+					<td>Multi-select</td><td>ms1</td>
+					<td>
+						<select id="ms1" multiple data-dojo-type="dijit/form/MultiSelect"
+							data-dojo-props='name:"ms1", "aria-label":"ms1",
+							style:{height:"100px", width:"175px", border:"5px solid #ededed"}'>
+
+							<option value="TN">Tennessee</option>
+							<option value="VA" selected>Virginia</option>
+							<option value="WA" selected>Washington</option>
+							<option value="FL">Florida</option>
+							<option value="CA">California</option>
+
+						</select>
+					</td>
+				</tr>
+
+				<tr>
+					<td>Select</td><td>s1</td>
+					<td>
+						<select id="s1" data-dojo-type="dijit/form/Select"
+							data-dojo-props='name:"s1", style:{width:"175px"}, "aria-label":"s1"'>
+							<option value="TN">Tennessee</option>
+							<option value="VA" selected="selected">Virginia</option>
+							<option value="WA">Washington</option>
+							<option value="FL">Florida</option>
+							<option value="CA">California</option>
+
+						</select>
+					</td>
+				</tr>
+
+				<tr>
+					<td>Hidden input</td>
+					<td>h1</td>
+					<td>
+						<input id="h1" data-dojo-type="dijit/form/TextBox" data-dojo-props='name:"h1", type:"hidden", value:"hidden", "aria-label":"h1" '/>
+					</td>
+				</tr>
+
+				<tr>
+					<td>Auto-sizing textarea</td>
+					<td>t1</td>
+					<td>
+						<textarea id="t1" data-dojo-type="dijit/form/Textarea" data-dojo-props='name:"t1", "aria-label":"t1" '>line 1
+line 2</textarea>
+					</td>
+				</tr>
+
+				<tr>
+					<td>Fixed size textarea</td>
+					<td>st1</td>
+					<td>
+						<textarea id="st1" data-dojo-type="dijit/form/SimpleTextarea" data-dojo-props='name:"st1", rows:"5", cols:"50", "aria-label":"st1" '>
+simple line 1
+simple line 2</textarea>
+					</td>
+				</tr>
+
+				<tr>
+					<td>Editor widget</td>
+					<td>richtext</td>
+					<td>
+						<textarea id="editor" name="richtext" data-dojo-type="dijit/Editor" data-dojo-props='"aria-label":"editor", plugins:["bold", "italic"]'><h1>original</h1><p>This is the default content</p></textarea>
+					</td>
+				</tr>
+
+				<tr>
+					<td>File upload</td>
+					<td>filename</td>
+					<td>
+						<input data-dojo-type="dijit/form/TextBox" data-dojo-props='name:"filename", type:"file", "aria-label":"filename" '/>
+					</td>
+				</tr>
+				<tr>
+					<td>Required Widget</td>
+					<td>requiredWidget</td>
+					<td>
+						<input data-dojo-type="dijit/form/ValidationTextBox" data-dojo-props='id: "rw", name:"requiredWidget", required:true, value:"", "aria-label":"rw" '/>
+					</td>
+				</tr>
+				<tr>
+					<td>Disabled Widget</td>
+					<td>disabledWidget</td>
+					<td>
+						<input data-dojo-type="dijit/form/TextBox" data-dojo-props='name:"disabledWidget", disabled:true, value:"Should not be returned", "aria-label":"disabled" '/>
+					</td>
+				</tr>
+				<tr>
+					<td>Disabled Required Widget</td>
+					<td>disabledRequiredWidget</td>
+					<td>
+						<input data-dojo-type="dijit/form/ValidationTextBox" data-dojo-props='id: "drw", name:"disabledRequiredWidget", disabled:true, required:true, value:"", "aria-label":"disabledRequired" '/>
+					</td>
+				</tr>
+				<tr>
+					<td>Read-only Widget</td>
+					<td>readOnlyWidget</td>
+					<td>
+						<input data-dojo-type="dijit/form/TextBox" data-dojo-props='name:"readOnlyWidget", readOnly:true, value:"Should be returned", "aria-label":"readonly" '/>
+					</td>
+				</tr>
+				<tr>
+					<td>Duplicate named TextBox 1</td>
+					<td>duplicate</td>
+					<td>
+						<input data-dojo-type="dijit/form/TextBox" data-dojo-props='name:"duplicate", value:"first", "aria-label":"duplicate" '/>
+					</td>
+				</tr>
+				<tr>
+					<td>Duplicate named TextBox 2</td>
+					<td>duplicate</td>
+					<td>
+						<input data-dojo-type="dijit/form/TextBox" data-dojo-props='name:"duplicate", value:"second", "aria-label":"duplicate2" '/>
+					</td>
+				</tr>
+				<tr>
+					<td>Duplicate named TextBox 3</td>
+					<td>duplicate</td>
+					<td>
+						<input data-dojo-type="dijit/form/TextBox" data-dojo-props='name:"duplicate", value:"third", "aria-label":"duplicate3" '/>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<button data-dojo-type="dijit/form/Button" data-dojo-props='onClick:function(){ getValues(); }'>Get Values from form!</button>
+		<button data-dojo-type="dijit/form/Button" data-dojo-props='onClick:function(){ setValues(); }'>Set Values to form!</button>
+		<button data-dojo-type="dijit/form/Button" data-dojo-props='onClick:function(){ validate(); }'>Validate form!</button>
+		<button data-dojo-type="dijit/form/Button" data-dojo-props='type:"submit", value:"Submit"'>Submit</button>
+		<button data-dojo-type="dijit/form/Button" data-dojo-props='type:"reset"'>HTML Reset</button>
+		<button data-dojo-type="dijit/form/Button" data-dojo-props='type:"button", onClick:function(){ dijit.byId("myForm").reset() }'>reset()</button>
+	</form>
+<button data-dojo-type="dijit/form/Button" data-dojo-props='type:"button",
+onClick:function(){ dijit.byId("myForm").submit() }'>Submit programmatically</button>
+
+<iframe name="formSubmitIframe" src="about:blank" onload="if(this.values)submittedValues(this.values)" style="display:none;"></iframe>
+
+	<form id="noValidateForm" data-dojo-type="dijit/form/Form" novalidate></form>
+</body>
+</html>

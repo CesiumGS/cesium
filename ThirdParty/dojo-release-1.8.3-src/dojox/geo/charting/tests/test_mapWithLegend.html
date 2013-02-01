@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Chart: Map&Legend</title>
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+			@import "../../../../dijit/themes/tundra/tundra.css";
+			@import "../resources/Map.css";
+		</style>
+		<script type="text/javascript" djConfig="parseOnLoad:true,gfxRenderer:'svg,canvas,vml,silverlight'" src="../../../../dojo/dojo.js"></script>
+		<script type="text/javascript">
+				var isTouchDevice = dojo.isIos || (navigator.userAgent.toLowerCase().indexOf("android") > -1)
+				|| (navigator.userAgent.toLowerCase().indexOf("blackberry") > -1);
+		</script>
+		<script type="text/javascript">
+			dojo.require("dojox.geo.charting.Map");
+			dojo.require("dojox.geo.charting.widget.Legend");
+			dojo.require("dojo.data.ItemFileWriteStore");
+			dojo.require("dijit.form.RadioButton");
+			dojo.require("dijit.layout.BorderContainer");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.requireIf(isTouchDevice,"dojox.geo.charting.TouchInteractionSupport");
+			dojo.requireIf(!isTouchDevice,"dojox.geo.charting.MouseInteractionSupport");
+			dojo.require("dojox.geo.charting.KeyboardInteractionSupport");
+			
+			dojo.addOnLoad(function(){
+				//create new map
+				var map = new dojox.geo.charting.Map("USStates", "../resources/data/USStates.json");
+				//add outside map marker file
+				map.setMarkerData("../resources/markers/USStates.json");
+				
+				// install mouse/touch navigation
+				if (!isTouchDevice) {
+					var mouseInteraction = new dojox.geo.charting.MouseInteractionSupport(map,{enablePan:true,enableZoom:true});
+					mouseInteraction.connect();
+				} else {
+					var touchInteraction = new dojox.geo.charting.TouchInteractionSupport(map,{});
+					touchInteraction.connect();
+				}
+				// install keyboard navigation
+				var keyboardInteraction = new dojox.geo.charting.KeyboardInteractionSupport(map, {enableZoom: true});
+        		keyboardInteraction.connect();
+				
+				//set data store to map
+				var dataStore = new dojo.data.ItemFileWriteStore({
+					url: "datastore/dataStore.json"
+				});
+								
+				map.setDataStore(dataStore, "product A");
+				
+				//add series to map 
+				map.addSeries([{
+					name: "Low sales state(0~$3.0M)",
+					min: "0.0",
+					max: "3.0",
+					color: "#FFCE52"
+				}, {
+					name: "Normal sales state($3.0M~$6.0M)",
+					min: "3.0",
+					max: "6.0",
+					color: "#63A584"
+				}, {
+					name: "High sales state($6.0M~$10.0M)",
+					min: "6.0",
+					max: "9.0",
+					color: "#CE6342"
+				}]);
+				//declare associated legend
+				var legend = new dojox.geo.charting.widget.Legend({
+					map: map
+				});
+				//map marker customization
+				map.onFeatureOver = function(feature){
+					feature.markerText = map.mapObj.marker.markerData[feature.id] + ": $" + feature.value.toFixed(3) + "M";
+				};
+				
+				dojo.connect(window,"onresize",this,function() {map.resize();});
+				
+							
+				changeProduct = function(radioButton) {
+					//console.log("change product called " + productName);
+					if (radioButton.checked) {
+						map.setDataBindingAttribute(radioButton.value);
+					}
+				};
+
+				function changeStoreValues() {
+					for (prop in map.mapObj.features) {
+						dataStore.fetchItemByIdentity({
+							identity: prop, 
+        					onItem: function(item) {
+            					dataStore.setValue(item,"product A",Math.random() * 10);
+            					//dataStore.setValue(item,"product B",Math.random() * 10);
+            					//dataStore.setValue(item,"product C",Math.random() * 10);
+            					
+        					}, 
+        					onError: function(err) { console.info(err.message);}
+    					}); 
+					}
+				}
+				
+				// simulate product value changes
+				//setInterval(changeStoreValues,1000);
+				
+			});
+
+	
+</script>
+	</head>
+	<body class="tundra" >
+		<h1>Map with series, data, legend</h1>
+		<p>Keyboard Tips: Use <b>TAB</b> to focus the map, then use <b>up/down/left/right</b> to go around the map, zoom in by <b>SPACE</b> and zoom out by <b>ESC</b>.</p>
+		<div id="USStates" style="width:900px;height:500px;border:1px solid;">
+		</div>
+		 <table id="productChoice" cellspacing="10" style="border: 1px">
+		        <tr>
+		        <td><label>Show product :</label></td>
+				<td><input type="radio" dojoType="dijit.form.RadioButton" name="product" id="radioA" checked
+			    onchange="changeProduct(this)"
+			    	value="product A" />
+			    <label for="radioA">A</label>
+			    </td>
+			    <td><input type="radio" dojoType="dijit.form.RadioButton" name="product" id="radioB"
+			    onchange="changeProduct(this)"
+			    	value="product B" />
+			    <label for="radioB">B</label>
+			    </td>
+			    <td><input type="radio" dojoType="dijit.form.RadioButton" name="product" id="radioC"
+			    onchange="changeProduct(this)"
+			    	value="product C" />
+			    <label for="radioC">C</label>
+			    </td>
+				</tr>
+			</table>
+	</body>
+</html>

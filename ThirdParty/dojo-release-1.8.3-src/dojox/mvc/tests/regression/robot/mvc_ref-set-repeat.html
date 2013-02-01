@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>doh.robot MVC Ref set repeat test</title>
+
+		<style>
+			@import "../../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../../dojo/dojo.js"
+			djConfig="isDebug: true, parseOnLoad: true"></script>
+
+		<script type="text/javascript" src="../helpers.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.addOnLoad(function(){
+				doh.robot.initRobot('../test_mvc_ref-set-repeat-simple.html');
+
+				doh.register("test_MVC_SimpleDataBoundField", [				                                               
+					{
+						name: "initial conditions",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							console.debug("dojo.version() is "+dojo.version);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Anne1", dijit.byId("nameInput0").get('value'),"nameInput0 should be Anne1");
+								doh.is("Ben1",  dijit.byId("nameInput1").get('value'),"nameInput1 should be Ben1 ");
+								doh.is("Chad1", dijit.byId("nameInput2").get('value'),"nameInput2 should be Chad1");
+
+								doh.is("Anne1", dijit.byId("firstnameOutput10").get('value'),"firstnameOutput10 should be Anne1");
+								doh.is("Ben1",  dijit.byId("firstnameOutput11").get('value'),"firstnameOutput11 should be Ben1 ");
+								doh.is("Chad1", dijit.byId("firstnameOutput12").get('value'),"firstnameOutput12 should be Chad1");
+
+								doh.is("Anne2", dijit.byId("firstnameOutput20").get('value'),"firstnameOutput20 should be Anne2");
+								doh.is("Ben2",  dijit.byId("firstnameOutput21").get('value'),"firstnameOutput21 should be Ben2 ");
+
+								doh.is("", dijit.byId("firstnameOutput30").get('value'),"firstnameOutput30 should be blank");
+							}), 1000);
+							return d;
+						}
+					 },
+                     {						
+						name: "SelectModel2",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("dijit_form_Button_1", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Anne2", dijit.byId("nameInput0").get('value'),"nameInput0 should be Anne2");
+								doh.is("Ben2",  dijit.byId("nameInput1").get('value'),"nameInput1 should be Ben2 ");
+							}), 1000);
+							return d;
+						}
+					 },
+                     {						
+						name: "ChangeModel2",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});							
+                            doh.robot.keyPress(dojo.keys.TAB, 500, {});                         
+							doh.robot.keyPress(dojo.keys.DELETE, 500, {});							
+							
+							doh.robot.typeKeys("Anne2-Update", 500, 1000);							
+                            doh.robot.keyPress(dojo.keys.TAB, 500, {});                         
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Anne2-Update", dijit.byId("nameInput0").get('value'),"nameInput0 should be Anne2-Update");
+								doh.is("Ben2",  dijit.byId("nameInput1").get('value'),"nameInput1 should be Ben2 ");
+
+								doh.is("Anne2-Update", dijit.byId("firstnameOutput20").get('value'),"firstnameOutput20 should be Anne2-Update");
+								doh.is("Ben2",  dijit.byId("firstnameOutput21").get('value'),"firstnameOutput21 should be Ben2 ");
+							}), 1000);
+							return d;
+						}
+					 },
+                     {						
+						name: "SelectModel3",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("dijit_form_Button_2", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("", dijit.byId("nameInput0").get('value'),"nameInput0 should be blank");
+							}), 1000);
+							return d;
+						}
+					 },
+                     {						
+						name: "ChangeModel3",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("nameInput0", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.keyPress(dojo.keys.DELETE, 500, {});
+							
+							doh.robot.typeKeys("Anne3-Update", 500, 1000);							
+                            doh.robot.keyPress(dojo.keys.TAB, 500, {});                         
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Anne3-Update", dijit.byId("nameInput0").get('value'),"nameInput0 should be Anne3-Update");
+
+								doh.is("Anne3-Update", dijit.byId("firstnameOutput30").get('value'),"firstnameOutput30 should be Anne3-Update");
+							}), 1000);
+							return d;
+						}
+					 },
+                     {						
+						name: "ResetAll",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("dijit_form_Button_0", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.mouseMoveAt("reset", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Anne1", dijit.byId("nameInput0").get('value'),"nameInput0 should be Anne1");
+								doh.is("Ben1",  dijit.byId("nameInput1").get('value'),"nameInput1 should be Ben1 ");
+								doh.is("Chad1", dijit.byId("nameInput2").get('value'),"nameInput2 should be Chad1");
+
+								doh.is("Anne1", dijit.byId("firstnameOutput10").get('value'),"firstnameOutput10 should be Anne1");
+								doh.is("Ben1",  dijit.byId("firstnameOutput11").get('value'),"firstnameOutput11 should be Ben1 ");
+								doh.is("Chad1", dijit.byId("firstnameOutput12").get('value'),"firstnameOutput12 should be Chad1");
+
+								doh.is("Anne2", dijit.byId("firstnameOutput20").get('value'),"firstnameOutput20 should be Anne2");
+								doh.is("Ben2",  dijit.byId("firstnameOutput21").get('value'),"firstnameOutput21 should be Ben2 ");
+
+								doh.is("", dijit.byId("firstnameOutput30").get('value'),"firstnameOutput30 should be blank");
+							
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+				doh.run();
+			});
+		</script>
+</html>

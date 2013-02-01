@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+	<title>dojox.layout.ExpandoPane</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+	<!-- test file style rollup, you need resources/ExpandoPane.css exclusively -->
+	<link rel="stylesheet" href="../resources/ExpandoPane.css">
+	<link rel="stylesheet" href="../../../dijit/tests/css/dijitTests.css">
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dojox.layout.ExpandoPane");
+	</script>
+</head>
+<body class="tundra" role="main">
+
+	<h1>Testing splitters on ExpandoPanes</h1>
+
+	<h2>splitter="true":</h2>
+	<div dojoType="dijit.layout.BorderContainer" style="height:275px; border: solid #ccc 1px;">
+		<div dojoType="dojox.layout.ExpandoPane" splitter="true" title="leftTest" region="left" maxWidth="175" style="width:175px; background:red">
+			foo
+		</div>
+		<div dojoType="dijit.layout.ContentPane" region="center" href="_lorem.html"></div>
+	</div>
+
+	<h2>splitter="false":</h2>
+	<div dojoType="dijit.layout.BorderContainer" style="height:275px; border: solid #ccc 1px;">
+		<div dojoType="dojox.layout.ExpandoPane" splitter="false" title="leftTest" region="left" maxWidth="175" style="width:175px; background:red">
+			foo
+		</div>
+		<div dojoType="dijit.layout.ContentPane" region="center" href="_lorem.html"></div>
+	</div>
+
+	<h2>Splitter not specified:</h2>
+	<div dojoType="dijit.layout.BorderContainer" style="height:275px; border: solid #ccc 1px;">
+		<div dojoType="dojox.layout.ExpandoPane" title="leftTest" region="left" maxWidth="175" style="width:175px; background:red">
+			foo
+		</div>
+		<div dojoType="dijit.layout.ContentPane" region="center" href="_lorem.html"></div>
+	</div>
+
+</body>
+</html>
+

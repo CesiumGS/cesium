@@ -1,0 +1,112 @@
+/* if you link this style sheet, dijit/themes/dijit.css must be imported. */
+/* dijit.Calendar */
+.dijitCalendar {
+  padding: 0;
+  width: 320px;
+  border-radius: 0;
+  text-align: center;
+  border: none 0 transparent;
+  background-color: white;
+}
+.dijitCalendar thead {
+  border-color: inherit;
+  vertical-align: middle;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#84868c), to(#000000), color-stop(0.5, #52555a), color-stop(0.5, #292929));
+}
+.dijitCalendarMonthLabel {
+  padding: 0 4px;
+  font-family: Helvetica;
+  text-shadow: rgba(247, 247, 247, 0.6) 0 1px 0px;
+  color: white;
+  font-size: 16px;
+}
+.dijitCalendarMonthMenu .dijitCalendarMonthLabel {
+  color: black;
+}
+.dijitCalendar .dijitDropDownButton .dijitButtonNode {
+  padding: 0 3px 0 2px;
+  border: none;
+  background-color: transparent;
+  background-image: none;
+  -webkit-box-shadow: 0 0 0 transparent;
+}
+.dijitArrowButtonInner {
+  display: none;
+}
+.dijitCalendarMonthContainer th {
+  border-right: 1px solid transparent;
+}
+.dijitCalendarIncrementControl {
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+}
+.dijitCalendarDecrease {
+  border-left-width: 0;
+  border-right-color: white;
+}
+.dijitCalendarIncrease {
+  border-right-width: 0;
+  border-left-color: white;
+}
+.dijitA11ySideArrow {
+  display: none;
+}
+.dijitCalendarDayLabelTemplate {
+  border-right: 1px solid transparent;
+  text-align: center;
+  text-shadow: rgba(247, 247, 247, 0.6) 0px 1px 0px;
+  background-color: #292c31;
+  font-size: 12px;
+  color: white;
+}
+.dijitCalendarDateTemplate {
+  border-bottom: 1px solid lightGrey;
+  font-family: Helvetica;
+  font-size: 22px;
+  font-weight: normal;
+  text-align: center;
+  border-right: 1px solid lightGrey;
+  background-color: white;
+  color: black;
+}
+.dijitCalendarDateTemplate:last-child {
+  border-right: none;
+}
+.dijitCalendarDateTemplate .dijitCalendarDateLabel {
+  padding: 3px 5px 3px 4px;
+  display: block;
+  text-decoration: none;
+  border: none;
+}
+.dijitCalendarPreviousMonth .dijitCalendarDateLabel, .dijitCalendarNextMonth .dijitCalendarDateLabel {
+  color: lightGrey;
+}
+.dijitCalendarHoveredDate .dijitCalendarDateLabel {
+  color: grey;
+}
+.dijitCalendarSelectedDate .dijitCalendarDateLabel {
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#00a200), to(#00d300), color-stop(0.2, #00ba00), color-stop(0.2, #00ba00));
+  color: white;
+  text-shadow: rgba(0, 0, 0, 0.4) 0 1px 0;
+}
+.dijitCalendarActiveDate .dijitCalendarDateLabel {
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#306ea1), to(#266093), color-stop(0.06, #4090d3), color-stop(0.5, #306ea1));
+}
+.dijitCalendarYearLabel {
+  margin: 0;
+  padding: 0;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#84868c), to(#000000), color-stop(0.5, #52555a), color-stop(0.5, #292929));
+}
+.dijitCalendarSelectedYear {
+  font-family: Helvetica;
+  text-shadow: rgba(247, 247, 247, 0.6) 0px 1px 0px;
+  color: white;
+  font-size: 16px;
+}
+.dijitCalendarNextYear, .dijitCalendarPreviousYear {
+  text-shadow: rgba(247, 247, 247, 0.6) 0px 1px 0px;
+  padding: 1px 6px 3px 6px;
+  color: white;
+  font-size: 12px;
+}

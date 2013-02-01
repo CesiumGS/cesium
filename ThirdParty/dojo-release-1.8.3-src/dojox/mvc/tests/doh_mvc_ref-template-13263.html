@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>DOH Async Late Binding Template Input - Output Group example</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+			@import "css/app-format.css";
+			@import "../../../dijit/themes/claro/claro.css";
+		</style>
+<script type="text/javascript" data-dojo-config="parseOnLoad:0,isDebug:1,async:1, mvc: {debugBindings: 1}" src="../../../dojo/dojo.js"></script>
+<script type="text/javascript">
+ 		var model;
+ 
+		require([
+				'dojo/_base/declare',
+				'dojox/mvc/at',
+				'dojox/mvc/EditModelRefController',
+				'dojox/mvc/ModelRefController',
+				'dojo/Stateful',
+				'dojox/mvc/Group',
+				'dijit/_TemplatedMixin',
+				'dijit/_WidgetsInTemplateMixin',
+				'dojox/mvc/StatefulModel',
+				'dojo/ready',
+				'dojo/parser',
+				'dijit/form/TextBox'
+				], function (declare, at, EditModelRefController, ModelRefController, Stateful, Group, _TemplatedMixin, 
+						_WidgetsInTemplateMixin, StatefulModel, ready, parser, TextBox) {
+
+				declare('test.TextBox', [TextBox], {
+					startup: function () {
+						console.log('starting...', this.id, this._refs.value.targetProp);
+						this.inherited(arguments);
+						console.log('started', this.id, this._refs.value.targetProp);
+					}
+				});
+				var testGroup = declare('test.Group', [Group], {
+					startup: function () {
+						console.log('starting...', this.id);
+						this.inherited(arguments);
+						console.log('started', this.id);
+					}
+				});
+				declare('test.Templated', [testGroup, _TemplatedMixin, _WidgetsInTemplateMixin], {
+					templateString: '<div><input data-dojo-type="test.TextBox" data-dojo-props="value: at(\'rel:\', \'fn\')"></div>'
+				});
+				
+				// All 3 of these models work
+				//model = new EditModelRefController({sourceModel: new Stateful({fn: 'first', ln: 'last'})});
+				//model = new Stateful({fn: 'first', ln: 'last'});
+				model = new ModelRefController({model: new Stateful({fn: 'first', ln: 'last'})});
+
+
+				require([
+					'doh/runner', 'dijit/dijit'
+				], function(){
+				require([
+					'dojo/domReady!'
+					], function(){
+						doh.register("parse", function() {
+						parser.parse();
+						console.log('setting ref after parsing...');
+						dijit.byId('late').set('target', model);
+						var prog = new test.Templated({
+							target: model
+						}, 'prog');
+						prog.startup();
+
+						});
+						// should be able to verify all of the inputs 
+						doh.register("check initial values", [{
+							name : "initial",
+							runTest : function() {
+								doh.is("first", dijit.byId("parsedInput").get('value'),"parsedInput should be first");
+								doh.is("first", dijit.byId("test_TextBox_0").get('value'),"test_TextBox_0 should be first");
+								doh.is("first", dijit.byId("test_TextBox_1").get('value'),"test_TextBox_1 should be first");
+								doh.is("first", dijit.byId("test_TextBox_2").get('value'),"test_TextBox_2 should be first");
+							}
+						}]);
+
+						doh.register("update first", [{
+							name : "Update-first",
+							runTest : function() {
+								var first1;
+								first1 = dijit.byId("parsedInput");
+								first1.set("value","first-update");
+								if (first1) {
+								doh.is("first-update", dijit.byId("parsedInput").get('value'),"parsedInput should be first-update");
+								doh.is("first-update", dijit.byId("test_TextBox_0").get('value'),"test_TextBox_0 should be first-update");
+								doh.is("first-update", dijit.byId("test_TextBox_1").get('value'),"test_TextBox_1 should be first-update");
+								doh.is("first-update", dijit.byId("test_TextBox_2").get('value'),"test_TextBox_2 should be first-update");
+								}
+							}
+						}]);
+						doh.run();
+
+					});
+				});	
+		}); 
+		</script>
+</head>
+	<body class="claro">
+		<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<h1>late binding</h1>
+		<p>no template</p>
+		<div id="parsedGroup" data-dojo-type="test.Group" data-dojo-props="target : model">
+			<input data-dojo-type="test.TextBox" data-dojo-props="value: at('rel:', 'fn')" id="parsedInput">
+		</div>
+		<p>Early parsed</p><div id="early" data-dojo-type="test.Templated" data-dojo-props="target : model"></div>
+		<p>Late parsed</p><div id="late" data-dojo-type="test.Templated"></div>
+		<p>programmatic</p><div id="prog"></div>
+	</body>
+
+</html>

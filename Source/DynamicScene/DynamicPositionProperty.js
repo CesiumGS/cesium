@@ -8,6 +8,9 @@ define([
         '../Core/Iso8601',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Matrix3',
+        '../Core/ReferenceFrame',
+        '../Core/Transforms',
         './CzmlCartesian3',
         './CzmlCartographic',
         './DynamicProperty'
@@ -20,11 +23,15 @@ define([
         Iso8601,
         Cartesian3,
         Cartographic,
+        Matrix3,
+        ReferenceFrame,
+        Transforms,
         CzmlCartesian3,
         CzmlCartographic,
         DynamicProperty) {
     "use strict";
 
+    var scratchMatrix3 = new Matrix3();
     var wgs84 = Ellipsoid.WGS84;
     var potentialTypes = [CzmlCartesian3, CzmlCartographic];
 
@@ -103,6 +110,13 @@ define([
         }
         result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== 'undefined') {
+            if (interval.referenceFrame === ReferenceFrame.INERTIAL) {
+                var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
+                if (typeof icrfToFixed === 'undefined') {
+                    return undefined;
+                }
+                result = icrfToFixed.multiplyByVector(result, result);
+            }
             result = wgs84.cartesianToCartographic(result);
         }
         return result;
@@ -136,7 +150,15 @@ define([
         var property = interval.data;
         var valueType = property.valueType;
         if (valueType === CzmlCartesian3) {
-            return property.getValue(time, result);
+            result = property.getValue(time, result);
+            if (interval.referenceFrame === ReferenceFrame.INERTIAL) {
+                var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
+                if (typeof icrfToFixed === 'undefined') {
+                    return undefined;
+                }
+                return icrfToFixed.multiplyByVector(result, result);
+            }
+            return result;
         }
         result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== 'undefined') {
@@ -312,6 +334,7 @@ define([
         } else {
             //If not, create it.
             existingInterval = iso8601Interval;
+            existingInterval.referenceFrame = ReferenceFrame.FIXED;
             thisIntervals.addInterval(existingInterval);
         }
 
@@ -331,8 +354,171 @@ define([
 
         //We could handle the data, add it to the property.
         if (typeof unwrappedInterval !== 'undefined') {
+            if (typeof czmlInterval.referenceFrame !== 'undefined') {
+                existingInterval.referenceFrame = ReferenceFrame[czmlInterval.referenceFrame];
+            }
             property._addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
         }
+    };
+
+    DynamicPositionProperty.prototype._getReferenceFrame = function() {
+        var propertyIntervals = this._propertyIntervals;
+        if (propertyIntervals.getLength() > 0) {
+            return propertyIntervals.get(0).referenceFrame;
+        }
+        return undefined;
+    };
+
+    DynamicPositionProperty.prototype._getValueInReferenceFrame = function(time, referenceFrame, result) {
+        if (typeof time === 'undefined') {
+            throw new DeveloperError('time is required.');
+        }
+
+        var interval = this._cachedInterval;
+        if (this._cachedTime !== time) {
+            this._cachedTime = time;
+            if (typeof interval === 'undefined' || !interval.contains(time)) {
+                interval = this._propertyIntervals.findIntervalContainingDate(time);
+                this._cachedInterval = interval;
+            }
+        }
+
+        if (typeof interval === 'undefined') {
+            return undefined;
+        }
+        var property = interval.data;
+        var valueType = property.valueType;
+        if (valueType === CzmlCartesian3) {
+            result = property.getValue(time, result);
+        } else {
+            result = interval.cachedValue = property.getValue(time, interval.cachedValue);
+            if (typeof result !== 'undefined') {
+                result = wgs84.cartographicToCartesian(result);
+            }
+        }
+
+        if (interval.referenceFrame !== referenceFrame) {
+            if (referenceFrame === ReferenceFrame.FIXED) {
+                var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
+                if (typeof icrfToFixed === 'undefined') {
+                    return undefined;
+                }
+                return icrfToFixed.multiplyByVector(result, result);
+            }
+            if (referenceFrame === ReferenceFrame.INERTIAL) {
+                var fixedToIcrf = Transforms.computeFixedToIcrfMatrix(time, scratchMatrix3);
+                if (typeof fixedToIcrf === 'undefined') {
+                    return undefined;
+                }
+                return fixedToIcrf.multiplyByVector(result, result);
+            }
+        }
+        return result;
+    };
+
+    DynamicPositionProperty.prototype._getValueRangeInReferenceFrame = function(start, stop, currentTime, referenceFrame, result) {
+        if (typeof start === 'undefined') {
+            throw new DeveloperError('start is required');
+        }
+
+        if (typeof stop === 'undefined') {
+            throw new DeveloperError('stop is required');
+        }
+
+        if (typeof result === 'undefined') {
+            result = [];
+        }
+
+        var propertyIntervals = this._propertyIntervals;
+
+        var startIndex = typeof start === 'undefined' ? 0 : propertyIntervals.indexOf(start);
+        var stopIndex = typeof stop === 'undefined' ? propertyIntervals.length - 1 : propertyIntervals.indexOf(stop);
+        if (startIndex < 0) {
+            startIndex = ~startIndex;
+        }
+
+        if (startIndex === propertyIntervals.getLength()) {
+            result.length = 0;
+            return result;
+        }
+
+        if (stopIndex < 0) {
+            stopIndex = ~stopIndex;
+            if (stopIndex !== propertyIntervals.getLength()) {
+                result.length = 0;
+                return result;
+            }
+            stopIndex -= 1;
+        }
+
+        var r = 0;
+        //Always step exactly on start (but only use it if it exists.)
+        var tmp;
+        tmp = this._getValueInReferenceFrame(start, referenceFrame, result[r]);
+        if (typeof tmp !== 'undefined') {
+            result[r++] = tmp;
+        }
+
+        var steppedOnNow = typeof currentTime === 'undefined' || currentTime.lessThan(start) || currentTime.greaterThan(stop);
+        for ( var i = startIndex; i < stopIndex + 1; i++) {
+            var current;
+            var interval = propertyIntervals.get(i);
+            var nextInterval = propertyIntervals.get(i + 1);
+            var loopStop = stop;
+            if (typeof nextInterval !== 'undefined' && stop.greaterThan(nextInterval.start)) {
+                loopStop = nextInterval.start;
+            }
+            var property = interval.data;
+            var currentInterval = property._intervals.get(0);
+            var times = currentInterval.data.times;
+            if (typeof times !== 'undefined') {
+                //Iterate over all interval times and add the ones that fall in our
+                //time range.  Note that times can contain data outside of
+                //the intervals range.  This is by design for use with interpolation.
+                var t;
+                for (t = 0; t < times.length; t++) {
+                    current = times[t];
+                    if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
+                        tmp = this._getValueInReferenceFrame(currentTime, referenceFrame, result[r]);
+                        if (typeof tmp !== 'undefined') {
+                            result[r++] = tmp;
+                        }
+                        steppedOnNow = true;
+                    }
+                    if (current.greaterThan(start) && current.lessThan(loopStop)) {
+                        tmp = this._getValueInReferenceFrame(current, referenceFrame, result[r]);
+                        if (typeof tmp !== 'undefined') {
+                            result[r++] = tmp;
+                        }
+                    }
+                }
+            } else {
+                //If times is undefined, it's because the interval contains a single position
+                //at which it stays for the duration of the interval.
+                current = interval.start;
+
+                //We don't need to actually step on now in this case, since the next value
+                //will be the same; but we do still need to check for it.
+                steppedOnNow = steppedOnNow || current.greaterThanOrEquals(currentTime);
+
+                //Finally, get the value at this non-sampled interval.
+                if (current.lessThan(loopStop)) {
+                    tmp = this._getValueInReferenceFrame(current, referenceFrame, result[r]);
+                    if (typeof tmp !== 'undefined') {
+                        result[r++] = tmp;
+                    }
+                }
+            }
+        }
+
+        //Always step exactly on stop (but only use it if it exists.)
+        tmp = this._getValueInReferenceFrame(stop, referenceFrame, result[r]);
+        if (typeof tmp !== 'undefined') {
+            result[r++] = tmp;
+        }
+
+        result.length = r;
+        return result;
     };
 
     return DynamicPositionProperty;

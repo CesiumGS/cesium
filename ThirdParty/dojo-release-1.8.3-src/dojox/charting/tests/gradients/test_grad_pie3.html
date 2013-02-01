@@ -1,0 +1,67 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+    <title>Gradient: Pie #3</title>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+    <script>
+		dojo.require("dojox.charting.Chart");
+        dojo.require("dojox.charting.plot2d.Pie");
+		dojo.require("dojox.charting.Theme");
+
+        run = function(){
+            dojo.attr("start", "disabled", true);
+            
+            var theme1 = new dojox.charting.Theme({
+                    seriesThemes: [
+                        {
+                            fill: {
+                                type: "linear", space: "shape", x1: 0, y1: 0, x2: 100, y2: 100,
+                                colors: [{ offset: 0, color: "white" }, { offset: 1, color: "red" }]
+                            }
+                        },
+                        {
+                            fill: {
+                                type: "linear", space: "shape", x1: 0, y1: 0, x2: 100, y2: 0,
+                                colors: [{ offset: 0, color: "white" }, { offset: 1, color: "blue" }]
+                            }
+                        },
+                        {
+                            fill: {
+                                type: "linear", space: "shape", x1: 0, y1: 0, x2: 100, y2: 100,
+                                colors: [{ offset: 0, color: "white" }, { offset: 1, color: "green" }]
+                            }
+                        }
+                    ],
+					noRadialConv: true
+                });
+
+            var chart1 = new dojox.charting.Chart("c1").
+                setTheme(theme1).
+                addPlot("default", {type: "Pie", radius: 180}).
+                addSeries("Series A", [2, 3, 4]).
+                render();
+        };
+        
+        dojo.addOnLoad(run);
+    </script>
+</head>
+<body>
+    <p><button id="start" onclick="run();">Start!</button></p>
+	<h1>shape-space gradient</h1>
+	<p>Pie</p>
+    <div id="c1" style="position: relative; width: 400px; height: 400px;"></div>
+</body>
+</html>

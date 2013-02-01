@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot TabIndent Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.DeferredList");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_TabIndent.html');
+					
+				var metaKey = {ctrl: true};
+					
+				doh.register("testTabIndent", [
+					{
+						name: "wait for editors to load",
+						timeout: 5000,
+						runTest: function(){
+						    return new dojo.DeferredList(
+						        dijit.registry.filter(function(w){ return w.onLoadDeferred; }).map(function(w){ return w.onLoadDeferred; })
+						    );
+						}
+					},
+					{
+						name: "toggleOn",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var editor = dijit.byId("tiTest");
+							
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor.setValue("<ol><li>a list item.</li><li>a list item2.</li></ol>");
+							}),500);
+							
+							doh.robot.mouseMoveAt(dojo.query(".dijitEditorIconTabIndent")[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(function(){ return editor.editNode }, 500);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500); //make sure the last thing in the list is selected
+							doh.robot.keyPress(dojo.keys.TAB, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("<ol><li>a list item.</li><ol><li>a list item2.</li></ol></ol>", editor.getValue());
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "shiftTab",
+						timeout: 2000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var editor = dijit.byId("tiTest");
+							doh.robot.keyPress(dojo.keys.TAB, 500, {shift: true});
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								var editorValue = editor.getValue();
+								var valid = editorValue === "<ol><li>a list item.</li><li>a list item2.<br /></li></ol>"; //chrome
+								valid = valid || editorValue === "<ol><li>a list item.</li><li>a list item2.<br/></li></ol>"; //safari
+								valid = valid || editorValue === "<ol><li>a list item.</li><li>a list item2.</li></ol>"; //everone else
+								doh.t(valid);
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "toggleOff",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var editor = dijit.byId("tiTest");
+							var origValue;
+							doh.robot.sequence(d.getTestErrback(function(){ origValue = editor.getValue(); }), 1000); 
+							doh.robot.mouseMoveAt(dojo.query(".dijitEditorIconTabIndent")[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(editor.editNode, 500);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.keyPress(dojo.keys.TAB, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								//verify the editor lost focus and therefore the value did not change
+								doh.is(origValue, editor.getValue());
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "toggleOn_ctrlM",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var editor = dijit.byId("tiTest");
+
+							doh.robot.mouseMoveAt(function(){ return editor.editNode }, 500);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.keyPress("m", 500, {ctrl: true});
+							doh.robot.mouseMoveAt(function(){ return editor.editNode }, 500);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500); //make sure the last thing in the list is selected
+							doh.robot.keyPress(dojo.keys.TAB, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("<ol><li>a list item.</li><ol><li>a list item2.</li></ol></ol>", editor.getValue());
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "toggleOff_ctrlM",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var editor = dijit.byId("tiTest");
+							var origValue;
+							doh.robot.sequence(d.getTestErrback(function(){ origValue = editor.getValue(); }), 1000); 
+							doh.robot.mouseMoveAt(function(){ return editor.editNode }, 500);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.keyPress("m", 500, {ctrl: true});
+							doh.robot.mouseMoveAt(function(){ return editor.editNode }, 500);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.keyPress(dojo.keys.TAB, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								//verify the editor lost focus and therefore the value did not change
+								doh.is(origValue, editor.getValue());
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

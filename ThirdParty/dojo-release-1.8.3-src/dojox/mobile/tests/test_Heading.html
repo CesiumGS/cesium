@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Heading</title>
+
+	<script type="text/javascript" src="../deviceTheme.js"
+		data-dojo-config="mblThemeFiles: ['base','TabBar','dojox/mobile/themes/common/domButtons.css']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/TabBar"
+		], function(ready, registry){
+			ready(function(){
+				var btn1 = registry.byId("btn1");
+				btn1.connect(btn1, "onClick", function(){
+					console.log(this.label + " button was clicked");
+				});
+			});
+		});
+	</script>
+
+<style>
+	.mblColorPink {
+		background-image: -webkit-gradient(linear, left top, left bottom, from(#ff9DE9), to(#cc62DD), color-stop(0.5, #ff6EDF), color-stop(0.5, #ff5FDC));
+		background-image: -moz-linear-gradient(top, #ff9DE9 0%, #ff6EDF 50%, #ff5FDC 50%, #cc62DD 100%);
+		background-color: pink;
+	}
+	
+	.mblColorPink45 {
+		background-image: -webkit-gradient(linear, left top, right bottom, from(#ff9DE9), to(#cc62DD), color-stop(0.5, #ff6EDF), color-stop(0.5, #ff5FDC));
+		background-image: -moz-linear-gradient(top left, #ff9DE9 0%, #ff6EDF 50%, #ff5FDC 50%, #cc62DD 100%);
+		background-color: pink;
+	}	
+</style>
+</head>
+<body style="visibility:hidden;">
+	<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='label:"Arrow"'>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" arrow="left" defaultColor="mblColorBlue" selColor="mblColorPink">MMMM</span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props=''>MMMM</span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='arrow:"right"'>MMMM</span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props=''>MMMM</span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"mblDomButtonWhitePlus"' style="float:right;"></span>
+
+	</div><br>
+
+	<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='label:"Labeled Icon"'>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"mblDomButtonWhitePlus",label:"DOM"'></span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"images/tab-icon-33w.png",label:"Image"'></span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"images/tab-icons.png",iconPos:"29,116,29,29",label:"Sprite"'></span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"mblDomButtonWhitePlus"' style="float:right;"></span>
+
+	</div><br>
+
+	<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='label:"Fixed Width"'>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"mblDomButtonWhitePlus",label:"DOM"' style="width:120px"></span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"images/tab-icon-33w.png",label:"Image"' style="width:120px"></span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"images/tab-icons.png",iconPos:"29,116,29,29",label:"Sprite"' style="width:120px"></span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"mblDomButtonWhitePlus"' style="float:right;"></span>
+
+	</div><br>
+
+	<div id="general" data-dojo-type="dojox.mobile.View">
+		<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Settings", moveTo:"settings", label:"General"'>
+		    <div style="float:right; display:none;"></div>
+		</div>
+		<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Long Button", moveTo:"settings"'>Very Very Long Title May Not Be Displayed in the Narrow Space - Very Very Long Title May Not Be Displayed in the Narrow Space</div>
+	</div>
+
+	<h3>Heading with buttons</h3>
+
+	<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='label:"World Clock"'>
+		<span id="btn1" data-dojo-type="dojox.mobile.ToolBarButton">Edit</span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"mblDomButtonWhitePlus"' style="float:right;" onclick="console.log('+ was clicked')"></span>
+
+	</div><br>
+
+
+	<div data-dojo-type="dojox.mobile.Heading">
+		<span data-dojo-type="dojox.mobile.ToolBarButton">Edit</span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"mblDomButtonWhitePlus"' style="float:right;"></span>
+		Alarm Clock
+	</div><br>
+
+
+	<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='label:"Voice Memos"'>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='label:"Speaker"'></span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='label:"Done"' defaultColor="mblColorBlue" style="float:right;"></span>
+	</div><br>
+
+
+	<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='label:"Updates"'>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='label:"Update All"' style="float:right;"></span>
+	</div><br>
+
+
+	<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='label:"News", back:"Bookmarks", moveTo:"bookmarks"'>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='label:"Done"' defaultColor="mblColorBlue" style="float:right;"></span>
+	</div><br>
+
+
+	<div data-dojo-type="dojox.mobile.Heading">
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='label:"Done"' defaultColor="mblColorBlue"></span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='label:"New Folder"' style="float:right;"></span>
+	</div><br>
+
+
+	<div data-dojo-type="dojox.mobile.Heading">
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='toggle:true'>New</span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='toggle:true'>Toggle</span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"images/tab-icon-18h.png", moveTo:"view3"' style="padding:0 10px"></span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"images/tab-icons.png", iconPos:"29,0,29,29", moveTo:"view3"' style="padding:0 10px"></span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"mblDomButtonWhitePlus", moveTo:"view3"' style="float:right;"></span>
+	</div><br>
+
+
+	<div data-dojo-type="dojox.mobile.Heading">
+		<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"segmentedControl"'>
+			<li data-dojo-type="dojox.mobile.TabBarButton" style="width:80px" data-dojo-props='selected:true'>Catalog</li>
+			<li data-dojo-type="dojox.mobile.TabBarButton" style="width:80px">Share</li>
+			<li data-dojo-type="dojox.mobile.TabBarButton" style="width:80px">Download</li>
+		</ul>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"mblDomButtonWhiteSearch"' style="float:right;"></span>
+	</div><br>
+
+
+	<div data-dojo-type="dojox.mobile.Heading">
+	  <table cellpadding="0" cellspacing="0" style="width:100%;"><tr>
+		<td><span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"mblDomButtonWhitePlus"'></span></td>
+        <td align="center"><table cellpadding="0" cellspacing="0"><tr>
+		<td align="center"><div data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"segmentedControl"' style="margin:auto;">
+			<div data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='selected:true' style="width:80px">Search</div>
+			<div data-dojo-type="dojox.mobile.TabBarButton" style="width:80px">Directions</div>
+		</div></td>
+		</tr></table></td>
+		<td align="right"><span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"images/tab-icon-15h.png"' style="float:right;"></span></td>
+	  </tr></table>
+	</div><br>
+
+
+	<div data-dojo-type="dojox.mobile.Heading">
+	  <table cellpadding="0" cellspacing="0" align="center"><tr>
+		<td align="center"><div data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"segmentedControl"' style="margin:auto;">
+			<div data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='selected:true' style="width:80px">Search</div>
+			<div data-dojo-type="dojox.mobile.TabBarButton" style="width:80px">Directions</div>
+		</div></td>
+	  </tr></table>
+	</div><br>
+
+
+	<div data-dojo-type="dojox.mobile.Heading">
+	  <table cellpadding="0" cellspacing="0" align="right"><tr>
+		<td align="center"><div data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"segmentedControl"' style="margin:auto;">
+			<div data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='selected:true' style="width:80px">Search</div>
+			<div data-dojo-type="dojox.mobile.TabBarButton" style="width:80px">Directions</div>
+		</div></td>
+	  </tr></table>
+	</div><br>
+
+
+	<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Inbox", label:"1 of 10"'>
+		<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"segmentedControl", selectOne:false' style="float:right;">
+			<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon:"mblDomButtonWhiteUpArrow"'></li>
+			<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon:"mblDomButtonWhiteDownArrow"'></li>
+		</ul>
+	</div><br>
+
+
+	<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Top", label:"Inbox(32)"'>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"mblDomButtonWhiteSearch"' style="float:right;"></span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"mblDomButtonWhiteUpArrow"' style="float:right;"></span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"mblDomButtonWhiteDownArrow"' style="float:right;"></span>
+	</div><br>
+
+
+	<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Inbox", label:"1 of 10"'>
+		<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"segmentedControl", selectOne:false' style="float:right;">
+			<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon:"mblDomButtonWhiteUpArrow"'></li>
+			<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon:"mblDomButtonWhiteSearch"'></li>
+		</ul>
+	</div><br>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot AccordionContainer Mouse Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx", "dojo/domReady!"
+			], function(doh, robot){
+
+				robot.initRobot('../test_AccordionContainer.html');
+
+				var registry;
+
+				doh.register("setup", [
+					function setup(){
+						// get pointers to singletons loaded on test page
+						registry = robot.window.require("dijit/registry");
+					}
+				]);
+
+				doh.register("Accordion Mouse tests",[
+					{
+						name: "basic operation",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							// Click open second pane
+							robot.mouseMoveAt("lazyLoadPane_button_title", 500, 1);
+							robot.mouseClick({left: true}, 500);
+							robot.sequence(d.getTestErrback(function(){
+								doh.is("lazyLoadPane", registry.byId("markupAccordion").get("selectedChildWidget").id, "second pane is now selected");
+							}), 500);
+
+							// Click open fourth pane
+							robot.mouseMoveAt("embeddedLayoutPane_button_title", 500, 1);
+							robot.mouseClick({left: true}, 500);
+							robot.sequence(d.getTestCallback(function(){
+								doh.is("embeddedLayoutPane", registry.byId("markupAccordion").get("selectedChildWidget").id, "fourth pane is now selected");
+							}), 2000);
+
+							return d;
+						}
+					}
+				]);
+				
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

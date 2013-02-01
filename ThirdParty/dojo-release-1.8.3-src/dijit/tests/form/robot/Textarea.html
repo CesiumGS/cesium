@@ -1,0 +1,327 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>doh.robot Textarea Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_Textarea.html');
+
+				// execute some test as soon as the widget gets focus
+				var focusThenRun = function(widget, fcn){
+					if(!widget.focused){
+						var handler = widget.connect(widget, '_onFocus', function(){
+							widget.disconnect(handler);
+							setTimeout(fcn, 1);
+						});
+						widget.focus();
+					}else{
+						fcn();
+					}
+				};
+
+				doh.register("init", function init(){
+					// Wait for Textarea widgets to size themselves... it's done on a setTimeout(func, 0)
+					var d = new doh.Deferred();
+					setTimeout(function(){
+						d.callback(true);
+					}, 100);
+					return d;
+				});
+
+				doh.register("height tests", [
+					{
+						name: "initial height",
+						runTest: function(){
+							var blank = dojo.marginBox("blank").h,
+							large = dojo.marginBox("largeTextArea").h;
+							doh.t(blank > 8, "blank: " + blank);
+							doh.t(large > blank, "blank: " + blank + ", large: " + large);
+						}
+					},
+					{
+						name: "expansion/contraction by newline",
+						timeout: 10000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								w = dijit.byId("blank"),
+								height1 = dojo.marginBox(w.domNode).h,
+								height2, height3;
+
+							focusThenRun(w, function(){
+								// Test expand on newline
+								doh.robot.typeKeys('Row of text.', 1, 2000);
+								doh.robot.keyPress(dojo.keys.ENTER, 100, {});
+								doh.robot.keyPress(dojo.keys.ENTER, 100, {});
+								doh.robot.sequence(function(){
+									height2 = dojo.marginBox(w.domNode).h;
+								}, 1000);
+
+								// Test shrink on delete of newline
+								doh.robot.keyPress(dojo.keys.LEFT_ARROW, 200, {});
+								doh.robot.keyPress(dojo.keys.DELETE, 200, {});
+								doh.robot.sequence(d.getTestCallback(function(){
+									height3 = dojo.marginBox(w.domNode).h;
+									doh.t(height2 > height1, "height ("+height2+") should have increased from " + height1);
+									doh.t(height3 < height2, "height ("+height3+") should have decreased from " + height2);
+								}), 1000);
+							});
+
+							return d;
+						}
+					},
+					{
+						name: "expansion/contraction by word wrap",
+						timeout: 50000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								w = dijit.byId("blank"),
+								height1 = dojo.marginBox(w.domNode).h,
+								height2,
+								height3,
+								handler,
+								pos,
+								i = 0,
+								text = 'The quick brown fox jumped over the lazy dog.',
+								typing = true;
+
+							w.set('intermediateChanges', true);
+							// Test expand by wordwrap
+							text = text+text+text+text;
+							// onChange handler enables very fast typing and deleting, but not too fast
+							handler = w.connect(w, 'onChange', function(nv){
+								if(typing){
+									pos = nv.indexOf(text);
+									if(pos <= 0){
+										doh.robot.typeKeys(text.substr(i++,1), 1, 0);
+										return;
+									} // still typing
+									height2 = dojo.marginBox(w.domNode).h;
+									typing = false;
+									// Test shrink on delete (backspace) of text.   delete seems to delete the next character
+									// rather than the previous character, hence the LEFT_ARROW.
+									doh.robot.keyPress(dojo.keys.LEFT_ARROW, 0, {});
+									doh.robot.keyPress(dojo.keys.DELETE, 0, {});
+								}else{
+									if(nv.length > pos){
+										doh.robot.keyPress(dojo.keys.LEFT_ARROW, 0, {});
+										doh.robot.keyPress(dojo.keys.DELETE, 0, {});
+										return; // still deleting
+									}
+									w.disconnect(handler);
+									doh.robot.sequence(d.getTestCallback(function(){
+										doh.t(height2 > height1, "height ("+height2+") should have increased from " + height1);
+										height3 = dojo.marginBox(w.domNode).h;
+										doh.t(height3 < height2, "height ("+height3+") should have decreased from " + height2);
+									}), 1);
+								}
+							});
+							doh.robot.typeKeys(text.substr(i++,1), 1, 0);
+
+							return d;
+						}
+					},
+					{
+						name: "expansion/contraction by cut/paste",
+						timeout: 9000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								modifier = dojo.isMac ? {meta: true} : {ctrl: true},
+								w = dijit.byId("blank"),
+								height1, height2, height3;
+
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.sequence(function(){
+								height1 = dojo.marginBox(w.domNode).h;
+								w.domNode.select();
+							}, 500);
+							// Cut text, height should decrease
+							doh.robot.keyPress("x", 500, modifier);
+							doh.robot.sequence(function(){
+								height2 = dojo.marginBox(w.domNode).h;
+							}, 500);
+
+							// Paste text, height should increase
+							doh.robot.keyPress("v", 500, modifier);
+							doh.robot.keyPress("v", 500, modifier);
+							doh.robot.sequence(d.getTestCallback(function(){
+								height3 = dojo.marginBox(w.domNode).h;
+								doh.t(height2 < height1, "height went from " + height1 + " to " + height2);
+								doh.t(height3 > height2, "height went from " + height2 + " to " + height3);
+							}), 500);
+
+							return d;
+						}
+					}
+
+				]);
+
+				doh.register("maxLength",
+					{
+						name: "maxLength",
+						timeout: 10000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								ta = dijit.byId("simple"),
+								value1, value2, value3;
+
+							focusThenRun(ta, function(){
+								// Limit is 50, and there's text there already, so not all of
+								// these characters will fit; some should be rejected.
+								doh.robot.typeKeys('0123456789', 1, 2000);
+								doh.robot.sequence(function(){
+									value1 = ta.get("value");
+								}, 500);
+
+								// Erase a character
+								doh.robot.keyPress(dojo.keys.LEFT_ARROW, 100, {});
+								doh.robot.keyPress(dojo.keys.DELETE, 500, {});
+								doh.robot.sequence(function(){
+									value2 = ta.get("value");
+								}, 500);
+
+								// And try to type a new character, there should be room now,
+								// but just for one character
+								doh.robot.typeKeys('AB', 500, 400);
+								doh.robot.sequence(d.getTestCallback(function(){
+									value3 = ta.get("value");
+									doh.is(50, value1.length, "should have stopped at 50, value is " + value1);
+									doh.is(49, value2.length, "erased a char, value is " + value2);
+									doh.is(50, value3.length, "tried to type 2 chars but only 1 should fit, value is " + value3);
+								}), 500);
+							});
+
+							return d;
+						}
+					});
+				doh.register("min/max height", [
+					{
+						name: "initial height",
+						timeout: 1000,
+						runTest: function(){
+							var w = dijit.byId("programmatic");
+							var h = w.domNode.offsetHeight;
+							doh.t(h > 64, "initial 3 line height " + h);
+						}
+					},
+					{
+						name: "#13166",
+						timeout: 5000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								w = dijit.byId("programmatic");
+
+							focusThenRun(w, function(){
+								var h = w.domNode.offsetHeight;
+								doh.robot.keyPress(dojo.keys.SPACE, 500, {});
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is(0, w.domNode.scrollTop, "no scroll");
+									doh.is(h, w.domNode.offsetHeight, "height should not change");
+								}), 500);
+							});
+
+							return d;
+						}
+					},
+					{
+						name: "less than max-height",
+						timeout: 5000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								w = dijit.byId("programmatic");
+
+							var h = w.domNode.offsetHeight;
+							w.set('value', '');
+							doh.t(h > w.domNode.offsetHeight, "min-height is smaller than 3 lines: " + w.domNode.offsetHeight);
+							doh.t(40 < w.domNode.offsetHeight, "min-height is at least 1 line: " + w.domNode.offsetHeight);
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(0, w.domNode.scrollTop, "no scroll");
+								doh.t(h < w.domNode.offsetHeight, "height grew " + w.domNode.offsetHeight);
+								if(dojo.isIE <= 7){
+									doh.t(w.domNode.parentNode.parentNode.clientHeight >= w.domNode.parentNode.parentNode.scrollHeight, "non-scrolled parent");
+								}
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "more than max-height",
+						timeout: 5000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								w = dijit.byId("programmatic");
+
+							var h = w.domNode.offsetHeight;
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.sequence(d.getTestCallback(function(){
+								if(dojo.isIE <= 7){
+									doh.is(0, w.domNode.scrollTop, "no scroll");
+									doh.t(w.domNode.parentNode.parentNode.clientHeight < w.domNode.parentNode.parentNode.scrollHeight, "scrolled parent");
+								}else{
+									doh.isNot(0, w.domNode.scrollTop, "scroll");
+								}
+								doh.t(h < w.domNode.offsetHeight, "height grew " + w.domNode.offsetHeight);
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "delete until less than max-height",
+						timeout: 5000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								w = dijit.byId("programmatic");
+
+							var h = w.domNode.offsetHeight;
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(0, w.domNode.scrollTop, "no scroll");
+								if(dojo.isIE <= 7){
+									doh.t(w.domNode.parentNode.parentNode.clientHeight >= w.domNode.parentNode.parentNode.scrollHeight, "non-scrolled parent");
+								}
+								doh.t(h > w.domNode.offsetHeight, "height shrank " + w.domNode.offsetHeight);
+							}), 500);
+
+							return d;
+						}
+					}
+
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

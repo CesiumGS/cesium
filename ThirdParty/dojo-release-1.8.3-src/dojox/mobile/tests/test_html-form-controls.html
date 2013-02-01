@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>HTML Form Controls</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/ScrollableView"
+		]);
+	</script>
+
+	<style>
+	html,body{
+		height: 100%;
+		overflow: hidden;
+	}
+	button,input{
+		-webkit-tap-highlight-color: rgba(0,0,0,0.3);
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="view1" data-dojo-type="dojox.mobile.ScrollableView">
+		<h1 data-dojo-type="dojox.mobile.Heading">HTML</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">HTML Form Controls</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<button style="line-height:normal">Button Element</button>
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<input type="button" value="Input Button">
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<input type="submit" value="Submit Button">
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<input type="reset" value="Reset Button">
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<input type="text"> text
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<input type="password"> password
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<input type="checkbox"> checkbox
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<input type="radio" name="chk1" checked="checked">
+				<input type="radio" name="chk1"> radio
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<select>
+					<option>Option 1</option>
+					<option>Option 2</option>
+					<option>Option 3</option>
+					<option>Option 4</option>
+					<option>Option 5</option>
+					<option>Option 6</option>
+				</select>
+			</li>
+		</ul>
+		<textarea style="margin-left:10px"></textarea>
+	</div>
+</body>
+</html>

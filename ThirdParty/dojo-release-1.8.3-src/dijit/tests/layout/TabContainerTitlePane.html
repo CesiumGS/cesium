@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>TabContainer Nested TitlePane Test</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, parseOnLoad: false"></script>
+
+	<!-- only needed for alternate theme testing: do NOT use in your code! -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.TitlePane");
+
+		var resized = {};
+
+		dojo.ready(function(){
+			dojo.connect(dijit.layout.TabContainer.prototype, "resize", function(){
+				resized[this.id] = true;
+			});
+			dojo.parser.parse(dojo.body());
+
+			// Tests that TabContainer.resize() (for the TabContainers nested in TitlePanes)
+			// is called at the right time.
+			doh.register("resize timing", [
+				{
+					name: "subtabs1",
+					runTest: function(t){
+						// Since tab 1 is selected and TitlePane 1 is open, subtabs1 should have resized on parse
+						doh.t(resized["subtabs1"], "subtabs1");
+						doh.f(resized["subtabs2"], "subtabs2");
+						doh.f(resized["subtabs3"], "subtabs3");
+					}
+				},
+				{
+					name: "subtabs2",
+					runTest: function(t){
+						// Since TitlePane 2 is open, subtabs2 should get a resize when tab2 is selected
+						dijit.byId("mainTabContainer").selectChild(dijit.byId("tab2"));
+						doh.t(resized["subtabs2"], "subtabs2");
+						doh.f(resized["subtabs3"], "subtabs3");
+					}
+				},
+				{
+					name: "subtabs3",
+					runTest: function(t){
+						// Since TitlePane 3 is closed, subtabs3 shouldn't get a resize until tab3 is selected
+						// and TitlePane is open
+						dijit.byId("mainTabContainer").selectChild(dijit.byId("tab3"));
+						doh.f(resized["subtabs3"], "subtabs3 not sized yet");
+						dijit.byId("tp3").set("open", true);
+						doh.t(resized["subtabs3"], "subtabs3 sized");
+					}
+				}
+			]);
+
+			doh.run();
+		});
+
+	</script>
+
+</head>
+<body class="claro">
+
+	<h1 class="testTitle">Dijit layout.TabContainer nested TitlePane tests</h1>
+
+	<div id="mainTabContainer" data-dojo-type="dijit/layout/TabContainer" data-dojo-props='style:"width: 100%; height: 150px;"'>
+
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id: "tab1", title:"Tab 1"'>
+			<h1>I am tab 1</h1>
+			<div data-dojo-type="dijit/TitlePane" data-dojo-props='id: "tp1", title:"Title pane 1", style:{width:"300px"}'>
+				<p>This is a title pane, containing another tab container ...</p>
+				<p>
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Quisque iaculis, nulla id semper faucibus, pede tellus nonummy magna, vitae adipiscing orci arcu ut augue. Nunc condimentum, magna a vestibulum convallis, libero purus pulvinar orci, sed vestibulum urna sem ut pede. More Ipsum...
+				</p>
+				<div data-dojo-type="dijit/layout/TabContainer" data-dojo-props='id: "subtabs1", style:"width: 100%; height: 150px;"'>
+					<div id="tab1_1" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='href:"tab1.html", title:"Tab 1"'></div>
+					<div id="tab1_2" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='href:"tab2.html", refreshOnShow:true, title:"Tab 2", selected:true'></div>
+				</div>
+			</div>
+		</div>
+
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id: "tab2", title:"Tab 2"'>
+			<h1>I am tab 2</h1>
+			<div data-dojo-type="dijit/TitlePane" data-dojo-props='id: "tp2", title:"Title pane 2", style:{width:"300px"}'>
+				<p>This is a title pane, containing another tab container ...</p>
+				<p>
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Quisque iaculis, nulla id semper faucibus, pede tellus nonummy magna, vitae adipiscing orci arcu ut augue. Nunc condimentum, magna a vestibulum convallis, libero purus pulvinar orci, sed vestibulum urna sem ut pede. More Ipsum...
+				</p>
+				<div data-dojo-type="dijit/layout/TabContainer" data-dojo-props='id: "subtabs2", style:"width: 100%; height: 150px;"'>
+					<div id="tab2_1" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='href:"tab1.html", title:"Tab 1"'></div>
+					<div id="tab2_2" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='href:"tab2.html", refreshOnShow:true, title:"Tab 2", selected:true'></div>
+				</div>
+			</div>
+		</div>
+
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id: "tab3", title:"Tab 3"'>
+			<h1>I am tab 3</h1>
+			<div data-dojo-type="dijit/TitlePane" data-dojo-props='id: "tp3", title:"Title pane 3", style:{width:"300px"}, open: false'>
+				<p>This is a title pane, containing another tab container ...</p>
+				<p>
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Quisque iaculis, nulla id semper faucibus, pede tellus nonummy magna, vitae adipiscing orci arcu ut augue. Nunc condimentum, magna a vestibulum convallis, libero purus pulvinar orci, sed vestibulum urna sem ut pede. More Ipsum...
+				</p>
+				<div data-dojo-type="dijit/layout/TabContainer" data-dojo-props='id: "subtabs3", style:"width: 100%; height: 150px;"'>
+					<div id="tab3_1" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='href:"tab1.html", title:"Tab 1"'></div>
+					<div id="tab3_2" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='href:"tab2.html", refreshOnShow:true, title:"Tab 2", selected:true'></div>
+				</div>
+			</div>
+		</div>
+
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id: "hrefTab", href:"tab2.html", title:"Href Tab"'></div>
+	</div>
+
+	<h3>Rendering time</h3>
+
+</body>
+</html>

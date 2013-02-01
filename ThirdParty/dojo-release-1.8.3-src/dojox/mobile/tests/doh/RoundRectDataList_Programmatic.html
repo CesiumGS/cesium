@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>RoundRectDataList</title>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojo.data.ItemFileWriteStore");
+			//dojo.require("dojo.parser"); // Use the lightweight parser.
+			dojo.require("dojox.mobile.parser");
+			dojo.require("dojox.mobile");
+			dojo.require("dojox.mobile.deviceTheme");
+			dojo.require("dojox.mobile.RoundRectDataList");
+
+	        dojo.require("doh.runner");
+
+			dojo.requireIf(!dojo.isWebKit, "dojox.mobile.compat");
+
+			var static_data = { 
+				items: [ 
+					{label: "Apple", 	moveTo: "dummy"},
+					{label: "Banana", 	moveTo: "dummy"},
+					{label: "Cherry", 	moveTo: "dummy"},
+					{label: "Grape", 	moveTo: "dummy"},
+					{label: "Kiwi", 	moveTo: "dummy"},
+					{label: "Lemon", 	moveTo: "dummy"},
+					{label: "Melon", 	moveTo: "dummy"},
+					{label: "Orange", 	moveTo: "dummy"},
+					{label: "Peach", 	moveTo: "dummy"}
+				]
+			};
+			var store1 = new dojo.data.ItemFileWriteStore({url: "settings.json", clearOnClose: true});
+			var store2 = new dojo.data.ItemFileWriteStore({data: dojo.clone(static_data)});
+			var store = store1;
+			var newItems = [[],[]];
+
+			// switch to the selected store
+			function switchTo(store){
+				window.store = store;
+				dijit.byId("list").setStore(store);
+			}
+			// add a new item
+			function add1(){
+				var item = store.newItem({label: "New Item", moveTo: "dummy"});
+				this.newItems[(store == store1) ? 1 : 0].push(item);
+			}
+			// delete the added item
+			function delete1(){
+				var item = this.newItems[(store == store1) ? 1 : 0].pop();
+				if(item){
+					store.deleteItem(item);
+				}
+			}
+
+			dojo.addOnLoad(function(){
+				var view = dijit.byId("foo");
+				var demoWidget = new dojox.mobile.RoundRectDataList({id:"list", store:store, query:{label: '*'}});
+//				view.addChild(demoWidget);
+				demoWidget.placeAt(view.containerNode);
+				demoWidget.startup();
+			});
+		</script>
+
+		<script type="text/javascript" src="TestUtil.js"></script>
+		<script type="text/javascript" src="RoundRectDataList.js"></script>
+	</head>
+	<body>
+		<div id="foo" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">RoundRectDataList</h1>
+			<p>show the different set:<br>
+			<input type="button" value="Set1" onclick="switchTo(store1)">
+			<input type="button" value="Set2" onclick="switchTo(store2)">
+			<p>alter the object store:<br>
+			<input type="button" value="Add" onclick="add1()">
+			<input type="button" value="Delete" onclick="delete1()">
+		</div>
+	</body>
+</html>

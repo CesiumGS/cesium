@@ -1,0 +1,5 @@
+define(
+({
+	deleteButton: "[Удалить]"
+})
+);

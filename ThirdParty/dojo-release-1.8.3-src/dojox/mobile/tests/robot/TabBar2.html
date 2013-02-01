@@ -1,0 +1,145 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Tooltip Mouse Quirks Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<!-- functions to help test -->
+		<!-- script type="text/javascript" src="../helpers.js"></script -->
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.registry");
+			dojo.require("dojox.mobile.TabBar");
+
+			dojo.addOnLoad(function(){
+				doh.robot.initRobot("../test_TabBar.html?theme=Android");
+
+				doh.register("dojox.mobile.TabBar mouse tests", [
+					{
+						name: "TabBar mouse tests",
+						timeout: 100000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_1").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_0").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_2").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_3").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_4").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_5").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_6").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_7").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_8").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_ToolBarButton_0").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_9").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_10").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_11").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_12").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_13").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_14").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_15").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_16").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_17").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_18").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_19").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_20").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_21").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_22").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_23").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_24").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_25").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_26").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_27").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_28").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_29").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_30").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_31").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_32").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_33").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_34").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_35").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_36").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_37").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_TabBarButton_38").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.assertTrue(dojo.hasClass(dijit.registry.byId("dojox_mobile_TabBarButton_2").domNode, "mblTabBarButtonSelected"), "id =" + "dojox_mobile_TabBarButton_2");
+								doh.assertTrue(dojo.hasClass(dijit.registry.byId("dojox_mobile_TabBarButton_5").domNode, "mblTabBarButtonSelected"), "id =" + "dojox_mobile_TabBarButton_5");
+								doh.assertTrue(dojo.hasClass(dijit.registry.byId("dojox_mobile_TabBarButton_8").domNode, "mblTabBarButtonSelected"), "id =" + "dojox_mobile_TabBarButton_5");
+								doh.assertTrue(dojo.hasClass(dijit.registry.byId("dojox_mobile_TabBarButton_17").domNode, "mblTabBarButtonSelected"), "id =" + "dojox_mobile_TabBarButton_5");
+								doh.assertTrue(dojo.hasClass(dijit.registry.byId("dojox_mobile_TabBarButton_38").domNode, "mblTabBarButtonSelected"), "id =" + "dojox_mobile_TabBarButton_38");
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>
