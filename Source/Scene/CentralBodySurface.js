@@ -746,6 +746,8 @@ define([
     var northwestScratch = new Cartesian3(0.0, 0.0, 0.0);
 
     function prepareNewTile(surface, terrainProvider, tile) {
+        surface._tileReplacementQueue.markTileRendered(tile);
+
         var upsampleTileDetails = getUpsampleTileDetails(surface, tile);
         if (typeof upsampleTileDetails !== 'undefined') {
             tile.upsampledTerrain = new TileTerrain(upsampleTileDetails);
