@@ -714,17 +714,18 @@ define([
                 on(dropBox, 'dragexit', event.stop);
             }
 
-            var currentTime = new JulianDate();
-            this.clock = new Clock({
-                startTime : currentTime.addDays(-0.5),
-                stopTime : currentTime.addDays(0.5),
-                currentTime : currentTime,
-                clockStep : ClockStep.SYSTEM_CLOCK_DEPENDENT,
-                multiplier : 1
-            });
+            var animationViewModel = this.animationViewModel;
+            if (typeof animationViewModel === 'undefined') {
+                animationViewModel = new AnimationViewModel(new ClockViewModel());
+                animationViewModel.owner = this;
+                animationViewModel.pauseViewModel.command.execute();
+                this.animationViewModel = animationViewModel;
+            }
 
+            this.clock = animationViewModel.clockViewModel.clock;
             var clock = this.clock;
-            this.animation = new Animation(this.animationWidget, new AnimationViewModel(new ClockViewModel(clock)));
+
+            this.animation = new Animation(this.animationWidget, animationViewModel);
 
             var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
@@ -1028,8 +1029,10 @@ define([
          * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
         update : function(currentTime) {
+            if (this === this.animation.viewModel.owner) {
+                this.animation.viewModel.update();
+            }
 
-            this.animation.viewModel.update();
             this.timelineControl.updateFromClock();
             this.visualizers.update(currentTime);
 
@@ -1105,6 +1108,16 @@ define([
          */
         autoStartRenderLoop : true,
 
+        updateAndRender : function() {
+            if (this === this.animation.viewModel.owner) {
+                this.animation.viewModel.update();
+            }
+            var currentTime = this.clock.currentTime;
+            this.initializeFrame();
+            this.update(currentTime);
+            this.render(currentTime);
+        },
+
         /**
          * This is a simple render loop that can be started if there is only one <code>CesiumViewerWidget</code>
          * on your page.  If you wish to customize your render loop, avoid this function and instead
@@ -1163,11 +1176,7 @@ define([
             var widget = this;
 
             function updateAndRender() {
-                widget.animation.viewModel.update();
-                var currentTime = widget.clock.currentTime;
-                widget.initializeFrame();
-                widget.update(currentTime);
-                widget.render(currentTime);
+                widget.updateAndRender();
                 requestAnimationFrame(updateAndRender);
             }
 

@@ -1,11 +1,13 @@
 /*global define*/
 define(['../Core/DeveloperError',
         '../Core/defaultValue',
+        '../Core/Clock',
         '../Core/JulianDate',
         '../ThirdParty/knockout-2.2.1'
         ], function(
          DeveloperError,
          defaultValue,
+         Clock,
          JulianDate,
          ko) {
     "use strict";
@@ -13,6 +15,7 @@ define(['../Core/DeveloperError',
     //TODO: Set start/stop time together, validation.
 
     var ClockViewModel = function(clock) {
+        clock = defaultValue(clock, new Clock());
         this.clock = clock;
 
         var startTime = ko.observable(clock.startTime);

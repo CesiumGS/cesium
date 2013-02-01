@@ -1,16 +1,18 @@
 /*global define*/
-define(['../Core/DeveloperError',
+define(['./Command',
+        './ButtonViewModel',
+        '../Core/DeveloperError',
         '../Core/binarySearch',
         '../Core/ClockStep',
         '../Core/ClockRange',
         '../Core/Color',
         '../Core/JulianDate',
         '../Core/defaultValue',
-        './Command',
-        './ButtonViewModel',
         '../ThirdParty/sprintf',
         '../ThirdParty/knockout-2.2.1'
         ], function(
+         Command,
+         ButtonViewModel,
          DeveloperError,
          binarySearch,
          ClockStep,
@@ -18,8 +20,6 @@ define(['../Core/DeveloperError',
          Color,
          JulianDate,
          defaultValue,
-         Command,
-         ButtonViewModel,
          sprintf,
          ko) {
     "use strict";
