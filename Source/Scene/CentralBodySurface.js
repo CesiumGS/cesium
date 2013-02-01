@@ -744,7 +744,10 @@ define([
     var northwestScratch = new Cartesian3(0.0, 0.0, 0.0);
 
     function prepareNewTile(surface, terrainProvider, tile) {
-        tile.upsampledTerrain = new TileTerrain();
+        var upsampleTileDetails = getUpsampleTileDetails(surface, tile);
+        if (typeof upsampleTileDetails !== 'undefined') {
+            tile.upsampledTerrain = new TileTerrain(upsampleTileDetails);
+        }
 
         if (isDataAvailable(tile)) {
             tile.loadedTerrain = new TileTerrain();
@@ -780,7 +783,7 @@ define([
         var suspendUpsampling = false;
 
         if (typeof loaded !== 'undefined') {
-            processTerrainLoadStateMachine(surface, context, terrainProvider, tile);
+            loaded.processLoadStateMachine(context, terrainProvider, tile.x, tile.y, tile.level);
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.
@@ -820,7 +823,12 @@ define([
                                     if (typeof childTile.upsampledTerrain !== 'undefined') {
                                         childTile.upsampledTerrain.freeResources();
                                     }
-                                    childTile.upsampledTerrain = new TileTerrain();
+                                    childTile.upsampledTerrain = new TileTerrain({
+                                        data : tile.terrainData,
+                                        x : tile.x,
+                                        y : tile.y,
+                                        z : tile.z
+                                    });
                                     childTile.state = TileState.LOADING;
                                 }
                             }
@@ -845,7 +853,7 @@ define([
         }
 
         if (!suspendUpsampling && typeof upsampled !== 'undefined') {
-            processTerrainUpsampleStateMachine(surface, context, terrainProvider, tile);
+            upsampled.processUpsampleStateMachine(context, terrainProvider, tile.x, tile.y, tile.level);
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.
@@ -868,116 +876,28 @@ define([
         }
     }
 
-    function processTerrainLoadStateMachine(surface, context, terrainProvider, tile) {
-        var tileTerrain = tile.loadedTerrain;
-
-        if (tileTerrain.state === TerrainState.UNLOADED) {
-            // Request the terrain from the terrain provider.
-            tileTerrain.data = terrainProvider.requestTileGeometry(tile.x, tile.y, tile.level);
-
-            // If the request method returns undefined (instead of a promise), the request
-            // has been deferred.
-            if (typeof tileTerrain.data !== 'undefined') {
-                tileTerrain.state = TerrainState.RECEIVING;
-
-                when(tileTerrain.data, function(terrainData) {
-                    tileTerrain.data = terrainData;
-                    tileTerrain.state = TerrainState.RECEIVED;
-                }, function() {
-                    // TODO: add error reporting and retry logic similar to imagery providers.
-                    tileTerrain.state = TerrainState.FAILED;
-                });
-            }
+    function getUpsampleTileDetails(surface, tile) {
+        // Find the nearest ancestor with loaded terrain.
+        var sourceTile = tile.parent;
+        while (typeof sourceTile !== 'undefined' && typeof sourceTile.terrainData === 'undefined') {
+            sourceTile = sourceTile.parent;
         }
 
-        if (tileTerrain.state === TerrainState.RECEIVED) {
-            transformTileTerrain(surface, context, terrainProvider, tile, tileTerrain);
+        if (typeof sourceTile === 'undefined') {
+            // No ancestors have loaded terrain - try again later.
+            return undefined;
         }
 
-        if (tileTerrain.state === TerrainState.TRANSFORMED) {
-            createTileTerrainResources(surface, context, terrainProvider, tile, tileTerrain);
-        }
-    }
-
-    function processTerrainUpsampleStateMachine(surface, context, terrainProvider, tile) {
-        var tileTerrain = tile.upsampledTerrain;
-
-        if (tileTerrain.state === TerrainState.UNLOADED) {
-            // Find the nearest ancestor with loaded terrain.
-            var sourceTile = tile.parent;
-            while (typeof sourceTile !== 'undefined' && typeof sourceTile.terrainData === 'undefined') {
-                sourceTile = sourceTile.parent;
-            }
-
-            if (typeof sourceTile === 'undefined') {
-                // No ancestors have loaded terrain - try again later.
-                return;
-            }
-
-            var sourceData = sourceTile.terrainData;
-
-            tileTerrain.data = sourceData.upsample(sourceTile.tilingScheme, sourceTile.x, sourceTile.y, sourceTile.level, tile.x, tile.y, tile.level);
-            if (typeof tileTerrain.data === 'undefined') {
-                // The upsample request has been deferred - try again later.
-                return;
-            }
-
-            tileTerrain.state = TerrainState.RECEIVING;
-
-            when(tileTerrain.data, function(terrainData) {
-                tileTerrain.data = terrainData;
-                tileTerrain.state = TerrainState.RECEIVED;
-            }, function() {
-                tileTerrain.state = TerrainState.FAILED;
-            });
-        }
-
-        if (tileTerrain.state === TerrainState.RECEIVED) {
-            transformTileTerrain(surface, context, terrainProvider, tile, tileTerrain);
-        }
-
-        if (tileTerrain.state === TerrainState.TRANSFORMED) {
-            createTileTerrainResources(surface, context, terrainProvider, tile, tileTerrain);
-        }
-    }
-
-    function transformTileTerrain(surface, context, terrainProvider, tile, tileTerrain) {
-        var tilingScheme = tile.tilingScheme;
-        var ellipsoid = tilingScheme.getEllipsoid();
-
-        var terrainData = tileTerrain.data;
-        var meshPromise = terrainData.createMesh(ellipsoid, tilingScheme, tile.x, tile.y, tile.level);
-
-        if (typeof meshPromise === 'undefined') {
-            // Postponed.
-            return;
-        }
-
-        tileTerrain.state = TerrainState.TRANSFORMING;
-
-        when(meshPromise, function(mesh) {
-            tileTerrain.mesh = mesh;
-            tileTerrain.state = TerrainState.TRANSFORMED;
-        }, function() {
-            tileTerrain.state = TerrainState.FAILED;
-        });
+        return {
+            data : sourceTile.terrainData,
+            x : sourceTile.x,
+            y : sourceTile.y,
+            level : sourceTile.level
+        };
     }
 
     var cartesian3Scratch = new Cartesian3(0.0, 0.0, 0.0);
     var cartesian3Scratch2 = new Cartesian3(0.0, 0.0, 0.0);
-
-    function createTileTerrainResources(surface, context, terrainProvider, tile, tileTerrain) {
-        var mesh = tileTerrain.mesh;
-
-        // Create the vertex array.
-        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, mesh, tileTerrain, true);
-
-        tileTerrain.state = TerrainState.READY;
-    }
-
-    function isDataReceived(state) {
-        return state.value >= TerrainState.RECEIVED.value;
-    }
 
     function isDataAvailable(tile) {
         var parent = tile.parent;

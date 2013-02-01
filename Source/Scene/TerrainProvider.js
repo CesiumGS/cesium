@@ -109,7 +109,7 @@ define([
         return lines;
     }
 
-    TerrainProvider.createTileEllipsoidGeometryFromBuffers = function(context, tile, buffers, tileTerrain, includesHeights) {
+    TerrainProvider.createTileEllipsoidGeometryFromBuffers = function(context, buffers, tileTerrain, includesHeights) {
         var datatype = ComponentDatatype.FLOAT;
         var typedArray = buffers.vertices;
         var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
