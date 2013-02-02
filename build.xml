@@ -327,6 +327,7 @@
 				<exclude name="*.html" />
 				<exclude name="*.ico" />
 				<exclude name="dojo/dojo.js" />
+				<exclude name="Widgets/Dojo/CesiumViewerWidget.js" />
 				<exclude name="${app.name}.js" />
 				<exclude name="${appStartupScript}" />
 
