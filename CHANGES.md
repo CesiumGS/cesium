@@ -6,7 +6,11 @@ Beta Releases
 
 ### b14 - 2013-xx-xx
 
+* Added a line segment-ray intersection test to `IntersectionTests`.
+* Fixed an issue where a `PolylineCollection` with a model matrix other than the identity would be incorrectly rendered in 2D and Columbus view.
+
 ### b13 - 2013-02-01
+
 * Breaking changes:
    * The combined `Cesium.js` file and other required files are now created in `Build/Cesium` and `Build/CesiumUnminified` folders.
    * The Web Worker files needed when using the combined `Cesium.js` file are now in a `Workers` subdirectory.
