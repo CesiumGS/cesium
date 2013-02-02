@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Test template with Repeat using different exprchars.</title>
+		<script src="../../../../dojo/dojo.js" type="text/javascript" data-dojo-config="parseOnLoad: 0, isDebug: 1, mvc: {debugBindings: 1}">
+		</script>
+		<style type="text/css">
+			@import "../css/app-format.css";
+			@import "../../../../dijit/themes/claro/claro.css";
+		</style>
+		<script type="text/javascript">
+			require([
+				"dojo/parser",
+				"dojox/mvc/getStateful",
+				"dojox/mvc/ListController",
+				"dojox/mvc/tests/test_templatedWidgetList/myMvcTemplated3",
+				"dojox/mvc/tests/test_templatedWidgetList/myMvcTemplated3bDetails",
+				"dojox/mvc/WidgetList",
+				"dojo/dom",
+				"dojox/mvc/Group",
+				"dojox/mvc/Output",
+				"dijit/form/TextBox",
+				"dojo/domReady!"
+			], function(parser, getStateful, ListController, myMvcTemplated3, myMvcTemplated3bDetails, WidgetList, dom){
+				array = getStateful([
+					{
+						Serial: "A111",
+						First: "Anne",
+						Last: "Ackerman",
+						Location: "NY",
+						Office: "1S76",
+						Email: "a.a@test.com",
+						Tel: "123-764-8237",
+						Fax: "123-764-8228"
+					},
+					{
+						Serial: "B111",
+						First: "Ben",
+						Last: "Beckham",
+						Location: "NY",
+						Office: "5N47",
+						Email: "b.b@test.com",
+						Tel: "123-764-8599",
+						Fax: "123-764-8600"
+					},
+					{
+						Serial: "C111",
+						First: "Chad",
+						Last: "Chapman",
+						Location: "CA",
+						Office: "1278",
+						Email: "c.c@test.com",
+						Tel: "408-764-8237",
+						Fax: "408-764-8228"
+					}
+				]);
+
+				ctrl = new ListController({model: array});
+
+
+				parser.parse();
+
+				(new WidgetList({children: ctrl.model, childClz: myMvcTemplated3, childParams: {
+						ctrl : ctrl
+					}}, 
+					dom.byId("programmaticRepeat2"))).startup();
+
+				(new myMvcTemplated3bDetails({ctrl : ctrl}, 
+					dom.byId("programmatic3bDetails"))).startup();				
+			});
+		</script>
+	</head>
+	<body class="claro" style="background-image: url(../images/master_detail.png)">
+	<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<div id="wrapper">
+			<div id="main">
+				<div id="leftNav"></div>
+				<div id="mainContent">
+					<div>
+						Widget template test uses a custom widget for the WidgetList and the details.
+					</div>
+					<br/>
+	
+					<h1>Repeating programmatically created template widget</h1>
+					<div id="programmaticRepeat2"></div>
+
+					<h1>Details for selected item programmatically created template widget</h1>
+					<div id="programmatic3bDetails"></div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

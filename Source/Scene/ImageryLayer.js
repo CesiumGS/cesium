@@ -130,7 +130,7 @@ define([
          *
          * @type {Number}
          */
-        this.brightness = defaultValue(description.brightness, defaultValue(imageryProvider.defaultBrightness, 1.0));
+        this.brightness = defaultValue(description.brightness, defaultValue(imageryProvider.defaultBrightness, ImageryLayer.DEFAULT_BRIGHTNESS));
 
         /**
          * The contrast of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
@@ -144,7 +144,32 @@ define([
          *
          * @type {Number}
          */
-        this.contrast = defaultValue(description.contrast, defaultValue(imageryProvider.defaultContrast, 1.0));
+        this.contrast = defaultValue(description.contrast, defaultValue(imageryProvider.defaultContrast, ImageryLayer.DEFAULT_CONTRAST));
+
+        /**
+         * The hue of this layer in radians. 0.0 uses the unmodified imagery color. This can either be a
+         * simple number or a function with the signature <code>function(frameState, layer, x, y, level)</code>.
+         * The function is passed the current {@link FrameState}, this layer, and the x, y, and level
+         * coordinates of the imagery tile for which the hue is required, and it is expected to return
+         * the hue value to use for the tile.  The function is executed for every
+         * frame and for every tile, so it must be fast.
+         *
+         * @type {Number}
+         */
+        this.hue = defaultValue(description.hue, defaultValue(imageryProvider.defaultHue, ImageryLayer.DEFAULT_HUE));
+
+        /**
+         * The saturation of this layer. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+         * saturation while greater than 1.0 increases it. This can either be a simple number or a function
+         * with the signature <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+         * imagery tile for which the saturation is required, and it is expected to return
+         * the saturation value to use for the tile.  The function is executed for every
+         * frame and for every tile, so it must be fast.
+         *
+         * @type {Number}
+         */
+        this.saturation = defaultValue(description.saturation, defaultValue(imageryProvider.defaultSaturation, ImageryLayer.DEFAULT_SATURATION));
 
         /**
          * The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
@@ -157,7 +182,7 @@ define([
          *
          * @type {Number}
          */
-        this.gamma = defaultValue(description.gamma, defaultValue(imageryProvider.defaultGamma, 1.0));
+        this.gamma = defaultValue(description.gamma, defaultValue(imageryProvider.defaultGamma, ImageryLayer.DEFAULT_GAMMA));
 
         /**
          * Determines if this layer is shown.
@@ -193,6 +218,37 @@ define([
         this._mipmapSampler = undefined;
         this._reprojectSampler = undefined;
     };
+
+    /**
+     * This value is used as the default brightness for the imagery layer if one is not provided during construction
+     * or by the imagery provider. This value does not modify the brightness of the imagery.
+     * @type {number}
+     */
+    ImageryLayer.DEFAULT_BRIGHTNESS = 1.0;
+    /**
+     * This value is used as the default contrast for the imagery layer if one is not provided during construction
+     * or by the imagery provider. This value does not modify the contrast of the imagery.
+     * @type {number}
+     */
+    ImageryLayer.DEFAULT_CONTRAST = 1.0;
+    /**
+     * This value is used as the default hue for the imagery layer if one is not provided during construction
+     * or by the imagery provider. This value does not modify the hue of the imagery.
+     * @type {number}
+     */
+    ImageryLayer.DEFAULT_HUE = 0.0;
+    /**
+     * This value is used as the default saturation for the imagery layer if one is not provided during construction
+     * or by the imagery provider. This value does not modify the saturation of the imagery.
+     * @type {number}
+     */
+    ImageryLayer.DEFAULT_SATURATION = 1.0;
+    /**
+     * This value is used as the default gamma for the imagery layer if one is not provided during construction
+     * or by the imagery provider. This value does not modify the gamma of the imagery.
+     * @type {number}
+     */
+    ImageryLayer.DEFAULT_GAMMA = 1.0;
 
     /**
      * Gets the imagery provider for this layer.

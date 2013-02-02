@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Edge To Edge Category Tests</title>
+<script type="text/javascript" src="../../deviceTheme.js"></script>
+<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+<script language="JavaScript" type="text/javascript">
+	require([
+		"dojo/dom-construct", // dojo.place
+		"dojo/ready", // dojo.ready
+		"dijit/registry",  // dijit.byId
+		"doh/runner",	//doh functions
+		"dojox/mobile/EdgeToEdgeCategory",
+		"dojox/mobile",				// This is a mobile app.
+		"dojox/mobile/View",		// This mobile app uses mobile view
+		"dojox/mobile/compat",		// This mobile app supports running on desktop browsers
+		"dojox/mobile/parser"		// This mobile app uses declarative programming with fast mobile parser
+	], function(domConst, ready, registry, runner, EdgeToEdgeCategory){
+
+		var CATEGORY_LABEL = "Edge To Edge Category";
+		var WIDGET_CLASSNAME1 = "mblEdgeToEdgeCategory";
+
+		function _createEdgeToEdgeCategoryDeclaratively(id) {
+			return registry.byId(id);
+		};
+		
+		function _createEdgeToEdgeCategoryProgrammatically(placeHolderId){
+			var widget = new EdgeToEdgeCategory({label:CATEGORY_LABEL});
+			runner.assertNotEqual(null, widget);
+			domConst.place(widget.domNode, placeHolderId, "replace");
+			widget.startup();
+			return widget;
+		};
+		
+		function _createEdgeToEdgeCategoryProgrammaticallyWithSourceNodeReference(id){
+			return new EdgeToEdgeCategory({label:CATEGORY_LABEL}, id);
+		};
+
+		function _assertCorrectEdgeToEdgeCategory(category){
+			runner.assertNotEqual(null, category);
+			runner.assertEqual(CATEGORY_LABEL, category.label, category.toString())
+			runner.assertEqual(CATEGORY_LABEL, category.domNode.innerHTML, "innerHTML id=" + category.domNode.id)
+			runner.assertEqual(WIDGET_CLASSNAME1, category.domNode.className, "id=" + category.domNode.id)
+		};
+		
+		function _showView2(){
+			var view1 = registry.byId("view1");
+			view1.performTransition("view2", 1, "none");
+		};
+
+		ready(function(){
+			runner.register("dojox.mobile.test.doh.EdgeToEdgeCategoryTests", [
+				function testInView1(){
+					var category1 = _createEdgeToEdgeCategoryDeclaratively("view1-category1");
+					var category2 = _createEdgeToEdgeCategoryProgrammatically("view1-category2");
+					var category3 = _createEdgeToEdgeCategoryProgrammaticallyWithSourceNodeReference("view1-category3");
+			
+					_assertCorrectEdgeToEdgeCategory(category1);
+					_assertCorrectEdgeToEdgeCategory(category2);
+					_assertCorrectEdgeToEdgeCategory(category3);
+				},
+				function testInView2(){
+					var category1 = _createEdgeToEdgeCategoryDeclaratively("view2-category1");
+					var category2 = _createEdgeToEdgeCategoryProgrammatically("view2-category2");
+					var category3 = _createEdgeToEdgeCategoryProgrammaticallyWithSourceNodeReference("view2-category3");
+					
+					_showView2();
+					
+					_assertCorrectEdgeToEdgeCategory(category1);
+					_assertCorrectEdgeToEdgeCategory(category2);
+					_assertCorrectEdgeToEdgeCategory(category3);
+				}
+			]);
+			runner.run();
+		});
+	})
+</script>
+</head>
+<body>
+	<div id="view1" data-dojo-type="dojox.mobile.View" selected="true">
+		<h1>View 1</h1>
+		<h2 id="view1-category1" data-dojo-type="dojox.mobile.EdgeToEdgeCategory">Edge To Edge Category</h2>		
+		<div id="view1-category2"></div>
+		<h2 id="view1-category3"></h2>
+	</div>	
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<h1>View 2</h1>
+		<h2 id="view2-category1" data-dojo-type="dojox.mobile.EdgeToEdgeCategory">Edge To Edge Category</h2>		
+		<div id="view2-category2"></div>
+		<h2 id="view2-category3"></h2>
+	</div>
+</body>
+</html>

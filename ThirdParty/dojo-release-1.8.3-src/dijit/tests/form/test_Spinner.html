@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Dojo Spinner Widget Test</title>
+
+		<style type="text/css">
+			@import "../../themes/claro/document.css";
+			@import "../css/dijitTests.css";
+			@import "../../../util/doh/robot/robot.css";
+
+			body .bigFont {
+			        font-size: larger; /* help test widget sizing */
+			}
+
+		</style>
+
+		<!-- required: the default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			data-dojo-config="isDebug: true, parseOnLoad: true"></script>
+
+		<!-- only needed for alternate theme testing: -->
+		<script type="text/javascript" src="../_testCommon.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit.form.NumberSpinner");
+			dojo.require("dojo.parser"); // scan page for widgets
+		</script>
+
+	</head>
+
+	<body class="claro" role="main">
+		<h1 class="testTitle">Dijit Spinner Test</h1>
+			Try typing values, and use the up/down arrow keys and/or the arrow push
+			buttons to spin
+			<br>
+		<form id="form1" action="" name="example" method="post">
+			<h1>number spinner</h1>
+			<br>
+			initial value=900, no delta specified, no min specified, max=1550, onChange captured, big font<br>
+			<label for="integerspinner1">Spinbox #1: </label><br>
+			<input id="integerspinner1" data-dojo-type="dijit/form/NumberSpinner"
+				data-dojo-props='onChange:function(val){ dojo.byId("oc1").value = val; },
+				value:900,
+				"class":"bigFont",
+				constraints:{max:1550,places:0},
+				name:"integerspinner1"
+				'/>
+			<label for="oc1">onChange:</label><input id="oc1" disabled value="not fired yet!" autocomplete="off"/>
+			<input type="button" id="sv1_1" value="Set value to 400" onClick="dijit.byId('integerspinner1').set('value',400)" tabIndex="-1"/>
+			<input type="button" id="sv1_2" value="Set value to null" onClick="dijit.byId('integerspinner1').set('value',null)" tabIndex="-1"/>
+			<input type="button" id="sv1_3" value="Set required to false" onClick="dijit.byId('integerspinner1').set('required',false)" tabIndex="-1"/>
+			<input type="button" id="sv1_4" value="Set required to true" onClick="dijit.byId('integerspinner1').set('required',true)" tabIndex="-1"/>
+			<br>
+			<br>
+			initial value=1000, delta=10, min=9 max=1550<br>
+			<label for="integerspinner2">Spinbox with custom styling (width=50%, 200% Courier font): </label>
+			<input id="integerspinner2" data-dojo-type="dijit/form/NumberSpinner"
+				data-dojo-props='style:{fontSize:"200%", fontFamily:"Courier", border:"1px solid blue", width:"50%"},
+				value:1000,
+				smallDelta:10,
+				largeDelta:100,
+				constraints:{min:9,max:1550,places:0},
+				style:{ textAlign: "right" },
+				name:"integerspinner2"
+				'/>
+			<br>
+			<br>
+			<label for="integertextbox3">Spinner line break test: </label>initial value not specified, delta not specified, min not specified, max not specified, signed not specified, separator not specified<br>
+			[verify no line break just after this text]
+			<input id="integertextbox3" data-dojo-type="dijit/form/NumberSpinner" data-dojo-props='name:"integertextbox3" '/>
+			[verify no line break just before this text]
+			<br>
+			<br>
+			Move the cursor left and right within the input field to see the effect on the spinner.
+			<br>
+			initial value=+1.0, smalldelta=0.1, largedelta=1.0, min=-10.9, max=155, places=1, maxLength=20, exponent=false<br>
+			<label for="realspinner1">Real Number Spinbox #1: </label><br>
+			<input id="realspinner1" data-dojo-type="dijit/form/NumberSpinner"
+				data-dojo-props='value:1.0,
+				smallDelta:0.1,
+				largeDelta:1.0,
+				constraints:{min:-10.9,max:155,places:1,round:true,exponent:false},
+				maxLength:"20",
+				name:"realspinner1"
+				'/>
+			<br>
+
+			<p>
+			<label for="spinnerMinOnly">Spinner with no maximum, 1 decimal place: </label><br>
+			<input id="spinnerMinOnly" data-dojo-type="dijit/form/NumberSpinner"
+				data-dojo-props='value:1.0,
+				smallDelta:0.1,
+				largeDelta:1.0,
+				constraints:{min:-10.9,places:1,round:false},
+				maxLength:"20",
+				name:"spinnerMinOnly"
+				'/>
+			<input type="button" onclick="dijit.byId('spinnerMinOnly').set('readOnly',false);" value="Remove readOnly"/>
+			<input type="button" onclick="dijit.byId('spinnerMinOnly').set('readOnly',true);" value="Set readOnly"/>
+			<input type="button" onclick="dijit.byId('spinnerMinOnly').set('disabled',false);" value="Remove disabled"/>
+			<input type="button" onclick="dijit.byId('spinnerMinOnly').set('disabled',true);" value="Set disabled"/>
+			</p>
+			<p>
+			<script type="text/javascript">
+				// so robot can get to it easily
+				document.displayData=function(){
+					var f = document.getElementById("form1");
+					var s = "";
+					for(var i = 0; i < f.elements.length; i++){
+						var elem = f.elements[i];
+						if(elem.nodeName.toLowerCase() == "button" || elem.type=="submit" || elem.type=="button")  { continue; }
+						s += elem.name + ": " + elem.value + "\n";
+					}
+					return s;
+				}
+			</script>
+
+			<div>
+				<button name="button" onclick="alert(document.displayData()); return false;">view data</button>
+				<input type="submit" name="submit" />
+			</div>
+		</form>
+	</body>
+</html>

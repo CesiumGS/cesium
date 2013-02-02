@@ -76,7 +76,7 @@ define([
      *
      * @param {Ray} ray The ray.
      * @param {Ellipsoid} ellipsoid The ellipsoid.
-     * @returns {Array} An array of one or two intersection scalars for points along the ray or undefined if there are no intersections.
+     * @returns {Object} An object with the first (<code>start</code>) and the second (<code>stop</code>) intersection scalars for points along the ray or undefined if there are no intersections.
      *
      * @exception {DeveloperError} ray is required.
      * @exception {DeveloperError} ellipsoid is required.
@@ -145,30 +145,13 @@ define([
             difference = q2 - 1.0; // Negatively valued.
             w2 = w.magnitudeSquared();
             product = w2 * difference; // Negatively valued.
-            if (qw < 0.0) {
-                // Looking inward.
-                discriminant = qw * qw - product;
-                temp = qw - Math.sqrt(discriminant); // Avoid cancellation.  Negatively valued.
-                return {
-                    start : 0.0,
-                    stop : difference / temp
-                };
-            } else if (qw > 0.0) {
-                // Looking outward.
-                discriminant = qw * qw - product;
-                temp = qw + Math.sqrt(discriminant); // Avoid cancellation. Positively valued.
-                return {
-                    start : 0.0,
-                    stop : temp / w2
-                };
-            } else {
-                // qw == 0.0 // Looking tangent.
-                temp = Math.sqrt(-product);
-                return {
-                    start : 0.0,
-                    stop : temp / w2
-                };
-            }
+
+            discriminant = qw * qw - product;
+            temp = -qw + Math.sqrt(discriminant); // Positively valued.
+            return {
+                start : 0.0,
+                stop : temp / w2
+            };
         } else {
             // q2 == 1.0. On ellipsoid.
             if (qw < 0.0) {

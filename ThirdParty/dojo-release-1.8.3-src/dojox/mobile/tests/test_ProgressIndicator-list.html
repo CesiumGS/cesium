@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Progress Indicator on ListItem</title>
+
+	<link href="../themes/common/domButtons.css" rel="stylesheet"/>
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/dom-class",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/ProgressIndicator",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(domClass, ready, registry, ProgressIndicator){
+			ready(function(){
+				var item4 = registry.byId("item4");
+				item4.set("busy", true);
+				setTimeout(function(){ // network latency simulation
+					item4.set("busy", false);
+				}, 5000);
+			});
+		});
+	</script>
+
+	<style>
+	.mblListItem {
+		font-weight: normal;
+		font-size: 12px;
+	}
+	.subject {
+		font: bold 16px Helvetica;
+	}
+	#item4 {
+		padding-top: 30px;
+		padding-bottom: 30px;
+	}
+	.loading1 {
+		font: bold 18px Helvetica;
+		color: gray;
+	}
+	.loading2 {
+		font: bold 14px Helvetica;
+		color: gray;
+	}
+	.textBox {
+		overflow: hidden;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="foo" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">Animations</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Transition Effects</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li id="item1" data-dojo-type="dojox.mobile.ListItem"
+				data-dojo-props='icon:"mblDomButtonBlueBall", moveTo:"#", variableHeight:true'>
+				<div class="textBox">
+					<div class="subject">Dojo: Traditional Karate-do Spirit</div>
+					Sarah Connor Hardcover<br>
+					Eligible for FREE Super Saver Shipping<br>
+					<span style="color:red">$14.50 (50%)</span> In Stock
+				</div>
+			</li>
+			<li id="item2" data-dojo-type="dojox.mobile.ListItem"
+				data-dojo-props='icon:"mblDomButtonBlueBall", moveTo:"#", variableHeight:true'>
+				<div class="textBox">
+					<div class="subject">Japanese Martial Arts Dojo</div>
+					Martin Parker Hardcover<br>
+					<span style="color:red">$14.00 (60%)</span> In Stock
+				</div>
+			</li>
+			<li id="item3" data-dojo-type="dojox.mobile.ListItem"
+				data-dojo-props='icon:"mblDomButtonBlueBall", moveTo:"#", variableHeight:true'>
+				<div class="textBox">
+					<div class="subject">Total Solar Eclipse</div>
+					Steven Young Hardcover<br>
+					Get it by Mar. 2 if you order in the next <span style="color:green"><b>16 hours</b></span><br>
+					Eligible for FREE Super Saver Shipping<br>
+					<span style="color:red">$9.50 (62%)</span> In Stock
+				</div>
+			</li>
+			<li id="item4" data-dojo-type="dojox.mobile.ListItem"
+				data-dojo-props='icon:"mblDomButtonBlueBall", moveTo:"#", variableHeight:true'>
+				<div class="textBox">
+					<div class="loading1">Loading More Items...</div>
+					<div class="loading2">more than 45 items</div>
+				</div>
+			</li>
+		</ul>
+	</div>
+</body>
+</html>

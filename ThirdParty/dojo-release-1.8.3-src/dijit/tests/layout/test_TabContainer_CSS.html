@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html dir="ltr">
+    <head>
+        <script src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+        <link rel="stylesheet" type="text/css" href="../../themes/claro/claro.css"/>
+
+		<!-- only needed for alternate theme testing: do NOT use in your code! -->
+		<script type="text/javascript" src="../_testCommon.js"></script>
+
+		<style>
+			#tabContainer1 {
+				height: 200px;
+				margin-bottom: 50px;
+			}
+		</style>
+		<script>
+			require([
+					"dojo/parser", "dojo/ready",
+					"dijit/layout/TabContainer", "dijit/layout/ContentPane",
+					"dijit/form/DropDownButton", "dijit/TooltipDialog"
+			], function(parser, ready){
+
+				ready(function() {
+					var tabsPane1 = dijit.byId('tabContainer1');
+					var tab1 = new dijit.layout.ContentPane({title: "My tab 1", content: "border line to right of tab does not show  (now resize your browser and the border line will appear)"});
+					tabsPane1.addChild(tab1);
+				});
+			});
+		</script>
+    </head>
+
+    <body class="claro">
+		<h1>TabContainer CSS Glitch Tests</h1>
+		<p>
+			Collected tests for problems with missing borders for TabContainer,
+			in particular problems with the border between the tab buttons and the tab content.
+		</p>
+
+		<h2>Borders in TooltipDialog</h2>
+		<p>
+			Open TooltipDialog and make sure the horizontal border between tab buttons and content
+			don't extend past the edge of the TabContainer.   Also check that button for second tab
+			(unselected tab) is visible on IE6.
+		</p>
+		<div data-dojo-type="dijit/form/DropDownButton">
+			<span>Show Tooltip Dialog with TabContainer</span>
+			<div id="tabTooltip" data-dojo-type="dijit/TooltipDialog" data-dojo-props='title:"Tab Container Tooltip"'>
+				<div data-dojo-type="dijit/layout/TabContainer" data-dojo-props='style:"width: 400px; height: 300px;"'>
+					<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"First tab"'>
+						<p>
+							This is the first tab.
+						</p>
+						<p>
+						Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean
+						semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin
+						porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.
+						Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis.
+						Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitae
+						risus.
+						</p>
+					</div>
+					<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Second tab"'>
+						<p>
+							This is the second tab.
+						</p>
+						<p>
+						<a href="http://www.lipsum.com/">ipsum dolor sit amet</a>, consectetuer adipiscing elit. Aenean
+						semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin
+						porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.
+						Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis.
+						Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitae
+						risus.
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<h2>Initial missing border</h2>
+		<p>
+			Make sure the TabContainers below show the border between tab buttons and tab content.
+			Previously it didn't show on initial page load, but showed after resize.
+		</p>
+        <div id='tabContainer1' data-dojo-type='dijit.layout.TabContainer' data-dojo-props="tabPosition: 'top'"></div>
+
+		<h2>Missing border on zoom</h2>
+		<p>
+			Make sure separating border doesn't disappear on zoom
+			(<i>not</i> text-size increase/decrease but zoom).
+			Problem used to occur on FF/windows and IE8.
+		</p>
+		<div id="myTC" dojoType="dijit.layout.TabContainer" style="width: 400px; height: 200px;" tabPosition="left-h" tabStrip="false">
+			<div id="LittleRed1" dojoType="dijit.layout.ContentPane" title="One" >
+				Once upon a time there was a dear little girl who was loved by
+				every one who looked at her, but most of all by her grandmother,
+				and there was nothing that she would not have given to the child.
+			</div>
+			<div id="HanselGretel1" dojoType="dijit.layout.ContentPane" title="Two" selected="true" >
+				Some content here.
+			</div>
+			<div id="GreenTwigs1" dojoType="dijit.layout.ContentPane" title="The Three Green Twigs" >
+				Yet more content.
+			</div>
+		</div>
+    </body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot AccordionContainer A11Y Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx", "dojo/dom", "dojo/keys",
+				"dijit/tests/helpers", "dojo/domReady!"
+			], function(doh, robot, dom, keys, helpers){
+
+				robot.initRobot('../test_AccordionContainer.html');
+
+				var registry, focus;
+
+				doh.register("setup", [
+					function setup(){
+						// get pointers to singletons loaded on test page
+						registry = robot.window.require("dijit/registry");
+						focus = robot.window.require("dijit/focus");
+					}
+				]);
+
+				doh.register("Accordion A11Y tests", [
+					{
+						name: "basic operation",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							robot.sequence(function(){
+								dom.byId("beforeMarkupAccordion").focus();
+							}, 500, 500);
+
+							// Tab into accordion, landing on title of first pane
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestErrback(function(){
+								doh.t(/A Simple Pane/.test(helpers.innerText(focus.curNode)), "tabbed to first pane's title");
+							}), 500);
+
+							// Use down arrow to get to second pane's title
+							robot.keyPress(keys.DOWN_ARROW, 500, {});
+							robot.sequence(d.getTestErrback(function(){
+								doh.f(/A Simple Pane/.test(helpers.innerText(focus.curNode)), "moved away from first pane's title");
+								doh.t(/Lazy Load Pane/.test(helpers.innerText(focus.curNode)), "moved to second pane's title");
+								doh.is("lazyLoadPane", registry.byId("markupAccordion").get("selectedChildWidget").id, "second pane is now selected");
+							}), 500);
+
+							// Tab into second pane's content area, landing on link inside pane
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestErrback(function(){
+								doh.is("WebA11y", helpers.innerText(focus.curNode), "tabbed into second pane");
+							}), 500);
+
+							// tab out of AccordionContainer
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestCallback(function(){
+								doh.is("afterMarkupAccordion", focus.curNode.id, "tabbed out of accordion");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+				
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

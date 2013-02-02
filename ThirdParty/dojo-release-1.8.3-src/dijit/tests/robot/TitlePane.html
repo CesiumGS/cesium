@@ -1,0 +1,307 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot TitlePane Test</title>
+
+		<style>
+			@import "../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx",
+				"dojo/aspect", "dojo/dom", "dojo/keys", "dojo/_base/lang", "dojo/query", "dojo/window",
+				"dijit/tests/helpers", "dojo/domReady!"
+			], function(doh, robot, aspect, dom, keys, lang, query, winUtils, helpers){
+
+				robot.initRobot('../test_TitlePane.html');
+
+				doh.register(function setup(){
+					// get pointer to registry in the iframe
+					registry = robot.window.require("dijit/registry");
+					dfocus = robot.window.require("dijit/focus");
+				});
+
+				var pane1, pane2, pane3, href1, href2;
+
+				doh.register("api", [
+					{
+						name: "setup",
+						runTest: function(){
+					    	pane1 = registry.byId("testPane1");
+					    	pane2 = registry.byId("pane_2");
+					    	pane3 = registry.byId("closed");		// initially closed
+							href1 = registry.byId("href1");	// initially closed href, href load completes after expand
+							href2 = registry.byId("href2");	// initially closed href, href load completes during expand
+						}
+					},
+					{
+						name: "title",
+						runTest: function(){
+							doh.is("Title Pane #1", pane1.get("title"), "title attr");
+							doh.is("Title Pane #1", helpers.innerText(pane1.titleNode), "inner text");
+							
+							pane1.set("title", "modified title");
+
+							doh.is("modified title", pane1.get("title"), "title attr modified");
+							doh.is("modified title", helpers.innerText(pane1.titleNode), "inner text modified");
+						}
+					},
+
+					{
+						name: "open",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.t(pane1.domNode.offsetHeight > 100, "pane 1 is open");
+							doh.t(pane1.get("open"), "pane1.open is true");
+
+							pane1.set("open", false);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(pane1.domNode.offsetHeight < 100, "pane 1 is closed");
+								doh.f(pane1.get("open"), "pane1.open is false");
+							}), 500);
+							
+							return d;
+						}
+					}
+				]);
+
+				doh.register("keyboard", [
+					{
+						name: "tabbing",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dom.byId("input").focus();
+
+							// should go to title bar
+							robot.keyPress(keys.TAB, 500, {});
+
+							robot.sequence(d.getTestErrback(function(){
+								doh.is(pane1.focusNode, dfocus.curNode,"focused on pane1 title")
+							}), 500);
+
+							// should skip hidden content and go to button
+							robot.keyPress(keys.TAB, 500, {});
+
+							robot.sequence(d.getTestErrback(function(){
+								doh.is(dom.byId("titleButton"), dfocus.curNode,"focused on title button after pane")
+							}), 500);
+
+							// go back to title bar
+							robot.keyPress(keys.TAB, 500, {shift: true});
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.is(pane1.focusNode, dfocus.curNode,"focused on pane1 title")
+							}), 500);
+
+							return d;
+						}
+					},
+
+					{
+						name: "open",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.keyPress(keys.SPACE, 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(pane1.domNode.offsetHeight > 100, "pane 1 is open");
+								doh.t(pane1.get("open"), "pane1.open is true");
+							}), 500);
+							
+							return d;
+						}
+					},
+					
+					{
+						name: "close",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.keyPress(keys.ENTER, 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(pane1.domNode.offsetHeight < 100, "pane 1 is closed");
+							}), 500);
+							
+							return d;
+						}
+					}
+				]);
+
+				doh.register("height checks", [
+					{
+						name: "content change",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var height1, height2, height3;
+
+							robot.sequence(d.getTestErrback(function(){
+								pane1.set("open", true);
+							}), 500);
+
+							// Changing the content while open should change the height
+							robot.sequence(d.getTestErrback(function(){
+								height1 = pane1.domNode.offsetHeight;
+								pane1.set("content", pane1.get("content") + "<br>new line");
+							}), 500);
+							robot.sequence(d.getTestErrback(function(){
+								height2 = pane1.domNode.offsetHeight;
+								doh.t(height2 > height1,  "expected height increase, actually went from " + height1 + " to " + height2);
+							}), 500);
+
+							// Change the content while closed should also change the height (when it is next opened)
+							robot.sequence(d.getTestErrback(function(){
+								pane1.set("open", false);
+							}), 500);
+							robot.sequence(d.getTestErrback(function(){
+								pane1.set("content", pane1.get("content") + "<br>another new line");
+								pane1.set("open", true);
+							}), 500);
+							robot.sequence(d.getTestCallback(function(){
+								height3 = pane1.domNode.offsetHeight;
+								doh.t(height3 > height2, "expected height increase, actually went from " + height2 + " to " + height3);
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "href loading",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Open the href pane, causing the href to load
+							winUtils.scrollIntoView(registry.byId("inner").domNode);
+							robot.sequence(d.getTestErrback(function(){
+								href1.set("open", true);
+							}), 1000);
+
+							// Initially it should display "Loading..." with a small height (enough for that one message)
+							var height1, height2;
+							robot.sequence(d.getTestErrback(function(){
+								doh.is("Loading...", lang.trim(helpers.innerText(href1.containerNode)));
+								height1 = href1.domNode.offsetHeight;
+							}), 1500);
+
+							// Then the real content should be loaded and height should change to accommodate it
+							robot.sequence(d.getTestCallback(function(){
+								doh.isNot("Loading...", lang.trim(helpers.innerText(href1.containerNode)), "actual content");
+								height2 = href1.domNode.offsetHeight;
+								doh.t(height2 > height1, "expected height increase, actually went from " + height1 + " to " + height2);
+							}), 3000);
+
+							return d;
+						}
+					},
+					{
+						name: "href load complete during expand",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Opening the href pane will cause it to expand, and during the expansion the load
+							// will finish.   Make sure height shows full content
+							href2.set("open", true);
+
+							robot.sequence(d.getTestCallback(function(){
+								var height = href2.domNode.offsetHeight;
+								doh.t(height > 100, "height for full content not just loading message: " + height);
+							}), 2000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("layout", [
+					{
+						name: "resize event",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// The first time pane3 is opened the tab container should get a resize event
+							var resized = false;
+							aspect.after(registry.byId("tabContainer"), "resize", function(){ resized = true;}, true);
+
+							doh.f(pane3.get("open"), "pane3 is closed");
+							pane3.set("open", true);
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(resized, "tabcontainer was resized");
+							}), 500);
+							
+							return d;
+						}
+					}
+				]);
+
+				doh.register("TitlePane in AccordionContainer", [
+					{
+						name: "initial conditions",
+						runTest: function(){
+							// none of the TitlePane's inside of the AccordionContainer should have loaded
+							// their href, since they are closed
+					    	doh.f(robot.window["actp1Loaded"], "closed TitlePane in open accordion pane not loaded");
+					    	doh.t(robot.window["actp2Loaded"], "open TitlePane in open accordion pane loaded");
+					    	doh.f(robot.window["actp3Loaded"], "first TitlePane in closed accordion pane not loaded");
+					    	doh.f(robot.window["actp4Loaded"], "open TitlePane in closed accordion pane not loaded");
+						}
+					},
+
+					{
+						name: "switch open accordion pane",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							registry.byId("ac").selectChild(registry.byId("accp2"));
+
+							setTimeout(d.getTestCallback(function(){
+						    	doh.f(robot.window["actp1Loaded"], "closed TitlePane in newly closed accordion pane not loaded");
+						    	doh.f(robot.window["actp3Loaded"], "closed TitlePane in newly opened accordion pane not loaded");
+						    	doh.t(robot.window["actp4Loaded"], "opened TitlePane in newly opened accordion pane loaded");
+							}), 500);
+							
+							return d;
+						}
+					},
+
+					{
+						name: "open a TitlePane",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							registry.byId("actp3").set("open", true);
+
+							setTimeout(d.getTestCallback(function(){
+						    	doh.t(robot.window["actp3Loaded"], "opening TitlePane causes href to load");
+							}), 500);
+							
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

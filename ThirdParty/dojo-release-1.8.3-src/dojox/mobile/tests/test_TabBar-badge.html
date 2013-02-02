@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>TabBar with badge</title>
+
+	<link href="../themes/common/domButtons/DomButtonRedBadge.css" rel="stylesheet"/>
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','TabBar']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/TabBar"
+		], function(registry){
+			test = function(i){
+				var w = registry.byId("btn"+i);
+				var badgeVal = w.get("badge");
+				w.set("badge", badgeVal ? null : "25");
+			}
+		});
+	</script>
+
+	<style>
+	.label {
+		font-family: "Helvetica Neue", Helvetica;
+		font-size: 13px;
+		margin-top: 20px;
+	}
+	.view {
+		font-size: 30px;
+		padding-top: 30px;
+		text-align: center;
+	}
+	</style>
+</head>
+<body style="padding-top:100px">
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='iconBase:"images/tab-icons.png"'>
+		<li id="btn0" data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='iconPos1:"0,0,29,29", iconPos2:"29,0,29,29", selected:true, badge:"55"'>Featured</li>
+		<li id="btn1" data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='iconPos1:"0,29,29,29", iconPos2:"29,29,29,29"'>Categories</li>
+		<li id="btn2" data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='iconPos1:"0,58,29,29", iconPos2:"29,58,29,29"'>Top 25</li>
+		<li id="btn3" data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='iconPos1:"0,87,29,29", iconPos2:"29,87,29,29"'>Search</li>
+		<li id="btn4" data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='iconPos1:"0,116,29,29", iconPos2:"29,116,29,29"'>Updates</li>
+	</ul>
+
+	<div id="view1" data-dojo-type="dojox.mobile.View" data-dojo-props='selected:true'>
+		<div class="view">View 1</div>
+	</div>
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<div class="view">View 2</div>
+	</div>
+	<div id="view3" data-dojo-type="dojox.mobile.View">
+		<div class="view">View 3</div>
+	</div>
+	<input type="button" onclick="test(0)" value="Featured">
+	<input type="button" onclick="test(1)" value="Categories">
+	<input type="button" onclick="test(2)" value="Top 25">
+	<input type="button" onclick="test(3)" value="Search">
+	<input type="button" onclick="test(4)" value="Updates">
+</body>
+</html>

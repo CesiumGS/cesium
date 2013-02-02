@@ -1210,13 +1210,13 @@ define([
      * // Example 1. Create a stream index buffer of unsigned shorts that is
      * // 16 bytes in size.
      * var buffer = context.createIndexBuffer(16, BufferUsage.STREAM_DRAW,
-     *     IndexType.unsignedShort);
+     *     IndexDatatype.UNSIGNED_SHORT);
      *
      * ////////////////////////////////////////////////////////////////////////////////
      *
      * // Example 2. Create a static index buffer containing three unsigned shorts.
      * var buffer = context.createIndexBuffer(new Uint16Array([0, 1, 2]),
-     *     BufferUsage.STATIC_DRAW, IndexType.unsignedShort)
+     *     BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT)
      */
     Context.prototype.createIndexBuffer = function(typedArrayOrSizeInBytes, usage, indexDatatype) {
         var bytesPerIndex;
@@ -1425,6 +1425,7 @@ define([
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
         // http://media.tojicode.com/webglCamp4/#20
         var preMultiplyAlpha = description.preMultiplyAlpha || pixelFormat === PixelFormat.RGB || pixelFormat === PixelFormat.LUMINANCE;
+        var flipY = defaultValue(description.flipY, true);
 
         var gl = this._gl;
         var textureTarget = gl.TEXTURE_2D;
@@ -1436,7 +1437,7 @@ define([
         if (source) {
             // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
             gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
 
             if (source.arrayBufferView) {
                 // Source: typed array
@@ -1450,7 +1451,7 @@ define([
         }
         gl.bindTexture(textureTarget, null);
 
-        return new Texture(gl, this._textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, width, height, preMultiplyAlpha);
+        return new Texture(gl, this._textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, width, height, preMultiplyAlpha, flipY);
     };
 
     /**
@@ -1634,6 +1635,7 @@ define([
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
         // http://media.tojicode.com/webglCamp4/#20
         var preMultiplyAlpha = description.preMultiplyAlpha || ((pixelFormat === PixelFormat.RGB) || (pixelFormat === PixelFormat.LUMINANCE));
+        var flipY = defaultValue(description.flipY, true);
 
         var gl = this._gl;
         var textureTarget = gl.TEXTURE_CUBE_MAP;
@@ -1653,7 +1655,7 @@ define([
         if (source) {
             // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
             gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
 
             createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X, source.positiveX);
             createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, source.negativeX);
@@ -1671,7 +1673,7 @@ define([
         }
         gl.bindTexture(textureTarget, null);
 
-        return new CubeMap(gl, this._textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, size, preMultiplyAlpha);
+        return new CubeMap(gl, this._textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
     };
 
     /**

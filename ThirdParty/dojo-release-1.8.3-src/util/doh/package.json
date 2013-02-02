@@ -1,0 +1,23 @@
+{
+	"name": "doh",
+	"version":"1.8.0dev",
+	"directories": {
+		"lib": "."
+	},
+	"main": "main",
+	"description": "DOH is a unit test framework developed by the Dojo Toolkit Community.",
+	"licenses": [
+		 {
+				 "type": "AFLv2.1",
+				 "url": "http://trac.dojotoolkit.org/browser/dojo/trunk/LICENSE#L43"
+		 },
+		 {
+				 "type": "BSD",
+				 "url": "http://trac.dojotoolkit.org/browser/dojo/trunk/LICENSE#L13"
+		 }
+	],
+	"bugs": "http://bugs.dojotoolkit.org/",
+	"keywords": ["JavaScript", "Dojo", "Toolkit", "DOH"],
+	"homepage": "http://dojotoolkit.org/",
+	"dojoBuild": "doh.profile.js"
+}

@@ -1,0 +1,702 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Tree DnD Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<!-- functions to help test -->
+		<script type="text/javascript" src="Tree_dnd.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.window");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_Tree_DnD.html');
+
+				setup();
+
+				// Dragging from an external source and dropping onto the Tree,
+				// creating a duplicate of the dragged item
+				doh.register("drop into", [
+					{
+						name: "drag 'Apple' over 'Fruits'",
+						timeout: 10000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								fruitsTreeNode = findTreeNode("itemTree", "Fruits");
+							doh.f(fruitsTreeNode.isExpanded, "fruitsTreeNode is initially closed");
+							doh.t(fruitsTreeNode.isExpandable, "but has (or may have) children");
+
+							// Check state of store too
+							var children = getNamesOfChildrenOfItem("Fruits");
+							doh.is(1, children.categories.length, "one category child");
+							doh.is("Citrus", children.categories[0]);
+							doh.is(0, children.items.length, "no item children yet");
+
+							// (Try to) make sure drag source and drop source are both in viewport
+							dojo.window.scrollIntoView(fruitsTreeNode.domNode);
+
+							// Drag "Apple" onto Fruits.
+							doh.robot.mouseMoveAt("1001", 500, 1);
+							doh.robot.mousePress({left: true}, 500);
+							doh.robot.mouseMoveAt(fruitsTreeNode.labelNode, 500, 2000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// TODO: check drag avatar shows drop is valid (ie, avatar is green)
+								doh.t(dojo.hasClass(fruitsTreeNode.rowNode, "dijitTreeRowHover"), "tree node has hover class");
+								doh.t(dojo.hasClass(fruitsTreeNode.rowNode, "dojoDndItemOver"), "tree node has DND drop class");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "drop 'Apple' on to 'Fruits'",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseRelease({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Check that new item was created and added to the store.
+								var children = getNamesOfChildrenOfItem("Fruits");
+								doh.is(1, children.categories.length, "one category child");
+								doh.is("Citrus", children.categories[0]);
+								doh.is(1, children.items.length, "one item child");
+								doh.is("Apple", children.items[0]);
+
+								// Check that data store update was reflected in the tree
+								var fruitsTreeNode = findTreeNode("itemTree", "Fruits");
+
+								doh.t(fruitsTreeNode.isExpanded, "drop caused the node to expand");
+								var treeNodeChildren = fruitsTreeNode.getChildren();
+								doh.is(2, treeNodeChildren.length, "2 TreeNode children");
+								doh.is("Apple", innerText(treeNodeChildren[0].labelNode));
+								doh.is("Citrus", innerText(treeNodeChildren[1].labelNode));
+							}), 1000);	// 1000ms to wait for 'Fruits' node to expand and show 'Apple' node
+
+							return d;
+						}
+					}
+				]);
+
+				// Moving an item w/in the tree
+				doh.register("re-parent an item", [
+					{
+						name: "drag 'Apple' from 'Fruits' to 'Citrus'",
+						timeout: 10000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								fruitsTreeNode = findTreeNode("itemTree", "Fruits"),
+								appleTreeNode = findTreeNode("itemTree", "Apple"),
+								citrusTreeNode = findTreeNode("itemTree", "Citrus");
+							dojo.window.scrollIntoView("itemTree");
+							// Drag "Apple" into "Citrus".
+							doh.robot.mouseMoveAt(appleTreeNode.labelNode, 500, 1);
+							doh.robot.mousePress({left: true}, 500);
+							doh.robot.mouseMoveAt(citrusTreeNode.labelNode, 500, 1000);
+							doh.robot.mouseMoveAt(citrusTreeNode.labelNode, 500, 1000);// If prev. mouseMove caused scroll, readjust
+							doh.robot.mouseRelease({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var myStore = dojo.global.myStore;
+
+								// Check that data store item was orphaned from Fruits
+								var fruitsItemChildren = getNamesOfChildrenOfItem("Fruits");
+								doh.is(0, fruitsItemChildren.items.length, "no item children");
+
+								// Check that data store update was reflected in the tree
+								var fruitsTreeNode = findTreeNode("itemTree", "Fruits");
+
+								var fruitsTreeNodeChildren = fruitsTreeNode.getChildren();
+								doh.is(1, fruitsTreeNodeChildren.length, "1 TreeNode children");
+								doh.is("Citrus", innerText(fruitsTreeNodeChildren[0].labelNode));
+
+								// ... and parented to Citrus item
+								var citrusItemChildren = getNamesOfChildrenOfItem("Citrus");
+								doh.is(2, citrusItemChildren.items.length, "two item children");
+								doh.is("Orange", citrusItemChildren.items[0]);
+								doh.is("Apple", citrusItemChildren.items[1]);
+
+								// Check that data store update was reflected in the tree
+								var citrusTreeNode = findTreeNode("itemTree", "Citrus");
+
+								var citrusTreeNodeChildren = citrusTreeNode.getChildren();
+								doh.is(2, citrusTreeNodeChildren.length, "2 TreeNode children for Citrus");
+								doh.is("Orange", innerText(citrusTreeNodeChildren[0].labelNode), "child of Citrus TreeNode");
+								doh.is("Apple", innerText(citrusTreeNodeChildren[1].labelNode), "child of Citrus TreeNode");
+							}), 2000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "drag 'Cereals' to be before 'Vegetables' (reordering)",
+						timeout: 10000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								vegetablesTreeNode = findTreeNode("collectionsTree", "Vegetables (0)"),
+								cerealsTreeNode = findTreeNode("collectionsTree", "Cereals (0)");
+
+							// (Try to) make sure drag source and drop source are both in viewport
+							dojo.window.scrollIntoView(cerealsTreeNode.domNode);
+
+							// Drag 'Cereals' and drop near top edge of 'Vegetables'.
+							// It should become Vegetables' prior-sibling
+							// Note: if mousemove duration is too small itemTree doesn't get onmouseout event on IE6/7,
+							// causing subsequent JS exceptions
+							doh.robot.mouseMoveAt(cerealsTreeNode.domNode, 500, 100);
+							doh.robot.mousePress({left: true}, 500);
+							doh.robot.mouseMoveAt(vegetablesTreeNode.domNode, 500, 1000, 50, 3);
+							doh.robot.mouseRelease({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var myStore = dojo.global.myStore;
+
+								// Check that order of children was changed
+								var foodsItemChildren = getNamesOfChildrenOfItem("Foods").categories;
+								doh.is(3, foodsItemChildren.length, "3 categories");
+								doh.is("Fruits", foodsItemChildren[0]);
+								doh.is("Cereals", foodsItemChildren[1]);
+								doh.is("Vegetables", foodsItemChildren[2]);
+
+								// Check that data store update was reflected in the tree
+								var
+									foodsTreeNode = findTreeNode("collectionsTree", "Foods (1)"),
+									foodsTreeNodeChildren = foodsTreeNode.getChildren();
+								doh.is(3, foodsTreeNodeChildren.length, "3 TreeNode children");
+								doh.is("Fruits (2)", innerText(foodsTreeNodeChildren[0].labelNode));
+								doh.is("Cereals (0)", innerText(foodsTreeNodeChildren[1].labelNode));
+								doh.is("Vegetables (0)", innerText(foodsTreeNodeChildren[2].labelNode));
+							}), 2000);
+
+							return d;
+						}
+					},
+
+					// We need to expand the Fruits TreeNode for the benefit of the next test,
+					// and we do it as a separate test so that citrusTreeNode will exist etc.
+					// by the time the next test starts.
+					{
+						name: "expand 'Fruits' TreeNode",
+						timeout: 10000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								fruitsTreeNode = findTreeNode("collectionsTree", "Fruits (2)");
+							doh.robot.mouseMoveAt(fruitsTreeNode.expandoNode, 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// This is just here to wait for the expand operation to take place,
+								// and then notify DOH that we are finished
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "drag 'Vegetables' to be after 'Citrus' (reordering)",
+						timeout: 10000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								vegetablesTreeNode = findTreeNode("collectionsTree", "Vegetables (0)"),
+								citrusTreeNode = findTreeNode("collectionsTree", "Citrus (1)"),
+								citrusTreeNodeSize = dojo.contentBox(citrusTreeNode.domNode);
+
+							// (Try to) make sure drag source and drop source are both in viewport
+							dojo.window.scrollIntoView(vegetablesTreeNode.domNode);
+
+							// Drag 'Vegetables' and drop near bottom edge of 'Citrus'.
+							// It should become Citrus' prior-sibling
+							doh.robot.mouseMoveAt(vegetablesTreeNode.domNode, 500, 1);
+							doh.robot.mousePress({left: true}, 500);
+							doh.robot.mouseMoveAt(citrusTreeNode.domNode, 1000, 2000, 50, citrusTreeNodeSize.h - 2);
+							doh.robot.mouseRelease({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var myStore = dojo.global.myStore;
+
+								// Check that order of children in data store was changed
+								var foodsItemChildren = getNamesOfChildrenOfItem("Foods").categories;
+								doh.is(2, foodsItemChildren.length, "2 categories under foods");
+								doh.is("Fruits", foodsItemChildren[0]);
+								doh.is("Cereals", foodsItemChildren[1]);
+
+								var fruitsItemChildren = getNamesOfChildrenOfItem("Fruits").categories;
+								doh.is(2, fruitsItemChildren.length, "2 categories under fruits");
+								doh.is("Citrus", fruitsItemChildren[0]);
+								doh.is("Vegetables", fruitsItemChildren[1]);
+
+								// Check that data store update was reflected in the tree
+								var
+									foodsTreeNode = findTreeNode("collectionsTree", "Foods (1)"),
+									foodsTreeNodeChildren = foodsTreeNode.getChildren();
+								doh.is(2, foodsTreeNodeChildren.length, "2 TreeNode children for foods");
+								doh.is("Fruits (2)", innerText(foodsTreeNodeChildren[0].labelNode));
+								doh.is("Cereals (0)", innerText(foodsTreeNodeChildren[1].labelNode));
+
+								var fruitsTreeNode = findTreeNode("collectionsTree", "Fruits (2)"),
+								fruitsTreeNodeChildren = fruitsTreeNode.getChildren();
+								doh.is(2, fruitsTreeNodeChildren.length, "2 TreeNode children for fruits");
+								doh.is("Citrus (1)", innerText(fruitsTreeNodeChildren[0].labelNode));
+								doh.is("Vegetables (0)", innerText(fruitsTreeNodeChildren[1].labelNode));
+							}), 500);
+
+							return d;
+						}
+					}
+
+				]);
+
+				doh.register("drag between trees", [
+					{
+						name: "move 'Vegetables' from left tree to right tree, from 'Fruits' to 'Foods'",
+						timeout: 10000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								vegetablesTreeNode = findTreeNode("collectionsTree", "Vegetables (0)"),
+								foodsTreeNode = registry.byId("itemTree").rootNode;
+
+							doh.robot.mouseMoveAt(vegetablesTreeNode.labelNode, 0, 1);
+							doh.robot.mousePress({left: true}, 500);
+							doh.robot.mouseMoveAt(foodsTreeNode.labelNode, 500, 1000);
+							doh.robot.mouseRelease({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var myStore = dojo.global.myStore;
+
+								// Check that data store item was orphaned from Fruits
+								var fruitsItemChildren = getNamesOfChildrenOfItem("Fruits");
+								doh.is(1, fruitsItemChildren.categories.length, "one fruits child");
+								doh.is("Citrus", fruitsItemChildren.categories[0], "one fruits child");
+
+								// And added to Foods
+								var foodsItemChildren = getNamesOfChildrenOfItem("Foods");
+								doh.is(3, foodsItemChildren.categories.length, "three foods children");
+								doh.is("Fruits", foodsItemChildren.categories[0], "food child");
+								doh.is("Cereals", foodsItemChildren.categories[1], "food child");
+								doh.is("Vegetables", foodsItemChildren.categories[2], "food child");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("drop in Tree outside of a treeNode", [
+					{
+						name: "drop 'Orange' within Tree but not over a TreeNode",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var orangeTreeNode = findTreeNode("itemTree", "Orange");
+
+							doh.robot.mouseMoveAt(orangeTreeNode.labelNode, 0, 1);
+							doh.robot.mousePress({left: true}, 500);
+							doh.robot.mouseMoveAt("itemTree", 500, 500, 5, 100);
+							doh.robot.mouseRelease({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var org = findTreeNode("itemTree", "Orange");
+								doh.t( org != null);
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+
+				// special function to allow dragging within a very short test window
+				function dragSourceToItemTree(srcId, destId, after){
+					var
+						child = dojo.global.dojo.byId(srcId),
+						parent = child.parentNode,
+						childPos = dojo.position(child),
+						parentPos = dojo.position(parent),
+						destTreeNode = findTreeNode("itemTree", destId);
+					dojo.window.scrollIntoView(parent);
+					parent.scrollTop += childPos.y + childPos.h - parentPos.y - parentPos.h;
+					doh.robot.mouseMoveAt(srcId, 500, 1);
+					doh.robot.mousePress({left: true}, 500);
+					doh.robot.mouseMoveAt(srcId, 1000, 500, (childPos.w >> 1) + 2, childPos.h >> 1); // start drag before scrolling to dest
+					doh.robot.sequence(function(){
+						dojo.window.scrollIntoView("itemTree");
+					}, 0);
+					doh.robot.mouseMoveAt(destTreeNode.labelNode, 500, 1); // move to dest center
+					doh.robot.mouseMoveAt(destTreeNode.labelNode, 500, 500, 0,
+						after
+							? (dojo.position(destTreeNode.domNode).h - dojo.position(destTreeNode.labelNode).y + dojo.position(destTreeNode.domNode).y - 1)
+							: -2
+					);
+					doh.robot.mouseRelease({left: true}, 500);
+				}
+
+				//=================
+				// Testing drag before and after items
+				// Dragging from an external source and dropping onto the Tree, creating a duplicate of the dragged item
+				//-----------------
+				doh.register("drag before and after items", [
+					{
+						name: "drag before the first item",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Drag "Banana" before Orange.
+							dragSourceToItemTree("1003", "Orange", !"after");
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Check that data store update was reflected in the tree
+								var citrusTreeNode = findTreeNode("itemTree", "Citrus");
+								var treeNodeChildren = citrusTreeNode.getChildren();
+								doh.is(3, treeNodeChildren.length, "3 TreeNode children");
+								doh.is("Banana", innerText(treeNodeChildren[0].labelNode));
+								doh.is("Orange", innerText(treeNodeChildren[1].labelNode));
+								doh.is("Apple",  innerText(treeNodeChildren[2].labelNode));
+
+								// ... and parented to Citrus item
+								var citrusItemChildren = getNamesOfChildrenOfItem("Citrus");
+								doh.is(3, citrusItemChildren.items.length, "three item children");
+								doh.is("Banana", citrusItemChildren.items[0]);
+								doh.is("Orange", citrusItemChildren.items[1]);
+								doh.is("Apple",  citrusItemChildren.items[2]);
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "drag after the first item",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Drag "Tomato" after Banana.
+							dragSourceToItemTree("1004", "Banana", "after");
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Check that data store update was reflected in the tree
+								var citrusTreeNode = findTreeNode("itemTree", "Citrus");
+								var treeNodeChildren = citrusTreeNode.getChildren();
+								doh.is(4, treeNodeChildren.length, "4 TreeNode children");
+								doh.is("Banana", innerText(treeNodeChildren[0].labelNode));
+								doh.is("Tomato", innerText(treeNodeChildren[1].labelNode));
+								doh.is("Orange", innerText(treeNodeChildren[2].labelNode));
+								doh.is("Apple",  innerText(treeNodeChildren[3].labelNode));
+
+								// ... and parented to Citrus item
+								var citrusItemChildren = getNamesOfChildrenOfItem("Citrus");
+								doh.is(4, citrusItemChildren.items.length, "four item children");
+								doh.is("Banana", citrusItemChildren.items[0]);
+								doh.is("Tomato", citrusItemChildren.items[1]);
+								doh.is("Orange", citrusItemChildren.items[2]);
+								doh.is("Apple",  citrusItemChildren.items[3]);
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "drag before in the middle of the list of items",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Drag "Pepper" before Orange.
+							dragSourceToItemTree("1005", "Orange", !"after");
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Check that data store update was reflected in the tree
+								var citrusTreeNode = findTreeNode("itemTree", "Citrus");
+								var treeNodeChildren = citrusTreeNode.getChildren();
+								doh.is(5, treeNodeChildren.length, "5 TreeNode children");
+								doh.is("Banana", innerText(treeNodeChildren[0].labelNode));
+								doh.is("Tomato", innerText(treeNodeChildren[1].labelNode));
+								doh.is("Pepper", innerText(treeNodeChildren[2].labelNode));
+								doh.is("Orange", innerText(treeNodeChildren[3].labelNode));
+								doh.is("Apple",  innerText(treeNodeChildren[4].labelNode));
+
+								// ... and parented to Citrus item
+								var citrusItemChildren = getNamesOfChildrenOfItem("Citrus");
+								doh.is(5, citrusItemChildren.items.length, "five item children");
+								doh.is("Banana", citrusItemChildren.items[0]);
+								doh.is("Tomato", citrusItemChildren.items[1]);
+								doh.is("Pepper", citrusItemChildren.items[2]);
+								doh.is("Orange", citrusItemChildren.items[3]);
+								doh.is("Apple",  citrusItemChildren.items[4]);
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "drag after in the middle of the list of items",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Drag "Wheat" after Orange.
+							dragSourceToItemTree("1006", "Orange", "after");
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Check that data store update was reflected in the tree
+								var citrusTreeNode = findTreeNode("itemTree", "Citrus");
+								var treeNodeChildren = citrusTreeNode.getChildren();
+								doh.is(6, treeNodeChildren.length, "6 TreeNode children");
+								doh.is("Banana", innerText(treeNodeChildren[0].labelNode));
+								doh.is("Tomato", innerText(treeNodeChildren[1].labelNode));
+								doh.is("Pepper", innerText(treeNodeChildren[2].labelNode));
+								doh.is("Orange", innerText(treeNodeChildren[3].labelNode));
+								doh.is("Wheat",  innerText(treeNodeChildren[4].labelNode));
+								doh.is("Apple",  innerText(treeNodeChildren[5].labelNode));
+
+								// ... and parented to Citrus item
+								var citrusItemChildren = getNamesOfChildrenOfItem("Citrus");
+								doh.is(6, citrusItemChildren.items.length, "six item children");
+								doh.is("Banana", citrusItemChildren.items[0]);
+								doh.is("Tomato", citrusItemChildren.items[1]);
+								doh.is("Pepper", citrusItemChildren.items[2]);
+								doh.is("Orange", citrusItemChildren.items[3]);
+								doh.is("Wheat",  citrusItemChildren.items[4]);
+								doh.is("Apple",  citrusItemChildren.items[5]);
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "drag before on the last item",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Drag "Corn" before Apple.
+							dragSourceToItemTree("1007", "Apple", !"after");
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Check that data store update was reflected in the tree
+								var citrusTreeNode = findTreeNode("itemTree", "Citrus");
+								var treeNodeChildren = citrusTreeNode.getChildren();
+								doh.is(7, treeNodeChildren.length, "7 TreeNode children");
+								doh.is("Banana", innerText(treeNodeChildren[0].labelNode));
+								doh.is("Tomato", innerText(treeNodeChildren[1].labelNode));
+								doh.is("Pepper", innerText(treeNodeChildren[2].labelNode));
+								doh.is("Orange", innerText(treeNodeChildren[3].labelNode));
+								doh.is("Wheat",  innerText(treeNodeChildren[4].labelNode));
+								doh.is("Corn",   innerText(treeNodeChildren[5].labelNode));
+								doh.is("Apple",  innerText(treeNodeChildren[6].labelNode));
+
+								// ... and parented to Citrus item
+								var citrusItemChildren = getNamesOfChildrenOfItem("Citrus");
+								doh.is(7, citrusItemChildren.items.length, "seven item children");
+								doh.is("Banana", citrusItemChildren.items[0]);
+								doh.is("Tomato", citrusItemChildren.items[1]);
+								doh.is("Pepper", citrusItemChildren.items[2]);
+								doh.is("Orange", citrusItemChildren.items[3]);
+								doh.is("Wheat",  citrusItemChildren.items[4]);
+								doh.is("Corn",   citrusItemChildren.items[5]);
+								doh.is("Apple",  citrusItemChildren.items[6]);
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "drag after on the last item",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Drag "Spinach" after Apple.
+							dragSourceToItemTree("1008", "Apple", "after");
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Check that data store update was reflected in the tree
+								var citrusTreeNode = findTreeNode("itemTree", "Citrus");
+								var treeNodeChildren = citrusTreeNode.getChildren();
+								doh.is(8, treeNodeChildren.length, "8 TreeNode children");
+								doh.is("Banana", innerText(treeNodeChildren[0].labelNode));
+								doh.is("Tomato", innerText(treeNodeChildren[1].labelNode));
+								doh.is("Pepper", innerText(treeNodeChildren[2].labelNode));
+								doh.is("Orange", innerText(treeNodeChildren[3].labelNode));
+								doh.is("Wheat",  innerText(treeNodeChildren[4].labelNode));
+								doh.is("Corn",   innerText(treeNodeChildren[5].labelNode));
+								doh.is("Apple",  innerText(treeNodeChildren[6].labelNode));
+								doh.is("Spinach",innerText(treeNodeChildren[7].labelNode));
+
+								// ... and parented to Citrus item
+								var citrusItemChildren = getNamesOfChildrenOfItem("Citrus");
+								doh.is(8, citrusItemChildren.items.length, "eight item children");
+								doh.is("Banana", citrusItemChildren.items[0]);
+								doh.is("Tomato", citrusItemChildren.items[1]);
+								doh.is("Pepper", citrusItemChildren.items[2]);
+								doh.is("Orange", citrusItemChildren.items[3]);
+								doh.is("Wheat",  citrusItemChildren.items[4]);
+								doh.is("Corn",   citrusItemChildren.items[5]);
+								doh.is("Apple",  citrusItemChildren.items[6]);
+								doh.is("Spinach",citrusItemChildren.items[7]);
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("multi-dnd", [
+					{
+						name: "click on a new node and drag should select it",
+						timeout: 15000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								fruitsTreeNode = findTreeNode("itemTree", "Fruits"),
+								cerealsTreeNode = findTreeNode("itemTree", "Cereals"),
+								tree = registry.byId("itemTree");
+
+							// click fruit item
+							doh.robot.mouseMoveAt(fruitsTreeNode.rowNode, 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							// drag cereal node to fruits node
+							doh.robot.mouseMoveAt(cerealsTreeNode.rowNode, 0, 1);
+							doh.robot.mousePress({left: true}, 500);
+							doh.robot.mouseMoveAt(fruitsTreeNode.rowNode, 500, 1000);
+							doh.robot.mouseRelease({left: true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(fruitsTreeNode == cerealsTreeNode.getParent());
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "drag parent and child to another child should do nothing",
+						timeout: 15000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								citrusTreeNode = findTreeNode("itemTree", "Citrus"), 
+								citrusParent = citrusTreeNode.getParent(),
+								orangeTreeNode = findTreeNode("itemTree", "Orange"),
+								appleTreeNode = findTreeNode("itemTree", "Apple"),
+								tree = registry.byId("itemTree");
+
+							doh.is(citrusTreeNode, orangeTreeNode.getParent(), 'orange is child of citrus');
+
+							// click Citrus item
+							doh.robot.mouseMoveAt(citrusTreeNode.rowNode, 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							// ctrl-click Orange item
+							doh.robot.mouseMoveAt(orangeTreeNode.rowNode, 0, 1);
+							doh.robot.keyDown(dojo.isMac ? dojo.keys.META : dojo.keys.CTRL, 500);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.keyUp(dojo.isMac ? dojo.keys.META : dojo.keys.CTRL, 500);
+
+							// drag to Apple Foods
+							doh.robot.mousePress({left: true}, 500);
+							doh.robot.mouseMoveAt(appleTreeNode.rowNode, 500, 500);
+							doh.robot.mouseRelease({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(citrusParent, citrusTreeNode.getParent(), 'citrus parent should not change');
+								doh.is(citrusTreeNode, orangeTreeNode.getParent(), 'orange should still be under citrus');
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "drag parent and child should only reparent parent",
+						timeout: 15000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								citrusTreeNode = findTreeNode("itemTree", "Citrus"),
+								orangeTreeNode = findTreeNode("itemTree", "Orange"),
+								cerealsTreeNode = findTreeNode("itemTree", "Cereals"),
+								tree = registry.byId("itemTree");
+
+							doh.is(citrusTreeNode, orangeTreeNode.getParent(), 'orange is child of citrus');
+
+							// click Citrus category
+							doh.robot.mouseMoveAt(citrusTreeNode.rowNode, 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							// ctrl-click Orange item
+							doh.robot.mouseMoveAt(orangeTreeNode.rowNode, 0, 1);
+							doh.robot.keyDown(dojo.isMac ? dojo.keys.META : dojo.keys.CTRL, 500);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.keyUp(dojo.isMac ? dojo.keys.META : dojo.keys.CTRL, 500);
+
+							// drag to Cereals category
+							doh.robot.mousePress({left: true}, 500);
+							doh.robot.mouseMoveAt(cerealsTreeNode.rowNode, 500, 500);
+							doh.robot.mouseRelease({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(cerealsTreeNode, citrusTreeNode.getParent(), 'citrus should be under cereals');
+								doh.is(citrusTreeNode, orangeTreeNode.getParent(), 'orange should still be under citrus');
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "drag multiple items",
+						timeout: 15000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								vegetablesTreeNode = findTreeNode("itemTree", "Vegetables"),
+								cerealsTreeNode = findTreeNode("itemTree", "Cereals"),
+								foodsTreeNode = findTreeNode("itemTree", "Foods"),
+								tree = registry.byId("itemTree");
+
+							// click Vegetables item
+							doh.robot.mouseMoveAt(vegetablesTreeNode.rowNode, 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							// ctrl-click cereals item
+							doh.robot.mouseMoveAt(cerealsTreeNode.rowNode, 0, 1);
+							doh.robot.keyDown(dojo.isMac ? dojo.keys.META : dojo.keys.CTRL, 500);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.keyUp(dojo.isMac ? dojo.keys.META : dojo.keys.CTRL, 500);
+
+							// drag to root item Foods
+							doh.robot.mousePress({left: true}, 500);
+							doh.robot.mouseMoveAt(foodsTreeNode.rowNode, 500, 500);
+							doh.robot.mouseRelease({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(foodsTreeNode, vegetablesTreeNode.getParent());
+								doh.is(foodsTreeNode, cerealsTreeNode.getParent());
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

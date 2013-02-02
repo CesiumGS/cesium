@@ -17,7 +17,7 @@
     <script src="../../ThirdParty/jshint-r12/jshint.js"></script>
     <script src="../../ThirdParty/CodeMirror-2.24/lib/codemirror.js"></script>
     <!-- The next four lines, including Cesium itself, are only for autocomplete -->
-    <script src="../../Build/Unminified/Cesium.js"></script>
+    <script src="../../Build/CesiumUnminified/Cesium.js"></script>
     <script src="../../ThirdParty/CodeMirror-2.24/lib/util/simple-hint.js"></script>
     <link rel="stylesheet" href="../../ThirdParty/CodeMirror-2.24/lib/util/simple-hint.css">
     <script src="Cesium-hint.js"></script>
@@ -27,7 +27,7 @@
     <script src="../../ThirdParty/CodeMirror-2.24/mode/xml/xml.js"></script>
     <script src="../../ThirdParty/CodeMirror-2.24/mode/htmlmixed/htmlmixed.js"></script>
 
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"> </script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"> </script>
 
     <script src="gallery/gallery-index.js"></script>
     <script src="CesiumSandcastle.js"> </script>
@@ -115,6 +115,7 @@
             <input data-dojo-type="dijit.form.TextBox" type="text" id="search" name="search" data-dojo-props="trim:true, placeHolder:'Search Gallery', intermediateChanges:true" />            
         </div>
         <div id="codeContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'leading', splitter: true">
+            <script type='dojo/method' event='_onKeyPress'></script>
             <div id="jsContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'JavaScript code'">
 	            <textarea id="code" name="code">// Select a demo from the gallery to load.
 	            </textarea>

@@ -89,7 +89,7 @@ define([
 
         this._clearColorCommand = new ClearCommand();
         this._clearColorCommand.clearState = context.createClearState({
-            color : Color.BLACK
+            color : new Color()
         });
         this._clearDepthStencilCommand = new ClearCommand();
         this._clearDepthStencilCommand.clearState = context.createClearState({
@@ -103,6 +103,8 @@ define([
          * @type SkyBox
          *
          * @default undefined
+         *
+         * @see Scene#backgroundColor
          */
         this.skyBox = undefined;
 
@@ -114,6 +116,17 @@ define([
          * @default undefined
          */
         this.skyAtmosphere = undefined;
+
+        /**
+         * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
+         *
+         * @type Color
+         *
+         * @default Color.BLACK
+         *
+         * @see Scene#skyBox
+         */
+        this.backgroundColor = Color.BLACK.clone();
 
         /**
          * The current mode of the scene.
@@ -201,7 +214,8 @@ define([
     };
 
     /**
-     * Gets state information about the current scene.
+     * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
+     * function, the previous frame's state is returned.
      *
      * @memberof Scene
      */
@@ -289,6 +303,10 @@ define([
 
             // PERFORMANCE_IDEA: sort bins
             frustumCommands.commands.push(command);
+
+            if (command.executeInClosestFrustum) {
+                break;
+            }
         }
     }
 
@@ -384,7 +402,9 @@ define([
         var skyBoxCommand = (typeof scene.skyBox !== 'undefined') ? scene.skyBox.update(context, scene._frameState) : undefined;
         var skyAtmosphereCommand = (typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, scene._frameState) : undefined;
 
-        scene._clearColorCommand.execute(context, framebuffer);
+        var clear = scene._clearColorCommand;
+        Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.clearState.color);
+        clear.execute(context, framebuffer);
 
         // Ideally, we would render the sky box and atmosphere last for
         // early-z, but we would have to draw it in each frustum
@@ -439,11 +459,7 @@ define([
      * DOC_TBA
      * @memberof Scene
      */
-    Scene.prototype.initializeFrame = function(time) {
-        if (typeof time === 'undefined') {
-            time = new JulianDate();
-        }
-
+    Scene.prototype.initializeFrame = function() {
         // Destroy released shaders once every 120 frames to avoid thrashing the cache
         if (this._shaderFrameCount++ === 120) {
             this._shaderFrameCount = 0;
@@ -451,36 +467,31 @@ define([
         }
 
         this._animations.update();
-
-        var us = this.getUniformState();
-        var frameState = this._frameState;
-
         this._camera.controller.update(this.mode, this.scene2D);
         this._screenSpaceCameraController.update(this.mode);
-
-        var frameNumber = CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0);
-        updateFrameState(this, frameNumber, time);
-        frameState.passes.color = true;
-        frameState.passes.overlay = true;
     };
 
     /**
      * DOC_TBA
      * @memberof Scene
      */
-    Scene.prototype.render = function() {
-        // Destroy released shaders once every 120 frames to avoid thrashing the cache
-        if (this._shaderFrameCount++ === 120) {
-            this._shaderFrameCount = 0;
-            this._context.getShaderCache().destroyReleasedShaderPrograms();
+    Scene.prototype.render = function(time) {
+        if (typeof time === 'undefined') {
+            time = new JulianDate();
         }
 
         var us = this.getUniformState();
         var frameState = this._frameState;
+
+        var frameNumber = CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0);
+        updateFrameState(this, frameNumber, time);
+        frameState.passes.color = true;
+        frameState.passes.overlay = true;
+
         us.update(frameState);
 
         this._commandList.length = 0;
-        this._primitives.update(this._context, this._frameState, this._commandList);
+        this._primitives.update(this._context, frameState, this._commandList);
 
         createPotentiallyVisibleSet(this, 'colorList');
         executeCommands(this);
