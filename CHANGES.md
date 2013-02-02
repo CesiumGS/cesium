@@ -6,7 +6,11 @@ Beta Releases
 
 ### b14 - 2013-xx-xx
 
+* Added a line segment-ray intersection test to `IntersectionTests`.
+* Fixed an issue where a `PolylineCollection` with a model matrix other than the identity would be incorrectly rendered in 2D and Columbus view.
+
 ### b13 - 2013-02-01
+
 * Breaking changes:
    * The combined `Cesium.js` file and other required files are now created in `Build/Cesium` and `Build/CesiumUnminified` folders.
    * The Web Worker files needed when using the combined `Cesium.js` file are now in a `Workers` subdirectory.
@@ -20,12 +24,10 @@ Beta Releases
 * Added `Transforms.computeIcrfToFixedMatrix` and `computeFixedToIcrfMatrix`.
 * Added `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Iau2006XysData`, and `Iau2006XysDataSample` classes to `Core`.
 * CZML now supports the ability to specify positions in the International Celestial Reference Frame (ICRF), and inertial reference frame.
-* Added a line segment-ray intersection test to `IntersectionTests`.
 * Fixed globe rendering on the Nexus 4 running Google Chrome Beta.
 * `ViewportQuad` now supports the material system. See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page.
 * Fixed rendering artifacts in `EllipsoidPrimitive`.
 * Fixed an issue where streaming CZML would fail when changing material types.
-* Fixed an issue where a `PolylineCollection` with a model matrix other than the identity would be incorrectly rendered in 2D and Columbus view.
 * Updated Dojo from 1.7.2 to 1.8.4.  Reminder: Cesium does not depend on Dojo but uses it for reference applications.
 
 ### b12a - 2013-01-18

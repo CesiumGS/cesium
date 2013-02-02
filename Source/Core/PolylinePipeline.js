@@ -32,7 +32,10 @@ define([
      * @memberof PolylinePipeline
      *
      * @param {Array} positions The polyline's Cartesian positions.
-     * @param {Matrix4} [modelMatrix=Matrix4.IDENTITY] The polyline's model matrix.
+     * @param {Matrix4} [modelMatrix=Matrix4.IDENTITY] The polyline's model matrix. Assumed to be an affine
+     * transformation matrix, where the upper left 3x3 elements are a rotation matrix, and
+     * the upper three elements in the fourth column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
+     * The matrix is not verified to be in the proper form.
      *
      * @returns An array of polyline segment objects containing the Cartesian position and indices.
      *
@@ -41,8 +44,8 @@ define([
      *
      * @example
      * var polylines = new PolylineCollection();
-     * polylines.add(...);
-     * var positions = polylines.get(0).getPositions();
+     * var polyline = polylines.add(...);
+     * var positions = polyline.getPositions();
      * var modelMatrix = polylines.modelMatrix;
      * var segments = PolylinePipeline.wrapLongitude(positions, modelMatrix);
      */

@@ -372,6 +372,17 @@ define([
      * @exception {DeveloperError} endPoint1 is required.
      * @exception {DeveloperError} planeNormal is required.
      * @exception {DeveloperError} planeD is required.
+     *
+     * @example
+     * var origin = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883, 0.0));
+     * var normal = ellipsoid.geodeticSurfaceNormal(origin);
+     * var constant = -Cartesian3.dot(normal, origin);
+     *
+     * var p0 = new Cartesian3(...);
+     * var p1 = new Cartesian3(...);
+     *
+     * // find the intersection of the line segment from p0 to p1 and the tangent plane at origin.
+     * var intersection = IntersectionTests.lineSegmentPlane(p0, p1, normal, constant);
      */
     IntersectionTests.lineSegmentPlane = function(endPoint0, endPoint1, planeNormal, planeD, result) {
         if (typeof endPoint0 === 'undefined') {
