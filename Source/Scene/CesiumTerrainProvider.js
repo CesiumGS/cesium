@@ -102,7 +102,7 @@ define([
         this._proxy = description.proxy;
 
         this.ready = true;
-        this.hasWaterMask = false; // TODO: change this back to true.
+        this.hasWaterMask = true;
 
         this._allLandTexture = undefined;
         this._allWaterTexture = undefined;
@@ -152,7 +152,8 @@ define([
         return when(promise, function(buffer) {
             var heightBuffer = new Uint16Array(buffer, 0, that.heightmapWidth * that.heightmapWidth);
             var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
-            return new HeightmapTerrainData(heightBuffer, that.heightmapWidth, that.heightmapWidth, childTileMask, that._terrainDataStructure);
+            var waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
+            return new HeightmapTerrainData(heightBuffer, that.heightmapWidth, that.heightmapWidth, childTileMask, that._terrainDataStructure, false, waterMask);
         });
     };
 

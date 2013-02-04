@@ -77,7 +77,7 @@ define([
      * @param {Boolean} [createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
      */
-    var HeightmapTerrainData = function HeightmapTerrainData(buffer, width, height, childTileMask, structure, createdByUpsampling) {
+    var HeightmapTerrainData = function HeightmapTerrainData(buffer, width, height, childTileMask, structure, createdByUpsampling, waterMask) {
         /**
          * The buffer containing the height data.
          * @type {TypedArray}
@@ -111,6 +111,8 @@ define([
          * @type {Number}
          */
         this.childTileMask = defaultValue(childTileMask, 15);
+
+        this.waterMask = waterMask;
 
         if (typeof structure === 'undefined') {
             structure = defaultStructure;

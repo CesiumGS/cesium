@@ -20,6 +20,11 @@ define([
         '../Core/TaskProcessor',
         '../Core/WebMercatorProjection',
         '../Renderer/DrawCommand',
+        '../Renderer/PixelDatatype',
+        '../Renderer/PixelFormat',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
         './ImageryLayer',
         './ImageryState',
         './SceneMode',
@@ -51,6 +56,11 @@ define([
         TaskProcessor,
         WebMercatorProjection,
         DrawCommand,
+        PixelDatatype,
+        PixelFormat,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
         ImageryLayer,
         ImageryState,
         SceneMode,
@@ -108,6 +118,10 @@ define([
 
         var ellipsoid = terrainTilingScheme.getEllipsoid();
         this._ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid, Cartesian3.ZERO);
+
+        this._waterMaskSampler = undefined;
+        this._allWaterTexture = undefined;
+        this._allLandTexture = undefined;
 
         this._debug = {
             enableDebugOutput : false,
@@ -795,6 +809,16 @@ define([
                 if (tile.terrainData !== loaded.data) {
                     tile.terrainData = loaded.data;
 
+                    // If there's a water mask included in the terrain data, create a
+                    // texture for it.
+                    if (typeof tile.terrainData.waterMask !== 'undefined') {
+                        tile.waterMaskTexture = createWaterMaskTexture(surface, context, tile.terrainData.waterMask);
+                        tile.waterMaskTranslationAndScale.x = 0.0;
+                        tile.waterMaskTranslationAndScale.y = 0.0;
+                        tile.waterMaskTranslationAndScale.z = 1.0;
+                        tile.waterMaskTranslationAndScale.w = 1.0;
+                    }
+
                     // Now that there's new data for this tile:
                     //  - child tiles that were previously upsampled need to be re-upsampled based on the new data.
                     //  - child tiles that were previously deemed unavailable may now be available.
@@ -864,7 +888,15 @@ define([
             // It's safe to overwrite terrainData because we won't get here after
             // loaded terrain data has been received.
             if (upsampled.state.value >= TerrainState.RECEIVED.value) {
-                tile.terrainData = upsampled.data;
+                if (tile.terrainData !== upsampled.data) {
+                    tile.terrainData = upsampled.data;
+
+                    // If the terrain provider has a water mask, "upsample" that as well
+                    // by computing texture translation and scale.
+                    if (terrainProvider.hasWaterMask) {
+                        upsampleWaterMask(surface, context, tile);
+                    }
+                }
             }
 
             if (upsampled.state === TerrainState.READY) {
@@ -914,6 +946,94 @@ define([
         }
 
         return parent.terrainData.isChildAvailable(parent.x, parent.y, tile.x, tile.y);
+    }
+
+    function createWaterMaskTexture(surface, context, waterMask) {
+        var result;
+
+        var waterMaskSize = Math.sqrt(waterMask.length);
+        if (waterMaskSize === 1 && (waterMask[0] === 0 || waterMask[0] === 255)) {
+            // Tile is entirely land or entirely water.
+            if (typeof surface._allWaterTexture === 'undefined') {
+                surface._allWaterTexture = context.createTexture2D({
+                    pixelFormat : PixelFormat.LUMINANCE,
+                    pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                    source : {
+                        arrayBufferView : new Uint8Array([255]),
+                        width : 1,
+                        height : 1
+                    }
+                });
+                surface._allWaterTexture.referenceCount = 1;
+                surface._allLandTexture = context.createTexture2D({
+                    pixelFormat : PixelFormat.LUMINANCE,
+                    pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                    source : {
+                        arrayBufferView : new Uint8Array([0]),
+                        width : 1,
+                        height : 1
+                    }
+                });
+                surface._allLandTexture.referenceCount = 1;
+            }
+
+            result = waterMask[0] === 0 ? surface._allLandTexture : surface._allWaterTexture;
+        } else {
+            result = context.createTexture2D({
+                pixelFormat : PixelFormat.LUMINANCE,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                source : {
+                    width : waterMaskSize,
+                    height : waterMaskSize,
+                    arrayBufferView : waterMask
+                }
+            });
+
+            result.referenceCount = 0;
+
+            if (typeof surface._waterMaskSampler === 'undefined') {
+                surface._waterMaskSampler = context.createSampler({
+                    wrapS : TextureWrap.CLAMP,
+                    wrapT : TextureWrap.CLAMP,
+                    minificationFilter : TextureMinificationFilter.LINEAR,
+                    magnificationFilter : TextureMagnificationFilter.LINEAR
+                });
+            }
+
+            result.setSampler(surface._waterMaskSampler);
+        }
+
+        ++result.referenceCount;
+        return result;
+    }
+
+    function upsampleWaterMask(surface, context, tile) {
+        // Find the nearest ancestor with loaded terrain.
+        var sourceTile = tile.parent;
+        while (typeof sourceTile !== 'undefined' && typeof sourceTile.waterMaskTexture === 'undefined') {
+            sourceTile = sourceTile.parent;
+        }
+
+        if (typeof sourceTile === 'undefined') {
+            // No ancestors have loaded terrain - try again later.
+            return;
+        }
+
+        tile.waterMaskTexture = sourceTile.waterMaskTexture;
+        ++tile.waterMaskTexture.referenceCount;
+
+        // Compute the water mask translation and scale
+        var sourceTileExtent = sourceTile.extent;
+        var tileExtent = tile.extent;
+        var tileWidth = tileExtent.east - tileExtent.west;
+        var tileHeight = tileExtent.north - tileExtent.south;
+
+        var scaleX = tileWidth / (sourceTileExtent.east - sourceTileExtent.west);
+        var scaleY = tileHeight / (sourceTileExtent.north - sourceTileExtent.south);
+        tile.waterMaskTranslationAndScale.x = scaleX * (tileExtent.west - sourceTileExtent.west) / tileWidth;
+        tile.waterMaskTranslationAndScale.y = scaleY * (tileExtent.south - sourceTileExtent.south) / tileHeight;
+        tile.waterMaskTranslationAndScale.z = scaleX;
+        tile.waterMaskTranslationAndScale.w = scaleY;
     }
 
     // This is debug code to render the bounding sphere of the tile in
@@ -967,7 +1087,7 @@ define([
             var uniformMap2 = createTileUniformMap();
             mergeUniformMap(uniformMap2, centralBodyUniformMap);
 
-            uniformMap2.waterMask = tile.waterMaskTexture;
+            uniformMap2.waterMask = tile.waterMaskTexture ? tile.waterMaskTexture : surface._allLandTexture;
 
             uniformMap2.center3D = rtc2;
 
@@ -1268,7 +1388,7 @@ define([
                     // trim texture array to the used length so we don't end up using old textures
                     // which might get destroyed eventually
                     uniformMap.dayTextures.length = numberOfDayTextures;
-                    uniformMap.waterMask = tile.waterMaskTexture;
+                    uniformMap.waterMask = tile.waterMaskTexture ? tile.waterMaskTexture : surface._allLandTexture;
                     Cartesian4.clone(tile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
                     colorCommandList.push(command);
