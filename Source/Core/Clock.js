@@ -24,11 +24,11 @@ define([
      * @see JulianDate
      *
      * @example
-     * //Create a clock that loops on Christmas day 2012 and runs
-     * //in real-time.  currentTime will default to startTime.
+     * // Create a clock that loops on Christmas day 2013 and runs
+     * // in real-time.  currentTime will default to startTime.
      * var clock = new Clock({
-     *    startTime : JulianDate.fromIso8601("12-25-2012");
-     *    stopTime : JulianDate.fromIso8601("12-26-2012");
+     *    startTime : JulianDate.fromIso8601("12-25-2013");
+     *    stopTime : JulianDate.fromIso8601("12-26-2013");
      *    clockRange : ClockRange.LOOP_STOP;
      * });
      */
