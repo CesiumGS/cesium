@@ -1016,12 +1016,12 @@ define([
     function upsampleWaterMask(surface, context, tile) {
         // Find the nearest ancestor with loaded terrain.
         var sourceTile = tile.parent;
-        while (typeof sourceTile !== 'undefined' && typeof sourceTile.waterMaskTexture === 'undefined') {
+        while (typeof sourceTile !== 'undefined' && (typeof sourceTile.terrainData === 'undefined' || sourceTile.terrainData.createdByUpsampling)) {
             sourceTile = sourceTile.parent;
         }
 
-        if (typeof sourceTile === 'undefined') {
-            // No ancestors have loaded terrain - try again later.
+        if (typeof sourceTile === 'undefined' || typeof sourceTile.waterMaskTexture === 'undefined') {
+            // No ancestors have a water mask texture - try again later.
             return;
         }
 
