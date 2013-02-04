@@ -132,7 +132,7 @@ define([
 
         this._tileUrl = this.url + '?';
         this._tileUrl += '&CID=' + this.cid;
-        this._tileUrl += '&Request=GetMap&Service=IS&Version=1.0.1&Transparent=TRUE&BGCOLOR=0xFFFFFFFF&CRS=EPSG:4326&Options.jpeg_quality=70&Format=image/png&Exceptions=IMAGE&Width=1024&Height=1024&Time=F0';
+        this._tileUrl += '&Request=GetMap&Service=IS&Version=1.0.1&Transparent=TRUE&BGCOLOR=0xFFFFFFFF&CRS=EPSG:4326&Options.jpeg_quality=70&Format=image/png&Exceptions=IMAGE&Width=1024&Height=1024';
     };
 
     /**
@@ -218,16 +218,14 @@ define([
                 var tile = tileSet[i];
                 tileExtent = tile.extent;
 
-                //if (typeof texture === 'undefined') {
-                    for (var imageryIndex = 0; imageryIndex < tile.imagery.length; ++imageryIndex) {
-                        if (tile.imagery[imageryIndex].imagery.imageryLayer._imageryProvider === this) {
-                            if (typeof texture !== 'undefined' && texture !== tile.imagery[imageryIndex].imagery.texture) {
-                                console.log('wtf');
-                            }
-                            texture = tile.imagery[imageryIndex].imagery.texture;
+                for (var imageryIndex = 0; imageryIndex < tile.imagery.length; ++imageryIndex) {
+                    if (tile.imagery[imageryIndex].imagery.imageryLayer._imageryProvider === this) {
+                        if (typeof texture !== 'undefined' && texture !== tile.imagery[imageryIndex].imagery.texture) {
+                            console.log('wtf');
                         }
+                        texture = tile.imagery[imageryIndex].imagery.texture;
                     }
-                //}
+                }
 
                 if (typeof extent === 'undefined') {
                     extent = new Extent(tileExtent.west, tileExtent.south, tileExtent.east, tileExtent.north);
