@@ -690,7 +690,8 @@ define([
                 url : 'http://release.pixia.com/wami-soa-server/wami/IS',
                 cid : '62a117e6224d44088b30eaf65d20d7ed',
                 extent : extent,
-                proxy : new DefaultProxy('/proxy/')
+                proxy : new DefaultProxy('/proxy/'),
+                credit : 'WAMI imagery courtesy Pixia and PV Labs'
             });
             var wamiLayer = imageryLayerCollection.addImageryProvider(wamiImageryProvider);
 
@@ -721,8 +722,7 @@ define([
 
             }, false);
 
-//            // This logo is replicated by the imagery selector button, so it's hidden here.
-//            centralBody.logoOffset = new Cartesian2(-100, -100);
+            centralBody.logoOffset = new Cartesian2(300, 0);
 //
 //            this._configureCentralBodyImagery();
 

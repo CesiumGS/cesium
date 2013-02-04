@@ -3,6 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/jsonp',
         '../Core/loadImage',
+        '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
         '../Core/Cartesian2',
         '../Core/Extent',
@@ -19,6 +20,7 @@ define([
         defaultValue,
         jsonp,
         loadImage,
+        writeTextToCanvas,
         DeveloperError,
         Cartesian2,
         Extent,
@@ -123,6 +125,12 @@ define([
         this._nextTime = undefined;
         this._replacingImage = false;
 
+        if (typeof description.credit !== 'undefined') {
+            this._logo = writeTextToCanvas(description.credit, {
+                font : '12px sans-serif'
+            });
+        }
+
         /**
          * True if the provider is ready for use; otherwise, false.
          *
@@ -189,6 +197,23 @@ define([
      */
     WideAreaMotionImageryProvider.prototype.getMaximumLevel = function() {
         return this.maxLevel;
+    };
+
+    /**
+     * Gets the logo to display when this imagery provider is active.  Typically this is used to credit
+     * the source of the imagery.  This function should not be called before {@link WideAreaMotionImageryProvider#isReady} returns true.
+     *
+     * @memberof WideAreaMotionImageryProvider
+     *
+     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     *
+     * @exception {DeveloperError} <code>getLogo</code> must not be called before the imagery provider is ready.
+     */
+    WideAreaMotionImageryProvider.prototype.getLogo = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getLogo must not be called before the imagery provider is ready.');
+        }
+        return this._logo;
     };
 
     WideAreaMotionImageryProvider.prototype.update = function(context, sceneState, tilesToRenderByTextureCount) {
@@ -277,6 +302,8 @@ define([
         return imageUrl;
     };
 
+    var frameCount = 1;
+
     /**
      * Requests the image for a given tile.
      *
@@ -297,6 +324,7 @@ define([
             imageUrl += '&TIME=F1';
         } else {
             imageUrl += '&TIME=' + this._nextTime.toDate().toISOString();
+            //imageUrl += '&TIME=F' + (frameCount++);
         }
 
         imageUrl += '&BBOX=' +
