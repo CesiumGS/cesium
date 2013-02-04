@@ -5,15 +5,33 @@ define(['../Core/DeveloperError',
         ], function(
          DeveloperError,
          defaultValue,
-         ko) {
+         knockout) {
     "use strict";
 
+    /**
+     * Encapsulate a function so that it can be exposed by ViewModels.
+     * @alias Command
+     * @constructor
+     *
+     * @param {Function} execute The function this command represents.
+     * @param {Observable} [canExecute=true] An observable indicating if the function can currently be executed.
+     */
     var Command = function(execute, canExecute) {
         if (typeof execute === 'undefined') {
             throw new DeveloperError('execute is required.');
         }
-        this.canExecute = defaultValue(canExecute, ko.observable(true));
+
+        /**
+         * Executes this command.
+         * @type Function
+         */
         this.execute = execute;
+
+        /**
+         * Indicates if this command can currently be executed.
+         * @type Observable Boolean
+         */
+        this.canExecute = defaultValue(canExecute, knockout.observable(true));
     };
 
     return Command;

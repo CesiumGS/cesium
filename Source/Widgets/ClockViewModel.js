@@ -9,24 +9,29 @@ define(['../Core/DeveloperError',
          defaultValue,
          Clock,
          JulianDate,
-         ko) {
+         knockout) {
     "use strict";
 
-    //TODO: Set start/stop time together, validation.
-
+    /**
+     * A ViewModel which exposes a {@link Clock} for user interfaces.
+     * @alias ClockViewModel
+     * @constructor
+     *
+     * @param {Clock} [clock] The clock object wrapped by this view model, if undefined a new instance will be created.
+     *
+     * @see Clock
+     */
     var ClockViewModel = function(clock) {
         clock = defaultValue(clock, new Clock());
         this.clock = clock;
 
-        var startTime = ko.observable(clock.startTime);
+        var startTime = knockout.observable(clock.startTime);
         /**
          * The start time of the clock.
-         * @type JulianDate
+         * @type Computed observable JulianDate
          */
-        this.startTime = ko.computed({
-            read : function() {
-                return startTime();
-            },
+        this.startTime = knockout.computed({
+            read : startTime,
             write : function(value) {
                 startTime(value);
                 clock.startTime = value;
@@ -34,15 +39,13 @@ define(['../Core/DeveloperError',
             equalityComparer : JulianDate.equals
         });
 
-        var stopTime = ko.observable(clock.stopTime);
+        var stopTime = knockout.observable(clock.stopTime);
         /**
          * The stop time of the clock.
-         * @type JulianDate
+         * Computed observable @type JulianDate
          */
-        this.stopTime = ko.computed({
-            read : function() {
-                return stopTime();
-            },
+        this.stopTime = knockout.computed({
+            read : stopTime,
             write : function(value) {
                 clock.stopTime = value;
                 stopTime(value);
@@ -50,15 +53,13 @@ define(['../Core/DeveloperError',
             equalityComparer : JulianDate.equals
         });
 
-        var currentTime = ko.observable(clock.currentTime);
+        var currentTime = knockout.observable(clock.currentTime);
         /**
          * The current time.
-         * @type JulianDate
+         * Computed observable @type JulianDate
          */
-        this.currentTime = ko.computed({
-            read : function() {
-                return currentTime();
-            },
+        this.currentTime = knockout.computed({
+            read : currentTime,
             write : function(value) {
                 clock.currentTime = value;
                 currentTime(value);
@@ -67,54 +68,47 @@ define(['../Core/DeveloperError',
         });
 
         /**
-         * The system time.
-         * @type JulianDate
+         * The current system time.
+         * Computed observable @type JulianDate
          */
-        this.systemTime = ko.observable(new JulianDate());
+        this.systemTime = knockout.observable(new JulianDate());
 
-        var multiplier = ko.observable(clock.multiplier);
+        var multiplier = knockout.observable(clock.multiplier);
         /**
          * Determines how much time advances when tick is called, negative values allow for advancing backwards.
          * If <code>clockStep</code> is set to ClockStep.TICK_DEPENDENT this is the number of seconds to advance.
          * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_DEPENDENT this value is multiplied by the
          * elapsed system time since the last call to tick.
-         * @type Number
+         * Computed observable @type Number
          */
-        this.multiplier = ko.computed({
-            read : function() {
-                return multiplier();
-            },
+        this.multiplier = knockout.computed({
+            read : multiplier,
             write : function(value) {
                 clock.multiplier = value;
                 multiplier(value);
             }
-        },this);
+        }, this);
 
-        var clockStep = ko.observable(clock.clockStep);
+        var clockStep = knockout.observable(clock.clockStep);
         /**
          * Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
-         * @type ClockStep
+         * Computed observable @type ClockStep
          */
-        this.clockStep = ko.computed({
-            read : function() {
-                return clockStep();
-            },
+        this.clockStep = knockout.computed({
+            read : clockStep,
             write : function(value) {
                 clockStep(value);
                 clock.clockStep = value;
             }
         });
 
-        var clockRange = ko.observable();
+        var clockRange = knockout.observable();
         /**
          * Determines how tick should behave when <code>startTime</code> or <code>stopTime</code> is reached.
-         * @type ClockRange
+         * Computed observable @type ClockRange
          */
-        this.clockRange = ko.computed({
-            read : function() {
-                clockRange();
-                return clock.clockRange;
-            },
+        this.clockRange = knockout.computed({
+            read : clockRange,
             write : function(value) {
                 clockRange(value);
                 clock.clockRange = value;
@@ -122,7 +116,11 @@ define(['../Core/DeveloperError',
         });
     };
 
-    ClockViewModel.prototype.update = function() {
+    /**
+     * Updates the view model with the contents of the underlying clock.
+     * @memberof ClockViewModel
+     */
+     ClockViewModel.prototype.update = function() {
         var clock = this.clock;
         this.systemTime(new JulianDate());
         this.startTime(clock.startTime);

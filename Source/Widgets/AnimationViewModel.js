@@ -31,7 +31,8 @@ define(['./Command',
     var AnimationViewModel = function(clockViewModel) {
         this.clockViewModel = clockViewModel;
 
-        var isAnimatingObs = this.isAnimatingObs = ko.observable(false);
+        var isAnimatingObs = ko.observable(false);
+        this.isAnimatingObs = isAnimatingObs;
 
         this._isOutOfRange = ko.computed(function() {
             var clockRange = clockViewModel.clockRange();
@@ -60,6 +61,23 @@ define(['./Command',
         });
 
         var that = this;
+
+        var shuttleRingTicks = ko.observable([//
+        0.000001, 0.000002, 0.000005, 0.00001, 0.00002, 0.00005, 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005,//
+        0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 15.0, 30.0, 60.0, 120.0, 300.0, 600.0, 900.0,//
+        1800.0, 3600.0, 7200.0, 14400.0, 21600.0, 43200.0, 86400.0, 172800.0, 345600.0, 604800.0]);
+
+        this.shuttleRingTicks = ko.computed({
+            read : shuttleRingTicks,
+            write : function(value) {
+                value = value.slice(0);
+                value.sort(function(a, b) {
+                    return a - b;
+                });
+                shuttleRingTicks(value);
+            }
+        });
+
         this.timeLabel = ko.computed(function() {
             return that.makeTimeLabel(clockViewModel.currentTime());
         });
@@ -274,10 +292,6 @@ define(['./Command',
         return sprintf("%02d:%02d:%02d UTC", gregorianDate.hour, gregorianDate.minute, gregorianDate.second);
     };
 
-    var typicalMultipliers = [0.000001, 0.000002, 0.000005, 0.00001, 0.00002, 0.00005, 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005,
-                              0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 15.0, 30.0, 60.0, 120.0, 300.0, 600.0, 900.0,
-                              1800.0, 3600.0, 7200.0, 14400.0, 21600.0, 43200.0, 86400.0, 172800.0, 345600.0, 604800.0];
-
     AnimationViewModel.prototype._cancelRealtime = function() {
         var clockViewModel = this.clockViewModel;
         if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK_TIME) {
@@ -286,33 +300,19 @@ define(['./Command',
         }
     };
 
-    /**
-     * Stop animating, and hold on the current time.
-     * @memberof AnimationViewModel
-     */
     AnimationViewModel.prototype._pause = function() {
         this._cancelRealtime();
         this.isAnimatingObs(false);
     };
 
-    /**
-     * Begin or resume animating in the most recent direction or mode.
-     * @memberof AnimationViewModel
-     */
     AnimationViewModel.prototype._unpause = function() {
         this._cancelRealtime();
         this.clockViewModel.currentTime(this.clockViewModel.clock.tick(0));
         this.isAnimatingObs(!this._isOutOfRange());
     };
 
-    /**
-     * Get a typical animation speed closest to the supplied speed.
-     *
-     * @memberof AnimationViewModel
-     * @param {Number} speed A speed to use for the search.
-     * @returns {Number} : A typical speed close to the supplied speed.
-     */
     AnimationViewModel.prototype._getTypicalSpeed = function(speed) {
+        var typicalMultipliers = this.shuttleRingTicks();
         var index = binarySearch(typicalMultipliers, Math.abs(speed), function(left, right) {
             return left - right;
         });
@@ -328,16 +328,14 @@ define(['./Command',
         return typicalMultipliers[index];
     };
 
-    /**
-     * Slow down the speed of animation, so time appears to pass more slowly.
-     * @memberof AnimationViewModel
-     */
     AnimationViewModel.prototype._slower = function() {
-        this._cancelRealtime();
+        var typicalMultipliers = this.shuttleRingTicks();
+
         var clockViewModel = this.clockViewModel;
         var multiplier = clockViewModel.multiplier();
         multiplier = multiplier > 0 ? multiplier : -multiplier;
 
+        this._cancelRealtime();
         var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
             return left - right;
         });
@@ -356,16 +354,13 @@ define(['./Command',
         }
     };
 
-    /**
-     * Speed up the animation, so time appears to pass more quickly.
-     * @memberof AnimationViewModel
-     */
     AnimationViewModel.prototype._faster = function() {
-        this._cancelRealtime();
+        var typicalMultipliers = this.shuttleRingTicks();
         var clockViewModel = this.clockViewModel;
         var multiplier = clockViewModel.multiplier();
         multiplier = multiplier > 0 ? multiplier : -multiplier;
 
+        this._cancelRealtime();
         var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
             return left - right;
         });

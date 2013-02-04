@@ -265,7 +265,7 @@ define(['../Core/destroyObject',
      * @constructor
      *
      * @param {DOM Node} parentNode The parent HTML DOM node for this widget.
-     * @param {AnimationController} animationController The animationController that will be manipulated by this widget.
+     * @param {AnimationViewModel} viewModel The ViewModel used by this widget.
      *
      * @exception {DeveloperError} parentNode is required.
      * @exception {DeveloperError} viewModel is required.
@@ -278,13 +278,12 @@ define(['../Core/destroyObject',
      * // and in the body, include: &lt;div id="animationWidget"&gt;&lt;/div&gt;
      *
      * var clock = new Clock();
-     * var animationController = new AnimationController(clock);
+     * var viewModel = new AnimationViewModel(new ClockViewModel(clock));
      * var parentNode = document.getElementById("animationWidget");
-     * var widget = new Animation(parentNode, animationController);
+     * var widget = new Animation(parentNode, viewModel);
      *
      * function tick() {
-     *     animationController.update();
-     *     widget.update();
+     *     viewModel.update();
      *     Cesium.requestAnimationFrame(tick);
      * }
      * Cesium.requestAnimationFrame(tick);
@@ -298,7 +297,16 @@ define(['../Core/destroyObject',
             throw new DeveloperError('viewModel is required.');
         }
 
+        /**
+         * The current viewModel
+         */
         this.viewModel = viewModel;
+
+        /**
+         * The parent HTML DOM node for this widget.
+         */
+        this.parentNode = parentNode;
+
         this._centerX = 0;
         this._defsElement = undefined;
         this._scale = 1.0;
