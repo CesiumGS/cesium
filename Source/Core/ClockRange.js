@@ -32,7 +32,7 @@ define([
          * time is moving backwards, {@link Clock#tick} will not advance past
          * {@link Clock#startTime}
          */
-        LOOP_STOP : new Enumeration(2, 'LOOP')
+        LOOP_STOP : new Enumeration(2, 'LOOP_STOP')
     };
 
     return ClockRange;

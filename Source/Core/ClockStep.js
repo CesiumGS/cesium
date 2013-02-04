@@ -33,7 +33,7 @@ define([
          * which point this mode reverts to SYSTEM_CLOCK_MULTIPLIER.  To prevent this,
          * use {@link ClockRange.UNBOUNDED}.
          */
-        SYSTEM_CLOCK_TIME: new Enumeration(2, 'SYSTEM_CLOCK_TIME')
+        SYSTEM_CLOCK_TIME : new Enumeration(2, 'SYSTEM_CLOCK_TIME')
     };
 
     return ClockStep;
