@@ -812,6 +812,12 @@ define([
                     // If there's a water mask included in the terrain data, create a
                     // texture for it.
                     if (typeof tile.terrainData.waterMask !== 'undefined') {
+                        if (typeof tile.waterMaskTexture !== 'undefined') {
+                            --tile.waterMaskTexture.referenceCount;
+                            if (tile.waterMaskTexture.referenceCount === 0) {
+                                tile.waterMaskTexture.destroy();
+                            }
+                        }
                         tile.waterMaskTexture = createWaterMaskTexture(surface, context, tile.terrainData.waterMask);
                         tile.waterMaskTranslationAndScale.x = 0.0;
                         tile.waterMaskTranslationAndScale.y = 0.0;
@@ -1087,7 +1093,7 @@ define([
             var uniformMap2 = createTileUniformMap();
             mergeUniformMap(uniformMap2, centralBodyUniformMap);
 
-            uniformMap2.waterMask = tile.waterMaskTexture ? tile.waterMaskTexture : surface._allLandTexture;
+            uniformMap2.waterMask = tile.waterMaskTexture;
 
             uniformMap2.center3D = rtc2;
 
@@ -1388,7 +1394,7 @@ define([
                     // trim texture array to the used length so we don't end up using old textures
                     // which might get destroyed eventually
                     uniformMap.dayTextures.length = numberOfDayTextures;
-                    uniformMap.waterMask = tile.waterMaskTexture ? tile.waterMaskTexture : surface._allLandTexture;
+                    uniformMap.waterMask = tile.waterMaskTexture;
                     Cartesian4.clone(tile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
                     colorCommandList.push(command);
