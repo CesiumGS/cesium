@@ -25,7 +25,7 @@ define([
          * {@link Clock#tick} advances the current time by the amount of system
          * time elapsed since the previous call multiplied by {@link Clock#multiplier}.
          */
-        SYSTEM_CLOCK_DEPENDENT : new Enumeration(1, 'SYSTEM_CLOCK_DEPENDENT'),
+        SYSTEM_CLOCK_MULTIPLIER : new Enumeration(1, 'SYSTEM_CLOCK_MULTIPLIER'),
         SYSTEM_CLOCK_TIME: new Enumeration(2, 'SYSTEM_CLOCK_TIME')
     };
 

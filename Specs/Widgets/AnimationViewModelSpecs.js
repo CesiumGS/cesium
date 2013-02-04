@@ -100,7 +100,7 @@ defineSuite([
         expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_TIME);
         expect(clock.multiplier).toEqual(1);
         animationController.faster();
-        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_DEPENDENT);
+        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
         expect(clock.multiplier).toBeGreaterThan(1);
         clock.multiplier = 1.0001;
         animationController.faster();
@@ -128,7 +128,7 @@ defineSuite([
         expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_TIME);
         expect(clock.multiplier).toEqual(1);
         animationController.slower();
-        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_DEPENDENT);
+        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
         expect(clock.multiplier).toBeLessThan(1);
         expect(clock.multiplier).toBeGreaterThan(0);
     });

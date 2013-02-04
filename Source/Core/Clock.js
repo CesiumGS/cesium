@@ -79,7 +79,7 @@ define([
 
         var clockStep = t.clockStep;
         if (typeof clockStep === 'undefined') {
-            clockStep = ClockStep.SYSTEM_CLOCK_DEPENDENT;
+            clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
         }
 
         var clockRange = t.clockRange;
@@ -108,7 +108,7 @@ define([
         /**
          * Determines how much time advances when tick is called, negative values allow for advancing backwards.
          * If <code>clockStep</code> is set to ClockStep.TICK_DEPENDENT this is the number of seconds to advance.
-         * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_DEPENDENT this value is multiplied by the
+         * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_MULTIPLIER this value is multiplied by the
          * elapsed system time since the last call to tick.
          * @type Number
          */

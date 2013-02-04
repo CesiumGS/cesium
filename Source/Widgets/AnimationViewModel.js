@@ -211,7 +211,7 @@ define(['./Command',
 
                 if (speed !== 0) {
                     clockViewModel.multiplier(speed);
-                    clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_DEPENDENT);
+                    clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
                 }
             },
             owner : this
@@ -295,7 +295,7 @@ define(['./Command',
     AnimationViewModel.prototype._cancelRealtime = function() {
         var clockViewModel = this.clockViewModel;
         if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK_TIME) {
-            clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_DEPENDENT);
+            clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
             clockViewModel.multiplier(1);
         }
     };
