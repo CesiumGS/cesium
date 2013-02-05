@@ -172,10 +172,10 @@ define([
             stride : structure.stride,
             width : this.width,
             height : this.height,
-            extent : nativeExtent,
+            nativeExtent : nativeExtent,
+            extent : extent,
             relativeToCenter : center,
-            radiiSquared : ellipsoid.getRadiiSquared(),
-            oneOverCentralBodySemimajorAxis : ellipsoid.getMaximumRadius(),
+            ellipsoid : ellipsoid,
             skirtHeight : Math.min(thisLevelMaxError * 4.0, 1000.0),
             isGeographic : tilingScheme instanceof GeographicTilingScheme
         });
@@ -202,8 +202,8 @@ define([
                     TerrainProvider.getRegularGridIndices(that.width + 2, that.height + 2),
                     result.statistics.minHeight,
                     result.statistics.maxHeight,
-                    result.boundingSphere3D, // TODO: compute the 2D bounding sphere.
-                    result.boundingSphere3D,
+                    BoundingSphere.clone(result.boundingSphere2DGeographic), // TODO: what about other projections?
+                    BoundingSphere.clone(result.boundingSphere3D),
                     occludeePointInScaledSpace);
         });
     };

@@ -44,10 +44,11 @@ define([
      * @param {Number} description.width The width of the heightmap image.
      * @param {Number} description.height The height of the heightmap image.
      * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
+     * @param {Extent} description.nativeExtent An extent in the native coordinates of the heightmap's projection.
      * @param {Boolean} description.generateTextureCoordinates Whether to generate texture coordinates.
      * @param {Boolean} description.interleaveTextureCoordinates Whether to interleave the texture coordinates into the vertex array.
      * @param {Cartesian3} description.relativetoCenter The positions will be computed as <code>worldPosition.subtract(relativeToCenter)</code>.
-     * @param {Cartesian3} description.radiiSquared The radii squared of the ellipsoid to use.
+     * @param {Ellipsoid} description.ellipsoid The ellipsoid to which the heightmap applies.
      * @param {Array|Float32Array} description.vertices The array to use to store computed vertices.
      * @param {Array|Float32Array} description.textureCoordinates The array to use to store computed texture coordinates, unless interleaved.
      * @param {Array|Float32Array} [description.indices] The array to use to store computed indices.  If undefined, indices will be not computed.
@@ -56,7 +57,6 @@ define([
         description = defaultValue(description, {});
 
         var heightmap = description.heightmap;
-        //var waterMask = description.waterMask;
         var heightScale = description.heightScale;
         var heightOffset = description.heightOffset;
         var bytesPerHeight = description.bytesPerHeight;
@@ -64,7 +64,7 @@ define([
         var width = description.width;
         var height = description.height;
 
-        var extent = description.extent;
+        var extent = description.nativeExtent;
         var granularityX = (extent.east - extent.west) / (width - 1);
         var granularityY = (extent.north - extent.south) / (height - 1);
         var generateTextureCoordinates = description.generateTextureCoordinates;
@@ -80,12 +80,13 @@ define([
         var textureCoordinates = description.textureCoordinates;
         var indices = description.indices;
 
-        var radiiSquared = description.radiiSquared;
+        var ellipsoid = description.ellipsoid;
+        var radiiSquared = ellipsoid.getRadiiSquared();
         var radiiSquaredX = radiiSquared.x;
         var radiiSquaredY = radiiSquared.y;
         var radiiSquaredZ = radiiSquared.z;
 
-        var oneOverCentralBodySemimajorAxis = description.oneOverCentralBodySemimajorAxis;
+        var oneOverCentralBodySemimajorAxis = 1.0 / ellipsoid.getMaximumRadius();
 
         var cos = Math.cos;
         var sin = Math.sin;
@@ -225,8 +226,6 @@ define([
                         textureCoordinates[textureCoordinatesIndex++] = v;
                     }
                 }
-
-                //vertices[vertexArrayIndex++] = waterMask[terrainOffset];
             }
         }
 
