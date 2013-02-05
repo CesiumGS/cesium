@@ -187,10 +187,8 @@ define([
 
         var that = this;
         return when(verticesPromise, function(result) {
-            // TODO: compute the bounding spheres and occludee point in the worker instead of here.
+            // TODO: compute the occludee point in the worker instead of here.
             var vertices = new Float32Array(result.vertices);
-            var boundingSphere3D = BoundingSphere.fromVertices(vertices, center, result.numberOfAttributes);
-            var boundingSphere2D = boundingSphere3D; // TODO: compute this correctly
 
             // TODO: we need to take the heights into account when computing the occludee point.
             var occludeePointInScaledSpace = Occluder.computeOccludeePointFromExtent(extent, ellipsoid);
@@ -204,8 +202,8 @@ define([
                     TerrainProvider.getRegularGridIndices(that.width + 2, that.height + 2),
                     result.statistics.minHeight,
                     result.statistics.maxHeight,
-                    boundingSphere2D,
-                    boundingSphere3D,
+                    result.boundingSphere3D, // TODO: compute the 2D bounding sphere.
+                    result.boundingSphere3D,
                     occludeePointInScaledSpace);
         });
     };
