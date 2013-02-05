@@ -176,7 +176,7 @@ define([
             relativeToCenter : center,
             radiiSquared : ellipsoid.getRadiiSquared(),
             oneOverCentralBodySemimajorAxis : ellipsoid.getMaximumRadius(),
-            skirtHeight : Math.min(thisLevelMaxError * 10.0, 1000.0),
+            skirtHeight : Math.min(thisLevelMaxError * 4.0, 1000.0),
             isGeographic : tilingScheme instanceof GeographicTilingScheme
         });
 
