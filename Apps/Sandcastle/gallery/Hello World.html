@@ -9,48 +9,19 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.2/require.js"></script>
     <script type="text/javascript">
-    require({
+    require.config({
         baseUrl : '../../../Source'
     });
     </script>
 </head>
-<body data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
 <style>
-    body {
-        background: #000;
-        color: #eee;
-        font-family: sans-serif;
-        font-size: 9pt;
-        padding: 0;
-        margin: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-    }
-    .fullSize {
-        display: block;
-        position: absolute;
-        top: 0;
-        left: 0;
-        border: none;
-        width: 100%;
-        height: 100%;
-    }
-    #toolbar {
-        margin: 5px;
-        padding: 2px 5px;
-        position: absolute;
-    }
+    @import url(../templates/bucket.css);
 </style>
-
 <div id="cesiumContainer" class="fullSize"></div>
-<div id="toolbar">Loading, please wait...</div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium'
-], function (
-    Cesium
-) {
+require(['Cesium'], function(Cesium) {
     "use strict";
 
     //A real application should require only the subset of modules that
@@ -60,8 +31,20 @@ require([
     var canvas = document.createElement('canvas');
     canvas.className = 'fullSize';
     document.getElementById('cesiumContainer').appendChild(canvas);
-    var ellipsoid = Cesium.Ellipsoid.WGS84;
     var scene = new Cesium.Scene(canvas);
+
+    scene.skyAtmosphere = new Cesium.SkyAtmosphere();
+
+    var skyBoxBaseUrl = '../../../Source/Assets/Textures/SkyBox/tycho2t3_80';
+    scene.skyBox = new Cesium.SkyBox({
+        positiveX : skyBoxBaseUrl + '_px.jpg',
+        negativeX : skyBoxBaseUrl + '_mx.jpg',
+        positiveY : skyBoxBaseUrl + '_py.jpg',
+        negativeY : skyBoxBaseUrl + '_my.jpg',
+        positiveZ : skyBoxBaseUrl + '_pz.jpg',
+        negativeZ : skyBoxBaseUrl + '_mz.jpg'
+    });
+
     var primitives = scene.getPrimitives();
 
     // Bing Maps
@@ -73,26 +56,16 @@ require([
         proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
     });
 
-    var cb = new Cesium.CentralBody(ellipsoid);
-    cb.getImageryLayers().addImageryProvider(bing);
+    var ellipsoid = Cesium.Ellipsoid.WGS84;
+    var centralBody = new Cesium.CentralBody(ellipsoid);
+    centralBody.getImageryLayers().addImageryProvider(bing);
 
-    primitives.setCentralBody(cb);
-    scene.skyAtmosphere = new Cesium.SkyAtmosphere();
-    var imageryUrl = '../../../Source/Assets/Textures/';
-    scene.skyBox = new Cesium.SkyBox({
-        positiveX: imageryUrl + 'SkyBox/tycho8_px_80.jpg',
-        negativeX: imageryUrl + 'SkyBox/tycho8_mx_80.jpg',
-        positiveY: imageryUrl + 'SkyBox/tycho8_py_80.jpg',
-        negativeY: imageryUrl + 'SkyBox/tycho8_my_80.jpg',
-        positiveZ: imageryUrl + 'SkyBox/tycho8_pz_80.jpg',
-        negativeZ: imageryUrl + 'SkyBox/tycho8_mz_80.jpg'
-    });
+    primitives.setCentralBody(centralBody);
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 
     ///////////////////////////////////////////////////////////////////////////
     // INSERT CODE HERE to create graphics primitives in the scene.
-
     ///////////////////////////////////////////////////////////////////////////
 
     function animate() {
@@ -117,7 +90,7 @@ require([
         // ...
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-    handler.setInputAction(function (movement) {
+    handler.setInputAction(function(movement) {
         // INSERT CODE HERE: Handler for mouse move
         // Use movement.startPosition, movement.endPosition
         // ...
@@ -127,13 +100,13 @@ require([
     // or click on a toolbar inside the iframe.
     function keydownHandler(e) {
         switch (e.keyCode) {
-        case '3'.charCodeAt(0):  // '3' -> 3D globe
+        case '3'.charCodeAt(0): // '3' -> 3D globe
             transitioner.morphTo3D();
             break;
-        case '2'.charCodeAt(0):  // '2' -> Columbus View
+        case '2'.charCodeAt(0): // '2' -> Columbus View
             transitioner.morphToColumbusView();
             break;
-        case '1'.charCodeAt(0):  // '1' -> 2D map
+        case '1'.charCodeAt(0): // '1' -> 2D map
             transitioner.morphTo2D();
             break;
         default:
@@ -164,8 +137,8 @@ require([
     };
     window.addEventListener('resize', onResize, false);
     onResize();
-    
-    document.getElementById("toolbar").innerHTML = '';
+
+    Sandcastle.finishedLoading();
 });
 </script>
 </body>
