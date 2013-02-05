@@ -28,7 +28,8 @@ define([
 
         return {
             vertices : vertices.buffer,
-            statistics : statistics
+            statistics : statistics,
+            numberOfAttributes : 6
         };
     }
 
