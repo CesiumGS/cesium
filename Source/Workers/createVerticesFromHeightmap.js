@@ -45,7 +45,11 @@ define([
         var extent = parameters.extent;
         var ellipsoid = parameters.ellipsoid;
 
-        // TODO: we need to take the heights into account when computing the occludee point.
+        // We should really take the heights into account when computing the occludee point.
+        // And we should compute the occludee point using something less over-conservative than
+        // the ellipsoid-min-radius bounding sphere.  But these two wrongs cancel each other out
+        // enough that I've never seen artifacts from it.  Fixing this up (and perhaps culling
+        // more tiles as a result) is on the roadmap.
         var occludeePointInScaledSpace = Occluder.computeOccludeePointFromExtent(extent, ellipsoid);
         if (typeof occludeePointInScaledSpace !== 'undefined') {
             Cartesian3.multiplyComponents(occludeePointInScaledSpace, ellipsoid.getOneOverRadii(), occludeePointInScaledSpace);
