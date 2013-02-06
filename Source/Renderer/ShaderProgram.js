@@ -1245,9 +1245,9 @@ define([
         }
     }
 
-    var scratchUniformMatrix2 = new Float32Array(4);
-    var scratchUniformMatrix3 = new Float32Array(9);
-    var scratchUniformMatrix4 = new Float32Array(16);
+    var scratchUniformMatrix2 = (typeof Float32Array !== 'undefined') ? new Float32Array(4) : undefined;
+    var scratchUniformMatrix3 = (typeof Float32Array !== 'undefined') ? new Float32Array(9) : undefined;
+    var scratchUniformMatrix4 = (typeof Float32Array !== 'undefined') ? new Float32Array(16) : undefined;
 
     /**
      * A shader program's uniform, including the uniform's value.  This is most commonly used to change
