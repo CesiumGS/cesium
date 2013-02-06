@@ -111,8 +111,9 @@ define([
         this._terrainDataStructure = {
             heightScale : 1.0 / 5.0,
             heightOffset : -1000.0,
+            elementsPerHeight : 1,
             stride : 1,
-            strideMultiplier : 256.0,
+            elementMultiplier : 256.0,
             isBigEndian : false
         };
     }

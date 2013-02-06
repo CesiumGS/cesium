@@ -28,8 +28,9 @@ define([
     var defaultStructure = {
             heightScale : 1.0,
             heightOffset : 0.0,
+            elementsPerHeight : 1,
             stride : 1,
-            strideMultiplier : 256.0,
+            elementMultiplier : 256.0,
             isBigEndian : false
         };
 
@@ -61,11 +62,13 @@ define([
      * @param {Number} [structure.heightOffset=0.0] The offset to add to the scaled height to obtain the final
      *                 height in meters.  The offset is added after the height sample is multiplied by the
      *                 heightScale.
-     * @param {Number} [structure.stride=1] The number of elements in the buffer that make up a single height
+     * @param {Number} [structure.elementsPerHeight=1] The number of elements in the buffer that make up a single height
      *                 sample.  This is usually 1, indicating that each element is a separate height sample.  If
      *                 it is greater than 1, that number of elements together form the height sample, which is
-     *                 computed according to the structure.strideMultiplier and structure.isBigEndian properties.
-     * @param {Number} [structure.strideMultiplier=256.0] The multiplier used to compute the height value when the
+     *                 computed according to the structure.elementMultiplier and structure.isBigEndian properties.
+     * @param {Number} [structure.stride=1] The number of elements to skip to get from the first element of
+     *                 one height to the first element of the next height.
+     * @param {Number} [structure.elementMultiplier=256.0] The multiplier used to compute the height value when the
      *                 stride property is greater than 1.  For example, if the stride is 4 and the strideMultiplier
      *                 is 256, the height is computed as follows:
      *                 `height = buffer[index] + buffer[index + 1] * 256 + buffer[index + 2] * 256 * 256 + buffer[index + 3] * 256 * 256 * 256`
@@ -119,8 +122,9 @@ define([
         } else {
             structure.heightScale = defaultValue(structure.heightScale, defaultStructure.heightScale);
             structure.heightOffset = defaultValue(structure.heightOffset, defaultStructure.heightOffset);
+            structure.elementsPerHeight = defaultValue(structure.elementsPerHeight, defaultStructure.elementsPerHeight);
             structure.stride = defaultValue(structure.stride, defaultStructure.stride);
-            structure.strideMultiplier = defaultValue(structure.strideMultiplier, defaultStructure.strideMultiplier);
+            structure.elementMultiplier = defaultValue(structure.elementMultiplier, defaultStructure.elementMultiplier);
             structure.isBigEndian = defaultValue(structure.isBigEndian, defaultStructure.isBigEndian);
         }
 
@@ -169,6 +173,7 @@ define([
             heightmap : this.buffer,
             heightScale : structure.heightScale,
             heightOffset : structure.heightOffset,
+            bytesPerHeight : structure.elementsPerHeight,
             stride : structure.stride,
             width : this.width,
             height : this.height,
@@ -305,12 +310,21 @@ define([
         var numberOfElements = numberOfHeights * structure.stride;
         var heights = new sourceHeights.constructor(numberOfElements);
 
+        var outputIndex = 0;
+        var i, j;
         if (structure.stride > 1) {
-            // TODO: implement this.
+            var stride = structure.stride;
+            for (j = topInteger; j <= bottomInteger; ++j) {
+                for (i = leftInteger; i <= rightInteger; ++i) {
+                    var index = (j * width + i) * stride;
+                    for (var k = 0; k < stride; ++k) {
+                        heights[outputIndex++] = sourceHeights[index + k];
+                    }
+                }
+            }
         } else {
-            var outputIndex = 0;
-            for (var j = topInteger; j <= bottomInteger; ++j) {
-                for (var i = leftInteger; i <= rightInteger; ++i) {
+            for (j = topInteger; j <= bottomInteger; ++j) {
+                for (i = leftInteger; i <= rightInteger; ++i) {
                     heights[outputIndex++] = sourceHeights[j * width + i];
                 }
             }
