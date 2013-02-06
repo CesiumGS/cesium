@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Dojo Form Widget Vertical Alignment Test</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+		BUTTON, SELECT, INPUT {
+			vertical-align: middle;
+		}
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, parseOnLoad: true"></script>
+
+	<!-- only needed for alternate theme testing: -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.form.DropDownButton");
+		dojo.require("dijit.form.ComboButton");
+		dojo.require("dijit.Menu");
+		dojo.require("dijit.MenuItem");
+		dojo.require("dijit.form.Select");
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.form.TextBox");
+		dojo.require("dijit.form.NumberTextBox");
+		dojo.require("dojo.parser");
+
+		dojo.ready(function(){
+
+			function test_all(pre){
+				function compare2native(className){
+					var
+						widget = dijit.byId(pre + "_" + className),
+						pos = dojo.position(widget.domNode),
+						mid = pos.y + (pos.h >> 1);
+
+					doh.t(Math.abs(mid - native_mid) <= 1, "native y:h = " + native_pos.y + ":" + native_pos.h + ", " + className + " y:h = " + pos.y + ":" + pos.h);
+				}
+				var
+					nativeNode = dojo.byId(pre+"_native"),
+					native_pos = dojo.position(nativeNode),
+					native_mid = native_pos.y + (native_pos.h >> 1);
+
+				compare2native("Button");
+				compare2native("DropDown");
+				compare2native("ComboButton");
+				compare2native("Select");
+				compare2native("ComboBox");
+				compare2native("TextBox");
+				compare2native("NumberTextBox");
+			}
+					
+			doh.register("check alignment", [
+				{
+					name: "p",
+					runTest: function(){
+						test_all("p");
+					}
+				},
+				{
+					name: "div",
+					runTest: function(){
+						test_all("div");
+					}
+				},
+				{
+					name: "font",
+					runTest: function(){
+						test_all("font");
+					}
+				}
+			]);
+
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro" role="main">
+	<h1 class="testTitle">Dojo Form Widget Vertical Alignment Test</h1>
+
+	<p>In a P</p>
+	<p class="box"><span style='white-space:nowrap;'>
+		<button id="p_native">native</button>
+		<button id="p_Button" data-dojo-type="dijit/form/Button" data-dojo-props='type:"button", iconClass:"plusIcon", value:"Button"'>
+			Button
+		</button>
+		<button id="p_DropDown" data-dojo-type="dijit/form/DropDownButton" data-dojo-props='type:"button", value:"DropDown", label:"DropDown"'>
+			<span data-dojo-type="dijit/Menu" data-dojo-props='style:"display:none;"'>
+				<span data-dojo-type="dijit/MenuItem">DropDown MenuItem</span>
+			</span>
+		</button>
+		<button id="p_ComboButton" data-dojo-type="dijit/form/ComboButton" data-dojo-props='optionsTitle:"options", iconClass:"plusIcon", title:"title"'>
+			<span>Create</span>
+			<span data-dojo-type="dijit/Menu">
+				<span data-dojo-type="dijit/MenuItem">One</span>
+				<span data-dojo-type="dijit/MenuItem">Two</span>
+			</span>
+		</button>
+		<label for="p_Select">Select</label>
+		<select id="p_Select" data-dojo-type="dijit/form/Select">
+			<option value="one">one</option>
+			<option value="two">two</option>
+			<option value="three">three</option>
+			<option value="four">four</option>
+		</select>
+		<label for="p_ComboBox">ComboBox</label>
+		<select id="p_ComboBox" data-dojo-type="dijit/form/ComboBox" data-dojo-props='style:{width:"5em"}'>
+			<option value="one">one</option>
+			<option value="two">two</option>
+			<option value="three">three</option>
+			<option value="four">four</option>
+		</select>
+		<label for="p_TextBox">TextBox</label>
+		<input id="p_TextBox" data-dojo-type="dijit/form/TextBox" data-dojo-props='value:"Text", style:{width:"5em"}'/>
+		<label for="p_NumberTextBox">NumberTextBox</label>
+		<input id="p_NumberTextBox" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='value:23, style:{width:"3em"}'/>
+	</span></p>
+
+	<p>In a DIV</p>
+	<div><span style='white-space:nowrap;'>
+		<button id="div_native">native</button>
+		<button id="div_Button" data-dojo-type="dijit/form/Button" data-dojo-props='type:"button", iconClass:"plusIcon", value:"Create"'>
+			Button
+		</button>
+		<button id="div_DropDown" data-dojo-type="dijit/form/DropDownButton" data-dojo-props='type:"button", value:"DropDown", label:"DropDown"'>
+			<span data-dojo-type="dijit/Menu">
+				<span data-dojo-type="dijit/MenuItem">DropDown MenuItem</span>
+			</span>
+		</button>
+		<button id="div_ComboButton" data-dojo-type="dijit/form/ComboButton" data-dojo-props='optionsTitle:"options", iconClass:"plusIcon", title:"title"'>
+			<span>Create</span>
+			<span data-dojo-type="dijit/Menu">
+				<span data-dojo-type="dijit/MenuItem">One</span>
+				<span data-dojo-type="dijit/MenuItem">Two</span>
+			</span>
+		</button>
+		<label for="div_Select">Select</label>
+		<select id="div_Select" data-dojo-type="dijit/form/Select">
+			<option value="one">one</option>
+			<option value="two">two</option>
+			<option value="three">three</option>
+			<option value="four">four</option>
+		</select>
+		<label for="div_ComboBox">ComboBox</label>
+		<select id="div_ComboBox" data-dojo-type="dijit/form/ComboBox" data-dojo-props='style:{width:"5em"}'>
+			<option value="one">one</option>
+			<option value="two">two</option>
+			<option value="three">three</option>
+			<option value="four">four</option>
+		</select>
+		<label for="div_TextBox">TextBox</label>
+		<input id="div_TextBox" data-dojo-type="dijit/form/TextBox" data-dojo-props='value:"Text", style:{width:"5em"}'/>
+		<label for="div_NumberTextBox">NumberTextBox</label>
+		<input id="div_NumberTextBox" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='value:23, style:{width:"3em"}'/>
+	</span></div>
+
+	<p>font-size 200%</p>
+	<div style="font-size: 200%;"><span style='white-space:nowrap;'>
+		<button id="font_native">native</button>
+		<button id="font_Button" data-dojo-type="dijit/form/Button" data-dojo-props='type:"button", iconClass:"plusIcon", value:"Button"'>
+			Button
+		</button>
+		<button id="font_DropDown" data-dojo-type="dijit/form/DropDownButton" data-dojo-props='type:"button", value:"DropDown", label:"DropDown"'>
+			<span data-dojo-type="dijit/Menu">
+				<span data-dojo-type="dijit/MenuItem">DropDown MenuItem</span>
+			</span>
+		</button>
+		<button id="font_ComboButton" data-dojo-type="dijit/form/ComboButton" data-dojo-props='optionsTitle:"options", iconClass:"plusIcon", title:"title"'>
+			<span>Create</span>
+			<span data-dojo-type="dijit/Menu">
+				<span data-dojo-type="dijit/MenuItem">One</span>
+				<span data-dojo-type="dijit/MenuItem">Two</span>
+			</span>
+		</button>
+		<label for="font_Select">Select</label>
+		<select id="font_Select" data-dojo-type="dijit/form/Select">
+			<option value="one">one</option>
+			<option value="two">two</option>
+			<option value="three">three</option>
+			<option value="four">four</option>
+		</select>
+		<label for="font_ComboBox">ComboBox</label>
+		<select id="font_ComboBox" data-dojo-type="dijit/form/ComboBox" data-dojo-props='style:{width:"5em"}'>
+			<option value="one">one</option>
+			<option value="two">two</option>
+			<option value="three">three</option>
+			<option value="four">four</option>
+		</select>
+		<label for="font_TextBox">TextBox</label>
+		<input id="font_TextBox" data-dojo-type="dijit/form/TextBox" data-dojo-props='value:"Text", style:{width:"5em"}'/>
+		<label for="font_NumberTextBox">NumberTextBox</label>
+		<input id="font_NumberTextBox" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='value:23, style:{width:"3em"}'/>
+	</span></div>
+
+</body>
+</html>

@@ -1,0 +1,1259 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>doh.robot DateTextBox Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+			dojo.require("dojo.date");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_DateTextBox.html');
+
+				// refs to DateTextBox widgets
+				var american, german, localLong, pattern;
+
+				// log of calls to onChange handler, and watch(value)
+				var changes = [], watches = [];
+
+				// ctrl-page-down / page-up will go forward/barck a year, except on chrome where
+				// it switches browser tabs.   use alt instead
+				var yearModifierKey = dojo.isChrome ? {alt: true} : {ctrl: true};
+
+				doh.register("setup",
+					function setUp(){
+						// refs to DateTextBox widgets
+				    		american = dijit.byId('american');
+				    		german = dijit.byId('german');
+						localLong = dijit.byId('localLong');
+				    		pattern = dijit.byId('pattern');
+
+				    	// setup onChange handler to monitor onChange calls on american textbox
+						dojo.connect(american, 'onChange', function(val){
+							console.log('onchange w/value: ', val);
+							changes.push(val);
+						});
+						
+						american.watch("value", function(attr, oldV, newV){
+							watches.push(newV);
+						});
+				    }
+				);
+
+				doh.register("API", [
+					function initial(){
+						// initial conditions
+						doh.is(0, dojo.date.compare(new Date(2005,11,30), american.get('value')), 'wire value of american: ' + american.get('value'));
+						doh.is('12/30/2005', american.get('displayedValue'), 'displayed value of american');
+					},
+
+					function setValue(){
+						american.set('value', new Date(2004,9,20));
+						doh.is(0, dojo.date.compare(new Date(2004,9,20), american.get('value')),
+								'wire value of american is: ' + american.get('value') +
+								' but should be: ' + new Date(2004,9,20));
+						doh.is('10/20/2004', american.get('displayedValue'), 'displayed value of american');
+						doh.t(american.isValid(), 'marked as valid');
+					},
+
+					function setDisplayedValue(){
+						american.set('displayedValue', '11/12/2006');
+						doh.is(0, dojo.date.compare(new Date(2006, 10, 12), american.get('value')), 'wire value of american');
+						doh.is('11/12/2006', american.get('displayedValue'), 'displayed value of american');
+						doh.t(american.isValid(), 'marked as valid');
+					},
+
+					function setInvalidDisplayedValue(){
+						american.set('displayedValue', 'foo');
+						doh.t(american.get('value') === undefined, 'value is undefined if displayedValue is garbage');
+						doh.f(american.isValid(), 'marked as invalid');
+
+						// setting the value to get('value') should never change anything, so
+						// therefore setting the value to undefined shouldn't affect the displayed value
+						american.set('value', undefined);
+						doh.is(american.get('displayedValue'), 'foo');
+					},
+
+					function setOutOfRange(){
+						// This widget is set to be valid between 2004 and 2006 only
+						american.set('displayedValue', '12/1/2008');
+						doh.f(american.isValid(), 'marked as invalid since out of range');
+						doh.is('12/1/2008', american.get('displayedValue'), 'displayed value of american');
+					},
+
+					function noInitialValue(){
+				    		var fromDate = dijit.byId('fromDate');
+						doh.is('', fromDate.get('displayedValue'), 'initially blank');
+						doh.is(dijit.form.DateTextBox.prototype.value, fromDate.value, 'default value');
+						var d = new doh.Deferred();
+						var today = new Date();
+						fromDate.set('value', today, true);
+						doh.robot.sequence(d.getTestCallback(function(){
+				    			var toDate = dijit.byId('toDate');
+							doh.is(today.toDateString(), fromDate.value.toDateString(), 'changed value');
+							doh.is(today.toDateString(), toDate.constraints.min.toDateString(), 'onChange');
+						}), 500);
+						return d;
+					}
+				]);
+
+
+				doh.register("localization", [
+					function initialGerman(){
+						doh.is(0, dojo.date.compare(new Date(2006,10,29), german.get('value')), 'wire value of german: ' + german.get('value'));
+						doh.is('29.11.2006', german.get('displayedValue'), 'displayed value of german');
+					},
+
+					function setValueGerman(){
+						german.set('value', new Date(2004,9,20));
+						doh.is(0, dojo.date.compare(new Date(2004,9,20), german.get('value')),
+								'wire value of german is: ' + german.get('value') +
+								' but should be: ' + new Date(2004,9,20));
+						doh.is('20.10.2004', german.get('displayedValue'), 'displayed value of german');
+						doh.t(german.isValid(), 'marked as valid');
+					},
+
+					function setDisplayedValueGerman(){
+						german.set('displayedValue', '12.11.2006');
+						doh.is(0, dojo.date.compare(new Date(2006, 10, 12), german.get('value')), 'wire value of german');
+						doh.is('12.11.2006', german.get('displayedValue'), 'displayed value of german');
+						doh.t(german.isValid(), 'marked as valid');
+					},
+
+					{
+						name: "labels",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							german.set('value', new Date(2006, 9, 15));	// 10/15/2006
+
+							// since there's no down arrow we just click on the <input> to open the drop down
+							doh.robot.mouseMoveAt(german.domNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var calendar = dijit.byId("german_popup");
+
+								// calendar exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// Month label
+								doh.is("Oktober", innerText(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0]));
+
+								// Day labels
+								var dayLabels = dojo.query(".dijitCalendarDayLabelTemplate", calendar.domNode);
+								doh.is(7, dayLabels.length, "7 day labels");
+								doh.is("M", innerText(dayLabels[0]), "day 0");
+								doh.is("D", innerText(dayLabels[1]), "day 1");
+								doh.is("M", innerText(dayLabels[2]), "day 2");
+								doh.is("D", innerText(dayLabels[3]), "day 3");
+								doh.is("F", innerText(dayLabels[4]), "day 4");
+								doh.is("S", innerText(dayLabels[5]), "day 5");
+								doh.is("S", innerText(dayLabels[6]), "day 6");
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							// Close the drop down so it doesn't interfere with the next test by covering up the
+							// <input> that we want to focus.
+							german.closeDropDown();
+						}
+					}
+				]);
+
+				doh.register("keyboard: direct input", {
+					name: "direct input",
+					timeout: 6000,
+					setUp: function(){
+						// clear the field
+						changes = [];
+						watches = [];
+						american.set('value', null, false);
+					},
+					runTest: function(){
+						var	d = new doh.Deferred(),
+							r1 = true,
+							r2 = true,
+							r3 = true,
+							r4 = true,
+							r5 = true,
+							r6 = false,
+							r7 = false,
+							r8 = true;
+
+						doh.is(1, watches.length, 'one watch(value) event from the set("value")');
+
+						american.focus();
+
+						doh.robot.typeKeys('1', 1000, 200);
+						doh.robot.sequence(function(){
+							r1 = american._isDefinitelyOutOfRange();
+						}, 100);
+						doh.robot.typeKeys('/', 100, 200);
+						doh.robot.sequence(function(){
+							r2 = american._isDefinitelyOutOfRange();
+						}, 100);
+						doh.robot.typeKeys('3', 100, 200);
+						doh.robot.sequence(function(){
+							r3 = american._isDefinitelyOutOfRange();
+						}, 100);
+						doh.robot.typeKeys('/', 100, 200);
+						doh.robot.sequence(function(){
+							r4 = american._isDefinitelyOutOfRange();
+						}, 100);
+						doh.robot.typeKeys('2', 100, 200);
+						doh.robot.sequence(function(){
+							r5 = american._isDefinitelyOutOfRange();
+						}, 100);
+						doh.robot.typeKeys('0', 100, 200);
+						doh.robot.sequence(function(){
+							r6 = american._isDefinitelyOutOfRange();
+						}, 100);
+						doh.robot.typeKeys('0', 100, 200);
+						doh.robot.sequence(function(){
+							r7 = american._isDefinitelyOutOfRange();
+						}, 100);
+						doh.robot.typeKeys('5', 100, 200);
+						doh.robot.sequence(function(){
+							r8 = american._isDefinitelyOutOfRange();
+						}, 100);
+						doh.robot.keyPress(dojo.keys.TAB, 500, {});
+						doh.robot.sequence(d.getTestCallback(function(){
+							doh.f(r1, "1 out of range");
+							doh.f(r2, "1/ out of range");
+							doh.f(r3, "1/3 out of range");
+							doh.f(r4, "1/3/ out of range");
+							doh.f(r5, "1/3/2 out of range");
+							doh.t(r6, "1/3/20 in range");
+							doh.t(r7, "1/3/200 in range");
+							doh.f(r8, "1/3/2005 out of range");
+							var value = american.get('value');
+							doh.is(0, dojo.date.compare(new Date(2005, 0, 3), value), 'actual value is ' + value);
+							doh.is(1, changes.length, 'one onchange event');	// #9018
+							doh.is(2, watches.length, 'one watch(value) event from the onblur');
+							doh.is(0, dojo.date.compare(new Date(2005, 0, 3), changes[0]),
+									'value reported by onchange: ' + changes[0] +
+									', should be ' + new Date(2005, 0, 3));
+							doh.is(0, dojo.date.compare(new Date(2005, 0, 3), watches[1]),
+									'value reported by watch(value): ' + watches[1] +
+									', should be ' + new Date(2005, 0, 3));
+						}), 1000);
+						return d;
+					}
+				});
+
+				doh.register("keyboard: drop down", [
+					function setUp(){
+						// set to may 10
+						changes = [];
+						american.set('displayedValue', "", false);
+						watches = [];	// put after set() so we can ignore the watch() published by set()
+					},
+
+					{
+						name: "initial popup display",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								calendar;
+
+							american.focus();
+
+							doh.robot.typeKeys("5/10/2005", 1000, 1800);
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 700, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								calendar = dijit.byId("american_popup");
+
+								// calendar exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// calendar is on the right month
+								doh.is("May", innerText(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0]), "calendar starts on month selected in input box");
+
+								// and the right year
+								var selectedYearButtons = dojo.query(".dijitCalendarSelectedYear", calendar.domNode);
+								doh.is(1, selectedYearButtons.length, "current year is shown");
+								doh.is("2005", innerText(selectedYearButtons[0]), "current year is 2005");
+
+								// and the currently selected date is right too
+								var selectedDays = dojo.query(".dijitCalendarSelectedDate", calendar.domNode);
+								doh.is(1, selectedDays.length, "one day selected");
+								doh.is("10", innerText(selectedDays[0]), "correct day is selected");
+
+								// focus moved to the calendar
+								doh.is(10, innerText(dojo.global.dijit.focus.curNode), "focus on selected calendar cell");
+
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "forward two days",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var calendar = dijit.byId("american_popup");
+
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// calendar still exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// selected day not changed (because no ENTER/SPACE)
+								var selectedDays = dojo.query(".dijitCalendarSelectedDate", calendar.domNode);
+								doh.is(1, selectedDays.length, "one day selected");
+								doh.is(10, innerText(selectedDays[0]), "correct day is selected");
+
+								// focus still on the calendar, moved forward 2 days
+								doh.is(12, innerText(dojo.global.dijit.focus.curNode), "focus");
+
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "back a day",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var calendar = dijit.byId("american_popup");
+
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// calendar still exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// focus still on the calendar, moved back 1 day
+								doh.is(11, innerText(dojo.global.dijit.focus.curNode), "focus");
+
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "forward four weeks",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var calendar = dijit.byId("american_popup");
+
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 750, {});
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 750, {});
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 750, {});
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 750, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// calendar still exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// should have advanced to next month
+								doh.is("June", innerText(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0]), "month changed");
+
+								// and focused day changed
+								doh.is(8, innerText(dojo.global.dijit.focus.curNode), "focus");
+
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "back three weeks",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var calendar = dijit.byId("american_popup");
+
+							doh.robot.keyPress(dojo.keys.UP_ARROW, 750, {});
+							doh.robot.keyPress(dojo.keys.UP_ARROW, 750, {});
+							doh.robot.keyPress(dojo.keys.UP_ARROW, 750, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// calendar still exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// should have scrolled back to previous month
+								doh.is("May", innerText(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0]), "month changed");
+
+								// focused day still the same
+								doh.is(18, innerText(dojo.global.dijit.focus.curNode), "focus");
+
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "forward two months",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var calendar = dijit.byId("american_popup");
+
+							doh.robot.keyPress(dojo.keys.PAGE_DOWN, 750, {});
+							doh.robot.keyPress(dojo.keys.PAGE_DOWN, 750, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// calendar still exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// focused day still the same
+								doh.is(18, innerText(dojo.global.dijit.focus.curNode), "focus");
+
+								// month changed
+								doh.is("July", innerText(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0]), "month changed");
+
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "back a month",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var calendar = dijit.byId("american_popup");
+
+							doh.robot.keyPress(dojo.keys.PAGE_UP, 750, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// calendar still exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// focused day still the same
+								doh.is(18, innerText(dojo.global.dijit.focus.curNode), "focus");
+
+								// month changed
+								doh.is("June", innerText(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0]), "month changed");
+
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "forward two years",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var calendar = dijit.byId("american_popup");
+
+							doh.robot.keyPress(dojo.keys.PAGE_DOWN, 750, yearModifierKey);
+							doh.robot.keyPress(dojo.keys.PAGE_DOWN, 750, yearModifierKey);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// calendar still exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// focused day still the same (focused even though disabled)
+								doh.is(18, innerText(dojo.global.dijit.focus.curNode), "focus");
+
+								// same month
+								doh.is("June", innerText(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0]), "same month");
+
+								// year changed
+								var selectedYearButtons = dojo.query(".dijitCalendarSelectedYear", calendar.domNode);
+								doh.is(1, selectedYearButtons.length, "current year is shown");
+								doh.is("2007", innerText(selectedYearButtons[0]), "year changed");
+
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "back a year",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var calendar = dijit.byId("american_popup");
+
+							doh.robot.keyPress(dojo.keys.PAGE_UP, 750, yearModifierKey);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// calendar still exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// focused day still the same
+								doh.is(18, innerText(dojo.global.dijit.focus.curNode), "focus");
+
+								// same month
+								doh.is("June", innerText(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0]), "same month");
+
+								// year changed
+								var selectedYearButtons = dojo.query(".dijitCalendarSelectedYear", calendar.domNode);
+								doh.is(1, selectedYearButtons.length, "current year is shown");
+								doh.is("2006", innerText(selectedYearButtons[0]), "year changed");
+
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "first day of month",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var calendar = dijit.byId("american_popup");
+
+							doh.robot.keyPress(dojo.keys.HOME, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// calendar still exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// focused on first day of month
+								doh.is(1, innerText(dojo.global.dijit.focus.curNode), "focus");
+
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "last day of month",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var calendar = dijit.byId("american_popup");
+
+							doh.robot.keyPress(dojo.keys.END, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// calendar still exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// focused on last day of month
+								doh.is(30, innerText(dojo.global.dijit.focus.curNode), "focus");
+
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "select a date",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// select
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is('6/30/2006', american.get('displayedValue'), 'displayed value of american');
+
+								var expectedVal = new Date(2006, 5, 30);	// 6/30/2006
+								doh.is(0, dojo.date.compare(expectedVal, american.get('value')), 'wire value of american: ' + american.get('value'));
+
+								doh.is(1, changes.length, "onchange event fired");
+								doh.is(1, watches.length, "watch(value) event fired");
+								doh.is(0, dojo.date.compare(expectedVal, changes[0]), 'onchange of american: ' + changes[0]);
+								doh.is(0, dojo.date.compare(expectedVal, watches[0]), 'watch(value) of american: ' + watches[0]);
+
+								// focus moved back to <input>
+								doh.is("american", dojo.global.dijit.focus.curNode.id, "focus on <input>")
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "tab away",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(1, changes.length, "no new onchange events");	// #9018
+								doh.is(1, watches.length, "no new watch(value) events yet");
+								doh.is("german", dojo.global.dijit.focus.curNode.id, "tabbed from american to german")
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+
+// TODO: add key-repeat tests
+
+				doh.register("mouse: drop down", [
+					function setUp(){
+						// clear the field
+						changes = [];
+						american.set('displayedValue', "", false);
+						watches = [];	// do it here to ignore watch() notification for above set() call
+					},
+
+					{
+						name: "initial popup display",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.is(0, changes.length, "no onchange events yet #1");
+								doh.is(0, watches.length, "no watch(value) events yet #1");
+							}), 500);
+
+							doh.robot.mouseMoveAt(american._buttonNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								var calendar = dijit.byId("american_popup");
+
+								// drop down automatically opened on click
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								doh.is(0, changes.length, "no onchange events yet #2");
+								doh.is(0, watches.length, "no watch(value) events yet #2");
+							}), 1000);
+
+							return d;
+						}
+					},
+					
+					{
+						name: "close and reopen",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Close drop down and then type a value
+							doh.robot.keyPress(dojo.keys.ESCAPE, 500, {});
+							doh.robot.typeKeys("5/10/2005", 500, 1800);
+							
+							// And open dropdown again (manually)
+							doh.robot.mouseMoveAt(american._buttonNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var calendar = dijit.byId("american_popup");
+
+								// calendar exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// calendar is on the right month
+								doh.is("May", innerText(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0]), "calendar starts on month selected in input box");
+
+								// and the right year
+								var selectedYearButtons = dojo.query(".dijitCalendarSelectedYear", calendar.domNode);
+								doh.is(1, selectedYearButtons.length, "current year is shown");
+								doh.is("2005", innerText(selectedYearButtons[0]), "current year is 2005");
+
+								// and the currently selected date is right too
+								var selectedDays = dojo.query(".dijitCalendarSelectedDate", calendar.domNode);
+								doh.is(1, selectedDays.length, "one day selected");
+								doh.is("10", innerText(selectedDays[0]), "correct day is selected");
+
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "advance a month",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var calendar = dijit.byId("american_popup"),
+								nextMonthButtons = dojo.query(".dijitCalendarIncrease", calendar.domNode);
+
+							doh.is(1, nextMonthButtons.length, "found next month button");
+
+							doh.robot.mouseMoveAt(nextMonthButtons[0], 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// calendar still exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// calendar moved to the next month
+								doh.is("June", innerText(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0]), "moved from may to june");
+
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "advance a month with the menu dropdown",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var calendar = dijit.byId("american_popup");
+
+							doh.is(1, dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode).length, "found month label");
+							doh.t(calendar.monthWidget.dropDown, "month dropdown exists");
+							doh.f(isVisible(calendar.monthWidget.dropDown), "month dropdown is not visible");
+
+							doh.robot.mouseMoveAt(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0], 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.mouseMoveAt(function(){
+								return dojo.query("[month=6]", calendar.monthWidget.dropDown.domNode)[0];
+							}, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// calendar still exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// calendar moved to the next month
+								doh.is("July", innerText(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0]), "moved from june to july");
+								var rows = dojo.query("TR.dijitCalendarWeekTemplate", calendar.domNode),
+									firstRowDays = dojo.query("TD", rows[0]);
+								doh.is(7, firstRowDays.length, "7 days in first row");
+								doh.t(dojo.hasClass(firstRowDays[0], "dijitCalendarPreviousMonth"), "previous month class applied");
+								doh.is("26", innerText(firstRowDays[0]), "first day is june 26");
+								doh.is("1", innerText(firstRowDays[5]), "sixth day is june 1");
+
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "advance a year",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var calendar = dijit.byId("american_popup"),
+								nextYearButtons = dojo.query(".dijitCalendarNextYear", calendar.domNode);
+
+							doh.is(1, nextYearButtons.length, "found next year button");
+
+							doh.robot.mouseMoveAt(nextYearButtons[0], 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// calendar still exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// calendar moved to the next year
+								var yearNodes = dojo.query(".dijitCalendarSelectedYear", calendar.domNode);
+								doh.is(1, yearNodes.length, "found year node");
+								doh.is("2006", innerText(yearNodes[0]), "moved from 2005 to 2006");
+
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "check disabled dates",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Move forward another year, to see disabled days (this date text box is valid only to 2006)
+							var calendar = dijit.byId("american_popup"),
+								nextYearButtons = dojo.query(".dijitCalendarNextYear", calendar.domNode);
+
+							doh.is(1, nextYearButtons.length, "found next year button");
+
+							doh.robot.mouseMoveAt(nextYearButtons[0], 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								dojo.query(".dijitCalendarDateTemplate", calendar.domNode).forEach(function(node){
+									doh.t(dojo.hasClass(node, 'dijitCalendarDisabledDate'), 'every day in 2007 is disabled');
+								});
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 500);
+
+							return d;
+						}
+					},
+
+					{
+						name: "check enabled dates",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Move back a year, dates should be enabled again
+							var calendar = dijit.byId("american_popup"),
+								previousYearButtons = dojo.query(".dijitCalendarPreviousYear", calendar.domNode);
+
+							doh.is(1, previousYearButtons.length, "found previous year button");
+
+							doh.robot.mouseMoveAt(previousYearButtons[0], 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								dojo.query(".dijitCalendarDateTemplate", calendar.domNode).forEach(function(node){
+									doh.f(dojo.hasClass(node, 'dijitCalendarDisabledDate'), "every day in 2006 is enabled");
+								});
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 500);
+
+							return d;
+						}
+					},
+
+					{
+						name: "check calendar display",
+						timeout: 6000,
+						runTest: function(){
+							var calendar = dijit.byId("american_popup"),
+								rows = dojo.query("TR.dijitCalendarWeekTemplate", calendar.domNode);
+
+							doh.is(6, rows.length, "six weeks shown");
+							var firstRowDays = dojo.query("TD", rows[0]);
+							doh.is(7, firstRowDays.length, "7 days in first row");
+							doh.t(dojo.hasClass(firstRowDays[0], "dijitCalendarPreviousMonth"), "previous month class applied");
+							doh.is("25", innerText(firstRowDays[0]), "first day is june 25");
+							doh.is("1", innerText(firstRowDays[6]), "seventh day is july 1");
+
+							var lastRowDays = dojo.query("TD", rows[5]);
+							doh.t(dojo.hasClass(lastRowDays[3], 'dijitCalendarNextMonth'), "last row is for next month");
+							doh.is(0, changes.length, "no onchange events yet");
+							doh.is(0, watches.length, "no watch(value) events yet");
+						}
+					},
+
+					{
+						name: "hover a date",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var calendar = dijit.byId("american_popup"),
+								rows = dojo.query("TR.dijitCalendarWeekTemplate", calendar.domNode),
+								thirdRowDays = dojo.query("TD", rows[2]),
+								day = thirdRowDays[6];
+
+							// hover June 15
+							doh.is("15", innerText(day), "found july 15");
+							doh.robot.mouseMoveAt(day, 0, 1);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(dojo.hasClass(day, 'dijitCalendarHoveredDate'), "hovered date has hover class");
+								doh.is(0, changes.length, "no onchange events yet");
+								doh.is(0, watches.length, "no watch(value) events yet");
+							}), 500);
+
+							return d;
+						}
+					},
+
+					{
+						name: "select a date",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// select June 15
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is('7/15/2006', american.get('displayedValue'), 'displayed value of american');
+
+								var expectedVal = new Date(2006, 6, 15);	// 7/15/2006
+								doh.is(0, dojo.date.compare(expectedVal, american.get('value')), 'wire value of american: ' + american.get('value'));
+
+								doh.is(1, changes.length, "onchange event fired");
+								doh.is(1, watches.length, "watch(value) event fired");
+								doh.is(0, dojo.date.compare(expectedVal, changes[0]), 'onchange of american: ' + changes[0]);
+								doh.is(0, dojo.date.compare(expectedVal, watches[0]), 'watch(value) of american: ' + watches[0]);
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "tab away",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(1, changes.length, "no new onchange events");	// #9018
+								doh.is(1, watches.length, "no new watch(value) events");
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+
+				// Tests that drop down displays correct year/month, and that correct cell is focused,
+				// based on this.value and this.dropDownDefaultValue
+				doh.register("focused popup value", [
+					{
+						name: "today",
+						timeout: 6000,
+						setUp: function(){
+							german.closeDropDown(true);	// close drop down and focus widget
+							german.set('value', null);
+							german.set("dropDownDefaultValue", null);
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var today = new Date();
+	
+								var selectedYearButtons = dojo.query(".dijitCalendarSelectedYear", german.dropDown.domNode);
+								doh.is(today.getFullYear(), innerText(selectedYearButtons[0]), "current year is selected");
+	
+								var selectedDates = dojo.query(".dijitCalendarSelectedDate", german.dropDown.domNode);
+								doh.is(0, selectedDates.length, "no selected date");
+							}), 500);
+
+							return d;
+						},
+						tearDown: function(){
+							german.closeDropDown(true);
+						}
+					},
+					{
+						name: "dropDownDefaultValue",
+						timeout: 6000,
+						setUp: function(){
+							german.closeDropDown(true);
+							german.set('value', null);
+							german.set("dropDownDefaultValue", new Date(2000,11,21));
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var selectedYearButtons = dojo.query(".dijitCalendarSelectedYear", german.dropDown.domNode);
+								doh.is("2000", innerText(selectedYearButtons[0]), "specified default year is selected");
+	
+								var selectedDates = dojo.query(".dijitCalendarSelectedDate", german.dropDown.domNode);
+								doh.is(0, selectedDates.length, "no selected date");
+	
+								doh.is("21", innerText(dojo.global.dijit.focus.curNode), "but focused on the 21st");
+							}), 500);
+
+							return d;
+						},
+						tearDown: function(){
+							german.closeDropDown(true);
+						}
+					},
+
+					// Testing that value overrides dropDownDefaultValue
+					{
+						name: "textbox value",
+						timeout: 6000,
+						setUp: function(){
+							german.closeDropDown(true);
+							german.set("dropDownDefaultValue", new Date(2000,11,21));
+							german.set('value', new Date(2004,10,25));
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var selectedYearButtons = dojo.query(".dijitCalendarSelectedYear", german.dropDown.domNode);
+								doh.is("2004", innerText(selectedYearButtons[0]), "textbox year is selected");
+	
+								var selectedDates = dojo.query(".dijitCalendarSelectedDate", german.dropDown.domNode);
+								doh.is(1, selectedDates.length, "one selected date");
+								doh.is("25", innerText(selectedDates[0]), "25th is selected");
+	
+								doh.is("25", innerText(dojo.global.dijit.focus.curNode), "and also focused on the 25th");
+							}), 500);
+
+							return d;
+						},
+						tearDown: function(){
+							german.closeDropDown(true);
+						}
+					}
+				]);
+
+				// Testing that canceling an edit doesn't select anything
+				doh.register("cancel", [
+					{
+						name: "no value",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.f(pattern.get("value"), "initially blank");
+
+							// open the drop down
+							doh.robot.mouseMoveAt(dijit.byId("pattern")._buttonNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestErrback(function(){
+								var calendar = dijit.byId("pattern_popup");
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+							}), 500);
+
+							// close the drop down
+							doh.robot.mouseMoveAt("pattern", 500, 1, pattern.domNode.offsetWidth + 20, pattern.domNode.offsetHeight/2);
+							doh.robot.mouseClick({left:true}, 500);			
+							doh.robot.sequence(d.getTestCallback(function(){
+								var calendar = dijit.byId("pattern_popup");
+								doh.f(calendar && isVisible(calendar), "calendar popup destroyed or hidden");
+								doh.f(pattern.get("value"), "no value set into DateTextBox")
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("month drop down edge case", [
+					function setUp(){
+						american.set('value', new Date(2010, 11, 31), false);
+					},
+
+					{
+						name: "initial popup display",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt(american._buttonNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var calendar = dijit.byId("american_popup");
+
+								// calendar exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// calendar is on the right month
+								doh.is("December", innerText(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0]), "calendar starts on month selected in input box");
+
+								// and the right year
+								var selectedYearButtons = dojo.query(".dijitCalendarSelectedYear", calendar.domNode);
+								doh.is(1, selectedYearButtons.length, "current year is shown");
+								doh.is("2010", innerText(selectedYearButtons[0]), "current year");
+
+								// and the currently focused date is the 31'st
+								doh.is("31", innerText(dojo.global.dijit.focus.curNode), "correct day is focused");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					// Switching to February to test that movement works even though there is no Feb 31st.
+					{
+						name: "switch to february",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var calendar = dijit.byId("american_popup");
+
+							doh.is(1, dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode).length, "found month label");
+							doh.t(calendar.monthWidget.dropDown, "month dropdown exists");
+							doh.f(isVisible(calendar.monthWidget.dropDown), "month dropdown is not visible");
+
+							doh.robot.mouseMoveAt(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0], 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt(function(){
+								return dojo.query("[month=1]", calendar.monthWidget.dropDown.domNode)[0];
+							}, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// calendar still exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// calendar moved to feb 2010
+								doh.is("February", innerText(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0]), "moved from December to February");
+								var selectedYearButtons = dojo.query(".dijitCalendarSelectedYear", calendar.domNode);
+								doh.is(1, selectedYearButtons.length, "current year is shown");
+								doh.is("2010", innerText(selectedYearButtons[0]), "current year");
+							}), 500);
+
+							return d;
+						}
+					},
+
+					// Switching to December to make sure that drop down isn't cut off
+					{
+						name: "switch back to december",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var calendar = dijit.byId("american_popup");
+
+							doh.is(1, dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode).length, "found month label");
+							doh.t(calendar.monthWidget.dropDown, "month dropdown exists");
+							doh.f(isVisible(calendar.monthWidget.dropDown), "month dropdown is not visible");
+
+							doh.robot.mouseMoveAt(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0], 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.mouseMoveAt(function(){
+								return dojo.query("[month=11]", calendar.monthWidget.dropDown.domNode)[0];
+							}, 1000, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// calendar still exists and is shown
+								doh.t(calendar, "calendar popup exists");
+								doh.t(isVisible(calendar), "calendar is visible");
+
+								// calendar moved to dec 2010
+								doh.is("December", innerText(dojo.query(".dijitCalendarCurrentMonthLabel", calendar.domNode)[0]), "moved from june to july");
+								var selectedYearButtons = dojo.query(".dijitCalendarSelectedYear", calendar.domNode);
+								doh.is(1, selectedYearButtons.length, "current year is shown");
+								doh.is("2010", innerText(selectedYearButtons[0]), "current year");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "cancel",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.ESCAPE, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+							}), 5);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("clicking input", [
+					{
+						name: "click on input",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt(localLong.focusNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								var calendar = dijit.byId("localLong_popup");
+								doh.f(calendar && isVisible(calendar), "calendar isn't visible");
+								doh.is(localLong.focusNode, dojo.global.dijit.focus.curNode, "focused on input");
+							}), 1000);
+
+							doh.robot.mouseMoveAt(localLong._buttonNode, 0, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var calendar = dijit.byId("localLong_popup");
+
+								// calendar isn't displayed
+								doh.t(calendar && isVisible(calendar), "calendar is visible");
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

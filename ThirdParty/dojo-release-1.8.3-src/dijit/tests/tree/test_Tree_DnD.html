@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Dijit Tree Test</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+		@import "../../../dojo/resources/dnd.css";
+		@import "../../../dojo/tests/dnd/dndDefault.css";
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, parseOnLoad: true, async: true"></script>
+
+	<!-- only needed for alternate theme testing: do NOT use in your code! -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		var testController = /testController=selector/.test(window.location.href.test) ?
+				"dijit.tree._dndSelector" : "dijit.tree.dndSource";
+		require([
+			"dojo/ready",
+			"dojo/dnd/Source",
+			"dojo/data/ItemFileWriteStore",
+			"dijit/dijit", // optimize: load dijit layer
+			"dijit/Tree",
+			"dijit/tree/TreeStoreModel",
+			testController.replace(/\./g, "/"),
+			"dijit/Menu",
+			"dijit/form/Button"
+		], function(ready){
+			dijit.Tree.prototype.dndController = testController;		
+
+			selected=[];
+	
+			globalId=1000;
+			lastSelected=null;
+	
+			ready(function(){
+
+				//record the selection from tree 1
+				dojo.subscribe("myTree", null, function(message){
+					if(message.event=="execute"){
+						console.log("Tree1 Select: ",dijit.byId("myTree").store.getLabel(message.item));
+						lastSelected=selected["myTree"]=message.item;
+					}
+				});
+
+				//record the selection from tree 2
+				dojo.subscribe("myTree2", null, function(message){
+					if(message.event=="execute"){
+						console.log("Tree2 Select: ",dijit.byId("myTree2").store.getLabel(message.item));
+						lastSelected=selected["myTree2"]=message.item;
+					}
+				});
+
+				//connect to the add button and have it add a new container to the store as necessary
+				dojo.connect(dijit.byId("addButton"), "onClick", function(){
+					var pInfo = {
+						parent: lastSelected,
+						attribute: "children"
+					};
+
+					//store.newItem({name: dojo.byId('newCat').value, id:globalId++, numberOfItems:dojo.byId('numItems').value}, pInfo);
+					myStore.newItem({name: dojo.byId('newCat').value, numberOfItems:0,id:globalId++}, pInfo);
+				});
+
+				//since we don't have a server, we're going to connect to the store and do a few things the server/store combination would normal be taking care of for us
+				dojo.connect(myStore, "onNew", function(item, pInfo){
+					var p = pInfo && pInfo.item;
+					if(p){
+						var currentTotal = myStore.getValues(p, "numberOfItems")[0];
+						myStore.setValue(p, "numberOfItems", ++currentTotal);
+					}
+
+				});
+			});
+		});
+
+		//create a custom label for tree one consisting of the label property pluss the value of the numberOfItems Column
+		function catTreeCustomLabel(item){
+			var label = myStore.getLabel(item);
+			var num = myStore.hasAttribute(item, "numberOfItems") ? myStore.getValues(item,"numberOfItems") : "?";
+			return label + ' (' + num+ ')';
+		}
+
+		//on item tree , we want to drop on containers, the root node itself, or between items in the containers
+		function itemTreeCheckItemAcceptance(node,source,position){
+			source.forInSelectedItems(function(item){
+				console.log("testing to drop item of type " + item.type[0] + " and data " + item.data + ", position " + position);
+			});
+			var item = dijit.getEnclosingWidget(node).item;
+			if(item && (item.root || myStore.hasAttribute(item,"numberOfItems"))){
+				return true;
+			}
+			return position != "over";
+
+		}
+
+		//on collection tree, only accept itself as the source tree
+		function collectionTreeCheckItemAcceptance(node,source,position){
+			return source.tree && source.tree.id == "collectionsTree";
+		}
+
+		function dndAccept(source,nodes){
+			return this.tree.id != "myTree";
+		}
+
+		function getIcon(item){
+			if(!item || myStore.hasAttribute(item, "numberOfItems")){
+				return "myFolder";
+			}
+			return "myItem"
+		}
+	</script>
+
+	<style>
+		.myFolder{
+			width: 16px;
+			height: 16px;
+			background: blue;
+		}
+
+		.myItem{
+			width: 16px;
+			height: 16px;
+			background: green;
+
+		}
+	</style>
+
+</head>
+<body class="claro" role="main">
+	<h1 class="testTitle">Dijit Tree Test - Drag And Drop Support</h1>
+
+	<div data-dojo-id="myStore" data-dojo-type="dojo/data/ItemFileWriteStore" data-dojo-props='url:"../_data/categories.json"'></div>
+
+	<table style="margin:5px; width:100%;" role="presentation">
+
+	<tr style="width:100%">
+		<td style="width: 50%">
+			<h2>Custom</h2>
+			<p>Should add this category to the store.  The second parameter is the value for numberOfItems.</p>
+			<div class="container">
+				<label for="newCat">New category:</label><input id="newCat" type="text" value="Pottedmeat" /><label for="numItems">numberOfItems:</label><input id="numItems" type="text" value="0" size="3"/><div id="addButton" data-dojo-type="dijit/form/Button">Add Category</div>
+			</div>
+		</td>
+		<td>
+			<h2>Items: </h2>
+			<p>List of Items to be categorized<p>
+				<div data-dojo-id="c2" data-dojo-type="dojo.dnd.Source" class="container" style="height:100px; overflow:auto;">
+				<div class="dojoDndItem" id="1001">Apple</div>
+				<div class="dojoDndItem" id="1002">Orange</div>
+				<div class="dojoDndItem" id="1003">Banana</div>
+				<div class="dojoDndItem" id="1004">Tomato</div>
+				<div class="dojoDndItem" id="1005">Pepper</div>
+				<div class="dojoDndItem" id="1006">Wheat</div>
+				<div class="dojoDndItem" id="1007">Corn</div>
+				<div class="dojoDndItem" id="1008">Spinach</div>
+				<div class="dojoDndItem" id="1009">Cucumber</div>
+				<div class="dojoDndItem" id="1010">Carrot</div>
+				<div class="dojoDndItem" id="1011">Potato</div>
+				<div class="dojoDndItem" id="1012">Grape</div>
+				<div class="dojoDndItem" id="1013">Lemon</div>
+				<div class="dojoDndItem" id="1014">Lettuce</div>
+				<div class="dojoDndItem" id="1015">Peanut</div>
+			</div>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<h2>Collection Count Summary</h2>
+			<p>
+				You can't drop items onto this tree, but you can reorder categories. The between threshold
+				is set to 5, so if you are near the top or bottom of a node the drop will be above or below it.
+			</p>
+			<div data-dojo-id="catModel" data-dojo-type="dijit/tree/TreeStoreModel" data-dojo-props='store:myStore, query:{id: "0"}'></div>
+			<div id="collectionsTree" data-dojo-type="dijit/Tree" data-dojo-props='"class":"container", model:catModel,
+				getLabel:catTreeCustomLabel, betweenThreshold:5,
+				checkAcceptance:dndAccept, checkItemAcceptance:collectionTreeCheckItemAcceptance, getIconClass:getIcon,
+				persist:false'></div>
+		</td>
+		<td>
+			<h2>Collection</h2>
+			<p>
+				Drop items from above list onto this tree, only on to categories or between other items; should fail to let you drop on other items.
+				Can also move items within this tree. The drag threshold is set to 8, between threshold is set to 5, so you have a few pixels
+				of buffer before drag operations start.
+			</p>
+			<div data-dojo-id="itemModel" data-dojo-type="dijit/tree/TreeStoreModel" data-dojo-props='store:myStore, query:{id: "0"}, childrenAttrs:["items", "children"]'></div>
+			<div id="itemTree" data-dojo-type="dijit/Tree" data-dojo-props='"class":"container", model:itemModel,
+				checkAcceptance:dndAccept, checkItemAcceptance:itemTreeCheckItemAcceptance,
+				dragThreshold:8,
+				betweenThreshold:5,
+				getIconClass:getIcon,
+				persist:false'></div>
+		</td>
+	</tr>
+	</table>
+
+	</body>
+</html>

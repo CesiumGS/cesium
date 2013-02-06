@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Bookmarkable - Split Views</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','FixedSplitter']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar: true, mblForceBookmarkable: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/bookmarkable",
+			"dojox/mobile/FixedSplitter",
+			"dojox/mobile/Container"
+		]);
+	</script>
+
+	<style>
+	html, body{
+		height: 100%;
+		overflow: hidden;
+		position: relative;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div data-dojo-type="dojox.mobile.FixedSplitter" data-dojo-props='orientation:"H"'>
+		<div data-dojo-type="dojox.mobile.Container" style="width:50%;border-right:1px solid black;">
+			<div id="foo1" data-dojo-type="dojox.mobile.View">
+				<h1 data-dojo-type="dojox.mobile.Heading">Animations</h1>
+				<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Transition Effects</h2>
+				<ul data-dojo-type="dojox.mobile.RoundRectList">
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"bar11", transition:"slide"'>
+						Slide
+					</li>
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png", moveTo:"bar12", transition:"flip"'>
+						Flip
+					</li>
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"bar13", transition:"fade"'>
+						Fade
+					</li>
+				</ul>
+			</div>
+
+			<div id="bar11" data-dojo-type="dojox.mobile.View">
+				<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"foo1"'>Search Result</h1>
+				<ul data-dojo-type="dojox.mobile.RoundRectList">
+					<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+						1. <span class="lnk">Dojo: Traditional Karate-do Spirit</span><br>
+						Sarah Connor Hardcover<br>
+						Eligible for FREE Super Saver Shipping<br>
+						<span style="color:red">$14.50 (50%)</span> In Stock<br>
+						# (531)
+					</li>
+				</ul>
+			</div>
+			<div id="bar12" data-dojo-type="dojox.mobile.View">
+				<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"foo1", transition:"flip"'>Search Result</h1>
+				<ul data-dojo-type="dojox.mobile.RoundRectList">
+					<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+						2. <span class="lnk">Japanese Martial Arts Dojo</span><br>
+						Martin Parker Hardcover<br>
+						<span style="color:red">$14.00 (60%)</span> In Stock<br>
+						# (173)
+					</li>
+				</ul>
+			</div>
+			<div id="bar13" data-dojo-type="dojox.mobile.View">
+				<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"foo1", transition:"fade"'>Search Result</h1>
+				<ul data-dojo-type="dojox.mobile.RoundRectList">
+					<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+						3. <span class="lnk">Total Solar Eclipse</span><br>
+						Steven Young Hardcover<br>
+						Get it by Mar. 2 if you order in the next <span style="color:green"><b>16 hours</b></span><br>
+						Eligible for FREE Super Saver Shipping<br>
+						<span style="color:red">$9.50 (62%)</span> In Stock<br>
+						# (1199)
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<div data-dojo-type="dojox.mobile.Container">
+			<div id="foo2" data-dojo-type="dojox.mobile.View">
+				<h1 data-dojo-type="dojox.mobile.Heading">Animations</h1>
+				<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Transition Effects</h2>
+				<ul data-dojo-type="dojox.mobile.RoundRectList">
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"bar21", transition:"slide"'>
+						Slide
+					</li>
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png", moveTo:"bar22", transition:"flip"'>
+						Flip
+					</li>
+					<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"bar23", transition:"fade"'>
+						Fade
+					</li>
+				</ul>
+			</div>
+
+			<div id="bar21" data-dojo-type="dojox.mobile.View">
+				<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"foo2"'>Search Result</h1>
+				<ul data-dojo-type="dojox.mobile.RoundRectList">
+					<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+						1. <span class="lnk">Dojo: Traditional Karate-do Spirit</span><br>
+						Sarah Connor Hardcover<br>
+						Eligible for FREE Super Saver Shipping<br>
+						<span style="color:red">$14.50 (50%)</span> In Stock<br>
+						# (531)
+					</li>
+				</ul>
+			</div>
+			<div id="bar22" data-dojo-type="dojox.mobile.View">
+				<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"foo2", transition:"flip"'>Search Result</h1>
+				<ul data-dojo-type="dojox.mobile.RoundRectList">
+					<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+						2. <span class="lnk">Japanese Martial Arts Dojo</span><br>
+						Martin Parker Hardcover<br>
+						<span style="color:red">$14.00 (60%)</span> In Stock<br>
+						# (173)
+					</li>
+				</ul>
+			</div>
+			<div id="bar23" data-dojo-type="dojox.mobile.View">
+				<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"foo2", transition:"fade"'>Search Result</h1>
+				<ul data-dojo-type="dojox.mobile.RoundRectList">
+					<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+						3. <span class="lnk">Total Solar Eclipse</span><br>
+						Steven Young Hardcover<br>
+						Get it by Mar. 2 if you order in the next <span style="color:green"><b>16 hours</b></span><br>
+						Eligible for FREE Super Saver Shipping<br>
+						<span style="color:red">$9.50 (62%)</span> In Stock<br>
+						# (1199)
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

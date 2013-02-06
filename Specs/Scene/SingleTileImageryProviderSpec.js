@@ -134,7 +134,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(providerWithCredit.getLogo()).not.toBeUndefined();
+            expect(providerWithCredit.getLogo()).toBeDefined();
         });
     });
 
@@ -156,7 +156,7 @@ defineSuite([
             proxy : proxy
         });
 
-        expect(provider).not.toBeUndefined();
+        expect(provider).toBeDefined();
         expect(calledCreateImage).toEqual(true);
     });
 

@@ -1,0 +1,24 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+		<title>Dojo source code color syntax highlighting example</title>
+		<link rel="stylesheet" type="text/css" href="pretty.css" />
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+		<script type="text/javascript" src="highlightRequires.js"></script>
+    </head>
+    <body>
+		<div id="container">
+			<h1>Test Source Code Formatting</h1>
+			<p>View source to see how easy it is to use the Dojo code highlight in your documentation.</p>
+			<p>Mimic the format of SyntaxHighlighter, using dojox.highlight and stylesheets, and our simple Code widget extension.</p>
+			<h3>Java code (including SQL/XML statement definition):</h3>
+			<div lang="java" dojoType="dojox.highlight.widget.Code" url="./example-java-source.java" style="height:200px; overflow:auto;"></div>	
+			<h3>XQuery code:</h3>
+			<div lang="xquery" dojoType="dojox.highlight.widget.Code" url="./example-xquery-source.xquery" style="height:200px; overflow:auto;"></div>
+			<h3>XML result data:</h3>
+			<div lang="xml" dojoType="dojox.highlight.widget.Code" url="./example-xml-resultdata.xml"></div>
+			<h3>XML doc:</h3>
+			<div lang="xml" dojoType="dojox.highlight.widget.Code" url="./example-xml-data.xml" style="height:200px; overflow:auto;"></div>
+		</div>
+    </body>
+</html>

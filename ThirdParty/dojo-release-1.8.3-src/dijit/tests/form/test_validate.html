@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Test TextBox Validation Widgets</title>
+
+		<style type="text/css">
+			@import "../../themes/claro/document.css";
+			@import "../css/dijitTests.css";
+
+			.testExample {
+				background-color:#fbfbfb;
+				padding:1em;
+				margin-bottom:1em;
+				border:1px solid #bfbfbf;
+			}
+
+			body .small {
+				width: 3em;
+			}
+			body .medium {
+				width: 10em;
+			}
+			body .long {
+				width: 20em;
+			}
+			body .verylong {
+				width: 90%;
+			}
+
+			.noticeMessage {
+				color:#093669;
+				font-size:0.95em;
+				margin-left:0.5em;
+			}
+
+			.dojoTitlePaneLabel label {
+				font-weight:bold;
+			}
+			#widget_q26 .dijitInputField {
+				padding:10px !important;
+			}
+
+			.monospace .dijitTextBox {
+				font-family: monospace;
+			}
+
+			.sans {
+				font-family: sans-serif;
+			}
+		</style>
+
+		<!-- required: the default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../themes/claro/claro.css"/>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			data-dojo-config="isDebug: true, parseOnLoad: true, extraLocale: ['de-de']"></script>
+
+		<!-- only needed for alternate theme testing: -->
+		<script type="text/javascript" src="../_testCommon.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("doh.runner");
+
+			dojo.require("dijit.form.TextBox");
+			dojo.require("dijit.form.ValidationTextBox");
+			dojo.require("dijit.form.NumberTextBox");
+			dojo.require("dijit.form.CurrencyTextBox");
+
+			dojo.require("dijit.Dialog");
+			dojo.require("dijit.form.Button");
+
+			dojo.require("dojo.currency");
+			dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+
+			// Add test=true to the URL to run unit tests.
+			var test = /mode=test/i.test(window.location.href);
+
+			dojo.ready(function(){
+
+				new dijit.form.TextBox({id: 'monospace1', "aria-label":"monospace1", disabled: true, value: 'M|M:monospace?'}, 'monospace1');
+				new dijit.form.TextBox({id: 'monospace2', "aria-label":"monospace2",disabled: true, value: 'M|M:monospace?'}).placeAt('widget_monospace1', 'after');
+				
+				new dijit.form.TextBox({id: 'sans1', "aria-label":"sans1", disabled: true, value: 'sans1'}, 'sans1');
+				new dijit.form.TextBox({id: 'sans2', "aria-label":"sans2", disabled: true, value: 'sans2'}).placeAt('widget_sans1', 'after');
+
+
+				if(!test){ return; }
+
+				doh.register("font inheritance", [
+					{
+						name: "with srcNodeRef, style on .dijitTextBox",
+						runTest: function(){
+							var d = new doh.Deferred();
+							setTimeout(d.getTestCallback(function(){
+								doh.is("monospace", dojo.style('monospace1', "fontFamily"));
+							}), 0);
+							return d;
+						}
+					},
+					{
+						name: "without srcNodeRef, style on .dijitTextBox",
+						runTest: function(){
+							var d = new doh.Deferred();
+							setTimeout(d.getTestCallback(function(){
+								doh.is("monospace", dojo.style('monospace2', "fontFamily"));
+							}), 0);
+							return d;
+						}
+					},
+					{
+						name: "with srcNodeRef, style inherited",
+						runTest: function(){
+							var d = new doh.Deferred();
+							setTimeout(d.getTestCallback(function(){
+								doh.is("sans-serif", dojo.style('sans1', "fontFamily"));
+							}), 0);
+							return d;
+						}
+					},
+					{
+						name: "without srcNodeRef, style inherited",
+						runTest: function(){
+							var d = new doh.Deferred();
+							setTimeout(d.getTestCallback(function(){
+								doh.is("sans-serif", dojo.style('sans2', "fontFamily"));
+							}), 0);
+							return d;
+						}
+					}
+				]);
+
+				doh.register("pattern", [
+					{
+						name: "pattern markup",
+						runTest: function(){
+							var w = dijit.byId('q22');
+							w.set('value', 'someTestString');
+							doh.is(true, w.isValid(false));
+							doh.f(!!w.focusNode.getAttribute('pattern'), "native pattern");
+						}
+					},
+					{
+						name: "pattern string",
+						runTest: function(){
+							var w = dijit.byId('q22');
+							w.set('value', 'someTestString');
+							w.set('pattern', "some[a-z]+"); // invalid
+							doh.is(false, w.isValid(false), "invalid");
+							doh.is(false, w._isValidSubset(), "invalid partial");
+							w.set('value', 'some');
+							doh.is(true, w._isValidSubset(), "valid partial");
+							w.set('value', 'someTestString');
+							w.set('pattern', "someT[a-z]+S[a-z]+"); // valid
+							doh.is(true, w.isValid(false), "valid");
+							doh.is(true, w._isValidSubset(), "valid partial 2");
+							doh.f(!!w.focusNode.getAttribute('pattern'), "native pattern");
+						}
+					},
+					{
+						name: "pattern function",
+						runTest: function(){
+							var w = dijit.byId('q22');
+							w.set('value', 'someTestString');
+							w.set('pattern', function(){ return "[a-z]+"; }); // invalid
+							doh.is(false, w.isValid(false), "invalid string");
+							w.set('pattern', function(){ return "[a-zTS]+"; }); // valid
+							doh.is(true, w.isValid(false), "valid string");
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+
+	<body class="claro" role="main">
+		<h1 class="testTitle">Dijit Validation Widgets</h1>
+		<!--	to test form submission, you'll need to create an action handler similar to
+			http://www.utexas.edu/teamweb/cgi-bin/generic.cgi -->
+		<form id="form1" action="" name="example" method="GET">
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q01">First Name:  </label>
+				<span class="noticeMessage"> TextBox class, <b>tabIndex=2</b>, Attributes: {trim: true, propercase: true, intermediateChanges: true, style: 'width:700px', selectOnClick: true}, First letter of each word is upper case.</span>
+			</div>
+			<div class="testExample">
+				<input id="q01" data-dojo-type="dijit/form/TextBox"
+					name="firstname" value="testing testing" style="width:700px" tabIndex="2"
+					data-dojo-props='
+					trim:true,
+					selectOnClick:true,
+					onFocus:function(){ console.log("user onfocus handler"); },
+					onBlur:function(){ console.log("user onblur handler"); },
+					onChange:function(v){ dojo.byId("oc1").value=v; },
+					intermediateChanges:true,
+					propercase:true '/>
+				<br><label for="oc1">onChange:</label><input id="oc1" size="34" disabled value="not fired yet!" autocomplete="off"/>
+				<input tabIndex="-1" type="button" onclick="dijit.byId('q01').set('disabled', true);" value="Disable"/>
+				<input tabIndex="-1" type="button" onclick="dijit.byId('q01').set('disabled', false);" value="Enable"/>
+			</div>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q02">Last Name:  </label>
+				<span class="noticeMessage"> TextBox class, Attributes: {trim: true, uppercase: true, "class": 'verylong'}, all letters converted to upper case. </span>
+			</div>
+			<div class="testExample">
+				<input id="q02" data-dojo-type="dijit/form/TextBox"
+					name="lastname" value="testing testing" class="verylong"
+					data-dojo-props='trim:true, uppercase:true '/>
+			</div>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q03">Age:  </label>
+				<span class="noticeMessage"> NumberTextBox class, <b>tabIndex=1</b>, Attributes: {trim: true}, no initial value specified, tooltipPosition=[above, below].  Displays a prompt message if field is blank.</span>
+			</div>
+			<div class="testExample">
+				<input id="q03" data-dojo-type="dijit/form/NumberTextBox"
+					name="age" tabIndex="1" class="small"
+					data-dojo-props='
+					promptMessage:"(optional) Enter an age between 0 and 120",
+					maxLength:"3",
+					constraints:{places:0,min:0,max:120},
+					onChange:function(val){ dojo.byId("oc3").value=""+val; },
+					tooltipPosition:["above", "below"]
+				'/>
+				<label for="oc3">onChange:</label><input id="oc3" size="14" disabled value="not fired yet!" autocomplete="off"/>
+				<span style='white-space:nowrap;'>
+				<button id="q03_valid" type=button onclick="dijit.byId('q03').set('value', 120);">set value to 120</button>
+				<button id="q03_outofrange" type=button onclick="dijit.byId('q03').set('value', 121);">set value to 121</button>
+				<button id="q03_invalid" type=button onclick="dijit.byId('q03').set('value', 'two');">set value to two</button>
+				<button id="q03_null" type=button onclick="dijit.byId('q03').set('value', null);">set value to null</button>
+				<button type=button onclick="dojo.byId('gv3').value=''+dijit.byId('q03').get('value');">get value</button>
+				<input id="gv3" aria-label="get value 3" size="10" disabled value="" autocomplete="off"/>
+				</span>
+			</div>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="fav">Favorite Number (1-100):  </label>
+				<span class="noticeMessage"> NumberTextBox class, Attributes: required=true, must be integer, no messages provided,  no initial value specified, maxlength=3</span>
+			</div>
+			<div class="testExample">
+				<input id="fav" data-dojo-type="dijit/form/NumberTextBox"
+					name="fav" class="small" required
+					data-dojo-props='maxLength:"3",constraints:{places:0,min:1,max:100},pattern:"\\d+"'/>
+					<button onclick="dijit.byId('fav').set('required', true); return false;">attr(required, true)</button>
+					<button onclick="dijit.byId('fav').set('required', false); return false;">attr(required, false)</button>
+			</div>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q04">Occupation:  </label>
+				<span class="noticeMessage">ValidationTextBox class,
+					Attributes: {lowercase: true, required: true, "class": verylong, style: font-size: 15pt;}. Displays a prompt message if field is blank.</span>
+			</div>
+			<div class="testExample">
+				<input id="q04" data-dojo-type="dijit/form/ValidationTextBox"
+					name="occupation" class="verylong" style="fontSize:15pt" required="true"
+					data-dojo-props='lowercase:true, promptMessage:"Enter an occupation" '/>
+			</div>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q05">Elevation:  </label>
+				<span class="noticeMessage">IntegerTextBox class,
+					Attributes: {required: true, min:-20000, max:+20000 }, displays a prompt message if field is blank, thousands separator remains during editing.</span>
+				<span class="noticeMessage">Enter feet above sea level with a sign.</span>
+			</div>
+			<div class="testExample">
+				<input id="q05" class="small"/>
+				<label for="oc5">onChange:</label><input id="oc5" size="10" disabled value="not fired yet!" autocomplete="off"/>
+			</div>
+<script>
+	// See if we can make a widget in script and attach it to the DOM ourselves.
+	dojo.ready(function(){
+		var props = {
+			name: "elevation",
+			value: 3000,
+			constraints: {min:-20000,max:20000,places:0},
+			promptMessage: "Enter a value between -20000 and +20000",
+			required: true,
+			style:{ textAlign: document.documentElement.dir == "rtl" ? "left" : "right" },
+			editOptions:{pattern:'#,##0'},
+			invalidMessage: "Invalid elevation.",
+			onChange: function(val){dojo.byId('oc5').value = val; },
+			"class": "medium"
+		};
+		var w = new dijit.form.NumberTextBox(props, "q05");
+	});
+</script>
+<!--
+			<div class="dojoTitlePaneLabel">
+				<label for="attach-here">Population:  </label>
+				<span class="noticeMessage">IntegerTextBox class,
+					Attributes: {trim: true, required: true, signed: false, separator: ","}. <br><b> This widget was added in script, not markup. </b> </span>
+			</div>
+			<div class="testExample" >
+				<input id="attach-here" type="text" name="population" class="medium" value="1500000"/>
+			</div>
+
+			<script>
+				// See if we can make a widget in script and attach it to the DOM ourselves.
+				dojo.ready(function(){
+					var props = {
+						name: "population",
+						value: "1,500,000",
+						trim: "true",
+						required: "true",
+						pattern: dojo.regexp.integer,
+						constraints: {signed:false, separator: ","},
+						invalidMessage: "Invalid population.  Enter a number."
+					};
+					var w = new dijit.form.ValidationTextBox(props, "attach-here");
+					});
+			</script>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q06">Real Number:  </label>
+				<span class="noticeMessage">RealNumberTextBox class,
+					Attributes: {trim: true, required: true}. Enter any sort of real number.</span>
+			</div>
+			<div class="testExample">
+				<input id="q06" type="text" name="real1" class="medium" value="+0.1234"
+					data-dojo-type="dijit/form/ValidationTextBox"
+					pattern="dojo.regexp.realNumber"
+					trim="true"
+					required="true"
+					invalidMessage="This is not a valid real number." />
+			</div>
+			<div class="dojoTitlePaneLabel">
+				<label for="q07">Exponential Notation:  </label>
+				<span class="noticeMessage">RealNumberTextBox class,
+					Attributes: {exponent: true}. Enter a real number in exponential notation.</span>
+			</div>
+			<div class="testExample">
+				<input id="q07" type="text" name="real2" class="medium" value="+0.12"
+					data-dojo-type="dijit/form/ValidationTextBox"
+					pattern="dojo.regexp.realNumber"
+					trim="true"
+					required="true"
+					constraints="{exponent:true}"
+					invalidMessage="Number must be in exponential notation. Example +5E-28" />
+			</div>
+			-->
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q08">Annual Income:  </label>
+				<span class="noticeMessage">CurrencyTextBox class,
+					Attributes: {fractional: true}.  Enter whole and cents.  Currency symbol is optional. Cents are MANDATORY.</span>
+			</div>
+
+			<div class="testExample">
+				<input id="q08" data-dojo-type="dijit/form/CurrencyTextBox"
+					name="income1" class="medium" value="54775.53" required
+					data-dojo-props='constraints:{fractional:true},
+						currency:"USD",
+						onChange:function(val){ dojo.byId("oc8").value = val; },
+						invalidMessage:"Invalid amount.  Cents are MANDATORY." '/>USD
+				&nbsp;<label for="oc8">onChange:</label><input id="oc8" size="15" disabled value="not fired yet!" autocomplete="off"/>
+			</div>
+
+			<div class="testExample">
+				<label for="q08eur">euro currency (local format) fractional part is optional:</label>
+				<input id="q08eur" data-dojo-type="dijit/form/CurrencyTextBox"
+					name="income2" class="medium" value="54775.53" required
+					data-dojo-props='currency:"EUR", invalidMessage:"Invalid amount.  Include cents." '/>EUR
+				<button onclick="dijit.byId('q08eur').set('disabled',true); return false;">Disable</button>
+				<button onclick="dijit.byId('q08eur').set('disabled',false); return false;">Enable</button>
+				<button onclick="dijit.byId('q08eur').reset(); return false;">Reset</button>
+			</div>
+
+			<!--
+				It is unusual to override the lang properties on individual
+				widgets.  Usually it should be the user's default or set on
+				a page basis by the server.  This is for testing purposes
+			-->
+			<div class="testExample">
+				euro currency (fixed lang: de-de) programmatically created, fractional part is optional: <input id="q08eurde" class="medium"/>EUR
+			</div>
+
+			<script>
+				// See if we can make a widget in script and attach it
+				// to the DOM ourselves.
+				dojo.ready(function(){
+					var example = dojo.currency.format(54775.53, {locale: 'de-de', currency: "EUR"});
+					var props = {
+						name: "income3",
+						value: 54775.53,
+						lang: 'de-de',
+						required: true,
+						currency: "EUR",
+						invalidMessage: "Invalid amount.  Example: " + example,
+						"aria-label": "income3 de-de"
+					};
+					var w = new dijit.form.CurrencyTextBox(props, "q08eurde");
+				});
+			</script>
+
+			<!--
+			<div class="dojoTitlePaneLabel">
+				<label for="q08a">Annual Income:  </label>
+				<span class="noticeMessage">Old regexp currency textbox,
+							Attributes: {fractional: true}. Enter dollars and cents.</span>
+			</div>
+			<div class="testExample">
+				<input id="q08a" type="text" name="income3" class="medium" value="$54,775.53"
+					data-dojo-type="dijit/form/ValidationTextBox"
+					pattern="dojo.regexp.currency"
+					trim="true"
+					required="true"
+					constraints="{fractional:true}"
+					invalidMessage="Invalid amount.  Include cents. Example: $12,000.00" />
+			</div>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q09">IPv4 Address:  </label>
+				<span class="noticeMessage">IpAddressTextBox class,
+					Attributes: {allowIPv6: false, allowHybrid: false}. Also Dotted Hex works, 0x18.0x11.0x9b.0x28</span>
+			</div>
+			<div class="testExample">
+				<input id="q09" type="text" name="ipv4" class="medium" value="24.17.155.40"
+					data-dojo-type="dijit/form/ValidationTextBox"
+					pattern="dojo.regexp.ipAddress"
+					trim="true"
+					required="true"
+					constraints="{allowIPv6:false,allowHybrid:false}"
+					invalidMessage="Invalid IPv4 address."/>
+			</div>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q10"> IPv6 Address:  </label>
+				<span class="noticeMessage">IpAddressTextBox class,
+					Attributes: {allowDottedDecimal: false, allowDottedHex: false}.
+							Also hybrid works, x:x:x:x:x:x:d.d.d.d</span>
+			</div>
+			<div class="testExample">
+				<input id="q10" type="text" name="ipv6" class="long" value="0000:0000:0000:0000:0000:0000:0000:0000"
+					data-dojo-type="dijit/form/ValidationTextBox"
+					pattern="dojo.regexp.ipAddress"
+					trim="true"
+					uppercase = "true"
+					required="true"
+					constraints="{allowDottedDecimal:false, allowDottedHex:false, allowDottedOctal:false}"
+					invalidMessage="Invalid IPv6 address, please enter eight groups of four hexadecimal digits. x:x:x:x:x:x:x:x"/>
+			</div>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q11"> URL:  </label>
+				<span class="noticeMessage">UrlTextBox class,
+					Attributes: {required: true, trim: true, scheme: true}. </span>
+			</div>
+
+			<div class="testExample">
+				<input id="q11" type="text" name="url" class="long" value="http://www.xyz.com/a/b/c?x=2#p3"
+					data-dojo-type="dijit/form/ValidationTextBox"
+					pattern="dojo.regexp.url"
+					trim="true"
+					required="true"
+					constraints="{scheme:true}"
+					invalidMessage="Invalid URL.  Be sure to include the scheme, http://..." />
+			</div>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q12"> Email Address  </label>
+				<span class="noticeMessage">EmailTextBox class,
+					Attributes: {required: true, trim: true}. </span>
+			</div>
+
+			<div class="testExample">
+				<input id="q12" type="text" name="email" class="long" value="fred&barney@stonehenge.com"
+					data-dojo-type="dijit/form/ValidationTextBox"
+					pattern="dojo.regexp.emailAddress"
+					trim="true"
+					required="true"
+					invalidMessage="Invalid Email Address." />
+			</div>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q13"> Email Address List </label>
+				<span class="noticeMessage">EmailListTextBox class,
+					Attributes: {required: true, trim: true}. </span>
+			</div>
+
+			<div class="testExample">
+				<input id="q13" type="text" name="email" class="long" value="a@xyz.com; b@xyz.com; c@xyz.com; "
+					data-dojo-type="dijit/form/ValidationTextBox"
+					pattern="dojo.regexp.emailAddressList"
+					trim="true"
+					required="true"
+					invalidMessage="Invalid Email Address List." />
+			</div>
+			-->
+			<div class="dojoTitlePaneLabel">
+				<label for="q22">Regular Expression </label>
+				<span class="noticeMessage">RegexpTextBox class,
+					Attributes: {required: true} </span>
+			</div>
+			<div class="testExample">
+				<input id="q22" data-dojo-type="dijit/form/ValidationTextBox"
+					name="phone" class="medium" value="someTestString" required
+					data-dojo-props='pattern:"[\\w]+", invalidMessage:"Invalid Non-Space Text."'/>
+			</div>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q23"> Password </label>
+				<span class="noticeMessage">(just a test that type attribute is obeyed) </span>
+			</div>
+			<div class="testExample">
+				<input id="q23" data-dojo-type="dijit/form/TextBox" type="password" name="password" class="medium"/>
+			</div>
+
+			<div class="dojoTitlePaneLabel">
+				<label id="l_ticket1651">Trac ticket 1651:  </label>
+				<span class="noticeMessage">value: null should show up as empty</span>
+			</div>
+			<div class="testExample">
+				<input id="ticket1651" class="medium" value="not null"/>
+			</div>
+
+			<script>
+				// See if we can make a widget in script and attach it to the DOM ourselves.
+				dojo.ready(function(){
+					var props = {
+							name: "ticket1651",
+							id: "mname",
+							templateString: null, // #11493
+							templatePath: dojo.moduleUrl('dijit.form.templates', 'TextBox.html'),
+							value: null,
+							"aria-labelledby":"l_ticket1651"
+					};
+					var w = new dijit.form.TextBox(props, "ticket1651");
+				});
+			</script>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q24">initially readOnly TextBox</label>
+				<span class="noticeMessage">a test that readOnly and disabled are understood for TextBox</span>
+			</div>
+			<div class="testExample">
+				<input id="q24" data-dojo-type="dijit/form/TextBox"
+					name="readOnly" class="medium" readOnly value="cannot type here" title="hint text"/>
+				<input type="button" id="removereadonly" onclick="dijit.byId('q24').set('readOnly',false);" value="Remove readOnly" tabIndex="-1"/>
+				<input type="button" onclick="dijit.byId('q24').set('readOnly',true);" value="Set readOnly" tabIndex="-1"/>
+				<input type="button" id="removedisabled" onclick="dijit.byId('q24').set('disabled',false);" value="Remove disabled" tabIndex="-1"/>
+				<input type="button" onclick="dijit.byId('q24').set('disabled',true);" value="Set disabled" tabIndex="-1"/>
+			</div>
+			<div class="dojoTitlePaneLabel">
+				<label for="q25">initially disabled ValidationTextBox</label>
+				<span class="noticeMessage">a test that disabled is understood for ValidationTextBox</span>
+			</div>
+			<div class="testExample">
+				<input id="q25" data-dojo-type="dijit/form/ValidationTextBox"
+					name="disabled" class="medium" disabled value="cannot type here"/>
+				<input type="button" onclick="dijit.byId('q25').set('readOnly',false);" value="Remove readOnly" tabIndex="-1"/>
+				<input type="button" onclick="dijit.byId('q25').set('readOnly',true);" value="Set readOnly" tabIndex="-1"/>
+				<input type="button" onclick="dijit.byId('q25').set('disabled',false);" value="Remove disabled" tabIndex="-1"/>
+				<input type="button" onclick="dijit.byId('q25').set('disabled',true);" value="Set disabled" tabIndex="-1"/>
+			</div>
+
+			<script>
+				// so robot can get to it easily
+				document.displayData=function(){
+					var f = document.getElementById("form1");
+					var s = "";
+					for(var i = 0; i < f.elements.length; i++){
+						var elem = f.elements[i];
+						if(elem.nodeName.toLowerCase() == "button" || elem.type=="submit" || elem.type=="button")  { continue; }
+						s += elem.name + ": " + elem.value + "\n";
+					}
+					return s;
+				}
+			</script>
+
+			<div>
+				<button name="button" onclick="alert(document.displayData()); return false;" tabIndex="-1">view data</button>
+				<input type="submit" name="submit"  tabIndex="-1"/>
+			</div>
+
+		</form>
+		<div class="dojoTitlePaneLabel">
+				<label for="q26">TextBox with placeholder</label>
+				<span class="noticeMessage">a test that placeholder works for TextBox.  10px padding added for testing.</span>
+		</div>
+		<div class="testExample">
+			<input id="q26" data-dojo-type="dijit/form/TextBox" placeHolder="placeholder is here" name="placeHolder" value=""/>
+		</div>
+		<h2>Tooltip positioning</h2>
+		<p>
+		These buttons switch the positions searched to try to place the validation error tooltips.
+		Note that setting tooltip positioning to "above" or "below" is dangerous if
+		you have a node with a dropdown, but the drop down might overlap the tooltip.
+		</p>
+		<button onclick="dijit.Tooltip.defaultPosition=['above', 'below'];">above, below</button>
+		<button onclick="dijit.Tooltip.defaultPosition=['after', 'before'];">after, before (default)</button>
+
+		<div class="monospace">
+			<input id="monospace1"/>
+		</div>
+		<div class="sans">
+			<input id="sans1"/>
+		</div>
+
+		<h2>Validation tooltips inside of dialogs:</h2>
+		<div dojoType="dijit.Dialog" id="dlg">
+			<label for="dlgNTB">NumberTextBox:</label>
+			<div dojoType="dijit.form.NumberTextBox" id="dlgNTB"></div>
+		</div>
+		<button dojoType="dijit.form.Button" id="dlgOpenBtn" onclick="dijit.byId('dlg').show();">show dialog</button>
+
+	</body>
+</html>

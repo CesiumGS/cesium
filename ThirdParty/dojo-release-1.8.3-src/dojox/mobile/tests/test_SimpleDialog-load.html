@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Simple Dialog Test</title>
+
+	<link href="../themes/common/domButtons.css" rel="stylesheet"/>
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','SimpleDialog','TextBox','Button','Slider']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/dom",
+			"dijit/registry",
+			"dojox/mobile/ProgressIndicator",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/SimpleDialog",
+			"dojox/mobile/TextBox",
+			"dojox/mobile/Button",
+			"dojox/mobile/Slider",
+			"dojox/mobile/_ContentPaneMixin"
+		], function(dom, registry, ProgressIndicator){
+			show = function(dlg){
+				registry.byId(dlg).show();
+			}
+			hide = function(dlg){
+				registry.byId(dlg).hide();
+			}
+			var prog;
+			show_progress_indicator = function(dlg,cont){
+				show(dlg);
+				var container = dom.byId(cont);
+				prog = ProgressIndicator.getInstance();
+				container.appendChild(prog.domNode);
+				prog.start();
+				setTimeout(function(){
+					hide_progress_indicator(dlg);
+				}, 5000);
+			}
+			hide_progress_indicator = function(dlg){
+				prog.stop();
+				hide(dlg);
+			}
+		});
+
+	</script>
+
+	<style>
+		.mblSimpleDialogInput {
+			margin: 7px 0 14px;
+			width: 260px;
+		}
+		.mblSimpleDialogButton {
+			margin: 7px 0 0;
+			width: 262px;
+			font-size: 17px;
+			font-weight: bold;
+			opacity: 0.95;
+		}
+		.mblSimpleDialogButton2l {
+			float: left;
+			width: 127px;
+			margin: 7px 0 0;
+			font-size: 17px;
+			font-weight: bold;
+			opacity: 0.95;
+		}
+		.mblSimpleDialogButton2r {
+			float: right;
+			width: 127px;
+			margin: 7px 0 0;
+			font-size: 17px;
+			font-weight: bold;
+			opacity: 0.95;
+		}
+		.mblSimpleDialog .mblProgressIndicator {
+			position: relative;
+			margin: 14px 0 7px;
+			top: 0;
+		}
+
+		.mblSimpleDialog .mblListItem {
+			text-align: left;
+		}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="dlg_message"
+	     data-dojo-type="dojox.mobile.SimpleDialog"
+	     data-dojo-mixins="dojox.mobile._ContentPaneMixin"
+	     data-dojo-props='href:"data/dialog1.html"'></div>
+
+	<div id="dlg_confirm"
+	     data-dojo-type="dojox.mobile.SimpleDialog"
+	     data-dojo-mixins="dojox.mobile._ContentPaneMixin"
+	     data-dojo-props='href:"data/dialog2.html"'></div>
+	
+	<div id="dlg_login"
+	     data-dojo-type="dojox.mobile.SimpleDialog"
+	     data-dojo-mixins="dojox.mobile._ContentPaneMixin"
+	     data-dojo-props='href:"data/dialog3.html"'></div>
+
+	<div id="dlg_progress"
+	     data-dojo-type="dojox.mobile.SimpleDialog"
+	     data-dojo-mixins="dojox.mobile._ContentPaneMixin"
+	     data-dojo-props='href:"data/dialog4.html"'></div>
+
+	<div id="dlg_volume"
+	     data-dojo-type="dojox.mobile.SimpleDialog"
+	     data-dojo-mixins="dojox.mobile._ContentPaneMixin"
+	     data-dojo-props='href:"data/dialog5.html"'></div>
+
+	<div id="dlg_select"
+	     data-dojo-type="dojox.mobile.SimpleDialog"
+	     data-dojo-mixins="dojox.mobile._ContentPaneMixin"
+	     data-dojo-props='href:"data/dialog6.html"'></div>
+
+	<div id="view" data-dojo-type="dojox.mobile.View" data-dojo-props='selected:true'>
+		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
+			Message Box <button onclick="show('dlg_message')">Show Dialog</button>
+		</div>
+		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
+			Confirmation Dialog <button onclick="show('dlg_confirm')">Show Dialog</button>
+		</div>
+		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
+			Login Dialog <button onclick="show('dlg_login')">Show Dialog</button>
+		</div>
+		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
+			Progress Indicator <button onclick="show_progress_indicator('dlg_progress','progress_indicator_container')">Show Dialog</button>
+		</div>
+		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
+			Volume Control <button onclick="show('dlg_volume')">Show Dialog</button>
+		</div>
+		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
+			Selectable List <button onclick="show('dlg_select')">Show Dialog</button>
+		</div>
+	</div>
+			
+</body>
+</html>

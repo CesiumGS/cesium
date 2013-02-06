@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>dijit.form.TextBox size tests</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../../themes/dijit.css";
+		@import "../../themes/dijit_rtl.css";
+		@import "../../themes/tundra/Common.css";
+		@import "../../themes/tundra/form/Button.css";
+		@import "../../themes/tundra/form/Common.css";
+		@import "../../themes/tundra/form/Select.css";
+		@import "../../themes/claro/Common.css";
+		@import "../../themes/claro/form/Button.css";
+		@import "../../themes/claro/form/Button_rtl.css";
+		@import "../../themes/claro/form/Common.css";
+		@import "../../themes/claro/form/Common_rtl.css";
+		@import "../../themes/claro/form/NumberSpinner.css";
+		@import "../../themes/claro/form/Select.css";
+		@import "../../themes/soria/Common.css";
+		@import "../../themes/soria/form/Button.css";
+		@import "../../themes/soria/form/Button_rtl.css";
+		@import "../../themes/soria/form/Common.css";
+		@import "../../themes/soria/form/Select.css";
+		@import "../../themes/nihilo/Common.css";
+		@import "../../themes/nihilo/form/Button.css";
+		@import "../../themes/nihilo/form/Button_rtl.css";
+		@import "../../themes/nihilo/form/Common.css";
+		@import "../../themes/nihilo/form/Select.css";
+
+		.dijitTextBox,
+		.dijitSelect {
+			box-sizing: border-box !important;
+			-moz-box-sizing: border-box !important;
+			width: 330px !important;
+		}
+		.dj_ie6 .dijitSelect,
+		.dj_ie7 .dijitSelect {
+			width: 332px !important; /* lack of box-sizing support */
+		}
+		.dj_iequirks .dijitSelect {
+			width: 330px !important; /* lack of box-sizing support */
+		}
+		#table > TBODY > TR > TD {
+			background-color: pink;
+			font-size: 100%;
+			padding: 0;
+			margin: 0;
+		}
+		TABLE#table, #table > TBODY > TR > TD, .dijit {
+			margin: 0 !important;
+		}
+		#table .dijit {
+			vertical-align: bottom;
+		}
+		.dj_ie9 table.dijitSelect {
+			border-width: thin !important; /* needed for IE9 strict bug since 1px table border only measures 0.8px */
+		}
+		.dj_iequirks.dj_ie9 table.dijitSelect {
+			border-width: 1px !important; /* needed for IE9 quirks due to strict rule above */
+		}
+		.padded .dijitInputField {
+			padding: 10px !important;
+		}
+		.unPadded .dijitInputField {
+			padding: 0 !important;
+		}
+		#table {
+			padding: 0;
+			border:1px solid black;
+			background-color: pink;
+		}
+		#table .layout {
+			padding: 1px;
+			border: 1px solid black;
+		}
+		.dj_a11y, /* a11y emulation rules */
+		.dj_a11y * {
+			background: white none !important;
+			border-color: black !important;
+			color: black !important;
+		}
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.form.TextBox");
+		dojo.require("dijit.form.NumberTextBox");
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.form.FilteringSelect");
+		dojo.require("dijit.form.NumberSpinner");
+		dojo.require("dijit.form.Select");
+		dojo.require("dijit.form.Button");
+
+		dojo.ready(function(){
+
+			var padding = "padded";
+			var theme = "claro";
+			var direction = "ltr";
+			var fontSize = "12pt";
+			var fontFamily = "monospace";
+
+			dijit.byId("theme").isRealA11y = dojo.hasClass(dojo.body(), "dj_a11y");
+
+			var str = window.location.href.substr(window.location.href.indexOf("?")+1).split(/#/);
+			var ary  = str[0].split(/&/);
+			if(window.location.href.indexOf("?") > -1){
+				for(var i=0; i<ary.length; i++){
+					var split = ary[i].split("="),
+						key = split[0],
+						value = split[1].replace(/[^\w]/g, "");	// replace() to prevent XSS attack
+					switch(key){
+						case "locale":
+							// locale string | null
+							dojo.locale = dojo.config.locale = locale = value;
+							break;
+						case "dir":
+						case "direction":
+							// rtl | ltr
+							direction = value;
+							break;
+						case "theme":
+							// tundra | soria | nihilo | claro | a11y
+							theme = value;
+							break;
+						case "a11y": // included for backward compat
+							theme = "a11y";
+							break;
+						case "size":
+						case "fontsize":
+						case "fontSize":
+							// size string (e.g 12px)
+							fontSize = value;
+							break;
+						case "family":
+						case "fontfamily":
+						case "fontFamily":
+							// family string (e.g monospace)
+							fontFamily = value;
+							break;
+						case "padding":
+							// padded | unPadded | default
+							padding = value;
+							break;
+					}
+				}
+			}
+
+			dijit.byId('padding').set('value', padding, true);
+			dijit.byId('theme').set('value', theme, true);
+			dijit.byId('direction').set('value', direction, true);
+			dijit.byId('fontSize').set('value', fontSize, true);
+			dijit.byId('fontFamily').set('value', fontFamily, true);
+
+			var	textbox = dijit.byId("textbox"),
+				validation = dijit.byId("validation"),
+				combobox = dijit.byId("combobox"),
+				select = dijit.byId("select"),
+				spinner = dijit.byId("spinner");
+
+			var compareToTextBox = function(attr){
+				try{
+				var
+					attrMap = {
+						x: 'offsetLeft',
+						h: 'offsetHeight',
+						w: 'offsetWidth'
+					},
+					textboxNode = textbox.domNode,
+					validationNode = validation.domNode,
+					comboboxNode = combobox.domNode,
+					selectNode = select.domNode,
+					spinnerNode = spinner.domNode,
+					textboxPos = dojo.position(textboxNode),
+					validationPos = dojo.position(validationNode),
+					comboboxPos = dojo.position(comboboxNode),
+					selectPos = dojo.position(selectNode),
+					spinnerPos = dojo.position(spinnerNode),
+					attrMapAttr = attrMap[attr];
+					// IE9 sometimes reports getBoundingClientRect.bottom incorrectly for TD so also check offset*
+				doh.t(Math.round(textboxPos[attr]) == Math.round(validationPos[attr])
+					|| (attrMapAttr && textboxNode[attrMapAttr] > 0 && textboxNode[attrMapAttr] == validationNode[attrMapAttr]),
+					"validationPos " + attr + " " + textboxPos[attr] + " vs " + validationPos[attr]);
+				doh.t(Math.round(textboxPos[attr]) == Math.round(comboboxPos[attr])
+					|| (attrMapAttr && textboxNode[attrMapAttr] > 0 && textboxNode[attrMapAttr] == comboboxNode[attrMapAttr]),
+					"comboboxPos " + attr + " " + textboxPos[attr] + " vs " + comboboxPos[attr]);
+				doh.t(Math.round(textboxPos[attr]) == Math.round(selectPos[attr])
+					|| (attrMapAttr && textboxNode[attrMapAttr] > 0 && textboxNode[attrMapAttr] == selectNode[attrMapAttr])
+					|| (dojo.isIE <= 7 && (Math.round(textboxPos[attr]) - Math.round(selectPos[attr]) == 2)), // box-sizing issue
+					"selectPos " + attr + " " + textboxPos[attr] + " vs " + selectPos[attr]);
+				doh.t(Math.round(textboxPos[attr]) == Math.round(spinnerPos[attr])
+					|| (attrMapAttr && textboxNode[attrMapAttr] > 0 && textboxNode[attrMapAttr] == spinnerNode[attrMapAttr]),
+					"spinnerPos " + attr + " " + textboxPos[attr] + " vs " + spinnerPos[attr]);
+				}catch(e){
+					throw e; // prevent consoles from including entire function text in output
+				}
+			};
+
+			var runTest = [
+				{
+						name: "x",
+						runTest: function(){ compareToTextBox("x"); }
+				},
+				{
+						name: "h",
+						runTest: function(){ compareToTextBox("h"); }
+				},
+				{
+						name: "w",
+						runTest: function(){ compareToTextBox("w"); }
+				}
+			];
+
+			var createErrors = function(){
+				textbox._hasBeenBlurred = true;
+				textbox.set('value', "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz");
+				validation._hasBeenBlurred = true;
+				validation.set('displayedValue', "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz");
+				combobox._hasBeenBlurred = true;
+				combobox.set('displayedValue', "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz");
+				spinner._hasBeenBlurred = true;
+				spinner.set('displayedValue', "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz");
+				select._hasBeenBlurred = true;
+				select.set('value', "");
+			};
+
+			doh.register("create normal boxes", {
+				name: "setup",
+				timeout: 9000,
+				runTest: function(){
+					var d = new doh.Deferred();
+					/* create errors, then insert good values to exercise the widget rendering */
+					createErrors();
+					validation.set('value', 23);
+					spinner.set('value', 32);
+					combobox.onChange = function(v){ if(v == "KY"){ d.callback(true); combobox.onChange = function(){}; }};
+					combobox.set('value', "KY");
+					select.set('value', "noError");
+					return d;
+				}
+ 			});
+
+			doh.register("check normal sizes", runTest);
+
+			dojo.forEach([textbox, validation, combobox, select, spinner], function(widget){
+				var widgetName = widget.baseClass.replace(/^.* /, "");
+				doh.register("valid internal offsets", [
+					{
+						name: "textbox: " + widgetName,
+						timeout: 1000,
+						runTest: function(){
+							var	paddedBoxPos = dojo.position(widget.containerNode || widget.focusNode.parentNode),
+								inputPos = dojo.position(dojo.query('.dijitSelectLabel', widget.domNode)[0] || widget.focusNode),
+								paddingLeft = Math.abs(inputPos.x - paddedBoxPos.x),
+								paddingRight = Math.abs(inputPos.w - paddedBoxPos.w) - paddingLeft,
+								paddingTop = Math.abs(inputPos.y - paddedBoxPos.y),
+								paddingBottom = Math.abs(inputPos.h - paddedBoxPos.h) - paddingTop,
+								pad = undefined;
+							if(dojo.hasClass(testtable, "padded")){
+								pad = 10;
+							}else if(dojo.hasClass(testtable, "unPadded")){
+								pad = 0;
+							}else{
+								return;
+							}
+							doh.t(Math.abs(paddingLeft-pad) <= 1, "left padding("+paddingLeft+") should be "+pad);
+							doh.t(Math.abs(paddingRight-pad) <= 1, "right padding("+paddingRight+") should be "+pad);
+							doh.t(Math.abs(paddingTop-pad) <= 1, "top padding("+paddingTop+") should be "+pad);
+							doh.t(Math.abs(paddingBottom-pad) <= 1, "bottom padding("+paddingBottom+") should be "+pad);
+						}
+					},
+					{
+						name: "padded box: " + widgetName,
+						timeout: 1000,
+						runTest: function(){
+							var	domNodePos = dojo.position(widget.domNode),
+								contentNode = (widget.containerNode || widget.focusNode).parentNode,
+								paddedBoxPos = dojo.position(contentNode),
+								//paddedBoxPos = dojo.position(widget.containerNode || widget.focusNode.parentNode),
+								// getBorderExtents bug neccesitates use of currentStyle
+								borderV = ((widget.domNode.currentStyle && widget.domNode.currentStyle.borderTopWidth) 
+									? (parseInt(widget.domNode.currentStyle.borderTopWidth) + parseInt(widget.domNode.currentStyle.borderBottomWidth)) 
+									: dojo.getBorderExtents(widget.domNode).h)
+									|| (widget.domNode.offsetHeight - widget.domNode.firstChild.offsetHeight),
+								borderH = ((widget.domNode.currentStyle && widget.domNode.currentStyle.borderLeftWidth) 
+									? (parseInt(widget.domNode.currentStyle.borderLeftWidth) + parseInt(widget.domNode.currentStyle.borderRightWidth)) 
+									: dojo.getBorderExtents(widget.domNode).h)
+									|| (widget.domNode.offsetWidth - widget.domNode.firstChild.offsetWidth);
+							if(!borderV || !borderH){ // border is inside domNode
+								var be = dojo.getBorderExtents(contentNode);
+								paddedBoxPos.x += be.l;
+								paddedBoxPos.y += be.t;
+								paddedBoxPos.w -= be.w;
+								paddedBoxPos.h -= be.h;
+								borderV = be.h;
+								borderH = be.w;
+							}
+							var	clientHeight = widget.domNode.offsetHeight - borderV,
+								clientWidth = widget.domNode.offsetWidth - borderH,
+								offset = Math.min(Math.abs(domNodePos.x + (borderH >> 1) - paddedBoxPos.x), Math.abs(domNodePos.x + domNodePos.w - (borderH >> 1) - paddedBoxPos.x - paddedBoxPos.w));
+							doh.t(Math.abs(clientHeight-paddedBoxPos.h) <= 1, "padded textbox height: " + clientHeight + " vs " + paddedBoxPos.h);
+							doh.t(offset <= 1, "padded textbox horizontally just left or right (" + offset + ") of domNode: domNode x/w/b = " + domNodePos.x+"/"+domNodePos.w+"/"+borderH + ", pad box x/w = " + paddedBoxPos.x+"/"+paddedBoxPos.w);
+						}
+					},
+					{
+						name: "button: " + widgetName,
+						timeout: 1000,
+						runTest: function(){
+							var buttonNode = dojo.query(".dijitArrowButton", widget.domNode)[0];
+							if(!buttonNode){ return; }
+							var paddedBoxNode = (widget.containerNode || widget.focusNode).parentNode;
+							while(buttonNode.parentNode != paddedBoxNode.parentNode){
+								buttonNode = buttonNode.parentNode;
+							}
+							var	paddedBoxPos = dojo.position(paddedBoxNode),
+								buttonPos = dojo.position(buttonNode),
+								offset = Math.min(Math.abs(paddedBoxPos.x + paddedBoxPos.w - buttonPos.x), Math.abs(buttonPos.x + buttonPos.w - paddedBoxPos.x));
+							// IE 6 & quirks float bug(s) causes a known 3px margin between input field & validation icon 
+							// Fix could be .dj_ie .dijitInputField { float:right; }
+							// But this breaks even more the tests, dojo.position() bug?
+							if(dojo.isIE < 7 || dojo.isQuirks)
+								doh.t(offset <= 4, "button node horizontally just left or right (" + offset + ") of padded input node: input x/w = " + paddedBoxPos.x+"/"+paddedBoxPos.w + ", button x/w = " + buttonPos.x+"/"+buttonPos.w);
+							else
+								doh.t(offset <= 1, "button node horizontally just left or right (" + offset + ") of padded input node: input x/w = " + paddedBoxPos.x+"/"+paddedBoxPos.w + ", button x/w = " + buttonPos.x+"/"+buttonPos.w);
+						}
+					}
+				]);
+			});
+
+			doh.register("create errors", {
+				name: "setup",
+				timeout: 9000,
+				runTest: function(){
+					var d = new doh.Deferred();
+					createErrors();
+					textbox.onChange = function(v){ d.callback(true); textbox.onChange = function(){}; };
+					textbox.set('value', textbox.get('value')+' ');
+					return d;
+				}
+			});
+
+			doh.register("check error sizes", runTest);
+
+			doh.register("check button sizes", [
+				{
+					name: "ComboBox",
+					timeout: 1000,
+					runTest: function(){
+						var	inputPos = dojo.position(combobox.focusNode.parentNode),
+							arrowPos = dojo.position(combobox._buttonNode);
+						doh.t(Math.abs(inputPos.h-arrowPos.h) <= 1, "ComboBox button height (" + arrowPos.h + ") is same as input height (" + inputPos.h + ")");
+					}
+				},
+				{
+					name: "Spinner",
+					timeout: 1000,
+					runTest: function(){
+						// use offsetHeight since the buttons could be truncated by overflow:hidden
+						var	inputHeight = spinner.focusNode.parentNode.offsetHeight,
+							downArrowHeight = spinner.downArrowNode.offsetHeight,
+							upArrowHeight = spinner.upArrowNode.offsetHeight;
+						doh.t((inputHeight-downArrowHeight-upArrowHeight) <= 1, "Spinner button heights (" + upArrowHeight + "," + downArrowHeight + ") are equal to the input height (" + inputHeight + ")");
+						doh.t(Math.abs(upArrowHeight - downArrowHeight) <= 1, "Spinner UP button height (" + upArrowHeight + ") is equal to the DOWN button height (" + downArrowHeight + ")");
+					}
+				}
+  			]);
+
+			dojo.forEach([validation, combobox, spinner], function(widget){
+				var widgetName = widget.baseClass.replace(/^.* /, "");
+				doh.register("error internal offsets", [
+					{
+						name: "textbox: " + widgetName,
+						timeout: 1000,
+						runTest: function(){
+							var	paddedBoxPos = dojo.position(widget.focusNode.parentNode),
+								inputPos = dojo.position(widget.focusNode),
+								paddingLeft = Math.abs(inputPos.x - paddedBoxPos.x),
+								paddingRight = Math.abs(inputPos.w - paddedBoxPos.w) - paddingLeft,
+								paddingTop = Math.abs(inputPos.y - paddedBoxPos.y),
+								paddingBottom = Math.abs(inputPos.h - paddedBoxPos.h) - paddingTop,
+								pad = undefined;
+							if(dojo.hasClass(testtable, "padded")){
+								pad = 10;
+							}else if(dojo.hasClass(testtable, "unPadded")){
+								pad = 0;
+							}else{
+								return;
+							}
+							doh.t(Math.abs(paddingLeft-pad) <= 1, "left padding("+paddingLeft+") should be "+pad);
+							doh.t(Math.abs(paddingRight-pad) <= 1, "right padding("+paddingRight+") should be "+pad);
+							doh.t(Math.abs(paddingTop-pad) <= 1, "top padding("+paddingTop+") should be "+pad);
+							doh.t(Math.abs(paddingBottom-pad) <= 1, "bottom padding("+paddingBottom+") should be "+pad);
+						}
+					},
+					{
+						name: "padded box: " + widgetName,
+						timeout: 1000,
+						runTest: function(){
+							var	domNodePos = dojo.position(widget.domNode),
+								paddedBoxPos = dojo.position(widget.focusNode.parentNode),
+								clientHeight = widget.domNode.clientHeight,
+								clientWidth = widget.domNode.clientWidth,
+								border = (domNodePos.w - clientWidth) >> 1, // average border width
+								offset = Math.min(Math.abs(domNodePos.x + border - paddedBoxPos.x), Math.abs(domNodePos.x + domNodePos.w - border - paddedBoxPos.x - paddedBoxPos.w));
+							doh.t(Math.abs(clientHeight-paddedBoxPos.h) <= 1, "padded textbox height: " + clientHeight + " vs " + paddedBoxPos.h);
+							doh.t(offset <= 1, "padded textbox horizontally just left or right (" + offset + ") of domNode: domNode x/w/b = " + domNodePos.x+"/"+domNodePos.w+"/"+border + ", pad box x/w = " + paddedBoxPos.x+"/"+paddedBoxPos.w);
+						}
+					},
+					{
+						name: "validation node: " + widgetName,
+						timeout: 1000,
+						runTest: function(){
+							if(widget.state != "Error"){ return; }
+							var	validationNode = dojo.query(".dijitValidationContainer", widget.domNode)[0],
+								validationPos = dojo.position(validationNode),
+								paddedBoxPos = dojo.position(widget.focusNode.parentNode),
+								offset = Math.min(Math.abs(paddedBoxPos.x + paddedBoxPos.w - validationPos.x), Math.abs(validationPos.x + validationPos.w - paddedBoxPos.x));
+
+							// IE 6 & quirks float bug(s) causes a known 3px margin between input field & validation icon 
+							// Fix could be .dj_ie .dijitInputField { float:right; }
+							// But this breaks even more the tests, dojo.position() bug?
+							if(dojo.isIE < 7 || dojo.isQuirks)
+								doh.t(offset <= 4, "padded textbox horizontally just left or right (" + offset + ") of validation node: valiation node x/w = " + validationPos.x+"/"+validationPos.w + ", pad box x/w = " + paddedBoxPos.x+"/"+paddedBoxPos.w);
+							else
+								doh.t(offset <= 1, "padded textbox horizontally just left or right (" + offset + ") of validation node: valiation node x/w = " + validationPos.x+"/"+validationPos.w + ", pad box x/w = " + paddedBoxPos.x+"/"+paddedBoxPos.w);
+						}
+					},
+					{
+						name: "button: " + widgetName,
+						timeout: 1000,
+						runTest: function(){
+							if(widget.state != "Error" || widgetName == "dijitValidationTextBox" ||
+								widgetName == "dijitNumberTextBox" || widgetName == "dijitCurrencyTextBox"){ return; }
+							var	validationNode = dojo.query(".dijitValidationContainer", widget.domNode)[0],
+								buttonNode = dojo.query(".dijitValidationContainer", widget.domNode)[0].previousSibling,
+								validationPos = dojo.position(validationNode),
+								buttonPos = dojo.position(buttonNode),
+								offset = Math.min(Math.abs(validationPos.x + validationPos.w - buttonPos.x), Math.abs(buttonPos.x + buttonPos.w - validationPos.x));
+							doh.t(offset <= 1, "button node horizontally just left or right (" + offset + ") of validation node: valiation node x/w = " + validationPos.x+"/"+validationPos.w + ", button x/w = " + buttonPos.x+"/"+buttonPos.w);
+						}
+					}
+				]);
+			});
+
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro" role="main">
+
+	<h1 class="testTitle">dijit.form.TextBox size tests</h1>
+
+	<table class="padded" id="table" style="font-family:monospace;font-size:12pt;" role="presentation">
+		<tr>
+			<td style="font-size:1px;overflow:hidden;">&nbsp;</td>
+			<td style="font-size:1px;overflow:hidden;">&nbsp;</td>
+			<td style="font-size:1px;overflow:hidden;">&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="layout">TextBox</td>
+			<td class="layout"><input id="textbox" data-dojo-type="dijit/form/TextBox" data-dojo-props='type:"text", value:"text", "aria-label":"textbox"'/></td>
+			<td style="font-size:1px;overflow:hidden;">&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="layout">NumberTextBox</td>
+			<td class="layout"><input id="validation" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='type:"text", value:54, required:true, "aria-label":"NumberTextBox"'/></td>
+			<td style="font-size:1px;overflow:hidden;">&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="layout">FilteringSelect</td>
+			<td class="layout"><select id="combobox" data-dojo-type="dijit/form/FilteringSelect" data-dojo-props='required:true, "aria-label":"FilteringSelect"'>
+				<option value="KY">Kentucky</option>
+			</select></td>
+			<td style="font-size:1px;overflow:hidden;">&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="layout">Select</td>
+			<td class="layout">
+			<!-- width:0px prevents IE from resizing the table columns inappropriately -->
+			<select id="select" data-dojo-type="dijit/form/Select" style="width:0px;" data-dojo-props='required:true, "aria-label":"Select"'>
+				<option data-dojo-value=""></option>
+				<option data-dojo-value="noError">Some Label</option>
+			</select></td>
+			<td style="font-size:1px;overflow:hidden;">&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="layout">NumberSpinner</td>
+			<td class="layout"><div id="spinner" data-dojo-type="dijit/form/NumberSpinner" data-dojo-props='type:"text", value:45, required:true, "aria-label":"numberSpinner"'></div></td>
+			<td style="font-size:1px;overflow:hidden;">&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="layout">INPUT type=file</td>
+			<td class="layout"><input id="file" data-dojo-type="dijit/form/TextBox" data-dojo-props='type:"file", "aria-label":"textboxFile" '/></td>
+			<td style="font-size:1px;overflow:hidden;">&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="font-size:1px;overflow:hidden;">&nbsp;</td>
+			<td style="font-size:1px;overflow:hidden;">&nbsp;</td>
+			<td style="font-size:1px;overflow:hidden;">&nbsp;</td>
+		</tr>
+	</table><br>
+	<script type="text/javascript">
+		testtable = dojo.byId('table');
+
+		function fontFamilyOnChange(fontFamily){
+			testtable.style.fontFamily = fontFamily;
+			if(dojo.isIE){
+				dojo.query('[widgetId]', document.body).forEach(function(node){
+					node.style.fontFamily = fontFamily;
+					dojo.query('*', node).forEach(function(node){
+						node.style.fontFamily = fontFamily;
+					});
+				});
+			}
+		}
+
+		function directionOnChange(direction){
+			dojo.query('[widgetId]', testtable).forEach(function(node){
+				if(dojo.isIE == 7){ // IE layout bugs
+					dojo.query('INPUT', node).forEach(function(node){
+						node.className = node.className;
+					});
+				}
+				node.style.direction = direction;
+				node.parentNode.style.direction = direction;
+				dojo.forEach(node.className.split(' '), function(cls){
+					if(cls.indexOf('Rtl') > 0){
+						dojo.removeClass(node, cls);
+					}
+				});
+				if(direction == "rtl"){
+					dojo.forEach(node.className.split(' '), function(cls){
+						if(cls.indexOf('Box') > 0){
+							cls = cls.substr(0, cls.indexOf('Box')+3) + "Rtl" + cls.substr(cls.indexOf('Box')+3);
+						}else{
+							cls = cls + "Rtl";
+						}
+						dojo.addClass(node, cls);
+					});
+				}
+			});
+		}
+
+		function themeOnChange(theme){
+			if(theme == "a11y"){
+				theme="dj_a11y";
+			}
+			dojo.body().className = theme + ((this.isRealA11y && theme != "dj_a11y") ? " dj_a11y" : "");
+		}
+
+
+		function sizeOnChange(size){
+			testtable.style.fontSize = size;
+			dojo.query('[widgetId]', testtable).forEach(function(node){
+				if(dojo.isIE == 7){ // IE layout bugs
+					dojo.query('INPUT', node).forEach(function(node){
+						node.className = node.className;
+					});
+				}
+			});
+		}
+
+		function paddingOnChange(padding){
+			testtable.className = padding;
+			dojo.query('[widgetId]', testtable).forEach(function(node){
+				if(dojo.isIE == 7){ // IE layout bugs
+					dojo.query('INPUT', node).forEach(function(node){
+						node.className = node.className;
+					});
+				}
+			});
+		}
+	</script>
+	<table style="background-color:cyan;" border="1" role="presentation">
+	<tr><td class="layout" style="text-align:right;">Font family:
+	<select id="fontFamily" data-dojo-type="dijit/form/ComboBox" data-dojo-props='style:{fontSize:"14pt"}, value:"", onChange:fontFamilyOnChange, "aria-label":"fontFamily"'>
+		<option selected>monospace</option>
+		<option>Helvetica</option>
+		<option>Times</option>
+		<option>Verdana</option>
+	</select></td></tr>
+	<tr><td class="layout" style="text-align:right;">Font size:
+	<select id="fontSize" data-dojo-type="dijit/form/ComboBox" data-dojo-props='style:{fontSize:"14pt"}, value:"", onChange:sizeOnChange, "aria-label":"fontSize"'>
+		<option>small</option>
+		<option selected>12pt</option>
+		<option>xx-large</option>
+		<option>8pt</option>
+		<option>21px</option>
+		<option>1cm</option>
+		<option>1em</option>
+		<option>200%</option>
+	</select></td></tr>
+	<tr><td class="layout" style="text-align:right;">Padding:
+	<select id="padding" data-dojo-type="dijit/form/Select" data-dojo-props='style:{width:"0px", fontSize:"14pt"}, value:"padded", onChange:paddingOnChange, "aria-label":"padding"'>
+		<option value="default">default</option>
+		<option value="padded">padded</option>
+		<option value="unPadded">unPadded</option>
+	</select></td></tr>
+	<tr><td class="layout" style="text-align:right;">Direction:
+	<span id="direction" data-dojo-type="dijit/form/Select" data-dojo-props='style:{width:"0px", fontSize:"14pt"}, value:"ltr", onChange:directionOnChange, "aria-label":"direction"'>
+		<span data-dojo-value="ltr">left-to-right</span>
+		<span data-dojo-value="rtl">right-to-left</span>
+	</span></td></tr>
+	<tr><td class="layout" style="text-align:right;">Theme:
+	<select id="theme" data-dojo-type="dijit/form/Select" data-dojo-props='style:{width:"0px", fontSize:"14pt"}, value:"claro", onChange:themeOnChange, "aria-label":"theme"'>
+		<option data-dojo-value="tundra">tundra</option>
+		<option data-dojo-value="soria">soria</option>
+		<option data-dojo-value="nihilo">nihilo</option>
+		<option data-dojo-value="claro">claro</option>
+		<option data-dojo-value="a11y">a11y</option>
+	</select></td></tr>
+	</table>
+	<button data-dojo-type="dijit/form/Button" data-dojo-props='onClick:function(){ doh.run(); }'>Run tests</button>
+</body>
+</html>

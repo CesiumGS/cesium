@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Edge To Edge List</title>
+		<link href="../../themes/iphone/iphone.css" rel="stylesheet"/>
+
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+//			dojo.require("dojo.parser"); // Use the lightweight parser.
+			dojo.require("dojox.mobile.parser");
+			dojo.require("dojox.mobile");
+			dojo.requireIf(!dojo.isWebKit, "dojox.mobile.compat");
+		</script>
+		<script type="text/javascript" src="TestUtil.js"></script>
+		<script type="text/javascript" src="EdgeToEdgeCatagory.js"></script>
+	</head>
+	<body>
+		<div id="foo" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">Mobile Mashup</h1>
+			<h2 id="Category" dojoType="dojox.mobile.EdgeToEdgeCategory">Spaces</h2>
+			<ul dojoType="dojox.mobile.EdgeToEdgeList">
+				<li id="item1" dojoType="dojox.mobile.ListItem" icon="../images/i-icon-1.png" rightText="Off" moveTo="bar">u1space</li>
+				<li id="item2" dojoType="dojox.mobile.ListItem" icon="../images/i-icon-2.png" rightText="On" moveTo="bar">u2space</li>
+				<li id="item3" dojoType="dojox.mobile.ListItem" rightText="Off" moveTo="bar">Wi-Fi</li>
+			</ul>
+		</div>
+
+		<div id="bar" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading" back="Spaces" moveTo="foo">u1space</h1>
+			<h2 dojoType="dojox.mobile.EdgeToEdgeCategory">Applications</h2>
+			<ul dojoType="dojox.mobile.EdgeToEdgeList">
+				<li dojoType="dojox.mobile.ListItem" rightText="Off">Video</li>
+				<li dojoType="dojox.mobile.ListItem" icon="../images/i-icon-1.png" rightText="VPN">Maps</li>
+				<li dojoType="dojox.mobile.ListItem" rightText="Off">Phone Number</li>
+			</ul>
+		</div>
+	</body>
+</html>

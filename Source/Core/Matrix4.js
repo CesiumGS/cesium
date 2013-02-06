@@ -47,6 +47,7 @@ define([
      * @see Matrix4.fromRotationTranslation
      * @see Matrix4.fromTranslation
      * @see Matrix4.fromScale
+     * @see Matrix4.fromUniformScale
      * @see Matrix4.fromCamera
      * @see Matrix4.computePerspectiveFieldOfView
      * @see Matrix4.computeOrthographicOffCenter
@@ -255,10 +256,11 @@ define([
             throw new DeveloperError('scale is required.');
         }
         if (typeof result === 'undefined') {
-            return new Matrix4(scale.x, 0.0,     0.0,     0.0,
-                               0.0,     scale.y, 0.0,     0.0,
-                               0.0,     0.0,     scale.z, 0.0,
-                               0.0,     0.0,     0.0,     1.0);
+            return new Matrix4(
+                scale.x, 0.0,     0.0,     0.0,
+                0.0,     scale.y, 0.0,     0.0,
+                0.0,     0.0,     scale.z, 0.0,
+                0.0,     0.0,     0.0,     1.0);
         }
 
         result[0] = scale.x;
@@ -272,6 +274,54 @@ define([
         result[8] = 0.0;
         result[9] = 0.0;
         result[10] = scale.z;
+        result[11] = 0.0;
+        result[12] = 0.0;
+        result[13] = 0.0;
+        result[14] = 0.0;
+        result[15] = 1.0;
+        return result;
+    };
+
+    /**
+     * Computes a Matrix4 instance representing a uniform scale.
+     * @memberof Matrix4
+     *
+     * @param {Number} scale The uniform scale factor.
+     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} scale is required.
+     *
+     * @example
+     * // Creates
+     * //   [2.0, 0.0, 0.0, 0.0]
+     * //   [0.0, 2.0, 0.0, 0.0]
+     * //   [0.0, 0.0, 2.0, 0.0]
+     * //   [0.0, 0.0, 0.0, 1.0]
+     * var m = Matrix4.fromScale(2.0);
+     */
+    Matrix4.fromUniformScale = function(scale, result) {
+        if (typeof scale !== 'number') {
+            throw new DeveloperError('scale is required.');
+        }
+        if (typeof result === 'undefined') {
+            return new Matrix4(scale, 0.0,   0.0,   0.0,
+                               0.0,   scale, 0.0,   0.0,
+                               0.0,   0.0,   scale, 0.0,
+                               0.0,   0.0,   0.0,   1.0);
+        }
+
+        result[0] = scale;
+        result[1] = 0.0;
+        result[2] = 0.0;
+        result[3] = 0.0;
+        result[4] = 0.0;
+        result[5] = scale;
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = 0.0;
+        result[9] = 0.0;
+        result[10] = scale;
         result[11] = 0.0;
         result[12] = 0.0;
         result[13] = 0.0;
@@ -790,11 +840,11 @@ define([
      *
      * @example
      * var myMatrix = new Matrix4();
-     * var row1Column0Index = Matrix4.getElementIndex(1, 0);
-     * var row1Column0 = myMatrix[row1Column0Index]
-     * myMatrix[row1Column0Index] = 10.0;
+     * var column1Row0Index = Matrix4.getElementIndex(1, 0);
+     * var column1Row0 = myMatrix[column1Row0Index]
+     * myMatrix[column1Row0Index] = 10.0;
      */
-    Matrix4.getElementIndex = function(row, column) {
+    Matrix4.getElementIndex = function(column, row) {
         if (typeof row !== 'number' || row < 0 || row > 3) {
             throw new DeveloperError('row is required and must be 0, 1, 2, or 3.');
         }
@@ -1066,7 +1116,7 @@ define([
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} translation is required.
      *
-     * @see Matrix.#fromTranslation
+     * @see Matrix4#fromTranslation
      *
      * @example
      * // Instead of Matrix4.multiply(m, Matrix4.fromTranslation(position), m);
@@ -1115,11 +1165,72 @@ define([
     };
 
     /**
+     * Multiplies a transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
+     * by an implicit uniform scale matrix.  This is an optimization
+     * for <code>Matrix4.multiply(m, Matrix4.fromScale(scale), m);</code> with less allocations and arithmetic operations.
+     *
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} matrix The matrix on the left-hand side.
+     * @param {Number} scale The uniform scale on the right-hand side.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     *
+     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} scale is required.
+     *
+     * @see Matrix4#fromUniformScale
+     *
+     * @example
+     * // Instead of Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);
+     * Matrix4.multiplyByUniformScale(m, scale, m);
+     */
+    Matrix4.multiplyByUniformScale = function(matrix, scale, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+        if (typeof scale !== 'number') {
+            throw new DeveloperError('scale is required');
+        }
+
+        if (scale === 1.0) {
+            return Matrix4.clone(matrix, result);
+        }
+
+        if (typeof result === 'undefined') {
+            return new Matrix4(
+                scale * matrix[0], scale * matrix[4], scale * matrix[8],  matrix[12],
+                scale * matrix[1], scale * matrix[5], scale * matrix[9],  matrix[13],
+                scale * matrix[2], scale * matrix[6], scale * matrix[10], matrix[14],
+                0.0,               0.0,               0.0,                1.0);
+        }
+
+        result[0] = scale * matrix[0];
+        result[1] = scale * matrix[1];
+        result[2] = scale * matrix[2];
+        result[3] = 0.0;
+        result[4] = scale * matrix[4];
+        result[5] = scale * matrix[5];
+        result[6] = scale * matrix[6];
+        result[7] = 0.0;
+        result[8] = scale * matrix[8];
+        result[9] = scale * matrix[9];
+        result[10] = scale * matrix[10];
+        result[11] = 0.0;
+        result[12] = matrix[12];
+        result[13] = matrix[13];
+        result[14] = matrix[14];
+        result[15] = 1.0;
+        return result;
+    };
+
+    /**
      * Computes the product of a matrix and a column vector.
      * @memberof Matrix4
      *
      * @param {Matrix4} matrix The matrix.
-     * @param {Cartesian4} cartesian The column.
+     * @param {Cartesian4} cartesian The vector.
      * @param {Cartesian4} [result] The object onto which to store the result.
      * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
@@ -1152,6 +1263,41 @@ define([
         result.z = z;
         result.w = w;
         return result;
+    };
+
+    var scratchPoint = new Cartesian4(0.0, 0.0, 0.0, 1.0);
+
+    /**
+     * Computes the product of a matrix and a {@link Cartesian3}.  This is equivalent to calling {@link Matrix4.multiplyByVector}
+     * with a {@link Cartesian4} with a <code>w</code> component of one.
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} matrix The matrix.
+     * @param {Cartesian3} cartesian The point.
+     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} matrix is required.
+     *
+     * @example
+     * Cartesian3 p = new Cartesian3(1.0, 2.0, 3.0);
+     * Matrix4.multiplyByPoint(matrix, p, result);
+     * // A shortcut for
+     * //   Cartesian3 p = ...
+     * //   Matrix4.multiplyByVector(matrix, new Cartesian4(p.x, p.y, p.z, 1.0), result);
+     */
+    Matrix4.multiplyByPoint = function(matrix, cartesian, result) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+
+        scratchPoint.x = cartesian.x;
+        scratchPoint.y = cartesian.y;
+        scratchPoint.z = cartesian.z;
+        // scratchPoint.w is one.  See above.
+
+        return Matrix4.multiplyByVector(matrix, scratchPoint, result);
     };
 
     /**
@@ -1830,10 +1976,27 @@ define([
     };
 
     /**
+     * Multiplies this matrix, assuming it is a transformation matrix (with a bottom row of
+     * <code>[0.0, 0.0, 0.0, 1.0]</code>), by an implicit uniform scale matrix.
+     *
+     * @memberof Matrix4
+     *
+     * @param {Number} scale The scale on the right-hand side of the multiplication.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     *
+     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} scale is required.
+     */
+    Matrix4.prototype.multiplyByUniformScale = function(scale, result) {
+        return Matrix4.multiplyByUniformScale(this, scale, result);
+    };
+
+    /**
      * Computes the product of this matrix and a column vector.
      * @memberof Matrix4
      *
-     * @param {Cartesian4} cartesian The column.
+     * @param {Cartesian4} cartesian The vector.
      * @param {Cartesian4} [result] The object onto which to store the result.
      * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
@@ -1841,6 +2004,21 @@ define([
      */
     Matrix4.prototype.multiplyByVector = function(cartesian, result) {
         return Matrix4.multiplyByVector(this, cartesian, result);
+    };
+
+    /**
+     * Computes the product of a matrix and a {@link Cartesian3}.  This is equivalent to calling {@link Matrix4#multiplyByVector}
+     * with a {@link Cartesian4} with a <code>w</code> component of one.
+     * @memberof Matrix4
+     *
+     * @param {Cartesian3} cartesian The point.
+     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Matrix4.prototype.multiplyByPoint = function(cartesian, result) {
+        return Matrix4.multiplyByPoint(this, cartesian, result);
     };
 
     /**

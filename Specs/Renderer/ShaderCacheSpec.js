@@ -127,4 +127,4 @@ defineSuite([
         var cache = new ShaderCache(context);
         expect(cache.isDestroyed()).toEqual(false);
     });
-});
+}, 'WebGL');

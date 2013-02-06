@@ -1,0 +1,125 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Tooltip Mouse Quirks Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<!-- functions to help test -->
+		<!-- script type="text/javascript" src="../helpers.js"></script -->
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.addOnLoad(function(){
+				doh.robot.initRobot("../test_Switch.html?theme=Android");
+
+				doh.register("dojox.mobile.Switch mouse tests", [
+					{
+						name: "Switch mouse tests",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_Switch_0").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_Switch_1").domNode, 500);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("on", dijit.registry.byId("dojox_mobile_Switch_0").get("value"));
+								doh.is("off", dijit.registry.byId("dojox_mobile_Switch_1").get("value"));
+							}), 500);
+							return d;
+						}
+					},
+					{
+						name: "Switch mouse tests",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_Switch_2").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_Switch_3").domNode, 500);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("on", dijit.registry.byId("dojox_mobile_Switch_2").get("value"));
+								doh.is("off", dijit.registry.byId("dojox_mobile_Switch_3").get("value"));
+							}), 500);
+							return d;
+						}
+					},
+					{
+						name: "Switch mouse tests",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_Switch_4").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_Switch_5").domNode, 500);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("on", dijit.registry.byId("dojox_mobile_Switch_4").get("value"));
+								doh.is("off", dijit.registry.byId("dojox_mobile_Switch_5").get("value"));
+							}), 500);
+							return d;
+						}
+					},
+					{
+						name: "Switch mouse tests",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_Switch_6").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_Switch_7").domNode, 500);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("on", dijit.registry.byId("dojox_mobile_Switch_6").get("value"));
+								doh.is("off", dijit.registry.byId("dojox_mobile_Switch_7").get("value"));
+							}), 500);
+							return d;
+						}
+					},
+					{
+						name: "Switch mouse tests",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_Switch_8").domNode, 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_Switch_9").domNode, 500);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("on", dijit.registry.byId("dojox_mobile_Switch_8").get("value"));
+								doh.is("off", dijit.registry.byId("dojox_mobile_Switch_9").get("value"));
+							}), 500);
+							return d;
+						}
+					}
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

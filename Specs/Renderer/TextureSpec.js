@@ -312,8 +312,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
-    // Fails on firefox.  Should be fixed soon: https://bugzilla.mozilla.org/show_bug.cgi?id=685156
-    xit('generates mipmaps', function() {
+    it('generates mipmaps', function() {
         texture = context.createTexture2D({
             source : blueImage,
             pixelFormat :PixelFormat.RGBA
@@ -372,6 +371,16 @@ defineSuite([
 
         expect(texture.getWidth()).toEqual(1);
         expect(texture.getHeight()).toEqual(2);
+    });
+
+    it('gets flip Y', function() {
+        texture = context.createTexture2D({
+            source : blueOverRedImage,
+            pixelFormat :PixelFormat.RGBA,
+            flipY : true
+        });
+
+        expect(texture.getFlipY()).toEqual(true);
     });
 
     it('destroys', function() {
@@ -786,4 +795,4 @@ defineSuite([
             t.destroy();
         }).toThrow();
     });
-});
+}, 'WebGL');

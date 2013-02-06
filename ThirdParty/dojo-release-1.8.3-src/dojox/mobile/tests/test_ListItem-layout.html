@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>ListItem - layout</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/declare",
+			"dijit/_WidgetBase",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(declare, WidgetBase){
+			PlainWidget = declare("PlainWidget", WidgetBase, {
+				buildRendering: function(){
+					this.inherited(arguments);
+					this.domNode.style.backgroundColor = "gray";
+					this.domNode.style.display = "inline";
+					this.domNode.style.lineHeight = "normal";
+				}
+			});
+		});
+
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="foo" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">ListItem Layout</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Examples</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div layout="left"><div data-dojo-type="PlainWidget">Left Widget</div></div>
+			</li>
+
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div layout="center"><div data-dojo-type="PlainWidget">Center Widget</div></div>
+			</li>
+
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div layout="right"><div data-dojo-type="PlainWidget">Right Widget</div></div>
+			</li>
+
+
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div layout="left"><span data-dojo-type="dojox.mobile.ToolBarButton">Left</span></div>
+			</li>
+
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div layout="center"><span data-dojo-type="dojox.mobile.ToolBarButton">Center</span></div>
+			</li>
+
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div layout="right"><span data-dojo-type="dojox.mobile.ToolBarButton">Right</span></div>
+			</li>
+
+
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div layout="center"><span data-dojo-type="dojox.mobile.ToolBarButton">Center</span></div>
+				<div layout="left"><span data-dojo-type="dojox.mobile.ToolBarButton">Left</span></div>
+				<div layout="right"><span data-dojo-type="dojox.mobile.ToolBarButton">Right</span></div>
+			</li>
+
+
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div layout="left">Left Node</div>
+			</li>
+
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div layout="center">Center Node</div>
+			</li>
+
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div layout="right">Right Node</div>
+			</li>
+
+
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div layout="left"><input></div>
+			</li>
+
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div layout="center"><input></div>
+			</li>
+
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div layout="right"><input></div>
+			</li>
+
+
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div layout="left">Left Node</div>
+				<div layout="right">Right Node</div>
+				<div layout="center">Center Node</div>
+			</li>
+
+
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"bar"'>
+				<div layout="left">Left Node</div>
+				<div layout="right">Right Node</div>
+				<div layout="center">Center Node</div>
+			</li>
+
+
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"bar", label:"Label"'>
+				<div layout="left">Left Node</div>
+				<div layout="right">Right Node</div>
+				<div layout="center">Center Node</div>
+			</li>
+
+
+			<li data-dojo-type="dojox.mobile.ListItem"
+	 			data-dojo-props='icon:"images/i-icon-1.png", moveTo:"bar", variableHeight:true, label:"Label<br>Label<br>Label"'>
+				<div data-dojo-type="PlainWidget" layout="left">Left Widget</div>
+				<div data-dojo-type="PlainWidget" data-dojo-props='layout:"right"'>Right Widget</div>
+				<div layout="center"><div data-dojo-type="PlainWidget">Center Widget</div></div>
+			</li>
+
+
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"bar", variableHeight:true'>
+				<div data-dojo-type="PlainWidget" layout="left">Left Widget</div>
+				<div data-dojo-type="PlainWidget" data-dojo-props='layout:"right"'>Right Widget</div>
+				<div layout="center"><div data-dojo-type="PlainWidget">Center Widget</div></div>
+				Label<br>Label<br>Label
+			</li>
+		</ul>
+	</div>
+</body>
+</html>

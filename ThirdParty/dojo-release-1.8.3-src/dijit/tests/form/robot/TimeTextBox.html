@@ -1,0 +1,416 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>doh.robot TimeTextBox Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+			dojo.require("dojo.date.stamp");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_TimeTextBox.html');
+
+				doh.register("keyboard", [
+					{
+						name: "select",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								w = dijit.byId('q1');
+							dojo.global.formValue = null;
+	
+							// focus field... drop down shouldn't open yet
+							w.focus();
+							doh.robot.sequence(d.getTestErrback(function(){
+								var popup = dijit.byId('q1_popup');
+								doh.t(!popup || isHidden(popup), "popup hidden");
+							}), 500);
+
+							// open drop down
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 1000, {});
+							doh.robot.sequence(d.getTestErrback(function(){
+								var popup = dijit.byId('q1_popup');
+								doh.t(popup && isVisible(popup), "popup visible");
+							}), 500);
+	
+							// advance from 5:45PM to 6PM, and select
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 1000, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							
+							doh.robot.sequence(d.getTestErrback(function(){
+								var popup = dijit.byId('q1_popup');
+								doh.t(!popup || isHidden(popup), "popup hidden again");
+
+								var val = dojo.date.stamp.toISOString(w.get('value'), {selector: "time"});	
+								doh.is(val, "T18:00:00", "6PM was selected");
+
+								doh.is(null, dojo.global.formValue, "no form submit");
+							}), 500);
+
+							// ENTER key while drop down is closed should submit the form
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.isNot(null, dojo.global.formValue, "form was submitted");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "select original value",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								w = dijit.byId('q1');
+	
+							dojo.global.formValue = null;
+
+							// focus field... drop down shouldn't open yet
+							w.focus();
+							doh.robot.sequence(d.getTestErrback(function(){
+								var popup = dijit.byId('q1_popup');
+								doh.t(!popup || isHidden(popup), "popup hidden");
+							}), 500);
+
+							// open drop down
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 1000, {});
+							doh.robot.sequence(d.getTestErrback(function(){
+								var popup = dijit.byId('q1_popup');
+								doh.t(popup && isVisible(popup), "popup visible");
+							}), 500);
+	
+							// select the initial value
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.sequence(d.getTestErrback(function(){
+								var popup = dijit.byId('q1_popup');
+								doh.t(!popup || isHidden(popup), "popup hidden again");
+
+								var val = dojo.date.stamp.toISOString(w.get('value'), {selector: "time"});	
+								doh.is(val, "T18:00:00", "6PM was selected (again)");
+
+								doh.is(null, dojo.global.formValue, "no form submit");
+							}), 500);
+
+							// ENTER key while drop down is closed should submit the form
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.isNot(null, dojo.global.formValue, "form was submitted");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "cancel",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								w = dijit.byId('q1');
+
+							dojo.global.formValue = null;
+
+							// focus field... drop down shouldn't open yet
+							w.focus();
+							doh.robot.sequence(d.getTestErrback(function(){
+								var popup = dijit.byId('q1_popup');
+								doh.t(!popup || isHidden(popup), "popup hidden");
+							}), 500);
+
+							// open drop down
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 1000, {});
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 100, {}); // needed to prevent FF8 bug: reset on ESC
+							doh.robot.sequence(d.getTestErrback(function(){
+								var popup = dijit.byId('q1_popup');
+								doh.t(popup && isVisible(popup), "popup visible");
+							}), 500);
+	
+							// close drop down
+							doh.robot.keyPress(dojo.keys.ESCAPE, 500, {});
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								var popup = dijit.byId('q1_popup');
+								doh.t(!popup || isHidden(popup), "popup hidden again");
+
+								var val = dojo.date.stamp.toISOString(w.get('value'), {selector: "time"});	
+								doh.is(val, "T18:00:00", "same value as before");
+							}), 500);
+							return d;
+						}
+					},
+					{
+						name: "partial input",
+						timeout: 10000,
+						setUp: function(){
+							// clear the field
+							var w = dijit.byId('q2');
+							w.set('value', null, false);
+						},
+						runTest: function(){
+							var d = new doh.Deferred(),
+								w = dijit.byId('q2');
+	
+							// focus field... drop down shouldn't open yet
+							w.focus();
+							doh.robot.sequence(d.getTestErrback(function(){
+								var popup = dijit.byId('q2_popup');
+								doh.t(!popup || isHidden(popup), "popup hidden");
+							}), 1000);
+
+							// do partial input
+							doh.robot.typeKeys('12', 500, 400);
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								// partial input shouldn't be flagged as an error, because probably
+								// the user just hasn't finished typing yet
+								doh.f(w.isValid(), 'fully invalid');
+								doh.t(w._isValidSubset(), 'partially valid');
+								doh.isNot("Error", w.state, 'no error shown');
+
+								// typing caused drop down to open							
+								var popup = dijit.byId('q2_popup');
+								doh.t(popup && isVisible(popup), "popup visible");
+
+								// drop down list should be filtered to times starting with 12:,
+								// and they should appear in chronological order
+								var children = dojo.query(".dijitTimePickerItem", popup.domNode);
+								doh.is(8, children.length, "# of items in drop down");
+								doh.is("12:00 AM", innerText(children[0]));
+								doh.is("12:15 AM", innerText(children[1]));
+								doh.is("12:30 AM", innerText(children[2]));
+								doh.is("12:45 AM", innerText(children[3]));
+								doh.is("12:00 PM", innerText(children[4]));
+								doh.is("12:15 PM", innerText(children[5]));
+								doh.is("12:30 PM", innerText(children[6]));
+								doh.is("12:45 PM", innerText(children[7]));
+							}), 1000);
+
+							// Setup handler to fire when TAB keypress below fires
+							doh.robot.sequence(function(){
+								onFocus(d.getTestCallback(function(){
+									var popup = dijit.byId('q2_popup');
+									doh.t(!popup || isHidden(popup), "popup hidden again");
+
+									doh.is("q3", dojo.global.dijit.focus.curNode.id, "tab moved to next input widget");
+								}));
+							}, 0);
+
+							// tab away to close drop down
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+
+							return d;
+						}
+					},
+					{
+						name: "invalid input",
+						timeout: 5000,
+						setUp: function(){
+							// clear the field
+							var w = dijit.byId('q2');
+							w.set('value', null, false);
+						},
+						runTest: function(){
+							var d = new doh.Deferred(),
+								w = dijit.byId('q2');
+	
+							// focus field... drop down shouldn't open yet
+							w.focus();
+
+							// do partial input
+							doh.robot.typeKeys('12a', 500, 600);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// partial input shouldn't be flagged as an error, because probably
+								// the user just hasn't finished typing yet
+								doh.f(w.isValid(), 'fully invalid');
+								doh.f(w._isValidSubset(), 'subset invalid');
+								doh.is("Error", w.state, 'error shown');
+
+								// typing caused drop down to open							
+								var popup = dijit.byId('q2_popup');
+								doh.t(popup && isVisible(popup), "popup visible");
+
+								// drop down list should be filtered to times starting with 12:,
+								// and they should appear in chronological order
+								var children = dojo.query(".dijitTimePickerItem", popup.domNode);
+								doh.is(10, children.length, "# of items in drop down");
+							}), 1000);
+
+							// tab away to close drop down
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+
+							return d;
+						}
+					},
+					{
+						name: "corrected invalid input",
+						timeout: 5000,
+						setUp: function(){
+							// clear the field
+							var w = dijit.byId('q2');
+							w.set('value', null, false);
+						},
+						runTest: function(){
+							var d = new doh.Deferred(),
+								w = dijit.byId('q2');
+	
+							// focus field... drop down shouldn't open yet
+							w.focus();
+
+							// do partial input
+							doh.robot.typeKeys('12a', 500, 600);
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// partial input shouldn't be flagged as an error, because probably
+								// the user just hasn't finished typing yet
+								doh.f(w.isValid(), 'fully invalid');
+								doh.t(w._isValidSubset(), 'subset valid');
+								doh.is("Error", w.state, 'error shown');
+
+								// typing caused drop down to open							
+								var popup = dijit.byId('q2_popup');
+								doh.t(popup && isVisible(popup), "popup visible");
+
+								// drop down list should be filtered to times starting with 12:,
+								// and they should appear in chronological order
+								var children = dojo.query(".dijitTimePickerItem", popup.domNode);
+								doh.is(8, children.length, "# of items in drop down");
+							}), 1000);
+
+							// tab away to close drop down
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+
+							return d;
+						}
+					}
+				]);
+
+				var handler, q5;
+				doh.register("mouse", [
+					{
+						name: "select",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								w = dijit.byId('q1'),
+								toClick;
+	
+							// click down arrow, opening drop down
+							doh.robot.mouseMoveAt(w._buttonNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+	
+							doh.robot.sequence(d.getTestErrback(function(){
+								var popup = dijit.byId('q1_popup');
+								doh.t(popup && isVisible(popup), "popup visible");
+								toClick = dojo.query(".dijitTimePickerItemInner:contains(6:45)", popup.domNode);
+								doh.is(1, toClick.length, "found 6:45 in drop down");
+							}), 500);
+
+							// click 6:45, thus selecting it and closing drop down
+							doh.robot.mouseMoveAt(function(){return toClick[0]; }, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								var popup = dijit.byId('q1_popup');
+								doh.t(!popup || isHidden(popup), "popup hidden");
+								var val = dojo.date.stamp.toISOString(w.get('value'), {selector: "time"});	
+								doh.is(val, "T18:45:00", "should be 6:45PM");
+							}), 500);
+							return d;
+						}
+					},
+					{
+						name: "constraints propagation",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							q5 = dijit.byId('q5');
+							handler = q5.connect(q5._buttonNode, 'onmouseup', d.getTestCallback(function(){
+								// drop down list should be filtered to 1 hour and 15 minute increments
+								var popup = dijit.byId("q5_popup"),
+									children = dojo.query(".dijitTimePickerItem", popup.domNode);
+								doh.is(4, children.length, "# of items in drop down");
+							}));
+							// click down arrow, opening drop down
+							doh.robot.mouseMoveAt(q5._buttonNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							return d;
+						},
+						tearDown: function(){
+							q5.disconnect(handler);
+							q5.closeDropDown();
+						}
+					}
+				]);
+
+				var q20;
+				doh.register("disabled", [
+					{
+						name: "disable",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							q20 = dijit.byId('q20');
+	
+							q20.set('disabled',true);
+							// click down arrow, but disabled so won't open drop down
+							doh.robot.mouseMoveAt(q20._buttonNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.typeKeys('1', 500, 200);
+	
+							doh.robot.sequence(d.getTestCallback(function(){
+								var popup = dijit.byId('q20_popup');
+								doh.t(!popup || isHidden(popup), "popup hidden");
+								var val = dojo.date.stamp.toISOString(q20.get('value'), {selector: "time"});	
+								doh.is(val, "T17:45:00", "should be 5:45PM");
+							}), 1000);
+							return d;
+						},
+						tearDown: function(){
+							q20.set('disabled',false);
+							q20.closeDropDown();
+						}
+					},
+					{
+						name: "readOnly",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							q20 = dijit.byId('q20');
+	
+							q20.set('readOnly',true);
+							// click down arrow, but readonly so won't open drop down
+							doh.robot.mouseMoveAt(q20._buttonNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.typeKeys('1', 500, 200);
+	
+							doh.robot.sequence(d.getTestCallback(function(){
+								var popup = dijit.byId('q20_popup');
+								doh.t(!popup || isHidden(popup), "popup hidden");
+								var val = dojo.date.stamp.toISOString(q20.get('value'), {selector: "time"});	
+								doh.is(val, "T17:45:00", "should be 5:45PM");
+							}), 1000);
+							return d;
+						},
+						tearDown: function(){
+							q20.set('readOnly',false);
+							q20.closeDropDown();
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

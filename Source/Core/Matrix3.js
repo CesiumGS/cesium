@@ -31,6 +31,7 @@ define([
      * @see Matrix3.fromRowMajorArray
      * @see Matrix3.fromQuaternion
      * @see Matrix3.fromScale
+     * @see Matrix3.fromUniformScale
      * @see Matrix2
      * @see Matrix4
      */
@@ -160,18 +161,18 @@ define([
         var m22 = -x2 - y2 + z2 + w2;
 
         if (typeof result === 'undefined') {
-            return new Matrix3(m00, m10, m20,
-                               m01, m11, m21,
-                               m02, m12, m22);
+            return new Matrix3(m00, m01, m02,
+                               m10, m11, m12,
+                               m20, m21, m22);
         }
         result[0] = m00;
-        result[1] = m01;
-        result[2] = m02;
-        result[3] = m10;
+        result[1] = m10;
+        result[2] = m20;
+        result[3] = m01;
         result[4] = m11;
-        result[5] = m12;
-        result[6] = m20;
-        result[7] = m21;
+        result[5] = m21;
+        result[6] = m02;
+        result[7] = m12;
         result[8] = m22;
         return result;
     };
@@ -198,22 +199,192 @@ define([
             throw new DeveloperError('scale is required.');
         }
         if (typeof result === 'undefined') {
-            return new Matrix3(scale.x, 0.0,     0.0,
-                               0.0,     scale.y, 0.0,
-                               0.0,     0.0,     scale.z);
+            return new Matrix3(
+                scale.x, 0.0,     0.0,
+                0.0,     scale.y, 0.0,
+                0.0,     0.0,     scale.z);
         }
 
         result[0] = scale.x;
         result[1] = 0.0;
         result[2] = 0.0;
-
         result[3] = 0.0;
         result[4] = scale.y;
         result[5] = 0.0;
-
         result[6] = 0.0;
         result[7] = 0.0;
         result[8] = scale.z;
+        return result;
+    };
+
+    /**
+     * Computes a Matrix3 instance representing a uniform scale.
+     * @memberof Matrix3
+     *
+     * @param {Number} scale The uniform scale factor.
+     * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
+     *
+     * @exception {DeveloperError} scale is required.
+     *
+     * @example
+     * // Creates
+     * //   [2.0, 0.0, 0.0]
+     * //   [0.0, 2.0, 0.0]
+     * //   [0.0, 0.0, 2.0]
+     * var m = Matrix3.fromUniformScale(2.0);
+     */
+    Matrix3.fromUniformScale = function(scale, result) {
+        if (typeof scale !== 'number') {
+            throw new DeveloperError('scale is required.');
+        }
+        if (typeof result === 'undefined') {
+            return new Matrix3(
+                scale, 0.0,   0.0,
+                0.0,   scale, 0.0,
+                0.0,   0.0,   scale);
+        }
+
+        result[0] = scale;
+        result[1] = 0.0;
+        result[2] = 0.0;
+        result[3] = 0.0;
+        result[4] = scale;
+        result[5] = 0.0;
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = scale;
+        return result;
+    };
+
+    /**
+     * Creates a rotation matrix around the x-axis.
+     *
+     * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
+     * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     *
+     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
+     *
+     * @exception {DeveloperError} angle is required.
+     *
+     * @example
+     * // Rotate a point 45 degrees counterclockwise around the x-axis.
+     * var p = new Cartesian3(5, 6, 7);
+     * var m = Matrix3.fromRotationX(CesiumMath.toRadians(45.0));
+     * var rotated = m.multiplyByVector(p);
+     */
+    Matrix3.fromRotationX = function(angle, result) {
+        if (typeof angle === 'undefined') {
+            throw new DeveloperError('angle is required.');
+        }
+
+        var cosAngle = Math.cos(angle);
+        var sinAngle = Math.sin(angle);
+
+        if (typeof result === 'undefined') {
+            return new Matrix3(
+                1.0, 0.0, 0.0,
+                0.0, cosAngle, -sinAngle,
+                0.0, sinAngle, cosAngle);
+        }
+
+        result[0] = 1.0;
+        result[1] = 0.0;
+        result[2] = 0.0;
+        result[3] = 0.0;
+        result[4] = cosAngle;
+        result[5] = sinAngle;
+        result[6] = 0.0;
+        result[7] = -sinAngle;
+        result[8] = cosAngle;
+
+        return result;
+    };
+
+    /**
+     * Creates a rotation matrix around the y-axis.
+     *
+     * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
+     * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     *
+     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
+     *
+     * @exception {DeveloperError} angle is required.
+     *
+     * @example
+     * // Rotate a point 45 degrees counterclockwise around the y-axis.
+     * var p = new Cartesian3(5, 6, 7);
+     * var m = Matrix3.fromRotationY(CesiumMath.toRadians(45.0));
+     * var rotated = m.multiplyByVector(p);
+     */
+    Matrix3.fromRotationY = function(angle, result) {
+        if (typeof angle === 'undefined') {
+            throw new DeveloperError('angle is required.');
+        }
+
+        var cosAngle = Math.cos(angle);
+        var sinAngle = Math.sin(angle);
+
+        if (typeof result === 'undefined') {
+            return new Matrix3(
+                cosAngle, 0.0, sinAngle,
+                0.0, 1.0, 0.0,
+                -sinAngle, 0.0, cosAngle);
+        }
+
+        result[0] = cosAngle;
+        result[1] = 0.0;
+        result[2] = -sinAngle;
+        result[3] = 0.0;
+        result[4] = 1.0;
+        result[5] = 0.0;
+        result[6] = sinAngle;
+        result[7] = 0.0;
+        result[8] = cosAngle;
+
+        return result;
+    };
+
+    /**
+     * Creates a rotation matrix around the z-axis.
+     *
+     * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
+     * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     *
+     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
+     *
+     * @exception {DeveloperError} angle is required.
+     *
+     * @example
+     * // Rotate a point 45 degrees counterclockwise around the z-axis.
+     * var p = new Cartesian3(5, 6, 7);
+     * var m = Matrix3.fromRotationZ(CesiumMath.toRadians(45.0));
+     * var rotated = m.multiplyByVector(p);
+     */
+    Matrix3.fromRotationZ = function(angle, result) {
+        if (typeof angle === 'undefined') {
+            throw new DeveloperError('angle is required.');
+        }
+
+        var cosAngle = Math.cos(angle);
+        var sinAngle = Math.sin(angle);
+
+        if (typeof result === 'undefined') {
+            return new Matrix3(
+                cosAngle, -sinAngle, 0.0,
+                sinAngle, cosAngle, 0.0,
+                0.0, 0.0, 1.0);
+        }
+
+        result[0] = cosAngle;
+        result[1] = sinAngle;
+        result[2] = 0.0;
+        result[3] = -sinAngle;
+        result[4] = cosAngle;
+        result[5] = 0.0;
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = 1.0;
 
         return result;
     };
@@ -261,11 +432,11 @@ define([
      *
      * @example
      * var myMatrix = new Matrix3();
-     * var row1Column0Index = Matrix3.getElementIndex(1, 0);
-     * var row1Column0 = myMatrix[row1Column0Index]
-     * myMatrix[row1Column0Index] = 10.0;
+     * var column1Row0Index = Matrix3.getElementIndex(1, 0);
+     * var column1Row0 = myMatrix[column1Row0Index]
+     * myMatrix[column1Row0Index] = 10.0;
      */
-    Matrix3.getElementIndex = function(row, column) {
+    Matrix3.getElementIndex = function(column, row) {
         if (typeof row !== 'number' || row < 0 || row > 2) {
             throw new DeveloperError('row is required and must be 0, 1, or 2.');
         }

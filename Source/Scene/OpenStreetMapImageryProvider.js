@@ -36,6 +36,7 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see SingleTileImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
      * @see <a href='http://wiki.openstreetmap.org/wiki/Main_Page'>OpenStreetMap Wiki</a>

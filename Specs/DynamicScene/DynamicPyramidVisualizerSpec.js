@@ -220,4 +220,4 @@ defineSuite([
         pyramidPrimitive = scene.getPrimitives().get(0);
         expect(pyramidPrimitive.dynamicObject).toEqual(testObject2);
     });
-});
+}, 'WebGL');

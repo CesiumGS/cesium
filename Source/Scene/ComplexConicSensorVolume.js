@@ -210,26 +210,6 @@ define([
          */
         this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : Color.clone(Color.WHITE);
 
-        /**
-         * <p>
-         * Determines if the sensor is affected by lighting, i.e., if the sensor is bright on the
-         * day side of the globe, and dark on the night side.  When <code>true</code>, the sensor
-         * is affected by lighting; when <code>false</code>, the sensor is uniformly shaded regardless
-         * of the sun position.
-         * </p>
-         * <p>
-         * The default is <code>true</code>.
-         * </p>
-         */
-        this.affectedByLighting = this._affectedByLighting = (typeof t.affectedByLighting !== 'undefined') ? t.affectedByLighting : true;
-
-        /**
-         * DOC_TBA
-         *
-         * @type Number
-         */
-        this.erosion = (typeof t.erosion === 'undefined') ? 1.0 : t.erosion;
-
         var that = this;
         this._uniforms = {
             u_sensorRadius : function() {
@@ -252,9 +232,6 @@ define([
             },
             u_intersectionColor : function() {
                 return that.intersectionColor;
-            },
-            u_erosion : function() {
-                return that.erosion;
             }
         };
         this._mode = SceneMode.SCENE3D;
@@ -445,15 +422,13 @@ define([
             var innerChanged = this._innerMaterial !== this.innerMaterial;
             var capChanged = this._capMaterial !== this.capMaterial;
             var silhouetteChanged = this._silhouetteMaterial !== this.silhouetteMaterial;
-            var affectedByLightingChanged = this._affectedByLighting !== this.affectedByLighting;
-            var materialChanged = outerChanged || innerChanged || capChanged || silhouetteChanged || affectedByLightingChanged;
+            var materialChanged = outerChanged || innerChanged || capChanged || silhouetteChanged;
 
             if (materialChanged) {
                 this._outerMaterial = this.outerMaterial;
                 this._innerMaterial = this.innerMaterial;
                 this._capMaterial = this.capMaterial;
                 this._silhouetteMaterial = this.silhouetteMaterial;
-                this._affectedByLighting = this.affectedByLighting;
 
                 var material = this._combineMaterials();
                 this._colorCommand.uniformMap = combine([this._uniforms, material._uniforms], false, false);
@@ -469,7 +444,6 @@ define([
                     ShadersSensorVolume +
                     '#line 0\n' +
                     material.shaderSource +
-                    (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
                     '#line 0\n' +
                     ComplexConicSensorVolumeFS;
 

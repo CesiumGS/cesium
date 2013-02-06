@@ -1,0 +1,7 @@
+{
+  "items" : [
+    { label: "Car Insurance", id: "CarInsurance", icon: "images/tab-icon-11h.png", data: "data/insurance-car.json", moveTo: "#" },
+    { label: "Life Insurance", id: "LifeInsurance", icon: "images/tab-icon-15h.png", data: "data/insurance-life.json", moveTo: "#" },
+    { label: "Sports Insurance", id: "SportsInsurance", icon: "images/tab-icon-10h.png", data: "data/insurance-sports.json", moveTo: "#" }
+  ]
+}

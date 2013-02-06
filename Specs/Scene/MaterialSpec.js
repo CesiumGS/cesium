@@ -4,6 +4,8 @@ defineSuite([
         'Scene/Polygon',
         'Specs/createContext',
         'Specs/destroyContext',
+        'Specs/createCamera',
+        'Specs/createFrameState',
         'Specs/frameState',
         'Specs/render',
         'Core/Cartesian3',
@@ -11,12 +13,15 @@ defineSuite([
         'Core/Color',
         'Core/Ellipsoid',
         'Core/Matrix4',
-        'Core/Math'
+        'Core/Math',
+        'Core/JulianDate'
     ], function(
         Material,
         Polygon,
         createContext,
         destroyContext,
+        createCamera,
+        createFrameState,
         frameState,
         render,
         Cartesian3,
@@ -24,7 +29,8 @@ defineSuite([
         Color,
         Ellipsoid,
         Matrix4,
-        CesiumMath) {
+        CesiumMath,
+        JulianDate) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -41,14 +47,8 @@ defineSuite([
     });
 
     beforeEach(function() {
-        var camera = {
-            eye : new Cartesian3(1.02, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z
-        };
         us = context.getUniformState();
-        us.setView(Matrix4.fromCamera(camera));
-        us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
+        us.update(createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
 
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon = new Polygon();
@@ -173,8 +173,20 @@ defineSuite([
         verifyMaterial('Facet');
     });
 
+    it('draws Water built-in material', function() {
+        verifyMaterial('Water');
+    });
+
     it('draws Blob built-in material', function() {
         verifyMaterial('Blob');
+    });
+
+    it('draws RimLighting built-in material', function() {
+        verifyMaterial('RimLighting');
+    });
+
+    it('draws Erosion built-in material', function() {
+        verifyMaterial('Erosion');
     });
 
     it('gets the material type', function() {
@@ -187,6 +199,7 @@ defineSuite([
         });
         expect(material.type).toEqual('Color');
     });
+
     it('creates a new material type and builds off of it', function() {
         var material1 = new Material({
             context : context,
@@ -699,4 +712,4 @@ defineSuite([
         material = material && material.destroy();
         expect(material).toEqual(undefined);
     });
-});
+}, 'WebGL');

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="../../../dojo/dojo.js" data-dojo-config="async:true, isDebug:true, selectorEngine: 'lite'"></script>
+	<script>
+		// These are the values I expect to be the same across all [mobile] webkit browsers
+		var expected = {
+			// Default settings for a browser, from dojo.js; apparently these get modified in special cases
+			// like when running under node, or against RequireJS, but nothing we need to worry about.
+			"host-browser":1,
+			"host-node": false,
+			"host-rhino": false,
+			"dom":1,
+			"dojo-amd-factory-scan":1,
+			"dojo-loader":1,
+			"dojo-has-api":1,
+			"dojo-inject-api":1,
+			"dojo-timeout-api":1,
+			"dojo-trace-api":1,
+			"dojo-log-api":1,
+			"dojo-dom-ready-api":1,
+			"dojo-publish-privates":1,
+			"dojo-config-api":1,
+			"dojo-sniff":1,
+			"dojo-sync-loader":1,
+			"dojo-test-sniff":1,
+			"config-tlmSiblingOfDojo":1,
+
+			// Other configuration switches that are hardcoded in the source.
+			// Setting some of these to false may reduce code size, but unclear what they all mean.
+			"config-publishRequireResult": 1,
+			"dojo-config-addOnLoad": 1,		// hardcoded to 1 in the source
+			"dojo-config-require": 1,
+			"dojo-debug-messages": true,
+			"dojo-gettext-api": 1,			// apparently unused
+			"dojo-guarantee-console": 1,
+			"dojo-loader-eval-hint-url": 1,
+			"dojo-modulePaths": 1,
+			"dojo-moduleUrl": 1,
+			"dojo-v1x-i18n-Api": 1,
+			"dojo-xhr-factory": 1,	// if require.getXhr() exists (true for dojo's AMD loader, false for requireJS?)
+			"extend-dojo": 1,		// add functions to global dojo object
+
+			// Browser flags
+			//"webkit": true,	// this is actually a number like 525 but I don't think anyone is using it
+			"air": false,
+			"ff": undefined,
+			"mozilla": undefined,
+			"ie": undefined,
+
+			// Configuration settings
+			"config-selectorEngine": "lite",
+			"dijit-legacy-requires": false,		// don't load unrequested modules for back-compat
+			"dom-quirks": false,				// we assume/require that the app is in strict mode
+			"quirks": false,					// we assume/require that the app is in strict mode
+
+			// Flags for old IE browser bugs / non-standard behavior
+			"array-extensible": true,		// false for old IE
+			"bug-for-in-skips-shadowed": 0,	// false for old IE
+			"dom-attributes-explicit": true,	// everyone except IE6, 7
+			"dom-attributes-specified-flag": true,	//everyone except IE6-8
+			"dom-addeventlistener": true,		// everyone except IE
+			"native-xhr": true,			// has XMLHTTPRequest
+			"ie-event-behavior": undefined,
+			"dojo-force-activex-xhr": false,	// true is for IE path
+
+			// Flags for features
+			"dom-matches-selector": true,
+			"dom-qsa": true,
+			"dom-qsa2.1": true,
+			"dom-qsa3": true,
+			"json-parse": true,
+			"json-stringify": true,
+
+			// Behavior that varies by browser, but is constant across webkit mobile browsers
+			"events-keypress-typed": true,		// whether printable characters generate keypress event?
+			"events-mouseenter": false,		// this is set by mouse.html but never used
+			"touch": true
+
+			// Values which can be different across mobile devices, so intentionally not specified in this list.
+			// "event-orientationchange": true,
+			// "safari": true,
+			// "android": true
+			// "wii": true
+		};
+		require([
+			// Modules I need for this script to run
+			"dojo/has",
+			"dojo/dom",
+			"dojo/json",
+			"dojo/domReady!",
+
+			// These modules loaded because they have a has.add() call.
+			// Generated from:
+			//		$ cd <root>
+			//		$ find . -name '*.js' -print |xargs fgrep -l 'has.add'
+			"dojo/_base/browser",
+			"dojo/_base/config",
+			"dojo/_base/connect",
+			"dojo/_base/kernel",
+			"dojo/_base/lang",
+			"dojo/_base/loader",
+			"dojo/_base/sniff",
+			"dojo/_base/window",
+			"dojo/_base/xhr",
+			"dojo/dom-class",
+			"dojo/i18n",
+			"dojo/main",
+			"dojo/mouse",
+			"dojo/on",
+			"dojo/query",
+			"dojo/ready",
+			"dojo/selector/_loader",
+			"dojo/selector/lite",
+			"dojox/form/uploader/Base",
+			"dojox/mobile/Audio",
+			"dojox/mobile/sniff"
+		], function(has, dom, json){
+
+			// Code to write output to textarea
+			var res = dom.byId("res");
+			res.value = "";		// in case value was saved from this page from before
+			function log(){
+				for(var i=0; i<arguments.length; i++){
+					res.value += arguments[i];
+				}
+				res.value += "\n";
+			}
+
+			log("userAgent: ", navigator.userAgent);
+			log("appVersion: ", navigator.appVersion);
+
+			/*
+			// Rearrange the has() hash to alphabetical order, and dump it to console.
+			// We could alternately get the list of has() flags from the builder:
+			//		$ cd util/buildscripts
+			//		$ ./build.sh action=release optimize=closure --profile webkitMobile --hasReport 1
+			
+			var keys = [], newHash = {};
+			for(var key in has.cache){
+				keys.push(key);
+			}
+			keys.sort();
+			for(var i=0; i<keys.length; i++){
+				newHash[keys[i]] = has(keys[i]);
+			}
+
+			// Dump the hash
+			log("has() values:")
+			log(json.stringify(newHash, null, "	"));
+			log("Total: " + keys.length);
+			*/
+
+			log("\nDifferences from expected values for webkit:");
+			var cnt = 0;
+			for(key in expected){
+				if(has(key) !== expected[key]){
+					log(key + ": expected = " + json.stringify(expected[key]) + ", actual: " +
+							json.stringify(has(key)));
+					cnt++;
+				}
+			}
+			if(cnt == 0){
+				log("None!");
+			}
+		});
+	</script>
+	<style>
+		textarea {
+			width: 95%;
+			height: 500px;
+		}
+	</style>
+</head>
+<body>
+	<p>
+		This file is for testing if the given browser matches the webkitMobile build profile.
+		Results:
+	</p>
+	<textarea id="res"></textarea>
+</body>
+</html>

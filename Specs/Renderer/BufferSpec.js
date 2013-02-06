@@ -151,4 +151,4 @@ defineSuite([
             b.destroy();
         }).toThrow();
     });
-});
+}, 'WebGL');

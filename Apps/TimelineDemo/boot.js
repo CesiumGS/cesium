@@ -3,16 +3,19 @@ require({
     baseUrl : '../..',
     packages : [{
         name : 'dojo',
-        location : 'ThirdParty/dojo-release-1.7.2-src/dojo'
+        location : 'ThirdParty/dojo-release-1.8.3-src/dojo'
     }, {
         name : 'dijit',
-        location : 'ThirdParty/dojo-release-1.7.2-src/dijit'
+        location : 'ThirdParty/dojo-release-1.8.3-src/dijit'
     }, {
         name : 'Core',
         location : 'Source/Core'
     }, {
         name : 'Widgets',
         location : 'Source/Widgets'
+    }, {
+        name : 'ThirdParty',
+        location : 'Source/ThirdParty'
     }, {
         name : 'TimelineDemo',
         location : 'Apps/TimelineDemo'

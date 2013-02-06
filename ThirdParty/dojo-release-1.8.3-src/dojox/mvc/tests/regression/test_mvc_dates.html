@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>13899 mvc Stateful Dates</title>
+
+	<style>
+		@import "../../../../dijit/themes/claro/document.css";
+		@import "../../../../util/doh/robot/robot.css";
+		@import "../../../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, parseOnLoad: false"></script>
+
+	<!-- only needed for alternate theme testing: -->
+	<script type="text/javascript" src="../../../../dijit/tests/_testCommon.js"></script>
+
+	<script type="text/javascript">
+	var model;
+			
+		require([
+			'dijit/form/DateTextBox',
+			'dijit/CalendarLite',
+			'dojox/mvc/StatefulModel',
+			'dijit/form/Button',
+			'dojox/mvc/Output',
+			'dijit/form/TextBox',
+			'dojo/date/stamp',
+			'dojox/mvc',
+			'dojo/on',
+			'dojo/domReady!'
+		], function (DateTextBox, Calendar, StatefulModel, Button, Output, TextBox, dateStamp) {
+
+			// *** Test1 setup begin: ***
+			var test1_init = dateStamp.fromISOString("1987-08-01"); // 8/1/1987
+			test1_model = new StatefulModel({
+				data: {
+					date: test1_init
+				}
+			});
+			var test1_cal = new Calendar({
+				ref: test1_model.date // bind to model.date
+			}, document.getElementById('test1_cal'));
+			test1_cal.startup();
+
+			var test1_cal2 = new Calendar({
+				ref: test1_model.date // bind to model.date
+			}, document.getElementById('test1_cal2'));
+			test1_cal2.startup();
+
+			var test1_txt2 = new TextBox({
+				ref: test1_model.date
+			}, document.getElementById('test1_txt2'));
+			dojo.style(test1_txt2.domNode, "width", "368px");
+			test1_txt2.startup();
+
+			var test1_out2 = new Output({
+				ref: test1_model.date // bind to model.date
+			}, document.getElementById('test1_output2'));
+			test1_out2.startup();
+
+			var test1_setday2 = new Button({
+				label: 'Set Calendar to dateStamp.fromISOString("1991-09-07") (Sep 7 1991)', 
+				onClick: function() {
+							//console.log("test1_setday2 called");
+							//var day2 = new Date(1991,9,7);  // 9/7/1991
+							//var day2 = new Date("1991-09-07");  // 9/7/1991
+							var day2 = dateStamp.fromISOString("1991-09-07"); // 9/7/1991
+							test1_cal2.set("value", day2);
+						} 
+			}, document.getElementById('test1_setdate1'));
+			test1_setday2.startup();
+
+			var test1_settext2 = new Button({
+				label: 'Set TextBox to dateStamp.fromISOString("1991-05-05") (May 5, 1991)', 
+				onClick: function() {
+							//test1_txt2.set("value", new Date("1993-05-05")); // ISO date format  
+							test1_txt2.set("value", dateStamp.fromISOString("1991-05-05")); // 5/5/1993
+							//test1_cal2.set("value", "1991-05-05"); 
+							//test1_txt2.set("value", "Sun May 05 1991 00:00:00 GMT-0400 (Eastern Daylight Time)");  
+						} 
+			}, document.getElementById('test1_setdate2'));
+			test1_settext2.startup();
+
+			var test1_settext3 = new Button({
+				label: 'Set TextBox to ISO String("2011-11-06") (Nov 6, 2011) fails on IE', 
+				onClick: function() {
+							//test1_txt2.set("value", new Date("2011-11-07")); // ISO date format  
+							test1_txt2.set("value", "2011-11-07"); // 11/6/2011
+							//test1_cal2.set("value", "2011-11-07"); 
+							//test1_txt2.set("value", "Sun Nov 06 2011 01:00:00 GMT-0500 (Eastern Standard Time)");  
+						} 
+			}, document.getElementById('test1_setdate3'));
+			test1_settext3.startup();
+
+			var test1_reset2 = new Button({
+				label: "Reset Calendar back to (Aug 1 1987)",
+				onClick: function() {
+							test1_model.date.reset();
+						} 
+			}, document.getElementById('test1_reset2'));
+			test1_reset2.startup();
+			// *** Test1 setup end: ***
+
+			// *** Test2 setup begin: ***
+			var test2_init = dateStamp.fromISOString("2011-11-06"); // Nov 6, 2011
+			test2_model = new StatefulModel({
+				data: {
+					date: test2_init
+				}
+			});
+			var test2_cal = new DateTextBox({
+				ref: test2_model.date // bind to model.date
+			}, document.getElementById('test2_cal'));
+			test2_cal.startup();
+
+			var test2_cal2 = new DateTextBox({
+				ref: test2_model.date // bind to model.date
+			}, document.getElementById('test2_cal2'));
+			test2_cal2.startup();
+
+			var test2_txt2 = new TextBox({
+				ref: test2_model.date
+			}, document.getElementById('test2_txt2'));
+			dojo.style(test2_txt2.domNode, "width", "368px");
+			test2_txt2.startup();
+
+			var test2_out2 = new Output({
+				ref: test2_model.date // bind to model.date
+			}, document.getElementById('test2_output2'));
+			test2_out2.startup();
+
+			var test2_setday2 = new Button({
+				label: 'Set DateTextBox to new Date(1993,9,28) (Oct 28, 1993)', 
+				onClick: function() {
+							var day2 = new Date(1993,9,28);  // 10/28/1993
+							//var day2 = new Date("1993-10-28");  // 10/28/1993
+							//var day2 = dateStamp.fromISOString("1993-09-28"); // 10/28/1997
+							//test2_cal2.set("value", day2);
+							test2_txt2.set("value", day2);
+						} 
+			}, document.getElementById('test2_setdate1'));
+			test2_setday2.startup();
+
+			var test2_settext2 = new Button({
+				label: 'Set DateTextBox to dateStamp.fromISOString("1997-10-14") (Oct 14 1997)', 
+				onClick: function() {
+							//test2_txt2.set("value", new Date("1997-10-14")); // ISO date format  
+							test2_txt2.set("value", dateStamp.fromISOString("1997-10-14")); // Oct 14 1997
+							//test2_cal2.set("value", "1997-10-14"); 
+							//test2_txt2.set("value", "Tue Oct 14 1997 00:00:00 GMT-0400 (Eastern Daylight Time)");  
+						} 
+			}, document.getElementById('test2_setdate2'));
+			test2_settext2.startup();
+
+			var test2_reset2 = new Button({
+				label: "Reset DateTextBox back to (Nov 6 2011)",
+				onClick: function() {
+							test2_model.date.reset();
+						} 
+			}, document.getElementById('test2_reset2'));
+
+			var test2_settext3 = new Button({
+				label: 'Set TextBox to ISO String("1991-05-05") (May 5, 1991)', 
+				onClick: function() {
+							//test2_txt2.set("value", new Date("1991-05-05")); // ISO date format  
+							test2_txt2.set("value", "1991-05-05"); // 5/5/1993
+							//test2_cal2.set("value", "1991-05-05"); 
+							//test2_txt2.set("value", "Sun May 05 1991 00:00:00 GMT-0400 (Eastern Daylight Time)");  
+						} 
+			}, document.getElementById('test2_setdate3'));
+			test2_settext3.startup();
+
+			test2_reset2.startup();
+			// *** Test2 setup end: ***
+
+
+			// *** Test3 setup begin: ***
+			// *** Test3 setup begin: ***
+			var test3_init = dateStamp.fromISOString("2011-08-27"); // 8/27/2011
+			test3_model = new StatefulModel({
+				data: {
+					date: test3_init,
+					date2: test3_init
+				}
+			});
+			var test3_cal = new Calendar({
+				ref: test3_model.date // bind to model.date
+			}, document.getElementById('test3_cal'));
+			test3_cal.startup();
+
+			var test3_cal2 = new DateTextBox({
+				ref: test3_model.date // bind to model.date
+			}, document.getElementById('test3_cal2'));
+			test3_cal2.startup();
+
+			var test3_txt2 = new TextBox({
+				ref: test3_model.date,
+				disabled: true
+			}, document.getElementById('test3_txt2'));
+			dojo.style(test3_txt2.domNode, "width", "368px");
+			test3_txt2.startup();
+
+			var test3_out2 = new Output({
+				ref: test3_model.date // bind to model.date
+			}, document.getElementById('test3_output2'));
+			test3_out2.startup();
+
+			var test3_setday2 = new Button({
+				label: 'Set Calendar to dateStamp.fromISOString("1997-10-14") (Oct 14 1997)', 
+				onClick: function() {
+							//console.log("test3_setday2 called");
+							//var day2 = new Date(1997,10,14);  // 10/14/1997
+							//var day2 = new Date("1997-10-14");  // 10/14/1997
+							var day2 = dateStamp.fromISOString("1997-10-14"); // 10/14/1997
+							test3_cal2.set("value", day2);
+						} 
+			}, document.getElementById('test3_setdate1'));
+			test3_setday2.startup();
+
+			var test3_settext2 = new Button({
+				label: 'Set TextBox to dateStamp.fromISOString("2011-11-06") (Nov 6, 2011)', 
+				onClick: function() {
+							//test3_txt2.set("value", new Date("2011-11-06")); // ISO date format  
+							test3_txt2.set("value", dateStamp.fromISOString("2011-11-06")); // 11/6/2011
+							//test3_cal2.set("value", "2011-11-06"); 
+							//test3_txt2.set("value", "2011-11-06"); // FAILS
+							//test3_txt2.set("value", "1991-05-06"); // 5/5/1991
+							//test3_txt2.set("value", "Sun Nov 06 2011 00:00:00 GMT-0400 (Eastern Daylight Time)");  
+						} 
+			}, document.getElementById('test3_setdate2'));
+			test3_settext2.startup();
+
+			var test3_settext3 = new Button({
+				label: 'Set TextBox to ISO String("1991-05-06T01:00:00") via new Date (May 5, 1991)', 
+				onClick: function() {
+							//test3_txt2.set("value", new Date("1991-05-05")); // ISO date format
+							var d = new Date("1991-05-06T01:00:00");  
+							test3_txt2.set("value", d); // 5/5/1991 YYYY-MM-DDThh:mm:ss via new Date
+							//test3_txt2.set("value", "1991-05-06T01:00:00"); // 5/5/1991 YYYY-MM-DDThh:mm:ss FAILS
+							//test3_cal2.set("value", "1991-05-05"); 
+							//test3_txt2.set("value", "Sun May 05 1991 00:00:00 GMT-0400 (Eastern Daylight Time)");  
+						} 
+			}, document.getElementById('test3_setdate3'));
+			test3_settext3.startup();
+			if(dojo.isIE){ // new Date("1991-05-06") will not work on IE
+				test3_settext3.set('disabled',true);
+			}
+
+			var test3_reset2 = new Button({
+				label: "Reset Calendar back to (Aug 27 2011)",
+				onClick: function() {
+							//console.log("test3_callreset2 called");
+							test3_model.date.reset();
+						} 
+			}, document.getElementById('test3_reset2'));
+			test3_reset2.startup();
+			// *** Test3 setup end: ***
+
+
+
+			// *** Test4 setup begin: RegExp Test***
+			// *** Test4 setup begin: RegExp Test***
+			var regx = new RegExp("abc","i");			
+			test4_model = new StatefulModel({
+				data: {
+					//regex: /abc/i // should be regex: /abc/
+					regex: regx // should be regex: /abc/
+				}
+			});
+
+			console.log('test4_model.regex', test4_model.regex.get('value'));
+			var str = "ABCDEFGHIJKLMNOP abcdefghi";
+			var patt1 = test4_model.regex.get('value');
+			console.log("str.match(test4_model.regex.get('value')) is ",str.match(test4_model.regex.get('value')));
+			console.log('str.match(patt1)',str.match(patt1));
+			test4_model.regex.set('value',/def/);
+			console.log("set to def str.match(test4_model.regex.get('value')) is ",str.match(test4_model.regex.get('value')));
+			test4_model.regex.reset();
+			console.log("after reset str.match(test4_model.regex.get('value')) is ",str.match(test4_model.regex.get('value')));
+			// *** Test4 setup end: ***
+	
+		});
+	</script>
+</head>
+
+<body class="claro">
+			<h2>Test 1: Two Calendars bound to each other, a TextBox and an mvc Output field.</h2>
+				<div  style="border-style: solid; border-width: 2px; width: 827px;">
+					<table>
+						<tbody>
+							<tr>
+								<td><div id="test1_cal"></div></td>
+								<td><div id="test1_cal2"></div></td>
+								<td>
+					<table><tbody>
+								<tr><td><label for="test1_txt2">TextBox bound to date:</label></td></tr>
+								<tr><td><div id="test1_txt2"></div></td></tr>
+								<tr><td><label for="test1_txt2">MVC Output bound to date:</label></td></tr>
+								<tr><td><div id="test1_output2"></div></td></tr>
+					</tbody></table>
+					<table><tbody><tr>
+								<td><div id="test1_setdate1"></div></td>
+					</tr></tbody></table>
+					<table><tbody><tr>
+								<td><div id="test1_setdate2"></div></td>
+					</tr></tbody></table>
+					<table><tbody><tr>
+								<td><div id="test1_setdate3"></div></td>
+					</tr></tbody></table>
+					<table><tbody><tr>
+								<td><div id="test1_reset2"></div></td>
+					</tr></tbody></table>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+			<h2>Test 2: Two DateTextBoxes bound to each other, a TextBox and an mvc Output field.</h2>
+				<div  style="border-style: solid; border-width: 2px; width: 827px;">
+					<table>
+						<tbody>
+							<tr>
+								<td style="vertical-align: top;"><div id="test2_cal"></div></td>
+								<td style="vertical-align: top;"><div id="test2_cal2"></div></td>
+								<td>
+					<table><tbody>
+								<tr><td><label for="test2_txt2">TextBox bound to date:</label></td></tr>
+								<tr><td><div id="test2_txt2"></div></td></tr>
+								<tr><td><label for="test2_txt2">MVC Output bound to date:</label></td></tr>
+								<tr><td><div id="test2_output2"></div></td></tr>
+					</tbody></table>
+					<table><tbody><tr>
+								<td><div id="test2_setdate1"></div></td>
+					</tr></tbody></table>
+					<table><tbody><tr>
+								<td><div id="test2_setdate2"></div></td>
+					</tr></tbody></table>
+					<table><tbody><tr>
+								<td><div id="test2_setdate3"></div></td>
+					</tr></tbody></table>
+					<table><tbody><tr>
+								<td><div id="test2_reset2"></div></td>
+					</tr></tbody></table>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+
+			<h2>Test 3: One Calendar bound to a DateTextbox, a TextBox and an mvc Output field.</h2>
+				<div  style="border-style: solid; border-width: 2px; width: 827px;">
+					<table>
+						<tbody>
+							<tr>
+								<td style="vertical-align: top;"><div id="test3_cal"></div></td>
+								<td style="vertical-align: top;"><div id="test3_cal2"></div></td>
+								<td>
+					<table><tbody>
+								<tr><td><label for="test3_txt2">TextBox bound to date: (disabled to avoid error)</label></td></tr>
+								<tr><td><div id="test3_txt2"></div></td></tr>
+								<tr><td><label for="test3_txt2">MVC Output bound to date:</label></td></tr>
+								<tr><td><div id="test3_output2"></div></td></tr>
+					</tbody></table>
+					<table><tbody><tr>
+								<td><div id="test3_setdate1"></div></td>
+					</tr></tbody></table>
+					<table><tbody><tr>
+								<td><div id="test3_setdate2"></div></td>
+					</tr></tbody></table>
+					<table><tbody><tr>
+								<td><div id="test3_setdate3"></div></td>
+					</tr></tbody></table>
+					<table><tbody><tr>
+								<td><div id="test3_reset2"></div></td>
+					</tr></tbody></table>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+	<!--  	  
+			<h2>I see these problems Binding a TextBox to DateTextBox and Calendar:</h2>
+				<div  style="border-style: solid; border-width: 2px; width: 827px;">
+				<span>There is also a problem when trying to set a date string in this format:</span><br>
+				<span>"Wed May 05 2010 01:00:00 GMT-0400 (Eastern Daylight Time)" into a  into a TextBox bound to a dijit.form.DateTextbox, but that works in a Calendar.</span><br>
+				<span>It is ending up with the DateTextBox set to null.  : </span><br>
+				<span></span><br>
+				<span>There is also a problem when trying to set a date ISO format date string like "1991-05-05":</span><br>
+				<span>"into a  into a TextBox bound to a Calendar, but that works for a dijit.form.DateTextbox.</span><br>
+				<span>It is loops for a while and gets range errors in the console.  : </span><br>
+				<span></span><br>
+				<span>Another thing I have found was that on a calendar I would get a different value from dijit.byId("cal").get('value') and dijit.byId("cal").value.</span><br>
+				<span>dijit.byId("cal").value:        Wed May 05 2010 <b>01:00:00</b> GMT-0400 (Eastern Daylight Time)</span><br>
+				<span>dijit.byId("cal").get('value'): Wed May 05 2010 <b>00:00:00</b> GMT-0400 (Eastern Daylight Time)</span><br>
+				<span>dijit.byId("cal").get('value') is getting 00:00:00 when it seems like it should be 01:00:00</span><br>
+				</div>
+	-->
+</body>
+</html>

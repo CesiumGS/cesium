@@ -18,6 +18,7 @@ define([
         '../Core/Queue',
         '../Core/WebMercatorProjection',
         '../Renderer/DrawCommand',
+        './ImageryLayer',
         './ImageryState',
         './SceneMode',
         './TerrainProvider',
@@ -43,6 +44,7 @@ define([
         Queue,
         WebMercatorProjection,
         DrawCommand,
+        ImageryLayer,
         ImageryState,
         SceneMode,
         TerrainProvider,
@@ -846,6 +848,21 @@ define([
             u_dayTextureAlpha : function() {
                 return this.dayTextureAlpha;
             },
+            u_dayTextureBrightness : function() {
+                return this.dayTextureBrightness;
+            },
+            u_dayTextureContrast : function() {
+                return this.dayTextureContrast;
+            },
+            u_dayTextureHue : function() {
+                return this.dayTextureHue;
+            },
+            u_dayTextureSaturation : function() {
+                return this.dayTextureSaturation;
+            },
+            u_dayTextureOneOverGamma : function() {
+                return this.dayTextureOneOverGamma;
+            },
             u_dayIntensity : function() {
                 return this.dayIntensity;
             },
@@ -864,6 +881,11 @@ define([
             dayTextureTranslationAndScale : [],
             dayTextureTexCoordsExtent : [],
             dayTextureAlpha : [],
+            dayTextureBrightness : [],
+            dayTextureContrast : [],
+            dayTextureHue : [],
+            dayTextureSaturation : [],
+            dayTextureOneOverGamma : [],
             dayIntensity : 0.0,
 
             southAndNorthLatitude : new Cartesian2(0.0, 0.0),
@@ -902,8 +924,6 @@ define([
             }
 
             tileSet.sort(tileDistanceSortFunction);
-
-            var shaderProgram = shaderSet.getShaderProgram(context, tileSetIndex);
 
             for (var i = 0, len = tileSet.length; i < len; i++) {
                 var tile = tileSet[i];
@@ -993,18 +1013,11 @@ define([
                     uniformMap.southMercatorYLowAndHighAndOneOverHeight.z = oneOverMercatorHeight;
                     Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
 
-                    // The first TileImagery's provider select the itensity for the entire tile.
-                    // This needs improvement, but that's part of a bigger lighting overhaul.
-                    var intensity = 0.2;
-                    if (tileImageryCollection.length > 0) {
-                        var firstImagery = tileImageryCollection[0].imagery;
-                        var firstImageryProvider = firstImagery.imageryLayer.getImageryProvider();
-                        if (typeof firstImageryProvider.getIntensity !== 'undefined') {
-                            intensity = firstImageryProvider.getIntensity(firstImagery.x, firstImagery.y, firstImagery.level);
-                        }
-
-                    }
-                    uniformMap.dayIntensity = intensity;
+                    var applyBrightness = false;
+                    var applyContrast = false;
+                    var applyHue = false;
+                    var applySaturation = false;
+                    var applyGamma = false;
 
                     while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                         var tileImagery = tileImageryCollection[imageryIndex];
@@ -1023,7 +1036,47 @@ define([
                         uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
                         uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
                         uniformMap.dayTextureTexCoordsExtent[numberOfDayTextures] = tileImagery.textureCoordinateExtent;
-                        uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
+
+                        if (typeof imageryLayer.alpha === 'function') {
+                            uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        } else {
+                            uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
+                        }
+
+                        if (typeof imageryLayer.brightness === 'function') {
+                            uniformMap.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        } else {
+                            uniformMap.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness;
+                        }
+                        applyBrightness = uniformMap.dayTextureBrightness[numberOfDayTextures] !== ImageryLayer.DEFAULT_BRIGHTNESS;
+
+                        if (typeof imageryLayer.contrast === 'function') {
+                            uniformMap.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        } else {
+                            uniformMap.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast;
+                        }
+                        applyContrast = uniformMap.dayTextureContrast[numberOfDayTextures] !== ImageryLayer.DEFAULT_CONTRAST;
+
+                        if (typeof imageryLayer.hue === 'function') {
+                            uniformMap.dayTextureHue[numberOfDayTextures] = imageryLayer.hue(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        } else {
+                            uniformMap.dayTextureHue[numberOfDayTextures] = imageryLayer.hue;
+                        }
+                        applyHue = uniformMap.dayTextureHue[numberOfDayTextures] !== ImageryLayer.DEFAULT_HUE;
+
+                        if (typeof imageryLayer.saturation === 'function') {
+                            uniformMap.dayTextureSaturation[numberOfDayTextures] = imageryLayer.saturation(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        } else {
+                            uniformMap.dayTextureSaturation[numberOfDayTextures] = imageryLayer.saturation;
+                        }
+                        applySaturation = uniformMap.dayTextureSaturation[numberOfDayTextures] !== ImageryLayer.DEFAULT_SATURATION;
+
+                        if (typeof imageryLayer.gamma === 'function') {
+                            uniformMap.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        } else {
+                            uniformMap.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma;
+                        }
+                        applyGamma = uniformMap.dayTextureOneOverGamma[numberOfDayTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
 
                         ++numberOfDayTextures;
                     }
@@ -1034,7 +1087,7 @@ define([
 
                     colorCommandList.push(command);
 
-                    command.shaderProgram = shaderProgram;
+                    command.shaderProgram = shaderSet.getShaderProgram(context, tileSetIndex, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma);
                     command.renderState = renderState;
                     command.primitiveType = TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
                     command.vertexArray = tile.vertexArray;

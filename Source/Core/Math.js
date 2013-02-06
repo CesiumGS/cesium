@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError'
        ], function(
+         defaultValue,
          DeveloperError) {
     "use strict";
 
@@ -169,7 +171,8 @@ define([
     CesiumMath.sign = function(value) {
         if (value > 0) {
             return 1;
-        } else if (value < 0) {
+        }
+        if (value < 0) {
             return -1;
         }
 
@@ -341,6 +344,15 @@ define([
     CesiumMath.DEGREES_PER_RADIAN = 180.0 / Math.PI;
 
     /**
+     * The number of radians in an arc second.
+     *
+     * @constant
+     * @type {Number}
+     * @see czm_radiansPerArcSecond
+     */
+    CesiumMath.RADIANS_PER_ARCSECOND = CesiumMath.RADIANS_PER_DEGREE / 3600.0;
+
+    /**
      * Converts degrees to radians.
      * @param {Number} degrees The angle to convert in degrees.
      * @return {Number} The corresponding angle in radians.
@@ -373,11 +385,14 @@ define([
         var twoPi = CesiumMath.TWO_PI;
 
         var simplified = angle - Math.floor(angle / twoPi) * twoPi;
+
         if (simplified < -Math.PI) {
-            simplified += twoPi;
-        } else if (simplified >= Math.PI) {
-            simplified -= twoPi;
+            return simplified + twoPi;
         }
+        if (simplified >= Math.PI) {
+            return simplified - twoPi;
+        }
+
         return simplified;
     };
 
@@ -385,24 +400,21 @@ define([
      * Alters the value of input x such that <code>-CesiumMath.PI</code> <= x <= <code>CesiumMath.PI</code>
      * @param {Number} angle in radians
      * @return {Number} The angle in the range ()<code>-CesiumMath.PI</code>, <code>CesiumMath.PI</code>).
-    */
-    CesiumMath.negativePiToPi = function(x){
+     */
+    CesiumMath.negativePiToPi = function(x) {
         var epsilon10 = CesiumMath.EPSILON10;
         var pi = CesiumMath.PI;
         var two_pi = CesiumMath.TWO_PI;
-        while(x < -(pi+ epsilon10)){
+        while (x < -(pi + epsilon10)) {
             x += two_pi;
         }
-        if(x < -pi){
-            x = -pi;
+        if (x < -pi) {
+            return -pi;
         }
-        while(x > pi + epsilon10){
-            x-=two_pi;
+        while (x > pi + epsilon10) {
+            x -= two_pi;
         }
-        if(x > pi){
-            x = pi;
-        }
-        return x;
+        return x > pi ? pi : x;
     };
 
     /**
@@ -445,6 +457,37 @@ define([
             }
         }
         return factorials[n];
+    };
+
+    /**
+     * Increments a number with a wrapping to a minimum value if the number exceeds the maximum value.
+     *
+     * @memberof CesiumMath
+     *
+     * @param {Number} [n] The number to be incremented.
+     * @param {Number} [maximumValue] The maximum incremented value before rolling over to the minimum value.
+     * @param {Number} [minimumValue=0.0] The number reset to after the maximum value has been exceeded.
+     *
+     * @return {Number} The incremented number.
+     *
+     * @example
+     * var n = CesiumMath.incrementWrap(5, 10, 0); // returns 6
+     * var n = CesiumMath.incrementWrap(10, 10, 0); // returns 0
+     *
+     * @exception {DeveloperError} Maximum value must be greater than minimum value.
+     */
+    CesiumMath.incrementWrap = function(n, maximumValue, minimumValue) {
+        minimumValue = defaultValue(minimumValue, 0.0);
+
+        if (maximumValue <= minimumValue) {
+            throw new DeveloperError('Maximum value must be greater than minimum value.');
+        }
+
+        ++n;
+        if (n > maximumValue) {
+            n = minimumValue;
+        }
+        return n;
     };
 
     /**

@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot dialog focus destroy Test</title>
+
+		<style>
+			@import "../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx",
+				"dojo/dom", "dojo/keys", "dojo/_base/lang", "dojo/domReady!"
+			], function(doh, robot, dom, keys, lang){
+				robot.initRobot('../test_Dialog_focusDestroy.html');
+
+				doh.register("TestDestroy", [
+					{
+						name: "destroy",
+						timeout: 20000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.mouseMoveAt("testInput", 500);
+							robot.mouseClick({left:true}, 500);
+							robot.keyPress(keys.BACKSPACE, 500);
+							robot.keyPress(keys.BACKSPACE, 500);
+							robot.keyPress(keys.BACKSPACE, 500);
+							robot.keyPress("a", 1000);
+							robot.mouseMoveAt("showDialog", 500);
+							robot.mouseClick({left:true}, 500);
+							robot.keyPress("a", 1000);
+							robot.mouseMoveAt("destroyButton", 500);
+							robot.mouseClick({left:true}, 500);
+							robot.mouseMoveAt("testInput", 500);
+							robot.mouseClick({left:true}, 500);
+							robot.keyPress(keys.BACKSPACE, 500);
+							robot.keyPress("b", 1000);
+							
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								var inputBox = dom.byId("testInput");
+								doh.is("b", inputBox.value);
+							})), 1000);
+
+							return d;
+						}
+					}
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

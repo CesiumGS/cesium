@@ -46,7 +46,7 @@ defineSuite([
 
         var tmp = new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(sPiOver4);
         var quatnerion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
-        var expected = new Matrix3(cPiOver2, -sPiOver2, 0.0, sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
+        var expected = new Matrix3(cPiOver2, sPiOver2, 0.0, -sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
 
         var returnedResult = Matrix3.fromQuaternion(quatnerion);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
@@ -60,7 +60,7 @@ defineSuite([
 
         var tmp = new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(sPiOver4);
         var quatnerion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
-        var expected = new Matrix3(cPiOver2, -sPiOver2, 0.0, sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
+        var expected = new Matrix3(cPiOver2, sPiOver2, 0.0, -sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
         var result = new Matrix3();
         var returnedResult = Matrix3.fromQuaternion(quatnerion, result);
         expect(result).toBe(returnedResult);
@@ -86,6 +86,27 @@ defineSuite([
         var returnedResult = Matrix3.fromScale(new Cartesian3(7.0, 8.0, 9.0), result);
         expect(returnedResult).toBe(result);
         expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromUniformScale works without a result parameter', function() {
+        var expected = new Matrix3(
+                2.0, 0.0, 0.0,
+                0.0, 2.0, 0.0,
+                0.0, 0.0, 2.0);
+        var returnedResult = Matrix3.fromUniformScale(2.0);
+        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromUniformScale works with a result parameter', function() {
+        var expected = new Matrix3(
+                2.0, 0.0, 0.0,
+                0.0, 2.0, 0.0,
+                0.0, 0.0, 2.0);
+        var result = new Matrix3();
+        var returnedResult = Matrix3.fromUniformScale(2.0, result);
+        expect(returnedResult).toBe(result);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -115,6 +136,72 @@ defineSuite([
         var matrix = Matrix3.fromColumnMajorArray([1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0], result);
         expect(matrix).toBe(result);
         expect(matrix).toEqual(expected);
+    });
+
+    it('fromRotationX works without a result parameter', function() {
+        var matrix = Matrix3.fromRotationX(0.0);
+        expect(matrix).toEqual(Matrix3.IDENTITY);
+    });
+
+    it('fromRotationX works with a result parameter', function() {
+        var expected = new Matrix3(
+                1.0, 0.0,  0.0,
+                0.0, 0.0, -1.0,
+                0.0, 1.0,  0.0);
+        var result = new Matrix3();
+        var matrix = Matrix3.fromRotationX(CesiumMath.toRadians(90.0), result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('fromRotationX throws without angle', function() {
+        expect(function() {
+            Matrix3.fromRotationX();
+        }).toThrow();
+    });
+
+    it('fromRotationY works without a result parameter', function() {
+        var matrix = Matrix3.fromRotationY(0.0);
+        expect(matrix).toEqual(Matrix3.IDENTITY);
+    });
+
+    it('fromRotationY works with a result parameter', function() {
+        var expected = new Matrix3(
+                 0.0, 0.0, 1.0,
+                 0.0, 1.0, 0.0,
+                -1.0, 0.0, 0.0);
+        var result = new Matrix3();
+        var matrix = Matrix3.fromRotationY(CesiumMath.toRadians(90.0), result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('fromRotationY throws without angle', function() {
+        expect(function() {
+            Matrix3.fromRotationY();
+        }).toThrow();
+    });
+
+    it('fromRotationZ works without a result parameter', function() {
+        var matrix = Matrix3.fromRotationZ(0.0);
+        expect(matrix).toEqual(Matrix3.IDENTITY);
+    });
+
+    it('fromRotationZ works with a result parameter', function() {
+        var expected = new Matrix3(
+                0.0, -1.0, 0.0,
+                1.0,  0.0, 0.0,
+                0.0,  0.0, 1.0);
+        var result = new Matrix3();
+        var matrix = Matrix3.fromRotationZ(CesiumMath.toRadians(90.0), result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('fromRotationZ throws without angle', function() {
+        expect(function() {
+            Matrix3.fromRotationZ();
+        }).toThrow();
     });
 
     it('clone works without a result parameter', function() {
@@ -153,7 +240,7 @@ defineSuite([
         var i = 0;
         for ( var col = 0; col < 3; col++) {
             for ( var row = 0; row < 3; row++) {
-                var index = Matrix3.getElementIndex(row, col);
+                var index = Matrix3.getElementIndex(col, row);
                 expect(index).toEqual(i);
                 i++;
             }
@@ -553,15 +640,15 @@ defineSuite([
         var row;
         var col = 0.0;
         expect(function() {
-            Matrix3.getElementIndex(row, col);
+            Matrix3.getElementIndex(col, row);
         }).toThrow();
     });
 
-    it('static getElement throws without col parameter', function() {
+    it('static getElement throws without column parameter', function() {
         var row = 0.0;
         var col;
         expect(function() {
-            Matrix3.getElementIndex(row, col);
+            Matrix3.getElementIndex(col, row);
         }).toThrow();
     });
 
@@ -697,6 +784,12 @@ defineSuite([
     it('static fromScale throws without scale parameter', function() {
         expect(function() {
             Matrix3.fromScale(undefined);
+        }).toThrow();
+    });
+
+    it('static fromUniformScale throws without scale parameter', function() {
+        expect(function() {
+            Matrix3.fromUniformScale(undefined);
         }).toThrow();
     });
 

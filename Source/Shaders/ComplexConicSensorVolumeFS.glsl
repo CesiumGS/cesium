@@ -22,7 +22,7 @@ czm_materialInput getMaterialInput(float sensorRadius, vec3 pointEC, vec3 normal
     czm_materialInput materialInput;
 
     vec3 pointMC = (czm_inverseModelView * vec4(pointEC, 1.0)).xyz;
-    materialInput.positionToEyeEC = normalize(-v_positionEC); 
+    materialInput.positionToEyeEC = -v_positionEC; 
     materialInput.normalEC = normalEC;
     
     materialInput.st = sensor2dTextureCoordinates(sensorRadius, pointMC);
@@ -33,82 +33,46 @@ czm_materialInput getMaterialInput(float sensorRadius, vec3 pointEC, vec3 normal
 }
 vec4 getOuterColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
-    sensorErode(sensorRadius, pointEC);
-    
     czm_materialInput materialInput = getMaterialInput(sensorRadius, pointEC, normalEC);
     czm_material material = czm_getOuterMaterial(materialInput);
     
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
     
-    vec4 color; 
-    #ifdef AFFECTED_BY_LIGHTING    
-    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
-    #else
-    color = vec4(material.diffuse, material.alpha);
-    #endif
-    
-    return color;        
+    return czm_phong(positionToEyeEC, material);
 }
 
 vec4 getInnerColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
-    sensorErode(sensorRadius, pointEC);
-    
     czm_materialInput materialInput = getMaterialInput(sensorRadius, pointEC, normalEC);
     czm_material material = czm_getInnerMaterial(materialInput);
     
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
 
-    vec4 color; 
-    #ifdef AFFECTED_BY_LIGHTING    
-    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
-    #else
-    color = vec4(material.diffuse, material.alpha);
-    #endif
-    
-    return color;        
+    return czm_phong(positionToEyeEC, material);        
 }
 
 vec4 getCapColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
-    sensorErode(sensorRadius, pointEC);
-    
     czm_materialInput materialInput = getMaterialInput(sensorRadius, pointEC, normalEC);
     czm_material material = czm_getCapMaterial(materialInput);
     
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
 
-    vec4 color; 
-    #ifdef AFFECTED_BY_LIGHTING    
-    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
-    #else
-    color = vec4(material.diffuse, material.alpha);
-    #endif
-    
-    return color;        
+    return czm_phong(positionToEyeEC, material);        
 }
 
 vec4 getSilhouetteColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
-    sensorErode(sensorRadius, pointEC);
-    
     czm_materialInput materialInput = getMaterialInput(sensorRadius, pointEC, normalEC);
     czm_material material = czm_getSilhouetteMaterial(materialInput);
     
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
 
-    vec4 color; 
-    #ifdef AFFECTED_BY_LIGHTING    
-    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
-    #else
-    color = vec4(material.diffuse, material.alpha);
-    #endif
-    
-    return color;        
+    return czm_phong(positionToEyeEC, material);        
 }
 
 #endif

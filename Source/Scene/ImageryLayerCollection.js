@@ -19,6 +19,7 @@ define([
      * An ordered collection of imagery layers.
      *
      * @alias ImageryLayerCollection
+     * @constructor
      */
     var ImageryLayerCollection = function ImageryLayerCollection() {
         this._layers = [];

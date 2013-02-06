@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Accordion Tests</title>
+
+	<script type="text/javascript" src="../../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','Accordion','TabBar']"></script>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+	<style type="text/css">
+		@import "../../themes/common/domButtons/DomButtonBlackRightArrow16.css";
+		@import "../../themes/common/domButtons/DomButtonWhiteDownArrow16.css";
+		@import "../../themes/common/dijit/dijit.css";
+		html,body{
+			height: 100%;
+		}
+		.myPane {
+			background-image: -webkit-gradient(linear, left top, left bottom, from(#dcdcdc), to(#FFFFFF));
+			font-family: Times New Roman, Helvetica;
+			color: black;
+		}
+	</style>
+
+	<script type="text/javascript">
+		require([
+			"dojo/dom-construct", // dojo.place
+			"dojo/dom-class", // dojo.hasClass
+			"dojo/ready", // dojo.ready
+			"dijit/registry",  // dijit.byId
+			"doh/runner",	//doh functions
+			"dojox/mobile/Accordion",
+			"dojox/mobile/ContentPane",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/View"
+		], function(domConst, domClass, ready, registry, runner, Accordion, ContentPane){
+			function _createAccordionDeclaratively(widgetId){
+				return registry.byId(widgetId);
+			}
+			
+			function _createAccordionProgrammatically(placeHolderId, widgetId){
+				var r = new Accordion({id:widgetId, iconBase:"../images/icons16.png"});
+				runner.assertNotEqual(null, r);
+				domConst.place(r.domNode, placeHolderId, "replace");
+//start up this place has issue..
+				r.startup();
+				var childWidget = ContentPane({label:"External Content 2", icon1:"mblDomButtonBlackRightArrow16", icon2:"mblDomButtonWhiteDownArrow16", href:"dojo.html"});
+				r.addChild(childWidget);
+//start up this place work fine.
+//				r.startup();
+				return r;
+			}
+			
+			function _createAccordionProgrammaticallyWithSourceNodeReference(widgetId, childWidgetId){
+				var r = new Accordion({iconBase:"../images/icons16.png"}, widgetId);
+				r.startup();
+				return r;
+			}
+			function _assertCorrectAccordion(widget){
+				var childWidgets = widget.getChildren();
+				runner.assertEqual(1, childWidgets.length, "id= " + widget.domNode.id + " childWidgets.length=" + childWidgets.length);
+				var child = childWidgets[0];
+				runner.assertEqual("none", child.domNode.style.display, "id= " + widget.domNode.id);
+				
+			}
+			function _showView2(){
+				var view1 = registry.byId("view1");
+				view1.performTransition("view2", 1, "none");
+			}
+			dojo.ready(function(){
+				doh.register("dojox.mobile.test.doh.AccordionTests", [
+					function testInView1(){
+						var widget1 = _createAccordionDeclaratively("dojox_mobile_Accordion_0");
+						var widget2 = _createAccordionProgrammatically("view1-Accordion2place", "view1-Accordion2");
+						var widget3 = _createAccordionProgrammaticallyWithSourceNodeReference("view1-Accordion3");
+
+						_assertCorrectAccordion(widget1);
+						_assertCorrectAccordion(widget2);
+						_assertCorrectAccordion(widget3);
+					},
+					function testInView2(){
+						var widget1 = _createAccordionDeclaratively("dojox_mobile_Accordion_1");
+						var widget2 = _createAccordionProgrammatically("view2-Accordion2place", "view2-Accordion2");
+						var widget3 = _createAccordionProgrammaticallyWithSourceNodeReference("view2-Accordion3");
+
+						_showView2();
+
+						_assertCorrectAccordion(widget1);
+						_assertCorrectAccordion(widget2);
+						_assertCorrectAccordion(widget3);
+					}
+				]);
+				runner.run();
+			});
+		})
+	</script>
+
+</head>
+<body>
+	<div id="view1" data-dojo-type="dojox.mobile.View">
+		<h1>View 1</h1>
+		<div data-dojo-type="dojox.mobile.Accordion" data-dojo-props='iconBase:"../images/icons16.png"'>
+			<div data-dojo-type="dojox.mobile.ContentPane" data-dojo-props='label:"External Content 1", icon1:"mblDomButtonBlackRightArrow16", icon2:"mblDomButtonWhiteDownArrow16", href:"dojo.html"'>
+			</div>
+		</div>
+		<div id="view1-Accordion2place"></div>
+		<div id="view1-Accordion3">
+			<div data-dojo-type="dojox.mobile.ContentPane" data-dojo-props='label:"External Content 3", icon1:"mblDomButtonBlackRightArrow16", icon2:"mblDomButtonWhiteDownArrow16", href:"dojo.html"'>
+			</div>
+		</div>
+	</div>
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<h1>View 2</h1>
+		<div data-dojo-type="dojox.mobile.Accordion" data-dojo-props='iconBase:"../images/icons16.png"'>
+			<div data-dojo-type="dojox.mobile.ContentPane" data-dojo-props='label:"External Content 1", icon1:"mblDomButtonBlackRightArrow16", icon2:"mblDomButtonWhiteDownArrow16", href:"dojo.html"'>
+			</div>
+		</div>
+		<div id="view2-Accordion2place"></div>
+		<div id="view2-Accordion3">
+			<div data-dojo-type="dojox.mobile.ContentPane" data-dojo-props='label:"External Content 3", icon1:"mblDomButtonBlackRightArrow16", icon2:"mblDomButtonWhiteDownArrow16", href:"dojo.html"'>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
