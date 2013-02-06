@@ -4,7 +4,6 @@ define([
         '../Core/Cartesian3',
         '../Core/Ellipsoid',
         '../Core/Extent',
-        '../Core/GeographicProjection',
         '../Core/HeightmapTessellator',
         '../Core/Occluder',
         './createTaskProcessorWorker'
@@ -13,7 +12,6 @@ define([
         Cartesian3,
         Ellipsoid,
         Extent,
-        GeographicProjection,
         HeightmapTessellator,
         Occluder,
         createTaskProcessorWorker) {
