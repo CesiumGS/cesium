@@ -220,46 +220,6 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to create sampler (wrapS)', function() {
-        expect(function() {
-            context.createSampler({
-                wrapS : 'invalid wrap'
-            });
-        }).toThrow();
-    });
-
-    it('fails to create sampler (wrapT)', function() {
-        expect(function() {
-            context.createSampler({
-                wrapT : 'invalid wrap'
-            });
-        }).toThrow();
-    });
-
-    it('fails to create sampler (minificationFilter)', function() {
-        expect(function() {
-            context.createSampler({
-                minificationFilter : 'invalid filter'
-            });
-        }).toThrow();
-    });
-
-    it('fails to create sampler (magnificationFilter)', function() {
-        expect(function() {
-            context.createSampler({
-                magnificationFilter : 'invalid filter'
-            });
-        }).toThrow();
-    });
-
-    it('fails to create sampler (maximumAnisotropy)', function() {
-        expect(function() {
-            context.createSampler({
-                maximumAnisotropy : 0.0
-            });
-        }).toThrow();
-    });
-
     it('isDestroyed', function() {
         var c = createContext();
         expect(c.isDestroyed()).toEqual(false);
