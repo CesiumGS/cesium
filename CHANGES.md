@@ -10,6 +10,7 @@ Beta Releases
    * `IntersectionTests.rayPlane` now takes the new `Plane` type instead of separate `planeNormal` and `planeD` arguments.
 * Added `Plane` for representing the equation of a plane.
 * Added a line segment-plane intersection test to `IntersectionTests`.
+* Added `IntersectionTests.trianglePlaneIntersection`.
 * Fixed an issue where a `PolylineCollection` with a model matrix other than the identity would be incorrectly rendered in 2D and Columbus view.
 
 ### b13 - 2013-02-01

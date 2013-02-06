@@ -549,7 +549,7 @@ define([
         }
         var indices = PolygonPipeline.earClip2D(positions2D);
         // PERFORMANCE_IDEA:  Checking bounding sphere with plane for quick reject
-        indices = PolygonPipeline.wrapLongitude(cleanedPositions, indices);		
+        indices = PolygonPipeline.wrapLongitude(cleanedPositions, indices);
         var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, polygon._granularity);
         var boundary = outerPositions || cleanedPositions;
         var boundingRectangle = computeBoundingRectangle(tangentPlane, boundary, angle, createMeshFromPositionsBoundingRectangle);

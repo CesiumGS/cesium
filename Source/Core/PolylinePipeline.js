@@ -43,6 +43,7 @@ define([
      *
      * @returns An array of polyline segment objects containing the Cartesian position and indices.
      *
+     * @see PolygonPipeline.wrapLongitude
      * @see Polyline
      * @see PolylineCollection
      *
