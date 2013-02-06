@@ -8,7 +8,8 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Ellipsoid',
-        './Ray'
+        './Ray',
+        './Plane'
     ], function(
         defaultValue,
         DeveloperError,
@@ -18,7 +19,8 @@ define([
         Cartesian2,
         Cartesian3,
         Ellipsoid,
-        Ray) {
+        Ray,
+        Plane) {
     "use strict";
 
     /**
@@ -50,8 +52,10 @@ define([
         this._origin = Cartesian3.clone(origin);
         this._xAxis = Cartesian3.fromCartesian4(eastNorthUp.getColumn(0));
         this._yAxis = Cartesian3.fromCartesian4(eastNorthUp.getColumn(1));
-        this._normal = Cartesian3.fromCartesian4(eastNorthUp.getColumn(2));
-        this._distance = -Cartesian3.dot(origin, origin); //The shortest distance from the origin to the plane.
+
+        var normal = Cartesian3.fromCartesian4(eastNorthUp.getColumn(2));
+        var distance = -Cartesian3.dot(origin, origin); //The shortest distance from the origin to the plane.
+        this._plane = new Plane(normal, distance);
     };
 
     var tmp = new AxisAlignedBoundingBox();
@@ -112,7 +116,7 @@ define([
         ray.origin = cartesian;
         Cartesian3.normalize(cartesian, ray.direction);
 
-        var intersectionPoint = IntersectionTests.rayPlane(ray, this._normal, this._distance, projectPointOntoPlaneCartesian3);
+        var intersectionPoint = IntersectionTests.rayPlane(ray, this._plane, projectPointOntoPlaneCartesian3);
 
         if (typeof intersectionPoint !== 'undefined') {
             var v = intersectionPoint.subtract(this._origin, intersectionPoint);
