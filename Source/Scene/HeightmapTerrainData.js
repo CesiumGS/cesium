@@ -185,26 +185,15 @@ define([
             return undefined;
         }
 
-        var that = this;
         return when(verticesPromise, function(result) {
-            // TODO: compute the occludee point in the worker instead of here.
-            var vertices = new Float32Array(result.vertices);
-
-            // TODO: we need to take the heights into account when computing the occludee point.
-            var occludeePointInScaledSpace = Occluder.computeOccludeePointFromExtent(extent, ellipsoid);
-            if (typeof occludeePointInScaledSpace !== 'undefined') {
-                Cartesian3.multiplyComponents(occludeePointInScaledSpace, ellipsoid.getOneOverRadii(), occludeePointInScaledSpace);
-            }
-
             return new TerrainMesh(
                     center,
-                    vertices,
-                    TerrainProvider.getRegularGridIndices(that.width + 2, that.height + 2),
-                    result.statistics.minHeight,
-                    result.statistics.maxHeight,
-                    BoundingSphere.clone(result.boundingSphere2DGeographic), // TODO: what about other projections?
-                    BoundingSphere.clone(result.boundingSphere3D),
-                    occludeePointInScaledSpace);
+                    new Float32Array(result.vertices),
+                    TerrainProvider.getRegularGridIndices(result.gridWidth, result.gridHeight),
+                    result.minHeight,
+                    result.maxHeight,
+                    result.boundingSphere3D,
+                    result.occludeePointInScaledSpace);
         });
     };
 

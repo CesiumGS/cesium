@@ -52,7 +52,6 @@ define([
        Cartesian3.clone(mesh.center, tile.center);
        tile.minHeight = mesh.minHeight;
        tile.maxHeight = mesh.maxHeight;
-       BoundingSphere.clone(mesh.boundingSphere2D, tile.boundingSphere2D);
        BoundingSphere.clone(mesh.boundingSphere3D, tile.boundingSphere3D);
 
        if (typeof mesh.occludeePointInScaledSpace !== 'undefined') {

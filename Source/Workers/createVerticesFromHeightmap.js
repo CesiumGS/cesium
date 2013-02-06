@@ -6,6 +6,7 @@ define([
         '../Core/Extent',
         '../Core/GeographicProjection',
         '../Core/HeightmapTessellator',
+        '../Core/Occluder',
         './createTaskProcessorWorker'
     ], function(
         BoundingSphere,
@@ -14,6 +15,7 @@ define([
         Extent,
         GeographicProjection,
         HeightmapTessellator,
+        Occluder,
         createTaskProcessorWorker) {
     "use strict";
 
@@ -42,15 +44,24 @@ define([
         var statistics = HeightmapTessellator.computeVertices(parameters);
         var boundingSphere3D = BoundingSphere.fromVertices(vertices, parameters.relativeToCenter, numberOfAttributes);
 
-        var boundingSphere2DGeographic = BoundingSphere.fromExtentWithHeights2D(parameters.extent, new GeographicProjection(), statistics.minHeight, statistics.maxHeight);
-        boundingSphere2DGeographic.center = new Cartesian3(boundingSphere2DGeographic.center.z, boundingSphere2DGeographic.center.x, boundingSphere2DGeographic.center.y);
+        var extent = parameters.extent;
+        var ellipsoid = parameters.ellipsoid;
+
+        // TODO: we need to take the heights into account when computing the occludee point.
+        var occludeePointInScaledSpace = Occluder.computeOccludeePointFromExtent(extent, ellipsoid);
+        if (typeof occludeePointInScaledSpace !== 'undefined') {
+            Cartesian3.multiplyComponents(occludeePointInScaledSpace, ellipsoid.getOneOverRadii(), occludeePointInScaledSpace);
+        }
 
         return {
             vertices : vertices.buffer,
-            statistics : statistics,
             numberOfAttributes : numberOfAttributes,
+            minHeight : statistics.minHeight,
+            maxHeight : statistics.maxHeight,
+            gridWidth : arrayWidth,
+            gridHeight : arrayHeight,
             boundingSphere3D : boundingSphere3D,
-            boundingSphere2DGeographic : boundingSphere2DGeographic
+            occludeePointInScaledSpace : occludeePointInScaledSpace
         };
     }
 
