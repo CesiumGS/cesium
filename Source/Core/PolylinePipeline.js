@@ -4,13 +4,15 @@ define([
         './Cartesian3',
         './Cartesian4',
         './IntersectionTests',
-        './Matrix4'
+        './Matrix4',
+        './Plane'
     ], function(
         defaultValue,
         Cartesian3,
         Cartesian4,
         IntersectionTests,
-        Matrix4) {
+        Matrix4,
+        Plane) {
     "use strict";
 
     /**
@@ -23,7 +25,9 @@ define([
     var wrapLongitudeInversMatrix = new Matrix4();
     var wrapLongitudeOrigin = new Cartesian4();
     var wrapLongitudeXZNormal = new Cartesian4();
+    var wrapLongitudeXZPlane = new Plane(Cartesian3.ZERO, 0.0);
     var wrapLongitudeYZNormal = new Cartesian4();
+    var wrapLongitudeYZPlane = new Plane(Cartesian3.ZERO, 0.0);
     var wrapLongitudeIntersection = new Cartesian3();
     var wrapLongitudeOffset = new Cartesian3();
 
@@ -58,9 +62,9 @@ define([
 
             var origin = Matrix4.multiplyByPoint(inverseModelMatrix, Cartesian3.ZERO, wrapLongitudeOrigin);
             var xzNormal = Matrix4.multiplyByVector(inverseModelMatrix, Cartesian4.UNIT_Y, wrapLongitudeXZNormal);
-            var xzConstant = -Cartesian3.dot(xzNormal, origin);
+            var xzPlane = Plane.fromPointNormal(origin, xzNormal, wrapLongitudeXZPlane);
             var yzNormal = Matrix4.multiplyByVector(inverseModelMatrix, Cartesian4.UNIT_X, wrapLongitudeYZNormal);
-            var yzConstant = -Cartesian3.dot(yzNormal, origin);
+            var yzPlane = Plane.fromPointNormal(origin, yzNormal, wrapLongitudeYZPlane);
 
             var currentSegment = [{
                 cartesian : Cartesian3.clone(positions[0]),
@@ -73,13 +77,13 @@ define([
                 var cur = positions[i];
 
                 // intersects the IDL if either endpoint is on the negative side of the yz-plane
-                if (Cartesian3.dot(prev, yzNormal) + yzConstant < 0.0 || Cartesian3.dot(cur, yzNormal) + yzNormal < 0.0) {
+                if (Plane.getPointDistance(yzPlane, prev) < 0.0 || Plane.getPointDistance(yzPlane, cur) < 0.0) {
                     // and intersects the xz-plane
-                    var intersection = IntersectionTests.lineSegmentPlane(prev, cur, xzNormal, xzConstant, wrapLongitudeIntersection);
+                    var intersection = IntersectionTests.lineSegmentPlane(prev, cur, xzPlane, wrapLongitudeIntersection);
                     if (typeof intersection !== 'undefined') {
                         // move point on the xz-plane slightly away from the plane
                         var offset = Cartesian3.multiplyByScalar(xzNormal, 5.0e-9, wrapLongitudeOffset);
-                        if (Cartesian3.dot(prev, xzNormal) + xzConstant < 0.0) {
+                        if (Plane.getPointDistance(xzPlane, prev) < 0.0) {
                             Cartesian3.negate(offset, offset);
                         }
 
