@@ -1,9 +1,18 @@
 /*global define*/
-define(['./Cartographic',
-        './Cartesian3'
+define([
+        './defaultValue',
+        './Cartesian3',
+        './Cartesian4',
+        './IntersectionTests',
+        './Matrix4',
+        './Plane'
     ], function(
-        Cartographic,
-        Cartesian3) {
+        defaultValue,
+        Cartesian3,
+        Cartesian4,
+        IntersectionTests,
+        Matrix4,
+        Plane) {
     "use strict";
 
     /**
@@ -11,79 +20,103 @@ define(['./Cartographic',
      *
      * @exports PolylinePipeline
      */
-    var PolylinePipeline = {
-        /**
-         * Breaks a {@link Polyline} into segments such that it does not cross the &plusmn;180 degree meridian of an ellipsoid.
-         *
-         * @param {Ellipsoid} ellipsoid The ellipsoid to wrap around.
-         * @param {Array} positions The polyline's Cartesian positions.
-         *
-         * @returns An array of polyline segment objects containing the Cartesian and {@link Cartographic} positions and indices.
-         *
-         * @see Polyline
-         * @see PolylineCollection
-         *
-         * @example
-         * var polylines = new PolylineCollection();
-         * polylines.add(...);
-         * var positions = polylines.get(0).getPositions();
-         * var segments = PolylinePipeline.wrapLongitude(ellipsoid, positions);
-         */
-        wrapLongitude : function(ellipsoid, positions) {
-            var segments = [];
+    var PolylinePipeline = {};
 
-            if (positions && (positions.length > 0)) {
-                var length = positions.length;
+    var wrapLongitudeInversMatrix = new Matrix4();
+    var wrapLongitudeOrigin = new Cartesian4();
+    var wrapLongitudeXZNormal = new Cartesian4();
+    var wrapLongitudeXZPlane = new Plane(Cartesian3.ZERO, 0.0);
+    var wrapLongitudeYZNormal = new Cartesian4();
+    var wrapLongitudeYZPlane = new Plane(Cartesian3.ZERO, 0.0);
+    var wrapLongitudeIntersection = new Cartesian3();
+    var wrapLongitudeOffset = new Cartesian3();
 
-                var currentSegment = [{
-                    cartesian : Cartesian3.clone(positions[0]),
-                    cartographic : ellipsoid.cartesianToCartographic(positions[0]),
-                    index : 0
-                }];
+    /**
+     * Breaks a {@link Polyline} into segments such that it does not cross the &plusmn;180 degree meridian of an ellipsoid.
+     * @memberof PolylinePipeline
+     *
+     * @param {Array} positions The polyline's Cartesian positions.
+     * @param {Matrix4} [modelMatrix=Matrix4.IDENTITY] The polyline's model matrix. Assumed to be an affine
+     * transformation matrix, where the upper left 3x3 elements are a rotation matrix, and
+     * the upper three elements in the fourth column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
+     * The matrix is not verified to be in the proper form.
+     *
+     * @returns An array of polyline segment objects containing the Cartesian position and indices.
+     *
+     * @see Polyline
+     * @see PolylineCollection
+     *
+     * @example
+     * var polylines = new PolylineCollection();
+     * var polyline = polylines.add(...);
+     * var positions = polyline.getPositions();
+     * var modelMatrix = polylines.modelMatrix;
+     * var segments = PolylinePipeline.wrapLongitude(positions, modelMatrix);
+     */
+    PolylinePipeline.wrapLongitude = function(positions, modelMatrix) {
+        var segments = [];
 
-                var prev = currentSegment[0].cartographic;
+        if (typeof positions !== 'undefined' && positions.length > 0) {
+            modelMatrix = defaultValue(modelMatrix, Matrix4.IDENTITY);
+            var inverseModelMatrix = Matrix4.inverseTransformation(modelMatrix, wrapLongitudeInversMatrix);
 
-                for ( var i = 1; i < length; ++i) {
-                    var cur = ellipsoid.cartesianToCartographic(positions[i]);
+            var origin = Matrix4.multiplyByPoint(inverseModelMatrix, Cartesian3.ZERO, wrapLongitudeOrigin);
+            var xzNormal = Matrix4.multiplyByVector(inverseModelMatrix, Cartesian4.UNIT_Y, wrapLongitudeXZNormal);
+            var xzPlane = Plane.fromPointNormal(origin, xzNormal, wrapLongitudeXZPlane);
+            var yzNormal = Matrix4.multiplyByVector(inverseModelMatrix, Cartesian4.UNIT_X, wrapLongitudeYZNormal);
+            var yzPlane = Plane.fromPointNormal(origin, yzNormal, wrapLongitudeYZPlane);
 
-                    if (Math.abs(prev.longitude - cur.longitude) > Math.PI) {
-                        var interpolatedLongitude = prev.longitude < 0.0 ? -Math.PI : Math.PI;
-                        var longitude = cur.longitude + (2.0 * interpolatedLongitude);
-                        var ratio = (interpolatedLongitude - prev.longitude) / (longitude - prev.longitude);
-                        var interpolatedLatitude = prev.latitude + (cur.latitude - prev.latitude) * ratio;
-                        var interpolatedHeight = prev.height + (cur.height - prev.height) * ratio;
+            var currentSegment = [{
+                cartesian : Cartesian3.clone(positions[0]),
+                index : 0
+            }];
+            var prev = currentSegment[0].cartesian;
+
+            var length = positions.length;
+            for ( var i = 1; i < length; ++i) {
+                var cur = positions[i];
+
+                // intersects the IDL if either endpoint is on the negative side of the yz-plane
+                if (Plane.getPointDistance(yzPlane, prev) < 0.0 || Plane.getPointDistance(yzPlane, cur) < 0.0) {
+                    // and intersects the xz-plane
+                    var intersection = IntersectionTests.lineSegmentPlane(prev, cur, xzPlane, wrapLongitudeIntersection);
+                    if (typeof intersection !== 'undefined') {
+                        // move point on the xz-plane slightly away from the plane
+                        var offset = Cartesian3.multiplyByScalar(xzNormal, 5.0e-9, wrapLongitudeOffset);
+                        if (Plane.getPointDistance(xzPlane, prev) < 0.0) {
+                            Cartesian3.negate(offset, offset);
+                        }
 
                         currentSegment.push({
-                            cartesian : ellipsoid.cartographicToCartesian(new Cartographic(interpolatedLongitude, interpolatedLatitude, interpolatedHeight)),
-                            cartographic : new Cartographic(interpolatedLongitude, interpolatedLatitude, interpolatedHeight),
+                            cartesian : Cartesian3.add(intersection, offset),
                             index : i
                         });
                         segments.push(currentSegment);
 
+                        Cartesian3.negate(offset, offset);
+
                         currentSegment = [];
                         currentSegment.push({
-                            cartesian : ellipsoid.cartographicToCartesian(new Cartographic(-interpolatedLongitude, interpolatedLatitude, interpolatedHeight)),
-                            cartographic : new Cartographic(-interpolatedLongitude, interpolatedLatitude, interpolatedHeight),
+                            cartesian : Cartesian3.add(intersection, offset),
                             index : i
                         });
                     }
-
-                    currentSegment.push({
-                        cartesian : Cartesian3.clone(positions[i]),
-                        cartographic : ellipsoid.cartesianToCartographic(positions[i]),
-                        index : i
-                    });
-
-                    prev = cur.clone();
                 }
 
-                if (currentSegment.length > 1) {
-                    segments.push(currentSegment);
-                }
+                currentSegment.push({
+                    cartesian : Cartesian3.clone(positions[i]),
+                    index : i
+                });
+
+                prev = cur;
             }
 
-            return segments;
+            if (currentSegment.length > 1) {
+                segments.push(currentSegment);
+            }
         }
+
+        return segments;
     };
 
     return PolylinePipeline;

@@ -361,8 +361,8 @@ define([
         return positions;
     };
 
-    Polyline.prototype._createSegments = function(ellipsoid) {
-        return PolylinePipeline.wrapLongitude(ellipsoid, this.getPositions());
+    Polyline.prototype._createSegments = function(modelMatrix) {
+        return PolylinePipeline.wrapLongitude(this.getPositions(), modelMatrix);
     };
 
     Polyline.prototype._setSegments = function(segments) {
