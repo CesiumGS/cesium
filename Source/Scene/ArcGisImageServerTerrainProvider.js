@@ -101,7 +101,7 @@ define([
                 elementsPerHeight : 3,
                 stride : 4,
                 elementMultiplier : 256.0,
-                isBigEndian : false
+                isBigEndian : true
             };
 
         // Grab the details of this ImageServer.

@@ -925,7 +925,7 @@ define([
                         data : tile.terrainData,
                         x : tile.x,
                         y : tile.y,
-                        z : tile.z
+                        level : tile.level
                     });
 
                     childTile.state = TileState.LOADING;
@@ -958,7 +958,7 @@ define([
                         data : tile.terrainData,
                         x : tile.x,
                         y : tile.y,
-                        z : tile.z
+                        level : tile.level
                     });
 
                     if (tile.terrainData.isChildAvailable(tile.x, tile.y, childTile.x, childTile.y)) {

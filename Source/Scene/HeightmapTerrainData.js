@@ -312,8 +312,8 @@ define([
 
         var outputIndex = 0;
         var i, j;
-        if (structure.stride > 1) {
-            var stride = structure.stride;
+        var stride = structure.stride;
+        if (stride > 1) {
             for (j = topInteger; j <= bottomInteger; ++j) {
                 for (i = leftInteger; i <= rightInteger; ++i) {
                     var index = (j * width + i) * stride;
@@ -336,21 +336,40 @@ define([
     function upsampleByInterpolating(terrainData, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
         var width = terrainData.width;
         var height = terrainData.height;
-
-        // TODO: account for the stride
+        var structure = terrainData.structure;
+        var stride = structure.stride;
 
         var sourceHeights = terrainData.buffer;
-        var heights = new sourceHeights.constructor(width * height);
+        var heights = new sourceHeights.constructor(width * height * stride);
 
         // PERFORMANCE_IDEA: don't recompute these extents - the caller already knows them.
         var sourceExtent = tilingScheme.tileXYToExtent(thisX, thisY, thisLevel);
         var destinationExtent = tilingScheme.tileXYToExtent(descendantX, descendantY, descendantLevel);
 
-        for (var j = 0; j < height; ++j) {
-            var latitude = CesiumMath.lerp(destinationExtent.north, destinationExtent.south, j / (height - 1));
-            for (var i = 0; i < width; ++i) {
-                var longitude = CesiumMath.lerp(destinationExtent.west, destinationExtent.east, i / (width - 1));
-                setHeight(heights, j * width + i, interpolateHeight(sourceHeights, sourceExtent, width, height, longitude, latitude));
+        var i, j, latitude, longitude;
+
+        if (stride > 1) {
+            var elementsPerHeight = structure.elementsPerHeight;
+            var elementMultiplier = structure.elementMultiplier;
+            var isBigEndian = structure.isBigEndian;
+
+            var divisor = Math.pow(elementMultiplier, elementsPerHeight - 1);
+
+            for (j = 0; j < height; ++j) {
+                latitude = CesiumMath.lerp(destinationExtent.north, destinationExtent.south, j / (height - 1));
+                for (i = 0; i < width; ++i) {
+                    longitude = CesiumMath.lerp(destinationExtent.west, destinationExtent.east, i / (width - 1));
+                    var heightSample = interpolateHeightWithStride(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, sourceExtent, width, height, longitude, latitude);
+                    setHeight(heights, elementsPerHeight, elementMultiplier, divisor, stride, isBigEndian, j * width + i, heightSample);
+                }
+            }
+        } else {
+            for (j = 0; j < height; ++j) {
+                latitude = CesiumMath.lerp(destinationExtent.north, destinationExtent.south, j / (height - 1));
+                for (i = 0; i < width; ++i) {
+                    longitude = CesiumMath.lerp(destinationExtent.west, destinationExtent.east, i / (width - 1));
+                    heights[j * width + i] = interpolateHeight(sourceHeights, sourceExtent, width, height, longitude, latitude);
+                }
             }
         }
 
@@ -381,10 +400,42 @@ define([
         southInteger = height - 1 - southInteger;
         northInteger = height - 1 - northInteger;
 
-        var southwestHeight = getHeight(sourceHeights, southInteger * width + westInteger);
-        var southeastHeight = getHeight(sourceHeights, southInteger * width + eastInteger);
-        var northwestHeight = getHeight(sourceHeights, northInteger * width + westInteger);
-        var northeastHeight = getHeight(sourceHeights, northInteger * width + eastInteger);
+        var southwestHeight = sourceHeights[southInteger * width + westInteger];
+        var southeastHeight = sourceHeights[southInteger * width + eastInteger];
+        var northwestHeight = sourceHeights[northInteger * width + westInteger];
+        var northeastHeight = sourceHeights[northInteger * width + eastInteger];
+
+        return triangleInterpolateHeight(dx, dy, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
+    }
+
+    function interpolateHeightWithStride(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, sourceExtent, width, height, longitude, latitude) {
+        var fromWest = (longitude - sourceExtent.west) * (width - 1) / (sourceExtent.east - sourceExtent.west);
+        var fromSouth = (latitude - sourceExtent.south) * (height - 1) / (sourceExtent.north - sourceExtent.south);
+
+        var westInteger = fromWest | 0;
+        var eastInteger = westInteger + 1;
+        if (eastInteger >= width) {
+            eastInteger = width - 1;
+            westInteger = width - 2;
+        }
+
+        var southInteger = fromSouth | 0;
+        var northInteger = southInteger + 1;
+        if (northInteger >= height) {
+            northInteger = height - 1;
+            southInteger = height - 2;
+        }
+
+        var dx = fromWest - westInteger;
+        var dy = fromSouth - southInteger;
+
+        southInteger = height - 1 - southInteger;
+        northInteger = height - 1 - northInteger;
+
+        var southwestHeight = getHeight(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, southInteger * width + westInteger);
+        var southeastHeight = getHeight(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, southInteger * width + eastInteger);
+        var northwestHeight = getHeight(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, northInteger * width + westInteger);
+        var northeastHeight = getHeight(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, northInteger * width + eastInteger);
 
         return triangleInterpolateHeight(dx, dy, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
     }
@@ -400,20 +451,42 @@ define([
         return southwestHeight + (dX * (northeastHeight - northwestHeight)) + (dY * (northwestHeight - southwestHeight));
     }
 
-    function getHeight(heights, index) {
-        return heights[index];
-//        index *= 4;
-//        return (heights[index] << 16) |
-//               (heights[index + 1] << 8) |
-//               heights[index + 1];
+    function getHeight(heights, elementsPerHeight, elementMultiplier, stride, isBigEndian, index) {
+        index *= stride;
+
+        var height = 0;
+        var i;
+
+        if (isBigEndian) {
+            for (i = 0; i < elementsPerHeight; ++i) {
+                height = (height * elementMultiplier) + heights[index + i];
+            }
+        } else {
+            for (i = elementsPerHeight - 1; i >= 0; --i) {
+                height = (height * elementMultiplier) + heights[index + i];
+            }
+        }
+
+        return height;
     }
 
-    function setHeight(heights, index, height) {
-        heights[index] = height;
-//        index *= 4;
-//        heights[index] = height >> 16;
-//        heights[index + 1] = (height >> 8) & 0xFF;
-//        heights[index + 2] = height & 0xFF;
+    function setHeight(heights, elementsPerHeight, elementMultiplier, divisor, stride, isBigEndian, index, height) {
+        index *= stride;
+
+        var i;
+        if (isBigEndian) {
+            for (i = 0; i < elementsPerHeight; ++i) {
+                heights[index + i] = (height / divisor) | 0;
+                height -= heights[index + i] * divisor;
+                divisor /= elementMultiplier;
+            }
+        } else {
+            for (i = elementsPerHeight - 1; i >= 0; --i) {
+                heights[index + i] = (height / divisor) | 0;
+                height -= heights[index + i] * divisor;
+                divisor /= elementMultiplier;
+            }
+        }
     }
 
     return HeightmapTerrainData;
