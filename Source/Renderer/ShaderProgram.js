@@ -1245,6 +1245,10 @@ define([
         }
     }
 
+    var scratchUniformMatrix2 = new Float32Array(4);
+    var scratchUniformMatrix3 = new Float32Array(9);
+    var scratchUniformMatrix4 = new Float32Array(16);
+
     /**
      * A shader program's uniform, including the uniform's value.  This is most commonly used to change
      * the value of a uniform, but can also be used retrieve a uniform's name and datatype,
@@ -1517,15 +1521,15 @@ define([
                 };
             case _gl.FLOAT_MAT2:
                 return function() {
-                    _gl.uniformMatrix2fv(_location, false, Matrix2.toArray(this.value));
+                    _gl.uniformMatrix2fv(_location, false, Matrix2.toArray(this.value, scratchUniformMatrix2));
                 };
             case _gl.FLOAT_MAT3:
                 return function() {
-                    _gl.uniformMatrix3fv(_location, false, Matrix3.toArray(this.value));
+                    _gl.uniformMatrix3fv(_location, false, Matrix3.toArray(this.value, scratchUniformMatrix3));
                 };
             case _gl.FLOAT_MAT4:
                 return function() {
-                    _gl.uniformMatrix4fv(_location, false, Matrix4.toArray(this.value));
+                    _gl.uniformMatrix4fv(_location, false, Matrix4.toArray(this.value, scratchUniformMatrix4));
                 };
             default:
                 throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type + ' for uniform "' + activeUniform.name + '".');
@@ -1651,19 +1655,19 @@ define([
             case _gl.FLOAT_MAT2:
                 return function() {
                     for ( var i = 0; i < _locations.length; ++i) {
-                        _gl.uniformMatrix2fv(_locations[i], false, Matrix2.toArray(this.value[i]));
+                        _gl.uniformMatrix2fv(_locations[i], false, Matrix2.toArray(this.value[i], scratchUniformMatrix2));
                     }
                 };
             case _gl.FLOAT_MAT3:
                 return function() {
                     for ( var i = 0; i < _locations.length; ++i) {
-                        _gl.uniformMatrix3fv(_locations[i], false, Matrix3.toArray(this.value[i]));
+                        _gl.uniformMatrix3fv(_locations[i], false, Matrix3.toArray(this.value[i], scratchUniformMatrix3));
                     }
                 };
             case _gl.FLOAT_MAT4:
                 return function() {
                     for ( var i = 0; i < _locations.length; ++i) {
-                        _gl.uniformMatrix4fv(_locations[i], false, Matrix4.toArray(this.value[i]));
+                        _gl.uniformMatrix4fv(_locations[i], false, Matrix4.toArray(this.value[i], scratchUniformMatrix4));
                     }
                 };
             default:
