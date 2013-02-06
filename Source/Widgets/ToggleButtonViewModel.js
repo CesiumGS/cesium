@@ -9,13 +9,13 @@ define(['../Core/DeveloperError',
     "use strict";
 
     /**
-     * A ViewModel which exposes a {@link Clock} for user interfaces.
-     * @alias ButtonViewModel
+     * A ViewModel which exposes the properties of a toggle button.
+     * @alias ToggleButtonViewModel
      * @constructor
      *
-     * @param {Object} [template] TODO
+     * @param {Object} [template] A template defining the button's properties.
      */
-    var ButtonViewModel = function(template) {
+    var ToggleButtonViewModel = function(template) {
         var t = defaultValue(template, {});
 
         /**
@@ -25,10 +25,10 @@ define(['../Core/DeveloperError',
         this.command = defaultValue(t.command, undefined);
 
         /**
-         * An observable boolean indicating if the button is currently selected.
+         * An observable boolean indicating if the button is currently toggled.
          * @type Observable boolean
          */
-        this.selected = defaultValue(t.selected, ko.observable(false));
+        this.toggled = defaultValue(t.toggled, ko.observable(false));
 
         /**
          * An observable string defining the buttons tool tip.
@@ -37,5 +37,5 @@ define(['../Core/DeveloperError',
         this.toolTip = defaultValue(t.toolTip, ko.observable(''));
     };
 
-    return ButtonViewModel;
+    return ToggleButtonViewModel;
 });

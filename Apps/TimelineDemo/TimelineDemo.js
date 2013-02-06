@@ -35,9 +35,7 @@ define(['dojo',
 
     function handleSetTime(e) {
         if (typeof timeline !== 'undefined') {
-            if (!animationViewModel.pauseViewModel.selected()) {
-                animationViewModel.pauseViewModel.command.execute();
-            }
+            animationViewModel.pauseViewModel.toggled(true);
             var scrubJulian = e.timeJulian;
             clock.currentTime = scrubJulian;
             updateScrubTime(scrubJulian);

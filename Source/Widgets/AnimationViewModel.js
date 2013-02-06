@@ -1,6 +1,6 @@
 /*global define*/
 define(['./Command',
-        './ButtonViewModel',
+        './ToggleButtonViewModel',
         '../Core/DeveloperError',
         '../Core/binarySearch',
         '../Core/ClockStep',
@@ -12,7 +12,7 @@ define(['./Command',
         '../ThirdParty/knockout-2.2.1'
         ], function(
          Command,
-         ButtonViewModel,
+         ToggleButtonViewModel,
          DeveloperError,
          binarySearch,
          ClockStep,
@@ -54,7 +54,7 @@ define(['./Command',
                    (currentTime.equals(stopTime) && multiplier < 0);
         });
 
-        var shouldAnimate = this.shouldAnimate = ko.observable(false);
+        this._shouldAnimate = ko.observable(false);
 
         this._isSystemTimeAvailable = ko.computed(function() {
             var clockRange = clockViewModel.clockRange();
@@ -66,22 +66,6 @@ define(['./Command',
             var startTime = clockViewModel.startTime();
             var stopTime = clockViewModel.stopTime();
             return systemTime.greaterThanOrEquals(startTime) && systemTime.lessThanOrEquals(stopTime);
-        });
-
-        var shuttleRingTicks = ko.observable([//
-        0.000001, 0.000002, 0.000005, 0.00001, 0.00002, 0.00005, 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005,//
-        0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 15.0, 30.0, 60.0, 120.0, 300.0, 600.0, 900.0,//
-        1800.0, 3600.0, 7200.0, 14400.0, 21600.0, 43200.0, 86400.0, 172800.0, 345600.0, 604800.0]);
-
-        this.shuttleRingTicks = ko.computed({
-            read : shuttleRingTicks,
-            write : function(value) {
-                value = value.slice(0);
-                value.sort(function(a, b) {
-                    return a - b;
-                });
-                shuttleRingTicks(value);
-            }
         });
 
         this.timeLabel = ko.computed(function() {
@@ -107,47 +91,48 @@ define(['./Command',
             write : function(value) {
                 srd(value);
                 if (!value) {
-                    shouldAnimate(shouldAnimate() && that._canAnimate());
+                    that._shouldAnimate(that._shouldAnimate() && that._canAnimate());
                 }
             }
         });
 
         var isAnimatingObs = ko.computed(function() {
-            return shouldAnimate() && (that._canAnimate() || that.shuttleRingDragging());
+            return that._shouldAnimate() && (that._canAnimate() || that.shuttleRingDragging());
         });
 
         this.isAnimatingObs = isAnimatingObs;
 
-        var pauseSelected = ko.computed({
+        var pauseToggled = ko.computed({
             read : function() {
                 return !isAnimatingObs();
             },
             write : function(value) {
                 if (value && isAnimatingObs()) {
-                    that._pause();
+                    that._cancelRealtime();
+                    that._shouldAnimate(false);
                 } else if (!value && !isAnimatingObs()) {
                     that._unpause();
                 }
             }
         });
 
-        this.pauseViewModel = new ButtonViewModel({
-            selected : pauseSelected,
+        this.pauseViewModel = new ToggleButtonViewModel({
+            toggled : pauseToggled,
             toolTip : ko.observable('Pause'),
             command : new Command(function() {
-                pauseSelected(!pauseSelected());
+                pauseToggled(!pauseToggled());
             })
         });
 
-        var playReverseSelected = ko.computed(function() {
+        var playReverseToggled = ko.computed(function() {
             return isAnimatingObs() && (clockViewModel.multiplier() < 0);
         });
 
-        this.playReverseViewModel = new ButtonViewModel({
-            selected : playReverseSelected,
+        this.playReverseViewModel = new ToggleButtonViewModel({
+            toggled : playReverseToggled,
             toolTip : ko.observable('Play Reverse'),
             command : new Command(function() {
-                if (!playReverseSelected()) {
+                if (!playReverseToggled()) {
                     that._cancelRealtime();
                     var multiplier = clockViewModel.multiplier();
                     if (multiplier > 0) {
@@ -158,15 +143,15 @@ define(['./Command',
             })
         });
 
-        var playSelected = ko.computed(function() {
+        var playToggled = ko.computed(function() {
             return isAnimatingObs() && clockViewModel.multiplier() > 0 && clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK_TIME;
         });
 
-        this.playViewModel = new ButtonViewModel({
-            selected : playSelected,
+        this.playViewModel = new ToggleButtonViewModel({
+            toggled : playToggled,
             toolTip : ko.observable('Play Forward'),
             command : new Command(function() {
-                if (!playSelected()) {
+                if (!playToggled()) {
                     that._cancelRealtime();
                     var multiplier = clockViewModel.multiplier();
                     if (multiplier < 0) {
@@ -177,7 +162,7 @@ define(['./Command',
             })
         });
 
-        var playRealtimeSelected = ko.computed(function() {
+        var playRealtimeToggled = ko.computed(function() {
             return clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK_TIME;
         });
 
@@ -185,8 +170,8 @@ define(['./Command',
             return that._isSystemTimeAvailable();
         });
 
-        this.playRealtimeViewModel = new ButtonViewModel({
-            selected : playRealtimeSelected,
+        this.playRealtimeViewModel = new ToggleButtonViewModel({
+            toggled : playRealtimeToggled,
             toolTip : ko.computed(function() {
                 if (that._isSystemTimeAvailable()) {
                     return 'Today (real-time)';
@@ -194,16 +179,31 @@ define(['./Command',
                 return 'Current time not in range';
             }),
             command : new Command(function() {
-                if (!playRealtimeSelected()) {
+                if (!playRealtimeToggled()) {
                     if (that._isSystemTimeAvailable()) {
                         clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_TIME);
                         clockViewModel.multiplier(1.0);
                         clockViewModel.currentTime(that.clockViewModel.clock.tick(0));
-                        that.shouldAnimate(true);
+                        that._shouldAnimate(true);
                     }
                 }
             }, playRealtimeCanExecute)
         });
+
+        var positiveTicks = [0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0,//
+                             15.0, 30.0, 60.0, 120.0, 300.0, 600.0, 900.0, 1800.0, 3600.0, 7200.0, 14400.0,//
+                             21600.0, 43200.0, 86400.0, 172800.0, 345600.0, 604800.0];
+
+        var tickIndex;
+        var allTicks = [];
+        var len = positiveTicks.length;
+        for (tickIndex = len - 1; tickIndex >= 0; tickIndex--) {
+            allTicks.push(-positiveTicks[tickIndex]);
+        }
+        for (tickIndex = 0; tickIndex < len; tickIndex++) {
+            allTicks.push(positiveTicks[tickIndex]);
+        }
+        this._shuttleRingTicks = allTicks;
 
         this.shuttleRingAngle = ko.computed({
             read : function() {
@@ -228,7 +228,7 @@ define(['./Command',
                 } else if (speed > 0.8) {
                     speed = Math.round(speed);
                 } else {
-                    speed = this._getTypicalSpeed(speed);
+                    speed = that._shuttleRingTicks[that._getTypicalSpeedIndex(speed)];
                 }
                 if (angle < 0) {
                     speed *= -1.0;
@@ -238,42 +238,31 @@ define(['./Command',
                     clockViewModel.multiplier(speed);
                     clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
                 }
-            },
-            owner : this
+            }
         });
 
-        this.moreReverse = {
+        this.slower = {
             canExecute : true,
             execute : function() {
                 that._cancelRealtime();
                 var clockViewModel = that.clockViewModel;
                 var multiplier = clockViewModel.multiplier();
-
-                if (multiplier < 0) {
-                    that._faster();
-                } else {
-                    that._slower();
-                    if (multiplier < 0.0008) {
-                        clockViewModel.multiplier(-0.001);
-                    }
+                var index = that._getTypicalSpeedIndex(multiplier) - 1;
+                if (index > 0) {
+                    clockViewModel.multiplier(that._shuttleRingTicks[index]);
                 }
             }
         };
 
-        this.moreForward = {
+        this.faster = {
             canExecute : true,
             execute : function() {
                 that._cancelRealtime();
                 var clockViewModel = that.clockViewModel;
                 var multiplier = clockViewModel.multiplier();
-
-                if (multiplier > 0) {
-                    that._faster();
-                } else {
-                    that._slower();
-                    if (multiplier > -0.0008) {
-                        clockViewModel.multiplier(0.001);
-                    }
+                var index = that._getTypicalSpeedIndex(multiplier) + 1;
+                if (index < that._shuttleRingTicks.length) {
+                    clockViewModel.multiplier(that._shuttleRingTicks[index]);
                 }
             }
         };
@@ -324,84 +313,15 @@ define(['./Command',
         }
     };
 
-    AnimationViewModel.prototype._pause = function() {
-        this._cancelRealtime();
-        this.shouldAnimate(false);
-    };
-
     AnimationViewModel.prototype._unpause = function() {
         this._cancelRealtime();
         this.clockViewModel.currentTime(this.clockViewModel.clock.tick(0));
-        this.shouldAnimate(true);
+        this._shouldAnimate(true);
     };
 
-    AnimationViewModel.prototype._getTypicalSpeed = function(speed) {
-        var typicalMultipliers = this.shuttleRingTicks();
-        var index = binarySearch(typicalMultipliers, Math.abs(speed), function(left, right) {
-            return left - right;
-        });
-
-        if (index < 0) {
-            index = ~index;
-        }
-        index--;
-
-        if (index < 0) {
-            index = 0;
-        }
-        return typicalMultipliers[index];
-    };
-
-    AnimationViewModel.prototype._slower = function() {
-        var typicalMultipliers = this.shuttleRingTicks();
-
-        var clockViewModel = this.clockViewModel;
-        var multiplier = clockViewModel.multiplier();
-        multiplier = multiplier > 0 ? multiplier : -multiplier;
-
-        this._cancelRealtime();
-        var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
-            return left - right;
-        });
-
-        if (index < 0) {
-            index = ~index;
-        }
-        index--;
-
-        if (index >= 0) {
-            if (clockViewModel.multiplier() >= 0) {
-                clockViewModel.multiplier(typicalMultipliers[index]);
-            } else {
-                clockViewModel.multiplier(-typicalMultipliers[index]);
-            }
-        }
-    };
-
-    AnimationViewModel.prototype._faster = function() {
-        var typicalMultipliers = this.shuttleRingTicks();
-        var clockViewModel = this.clockViewModel;
-        var multiplier = clockViewModel.multiplier();
-        multiplier = multiplier > 0 ? multiplier : -multiplier;
-
-        this._cancelRealtime();
-        var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
-            return left - right;
-        });
-
-        if (index < 0) {
-            index = ~index;
-        } else {
-            index++;
-        }
-
-        if (index >= 0) {
-            if (clockViewModel.multiplier() >= 0) {
-                clockViewModel.multiplier(typicalMultipliers[index]);
-            } else {
-                clockViewModel.multiplier(-typicalMultipliers[index]);
-            }
-        }
+    AnimationViewModel.prototype._getTypicalSpeedIndex = function(speed) {
+        var index = binarySearch(this._shuttleRingTicks, speed, binarySearch.numericComparator);
+        return index < 0 ? ~index : index;
     };
 
     return AnimationViewModel;

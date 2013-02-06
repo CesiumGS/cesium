@@ -148,9 +148,9 @@ define(['../Core/destroyObject',
                 shuttleRingDragging(true);
                 viewModel.shuttleRingAngle(angle);
             } else if (angle < shuttleRingAngle) {
-                viewModel.moreReverse.execute();
+                viewModel.slower.execute();
             } else if (angle > shuttleRingAngle) {
-                viewModel.moreForward.execute();
+                viewModel.faster.execute();
             }
             e.preventDefault();
             e.stopPropagation();
@@ -180,10 +180,10 @@ define(['../Core/destroyObject',
         var subscriptions = [];
         this._subscriptions = subscriptions;
 
-        subscriptions.push(viewModel.selected.subscribe(function(value) {
-            that.setSelected(value);
+        subscriptions.push(viewModel.toggled.subscribe(function(value) {
+            that.setToggled(value);
         }));
-        this.setSelected(viewModel.selected());
+        this.setToggled(viewModel.toggled());
 
         subscriptions.push(viewModel.toolTip.subscribe(function(value) {
             that.setToolTip(value);
@@ -216,20 +216,20 @@ define(['../Core/destroyObject',
             return;
         }
 
-        if (this._selected) {
-            this.svgElement.setAttribute('class', 'animation-rectButton animation-buttonSelected');
+        if (this._toggled) {
+            this.svgElement.setAttribute('class', 'animation-rectButton animation-buttonToggled');
             return;
         }
 
         this.svgElement.setAttribute('class', 'animation-rectButton');
     };
 
-    SvgButton.prototype.setSelected = function(selected) {
-        this._selected = selected;
+    SvgButton.prototype.setToggled = function(toggled) {
+        this._toggled = toggled;
 
         if (this._enabled) {
-            if (selected) {
-                this.svgElement.setAttribute('class', 'animation-rectButton animation-buttonSelected');
+            if (toggled) {
+                this.svgElement.setAttribute('class', 'animation-rectButton animation-buttonToggled');
             } else {
                 this.svgElement.setAttribute('class', 'animation-rectButton');
             }
@@ -320,7 +320,7 @@ define(['../Core/destroyObject',
         cssStyle.textContent = //
         '.animation-rectButton .animation-buttonGlow { filter: url(#animation_blurred); }\n' + //
         '.animation-rectButton .animation-buttonMain { fill: url(#animation_buttonNormal); }\n' + //
-        '.animation-buttonSelected .animation-buttonMain { fill: url(#animation_buttonSelected); }\n' + //
+        '.animation-buttonToggled .animation-buttonMain { fill: url(#animation_buttonToggled); }\n' + //
         '.animation-rectButton:hover .animation-buttonMain { fill: url(#animation_buttonHovered); }\n' + //
         '.animation-buttonDisabled .animation-buttonMain { fill: url(#animation_buttonDisabled); }\n' + //
         '.animation-shuttleRingG .animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshGradient); }\n' + //
@@ -488,7 +488,7 @@ define(['../Core/destroyObject',
         var subscriptions = [];
         this.subscriptions = subscriptions;
 
-        subscriptions.push(viewModel.pauseViewModel.selected.subscribe(function(value) {
+        subscriptions.push(viewModel.pauseViewModel.toggled.subscribe(function(value) {
             if (value) {
                 that._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPausePointer');
             } else {
@@ -496,7 +496,7 @@ define(['../Core/destroyObject',
             }
         }));
 
-        if (viewModel.pauseViewModel.selected()) {
+        if (viewModel.pauseViewModel.toggled()) {
             this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPausePointer');
         } else {
             this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
@@ -604,7 +604,7 @@ define(['../Core/destroyObject',
     Animation.prototype.applyThemeChanges = function() {
         var buttonNormalBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeNormal).getPropertyValue('color'));
         var buttonHoverBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeHover).getPropertyValue('color'));
-        var buttonSelectedBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeSelect).getPropertyValue('color'));
+        var buttonToggledBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeSelect).getPropertyValue('color'));
         var buttonDisabledBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeDisabled).getPropertyValue('color'));
         var knobBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeKnob).getPropertyValue('color'));
         var pointerColor = Color.fromCssColorString(window.getComputedStyle(this._themePointer).getPropertyValue('color'));
@@ -664,7 +664,7 @@ define(['../Core/destroyObject',
                     'stop-color' : _makeColorString(buttonHoverBackColor, _gradientEnabledColor3)
                 }]
             }, {
-                id : 'animation_buttonSelected',
+                id : 'animation_buttonToggled',
                 tagName : 'linearGradient',
                 x1 : '50%',
                 y1 : '0%',
@@ -673,19 +673,19 @@ define(['../Core/destroyObject',
                 children : [{
                     tagName : 'stop',
                     offset : '0%',
-                    'stop-color' : _makeColorString(buttonSelectedBackColor, _gradientEnabledColor0)
+                    'stop-color' : _makeColorString(buttonToggledBackColor, _gradientEnabledColor0)
                 }, {
                     tagName : 'stop',
                     offset : '12%',
-                    'stop-color' : _makeColorString(buttonSelectedBackColor, _gradientEnabledColor1)
+                    'stop-color' : _makeColorString(buttonToggledBackColor, _gradientEnabledColor1)
                 }, {
                     tagName : 'stop',
                     offset : '46%',
-                    'stop-color' : _makeColorString(buttonSelectedBackColor, _gradientEnabledColor2)
+                    'stop-color' : _makeColorString(buttonToggledBackColor, _gradientEnabledColor2)
                 }, {
                     tagName : 'stop',
                     offset : '81%',
-                    'stop-color' : _makeColorString(buttonSelectedBackColor, _gradientEnabledColor3)
+                    'stop-color' : _makeColorString(buttonToggledBackColor, _gradientEnabledColor3)
                 }]
             }, {
                 id : 'animation_buttonDisabled',

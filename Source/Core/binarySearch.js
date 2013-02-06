@@ -65,5 +65,9 @@ define(['./DeveloperError'], function(DeveloperError) {
         return ~(high + 1);
     };
 
+    binarySearch.numericComparator = function(left, right) {
+        return left - right;
+    };
+
     return binarySearch;
 });
