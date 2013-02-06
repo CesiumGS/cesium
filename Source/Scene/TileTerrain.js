@@ -70,23 +70,7 @@ define([
 
    TileTerrain.prototype.processLoadStateMachine = function(context, terrainProvider, x, y, level) {
        if (this.state === TerrainState.UNLOADED) {
-           // Request the terrain from the terrain provider.
-           this.data = terrainProvider.requestTileGeometry(x, y, level);
-
-           // If the request method returns undefined (instead of a promise), the request
-           // has been deferred.
-           if (typeof this.data !== 'undefined') {
-               this.state = TerrainState.RECEIVING;
-
-               var that = this;
-               when(this.data, function(terrainData) {
-                   that.data = terrainData;
-                   that.state = TerrainState.RECEIVED;
-               }, function() {
-                   // TODO: add error reporting and retry logic similar to imagery providers.
-                   that.state = TerrainState.FAILED;
-               });
-           }
+           requestTileGeometry(this, terrainProvider, x, y, level);
        }
 
        if (this.state === TerrainState.RECEIVED) {
@@ -97,6 +81,32 @@ define([
            createResources(this, context, terrainProvider, x, y, level);
        }
    };
+
+   function requestTileGeometry(tileTerrain, terrainProvider, x, y, level) {
+       function success(terrainData) {
+           tileTerrain.data = terrainData;
+           tileTerrain.state = TerrainState.RECEIVED;
+       }
+
+       function failure() {
+           // TODO: add error reporting and retry logic similar to imagery providers.
+           tileTerrain.state = TerrainState.FAILED;
+       }
+
+       // Request the terrain from the terrain provider.
+       tileTerrain.data = terrainProvider.requestTileGeometry(x, y, level);
+
+       // If the request method returns undefined (instead of a promise), the request
+       // has been deferred.
+       if (typeof tileTerrain.data !== 'undefined') {
+           tileTerrain.state = TerrainState.RECEIVING;
+
+           when(tileTerrain.data, success, failure);
+       } else {
+           // Deferred - try again later.
+           tileTerrain.state = TerrainState.UNLOADED;
+       }
+   }
 
    TileTerrain.prototype.processUpsampleStateMachine = function(context, terrainProvider, x, y, level) {
        if (this.state === TerrainState.UNLOADED) {
