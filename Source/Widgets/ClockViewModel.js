@@ -26,6 +26,8 @@ define(['../Core/DeveloperError',
         this.clock = clock;
 
         var startTime = knockout.observable(clock.startTime);
+        startTime.equalityComparer = JulianDate.equals;
+
         /**
          * The start time of the clock.
          * @type Computed observable JulianDate
@@ -35,11 +37,12 @@ define(['../Core/DeveloperError',
             write : function(value) {
                 startTime(value);
                 clock.startTime = value;
-            },
-            equalityComparer : JulianDate.equals
+            }
         });
 
         var stopTime = knockout.observable(clock.stopTime);
+        stopTime.equalityComparer = JulianDate.equals;
+
         /**
          * The stop time of the clock.
          * Computed observable @type JulianDate
@@ -49,11 +52,12 @@ define(['../Core/DeveloperError',
             write : function(value) {
                 clock.stopTime = value;
                 stopTime(value);
-            },
-            equalityComparer : JulianDate.equals
+            }
         });
 
         var currentTime = knockout.observable(clock.currentTime);
+        currentTime.equalityComparer = JulianDate.equals;
+
         /**
          * The current time.
          * Computed observable @type JulianDate
@@ -63,8 +67,7 @@ define(['../Core/DeveloperError',
             write : function(value) {
                 clock.currentTime = value;
                 currentTime(value);
-            },
-            equalityComparer : JulianDate.equals
+            }
         });
 
         /**
@@ -72,6 +75,7 @@ define(['../Core/DeveloperError',
          * Computed observable @type JulianDate
          */
         this.systemTime = knockout.observable(new JulianDate());
+        this.systemTime.equalityComparer = JulianDate.equals;
 
         var multiplier = knockout.observable(clock.multiplier);
         /**
@@ -90,6 +94,10 @@ define(['../Core/DeveloperError',
         }, this);
 
         var clockStep = knockout.observable(clock.clockStep);
+        clockStep.equalityComparer = function(a, b) {
+            return a === b;
+        };
+
         /**
          * Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
          * Computed observable @type ClockStep
@@ -103,6 +111,10 @@ define(['../Core/DeveloperError',
         });
 
         var clockRange = knockout.observable();
+        clockStep.equalityComparer = function(a, b) {
+            return a === b;
+        };
+
         /**
          * Determines how tick should behave when <code>startTime</code> or <code>stopTime</code> is reached.
          * Computed observable @type ClockRange

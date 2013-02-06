@@ -134,7 +134,8 @@ define(['../Core/destroyObject',
     function _setShuttleRingFromMouse(widget, svg, e) {
         var viewModel = widget.viewModel;
         var centerX = widget._centerX;
-        if (e.type === 'mousedown' || (widget._shuttleRingDragging && e.type === 'mousemove')) {
+        var shuttleRingDragging = viewModel.shuttleRingDragging;
+        if (e.type === 'mousedown' || (shuttleRingDragging() && e.type === 'mousemove')) {
             var rect = svg.getBoundingClientRect();
             var x = e.clientX - centerX - rect.left;
             var y = e.clientY - centerX - rect.top;
@@ -143,8 +144,8 @@ define(['../Core/destroyObject',
                 angle -= 360;
             }
             var shuttleRingAngle = viewModel.shuttleRingAngle();
-            if (widget._shuttleRingDragging || (Math.abs(shuttleRingAngle - angle) < 15)) {
-                widget._shuttleRingDragging = true;
+            if (shuttleRingDragging() || (Math.abs(shuttleRingAngle - angle) < 15)) {
+                shuttleRingDragging(true);
                 viewModel.shuttleRingAngle(angle);
             } else if (angle < shuttleRingAngle) {
                 viewModel.moreReverse.execute();
@@ -154,7 +155,7 @@ define(['../Core/destroyObject',
             e.preventDefault();
             e.stopPropagation();
         } else {
-            widget._shuttleRingDragging = false;
+            shuttleRingDragging(false);
         }
     }
 
@@ -310,7 +311,6 @@ define(['../Core/destroyObject',
         this._centerX = 0;
         this._defsElement = undefined;
         this._scale = 1.0;
-        this._shuttleRingDragging = false;
         this._svgNode = undefined;
         this._topG = undefined;
 

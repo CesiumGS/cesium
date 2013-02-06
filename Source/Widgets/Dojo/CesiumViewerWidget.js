@@ -514,6 +514,7 @@ define([
 
             clock.multiplier = 60;
             clock.currentTime = clock.startTime;
+            clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
             this.timelineControl.zoomTo(clock.startTime, clock.stopTime);
         },
 

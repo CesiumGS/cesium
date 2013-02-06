@@ -31,36 +31,42 @@ define(['./Command',
     var AnimationViewModel = function(clockViewModel) {
         this.clockViewModel = clockViewModel;
 
-        var isAnimatingObs = ko.observable(false);
-        this.isAnimatingObs = isAnimatingObs;
+        var that = this;
 
-        this._isOutOfRange = ko.computed(function() {
-            var clockRange = clockViewModel.clockRange();
-
-            if (clockRange === ClockRange.UNBOUNDED) {
-                return false;
-            }
-
-            var currentTime = clockViewModel.currentTime();
-            var startTime = clockViewModel.startTime();
-            var stopTime = clockViewModel.stopTime();
-            return currentTime.lessThan(startTime) || currentTime.greaterThan(stopTime);
-        });
-
-        this._isSystemTimeAvailable =  ko.computed(function() {
-            var currentTime = clockViewModel.systemTime();
-            var startTime = clockViewModel.startTime();
-            var stopTime = clockViewModel.stopTime();
+        this._canAnimate = ko.computed(function() {
             var clockRange = clockViewModel.clockRange();
 
             if (clockRange === ClockRange.UNBOUNDED) {
                 return true;
             }
 
-            return !(currentTime.lessThan(startTime) || currentTime.greaterThan(stopTime));
+            var multiplier = clockViewModel.multiplier();
+            var currentTime = clockViewModel.currentTime();
+            var startTime = clockViewModel.startTime();
+
+            if (clockRange === ClockRange.LOOP_STOP) {
+                return currentTime.greaterThan(startTime) || (currentTime.equals(startTime) && multiplier > 0);
+            }
+
+            var stopTime = clockViewModel.stopTime();
+            return (currentTime.greaterThan(startTime) && currentTime.lessThan(stopTime)) ||
+                   (currentTime.equals(startTime) && multiplier > 0) ||
+                   (currentTime.equals(stopTime) && multiplier < 0);
         });
 
-        var that = this;
+        var shouldAnimate = this.shouldAnimate = ko.observable(false);
+
+        this._isSystemTimeAvailable = ko.computed(function() {
+            var clockRange = clockViewModel.clockRange();
+            if (clockRange === ClockRange.UNBOUNDED) {
+                return true;
+            }
+
+            var systemTime = clockViewModel.systemTime();
+            var startTime = clockViewModel.startTime();
+            var stopTime = clockViewModel.stopTime();
+            return systemTime.greaterThanOrEquals(startTime) && systemTime.lessThanOrEquals(stopTime);
+        });
 
         var shuttleRingTicks = ko.observable([//
         0.000001, 0.000002, 0.000005, 0.00001, 0.00002, 0.00005, 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005,//
@@ -92,6 +98,25 @@ define(['./Command',
             }
             return clockViewModel.multiplier() + 'x';
         });
+
+        var srd = ko.observable(false);
+        this.shuttleRingDragging = ko.computed({
+            read : function() {
+                return srd();
+            },
+            write : function(value) {
+                srd(value);
+                if (!value) {
+                    shouldAnimate(shouldAnimate() && that._canAnimate());
+                }
+            }
+        });
+
+        var isAnimatingObs = ko.computed(function() {
+            return shouldAnimate() && (that._canAnimate() || that.shuttleRingDragging());
+        });
+
+        this.isAnimatingObs = isAnimatingObs;
 
         var pauseSelected = ko.computed({
             read : function() {
@@ -174,7 +199,7 @@ define(['./Command',
                         clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_TIME);
                         clockViewModel.multiplier(1.0);
                         clockViewModel.currentTime(that.clockViewModel.clock.tick(0));
-                        that.isAnimatingObs(!that._isOutOfRange());
+                        that.shouldAnimate(true);
                     }
                 }
             }, playRealtimeCanExecute)
@@ -257,7 +282,6 @@ define(['./Command',
     AnimationViewModel.prototype.update = function() {
         if (this.isAnimatingObs()) {
             this.clockViewModel.clock.tick();
-            this.isAnimatingObs(!this._isOutOfRange());
         }
         this.clockViewModel.update();
     };
@@ -302,13 +326,13 @@ define(['./Command',
 
     AnimationViewModel.prototype._pause = function() {
         this._cancelRealtime();
-        this.isAnimatingObs(false);
+        this.shouldAnimate(false);
     };
 
     AnimationViewModel.prototype._unpause = function() {
         this._cancelRealtime();
         this.clockViewModel.currentTime(this.clockViewModel.clock.tick(0));
-        this.isAnimatingObs(!this._isOutOfRange());
+        this.shouldAnimate(true);
     };
 
     AnimationViewModel.prototype._getTypicalSpeed = function(speed) {
@@ -346,7 +370,7 @@ define(['./Command',
         index--;
 
         if (index >= 0) {
-            if (multiplier >= 0) {
+            if (clockViewModel.multiplier() >= 0) {
                 clockViewModel.multiplier(typicalMultipliers[index]);
             } else {
                 clockViewModel.multiplier(-typicalMultipliers[index]);
@@ -372,7 +396,7 @@ define(['./Command',
         }
 
         if (index >= 0) {
-            if (multiplier >= 0) {
+            if (clockViewModel.multiplier() >= 0) {
                 clockViewModel.multiplier(typicalMultipliers[index]);
             } else {
                 clockViewModel.multiplier(-typicalMultipliers[index]);
