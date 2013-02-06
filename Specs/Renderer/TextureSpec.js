@@ -170,20 +170,6 @@ defineSuite([
         expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
     });
 
-    it('can clear the texture', function() {
-        texture = context.createTexture2D({
-            width : 1,
-            height : 1
-        });
-        expect(renderFragment(context)).toEqual([0, 0, 0, 0]);
-
-        texture.copyFrom(blueImage);
-        expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
-
-        texture.clear();
-        expect(renderFragment(context)).toEqual([0, 0, 0, 0]);
-    });
-
     it('renders with premultiplied alpha', function() {
         texture = context.createTexture2D({
             source : blueAlphaImage,

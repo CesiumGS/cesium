@@ -50,20 +50,6 @@ define([
     };
 
     /**
-     * Clears this texture, setting all pixels to zero.
-     *
-     * @memberof Texture
-     */
-    Texture.prototype.clear = function() {
-        var gl = this._gl;
-        var target = this._textureTarget;
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(target, this._texture);
-        gl.texImage2D(target, 0, this._pixelFormat, this._width, this._height, 0, this._pixelFormat, this._pixelDatatype, null);
-        gl.bindTexture(target, null);
-    };
-
-    /**
      * Copy new image data into this texture, from a source {ImageData}, {HTMLImageElement}, {HTMLCanvasElement}, {HTMLVideoElement},
      * or an object with width, height, and arrayBufferView properties.
      *

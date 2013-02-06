@@ -777,16 +777,13 @@ define([
         if (logoData.rebuildLogo) {
             var texture = logoQuad.material.uniforms.image;
 
-            if (typeof texture === 'undefined' || texture.getWidth() !== totalLogoWidth || texture.getHeight() !== totalLogoHeight) {
-                texture = texture && texture.destroy();
-                texture = context.createTexture2D({
-                    width : totalLogoWidth,
-                    height : totalLogoHeight
-                });
-                logoQuad.material.uniforms.image = texture;
-            } else {
-                texture.clear();
-            }
+            // always delete and recreate the texture to get rid of leftover pixels
+            texture = texture && texture.destroy();
+            texture = context.createTexture2D({
+                width : totalLogoWidth,
+                height : totalLogoHeight
+            });
+            logoQuad.material.uniforms.image = texture;
 
             var yOffset = 0;
             for (i = 0, len = logoData.logos.length; i < len; i++) {
