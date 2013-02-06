@@ -216,8 +216,6 @@ define([
      *          deferred.
      */
     HeightmapTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
-        // TODO: should we upsample the mesh instead of the raw data?
-
         var levelDifference = descendantLevel - thisLevel;
         if (levelDifference > 1) {
             throw new DeveloperError('Upsampling through more than one level at a time is not currently supported.');
@@ -265,7 +263,6 @@ define([
     };
 
     function upsampleBySubsetting(terrainData, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
-        // TODO: allow greater level differences?
         var levelDifference = 1;
 
         var width = terrainData.width;
