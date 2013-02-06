@@ -19,7 +19,6 @@
     </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
     <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
@@ -30,9 +29,9 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 require([
-    'Cesium', 'Widgets/Dojo/CesiumWidget', 'dijit/form/DropDownButton', 'dijit/DropDownMenu', 'dijit/MenuItem'
+    'Cesium', 'dijit/form/DropDownButton', 'dijit/DropDownMenu', 'dijit/MenuItem'
 ], function(
-    Cesium, CesiumWidget, DropDownButton, DropDownMenu, MenuItem)
+    Cesium, DropDownButton, DropDownMenu, MenuItem)
 {
     "use strict";
 
@@ -771,9 +770,7 @@ require([
         primitives.add(worldPolygon);
     }
 
-    var widget = new CesiumWidget();
-    widget.placeAt('cesiumContainer');
-    widget.startup();
+    var widget = new Cesium.CesiumWidget('cesiumContainer');
 
     createPrimitives(widget);
     createButtons(widget);
