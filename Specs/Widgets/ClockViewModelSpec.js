@@ -27,6 +27,7 @@ defineSuite([
         clock.multiplier = 1;
         clock.clockStep = ClockStep.TICK_DEPENDENT;
         clock.clockRange = ClockRange.UNBOUNDED;
+        clock.shouldAnimate = false;
 
         var clockViewModel = new ClockViewModel(clock);
         expect(clockViewModel.clock).toBe(clock);
@@ -48,6 +49,7 @@ defineSuite([
         clock.multiplier = 1;
         clock.clockStep = ClockStep.TICK_DEPENDENT;
         clock.clockRange = ClockRange.UNBOUNDED;
+        clock.shouldAnimate = false;
 
         var clockViewModel = new ClockViewModel(clock);
         expect(clockViewModel.clock).toBe(clock);
@@ -57,6 +59,7 @@ defineSuite([
         expect(clockViewModel.multiplier()).toEqual(clock.multiplier);
         expect(clockViewModel.clockStep()).toEqual(clock.clockStep);
         expect(clockViewModel.clockRange()).toEqual(clock.clockRange);
+        expect(clockViewModel.shouldAnimate()).toEqual(clock.shouldAnimate);
         expect(clockViewModel.systemTime()).toBeDefined();
 
         clock.startTime = JulianDate.fromIso8601("2013-01-01T00:00:00");
@@ -65,6 +68,7 @@ defineSuite([
         clock.multiplier = 2;
         clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
         clock.clockRange = ClockRange.CLAMPED;
+        clock.shouldAnimate = true;
 
         expect(clockViewModel.startTime()).toNotEqual(clock.startTime);
         expect(clockViewModel.stopTime()).toNotEqual(clock.stopTime);
@@ -72,6 +76,7 @@ defineSuite([
         expect(clockViewModel.multiplier()).toNotEqual(clock.multiplier);
         expect(clockViewModel.clockStep()).toNotEqual(clock.clockStep);
         expect(clockViewModel.clockRange()).toNotEqual(clock.clockRange);
+        expect(clockViewModel.shouldAnimate()).toNotEqual(clock.shouldAnimate);
 
         var lastSystemTime = clockViewModel.systemTime();
         clockViewModel.synchronize();
@@ -82,6 +87,7 @@ defineSuite([
         expect(clockViewModel.multiplier()).toEqual(clock.multiplier);
         expect(clockViewModel.clockStep()).toEqual(clock.clockStep);
         expect(clockViewModel.clockRange()).toEqual(clock.clockRange);
+        expect(clockViewModel.shouldAnimate()).toEqual(clock.shouldAnimate);
         expect(clockViewModel.systemTime().greaterThan(lastSystemTime)).toEqual(true);
     });
 
@@ -93,6 +99,7 @@ defineSuite([
         clock.multiplier = 1;
         clock.clockStep = ClockStep.TICK_DEPENDENT;
         clock.clockRange = ClockRange.UNBOUNDED;
+        clock.shouldAnimate = false;
 
         var clockViewModel = new ClockViewModel(clock);
         expect(clockViewModel.shouldAnimate()).toEqual(false);

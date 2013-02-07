@@ -3,12 +3,14 @@ define([
         './DeveloperError',
         './JulianDate',
         './ClockStep',
-        './ClockRange'
+        './ClockRange',
+        './defaultValue'
        ], function(
          DeveloperError,
          JulianDate,
          ClockStep,
-         ClockRange) {
+         ClockRange,
+         defaultValue) {
     "use strict";
 
     /**
@@ -72,21 +74,6 @@ define([
             throw new DeveloperError('startTime must come before stopTime.');
         }
 
-        var multiplier = t.multiplier;
-        if (typeof multiplier === 'undefined') {
-            multiplier = 1.0;
-        }
-
-        var clockStep = t.clockStep;
-        if (typeof clockStep === 'undefined') {
-            clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-        }
-
-        var clockRange = t.clockRange;
-        if (typeof clockRange === 'undefined') {
-            clockRange = ClockRange.UNBOUNDED;
-        }
-
         /**
          * The start time of the clock.
          * @type JulianDate
@@ -112,77 +99,70 @@ define([
          * elapsed system time since the last call to tick.
          * @type Number
          */
-        this.multiplier = multiplier;
+        this.multiplier = defaultValue(t.multiplier, 1.0);
 
         /**
          * Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
          * @type ClockStep
          */
-        this.clockStep = clockStep;
+        this.clockStep = defaultValue(t.clockStep, ClockStep.SYSTEM_CLOCK_MULTIPLIER);
 
         /**
          * Determines how tick should behave when <code>startTime</code> or <code>stopTime</code> is reached.
          * @type ClockRange
          */
-        this.clockRange = clockRange;
+        this.clockRange = defaultValue(t.clockRange, ClockRange.UNBOUNDED);
+
+        /**
+         * Determines if tick should actually advance time.
+         * @type ClockRange
+         */
+        this.shouldAnimate = defaultValue(t.shouldAnimate, true);
 
         this._lastCpuTime = new Date().getTime();
     };
 
     /**
      * Advances the clock from the currentTime based on the current configuration options.
+     * This should be called every frame, wheter animation is desired or not.
      * @memberof Clock
      *
      * @param {Number} [secondsToTick] optional parameter to force the clock to tick the provided number of seconds,
-     * regardless of the value of <code>clockStep</code> and <code>multiplier</code>.
+     * regardless of other settings.
      * @returns {JulianDate} The new value of the <code>currentTime</code> property.
      */
     Clock.prototype.tick = function(secondsToTick) {
-        return _tick(secondsToTick, this.multiplier, this);
-    };
-
-    /**
-     * Advances the clock in the opposite direction of the current <code>multiplier</code>.
-     * If <code>multiplier</code> is positive this will advance the clock backwards one tick.
-     * If <code>multiplier</code> is negative this will advance the clock forward one tick.
-     * @memberof Clock
-     *
-     * @returns {JulianDate} The new value of Clock.currentTime
-     */
-    Clock.prototype.reverseTick = function() {
-        return _tick(undefined, -this.multiplier, this);
-    };
-
-    function _tick(secondsToTick, multiplier, clock) {
         var currentCpuTime = new Date().getTime();
-        if (clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-            clock.currentTime = new JulianDate();
-            clock._lastCpuTime = currentCpuTime;
-            return clock.currentTime;
+        if (this.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
+            this.currentTime = new JulianDate();
+            this._lastCpuTime = currentCpuTime;
+            return this.currentTime;
         }
 
-        var startTime = clock.startTime;
-        var stopTime = clock.stopTime;
-        var currentTime = clock.currentTime;
+        var startTime = this.startTime;
+        var stopTime = this.stopTime;
+        var currentTime = this.currentTime;
+        var multiplier = this.multiplier;
+        var shouldAnimate = this.shouldAnimate;
 
-        if (typeof secondsToTick === 'undefined') {
-            if (clock.clockStep === ClockStep.TICK_DEPENDENT) {
+        if (typeof secondsToTick !== 'undefined') {
+            currentTime = currentTime.addSeconds(secondsToTick);
+        } else if (shouldAnimate) {
+            if (this.clockStep === ClockStep.TICK_DEPENDENT) {
                 currentTime = currentTime.addSeconds(multiplier);
             } else {
-                var milliseconds = currentCpuTime - clock._lastCpuTime;
+                var milliseconds = currentCpuTime - this._lastCpuTime;
                 currentTime = currentTime.addSeconds(multiplier * (milliseconds / 1000.0));
             }
-        } else {
-            currentTime = currentTime.addSeconds(secondsToTick);
         }
 
-        if (clock.clockRange === ClockRange.CLAMPED) {
+        if (this.clockRange === ClockRange.CLAMPED) {
             if (currentTime.lessThan(startTime)) {
                 currentTime = startTime;
             } else if (currentTime.greaterThan(stopTime)) {
                 currentTime = stopTime;
             }
-        } else if (clock.clockRange === ClockRange.LOOP_STOP) {
+        } else if (this.clockRange === ClockRange.LOOP_STOP) {
             if (currentTime.lessThan(startTime)) {
                 currentTime = startTime.clone();
             }
@@ -191,10 +171,10 @@ define([
             }
         }
 
-        clock.currentTime = currentTime;
-        clock._lastCpuTime = currentCpuTime;
+        this.currentTime = currentTime;
+        this._lastCpuTime = currentCpuTime;
         return currentTime;
-    }
+    };
 
     return Clock;
 });

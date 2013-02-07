@@ -127,7 +127,14 @@ define(['../Core/DeveloperError',
             }
         });
 
-        this.shouldAnimate = knockout.observable(false);
+        var shouldAnimate = knockout.observable(clock.shouldAnimate);
+        this.shouldAnimate = knockout.computed({
+            read : shouldAnimate,
+            write : function(value) {
+                shouldAnimate(value);
+                clock.shouldAnimate = value;
+            }
+        });
     };
 
     /**
@@ -136,12 +143,7 @@ define(['../Core/DeveloperError',
      * @memberof ClockViewModel
      */
     ClockViewModel.prototype.tickAndSynchronize = function() {
-        var time;
-        if (this.shouldAnimate()) {
-            time = this.clock.tick();
-        } else {
-            time = this.clock.tick(0);
-        }
+        var time = this.clock.tick();
         this.synchronize();
         return time;
     };
@@ -161,6 +163,7 @@ define(['../Core/DeveloperError',
         this.multiplier(clock.multiplier);
         this.clockStep(clock.clockStep);
         this.clockRange(clock.clockRange);
+        this.shouldAnimate(clock.shouldAnimate);
     };
 
     return ClockViewModel;

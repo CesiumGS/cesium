@@ -199,6 +199,7 @@ defineSuite([
         clockViewModel.multiplier(1);
         clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
         clockViewModel.clockRange(ClockRange.UNBOUNDED);
+        clockViewModel.shouldAnimate(false);
 
         var viewModel = new AnimationViewModel(clockViewModel);
 
@@ -248,6 +249,7 @@ defineSuite([
         clockViewModel.stopTime(JulianDate.fromIso8601("2012-01-02T00:00:00"));
         clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
         clockViewModel.currentTime(centerTime);
+        clockViewModel.shouldAnimate(false);
 
         var viewModel = new AnimationViewModel(clockViewModel);
         verifyPausedState(viewModel);
@@ -338,6 +340,7 @@ defineSuite([
         clockViewModel.stopTime(JulianDate.fromIso8601("2012-01-02T00:00:00"));
         clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
         clockViewModel.currentTime(centerTime);
+        clockViewModel.shouldAnimate(false);
 
         var viewModel = new AnimationViewModel(clockViewModel);
         verifyPausedState(viewModel);

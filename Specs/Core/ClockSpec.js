@@ -383,31 +383,6 @@ defineSuite([
         expect(start).toEqual(clock.currentTime);
     });
 
-    it('Tick followed by tickReverse gets you back to the same time.', function() {
-        var start = JulianDate.fromTotalDays(0);
-        var stop = JulianDate.fromTotalDays(1);
-        var currentTime = JulianDate.fromTotalDays(0);
-        var step = ClockStep.TICK_DEPENDENT;
-        var range = ClockRange.UNBOUNDED;
-        var multiplier = 1.5;
-        var clock = new Clock({
-            currentTime : currentTime,
-            clockStep : step,
-            multiplier : multiplier,
-            startTime : start,
-            stopTime : stop,
-            clockRange : range
-        });
-
-        expect(clock.currentTime).toEqual(currentTime);
-        currentTime = currentTime.addSeconds(multiplier);
-        clock.tick();
-        expect(clock.currentTime).toEqual(currentTime);
-        clock.reverseTick();
-        currentTime = currentTime.addSeconds(-multiplier);
-        expect(clock.currentTime).toEqual(currentTime);
-    });
-
     it('Passing parameter to tick ticks that many seconds.', function() {
         var start = JulianDate.fromTotalDays(0);
         var stop = JulianDate.fromTotalDays(1);
