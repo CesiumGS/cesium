@@ -37,6 +37,13 @@ defineSuite([
         expect(viewModel.playRealtimeViewModel.toggled()).toEqual(false);
     }
 
+    function verifyRealtimeState(viewModel) {
+        expect(viewModel.pauseViewModel.toggled()).toEqual(false);
+        expect(viewModel.playReverseViewModel.toggled()).toEqual(false);
+        expect(viewModel.playForwardViewModel.toggled()).toEqual(false);
+        expect(viewModel.playRealtimeViewModel.toggled()).toEqual(true);
+    }
+
     it('constructor sets expected properties', function() {
         var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
@@ -171,7 +178,7 @@ defineSuite([
 
         clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
         clockViewModel.multiplier(123.1);
-        expectedString = '123.1x';
+        expectedString = '123.100x';
         expect(animationViewModel.speedLabel()).toEqual(expectedString);
 
         clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_TIME);
@@ -279,6 +286,48 @@ defineSuite([
         clockViewModel.clockRange(ClockRange.UNBOUNDED);
         viewModel.playReverseViewModel.command.execute();
         verifyReverseState(viewModel);
+    });
+
+    it('dragging shuttle ring does not pause with bounded start or stop Time', function() {
+        var centerTime = JulianDate.fromIso8601("2012-01-01T12:00:00");
+
+        var clockViewModel = new ClockViewModel();
+        clockViewModel.startTime(JulianDate.fromIso8601("2012-01-01T00:00:00"));
+        clockViewModel.stopTime(JulianDate.fromIso8601("2012-01-02T00:00:00"));
+        clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
+        clockViewModel.clockRange(ClockRange.CLAMPED);
+        clockViewModel.multiplier(1);
+
+        var viewModel = new AnimationViewModel(clockViewModel);
+        verifyPausedState(viewModel);
+
+        //Play forward while clamped
+        clockViewModel.currentTime(centerTime);
+        viewModel.playForwardViewModel.command.execute();
+        verifyForwardState(viewModel);
+
+        //Set current time to stop time, which won't stop while dragging
+        viewModel.shuttleRingDragging(true);
+        clockViewModel.currentTime(clockViewModel.stopTime());
+        verifyForwardState(viewModel);
+
+        //Drag complete stops.
+        viewModel.shuttleRingDragging(false);
+        verifyPausedState(viewModel);
+
+        //Do the same thing with start time
+        clockViewModel.currentTime(centerTime);
+        viewModel.playReverseViewModel.command.execute();
+        verifyReverseState(viewModel);
+
+        viewModel.shuttleRingDragging(true);
+        clockViewModel.currentTime(clockViewModel.startTime());
+        verifyReverseState(viewModel);
+
+        //Drag complete stops.
+        viewModel.shuttleRingDragging(false);
+        verifyPausedState(viewModel);
+
     });
 
     it('animating forward pauses with a bounded stopTime', function() {
@@ -399,7 +448,66 @@ defineSuite([
         clockViewModel.stopTime(clockViewModel.systemTime().addSeconds(60));
         expect(viewModel.playRealtimeViewModel.command.canExecute()).toEqual(true);
     });
-    
+
+    it('User action breaks out of realtime mode', function() {
+        var clockViewModel = new ClockViewModel();
+        var viewModel = new AnimationViewModel(clockViewModel);
+        clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
+        clockViewModel.clockRange(ClockRange.UNBOUNDED);
+
+        viewModel.playRealtimeViewModel.command.execute();
+        verifyRealtimeState(viewModel);
+        expect(clockViewModel.multiplier()).toEqual(1);
+
+        //Pausing breaks realtime state
+        viewModel.pauseViewModel.command.execute();
+        verifyPausedState(viewModel);
+        expect(clockViewModel.multiplier()).toEqual(1);
+
+        viewModel.playRealtimeViewModel.command.execute();
+        verifyRealtimeState(viewModel);
+
+        //Reverse breaks realtime state
+        viewModel.playReverseViewModel.command.execute();
+        verifyReverseState(viewModel);
+        expect(clockViewModel.multiplier()).toEqual(-1);
+
+        viewModel.playRealtimeViewModel.command.execute();
+        verifyRealtimeState(viewModel);
+
+        //Play breaks realtime state
+        viewModel.playForwardViewModel.command.execute();
+        verifyForwardState(viewModel);
+        expect(clockViewModel.multiplier()).toEqual(1);
+
+        viewModel.playRealtimeViewModel.command.execute();
+        verifyRealtimeState(viewModel);
+
+        //Shuttle ring change breaks realtime state
+        viewModel.shuttleRingAngle(viewModel.shuttleRingAngle() + 1);
+        verifyForwardState(viewModel);
+    });
+
+    it('Shuttle ring angles set expected multipliers', function() {
+        var clockViewModel = new ClockViewModel();
+        var viewModel = new AnimationViewModel(clockViewModel);
+
+        //Max angle should produce max speed
+        viewModel.shuttleRingAngle(AnimationViewModel._maxShuttleRingAngle);
+        expect(clockViewModel.multiplier()).toEqual(AnimationViewModel._shuttleRingTicks[AnimationViewModel._shuttleRingTicks.length - 1]);
+
+        //Min angle should produce min speed
+        viewModel.shuttleRingAngle(-AnimationViewModel._maxShuttleRingAngle);
+        expect(clockViewModel.multiplier()).toEqual(AnimationViewModel._shuttleRingTicks[0]);
+
+        //Angles less than 1 are equivalent to the speed
+        viewModel.shuttleRingAngle(0.5);
+        expect(clockViewModel.multiplier()).toEqual(0.5);
+
+        viewModel.shuttleRingAngle(-0.5);
+        expect(clockViewModel.multiplier()).toEqual(-0.5);
+    });
+
     it('throws when constructed without arguments', function() {
         expect(function() {
             return new AnimationViewModel();

@@ -29,7 +29,7 @@ define(['./Command',
     var _shuttleRingTicks = [];
 
     //TODO: Make _shuttleRingTicks part of AnimationViewModel and user settable.
-    var positiveTicks = [0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0,//
+    var positiveTicks = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0,//
                          15.0, 30.0, 60.0, 120.0, 300.0, 600.0, 900.0, 1800.0, 3600.0, 7200.0, 14400.0,//
                          21600.0, 43200.0, 86400.0, 172800.0, 345600.0, 604800.0];
     var tickIndex;
@@ -132,7 +132,12 @@ define(['./Command',
             if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK_TIME) {
                 return 'Today';
             }
-            return clockViewModel.multiplier() + 'x';
+
+            var multiplier = clockViewModel.multiplier();
+            if (multiplier % 1 === 0) {
+                return multiplier + 'x';
+            }
+            return multiplier.toFixed(3) + 'x';
         });
 
         this._isAnimatingObs = knockout.computed(function() {
@@ -220,36 +225,63 @@ define(['./Command',
             }, playRealtimeCanExecute)
         });
 
+        function angle2Multiplier(angle) {
+            //If the angle is less than 1, just use it for the position
+            if (Math.abs(angle) < 1) {
+                return angle;
+            }
+
+            var minp = 1;
+            var maxp = _maxShuttleRingAngle;
+            var maxv;
+            var minv = 0;
+            var scale;
+
+            if (angle > 0) {
+                maxv = Math.log(_shuttleRingTicks[_shuttleRingTicks.length - 1]);
+                scale = (maxv - minv) / (maxp - minp);
+                return Math.exp(minv + scale * (angle - minp));
+            }
+
+            maxv = Math.log(-_shuttleRingTicks[0]);
+            scale = (maxv - minv) / (maxp - minp);
+            return -Math.exp(minv + scale * (Math.abs(angle) - minp));
+        }
+
+        function multiplier2Angle(multiplier) {
+            if (Math.abs(multiplier) < 1) {
+                return multiplier;
+            }
+
+            var minp = 1;
+            var maxp = _maxShuttleRingAngle;
+            var maxv;
+            var minv = 0;
+            var scale;
+
+            if (multiplier > 0) {
+                maxv = Math.log(_shuttleRingTicks[_shuttleRingTicks.length - 1]);
+                scale = (maxv - minv) / (maxp - minp);
+                return (Math.log(multiplier) - minv) / scale + minp;
+            }
+
+            maxv = Math.log(-_shuttleRingTicks[0]);
+            scale = (maxv - minv) / (maxp - minp);
+            return -((Math.log(Math.abs(multiplier)) - minv) / scale + minp);
+        }
+
         this.shuttleRingAngle = knockout.computed({
             read : function() {
-                var speed = clockViewModel.multiplier();
-                var angle = Math.log(Math.abs(speed)) / 0.15 + 15;
-                angle = Math.max(Math.min(angle, _maxShuttleRingAngle), 0);
-                if (speed < 0) {
-                    angle *= -1.0;
-                }
-                return angle;
+                var multiplier = clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK_TIME ? clockViewModel.multiplier() : 1.0;
+                return Math.round(multiplier2Angle(multiplier));
             },
             write : function(angle) {
-                if (Math.abs(angle) < 5) {
-                    return 0;
-                }
-
                 angle = Math.max(Math.min(angle, _maxShuttleRingAngle), -_maxShuttleRingAngle);
-                var speed = Math.exp(((Math.abs(angle) - 15.0) * 0.15));
-                if (speed > 10.0) {
-                    var scale = Math.pow(10, Math.floor((Math.log(speed) / Math.LN10) + 0.0001) - 1.0);
-                    speed = Math.round(Math.round(speed / scale) * scale);
-                } else if (speed > 0.8) {
-                    speed = Math.round(speed);
-                } else {
-                    speed = _shuttleRingTicks[_getTypicalSpeedIndex(speed)];
-                }
-                if (angle < 0) {
-                    speed *= -1.0;
-                }
-
+                var speed = angle2Multiplier(angle);
                 if (speed !== 0) {
+                    if (Math.abs(speed) > 1) {
+                        speed = Math.round(speed);
+                    }
                     clockViewModel.multiplier(speed);
                     clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
                 }
@@ -316,6 +348,7 @@ define(['./Command',
 
     //Currently exposed for tests.
     AnimationViewModel._shuttleRingTicks = _shuttleRingTicks;
+    AnimationViewModel._maxShuttleRingAngle = _maxShuttleRingAngle;
 
     return AnimationViewModel;
 });
