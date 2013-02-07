@@ -136,7 +136,7 @@ define([
      * @returns {Boolean} True if the provider has a water mask; otherwise, false.
      */
     EllipsoidTerrainProvider.prototype.hasWaterMask = function() {
-        return true;
+        return false;
     };
 
     /**
