@@ -260,10 +260,10 @@ require([
         primitives.add(greenPolygon);
     }
     
-    function drawPoly(scene, ellipsoid) {
-        Sandcastle.declare(drawPoly);    // For highlighting in Sandcastle.
+    function drawExtent(scene, ellipsoid) {
+        Sandcastle.declare(drawExtent);    // For highlighting in Sandcastle.
         
-        var SelectPoly = function(scene, handler) {
+        var DrawExtentHelper = function(scene, handler) {
             this._canvas = scene.getCanvas();
             this._scene = scene;
             this._ellipsoid = scene.getPrimitives().getCentralBody().getEllipsoid();
@@ -273,7 +273,7 @@ require([
             this._scene.getPrimitives().add(this._poly);
         };
         
-        SelectPoly.prototype.enableInput = function() {
+        DrawExtentHelper.prototype.enableInput = function() {
             var controller = this._scene.getScreenSpaceCameraController();
             
             controller.enableTranslate = true;
@@ -283,7 +283,7 @@ require([
             controller.enableLook = true;
         };
         
-        SelectPoly.prototype.disableInput = function() {
+        DrawExtentHelper.prototype.disableInput = function() {
             var controller = this._scene.getScreenSpaceCameraController();
             
             controller.enableTranslate = false;
@@ -293,10 +293,10 @@ require([
             controller.enableLook = false;
         };
         
-        SelectPoly.prototype.getExtent = function(mn, mx) {
-            // Re-order
+        DrawExtentHelper.prototype.getExtent = function(mn, mx) {
             var e = new Cesium.Extent();
 
+            // Re-order so west < east and south < north
             e.west = Math.min(mn.longitude, mx.longitude);
             e.east = Math.max(mn.longitude, mx.longitude);
             e.south = Math.min(mn.latitude, mx.latitude);
@@ -316,25 +316,24 @@ require([
             return e;
         };
         
-        SelectPoly.prototype.setPolyPts = function(mn, mx) {
+        DrawExtentHelper.prototype.setPolyPts = function(mn, mx) {
             var e = this.getExtent(mn, mx);
             this._poly.configureExtent(e);
         };
         
-        SelectPoly.prototype.setToDegrees = function(w, s, e, n) {
+        DrawExtentHelper.prototype.setToDegrees = function(w, s, e, n) {
             var toRad = Cesium.Math.toRadians;
             var mn = new Cesium.Cartographic(toRad(w), toRad(s));
             var mx = new Cesium.Cartographic(toRad(e), toRad(n));
             this.setPolyPts(mn, mx);
         };
         
-        SelectPoly.prototype.handleRegionStop = function(movement) {
+        DrawExtentHelper.prototype.handleRegionStop = function(movement) {
             this.enableInput();
             var cartesian = this._scene.getCamera().controller.pickEllipsoid(movement.position,
                     this._ellipsoid);
             if (cartesian) {
                 this._click2 = this._ellipsoid.cartesianToCartographic(cartesian);
-                // console.log("SelectPoly end: " + this._click2);
             }
             this._mouseHandler.setInputAction(function(movement) {
             }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
@@ -346,7 +345,7 @@ require([
             this._finishHandler(this.getExtent(this._click1, this._click2));
         };
         
-        SelectPoly.prototype.handleRegionInter = function(movement) {
+        DrawExtentHelper.prototype.handleRegionInter = function(movement) {
             var cartesian = this._scene.getCamera().controller.pickEllipsoid(movement.endPosition,
                     this._ellipsoid);
             if (cartesian) {
@@ -355,13 +354,12 @@ require([
             }
         };
         
-        SelectPoly.prototype.handleRegionStart = function(movement) {
+        DrawExtentHelper.prototype.handleRegionStart = function(movement) {
             var cartesian = this._scene.getCamera().controller.pickEllipsoid(movement.position,
                     this._ellipsoid);
             if (cartesian) {
                 var that = this;
                 this._click1 = this._ellipsoid.cartesianToCartographic(cartesian);
-                // console.log("SelectPoly start: " + this._click1);
                 this._mouseHandler.setInputAction(function(movement) {
                     that.handleRegionStop(movement);
                 }, Cesium.ScreenSpaceEventType.LEFT_UP);
@@ -371,7 +369,7 @@ require([
             }
         };
         
-        SelectPoly.prototype.start = function() {
+        DrawExtentHelper.prototype.start = function() {
             this.disableInput();
 
             var that = this;
@@ -383,9 +381,23 @@ require([
         };
         
         // Actual instantiation...
-        var myHandler = function(e) { console.log("handling extent: " + JSON.stringify(e) ); };
-        var polySelect = new SelectPoly(scene, myHandler);
-        polySelect.start();
+        var myHandler = function(e) {
+            var labels = new Cesium.LabelCollection();
+            label = labels.add();
+            scene.getPrimitives().add(labels);
+            
+            label.setShow(true);
+            label.setText('(' +
+                Cesium.Math.toDegrees(e.west).toFixed(2) + ', ' +
+                Cesium.Math.toDegrees(e.south).toFixed(2) + ', ' +
+                Cesium.Math.toDegrees(e.east).toFixed(2) + ', ' +
+                Cesium.Math.toDegrees(e.north).toFixed(2) + ')');
+            label.setScale(0.7);
+            label.setPosition(widget.ellipsoid.cartographicToCartesian(e.getCenter()));
+            label.setHorizontalOrigin( Cesium.HorizontalOrigin.CENTER );
+        };
+        var drawExtentHelper = new DrawExtentHelper(scene, myHandler);
+        drawExtentHelper.start();
     }
 
     function createButtons(widget) {
@@ -442,12 +454,12 @@ require([
         }).placeAt('toolbar');
         
         new Button({
-            label: 'Draw Polygon',
+            label: 'Drag to Draw Extent',
             onClick: function() {
                 cleanup();
                 widget.viewHome();
-                drawPoly(scene, ellipsoid);
-                Sandcastle.highlight(drawPoly);
+                drawExtent(scene, ellipsoid);
+                Sandcastle.highlight(drawExtent);
             }
         }).placeAt('toolbar');
     }
