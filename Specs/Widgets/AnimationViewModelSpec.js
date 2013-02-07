@@ -4,37 +4,43 @@ defineSuite([
              'Widgets/ClockViewModel',
              'Core/JulianDate',
              'Core/ClockStep',
+             'Core/ClockRange',
              'Core/Math'
             ], function(
               AnimationViewModel,
               ClockViewModel,
               JulianDate,
               ClockStep,
+              ClockRange,
               CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    function verifyPausedState(viewModel) {
+        expect(viewModel.pauseViewModel.toggled()).toEqual(true);
+        expect(viewModel.playReverseViewModel.toggled()).toEqual(false);
+        expect(viewModel.playForwardViewModel.toggled()).toEqual(false);
+        expect(viewModel.playRealtimeViewModel.toggled()).toEqual(false);
+    }
+
+    function verifyForwardState(viewModel) {
+        expect(viewModel.pauseViewModel.toggled()).toEqual(false);
+        expect(viewModel.playReverseViewModel.toggled()).toEqual(false);
+        expect(viewModel.playForwardViewModel.toggled()).toEqual(true);
+        expect(viewModel.playRealtimeViewModel.toggled()).toEqual(false);
+    }
+
+    function verifyReverseState(viewModel) {
+        expect(viewModel.pauseViewModel.toggled()).toEqual(false);
+        expect(viewModel.playReverseViewModel.toggled()).toEqual(true);
+        expect(viewModel.playForwardViewModel.toggled()).toEqual(false);
+        expect(viewModel.playRealtimeViewModel.toggled()).toEqual(false);
+    }
 
     it('constructor sets expected properties', function() {
         var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
         expect(animationViewModel.clockViewModel).toBe(clockViewModel);
-
-//        expect(animationViewModel.speedLabel()).toEqual(clockViewModel.multiplier() + 'x');
-//        expect(animationViewModel.shuttleRingDragging()).toEqual(false);
-//
-//        expect(animationViewModel.pauseViewModel.toggled()).toEqual(true);
-//        expect(animationViewModel.pauseViewModel.toolTip()).toEqual('Pause');
-//
-//        expect(animationViewModel.playReverseViewModel.toggled()).toEqual(false);
-//        expect(animationViewModel.playReverseViewModel.toolTip()).toEqual('Play Reverse');
-//
-//        expect(animationViewModel.playForwardViewModel.toggled()).toEqual(false);
-//        expect(animationViewModel.playForwardViewModel.toolTip()).toEqual('Play Forward');
-//
-//        expect(animationViewModel.playRealtimeViewModel.toggled()).toEqual(false);
-//        expect(animationViewModel.playRealtimeViewModel.toolTip()).toEqual('Today (real-time)');
-//
-//        expect(animationViewModel.shuttleRingAngle()).toEqual(15);
     });
 
     it('setTimeFormatter overrides the default formatter', function() {
@@ -158,9 +164,261 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
+    it('correctly formats speed label', function() {
+        var clockViewModel = new ClockViewModel();
+        var animationViewModel = new AnimationViewModel(clockViewModel);
+        var expectedString;
+
+        clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
+        clockViewModel.multiplier(123.1);
+        expectedString = '123.1x';
+        expect(animationViewModel.speedLabel()).toEqual(expectedString);
+
+        clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_TIME);
+        expectedString = 'Today';
+        expect(animationViewModel.speedLabel()).toEqual(expectedString);
+
+        clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
+        clockViewModel.multiplier(15);
+        expectedString = '15x';
+        expect(animationViewModel.speedLabel()).toEqual(expectedString);
+    });
+
+    it('pause button restores current state', function() {
+        var clockViewModel = new ClockViewModel();
+        clockViewModel.startTime(JulianDate.fromIso8601("2012-01-01T00:00:00"));
+        clockViewModel.stopTime(JulianDate.fromIso8601("2012-01-02T00:00:00"));
+        clockViewModel.currentTime(JulianDate.fromIso8601("2012-01-01T12:00:00"));
+        clockViewModel.multiplier(1);
+        clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
+        clockViewModel.clockRange(ClockRange.UNBOUNDED);
+
+        var viewModel = new AnimationViewModel(clockViewModel);
+
+        //Starts out paused
+        verifyPausedState(viewModel);
+
+        //Toggling paused restores state when animating forward
+        viewModel.pauseViewModel.command.execute();
+
+        verifyForwardState(viewModel);
+
+        //Executing paused command restores paused state
+        viewModel.pauseViewModel.command.execute();
+
+        verifyPausedState(viewModel);
+
+        //Setting the multiplier to negative and unpausing animates backward
+        clockViewModel.multiplier(-1);
+        viewModel.pauseViewModel.command.execute();
+
+        verifyReverseState(viewModel);
+    });
+
+    it('animating forwards negates the multiplier if it is positive', function() {
+        var clockViewModel = new ClockViewModel();
+        var viewModel = new AnimationViewModel(clockViewModel);
+        var multiplier = -100;
+        clockViewModel.multiplier(multiplier);
+        viewModel.playForwardViewModel.command.execute();
+        expect(clockViewModel.multiplier()).toEqual(-multiplier);
+    });
+
+    it('animating backwards negates the multiplier if it is positive', function() {
+        var clockViewModel = new ClockViewModel();
+        var viewModel = new AnimationViewModel(clockViewModel);
+        var multiplier = 100;
+        clockViewModel.multiplier(multiplier);
+        viewModel.playReverseViewModel.command.execute();
+        expect(clockViewModel.multiplier()).toEqual(-multiplier);
+    });
+
+    it('animating backwards pauses with a bounded startTime', function() {
+        var centerTime = JulianDate.fromIso8601("2012-01-01T12:00:00");
+
+        var clockViewModel = new ClockViewModel();
+        clockViewModel.startTime(JulianDate.fromIso8601("2012-01-01T00:00:00"));
+        clockViewModel.stopTime(JulianDate.fromIso8601("2012-01-02T00:00:00"));
+        clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
+        clockViewModel.currentTime(centerTime);
+
+        var viewModel = new AnimationViewModel(clockViewModel);
+        verifyPausedState(viewModel);
+
+        //Play in reverse while clamped
+        clockViewModel.multiplier(-1);
+        clockViewModel.clockRange(ClockRange.CLAMPED);
+        viewModel.playReverseViewModel.command.execute();
+
+        verifyReverseState(viewModel);
+
+        //Set current time to start time
+        clockViewModel.currentTime(clockViewModel.startTime());
+
+        //Should now be paused
+        verifyPausedState(viewModel);
+
+        //Animate in reverse again.
+        clockViewModel.currentTime(centerTime);
+        clockViewModel.clockRange(ClockRange.LOOP_STOP);
+        viewModel.playReverseViewModel.command.execute();
+
+        verifyReverseState(viewModel);
+
+        //Set current time to start time
+        clockViewModel.currentTime(clockViewModel.startTime());
+
+        //Should now be paused
+        verifyPausedState(viewModel);
+
+        //Reversing in start state while bounded should have no affect
+        viewModel.playReverseViewModel.command.execute();
+        verifyPausedState(viewModel);
+
+        //Set to unbounded and reversing should be okay
+        clockViewModel.clockRange(ClockRange.UNBOUNDED);
+        viewModel.playReverseViewModel.command.execute();
+        verifyReverseState(viewModel);
+    });
+
+    it('animating forward pauses with a bounded stopTime', function() {
+        var centerTime = JulianDate.fromIso8601("2012-01-01T12:00:00");
+
+        var clockViewModel = new ClockViewModel();
+        clockViewModel.startTime(JulianDate.fromIso8601("2012-01-01T00:00:00"));
+        clockViewModel.stopTime(JulianDate.fromIso8601("2012-01-02T00:00:00"));
+        clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
+        clockViewModel.currentTime(centerTime);
+
+        var viewModel = new AnimationViewModel(clockViewModel);
+        verifyPausedState(viewModel);
+
+        //Play forward while clamped
+        clockViewModel.multiplier(1);
+        clockViewModel.clockRange(ClockRange.CLAMPED);
+        viewModel.playForwardViewModel.command.execute();
+
+        verifyForwardState(viewModel);
+
+        //Set current time to stop time
+        clockViewModel.currentTime(clockViewModel.stopTime());
+
+        //Should now be paused
+        verifyPausedState(viewModel);
+
+        //Playing in stop state while bounded should have no affect
+        viewModel.playForwardViewModel.command.execute();
+        verifyPausedState(viewModel);
+
+        //Set to unbounded and playing should be okay
+        clockViewModel.clockRange(ClockRange.UNBOUNDED);
+        viewModel.playForwardViewModel.command.execute();
+        verifyForwardState(viewModel);
+    });
+
+    it('slower has no affect if at the slowest speed', function() {
+        var clockViewModel = new ClockViewModel();
+        var viewModel = new AnimationViewModel(clockViewModel);
+        var slowestSpeed = AnimationViewModel._shuttleRingTicks[0];
+        clockViewModel.multiplier(slowestSpeed);
+        viewModel.slower.execute();
+        expect(clockViewModel.multiplier()).toEqual(slowestSpeed);
+    });
+
+    it('faster has no affect if at the faster speed', function() {
+        var clockViewModel = new ClockViewModel();
+        var viewModel = new AnimationViewModel(clockViewModel);
+        var fastestSpeed = AnimationViewModel._shuttleRingTicks[AnimationViewModel._shuttleRingTicks.length - 1];
+        clockViewModel.multiplier(fastestSpeed);
+        viewModel.faster.execute();
+        expect(clockViewModel.multiplier()).toEqual(fastestSpeed);
+    });
+
+    it('slower and faster cycle threw defined multipliers', function() {
+        var clockViewModel = new ClockViewModel();
+        var viewModel = new AnimationViewModel(clockViewModel);
+
+        var i = 0;
+        var multipliers = AnimationViewModel._shuttleRingTicks;
+        var length = multipliers.length;
+
+        //Start at slowest speed
+        clockViewModel.multiplier(multipliers[0]);
+
+        //Cycle through them all with faster
+        for (i = 1; i < length; i++) {
+            viewModel.faster.execute();
+            expect(clockViewModel.multiplier()).toEqual(multipliers[i]);
+        }
+
+        //We should be at the fastest time now.
+        expect(clockViewModel.multiplier()).toEqual(multipliers[length - 1]);
+
+        //Cycle through them all with slower
+        for (i = length - 2; i >= 0; i--) {
+            viewModel.slower.execute();
+            expect(clockViewModel.multiplier()).toEqual(multipliers[i]);
+        }
+
+        //We should be at the slowest time now.
+        expect(clockViewModel.multiplier()).toEqual(multipliers[0]);
+    });
+
+    it('Realtime canExecute depends on clock settings', function() {
+        var clockViewModel = new ClockViewModel();
+        var viewModel = new AnimationViewModel(clockViewModel);
+
+        //UNBOUNDED but available when start/stop time does not include realtime
+        clockViewModel.systemTime(new JulianDate());
+        clockViewModel.clockRange(ClockRange.UNBOUNDED);
+        clockViewModel.startTime(clockViewModel.systemTime().addSeconds(-60));
+        clockViewModel.stopTime(clockViewModel.systemTime().addSeconds(-30));
+        expect(viewModel.playRealtimeViewModel.command.canExecute()).toEqual(true);
+
+        //CLAMPED but unavailable when start/stop time does not include realtime
+        clockViewModel.clockRange(ClockRange.CLAMPED);
+        clockViewModel.startTime(clockViewModel.systemTime().addSeconds(-60));
+        clockViewModel.stopTime(clockViewModel.systemTime().addSeconds(-30));
+        expect(viewModel.playRealtimeViewModel.command.canExecute()).toEqual(false);
+
+        //CLAMPED but available when start/stop time includes realtime
+        clockViewModel.clockRange(ClockRange.CLAMPED);
+        clockViewModel.startTime(clockViewModel.systemTime().addSeconds(-60));
+        clockViewModel.stopTime(clockViewModel.systemTime().addSeconds(60));
+        expect(viewModel.playRealtimeViewModel.command.canExecute()).toEqual(true);
+
+        //LOOP_STOP but unavailable when start/stop time does not include realtime
+        clockViewModel.clockRange(ClockRange.LOOP_STOP);
+        clockViewModel.startTime(clockViewModel.systemTime().addSeconds(-60));
+        clockViewModel.stopTime(clockViewModel.systemTime().addSeconds(-30));
+        expect(viewModel.playRealtimeViewModel.command.canExecute()).toEqual(false);
+
+        //LOOP_STOP but available when start/stop time includes realtime
+        clockViewModel.clockRange(ClockRange.LOOP_STOP);
+        clockViewModel.startTime(clockViewModel.systemTime().addSeconds(-60));
+        clockViewModel.stopTime(clockViewModel.systemTime().addSeconds(60));
+        expect(viewModel.playRealtimeViewModel.command.canExecute()).toEqual(true);
+    });
+    
     it('throws when constructed without arguments', function() {
         expect(function() {
             return new AnimationViewModel();
+        }).toThrow();
+    });
+
+    it('setTimeFormatter throws with non-function', function() {
+        var clockViewModel = new ClockViewModel();
+        var animationViewModel = new AnimationViewModel(clockViewModel);
+        expect(function() {
+            animationViewModel.setTimeFormatter({});
+        }).toThrow();
+    });
+
+    it('setDateFormatter throws with non-function', function() {
+        var clockViewModel = new ClockViewModel();
+        var animationViewModel = new AnimationViewModel(clockViewModel);
+        expect(function() {
+            animationViewModel.setDateFormatter({});
         }).toThrow();
     });
 });

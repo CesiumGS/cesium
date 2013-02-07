@@ -30,8 +30,8 @@ define(['./Command',
 
     //TODO: Make _shuttleRingTicks part of AnimationViewModel and user settable.
     var positiveTicks = [0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0,//
-                        15.0, 30.0, 60.0, 120.0, 300.0, 600.0, 900.0, 1800.0, 3600.0, 7200.0, 14400.0,//
-                        21600.0, 43200.0, 86400.0, 172800.0, 345600.0, 604800.0];
+                         15.0, 30.0, 60.0, 120.0, 300.0, 600.0, 900.0, 1800.0, 3600.0, 7200.0, 14400.0,//
+                         21600.0, 43200.0, 86400.0, 172800.0, 345600.0, 604800.0];
     var tickIndex;
     var len = positiveTicks.length;
     for (tickIndex = len - 1; tickIndex >= 0; tickIndex--) {
@@ -41,29 +41,50 @@ define(['./Command',
         _shuttleRingTicks.push(positiveTicks[tickIndex]);
     }
 
+    function _cancelRealtime(clockViewModel) {
+        if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK_TIME) {
+            clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
+            clockViewModel.multiplier(1);
+        }
+    }
+
+    function _unpause(viewModel) {
+        _cancelRealtime(viewModel.clockViewModel);
+        viewModel.clockViewModel.currentTime(viewModel.clockViewModel.clock.tick(0));
+        viewModel._shouldAnimate(true);
+    }
+
+    function _getTypicalSpeedIndex(speed) {
+        var index = binarySearch(_shuttleRingTicks, speed, binarySearch.numericComparator);
+        return index < 0 ? ~index : index;
+    }
+
     var AnimationViewModel = function(clockViewModel) {
         this.clockViewModel = clockViewModel;
 
         var that = this;
 
-        this._dateFormatter = function(date) {
+        this._dateFormatter = knockout.observable(function(date) {
             var gregorianDate = date.toGregorianDate();
             return _monthNames[gregorianDate.month - 1] + ' ' + gregorianDate.day + ' ' + gregorianDate.year;
-        };
+        });
 
-        this._timeFormatter = function(date) {
+        this._timeFormatter = knockout.observable(function(date) {
             var gregorianDate = date.toGregorianDate();
             var millisecond = Math.round(gregorianDate.millisecond);
             if (Math.abs(that.clockViewModel.multiplier()) < 1) {
                 return sprintf("%02d:%02d:%02d.%03d", gregorianDate.hour, gregorianDate.minute, gregorianDate.second, millisecond);
             }
             return sprintf("%02d:%02d:%02d UTC", gregorianDate.hour, gregorianDate.minute, gregorianDate.second);
-        };
+        });
+
+        this.shuttleRingDragging = knockout.observable(false);
+        this._shouldAnimate = knockout.observable(false);
 
         this._canAnimate = knockout.computed(function() {
             var clockRange = clockViewModel.clockRange();
 
-            if (clockRange === ClockRange.UNBOUNDED) {
+            if (that.shuttleRingDragging() || clockRange === ClockRange.UNBOUNDED) {
                 return true;
             }
 
@@ -71,17 +92,21 @@ define(['./Command',
             var currentTime = clockViewModel.currentTime();
             var startTime = clockViewModel.startTime();
 
+            var result = false;
             if (clockRange === ClockRange.LOOP_STOP) {
-                return currentTime.greaterThan(startTime) || (currentTime.equals(startTime) && multiplier > 0);
+                result = currentTime.greaterThan(startTime) || (currentTime.equals(startTime) && multiplier > 0);
+            } else {
+                var stopTime = clockViewModel.stopTime();
+                result = (currentTime.greaterThan(startTime) && currentTime.lessThan(stopTime)) || //
+                         (currentTime.equals(startTime) && multiplier > 0) || //
+                         (currentTime.equals(stopTime) && multiplier < 0);
             }
 
-            var stopTime = clockViewModel.stopTime();
-            return (currentTime.greaterThan(startTime) && currentTime.lessThan(stopTime)) ||
-                   (currentTime.equals(startTime) && multiplier > 0) ||
-                   (currentTime.equals(stopTime) && multiplier < 0);
+            if (!result) {
+                that._shouldAnimate(false);
+            }
+            return result;
         });
-
-        this._shouldAnimate = knockout.observable(false);
 
         this._isSystemTimeAvailable = knockout.computed(function() {
             var clockRange = clockViewModel.clockRange();
@@ -96,11 +121,11 @@ define(['./Command',
         });
 
         this.timeLabel = knockout.computed(function() {
-            return that._timeFormatter(clockViewModel.currentTime());
+            return that._timeFormatter()(clockViewModel.currentTime());
         });
 
         this.dateLabel = knockout.computed(function() {
-            return that._dateFormatter(clockViewModel.currentTime());
+            return that._dateFormatter()(clockViewModel.currentTime());
         });
 
         this.speedLabel = knockout.computed(function() {
@@ -110,42 +135,22 @@ define(['./Command',
             return clockViewModel.multiplier() + 'x';
         });
 
-        var shuttleRingDraggingObs = knockout.observable(false);
-        this.shuttleRingDragging = knockout.computed({
-            read : function() {
-                return shuttleRingDraggingObs();
-            },
-            write : function(value) {
-                shuttleRingDraggingObs(value);
-                if (!value) {
-                    that._shouldAnimate(that._shouldAnimate() && that._canAnimate());
-                }
-            }
-        });
-
         this._isAnimatingObs = knockout.computed(function() {
             return that._shouldAnimate() && (that._canAnimate() || that.shuttleRingDragging());
         });
 
-        var pauseToggled = knockout.computed({
-            read : function() {
-                return !that._isAnimatingObs();
-            },
-            write : function(value) {
-                if (value && that._isAnimatingObs()) {
-                    that._cancelRealtime();
-                    that._shouldAnimate(false);
-                } else if (!value && !that._isAnimatingObs()) {
-                    that._unpause();
-                }
-            }
-        });
-
         this.pauseViewModel = new ToggleButtonViewModel({
-            toggled : pauseToggled,
+            toggled : knockout.computed(function() {
+                return !that._isAnimatingObs();
+            }),
             toolTip : knockout.observable('Pause'),
             command : new Command(function() {
-                pauseToggled(!pauseToggled());
+                if (that._shouldAnimate()) {
+                    _cancelRealtime(that.clockViewModel);
+                    that._shouldAnimate(false);
+                } else if (that._canAnimate()) {
+                    _unpause(that);
+                }
             })
         });
 
@@ -158,12 +163,12 @@ define(['./Command',
             toolTip : knockout.observable('Play Reverse'),
             command : new Command(function() {
                 if (!playReverseToggled()) {
-                    that._cancelRealtime();
+                    _cancelRealtime(that.clockViewModel);
                     var multiplier = clockViewModel.multiplier();
                     if (multiplier > 0) {
                         clockViewModel.multiplier(-multiplier);
                     }
-                    that._unpause();
+                    _unpause(that);
                 }
             })
         });
@@ -177,12 +182,12 @@ define(['./Command',
             toolTip : knockout.observable('Play Forward'),
             command : new Command(function() {
                 if (!playToggled()) {
-                    that._cancelRealtime();
+                    _cancelRealtime(that.clockViewModel);
                     var multiplier = clockViewModel.multiplier();
                     if (multiplier < 0) {
                         clockViewModel.multiplier(-multiplier);
                     }
-                    that._unpause();
+                    _unpause(that);
                 }
             })
         });
@@ -238,7 +243,7 @@ define(['./Command',
                 } else if (speed > 0.8) {
                     speed = Math.round(speed);
                 } else {
-                    speed = _shuttleRingTicks[that._getTypicalSpeedIndex(speed)];
+                    speed = _shuttleRingTicks[_getTypicalSpeedIndex(speed)];
                 }
                 if (angle < 0) {
                     speed *= -1.0;
@@ -254,11 +259,11 @@ define(['./Command',
         this.slower = {
             canExecute : true,
             execute : function() {
-                that._cancelRealtime();
+                _cancelRealtime(that.clockViewModel);
                 var clockViewModel = that.clockViewModel;
                 var multiplier = clockViewModel.multiplier();
-                var index = that._getTypicalSpeedIndex(multiplier) - 1;
-                if (index > 0) {
+                var index = _getTypicalSpeedIndex(multiplier) - 1;
+                if (index >= 0) {
                     clockViewModel.multiplier(_shuttleRingTicks[index]);
                 }
             }
@@ -267,10 +272,10 @@ define(['./Command',
         this.faster = {
             canExecute : true,
             execute : function() {
-                that._cancelRealtime();
+                _cancelRealtime(that.clockViewModel);
                 var clockViewModel = that.clockViewModel;
                 var multiplier = clockViewModel.multiplier();
-                var index = that._getTypicalSpeedIndex(multiplier) + 1;
+                var index = _getTypicalSpeedIndex(multiplier) + 1;
                 if (index < _shuttleRingTicks.length) {
                     clockViewModel.multiplier(_shuttleRingTicks[index]);
                 }
@@ -286,61 +291,31 @@ define(['./Command',
     };
 
     AnimationViewModel.prototype.getDateFormatter = function() {
-        return this._dateFormatter;
+        return this._dateFormatter();
     };
 
     AnimationViewModel.prototype.setDateFormatter = function(dateFormatter) {
-        this._dateFormatter = dateFormatter;
-        //Force a refresh
-        this.clockViewModel.currentTime.notifySubscribers();
+        if (typeof dateFormatter !== 'function') {
+            throw new DeveloperError('dateFormatter must be a function');
+        }
+        this._dateFormatter(dateFormatter);
+        this._dateFormatter.notifySubscribers();
     };
 
     AnimationViewModel.prototype.getTimeFormatter = function() {
-        return this._timeFormatter;
+        return this._timeFormatter();
     };
 
     AnimationViewModel.prototype.setTimeFormatter = function(timeFormatter) {
-        this._timeFormatter = timeFormatter;
-        //Force a refresh
-        this.clockViewModel.currentTime.notifySubscribers();
-    };
-
-    /**
-     * Override this function to change the format of the date label on the widget.
-     * The returned string will be displayed as the middle line of text on the widget.
-     *
-     * @function
-     * @memberof AnimationViewModel
-     * @returns {String} The human-readable version of the current date.
-     */
-
-    /**
-     * Override this function to change the format of the time label on the widget.
-     * The returned string will be displayed as the bottom line of text on the widget.
-     *
-     * @function
-     * @memberof AnimationViewModel.prototype
-     * @returns {String} The human-readable version of the current time.
-     */
-
-    AnimationViewModel.prototype._cancelRealtime = function() {
-        var clockViewModel = this.clockViewModel;
-        if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK_TIME) {
-            clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
-            clockViewModel.multiplier(1);
+        if (typeof timeFormatter !== 'function') {
+            throw new DeveloperError('timeFormatter must be a function');
         }
+        this._timeFormatter(timeFormatter);
+        this._timeFormatter.notifySubscribers();
     };
 
-    AnimationViewModel.prototype._unpause = function() {
-        this._cancelRealtime();
-        this.clockViewModel.currentTime(this.clockViewModel.clock.tick(0));
-        this._shouldAnimate(true);
-    };
-
-    AnimationViewModel.prototype._getTypicalSpeedIndex = function(speed) {
-        var index = binarySearch(_shuttleRingTicks, speed, binarySearch.numericComparator);
-        return index < 0 ? ~index : index;
-    };
+    //Currently exposed for tests.
+    AnimationViewModel._shuttleRingTicks = _shuttleRingTicks;
 
     return AnimationViewModel;
 });

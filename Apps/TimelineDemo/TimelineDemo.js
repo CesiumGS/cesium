@@ -35,9 +35,11 @@ define(['dojo',
 
     function handleSetTime(e) {
         if (typeof timeline !== 'undefined') {
-            animationViewModel.pauseViewModel.toggled(true);
+            if (!animationViewModel.pauseViewModel.toggled()) {
+                animationViewModel.pauseViewModel.command.execute();
+            }
             var scrubJulian = e.timeJulian;
-            clock.currentTime = scrubJulian;
+            animationViewModel.clockViewModel.currentTime(scrubJulian);
             updateScrubTime(scrubJulian);
         }
     }

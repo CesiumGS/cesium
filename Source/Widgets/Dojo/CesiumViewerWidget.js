@@ -742,7 +742,9 @@ define([
 
             function onTimelineScrub(e) {
                 widget.clock.currentTime = e.timeJulian;
-                widget.animation.viewModel.pauseViewModel.toggled(true);
+                if (!widget.animation.viewModel.pauseViewModel.toggled()) {
+                    widget.animation.viewModel.pauseViewModel.execute();
+                }
             }
 
             var timelineWidget = widget.timelineWidget;
