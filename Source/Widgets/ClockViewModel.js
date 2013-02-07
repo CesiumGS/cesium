@@ -110,8 +110,8 @@ define(['../Core/DeveloperError',
             }
         });
 
-        var clockRange = knockout.observable();
-        clockStep.equalityComparer = function(a, b) {
+        var clockRange = knockout.observable(clock.clockRange);
+        clockRange.equalityComparer = function(a, b) {
             return a === b;
         };
 
