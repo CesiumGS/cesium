@@ -98,7 +98,7 @@ define(['dojo',
         animation = new Animation(dojo.byId('animationWidget'), animationViewModel);
 
         //'press' the play button
-        animationViewModel.playViewModel.command.execute();
+        animationViewModel.playForwardViewModel.command.execute();
 
         function tick() {
             animationViewModel.update();

@@ -363,7 +363,7 @@ define(['../Core/destroyObject',
 
         this._realtimeSVG = new SvgButton(_wingButton(3, 4, '#animation_pathClock', viewModel.playRealtimeViewModel.toolTip()), viewModel.playRealtimeViewModel);
         this._playReverseSVG = new SvgButton(_rectButton(44, 99, '#animation_pathPlayReverse', viewModel.playReverseViewModel.toolTip()), viewModel.playReverseViewModel);
-        this._playForwardSVG = new SvgButton(_rectButton(124, 99, '#animation_pathPlay', viewModel.playViewModel.toolTip()), viewModel.playViewModel);
+        this._playForwardSVG = new SvgButton(_rectButton(124, 99, '#animation_pathPlay', viewModel.playForwardViewModel.toolTip()), viewModel.playForwardViewModel);
         this._pauseSVG = new SvgButton(_rectButton(84, 99, '#animation_pathPause', viewModel.pauseViewModel.toolTip()), viewModel.pauseViewModel);
 
         var buttonsG = document.createElementNS(_svgNS, 'g');
