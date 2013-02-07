@@ -251,29 +251,15 @@ require([
         url : 'http://cesium.agi.com/smallterrain'
     });
     
-    /*var terrainProvider = new Cesium.TileMapServiceTerrainProvider({
-        url : 'http://cesium.agi.com/terrain'
+    /*var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
+        url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
+        token : 'uEyIBv7tIWJmAt8XWAwNgYPup2w8HaIpClBAIMOPNgSA_ql4hdx1J92sv_NtVKpguVR8o0mhyMicdt8zUH4uKQ..',
+        proxy : new Cesium.DefaultProxy('/terrain/')
     });*/
 
     cb._surface._terrainProvider = terrainProvider;
-    
+
     cb.oceanNormalMapUrl = require.toUrl('Assets/Textures/waterNormalsSmall.jpg');
-
-    /*var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
-        url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-        token : 'qV84HyuF8fxKlS3QNus8G9J4GxlA6R64C6WSMXcaZqnvvuAbWJARjvH9xt-axZ2cm7O8r11lCO6SxVYteypIKA..',
-        proxy : new Cesium.DefaultProxy('/terrain/')
-    });
-
-    cb._surface._terrainProvider = terrainProvider;
-    
-    // TODO: this shouldn't be necessary
-    var surface = cb._surface;
-    var levelZeroTiles = surface._levelZeroTiles;
-    for (var i = 0; i < levelZeroTiles.length; ++i) {
-        levelZeroTiles[i].freeResources();
-    }
-    surface._levelZeroTiles = terrainProvider.tilingScheme.createLevelZeroTiles();*/
 
     //scene.getCamera().frustum.near = 10.0;
     //cb.affectedByLighting = false;

@@ -284,6 +284,14 @@ define([
             }
         }
 
+        if (typeof this._allWaterTexture !== 'undefined') {
+            this._allWaterTexture.destroy();
+        }
+
+        if (typeof this._allLandTexture !== 'undefined') {
+            this._allLandTexture.destroy();
+        }
+
         return destroyObject(this);
     };
 

@@ -35,9 +35,6 @@ define([
         parameters.extent = Extent.clone(parameters.extent);
 
         parameters.vertices = vertices;
-        parameters.includeHeightsInVertexData = true;
-        parameters.generateTextureCoordinates = true;
-        parameters.interleaveTextureCoordinates = true;
 
         var statistics = HeightmapTessellator.computeVertices(parameters);
         var boundingSphere3D = BoundingSphere.fromVertices(vertices, parameters.relativeToCenter, numberOfAttributes);

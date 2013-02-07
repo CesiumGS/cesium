@@ -4,6 +4,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/DeveloperError',
+        '../Core/HeightmapTessellator',
         '../Core/Math',
         '../Core/Occluder',
         '../Core/TaskProcessor',
@@ -16,6 +17,7 @@ define([
         BoundingSphere,
         Cartesian3,
         DeveloperError,
+        HeightmapTessellator,
         CesiumMath,
         Occluder,
         TaskProcessor,
@@ -24,15 +26,6 @@ define([
         TerrainProvider,
         when) {
     "use strict";
-
-    var defaultStructure = {
-            heightScale : 1.0,
-            heightOffset : 0.0,
-            elementsPerHeight : 1,
-            stride : 1,
-            elementMultiplier : 256.0,
-            isBigEndian : false
-        };
 
     /**
      * Terrain data for a single {@link Tile} where the terrain data is represented as a heightmap.  A heightmap
@@ -89,14 +82,14 @@ define([
         this._childTileMask = defaultValue(childTileMask, 15);
 
         if (typeof structure === 'undefined') {
-            structure = defaultStructure;
+            structure = HeightmapTessellator.DEFAULT_STRUCTURE;
         } else {
-            structure.heightScale = defaultValue(structure.heightScale, defaultStructure.heightScale);
-            structure.heightOffset = defaultValue(structure.heightOffset, defaultStructure.heightOffset);
-            structure.elementsPerHeight = defaultValue(structure.elementsPerHeight, defaultStructure.elementsPerHeight);
-            structure.stride = defaultValue(structure.stride, defaultStructure.stride);
-            structure.elementMultiplier = defaultValue(structure.elementMultiplier, defaultStructure.elementMultiplier);
-            structure.isBigEndian = defaultValue(structure.isBigEndian, defaultStructure.isBigEndian);
+            structure.heightScale = defaultValue(structure.heightScale, HeightmapTessellator.DEFAULT_STRUCTURE.heightScale);
+            structure.heightOffset = defaultValue(structure.heightOffset, HeightmapTessellator.DEFAULT_STRUCTURE.heightOffset);
+            structure.elementsPerHeight = defaultValue(structure.elementsPerHeight, HeightmapTessellator.DEFAULT_STRUCTURE.elementsPerHeight);
+            structure.stride = defaultValue(structure.stride, HeightmapTessellator.DEFAULT_STRUCTURE.stride);
+            structure.elementMultiplier = defaultValue(structure.elementMultiplier, HeightmapTessellator.DEFAULT_STRUCTURE.elementMultiplier);
+            structure.isBigEndian = defaultValue(structure.isBigEndian, HeightmapTessellator.DEFAULT_STRUCTURE.isBigEndian);
         }
 
         this._structure = structure;
@@ -134,10 +127,7 @@ define([
 
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : this._buffer,
-            heightScale : structure.heightScale,
-            heightOffset : structure.heightOffset,
-            bytesPerHeight : structure.elementsPerHeight,
-            stride : structure.stride,
+            structure : structure,
             width : this._width,
             height : this._height,
             nativeExtent : nativeExtent,
