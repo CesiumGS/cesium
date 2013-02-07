@@ -79,43 +79,14 @@ define([
      *                  low-order element.  If it is true, the first element is the high-order element.
      * @param {Boolean} [createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
+     *
+     * @see TerrainData
      */
     var HeightmapTerrainData = function HeightmapTerrainData(buffer, width, height, childTileMask, structure, createdByUpsampling, waterMask) {
-        /**
-         * The buffer containing the height data.
-         * @type {TypedArray}
-         */
-        this.buffer = buffer;
-
-        /**
-         * The width (longitude direction) of the heightmap, in samples.
-         * @type {Number}
-         */
-        this.width = width;
-
-        /**
-         * The height (latitude direction) of the heightmap, in samples.
-         * @type {Number}
-         */
-        this.height = height;
-
-        /**
-         * A bit mask indicating which of this tile's four children exist.
-         * If a child's bit is set, geometry will be requested for that tile as well when it
-         * is needed.  If the bit is cleared, the child tile is not requested and geometry is
-         * instead upsampled from the parent.  The bit values are as follows:
-         * <table>
-         *   <th><td>Bit Position</td><td>Bit Value</td><td>Child Tile</td></th>
-         *   <tr><td>0</td><td>1</td><td>Southwest</td></tr>
-         *   <tr><td>1</td><td>2</td><td>Southeast</td></tr>
-         *   <tr><td>2</td><td>4</td><td>Northwest</td></tr>
-         *   <tr><td>3</td><td>8</td><td>Northeast</td></tr>
-         * </table>
-         * @type {Number}
-         */
-        this.childTileMask = defaultValue(childTileMask, 15);
-
-        this.waterMask = waterMask;
+        this._buffer = buffer;
+        this._width = width;
+        this._height = height;
+        this._childTileMask = defaultValue(childTileMask, 15);
 
         if (typeof structure === 'undefined') {
             structure = defaultStructure;
@@ -128,17 +99,9 @@ define([
             structure.isBigEndian = defaultValue(structure.isBigEndian, defaultStructure.isBigEndian);
         }
 
-        /**
-         * Describes the structure of the height data.
-         * @type {Object}
-         */
-        this.structure = structure;
-
-        /**
-         * True if this data was created by upsampling another instance; otherwise, false.
-         * @type {Boolean}
-         */
-        this.createdByUpsampling = defaultValue(createdByUpsampling, false);
+        this._structure = structure;
+        this._createdByUpsampling = defaultValue(createdByUpsampling, false);
+        this._waterMask = waterMask;
     };
 
     var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
@@ -164,19 +127,19 @@ define([
         // Compute the center of the tile for RTC rendering.
         var center = ellipsoid.cartographicToCartesian(extent.getCenter());
 
-        var structure = this.structure;
+        var structure = this._structure;
 
-        var levelZeroMaxError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, this.width, tilingScheme.getNumberOfXTilesAtLevel(0));
+        var levelZeroMaxError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, this._width, tilingScheme.getNumberOfXTilesAtLevel(0));
         var thisLevelMaxError = levelZeroMaxError / (1 << level);
 
         var verticesPromise = taskProcessor.scheduleTask({
-            heightmap : this.buffer,
+            heightmap : this._buffer,
             heightScale : structure.heightScale,
             heightOffset : structure.heightOffset,
             bytesPerHeight : structure.elementsPerHeight,
             stride : structure.stride,
-            width : this.width,
-            height : this.height,
+            width : this._width,
+            height : this._height,
             nativeExtent : nativeExtent,
             extent : extent,
             relativeToCenter : center,
@@ -228,7 +191,7 @@ define([
 
         var result;
 
-        if ((this.width % 2) === 1 && (this.height % 2) === 1) {
+        if ((this._width % 2) === 1 && (this._height % 2) === 1) {
             // We have an odd number of posts greater than 2 in each direction,
             // so we can upsample by simply dropping half of the posts in each direction.
             result = upsampleBySubsetting(this, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel);
@@ -264,14 +227,41 @@ define([
             bitNumber -= 2; // south child
         }
 
-        return (this.childTileMask & (1 << bitNumber)) !== 0;
+        return (this._childTileMask & (1 << bitNumber)) !== 0;
+    };
+
+    /**
+     * Gets the water mask included in this terrain data, if any.  A water mask is a rectangular
+     * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
+     * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
+     *
+     *  @memberof HeightmapTerrainData
+     *
+     *  @returns {Uint8Array|Image|Canvas} The water mask, or undefined if no water mask is associated with this terrain data.
+     */
+    HeightmapTerrainData.prototype.getWaterMask = function() {
+        return this._waterMask;
+    };
+
+    /**
+     * Gets a value indicating whether or not this terrain data was created by upsampling lower resolution
+     * terrain data.  If this value is false, the data was obtained from some other source, such
+     * as by downloading it from a remote server.  This method should return true for instances
+     * returned from a call to {@link HeightmapTerrainData#upsample}.
+     *
+     * @memberof HeightmapTerrainData
+     *
+     * @returns {Boolean} True if this instance was created by upsampling; otherwise, false.
+     */
+    HeightmapTerrainData.prototype.wasCreatedByUpsampling = function() {
+        return this._createdByUpsampling;
     };
 
     function upsampleBySubsetting(terrainData, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
         var levelDifference = 1;
 
-        var width = terrainData.width;
-        var height = terrainData.height;
+        var width = terrainData._width;
+        var height = terrainData._height;
 
         // Compute the post indices of the corners of this tile within its own level.
         var leftPostIndex = descendantX * (width - 1);
@@ -302,8 +292,8 @@ define([
         var upsampledWidth = (rightInteger - leftInteger + 1);
         var upsampledHeight = (bottomInteger - topInteger + 1);
 
-        var sourceHeights = terrainData.buffer;
-        var structure = terrainData.structure;
+        var sourceHeights = terrainData._buffer;
+        var structure = terrainData._structure;
 
         // Copy the relevant posts.
         var numberOfHeights = upsampledWidth * upsampledHeight;
@@ -330,16 +320,16 @@ define([
             }
         }
 
-        return new HeightmapTerrainData(heights, upsampledWidth, upsampledHeight, 0, terrainData.structure, true);
+        return new HeightmapTerrainData(heights, upsampledWidth, upsampledHeight, 0, terrainData._structure, true);
     }
 
     function upsampleByInterpolating(terrainData, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
-        var width = terrainData.width;
-        var height = terrainData.height;
-        var structure = terrainData.structure;
+        var width = terrainData._width;
+        var height = terrainData._height;
+        var structure = terrainData._structure;
         var stride = structure.stride;
 
-        var sourceHeights = terrainData.buffer;
+        var sourceHeights = terrainData._buffer;
         var heights = new sourceHeights.constructor(width * height * stride);
 
         // PERFORMANCE_IDEA: don't recompute these extents - the caller already knows them.
@@ -373,7 +363,7 @@ define([
             }
         }
 
-        return new HeightmapTerrainData(heights, width, height, 0, terrainData.structure, true);
+        return new HeightmapTerrainData(heights, width, height, 0, terrainData._structure, true);
     }
 
     function interpolateHeight(sourceHeights, sourceExtent, width, height, longitude, latitude) {

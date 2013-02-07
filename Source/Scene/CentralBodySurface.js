@@ -811,14 +811,15 @@ define([
 
                     // If there's a water mask included in the terrain data, create a
                     // texture for it.
-                    if (typeof tile.terrainData.waterMask !== 'undefined') {
+                    var waterMask = tile.terrainData.getWaterMask();
+                    if (typeof waterMask !== 'undefined') {
                         if (typeof tile.waterMaskTexture !== 'undefined') {
                             --tile.waterMaskTexture.referenceCount;
                             if (tile.waterMaskTexture.referenceCount === 0) {
                                 tile.waterMaskTexture.destroy();
                             }
                         }
-                        tile.waterMaskTexture = createWaterMaskTexture(surface, context, tile.terrainData.waterMask);
+                        tile.waterMaskTexture = createWaterMaskTexture(surface, context, waterMask);
                         tile.waterMaskTranslationAndScale.x = 0.0;
                         tile.waterMaskTranslationAndScale.y = 0.0;
                         tile.waterMaskTranslationAndScale.z = 1.0;
@@ -910,7 +911,7 @@ define([
             for (var childIndex = 0; childIndex < 4; ++childIndex) {
                 var childTile = tile.children[childIndex];
                 if (childTile.state !== TileState.START) {
-                    if (childTile.terrainData !== 'undefined' && !childTile.terrainData.createdByUpsampling) {
+                    if (childTile.terrainData !== 'undefined' && !childTile.terrainData.wasCreatedByUpsampling()) {
                         // Data for the child tile has already been loaded.
                         continue;
                     }
@@ -943,7 +944,7 @@ define([
             for (var childIndex = 0; childIndex < 4; ++childIndex) {
                 var childTile = tile.children[childIndex];
                 if (childTile.state !== TileState.START) {
-                    if (childTile.terrainData !== 'undefined' && !childTile.terrainData.createdByUpsampling) {
+                    if (childTile.terrainData !== 'undefined' && !childTile.terrainData.wasCreatedByUpsampling()) {
                         // Data for the child tile has already been loaded.
                         continue;
                     }
@@ -1057,7 +1058,7 @@ define([
     function upsampleWaterMask(surface, context, tile) {
         // Find the nearest ancestor with loaded terrain.
         var sourceTile = tile.parent;
-        while (typeof sourceTile !== 'undefined' && (typeof sourceTile.terrainData === 'undefined' || sourceTile.terrainData.createdByUpsampling)) {
+        while (typeof sourceTile !== 'undefined' && (typeof sourceTile.terrainData === 'undefined' || sourceTile.terrainData.wasCreatedByUpsampling())) {
             sourceTile = sourceTile.parent;
         }
 
