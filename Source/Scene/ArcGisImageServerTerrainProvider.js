@@ -1,56 +1,36 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/jsonp',
         '../Core/loadImage',
         '../Core/getImagePixels',
         '../Core/throttleRequestByServer',
         '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
         '../Core/Math',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
+        '../Core/Ellipsoid',
         '../Core/Event',
-        '../Core/Extent',
-        '../Core/Occluder',
-        '../Core/TaskProcessor',
-        './Projections',
-        './TileState',
         './TerrainProvider',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
-        './WebMercatorTilingScheme',
         '../ThirdParty/when'
     ], function(
         defaultValue,
-        jsonp,
         loadImage,
         getImagePixels,
         throttleRequestByServer,
         writeTextToCanvas,
         DeveloperError,
         CesiumMath,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
+        Ellipsoid,
         Event,
-        Extent,
-        Occluder,
-        TaskProcessor,
-        Projections,
-        TileState,
         TerrainProvider,
         GeographicTilingScheme,
         HeightmapTerrainData,
-        WebMercatorTilingScheme,
         when) {
     "use strict";
 
     /**
-     * A {@link TerrainProvider} that produces geometry by tessellating height maps
+     * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
      * retrieved from an ArcGIS ImageServer.
      *
      * @alias ArcGisImageServerTerrainProvider
@@ -59,6 +39,13 @@ define([
      * @param {String} description.url The URL of the ArcGIS ImageServer service.
      * @param {String} [description.token] The authorization token to use to connect to the service.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {TilingScheme} [description.tilingScheme] The tiling scheme specifying how the terrain
+     *                       is broken into tiles.  If this parameter is not provided, a {@link GeographicTilingScheme}
+     *                       is used.
+     * @param {Ellipsoid} [description.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+     *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead.
+     *                    If neither parameter is specified, the WGS84 ellipsoid is used.
+     * @param {String} [description.credit] A string crediting the data source, which is displayed on the canvas.
      *
      * @see TerrainProvider
      */
@@ -67,31 +54,18 @@ define([
             throw new DeveloperError('description.url is required.');
         }
 
-        /**
-         * The URL of the ArcGIS ImageServer.
-         * @type {String}
-         */
-        this.url = description.url;
+        this._url = description.url;
+        this._token = description.token;
 
-        /**
-         * The authorization token to use to connect to the service.
-         *
-         * @type {String}
-         */
-        this.token = description.token;
+        this._tilingScheme = description.tilingScheme;
+        if (typeof this._tilingScheme === 'undefined') {
+            this._tilingScheme = new GeographicTilingScheme({
+                ellipsoid : defaultValue(description.ellipsoid, Ellipsoid.WGS84)
+            });
+        }
 
-        /**
-         * The tiling scheme used to tile the surface.
-         *
-         * @type TilingScheme
-         */
-        this._tilingScheme = new WebMercatorTilingScheme({
-            numberOfLevelZeroTilesX : 2,
-            numberOfLevelZeroTilesY : 2
-        });
-        this.maxLevel = 25;
-        this.heightmapWidth = 65;
-        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.getEllipsoid(), this.heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
+        this._heightmapWidth = 65;
+        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.getEllipsoid(), this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
 
         this._proxy = description.proxy;
 
@@ -106,56 +80,17 @@ define([
 
         this._errorEvent = new Event();
 
-        // Grab the details of this ImageServer.
-        var url = this.url;
-        if (this.token) {
-            url += '?token=' + this.token;
-        }
-        var metadata = jsonp(url, {
-            parameters : {
-                f : 'json'
-            }
-        });
-
-        var that = this;
-        when(metadata, function(data) {
-            /*var extentData = data.extent;
-
-            if (extentData.spatialReference.wkid === 102100) {
-                that._extentSouthwestInMeters = new Cartesian2(extentData.xmin, extentData.ymin);
-                that._extentNortheastInMeters = new Cartesian2(extentData.xmax, extentData.ymax);
-                that.tilingScheme = new WebMercatorTilingScheme({
-                    extentSouthwestInMeters: that._extentSouthwestInMeters,
-                    extentNortheastInMeters: that._extentNortheastInMeters
-                });
-            } if (extentData.spatialReference.wkid === 4326) {
-                var extent = new Extent(CesiumMath.toRadians(extentData.xmin),
-                                        CesiumMath.toRadians(extentData.ymin),
-                                        CesiumMath.toRadians(extentData.xmax),
-                                        CesiumMath.toRadians(extentData.ymax));
-                that.tilingScheme = new GeographicTilingScheme({
-                    extent: extent
-                });
-            }
-
-            // The server can pretty much provide any level we ask for by interpolating.
-            that.maxLevel = 25;*/
-
+        if (typeof description.credit !== 'undefined') {
             // Create the copyright message.
-            that._logo = writeTextToCanvas(data.copyrightText, {
+            this._logo = writeTextToCanvas(description.credit, {
                 font : '12px sans-serif'
             });
-
-            that.ready = true;
-        }, function(e) {
-            /*global console*/
-            console.error('failed to load metadata: ' + e);
-        });
+        }
     }
 
     /**
      * Requests the geometry for a given tile.  This function should not be called before
-     * {@link TerrainProvider#isReady} returns true.  The result must include terrain data and
+     * {@link ArcGisImageServerTerrainProvider#isReady} returns true.  The result must include terrain data and
      * may optionally include a water mask and an indication of which child tiles are available.
      *
      * @memberof ArcGisImageServerTerrainProvider
@@ -174,8 +109,8 @@ define([
         // pixel.  So expand the extent by half a sample spacing in each direction
         // so that the first height is on the edge of the extent we need rather than
         // half a sample spacing into the extent.
-        var xSpacing = (extent.east - extent.west) / (this.heightmapWidth - 1);
-        var ySpacing = (extent.north - extent.south) / (this.heightmapWidth - 1);
+        var xSpacing = (extent.east - extent.west) / (this._heightmapWidth - 1);
+        var ySpacing = (extent.north - extent.south) / (this._heightmapWidth - 1);
 
         extent.west -= xSpacing * 0.5;
         extent.east += xSpacing * 0.5;
@@ -184,9 +119,9 @@ define([
 
         var bbox = CesiumMath.toDegrees(extent.west) + '%2C' + CesiumMath.toDegrees(extent.south) + '%2C' + CesiumMath.toDegrees(extent.east) + '%2C' + CesiumMath.toDegrees(extent.north);
 
-        var url = this.url + '/exportImage?interpolation=RSP_BilinearInterpolation&format=tiff&f=image&size=' + this.heightmapWidth + '%2C' + this.heightmapWidth + '&bboxSR=4326&imageSR=3857&bbox=' + bbox;
-        if (this.token) {
-            url += '&token=' + this.token;
+        var url = this._url + '/exportImage?interpolation=RSP_BilinearInterpolation&format=tiff&f=image&size=' + this._heightmapWidth + '%2C' + this._heightmapWidth + '&bboxSR=4326&imageSR=4326&bbox=' + bbox;
+        if (this._token) {
+            url += '&token=' + this._token;
         }
 
         var proxy = this._proxy;
@@ -204,7 +139,7 @@ define([
             var heightBuffer = getImagePixels(image);
             var childTileMask = 15;
             var waterMask;
-            return new HeightmapTerrainData(heightBuffer, that.heightmapWidth, that.heightmapWidth, childTileMask, that._terrainDataStructure, false, waterMask);
+            return new HeightmapTerrainData(heightBuffer, that._heightmapWidth, that._heightmapWidth, childTileMask, that._terrainDataStructure, false, waterMask);
         });
     };
 
