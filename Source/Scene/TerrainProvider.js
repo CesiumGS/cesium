@@ -18,20 +18,12 @@ define([
      *
      * @alias TerrainProvider
      * @constructor
-     * @private
      *
      * @see EllipsoidTerrainProvider
+     * @see CesiumTerrainProvider
+     * @see ArcGisImageServerTerrainProvider
      */
     function TerrainProvider() {
-        /**
-         * The tiling scheme used to tile the surface.
-         *
-         * @type TilingScheme
-         */
-        this.tilingScheme = undefined;
-
-        this.levelZeroMaximumGeometricError = undefined;
-
         throw new DeveloperError('This type should not be instantiated directly.');
     }
 
@@ -186,31 +178,9 @@ define([
     TerrainProvider.heightmapTerrainQuality = 0.25;
 
     /**
-     * Determines an appropriate geometric error estimate when the geometry comes from a heightmap.
-     *
-     * @param ellipsoid The ellipsoid to which the terrain is attached.
-     * @param tileImageWidth The width, in pixels, of the heightmap associated with a single tile.
-     * @param numberOfTilesAtLevelZero The number of tiles in the horizontal direction at tile level zero.
-     * @returns {Number} An estimated geometric error.
-     */
-    TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap = function(ellipsoid, tileImageWidth, numberOfTilesAtLevelZero) {
-        return ellipsoid.getMaximumRadius() * 2 * Math.PI * TerrainProvider.heightmapTerrainQuality / (tileImageWidth * numberOfTilesAtLevelZero);
-    };
-
-    /**
-     * Gets the maximum geometric error allowed in a tile at a given level.
-     *
-     * @param {Number} level The tile level for which to get the maximum geometric error.
-     * @returns {Number} The maximum geometric error.
-     */
-    TerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
-        return this.levelZeroMaximumGeometricError / (1 << level);
-    };
-
-    /**
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link TerrainProvider#isReady} returns true.  The result must include terrain data and
-     * may optionally include an indication of which child tiles are available.
+     * may optionally include a water mask and an indication of which child tiles are available.
      *
      * @memberof TerrainProvider
      *
@@ -235,6 +205,74 @@ define([
      * @returns {Event} The event.
      */
     TerrainProvider.prototype.getErrorEvent = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Gets the maximum geometric error allowed in a tile at a given level.  This function should not be
+     * called before {@link TerrainProvider#isReady} returns true.
+     *
+     * @memberof TerrainProvider
+     *
+     * @param {Number} level The tile level for which to get the maximum geometric error.
+     * @returns {Number} The maximum geometric error.
+     */
+    TerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Gets the logo to display when this terrain provider is active.  Typically this is used to credit
+     * the source of the terrain.  This function should not be called before {@link TerrainProvider#isReady} returns true.
+     *
+     * @memberof TerrainProvider
+     *
+     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     *
+     * @exception {DeveloperError} <code>getLogo</code> must not be called before the terrain provider is ready.
+     */
+    TerrainProvider.prototype.getLogo = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Gets the tiling scheme used by this provider.  This function should
+     * not be called before {@link TerrainProvider#isReady} returns true.
+     *
+     * @memberof TerrainProvider
+     *
+     * @returns {GeographicTilingScheme} The tiling scheme.
+     * @see WebMercatorTilingScheme
+     * @see GeographicTilingScheme
+     *
+     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the terrain provider is ready.
+     */
+    TerrainProvider.prototype.getTilingScheme = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Gets a value indicating whether or not the provider includes a water mask.  The water mask
+     * indicates which areas of the globe are water rather than land, so they can be rendered
+     * as a reflective surface with animated waves.  This function should not be
+     * called before {@link TerrainProvider#isReady} returns true.
+     *
+     * @memberof TerrainProvider
+     *
+     * @returns {Boolean} True if the provider has a water mask; otherwise, false.
+     */
+    TerrainProvider.prototype.hasWaterMask = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Gets a value indicating whether or not the provider is ready for use.
+     *
+     * @memberof TerrainProvider
+     *
+     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
+     */
+    TerrainProvider.prototype.isReady = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 

@@ -48,7 +48,7 @@ define([
         });
 
         this._heightmapWidth = 65;
-        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.getEllipsoid(), this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
+        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.getEllipsoid(), this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
 
         this._terrainDataStructure = {
             heightScale : 1.0 / 5.0,
@@ -64,7 +64,7 @@ define([
 
     /**
      * Requests the geometry for a given tile.  This function should not be called before
-     * {@link TerrainProvider#isReady} returns true.  The result must include terrain data and
+     * {@link CesiumTerrainProvider#isReady} returns true.  The result must include terrain data and
      * may optionally include a water mask and an indication of which child tiles are available.
      *
      * @memberof CesiumTerrainProvider
@@ -120,7 +120,9 @@ define([
      * @param {Number} level The tile level for which to get the maximum geometric error.
      * @returns {Number} The maximum geometric error.
      */
-    CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = TerrainProvider.prototype.getLevelMaximumGeometricError;
+    CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
+        return this._levelZeroMaximumGeometricError / (1 << level);
+    };
 
     /**
      * Gets the logo to display when this terrain provider is active.  Typically this is used to credit
