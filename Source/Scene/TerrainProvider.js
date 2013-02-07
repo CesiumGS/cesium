@@ -225,5 +225,18 @@ define([
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 
+    /**
+     * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link TileProviderError}.
+     *
+     * @memberof TerrainProvider
+     *
+     * @returns {Event} The event.
+     */
+    TerrainProvider.prototype.getErrorEvent = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
     return TerrainProvider;
 });
