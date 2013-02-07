@@ -44,7 +44,9 @@ define([
         });
 
     /**
-     * Compute vertices from a heightmap image.
+     * Fills an array of vertices from a heightmap image.  On return, the vertex data is in the order
+     * [X, Y, Z, H, U, V], where X, Y, and Z represent the Cartesian position of the vertex, H is the
+     * height above the ellipsoid, and U and V are the texture coordinates.
      *
      * @param {Array|Float32Array} description.vertices The array to use to store computed vertices.
      * @param {TypedArray} description.heightmap The heightmap to tessellate.
