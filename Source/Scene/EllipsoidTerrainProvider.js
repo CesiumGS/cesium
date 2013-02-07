@@ -1,42 +1,18 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
         '../Core/Ellipsoid',
         '../Core/Event',
-        '../Core/ExtentTessellator',
-        '../Core/Occluder',
-        '../Core/PlaneTessellator',
-        '../Core/TaskProcessor',
         './HeightmapTerrainData',
         './TerrainProvider',
-        './TileState',
-        './GeographicTilingScheme',
-        '../ThirdParty/when'
+        './GeographicTilingScheme'
     ], function(
         defaultValue,
-        DeveloperError,
-        CesiumMath,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
         Ellipsoid,
         Event,
-        ExtentTessellator,
-        Occluder,
-        PlaneTessellator,
-        TaskProcessor,
         HeightmapTerrainData,
         TerrainProvider,
-        TileState,
-        GeographicTilingScheme,
-        when) {
+        GeographicTilingScheme) {
     "use strict";
 
     /**
@@ -45,7 +21,6 @@ define([
      *
      * @alias EllipsoidTerrainProvider
      * @constructor
-     * @private
      *
      * @param {TilingScheme} [description.tilingScheme] The tiling scheme specifying how the ellipsoidal
      * surface is broken into tiles.  If this parameter is not provided, a {@link GeographicTilingScheme}
@@ -59,15 +34,16 @@ define([
     function EllipsoidTerrainProvider(description) {
         description = defaultValue(description, {});
 
-        /**
-         * The tiling scheme used to tile the surface.
-         *
-         * @type TilingScheme
-         */
-        this._tilingScheme = defaultValue(description.tilingScheme, new GeographicTilingScheme({ ellipsoid : defaultValue(description.ellipsoid, Ellipsoid.WGS84) }));
+        this._tilingScheme = description.tilingScheme;
+        if (typeof this._tilingScheme === 'undefined') {
+            this._tilingScheme = new GeographicTilingScheme({
+                ellipsoid : defaultValue(description.ellipsoid, Ellipsoid.WGS84)
+            });
+        }
 
-        // Note: the 64 below does NOT need to match the actual vertex dimensions.
-        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.getEllipsoid(), 64, this._tilingScheme.getNumberOfXTilesAtLevel(0));
+        // Note: the 64 below does NOT need to match the actual vertex dimensions, because
+        // the ellipsoid is significantly smoother than actual terrain.
+        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.getEllipsoid(), 64, this._tilingScheme.getNumberOfXTilesAtLevel(0));
 
         var width = 16;
         var height = 16;
@@ -75,17 +51,7 @@ define([
         this._terrainData = new HeightmapTerrainData(buffer, width, height);
 
         this._errorEvent = new Event();
-
-        this.ready = true;
     }
-
-    /**
-     * Gets the maximum geometric error allowed in a tile at a given level.
-     *
-     * @param {Number} level The tile level for which to get the maximum geometric error.
-     * @returns {Number} The maximum geometric error.
-     */
-    EllipsoidTerrainProvider.prototype.getLevelMaximumGeometricError = TerrainProvider.prototype.getLevelMaximumGeometricError;
 
     /**
      * Requests the geometry for a given tile.  This function should not be called before
@@ -118,8 +84,70 @@ define([
         return this._errorEvent;
     };
 
+    /**
+     * Gets the maximum geometric error allowed in a tile at a given level.
+     *
+     * @memberof EllipsoidTerrainProvider
+     *
+     * @param {Number} level The tile level for which to get the maximum geometric error.
+     * @returns {Number} The maximum geometric error.
+     */
+    EllipsoidTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
+        return this._levelZeroMaximumGeometricError / (1 << level);
+    };
+
+    /**
+     * Gets the logo to display when this terrain provider is active.  Typically this is used to credit
+     * the source of the terrain.  This function should not be called before {@link EllipsoidTerrainProvider#isReady} returns true.
+     *
+     * @memberof EllipsoidTerrainProvider
+     *
+     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     *
+     * @exception {DeveloperError} <code>getLogo</code> must not be called before the terrain provider is ready.
+     */
+    EllipsoidTerrainProvider.prototype.getLogo = function() {
+        return undefined;
+    };
+
+    /**
+     * Gets the tiling scheme used by this provider.  This function should
+     * not be called before {@link EllipsoidTerrainProvider#isReady} returns true.
+     *
+     * @memberof EllipsoidTerrainProvider
+     *
+     * @returns {GeographicTilingScheme} The tiling scheme.
+     * @see WebMercatorTilingScheme
+     * @see GeographicTilingScheme
+     *
+     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the terrain provider is ready.
+     */
     EllipsoidTerrainProvider.prototype.getTilingScheme = function() {
         return this._tilingScheme;
+    };
+
+    /**
+     * Gets a value indicating whether or not the provider includes a water mask.  The water mask
+     * indicates which areas of the globe are water rather than land, so they can be rendered
+     * as a reflective surface with animated waves.
+     *
+     * @memberof EllipsoidTerrainProvider
+     *
+     * @returns {Boolean} True if the provider has a water mask; otherwise, false.
+     */
+    EllipsoidTerrainProvider.prototype.hasWaterMask = function() {
+        return true;
+    };
+
+    /**
+     * Gets a value indicating whether or not the provider is ready for use.
+     *
+     * @memberof EllipsoidTerrainProvider
+     *
+     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
+     */
+    EllipsoidTerrainProvider.prototype.isReady = function() {
+        return true;
     };
 
     return EllipsoidTerrainProvider;

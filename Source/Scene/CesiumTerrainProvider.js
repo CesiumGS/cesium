@@ -3,6 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/loadArrayBuffer',
         '../Core/throttleRequestByServer',
+        '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
         '../Core/Event',
         './GeographicTilingScheme',
@@ -13,6 +14,7 @@ define([
         defaultValue,
         loadArrayBuffer,
         throttleRequestByServer,
+        writeTextToCanvas,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -31,6 +33,7 @@ define([
      *
      * @param {String} description.url The URL of the Cesium terrain server.
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {String} [description.credit] A string crediting the data source, which is displayed on the canvas.
      *
      * @see TerrainProvider
      */
@@ -60,6 +63,13 @@ define([
         };
 
         this._errorEvent = new Event();
+
+        this._logo = undefined;
+        if (typeof description.credit !== 'undefined') {
+            this._logo = writeTextToCanvas(description.credit, {
+                font : '12px sans-serif'
+            });
+        }
     }
 
     /**

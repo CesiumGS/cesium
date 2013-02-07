@@ -178,6 +178,18 @@ define([
     TerrainProvider.heightmapTerrainQuality = 0.25;
 
     /**
+     * Determines an appropriate geometric error estimate when the geometry comes from a heightmap.
+     *
+     * @param ellipsoid The ellipsoid to which the terrain is attached.
+     * @param tileImageWidth The width, in pixels, of the heightmap associated with a single tile.
+     * @param numberOfTilesAtLevelZero The number of tiles in the horizontal direction at tile level zero.
+     * @returns {Number} An estimated geometric error.
+     */
+    TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap = function(ellipsoid, tileImageWidth, numberOfTilesAtLevelZero) {
+        return ellipsoid.getMaximumRadius() * 2 * Math.PI * TerrainProvider.heightmapTerrainQuality / (tileImageWidth * numberOfTilesAtLevelZero);
+    };
+
+    /**
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link TerrainProvider#isReady} returns true.  The result must include terrain data and
      * may optionally include a water mask and an indication of which child tiles are available.
