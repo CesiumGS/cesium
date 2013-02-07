@@ -14,6 +14,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/Event',
         '../Core/Extent',
         '../Core/Occluder',
         '../Core/TaskProcessor',
@@ -44,6 +45,7 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Event,
         Extent,
         Occluder,
         TaskProcessor,
@@ -116,6 +118,8 @@ define([
             elementMultiplier : 256.0,
             isBigEndian : false
         };
+
+        this._errorEvent = new Event();
     }
 
     /**
@@ -164,6 +168,19 @@ define([
      */
     CesiumTerrainProvider.prototype.getLogo = function() {
         return this._logo;
+    };
+
+    /**
+     * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link TileProviderError}.
+     *
+     * @memberof CesiumTerrainProvider
+     *
+     * @returns {Event} The event.
+     */
+    CesiumTerrainProvider.prototype.getErrorEvent = function() {
+        return this._errorEvent;
     };
 
     return CesiumTerrainProvider;

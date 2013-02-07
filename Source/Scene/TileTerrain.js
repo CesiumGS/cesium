@@ -5,6 +5,7 @@ define([
         '../Core/DeveloperError',
         './TerrainProvider',
         './TerrainState',
+        './TileProviderError',
         '../ThirdParty/when'
     ], function(
         BoundingSphere,
@@ -12,6 +13,7 @@ define([
         DeveloperError,
         TerrainProvider,
         TerrainState,
+        TileProviderError,
         when) {
    "use strict";
 
@@ -89,23 +91,37 @@ define([
        }
 
        function failure() {
-           // TODO: add error reporting and retry logic similar to imagery providers.
+           // Initially assume failure.  handleError may retry, in which case the state will
+           // change to RECEIVING or UNLOADED.
            tileTerrain.state = TerrainState.FAILED;
+
+           var message = 'Failed to obtain terrain tile X: ' + x + ' Y: ' + y + ' Level: ' + level + '.';
+           terrainProvider._requestError = TileProviderError.handleError(
+                   terrainProvider._requestError,
+                   terrainProvider,
+                   terrainProvider.getErrorEvent(),
+                   message,
+                   x, y, level,
+                   doRequest);
        }
 
-       // Request the terrain from the terrain provider.
-       tileTerrain.data = terrainProvider.requestTileGeometry(x, y, level);
+       function doRequest() {
+           // Request the terrain from the terrain provider.
+           tileTerrain.data = terrainProvider.requestTileGeometry(x, y, level);
 
-       // If the request method returns undefined (instead of a promise), the request
-       // has been deferred.
-       if (typeof tileTerrain.data !== 'undefined') {
-           tileTerrain.state = TerrainState.RECEIVING;
+           // If the request method returns undefined (instead of a promise), the request
+           // has been deferred.
+           if (typeof tileTerrain.data !== 'undefined') {
+               tileTerrain.state = TerrainState.RECEIVING;
 
-           when(tileTerrain.data, success, failure);
-       } else {
-           // Deferred - try again later.
-           tileTerrain.state = TerrainState.UNLOADED;
+               when(tileTerrain.data, success, failure);
+           } else {
+               // Deferred - try again later.
+               tileTerrain.state = TerrainState.UNLOADED;
+           }
        }
+
+       doRequest();
    }
 
    TileTerrain.prototype.processUpsampleStateMachine = function(context, terrainProvider, x, y, level) {

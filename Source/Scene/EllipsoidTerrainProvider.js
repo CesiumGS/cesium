@@ -8,6 +8,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Ellipsoid',
+        '../Core/Event',
         '../Core/ExtentTessellator',
         '../Core/Occluder',
         '../Core/PlaneTessellator',
@@ -26,6 +27,7 @@ define([
         Cartesian3,
         Cartographic,
         Ellipsoid,
+        Event,
         ExtentTessellator,
         Occluder,
         PlaneTessellator,
@@ -72,6 +74,8 @@ define([
         var buffer = new Uint8Array(width * height);
         this._terrainData = new HeightmapTerrainData(buffer, width, height);
 
+        this._errorEvent = new Event();
+
         this.ready = true;
     }
 
@@ -99,6 +103,19 @@ define([
      */
     EllipsoidTerrainProvider.prototype.requestTileGeometry = function(x, y, level) {
         return this._terrainData;
+    };
+
+    /**
+     * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link TileProviderError}.
+     *
+     * @memberof EllipsoidTerrainProvider
+     *
+     * @returns {Event} The event.
+     */
+    EllipsoidTerrainProvider.prototype.getErrorEvent = function() {
+        return this._errorEvent;
     };
 
     return EllipsoidTerrainProvider;

@@ -12,6 +12,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Event',
         '../Core/Extent',
         '../Core/Occluder',
         '../Core/TaskProcessor',
@@ -35,6 +36,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
+        Event,
         Extent,
         Occluder,
         TaskProcessor,
@@ -103,6 +105,8 @@ define([
                 elementMultiplier : 256.0,
                 isBigEndian : true
             };
+
+        this._errorEvent = new Event();
 
         // Grab the details of this ImageServer.
         var url = this.url;
@@ -220,6 +224,19 @@ define([
      */
     ArcGisImageServerTerrainProvider.prototype.getLogo = function() {
         return this._logo;
+    };
+
+    /**
+     * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link TileProviderError}.
+     *
+     * @memberof ArcGisImageServerTerrainProvider
+     *
+     * @returns {Event} The event.
+     */
+    ArcGisImageServerTerrainProvider.prototype.getErrorEvent = function() {
+        return this._errorEvent;
     };
 
     return ArcGisImageServerTerrainProvider;
