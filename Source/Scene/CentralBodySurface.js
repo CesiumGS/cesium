@@ -101,7 +101,7 @@ define([
 
         this._layerOrderChanged = false;
 
-        var terrainTilingScheme = this._terrainProvider.tilingScheme;
+        var terrainTilingScheme = this._terrainProvider.getTilingScheme();
         this._levelZeroTiles = terrainTilingScheme.createLevelZeroTiles();
 
         this._tilesToRenderByTextureCount = [];
@@ -345,7 +345,7 @@ define([
 
         var cameraPosition = frameState.camera.getPositionWC();
 
-        var ellipsoid = surface._terrainProvider.tilingScheme.getEllipsoid();
+        var ellipsoid = surface._terrainProvider.getTilingScheme().getEllipsoid();
         var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition);
 
         surface._ellipsoidalOccluder.setCameraPosition(cameraPosition);

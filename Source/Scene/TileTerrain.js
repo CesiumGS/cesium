@@ -136,7 +136,7 @@ define([
            var sourceY = upsampleDetails.y;
            var sourceLevel = upsampleDetails.level;
 
-           this.data = sourceData.upsample(terrainProvider.tilingScheme, sourceX, sourceY, sourceLevel, x, y, level);
+           this.data = sourceData.upsample(terrainProvider.getTilingScheme(), sourceX, sourceY, sourceLevel, x, y, level);
            if (typeof this.data === 'undefined') {
                // The upsample request has been deferred - try again later.
                return;
@@ -163,7 +163,7 @@ define([
    };
 
    function transform(tileTerrain, context, terrainProvider, x, y, level) {
-       var tilingScheme = terrainProvider.tilingScheme;
+       var tilingScheme = terrainProvider.getTilingScheme();
        var ellipsoid = tilingScheme.getEllipsoid();
 
        var terrainData = tileTerrain.data;

@@ -64,10 +64,10 @@ define([
          *
          * @type TilingScheme
          */
-        this.tilingScheme = defaultValue(description.tilingScheme, new GeographicTilingScheme({ ellipsoid : defaultValue(description.ellipsoid, Ellipsoid.WGS84) }));
+        this._tilingScheme = defaultValue(description.tilingScheme, new GeographicTilingScheme({ ellipsoid : defaultValue(description.ellipsoid, Ellipsoid.WGS84) }));
 
         // Note: the 64 below does NOT need to match the actual vertex dimensions.
-        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.getEllipsoid(), 64, this.tilingScheme.getNumberOfXTilesAtLevel(0));
+        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.getEllipsoid(), 64, this._tilingScheme.getNumberOfXTilesAtLevel(0));
 
         var width = 16;
         var height = 16;
@@ -116,6 +116,10 @@ define([
      */
     EllipsoidTerrainProvider.prototype.getErrorEvent = function() {
         return this._errorEvent;
+    };
+
+    EllipsoidTerrainProvider.prototype.getTilingScheme = function() {
+        return this._tilingScheme;
     };
 
     return EllipsoidTerrainProvider;

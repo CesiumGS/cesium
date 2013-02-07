@@ -1,114 +1,54 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/getImagePixels',
-        '../Core/jsonp',
         '../Core/loadArrayBuffer',
-        '../Core/loadImage',
         '../Core/throttleRequestByServer',
-        '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
         '../Core/Event',
-        '../Core/Extent',
-        '../Core/Occluder',
-        '../Core/TaskProcessor',
-        '../Renderer/PixelDatatype',
-        '../Renderer/PixelFormat',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
-        './Projections',
         './TerrainProvider',
-        './TileState',
-        './WebMercatorTilingScheme',
         '../ThirdParty/when'
     ], function(
         defaultValue,
-        getImagePixels,
-        jsonp,
         loadArrayBuffer,
-        loadImage,
         throttleRequestByServer,
-        writeTextToCanvas,
         DeveloperError,
-        CesiumMath,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
         Event,
-        Extent,
-        Occluder,
-        TaskProcessor,
-        PixelDatatype,
-        PixelFormat,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
         GeographicTilingScheme,
         HeightmapTerrainData,
-        Projections,
         TerrainProvider,
-        TileState,
-        WebMercatorTilingScheme,
         when) {
     "use strict";
 
     /**
      * A {@link TerrainProvider} that produces geometry by tessellating height maps
-     * retrieved from a Tile Map Service (TMS) server.
+     * retrieved from a Cesium terrain server.  The format of the terrain tiles is described on the
+     * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Cesium-Terrain-Server Cesium wiki}.
      *
      * @alias CesiumTerrainProvider
      * @constructor
      *
-     * @param {String} description.url The URL of the TMS service.
-     * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {String} description.url The URL of the Cesium terrain server.
+     * @param {Proxy} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @see TerrainProvider
      */
     function CesiumTerrainProvider(description) {
-        description = defaultValue(description, {});
-
-        if (typeof description.url === 'undefined') {
+        if (typeof description === 'undefined' || typeof description.url === 'undefined') {
             throw new DeveloperError('description.url is required.');
         }
 
-        /**
-         * The URL of the ArcGIS ImageServer.
-         * @type {String}
-         */
-        this.url = description.url;
+        this._url = description.url;
+        this._proxy = description.proxy;
 
-        /**
-         * The tiling scheme used to tile the surface.
-         *
-         * @type TilingScheme
-         */
-        this.tilingScheme = new GeographicTilingScheme({
+        this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 1
         });
-        //this.maxLevel = 17;
-        this.heightmapWidth = 65;
-        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.getEllipsoid(), this.heightmapWidth, this.tilingScheme.getNumberOfXTilesAtLevel(0));
 
-        this._proxy = description.proxy;
-
-        this.ready = true;
-        this.hasWaterMask = true;
-
-        this._allLandTexture = undefined;
-        this._allWaterTexture = undefined;
-        this._waterMaskSampler = undefined;
+        this._heightmapWidth = 65;
+        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.getEllipsoid(), this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
 
         this._terrainDataStructure = {
             heightScale : 1.0 / 5.0,
@@ -121,14 +61,6 @@ define([
 
         this._errorEvent = new Event();
     }
-
-    /**
-     * Gets the maximum geometric error allowed in a tile at a given level.
-     *
-     * @param {Number} level The tile level for which to get the maximum geometric error.
-     * @returns {Number} The maximum geometric error.
-     */
-    CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = TerrainProvider.prototype.getLevelMaximumGeometricError;
 
     /**
      * Requests the geometry for a given tile.  This function should not be called before
@@ -145,8 +77,13 @@ define([
      *          pending and the request will be retried later.
      */
     CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level) {
-        var yTiles = this.tilingScheme.getNumberOfYTilesAtLevel(level);
-        var url = this.url + '/' + level + '/' + x + '/' + (yTiles - y - 1) + '.terrain';
+        var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
+        var url = this._url + '/' + level + '/' + x + '/' + (yTiles - y - 1) + '.terrain';
+
+        var proxy = this._proxy;
+        if (typeof proxy !== 'undefined') {
+            url = proxy.getURL(url);
+        }
 
         var promise = throttleRequestByServer(url, loadArrayBuffer);
         if (typeof promise === 'undefined') {
@@ -155,19 +92,11 @@ define([
 
         var that = this;
         return when(promise, function(buffer) {
-            var heightBuffer = new Uint16Array(buffer, 0, that.heightmapWidth * that.heightmapWidth);
+            var heightBuffer = new Uint16Array(buffer, 0, that._heightmapWidth * that._heightmapWidth);
             var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
             var waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
-            return new HeightmapTerrainData(heightBuffer, that.heightmapWidth, that.heightmapWidth, childTileMask, that._terrainDataStructure, false, waterMask);
+            return new HeightmapTerrainData(heightBuffer, that._heightmapWidth, that._heightmapWidth, childTileMask, that._terrainDataStructure, false, waterMask);
         });
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof CesiumTerrainProvider
-     */
-    CesiumTerrainProvider.prototype.getLogo = function() {
-        return this._logo;
     };
 
     /**
@@ -181,6 +110,70 @@ define([
      */
     CesiumTerrainProvider.prototype.getErrorEvent = function() {
         return this._errorEvent;
+    };
+
+    /**
+     * Gets the maximum geometric error allowed in a tile at a given level.
+     *
+     * @memberof CesiumTerrainProvider
+     *
+     * @param {Number} level The tile level for which to get the maximum geometric error.
+     * @returns {Number} The maximum geometric error.
+     */
+    CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = TerrainProvider.prototype.getLevelMaximumGeometricError;
+
+    /**
+     * Gets the logo to display when this terrain provider is active.  Typically this is used to credit
+     * the source of the terrain.  This function should not be called before {@link CesiumTerrainProvider#isReady} returns true.
+     *
+     * @memberof CesiumTerrainProvider
+     *
+     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     *
+     * @exception {DeveloperError} <code>getLogo</code> must not be called before the terrain provider is ready.
+     */
+    CesiumTerrainProvider.prototype.getLogo = function() {
+        return this._logo;
+    };
+
+    /**
+     * Gets the tiling scheme used by this provider.  This function should
+     * not be called before {@link CesiumTerrainProvider#isReady} returns true.
+     *
+     * @memberof CesiumTerrainProvider
+     *
+     * @returns {GeographicTilingScheme} The tiling scheme.
+     * @see WebMercatorTilingScheme
+     * @see GeographicTilingScheme
+     *
+     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the terrain provider is ready.
+     */
+    CesiumTerrainProvider.prototype.getTilingScheme = function() {
+        return this._tilingScheme;
+    };
+
+    /**
+     * Gets a value indicating whether or not the provider includes a water mask.  The water mask
+     * indicates which areas of the globe are water rather than land, so they can be rendered
+     * as a reflective surface with animated waves.
+     *
+     * @memberof CesiumTerrainProvider
+     *
+     * @returns {Boolean} True if the provider has a water mask; otherwise, false.
+     */
+    CesiumTerrainProvider.prototype.hasWaterMask = function() {
+        return true;
+    };
+
+    /**
+     * Gets a value indicating whether or not the provider is ready for use.
+     *
+     * @memberof CesiumTerrainProvider
+     *
+     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
+     */
+    CesiumTerrainProvider.prototype.isReady = function() {
+        return true;
     };
 
     return CesiumTerrainProvider;

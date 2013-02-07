@@ -313,10 +313,10 @@ define([
             return;
         }
 
-        if (!terrainProvider.ready) {
+        if (!terrainProvider.isReady()) {
             return;
         }
-        var terrainMaxExtent = terrainProvider.tilingScheme.getExtent();
+        var terrainMaxExtent = terrainProvider.getTilingScheme().getExtent();
 
         var viewProjMatrix = context.getUniformState().getViewProjection();
         var viewport = viewportScratch;
@@ -574,7 +574,7 @@ define([
                     });
         }
 
-        if (this._surface._terrainProvider.hasWaterMask &&
+        if (this._surface._terrainProvider.hasWaterMask() &&
             this.oceanNormalMapUrl !== this._lastOceanNormalMapUrl) {
 
             this._lastOceanNormalMapUrl = this.oceanNormalMapUrl;
@@ -636,7 +636,7 @@ define([
                  getPositionMode + '\n' +
                  get2DYPositionFraction;
 
-            var hasWaterMask = this._surface._terrainProvider.hasWaterMask;
+            var hasWaterMask = this._surface._terrainProvider.hasWaterMask();
             var showPrettyOcean = hasWaterMask && typeof this._oceanNormalMap !== 'undefined';
 
             this._surfaceShaderSet.baseFragmentShaderString =
