@@ -193,6 +193,17 @@ define([
          */
         this.oceanNormalMapUrl = undefined;
 
+        /**
+         * True if primitives such as billboards, polylines, labels, etc. should be depth-tested
+         * against the terrain surface, or false if such primitives should always be drawn on top
+         * of terrain unless they're on the opposite side of the globe.  The disadvantage of depth
+         * testing primitives against terrain is that slight numerical noise or terrain level-of-detail
+         * switched can sometimes make a primitive that should be on the surface disappear underneath it.
+         *
+         * @type Boolean
+         */
+        this.depthTestAgainstTerrain = false;
+
         this._lastOceanNormalMapUrl = undefined;
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
@@ -704,7 +715,10 @@ define([
 
             // render depth plane
             if (mode === SceneMode.SCENE3D) {
-                colorCommandList.push(this._depthCommand);
+                if (!this.depthTestAgainstTerrain) {
+                    colorCommandList.push(this._clearDepthCommand);
+                    colorCommandList.push(this._depthCommand);
+                }
             }
         }
 
