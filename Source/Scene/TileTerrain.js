@@ -17,6 +17,18 @@ define([
         when) {
    "use strict";
 
+   /**
+    * Manages details of the terrain load or upsample process.
+    *
+    * @alias TileTerrain
+    * @constructor
+    * @private
+    *
+    * @param {TerrainData} [upsampleDetails.data] The terrain data being upsampled.
+    * @param {Number} [upsampleDetails.x] The X coordinate of the tile being upsampled.
+    * @param {Number} [upsampleDetails.y] The Y coordinate of the tile being upsampled.
+    * @param {Number} [upsampleDetails.level] The level coordinate of the tile being upsampled.
+    */
    var TileTerrain = function TileTerrain(upsampleDetails) {
        /**
         * The current state of the terrain in the terrain processing pipeline.
@@ -62,7 +74,7 @@ define([
            tile.occludeePointInScaledSpace = undefined;
        }
 
-       // Free the existing vertex array, if any.
+       // Free the tile's existing vertex array, if any.
        tile.freeVertexArray();
 
        // Transfer ownership of the vertex array to the tile itself.
