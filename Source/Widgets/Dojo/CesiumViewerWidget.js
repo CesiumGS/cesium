@@ -719,8 +719,8 @@ define([
             if (typeof animationViewModel === 'undefined') {
                 var clockViewModel = new ClockViewModel();
                 clockViewModel.owner = this;
+                clockViewModel.shouldAnimate(true);
                 animationViewModel = new AnimationViewModel(clockViewModel);
-                animationViewModel.pauseViewModel.command.execute();
             }
             this.animationViewModel = animationViewModel;
             this.clockViewModel = animationViewModel.clockViewModel;
@@ -743,10 +743,8 @@ define([
             }
 
             function onTimelineScrub(e) {
-                widget.clock.currentTime = e.timeJulian;
-                if (!widget.animationViewModel.pauseViewModel.toggled()) {
-                    widget.animationViewModel.pauseViewModel.command.execute();
-                }
+                widget.clockViewModel.currentTime(e.timeJulian);
+                widget.clockViewModel.shouldAnimate(false);
             }
 
             var timelineWidget = widget.timelineWidget;
@@ -1046,6 +1044,7 @@ define([
             if (typeof viewFromTo !== 'undefined') {
                 viewFromTo.update(currentTime);
             }
+            return currentTime;
         },
 
         /**
@@ -1115,8 +1114,7 @@ define([
 
         updateAndRender : function() {
             this.initializeFrame();
-            this.update();
-            this.render(this.clock.currentTime);
+            this.render(this.update());
         },
 
         /**
