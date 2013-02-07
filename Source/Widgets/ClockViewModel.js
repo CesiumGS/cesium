@@ -126,13 +126,33 @@ define(['../Core/DeveloperError',
                 clock.clockRange = value;
             }
         });
+
+        this.shouldAnimate = knockout.observable(false);
+    };
+
+    /**
+     * Ticks the clock and updates the view model with its contents.
+     * This should be called as part of the render loop.
+     * @memberof ClockViewModel
+     */
+    ClockViewModel.prototype.tickAndSynchronize = function() {
+        var time;
+        if (this.shouldAnimate()) {
+            time = this.clock.tick();
+        } else {
+            time = this.clock.tick(0);
+        }
+        this.synchronize();
+        return time;
     };
 
     /**
      * Updates the view model with the contents of the underlying clock.
+     * Can be called to force an update of the viewModel if the underlying
+     * clock is changed.
      * @memberof ClockViewModel
      */
-     ClockViewModel.prototype.update = function() {
+     ClockViewModel.prototype.synchronize = function() {
         var clock = this.clock;
         this.systemTime(new JulianDate());
         this.startTime(clock.startTime);

@@ -96,16 +96,17 @@ define(['dojo',
         var middle = startJulian.getSecondsDifference(endJulian) / 4;
         timeline.addTrack(new TimeInterval(startJulian.addSeconds(middle), startJulian.addSeconds(middle * 3)), 8, Color.DEEPSKYBLUE, new Color(0.55, 0.55, 0.55, 0.25));
 
-        animationViewModel = new AnimationViewModel(new ClockViewModel(clock));
+        var clockViewModel = new ClockViewModel(clock);
+        animationViewModel = new AnimationViewModel(clockViewModel);
         animation = new Animation(dojo.byId('animationWidget'), animationViewModel);
 
         //'press' the play button
         animationViewModel.playForwardViewModel.command.execute();
 
         function tick() {
-            animationViewModel.update();
+            var time = clockViewModel.tickAndSynchronize();
             timeline.updateFromClock();
-            updateScrubTime(clock.currentTime);
+            updateScrubTime(time);
             requestAnimationFrame(tick);
         }
         tick();

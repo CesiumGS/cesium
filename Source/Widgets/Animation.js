@@ -209,19 +209,21 @@ define(['../Core/destroyObject',
     };
 
     SvgButton.prototype.setEnabled = function(enabled) {
-        this._enabled = enabled;
+        if (this._enabled !== enabled) {
+            this._enabled = enabled;
 
-        if (!enabled) {
-            this.svgElement.setAttribute('class', 'animation-buttonDisabled');
-            return;
+            if (!enabled) {
+                this.svgElement.setAttribute('class', 'animation-buttonDisabled');
+                return;
+            }
+
+            if (this._toggled) {
+                this.svgElement.setAttribute('class', 'animation-rectButton animation-buttonToggled');
+                return;
+            }
+
+            this.svgElement.setAttribute('class', 'animation-rectButton');
         }
-
-        if (this._toggled) {
-            this.svgElement.setAttribute('class', 'animation-rectButton animation-buttonToggled');
-            return;
-        }
-
-        this.svgElement.setAttribute('class', 'animation-rectButton');
     };
 
     SvgButton.prototype.setToggled = function(toggled) {

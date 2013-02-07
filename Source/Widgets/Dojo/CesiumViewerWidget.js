@@ -717,13 +717,15 @@ define([
 
             var animationViewModel = this.animationViewModel;
             if (typeof animationViewModel === 'undefined') {
-                animationViewModel = new AnimationViewModel(new ClockViewModel());
-                animationViewModel.owner = this;
+                var clockViewModel = new ClockViewModel();
+                clockViewModel.owner = this;
+                animationViewModel = new AnimationViewModel(clockViewModel);
                 animationViewModel.pauseViewModel.command.execute();
-                this.animationViewModel = animationViewModel;
             }
+            this.animationViewModel = animationViewModel;
+            this.clockViewModel = animationViewModel.clockViewModel;
 
-            this.clock = animationViewModel.clockViewModel.clock;
+            this.clock = this.clockViewModel.clock;
             var clock = this.clock;
 
             this.animation = new Animation(this.animationWidget, animationViewModel);
@@ -742,8 +744,8 @@ define([
 
             function onTimelineScrub(e) {
                 widget.clock.currentTime = e.timeJulian;
-                if (!widget.animation.viewModel.pauseViewModel.toggled()) {
-                    widget.animation.viewModel.pauseViewModel.execute();
+                if (!widget.animationViewModel.pauseViewModel.toggled()) {
+                    widget.animationViewModel.pauseViewModel.command.execute();
                 }
             }
 
@@ -1029,11 +1031,13 @@ define([
          * @memberof CesiumViewerWidget.prototype
          * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
-        update : function(currentTime) {
-            if (this === this.animation.viewModel.owner) {
-                this.animation.viewModel.update();
+        update : function() {
+            var currentTime;
+            if (this.clockViewModel.owner === this) {
+                currentTime = this.clockViewModel.tickAndSynchronize();
+            } else {
+                currentTime = this.clockViewModel.currentTime();
             }
-
             this.timelineControl.updateFromClock();
             this.visualizers.update(currentTime);
 
@@ -1110,13 +1114,9 @@ define([
         autoStartRenderLoop : true,
 
         updateAndRender : function() {
-            if (this === this.animation.viewModel.owner) {
-                this.animation.viewModel.update();
-            }
-            var currentTime = this.clock.currentTime;
             this.initializeFrame();
-            this.update(currentTime);
-            this.render(currentTime);
+            this.update();
+            this.render(this.clock.currentTime);
         },
 
         /**

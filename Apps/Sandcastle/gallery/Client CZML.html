@@ -145,7 +145,7 @@ require([
     // Custom render loop adapted from CesiumViewerWidget.startRenderLoop()
     function updateAndRender() {
         widget.initializeFrame();
-        widget.animation.viewModel.update();
+        widget.animation.viewModel.clockViewModel.tickAndSynchronize();
         var currentTime = widget.clock.currentTime;
         widget.update(currentTime);
 

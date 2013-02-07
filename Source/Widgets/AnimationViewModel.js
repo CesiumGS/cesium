@@ -48,10 +48,9 @@ define(['./Command',
         }
     }
 
-    function _unpause(viewModel) {
-        _cancelRealtime(viewModel.clockViewModel);
-        viewModel.clockViewModel.currentTime(viewModel.clockViewModel.clock.tick(0));
-        viewModel._shouldAnimate(true);
+    function _unpause(clockViewModel) {
+        _cancelRealtime(clockViewModel);
+        clockViewModel.shouldAnimate(true);
     }
 
     function _getTypicalSpeedIndex(speed) {
@@ -79,7 +78,6 @@ define(['./Command',
         });
 
         this.shuttleRingDragging = knockout.observable(false);
-        this._shouldAnimate = knockout.observable(false);
 
         this._canAnimate = knockout.computed(function() {
             var clockRange = clockViewModel.clockRange();
@@ -103,7 +101,7 @@ define(['./Command',
             }
 
             if (!result) {
-                that._shouldAnimate(false);
+                that.clockViewModel.shouldAnimate(false);
             }
             return result;
         });
@@ -141,7 +139,7 @@ define(['./Command',
         });
 
         this._isAnimatingObs = knockout.computed(function() {
-            return that._shouldAnimate() && (that._canAnimate() || that.shuttleRingDragging());
+            return that.clockViewModel.shouldAnimate() && (that._canAnimate() || that.shuttleRingDragging());
         });
 
         this.pauseViewModel = new ToggleButtonViewModel({
@@ -150,11 +148,11 @@ define(['./Command',
             }),
             toolTip : knockout.observable('Pause'),
             command : new Command(function() {
-                if (that._shouldAnimate()) {
+                if (that.clockViewModel.shouldAnimate()) {
                     _cancelRealtime(that.clockViewModel);
-                    that._shouldAnimate(false);
+                    that.clockViewModel.shouldAnimate(false);
                 } else if (that._canAnimate()) {
-                    _unpause(that);
+                    _unpause(that.clockViewModel);
                 }
             })
         });
@@ -173,7 +171,7 @@ define(['./Command',
                     if (multiplier > 0) {
                         clockViewModel.multiplier(-multiplier);
                     }
-                    _unpause(that);
+                    _unpause(that.clockViewModel);
                 }
             })
         });
@@ -192,7 +190,7 @@ define(['./Command',
                     if (multiplier < 0) {
                         clockViewModel.multiplier(-multiplier);
                     }
-                    _unpause(that);
+                    _unpause(that.clockViewModel);
                 }
             })
         });
@@ -218,8 +216,7 @@ define(['./Command',
                     if (that._isSystemTimeAvailable()) {
                         clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_TIME);
                         clockViewModel.multiplier(1.0);
-                        clockViewModel.currentTime(that.clockViewModel.clock.tick(0));
-                        that._shouldAnimate(true);
+                        that.clockViewModel.shouldAnimate(true);
                     }
                 }
             }, playRealtimeCanExecute)
@@ -313,13 +310,6 @@ define(['./Command',
                 }
             }
         };
-    };
-
-    AnimationViewModel.prototype.update = function() {
-        if (this._isAnimatingObs()) {
-            this.clockViewModel.clock.tick();
-        }
-        this.clockViewModel.update();
     };
 
     AnimationViewModel.prototype.getDateFormatter = function() {
