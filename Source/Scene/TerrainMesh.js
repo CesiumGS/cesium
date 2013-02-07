@@ -13,9 +13,9 @@ define([
     *
     * @param {Cartesian3} center The center of the tile.  Vertex positions are specified relative to this center.
     * @param {Float32Array} vertices The vertex data, including positions, texture coordinates, and heights.
-    *                       The vertex data is in the order [X, Y, Z, U, V, H], where X, Y, and Z represent
-    *                       the Cartesian position of the vertex, U and V are the texture coordinates, and
-    *                       H is the height above the ellipsoid.
+    *                       The vertex data is in the order [X, Y, Z, H, U, V], where X, Y, and Z represent
+    *                       the Cartesian position of the vertex, H is the height above the ellipsoid, and
+    *                       U and V are the texture coordinates.
     * @param {Uint16Array} indices The indices describing how the vertices are connected to form triangles.
     * @param {Number} minHeight The lowest height in the tile, in meters above the ellipsoid.
     * @param {Number} maxHeight The highest height in the tile, in meters above the ellipsoid.
@@ -33,9 +33,9 @@ define([
 
        /**
         * The vertex data, including positions, texture coordinates, and heights.
-        * The vertex data is in the order [X, Y, Z, U, V, H], where X, Y, and Z represent
-        * the Cartesian position of the vertex, U and V are the texture coordinates, and
-        * H is the height above the ellipsoid.
+        * The vertex data is in the order [X, Y, Z, H, U, V], where X, Y, and Z represent
+        * the Cartesian position of the vertex, H is the height above the ellipsoid, and
+        * U and V are the texture coordinates.
         * @type {Float32Array}
         */
        this.vertices = vertices;
