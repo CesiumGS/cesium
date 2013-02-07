@@ -178,10 +178,6 @@
 		</exec>
 
 		<!-- create each combined worker layer -->
-		<antcall target="combineJavaScript.combineWorker">
-			<param name="worker" value="createVerticesFromExtent" />
-		</antcall>
-
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. name=Workers/createVerticesFromHeightmap out=${relativeCombineOutputDirectory}\createVerticesFromHeightmap.js" />
 		</exec>
