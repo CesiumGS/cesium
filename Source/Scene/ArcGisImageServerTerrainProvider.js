@@ -63,9 +63,7 @@ define([
      * @see TerrainProvider
      */
     function ArcGisImageServerTerrainProvider(description) {
-        description = defaultValue(description, {});
-
-        if (typeof description.url === 'undefined') {
+        if (typeof description === 'undefined' || typeof description.url === 'undefined') {
             throw new DeveloperError('description.url is required.');
         }
 
@@ -87,13 +85,13 @@ define([
          *
          * @type TilingScheme
          */
-        this.tilingScheme = new WebMercatorTilingScheme({
+        this._tilingScheme = new WebMercatorTilingScheme({
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 2
         });
         this.maxLevel = 25;
         this.heightmapWidth = 65;
-        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.getEllipsoid(), this.heightmapWidth, this.tilingScheme.getNumberOfXTilesAtLevel(0));
+        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.getEllipsoid(), this.heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
 
         this._proxy = description.proxy;
 
@@ -156,14 +154,6 @@ define([
     }
 
     /**
-     * Gets the maximum geometric error allowed in a tile at a given level.
-     *
-     * @param {Number} level The tile level for which to get the maximum geometric error.
-     * @returns {Number} The maximum geometric error.
-     */
-    ArcGisImageServerTerrainProvider.prototype.getLevelMaximumGeometricError = TerrainProvider.prototype.getLevelMaximumGeometricError;
-
-    /**
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link TerrainProvider#isReady} returns true.  The result must include terrain data and
      * may optionally include a water mask and an indication of which child tiles are available.
@@ -178,7 +168,7 @@ define([
      *          pending and the request will be retried later.
      */
     ArcGisImageServerTerrainProvider.prototype.requestTileGeometry = function(x, y, level) {
-        var extent = this.tilingScheme.tileXYToExtent(x, y, level);
+        var extent = this._tilingScheme.tileXYToExtent(x, y, level);
 
         // Each pixel in the heightmap represents the height at the center of that
         // pixel.  So expand the extent by half a sample spacing in each direction
@@ -219,14 +209,6 @@ define([
     };
 
     /**
-     * DOC_TBA
-     * @memberof ArcGisImageServerTerrainProvider
-     */
-    ArcGisImageServerTerrainProvider.prototype.getLogo = function() {
-        return this._logo;
-    };
-
-    /**
      * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
      * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
      * are passed an instance of {@link TileProviderError}.
@@ -237,6 +219,72 @@ define([
      */
     ArcGisImageServerTerrainProvider.prototype.getErrorEvent = function() {
         return this._errorEvent;
+    };
+
+    /**
+     * Gets the maximum geometric error allowed in a tile at a given level.
+     *
+     * @memberof ArcGisImageServerTerrainProvider
+     *
+     * @param {Number} level The tile level for which to get the maximum geometric error.
+     * @returns {Number} The maximum geometric error.
+     */
+    ArcGisImageServerTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
+        return this._levelZeroMaximumGeometricError / (1 << level);
+    };
+
+    /**
+     * Gets the logo to display when this terrain provider is active.  Typically this is used to credit
+     * the source of the terrain.  This function should not be called before {@link ArcGisImageServerTerrainProvider#isReady} returns true.
+     *
+     * @memberof ArcGisImageServerTerrainProvider
+     *
+     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     *
+     * @exception {DeveloperError} <code>getLogo</code> must not be called before the terrain provider is ready.
+     */
+    ArcGisImageServerTerrainProvider.prototype.getLogo = function() {
+        return this._logo;
+    };
+
+    /**
+     * Gets the tiling scheme used by this provider.  This function should
+     * not be called before {@link ArcGisImageServerTerrainProvider#isReady} returns true.
+     *
+     * @memberof ArcGisImageServerTerrainProvider
+     *
+     * @returns {GeographicTilingScheme} The tiling scheme.
+     * @see WebMercatorTilingScheme
+     * @see GeographicTilingScheme
+     *
+     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the terrain provider is ready.
+     */
+    ArcGisImageServerTerrainProvider.prototype.getTilingScheme = function() {
+        return this._tilingScheme;
+    };
+
+    /**
+     * Gets a value indicating whether or not the provider includes a water mask.  The water mask
+     * indicates which areas of the globe are water rather than land, so they can be rendered
+     * as a reflective surface with animated waves.
+     *
+     * @memberof ArcGisImageServerTerrainProvider
+     *
+     * @returns {Boolean} True if the provider has a water mask; otherwise, false.
+     */
+    ArcGisImageServerTerrainProvider.prototype.hasWaterMask = function() {
+        return false;
+    };
+
+    /**
+     * Gets a value indicating whether or not the provider is ready for use.
+     *
+     * @memberof ArcGisImageServerTerrainProvider
+     *
+     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
+     */
+    ArcGisImageServerTerrainProvider.prototype.isReady = function() {
+        return true;
     };
 
     return ArcGisImageServerTerrainProvider;
