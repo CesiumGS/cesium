@@ -34,6 +34,9 @@ define([
      */
     var HeightmapTessellator = {};
 
+    /**
+     * The default structure of a heightmap, as given to {@link HeightmapTessellator#computeVertices}.
+     */
     HeightmapTessellator.DEFAULT_STRUCTURE = freezeObject({
             heightScale : 1.0,
             heightOffset : 0.0,

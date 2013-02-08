@@ -81,15 +81,16 @@ define([
         this._height = height;
         this._childTileMask = defaultValue(childTileMask, 15);
 
+        var defaultStructure = HeightmapTessellator.DEFAULT_STRUCTURE;
         if (typeof structure === 'undefined') {
-            structure = HeightmapTessellator.DEFAULT_STRUCTURE;
+            structure = defaultStructure;
         } else {
-            structure.heightScale = defaultValue(structure.heightScale, HeightmapTessellator.DEFAULT_STRUCTURE.heightScale);
-            structure.heightOffset = defaultValue(structure.heightOffset, HeightmapTessellator.DEFAULT_STRUCTURE.heightOffset);
-            structure.elementsPerHeight = defaultValue(structure.elementsPerHeight, HeightmapTessellator.DEFAULT_STRUCTURE.elementsPerHeight);
-            structure.stride = defaultValue(structure.stride, HeightmapTessellator.DEFAULT_STRUCTURE.stride);
-            structure.elementMultiplier = defaultValue(structure.elementMultiplier, HeightmapTessellator.DEFAULT_STRUCTURE.elementMultiplier);
-            structure.isBigEndian = defaultValue(structure.isBigEndian, HeightmapTessellator.DEFAULT_STRUCTURE.isBigEndian);
+            structure.heightScale = defaultValue(structure.heightScale, defaultStructure.heightScale);
+            structure.heightOffset = defaultValue(structure.heightOffset, defaultStructure.heightOffset);
+            structure.elementsPerHeight = defaultValue(structure.elementsPerHeight, defaultStructure.elementsPerHeight);
+            structure.stride = defaultValue(structure.stride, defaultStructure.stride);
+            structure.elementMultiplier = defaultValue(structure.elementMultiplier, defaultStructure.elementMultiplier);
+            structure.isBigEndian = defaultValue(structure.isBigEndian, defaultStructure.isBigEndian);
         }
 
         this._structure = structure;
