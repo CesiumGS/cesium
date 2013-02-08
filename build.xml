@@ -178,9 +178,9 @@
 		</exec>
 
 		<!-- create each combined worker layer -->
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. name=Workers/createVerticesFromHeightmap out=${relativeCombineOutputDirectory}\createVerticesFromHeightmap.js" />
-		</exec>
+		<antcall target="combineJavaScript.combineWorker">
+		  <param name="worker" value="createVerticesFromHeightmap" />
+		</antcall>
 
 		<!-- copy to build folder with copyright header added at the top -->
 		<copy todir="${buildOutputDirectory}">
