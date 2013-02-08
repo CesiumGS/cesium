@@ -27,12 +27,12 @@ define([
         CLAMPED : new Enumeration(1, 'CLAMPED'),
 
         /**
-         * When {@link Clock#stopTime} is reached, {@link Clock#tick} will loop
-         * {@link Clock#currentTime} back to the {@link Clock#startTime}.
-         * Note that this is a one-way loop, animating backwards will pause
-         * at the start time.
+         * When {@link Clock#stopTime} is reached, {@link Clock#tick} will advance
+         * {@link Clock#currentTime} to the opposite end of the interval.  When
+         * time is moving backwards, {@link Clock#tick} will not advance past
+         * {@link Clock#startTime}
          */
-        LOOP : new Enumeration(1, 'LOOP')
+        LOOP_STOP : new Enumeration(2, 'LOOP_STOP')
     };
 
     return ClockRange;

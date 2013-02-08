@@ -125,7 +125,7 @@ require([
         clock.startTime = availability.start.clone();
         clock.currentTime = availability.start.clone();
         clock.stopTime = availability.stop.clone();
-        clock.clockRange = Cesium.ClockRange.LOOP;
+        clock.clockRange = Cesium.ClockRange.LOOP_STOP;
 
         return visualizers;
     }
@@ -143,12 +143,9 @@ require([
     widget.clock.multiplier = 300.0;
 
     // Custom render loop adapted from CesiumViewerWidget.startRenderLoop()
-    var animationController = widget.animationController;
-
     function updateAndRender() {
-        var currentTime = animationController.update();
         widget.initializeFrame();
-        widget.update(currentTime);
+        var currentTime = widget.update();
 
         // Update the visualizers...
         visualizers.update(currentTime);
