@@ -39,6 +39,16 @@ defineSuite(['Core/Color',
         expect(v.alpha).toEqual(0.4);
     });
 
+    it('toBytes returns the same values that fromBytes took', function() {
+        var r = 5;
+        var g = 87;
+        var b = 23;
+        var a = 88;
+        var c = Color.fromBytes(r, g, b, a);
+        var bytes = c.toBytes();
+        expect(bytes).toEqual([r, g, b, a]);
+    });
+
     it('byteToFloat works in all cases', function() {
         expect(Color.byteToFloat(0)).toEqual(0);
         expect(Color.byteToFloat(255)).toEqual(1.0);
