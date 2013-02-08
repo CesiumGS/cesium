@@ -24,10 +24,11 @@ define([
     "use strict";
 
     /**
-     * Contains class functions to create a mesh or vertex array from a heightmap image.
+     * Contains functions to create a mesh from a heightmap image.
      *
      * @exports HeightmapTessellator
      *
+     * @see ExtentTessellator
      * @see CubeMapEllipsoidTessellator
      * @see BoxTessellator
      * @see PlaneTessellator
