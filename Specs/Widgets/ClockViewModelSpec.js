@@ -78,7 +78,6 @@ defineSuite([
         expect(clockViewModel.clockRange()).toNotEqual(clock.clockRange);
         expect(clockViewModel.shouldAnimate()).toNotEqual(clock.shouldAnimate);
 
-        var lastSystemTime = clockViewModel.systemTime();
         clockViewModel.tickAndSynchronize();
 
         expect(clockViewModel.startTime()).toEqual(clock.startTime);
@@ -88,7 +87,6 @@ defineSuite([
         expect(clockViewModel.clockStep()).toEqual(clock.clockStep);
         expect(clockViewModel.clockRange()).toEqual(clock.clockRange);
         expect(clockViewModel.shouldAnimate()).toEqual(clock.shouldAnimate);
-        expect(clockViewModel.systemTime().greaterThan(lastSystemTime)).toEqual(true);
     });
 
     it('time advances depending on shouldAnimate', function() {
