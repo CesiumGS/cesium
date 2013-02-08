@@ -15,6 +15,8 @@ define(['../Core/destroyObject',
     var _svgNS = "http://www.w3.org/2000/svg";
     var _xlinkNS = "http://www.w3.org/1999/xlink";
 
+    var _widgetForDrag;
+
     var _gradientEnabledColor0 = Color.fromCssColorString('rgba(247,250,255,0.384)');
     var _gradientEnabledColor1 = Color.fromCssColorString('rgba(143,191,255,0.216)');
     var _gradientEnabledColor2 = Color.fromCssColorString('rgba(153,197,255,0.098)');
@@ -134,18 +136,35 @@ define(['../Core/destroyObject',
     function _setShuttleRingFromMouse(widget, svg, e) {
         var viewModel = widget.viewModel;
         var centerX = widget._centerX;
-        var shuttleRingDragging = viewModel.shuttleRingDragging;
-        if (e.type === 'mousedown' || (shuttleRingDragging() && e.type === 'mousemove')) {
+        var shuttleRingDragging = viewModel.shuttleRingDragging();
+
+        if (shuttleRingDragging && (_widgetForDrag !== widget)) {
+            return;
+        }
+
+        if (e.type === 'mousedown' || (shuttleRingDragging && e.type === 'mousemove')) {
             var rect = svg.getBoundingClientRect();
-            var x = e.clientX - centerX - rect.left;
-            var y = e.clientY - centerX - rect.top;
+            var clientX = e.clientX;
+            var clientY = e.clientY;
+
+            if (!shuttleRingDragging &&
+                (clientX > rect.right ||
+                 clientX < rect.left ||
+                 clientY < rect.top ||
+                 clientY > rect.bottom)) {
+                return;
+            }
+
+            var x = clientX - centerX - rect.left;
+            var y = clientY - centerX - rect.top;
             var angle = Math.atan2(y, x) * 180 / Math.PI + 90;
             if (angle > 180) {
                 angle -= 360;
             }
             var shuttleRingAngle = viewModel.shuttleRingAngle();
-            if (shuttleRingDragging() || (Math.abs(shuttleRingAngle - angle) < 15)) {
-                shuttleRingDragging(true);
+            if (shuttleRingDragging || (Math.abs(shuttleRingAngle - angle) < 15)) {
+                _widgetForDrag = widget;
+                viewModel.shuttleRingDragging(true);
                 viewModel.shuttleRingAngle(angle);
             } else if (angle < shuttleRingAngle) {
                 viewModel.slower.execute();
@@ -155,7 +174,8 @@ define(['../Core/destroyObject',
             e.preventDefault();
             e.stopPropagation();
         } else {
-            shuttleRingDragging(false);
+            _widgetForDrag = undefined;
+            viewModel.shuttleRingDragging(false);
         }
     }
 
@@ -467,7 +487,7 @@ define(['../Core/destroyObject',
         parentNode.appendChild(svg);
 
         //Perform initial calculations for scale and theme.
-        this.setScale(1);
+        this.setScale(1.0);
         this.applyThemeChanges();
 
         //TODO: Since the animation widget uses SVG and has no HTML backing,

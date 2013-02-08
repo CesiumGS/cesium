@@ -42,7 +42,7 @@ define(['./Command',
     }
 
     function _cancelRealtime(clockViewModel) {
-        if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK_TIME) {
+        if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK) {
             clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
             clockViewModel.multiplier(1);
         }
@@ -127,7 +127,7 @@ define(['./Command',
         });
 
         this.speedLabel = knockout.computed(function() {
-            if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK_TIME) {
+            if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK) {
                 return 'Today';
             }
 
@@ -177,7 +177,7 @@ define(['./Command',
         });
 
         var playToggled = knockout.computed(function() {
-            return that._isAnimatingObs() && clockViewModel.multiplier() > 0 && clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK_TIME;
+            return that._isAnimatingObs() && clockViewModel.multiplier() > 0 && clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK;
         });
 
         this.playForwardViewModel = new ToggleButtonViewModel({
@@ -196,7 +196,7 @@ define(['./Command',
         });
 
         var playRealtimeToggled = knockout.computed(function() {
-            return clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK_TIME;
+            return clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK;
         });
 
         var playRealtimeCanExecute = knockout.computed(function() {
@@ -214,7 +214,7 @@ define(['./Command',
             command : new Command(function() {
                 if (!playRealtimeToggled()) {
                     if (that._isSystemTimeAvailable()) {
-                        clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_TIME);
+                        clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK);
                         clockViewModel.multiplier(1.0);
                         that.clockViewModel.shouldAnimate(true);
                     }
@@ -269,7 +269,7 @@ define(['./Command',
 
         this.shuttleRingAngle = knockout.computed({
             read : function() {
-                var multiplier = clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK_TIME ? clockViewModel.multiplier() : 1.0;
+                var multiplier = clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK ? clockViewModel.multiplier() : 1.0;
                 return Math.round(multiplier2Angle(multiplier));
             },
             write : function(angle) {

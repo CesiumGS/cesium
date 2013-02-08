@@ -1112,6 +1112,12 @@ define([
          */
         autoStartRenderLoop : true,
 
+        /**
+         * Updates and renders the scene to reflect the current time.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
         updateAndRender : function() {
             this.initializeFrame();
             this.render(this.update());
@@ -1120,7 +1126,7 @@ define([
         /**
          * This is a simple render loop that can be started if there is only one <code>CesiumViewerWidget</code>
          * on your page.  If you wish to customize your render loop, avoid this function and instead
-         * use code similar to one of the following examples.
+         * use code similar to the following example.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
@@ -1128,57 +1134,19 @@ define([
          * @see CesiumViewerWidget#autoStartRenderLoop
          * @example
          * // This takes the place of startRenderLoop for a single widget.
-         *
-         * var animationController = widget.animationController;
-         * function updateAndRender() {
-         *     var currentTime = animationController.update();
-         *     widget.initializeFrame();
-         *     widget.update(currentTime);
-         *     widget.render(currentTime);
-         *     requestAnimationFrame(updateAndRender);
-         * }
-         * requestAnimationFrame(updateAndRender);
-         * @example
-         * // This example requires widget1 and widget2 to share an animationController
-         * // (for example, widget2's constructor was called with a copy of widget1's
-         * // animationController).
-         *
-         * function updateAndRender() {
-         *     var currentTime = animationController.update();
-         *     widget1.initializeFrame();
-         *     widget2.initializeFrame();
-         *     widget1.update(currentTime);
-         *     widget2.update(currentTime);
-         *     widget1.render(currentTime);
-         *     widget2.render(currentTime);
-         *     requestAnimationFrame(updateAndRender);
-         * }
-         * requestAnimationFrame(updateAndRender);
-         * @example
-         * // This example uses separate animationControllers for widget1 and widget2.
-         * // These widgets can animate at different rates and pause individually.
-         *
-         * function updateAndRender() {
-         *     var time1 = widget1.animationController.update();
-         *     var time2 = widget2.animationController.update();
-         *     widget1.initializeFrame();
-         *     widget2.initializeFrame();
-         *     widget1.update(time1);
-         *     widget2.update(time2);
-         *     widget1.render(time1);
-         *     widget2.render(time2);
-         *     requestAnimationFrame(updateAndRender);
-         * }
-         * requestAnimationFrame(updateAndRender);
+         *  var widget = this;
+         *  function updateAndRender() {
+         *      widget.updateAndRender();
+         *      requestAnimationFrame(updateAndRender);
+         *  }
+         *  requestAnimationFrame(updateAndRender);
          */
         startRenderLoop : function() {
             var widget = this;
-
             function updateAndRender() {
                 widget.updateAndRender();
                 requestAnimationFrame(updateAndRender);
             }
-
             requestAnimationFrame(updateAndRender);
         }
     });

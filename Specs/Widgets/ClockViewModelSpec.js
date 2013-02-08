@@ -79,7 +79,7 @@ defineSuite([
         expect(clockViewModel.shouldAnimate()).toNotEqual(clock.shouldAnimate);
 
         var lastSystemTime = clockViewModel.systemTime();
-        clockViewModel.synchronize();
+        clockViewModel.tickAndSynchronize();
 
         expect(clockViewModel.startTime()).toEqual(clock.startTime);
         expect(clockViewModel.stopTime()).toEqual(clock.stopTime);

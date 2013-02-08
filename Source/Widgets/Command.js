@@ -17,10 +17,6 @@ define(['../Core/DeveloperError',
      * @param {Observable} [canExecute=true] An observable indicating if the function can currently be executed.
      */
     var Command = function(execute, canExecute) {
-        if (typeof execute === 'undefined') {
-            throw new DeveloperError('execute is required.');
-        }
-
         /**
          * Executes this command.
          * @type Function

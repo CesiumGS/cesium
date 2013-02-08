@@ -29,9 +29,11 @@ define([
      * // Create a clock that loops on Christmas day 2013 and runs
      * // in real-time.  currentTime will default to startTime.
      * var clock = new Clock({
-     *    startTime : JulianDate.fromIso8601("12-25-2013");
-     *    stopTime : JulianDate.fromIso8601("12-26-2013");
-     *    clockRange : ClockRange.LOOP_STOP;
+     *    startTime : JulianDate.fromIso8601("12-25-2013"),
+     *    currentTime : JulianDate.fromIso8601("12-25-2013"),
+     *    stopTime : JulianDate.fromIso8601("12-26-2013"),
+     *    clockRange : ClockRange.LOOP_STOP,
+     *    clockStep : SYSTEM_CLOCK_MULTIPLIER
      * });
      */
     var Clock = function(template) {
@@ -124,7 +126,8 @@ define([
 
     /**
      * Advances the clock from the currentTime based on the current configuration options.
-     * This should be called every frame, wheter animation is desired or not.
+     * tick should be called every frame, regardless of wether animation is taking place
+     * or not.  To control animation, use the <code>shouldAnimate</code> propery.
      * @memberof Clock
      *
      * @param {Number} [secondsToTick] optional parameter to force the clock to tick the provided number of seconds,
@@ -133,7 +136,7 @@ define([
      */
     Clock.prototype.tick = function(secondsToTick) {
         var currentCpuTime = new Date().getTime();
-        if (this.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
+        if (this.clockStep === ClockStep.SYSTEM_CLOCK) {
             this.currentTime = new JulianDate();
             this._lastCpuTime = currentCpuTime;
             return this.currentTime;
