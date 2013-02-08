@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/buildModuleUrl',
         '../Core/combine',
         '../Core/loadImage',
         '../Core/defaultValue',
@@ -46,6 +47,7 @@ define([
         '../Shaders/CentralBodyVSPole',
         '../ThirdParty/when'
     ], function(
+        buildModuleUrl,
         combine,
         loadImage,
         defaultValue,
@@ -191,7 +193,7 @@ define([
          *
          * @type String
          */
-        this.oceanNormalMapUrl = undefined;
+        this.oceanNormalMapUrl = buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg');
 
         /**
          * True if primitives such as billboards, polylines, labels, etc. should be depth-tested
@@ -208,6 +210,7 @@ define([
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
         this._showingPrettyOcean = false;
+        this._hasWaterMask = false;
 
         var that = this;
 
@@ -251,6 +254,28 @@ define([
      */
     CentralBody.prototype.getImageryLayers = function() {
         return this._imageryLayerCollection;
+    };
+
+    /**
+     * Gets the terrain provider providing surface geometry for this central body.
+     *
+     * @memberof CentralBody
+     *
+     * @returns {TerrainProvider} The terrain provider.
+     */
+    CentralBody.prototype.getTerrainProvider = function() {
+        return this._surface.getTerrainProvider();
+    };
+
+    /**
+     * Sets the terrain provider providing surface geometry for this central body.
+     *
+     * @memberof CentralBody
+     *
+     * @param {TerrainProvider} terrainProvider The new terrain provider.
+     */
+    CentralBody.prototype.setTerrainProvider = function(terrainProvider) {
+        this._surface.setTerrainProvider(terrainProvider);
     };
 
     CentralBody.prototype._computeDepthQuad = function(frameState) {
@@ -601,12 +626,15 @@ define([
 
         // Initial compile or re-compile if uber-shader parameters changed
         var projectionChanged = this._projection !== projection;
+        var hasWaterMask = this._surface._terrainProvider.hasWaterMask();
+        var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
 
         if (typeof this._surfaceShaderSet === 'undefined' ||
             typeof this._northPoleCommand.shaderProgram === 'undefined' ||
             typeof this._southPoleCommand.shaderProgram === 'undefined' ||
             modeChanged ||
             projectionChanged ||
+            hasWaterMaskChanged ||
             (typeof this._oceanNormalMap !== 'undefined') !== this._showingPrettyOcean) {
 
             var getPosition3DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition3DMode(position3DWC); }';
@@ -647,7 +675,6 @@ define([
                  getPositionMode + '\n' +
                  get2DYPositionFraction;
 
-            var hasWaterMask = this._surface._terrainProvider.hasWaterMask();
             var showPrettyOcean = hasWaterMask && typeof this._oceanNormalMap !== 'undefined';
 
             this._surfaceShaderSet.baseFragmentShaderString =
@@ -664,6 +691,7 @@ define([
             this._southPoleCommand.shaderProgram = poleShaderProgram;
 
             this._showingPrettyOcean = typeof this._oceanNormalMap !== 'undefined';
+            this._hasWaterMask = hasWaterMask;
         }
 
         var cameraPosition = frameState.camera.getPositionWC();

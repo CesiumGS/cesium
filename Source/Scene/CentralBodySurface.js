@@ -154,6 +154,33 @@ define([
         debugCreateRenderCommandsForTileBoundingSphere(this, context, frameState, centralBodyUniformMap, shaderSet, renderState, colorCommandList);
     };
 
+    CentralBodySurface.prototype.getTerrainProvider = function() {
+        return this._terrainProvider;
+    }
+
+    CentralBodySurface.prototype.setTerrainProvider = function(terrainProvider) {
+        if (typeof terrainProvider === 'undefined') {
+            throw new DeveloperError('terrainProvider is required.');
+        }
+
+        this._terrainProvider = terrainProvider;
+
+        // Clear the replacement queue
+        var replacementQueue = this._tileReplacementQueue;
+        replacementQueue.head = undefined;
+        replacementQueue.tail = undefined;
+        replacementQueue.count = 0;
+
+        // Free and recreate the level zero tiles.
+        var levelZeroTiles = this._levelZeroTiles;
+        for (var i = 0; i < levelZeroTiles.length; ++i) {
+            levelZeroTiles[i].freeResources();
+        }
+
+        var terrainTilingScheme = this._terrainProvider.getTilingScheme();
+        this._levelZeroTiles = terrainTilingScheme.createLevelZeroTiles();
+    };
+
     CentralBodySurface.prototype._onLayerAdded = function(layer, index) {
         if (typeof this._levelZeroTiles === 'undefined') {
             return;

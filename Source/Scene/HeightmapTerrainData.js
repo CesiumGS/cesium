@@ -84,7 +84,7 @@ define([
         var defaultStructure = HeightmapTessellator.DEFAULT_STRUCTURE;
         if (typeof structure === 'undefined') {
             structure = defaultStructure;
-        } else {
+        } else if (structure !== defaultStructure) {
             structure.heightScale = defaultValue(structure.heightScale, defaultStructure.heightScale);
             structure.heightOffset = defaultValue(structure.heightOffset, defaultStructure.heightOffset);
             structure.elementsPerHeight = defaultValue(structure.elementsPerHeight, defaultStructure.elementsPerHeight);
