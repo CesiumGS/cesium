@@ -325,7 +325,7 @@ defineSuite([
         expect(start).toEqual(clock.currentTime);
     });
 
-    it('Tick dependant clock step stops at end when animating .', function() {
+    it('Tick dependant clock step stops at end when animating forwards.', function() {
         var start = JulianDate.fromTotalDays(0);
         var stop = JulianDate.fromTotalDays(1);
 
@@ -351,7 +351,7 @@ defineSuite([
         //We can't numerically validate the real-time clock, but we
         //can at least make sure the code executes.
         var clock = new Clock({
-            clockStep : ClockStep.SYSTEM_DEPENDENT
+            clockStep : ClockStep.SYSTEM_CLOCK
         });
         var time1 = clock.tick();
 
