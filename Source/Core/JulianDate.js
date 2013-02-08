@@ -658,6 +658,22 @@ define([
     };
 
     /**
+     * Returns true if the first JulianDate equals the second JulianDate.
+     * @memberof JulianDate
+     *
+     * @param {JulianDate} left The first JulianDate to compare for equality.
+     * @param {JulianDate} right The second JulianDate to compare for equality.
+     * @return {Boolean} <code>true</code> if the JulianDates are equal; otherwise, <code>false</code>.
+     */
+    JulianDate.equals = function(left, right) {
+        return (left === right) ||
+               (typeof left !== 'undefined' &&
+                typeof right !== 'undefined' &&
+                left._julianDayNumber === right._julianDayNumber &&
+                left._secondsOfDay === right._secondsOfDay);
+    };
+
+    /**
      * Duplicates this JulianDate.
      * @memberof JulianDate
      *

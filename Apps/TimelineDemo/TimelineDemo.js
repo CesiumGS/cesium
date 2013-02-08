@@ -2,28 +2,32 @@
 define(['dojo',
         'dijit/dijit',
         'Core/Clock',
+        'Core/ClockRange',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
-        'Core/AnimationController',
         'Core/requestAnimationFrame',
         'Widgets/Animation',
+        'Widgets/ClockViewModel',
+        'Widgets/AnimationViewModel',
         'Widgets/Timeline'
     ], function(
          dojo,
          dijit,
          Clock,
+         ClockRange,
          Color,
          JulianDate,
          TimeInterval,
-         AnimationController,
          requestAnimationFrame,
          Animation,
+         ClockViewModel,
+         AnimationViewModel,
          Timeline) {
     "use strict";
 
     var startDatePart, endDatePart, startTimePart, endTimePart;
-    var timeline, clock, endBeforeStart, containerElement, animationController, animation;
+    var timeline, clock, endBeforeStart, containerElement, animationViewModel, animation;
 
     function updateScrubTime(julianDate) {
         document.getElementById('mousePos').innerHTML = timeline.makeLabel(julianDate) + ' UTC';
@@ -31,9 +35,9 @@ define(['dojo',
 
     function handleSetTime(e) {
         if (typeof timeline !== 'undefined') {
-            animationController.pause();
             var scrubJulian = e.timeJulian;
-            clock.currentTime = scrubJulian;
+            animationViewModel.clockViewModel.shouldAnimate(false);
+            animationViewModel.clockViewModel.currentTime(scrubJulian);
             updateScrubTime(scrubJulian);
         }
     }
@@ -77,26 +81,28 @@ define(['dojo',
             startTime : startJulian,
             currentTime : scrubJulian,
             stopTime : endJulian,
-            multiplier : 60
+            clockRange : ClockRange.LOOP_STOP,
+            multiplier : 60,
+            shouldAnimate : true
         });
 
         timeline = new Timeline('time1', clock);
         timeline.addEventListener('settime', handleSetTime, false);
         timeline.addEventListener('setzoom', handleSetZoom, false);
 
-        timeline.addTrack(new TimeInterval(startJulian, startJulian.addSeconds(60*60)), 8, Color.RED, new Color(0.55, 0.55, 0.55, 0.25));
-        timeline.addTrack(new TimeInterval(endJulian.addSeconds(-60*60), endJulian), 8, Color.LIME);
+        timeline.addTrack(new TimeInterval(startJulian, startJulian.addSeconds(60 * 60)), 8, Color.RED, new Color(0.55, 0.55, 0.55, 0.25));
+        timeline.addTrack(new TimeInterval(endJulian.addSeconds(-60 * 60), endJulian), 8, Color.LIME);
         var middle = startJulian.getSecondsDifference(endJulian) / 4;
         timeline.addTrack(new TimeInterval(startJulian.addSeconds(middle), startJulian.addSeconds(middle * 3)), 8, Color.DEEPSKYBLUE, new Color(0.55, 0.55, 0.55, 0.25));
 
-        animationController = new AnimationController(clock);
-        animation = new Animation(dojo.byId('animationWidget'), animationController);
+        var clockViewModel = new ClockViewModel(clock);
+        animationViewModel = new AnimationViewModel(clockViewModel);
+        animation = new Animation(dojo.byId('animationWidget'), animationViewModel);
 
         function tick() {
-            var currentTime = animationController.update();
-            animation.update();
+            var time = clockViewModel.tickAndSynchronize();
             timeline.updateFromClock();
-            updateScrubTime(currentTime);
+            updateScrubTime(time);
             requestAnimationFrame(tick);
         }
         tick();
@@ -171,12 +177,12 @@ define(['dojo',
     function setThemeLight() {
         document.body.className = 'claro';
         dijit.byId('themeSelector').set('label', 'Theme: Light');
-        animation.onThemeChanged();
+        animation.applyThemeChanges();
     }
     function setThemeDark() {
         document.body.className = 'claro cesium-darker';
         dijit.byId('themeSelector').set('label', 'Theme: Dark');
-        animation.onThemeChanged();
+        animation.applyThemeChanges();
     }
     function cycleTheme() {
         if (document.body.className === 'claro') {

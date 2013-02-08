@@ -3,12 +3,14 @@ define([
         './DeveloperError',
         './JulianDate',
         './ClockStep',
-        './ClockRange'
+        './ClockRange',
+        './defaultValue'
        ], function(
          DeveloperError,
          JulianDate,
          ClockStep,
-         ClockRange) {
+         ClockRange,
+         defaultValue) {
     "use strict";
 
     /**
@@ -22,15 +24,16 @@ define([
      * @see ClockStep
      * @see ClockRange
      * @see JulianDate
-     * @see AnimationController
      *
      * @example
-     * //Create a clock that loops on Christmas day 2012 and runs
-     * //in real-time.  currentTime will default to startTime.
+     * // Create a clock that loops on Christmas day 2013 and runs
+     * // in real-time.  currentTime will default to startTime.
      * var clock = new Clock({
-     *    startTime : JulianDate.fromIso8601("12-25-2012");
-     *    stopTime : JulianDate.fromIso8601("12-26-2012");
-     *    clockRange : ClockRange.LOOP;
+     *    startTime : JulianDate.fromIso8601("12-25-2013"),
+     *    currentTime : JulianDate.fromIso8601("12-25-2013"),
+     *    stopTime : JulianDate.fromIso8601("12-26-2013"),
+     *    clockRange : ClockRange.LOOP_STOP,
+     *    clockStep : SYSTEM_CLOCK_MULTIPLIER
      * });
      */
     var Clock = function(template) {
@@ -73,21 +76,6 @@ define([
             throw new DeveloperError('startTime must come before stopTime.');
         }
 
-        var multiplier = t.multiplier;
-        if (typeof multiplier === 'undefined') {
-            multiplier = 1.0;
-        }
-
-        var clockStep = t.clockStep;
-        if (typeof clockStep === 'undefined') {
-            clockStep = ClockStep.SPEED_MULTIPLIER;
-        }
-
-        var clockRange = t.clockRange;
-        if (typeof clockRange === 'undefined') {
-            clockRange = ClockRange.UNBOUNDED;
-        }
-
         /**
          * The start time of the clock.
          * @type JulianDate
@@ -108,137 +96,81 @@ define([
 
         /**
          * Determines how much time advances when tick is called, negative values allow for advancing backwards.
-         * If <code>clockStep</code> is set to {@link ClockStep.TICK_DEPENDENT}, this is the number of seconds to advance.
-         * If <code>clockStep</code> is set to {@link ClockStep.SYSTEM_CLOCK_TIME}, this value is multiplied by the
+         * If <code>clockStep</code> is set to ClockStep.TICK_DEPENDENT this is the number of seconds to advance.
+         * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_MULTIPLIER this value is multiplied by the
          * elapsed system time since the last call to tick.
          * @type Number
          */
-        this.multiplier = multiplier;
+        this.multiplier = defaultValue(t.multiplier, 1.0);
 
         /**
          * Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
          * @type ClockStep
          */
-        this.clockStep = clockStep;
+        this.clockStep = defaultValue(t.clockStep, ClockStep.SYSTEM_CLOCK_MULTIPLIER);
 
         /**
          * Determines how tick should behave when <code>startTime</code> or <code>stopTime</code> is reached.
          * @type ClockRange
          */
-        this.clockRange = clockRange;
+        this.clockRange = defaultValue(t.clockRange, ClockRange.UNBOUNDED);
+
+        /**
+         * Determines if tick should actually advance time.
+         * @type ClockRange
+         */
+        this.shouldAnimate = defaultValue(t.shouldAnimate, true);
 
         this._lastCpuTime = new Date().getTime();
-        this._isOutOfRange = false;
     };
 
     /**
      * Advances the clock from the currentTime based on the current configuration options.
+     * tick should be called every frame, regardless of wether animation is taking place
+     * or not.  To control animation, use the <code>shouldAnimate</code> propery.
      * @memberof Clock
      *
      * @param {Number} [secondsToTick] optional parameter to force the clock to tick the provided number of seconds,
-     * regardless of the value of <code>clockStep</code> and <code>multiplier</code>.
-     * @returns {JulianDate} : The new value of the <code>currentTime</code> property.
+     * regardless of other settings.
+     * @returns {JulianDate} The new value of the <code>currentTime</code> property.
      */
     Clock.prototype.tick = function(secondsToTick) {
-        return this._tick(secondsToTick, this.multiplier);
-    };
-
-    /**
-     * Advances the clock in the opposite direction of the current <code>multiplier</code>.
-     * If <code>multiplier</code> is positive this will advance the clock backwards one tick.
-     * If <code>multiplier</code> is negative this will advance the clock forward one tick.
-     * @memberof Clock
-     *
-     * @returns {JulianDate} : The new value of Clock.currentTime
-     */
-    Clock.prototype.reverseTick = function() {
-        return this._tick(undefined, -this.multiplier);
-    };
-
-    /**
-     * Check if system clock time is within range.  This can change over time, as the system
-     * time passes the start and stop times.
-     * @memberof Clock
-     *
-     * @returns {Boolean} : <code>true</code> if {@link ClockStep.SYSTEM_CLOCK_TIME} is a valid mode given the current {@link ClockRange} setting.
-     */
-    Clock.prototype.isSystemTimeAvailable = function () {
-        if (this.clockRange === ClockRange.UNBOUNDED) {
-            return true;
+        var currentCpuTime = new Date().getTime();
+        if (this.clockStep === ClockStep.SYSTEM_CLOCK) {
+            this.currentTime = new JulianDate();
+            this._lastCpuTime = currentCpuTime;
+            return this.currentTime;
         }
 
         var startTime = this.startTime;
         var stopTime = this.stopTime;
-        var currentTime = new JulianDate();
-        return !(currentTime.lessThan(startTime) || currentTime.greaterThan(stopTime));
-    };
-
-    /**
-     * Check if last tick went outside the startTime or stopTime, indicating pause mode should be engaged.
-     *
-     * @memberof Clock
-     * @returns {Boolean} : <code>true</code> if the previous {@link Clock#tick} or {@link Clock#reverseTick} reached a {@link ClockRange.CLAMPED} start or stop time.
-     */
-    Clock.prototype.isOutOfRange = function () {
-        return this._isOutOfRange;
-    };
-
-    Clock.prototype._tick = function(secondsToTick, multiplier) {
-        var startTime = this.startTime;
-        var stopTime = this.stopTime;
         var currentTime = this.currentTime;
-        var currentCpuTime = new Date().getTime();
-        this._isOutOfRange = false;
+        var multiplier = this.multiplier;
+        var shouldAnimate = this.shouldAnimate;
 
-        if (this.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-            currentTime = new JulianDate();
-        } else if (typeof secondsToTick === 'undefined') {
+        if (typeof secondsToTick !== 'undefined') {
+            currentTime = currentTime.addSeconds(secondsToTick);
+        } else if (shouldAnimate) {
             if (this.clockStep === ClockStep.TICK_DEPENDENT) {
                 currentTime = currentTime.addSeconds(multiplier);
             } else {
                 var milliseconds = currentCpuTime - this._lastCpuTime;
                 currentTime = currentTime.addSeconds(multiplier * (milliseconds / 1000.0));
             }
-        } else {
-            currentTime = currentTime.addSeconds(secondsToTick);
         }
 
         if (this.clockRange === ClockRange.CLAMPED) {
             if (currentTime.lessThan(startTime)) {
                 currentTime = startTime;
-                // SYSTEM_CLOCK_TIME + CLAMPED at start time, don't report out of range,
-                // just wait at the start time for the realtime event to begin.
-                if (this.clockStep !== ClockStep.SYSTEM_CLOCK_TIME) {
-                    // Other modes pause at the CLAMPED start time.
-                    this._isOutOfRange = true;
-                }
             } else if (currentTime.greaterThan(stopTime)) {
                 currentTime = stopTime;
-                this._isOutOfRange = true;
-                // SYSTEM_CLOCK_TIME + CLAMPED at end time, pause at the end time.
-                if (this.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-                    this.clockStep = ClockStep.SPEED_MULTIPLIER;
-                }
             }
-        } else if (this.clockRange === ClockRange.LOOP) {
-            if (this.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-                if (currentTime.lessThan(startTime)) {
-                    // SYSTEM_CLOCK_TIME + LOOP at start time simply waits at the start time to begin.
-                    currentTime = startTime;
-                }
-                if (currentTime.greaterThan(stopTime)) {
-                    // SYSTEM_CLOCK_TIME + LOOP at end time switches to SPEED_MULTIPLIER mode and restarts.
-                    currentTime = startTime;
-                    this.clockStep = ClockStep.SPEED_MULTIPLIER;
-                }
-            } else {
-                while (currentTime.greaterThan(stopTime)) {
-                    currentTime = startTime.addSeconds(stopTime.getSecondsDifference(currentTime));
-                }
-                if (currentTime.lessThan(startTime)) {
-                    currentTime = startTime;
-                    this._isOutOfRange = true;
-                }
+        } else if (this.clockRange === ClockRange.LOOP_STOP) {
+            if (currentTime.lessThan(startTime)) {
+                currentTime = startTime.clone();
+            }
+            while (currentTime.greaterThan(stopTime)) {
+                currentTime = startTime.addSeconds(stopTime.getSecondsDifference(currentTime));
             }
         }
 

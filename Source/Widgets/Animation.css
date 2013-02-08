@@ -59,12 +59,12 @@
     stroke: #759DC0;
     stroke-width: 1.2;
 }
-.animation-buttonSelected .animation-buttonGlow {
+.animation-buttonToggled .animation-buttonGlow {
     display: block;
     fill: #FFAA2A;
 }
-.animation-buttonSelected .animation-buttonMain {
-    /* Widget will add: fill: url(#animation_buttonSelected); */
+.animation-buttonToggled .animation-buttonMain {
+    /* Widget will add: fill: url(#animation_buttonToggled); */
     stroke: #EA0;
 }
 .animation-rectButton:hover .animation-buttonGlow {
@@ -74,10 +74,10 @@
     /* Widget will add: fill: url(#animation_buttonHovered); */
     stroke: #759DC0;
 }
-.animation-buttonSelected:hover .animation-buttonGlow {
+.animation-buttonToggled:hover .animation-buttonGlow {
     fill: #fff;
 }
-.animation-buttonSelected:hover .animation-buttonMain {
+.animation-buttonToggled:hover .animation-buttonMain {
     stroke: #EA0;
 }
 .animation-rectButton:active .animation-buttonMain {
@@ -175,19 +175,19 @@
 .cesium-darker .animation-rectButton .animation-buttonMain {
     stroke: #444;
 }
-.cesium-darker .animation-buttonSelected .animation-buttonGlow {
+.cesium-darker .animation-buttonToggled .animation-buttonGlow {
     fill: #2E2;
 }
-.cesium-darker .animation-buttonSelected .animation-buttonMain {
+.cesium-darker .animation-buttonToggled .animation-buttonMain {
     stroke: #2E2;
 }
 .cesium-darker .animation-rectButton:hover .animation-buttonMain {
     stroke: #AEF;
 }
-.cesium-darker .animation-buttonSelected:hover .animation-buttonGlow {
+.cesium-darker .animation-buttonToggled:hover .animation-buttonGlow {
     fill: #fff;
 }
-.cesium-darker .animation-buttonSelected:hover .animation-buttonMain {
+.cesium-darker .animation-buttonToggled:hover .animation-buttonMain {
     stroke: #2E2;
 }
 .cesium-darker .animation-rectButton:active .animation-buttonMain {

@@ -40,8 +40,8 @@ require([
     "use strict";
 
     // This example shows two widgets that share a single
-    // animationController.  It is also possible to use
-    // separate animationControllers to show a scene at
+    // animation view model.  It is also possible to use
+    // separate view models  to show a scene at
     // different times.
 
     var endUserOptions = {
@@ -53,20 +53,16 @@ require([
         endUserOptions : endUserOptions,
         autoStartRenderLoop : false
     });
-    widget1.placeAt("cesiumContainerTop");
+    widget1.placeAt('cesiumContainerTop');
     widget1.startup();
 
-    // Save off a copy of widget1's animationController
-    var animationController = widget1.animationController;
-
-    // Now create widget2, passing in the
-    // existing animationController to be shared.
+    // Use widget1's animationViewModel in widget2
     var widget2 = new CesiumViewerWidget({
-        animationController : animationController,
+        animationViewModel : widget1.animation.viewModel,
         endUserOptions : endUserOptions,
         autoStartRenderLoop : false
     });
-    widget2.placeAt("cesiumContainerBottom");
+    widget2.placeAt('cesiumContainerBottom');
     widget2.startup();
 
     // Switch widget2 to Columbus View.
@@ -75,15 +71,8 @@ require([
     // Now both widgets are created.  A custom render loop is
     // needed to drive them both from requestAnimationFrame.
     function updateAndRender() {
-        // Get the time from the shared controller, then
-        // update and render both widgets.
-        var currentTime = animationController.update();
-        widget1.initializeFrame();
-        widget2.initializeFrame();
-        widget1.update(currentTime);
-        widget2.update(currentTime);
-        widget1.render(currentTime);
-        widget2.render(currentTime);
+        widget1.updateAndRender();
+        widget2.updateAndRender();
         requestAnimationFrame(updateAndRender);
     }
 
