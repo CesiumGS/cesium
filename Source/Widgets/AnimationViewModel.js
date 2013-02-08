@@ -53,31 +53,86 @@ define(['./Command',
         clockViewModel.shouldAnimate(true);
     }
 
+    function numberComparator(left, right) {
+        return left - right;
+    }
+
     function _getTypicalSpeedIndex(speed) {
-        var index = binarySearch(_shuttleRingTicks, speed, binarySearch.numericComparator);
+        var index = binarySearch(_shuttleRingTicks, speed, numberComparator);
         return index < 0 ? ~index : index;
     }
 
-    var AnimationViewModel = function(clockViewModel) {
-        this.clockViewModel = clockViewModel;
+    function angle2Multiplier(angle) {
+        //If the angle is less than 1, just use it for the position
+        if (Math.abs(angle) < 1) {
+            return angle;
+        }
 
+        var minp = 1;
+        var maxp = _maxShuttleRingAngle;
+        var maxv;
+        var minv = 0;
+        var scale;
+
+        if (angle > 0) {
+            maxv = Math.log(_shuttleRingTicks[_shuttleRingTicks.length - 1]);
+            scale = (maxv - minv) / (maxp - minp);
+            return Math.exp(minv + scale * (angle - minp));
+        }
+
+        maxv = Math.log(-_shuttleRingTicks[0]);
+        scale = (maxv - minv) / (maxp - minp);
+        return -Math.exp(minv + scale * (Math.abs(angle) - minp));
+    }
+
+    function multiplier2Angle(multiplier) {
+        if (Math.abs(multiplier) < 1) {
+            return multiplier;
+        }
+
+        var minp = 1;
+        var maxp = _maxShuttleRingAngle;
+        var maxv;
+        var minv = 0;
+        var scale;
+
+        if (multiplier > 0) {
+            maxv = Math.log(_shuttleRingTicks[_shuttleRingTicks.length - 1]);
+            scale = (maxv - minv) / (maxp - minp);
+            return (Math.log(multiplier) - minv) / scale + minp;
+        }
+
+        maxv = Math.log(-_shuttleRingTicks[0]);
+        scale = (maxv - minv) / (maxp - minp);
+        return -((Math.log(Math.abs(multiplier)) - minv) / scale + minp);
+    }
+
+    /**
+     * The ViewModel for the {@link Animation} widget.
+     * @alias AnimationViewModel
+     * @constructor
+     *
+     * @param {ClockViewModel} [clockViewModel] The ClockViewModel instance to use.
+     *
+     * @see Animation
+     */
+    var AnimationViewModel = function(clockViewModel) {
         var that = this;
 
-        this._dateFormatter = knockout.observable(function(date) {
-            var gregorianDate = date.toGregorianDate();
-            return _monthNames[gregorianDate.month - 1] + ' ' + gregorianDate.day + ' ' + gregorianDate.year;
-        });
+        /**
+         * The ClockViewModel instance to use.
+         * @type ClockViewModel
+         */
+        this.clockViewModel = clockViewModel;
 
-        this._timeFormatter = knockout.observable(function(date) {
-            var gregorianDate = date.toGregorianDate();
-            var millisecond = Math.round(gregorianDate.millisecond);
-            if (Math.abs(that.clockViewModel.multiplier()) < 1) {
-                return sprintf("%02d:%02d:%02d.%03d", gregorianDate.hour, gregorianDate.minute, gregorianDate.second, millisecond);
-            }
-            return sprintf("%02d:%02d:%02d UTC", gregorianDate.hour, gregorianDate.minute, gregorianDate.second);
-        });
-
+        /**
+         * Indicates if the shuttle ring is currently being dragged.
+         * @type Observable
+         */
         this.shuttleRingDragging = knockout.observable(false);
+
+        this._dateFormatter = knockout.observable(AnimationViewModel.defaultDateFormatter);
+        this._timeFormatter = knockout.observable(AnimationViewModel.defaultTimeFormatter);
 
         this._canAnimate = knockout.computed(function() {
             var clockRange = clockViewModel.clockRange();
@@ -118,14 +173,30 @@ define(['./Command',
             return systemTime.greaterThanOrEquals(startTime) && systemTime.lessThanOrEquals(stopTime);
         });
 
+        this._isAnimatingObs = knockout.computed(function() {
+            return that.clockViewModel.shouldAnimate() && (that._canAnimate() || that.shuttleRingDragging());
+        });
+
+        /**
+         * The string representation of the current time.
+         * @type Observable
+         */
         this.timeLabel = knockout.computed(function() {
-            return that._timeFormatter()(clockViewModel.currentTime());
+            return that._timeFormatter()(clockViewModel.currentTime(), that);
         });
 
+        /**
+         * The string representation of the current date.
+         * @type Observable
+         */
         this.dateLabel = knockout.computed(function() {
-            return that._dateFormatter()(clockViewModel.currentTime());
+            return that._dateFormatter()(clockViewModel.currentTime(), that);
         });
 
+        /**
+         * The string representation of the current speed.
+         * @type Observable
+         */
         this.speedLabel = knockout.computed(function() {
             if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK) {
                 return 'Today';
@@ -138,10 +209,10 @@ define(['./Command',
             return multiplier.toFixed(3) + 'x';
         });
 
-        this._isAnimatingObs = knockout.computed(function() {
-            return that.clockViewModel.shouldAnimate() && (that._canAnimate() || that.shuttleRingDragging());
-        });
-
+        /**
+         * The pause toggle button.
+         * @type ToggleButtonViewModel
+         */
         this.pauseViewModel = new ToggleButtonViewModel({
             toggled : knockout.computed(function() {
                 return !that._isAnimatingObs();
@@ -157,54 +228,52 @@ define(['./Command',
             })
         });
 
-        var playReverseToggled = knockout.computed(function() {
-            return that._isAnimatingObs() && (clockViewModel.multiplier() < 0);
-        });
-
+        /**
+         * The reverse toggle button.
+         * @type ToggleButtonViewModel
+         */
         this.playReverseViewModel = new ToggleButtonViewModel({
-            toggled : playReverseToggled,
+            toggled : knockout.computed(function() {
+                return that._isAnimatingObs() && (clockViewModel.multiplier() < 0);
+            }),
             toolTip : knockout.observable('Play Reverse'),
             command : new Command(function() {
-                if (!playReverseToggled()) {
-                    _cancelRealtime(that.clockViewModel);
-                    var multiplier = clockViewModel.multiplier();
-                    if (multiplier > 0) {
-                        clockViewModel.multiplier(-multiplier);
-                    }
-                    _unpause(that.clockViewModel);
+                _cancelRealtime(clockViewModel);
+                var multiplier = clockViewModel.multiplier();
+                if (multiplier > 0) {
+                    clockViewModel.multiplier(-multiplier);
                 }
+                clockViewModel.shouldAnimate(true);
             })
         });
 
-        var playToggled = knockout.computed(function() {
-            return that._isAnimatingObs() && clockViewModel.multiplier() > 0 && clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK;
-        });
-
+        /**
+         * The play toggle button.
+         * @type ToggleButtonViewModel
+         */
         this.playForwardViewModel = new ToggleButtonViewModel({
-            toggled : playToggled,
+            toggled : knockout.computed(function() {
+                return that._isAnimatingObs() && clockViewModel.multiplier() > 0 && clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK;
+            }),
             toolTip : knockout.observable('Play Forward'),
             command : new Command(function() {
-                if (!playToggled()) {
-                    _cancelRealtime(that.clockViewModel);
-                    var multiplier = clockViewModel.multiplier();
-                    if (multiplier < 0) {
-                        clockViewModel.multiplier(-multiplier);
-                    }
-                    _unpause(that.clockViewModel);
+                _cancelRealtime(clockViewModel);
+                var multiplier = clockViewModel.multiplier();
+                if (multiplier < 0) {
+                    clockViewModel.multiplier(-multiplier);
                 }
+                clockViewModel.shouldAnimate(true);
             })
         });
 
-        var playRealtimeToggled = knockout.computed(function() {
-            return clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK;
-        });
-
-        var playRealtimeCanExecute = knockout.computed(function() {
-            return that._isSystemTimeAvailable();
-        });
-
+        /**
+         * The realtime toggle button.
+         * @type ToggleButtonViewModel
+         */
         this.playRealtimeViewModel = new ToggleButtonViewModel({
-            toggled : playRealtimeToggled,
+            toggled : knockout.computed(function() {
+                return clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK;
+            }),
             toolTip : knockout.computed(function() {
                 if (that._isSystemTimeAvailable()) {
                     return 'Today (real-time)';
@@ -212,61 +281,22 @@ define(['./Command',
                 return 'Current time not in range';
             }),
             command : new Command(function() {
-                if (!playRealtimeToggled()) {
+                if (clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK) {
                     if (that._isSystemTimeAvailable()) {
                         clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK);
                         clockViewModel.multiplier(1.0);
                         that.clockViewModel.shouldAnimate(true);
                     }
                 }
-            }, playRealtimeCanExecute)
+            }, knockout.computed(function() {
+                return that._isSystemTimeAvailable();
+            }))
         });
 
-        function angle2Multiplier(angle) {
-            //If the angle is less than 1, just use it for the position
-            if (Math.abs(angle) < 1) {
-                return angle;
-            }
-
-            var minp = 1;
-            var maxp = _maxShuttleRingAngle;
-            var maxv;
-            var minv = 0;
-            var scale;
-
-            if (angle > 0) {
-                maxv = Math.log(_shuttleRingTicks[_shuttleRingTicks.length - 1]);
-                scale = (maxv - minv) / (maxp - minp);
-                return Math.exp(minv + scale * (angle - minp));
-            }
-
-            maxv = Math.log(-_shuttleRingTicks[0]);
-            scale = (maxv - minv) / (maxp - minp);
-            return -Math.exp(minv + scale * (Math.abs(angle) - minp));
-        }
-
-        function multiplier2Angle(multiplier) {
-            if (Math.abs(multiplier) < 1) {
-                return multiplier;
-            }
-
-            var minp = 1;
-            var maxp = _maxShuttleRingAngle;
-            var maxv;
-            var minv = 0;
-            var scale;
-
-            if (multiplier > 0) {
-                maxv = Math.log(_shuttleRingTicks[_shuttleRingTicks.length - 1]);
-                scale = (maxv - minv) / (maxp - minp);
-                return (Math.log(multiplier) - minv) / scale + minp;
-            }
-
-            maxv = Math.log(-_shuttleRingTicks[0]);
-            scale = (maxv - minv) / (maxp - minp);
-            return -((Math.log(Math.abs(multiplier)) - minv) / scale + minp);
-        }
-
+        /**
+         * The current shuttle ring Angle.
+         * @type Observable
+         */
         this.shuttleRingAngle = knockout.computed({
             read : function() {
                 var multiplier = clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK ? clockViewModel.multiplier() : 1.0;
@@ -285,6 +315,10 @@ define(['./Command',
             }
         });
 
+        /**
+         * The command to decrease the speed of animation.
+         * @type Command
+         */
         this.slower = {
             canExecute : true,
             execute : function() {
@@ -298,6 +332,10 @@ define(['./Command',
             }
         };
 
+        /**
+         * The command to increase the speed of animation.
+         * @type Command
+         */
         this.faster = {
             canExecute : true,
             execute : function() {
@@ -312,10 +350,54 @@ define(['./Command',
         };
     };
 
+    /**
+     * The default date formatter used by new instances.
+     * @memberof AnimationViewModel
+     *
+     * @param {JulianDate} date The date to be formatted
+     * @param {AnimationViewModel} viewModel The AnimationViewModel instsance requesting formatting.
+     * @returns {String} The string representation of the calendar date portion of the provided date.
+     */
+    AnimationViewModel.defaultDateFormatter = function(date, viewModel) {
+        var gregorianDate = date.toGregorianDate();
+        return _monthNames[gregorianDate.month - 1] + ' ' + gregorianDate.day + ' ' + gregorianDate.year;
+    };
+
+    /**
+     * The default time formatter used by new instances.
+     * @memberof AnimationViewModel
+     *
+     * @param {JulianDate} date The date to be formatted
+     * @param {AnimationViewModel} viewModel The AnimationViewModel instsance requesting formatting.
+     * @returns {String} The string representation of the time portion of the provided date.
+     */
+    AnimationViewModel.defaultTimeFormatter = function(date, viewModel) {
+        var gregorianDate = date.toGregorianDate();
+        var millisecond = Math.round(gregorianDate.millisecond);
+        if (Math.abs(viewModel.clockViewModel.multiplier()) < 1) {
+            return sprintf("%02d:%02d:%02d.%03d", gregorianDate.hour, gregorianDate.minute, gregorianDate.second, millisecond);
+        }
+        return sprintf("%02d:%02d:%02d UTC", gregorianDate.hour, gregorianDate.minute, gregorianDate.second);
+    };
+
+    /**
+     * @memberof AnimationViewModel
+     * @returns {Function} The current date format function.
+     */
     AnimationViewModel.prototype.getDateFormatter = function() {
         return this._dateFormatter();
     };
 
+    /**
+     * Sets the current date format function.
+     * @memberof AnimationViewModel
+     *
+     * @param {Function} dateFormatter A function which takes a
+     * {@link JulianDate} and an AnimationViewModel instance and
+     * returns a string representation of the calendar date portion.
+     *
+     * @exception {DeveloperError} timeFormatter must be a function.
+     */
     AnimationViewModel.prototype.setDateFormatter = function(dateFormatter) {
         if (typeof dateFormatter !== 'function') {
             throw new DeveloperError('dateFormatter must be a function');
@@ -324,13 +406,27 @@ define(['./Command',
         this._dateFormatter.notifySubscribers();
     };
 
+    /**
+     * @memberof AnimationViewModel
+     * @returns {Function} The current time format function.
+     */
     AnimationViewModel.prototype.getTimeFormatter = function() {
         return this._timeFormatter();
     };
 
+    /**
+     * Sets the current time format function.
+     * @memberof AnimationViewModel
+     *
+     * @param {Function} timeFormatter A function which takes a
+     * {@link JulianDate} and an AnimationViewModel instance and
+     * returns a string representation of the time portion.
+     *
+     * @exception {DeveloperError} timeFormatter must be a function.
+     */
     AnimationViewModel.prototype.setTimeFormatter = function(timeFormatter) {
         if (typeof timeFormatter !== 'function') {
-            throw new DeveloperError('timeFormatter must be a function');
+            throw new DeveloperError('timeFormatter must be a function.');
         }
         this._timeFormatter(timeFormatter);
         this._timeFormatter.notifySubscribers();

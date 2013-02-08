@@ -35,10 +35,8 @@ define(['dojo',
 
     function handleSetTime(e) {
         if (typeof timeline !== 'undefined') {
-            if (!animationViewModel.pauseViewModel.toggled()) {
-                animationViewModel.pauseViewModel.command.execute();
-            }
             var scrubJulian = e.timeJulian;
+            animationViewModel.clockViewModel.shouldAnimate(false);
             animationViewModel.clockViewModel.currentTime(scrubJulian);
             updateScrubTime(scrubJulian);
         }
@@ -83,25 +81,23 @@ define(['dojo',
             startTime : startJulian,
             currentTime : scrubJulian,
             stopTime : endJulian,
-            clockRange: ClockRange.LOOP_STOP,
-            multiplier : 60
+            clockRange : ClockRange.LOOP_STOP,
+            multiplier : 60,
+            shouldAnimate : true
         });
 
         timeline = new Timeline('time1', clock);
         timeline.addEventListener('settime', handleSetTime, false);
         timeline.addEventListener('setzoom', handleSetZoom, false);
 
-        timeline.addTrack(new TimeInterval(startJulian, startJulian.addSeconds(60*60)), 8, Color.RED, new Color(0.55, 0.55, 0.55, 0.25));
-        timeline.addTrack(new TimeInterval(endJulian.addSeconds(-60*60), endJulian), 8, Color.LIME);
+        timeline.addTrack(new TimeInterval(startJulian, startJulian.addSeconds(60 * 60)), 8, Color.RED, new Color(0.55, 0.55, 0.55, 0.25));
+        timeline.addTrack(new TimeInterval(endJulian.addSeconds(-60 * 60), endJulian), 8, Color.LIME);
         var middle = startJulian.getSecondsDifference(endJulian) / 4;
         timeline.addTrack(new TimeInterval(startJulian.addSeconds(middle), startJulian.addSeconds(middle * 3)), 8, Color.DEEPSKYBLUE, new Color(0.55, 0.55, 0.55, 0.25));
 
         var clockViewModel = new ClockViewModel(clock);
         animationViewModel = new AnimationViewModel(clockViewModel);
         animation = new Animation(dojo.byId('animationWidget'), animationViewModel);
-
-        //'press' the play button
-        animationViewModel.playForwardViewModel.command.execute();
 
         function tick() {
             var time = clockViewModel.tickAndSynchronize();

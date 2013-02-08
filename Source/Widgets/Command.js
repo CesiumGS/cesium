@@ -25,7 +25,7 @@ define(['../Core/DeveloperError',
 
         /**
          * Indicates if this command can currently be executed.
-         * @type Observable Boolean
+         * @type Observable
          */
         this.canExecute = defaultValue(canExecute, knockout.observable(true));
     };

@@ -19,20 +19,20 @@ define(['../Core/DeveloperError',
         var t = defaultValue(template, {});
 
         /**
-         * A command object which encapsulate what happens when the button is pressed.
+         * A command object which encapsulates what happens when the button is toggled.
          * @type Command
          */
         this.command = defaultValue(t.command, undefined);
 
         /**
          * An observable boolean indicating if the button is currently toggled.
-         * @type Observable boolean
+         * @type Observable
          */
         this.toggled = defaultValue(t.toggled, ko.observable(false));
 
         /**
-         * An observable string defining the buttons tool tip.
-         * @type Observable string
+         * An observable string defining the  tool tip.
+         * @type Observable
          */
         this.toolTip = defaultValue(t.toolTip, ko.observable(''));
     };

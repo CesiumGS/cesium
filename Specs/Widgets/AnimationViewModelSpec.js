@@ -73,22 +73,22 @@ defineSuite([
 
         clockViewModel.multiplier(1);
         var expectedResult = '06:07:08 UTC';
-        var result = animationViewModel.getTimeFormatter()(date);
+        var result = animationViewModel.getTimeFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         clockViewModel.multiplier(-1);
         expectedResult = '06:07:08 UTC';
-        result = animationViewModel.getTimeFormatter()(date);
+        result = animationViewModel.getTimeFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         clockViewModel.multiplier(-0.5);
         expectedResult = '06:07:08.890';
-        result = animationViewModel.getTimeFormatter()(date);
+        result = animationViewModel.getTimeFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         clockViewModel.multiplier(0.5);
         expectedResult = '06:07:08.890';
-        result = animationViewModel.getTimeFormatter()(date);
+        result = animationViewModel.getTimeFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
     });
 
@@ -112,62 +112,62 @@ defineSuite([
 
         var date = JulianDate.fromIso8601('2012-01-05T06:07:08.89Z');
         var expectedResult = 'Jan 5 2012';
-        var result = animationViewModel.getDateFormatter()(date);
+        var result = animationViewModel.getDateFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-02-05T06:07:08.89Z');
         expectedResult = 'Feb 5 2012';
-        result = animationViewModel.getDateFormatter()(date);
+        result = animationViewModel.getDateFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-03-05T06:07:08.89Z');
         expectedResult = 'Mar 5 2012';
-        result = animationViewModel.getDateFormatter()(date);
+        result = animationViewModel.getDateFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-04-05T06:07:08.89Z');
         expectedResult = 'Apr 5 2012';
-        result = animationViewModel.getDateFormatter()(date);
+        result = animationViewModel.getDateFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-05-05T06:07:08.89Z');
         expectedResult = 'May 5 2012';
-        result = animationViewModel.getDateFormatter()(date);
+        result = animationViewModel.getDateFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-06-05T06:07:08.89Z');
         expectedResult = 'Jun 5 2012';
-        result = animationViewModel.getDateFormatter()(date);
+        result = animationViewModel.getDateFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-07-05T06:07:08.89Z');
         expectedResult = 'Jul 5 2012';
-        result = animationViewModel.getDateFormatter()(date);
+        result = animationViewModel.getDateFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-08-05T06:07:08.89Z');
         expectedResult = 'Aug 5 2012';
-        result = animationViewModel.getDateFormatter()(date);
+        result = animationViewModel.getDateFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-09-05T06:07:08.89Z');
         expectedResult = 'Sep 5 2012';
-        result = animationViewModel.getDateFormatter()(date);
+        result = animationViewModel.getDateFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-10-05T06:07:08.89Z');
         expectedResult = 'Oct 5 2012';
-        result = animationViewModel.getDateFormatter()(date);
+        result = animationViewModel.getDateFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-11-05T06:07:08.89Z');
         expectedResult = 'Nov 5 2012';
-        result = animationViewModel.getDateFormatter()(date);
+        result = animationViewModel.getDateFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-12-05T06:07:08.89Z');
         expectedResult = 'Dec 5 2012';
-        result = animationViewModel.getDateFormatter()(date);
+        result = animationViewModel.getDateFormatter()(date, animationViewModel);
         expect(result).toEqual(expectedResult);
     });
 

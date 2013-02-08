@@ -45,7 +45,7 @@ require([
     // different times.
 
     var endUserOptions = {
-        'source' : '../../CesiumViewer/Gallery/simple.czml'
+        source : '../../CesiumViewer/Gallery/simple.czml'
     };
 
     // First, create widget1 (the top widget).
@@ -56,13 +56,9 @@ require([
     widget1.placeAt('cesiumContainerTop');
     widget1.startup();
 
-    // Save off a copy of widget1's animation view model
-    var animationViewModel = widget1.animation.viewModel;
-
-    // Now create widget2, passing in the
-    // existing animation view model to be shared.
+    // Use widget1's animationViewModel in widget2
     var widget2 = new CesiumViewerWidget({
-        animationViewModel : animationViewModel,
+        animationViewModel : widget1.animation.viewModel,
         endUserOptions : endUserOptions,
         autoStartRenderLoop : false
     });
@@ -75,8 +71,6 @@ require([
     // Now both widgets are created.  A custom render loop is
     // needed to drive them both from requestAnimationFrame.
     function updateAndRender() {
-        // Get the time from the shared controller, then
-        // update and render both widgets.
         widget1.updateAndRender();
         widget2.updateAndRender();
         requestAnimationFrame(updateAndRender);

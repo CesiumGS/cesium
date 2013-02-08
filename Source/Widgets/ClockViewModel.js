@@ -30,7 +30,7 @@ define(['../Core/DeveloperError',
 
         /**
          * The start time of the clock.
-         * @type Computed observable JulianDate
+         * @type Observable
          */
         this.startTime = knockout.computed({
             read : startTime,
@@ -45,7 +45,7 @@ define(['../Core/DeveloperError',
 
         /**
          * The stop time of the clock.
-         * Computed observable @type JulianDate
+         * @type Observable
          */
         this.stopTime = knockout.computed({
             read : stopTime,
@@ -60,7 +60,7 @@ define(['../Core/DeveloperError',
 
         /**
          * The current time.
-         * Computed observable @type JulianDate
+         * @type Observable
          */
         this.currentTime = knockout.computed({
             read : currentTime,
@@ -72,7 +72,7 @@ define(['../Core/DeveloperError',
 
         /**
          * The current system time.
-         * Computed observable @type JulianDate
+         * @type Observable
          */
         this.systemTime = knockout.observable(new JulianDate());
         this.systemTime.equalityComparer = JulianDate.equals;
@@ -84,6 +84,7 @@ define(['../Core/DeveloperError',
          * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_MULTIPLIER this value is multiplied by the
          * elapsed system time since the last call to tick.
          * Computed observable @type Number
+         * @type Observable
          */
         this.multiplier = knockout.computed({
             read : multiplier,
@@ -100,7 +101,7 @@ define(['../Core/DeveloperError',
 
         /**
          * Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
-         * Computed observable @type ClockStep
+         * @type Observable
          */
         this.clockStep = knockout.computed({
             read : clockStep,
@@ -118,6 +119,7 @@ define(['../Core/DeveloperError',
         /**
          * Determines how tick should behave when <code>startTime</code> or <code>stopTime</code> is reached.
          * Computed observable @type ClockRange
+         * @type Observable
          */
         this.clockRange = knockout.computed({
             read : clockRange,
@@ -128,6 +130,11 @@ define(['../Core/DeveloperError',
         });
 
         var shouldAnimate = knockout.observable(clock.shouldAnimate);
+
+        /**
+         * Determines if tickAndSynchronize should actually advance time.
+         * @type Observable
+         */
         this.shouldAnimate = knockout.computed({
             read : shouldAnimate,
             write : function(value) {
@@ -138,7 +145,7 @@ define(['../Core/DeveloperError',
     };
 
     /**
-     * Ticks the clock and updates the view model with its contents.
+     * Ticks the underlying clock and updates the view model with its contents.
      * This should be called as part of the render loop.
      * @memberof ClockViewModel
      */

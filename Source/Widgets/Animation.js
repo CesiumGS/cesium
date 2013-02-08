@@ -133,9 +133,8 @@ define(['../Core/destroyObject',
         return _svgFromObject(button);
     }
 
-    function _setShuttleRingFromMouse(widget, svg, e) {
+    function _setShuttleRingFromMouse(widget, e) {
         var viewModel = widget.viewModel;
-        var centerX = widget._centerX;
         var shuttleRingDragging = viewModel.shuttleRingDragging();
 
         if (shuttleRingDragging && (_widgetForDrag !== widget)) {
@@ -143,6 +142,8 @@ define(['../Core/destroyObject',
         }
 
         if (e.type === 'mousedown' || (shuttleRingDragging && e.type === 'mousemove')) {
+            var centerX = widget._centerX;
+            var svg = widget._svgNode;
             var rect = svg.getBoundingClientRect();
             var clientX = e.clientX;
             var clientY = e.clientY;
@@ -155,6 +156,8 @@ define(['../Core/destroyObject',
                 return;
             }
 
+            var pointerRect = widget._shuttleRingPointer.getBoundingClientRect();
+
             var x = clientX - centerX - rect.left;
             var y = clientY - centerX - rect.top;
             var angle = Math.atan2(y, x) * 180 / Math.PI + 90;
@@ -162,7 +165,7 @@ define(['../Core/destroyObject',
                 angle -= 360;
             }
             var shuttleRingAngle = viewModel.shuttleRingAngle();
-            if (shuttleRingDragging || (Math.abs(shuttleRingAngle - angle) < 15)) {
+            if (shuttleRingDragging || (clientX < pointerRect.right && clientX > pointerRect.left && clientY > pointerRect.top && clientY < pointerRect.bottom)) {
                 _widgetForDrag = widget;
                 viewModel.shuttleRingDragging(true);
                 viewModel.shuttleRingAngle(angle);
@@ -184,6 +187,9 @@ define(['../Core/destroyObject',
     var SvgButton = function(svgElement, viewModel) {
         this.viewModel = viewModel;
         this.svgElement = svgElement;
+        this._enabled = undefined;
+        this._toggled = undefined;
+        this._subscriptions = [];
 
         var that = this;
         svgElement.addEventListener('click', function() {
@@ -197,9 +203,7 @@ define(['../Core/destroyObject',
         //bind to SVG, so we we figure that out we can modify our SVG
         //to include the binding information directly.
 
-        var subscriptions = [];
-        this._subscriptions = subscriptions;
-
+        var subscriptions = this._subscriptions;
         subscriptions.push(viewModel.toggled.subscribe(function(value) {
             that.setToggled(value);
         }));
@@ -247,13 +251,15 @@ define(['../Core/destroyObject',
     };
 
     SvgButton.prototype.setToggled = function(toggled) {
-        this._toggled = toggled;
+        if (this._toggled !== toggled) {
+            this._toggled = toggled;
 
-        if (this._enabled) {
-            if (toggled) {
-                this.svgElement.setAttribute('class', 'animation-rectButton animation-buttonToggled');
-            } else {
-                this.svgElement.setAttribute('class', 'animation-rectButton');
+            if (this._enabled) {
+                if (toggled) {
+                    this.svgElement.setAttribute('class', 'animation-rectButton animation-buttonToggled');
+                } else {
+                    this.svgElement.setAttribute('class', 'animation-rectButton');
+                }
             }
         }
     };
@@ -293,20 +299,20 @@ define(['../Core/destroyObject',
      * @exception {DeveloperError} parentNode is required.
      * @exception {DeveloperError} viewModel is required.
      *
-     * @see AnimationController
+     * @see AnimationViewModel
      * @see Clock
      *
      * @example
      * // In HTML head, include a link to Animation.css stylesheet,
      * // and in the body, include: &lt;div id="animationWidget"&gt;&lt;/div&gt;
      *
-     * var clock = new Clock();
-     * var viewModel = new AnimationViewModel(new ClockViewModel(clock));
+     * var clockViewModel = new ClockViewModel();
+     * var viewModel = new AnimationViewModel(clockViewModel);
      * var parentNode = document.getElementById("animationWidget");
      * var widget = new Animation(parentNode, viewModel);
      *
      * function tick() {
-     *     viewModel.update();
+     *     clockViewModel.tickAndSynchronize();
      *     Cesium.requestAnimationFrame(tick);
      * }
      * Cesium.requestAnimationFrame(tick);
@@ -321,7 +327,7 @@ define(['../Core/destroyObject',
         }
 
         /**
-         * The current viewModel
+         * The viewModel
          */
         this.viewModel = viewModel;
 
@@ -365,6 +371,7 @@ define(['../Core/destroyObject',
         '<div class="animation-themeSwoosh"></div>' + //
         '<div class="animation-themeSwooshHover"></div>';
 
+        this._theme = themeEle;
         this._themeNormal = themeEle.childNodes[0];
         this._themeHover = themeEle.childNodes[1];
         this._themeSelect = themeEle.childNodes[2];
@@ -497,7 +504,7 @@ define(['../Core/destroyObject',
 
         var that = this;
         var callBack = function(e) {
-            _setShuttleRingFromMouse(that, svg, e);
+            _setShuttleRingFromMouse(that, e);
         };
         shuttleRingBackPanel.addEventListener('mousedown', callBack, true);
         shuttleRingSwooshG.addEventListener('mousedown', callBack, true);
@@ -508,7 +515,7 @@ define(['../Core/destroyObject',
 
         //Keep track of the manual subscriptions so that we can unsubscribe later.
         var subscriptions = [];
-        this.subscriptions = subscriptions;
+        this._subscriptions = subscriptions;
 
         subscriptions.push(viewModel.pauseViewModel.toggled.subscribe(function(value) {
             if (value) {
@@ -551,6 +558,8 @@ define(['../Core/destroyObject',
      * @memberof Animation
      */
     Animation.prototype.destroy = function() {
+        this.parentNode.removeChild(this._svgNode);
+        this.parentNode.removeChild(this._theme);
         this._realtimeSVG.destroy();
         this._playReverseSVG.destroy();
         this._playForwardSVG.destroy();
@@ -620,7 +629,7 @@ define(['../Core/destroyObject',
      *
      * @example
      * //Switch to the cesium-darker theme.
-     * document.body.className = ' cesium-darker';
+     * document.body.className = 'cesium-darker';
      * animation.applyThemeChanges();
      */
     Animation.prototype.applyThemeChanges = function() {
