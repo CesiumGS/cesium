@@ -1,8 +1,11 @@
 /*global defineSuite*/
 defineSuite([
+         'Renderer/Texture',
          'Specs/createContext',
          'Specs/destroyContext',
          'Core/Cartesian2',
+         'Core/Color',
+         'Core/loadImage',
          'Core/PrimitiveType',
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
@@ -11,10 +14,13 @@ defineSuite([
          'Renderer/TextureWrap',
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter'
-     ], 'Renderer/Texture', function(
+     ], function(
+         Texture,
          createContext,
          destroyContext,
          Cartesian2,
+         Color,
+         loadImage,
          PrimitiveType,
          BufferUsage,
          ClearCommand,
@@ -27,14 +33,14 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
-    var sp;
-    var va;
-    var texture;
-
     var greenImage;
     var blueImage;
     var blueAlphaImage;
     var blueOverRedImage;
+
+    var sp;
+    var va;
+    var texture;
 
     beforeAll(function() {
         context = createContext();
@@ -51,10 +57,14 @@ defineSuite([
     });
 
     function renderFragment(context) {
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-        var fs =
-            'uniform sampler2D u_texture;' +
-            'void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }';
+        var vs = '';
+        vs += 'attribute vec4 position;';
+        vs += 'void main() { gl_PointSize = 1.0; gl_Position = position; }';
+
+        var fs = '';
+        fs += 'uniform sampler2D u_texture;';
+        fs += 'void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }';
+
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -75,25 +85,29 @@ defineSuite([
         return context.readPixels();
     }
 
-    it('create images', function() {
-        greenImage = new Image();
-        greenImage.src = './Data/Images/Green.png';
+    it('loads images for the test', function() {
+        loadImage('./Data/Images/Green.png').then(function(image) {
+            greenImage = image;
+        });
 
-        blueImage = new Image();
-        blueImage.src = './Data/Images/Blue.png';
+        loadImage('./Data/Images/Blue.png').then(function(image) {
+            blueImage = image;
+        });
 
-        blueAlphaImage = new Image();
-        blueAlphaImage.src = './Data/Images/BlueAlpha.png';
+        loadImage('./Data/Images/BlueAlpha.png').then(function(image) {
+            blueAlphaImage = image;
+        });
 
-        blueOverRedImage = new Image();
-        blueOverRedImage.src = './Data/Images/BlueOverRed.png';
+        loadImage('./Data/Images/BlueOverRed.png').then(function(image) {
+            blueOverRedImage = image;
+        });
 
         waitsFor(function() {
-            return greenImage.complete && blueImage.complete && blueAlphaImage.complete && blueOverRedImage.complete;
+            return greenImage && blueImage && blueAlphaImage && blueOverRedImage;
         }, 'Load .png file(s) for texture test.', 3000);
     });
 
-    it('creates with defaults', function() {
+    it('has expected default values for pixel format and datatype', function() {
         texture = context.createTexture2D({
             source : blueImage
         });
@@ -102,84 +116,64 @@ defineSuite([
         expect(texture.getPixelDatatype()).toEqual(PixelDatatype.UNSIGNED_BYTE);
     });
 
-    it('creates from the framebuffer', function() {
+    it('can create a texture from the framebuffer', function() {
         context.clear(new ClearCommand(context.createClearState({
-            color : {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            color : Color.RED
         })));
-        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual(Color.RED.toBytes());
 
         texture = context.createTexture2DFromFramebuffer();
         expect(texture.getWidth()).toEqual(context.getCanvas().clientWidth);
         expect(texture.getHeight()).toEqual(context.getCanvas().clientHeight);
 
         context.clear(new ClearCommand(context.createClearState({
-            color : {
-                red : 1.0,
-                green : 1.0,
-                blue : 1.0,
-                alpha : 1.0
-            }
+            color : Color.WHITE
         })));
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual(Color.WHITE.toBytes());
 
-        expect(renderFragment(context)).toEqual([255, 0, 0, 255]);
+        expect(renderFragment(context)).toEqual(Color.RED.toBytes());
     });
 
-    it('copies from the framebuffer', function() {
+    it('can copy from the framebuffer', function() {
         texture = context.createTexture2D({
             source : blueImage,
             pixelFormat : PixelFormat.RGB
         });
 
         // Render blue
-        expect(renderFragment(context)).toEqual([0, 0, 255, 255]);
+        expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
 
         // Clear to red
         context.clear(new ClearCommand(context.createClearState({
-            color : {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            color : Color.RED
         })));
-        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual(Color.RED.toBytes());
 
         texture.copyFromFramebuffer();
 
         // Clear to white
         context.clear(new ClearCommand(context.createClearState({
-            color : {
-                red : 1.0,
-                green : 1.0,
-                blue : 1.0,
-                alpha : 1.0
-            }
+            color : Color.WHITE
         })));
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual(Color.WHITE.toBytes());
 
         // Render red
-        expect(renderFragment(context)).toEqual([255, 0, 0, 255]);
+        expect(renderFragment(context)).toEqual(Color.RED.toBytes());
     });
 
-    it('draws a textured blue point', function() {
+    it('draws the expected texture color', function() {
         texture = context.createTexture2D({
             source : blueImage,
-            pixelFormat :PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA
         });
 
-        expect(renderFragment(context)).toEqual([0, 0, 255, 255]);
+        expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
     });
 
     it('renders with premultiplied alpha', function() {
         texture = context.createTexture2D({
             source : blueAlphaImage,
-            pixelFormat :PixelFormat.RGBA,
+            pixelFormat : PixelFormat.RGBA,
             preMultiplyAlpha : true
         });
         expect(texture.getPreMultiplyAlpha()).toEqual(true);
@@ -190,14 +184,18 @@ defineSuite([
     it('draws textured blue and red points', function() {
         texture = context.createTexture2D({
             source : blueOverRedImage,
-            pixelFormat :PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA
         });
 
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-        var fs =
-            'uniform sampler2D u_texture;' +
-            'uniform mediump vec2 u_txCoords;' +
-            'void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }';
+        var vs = '';
+        vs += 'attribute vec4 position;';
+        vs += 'void main() { gl_PointSize = 1.0; gl_Position = position; }';
+
+        var fs = '';
+        fs += 'uniform sampler2D u_texture;';
+        fs += 'uniform mediump vec2 u_txCoords;';
+        fs += 'void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }';
+
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -218,20 +216,20 @@ defineSuite([
         // Blue on top
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.75);
         context.draw(da);
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual(Color.BLUE.toBytes());
 
         // Red on bottom
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.25);
         context.draw(da);
-        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual(Color.RED.toBytes());
     });
 
-    it('creates from a typed array', function() {
-        var bytes = new Uint8Array([0, 255, 0, 255]);
+    it('can be created from a typed array', function() {
+        var bytes = new Uint8Array(Color.GREEN.toBytes());
 
         texture = context.createTexture2D({
-            pixelFormat : PixelFormat.RGBA, // Default
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE, // Default
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             source : {
                 width : 1,
                 height : 1,
@@ -239,38 +237,42 @@ defineSuite([
             }
         });
 
-        expect(renderFragment(context)).toEqual([0, 255, 0, 255]);
+        expect(renderFragment(context)).toEqual(Color.GREEN.toBytes());
     });
 
-    it('copies from a typed array', function() {
+    it('can copy from a typed array', function() {
         texture = context.createTexture2D({
-            width : 1,
-            height : 1,
-            pixelFormat : PixelFormat.RGBA, // Default
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE // Default
-        });
-
-        var bytes = new Uint8Array([255, 0, 255, 0]);
-        texture.copyFrom({
-            arrayBufferView : bytes,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             width : 1,
             height : 1
         });
 
-        expect(renderFragment(context)).toEqual([255, 0, 255, 0]);
-    });
-
-    it('copies over a subset of a texture', function() {
-        texture = context.createTexture2D({
-            source : blueOverRedImage,
-            pixelFormat :PixelFormat.RGBA
+        var bytes = new Uint8Array(Color.NAVY.toBytes());
+        texture.copyFrom({
+            width : 1,
+            height : 1,
+            arrayBufferView : bytes
         });
 
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-        var fs =
-            'uniform sampler2D u_texture;' +
-            'uniform mediump vec2 u_txCoords;' +
-            'void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }';
+        expect(renderFragment(context)).toEqual(Color.NAVY.toBytes());
+    });
+
+    it('can replace a subset of a texture', function() {
+        texture = context.createTexture2D({
+            source : blueOverRedImage,
+            pixelFormat : PixelFormat.RGBA
+        });
+
+        var vs = '';
+        vs += 'attribute vec4 position;';
+        vs += 'void main() { gl_PointSize = 1.0; gl_Position = position; }';
+
+        var fs = '';
+        fs += 'uniform sampler2D u_texture;';
+        fs += 'uniform mediump vec2 u_txCoords;';
+        fs += 'void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }';
+
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -291,12 +293,12 @@ defineSuite([
         // Blue on top
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.75);
         context.draw(da);
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual(Color.BLUE.toBytes());
 
         // Red on bottom
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.25);
         context.draw(da);
-        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual(Color.RED.toBytes());
 
         // After copy...
         texture.copyFrom(greenImage, 0, 1);
@@ -304,18 +306,18 @@ defineSuite([
         // Now green on top
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.75);
         context.draw(da);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+        expect(context.readPixels()).toEqual(Color.LIME.toBytes());
 
         // Still red on bottom
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.25);
         context.draw(da);
-        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual(Color.RED.toBytes());
     });
 
-    it('generates mipmaps', function() {
+    it('can generate mipmaps', function() {
         texture = context.createTexture2D({
             source : blueImage,
-            pixelFormat :PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA
         });
 
         texture.generateMipmap();
@@ -323,13 +325,13 @@ defineSuite([
             minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
         }));
 
-        expect(renderFragment(context)).toEqual([0, 0, 255, 255]);
+        expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
     });
 
-    it('gets the default sampler', function() {
+    it('is created with a default sampler', function() {
         texture = context.createTexture2D({
             source : blueImage,
-            pixelFormat :PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA
         });
 
         var sampler = texture.getSampler();
@@ -340,10 +342,10 @@ defineSuite([
         expect(sampler.maximumAnisotropy).toEqual(1.0);
     });
 
-    it('sets a sampler', function() {
+    it('can set a sampler', function() {
         texture = context.createTexture2D({
             source : blueImage,
-            pixelFormat :PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA
         });
 
         var sampler = context.createSampler({
@@ -363,30 +365,39 @@ defineSuite([
         expect(s.maximumAnisotropy).toEqual(2.0);
     });
 
-    it('gets width and height', function() {
+    it('can get width and height', function() {
         texture = context.createTexture2D({
             source : blueOverRedImage,
-            pixelFormat :PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA
         });
 
         expect(texture.getWidth()).toEqual(1);
         expect(texture.getHeight()).toEqual(2);
     });
 
-    it('gets flip Y', function() {
+    it('can get whether Y is flipped', function() {
         texture = context.createTexture2D({
             source : blueOverRedImage,
-            pixelFormat :PixelFormat.RGBA,
+            pixelFormat : PixelFormat.RGBA,
             flipY : true
         });
 
         expect(texture.getFlipY()).toEqual(true);
     });
 
-    it('destroys', function() {
+    it('can get the dimensions of a texture', function() {
+        texture = context.createTexture2D({
+            width : 64,
+            height : 16
+        });
+
+        expect(texture.getDimensions()).toEqual(new Cartesian2(64, 16));
+    });
+
+    it('can be destroyed', function() {
         var t = context.createTexture2D({
             source : blueImage,
-            pixelFormat :PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA
         });
 
         expect(t.isDestroyed()).toEqual(false);
@@ -394,19 +405,19 @@ defineSuite([
         expect(t.isDestroyed()).toEqual(true);
     });
 
-    it('fails to create (description)', function() {
+    it('throws when creating a texture without a description', function() {
         expect(function() {
             texture = context.createTexture2D();
         }).toThrow();
     });
 
-    it('fails to create (source)', function() {
+    it('throws when creating a texture without a source', function() {
         expect(function() {
             texture = context.createTexture2D({});
         }).toThrow();
     });
 
-    it('fails to create (width, no height)', function() {
+    it('throws when creating a texture with width and no height', function() {
         expect(function() {
             texture = context.createTexture2D({
                 width : 16
@@ -414,7 +425,15 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to create (small width)', function() {
+    it('throws when creating a texture with height and no width', function() {
+        expect(function() {
+            texture = context.createTexture2D({
+                height : 16
+            });
+        }).toThrow();
+    });
+
+    it('throws when creating a texture with zero width', function() {
         expect(function() {
             texture = context.createTexture2D({
                 width : 0,
@@ -423,7 +442,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to create (large width)', function() {
+    it('throws when creating a texture with width larger than the maximum texture size', function() {
         expect(function() {
             texture = context.createTexture2D({
                 width : context.getMaximumTextureSize() + 1,
@@ -432,7 +451,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to create (small height)', function() {
+    it('throws when creating a texture with zero height', function() {
         expect(function() {
             texture = context.createTexture2D({
                 width : 16,
@@ -441,7 +460,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to create (large height)', function() {
+    it('throws when creating a texture with height larger than the maximum texture size', function() {
         expect(function() {
             texture = context.createTexture2D({
                 width : 16,
@@ -450,7 +469,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to create (PixelFormat)', function() {
+    it('throws when creating a texture with an invalid pixel format', function() {
         expect(function() {
             texture = context.createTexture2D({
                 source : blueImage,
@@ -459,7 +478,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to create (pixelDatatype)', function() {
+    it('throws when creating a texture with an invalid pixel datatype', function() {
         expect(function() {
             texture = context.createTexture2D({
                 source : blueImage,
@@ -510,7 +529,7 @@ defineSuite([
         }
     });
 
-    it('fails to create from the framebuffer (PixelFormat)', function() {
+    it('throws when creating from the framebuffer with an invalid pixel format', function() {
         expect(function() {
             texture = context.createTexture2DFromFramebuffer('invalid PixelFormat');
         }).toThrow();
@@ -522,31 +541,31 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to create from the framebuffer (framebufferXOffset)', function() {
+    it('throws when creating from the framebuffer with a negative framebufferXOffset', function() {
         expect(function() {
             texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, -1);
         }).toThrow();
     });
 
-    it('fails to create from the framebuffer (framebufferYOffset)', function() {
+    it('throws when creating from the framebuffer with a negative framebufferYOffset', function() {
         expect(function() {
             texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, 0, -1);
         }).toThrow();
     });
 
-    it('fails to create from the framebuffer (width)', function() {
+    it('throws when creating from the framebuffer with a width greater than the canvas clientWidth', function() {
         expect(function() {
             texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, 0, 0, context.getCanvas().clientWidth + 1);
         }).toThrow();
     });
 
-    it('fails to create from the framebuffer (height)', function() {
+    it('throws when creating from the framebuffer with a height greater than the canvas clientHeight', function() {
         expect(function() {
             texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, 0, 0, 1, context.getCanvas().clientHeight + 1);
         }).toThrow();
     });
 
-    it('throws when copying to a texture from a framebuffer with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
+    it('throws when copying to a texture from the framebuffer with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
         if (context.getDepthTexture()) {
             texture = context.createTexture2D({
                 width : 1,
@@ -561,7 +580,7 @@ defineSuite([
         }
     });
 
-    it('fails to copy from the frame buffer (xOffset)', function() {
+    it('throws when copying from the framebuffer with a negative xOffset', function() {
         texture = context.createTexture2D({
             source : blueImage
         });
@@ -571,7 +590,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to copy from the frame buffer (yOffset)', function() {
+    it('throws when copying from the framebuffer with a negative yOffset', function() {
         texture = context.createTexture2D({
             source : blueImage
         });
@@ -581,7 +600,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to copy from the frame buffer (framebufferXOffset)', function() {
+    it('throws when copying from the framebuffer with a negative framebufferXOffset', function() {
         texture = context.createTexture2D({
             source : blueImage
         });
@@ -591,7 +610,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to copy from the frame buffer (framebufferYOffset)', function() {
+    it('throws when copying from the framebuffer with a negative framebufferYOffset', function() {
         texture = context.createTexture2D({
             source : blueImage
         });
@@ -601,7 +620,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to copy from the frame buffer (width)', function() {
+    it('throws when copying from the framebuffer with a larger width', function() {
         texture = context.createTexture2D({
             source : blueImage
         });
@@ -611,53 +630,13 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to copy from the frame buffer (height)', function() {
+    it('throws when copying from the framebuffer with a larger height', function() {
         texture = context.createTexture2D({
             source : blueImage
         });
 
         expect(function() {
             texture.copyFromFramebuffer(0, 0, 0, 0, 0, texture.getHeight() + 1);
-        }).toThrow();
-    });
-
-    it('fails to set sampler (wrapS)', function() {
-        expect(function() {
-            context.createSampler({
-                wrapS : 'invalid wrap'
-            });
-        }).toThrow();
-    });
-
-    it('fails to set sampler (wrapT)', function() {
-        expect(function() {
-            context.createSampler({
-                wrapT : 'invalid wrap'
-            });
-        }).toThrow();
-    });
-
-    it('fails to set sampler (minificationFilter)', function() {
-        expect(function() {
-            context.createSampler({
-                minificationFilter : 'invalid filter'
-            });
-        }).toThrow();
-    });
-
-    it('fails to set sampler (magnificationFilter)', function() {
-        expect(function() {
-            context.createSampler({
-                magnificationFilter : 'invalid filter'
-            });
-        }).toThrow();
-    });
-
-    it('fails to set sampler (maximumAnisotropy)', function() {
-        expect(function() {
-            context.createSampler({
-                maximumAnisotropy : 0.0
-            });
         }).toThrow();
     });
 
@@ -680,7 +659,7 @@ defineSuite([
         }
     });
 
-    it('fails to copy from an image (source)', function() {
+    it('throws when copyFrom is not given a source', function() {
         texture = context.createTexture2D({
             source : blueImage
         });
@@ -690,29 +669,27 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to copy from an image (xOffset)', function() {
+    it('throws when copyFrom is given a negative xOffset', function() {
         texture = context.createTexture2D({
             source : blueImage
         });
-        var image = new Image();
 
         expect(function() {
-            texture.copyFrom(image, -1);
+            texture.copyFrom(blueImage, -1);
         }).toThrow();
     });
 
-    it('fails to copy from an image (yOffset)', function() {
+    it('throws when copyFrom is given a negative yOffset', function() {
         texture = context.createTexture2D({
             source : blueImage
         });
-        var image = new Image();
 
         expect(function() {
-            texture.copyFrom(image, 0, -1);
+            texture.copyFrom(blueImage, 0, -1);
         }).toThrow();
     });
 
-    it('fails to copy from an image (width)', function() {
+    it('throws when copyFrom is given a source with larger width', function() {
         texture = context.createTexture2D({
             source : blueImage
         });
@@ -724,7 +701,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to copy from an image (height)', function() {
+    it('throws when copyFrom is given a source with larger height', function() {
         texture = context.createTexture2D({
             source : blueImage
         });
@@ -751,7 +728,7 @@ defineSuite([
         }
     });
 
-    it('fails to generate mipmaps (width)', function() {
+    it('throws when generating mipmaps with a non-power of two width', function() {
         texture = context.createTexture2D({
             width : 3,
             height : 2
@@ -762,7 +739,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to generate mipmaps (height)', function() {
+    it('throws when generating mipmaps with a non-power of two height', function() {
         texture = context.createTexture2D({
             width : 2,
             height : 3
@@ -773,7 +750,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to generate mipmaps (hint)', function() {
+    it('throws when generating mipmaps with an invalid hint', function() {
         texture = context.createTexture2D({
             source : blueImage
         });
@@ -783,10 +760,10 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fails to destroy', function() {
+    it('throws when destroy is called after destroying', function() {
         var t = context.createTexture2D({
             source : blueImage,
-            pixelFormat :PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA
         });
 
         t.destroy();
