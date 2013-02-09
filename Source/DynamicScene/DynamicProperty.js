@@ -241,7 +241,7 @@ define([
         return thisValueType.getValue(intervalData.values, result);
     };
 
-    DynamicProperty._mergeNewSamples = function(epoch, times, values, newData, doublesPerValue, valueType) {
+    DynamicProperty._mergeNewSamples = function(epoch, times, values, newData, doublesPerValue) {
         var newDataIndex = 0, i, prevItem, timesInsertionPoint, valuesInsertionPoint, timesSpliceArgs, valuesSpliceArgs, currentTime, nextTime;
         while (newDataIndex < newData.length) {
             currentTime = czmlDateToJulianDate(newData[newDataIndex], epoch);
@@ -255,7 +255,7 @@ define([
                 valuesInsertionPoint = timesInsertionPoint * doublesPerValue;
                 valuesSpliceArgs = [valuesInsertionPoint, 0];
                 prevItem = undefined;
-                nextTime = times[timesInsertionPoint + 1];
+                nextTime = times[timesInsertionPoint];
                 while (newDataIndex < newData.length) {
                     currentTime = czmlDateToJulianDate(newData[newDataIndex], epoch);
                     if ((typeof prevItem !== 'undefined' && JulianDate.compare(prevItem, currentTime) >= 0) ||

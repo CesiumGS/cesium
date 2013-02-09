@@ -230,7 +230,6 @@ define([
             scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
 
             var camera = scene.getCamera();
-            camera.position = camera.position.multiplyByScalar(1.5);
             camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
             var handler = new ScreenSpaceEventHandler(canvas);
