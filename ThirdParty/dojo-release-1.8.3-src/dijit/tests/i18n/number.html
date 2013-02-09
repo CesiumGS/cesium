@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Test NumberTextBox</title>
+
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true, extraLocale: ['zh-cn','fr-fr']"></script>
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit.form.NumberTextBox");
+			dojo.require("dijit.form.CurrencyTextBox");
+			dojo.require("dijit.form.DateTextBox");
+			dojo.require("dijit.form.ValidationTextBox");
+			dojo.require("dojo.date.locale");
+			dojo.require("dojo.date.stamp");
+			dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+			dojo.require("doh.runner");
+		</script>
+		<script src="test_i18n.js"></script>
+		<script type="text/javascript">
+			dojo.ready(function(){
+				doh.register("parse", function(){
+					dojo.parser.parse();
+				});
+				doh.register("t", getAllTestCases());
+				doh.run();
+			});
+		</script>
+
+		<style type="text/css">
+			@import "../../themes/claro/document.css";
+			@import "../../themes/claro/claro.css";
+			@import "../css/dijitTests.css";
+
+			.title {
+				background-color:#ddd;
+			}
+
+			.hint {
+				background-color:#eee;
+			}
+
+			.testExample {
+				background-color:#fbfbfb;
+				padding:1em;
+				margin-bottom:1em;
+				border:1px solid #bfbfbf;
+			}
+
+			.dojoTitlePaneLabel label {
+				font-weight:bold;
+			}
+
+			td {white-space:nowrap}
+		</style>
+	</head>
+
+	<body class="claro">
+		<h1 class="testTitle">Dijit TextBox Globalization Test for Number</h1>
+
+<!--		<h2 class="testTitle">Press the following button to start all test after this page is loaded.</h2>
+		<button id="startButton" onclick="startTest()">Start Test</button>-->
+		<p>
+			Before start this test, make sure the <b>dojo/cldr/nls</b> contains the data for "zh-cn", "fr-fr". If not, convert these CLDR data and put them there.
+		</p>
+
+		<script>
+		(function(){
+
+			genFormatTestCases("Number Format", "dijit.form.NumberTextBox", [
+
+				{ attrs: {lang: "zh-cn"},
+				  desc: "Locale: zh_CN",
+				  value: "12345.067",
+				  expValue: "12,345.067",
+				  comment: ""
+				},
+				{ attrs: {lang: "zh-cn"},
+				  desc: "Locale: zh_CN",
+				  value: "-12345.067",
+				  expValue: "-12,345.067",
+				  comment: ""
+				},
+
+				{ attrs: {lang: "fr-fr"},
+				  desc: "Locale: fr_FR",
+				  value: "12345.067",
+				  expValue: "12&nbsp;345,067",
+				  comment: ""
+				},
+				{ attrs: {lang: "fr-fr"},
+				  desc: "Locale: zh_CN",
+				  value: "-12345.067",
+				  expValue: "-12&nbsp;345,067",
+				  comment: ""
+				}
+			]);
+
+			genValidateTestCases("Number Validate", "dijit.form.NumberTextBox", [
+
+				{ attrs: {lang: "zh-cn"},
+				  desc: "Locale: zh_CN",
+				  value: 12345.067,
+				  expValue: "12,345.067",
+				  comment: ""
+				},
+				{ attrs: {lang: "zh-cn"},
+				  desc: "Locale: zh_CN",
+				  value: -12345.067,
+				  expValue: "-12,345.067",
+				  comment: ""
+				},
+
+				{ attrs: {lang: "fr-fr"},
+				  desc: "Locale: fr_FR",
+				  value: 12345.067,
+				  expValue: "12&nbsp;345,067",
+				  comment: ""
+				},
+				{ attrs: {lang: "fr-fr"},
+				  desc: "Locale: zh_CN",
+				  value: -12345.067,
+				  expValue: "-12&nbsp;345,067",
+				  comment: ""
+				}
+			]);
+
+		})();
+
+		</script>
+	</body>
+</html>
+
+

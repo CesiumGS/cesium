@@ -1,0 +1,565 @@
+﻿<html>
+<head>
+	<title>Dojo Unified 2D Graphics</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<!-- test styles -->
+	<style type="text/css">
+		@import "../../../../dojo/resources/dojo.css";
+		@import "../../../../dijit/tests/css/dijitTests.css";
+		td { border: 1px solid black; text-align: left; vertical-align: top; }
+		v:group { text-align: left; }
+	</style>
+
+	<!-- required: dojo.js -->
+	<!-- SVGWEB { -->
+	<meta name="svg.render.forceflash" content="true"/>
+	<script src="svgweb/src/svg.js" data-path="svgweb/src"></script>
+	<script src="../../../../dojo/dojo.js" djConfig="isDebug:true,forceGfxRenderer:'svg'" type="text/javascript"></script>
+	<!-- } -->
+
+	<script type="text/javascript">
+
+		dojo.require("dojox.gfx");
+
+		var gTestContainer = null;
+		var gTests = {};
+
+		function isEqual(foo, bar, prefix){
+		    var flag = true;
+		    if(foo != bar ){
+		        console.debug(prefix+":"+foo + "!=" + bar + " try dig into it" );
+		        if( foo instanceof Array ) {
+		            for( var i = 0; i< foo.length; i++ ) {
+		                flag = isEqual(foo[i], bar[i], prefix+"["+i+"]") && flag;
+		            }
+		            flag = false;
+		        } else {
+		            for(var x in foo) {
+		                if(bar[x] != undefined ) {
+		                    flag = isEqual(foo[x], bar[x], prefix+"."+x) && flag;
+		                } else {
+		                    console.debug(prefix+":"+ x + " is undefined in bar" );
+		                    flag = false;
+		                }
+		            }
+		        }
+		    }
+		    return flag;
+		}
+
+
+		function getTestSurface(testName, testDescription, width, height){
+		   width = width ? width : 300;
+		   height = height ? height : 300;
+
+		   // Create a DOM node for the surface
+		   var testRow = document.createElement('tr');
+		   var testCell = document.createElement('td');
+		   var testHolder = document.createElement('div');
+		   testHolder.id = testName + '_holder';
+		   testHolder.style.width  = width;
+		   testHolder.style.height = height;
+
+		   testCell.appendChild(testHolder);
+		   testRow.appendChild(testCell);
+		   gTestContainer.appendChild(testRow);
+
+		   var descRow = document.createElement('tr');
+		   var desc = document.createElement('td');
+		   desc.innerHTML = testDescription;
+		   descRow.appendChild(desc);
+		   gTestContainer.appendChild(descRow);
+
+		   return dojox.gfx.createSurface(testHolder, width, height);
+		}
+
+		function addTest(testName, fn){
+		   gTests[testName] = fn;
+		}
+
+		function runTest_nodebug(testName){
+		   try {
+		      var t = gTests[testName];
+		      if (!t) {
+		         return 'no test named ' + t;
+		      }
+		      t(testName);
+		      return null; // the success condition
+		   } catch (e) {
+		      return e.message;
+		   }
+		}
+
+		function runTest_debug(testName){
+		      var t = gTests[testName];
+		      if (!t) {
+		         return 'no test named ' + t;
+		      }
+		      t(testName);
+		      return null; // the success condition
+		}
+
+		var runTest = dojo.config.isDebug ? runTest_debug : runTest_nodebug;
+
+		dojo.addOnLoad(function(){
+			gTestContainer = dojo.byId('testcontainer');
+			var rect = { x: 0, y: 0, width: 100, height: 100 };
+
+			addTest('rect', function(testName){
+				var surface = getTestSurface(testName, 'translucent rect with rounded stroke');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				var red_rect = surface.createRect(rect);
+				red_rect.setFill([255, 0, 0, 0.5]);
+				red_rect.setStroke({color: "blue", width: 10, join: "round" });
+				red_rect.setTransform({dx: 100, dy: 100});
+				//dojo.connect(red_rect.getNode(), "onclick", function(){ alert("red"); });
+				red_rect.connect("onclick", function(){ alert("red"); });
+				});
+				/* } */
+			});
+
+			addTest('straight_rect', function(testName){
+				var surface = getTestSurface(testName, 'translucent rect with no stroke');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				var blue_rect = surface.createRect(rect).setFill([0, 255, 0, 0.5]).setTransform({ dx: 100, dy: 100 });
+				//dojo.connect( blue_rect.getNode(), "onclick", function(){ blue_rect.setShape({width: blue_rect.getShape().width + 20}); });
+				blue_rect.connect("onclick", function(){ blue_rect.setShape({width: blue_rect.getShape().width + 20}); });
+				});
+				/* } */
+			});
+
+			addTest('rotated_rect', function(testName){
+				var surface = getTestSurface(testName, '30g CCW blue translucent rounded rect');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				console.debug('rotated_rect');
+				// anonymous 30 degree CCW rotated green rectangle
+				surface.createRect({r: 20})
+					.setFill([0, 0, 255, 0.5])
+					// rotate it around its center and move to (100, 100)
+					.setTransform([dojox.gfx.matrix.translate(100, 100), dojox.gfx.matrix.rotategAt(-30, 0, 0)])
+					;
+				});
+				/* } */
+			});
+
+			addTest('skew_rect', function(testName){
+				var surface = getTestSurface(testName, 'skewed rects' );
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				// anonymous red rectangle
+				surface.createRect(rect).setFill(new dojo.Color([255, 0, 0, 0.5]))
+					// skew it around LB point -30d, rotate it around LB point 30d, and move it to (100, 100)
+					.setTransform([dojox.gfx.matrix.translate(100, 100), dojox.gfx.matrix.rotategAt(-30, 0, 100), dojox.gfx.matrix.skewXgAt(30, 0, 100)]);
+				// anonymous blue rectangle
+				surface.createRect(rect).setFill(new dojo.Color([0, 0, 255, 0.5]))
+					// skew it around LB point -30d, and move it to (100, 100)
+					.setTransform([dojox.gfx.matrix.translate(100, 100), dojox.gfx.matrix.skewXgAt(30, 0, 100)]);
+				// anonymous yellow rectangle
+				surface.createRect(rect).setFill(new dojo.Color([255, 255, 0, 0.25]))
+					// move it to (100, 100)
+					.setTransform(dojox.gfx.matrix.translate(100, 100));
+				});
+				/* } */
+			});
+
+			addTest('matrix_rect', function(testName){
+				var surface = getTestSurface(testName, 'all matrix operations, check debug output for more details');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+
+				var group = surface.createGroup();
+		
+				var blue_rect = group.createRect(rect).setFill([0, 0, 255, 0.5]).applyTransform(dojox.gfx.matrix.identity);
+				console.debug( "blue_rect: rect with identity" );
+
+				group.createRect(rect).setFill([0, 255, 0, 0.5]).applyTransform(dojox.gfx.matrix.translate(30, 40));
+				console.debug( "lime_rect: translate(30,40) " );
+		
+				group.createRect(rect).setFill([255, 0, 0, 0.5]).applyTransform(dojox.gfx.matrix.rotateg(-30));
+				console.debug( "red_rect: rotate 30 degree counterclockwise " );
+
+				group.createRect(rect).setFill([0, 255, 255, 0.5])
+					.applyTransform(dojox.gfx.matrix.scale({x:1.5, y:0.5}))
+					.applyTransform(dojox.gfx.matrix.translate(-40, 220))
+					;
+				console.debug( "lightblue_rect: scale(1.5, 0.5)" );
+
+				group.createRect(rect).setFill([0, 0, 255, 0.5]).setFill([255, 0, 255, 0.5]).applyTransform(dojox.gfx.matrix.flipX);
+				console.debug( "pink_rect: flipX" );
+
+				group.createRect(rect).setFill([0, 0, 255, 0.5]).setFill([255, 255, 0, 0.5]).applyTransform(dojox.gfx.matrix.flipY);
+				console.debug( "yellow_rect: flipY" );
+
+				group.createRect(rect).setFill([0, 0, 255, 0.5]).setFill([128, 0, 128, 0.5]).applyTransform(dojox.gfx.matrix.flipXY);
+				console.debug( "purple_rect: flipXY" );
+
+				group.createRect(rect).setFill([0, 0, 255, 0.5]).setFill([255, 128, 0, 0.5]).applyTransform(dojox.gfx.matrix.skewXg(-15));
+				console.debug( "purple_rect: skewXg 15 degree" );
+
+				group.createRect(rect).setFill([0, 0, 255, 0.5]).setFill([0, 0, 0, 0.5]).applyTransform(dojox.gfx.matrix.skewYg(-50));
+				console.debug( "black_rect: skewXg 50 degree" );
+
+				// move
+				group
+					.setTransform({ xx: 1.5, yy: 0.5, dx: 100, dy: 100 })
+					.applyTransform(dojox.gfx.matrix.rotateg(-30))
+					;
+				});
+				/* } */
+			});
+
+			addTest('attach', function(testName){
+				var surface = getTestSurface(testName, 'Attach to existed shape');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				var red_rect = surface.createRect(rect)
+					.setShape({ width: 75 })
+					.setFill([255, 0, 0, 0.5])
+					.setStroke({ color: "blue", width: 1 })
+					.setTransform({ dx: 50, dy: 50, xx: 1, xy: 0.5, yx: 0.7, yy: 1.1 })
+					;
+
+				console.debug("attaching !");
+				// now attach it!
+				var ar = dojox.gfx.attachNode(red_rect.rawNode);
+				console.assert( ar.rawNode == red_rect.rawNode );
+
+				// FIXME: more generic method to compare two dictionary?
+				console.debug("attach shape: ");
+				isEqual(ar.shape, red_rect.shape, "rect.shape");
+				console.debug("attach matrix: ");
+				isEqual(ar.matrix, red_rect.matrix, "rect.matrix");
+				console.debug("attach strokeStyle: ");
+				isEqual(ar.strokeStyle, red_rect.strokeStyle, "rect.strokeStyle");
+				console.debug("attach fillStyle: ");
+				isEqual(ar.fillStyle, red_rect.fillStyle, "rect.fillStyle");
+				});
+				/* } */
+			});
+	
+			// test circle
+			addTest('circle', function(testName){
+				var surface = getTestSurface(testName, 'translucent green circle');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				var circle = { cx: 130, cy: 130, r: 50 };
+				surface.createCircle(circle).setFill([0, 255, 0, 0.5]).setTransform({ dx: 20, dy: 20 });
+				});
+				/* } */
+			});
+
+			// test line
+			addTest('line', function(testName){
+				var surface = getTestSurface(testName, 'straight red line');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				var line = { x1: 20, y1: 20, x2: 100, y2: 120 };
+				surface.createLine(line).setFill([255, 0, 0, 0.5]).setStroke({color: "red", width: 1}).setTransform({ dx:70, dy: 100 });
+				});
+				/* } */
+			});
+
+			// test ellipse 
+			addTest('ellipse', function(testName){
+				var surface = getTestSurface(testName, 'translucent cyan ellipse');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				var ellipse = { cx: 50, cy: 80, rx: 50, ry: 80 };
+				surface.createEllipse(ellipse).setFill([0, 255, 255, 0.5]).setTransform({ dx: 30, dy: 70 });
+				});
+				/* } */
+			});
+
+			// test polyline
+			addTest('polyline', function(testName){
+				var surface = getTestSurface(testName, 'unfilled open polyline');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				var points = [ {x: 10, y: 20}, {x: 40, y: 70}, {x: 120, y: 50}, {x: 90, y: 90} ];
+				surface.createPolyline(points).setFill(null).setStroke({ color: "blue", width: 1 }).setTransform({ dx: 15, dy: 0 });
+				});
+				/* } */
+			});
+
+			// test polygon
+			addTest('polygon', function(testName){
+				var surface = getTestSurface(testName, 'filled polygon');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				var points2 = [{x: 100, y: 0}, {x: 200, y: 40}, {x: 180, y: 150}, {x: 60, y: 170}, {x: 20, y: 100}];
+				surface.createPolyline(points2).setFill([0, 128, 255, 0.6]).setTransform({dx:30, dy: 20});
+				});
+				/* } */
+			});
+
+			// test path: lineTo, moveTo, closePath
+			addTest('lineTo', function(testName){
+				var surface = getTestSurface(testName, 'lineTo, moveTo, closePath');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				surface.createPath()
+					.moveTo(10, 20).lineTo(80, 150)
+					.setAbsoluteMode(false).lineTo(40, 0)
+					.setAbsoluteMode(true).lineTo(180, 100)
+					.setAbsoluteMode(false).lineTo(0, -30).lineTo(-30, -50)
+					.closePath()
+					.setStroke({ color: "red", width: 1 })
+					.setFill(null)
+					.setTransform({ dx: 10, dy: 18 })
+					;
+				});
+				/* } */
+			});
+
+			addTest('setPath', function(testName){
+				var surface = getTestSurface(testName, 'setPath example with lineTo moveTo');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				surface.createPath()
+					.moveTo(10, 20).lineTo(80, 150)
+					.setAbsoluteMode(false).lineTo(40,0)
+					.setAbsoluteMode(true).lineTo(180, 100)
+					.setAbsoluteMode(false).lineTo(0, -30).lineTo(-30, -50)
+					.curveTo(10, -80, -150, -10, -90, -10)
+					.closePath()
+					.setStroke({ color: "red", width: 1 })
+					.setFill(null)
+					.setTransform({ dx: 10, dy: 58 })
+					;
+
+				surface.createPath({ path: "M10,20 L80,150 l40,0 L180,100 l0,-30 l-30,-50 c10,-80 -150,-10 -90,-10 z" })
+					.setFill(null)
+					.setStroke({ color: "blue", width: 1 })
+					.setTransform({ dx: 50, dy: 78 })
+					;
+				});
+				/* } */
+			});
+
+			// test arcTo 
+			addTest('arcTo', function(testName){
+				var surface = getTestSurface(testName, 'arcTo: from 0 to 360 degree, w/ 30 degree of x axis rotation, rendered with different color');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+
+				var m = dojox.gfx.matrix;
+				var g1 = surface.createGroup();
+				var g2 = g1.createGroup();
+
+				var rx = 100, ry = 60, xRotg = 30;
+				var startPoint = m.multiplyPoint(m.rotateg(xRotg), {x: -rx, y: 0  });
+				var endPoint   = m.multiplyPoint(m.rotateg(xRotg), {x: 0,   y: -ry});
+	    
+				var re1 = g1.createPath()
+					.moveTo(startPoint)
+					.arcTo(rx, ry, xRotg, true, false, endPoint)
+					.setStroke({color: "red"})
+					;
+				var ge1 = g1.createPath()
+					.moveTo(re1.getLastPosition())
+					.arcTo(rx, ry, xRotg, false, false, startPoint)
+					.setStroke({color: "blue"})
+					;
+				var re2 = g2.createPath()
+					.moveTo(startPoint)
+					.arcTo(rx, ry, xRotg, false, true, endPoint)
+					.setStroke({color: "red"})
+					;
+				var ge2 = g2.createPath()
+					.moveTo(re2.getLastPosition())
+					.arcTo(rx, ry, xRotg, true, true, startPoint)
+					.setStroke({color: "blue"})
+					;
+			
+				g1.setTransform({dx: 150, dy: 150});
+				g2.setTransform({dx: 10,  dy: 10});
+				});
+				/* } */
+			});
+
+			// test path: curveTo, smoothCurveTo
+			addTest('curveTo', function(testName) {
+				var surface = getTestSurface(testName, 'curveTo, smoothCurveTo');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				surface.createPath()
+					.moveTo(10, 20).curveTo(50, 50, 50, 100, 150, 100).smoothCurveTo(300, 300, 200, 200)
+					.setStroke({ color: "green", width: 1 }).setFill(null).setTransform({ dx: 10, dy: 30 })
+					;
+				});
+				/* } */
+			});
+
+			// test path: curveTo, smoothCurveTo with relative.
+			addTest('curveTo2', function(testName) {
+				var surface = getTestSurface(testName, 'curveTo, smoothCurveTo with relative coordination');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				surface.createPath()
+					.moveTo(10, 20).curveTo(50, 50, 50, 100, 150, 100)
+					.setAbsoluteMode(false).smoothCurveTo(150, 200, 50, 100)
+					.setAbsoluteMode(true).smoothCurveTo(50, 100, 10, 230)
+					.setStroke({ color: "green", width: 1 }).setFill(null).setTransform({ dx: 10, dy: 30 })
+					;
+				});
+				/* } */
+			});
+
+			// test path: curveTo, smoothCurveTo with relative.
+			addTest('qCurveTo', function(testName) {
+				var surface = getTestSurface(testName, 'qCurveTo, qSmoothCurveTo' );
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				surface.createPath()
+					.moveTo(10, 15).qCurveTo(50, 50, 100, 100).qSmoothCurveTo(150, 20)
+					.setStroke({ color: "green", width: 1 }).setFill(null).setTransform({ dx: 10, dy: 30 })
+					;
+				});
+				/* } */
+			});
+
+			addTest('qCurveTo2', function(testName) {
+				var surface = getTestSurface(testName, 'qCurveTo, qSmoothCurveTo with relative' );
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				surface.createPath()
+					.moveTo(10, 20).qCurveTo(50, 50, 100, 100)
+					.setAbsoluteMode(false).qSmoothCurveTo(50, -80)
+					.setAbsoluteMode(true).qSmoothCurveTo(200, 80)
+					.setStroke({ color: "green", width: 1 }).setFill(null).setTransform({ dx: 10, dy: 30 })
+					;
+				});
+				/* } */
+			});
+
+			// test defines, linearGradient
+			addTest('linearGradient', function(testName) {
+				var surface = getTestSurface(testName, 'linear gradient fill');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				// this is an example to split the linearGradient from setFill:
+				var lg = {
+					type: "linear",
+					x1: 0, y1: 0, x2: 75, y2: 50,
+					colors: [
+						{ offset: 0, color: "#F60" },
+						{ offset: 1, color: "#FF6" }
+					]
+				};
+				surface.createRect(rect).setFill(lg).setTransform({ dx: 40, dy: 100 });
+				});
+				/* } */
+			});
+
+			// TODO: test radialGradient
+			addTest('radialGradient', function(testName) {
+				var surface = getTestSurface(testName, 'radial gradient fill');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				// this is a total inline implementation compared with previous one.
+				var rg = {
+					type: "radial",
+					cx: 100, cy: 100, r: 100,
+					colors: [
+						{ offset:   0, color: "red" },
+						{ offset: 0.5, color: "green" },
+						{ offset:   1, color: "blue" }
+					]
+				};
+		
+				surface.createCircle({cx: 100, cy: 100, r: 100})
+					.setStroke({})
+					.setFill(rg)
+					.setTransform({dx: 40, dy: 30})
+					;
+		//		surface.createRect(rect)
+		//		.setShape({width: 200})
+		//		.setStroke({})
+		//		.setFill(rg)
+		//		.setTransform({dx: 40, dy: 30})
+		//		;
+				});
+				/* } */
+			});
+
+			addTest('attach_gradient', function(testName) {
+				var surface = getTestSurface(testName, 'attach gradient fill');
+				/* SVGWEB { */
+				surface.whenLoaded(function() {
+				// this is an example to split the linearGradient from setFill:
+				var lg = {
+					type: "linear",
+					x1: 0, y1: 0, x2: 75, y2: 50,
+					colors: [
+						{ offset:   0, color: "#F60" },
+						{ offset: 0.5, color: "#FAF" },
+						{ offset:   1, color: "#FF6" }
+					]
+				};
+
+				var lgr = surface.createRect(rect).setFill(lg).setTransform({ dx: 40, dy: 100 });
+
+				var ar = dojox.gfx.attachNode(lgr.rawNode);
+				// FIXME: more generic method to compare two dictionary?
+				console.debug("attach_gradient!");
+
+				console.debug("attach shape: ");
+				isEqual(lgr.shape, ar.shape, "rect.shape");
+				console.debug("attach matrix: ");
+				isEqual(lgr.matrix, ar.matrix, "rect.matrix");
+				console.debug("attach strokeStyle: ");
+				isEqual(lgr.strokeStyle, ar.strokeStyle, "rect.strokeStyle");
+				console.debug("attach fillStyle: ");
+				isEqual(lgr.fillStyle.gradient, ar.fillStyle.gradient, "rect.fillStyle.gradient");
+				//isEqual(lgr.fillStyle.id, ar.fillStyle.id, "rect.fillStyle.id");
+				});
+				/* } */
+			});
+
+			var gTestsToRun = [
+				'rect',
+				'straight_rect',
+				'rotated_rect',
+				'skew_rect',
+				'matrix_rect', 
+				//'attach',
+				//'attach_gradient',
+				'circle',
+				'arcTo',
+				'line',
+				'ellipse',
+				'polyline',
+				'polygon',
+				'lineTo',
+				'setPath',
+				'curveTo',
+				'curveTo2',
+				'qCurveTo',
+				'qCurveTo2',
+				'linearGradient',
+				'radialGradient'
+			];
+
+			for (var i = 0; i < gTestsToRun.length; ++i) {
+				var testName = gTestsToRun[i];
+				var err = runTest(testName);
+				if (err) {
+					getTestSurface(testName, testName + ' FAILED (' + err + ')');
+				}
+			}
+
+		}); // end onload
+		</script>
+</head>
+<body>
+	<h1 class="testTitle">dojox.gfx tests</h1>
+		<table>
+			<tbody id="testcontainer">
+			</tbody>
+		</table>
+</body>
+</html>

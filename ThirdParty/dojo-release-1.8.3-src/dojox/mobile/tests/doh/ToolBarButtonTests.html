@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Button Tests</title>
+<script type="text/javascript" src="../../deviceTheme.js"></script>
+<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+<script language="JavaScript" type="text/javascript">
+	var BUTTON_LABEL = "Button";
+	var WIDGET_CLASSNAME1 = "mblToolBarButton";
+	var WIDGET_CLASSNAME2 = "mblToolBarButtonRightArrow";
+	var WIDGET_ICON_CLASSNAME1 = "mblDomButtonWhiteSearch";
+	var WIDGET_ICON_CLASSNAME2 = "mblDomButton";
+
+	require([
+		"dojo/_base/sniff",
+		"dojo/dom-class", // dojo.hasClass
+		"dojo/dom-construct", // dojo.place
+		"dojo/ready", // dojo.ready
+		"dijit/registry",  // dijit.byId
+		"doh/runner",	//doh functions
+		"dojox/mobile/ToolBarButton",
+		"dojox/mobile",				// This is a mobile app.
+		"dojox/mobile/View",		// This mobile app uses mobile view
+		"dojox/mobile/compat",		// This mobile app supports running on desktop browsers
+		"dojox/mobile/parser"		// This mobile app uses declarative programming with fast mobile parser
+	], function(has, domClass, domConst, ready, registry, runner, Button){
+		function _createButtonDeclaratively(buttonId) {
+			return registry.byId(buttonId);
+		}
+		function _createButtonProgrammatically(placeHolderId){
+			var button = new Button({label:BUTTON_LABEL, arrow:"right", icon:"mblDomButtonWhiteSearch"});
+			runner.assertNotEqual(null, button, placeHolderId);
+			domConst.place(button.domNode, placeHolderId, "replace");
+			button.startup();
+			return button;
+		}
+		function _createButtonProgrammaticallyWithSourceNodeReference(buttonId){
+			return new Button({label:BUTTON_LABEL, arrow:"right", icon:"mblDomButtonWhiteSearch"}, buttonId);
+		}
+		function _assertCorrectButton(button){
+			runner.assertNotEqual(null, button);
+			runner.assertEqual(BUTTON_LABEL, button.labelNode.innerHTML, "id=" + button.domNode.id);
+			runner.assertTrue(domClass.contains(button.domNode, WIDGET_CLASSNAME1), WIDGET_CLASSNAME1 + " id=" + button.domNode.id + " class=" + button.domNode.className);
+			runner.assertTrue(domClass.contains(button.domNode, WIDGET_CLASSNAME2), WIDGET_CLASSNAME2 + " id=" + button.domNode.id + " class=" + button.domNode.className);
+			runner.assertTrue(button.iconNode, "iconNode: There is no iconNode. id=" + button.domNode.id);
+			runner.assertTrue(domClass.contains(button.iconNode.childNodes[0], WIDGET_ICON_CLASSNAME1), WIDGET_ICON_CLASSNAME1 + " id=" + button.domNode.id + " class=" + button.iconNode.childNodes[0].className);
+			runner.assertTrue(domClass.contains(button.iconNode.childNodes[0], WIDGET_ICON_CLASSNAME2), WIDGET_ICON_CLASSNAME2 + " id=" + button.domNode.id + " class=" + button.iconNode.childNodes[0].className);
+		}
+		function _showView2(){
+			var view1 = registry.byId("view1");
+			view1.performTransition("view2", 1, "none");
+		}
+		ready(function(){
+			runner.register("dojox.mobile.test.doh.ButtonTests", [
+				function testInView1(){
+					var button1 = _createButtonDeclaratively("view1-button1");
+					var button2 = _createButtonProgrammatically("view1-button2");
+					var button3 = _createButtonProgrammaticallyWithSourceNodeReference("view1-button3");
+			
+					_assertCorrectButton(button1);
+					_assertCorrectButton(button2);
+					_assertCorrectButton(button3);
+				},
+				function testInView2(){
+					var button1 = _createButtonDeclaratively("view2-button1");
+					var button2 = _createButtonProgrammatically("view2-button2");
+					var button3 = _createButtonProgrammaticallyWithSourceNodeReference("view2-button3");
+					
+					_showView2();
+					
+					_assertCorrectButton(button1);
+					_assertCorrectButton(button2);
+					_assertCorrectButton(button3);
+				}
+			]);
+			runner.run();
+		});
+	})
+</script>
+</head>
+<body>
+	<div id="view1" data-dojo-type="dojox.mobile.View" selected="true">
+		<h1>View 1</h1>
+		<div id="view1-button1" data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props="arrow:'right', icon:'mblDomButtonWhiteSearch'">Button</div>
+		<div id="view1-button2"></div>
+		<div id="view1-button3"></div>
+	</div>
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<h1>View 2</h1>
+		<div id="view2-button1" data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props="arrow:'right', icon:'mblDomButtonWhiteSearch'">Button</div>
+		<div id="view2-button2"></div>
+		<div id="view2-button3"></div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,87 @@
+body {
+	padding: 0em 1em 1em 50px;
+	margin: 0;
+	font-family: sans-serif;
+	color: black;
+	background: white;
+	background-image: url(../images/MVC_patterns_in_Dojo.png);
+	background-position: top left;
+	background-attachment: fixed;
+	background-repeat: no-repeat;
+}
+
+.rule {display: block; background-color: #6682b5;}
+*[class~="rule"] {display: block; background-color: #aaa;}
+.spacer {display: block; margin-bottom:10px; padding-bottom:5px;}
+*[class~="spacer"] {display: block; margin-bottom:10px; padding-bottom:5px; }
+
+/*table { width: 500px; display: inline-block; } */ 
+tbody { display: inline-block; width: 100%; }
+.row { width: 500px; display: inline-block; margin: 5px; }
+.cell { width: 20%;  display:inline-block; }
+.fullrow { width: 100%; display: inline-block; margin: 5px; }
+.fixedcell { width: 170px;  display:inline-block; }
+.widerow { width: 900px; display: inline-block; margin: 5px; }
+.narrowcell { width: 5%;  display:inline-block; }
+label { text-align: right; width: 98%; display: inline-block; font-weight: bold; }
+
+.generate-heading { font-size:1.2em; font-weight:bold; }
+.generate-label-cell { text-align: left; width: 20%;  display:inline-block; }
+.generate-dijit-cell { text-align: left; width: 20%;  display:inline-block; }
+
+#wrapper{
+	margin-top:0px;
+	margin-left:-5px;
+	width:100%;
+	min-width:770px;
+	font-family:"Arial";
+	font-size:0.8em;
+	background-image: url("../images/background.jpg");
+}
+#header{
+	height:100px;
+	width: 100%;
+	min-width:760px;
+	margin-left:-10px;
+	margin-top:20px;
+	z-index:1;
+}
+#headerInsert{
+	width:80%; margin:auto;
+	margin-top:0px;
+	height:100px;
+	z-index:2;
+	color: #005A9C;
+}
+#main{
+	min-height:600px;
+	width:80%; 
+	min-width:880px;
+	text-align: left;
+	padding:10px;
+	margin-top:35px;
+	font-weight:normal;
+}
+#mainContent{
+	float:left;
+	width:85%;
+	min-width:520px;
+	margin-top:-500px;
+	margin-left:140px;
+}
+#leftNav{
+	padding-top:30px;
+	height:500px;
+	width:110px;
+	margin-right:10px;
+	float:left;
+}
+#navigation{
+	width:380px;
+	height:50px;
+	margin-left:60px;
+	font-weight:bold;
+}
+#navigation ul{list-style:none; }
+#navigation ul li{float:left; display:block; margin-top:-10px;width:90px;height:30px; padding:5px;}
+#navigation ul li:hover{ color:#aaa;}

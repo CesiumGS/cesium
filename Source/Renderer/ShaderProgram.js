@@ -1245,6 +1245,10 @@ define([
         }
     }
 
+    var scratchUniformMatrix2 = (typeof Float32Array !== 'undefined') ? new Float32Array(4) : undefined;
+    var scratchUniformMatrix3 = (typeof Float32Array !== 'undefined') ? new Float32Array(9) : undefined;
+    var scratchUniformMatrix4 = (typeof Float32Array !== 'undefined') ? new Float32Array(16) : undefined;
+
     /**
      * A shader program's uniform, including the uniform's value.  This is most commonly used to change
      * the value of a uniform, but can also be used retrieve a uniform's name and datatype,
@@ -1517,15 +1521,15 @@ define([
                 };
             case _gl.FLOAT_MAT2:
                 return function() {
-                    _gl.uniformMatrix2fv(_location, false, Matrix2.toArray(this.value));
+                    _gl.uniformMatrix2fv(_location, false, Matrix2.toArray(this.value, scratchUniformMatrix2));
                 };
             case _gl.FLOAT_MAT3:
                 return function() {
-                    _gl.uniformMatrix3fv(_location, false, Matrix3.toArray(this.value));
+                    _gl.uniformMatrix3fv(_location, false, Matrix3.toArray(this.value, scratchUniformMatrix3));
                 };
             case _gl.FLOAT_MAT4:
                 return function() {
-                    _gl.uniformMatrix4fv(_location, false, Matrix4.toArray(this.value));
+                    _gl.uniformMatrix4fv(_location, false, Matrix4.toArray(this.value, scratchUniformMatrix4));
                 };
             default:
                 throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type + ' for uniform "' + activeUniform.name + '".');
@@ -1651,19 +1655,19 @@ define([
             case _gl.FLOAT_MAT2:
                 return function() {
                     for ( var i = 0; i < _locations.length; ++i) {
-                        _gl.uniformMatrix2fv(_locations[i], false, Matrix2.toArray(this.value[i]));
+                        _gl.uniformMatrix2fv(_locations[i], false, Matrix2.toArray(this.value[i], scratchUniformMatrix2));
                     }
                 };
             case _gl.FLOAT_MAT3:
                 return function() {
                     for ( var i = 0; i < _locations.length; ++i) {
-                        _gl.uniformMatrix3fv(_locations[i], false, Matrix3.toArray(this.value[i]));
+                        _gl.uniformMatrix3fv(_locations[i], false, Matrix3.toArray(this.value[i], scratchUniformMatrix3));
                     }
                 };
             case _gl.FLOAT_MAT4:
                 return function() {
                     for ( var i = 0; i < _locations.length; ++i) {
-                        _gl.uniformMatrix4fv(_locations[i], false, Matrix4.toArray(this.value[i]));
+                        _gl.uniformMatrix4fv(_locations[i], false, Matrix4.toArray(this.value[i], scratchUniformMatrix4));
                     }
                 };
             default:
@@ -2165,17 +2169,23 @@ define([
                     var value;
                     var loc;
 
-                    // On some platforms - Nexus 4 for one - an array of sampler2D ends up being represented
+                    // On some platforms - Nexus 4 in Firefox for one - an array of sampler2D ends up being represented
                     // as separate uniforms, one for each array element.  Check for and handle that case.
                     var indexOfBracket = uniformName.indexOf('[');
                     if (indexOfBracket >= 0) {
                         // We're assuming the array elements show up in numerical order - it seems to be true.
                         uniformArray = allUniforms[uniformName.slice(0, indexOfBracket)];
                         locations = uniformArray._getLocations();
-                        value = uniformArray.value;
-                        loc = gl.getUniformLocation(program, uniformName);
-                        locations.push(loc);
-                        value.push(gl.getUniform(program, loc));
+
+                        // On the Nexus 4 in Chrome, we get one uniform per sampler, just like in Firefox,
+                        // but the size is not 1 like it is in Firefox.  So if we push locations here,
+                        // we'll end up adding too many locations.
+                        if (locations.length <= 1) {
+                            value = uniformArray.value;
+                            loc = gl.getUniformLocation(program, uniformName);
+                            locations.push(loc);
+                            value.push(gl.getUniform(program, loc));
+                        }
                     } else {
                         locations = [];
                         value = [];

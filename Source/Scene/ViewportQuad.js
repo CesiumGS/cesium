@@ -1,48 +1,54 @@
 /*global define*/
 define([
+        '../Core/Color',
+        '../Core/combine',
         '../Core/destroyObject',
         '../Core/defaultValue',
+        '../Core/DeveloperError',
         '../Core/BoundingRectangle',
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
+        './Material',
         '../Renderer/BufferUsage',
-        '../Renderer/BlendEquation',
-        '../Renderer/BlendFunction',
+        '../Renderer/BlendingState',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
+        '../Shaders/Noise',
         '../Shaders/ViewportQuadVS',
         '../Shaders/ViewportQuadFS'
     ], function(
+        Color,
+        combine,
         destroyObject,
         defaultValue,
+        DeveloperError,
         BoundingRectangle,
         ComponentDatatype,
         PrimitiveType,
+        Material,
         BufferUsage,
-        BlendEquation,
-        BlendFunction,
+        BlendingState,
         CommandLists,
         DrawCommand,
+        Noise,
         ViewportQuadVS,
         ViewportQuadFS) {
     "use strict";
 
     /**
-     * DOC_TBA
+     * A viewport aligned quad.
      *
      * @alias ViewportQuad
      * @constructor
+     *
+     * @param {BoundingRectangle} rectangle The BoundingRectangle defining the quad's position within the viewport.
+     *
+     * @example
+     * var viewportQuad = new ViewportQuad();
+     * var viewportQuad = new BoundingRectangle(0, 0, 80, 40);
+     * viewportQuad.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
      */
-    var ViewportQuad = function(rectangle, vertexShaderSource, fragmentShaderSource) {
-        /**
-         * DOC_TBA
-         */
-        this.renderState = undefined;
-
-        /**
-         * DOC_TBA
-         */
-        this.enableBlending = false;
+    var ViewportQuad = function(rectangle) {
 
         this._va = undefined;
         this._overlayCommand = new DrawCommand();
@@ -50,112 +56,39 @@ define([
         this._commandLists = new CommandLists();
         this._commandLists.overlayList.push(this._overlayCommand);
 
-        this._vertexShaderSource = defaultValue(vertexShaderSource, ViewportQuadVS);
-        this._fragmentShaderSource = defaultValue(fragmentShaderSource, ViewportQuadFS);
 
-        this._texture = undefined;
-        this._destroyTexture = true;
+        /**
+         * The BoundingRectangle defining the quad's position within the viewport.
+         *
+         * @type BoundingRectangle
+         *
+         * @example
+         * viewportQuad.rectangle = new BoundingRectangle(0, 0, 80, 40);
+         */
+        this.rectangle = new BoundingRectangle(0, 0, 10, 10);
 
-        this._framebuffer = undefined;
-        this._destroyFramebuffer = false;
 
-        this._rectangle = BoundingRectangle.clone(rectangle);
-
-        var that = this;
-        this._overlayCommand.uniformMap = this.uniforms = {
-            u_texture : function() {
-                return that._texture;
-            }
-        };
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ViewportQuad
-     */
-    ViewportQuad.prototype.getRectangle = function() {
-        return this._rectangle;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof ViewportQuad
-     *
-     * @param {BoundingRectangle} value DOC_TBA
-     */
-    ViewportQuad.prototype.setRectangle = function(value) {
-        BoundingRectangle.clone(value, this._rectangle);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ViewportQuad
-     */
-    ViewportQuad.prototype.getTexture = function() {
-        return this._texture;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ViewportQuad
-     */
-    ViewportQuad.prototype.setTexture = function(value) {
-        if (this._texture !== value) {
-            this._texture = this._destroyTexture && this._texture && this._texture.destroy();
-            this._texture = value;
-        }
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ViewportQuad
-     */
-    ViewportQuad.prototype.getDestroyTexture = function() {
-        return this._destroyTexture;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ViewportQuad
-     */
-    ViewportQuad.prototype.setDestroyTexture = function(value) {
-        this._destroyTexture = value;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ViewportQuad
-     */
-    ViewportQuad.prototype.getFramebuffer = function() {
-        return this._framebuffer;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ViewportQuad
-     */
-    ViewportQuad.prototype.setFramebuffer = function(value) {
-        if (this._framebuffer !== value) {
-            this._framebuffer = this._destroyFramebuffer && this._framebuffer && this._framebuffer.destroy();
-            this._framebuffer = value;
-        }
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ViewportQuad
-     */
-    ViewportQuad.prototype.getDestroyFramebuffer = function() {
-        return this._destroyFramebuffer;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ViewportQuad
-     */
-    ViewportQuad.prototype.setDestroyFramebuffer = function(value) {
-        this._destroyFramebuffer = value;
+        /**
+         * The surface appearance of the viewport quad.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
+         * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+         * <p>
+         * The default material is <code>Material.ColorType</code>.
+         * </p>
+         *
+         * @type Material
+         *
+         * @example
+         * // 1. Change the color of the default material to yellow
+         * viewportQuad.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+         *
+         * // 2. Change material to horizontal stripes
+         * viewportQuad.material = Material.fromType(scene.getContext(), Material.StripeType);
+         *
+         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
+         */
+        this.material = Material.fromType(undefined, Material.ColorType);
+        this.material.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
+        this._material = undefined;
     };
 
     var attributeIndices = {
@@ -229,36 +162,50 @@ define([
     }
 
     /**
-     * @private
+     * Commits changes to properties before rendering by updating the object's WebGL resources.
+     *
+     * @memberof ViewportQuad
+     *
+     * @exception {DeveloperError} this.material must be defined.
+     * @exception {DeveloperError} this.rectangle must be defined.
      */
     ViewportQuad.prototype.update = function(context, frameState, commandList) {
-        if (typeof this._texture === 'undefined') {
-            return;
+        if (typeof this.material === 'undefined') {
+            throw new DeveloperError('this.material must be defined.');
         }
 
-        if (typeof this._overlayCommand.shaderProgram === 'undefined') {
-            this._overlayCommand.shaderProgram = context.getShaderCache().getShaderProgram(this._vertexShaderSource, this._fragmentShaderSource, attributeIndices);
+        if (typeof this.rectangle === 'undefined') {
+            throw new DeveloperError('this.rectangle must be defined.');
+        }
+
+        if (typeof this._va === 'undefined') {
             this._va = getVertexArray(context);
             this._overlayCommand.vertexArray = this._va.vertexArray;
-            this.renderState = context.createRenderState({
-                blending : {
-                    enabled : true,
-                    equationRgb : BlendEquation.ADD,
-                    equationAlpha : BlendEquation.ADD,
-                    functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-                    functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
-                    functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
-                    functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
-                }
+            this._overlayCommand.renderState = context.createRenderState({
+                blending : BlendingState.ALPHA_BLEND
             });
         }
 
-        this.renderState.blending.enabled = this.enableBlending;
-        this.renderState.viewport = this._rectangle;
-        this._overlayCommand.renderState = this.renderState;
-        this._overlayCommand.framebuffer = this._framebuffer;
+        var pass = frameState.passes;
+        if (pass.overlay) {
+            if (this._material !== this.material) {
+                // Recompile shader when material changes
+                this._material = this.material;
 
-        if (frameState.passes.overlay) {
+                var fsSource =
+                    '#line 0\n' +
+                    Noise +
+                    '#line 0\n' +
+                    this._material.shaderSource +
+                    '#line 0\n' +
+                    ViewportQuadFS;
+
+                this._overlayCommand.shaderProgram = this._overlayCommand.shaderProgram && this._overlayCommand.shaderProgram.release();
+                this._overlayCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fsSource, attributeIndices);
+            }
+
+            this._overlayCommand.renderState.viewport = this.rectangle;
+            this._overlayCommand.uniformMap = this._material._uniforms;
             commandList.push(this._commandLists);
         }
     };
@@ -301,8 +248,6 @@ define([
     ViewportQuad.prototype.destroy = function() {
         this._va = this._va && this._va.release();
         this._overlayCommand.shaderProgram = this._overlayCommand.shaderProgram && this._overlayCommand.shaderProgram.release();
-        this._texture = this._destroyTexture && this._texture && this._texture.destroy();
-        this._framebuffer = this._destroyFramebuffer && this._framebuffer && this._framebuffer.destroy();
 
         return destroyObject(this);
     };

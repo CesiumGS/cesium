@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Heading</title>
+		<link href="../../themes/android/base.css" rel="stylesheet"/>
+		<link href="../../themes/common/domButtons.css" rel="stylesheet"/>
+
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			//dojo.require("dojo.parser"); // Use the lightweight parser.
+			dojo.require("dojox.mobile.parser");
+			dojo.require("dojox.mobile");
+			dojo.requireIf(!dojo.isWebKit, "dojox.mobile.compat");
+
+	        dojo.require("doh.runner");
+			dojo.addOnLoad(function(){
+				doh.register("dojox.mobile.test.doh.Heading1", [
+					{
+						name: "Heading Verification",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							setTimeout(d.getTestCallback(function(){
+								var demoWidget = dijit.byId("dojox_mobile_Heading_0");
+								doh.assertTrue('mblHeading mblHeadingCenterTitle' == demoWidget.domNode.className || 'mblHeading' == demoWidget.domNode.className);
+								doh.assertEqual('General', demoWidget.domNode.childNodes[1].childNodes[0].nodeValue);
+
+								demoWidget = dijit.byId("dojox_mobile_Heading_1");
+								doh.assertTrue('mblHeading mblHeadingCenterTitle' == demoWidget.domNode.className || 'mblHeading' == demoWidget.domNode.className);
+								doh.assertEqual('Very Very Long Title May Not Be Displayed in the Narrow Space', demoWidget.domNode.childNodes[1].childNodes[0].nodeValue);
+								
+								demoWidget = dijit.byId("dojox_mobile_Heading_2");
+								doh.assertTrue('mblHeading mblHeadingCenterTitle' == demoWidget.domNode.className || 'mblHeading' == demoWidget.domNode.className);
+								doh.assertEqual('World Clock', demoWidget.domNode.childNodes[0].childNodes[0].nodeValue);
+
+								demoWidget = dijit.byId("dojox_mobile_Heading_3");
+								doh.assertTrue('mblHeading mblHeadingCenterTitle' == demoWidget.domNode.className || 'mblHeading' == demoWidget.domNode.className);
+							}));
+							return d;
+						}
+					}
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+	<body>
+		<div id="general" data-dojo-type="dojox.mobile.View" selected="true">
+			<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Settings", moveTo:"settings"'>General</h1>
+			<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Long Button", moveTo:"settings"'>Very Very Long Title May Not Be Displayed in the Narrow Space</h1>
+		</div>
+
+		<h1 data-dojo-type="dojox.mobile.Heading" label="World Clock"></h1><br>
+
+
+		<h1 data-dojo-type="dojox.mobile.Heading">
+			<button data-dojo-type="dojox.mobile.ToolBarButton" style="padding: 0px 14px">Edit</button>
+			<button data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='icon:"mblDomButtonWhitePlus"' style="float:right;"></button>Alarm Clock</h1><br>
+
+
+	</body>
+</html>

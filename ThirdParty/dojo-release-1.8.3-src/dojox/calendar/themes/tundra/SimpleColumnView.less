@@ -1,0 +1,366 @@
+@import "ColumnViewCommon.less";
+
+@row-header-width: 70px;
+@secondary-sheet-height: 0px;
+@sheet-top: @column-header-height;
+
+.tundra .dojoxCalendarSimpleColumnView {	
+  cursor: default;
+	-webkit-user-select: none;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarHeader {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	height: @column-header-height - 1px;
+	.border-box;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarScrollContainer {
+	left: 0;
+	right: 0;
+	bottom: 0;
+	top: @sheet-top;
+	position: absolute;
+	overflow-y: hidden;
+	overflow-x: hidden;
+	border-top: @outer-border;
+	border-bottom: @outer-border;
+	.border-box;
+}
+	
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarGrid {
+	position: absolute;
+	left: @row-header-width;
+	right: 0;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable {
+	border-collapse: collapse;
+	table-layout: fixed;
+	width: 100%;
+	position: relative;
+	margin: 0;
+	padding: 0;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable td {
+	border-top: dotted 1px #B5BCC7;	
+	border-right: @inner-border;
+	.border-box;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable .hour	{
+	border-top: @hour-stroke;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable tr:first-child td	{
+	border-top: 1px solid transparent;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable .halfhour	{
+	border-top: @half-hour-stroke;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable .quarterhour	{
+	border-top: @quarter-hour-stroke;
+}
+
+/* 
+ * The dojoxCalendarToday & dojoxCalendarWeekend classes is added by the 
+ * ColumnView.styleGridColumn method that can be subclassed to add/remove css classes
+ */
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable .dojoxCalendarToday {
+	background-color: @today-color;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable tr td.last-child	{
+	border-right: @outer-border;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable tr:first-child td.dojoxCalendarToday	{
+	border-top: 1px solid @today-color;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable .dojoxCalendarWeekend {
+	background-color: @week-end-color;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable tr:first-child td.dojoxCalendarWeekend	{
+	border-top: 1px solid @week-end-color;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarContainer {
+	position: absolute;
+	top: 0;
+	left: @row-header-width;
+	right: 0;
+	cursor: default;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarContainerTable {
+	border-collapse: collapse;
+	table-layout: fixed;
+	width: 100%;
+	position: relative;
+	margin: 0;
+	padding: 0;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarContainerTable td {
+	height: 100%;
+	padding: 0;
+	vertical-align: top;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarContainerColumn {
+	position:	relative;
+	margin-left: 2px;
+	margin-right: 9px;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEventContainer {
+	position: absolute;
+	overflow: hidden;
+	.select-none;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarYearColumnHeader{
+	position: absolute;
+	height: @column-header-height - 1px;
+	left: 0;
+	width: @row-header-width - 2px;
+	top: 0;	
+	border-left: @outer-border;
+	border-top: @outer-border;
+	border-right: @outer-border;	
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarYearColumnHeader table {
+	position:relative;
+	width:100%;
+	height:100%;	
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarYearColumnHeader table td {
+	text-align: center;
+	vertical-align: middle;
+	border-bottom: @outer-border;	
+	color: @label-color;
+	.header-background;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeader {
+	position: absolute;
+	height: @column-header-height;	 
+	left: @row-header-width;
+	right: 0;
+	top: 0;
+	cursor: default;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeaderTable {
+	border-collapse: collapse;
+	table-layout: fixed;
+	position: relative;
+	margin: 0;
+	padding: 0;			
+	width: 100%;
+	height: 100%;	
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeaderTable td {	
+	overflow:hidden;
+	white-space: nowrap;
+	vertical-align: middle;
+	text-align: center;
+	.header-background;
+	border-right: @inner-border;
+	border-top: @outer-border;
+	border-bottom: @outer-border;
+	.select-none;
+	color: @label-color;
+	.transition-duration(0.2s);
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeaderTable td.last-child {	
+	border-right: @outer-border;	
+}
+
+/* 
+ * The dojoxCalendarToday & dojoxCalendarWeekend classes is added by the 
+ * ColumnView.styleColumnHeaderCell method that can be subclassed to add/remove css classes
+ */
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeaderTable .dojoxCalendarToday {
+	font-weight: bold;
+	color: @today-label-color;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeaderTable .dojoxCalendarWeekend {
+	color: @week-end-label-color;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeaderTable td.Hover{	
+	cursor: pointer;		
+	.header-hover-background;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeaderTable td.Active{	
+	.header-active-background;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarRowHeader {
+	position: absolute;
+	width: @row-header-width - 2px;
+	cursor: default;
+	border-left: @outer-border;
+	border-right: @outer-border;
+	height: 100%;
+	.select-none;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarRowHeaderTable {
+	border-collapse: collapse;
+	table-layout: fixed;
+	position: relative;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarRowHeaderTable td.dummy{
+	border-top: 1px solid @row-color;
+}
+
+/* 
+ * The ColumnView.styleRowHeaderCell method that can be subclassed to add/remove css classes per hour.
+ */
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarRowHeaderTable td {	
+	vertical-align: top;			
+	text-align: right;	
+	border-top: @outer-border; 	
+	background-color: @row-color;
+	color: @label-color;
+	.border-box;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarRowHeaderTable tr:first-child td	{
+	border-top: 1px solid @row-color;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarRowHeaderTable td span {
+	padding-right: 4px;
+}
+ 
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent {
+	position: absolute;	
+	text-align: left;
+	color: #FFF;
+	cursor: default;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .bg {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	z-index: -1;
+	border: 1px solid #260000;	
+	.rounded-corners;
+	background-color: #9F0000;
+	.opacity(90);
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent.Hovered .bg {
+	background-color: #CC0000;	
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent.Selected .bg {
+	background-color: #660000;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent.Edited .bg {
+	border: dashed 1px #FFFFFF;
+	.opacity(70);
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent.Focused .bg {
+	border: dashed 1px #FFFFFF;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .summary {
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .startTime {
+	font-weight: bold;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .endTime {
+	position: absolute;		
+	font-weight: bold;	
+	bottom:3px;
+	left: 6px;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .beforeIcon {
+	text-align: center;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .afterIcon {
+	position: absolute;
+	bottom: 2px;
+	width: 100%;
+	text-align: center;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .handle {
+	.glass-view;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .moveHandle {
+	position: absolute;
+	top:0;
+	width:100%;
+	bottom:0;
+	cursor:move;	
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .resizeStartHandle {
+	position: absolute;
+	top:0;
+	width:100%;
+	height:10px;
+	cursor:n-resize;	
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .resizeEndHandle {
+	position: absolute;
+	bottom:0;
+	width:100%;
+	height:10px;
+	cursor:n-resize;	
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent dl {
+	margin: 0;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarEvent dd {
+	margin: 0;
+	padding: 0 3px;
+	text-align: left;
+}
+
+.tundra .dojoxCalendarSimpleColumnView .dojoxCalendarVScrollBar {
+	position: absolute;
+	top: @sheet-top;
+	bottom: 0;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+

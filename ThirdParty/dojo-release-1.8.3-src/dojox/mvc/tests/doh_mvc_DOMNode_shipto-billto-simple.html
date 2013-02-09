@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Static Master/Detail Pattern -- Multiple Address Detail example</title>
+		<style type="text/css">
+			@import "css/app-format.css";
+		</style>
+		<script type="text/javascript" data-dojo-config="parseOnLoad:0,isDebug:1,async:1,mvc:{debugBindings:1}" src="../../../dojo/dojo.js"></script>
+		<script type="text/javascript">
+			var ctrl, ctrlDetail, model, data;
+
+			require([
+				"doh/runner",
+				"dojo/parser",
+				"dojo/Stateful",
+				"dojo/dom",
+				"dojo/when",
+				"dojox/mvc/getStateful",
+				"dojox/mvc/ModelRefController",
+				"dojox/mvc/Group",
+				"dojox/mvc/parserExtension",
+				"dojo/domReady!"
+			], function(doh, parser, Stateful, dom, when, getStateful, ModelRefController){
+
+				ctrl = new ModelRefController();
+				ctrlDetail = new ModelRefController();
+
+				when(parser.parse(), function(){
+					data = {
+						"Serial": "360324",
+						"First": "John",
+						"Last": "Doe",
+						"Email": "jdoe@example.com",
+						"ShipTo": {
+							"Street": "123 Valley Rd-ShipTo",
+							"City": "Katonah",
+							"State": "NY",
+							"Zip": "10536"
+						},
+						"BillTo": {
+							"Street": "17 Skyline Dr-BillTo",
+							"City": "Hawthorne",
+							"State": "NY",
+							"Zip": "10532"
+						}
+					};
+
+					ctrl.set("model", getStateful(data));
+					ctrlDetail.set("model", ctrl.model.get("ShipTo"));
+
+					doh.register("Switch between ShipTo and BillTo", [{
+						name: "Switch-to-BillTo",
+						runTest: function(){
+							ctrlDetail.set("model", ctrl.model.get("BillTo"));
+							doh.is("17 Skyline Dr-BillTo", dom.byId("streetInput").value, "Street should be of BillTo");
+							doh.is("Hawthorne", dom.byId("cityInput").value, "City should be of BillTo");
+						}
+					}, {
+						name: "Switch-to-ShipTo",
+						runTest: function(){
+							ctrlDetail.set("model", ctrl.model.get("ShipTo"));
+							doh.is("123 Valley Rd-ShipTo", dom.byId("streetInput").value, "Street should be of ShipTo");
+							doh.is("Katonah", dom.byId("cityInput").value, "City should be of ShipTo");
+						}
+					}]);
+
+					doh.run();
+				});
+			});	
+		</script>
+	</head>
+	<body class="claro">
+		<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<div id="wrapper">
+		<div id="header">
+			<div id="navigation">
+			</div>
+			<div id="headerInsert">
+				<h1>Order Shipping Details</h1>
+				<h2>Data Binding Example - Group Container.</h2>
+			</div>
+		</div>
+		<div id="main">
+		<div id="leftNav"></div>
+		<div id="mainContent">
+		<div class="row" data-dojo-type="dojox.mvc.Group" data-dojo-props="target: at(ctrl, 'model')">
+			<div class="row">
+				<label class="cell" for="serialInput">Order #:</label>
+				<input class="cell" id="serialInput"  
+							data-mvc-bindings="value: at('rel:', 'Serial')">
+			</div>
+			<div class="row">
+				<label class="cell" for="lastnameInput">Last:</label>
+				<input class="cell" id="lastnameInput"  
+					data-mvc-bindings="value: at('rel:', 'Last')">
+			</div>
+			<div class="row">
+				<label class="cell" for="emailInput">Email:</label>
+				<input class="cell" id="emailInput"  
+					data-mvc-bindings="value: at('rel:', 'Email')">
+			</div>
+		</div>
+		<br/>
+		<div class="row" id="addrGroup" data-dojo-type="dojox.mvc.Group" data-dojo-props="target: at(ctrlDetail, 'model')">
+			<div class="row">
+				<label class="cell" for="streetInput">Street:</label>
+				<input class="cell" id="streetInput"  
+					data-mvc-bindings="value: at('rel:', 'Street')">
+			</div>
+			<div class="row">
+				<label class="cell" for="cityInput">City:</label>
+				<input class="cell" id="cityInput"  
+					data-mvc-bindings="value: at('rel:', 'City')">
+			</div>
+			<div class="row">
+				<label class="cell" for="stateInput">State:</label>
+				<input class="cell" id="stateInput"  
+					data-mvc-bindings="value: at('rel:', 'State')">
+			</div>
+			<div class="row">
+				<label class="cell" for="zipInput">Zipcode:</label>
+				<input class="cell" id="zipInput"  
+					data-mvc-bindings="value: at('rel:', 'Zip')">
+			</div>
+		</div>
+		</div></div></div>
+	</body>
+</html>

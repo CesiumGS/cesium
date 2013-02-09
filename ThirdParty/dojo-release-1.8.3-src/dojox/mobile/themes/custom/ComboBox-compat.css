@@ -1,0 +1,7 @@
+/* dojox.mobile.ComboBox */
+.dj_gecko .dijitPopup {
+  -moz-box-shadow: none;
+}
+.dj_gecko .mblComboBoxMenuItemSelected {
+  background-image: -moz-linear-gradient(top, #bbbbbb 0%, #666666 100%);
+}

@@ -1,0 +1,71 @@
+@import "MatrixViewCommon.less";
+
+.tundra .dojoxCalendarMatrixViewRtl .dojoxCalendarGrid {
+	right: @row-header-width;
+	left: 0;
+}
+
+.tundra .dojoxCalendarMatrixViewRtl .dojoxCalendarGridTable td {			
+	text-align: left;
+	border-bottom: @inner-border;
+	border-left: @inner-border;
+	border-right: none;
+}
+
+.tundra .dojoxCalendarMatrixViewRtl .dojoxCalendarGridTable td span{
+	padding-left: 2px;
+}
+
+.tundra .dojoxCalendarMatrixViewRtl .dojoxCalendarGridTable td.last-child	{
+	border-left: @outer-border;
+}
+
+.tundra .dojoxCalendarMatrixViewRtl .dojoxCalendarContainer {
+	right: @row-header-width;
+	left: 0;
+}
+
+.tundra .dojoxCalendarMatrixViewRtl .dojoxCalendarContainerTable td {
+	border-bottom: solid 1px transparent;
+	border-right: solid 1px transparent;
+	text-align: right;
+	vertical-align: top;		
+}
+
+.tundra .dojoxCalendarMatrixViewRtl .dojoxCalendarYearColumnHeader{
+	position: absolute;
+	right: 0;
+	left: auto;
+}
+
+.tundra .dojoxCalendarMatrixViewRtl .dojoxCalendarColumnHeader {
+	right: @row-header-width;
+	left: 0;
+}
+
+.tundra .dojoxCalendarMatrixView .dojoxCalendarColumnHeaderTable td {	
+	border-left: @outer-border;
+	border-right: none;
+}
+
+.tundra .dojoxCalendarMatrixViewRtl .dojoxCalendarRowHeader {
+	right: 0;
+	left: auto;
+}
+
+.tundra .dojoxCalendarMatrixViewRtl .dojoxCalendarEvent.dojoxCalendarHorizontal .labels {
+	text-align: right;
+}
+
+.tundra .dojoxCalendarMatrixViewRtl .dojoxCalendarEvent.dojoxCalendarLabel .labels {
+	text-align: right;
+}
+
+.tundra .dojoxCalendarMatrixViewRtl .dojoxCalendarEvent .resizeStartHandle {
+	right: 0;
+}
+
+.tundra .dojoxCalendarMatrixViewRtl .dojoxCalendarEvent .resizeEndHandle {
+	left:0;
+	right:auto;
+}

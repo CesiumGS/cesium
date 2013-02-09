@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Editor Test: ViewSource Plugin</title>
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!--<script type="text/javascript" src="../_testCommon.js"></script>-->
+
+	<script type="text/javascript">
+		dojo.require("dijit.Editor");
+		dojo.require("dijit._editor.plugins.ViewSource");
+		dojo.require("dijit._editor.plugins.FullScreen");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+	</script>
+</head>
+<body class="claro">
+	<br>
+	<br>
+	<div>Content before the editors.</div>
+	<br>
+	<br>
+	<div>
+		<div id="editor0" data-dojo-type="dijit/Editor"
+			data-dojo-props='extraPlugins:["viewSource"], style:"background-color: white; width: 800px;", height:"400px" '>
+			<h1>ViewSource Plugin details</h1>
+			<ol>
+				<li>The ViewSource plugin provides an extra button on the toolbar to allow switching the
+					editor from WSYIWYG editing to into HTML source mode editing in the browser.
+					This plugin is particularly useful when needing to tweak generated HTML source.</li>
+				<li>The mode can also be toggled by entering the key command: CTRL-SHIFT-F12
+					in the editor pane.</li>
+				<li>When it toggled it makes the edit area either a textarea if editing is enabled, or a readonly TEXTAREA node
+					if it is not editable.</li>
+				<li>The plugin is aware of the FullScreen plugin, and when present will make sure that FullScreen knows which
+					node to make 'full'.</li>
+				<li>The View Source adds in basic comment and script tag stripping by default (to help avoid XSS) attacks in code.
+					These can be disabled, but it is not recommended.</li>
+				<li>While in view source mode, all other menu bar plugins are disabled.</li>
+			</ol>
+
+			<h2>Things to test:</h2>
+			<ol>
+				<li>Verify that clicking the View Source icon highlights the button appropriately and toggles the view source mode on.</li>
+				<li>Verify that clicking the View Source icon again dehighlites the button and toggles the view source mode off.</li>
+				<li>Click in the editing pane and verify that CTRL-SHIFT-F12 toggles the view source mode on and off.</li>
+	   			<li>Verify that when in View Source mode and comment and script tag stripping is enabled, that both inputs are removed when
+					toggled off.</li>
+			</ol>
+		</div>
+	</div>
+	<br>
+	<br>
+	<div>
+		<div id="editor1" data-dojo-type="dijit/Editor"
+			data-dojo-props='extraPlugins:["fullScreen","viewSource"], style:"background-color: white; width: 800px;", height:"300px" '>
+			<h1>ViewSource Plugin with FullScreen Plugin details</h1>
+			<ol>
+				<li>The ViewSource plugin is FullScreen aware.  It will  should work appropriately when in full screen mode.</li>
+			</ol>
+
+			<h2>Things to test:</h2>
+			<ol>
+				<li>Verify that while in Full Screen mode clicking the View Source icon highlights the button appropriately and toggles the
+					view source mode on and scales appropriately.</li>
+			</ol>
+		</div>
+	</div>
+	<br>
+	<br>
+	<div>
+		<div id="editor2" data-dojo-type="dijit/Editor"
+			data-dojo-props='extraPlugins:["fullScreen",{name: "viewSource", readOnly: true}], style:"background-color: white; width: 800px;", height:"300px" '>
+			<h1>ViewSource Plugin with readOnly enabled details</h1>
+			<ol>
+				<li>The ViewSource plugin supports a readonly mode.  This should display the content but not allow any edits..</li>
+			</ol>
+
+			<h2>Things to test:</h2>
+			<ol>
+				<li>Verify that while in View Source mode, the source cannot be edited.</li>
+			</ol>
+		</div>
+	</div>
+	<br>
+	<br>
+	<div>
+		<div id="editor3" data-dojo-type="dijit/Editor"
+			data-dojo-props='extraPlugins:["fullScreen",{name: "viewSource", stripScripts: false, stripComments: false, stripIFrames: false}],
+			style:"background-color: white; width: 800px;", height:"300px" '>
+			<h1>ViewSource Plugin with script* disabled</h1>
+			<ol>
+				<li>The ViewSource plugin supports disabling the script stripping, comment stripping, etc.  This can be dangerous, but sometimes it is desirable.</li>
+			</ol>
+
+			<h2>Things to test:</h2>
+			<ol>
+				<li>Verify that typed in script tags, comments, and iframes are left in the content when view switched.</li>
+			</ol>
+		</div>
+	</div>
+	<br>
+	<br>
+	<div>Content after the editors.</div>
+</body>
+</html>

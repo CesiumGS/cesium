@@ -1,0 +1,27 @@
+<html>
+	<head>
+		<title>dojo.connect() keypress/keydown test</title>
+		<script src="../../dojo.js"></script>
+		<script>
+			require(["dojo/dom", "dojo/on", "dojo/_base/connect", "dojo/domReady!"],
+			function(dom, on, connect){
+				connect.connect(dom.byId("textbox"), "onkeypress", function(evt){
+					console.log("keypress event from dojo.connect(): ", evt.type + ", " + evt.charCode + ", " + evt.charOrCode);
+				});
+				connect.connect(dom.byId("textbox"), "onkeydown", function(evt){
+					console.log("keydown event from dojo.connect(): " + evt.type + ", " + evt.keyCode);
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<h1>dojo.connect() keypress/keydown test</h1>
+		<p>
+			Test for dojo.connect()'s deprecated code to normalize onkeypress/onkeydown events to behave like mozilla.
+		</p>
+		<p>
+			Type into &lt;input&gt;, and watch console for log messages.
+		</p>
+		<input id="textbox">
+	</body>
+</html>

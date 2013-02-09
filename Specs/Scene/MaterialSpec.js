@@ -181,6 +181,14 @@ defineSuite([
         verifyMaterial('Blob');
     });
 
+    it('draws RimLighting built-in material', function() {
+        verifyMaterial('RimLighting');
+    });
+
+    it('draws Erosion built-in material', function() {
+        verifyMaterial('Erosion');
+    });
+
     it('gets the material type', function() {
         var material = new Material({
             context : context,
@@ -191,6 +199,7 @@ defineSuite([
         });
         expect(material.type).toEqual('Color');
     });
+
     it('creates a new material type and builds off of it', function() {
         var material1 = new Material({
             context : context,

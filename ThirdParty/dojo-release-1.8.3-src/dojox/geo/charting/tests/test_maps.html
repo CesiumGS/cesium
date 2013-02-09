@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="user-scalable=no, width=device-width" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		
+		<title>Simple Maps,support pan and zoom navigation</title>
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+			@import "../../../../dijit/themes/tundra/tundra.css";
+			@import "../resources/Map.css";
+			.mapContainer {
+				width: 680px;
+				height: 600px;
+				border: solid 1px;
+			}
+			
+			.mapVerticalContainer {
+				display: none;
+				width: 405px;
+				height: 500px;
+				border: solid 1px;
+			}
+		</style>
+		<script type="text/javascript" djConfig="parseOnLoad:true,gfxRenderer:'svg,canvas,vml,silverlight'" src="../../../../dojo/dojo.js"></script>
+		<script type="text/javascript">
+				var isTouchDevice = dojo.isIos || (navigator.userAgent.toLowerCase().indexOf("android") > -1)
+				|| (navigator.userAgent.toLowerCase().indexOf("blackberry") > -1);
+		</script>
+		<script type="text/javascript">
+			dojo.require("dojox.geo.charting.Map");
+			dojo.requireIf(isTouchDevice,"dojox.geo.charting.TouchInteractionSupport");
+			dojo.requireIf(!isTouchDevice,"dojox.geo.charting.MouseInteractionSupport");
+			dojo.require("dojox.geo.charting.KeyboardInteractionSupport");
+			
+			dojo.addOnLoad(function(){
+				var map = new dojox.geo.charting.Map("USStates", "../resources/data/USStates.json");
+				map.setMarkerData("../resources/markers/USStates.json");
+				if (!isTouchDevice) {
+					var mouseInteraction = new dojox.geo.charting.MouseInteractionSupport(map,{enablePan:true,enableZoom:true});
+					mouseInteraction.connect();
+				} else {
+					var touchInteraction = new dojox.geo.charting.TouchInteractionSupport(map,{});
+					touchInteraction.connect();
+				}
+				var keyboardInteraction = new dojox.geo.charting.KeyboardInteractionSupport(map, {enableZoom: true});
+        keyboardInteraction.connect();
+				dojo.connect(window,"onresize",this,function(){map.resize(true,true);});
+				
+			});
+		</script>
+	</head>
+	<body class="tundra">
+	  <p>Keyboard Tips: Use <b>TAB</b> to focus the map, then use <b>up/down/left/right</b> to go around the map, zoom in by <b>SPACE</b> and zoom out by <b>ESC</b>.</p>
+		<div class="mapContainer" id="USStates"></div>
+	</body>
+</html>

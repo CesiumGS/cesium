@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	>
+
+<channel>
+	<title>The Dojo Toolkit Blog</title>
+	<atom:link href="http://dojotoolkit.org/blog/feed" rel="self" type="application/rss+xml" />
+	<link>http://dojotoolkit.org/blog</link>
+	<description>Unbeatable JavaScript Tools</description>
+	<lastBuildDate>Wed, 13 Jul 2011 14:59:51 +0000</lastBuildDate>
+	<language>en</language>
+	<sy:updatePeriod>hourly</sy:updatePeriod>
+	<sy:updateFrequency>1</sy:updateFrequency>
+	<generator>http://wordpress.org/?v=3.0.1</generator>
+		<item>
+		<title>DojoConf Tickets Now On Sale!</title>
+		<link>http://dojotoolkit.org/blog/dojoconf-tickets-now-on-sale</link>
+		<comments>http://dojotoolkit.org/blog/dojoconf-tickets-now-on-sale#comments</comments>
+		<pubDate>Wed, 13 Jul 2011 14:59:36 +0000</pubDate>
+		<dc:creator>Dylan Schiemann</dc:creator>
+				<category><![CDATA[Announcements]]></category>
+		<category><![CDATA[Events]]></category>
+		<category><![CDATA[News]]></category>
+
+		<guid isPermaLink="false">http://dojotoolkit.org/blog/?p=261</guid>
+		<description><![CDATA[The first ever DojoConf will be a premier event for the Dojo community and JavaScript community at large. it is run by the amazing team behind JSConf and TXJS, so you can plan on amazing presentations followed up by outstanding &#8230; <a href="http://dojotoolkit.org/blog/dojoconf-tickets-now-on-sale">Continue reading <span class="meta-nav">&#8594;</span></a>]]></description>
+			<content:encoded><![CDATA[<p>The first ever <a href="http://dojoconf.com/">DojoConf</a> will be a premier event for the Dojo community and JavaScript community at large. it is run by the amazing team behind JSConf and TXJS, so you can plan on amazing presentations followed up by outstanding social events.</p>
+<ul>
+<li>Where: Washington, DC (Palomar Hotel)</li>
+<li>When: Evening of September 15th, all-day September 16 and 17, 2011</li>
+<li>Who: Speakers including Peter Higgins, Dylan Schiemann, Alex Russell, Patrick Ruzand, James Thomas and many more presenting on everything from the future of Dojo to Dojo Mobile. Attendees will include anyone interested in Dojo, including committers, contributors, web developers, designers, project managers, and software architects.</li>
+<li>How: <a href="http://dojoconf2011.eventbrite.com">Tickets for DojoConf are available for US $650 for General Admission</a>, and are currently on sale with very limited supplies. Hotel rooms are available for the low price of US $149 and can be reserved once you register.</li>
+<li>What&#8217;s included: The ticket cost covers full access to all three parties and all of the conference day-of events, basically everything is taken care of for you!</li>
+</ul>
+<p>Early bird tickets have already gone on sale and sold out in a matter of hours, we have opened up a few more Early Bird tickets with this blog post to ensure that those who need/want them can get them. Get them now, they will sell out quickly!</li>
+]]></content:encoded>
+			<wfw:commentRss>http://dojotoolkit.org/blog/dojoconf-tickets-now-on-sale/feed</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>Dojo Web Builder Source on GitHub</title>
+		<link>http://dojotoolkit.org/blog/dojo-web-builder-source-on-github</link>
+		<comments>http://dojotoolkit.org/blog/dojo-web-builder-source-on-github#comments</comments>
+		<pubDate>Thu, 16 Jun 2011 16:52:12 +0000</pubDate>
+		<dc:creator>Dylan Schiemann</dc:creator>
+				<category><![CDATA[Announcements]]></category>
+		<category><![CDATA[News]]></category>
+
+		<guid isPermaLink="false">http://dojotoolkit.org/blog/?p=257</guid>
+		<description><![CDATA[Last month we launched the Dojo Web Builder, an online solution to generate customised versions of The Dojo Toolkit using just your web browser. We are pleased to announce that the technology behind the Dojo Web Builder is now available &#8230; <a href="http://dojotoolkit.org/blog/dojo-web-builder-source-on-github">Continue reading <span class="meta-nav">&#8594;</span></a>]]></description>
+			<content:encoded><![CDATA[<p>Last month we launched the <a href="http://dojotoolkit.org/blog/introducing-the-new-dojo-web-builder">Dojo Web Builder</a>, an online solution to generate customised versions of The Dojo Toolkit using just your web browser. We are pleased to announce that the technology behind the <a href="https://github.com/dojo/dwb">Dojo Web Builder is now available on Github</a> as an official Dojo Foundation project.</p>
+<p>Users can now run the tool locally, which provides access to two really important features&#8230;.</p>
+<ul>
+<li>Generate custom Dojo builds for older versions of the Dojo Toolkit. The Web Builder can be easily configured to work with older versions of the toolkit, whereas the hosted version only provides access to the latest version of Dojo. This allows users who aren&#8217;t using the latest version of Dojo within their application to generate customised builds with the tool.</li>
+<li>Expose custom application modules through the Web Builder. Plug your local Dojo modules into the Web Builder and the tool will automatically allow users to build optimised application layers from all modules it has discovered.</li>
+</ul>
+<p>Follow the simple instructions in the <a href="https://github.com/dojo/dwb/blob/master/README.md">project&#8217;s README file</a> for full details on both of these modes.</p>
+<p>Visit the <a href="https://github.com/dojo/dwb">Dojo Web Builder GitHub project</a> and start using it today!</p>
+]]></content:encoded>
+			<wfw:commentRss>http://dojotoolkit.org/blog/dojo-web-builder-source-on-github/feed</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>Dojo 1.6.1, 1.7 Beta, Tutorials, Dojo Beer, DojoConf, and more&#8230;</title>
+		<link>http://dojotoolkit.org/blog/dojo-1-6-1-1-7-beta-tutorials-dojo-beer-dojoconf-and-more</link>
+		<comments>http://dojotoolkit.org/blog/dojo-1-6-1-1-7-beta-tutorials-dojo-beer-dojoconf-and-more#comments</comments>
+		<pubDate>Wed, 08 Jun 2011 21:56:49 +0000</pubDate>
+		<dc:creator>Dylan Schiemann</dc:creator>
+				<category><![CDATA[Announcements]]></category>
+		<category><![CDATA[Events]]></category>
+		<category><![CDATA[News]]></category>
+
+		<guid isPermaLink="false">http://dojotoolkit.org/blog/?p=253</guid>
+		<description><![CDATA[If you haven&#8217;t been following us on Twitter, it&#8217;s been a very busy month in our community, with many exciting announcements and upcoming events. Recent News Dojo 1.6.1 released. Many minor enhancements and fixes were made, along with official support &#8230; <a href="http://dojotoolkit.org/blog/dojo-1-6-1-1-7-beta-tutorials-dojo-beer-dojoconf-and-more">Continue reading <span class="meta-nav">&#8594;</span></a>]]></description>
+			<content:encoded><![CDATA[<p>If you haven&#8217;t been following us on Twitter, it&#8217;s been a very busy month in our community, with many exciting announcements and upcoming events.</p>
+<h2>Recent News</h2>
+<ul>
+<li><a href="http://dojotoolkit.org/download/">Dojo 1.6.1 released</a>. Many minor enhancements and fixes were made, along with official support for Internet Explorer 9 and Firefox 4.</li>
+<li><a href="http://download.dojotoolkit.org/release-1.7.0b1/">Dojo 1.7 beta released</a>. Please start testing your applications now and report issues. A <a href="http://docs.dojocampus.org/releasenotes/1.7">draft of the 1.7 release notes is in progress</a>. 1.7 final is slated for release in the next 3-6 weeks.</li>
+<li><a href="http://dojotoolkit.org/documentation/">Dojo Tutorials</a>. In case you missed it, we now have 28 new tutorials, all updated for Dojo 1.6, covering a variety of areas of Dojo and Dojo Mobile, as well as a new section of Dojo Recipes, for solving complex real-world problems.</a>
+</ul>
+<h2>Upcoming Events</h2>
+<ul>
+<li><a href="http://www.sitepen.com/services/workshops/">Dojo Workshops</a> in your area. SitePen has been offering a number of workshops, with the next <a href="http://www.sitepen.com/services/workshops/index.php?dojo-workshop-washington-dc-06-2011">Dojo Workshop in Washington DC</a>. Register now for one of the last few slots.</li>
+<li><a href="http://www.sitepen.com/blog/2011/05/26/heads-up-dojo-beer-dc-june-22-2011/">Dojo Beer DC</a>. Even if you cannot make the workshop, join us for free <a href="http://www.sitepen.com/blog/2011/05/26/heads-up-dojo-beer-dc-june-22-2011/">Dojo Beer in DC</a>, or any upcoming Dojo Beer event.</a></li>
+<li>The first ever <a href="http://dojoconf.com/">DojoConf</a> is coming. Run by the same great team that brings us JSConf, DojoConf will be an amazing event. Stay tuned for tickets, which go on sale in a few weeks. Or submit a talk idea by this Friday, June 10th.</li>
+<li>The <a href="http://londonajax.com/">London Ajax Mobile Event</a> will feature a number of great talks on mobile, including Dojo Mobile, EmbedJS, WinkToolkit, and more on July 2nd in London. A few tickets remain, register before it sells out.</li>
+</ul>
+<p>We hope to see you at one of these, or many other upcoming Dojo events.</p>
+]]></content:encoded>
+			<wfw:commentRss>http://dojotoolkit.org/blog/dojo-1-6-1-1-7-beta-tutorials-dojo-beer-dojoconf-and-more/feed</wfw:commentRss>
+		<slash:comments>2</slash:comments>
+		</item>
+		<item>
+		<title>Dojo 1.6.1 Release Candidate 1</title>
+		<link>http://dojotoolkit.org/blog/dojo161rc1</link>
+		<comments>http://dojotoolkit.org/blog/dojo161rc1#comments</comments>
+		<pubDate>Thu, 14 Apr 2011 15:20:15 +0000</pubDate>
+		<dc:creator>Dylan Schiemann</dc:creator>
+				<category><![CDATA[Announcements]]></category>
+		<category><![CDATA[News]]></category>
+
+		<guid isPermaLink="false">http://dojotoolkit.org/blog/?p=235</guid>
+		<description><![CDATA[Dojo 1.6.1rc1 is now available. 1.6.1rc1 contains many fixes, with a special focus on IE9 and FF4 support, browsers released just after Dojo 1.6.0 was completed. Please test 1.6.1rc1, especially against IE9 and FF4 browsers, and send us your feedback &#8230; <a href="http://dojotoolkit.org/blog/dojo161rc1">Continue reading <span class="meta-nav">&#8594;</span></a>]]></description>
+			<content:encoded><![CDATA[<p><a href="http://download.dojotoolkit.org/release-1.6.1rc1/">Dojo 1.6.1rc1</a> is now available.</p>
+<p><a href="http://bugs.dojotoolkit.org/query?status=assigned&#038;status=closed&#038;status=new&#038;status=reopened&#038;group=status&#038;order=priority&#038;milestone=1.6.1&#038;col=id&#038;col=summary&#038;col=type&#038;col=priority&#038;col=component">1.6.1rc1 contains many fixes</a>, with a special focus on IE9 and FF4 support, browsers released just after Dojo 1.6.0 was completed.</p>
+<p>Please test 1.6.1rc1, especially against IE9 and FF4 browsers, and send us your feedback and/or file any bugs you find.  April 20, 2011 is the target release date for 1.6.1.</p>
+]]></content:encoded>
+			<wfw:commentRss>http://dojotoolkit.org/blog/dojo161rc1/feed</wfw:commentRss>
+		<slash:comments>3</slash:comments>
+		</item>
+		<item>
+		<title>Introducing the New Dojo Web Builder</title>
+		<link>http://dojotoolkit.org/blog/introducing-the-new-dojo-web-builder</link>
+		<comments>http://dojotoolkit.org/blog/introducing-the-new-dojo-web-builder#comments</comments>
+		<pubDate>Tue, 05 Apr 2011 16:09:28 +0000</pubDate>
+		<dc:creator>Dylan Schiemann</dc:creator>
+				<category><![CDATA[Announcements]]></category>
+		<category><![CDATA[News]]></category>
+
+		<guid isPermaLink="false">http://dojotoolkit.org/blog/?p=189</guid>
+		<description><![CDATA[Background Dojo&#8217;s build system has long been considered as one of the toolkit&#8217;s most important features. Using the build system will dramatically improve the performance of your Dojo application by optimising the JavaScript modules and CSS files. This reduces the &#8230; <a href="http://dojotoolkit.org/blog/introducing-the-new-dojo-web-builder">Continue reading <span class="meta-nav">&#8594;</span></a>]]></description>
+			<content:encoded><![CDATA[<h2>Background</h2>
+<p><a href="http://dojotoolkit.org/reference-guide/build/">Dojo&#8217;s build system</a> has long been considered as one of the toolkit&#8217;s most important features. Using the build system will dramatically improve the performance of your Dojo application by optimising the JavaScript modules and CSS files. This reduces the download size and number of HTTP connections needed to load your application. </p>
+<p>Today, The Dojo Toolkit&#8217;s build tools are about to improve even further with the launching of a brand new solution, The Dojo Web Builder!</p>
+<p>The Web Builder is an online solution providing an intuitive web interface to the existing build tools, allowing you to create customised Dojo builds using just your web browser and much more. This new tool will dramatically lower the barrier to entry for the build system, easing new users into the process of using a build tool and improving the performance of unoptimised Dojo applications everywhere!</p>
+<p>To start, <a href="http://build.dojotoolkit.org">use the Dojo Web Builder tool</a>, or continue reading for more details. We have produced a number of screencasts showing off the tool&#8217;s features and walking you through the steps required for some common example builds:</p>
+<p><iframe src="http://player.vimeo.com/video/21689343" width="400" height="250" frameborder="0"></iframe>
+<p><a href="http://vimeo.com/21689343">Dojo Web Builder &#8211; Custom Builds</a> from <a href="http://vimeo.com/dojotoolkit">Dojo Toolkit</a> on <a href="http://vimeo.com">Vimeo</a>.</p>
+<p><iframe src="http://player.vimeo.com/video/21689631" width="400" height="250" frameborder="0"></iframe>
+<p><a href="http://vimeo.com/21689631">Dojo Web Builder &#8211; Auto Analysis</a> from <a href="http://vimeo.com/dojotoolkit">Dojo Toolkit</a> on <a href="http://vimeo.com">Vimeo</a>.</p>
+<p><iframe src="http://player.vimeo.com/video/21689724" width="400" height="250" frameborder="0"></iframe>
+<p><a href="http://vimeo.com/21689724">Dojo Web Builder &#8211; Advanced Mode</a> from <a href="http://vimeo.com/dojotoolkit">Dojo Toolkit</a> on <a href="http://vimeo.com">Vimeo</a>.</p>
+<h2>Features</h2>
+<ul>
+<li>Browse catalogue of every module in Dojo, Dijit and DojoX, using text searching to quickly filter the entire results. Simply select desired modules to include those in a custom build. Currently serving over eight hundred modules for the 1.6 release.</li>
+<li>Automatically generate custom Dojo builds using our remote service, no need to open terminals and run the intensive build system locally. When the build is complete, it will automatically start the download of the result. Progress indicator keeps you informed of status during a custom build.</li>
+<li>Auto-analyse existing Dojo applications to discover module dependencies. Provide the Web Builder with a remote URL, upload a HTML page, zip archive or an existing build profile to have the tool show you any Dojo Toolkit or custom module dependencies uncovered. Custom builds using the results will automatically include your custom modules.</li>
+<li>Customise builds even further in &#8220;Advanced Mode&#8221;. Want to include a Dijit theme with compressed CSS? Want to use Google&#8217;s Closure compiler for aggressive compression? Want to build multiple application layers? Want to generate builds for the WebKit platform? Need to generate a cross-domain build? Switch to using the Web Builder in &#8220;Advanced Mode&#8221; to unleash the ability to heavily customise build parameters.</li>
+</ul>
+<h2>Open source</h2>
+<p>The Dojo Web Builder project consists of two new components that were developed:</p>
+<ul>
+<li>Dojo-based web application providing the interface to the build system through a web browser.</li>
+<li>Backend service, allowing existing build system to be controlled through a RESTful interface.</li>
+</ul>
+<p>The entire project will shortly be open-sourced, living on the Dojo Foundation&#8217;s Github repository, allowing anyone to contribute to its continuing development. More importantly, other users will be able to run local versions of the tool pointing at their own modules. For example, an organisation might provide an internal version allowing teams to easily generate new custom builds of a project&#8217;s modules, without having to distribute the entire project source. In addition, the tool can be configured to generate custom builds for older versions of The Dojo Toolkit, such as 1.5 and 1.4.3. Future plans for the project include native support for the AMD module and CommonJS package formats. This will allow the Dojo Web Builder to be used with a broad variety of JavaScript modules and packages external to Dojo. A full announcement will follow when the project&#8217;s source code is available. </p>
+<h2>Conclusion</h2>
+<p>Start using the <a href="http://build.dojotoolkit.org">Dojo Web Builder</a> today. The hosted version is configured to provide access to the custom builds using the latest version of The Dojo Toolkit, 1.6. </p>
+]]></content:encoded>
+			<wfw:commentRss>http://dojotoolkit.org/blog/introducing-the-new-dojo-web-builder/feed</wfw:commentRss>
+		<slash:comments>9</slash:comments>
+		</item>
+		<item>
+		<title>This Week in Dojo: New Tutorials, Mobile Showcase and more</title>
+		<link>http://dojotoolkit.org/blog/this-week-in-dojo</link>
+		<comments>http://dojotoolkit.org/blog/this-week-in-dojo#comments</comments>
+		<pubDate>Mon, 04 Apr 2011 19:43:36 +0000</pubDate>
+		<dc:creator>iTorrey</dc:creator>
+				<category><![CDATA[News]]></category>
+		<category><![CDATA[Uncategorized]]></category>
+
+		<guid isPermaLink="false">http://dojotoolkit.org/blog/?p=183</guid>
+		<description><![CDATA[In the past three weeks SitePen engineers have released a flurry of new tutorials (13 and counting) including two tutorials focused on building Web Apps using Dojo Mobile! Speaking of Dojo Mobile There is now a Dojo Mobile Showcase which &#8230; <a href="http://dojotoolkit.org/blog/this-week-in-dojo">Continue reading <span class="meta-nav">&#8594;</span></a>]]></description>
+			<content:encoded><![CDATA[<p>In the past three weeks <a href="http://www.sitepen.com">SitePen</a> engineers have released a flurry of new <a href="/documentation">tutorials</a> (13 and counting) including two tutorials focused on building Web Apps using Dojo Mobile!</p>
+<h2>Speaking of Dojo Mobile</h2>
+<p>There is now a <a href="http://chrism.dojotoolkit.org/mobile-0.2/make_samples/dojo-samples/demos/mobile-gallery/demo.html">Dojo Mobile Showcase</a> which shows the various widgets available in Dojo 1.6 and gives a glimpse at what&#8217;s coming in Dojo 1.7.</p>
+<h3>Boilerplate</h3>
+<p>Boilerplates are all the rage these days, and sure you can get a sweet HTML5 boilerplate but what about Dojo? Stepping up to the plate is Rebecca Murphy and Colin Snover with their initial release of their <a href="http://blog.rebeccamurphey.com/a-dojo-boilerplate">Dojo 1.6 boilerplate</a>!  </p>
+]]></content:encoded>
+			<wfw:commentRss>http://dojotoolkit.org/blog/this-week-in-dojo/feed</wfw:commentRss>
+		<slash:comments>4</slash:comments>
+		</item>
+		<item>
+		<title>Dojo 1.6 Released!</title>
+		<link>http://dojotoolkit.org/blog/dojo-1-6-released</link>
+		<comments>http://dojotoolkit.org/blog/dojo-1-6-released#comments</comments>
+		<pubDate>Tue, 15 Mar 2011 20:41:19 +0000</pubDate>
+		<dc:creator>Dylan Schiemann</dc:creator>
+				<category><![CDATA[Announcements]]></category>
+		<category><![CDATA[News]]></category>
+
+		<guid isPermaLink="false">http://dojotoolkit.org/blog/?p=159</guid>
+		<description><![CDATA[Now available, and ready for your web app! The Dojo 1.6 release was a substantial undertaking and involves efforts from the largest Dojo team ever. We&#8217;re reinventing Dojo for the present and the future, and this release is the first &#8230; <a href="http://dojotoolkit.org/blog/dojo-1-6-released">Continue reading <span class="meta-nav">&#8594;</span></a>]]></description>
+			<content:encoded><![CDATA[<h2>Now available, and ready for your web app!</h2>
+<p>The <a href="http://dojotoolkit.org/download/">Dojo 1.6 release</a> was a substantial undertaking and involves efforts from the largest Dojo team ever. We&#8217;re reinventing Dojo for the present and the future, and this release is the first major step towards our plans for Dojo 2.0. The tremendous efforts and work of the Dojo community has made this release possible, with significant improvements in a short amount of time.</p>
+<p><a class="blueButton" href="http://dojotoolkit.org/download/">Get Dojo</a> </p>
+<h2>What&#8217;s New in 1.6?</h2>
+<p>Dojo 1.6 contains a number of great additions and refinements. Key highlights include:</p>
+<ul>
+<li><a href="http://dojotoolkit.org/features/1.6/object-store">Object store: Rethinking data stores in a manner that&#8217;s generally easier to work with and more flexible than dojo.data.</a></li>
+<li>LESS Dijit themes: Use the popular LESS CSS framework for simplified theme creation.</li>
+<li><a href="http://dojotoolkit.org/features/1.6/html5data-attributes">HTML5 data attributes: Use data-* attributes instead of custom attributes, so your markup will validate against the HTML5 validator.</a></li>
+<li><a href="http://dojotoolkit.org/features/1.6/widget-watch">Widget watch(): Follow changes to widget attributes with watch().</a></li>
+<li><a href="http://dojotoolkit.org/features/1.6/dojo-websocket">Dojo WebSocket: A simple API for working with WebSockets and other real-time Comet techniques.</a></li>
+<li><a href="http://dojotoolkit.org/features/1.6/async-modules">CommonJS AMD: Dojo now supports the CommonJS AMD format for defining modules.</a></li>
+<li>Charts: The project now contains new Spider and Gantt charts, and support for Canvas text.</li>
+<li>Scene Graph: Dojo Mobile&#8217;s scene graph implementation enables powerful replay capabilities.</li>
+<li>Fixes: Many, many improvements to support new browsers including IE9, compatibility with non-browser environments, widget improvements, and shiny polish all around.</li>
+</ul>
+<p>We&#8217;ve also made substantial progress on <a href="http://dojotoolkit.org/features/mobile">Dojo Mobile</a>, available now for your mobile web apps!</p>
+<p>Visit the new <a href="http://dojotoolkit.org/features/">Dojo Features</a> section to watch interviews with key Dojo committers and users and learn more about this release, as well as the thousands of outstanding features that have been in Dojo for several years.</p>
+<p><a class="blueButton" href="http://dojotoolkit.org/features/">Learn More</a> </p>
+<h2>Testing and Compatibility</h2>
+<p>In total, we&#8217;ve resolved more than 600 issues since Dojo 1.5. The DOH test suite of tens of thousands of tests passes in all officially supported browsers:</p>
+<ul>
+<li>Chrome: 8.x and newer</li>
+<li>Firefox: 3.5.x and 3.6.x</li>
+<li>Internet Explorer: 6, 7, and 8</li>
+<li>Opera: 11.x</li>
+<li>Safari: 4.1.x and 5.0.x</li>
+</ul>
+<p>The code was completed before Internet Explorer 9 and Firefox 4 were released. That said, we&#8217;ve fixed all known issues with these browsers as well (testing was done with IE9 RC and Firefox 4 RC1).</p>
+<p>Dojo is also tested with popular mobile browsers including iOS 4.x, Android 2.x and 3.x, and passes for all supported features in Dojo Mobile, and most features throughout Dojo. Work is also near completion for support with Blackberry 6 on mobile phones and the PlayBook.</p>
+<h2>Use Direct from the CDN, or Download</h2>
+<p><a href="http://dojotoolkit.org/download/">Get the Dojo release</a> that&#8217;s right for you. Choose from CDN, optimized builds, or source versions with full demos and utilities.</p>
+<p><a class="blueButton" href="http://dojotoolkit.org/download/">Get Dojo</a> </p>
+<h2>Documentation</h2>
+<p>Many improvements have been made to the <a href="http://dojotoolkit.org/documentation/">Dojo documentation</a>. Most notable is a <a href="http://staging.dojotoolkit.org/documentation/">collection of new tutorials</a> on using Dojo 1.6, in addition to the <a href="http://dojotoolkit.org/reference-guide/">reference guide and </a><a href="http://dojotoolkit.org/api/">API documentation</a>.</p>
+<p><a class="blueButton" href="http://dojotoolkit.org/documentation/">Documentation</a> </p>
+<h2>Roadmap</h2>
+<p>Work on Dojo 1.7 is already underway. We&#8217;re anticipating releases every 3 months in 2011 as we make progress towards Dojo 2.0! A full roadmap will be available shortly so you&#8217;re aware of the latest changes, and to know how to get involved.</p>
+<h2>Release Notes</h2>
+<p>Read the complete <a href="http://dojotoolkit.org/reference-guide/releasenotes/1.6.html">Dojo 1.6 release notes</a> for full details on everything that has changed with Dojo since 1.5.</p>
+<h2>Thanks!</h2>
+<p>And as always, we appreciate your interest and usage. If you find an issue with Dojo, have a suggestion, or see anything on the site or within the documentation that you think should be better, please register for a <a href="http://my.dojofoundation.org/">Dojo Foundation account</a> and <a href="http://bugs.dojotoolkit.org/">open a ticket</a>.</p>
+]]></content:encoded>
+			<wfw:commentRss>http://dojotoolkit.org/blog/dojo-1-6-released/feed</wfw:commentRss>
+		<slash:comments>13</slash:comments>
+		</item>
+		<item>
+		<title>Upcoming Dojo Beer Events</title>
+		<link>http://dojotoolkit.org/blog/upcoming-dojo-beer-events</link>
+		<comments>http://dojotoolkit.org/blog/upcoming-dojo-beer-events#comments</comments>
+		<pubDate>Tue, 22 Feb 2011 13:51:26 +0000</pubDate>
+		<dc:creator>Dylan Schiemann</dc:creator>
+				<category><![CDATA[Events]]></category>
+
+		<guid isPermaLink="false">http://dojotoolkit.org/blog/?p=155</guid>
+		<description><![CDATA[We&#8217;re planning the following upcoming Dojo Beer events: February 26: Phoenix, Arizona March 10: London (and if you want to attend QCon, use the discount code DOJO to save £50) April 8: Chicago April 11: Las Vegas Let us know &#8230; <a href="http://dojotoolkit.org/blog/upcoming-dojo-beer-events">Continue reading <span class="meta-nav">&#8594;</span></a>]]></description>
+			<content:encoded><![CDATA[<p>We&#8217;re planning the following upcoming Dojo Beer events:</p>
+<ul>
+<li><a href="http://plancast.com/p/3ild">February 26: Phoenix, Arizona</a></li>
+<li><a href="https://secure.trifork.com/london-2011/freeevent/index.jsp?eventOID=3032">March 10: London</a> (and if you want to <a href="https://secure.trifork.com/london-2011/registration/processConference.jsp">attend QCon</a>, use the discount code DOJO to save £50)</li>
+<li><a href="http://plancast.com/p/3uym">April 8: Chicago</a></li>
+<li><a href="http://plancast.com/p/40x9">April 11: Las Vegas</a></li>
+</ul>
+<p>Let us know if you plan to make it, and we&#8217;ll update the details as they become available.</p>
+]]></content:encoded>
+			<wfw:commentRss>http://dojotoolkit.org/blog/upcoming-dojo-beer-events/feed</wfw:commentRss>
+		<slash:comments>2</slash:comments>
+		</item>
+		<item>
+		<title>Dojo 1.6 Beta 1</title>
+		<link>http://dojotoolkit.org/blog/dojo-1-6-beta-1</link>
+		<comments>http://dojotoolkit.org/blog/dojo-1-6-beta-1#comments</comments>
+		<pubDate>Sun, 16 Jan 2011 17:08:43 +0000</pubDate>
+		<dc:creator>Dylan Schiemann</dc:creator>
+				<category><![CDATA[Announcements]]></category>
+
+		<guid isPermaLink="false">http://dojotoolkit.org/blog/?p=146</guid>
+		<description><![CDATA[We&#8217;re pleased to announce the first Dojo 1.6 beta. When Dojo 1.6 final is released in February, it will be our first release that includes a number of retrofitted, backwards-compatible, significant changes towards Dojo 2.0. Because there are a number &#8230; <a href="http://dojotoolkit.org/blog/dojo-1-6-beta-1">Continue reading <span class="meta-nav">&#8594;</span></a>]]></description>
+			<content:encoded><![CDATA[<p>We&#8217;re pleased to announce the first <a href="http://download.dojotoolkit.org/release-1.6.0b1/">Dojo 1.6 beta</a>.</p>
+<p>When Dojo 1.6 final is released in February, it will be our first release that includes a number of retrofitted, backwards-compatible, significant changes towards Dojo 2.0.</p>
+<p>Because there are a number of changes in progress, we will also soon release Dojo 1.5.1 which includes just the most important fixes for what has been our most stable and popular release ever.</p>
+<p>Please check out the in draft <a href="http://docs.dojocampus.org/releasenotes/1.6">Dojo 1.6 beta release notes</a> and the list of <a href="http://bugs.dojotoolkit.org/query?milestone=1.6&#038;resolution=fixed">resolved issues</a> for more details. Try it out, and as usual file tickets in <a href="http://bugs.dojotoolkit.org/">http://bugs.dojotoolkit.org/</a>. And if you&#8217;re interested in Dojo Mobile, many significant additions and improvements have landed in trunk, with many more planned for 1.7 and 2.0. </p>
+<p>Stay tuned in February for the Dojo 1.6 release.</p>
+]]></content:encoded>
+			<wfw:commentRss>http://dojotoolkit.org/blog/dojo-1-6-beta-1/feed</wfw:commentRss>
+		<slash:comments>6</slash:comments>
+		</item>
+		<item>
+		<title>Dojo, Eye-Fi, and CES</title>
+		<link>http://dojotoolkit.org/blog/dojo-eye-fi-and-ces</link>
+		<comments>http://dojotoolkit.org/blog/dojo-eye-fi-and-ces#comments</comments>
+		<pubDate>Mon, 10 Jan 2011 17:35:22 +0000</pubDate>
+		<dc:creator>Dylan Schiemann</dc:creator>
+				<category><![CDATA[News]]></category>
+
+		<guid isPermaLink="false">http://dojotoolkit.org/blog/?p=142</guid>
+		<description><![CDATA[Long-time Dojo user Eye-Fi was at CES in Las Vegas showing our their current wi-fi enabled SD memory card and photo sync services. Here&#8217;s a video interview where they show off the camera and application, and discuss the benefits of &#8230; <a href="http://dojotoolkit.org/blog/dojo-eye-fi-and-ces">Continue reading <span class="meta-nav">&#8594;</span></a>]]></description>
+			<content:encoded><![CDATA[<p>Long-time Dojo user <a href="http://eye.fi/">Eye-Fi</a> was at CES in Las Vegas showing our their current wi-fi enabled SD memory card and photo sync services.</p>
+<p>Here&#8217;s a video interview where they show off the camera and application, and discuss the benefits of using Dojo within their platform, as they transitioned from a traditional web app to an AIR-based application:</p>
+<p><object width="640" height="390"><param name="movie" value="http://www.youtube.com/v/MV5XsrvSzMc&#038;hl=en_US&#038;feature=player_embedded&#038;version=3"></param><param name="allowFullScreen" value="true"></param><param name="allowScriptAccess" value="always"></param><embed src="http://www.youtube.com/v/MV5XsrvSzMc&#038;hl=en_US&#038;feature=player_embedded&#038;version=3" type="application/x-shockwave-flash" allowfullscreen="true" allowScriptAccess="always" width="640" height="390"></embed></object></p>
+<p>Additional commentary and context is available at TheNextWeb&#8217;s post on how to <a href="http://thenextweb.com/gadgets/2011/01/10/upload-pictures-straight-from-your-digital-camera-to-your-social-networks/?awesm=tnw.to_17J8v&#038;utm_content=twitter-publisher-main&#038;utm_medium=tnw.to-twitter&#038;utm_source=direct-tnw.to">Upload pictures straight from your digital camera to your social networks</a>.</p>
+<p>Great work by the Eye-Fi team, in creating an amazing hardware+software platform for simplifying the photo sync process, with the Dojo Toolkit as a key component in that effort!</p>
+]]></content:encoded>
+			<wfw:commentRss>http://dojotoolkit.org/blog/dojo-eye-fi-and-ces/feed</wfw:commentRss>
+		<slash:comments>1</slash:comments>
+		</item>
+	</channel>
+</rss>

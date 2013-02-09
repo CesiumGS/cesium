@@ -1,0 +1,102 @@
+[ 
+                    {
+                        "Serial"  : "A111",
+                        "First"   : "Anne",
+                        "Last"    : "Ackerman",
+                        "Location": "NY",
+                        "Office"  : "1S76",
+                        "Email"   : "a.a@test.com",
+                        "Tel"     : "123-764-8237",
+                        "Fax"     : "123-764-8228"
+                    },
+                    {
+                        "Serial"  : "B111",
+                        "First"   : "Ben",
+                        "Last"    : "Beckham",
+                        "Location": "NY",
+                        "Office"  : "5N47",
+                        "Email"   : "b.b@test.com",
+                        "Tel"     : "123-764-8599",
+                        "Fax"     : "123-764-8600"
+                    },
+                    {
+                        "Serial"  : "C111",
+                        "First"   : "Chad",
+                        "Last"    : "Chapman",
+                        "Location": "CA",
+                        "Office"  : "1278",
+                        "Email"   : "c.c@test.com",
+                        "Tel"     : "408-764-8237",
+                        "Fax"     : "408-764-8228"
+                    },
+                    {
+                        "Serial"  : "D111",
+                        "First"   : "David",
+                        "Last"    : "Durham",
+                        "Location": "NJ",
+                        "Office"  : "C12",
+                        "Email"   : "d.d@test.com",
+                        "Tel"     : "514-764-8237",
+                        "Fax"     : "514-764-8228"
+                    },
+                    {
+                        "Serial"  : "E111",
+                        "First"   : "Emma",
+                        "Last"    : "Eklof",
+                        "Location": "NY",
+                        "Office"  : "4N76",
+                        "Email"   : "e.e@test.com",
+                        "Tel"     : "123-764-1234",
+                        "Fax"     : "123-764-4321"
+                    },
+                    {
+                        "Serial"  : "F111",
+                        "First"   : "Fred",
+                        "Last"    : "Fisher",
+                        "Location": "NJ",
+                        "Office"  : "V89",
+                        "Email"   : "f.f@test.com",
+                        "Tel"     : "514-764-8567",
+                        "Fax"     : "514-764-8000"
+                    },
+                    {
+                        "Serial"  : "G111",
+                        "First"   : "George",
+                        "Last"    : "Garnett",
+                        "Location": "NY",
+                        "Office"  : "7S11",
+                        "Email"   : "gig@test.com",
+                        "Tel"     : "123-999-8599",
+                        "Fax"     : "123-999-8600"
+                    },
+                    {
+                        "Serial"  : "H111",
+                        "First"   : "Hunter",
+                        "Last"    : "Huffman",
+                        "Location": "CA",
+                        "Office"  : "6532",
+                        "Email"   : "h.h@test.com",
+                        "Tel"     : "408-874-8237",
+                        "Fax"     : "408-874-8228"
+                    },
+                    {
+                        "Serial"  : "I111",
+                        "First"   : "Irene",
+                        "Last"    : "Ira",
+                        "Location": "NJ",
+                        "Office"  : "F09",
+                        "Email"   : "i.i@test.com",
+                        "Tel"     : "514-764-6532",
+                        "Fax"     : "514-764-7300"
+                    },
+                    {
+                        "Serial"  : "J111",
+                        "First"   : "John",
+                        "Last"    : "Jacklin",
+                        "Location": "CA",
+                        "Office"  : "6701",
+                        "Email"   : "j.j@test.com",
+                        "Tel"     : "408-764-1234",
+                        "Fax"     : "408-764-4321"
+                    }
+]

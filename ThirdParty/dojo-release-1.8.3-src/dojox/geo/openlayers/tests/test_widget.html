@@ -1,0 +1,100 @@
+<html>
+<head profile="http://www.w3.org/2002/12/namespace">
+<link rel="stylesheet" type="text/css" href="../../../../dijit/themes/dijit.css">
+<link rel="stylesheet" type="text/css" href="../../../../dijit/themes/tundra/tundra.css">
+<title>Widget</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+
+<!--  Google API -->
+<script src="http://maps.google.com/maps/api/js?v=3&amp;sensor=false"></script>
+
+<!-- hosted version -->
+<script type="text/javascript" src="http://openlayers.org/api/2/OpenLayers.js"></script>
+
+<script type="text/javascript">
+	var djConfig = {
+		parseOnLoad : true
+	};
+</script>
+
+<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+<script type="text/javascript">
+	require([	"dojo/ready",
+						"dojo/_base/html",
+						"dojox/geo/openlayers/widget/Map",
+						"dojox/geo/openlayers/WidgetFeature",
+						"dojox/geo/openlayers/Point",
+						"dojox/geo/openlayers/GeometryFeature",
+						"dijit/form/Button",
+						"dojo/parser"], function(ready, html, Map, WidgetFeature, Point, GeometryFeature, Button){
+
+		ready(function(){
+			var map = dijit.byId("map");
+			var ol = map.map.getOLMap();
+
+			var gfx = map.map.getLayer("name", "aGfxLayer")[0];
+			var cannes = ['7 1\' 0" E', '43 33\' 0" N'];
+			var p = {
+				x : dojox.geo.openlayers.parseDMS(cannes[0], true),
+				y : dojox.geo.openlayers.parseDMS(cannes[1], true)
+			};
+			var pg = new dojox.geo.openlayers.Point(p);
+
+			var gf = new dojox.geo.openlayers.GeometryFeature(pg);
+			gf.setStroke({
+				color : "red",
+				width : 5
+			});
+			gf.setShapeProperties({
+				r : 20
+			});
+			gfx.addFeature(gf);
+			gfx.redraw();
+
+			var layer = map.map.getLayer("name", "aLayer")[0];
+			var o = {
+				createWidget : function(){
+					var b = new dijit.form.Button();
+					b.set("label", "A Button at <br/> longitude 7.15 &deg; <br/> latitude 43.65 &deg;");
+					html.style(b.domNode, {
+						width : 200 + "px",
+						height : 100 + "px"
+					});
+					return b;
+				},
+				longitude : 7.154126,
+				latitude : 43.651748
+			};
+			var widgetFeature = new WidgetFeature(o);
+			layer.addFeature(widgetFeature);
+			layer.redraw();
+
+		});
+	});
+</script>
+
+<style type="text/css">
+.olLayerGoogleCopyright {
+	visibility: hidden;
+}
+</style>
+
+</head>
+<body class="tundra">
+</head>
+
+<div id="map" dojoType="dojox.geo.openlayers.widget.Map" baseLayerType="Google"
+	initialLocation="{
+    position : [7.154126, 43.651748],
+    extent : 0.2 }"
+	style="background-color: #b5d0d0; width: 100%; height: 100%;">
+
+	<div class="layer" id="aGfxLayer" name="aGfxLayer" type="GfxLayer"></div>
+
+	<div class="layer" id="aLayer" name="aLayer" type="Layer"></div>
+
+</div>
+
+</body>
+</html>

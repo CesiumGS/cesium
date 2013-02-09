@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>MVC DOH Test</title>
+	<style>
+		@import "../../../../dojo/resources/dojo.css";
+		@import "../../../../dijit/tests/css/dijitTests.css";
+		@import "css/app-format.css";
+	</style>
+	<link id="themeStyles" rel="stylesheet" href="../../../../dijit/themes/claro/claro.css"/>
+	<script src="../../../../dojo/dojo.js" type="text/javascript" djConfig="isDebug: true"></script>
+	<script type="text/javascript" src="./helpers.js"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.mvc");
+		dojo.require("dojox.mvc.Group");
+		dojo.require("dijit.form.TextBox");
+		dojo.require("dijit.form.Button");
+		dojo.require("dojo.parser");
+
+		// Initial data
+		var master_init = {
+			"Serial" : "360324",
+			"First" : "John",
+			"Last" : "Doe",
+			"Email" : "jdoe@example.com",
+			"ShipTo" : {
+				"Street" : "123 Valley Rd",
+				"City" : "Katonah",
+				"State" : "NY",
+				"Zip" : "10536"
+			},
+			"BillTo" : {
+				"Street" : "17 Skyline Dr",
+				"City" : "Hawthorne",
+				"State" : "NY",
+				"Zip" : "10532"
+			}
+		};
+
+		// The dojox.mvc.StatefulModel class creates a data model instance
+		// where each leaf within the data model is decorated with dojo.Stateful
+		// properties that widgets can bind to and watch for their changes.
+		var masterRecord = dojox.mvc.newStatefulModel({ data : master_init });
+		var selectedAddr = dojox.mvc.newStatefulModel({ data : "ShipTo" });
+	</script>
+
+	<script type="text/javascript">
+		dojo.require('doh.runner');
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dojo.parser"); // scan page for widgets and instantiate them
+
+		dojo.addOnLoad(function() {
+
+		doh.register("parse", function() {
+			dojo.parser.parse();
+		});
+
+		// should be able to verify all of the inputs 
+		doh.register("check initial values and bindings", [{
+			name : "initial",
+			runTest : function() {
+				var serial1, bind1, addr1;
+				//test serialInput
+				serial1 = dijit.byId("serialInput");
+				if (serial1) {
+					bind1 = serial1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.is("360324", bind1.data,"bind1.data should be set");
+						doh.is("360324", bind1.value,"bind1.value should be set");
+					}
+				}
+				//test addrLabel
+				addr1 = dijit.byId("addrLabel");
+				if (addr1) {
+					bind1 = addr1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.is("ShipTo", bind1.data,"bind1.data should be set");
+						doh.is("ShipTo", bind1.value,"bind1.value should be set");
+					}
+				}
+				//test streetInput
+				addr1 = dijit.byId("streetInput");
+				if (addr1) {
+					bind1 = addr1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.is("123 Valley Rd", bind1.data,"bind1.data should be set");
+						doh.is("123 Valley Rd", bind1.value,"bind1.value should be set");
+					}
+				}
+			}
+		}]);
+
+		doh.register("check BillTo", [{
+			name : "testBillTo",
+			runTest : function() {
+				setRef("addrGroup", masterRecord.BillTo);
+				var serial1, bind1, addr1;
+				//test serialInput
+				serial1 = dijit.byId("serialInput");
+				if (serial1) {
+					bind1 = serial1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.is("360324", bind1.data,"bind1.data should be set");
+						doh.is("360324", bind1.value,"bind1.value should be set");
+					}
+				}
+				//test addrLabel
+				addr1 = dijit.byId("addrLabel");
+
+				if (addr1) {
+					bind1 = addr1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.is("ShipTo", bind1.data,"bind1.data should be set");
+						doh.is("BillTo", bind1.value,"bind1.value should be set");
+					}
+				}
+				//test streetInput
+				addr1 = dijit.byId("streetInput");
+				if (addr1) {
+					bind1 = addr1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.is("17 Skyline Dr", bind1.data,"bind1.data should be set");
+						doh.is("17 Skyline Dr", bind1.value,"bind1.value should be set");
+					}
+				}
+			}
+		}]);
+
+		doh.run();
+
+		});
+	</script>
+</head>
+
+
+<body class="claro">
+	<h1 class="testTitle">doh_mvc__shipto-billto-simple.html automated tests (non-robot)</h1>
+	<div id="wrapper">
+		<div id="header">
+			<div id="navigation"></div>
+			<div id="headerInsert">
+				<h1>Order Shipping Details</h1>
+				<h2>Data Binding Example - Group Container.</h2>
+			</div>
+		</div>
+		<div id="main">
+			<div id="leftNav"></div>
+			<div id="mainContent"><!--
+			The group container denotes some logical grouping of widgets and also serves
+			to establish a parent data binding context for its children.
+			The ref attribute for the outermost container obtains the binding from the
+			"page scope" itself.
+			-->
+			<div class="row" data-dojo-type="dojox.mvc.Group" data-dojo-props="ref: 'masterRecord'">
+				<div class="row"><label class="cell" for="serialInput">Serial:</label>
+					<input class="cell" id="serialInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'Serial'"/>
+				</div>
+				<div class="row"><label class="cell" for="lastnameInput">Last:</label>
+					<input class="cell" id="lastnameInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'Last'"/>
+				</div>
+				<div class="row"><label class="cell" for="emailInput">Email:</label>
+					<input class="cell" id="emailInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'Email'"/>
+				</div>
+			</div>
+			<br />
+			Choose:
+			<button id="shipto1" type="button" data-dojo-type="dijit.form.Button"
+				data-dojo-props="onClick: function(){setRef('addrGroup', masterRecord.ShipTo);}">Ship To</button>
+			<button id="billto1" type="button" data-dojo-type="dijit.form.Button"
+				data-dojo-props="onClick: function(){setRef('addrGroup', masterRecord.BillTo);}">Bill To</button>
+			<br />
+			<div class="row"><label class="cell" for="addrLabel">Selected
+			Address:</label> <input class="cell" data-dojo-type="dijit.form.TextBox"
+				id="addrLabel" data-dojo-props="ref: 'selectedAddr'"/></div>
+			<br />
+			<!--
+				For convenience, the widget hierarchy matches the data hierarchy
+				(see JSON literal above).
+				In this implementation, the child ref attributes are simple property names
+				of the parent binding context.
+				The ref attribute may support more advanced constructs, such as queries
+				over the parent widget's or other application specified binding context.
+			-->
+			<div class="row" id="addrGroup" data-dojo-type="dojox.mvc.Group"
+				data-dojo-props="ref: 'masterRecord.ShipTo'">
+				<div class="row"><label class="cell" for="streetInput">Street:</label>
+					<input class="cell" id="streetInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'Street'"/>
+				</div>
+				<div class="row"><label class="cell" for="cityInput">City:</label>
+					<input class="cell" id="cityInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'City'"/>
+				</div>
+				<div class="row"><label class="cell" for="stateInput">State:</label>
+					<input class="cell" id="stateInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'State'"/>
+				</div>
+				<div class="row"><label class="cell" for="zipInput">Zipcode:</label>
+					<input class="cell" id="zipInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'Zip'"/>
+				</div>
+			</div>
+		</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+	function setRef(id, addrRef){
+		var widget = dijit.byId(id);
+		widget.set("ref", addrRef);
+		if(addrRef == "masterRecord.ShipTo"){
+			selectedAddr.set("value", "ShipTo");
+		}else{
+			selectedAddr.set("value", "BillTo");
+		}
+	}
+	</script>
+</body>
+</html>

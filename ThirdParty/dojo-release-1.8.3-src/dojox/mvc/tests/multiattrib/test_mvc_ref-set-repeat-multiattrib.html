@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>MVC Repeat with Multiattribute Test</title>
+
+	<style type="text/css">
+		@import "../../../../dijit/themes/claro/document.css";
+		@import "../../../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, async: true, mvc: {debugBindings: true}"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox",
+			"dojox/mvc",
+			"dojo/parser",
+			"dojo/store/Memory",
+			"dojox/mvc/at",
+			"dojox/mvc/_patches",
+			"dojox/mvc/Group",
+			"dojox/mvc/Repeat",
+			"dojox/mvc/Output",
+			"dijit/form/Button",
+			"dijit/form/DropDownButton",
+			"dijit/form/ComboButton",
+			"dijit/form/ToggleButton",
+			"dijit/ColorPalette",
+			"dijit/TooltipDialog",
+			"dijit/form/TextBox",
+			"dijit/Menu",
+			"dijit/MenuItem",
+			"dijit/form/TextBox",
+			"dijit/form/Select",
+			"dijit/form/CheckBox"
+		], function(dojox, mvc, parser, MemoryStore, at){
+			//(cutItemModel = new dojo.Stateful).set("iconClass", "dijitEditorIcon dijitEditorIconCut");
+			//(copyItemModel = new dojo.Stateful).set("iconClass", "dijitEditorIcon dijitEditorIconCopy").set("label", "Copy");
+			//(boldItemModel = new dojo.Stateful).set("checked", false);
+//			window.at = at;
+
+			var search_results_init1 =
+			[{
+				"Query" : "Engineers1",
+				"Results" : [
+					{
+						"First"	  : "Anne1",
+						"Last"	  : "Ackerman1",
+						"Checked" : true
+					},
+					{
+						"First"	  : "Ben1",
+						"Last"	  : "Beckham1",
+						"Checked" : false
+					},
+					{
+						"First"	  : "Chad1",
+						"Last"	  : "Chapman1",
+						"Checked" : true
+					}
+				]
+			}];
+			var search_results_init2 =
+			[{
+				"Query" : "Engineers2",
+				"Results" : [
+					{
+						"First"	  : "Anne2",
+						"Last"	  : "Ackerman2",
+						"Checked" : true
+					},
+					{
+						"First"	  : "Ben2",
+						"Last"	  : "Beckham2",
+						"Checked" : false
+					}
+				]
+			}];
+			var search_results_init3 =
+			[{
+				"Query" : "Engineers3",
+				"Results" : [
+					{
+						"First"	  : "",
+						"Last"	  : "",
+						"Checked" : true
+					}
+				]
+			}];
+
+			var memStore1 = new MemoryStore({data : search_results_init1});
+			model1 = mvc.newStatefulModel({ store : memStore1 })[0];
+			var memStore2 = new MemoryStore({data : search_results_init2});
+			model2 = mvc.newStatefulModel({ store : memStore2 })[0];
+			var memStore3 = new MemoryStore({data : search_results_init3});
+			model3 = mvc.newStatefulModel({ store : memStore3 })[0];
+			
+			parser.parse();
+		});
+	</script>
+</head>
+<body class="claro">
+	<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<div id="wrapper">
+			<div id="header">
+				<div id="navigation"></div>
+				<div id="headerInsert">
+					<h1>Input Ouput Sync</h1>
+					<h2>Data Binding Example</h2>
+				</div>
+			</div>
+			<div id="main">
+				<div id="leftNav"></div>
+				<div id="mainContent">
+					<div class="row">
+						<button type="button" data-dojo-type="dijit/form/Button" data-dojo-props="onClick: function(){dijit.byId('outergroupId').set('ref',model1);}">Swap Model1</button>
+						<button type="button" data-dojo-type="dijit/form/Button" data-dojo-props="onClick: function(){dijit.byId('outergroupId').set('ref',model2);}">Swap Model2</button>
+						<button type="button" data-dojo-type="dijit/form/Button" data-dojo-props="onClick: function(){dijit.byId('outergroupId').set('target',at(model3));}">Swap Model3</button>
+					</div>
+					<div id="outergroupId"	 data-dojo-type="dojox/mvc/Group" data-dojo-props="target: at('model1')">
+						<div id="repeatId" data-dojo-type="dojox/mvc/Repeat" data-dojo-props="children: at('rel:', 'Results')">
+							<div class="row" data-dojo-type="dojox/mvc/Group" data-dojo-props="target: at('rel:${this.index}')">
+								<input class="cell" data-dojo-type="dijit/form/CheckBox" id="CBInput${this.index}" data-dojo-props="checked: at('rel:Checked', 'value')"/>
+								<label data-dojo-type="dojox/mvc/Output" for="CBInput${this.index}" data-dojo-props="ref: 'First'"></label>
+					<!--  		<label for="CBInput${this.index}" data-dojo-props="ref: 'First'">LABEL(firstname)->${model1.Results[this.index].First}</label>-->	
+								<input class="cell" data-dojo-type="dijit/form/TextBox" id="nameInput${this.index}" data-dojo-props="value: at('rel:First', 'value')"/>
+								<input class="cell" data-dojo-type="dijit/form/TextBox" id="nameInputLast${this.index}" data-dojo-props="value: at('Last', 'value')"/>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+							<span>
+								Model1 Output is ==&gt;  
+							</span>
+							<span id="CBOutput10" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model1.Results[0].Checked">
+								Checked1 is "${this.value}" : 
+							</span>
+							<span id="firstnameOutput10" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model1.Results[0].First">
+								First1 is "${this.value}" : 
+							</span>
+							<span id="lastnameOutput10" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model1.Results[0].Last">
+								Last1 is "${this.value}" : 
+							</span>
+							<span id="CBOutput11" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model1.Results[1].Checked">
+								Checked2 is "${this.value}" : 
+							</span>
+							<span id="firstnameOutput11" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model1.Results[1].First">
+								First2 is "${this.value}" : 
+							</span>
+							<span id="lastnameOutput11" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model1.Results[1].Last">
+								Last2 is "${this.value}" : 
+							</span>
+							<span id="CBOutput12" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model1.Results[2].Checked">
+								Checked3 is "${this.value}" : 
+							</span>
+							<span id="firstnameOutput12" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model1.Results[2].First">
+								First3 is "${this.value}" : 
+							</span>
+							<span id="lastnameOutput12" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model1.Results[2].Last">
+								Last3 is "${this.value}"
+							</span>
+					</div>
+					<div class="row">
+							<span>
+								Model2 Output is ==&gt;  
+							</span>
+							<span id="CBOutput20" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model2.Results[0].Checked">
+								Checked1 is "${this.value}" : 
+							</span>
+							<span id="firstnameOutput20" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model2.Results[0].First">
+								First1 is "${this.value}" : 
+							</span>
+							<span id="lastnameOutput20" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model2.Results[0].Last">
+								Last1 is "${this.value}" : 
+							</span>
+							<span id="CBOutput21" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model2.Results[1].Checked">
+								Checked2 is "${this.value}" : 
+							</span>
+							<span id="firstnameOutput21" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model2.Results[1].First">
+								First2 is "${this.value}" : 
+							</span>
+							<span id="lastnameOutput21" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model2.Results[1].Last">
+								Last2 is "${this.value}"
+							</span>
+					</div>
+					<div class="row">
+							<span>
+								Model3 Output is ==&gt;  
+							</span>
+							<span id="CBOutput30" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model3.Results[0].Checked">
+								Checked1 is "${this.value}" : 
+							</span>
+							<span id="firstnameOutput30" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model3.Results[0].First">
+								First1 is "${this.value}" :
+							</span>
+							<span id="lastnameOutput30" data-dojo-type="dojox/mvc/Output" data-dojo-props="ref: model3.Results[0].Last">
+								Last1 is "${this.value}"
+							</span>
+					</div>
+					<br/>Model:
+					<button id="reset" type="button" data-dojo-type="dijit/form/Button" data-dojo-props="onClick: function(){model1.reset();model2.reset();model3.reset();}">Reset all</button>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

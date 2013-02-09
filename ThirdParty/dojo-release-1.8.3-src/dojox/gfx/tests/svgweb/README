@@ -1,0 +1,14 @@
+This folder contains dojox.gfx tests modified to force SVGWeb on all browsers.
+
+NOTICE of 3rd party code included
+=================================
+The svgweb/ folder contains a version of svgweb (svgweb-2010-04-09) which has
+been tested against dojox.gfx.
+
+This is a separately licensed library, see COPYING.txt in svgweb/ (note that
+only the binary subset of files from that project are included here).
+
+Folder svgweb/ is used for testing only, and is not required for Dojo to work.
+It can be safely removed.
+
+To obtain SVGWeb files directly, please visit http://code.google.com/p/svgweb/

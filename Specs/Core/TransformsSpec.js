@@ -1,28 +1,40 @@
 /*global defineSuite*/
 defineSuite([
          'Core/Transforms',
+         'Core/DeveloperError',
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartesian4',
          'Core/Ellipsoid',
+         'Core/Iau2006XysData',
          'Core/JulianDate',
          'Core/Matrix3',
          'Core/Matrix4',
          'Core/Math',
          'Core/Quaternion',
-         'Core/TimeConstants'
+         'Core/TimeConstants',
+         'Core/TimeInterval',
+         'Core/EarthOrientationParameters',
+         'ThirdParty/when',
+         'Core/loadJson'
      ], function(
          Transforms,
+         DeveloperError,
          Cartesian2,
          Cartesian3,
          Cartesian4,
          Ellipsoid,
+         Iau2006XysData,
          JulianDate,
          Matrix3,
          Matrix4,
          CesiumMath,
          Quaternion,
-         TimeConstants) {
+         TimeConstants,
+         TimeInterval,
+         EarthOrientationParameters,
+         when,
+         loadJson) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -190,6 +202,310 @@ defineSuite([
         var tAngle = Quaternion.fromRotationMatrix(t).getAngle();
         var uAngle = Quaternion.fromRotationMatrix(u).getAngle();
         expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
+    });
+
+    describe('computeIcrfToFixedMatrix', function() {
+        function preloadTransformationData(start, stop, eopDescription) {
+            var ready = false;
+            var failed = false;
+
+            runs(function() {
+                Transforms.earthOrientationParameters = new EarthOrientationParameters(eopDescription);
+                var preloadInterval = new TimeInterval(start, stop);
+                when(Transforms.preloadIcrfFixed(preloadInterval), function() {
+                    ready = true;
+                }, function() {
+                    failed = true;
+                });
+            });
+
+            waitsFor(function() {
+                if (failed) {
+                    throw new DeveloperError('Preload of ICRF data failed.');
+                }
+                return ready;
+            });
+        }
+
+        it('throws if the date parameter is not specified', function() {
+            expect(function() {
+                Transforms.computeIcrfToFixedMatrix(undefined);
+            }).toThrow();
+
+            expect(function() {
+                Transforms.computeFixedToIcrfMatrix(undefined);
+            }).toThrow();
+        });
+
+        it('works with data from STK Components', function() {
+            // This data set represents a set of data encompassing the corresponding EOP data below.
+            // The rotation data from Components span before and after the EOP data so as to test
+            // what happens when we try evaluating at times when we don't have EOP as well as at
+            // times where we do.  The samples are not at exact EOP times, in order to test interpolation.
+            var componentsData;
+            when(loadJson('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json'), function(dataResult) {
+                componentsData = dataResult;
+            });
+
+            waitsFor(function() {
+                return typeof componentsData !== 'undefined';
+            });
+
+            runs(function() {
+                var start = JulianDate.fromIso8601(componentsData[0].date);
+                var stop = JulianDate.fromIso8601(componentsData[componentsData.length - 1].date);
+
+                preloadTransformationData(start, stop, {
+                    url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                });
+            });
+
+            runs(function() {
+
+                for ( var i = 0; i < componentsData.length; ++i) {
+
+                    var time = JulianDate.fromIso8601(componentsData[i].date);
+                    var resultT = new Matrix3();
+                    var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+                    expect(t).toBe(resultT);
+
+                    // rotation matrix determinants are 1.0
+                    var det = t[0] * t[4] * t[8] + t[3] * t[7] * t[2] + t[6] * t[1] * t[5] - t[6] * t[4] * t[2] - t[3] * t[1] * t[8] - t[0] * t[7] * t[5];
+                    expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+
+                    // rotation matrix inverses are equal to its transpose
+                    var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
+                    expect(t4.inverse()).toEqualEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14);
+
+                    var expectedMtx = Matrix3.fromQuaternion(componentsData[i].icrfToFixedQuaternion);
+                    var testInverse = t.transpose().multiply(expectedMtx);
+                    var testDiff = new Matrix3();
+                    for ( var k = 0; k < 9; k++) {
+                        testDiff[k] = t[k] - expectedMtx[k];
+                    }
+                    expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
+                    expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+                }
+            });
+        });
+
+        it('works with hard-coded data', function() {
+            // 2011-07-03 00:00:00 UTC
+            var time = new JulianDate(2455745, 43200);
+
+            preloadTransformationData(time, time, {
+                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+            });
+
+            runs(function() {
+                var resultT = new Matrix3();
+                var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+                expect(t).toBe(resultT);
+
+                // rotation matrix determinants are 1.0
+                var det = t[0] * t[4] * t[8] + t[3] * t[7] * t[2] + t[6] * t[1] * t[5] - t[6] * t[4] * t[2] - t[3] * t[1] * t[8] - t[0] * t[7] * t[5];
+                expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+
+                // rotation matrix inverses are equal to its transpose
+                var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
+                expect(t4.inverse()).toEqualEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14);
+
+                time = time.addHours(23.93447); // add one sidereal day
+                var resultU = new Matrix3();
+                var u = Transforms.computeIcrfToFixedMatrix(time, resultU);
+                expect(u).toBe(resultU);
+                var tAngle = Quaternion.fromRotationMatrix(t).getAngle();
+                var uAngle = Quaternion.fromRotationMatrix(u).getAngle();
+                expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
+
+                // The rotation matrix from STK Components corresponding to the time and data inputs above
+                var expectedMtx = new Matrix3(0.18264414843630006, -0.98317906144315947, -0.00021950336420248503, 0.98317840915224974, 0.18264428011734501, -0.0011325710874539787, 0.0011536112127187594, -0.0000089534866085598909, 0.99999933455028112);
+
+                var testInverse = t.transpose().multiply(expectedMtx);
+                var testDiff = new Matrix3();
+                for ( var i = 0; i < 9; i++) {
+                    testDiff[i] = t[i] - expectedMtx[i];
+                }
+                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
+                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+            });
+        });
+
+        it('works over day boundary', function() {
+
+            var time = new JulianDate(2455745, 86395);
+
+            preloadTransformationData(time, time, {
+                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+            });
+
+            runs(function() {
+                var resultT = new Matrix3();
+                var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+
+                // The rotation matrix from STK Components corresponding to the time and data inputs above
+                var expectedMtx = new Matrix3(-0.19073578935932833, 0.98164138366748721, 0.00022919174269963536, -0.98164073712836186, -0.19073592679333939, 0.0011266944449015753, 0.0011497249933208494, -0.000010082996932331842, 0.99999933901516791);
+
+                var testInverse = t.transpose().multiply(expectedMtx);
+                var testDiff = new Matrix3();
+                for ( var i = 0; i < 9; i++) {
+                    testDiff[i] = t[i] - expectedMtx[i];
+                }
+                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
+                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+            });
+        });
+
+        it('works over day boundary backwards', function() {
+            var time = new JulianDate(2455745, 10);
+
+            preloadTransformationData(time, time, {
+                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+            });
+
+            runs(function() {
+                var resultT = new Matrix3();
+                var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+
+                //The rotation matrix from STK Components corresponding to the time and data inputs above
+                var expectedMtx = new Matrix3(-0.17489910479510423, 0.984586338811966, 0.00021110831245616662, -0.98458569065286827, -0.17489923190143036, 0.0011297972845023996, 0.0011493056536445096, -0.00001025368996280683, 0.99999933949547);
+
+                var testInverse = t.transpose().multiply(expectedMtx);
+                var testDiff = new Matrix3();
+                for ( var i = 0; i < 9; i++) {
+                    testDiff[i] = t[i] - expectedMtx[i];
+                }
+                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
+                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+            });
+        });
+
+        it('works with position rotation', function() {
+            // GEO Satellite position
+            var inertialPos = new Cartesian3(-7322101.15395708, -41525699.1558387, 0);
+            // The following is the value computed by STK Components for the date specified below
+            var expectedFixedPos = new Cartesian3(39489858.9917795, -14783363.192887, -8075.05820056297);
+
+            // 2011-07-03 00:00:00 UTC
+            var time = new JulianDate(2455745, 43200);
+
+            preloadTransformationData(time, time, {
+                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+            });
+
+            runs(function() {
+                var resultT = new Matrix3();
+                var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+
+                var result = t.multiplyByVector(inertialPos);
+                var error = result.subtract(expectedFixedPos);
+
+                // Given the magnitude of the positions involved (1e8)
+                // this tolerance represents machine precision
+                expect(error).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON7);
+            });
+        });
+
+        it('undefined prior to 1974', function() {
+            // 1970 jan 1 0h UTC
+            var time = new JulianDate(2440587, 43200);
+            // Purposefully do not load EOP!  EOP doesn't make a lot of sense before 1972.
+            // Even though we are trying to load the data for 1970,
+            // we don't have the data in Cesium to load.
+            preloadTransformationData(time, time.addDays(1));
+            var resultT = new Matrix3();
+            var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+            // Check that we get undefined, since we don't have ICRF data
+            expect(t).toEqual(undefined);
+        });
+
+        it('works after 2028', function() {
+            // 2030 jan 1 0h UTC
+            var time = new JulianDate(2462502, 43200);
+            // Purposefully do not load EOP!  EOP doesn't exist yet that far into the future
+            // Even though we are trying to load the data for 2030,
+            // we don't have the data in Cesium to load.
+            preloadTransformationData(time, time.addDays(1));
+            var resultT = new Matrix3();
+            var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+            // Check that we get undefined, since we don't have ICRF data
+            expect(t).toEqual(undefined);
+        });
+
+        it('works without EOP data loaded', function() {
+            // GEO Satellite position
+            var inertialPos = new Cartesian3(-7322101.15395708, -41525699.1558387, 0);
+            // The following is the value computed by STK Components for the date specified below
+            var expectedFixedPos = new Cartesian3(39489545.7583001, -14784199.9085371, -8034.77037239318);
+
+            // 2011-07-03 00:00:00 UTC
+            var time = new JulianDate(2455745, 43200);
+
+            preloadTransformationData(time, time, undefined);
+
+            runs(function() {
+                var resultT = new Matrix3();
+                var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
+
+                var result = t.multiplyByVector(inertialPos);
+                var error = result.subtract(expectedFixedPos);
+
+                // Given the magnitude of the positions involved (1e8)
+                // this tolerance represents machine precision
+                expect(error).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON7);
+            });
+        });
+
+        it('throws a RuntimeError when asked to compute with invalid EOP data', function() {
+            // 2011-07-03 00:00:00 UTC
+            var time = new JulianDate(2455745, 43200);
+
+            preloadTransformationData(time, time, {
+                url : 'Data/EarthOrientationParameters/EOP-Invalid.json'
+            });
+
+            runs(function() {
+                expect(function() {
+                    return Transforms.computeIcrfToFixedMatrix(time);
+                }).toThrow();
+            });
+        });
+
+        it('throws a RuntimeError when asked to compute with a missing EOP data file', function() {
+            // 2011-07-03 00:00:00 UTC
+            var time = new JulianDate(2455745, 43200);
+
+            preloadTransformationData(time, time, {
+                url : 'Data/EarthOrientationParameters/EOP-DoesNotExist.json'
+            });
+
+            runs(function() {
+                expect(function() {
+                    return Transforms.computeIcrfToFixedMatrix(time);
+                }).toThrow();
+            });
+        });
+
+        it('returns undefined before XYS data is loaded.', function() {
+            Transforms.earthOrientationParameters = new EarthOrientationParameters();
+            Transforms.iau2006XysData = new Iau2006XysData();
+
+            var time = new JulianDate(2455745, 43200);
+            expect(Transforms.computeIcrfToFixedMatrix(time)).toBeUndefined();
+        });
+
+        it('returns undefined before EOP data is loaded.', function() {
+            var time = new JulianDate(2455745, 43200);
+            preloadTransformationData(time, time);
+
+            runs(function() {
+                expect(Transforms.computeIcrfToFixedMatrix(time)).toBeDefined();
+                Transforms.earthOrientationParameters = new EarthOrientationParameters({
+                    url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                });
+                expect(Transforms.computeIcrfToFixedMatrix(time)).toBeUndefined();
+            });
+        });
     });
 
     var width = 1024.0;

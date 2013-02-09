@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Transition on Orientation Change</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/connect",
+			"dojo/_base/window",
+			"dojo/dom",
+			"dojo/dom-class",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile",
+			"dojox/mobile/sniff",
+			"dojox/mobile/parser",
+			"dojox/mobile/compat"
+		], function(connect, win, dom, domClass, ready, registry, common, has){
+			ready(function(){
+				var portrait = registry.byId("portrait");
+				var landscape = registry.byId("landscape");
+				var timer;
+				var onChange = function(){
+					var dim = common.getScreenSize();
+					var n, t;
+					if(timer){
+						clearTimeout(timer);
+					}
+					if(dim.h > dim.w && common.currentView != portrait){
+						n = landscape.domNode;
+						t = (domClass.contains(n, "mblIn") || domClass.contains(n, "mblOut")) ? 2000 : 0;
+						timer = setTimeout(function(){
+							landscape.performTransition("portrait", 1, "fade");
+							timer = null;
+						}, t);
+					}else if (dim.h <= dim.w && common.currentView != landscape){
+						n = portrait.domNode;
+						t = (domClass.contains(n, "mblIn") || domClass.contains(n, "mblOut")) ? 2000 : 0;
+						timer = setTimeout(function(){
+							portrait.performTransition("landscape", 1, "fade");
+							timer = null;
+						}, t);
+					}
+				};
+				if(domClass.contains(win.doc.documentElement, "dj_landscape")){
+					setTimeout(function(){
+						landscape.show();
+					}, 0);
+				}
+				connect.connect(null, (win.global.onorientationchange !== undefined && !has('android'))
+					? "onorientationchange" : "onresize", null, onChange);
+			});
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="portrait" data-dojo-type="dojox.mobile.View" data-dojo-props='selected:true'>
+		<h1 data-dojo-type="dojox.mobile.Heading">Portrait</h1>
+		<div style="text-align:center;padding-top:20px;">
+			<img alt="" src="images/a-icon-2-41x41.png">
+			<h2>View<br>for<br>portrait</h2>
+		</div>
+	</div>
+
+	<div id="landscape" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">Landscape</h1>
+		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true' style="text-align:center;">
+			<h2>View for landscape</h2>
+		</div>
+	</div>
+</body>
+</html>

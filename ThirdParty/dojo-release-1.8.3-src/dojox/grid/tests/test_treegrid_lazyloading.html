@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+        <title>dojox.grid.TreeGrid Lazy-loading for children items test</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+        <style type="text/css">
+            @import "../../../dojo/resources/dojo.css";
+            @import "../../../dijit/themes/claro/claro.css";
+            @import "../../../dojox/grid/resources/Grid.css";
+			@import "../../../dojox/grid/resources/tundraGrid.css";
+            @import "../../../dojox/grid/resources/claroGrid.css";
+            body {
+				font-size: 0.9em;
+				font-family: Geneva, Arial, Helvetica, sans-serif;
+				padding: 0.5em;
+			}
+			.title {
+				text-align:center;
+				margin:1em;
+			}
+			#grid1 {
+                width: 65em;
+                height: 25em;
+				border: 1px solid #333333;
+            }
+			#grid2 {
+                width: 65em;
+                height: 25em;
+				border: 1px solid #333333;
+            }
+        </style>
+        <script type="text/javascript" src="../../../dojo/dojo.js"  djConfig="isDebug:true, parseOnLoad: true"></script>
+        <script type="text/javascript">
+            dojo.require("dojox.grid.LazyTreeGrid");
+			dojo.require("dojo.data.ItemFileWriteStore");
+            dojo.require("dijit.tree.ForestStoreModel");
+			dojo.require("dojox.grid.LazyTreeGridStoreModel");
+			dojo.require("dijit.form.Button");
+			
+			// large dataset
+			var rows = 5;
+			var continentItems = [
+				{name:'South America', type:'continent', population:'', area:''},
+				{name:'North America', type:'continent', population:'', area:''},
+				{name:'Asia', type:'continent', population:'', area:''},
+				{name:'Oceania', type:'continent', population:'', area:''},
+				{name:'Europe', type:'continent', population:'', area:''}
+			];
+			var continentChildrenList = [];
+			for(var i=0, l=continentItems.length; i<rows; i++){
+				continentChildrenList.push(dojo.mixin({ id: 'continent_' + i }, continentItems[i%l]));
+			}
+			
+			rows = 100;
+			var countryItems = [
+				{name:'Egypt', type:'country', population:'', area:''},
+				{name: 'Kenya', type: 'country', population:'', area:''},
+				{name:'Sudan', type:'country', population:'', area:''},
+				{name:'China', type:'country' , population:'', area:''},
+		        {name:'India', type:'country' , population:'', area:''},
+		        {name:'Russia', type:'country' , population:'', area:''},
+		        {name:'Mongolia', type:'country', population:'', area:'' },
+				{name:'Australia', type:'country', population:'21 million', area:''},
+		        {name:'Germany', type:'country', population:'', area:'' },
+		        {name:'France', type:'country', population:'', area:'' },
+		        {name:'Spain', type:'country', population:'', area:'' },
+		        {name:'Italy', type:'country', population:'', area:'' },
+		        {name:'Mexico', type:'country',  population:'108 million', area:'1,972,550 sq km'},
+				{name:'Canada', type:'country',  population:'33 million', area:'9,984,670 sq km'},
+				{name:'United States of America', type:'country', population:'', area:'' },
+				{name:'Brazil', type:'country', population:'186 million', area:'' },
+		        {name:'Argentina', type:'country', population:'40 million', area:'' }
+			];
+			
+			var countryChildrenList = [];
+			for(var i=0, l=countryItems.length; i<rows; i++){
+				countryChildrenList.push(dojo.mixin({ id: 'country_' + i }, countryItems[i%l]));
+			}
+			
+			cityItems = [
+				{name:'Nairobi', type:'city', population:'', area:''},
+		        {name:'Mombasa', type:'city', population:'', area:''},
+		        {name:'Khartoum', type:'city', population:'', area:''},
+				{name:'Mexico City', type:'city', population:'19 million', area:'', timezone:'-6 UTC'},
+		        {name:'Guadalajara', type:'city', population:'4 million', area:'', timezone:'-6 UTC' },
+		        {name:'Ottawa', type:'city', population:'0.9 million', area:'', timezone:'-5 UTC'},
+		        {name:'Toronto', type:'city', population:'2.5 million', area:'', timezone:'-5 UTC' },
+			];
+			
+			var cityChildrenList = [];
+			for(var i=0, l=cityItems.length; i<rows; i++){
+				cityChildrenList.push(dojo.mixin({ id: 'city_' + i }, cityItems[i%l]));
+			}
+
+			var dataItems = {
+				identifier: 'id',
+                label: 'name',
+				items: [
+					{id:'Continent', name:'Continent', type:'', population: '', area: '', children: continentChildrenList},
+					{id:"Country", name:"Country", type:"", population: '', area: '', children: countryChildrenList},
+					{id:"City", name:"City", type:"", population: '', area: '', children: cityChildrenList}
+				]
+			};
+			
+			var readStore = new dojo.data.ItemFileReadStore({data: dataItems});
+			var writeStore = new dojo.data.ItemFileWriteStore({url: "support/countryStore.json?"});
+			var model1 = new dijit.tree.ForestStoreModel({store: readStore, childrenAttrs: ['children']})
+			var model2 = new dojox.grid.LazyTreeGridStoreModel({store: writeStore, childrenAttrs: ['children']});
+			
+			var layout = [
+				{name: 'Name', field: 'name', width: 'auto'},
+				{name: 'Type', field: 'type', width: 'auto'},
+				{name: 'Population', field: 'population', width: 'auto'},
+				{name: 'Area', field: 'area', width: 'auto'}
+			]
+			
+			function refresh(flg){
+				grid2.refresh(flg);
+			}
+			var idx = 0;
+			function addItem(){
+				var item = {id:'test_' + idx, name:'test_' + (idx++), type:'', population: '', area: ''};
+				grid2.store.newItem(item);
+			}
+			function addChildItem(){
+				var parentItem = grid2.selection.getSelected()[0];
+				if(parentItem){
+					var item = {id:'test_child_' + idx, name:'test_child_' + (idx++), type:'', population: '', area: ''};
+					grid2.store.newItem(item, {parent: parentItem, attribute: "children"});
+				}
+			}
+			function removeSelected(){
+				grid2.removeSelectedRows();
+			}
+			function expandSelected(){
+				var item = grid2.selection.getSelected()[0];
+				if(item){
+					grid2.expand(grid2.store.getIdentity(item));
+				}
+			}
+			function collapseSelected(){
+				var item = grid2.selection.getSelected()[0];
+				if(item){
+					grid2.collapse(grid2.store.getIdentity(item));
+				}
+			}
+        </script>
+    </head>
+    <body class="claro">
+        <h1 class="title">Test: dojox.grid.TreeGrid - Lazy-loading for children items</h1>
+		<h2>grid 1</h2>
+		<div id='grid1' jsid='grid1' dojoType='dojox.grid.LazyTreeGrid' summary="A customized tree grid summary"
+				structure='layout' treeModel='model1' rowSelector='true'></div>
+				
+		<h2>grid 2</h2>
+		<div id='grid2' jsid='grid2' dojoType='dojox.grid.LazyTreeGrid'
+				structure='layout' treeModel='model2' 
+				keepSelection='true' rowSelector='true'></div>
+		
+		<button dojoType="dijit.form.Button" onClick="refresh(true)">Refresh with state</button>
+		<button dojoType="dijit.form.Button" onClick="refresh(false)">Refresh without state</button>
+		<button dojoType="dijit.form.Button" onClick="addItem()">Add Item</button>
+		<button dojoType="dijit.form.Button" onClick="addChildItem()">Add Child Item</button>
+		<button dojoType="dijit.form.Button" onClick="removeSelected()">Delete Selected</button>
+		<button dojoType="dijit.form.Button" onClick="expandSelected()">Expand Selected</button>
+		<button dojoType="dijit.form.Button" onClick="collapseSelected()">Collapse Selected</button>
+    </body>
+</html>

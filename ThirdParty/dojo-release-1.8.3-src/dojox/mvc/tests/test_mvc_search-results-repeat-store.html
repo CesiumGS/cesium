@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html style="width: 100%; height: 100%;">
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<title>Dojo Repeat Selection Test</title>
+
+<style type="text/css">
+@import "../../../dijit/themes/dijit.css";
+@import "../../../dijit/themes/claro/document.css";
+@import "../../../dijit/tests/css/dijitTests.css";
+@import "css/app-format.css";
+</style>
+
+<!-- required: a default dijit theme: -->
+<link id="themeStyles" rel="stylesheet"
+	href="../../../dijit/themes/claro/claro.css" />
+
+
+<!-- required: dojo.js -->
+<script type="text/javascript" src="../../../dojo/dojo.js"
+	data-dojo-config="isDebug: true, async: true, parseOnLoad: false, mvc: {debugBindings: true}"></script>
+
+<script type="text/javascript">
+var results, savedData;
+	require([
+			"dojo/parser", 
+			"dijit/registry", 
+			"dojox/mvc/at",
+			"dojox/mvc/getStateful", 
+			"dojo/data/ItemFileWriteStore",
+			"dojo/store/DataStore",
+			"dojo/_base/kernel",
+			"dojox/mvc/_atBindingExtension", 
+			"dojox/mvc/ListController", 
+			"dojox/mvc/EditModelRefController", 
+			"dojox/mvc/StatefulArray",
+			"dojox/mvc/Group", 
+			"dojox/mvc/Output", 
+			"dojox/mvc/Repeat",
+			"dijit/form/Button", 
+			"dijit/layout/ContentPane",
+			"dijit/form/TextBox"
+			],
+			function(parser, registry, at, getStateful, ItemFileWriteStore, DataStore, kernel){
+				var writeStore = new ItemFileWriteStore({url: kernel.moduleUrl("dojox.mvc.tests.regression._data", "mvcRepeatData.json")});
+				var modelPromise = new DataStore({store: writeStore}).query(); 
+				modelPromise.then(function(data){ 
+					savedData = data;
+					results = getStateful(data);
+
+					parser.parse();
+				});
+
+				setDetailsContext = function(index){
+					var ctl=registry.byId("listCtl");
+					ctl.set("cursorIndex", index);
+				};
+
+				saveData = function(){
+					//var ctl=registry.byId("listCtl");
+					var ctl=registry.byId("editCtl");
+					var ind = ctl.sourceModel.get('cursorIndex');
+					var ind2 = ctl.commitCurrent();
+					console.log(results[ind]);
+				};
+
+				saveAllData = function(){
+					var ctl=registry.byId("editCtl");
+					var ind = ctl.commit();
+					console.log(results);
+				};
+
+				resetData = function(){
+					var ctl=registry.byId("editCtl");
+					var ind = ctl.reset();
+					//results[ind].set(savedData[ind]);
+					//results.set(savedData);
+				};
+
+			});
+</script>
+</head>
+<body class="claro"
+	style="width: 100%; height: 100%; margin: 0; padding: 0;">
+	<script type="dojo/require">at: "dojox/mvc/at"</script>
+	<span id="listCtl" data-dojo-type="dojox.mvc.ListController"
+		data-dojo-props="model: results, cursorIndex: 0"></span>
+	<div id="header">
+		<div id="navigation"></div>
+		<div id="headerInsert">
+			<h1>Employee Search</h1>
+			<h2>Master Detail Example - With repeat container.</h2>
+		</div>
+	</div>
+	<div id="main">
+		<div id="leftNav"></div>
+		<div id="mainContent">
+			<!--
+			 The group container denotes some logical grouping of widgets and also serves
+			 to establish a parent data binding context for its children.
+			 The target attribute for the outermost container obtains the binding from the
+			 "page scope" itself.
+		 	-->
+				<div id="searchBanner">Search Results for term: Engineers</div>
+
+				<!--
+				The repeat container denotes a templated UI that operates over a collection
+				of data records.
+				The UI can be customized for each iteration using properties such as
+				listCtl cursor or cursorIndex for the iteration.
+				-->
+				<div data-dojo-type="dojox.mvc.Repeat"
+					data-dojo-props="children: results">
+					<div class="row" data-dojo-type="dojox.mvc.Group"
+						data-dojo-props="target: at('rel:${this.index}')">
+						<label class="cell" for="nameInput${this.index}">Name:</label> 
+						<div class="cell" data-dojo-type="dojox.mvc.Output"
+							id="nameInput${this.index}"
+							data-dojo-props="value: at('rel:', 'First')"></div>
+						<button type="button" data-dojo-type="dijit.form.Button"
+							data-dojo-props="onClick: function(){setDetailsContext('${this.index}');}">Details</button>
+					</div>
+				</div>
+				<div class="spacer"></div>
+			<div id="editCtl" data-dojo-type="dijit.layout.ContentPane" data-dojo-mixins="dojox.mvc.EditModelRefController"
+			 data-dojo-props="region: 'center', style: 'background-color: white;', sourceModel: at('widget:listCtl', 'cursor')">
+			<!-- 
+			<div id="editCtl" data-dojo-type="dijit.layout.ContentPane" data-dojo-mixins="dojox.mvc.EditModelRefController"
+			 data-dojo-props="region: 'center', style: 'background-color: white;', sourceModel: at('widget:listCtl', 'cursor')">
+			<div data-dojo-type="dojox.mvc.Group" 
+					data-dojo-props="target: at('widget:listCtl', 'cursor')">
+			 -->			
+					<div class="row">
+						<div style="display: inline-block;" id="detailsBanner">Details for result index:</div>
+						<span class="cell" id="indexOutput"
+							data-dojo-type="dojox.mvc.Output"
+							data-dojo-props="value: at('widget:listCtl', 'cursorIndex')"></span>
+					</div>
+					<div class="row">
+						<label class="cell" for="firstInput">First Name:</label> 
+							<input class="cell" id="firstInput" data-dojo-type="dijit.form.TextBox"
+							data-dojo-props="value: at('rel:', 'First')">
+					</div>
+					<div class="row">
+						<label class="cell" for="lastInput">Last Name:</label> 
+						<input class="cell" id="lastInput" data-dojo-type="dijit.form.TextBox"
+							data-dojo-props="value: at('rel:', 'Last')">
+					</div>
+					<div class="row">
+						<label class="cell" for="locationInput">Location:</label> 
+						<input class="cell" id="locationInput"
+							data-dojo-type="dijit.form.TextBox"
+							data-dojo-props="value: at('rel:', 'Location')">
+					</div>
+					<div class="row">
+						<label class="cell" for="officeInput">Office:</label> 
+						<input class="cell" id="officeInput" data-dojo-type="dijit.form.TextBox"
+							data-dojo-props="value: at('rel:', 'Office')">
+					</div>
+					<div class="row">
+						<label class="cell" for="emailInput">Email:</label> 
+						<input class="cell" id="emailInput" data-dojo-type="dijit.form.TextBox"
+							data-dojo-props="value: at('rel:', 'Email')">
+					</div>
+					<div class="row">
+						<label class="cell" for="telInput">Telephone:</label> 
+						<input class="cell" id="telInput" data-dojo-type="dijit.form.TextBox"
+							data-dojo-props="value: at('rel:', 'Tel')">
+					</div>
+					<div class="row">
+						<label class="cell" for="faxInput">Fax:</label> 
+						<input class="cell" id="faxInput" data-dojo-type="dijit.form.TextBox"
+							data-dojo-props="value: at('rel:', 'Fax')">
+					</div>
+					<div class="row">
+					<div class="spacer"></div>
+						<button type="button" data-dojo-type="dijit.form.Button" 
+								data-dojo-props="onClick: function(){saveData();}">Save Item</button>        
+						<button type="button" data-dojo-type="dijit.form.Button" 
+								data-dojo-props="onClick: function(){saveAllData();}">Commit All</button>        
+						<button type="button" data-dojo-type="dijit.form.Button" 
+								data-dojo-props="onClick: function(){resetData();}">Reset to last saved</button>        
+					</div>
+					
+				</div>
+			</div>
+	</div>
+</body>
+</html>

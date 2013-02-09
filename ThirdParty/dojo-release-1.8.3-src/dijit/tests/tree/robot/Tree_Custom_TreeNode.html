@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>doh.robot Custom TreeNode Test</title>
+
+	<style>
+		@import "../../../../util/doh/robot/robot.css";
+	</style>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.robotx");
+		dojo.require("dijit.tests.helpers");		// for waitForLoad()
+
+		var tree,registry;
+
+		dojo.ready(function(){
+			doh.robot.initRobot('../test_Custom_TreeNode.html');
+
+			doh.register("_setup", [
+				{
+					name: "wait for widgets to load",
+					timeout: 10000,
+					runTest: waitForLoad
+				},
+				function setVars(){
+					registry = dojo.global.require("dijit/registry");
+					tree = dojo.global.tree;
+				}
+			]);
+
+			doh.register("arrow navigation", [
+				{
+					name:"focus root",
+					timeout:4000,
+					runTest:function(){
+						var d = new doh.Deferred();
+
+						var firstVisibleNode = dojo.query(".dijitTreeLabel")[1];
+						doh.robot.mouseMoveAt(firstVisibleNode, 500, 500);
+						doh.robot.mouseClick({left: true}, 500);
+
+						doh.robot.sequence(d.getTestCallback(function(){
+							var focus = dojo.global.dijit.focus.curNode;
+							doh.is("The Root", innerText(focus), "focused on root");
+						}), 500);
+
+						return d;
+					}
+				},
+				{
+					name:"right arrow, down arrow",
+					timeout:4000,
+					runTest:function(){
+						var d = new doh.Deferred();
+
+						// From Continents node, press "A".   Should go to Africa.
+						doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 100);
+						doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 100);
+						doh.robot.sequence(d.getTestCallback(function(){
+							var focus = dojo.global.dijit.focus.curNode;
+							doh.is("Child_0", innerText(focus), "focused on first child");
+						}), 500);
+
+						return d;
+					}
+				}
+			]);
+
+			doh.run();
+		});
+
+	</script>
+</head>
+</html>
+
