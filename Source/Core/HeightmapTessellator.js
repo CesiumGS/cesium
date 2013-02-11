@@ -53,6 +53,11 @@ define([
      * height above the ellipsoid, and U and V are the texture coordinates.
      *
      * @param {Array|Float32Array} description.vertices The array to use to store computed vertices.
+     *                             If description.skirtHeight is 0.0, the array should have
+     *                             description.width * description.height * 6 elements.  If
+     *                             description.skirtHeight is greater than 0.0, the array should
+     *                             have (description.width + 2) * (description.height * 2) * 6
+     *                             elements.
      * @param {TypedArray} description.heightmap The heightmap to tessellate.
      * @param {Number} description.width The width of the heightmap, in height samples.
      * @param {Number} description.height The height of the heightmap, in height samples.
@@ -89,6 +94,25 @@ define([
      * @param {Boolean} [description.structure.isBigEndian=false] Indicates endianness of the elements in the buffer when the
      *                  stride property is greater than 1.  If this property is false, the first element is the
      *                  low-order element.  If it is true, the first element is the high-order element.
+     *
+     * @example
+     * var width = 5;
+     * var height = 5;
+     * var vertices = new Float32Array(width * height * 6);
+     * var description = ;
+     * HeightmapTessellator.computeVertices({
+     *     vertices : vertices,
+     *     heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
+     *     width : width,
+     *     height : height,
+     *     skirtHeight : 0.0,
+     *     nativeExtent : {
+     *         west : 10.0,
+     *         east : 20.0,
+     *         south : 30.0,
+     *         north : 40.0
+     *     }
+     * });
      */
     HeightmapTessellator.computeVertices = function(description) {
         if (typeof description === 'undefined' || typeof description.heightmap === 'undefined') {
@@ -143,7 +167,7 @@ define([
                 geographicWest = toRadians(nativeExtent.west);
                 geographicSouth = toRadians(nativeExtent.south);
                 geographicEast = toRadians(nativeExtent.east);
-                extent.north = toRadians(nativeExtent.north);
+                geographicNorth = toRadians(nativeExtent.north);
             } else {
                 geographicWest = nativeExtent.west * oneOverCentralBodySemimajorAxis;
                 geographicSouth = piOverTwo - (2.0 * atan(exp(-nativeExtent.south * oneOverCentralBodySemimajorAxis)));
