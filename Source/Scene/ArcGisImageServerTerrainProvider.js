@@ -48,6 +48,14 @@ define([
      * @param {String} [description.credit] A string crediting the data source, which is displayed on the canvas.
      *
      * @see TerrainProvider
+     *
+     * @example
+     * var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
+     *   url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
+     *   token : 'KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg..',
+     *   proxy : new Cesium.DefaultProxy('/terrain/')
+     * });
+     * centralBody.setTerrainProvider(terrainProvider);
      */
     function ArcGisImageServerTerrainProvider(description) {
         if (typeof description === 'undefined' || typeof description.url === 'undefined') {
