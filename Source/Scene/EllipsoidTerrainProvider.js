@@ -47,8 +47,11 @@ define([
 
         var width = 16;
         var height = 16;
-        var buffer = new Uint8Array(width * height);
-        this._terrainData = new HeightmapTerrainData(buffer, width, height);
+        this._terrainData = new HeightmapTerrainData({
+            buffer : new Uint8Array(width * height),
+            width : 16,
+            height : 16
+        });
 
         this._errorEvent = new Event();
     }

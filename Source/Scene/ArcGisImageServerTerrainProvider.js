@@ -144,10 +144,13 @@ define([
 
         var that = this;
         return when(promise, function(image) {
-            var heightBuffer = getImagePixels(image);
-            var childTileMask = 15;
-            var waterMask;
-            return new HeightmapTerrainData(heightBuffer, that._heightmapWidth, that._heightmapWidth, childTileMask, that._terrainDataStructure, false, waterMask);
+            return new HeightmapTerrainData({
+                buffer : getImagePixels(image),
+                width : that._heightmapWidth,
+                height : that._heightmapWidth,
+                childTileMask : 15, // all children present
+                structure : that._terrainDataStructure
+            });
         });
     };
 

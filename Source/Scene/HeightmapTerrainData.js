@@ -34,10 +34,10 @@ define([
      * @alias HeightmapTerrainData
      * @constructor
      *
-     * @param {TypedArray} buffer The buffer containing height data.
-     * @param {Number} width The width (longitude direction) of the heightmap, in samples.
-     * @param {Number} height The height (latitude direction) of the heightmap, in samples.
-     * @param {Number} [childTileMask=15] A bit mask indicating which of this tile's four children exist.
+     * @param {TypedArray} description.buffer The buffer containing height data.
+     * @param {Number} description.width The width (longitude direction) of the heightmap, in samples.
+     * @param {Number} description.height The height (latitude direction) of the heightmap, in samples.
+     * @param {Number} [description.childTileMask=15] A bit mask indicating which of this tile's four children exist.
      *                 If a child's bit is set, geometry will be requested for that tile as well when it
      *                 is needed.  If the bit is cleared, the child tile is not requested and geometry is
      *                 instead upsampled from the parent.  The bit values are as follows:
@@ -48,29 +48,29 @@ define([
      *                  <tr><td>2</td><td>4</td><td>Northwest</td></tr>
      *                  <tr><td>3</td><td>8</td><td>Northeast</td></tr>
      *                 </table>
-     * @param {Object} [structure] An object describing the structure of the height data.
-     * @param {Number} [structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
+     * @param {Object} [description.structure] An object describing the structure of the height data.
+     * @param {Number} [description.structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
      *                 the height above the heightOffset, in meters.  The heightOffset is added to the resulting
      *                 height after multiplying by the scale.
-     * @param {Number} [structure.heightOffset=0.0] The offset to add to the scaled height to obtain the final
+     * @param {Number} [description.structure.heightOffset=0.0] The offset to add to the scaled height to obtain the final
      *                 height in meters.  The offset is added after the height sample is multiplied by the
      *                 heightScale.
-     * @param {Number} [structure.elementsPerHeight=1] The number of elements in the buffer that make up a single height
+     * @param {Number} [description.structure.elementsPerHeight=1] The number of elements in the buffer that make up a single height
      *                 sample.  This is usually 1, indicating that each element is a separate height sample.  If
      *                 it is greater than 1, that number of elements together form the height sample, which is
      *                 computed according to the structure.elementMultiplier and structure.isBigEndian properties.
-     * @param {Number} [structure.stride=1] The number of elements to skip to get from the first element of
+     * @param {Number} [description.structure.stride=1] The number of elements to skip to get from the first element of
      *                 one height to the first element of the next height.
-     * @param {Number} [structure.elementMultiplier=256.0] The multiplier used to compute the height value when the
+     * @param {Number} [description.structure.elementMultiplier=256.0] The multiplier used to compute the height value when the
      *                 stride property is greater than 1.  For example, if the stride is 4 and the strideMultiplier
      *                 is 256, the height is computed as follows:
      *                 `height = buffer[index] + buffer[index + 1] * 256 + buffer[index + 2] * 256 * 256 + buffer[index + 3] * 256 * 256 * 256`
      *                 This is assuming that the isBigEndian property is false.  If it is true, the order of the
      *                 elements is reversed.
-     * @param {Boolean} [structure.isBigEndian=false] Indicates endianness of the elements in the buffer when the
+     * @param {Boolean} [description.structure.isBigEndian=false] Indicates endianness of the elements in the buffer when the
      *                  stride property is greater than 1.  If this property is false, the first element is the
      *                  low-order element.  If it is true, the first element is the high-order element.
-     * @param {Boolean} [createdByUpsampling=false] True if this instance was created by upsampling another instance;
+     * @param {Boolean} [description.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
      *
      * @see TerrainData
@@ -81,15 +81,33 @@ define([
      * var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
      * var waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
      * var structure = HeightmapTessellator.DEFAULT_STRUCTURE;
-     * var terrainData = new HeightmapTerrainData(heightBuffer, 65, 65, childTileMask, structure, false, waterMask);
+     * var terrainData = new HeightmapTerrainData({
+     *   buffer : heightBuffer,
+     *   width : 65,
+     *   height : 65,
+     *   childTileMask : childTileMask,
+     *   structure : structure,
+     *   waterMask : waterMask
+     * });
      */
-    var HeightmapTerrainData = function HeightmapTerrainData(buffer, width, height, childTileMask, structure, createdByUpsampling, waterMask) {
-        this._buffer = buffer;
-        this._width = width;
-        this._height = height;
-        this._childTileMask = defaultValue(childTileMask, 15);
+    var HeightmapTerrainData = function HeightmapTerrainData(description) {
+        if (typeof description === 'undefined' || typeof description.buffer === 'undefined') {
+            throw new DeveloperError('description.buffer is required.');
+        }
+        if (typeof description.width === 'undefined') {
+            throw new DeveloperError('description.width is required.');
+        }
+        if (typeof description.height === 'undefined') {
+            throw new DeveloperError('description.height is required.');
+        }
+
+        this._buffer = description.buffer;
+        this._width = description.width;
+        this._height = description.height;
+        this._childTileMask = defaultValue(description.childTileMask, 15);
 
         var defaultStructure = HeightmapTessellator.DEFAULT_STRUCTURE;
+        var structure = description.structure;
         if (typeof structure === 'undefined') {
             structure = defaultStructure;
         } else if (structure !== defaultStructure) {
@@ -102,8 +120,8 @@ define([
         }
 
         this._structure = structure;
-        this._createdByUpsampling = defaultValue(createdByUpsampling, false);
-        this._waterMask = waterMask;
+        this._createdByUpsampling = defaultValue(description.createdByUpsampling, false);
+        this._waterMask = description.waterMask;
     };
 
     var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
@@ -123,6 +141,22 @@ define([
      *          be retried later.
      */
     HeightmapTerrainData.prototype.createMesh = function(ellipsoid, tilingScheme, x, y, level) {
+        if (typeof ellipsoid === 'undefined') {
+            throw new DeveloperError('ellipsoid is required.');
+        }
+        if (typeof tilingScheme === 'undefined') {
+            throw new DeveloperError('tilingScheme is required.');
+        }
+        if (typeof x === 'undefined') {
+            throw new DeveloperError('x is required.');
+        }
+        if (typeof y === 'undefined') {
+            throw new DeveloperError('y is required.');
+        }
+        if (typeof level === 'undefined') {
+            throw new DeveloperError('level is required.');
+        }
+
         var nativeExtent = tilingScheme.tileXYToNativeExtent(x, y, level);
         var extent = tilingScheme.tileXYToExtent(x, y, level);
 
@@ -183,6 +217,28 @@ define([
      *          deferred.
      */
     HeightmapTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
+        if (typeof tilingScheme === 'undefined') {
+            throw new DeveloperError('tilingScheme is required.');
+        }
+        if (typeof thisX === 'undefined') {
+            throw new DeveloperError('thisX is required.');
+        }
+        if (typeof thisY === 'undefined') {
+            throw new DeveloperError('thisY is required.');
+        }
+        if (typeof thisLevel === 'undefined') {
+            throw new DeveloperError('thisLevel is required.');
+        }
+        if (typeof descendantX === 'undefined') {
+            throw new DeveloperError('descendantX is required.');
+        }
+        if (typeof descendantY === 'undefined') {
+            throw new DeveloperError('descendantY is required.');
+        }
+        if (typeof descendantLevel === 'undefined') {
+            throw new DeveloperError('descendantLevel is required.');
+        }
+
         var levelDifference = descendantLevel - thisLevel;
         if (levelDifference > 1) {
             throw new DeveloperError('Upsampling through more than one level at a time is not currently supported.');
@@ -218,6 +274,19 @@ define([
      * @returns {Boolean} True if the child tile is available; otherwise, false.
      */
     HeightmapTerrainData.prototype.isChildAvailable = function(thisX, thisY, childX, childY) {
+        if (typeof thisX === 'undefined') {
+            throw new DeveloperError('thisX is required.');
+        }
+        if (typeof thisY === 'undefined') {
+            throw new DeveloperError('thisY is required.');
+        }
+        if (typeof childX === 'undefined') {
+            throw new DeveloperError('childX is required.');
+        }
+        if (typeof childY === 'undefined') {
+            throw new DeveloperError('childY is required.');
+        }
+
         var bitNumber = 2; // northwest child
         if (childX !== thisX * 2) {
             ++bitNumber; // east child
@@ -319,7 +388,14 @@ define([
             }
         }
 
-        return new HeightmapTerrainData(heights, upsampledWidth, upsampledHeight, 0, terrainData._structure, true);
+        return new HeightmapTerrainData({
+            buffer : heights,
+            width : upsampledWidth,
+            height : upsampledHeight,
+            childTileMask : 0,
+            structure : terrainData._structure,
+            createdByUpsampling : true
+        });
     }
 
     function upsampleByInterpolating(terrainData, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
@@ -362,7 +438,14 @@ define([
             }
         }
 
-        return new HeightmapTerrainData(heights, width, height, 0, terrainData._structure, true);
+        return new HeightmapTerrainData({
+            buffer : heights,
+            width : width,
+            height : height,
+            childTileMask : 0,
+            structure : terrainData._structure,
+            createdByUpsampling : true
+        });
     }
 
     function interpolateHeight(sourceHeights, sourceExtent, width, height, longitude, latitude) {

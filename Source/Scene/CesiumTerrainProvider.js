@@ -103,9 +103,14 @@ define([
         var that = this;
         return when(promise, function(buffer) {
             var heightBuffer = new Uint16Array(buffer, 0, that._heightmapWidth * that._heightmapWidth);
-            var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
-            var waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
-            return new HeightmapTerrainData(heightBuffer, that._heightmapWidth, that._heightmapWidth, childTileMask, that._terrainDataStructure, false, waterMask);
+            return new HeightmapTerrainData({
+                buffer : heightBuffer,
+                childTileMask : new Uint8Array(buffer, heightBuffer.byteLength, 1)[0],
+                waterMask : new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1),
+                width : that._heightmapWidth,
+                height : that._heightmapWidth,
+                structure : that._terrainDataStructure
+            });
         });
     };
 
