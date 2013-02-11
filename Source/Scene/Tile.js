@@ -199,8 +199,8 @@ define([
         this.terrainData = undefined;
         this.center = new Cartesian3(0.0, 0.0, 0.0);
         this.vertexArray = undefined;
-        this.minHeight = 0.0;
-        this.maxHeight = 0.0;
+        this.minimumHeight = 0.0;
+        this.maximumHeight = 0.0;
         this.boundingSphere3D = new BoundingSphere();
         this.boundingSphere2D = new BoundingSphere();
         this.occludeePointInScaledSpace = new Cartesian3(0.0, 0.0, 0.0);

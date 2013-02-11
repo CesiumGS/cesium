@@ -64,8 +64,8 @@ define([
    TileTerrain.prototype.publishToTile = function(tile) {
        var mesh = this.mesh;
        Cartesian3.clone(mesh.center, tile.center);
-       tile.minHeight = mesh.minHeight;
-       tile.maxHeight = mesh.maxHeight;
+       tile.minimumHeight = mesh.minimumHeight;
+       tile.maximumHeight = mesh.maximumHeight;
        BoundingSphere.clone(mesh.boundingSphere3D, tile.boundingSphere3D);
 
        if (typeof mesh.occludeePointInScaledSpace !== 'undefined') {

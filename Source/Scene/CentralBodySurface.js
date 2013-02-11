@@ -542,7 +542,7 @@ define([
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
-            BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minHeight, tile.maxHeight, boundingVolume);
+            BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
             boundingVolume.center = new Cartesian3(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y);
 
             if (frameState.mode === SceneMode.MORPHING) {
@@ -579,7 +579,7 @@ define([
         var southNormal = tile.southNormal;
         var eastNormal = tile.eastNormal;
         var northNormal = tile.northNormal;
-        var maxHeight = tile.maxHeight;
+        var maximumHeight = tile.maximumHeight;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             southwestCornerCartesian = frameState.scene2D.projection.project(tile.extent.getSouthwest(), southwestCornerScratch);
@@ -594,7 +594,7 @@ define([
             eastNormal = Cartesian3.UNIT_Y;
             southNormal = negativeUnitZ;
             northNormal = Cartesian3.UNIT_Z;
-            maxHeight = 0.0;
+            maximumHeight = 0.0;
         }
 
         var vectorFromSouthwestCorner = cameraCartesianPosition.subtract(southwestCornerCartesian, vectorScratch);
@@ -611,7 +611,7 @@ define([
         } else {
             cameraHeight = cameraCartesianPosition.x;
         }
-        var distanceFromTop = cameraHeight - maxHeight;
+        var distanceFromTop = cameraHeight - maximumHeight;
 
         var result = 0.0;
 
@@ -1481,7 +1481,7 @@ define([
                     var boundingVolume = tile.boundingSphere3D;
 
                     if (frameState.mode !== SceneMode.SCENE3D) {
-                        boundingVolume = BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minHeight, tile.maxHeight);
+                        boundingVolume = BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight);
                         boundingVolume.center = new Cartesian3(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y);
 
                         if (frameState.mode === SceneMode.MORPHING) {

@@ -140,7 +140,7 @@ define([
         var sqrt = Math.sqrt;
         var atan = Math.atan;
         var exp = Math.exp;
-        var piOverTwo = Math.PI / 2.0;
+        var piOverTwo = CesiumMath.PI_OVER_TWO;
         var toRadians = CesiumMath.toRadians;
 
         var vertices = description.vertices;
@@ -201,8 +201,8 @@ define([
 
         var vertexArrayIndex = 0;
 
-        var minHeight = 65536.0;
-        var maxHeight = -65536.0;
+        var minimumHeight = 65536.0;
+        var maximumHeight = -65536.0;
 
         var startRow = 0;
         var endRow = height;
@@ -278,8 +278,8 @@ define([
 
                 heightSample = heightSample * heightScale + heightOffset;
 
-                maxHeight = Math.max(maxHeight, heightSample);
-                minHeight = Math.min(minHeight, heightSample);
+                maximumHeight = Math.max(maximumHeight, heightSample);
+                minimumHeight = Math.min(minimumHeight, heightSample);
 
                 if (colIndex !== col || rowIndex !== row) {
                     heightSample -= skirtHeight;
@@ -292,10 +292,11 @@ define([
                 var kY = radiiSquaredY * nY;
 
                 var gamma = sqrt((kX * nX) + (kY * nY) + (kZ * nZ));
+                var oneOverGamma = 1.0 / gamma;
 
-                var rSurfaceX = kX / gamma;
-                var rSurfaceY = kY / gamma;
-                var rSurfaceZ = kZ / gamma;
+                var rSurfaceX = kX * oneOverGamma;
+                var rSurfaceY = kY * oneOverGamma;
+                var rSurfaceZ = kZ * oneOverGamma;
 
                 vertices[vertexArrayIndex++] = rSurfaceX + nX * heightSample - relativeToCenter.x;
                 vertices[vertexArrayIndex++] = rSurfaceY + nY * heightSample - relativeToCenter.y;
@@ -311,8 +312,8 @@ define([
         }
 
         return {
-            maxHeight : maxHeight,
-            minHeight : minHeight
+            maximumHeight : maximumHeight,
+            minimumHeight : minimumHeight
         };
     };
 

@@ -149,8 +149,8 @@ define([
                     center,
                     new Float32Array(result.vertices),
                     TerrainProvider.getRegularGridIndices(result.gridWidth, result.gridHeight),
-                    result.minHeight,
-                    result.maxHeight,
+                    result.minimumHeight,
+                    result.maximumHeight,
                     result.boundingSphere3D,
                     result.occludeePointInScaledSpace);
         });

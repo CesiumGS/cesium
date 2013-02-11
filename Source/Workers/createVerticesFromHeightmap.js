@@ -55,8 +55,8 @@ define([
         return {
             vertices : vertices.buffer,
             numberOfAttributes : numberOfAttributes,
-            minHeight : statistics.minHeight,
-            maxHeight : statistics.maxHeight,
+            minimumHeight : statistics.minimumHeight,
+            maximumHeight : statistics.maximumHeight,
             gridWidth : arrayWidth,
             gridHeight : arrayHeight,
             boundingSphere3D : boundingSphere3D,
