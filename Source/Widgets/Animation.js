@@ -546,10 +546,10 @@ define(['../Core/destroyObject',
         }));
         this._knobTime.childNodes[0].textContent = viewModel.timeLabel();
 
-        subscriptions.push(viewModel.speedLabel.subscribe(function(value) {
+        subscriptions.push(viewModel.multiplierLabel.subscribe(function(value) {
             that._knobStatus.childNodes[0].textContent = value;
         }));
-        this._knobStatus.childNodes[0].textContent = viewModel.speedLabel();
+        this._knobStatus.childNodes[0].textContent = viewModel.multiplierLabel();
     };
 
     /**

@@ -43,8 +43,8 @@ define(['./Command',
         return left - right;
     }
 
-    function _getTypicalSpeedIndex(speed, shuttleRingTicks) {
-        var index = binarySearch(shuttleRingTicks, speed, numberComparator);
+    function _getTypicalMultiplierIndex(multiplier, shuttleRingTicks) {
+        var index = binarySearch(shuttleRingTicks, multiplier, numberComparator);
         return index < 0 ? ~index : index;
     }
 
@@ -182,10 +182,10 @@ define(['./Command',
         });
 
         /**
-         * The string representation of the current speed.
+         * The string representation of the current multiplier.
          * @type Observable
          */
-        this.speedLabel = knockout.computed(function() {
+        this.multiplierLabel = knockout.computed(function() {
             if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK) {
                 return 'Today';
             }
@@ -292,12 +292,12 @@ define(['./Command',
             },
             write : function(angle) {
                 angle = Math.max(Math.min(angle, _maxShuttleRingAngle), -_maxShuttleRingAngle);
-                var speed = angle2Multiplier(angle, that._shuttleRingTicks());
-                if (speed !== 0) {
-                    if (Math.abs(speed) > 1) {
-                        speed = Math.round(speed);
+                var multiplier = angle2Multiplier(angle, that._shuttleRingTicks());
+                if (multiplier !== 0) {
+                    if (Math.abs(multiplier) > 1) {
+                        multiplier = Math.round(multiplier);
                     }
-                    clockViewModel.multiplier(speed);
+                    clockViewModel.multiplier(multiplier);
                     clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
                 }
             }
@@ -314,7 +314,7 @@ define(['./Command',
                 var clockViewModel = that.clockViewModel;
                 var shuttleRingTicks = that._shuttleRingTicks();
                 var multiplier = clockViewModel.multiplier();
-                var index = _getTypicalSpeedIndex(multiplier, shuttleRingTicks) - 1;
+                var index = _getTypicalMultiplierIndex(multiplier, shuttleRingTicks) - 1;
                 if (index >= 0) {
                     clockViewModel.multiplier(shuttleRingTicks[index]);
                 }
@@ -332,7 +332,7 @@ define(['./Command',
                 var clockViewModel = that.clockViewModel;
                 var shuttleRingTicks = that._shuttleRingTicks();
                 var multiplier = clockViewModel.multiplier();
-                var index = _getTypicalSpeedIndex(multiplier, shuttleRingTicks) + 1;
+                var index = _getTypicalMultiplierIndex(multiplier, shuttleRingTicks) + 1;
                 if (index < shuttleRingTicks.length) {
                     clockViewModel.multiplier(shuttleRingTicks[index]);
                 }
