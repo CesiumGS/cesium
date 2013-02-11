@@ -19,11 +19,10 @@ uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
 uniform sampler2D u_waterMask;
 uniform vec4 u_waterMaskTranslationAndScale;
 uniform float u_zoomedOutOceanSpecularIntensity;
+#endif
 
 #ifdef SHOW_OCEAN_WAVES
 uniform sampler2D u_oceanNormalMap;
-#endif
-
 #endif
 
 varying vec3 v_positionMC;
@@ -142,8 +141,6 @@ void main()
     gl_FragColor = color;
 }
 
-#ifdef SHOW_REFLECTIVE_OCEAN
-
 #ifdef SHOW_OCEAN_WAVES
 vec4 getNoise(vec2 uv, float time)
 {
@@ -180,6 +177,8 @@ vec4 getNoise(vec2 uv, float time)
     return ((noise / 4.0) - 0.5) * 2.0;
 }
 #endif // #ifdef SHOW_OCEAN_WAVES
+
+#ifdef SHOW_REFLECTIVE_OCEAN
 
 float waveFade(float edge0, float edge1, float x)
 {
