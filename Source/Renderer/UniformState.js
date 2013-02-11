@@ -70,10 +70,7 @@ define([
         this._viewRotation = new Matrix3();
         this._inverseViewRotation = new Matrix3();
 
-        this._viewRotation3DDirty = true;
         this._viewRotation3D = new Matrix3();
-
-        this._inverseViewRotation3DDirty = true;
         this._inverseViewRotation3D = new Matrix3();
 
         this._inverseProjectionDirty = true;
@@ -140,8 +137,6 @@ define([
 
         uniformState._view3DDirty = true;
         uniformState._inverseView3DDirty = true;
-        uniformState._viewRotation3DDirty = true;
-        uniformState._inverseViewRotation3DDirty = true;
         uniformState._modelViewDirty = true;
         uniformState._modelView3DDirty = true;
         uniformState._modelViewRelativeToEyeDirty = true;
@@ -236,6 +231,8 @@ define([
 
         if (frameState.mode === SceneMode.SCENE2D) {
             this._frustum2DWidth = camera.frustum.right - camera.frustum.left;
+        } else {
+            this._frustum2DWidth = 0.0;
         }
 
         setSunAndMoonDirections(this, frameState);
@@ -408,6 +405,7 @@ define([
             } else {
                 view2Dto3D(this._cameraPosition, this._cameraDirection, this._cameraRight, this._cameraUp, this._frustum2DWidth, this._mode, this._mapProjection, this._view3D);
             }
+            Matrix4.getRotation(this._view3D, this._viewRotation3D);
             this._view3DDirty = false;
         }
         return this._view3D;
@@ -438,11 +436,7 @@ define([
      * @see czm_viewRotation3D
      */
     UniformState.prototype.getViewRotation3D = function() {
-        if (this._viewRotation3DDirty) {
-            var view3D = this.getView3D();
-            Matrix4.getRotation(view3D, this._viewRotation3D);
-            this._viewRotation3DDirty = false;
-        }
+        this.getView3D();
         return this._viewRotation3D;
     };
 
@@ -474,6 +468,7 @@ define([
     UniformState.prototype.getInverseView3D = function() {
         if (this._inverseView3DDirty) {
             Matrix4.inverseTransformation(this.getView3D(), this._inverseView3D);
+            Matrix4.getRotation(this._inverseView3D, this._inverseViewRotation3D);
             this._inverseView3DDirty = false;
         }
         return this._inverseView3D;
@@ -504,11 +499,7 @@ define([
      * @see czm_inverseViewRotation3D
      */
     UniformState.prototype.getInverseViewRotation3D = function() {
-        if (this._inverseViewRotation3DDirty) {
-            var inverseView3D = this.getInverseView3D();
-            Matrix4.getRotation(inverseView3D, this._inverseViewRotation3D);
-            this._inverseViewRotation3DDirty = false;
-        }
+        this.getInverseView3D();
         return this._inverseViewRotation3D;
     };
 
