@@ -177,11 +177,11 @@ define([
         uniformState._modelViewInfiniteProjectionDirty = true;
     }
 
-    function setCameraPosition(uniformState, position, direction, right, up) {
-        Cartesian3.clone(position, uniformState._cameraPosition);
-        Cartesian3.clone(direction, uniformState._cameraDirection);
-        Cartesian3.clone(right, uniformState._cameraRight);
-        Cartesian3.clone(up, uniformState._cameraUp);
+    function setCamera(uniformState, camera) {
+        Cartesian3.clone(camera.getPositionWC(), uniformState._cameraPosition);
+        Cartesian3.clone(camera.getDirectionWC(), uniformState._cameraDirection);
+        Cartesian3.clone(camera.getRightWC(), uniformState._cameraRight);
+        Cartesian3.clone(camera.getUpWC(), uniformState._cameraUp);
         uniformState._encodedCameraPositionMCDirty = true;
     }
 
@@ -232,7 +232,7 @@ define([
 
         setView(this, camera.getViewMatrix());
         setInverseView(this, camera.getInverseViewMatrix());
-        setCameraPosition(this, camera.getPositionWC(), camera.getDirectionWC(), camera.getRightWC(), camera.getUpWC());
+        setCamera(this, camera);
 
         if (frameState.mode === SceneMode.SCENE2D) {
             this._frustum2DWidth = camera.frustum.right - camera.frustum.left;
