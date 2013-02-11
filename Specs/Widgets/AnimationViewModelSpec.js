@@ -179,16 +179,16 @@ defineSuite([
         clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
         clockViewModel.multiplier(123.1);
         expectedString = '123.100x';
-        expect(animationViewModel.speedLabel()).toEqual(expectedString);
+        expect(animationViewModel.multiplierLabel()).toEqual(expectedString);
 
         clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK);
         expectedString = 'Today';
-        expect(animationViewModel.speedLabel()).toEqual(expectedString);
+        expect(animationViewModel.multiplierLabel()).toEqual(expectedString);
 
         clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
         clockViewModel.multiplier(15);
         expectedString = '15x';
-        expect(animationViewModel.speedLabel()).toEqual(expectedString);
+        expect(animationViewModel.multiplierLabel()).toEqual(expectedString);
     });
 
     it('pause button restores current state', function() {

@@ -143,6 +143,7 @@ define(['../Core/destroyObject',
 
         if (e.type === 'mousedown' || (shuttleRingDragging && e.type === 'mousemove')) {
             var centerX = widget._centerX;
+            var centerY = widget._centerY;
             var svg = widget._svgNode;
             var rect = svg.getBoundingClientRect();
             var clientX = e.clientX;
@@ -159,7 +160,7 @@ define(['../Core/destroyObject',
             var pointerRect = widget._shuttleRingPointer.getBoundingClientRect();
 
             var x = clientX - centerX - rect.left;
-            var y = clientY - centerX - rect.top;
+            var y = clientY - centerY - rect.top;
             var angle = Math.atan2(y, x) * 180 / Math.PI + 90;
             if (angle > 180) {
                 angle -= 360;
@@ -268,6 +269,39 @@ define(['../Core/destroyObject',
         this.svgElement.getElementsByTagName('title')[0].textContent = toolTip;
     };
 
+    function _resize(that) {
+        var svg = that._svgNode;
+
+        var parentWidth = that.parentNode.clientWidth;
+        var parentHeight = that.parentNode.clientHeight;
+
+        //The width and height as the SVG was originally drawn.
+        var baseWidth = 200;
+        var baseHeight = 132;
+
+        var width = parentWidth;
+        var height = parentHeight;
+        if (parentWidth === 0 && parentHeight === 0) {
+            width = baseWidth;
+            height = baseHeight;
+        } else if (parentWidth === 0) {
+            height = parentHeight;
+            width = baseWidth * (parentHeight / baseHeight);
+        } else if (parentHeight === 0) {
+            width = parentWidth;
+            height = baseHeight * (parentWidth / baseWidth);
+        }
+
+        svg.style.cssText = 'width: ' + width + 'px; height: ' + height + 'px; position: absolute; bottom: 0; left: 0;';
+        svg.setAttribute('width', width);
+        svg.setAttribute('height', height);
+        svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+
+        that._topG.setAttribute('transform', 'scale(' + (width / baseWidth) + ',' + (height / baseHeight) + ')');
+        that._centerX = Math.max(1, Math.floor(100.0 * width / baseWidth));
+        that._centerY = Math.max(1, Math.floor(100.0 * height / baseHeight));
+    }
+
     /**
      * <span style="display: block; text-align: center;">
      * <img src="images/AnimationWidget.png" width="211" height="142" alt="" style="border: none; border-radius: 5px;" />
@@ -337,8 +371,8 @@ define(['../Core/destroyObject',
         this.parentNode = parentNode;
 
         this._centerX = 0;
+        this._centerY = 0;
         this._defsElement = undefined;
-        this._scale = 1.0;
         this._svgNode = undefined;
         this._topG = undefined;
 
@@ -493,16 +527,17 @@ define(['../Core/destroyObject',
         svg.appendChild(topG);
         parentNode.appendChild(svg);
 
-        //Perform initial calculations for scale and theme.
-        this.setScale(1.0);
-        this.applyThemeChanges();
-
         //TODO: Since the animation widget uses SVG and has no HTML backing,
         //we need to wire everything up manually.  Knockout can supposedly
         //bind to SVG, so we we figure that out we can modify our SVG
         //to include the binding information directly.
 
         var that = this;
+
+        window.addEventListener('resize', function() {
+            _resize(that);
+        }, true);
+
         var callBack = function(e) {
             _setShuttleRingFromMouse(that, e);
         };
@@ -550,6 +585,10 @@ define(['../Core/destroyObject',
             that._knobStatus.childNodes[0].textContent = value;
         }));
         this._knobStatus.childNodes[0].textContent = viewModel.multiplierLabel();
+
+        //Perform initial calculations for scale and theme.
+        _resize(this);
+        this.applyThemeChanges();
     };
 
     /**
@@ -580,47 +619,6 @@ define(['../Core/destroyObject',
      */
     Animation.prototype.isDestroyed = function() {
         return false;
-    };
-
-    /**
-     * Get the widget scale last set by {@link Animation#setScale}.
-     * @memberof Animation
-     *
-     * @returns {Number} The scale of the widget.
-     */
-    Animation.prototype.getScale = function() {
-        return this._scale;
-    };
-
-    /**
-     * Adjust the overall size of the widget relative to the rest of the page.
-     * The default scale is 1.0.
-     * @memberof Animation
-     *
-     * @param {Number} scale A size modifier for the widget UI
-     *
-     * @exception {DeveloperError} scale must be greater than 0.
-     */
-    Animation.prototype.setScale = function(scale) {
-        if (scale <= 0) {
-            throw new DeveloperError('scale must be greater than 0.');
-        }
-
-        this._scale = scale;
-
-        scale *= 0.85; // The default 1.0 scale is smaller than the native SVG as originally designed.
-        this._centerX = Math.max(1, Math.floor(100.0 * scale));
-
-        var svg = this._svgNode;
-        var width = Math.max(2, Math.floor(200 * scale));
-        var height = Math.max(2, Math.floor(132 * scale));
-
-        svg.style.cssText = 'width: ' + width + 'px; height: ' + height + 'px; position: absolute; bottom: 0; left: 0;';
-        svg.setAttribute('width', width);
-        svg.setAttribute('height', height);
-        svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
-
-        this._topG.setAttribute('transform', 'scale(' + scale + ')');
     };
 
     /**
