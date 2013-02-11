@@ -1009,12 +1009,12 @@ define([
         return 1.0;
     };
 
-    var view2Dto3DPScratch = new Cartesian3(0.0, 0.0, 0.0);
-    var view2Dto3DRScratch = new Cartesian4(0.0, 0.0, 0.0, 0.0);
-    var view2Dto3DUScratch = new Cartesian4(0.0, 0.0, 0.0, 0.0);
-    var view2Dto3DDScratch = new Cartesian4(0.0, 0.0, 0.0, 0.0);
-    var view2Dto3DCartographicScratch = new Cartographic(0.0, 0.0, 0.0);
-    var view2Dto3DCartesian3Scratch = new Cartesian3(0.0, 0.0, 0.0);
+    var view2Dto3DPScratch = new Cartesian3();
+    var view2Dto3DRScratch = new Cartesian4();
+    var view2Dto3DUScratch = new Cartesian4();
+    var view2Dto3DDScratch = new Cartesian4();
+    var view2Dto3DCartographicScratch = new Cartographic();
+    var view2Dto3DCartesian3Scratch = new Cartesian3();
     var view2Dto3DMatrix4Scratch = new Matrix4();
 
     function view2Dto3D(position2D, direction2D, right2D, up2D, frustum2DWidth, mode, projection, result) {

@@ -110,7 +110,7 @@ define([
         this._cameraPosition = cameraPosition;
     };
 
-    var tempVecScratch = new Cartesian3(0.0, 0.0, 0.0);
+    var tempVecScratch = new Cartesian3();
 
     /**
      * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.

@@ -211,10 +211,10 @@ define([
     };
 
     var defaultProjection = new GeographicProjection();
-    var fromExtent2DLowerLeft = new Cartesian3(0.0, 0.0, 0.0);
-    var fromExtent2DUpperRight = new Cartesian3(0.0, 0.0, 0.0);
-    var fromExtent2DSouthwest = new Cartographic(0.0, 0.0, 0.0);
-    var fromExtent2DNortheast = new Cartographic(0.0, 0.0, 0.0);
+    var fromExtent2DLowerLeft = new Cartesian3();
+    var fromExtent2DUpperRight = new Cartesian3();
+    var fromExtent2DSouthwest = new Cartographic();
+    var fromExtent2DNortheast = new Cartographic();
 
     /**
      * Computes a bounding sphere from an extent projected in 2D.

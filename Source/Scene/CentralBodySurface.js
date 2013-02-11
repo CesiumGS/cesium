@@ -567,11 +567,11 @@ define([
         return true;
     }
 
-    var southwestCornerScratch = new Cartesian3(0.0, 0.0, 0.0);
-    var northeastCornerScratch = new Cartesian3(0.0, 0.0, 0.0);
+    var southwestCornerScratch = new Cartesian3();
+    var northeastCornerScratch = new Cartesian3();
     var negativeUnitY = Cartesian3.UNIT_Y.negate();
     var negativeUnitZ = Cartesian3.UNIT_Z.negate();
-    var vectorScratch = new Cartesian3(0.0, 0.0, 0.0);
+    var vectorScratch = new Cartesian3();
 
     function distanceSquaredToTile(frameState, cameraCartesianPosition, cameraCartographicPosition, tile) {
         var southwestCornerCartesian = tile.southwestCornerCartesian;
@@ -786,10 +786,10 @@ define([
         } while (Date.now() < endTime && typeof tile !== 'undefined');
     }
 
-    var cartesian3Scratch = new Cartesian3(0.0, 0.0, 0.0);
-    var cartesian3Scratch2 = new Cartesian3(0.0, 0.0, 0.0);
-    var southeastScratch = new Cartesian3(0.0, 0.0, 0.0);
-    var northwestScratch = new Cartesian3(0.0, 0.0, 0.0);
+    var cartesian3Scratch = new Cartesian3();
+    var cartesian3Scratch2 = new Cartesian3();
+    var southeastScratch = new Cartesian3();
+    var northwestScratch = new Cartesian3();
 
     function prepareNewTile(surface, terrainProvider, tile) {
         surface._tileReplacementQueue.markTileRendered(tile);
@@ -1269,11 +1269,11 @@ define([
             dayTextureOneOverGamma : [],
             dayIntensity : 0.0,
 
-            southAndNorthLatitude : new Cartesian2(0.0, 0.0),
-            southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(0.0, 0.0, 0.0),
+            southAndNorthLatitude : new Cartesian2(),
+            southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(),
 
             waterMask : undefined,
-            waterMaskTranslationAndScale : new Cartesian4(0.0, 0.0, 0.0, 0.0)
+            waterMaskTranslationAndScale : new Cartesian4()
         };
     }
 

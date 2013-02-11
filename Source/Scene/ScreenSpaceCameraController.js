@@ -246,7 +246,7 @@ define([
                     endPosition : new Cartesian2(
                             object[lastMovementName].endPosition.x + object[lastMovementName].motion.x * d,
                             object[lastMovementName].endPosition.y + object[lastMovementName].motion.y * d),
-                    motion : new Cartesian2(0.0, 0.0)
+                    motion : new Cartesian2()
                 };
             }
 

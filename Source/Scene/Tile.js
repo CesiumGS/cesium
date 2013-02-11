@@ -147,14 +147,14 @@ define([
          *
          * @type Cartesian3
          */
-        this.southwestCornerCartesian = new Cartesian3(0.0, 0.0, 0.0);
+        this.southwestCornerCartesian = new Cartesian3();
 
         /**
          * The world coordinates of the northeast corner of the tile's extent.
          *
          * @type Cartesian3
          */
-        this.northeastCornerCartesian = new Cartesian3(0.0, 0.0, 0.0);
+        this.northeastCornerCartesian = new Cartesian3();
 
         /**
          * A normal that, along with southwestCornerCartesian, defines a plane at the western edge of
@@ -162,7 +162,7 @@ define([
          *
          * @type Cartesian3
          */
-        this.westNormal = new Cartesian3(0.0, 0.0, 0.0);
+        this.westNormal = new Cartesian3();
 
         /**
          * A normal that, along with southwestCornerCartesian, defines a plane at the southern edge of
@@ -172,7 +172,7 @@ define([
          *
          * @type Cartesian3
          */
-        this.southNormal = new Cartesian3(0.0, 0.0, 0.0);
+        this.southNormal = new Cartesian3();
 
         /**
          * A normal that, along with northeastCornerCartesian, defines a plane at the eastern edge of
@@ -180,7 +180,7 @@ define([
          *
          * @type Cartesian3
          */
-        this.eastNormal = new Cartesian3(0.0, 0.0, 0.0);
+        this.eastNormal = new Cartesian3();
 
         /**
          * A normal that, along with northeastCornerCartesian, defines a plane at the eastern edge of
@@ -190,20 +190,20 @@ define([
          *
          * @type Cartesian3
          */
-        this.northNormal = new Cartesian3(0.0, 0.0, 0.0);
+        this.northNormal = new Cartesian3();
 
         this.waterMaskTexture = undefined;
 
         this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
         this.terrainData = undefined;
-        this.center = new Cartesian3(0.0, 0.0, 0.0);
+        this.center = new Cartesian3();
         this.vertexArray = undefined;
         this.minimumHeight = 0.0;
         this.maximumHeight = 0.0;
         this.boundingSphere3D = new BoundingSphere();
         this.boundingSphere2D = new BoundingSphere();
-        this.occludeePointInScaledSpace = new Cartesian3(0.0, 0.0, 0.0);
+        this.occludeePointInScaledSpace = new Cartesian3();
 
         this.isRenderable = false;
 

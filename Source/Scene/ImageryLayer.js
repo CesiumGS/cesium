@@ -730,7 +730,7 @@ define([
             return this.oneOverMercatorHeight;
         },
 
-        textureDimensions : new Cartesian2(0.0, 0.0),
+        textureDimensions : new Cartesian2(),
         texture : undefined,
         northLatitude : 0,
         southLatitude : 0,

@@ -88,7 +88,7 @@ define([
             height : initialSize.y,
             pixelFormat : this._pixelFormat
         });
-        this._root = new TextureAtlasNode(new Cartesian2(0.0, 0.0), new Cartesian2(initialSize.x, initialSize.y));
+        this._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialSize.x, initialSize.y));
 
         // Add initial images if there are any.
         if (typeof images !== 'undefined' && (images.length > 0)) {
@@ -113,9 +113,9 @@ define([
 
             // Create new node structure, putting the old root node in the bottom left.
             var nodeBottomRight = new TextureAtlasNode(new Cartesian2(oldAtlasWidth + this._borderWidthInPixels, 0.0), new Cartesian2(atlasWidth, oldAtlasHeight));
-            var nodeBottomHalf = new TextureAtlasNode(new Cartesian2(0.0, 0.0), new Cartesian2(atlasWidth, oldAtlasHeight), this._root, nodeBottomRight);
+            var nodeBottomHalf = new TextureAtlasNode(new Cartesian2(), new Cartesian2(atlasWidth, oldAtlasHeight), this._root, nodeBottomRight);
             var nodeTopHalf = new TextureAtlasNode(new Cartesian2(0.0, oldAtlasHeight + this._borderWidthInPixels), new Cartesian2(atlasWidth, atlasHeight));
-            var nodeMain = new TextureAtlasNode(new Cartesian2(0.0, 0.0), new Cartesian2(atlasWidth, atlasHeight), nodeBottomHalf, nodeTopHalf);
+            var nodeMain = new TextureAtlasNode(new Cartesian2(), new Cartesian2(atlasWidth, atlasHeight), nodeBottomHalf, nodeTopHalf);
             this._root = nodeMain;
 
             // Resize texture coordinates.
@@ -156,7 +156,7 @@ define([
                 height : initialHeight,
                 pixelFormat : this._pixelFormat
             });
-            this._root = new TextureAtlasNode(new Cartesian2(0.0, 0.0), new Cartesian2(initialWidth, initialHeight));
+            this._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialWidth, initialHeight));
         }
     };
 

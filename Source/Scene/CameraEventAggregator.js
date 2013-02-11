@@ -102,9 +102,9 @@ define([
                     that._movement.endPosition.y = that._movement.endPosition.y + arcLength;
                 } else {
                     that._movement = {
-                        startPosition : new Cartesian2(0.0, 0.0),
+                        startPosition : new Cartesian2(),
                         endPosition : new Cartesian2(0.0, arcLength),
-                        motion : new Cartesian2(0.0, 0.0)
+                        motion : new Cartesian2()
                     };
                     that._lastMovement = that._movement; // This looks unusual, but its needed for wheel inertia.
                     that._update = false;
