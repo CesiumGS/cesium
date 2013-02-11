@@ -206,6 +206,16 @@ define([
          */
         this.depthTestAgainstTerrain = false;
 
+        /**
+         * The size of the terrain tile cache, expressed as a number of tiles.  Any additional
+         * tiles beyond this number will be freed, as long as they aren't needed for rendering
+         * this frame.  A larger number will consume more memory but will show detail faster
+         * when, for example, zooming out and then back in.
+         *
+         * @type Number
+         */
+        this.tileCacheSize = 100;
+
         this._lastOceanNormalMapUrl = undefined;
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
@@ -730,6 +740,7 @@ define([
                 this._zoomedOutOceanSpecularIntensity = 0.0;
             }
 
+            this._surface._tileCacheSize = this.tileCacheSize;
             this._surface.update(context,
                     frameState,
                     colorCommandList,

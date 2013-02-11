@@ -110,6 +110,7 @@ define([
         this._tileTraversalQueue = new Queue();
         this._tileLoadQueue = new TileLoadQueue();
         this._tileReplacementQueue = new TileReplacementQueue();
+        this._tileCacheSize = 100;
 
         // The number of milliseconds each frame to allow for processing the tile load queue.
         // At least one tile will be processed per frame (assuming that any need processing),
@@ -665,9 +666,9 @@ define([
             return;
         }
 
-        // Arbitrarily limit the number of loaded tiles to 100, or however
-        // many tiles were traversed this frame, whichever is greater.
-        surface._tileReplacementQueue.trimTiles(100);
+        // Remove any tiles that were not used this frame beyond the number
+        // we're allowed to keep.
+        surface._tileReplacementQueue.trimTiles(surface._tileCacheSize);
 
         var startTime = Date.now();
         var timeSlice = surface._loadQueueTimeSlice;
