@@ -28,7 +28,7 @@ define([
     "use strict";
 
     /**
-     * Terrain data for a single {@link Tile} where the terrain data is represented as a heightmap.  A heightmap
+     * Terrain data for a single tile where the terrain data is represented as a heightmap.  A heightmap
      * is a rectangular array of heights in row-major order from south to north and west to east.
      *
      * @alias HeightmapTerrainData
@@ -74,6 +74,14 @@ define([
      *                  otherwise, false.
      *
      * @see TerrainData
+     *
+     * @example
+     * var buffer = ...
+     * var heightBuffer = new Uint16Array(buffer, 0, that._heightmapWidth * that._heightmapWidth);
+     * var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
+     * var waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
+     * var structure = HeightmapTessellator.DEFAULT_STRUCTURE;
+     * var terrainData = new HeightmapTerrainData(heightBuffer, 65, 65, childTileMask, structure, false, waterMask);
      */
     var HeightmapTerrainData = function HeightmapTerrainData(buffer, width, height, childTileMask, structure, createdByUpsampling, waterMask) {
         this._buffer = buffer;
