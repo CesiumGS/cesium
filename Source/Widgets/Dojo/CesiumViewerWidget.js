@@ -20,6 +20,7 @@ define([
         '../ClockViewModel',
         '../../Core/defaultValue',
         '../../Core/loadJson',
+        '../../Core/binarySearch',
         '../../Core/BoundingRectangle',
         '../../Core/Clock',
         '../../Core/ClockStep',
@@ -80,6 +81,7 @@ define([
         ClockViewModel,
         defaultValue,
         loadJson,
+        binarySearch,
         BoundingRectangle,
         Clock,
         ClockStep,
@@ -496,12 +498,14 @@ define([
          */
         setTimeFromBuffer : function() {
             var clock = this.clock;
+            var shuttleRingTicks = AnimationViewModel.defaultTicks.slice(0);
 
             var availability = this.dynamicObjectCollection.computeAvailability();
             if (availability.start.equals(Iso8601.MINIMUM_VALUE)) {
                 clock.startTime = new JulianDate();
                 clock.stopTime = clock.startTime.addDays(1);
                 clock.clockRange = ClockRange.UNBOUNDED;
+                clock.multiplier = 60.0;
             } else {
                 clock.startTime = availability.start;
                 clock.stopTime = availability.stop;
@@ -510,9 +514,35 @@ define([
                 } else {
                     clock.clockRange = ClockRange.CLAMPED;
                 }
+                var totalSeconds = clock.startTime.getSecondsDifference(clock.stopTime);
+                var multiplier = Math.round(totalSeconds / 120.0);
+                if (multiplier < 1) {
+                    multiplier = 1;
+                }
+
+                var index = binarySearch(shuttleRingTicks, multiplier, function(left, right) {
+                    return left - right;
+                });
+                if (index < 0) {
+                    index = ~index;
+                }
+                if (index !== shuttleRingTicks.length) {
+                    clock.multiplier = shuttleRingTicks[index];
+                } else {
+                    shuttleRingTicks.push(-multiplier);
+                    shuttleRingTicks.push(multiplier);
+                    clock.multiplier = multiplier;
+                }
+
+                var fastestSpeed = Math.round(totalSeconds / 10.0);
+                if (fastestSpeed > shuttleRingTicks[shuttleRingTicks.length - 1]) {
+                    shuttleRingTicks.push(fastestSpeed);
+                    shuttleRingTicks.push(-fastestSpeed);
+                }
             }
 
-            clock.multiplier = 60;
+            this.animationViewModel.setShuttleRingTicks(shuttleRingTicks);
+
             clock.currentTime = clock.startTime;
             clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
             this.timelineControl.zoomTo(clock.startTime, clock.stopTime);

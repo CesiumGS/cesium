@@ -371,7 +371,7 @@ defineSuite([
     it('slower has no affect if at the slowest speed', function() {
         var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
-        var slowestSpeed = AnimationViewModel._shuttleRingTicks[0];
+        var slowestSpeed = viewModel.getShuttleRingTicks()[0];
         clockViewModel.multiplier(slowestSpeed);
         viewModel.slower.execute();
         expect(clockViewModel.multiplier()).toEqual(slowestSpeed);
@@ -380,7 +380,7 @@ defineSuite([
     it('faster has no affect if at the faster speed', function() {
         var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
-        var fastestSpeed = AnimationViewModel._shuttleRingTicks[AnimationViewModel._shuttleRingTicks.length - 1];
+        var fastestSpeed = viewModel.getShuttleRingTicks()[viewModel.getShuttleRingTicks().length - 1];
         clockViewModel.multiplier(fastestSpeed);
         viewModel.faster.execute();
         expect(clockViewModel.multiplier()).toEqual(fastestSpeed);
@@ -391,7 +391,7 @@ defineSuite([
         var viewModel = new AnimationViewModel(clockViewModel);
 
         var i = 0;
-        var multipliers = AnimationViewModel._shuttleRingTicks;
+        var multipliers = viewModel.getShuttleRingTicks();
         var length = multipliers.length;
 
         //Start at slowest speed
@@ -502,11 +502,11 @@ defineSuite([
 
         //Max angle should produce max speed
         viewModel.shuttleRingAngle(AnimationViewModel._maxShuttleRingAngle);
-        expect(clockViewModel.multiplier()).toEqual(AnimationViewModel._shuttleRingTicks[AnimationViewModel._shuttleRingTicks.length - 1]);
+        expect(clockViewModel.multiplier()).toEqual(viewModel.getShuttleRingTicks()[viewModel.getShuttleRingTicks().length - 1]);
 
         //Min angle should produce min speed
         viewModel.shuttleRingAngle(-AnimationViewModel._maxShuttleRingAngle);
-        expect(clockViewModel.multiplier()).toEqual(AnimationViewModel._shuttleRingTicks[0]);
+        expect(clockViewModel.multiplier()).toEqual(viewModel.getShuttleRingTicks()[0]);
 
         //Angles less than 1 are equivalent to the speed
         viewModel.shuttleRingAngle(0.5);

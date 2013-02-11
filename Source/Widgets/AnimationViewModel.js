@@ -26,20 +26,6 @@ define(['./Command',
 
     var _monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     var _maxShuttleRingAngle = 105;
-    var _shuttleRingTicks = [];
-
-    //TODO: Make _shuttleRingTicks part of AnimationViewModel and user settable.
-    var positiveTicks = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0,//
-                         15.0, 30.0, 60.0, 120.0, 300.0, 600.0, 900.0, 1800.0, 3600.0, 7200.0, 14400.0,//
-                         21600.0, 43200.0, 86400.0, 172800.0, 345600.0, 604800.0];
-    var tickIndex;
-    var len = positiveTicks.length;
-    for (tickIndex = len - 1; tickIndex >= 0; tickIndex--) {
-        _shuttleRingTicks.push(-positiveTicks[tickIndex]);
-    }
-    for (tickIndex = 0; tickIndex < len; tickIndex++) {
-        _shuttleRingTicks.push(positiveTicks[tickIndex]);
-    }
 
     function _cancelRealtime(clockViewModel) {
         if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK) {
@@ -57,12 +43,12 @@ define(['./Command',
         return left - right;
     }
 
-    function _getTypicalSpeedIndex(speed) {
-        var index = binarySearch(_shuttleRingTicks, speed, numberComparator);
+    function _getTypicalSpeedIndex(speed, shuttleRingTicks) {
+        var index = binarySearch(shuttleRingTicks, speed, numberComparator);
         return index < 0 ? ~index : index;
     }
 
-    function angle2Multiplier(angle) {
+    function angle2Multiplier(angle, shuttleRingTicks) {
         //If the angle is less than 1, just use it for the position
         if (Math.abs(angle) < 1) {
             return angle;
@@ -73,19 +59,18 @@ define(['./Command',
         var maxv;
         var minv = 0;
         var scale;
-
         if (angle > 0) {
-            maxv = Math.log(_shuttleRingTicks[_shuttleRingTicks.length - 1]);
+            maxv = Math.log(shuttleRingTicks[shuttleRingTicks.length - 1]);
             scale = (maxv - minv) / (maxp - minp);
             return Math.exp(minv + scale * (angle - minp));
         }
 
-        maxv = Math.log(-_shuttleRingTicks[0]);
+        maxv = Math.log(-shuttleRingTicks[0]);
         scale = (maxv - minv) / (maxp - minp);
         return -Math.exp(minv + scale * (Math.abs(angle) - minp));
     }
 
-    function multiplier2Angle(multiplier) {
+    function multiplier2Angle(multiplier, shuttleRingTicks) {
         if (Math.abs(multiplier) < 1) {
             return multiplier;
         }
@@ -97,12 +82,12 @@ define(['./Command',
         var scale;
 
         if (multiplier > 0) {
-            maxv = Math.log(_shuttleRingTicks[_shuttleRingTicks.length - 1]);
+            maxv = Math.log(shuttleRingTicks[shuttleRingTicks.length - 1]);
             scale = (maxv - minv) / (maxp - minp);
             return (Math.log(multiplier) - minv) / scale + minp;
         }
 
-        maxv = Math.log(-_shuttleRingTicks[0]);
+        maxv = Math.log(-shuttleRingTicks[0]);
         scale = (maxv - minv) / (maxp - minp);
         return -((Math.log(Math.abs(multiplier)) - minv) / scale + minp);
     }
@@ -130,6 +115,9 @@ define(['./Command',
          * @type Observable
          */
         this.shuttleRingDragging = knockout.observable(false);
+
+        this._shuttleRingTicks = knockout.observable();
+        this.setShuttleRingTicks(AnimationViewModel.defaultTicks);
 
         this._dateFormatter = knockout.observable(AnimationViewModel.defaultDateFormatter);
         this._timeFormatter = knockout.observable(AnimationViewModel.defaultTimeFormatter);
@@ -300,11 +288,11 @@ define(['./Command',
         this.shuttleRingAngle = knockout.computed({
             read : function() {
                 var multiplier = clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK ? clockViewModel.multiplier() : 1.0;
-                return Math.round(multiplier2Angle(multiplier));
+                return Math.round(multiplier2Angle(multiplier, that._shuttleRingTicks()));
             },
             write : function(angle) {
                 angle = Math.max(Math.min(angle, _maxShuttleRingAngle), -_maxShuttleRingAngle);
-                var speed = angle2Multiplier(angle);
+                var speed = angle2Multiplier(angle, that._shuttleRingTicks());
                 if (speed !== 0) {
                     if (Math.abs(speed) > 1) {
                         speed = Math.round(speed);
@@ -324,10 +312,11 @@ define(['./Command',
             execute : function() {
                 _cancelRealtime(that.clockViewModel);
                 var clockViewModel = that.clockViewModel;
+                var shuttleRingTicks = that._shuttleRingTicks();
                 var multiplier = clockViewModel.multiplier();
-                var index = _getTypicalSpeedIndex(multiplier) - 1;
+                var index = _getTypicalSpeedIndex(multiplier, shuttleRingTicks) - 1;
                 if (index >= 0) {
-                    clockViewModel.multiplier(_shuttleRingTicks[index]);
+                    clockViewModel.multiplier(shuttleRingTicks[index]);
                 }
             }
         };
@@ -341,10 +330,11 @@ define(['./Command',
             execute : function() {
                 _cancelRealtime(that.clockViewModel);
                 var clockViewModel = that.clockViewModel;
+                var shuttleRingTicks = that._shuttleRingTicks();
                 var multiplier = clockViewModel.multiplier();
-                var index = _getTypicalSpeedIndex(multiplier) + 1;
-                if (index < _shuttleRingTicks.length) {
-                    clockViewModel.multiplier(_shuttleRingTicks[index]);
+                var index = _getTypicalSpeedIndex(multiplier, shuttleRingTicks) + 1;
+                if (index < shuttleRingTicks.length) {
+                    clockViewModel.multiplier(shuttleRingTicks[index]);
                 }
             }
         };
@@ -361,6 +351,46 @@ define(['./Command',
     AnimationViewModel.defaultDateFormatter = function(date, viewModel) {
         var gregorianDate = date.toGregorianDate();
         return _monthNames[gregorianDate.month - 1] + ' ' + gregorianDate.day + ' ' + gregorianDate.year;
+    };
+
+    /**
+     * @memberof AnimationViewModel
+     * @returns The default array of known clock multipliers associated with new instances of the shuttle ring.
+     */
+    AnimationViewModel.defaultTicks = [//
+    -0.001, -0.002, -0.005, -0.01, -0.02, -0.05, -0.1, -0.25, -0.5, -1.0, -2.0, -5.0, -10.0,//
+    -15.0, -30.0, -60.0, -120.0, -300.0, -600.0, -900.0, -1800.0, -3600.0, -7200.0, -14400.0,//
+    -21600.0, -43200.0, -86400.0, -172800.0, -345600.0, -604800.0,//
+    0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0,//
+    15.0, 30.0, 60.0, 120.0, 300.0, 600.0, 900.0, 1800.0, 3600.0, 7200.0, 14400.0,//
+    21600.0, 43200.0, 86400.0, 172800.0, 345600.0, 604800.0];
+
+    /**
+     * @memberof AnimationViewModel
+     * @returns The array of known clock multipliers associated with the shuttle ring.
+     */
+    AnimationViewModel.prototype.getShuttleRingTicks = function() {
+        return this._shuttleRingTicks();
+    };
+
+    /**
+     * Sets the array of known clock multipliers to associate with the shuttle ring.
+     * This sets both the minimum and maximum range of values for the shuttle ring as well
+     * as the values that are snapped to when a single click is made.  The values need
+     * not be in order, as they will be sorted automatically.
+     * @memberof AnimationViewModel
+     *
+     * @param ticks The list of known clock multipliers to associate with the shuttle ring.
+     *
+     * @exception {DeveloperError} ticks is required.
+     */
+    AnimationViewModel.prototype.setShuttleRingTicks = function(ticks) {
+        if (typeof ticks === 'undefined') {
+            throw new DeveloperError('ticks is required.');
+        }
+        var copy = ticks.slice(0);
+        copy.sort(numberComparator);
+        this._shuttleRingTicks(copy);
     };
 
     /**
@@ -433,7 +463,6 @@ define(['./Command',
     };
 
     //Currently exposed for tests.
-    AnimationViewModel._shuttleRingTicks = _shuttleRingTicks;
     AnimationViewModel._maxShuttleRingAngle = _maxShuttleRingAngle;
 
     return AnimationViewModel;
