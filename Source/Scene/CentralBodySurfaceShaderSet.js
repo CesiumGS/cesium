@@ -24,10 +24,7 @@ define([
         var shaders = this._shaders;
         for ( var keyword in shaders) {
             if (shaders.hasOwnProperty(keyword)) {
-                var shader = shaders[keyword];
-                if (shader !== 'undefined') {
-                    shader.release();
-                }
+                shaders[keyword].release();
             }
         }
 
