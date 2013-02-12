@@ -15,191 +15,191 @@ define([
         TerrainState,
         TileProviderError,
         when) {
-   "use strict";
+    "use strict";
 
-   /**
-    * Manages details of the terrain load or upsample process.
-    *
-    * @alias TileTerrain
-    * @constructor
-    * @private
-    *
-    * @param {TerrainData} [upsampleDetails.data] The terrain data being upsampled.
-    * @param {Number} [upsampleDetails.x] The X coordinate of the tile being upsampled.
-    * @param {Number} [upsampleDetails.y] The Y coordinate of the tile being upsampled.
-    * @param {Number} [upsampleDetails.level] The level coordinate of the tile being upsampled.
-    */
-   var TileTerrain = function TileTerrain(upsampleDetails) {
-       /**
-        * The current state of the terrain in the terrain processing pipeline.
-        * @type TerrainState
-        */
-       this.state = TerrainState.UNLOADED;
-       this.data = undefined;
-       this.mesh = undefined;
-       this.vertexArray = undefined;
-       this.upsampleDetails = upsampleDetails;
-   };
+    /**
+     * Manages details of the terrain load or upsample process.
+     *
+     * @alias TileTerrain
+     * @constructor
+     * @private
+     *
+     * @param {TerrainData} [upsampleDetails.data] The terrain data being upsampled.
+     * @param {Number} [upsampleDetails.x] The X coordinate of the tile being upsampled.
+     * @param {Number} [upsampleDetails.y] The Y coordinate of the tile being upsampled.
+     * @param {Number} [upsampleDetails.level] The level coordinate of the tile being upsampled.
+     */
+    var TileTerrain = function TileTerrain(upsampleDetails) {
+        /**
+         * The current state of the terrain in the terrain processing pipeline.
+         * @type TerrainState
+         */
+        this.state = TerrainState.UNLOADED;
+        this.data = undefined;
+        this.mesh = undefined;
+        this.vertexArray = undefined;
+        this.upsampleDetails = upsampleDetails;
+    };
 
-   TileTerrain.prototype.freeResources = function() {
-       this.state = TerrainState.UNLOADED;
-       this.data = undefined;
-       this.mesh = undefined;
+    TileTerrain.prototype.freeResources = function() {
+        this.state = TerrainState.UNLOADED;
+        this.data = undefined;
+        this.mesh = undefined;
 
-       if (typeof this.vertexArray !== 'undefined') {
-           var indexBuffer = this.vertexArray.getIndexBuffer();
+        if (typeof this.vertexArray !== 'undefined') {
+            var indexBuffer = this.vertexArray.getIndexBuffer();
 
-           this.vertexArray.destroy();
-           this.vertexArray = undefined;
+            this.vertexArray.destroy();
+            this.vertexArray = undefined;
 
-           if (!indexBuffer.isDestroyed() && typeof indexBuffer.referenceCount !== 'undefined') {
-               --indexBuffer.referenceCount;
-               if (indexBuffer.referenceCount === 0) {
-                   indexBuffer.destroy();
-               }
-           }
-       }
-   };
+            if (!indexBuffer.isDestroyed() && typeof indexBuffer.referenceCount !== 'undefined') {
+                --indexBuffer.referenceCount;
+                if (indexBuffer.referenceCount === 0) {
+                    indexBuffer.destroy();
+                }
+            }
+        }
+    };
 
-   TileTerrain.prototype.publishToTile = function(tile) {
-       var mesh = this.mesh;
-       Cartesian3.clone(mesh.center, tile.center);
-       tile.minimumHeight = mesh.minimumHeight;
-       tile.maximumHeight = mesh.maximumHeight;
-       BoundingSphere.clone(mesh.boundingSphere3D, tile.boundingSphere3D);
+    TileTerrain.prototype.publishToTile = function(tile) {
+        var mesh = this.mesh;
+        Cartesian3.clone(mesh.center, tile.center);
+        tile.minimumHeight = mesh.minimumHeight;
+        tile.maximumHeight = mesh.maximumHeight;
+        BoundingSphere.clone(mesh.boundingSphere3D, tile.boundingSphere3D);
 
-       if (typeof mesh.occludeePointInScaledSpace !== 'undefined') {
-           Cartesian3.clone(mesh.occludeePointInScaledSpace, tile.occludeePointInScaledSpace);
-       } else {
-           tile.occludeePointInScaledSpace = undefined;
-       }
+        if (typeof mesh.occludeePointInScaledSpace !== 'undefined') {
+            Cartesian3.clone(mesh.occludeePointInScaledSpace, tile.occludeePointInScaledSpace);
+        } else {
+            tile.occludeePointInScaledSpace = undefined;
+        }
 
-       // Free the tile's existing vertex array, if any.
-       tile.freeVertexArray();
+        // Free the tile's existing vertex array, if any.
+        tile.freeVertexArray();
 
-       // Transfer ownership of the vertex array to the tile itself.
-       tile.vertexArray = this.vertexArray;
-       this.vertexArray = undefined;
-   };
+        // Transfer ownership of the vertex array to the tile itself.
+        tile.vertexArray = this.vertexArray;
+        this.vertexArray = undefined;
+    };
 
-   TileTerrain.prototype.processLoadStateMachine = function(context, terrainProvider, x, y, level) {
-       if (this.state === TerrainState.UNLOADED) {
-           requestTileGeometry(this, terrainProvider, x, y, level);
-       }
+    TileTerrain.prototype.processLoadStateMachine = function(context, terrainProvider, x, y, level) {
+        if (this.state === TerrainState.UNLOADED) {
+            requestTileGeometry(this, terrainProvider, x, y, level);
+        }
 
-       if (this.state === TerrainState.RECEIVED) {
-           transform(this, context, terrainProvider, x, y, level);
-       }
+        if (this.state === TerrainState.RECEIVED) {
+            transform(this, context, terrainProvider, x, y, level);
+        }
 
-       if (this.state === TerrainState.TRANSFORMED) {
-           createResources(this, context, terrainProvider, x, y, level);
-       }
-   };
+        if (this.state === TerrainState.TRANSFORMED) {
+            createResources(this, context, terrainProvider, x, y, level);
+        }
+    };
 
-   function requestTileGeometry(tileTerrain, terrainProvider, x, y, level) {
-       function success(terrainData) {
-           tileTerrain.data = terrainData;
-           tileTerrain.state = TerrainState.RECEIVED;
-       }
+    function requestTileGeometry(tileTerrain, terrainProvider, x, y, level) {
+        function success(terrainData) {
+            tileTerrain.data = terrainData;
+            tileTerrain.state = TerrainState.RECEIVED;
+        }
 
-       function failure() {
-           // Initially assume failure.  handleError may retry, in which case the state will
-           // change to RECEIVING or UNLOADED.
-           tileTerrain.state = TerrainState.FAILED;
+        function failure() {
+            // Initially assume failure.  handleError may retry, in which case the state will
+            // change to RECEIVING or UNLOADED.
+            tileTerrain.state = TerrainState.FAILED;
 
-           var message = 'Failed to obtain terrain tile X: ' + x + ' Y: ' + y + ' Level: ' + level + '.';
-           terrainProvider._requestError = TileProviderError.handleError(
-                   terrainProvider._requestError,
-                   terrainProvider,
-                   terrainProvider.getErrorEvent(),
-                   message,
-                   x, y, level,
-                   doRequest);
-       }
+            var message = 'Failed to obtain terrain tile X: ' + x + ' Y: ' + y + ' Level: ' + level + '.';
+            terrainProvider._requestError = TileProviderError.handleError(
+                    terrainProvider._requestError,
+                    terrainProvider,
+                    terrainProvider.getErrorEvent(),
+                    message,
+                    x, y, level,
+                    doRequest);
+        }
 
-       function doRequest() {
-           // Request the terrain from the terrain provider.
-           tileTerrain.data = terrainProvider.requestTileGeometry(x, y, level);
+        function doRequest() {
+            // Request the terrain from the terrain provider.
+            tileTerrain.data = terrainProvider.requestTileGeometry(x, y, level);
 
-           // If the request method returns undefined (instead of a promise), the request
-           // has been deferred.
-           if (typeof tileTerrain.data !== 'undefined') {
-               tileTerrain.state = TerrainState.RECEIVING;
+            // If the request method returns undefined (instead of a promise), the request
+            // has been deferred.
+            if (typeof tileTerrain.data !== 'undefined') {
+                tileTerrain.state = TerrainState.RECEIVING;
 
-               when(tileTerrain.data, success, failure);
-           } else {
-               // Deferred - try again later.
-               tileTerrain.state = TerrainState.UNLOADED;
-           }
-       }
+                when(tileTerrain.data, success, failure);
+            } else {
+                // Deferred - try again later.
+                tileTerrain.state = TerrainState.UNLOADED;
+            }
+        }
 
-       doRequest();
-   }
+        doRequest();
+    }
 
-   TileTerrain.prototype.processUpsampleStateMachine = function(context, terrainProvider, x, y, level) {
-       if (this.state === TerrainState.UNLOADED) {
-           var upsampleDetails = this.upsampleDetails;
-           if (typeof upsampleDetails === 'undefined') {
-               throw new DeveloperError('TileTerrain cannot upsample unless provided upsampleDetails.');
-           }
+    TileTerrain.prototype.processUpsampleStateMachine = function(context, terrainProvider, x, y, level) {
+        if (this.state === TerrainState.UNLOADED) {
+            var upsampleDetails = this.upsampleDetails;
+            if (typeof upsampleDetails === 'undefined') {
+                throw new DeveloperError('TileTerrain cannot upsample unless provided upsampleDetails.');
+            }
 
-           var sourceData = upsampleDetails.data;
-           var sourceX = upsampleDetails.x;
-           var sourceY = upsampleDetails.y;
-           var sourceLevel = upsampleDetails.level;
+            var sourceData = upsampleDetails.data;
+            var sourceX = upsampleDetails.x;
+            var sourceY = upsampleDetails.y;
+            var sourceLevel = upsampleDetails.level;
 
-           this.data = sourceData.upsample(terrainProvider.getTilingScheme(), sourceX, sourceY, sourceLevel, x, y, level);
-           if (typeof this.data === 'undefined') {
-               // The upsample request has been deferred - try again later.
-               return;
-           }
+            this.data = sourceData.upsample(terrainProvider.getTilingScheme(), sourceX, sourceY, sourceLevel, x, y, level);
+            if (typeof this.data === 'undefined') {
+                // The upsample request has been deferred - try again later.
+                return;
+            }
 
-           this.state = TerrainState.RECEIVING;
+            this.state = TerrainState.RECEIVING;
 
-           var that = this;
-           when(this.data, function(terrainData) {
-               that.data = terrainData;
-               that.state = TerrainState.RECEIVED;
-           }, function() {
-               that.state = TerrainState.FAILED;
-           });
-       }
+            var that = this;
+            when(this.data, function(terrainData) {
+                that.data = terrainData;
+                that.state = TerrainState.RECEIVED;
+            }, function() {
+                that.state = TerrainState.FAILED;
+            });
+        }
 
-       if (this.state === TerrainState.RECEIVED) {
-           transform(this, context, terrainProvider, x, y, level);
-       }
+        if (this.state === TerrainState.RECEIVED) {
+            transform(this, context, terrainProvider, x, y, level);
+        }
 
-       if (this.state === TerrainState.TRANSFORMED) {
-           createResources(this, context, terrainProvider, x, y, level);
-       }
-   };
+        if (this.state === TerrainState.TRANSFORMED) {
+            createResources(this, context, terrainProvider, x, y, level);
+        }
+    };
 
-   function transform(tileTerrain, context, terrainProvider, x, y, level) {
-       var tilingScheme = terrainProvider.getTilingScheme();
-       var ellipsoid = tilingScheme.getEllipsoid();
+    function transform(tileTerrain, context, terrainProvider, x, y, level) {
+        var tilingScheme = terrainProvider.getTilingScheme();
+        var ellipsoid = tilingScheme.getEllipsoid();
 
-       var terrainData = tileTerrain.data;
-       var meshPromise = terrainData.createMesh(ellipsoid, tilingScheme, x, y, level);
+        var terrainData = tileTerrain.data;
+        var meshPromise = terrainData.createMesh(ellipsoid, tilingScheme, x, y, level);
 
-       if (typeof meshPromise === 'undefined') {
-           // Postponed.
-           return;
-       }
+        if (typeof meshPromise === 'undefined') {
+            // Postponed.
+            return;
+        }
 
-       tileTerrain.state = TerrainState.TRANSFORMING;
+        tileTerrain.state = TerrainState.TRANSFORMING;
 
-       when(meshPromise, function(mesh) {
-           tileTerrain.mesh = mesh;
-           tileTerrain.state = TerrainState.TRANSFORMED;
-       }, function() {
-           tileTerrain.state = TerrainState.FAILED;
-       });
-   }
+        when(meshPromise, function(mesh) {
+            tileTerrain.mesh = mesh;
+            tileTerrain.state = TerrainState.TRANSFORMED;
+        }, function() {
+            tileTerrain.state = TerrainState.FAILED;
+        });
+    }
 
-   function createResources(tileTerrain, context, terrainProvider, x, y, level) {
-       TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tileTerrain.mesh, tileTerrain, true);
-       tileTerrain.state = TerrainState.READY;
-   }
+    function createResources(tileTerrain, context, terrainProvider, x, y, level) {
+        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tileTerrain.mesh, tileTerrain, true);
+        tileTerrain.state = TerrainState.READY;
+    }
 
-   return TileTerrain;
+    return TileTerrain;
 });

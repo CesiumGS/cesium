@@ -25,7 +25,7 @@ define([
      * @see JulianDate
      *
      */
-     var TimeIntervalCollection = function() {
+    var TimeIntervalCollection = function() {
         this._intervals = [];
     };
 

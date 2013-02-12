@@ -364,15 +364,15 @@ define([
      * @see UniformState#getModel
      * @see czm_inverseModel
      */
-     UniformState.prototype.getInverseModel = function() {
-         if (this._inverseModelDirty) {
-             this._inverseModelDirty = false;
+    UniformState.prototype.getInverseModel = function() {
+        if (this._inverseModelDirty) {
+            this._inverseModelDirty = false;
 
-             this._model.inverse(this._inverseModel);
-         }
+            this._model.inverse(this._inverseModel);
+        }
 
-         return this._inverseModel;
-     };
+        return this._inverseModel;
+    };
 
     /**
      * DOC_TBA

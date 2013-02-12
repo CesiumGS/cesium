@@ -12,19 +12,18 @@ defineSuite([
     "use strict";
     /*global document,describe,it,expect,beforeEach*/
 
-    function Tile(num, loadedState, upsampledState)
-    {
+    function Tile(num, loadedState, upsampledState) {
         this._num = num;
         this.state = TileState.LOADING;
         this.imagery = [];
         if (typeof loadedState !== 'undefined') {
             this.loadedTerrain = {
-                    state : loadedState
+                state : loadedState
             };
         }
         if (typeof upsampledState !== 'undefined') {
             this.upsampledTerrain = {
-                    state : upsampledState
+                state : upsampledState
             };
         }
     }
@@ -103,61 +102,61 @@ defineSuite([
     });
 
     describe('trimTiles', function() {
-       it('does not remove a transitioning tile.', function() {
-           queue.markTileRendered(one);
-           queue.markTileRendered(two);
-           queue.markTileRendered(loadTransitioning);
-           queue.markTileRendered(upsampleTransitioning);
-           queue.markTileRendered(three);
+        it('does not remove a transitioning tile.', function() {
+            queue.markTileRendered(one);
+            queue.markTileRendered(two);
+            queue.markTileRendered(loadTransitioning);
+            queue.markTileRendered(upsampleTransitioning);
+            queue.markTileRendered(three);
 
-           queue.markStartOfRenderFrame();
+            queue.markStartOfRenderFrame();
 
-           queue.trimTiles(0);
-           expect(queue.count).toEqual(2);
-           expect(queue.head.replacementNext).toEqual(loadTransitioning);
-           expect(queue.head).toEqual(upsampleTransitioning);
-       });
+            queue.trimTiles(0);
+            expect(queue.count).toEqual(2);
+            expect(queue.head.replacementNext).toEqual(loadTransitioning);
+            expect(queue.head).toEqual(upsampleTransitioning);
+        });
 
-       it('does not remove a tile with transitioning imagery.', function() {
-           queue.markTileRendered(one);
-           queue.markTileRendered(two);
-           queue.markTileRendered(three);
+        it('does not remove a tile with transitioning imagery.', function() {
+            queue.markTileRendered(one);
+            queue.markTileRendered(two);
+            queue.markTileRendered(three);
 
-           two.imagery.push({
-               imagery : {
-                   state : ImageryState.TRANSITIONING
-               }
-           });
+            two.imagery.push({
+                imagery : {
+                    state : ImageryState.TRANSITIONING
+                }
+            });
 
-           queue.markStartOfRenderFrame();
+            queue.markStartOfRenderFrame();
 
-           queue.trimTiles(0);
-           expect(queue.count).toEqual(1);
-           expect(queue.head).toEqual(two);
-       });
+            queue.trimTiles(0);
+            expect(queue.count).toEqual(1);
+            expect(queue.head).toEqual(two);
+        });
 
-       it('does not remove a transitioning tile at the end of the last render frame.', function() {
-           queue.markTileRendered(one);
-           queue.markTileRendered(two);
-           queue.markTileRendered(three);
-           queue.markTileRendered(loadTransitioning);
+        it('does not remove a transitioning tile at the end of the last render frame.', function() {
+            queue.markTileRendered(one);
+            queue.markTileRendered(two);
+            queue.markTileRendered(three);
+            queue.markTileRendered(loadTransitioning);
 
-           queue.markStartOfRenderFrame();
+            queue.markStartOfRenderFrame();
 
-           queue.trimTiles(0);
-           expect(queue.count).toEqual(1);
-           expect(queue.head).toEqual(loadTransitioning);
-       });
+            queue.trimTiles(0);
+            expect(queue.count).toEqual(1);
+            expect(queue.head).toEqual(loadTransitioning);
+        });
 
-       it('removes two tiles not used last render frame.', function() {
-           queue.markTileRendered(loadTransitioning);
-           queue.markTileRendered(one);
-           queue.markTileRendered(two);
-           queue.markStartOfRenderFrame();
-           queue.markTileRendered(three);
-           queue.markTileRendered(four);
-           queue.trimTiles(0);
-           expect(queue.count).toEqual(3);
-       });
+        it('removes two tiles not used last render frame.', function() {
+            queue.markTileRendered(loadTransitioning);
+            queue.markTileRendered(one);
+            queue.markTileRendered(two);
+            queue.markStartOfRenderFrame();
+            queue.markTileRendered(three);
+            queue.markTileRendered(four);
+            queue.trimTiles(0);
+            expect(queue.count).toEqual(3);
+        });
     });
 });
