@@ -1,5 +1,4 @@
-attribute vec3 position3D;
-attribute float height;
+attribute vec4 position3DAndHeight;
 attribute vec2 textureCoordinates;
 
 uniform float u_morphTime;
@@ -23,7 +22,7 @@ float get2DYPositionFraction();
 
 vec4 getPosition3DMode(vec3 position3DWC)
 {
-    return czm_projection * (u_modifiedModelView * vec4(position3D, 1.0));
+    return czm_projection * (u_modifiedModelView * vec4(position3DAndHeight.xyz, 1.0));
 }
 
 float get2DMercatorYPositionFraction()
@@ -69,7 +68,7 @@ vec4 getPosition2DMode(vec3 position3DWC)
 
 vec4 getPositionColumbusViewMode(vec3 position3DWC)
 {
-    return getPositionPlanarEarth(position3DWC, height);
+    return getPositionPlanarEarth(position3DWC, position3DAndHeight.w);
 }
 
 vec4 getPositionMorphingMode(vec3 position3DWC)
@@ -84,7 +83,7 @@ vec4 getPositionMorphingMode(vec3 position3DWC)
 
 void main() 
 {
-    vec3 position3DWC = position3D + u_center3D;
+    vec3 position3DWC = position3DAndHeight.xyz + u_center3D;
 
     gl_Position = getPosition(position3DWC);
     

@@ -33,9 +33,8 @@ define([
      * @memberof TerrainProvider
      */
     TerrainProvider.attributeIndices = {
-        position3D : 0,
-        height : 1,
-        textureCoordinates : 2
+        position3DAndHeight : 0,
+        textureCoordinates : 1
     };
 
     TerrainProvider.wireframe = false;
@@ -106,46 +105,28 @@ define([
         var typedArray = buffers.vertices;
         var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
         var stride = 5 * datatype.sizeInBytes;
+        var position3DAndHeightLength = 3;
 
         if (includesHeights) {
             stride += datatype.sizeInBytes;
+            ++position3DAndHeightLength;
         }
 
         var attributes = [{
-            index : TerrainProvider.attributeIndices.position3D,
+            index : TerrainProvider.attributeIndices.position3DAndHeight,
             vertexBuffer : buffer,
             componentDatatype : datatype,
-            componentsPerAttribute : 3,
+            componentsPerAttribute : position3DAndHeightLength,
             offsetInBytes : 0,
             strideInBytes : stride
         }];
-
-        var textureCoordinatesOffset = 3;
-        if (includesHeights) {
-            attributes.push({
-                index : TerrainProvider.attributeIndices.height,
-                vertexBuffer : buffer,
-                componentDatatype : datatype,
-                componentsPerAttribute : 1,
-                offsetInBytes : 3 * datatype.sizeInBytes,
-                strideInBytes : stride
-            });
-            ++textureCoordinatesOffset;
-        } else {
-            attributes.push({
-                index : TerrainProvider.attributeIndices.height,
-                value : [0.0],
-                componentDatatype : datatype,
-                componentsPerAttribute : 1
-            });
-        }
 
         attributes.push({
             index : TerrainProvider.attributeIndices.textureCoordinates,
             vertexBuffer : buffer,
             componentDatatype : datatype,
             componentsPerAttribute : 2,
-            offsetInBytes : textureCoordinatesOffset * datatype.sizeInBytes,
+            offsetInBytes : position3DAndHeightLength * datatype.sizeInBytes,
             strideInBytes : stride
         });
 

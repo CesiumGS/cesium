@@ -38,6 +38,7 @@ define([
         './EllipsoidTerrainProvider',
         './ImageryLayerCollection',
         './SceneMode',
+        './TerrainProvider',
         './ViewportQuad',
         '../Shaders/CentralBodyFS',
         '../Shaders/CentralBodyFSDepth',
@@ -85,6 +86,7 @@ define([
         EllipsoidTerrainProvider,
         ImageryLayerCollection,
         SceneMode,
+        TerrainProvider,
         ViewportQuad,
         CentralBodyFS,
         CentralBodyFSDepth,
@@ -118,7 +120,7 @@ define([
 
         this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
 
-        this._surfaceShaderSet = new CentralBodySurfaceShaderSet(attributeIndices);
+        this._surfaceShaderSet = new CentralBodySurfaceShaderSet(TerrainProvider.attributeIndices);
 
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
@@ -238,12 +240,6 @@ define([
                 return that._oceanNormalMap;
             }
         };
-    };
-
-    var attributeIndices = {
-        position3D : 0,
-        height : 1,
-        textureCoordinates : 2
     };
 
     /**
@@ -695,7 +691,7 @@ define([
             this._surfaceShaderSet.invalidateShaders();
 
             var poleShaderProgram = this._northPoleCommand.shaderProgram && this._northPoleCommand.shaderProgram.release();
-            poleShaderProgram = shaderCache.getShaderProgram(CentralBodyVSPole, CentralBodyFSPole, attributeIndices);
+            poleShaderProgram = shaderCache.getShaderProgram(CentralBodyVSPole, CentralBodyFSPole, TerrainProvider.attributeIndices);
 
             this._northPoleCommand.shaderProgram = poleShaderProgram;
             this._southPoleCommand.shaderProgram = poleShaderProgram;
