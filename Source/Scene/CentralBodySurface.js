@@ -947,7 +947,7 @@ define([
             for (var childIndex = 0; childIndex < 4; ++childIndex) {
                 var childTile = tile.children[childIndex];
                 if (childTile.state !== TileState.START) {
-                    if (childTile.terrainData !== 'undefined' && !childTile.terrainData.wasCreatedByUpsampling()) {
+                    if (typeof childTile.terrainData !== 'undefined' && !childTile.terrainData.wasCreatedByUpsampling()) {
                         // Data for the child tile has already been loaded.
                         continue;
                     }
@@ -980,7 +980,7 @@ define([
             for (var childIndex = 0; childIndex < 4; ++childIndex) {
                 var childTile = tile.children[childIndex];
                 if (childTile.state !== TileState.START) {
-                    if (childTile.terrainData !== 'undefined' && !childTile.terrainData.wasCreatedByUpsampling()) {
+                    if (typeof childTile.terrainData !== 'undefined' && !childTile.terrainData.wasCreatedByUpsampling()) {
                         // Data for the child tile has already been loaded.
                         continue;
                     }
