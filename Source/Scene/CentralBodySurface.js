@@ -772,6 +772,8 @@ define([
                 isDoneLoading = isDoneLoading && imageryDoneLoading;
             }
 
+            var next = tile.loadNext;
+
             // The tile becomes renderable when the terrain and all imagery data are loaded.
             if (i === len && isRenderable) {
                 tile.isRenderable = true;
@@ -782,7 +784,7 @@ define([
                 }
             }
 
-            tile = tile.loadNext;
+            tile = next;
         } while (Date.now() < endTime && typeof tile !== 'undefined');
     }
 
