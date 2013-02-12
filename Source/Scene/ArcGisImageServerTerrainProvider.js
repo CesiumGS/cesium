@@ -57,7 +57,7 @@ define([
      * });
      * centralBody.setTerrainProvider(terrainProvider);
      */
-    function ArcGisImageServerTerrainProvider(description) {
+    var ArcGisImageServerTerrainProvider = function ArcGisImageServerTerrainProvider(description) {
         if (typeof description === 'undefined' || typeof description.url === 'undefined') {
             throw new DeveloperError('description.url is required.');
         }
@@ -94,7 +94,7 @@ define([
                 font : '12px sans-serif'
             });
         }
-    }
+    };
 
     /**
      * Requests the geometry for a given tile.  This function should not be called before

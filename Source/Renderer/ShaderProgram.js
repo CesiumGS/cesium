@@ -277,7 +277,7 @@ define([
         /**
          * An automatic GLSL uniform representing a 4x4 view transformation matrix that
          * transforms 3D world coordinates to eye coordinates.  In 3D mode, this is identical to
-         * {@link ShaderProgram#czm_view}, but in 2D and Columbus View it represents the view matrix
+         * {@link czm_view}, but in 2D and Columbus View it represents the view matrix
          * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
          * 2D and Columbus View in the same way that 3D is lit.
          * <br /><br />
@@ -352,7 +352,7 @@ define([
         /**
          * An automatic GLSL uniform representing a 3x3 view rotation matrix that
          * transforms vectors in 3D world coordinates to eye coordinates.  In 3D mode, this is identical to
-         * {@link ShaderProgram#czm_viewRotation}, but in 2D and Columbus View it represents the view matrix
+         * {@link czm_viewRotation}, but in 2D and Columbus View it represents the view matrix
          * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
          * 2D and Columbus View in the same way that 3D is lit.
          * <br /><br />
@@ -426,7 +426,7 @@ define([
         /**
          * An automatic GLSL uniform representing a 4x4 transformation matrix that
          * transforms from 3D eye coordinates to world coordinates.  In 3D mode, this is identical to
-         * {@link ShaderProgram#czm_inverseView}, but in 2D and Columbus View it represents the inverse view matrix
+         * {@link czm_inverseView}, but in 2D and Columbus View it represents the inverse view matrix
          * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
          * 2D and Columbus View in the same way that 3D is lit.
          * <br /><br />
@@ -501,7 +501,7 @@ define([
         /**
          * An automatic GLSL uniform representing a 3x3 rotation matrix that
          * transforms vectors from 3D eye coordinates to world coordinates.  In 3D mode, this is identical to
-         * {@link ShaderProgram#czm_inverseViewRotation}, but in 2D and Columbus View it represents the inverse view matrix
+         * {@link czm_inverseViewRotation}, but in 2D and Columbus View it represents the inverse view matrix
          * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
          * 2D and Columbus View in the same way that 3D is lit.
          * <br /><br />
@@ -696,7 +696,7 @@ define([
         /**
          * An automatic GLSL uniform representing a 4x4 model-view transformation matrix that
          * transforms 3D model coordinates to eye coordinates.  In 3D mode, this is identical to
-         * {@link ShaderProgram#czm_modelView}, but in 2D and Columbus View it represents the model-view matrix
+         * {@link czm_modelView}, but in 2D and Columbus View it represents the model-view matrix
          * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
          * 2D and Columbus View in the same way that 3D is lit.
          * <br /><br />
@@ -819,7 +819,7 @@ define([
         /**
          * An automatic GLSL uniform representing a 4x4 transformation matrix that
          * transforms from eye coordinates to 3D model coordinates.  In 3D mode, this is identical to
-         * {@link ShaderProgram#czm_inverseModelView}, but in 2D and Columbus View it represents the inverse model-view matrix
+         * {@link czm_inverseModelView}, but in 2D and Columbus View it represents the inverse model-view matrix
          * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
          * 2D and Columbus View in the same way that 3D is lit.
          * <br /><br />
@@ -1072,7 +1072,7 @@ define([
          * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
          * transforms normal vectors in 3D model coordinates to eye coordinates.
          * In 3D mode, this is identical to
-         * {@link ShaderProgram#czm_normal}, but in 2D and Columbus View it represents the normal transformation
+         * {@link czm_normal}, but in 2D and Columbus View it represents the normal transformation
          * matrix as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
          * 2D and Columbus View in the same way that 3D is lit.
          * <br /><br />
@@ -1153,7 +1153,7 @@ define([
          * transforms normal vectors in eye coordinates to 3D model coordinates.  This is
          * the opposite of the transform provided by {@link czm_normal}.
          * In 3D mode, this is identical to
-         * {@link ShaderProgram#czm_inverseNormal}, but in 2D and Columbus View it represents the inverse normal transformation
+         * {@link czm_inverseNormal}, but in 2D and Columbus View it represents the inverse normal transformation
          * matrix as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
          * 2D and Columbus View in the same way that 3D is lit.
          * <br /><br />
