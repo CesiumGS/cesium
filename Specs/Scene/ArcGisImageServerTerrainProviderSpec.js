@@ -1,18 +1,30 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/ArcGisImageServerTerrainProvider',
+         'Core/loadImage',
+         'Core/DefaultProxy',
          'Core/Ellipsoid',
          'Core/Math',
          'Scene/GeographicTilingScheme',
-         'Scene/TerrainProvider'
+         'Scene/HeightmapTerrainData',
+         'Scene/TerrainProvider',
+         'ThirdParty/when'
      ], function(
          ArcGisImageServerTerrainProvider,
+         loadImage,
+         DefaultProxy,
          Ellipsoid,
          CesiumMath,
          GeographicTilingScheme,
-         TerrainProvider) {
+         HeightmapTerrainData,
+         TerrainProvider,
+         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    afterEach(function() {
+        loadImage.createImage = loadImage.defaultCreateImage;
+    });
 
     it('conforms to TerrainProvider interface', function() {
         expect(ArcGisImageServerTerrainProvider).toConformToInterface(TerrainProvider);
@@ -97,5 +109,157 @@ defineSuite([
             url : 'made/up/url'
         });
         expect(provider.isReady()).toBe(true);
+    });
+
+    describe('requestTileGeometry', function() {
+        it('requests expanded extent to account for center versus edge', function() {
+            var baseUrl = 'made/up/url';
+
+            loadImage.createImage = function(url, crossOrigin, deferred) {
+                expect(url.indexOf('exportImage?')).toBeGreaterThanOrEqualTo(0);
+                expect(url.indexOf('bbox=-181.40625%2C-91.40625%2C1.40625%2C91.40625')).toBeGreaterThanOrEqualTo(0);
+                expect(crossOrigin).toEqual(true);
+
+                // Just return any old image.
+                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            var terrainProvider = new ArcGisImageServerTerrainProvider({
+                url : baseUrl
+            });
+
+            var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+
+            var loaded = false;
+            when(promise, function(terrainData) {
+                loaded = true;
+            });
+
+            waitsFor(function() {
+                return loaded;
+            }, 'request to complete');
+        });
+
+        it('uses the token if one is supplied', function() {
+            var baseUrl = 'made/up/url';
+
+            loadImage.createImage = function(url, crossOrigin, deferred) {
+                expect(url.indexOf('exportImage?')).toBeGreaterThanOrEqualTo(0);
+                expect(url.indexOf('token=foofoofoo')).toBeGreaterThanOrEqualTo(0);
+                expect(crossOrigin).toEqual(true);
+
+                // Just return any old image.
+                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            var terrainProvider = new ArcGisImageServerTerrainProvider({
+                url : baseUrl,
+                token : 'foofoofoo'
+            });
+
+            var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+
+            var loaded = false;
+            when(promise, function(terrainData) {
+                loaded = true;
+            });
+
+            waitsFor(function() {
+                return loaded;
+            }, 'request to complete');
+        });
+
+        it('uses the proxy if one is supplied', function() {
+            var baseUrl = 'made/up/url';
+
+            loadImage.createImage = function(url, crossOrigin, deferred) {
+                expect(url.indexOf('/proxy/?')).toBe(0);
+                expect(url.indexOf('exportImage%3F')).toBeGreaterThanOrEqualTo(0);
+                expect(crossOrigin).toEqual(true);
+
+                // Just return any old image.
+                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            var terrainProvider = new ArcGisImageServerTerrainProvider({
+                url : baseUrl,
+                proxy : new DefaultProxy('/proxy/')
+            });
+
+            var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+
+            var loaded = false;
+            when(promise, function(terrainData) {
+                loaded = true;
+            });
+
+            waitsFor(function() {
+                return loaded;
+            }, 'request to complete');
+        });
+
+        it('provides HeightmapTerrainData', function() {
+            var baseUrl = 'made/up/url';
+
+            loadImage.createImage = function(url, crossOrigin, deferred) {
+                expect(url.indexOf('/proxy/?')).toBe(0);
+                expect(url.indexOf('exportImage%3F')).toBeGreaterThanOrEqualTo(0);
+                expect(crossOrigin).toEqual(true);
+
+                // Just return any old image.
+                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            var terrainProvider = new ArcGisImageServerTerrainProvider({
+                url : baseUrl,
+                proxy : new DefaultProxy('/proxy/')
+            });
+
+            var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+
+            var loadedData;
+            when(promise, function(terrainData) {
+                loadedData = terrainData;
+            });
+
+            waitsFor(function() {
+                return typeof loadedData !== 'undefined';
+            }, 'request to complete');
+
+            runs(function() {
+                expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
+            });
+        });
+
+        it('returns undefined if too many requests are already in progress', function() {
+            var baseUrl = 'made/up/url';
+
+            var deferreds = [];
+
+            loadImage.createImage = function(url, crossOrigin, deferred) {
+                // Do nothing, so requests never complete
+                deferreds.push(deferred);
+            };
+
+            var terrainProvider = new ArcGisImageServerTerrainProvider({
+                url : baseUrl,
+                proxy : new DefaultProxy('/proxy/')
+            });
+
+            var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+            expect(promise).toBeDefined();
+
+            var i;
+            for (i = 0; i < 10; ++i) {
+                promise = terrainProvider.requestTileGeometry(0, 0, 0);
+            }
+
+            promise = terrainProvider.requestTileGeometry(0, 0, 0);
+            expect(promise).toBeUndefined();
+
+            for (i = 0; i < deferreds.length; ++i) {
+                deferreds[i].resolve();
+            }
+        });
     });
 });
