@@ -561,16 +561,23 @@ define([
                     stencil : 0.0
                 });
             } else {
-                this._rsColor = context.createRenderState();
-                this._rsColorWithoutDepthTest = context.createRenderState();
-                this._depthCommand.renderState = context.createRenderState();
+                this._rsColor = context.createRenderState({
+                    cull : {
+                        enabled : true
+                    }
+                });
+                this._rsColorWithoutDepthTest = context.createRenderState({
+                    cull : {
+                        enabled : true
+                    }
+                });
+                this._depthCommand.renderState = context.createRenderState({
+                    cull : {
+                        enabled : true
+                    }
+                });
             }
         }
-
-        var cull = (mode === SceneMode.SCENE3D) || (mode === SceneMode.MORPHING);
-        this._rsColor.cull.enabled = cull;
-        this._rsColorWithoutDepthTest.cull.enabled = cull;
-        this._depthCommand.renderState.cull.enabled = cull;
 
         this._northPoleCommand.renderState = this._rsColorWithoutDepthTest;
         this._southPoleCommand.renderState = this._rsColorWithoutDepthTest;
