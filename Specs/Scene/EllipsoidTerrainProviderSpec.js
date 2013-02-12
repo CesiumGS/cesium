@@ -33,4 +33,10 @@ defineSuite([
         var terrainData = terrain.requestTileGeometry(0, 0, 0);
         expect(terrainData).toBeDefined();
     });
+
+    it('has error event', function() {
+        var provider = new EllipsoidTerrainProvider();
+        expect(provider.getErrorEvent()).toBeDefined();
+        expect(provider.getErrorEvent()).toBe(provider.getErrorEvent());
+    });
 }, 'WebGL');

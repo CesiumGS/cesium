@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/ArcGisImageServerTerrainProvider',
-         'Core/loadImage',
+         'Scene/CesiumTerrainProvider',
+         'Core/loadArrayBuffer',
          'Core/DefaultProxy',
          'Core/Ellipsoid',
          'Core/Math',
@@ -10,8 +10,8 @@ defineSuite([
          'Scene/TerrainProvider',
          'ThirdParty/when'
      ], function(
-         ArcGisImageServerTerrainProvider,
-         loadImage,
+         CesiumTerrainProvider,
+         loadArrayBuffer,
          DefaultProxy,
          Ellipsoid,
          CesiumMath,
@@ -23,26 +23,26 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     afterEach(function() {
-        loadImage.createImage = loadImage.defaultCreateImage;
+        loadArrayBuffer.load = loadArrayBuffer.defaultLoad;
     });
 
     it('conforms to TerrainProvider interface', function() {
-        expect(ArcGisImageServerTerrainProvider).toConformToInterface(TerrainProvider);
+        expect(CesiumTerrainProvider).toConformToInterface(TerrainProvider);
     });
 
     it('constructor throws if url is not provided', function() {
         expect(function() {
-            return new ArcGisImageServerTerrainProvider();
+            return new CesiumTerrainProvider();
         }).toThrow();
 
         expect(function() {
-            return new ArcGisImageServerTerrainProvider({
+            return new CesiumTerrainProvider({
             });
         }).toThrow();
     });
 
     it('uses geographic tiling scheme by default', function() {
-        var provider = new ArcGisImageServerTerrainProvider({
+        var provider = new CesiumTerrainProvider({
             url : 'made/up/url'
         });
 
@@ -50,22 +50,8 @@ defineSuite([
         expect(tilingScheme instanceof GeographicTilingScheme).toBe(true);
     });
 
-    it('constructor can specify tiling scheme', function() {
-        var tilingScheme = new GeographicTilingScheme({
-            ellipsoid : Ellipsoid.UNIT_SPHERE,
-            numberOfLevelZeroTilesX : 123,
-            numberOfLevelZeroTilesY : 456
-        });
-        var provider = new ArcGisImageServerTerrainProvider({
-            url : 'made/up/url',
-            tilingScheme : tilingScheme
-        });
-
-        expect(provider.getTilingScheme()).toBe(tilingScheme);
-    });
-
     it('has error event', function() {
-        var provider = new ArcGisImageServerTerrainProvider({
+        var provider = new CesiumTerrainProvider({
             url : 'made/up/url'
         });
         expect(provider.getErrorEvent()).toBeDefined();
@@ -73,7 +59,7 @@ defineSuite([
     });
 
     it('returns reasonable geometric error for various levels', function() {
-        var provider = new ArcGisImageServerTerrainProvider({
+        var provider = new CesiumTerrainProvider({
             url : 'made/up/url'
         });
 
@@ -83,105 +69,46 @@ defineSuite([
     });
 
     it('logo is undefined if credit is not provided', function() {
-        var provider = new ArcGisImageServerTerrainProvider({
+        var provider = new CesiumTerrainProvider({
             url : 'made/up/url'
         });
         expect(provider.getLogo()).toBeUndefined();
     });
 
     it('logo is defined if credit is provided', function() {
-        var provider = new ArcGisImageServerTerrainProvider({
+        var provider = new CesiumTerrainProvider({
             url : 'made/up/url',
             credit : 'thanks to our awesome made up contributors!'
         });
         expect(provider.getLogo()).toBeDefined();
     });
 
-    it('does not have a water mask', function() {
-        var provider = new ArcGisImageServerTerrainProvider({
+    it('has a water mask', function() {
+        var provider = new CesiumTerrainProvider({
             url : 'made/up/url'
         });
-        expect(provider.hasWaterMask()).toBe(false);
+        expect(provider.hasWaterMask()).toBe(true);
     });
 
     it('is ready immediately', function() {
-        var provider = new ArcGisImageServerTerrainProvider({
+        var provider = new CesiumTerrainProvider({
             url : 'made/up/url'
         });
         expect(provider.isReady()).toBe(true);
     });
 
     describe('requestTileGeometry', function() {
-        it('requests expanded extent to account for center versus edge', function() {
-            var baseUrl = 'made/up/url';
-
-            loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url.indexOf('exportImage?')).toBeGreaterThanOrEqualTo(0);
-                expect(url.indexOf('bbox=-181.40625%2C-91.40625%2C1.40625%2C91.40625')).toBeGreaterThanOrEqualTo(0);
-                expect(crossOrigin).toEqual(true);
-
-                // Just return any old image.
-                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            };
-
-            var terrainProvider = new ArcGisImageServerTerrainProvider({
-                url : baseUrl
-            });
-
-            var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-            var loaded = false;
-            when(promise, function(terrainData) {
-                loaded = true;
-            });
-
-            waitsFor(function() {
-                return loaded;
-            }, 'request to complete');
-        });
-
-        it('uses the token if one is supplied', function() {
-            var baseUrl = 'made/up/url';
-
-            loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url.indexOf('exportImage?')).toBeGreaterThanOrEqualTo(0);
-                expect(url.indexOf('token=foofoofoo')).toBeGreaterThanOrEqualTo(0);
-                expect(crossOrigin).toEqual(true);
-
-                // Just return any old image.
-                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            };
-
-            var terrainProvider = new ArcGisImageServerTerrainProvider({
-                url : baseUrl,
-                token : 'foofoofoo'
-            });
-
-            var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-            var loaded = false;
-            when(promise, function(terrainData) {
-                loaded = true;
-            });
-
-            waitsFor(function() {
-                return loaded;
-            }, 'request to complete');
-        });
-
         it('uses the proxy if one is supplied', function() {
             var baseUrl = 'made/up/url';
 
-            loadImage.createImage = function(url, crossOrigin, deferred) {
+            loadArrayBuffer.load = function(url, headers, deferred) {
                 expect(url.indexOf('/proxy/?')).toBe(0);
-                expect(url.indexOf('exportImage%3F')).toBeGreaterThanOrEqualTo(0);
-                expect(crossOrigin).toEqual(true);
 
-                // Just return any old image.
-                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                // Just return any old file, as long as its big enough
+                return loadArrayBuffer.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', headers, deferred);
             };
 
-            var terrainProvider = new ArcGisImageServerTerrainProvider({
+            var terrainProvider = new CesiumTerrainProvider({
                 url : baseUrl,
                 proxy : new DefaultProxy('/proxy/')
             });
@@ -201,15 +128,12 @@ defineSuite([
         it('provides HeightmapTerrainData', function() {
             var baseUrl = 'made/up/url';
 
-            loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url.indexOf('exportImage?')).toBeGreaterThanOrEqualTo(0);
-                expect(crossOrigin).toEqual(true);
-
-                // Just return any old image.
-                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            loadArrayBuffer.load = function(url, headers, deferred) {
+                // Just return any old file, as long as its big enough
+                return loadArrayBuffer.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', headers, deferred);
             };
 
-            var terrainProvider = new ArcGisImageServerTerrainProvider({
+            var terrainProvider = new CesiumTerrainProvider({
                 url : baseUrl
             });
 
@@ -234,12 +158,12 @@ defineSuite([
 
             var deferreds = [];
 
-            loadImage.createImage = function(url, crossOrigin, deferred) {
+            loadArrayBuffer.load = function(url, headers, deferred) {
                 // Do nothing, so requests never complete
                 deferreds.push(deferred);
             };
 
-            var terrainProvider = new ArcGisImageServerTerrainProvider({
+            var terrainProvider = new CesiumTerrainProvider({
                 url : baseUrl
             });
 
