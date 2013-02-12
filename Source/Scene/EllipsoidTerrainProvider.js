@@ -58,8 +58,8 @@ define([
 
     /**
      * Requests the geometry for a given tile.  This function should not be called before
-     * {@link TerrainProvider#isReady} returns true.  The result must include terrain data and
-     * may optionally include an indication of which child tiles are available.
+     * {@link TerrainProvider#isReady} returns true.  The result includes terrain
+     * data and indicates that all child tiles are available.
      *
      * @memberof EllipsoidTerrainProvider
      *

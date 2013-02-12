@@ -55,7 +55,7 @@ define([
      *   token : 'KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg..',
      *   proxy : new Cesium.DefaultProxy('/terrain/')
      * });
-     * centralBody.setTerrainProvider(terrainProvider);
+     * centralBody.terrainProvider = terrainProvider;
      */
     var ArcGisImageServerTerrainProvider = function ArcGisImageServerTerrainProvider(description) {
         if (typeof description === 'undefined' || typeof description.url === 'undefined') {
@@ -98,8 +98,8 @@ define([
 
     /**
      * Requests the geometry for a given tile.  This function should not be called before
-     * {@link ArcGisImageServerTerrainProvider#isReady} returns true.  The result must include terrain data and
-     * may optionally include a water mask and an indication of which child tiles are available.
+     * {@link ArcGisImageServerTerrainProvider#isReady} returns true.  The result includes terrain
+     * data and indicates that all child tiles are available.
      *
      * @memberof ArcGisImageServerTerrainProvider
      *

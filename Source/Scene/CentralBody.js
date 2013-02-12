@@ -111,6 +111,12 @@ define([
         var terrainProvider = new EllipsoidTerrainProvider({ellipsoid : ellipsoid});
         var imageryLayerCollection = new ImageryLayerCollection();
 
+        /**
+         * The terrain provider providing surface geometry for this central body.
+         * @type {TerrainProvider}
+         */
+        this.terrainProvider = terrainProvider;
+
         this._ellipsoid = ellipsoid;
         this._imageryLayerCollection = imageryLayerCollection;
         this._surface = new CentralBodySurface({
@@ -260,28 +266,6 @@ define([
      */
     CentralBody.prototype.getImageryLayers = function() {
         return this._imageryLayerCollection;
-    };
-
-    /**
-     * Gets the terrain provider providing surface geometry for this central body.
-     *
-     * @memberof CentralBody
-     *
-     * @returns {TerrainProvider} The terrain provider.
-     */
-    CentralBody.prototype.getTerrainProvider = function() {
-        return this._surface.getTerrainProvider();
-    };
-
-    /**
-     * Sets the terrain provider providing surface geometry for this central body.
-     *
-     * @memberof CentralBody
-     *
-     * @param {TerrainProvider} terrainProvider The new terrain provider.
-     */
-    CentralBody.prototype.setTerrainProvider = function(terrainProvider) {
-        this._surface.setTerrainProvider(terrainProvider);
     };
 
     CentralBody.prototype._computeDepthQuad = function(frameState) {
@@ -744,6 +728,7 @@ define([
             }
 
             this._surface._tileCacheSize = this.tileCacheSize;
+            this._surface.setTerrainProvider(this.terrainProvider);
             this._surface.update(context,
                     frameState,
                     colorCommandList,

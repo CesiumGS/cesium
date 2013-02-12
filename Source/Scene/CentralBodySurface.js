@@ -157,9 +157,13 @@ define([
 
     CentralBodySurface.prototype.getTerrainProvider = function() {
         return this._terrainProvider;
-    }
+    };
 
     CentralBodySurface.prototype.setTerrainProvider = function(terrainProvider) {
+        if (this._terrainProvider === terrainProvider) {
+            return;
+        }
+
         if (typeof terrainProvider === 'undefined') {
             throw new DeveloperError('terrainProvider is required.');
         }

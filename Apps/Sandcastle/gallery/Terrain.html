@@ -59,7 +59,7 @@ require([
             return new MenuItem({
                 label : providerInfo.name,
                 onClick : function() {
-                    centralBody.setTerrainProvider(providerInfo.provider);
+                    centralBody.terrainProvider = providerInfo.provider;
                     button.set('label', providerInfo.name);
                 }
             });
@@ -137,7 +137,7 @@ require([
         url : 'http://cesium.agi.com/smallterrain'
     });
 
-    centralBody.setTerrainProvider(terrainProvider);
+    centralBody.terrainProvider = terrainProvider;
 
     var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
 
