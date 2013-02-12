@@ -31,6 +31,7 @@
     right: 2px;
     height: 27px;
     padding: 0;
+    margin: 0;
     overflow: hidden;
     font-size: 14px;
 }
@@ -42,10 +43,6 @@
     padding: 0;
     width: 169px;
     height: 112px;    
-}
-
-.cw-timeline {
-    margin: 0;
 }
 
 .cw-cesiumLogo {
