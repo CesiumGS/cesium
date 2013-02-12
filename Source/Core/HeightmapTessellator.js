@@ -135,6 +135,11 @@ define([
             throw new DeveloperError('description.skirtHeight is required.');
         }
 
+        // This function tends to be a performance hotspot for terrain rendering,
+        // so it employs a lot of inlining and unrolling as an optimization.
+        // In particular, the functionality of Ellipsoid.cartographicToCartesian
+        // is inlined.
+
         var cos = Math.cos;
         var sin = Math.sin;
         var sqrt = Math.sqrt;
