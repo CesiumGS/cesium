@@ -3,12 +3,14 @@ define(['../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/ClockStep',
         '../Core/Color',
+        '../Core/defaultValue',
         '../ThirdParty/sprintf'
         ], function(
          destroyObject,
          DeveloperError,
          ClockStep,
          Color,
+         defaultValue,
          sprintf) {
     "use strict";
 
@@ -161,6 +163,7 @@ define(['../Core/destroyObject',
 
             var x = clientX - centerX - rect.left;
             var y = clientY - centerY - rect.top;
+
             var angle = Math.atan2(y, x) * 180 / Math.PI + 90;
             if (angle > 180) {
                 angle -= 360;
@@ -272,15 +275,16 @@ define(['../Core/destroyObject',
     function _resize(that) {
         var svg = that._svgNode;
 
-        var parentWidth = that.parentNode.clientWidth;
-        var parentHeight = that.parentNode.clientHeight;
-
         //The width and height as the SVG was originally drawn.
         var baseWidth = 200;
         var baseHeight = 132;
 
+        var parentWidth = defaultValue(that.parentNode.clientWidth, 0);
+        var parentHeight = defaultValue(that.parentNode.clientHeight, 0);
+
         var width = parentWidth;
         var height = parentHeight;
+
         if (parentWidth === 0 && parentHeight === 0) {
             width = baseWidth;
             height = baseHeight;
@@ -292,14 +296,18 @@ define(['../Core/destroyObject',
             height = baseHeight * (parentWidth / baseWidth);
         }
 
+        var scaleX = width / baseWidth;
+        var scaleY = height / baseHeight;
+
         svg.style.cssText = 'width: ' + width + 'px; height: ' + height + 'px; position: absolute; bottom: 0; left: 0;';
         svg.setAttribute('width', width);
         svg.setAttribute('height', height);
         svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
 
-        that._topG.setAttribute('transform', 'scale(' + (width / baseWidth) + ',' + (height / baseHeight) + ')');
-        that._centerX = Math.max(1, Math.floor(100.0 * width / baseWidth));
-        that._centerY = Math.max(1, Math.floor(100.0 * height / baseHeight));
+        that._topG.setAttribute('transform', 'scale(' + scaleX + ',' + scaleY + ')');
+
+        that._centerX = Math.max(1, 100.0 * scaleX);
+        that._centerY = Math.max(1, 100.0 * scaleY);
     }
 
     /**
@@ -587,8 +595,8 @@ define(['../Core/destroyObject',
         this._knobStatus.childNodes[0].textContent = viewModel.multiplierLabel();
 
         //Perform initial calculations for scale and theme.
-        _resize(this);
         this.applyThemeChanges();
+        _resize(this);
     };
 
     /**
