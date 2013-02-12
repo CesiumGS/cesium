@@ -303,10 +303,6 @@ define([
             levelZeroTiles[i].freeResources();
         }
 
-        if (typeof this._terrainProvider.destroy !== 'undefined') {
-            this._terrainProvider.destroy();
-        }
-
         this._imageryLayerCollection.destroy();
 
         var debug = this._debug;
