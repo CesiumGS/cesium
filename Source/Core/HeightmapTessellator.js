@@ -36,7 +36,9 @@ define([
     var HeightmapTessellator = {};
 
     /**
-     * The default structure of a heightmap, as given to {@link HeightmapTessellator#computeVertices}.
+     * The default structure of a heightmap, as given to {@link HeightmapTessellator.computeVertices}.
+     *
+     * @memberof HeightmapTessellator
      */
     HeightmapTessellator.DEFAULT_STRUCTURE = freezeObject({
             heightScale : 1.0,
@@ -51,6 +53,8 @@ define([
      * Fills an array of vertices from a heightmap image.  On return, the vertex data is in the order
      * [X, Y, Z, H, U, V], where X, Y, and Z represent the Cartesian position of the vertex, H is the
      * height above the ellipsoid, and U and V are the texture coordinates.
+     *
+     * @memberof HeightmapTessellator
      *
      * @param {Array|Float32Array} description.vertices The array to use to store computed vertices.
      *                             If description.skirtHeight is 0.0, the array should have

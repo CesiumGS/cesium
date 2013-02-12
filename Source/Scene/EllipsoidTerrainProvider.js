@@ -31,7 +31,7 @@ define([
      *
      * @see TerrainProvider
      */
-    function EllipsoidTerrainProvider(description) {
+    var EllipsoidTerrainProvider = function EllipsoidTerrainProvider(description) {
         description = defaultValue(description, {});
 
         this._tilingScheme = description.tilingScheme;
@@ -54,7 +54,7 @@ define([
         });
 
         this._errorEvent = new Event();
-    }
+    };
 
     /**
      * Requests the geometry for a given tile.  This function should not be called before

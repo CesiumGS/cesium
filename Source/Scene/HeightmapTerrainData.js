@@ -42,7 +42,7 @@ define([
      *                 is needed.  If the bit is cleared, the child tile is not requested and geometry is
      *                 instead upsampled from the parent.  The bit values are as follows:
      *                 <table>
-     *                  <th><td>Bit Position</td><td>Bit Value</td><td>Child Tile</td></th>
+     *                  <tr><th>Bit Position</th><th>Bit Value</th><th>Child Tile</th></tr>
      *                  <tr><td>0</td><td>1</td><td>Southwest</td></tr>
      *                  <tr><td>1</td><td>2</td><td>Southeast</td></tr>
      *                  <tr><td>2</td><td>4</td><td>Northwest</td></tr>
