@@ -335,12 +335,7 @@ require([
             if (cartesian) {
                 this._click2 = this._ellipsoid.cartesianToCartographic(cartesian);
             }
-            this._mouseHandler.setInputAction(function(movement) {
-            }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
-            this._mouseHandler.setInputAction(function(movement) {
-            }, Cesium.ScreenSpaceEventType.LEFT_UP);
-            this._mouseHandler.setInputAction(function(movement) {
-            }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            this._mouseHandler.destroy();
 
             this._finishHandler(this.getExtent(this._click1, this._click2));
         };
