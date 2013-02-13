@@ -52,7 +52,6 @@ define([
      *
      * @memberof TerrainData
      *
-     * @param {Ellipsoid} ellipsoid The ellipsoid to which this terrain data applies.
      * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
@@ -61,7 +60,7 @@ define([
      *          asynchronous mesh creations are already in progress and the operation should
      *          be retried later.
      */
-    TerrainData.prototype.createMesh = function(ellipsoid, tilingScheme, x, y, level) {
+    TerrainData.prototype.createMesh = function(tilingScheme, x, y, level) {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 

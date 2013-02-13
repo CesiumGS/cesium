@@ -176,10 +176,9 @@ define([
 
     function transform(tileTerrain, context, terrainProvider, x, y, level) {
         var tilingScheme = terrainProvider.getTilingScheme();
-        var ellipsoid = tilingScheme.getEllipsoid();
 
         var terrainData = tileTerrain.data;
-        var meshPromise = terrainData.createMesh(ellipsoid, tilingScheme, x, y, level);
+        var meshPromise = terrainData.createMesh(tilingScheme, x, y, level);
 
         if (typeof meshPromise === 'undefined') {
             // Postponed.
