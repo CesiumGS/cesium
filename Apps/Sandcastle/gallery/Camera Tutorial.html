@@ -63,6 +63,47 @@ require(['Cesium'], function(Cesium) {
     primitives.setCentralBody(centralBody);
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
+    
+    // create viewport quad with keyboard and mouse instructions
+    var instructions = ['w/s - move forward/backward',
+                       'a/d - move left/right',
+                       'q/e - move up/down',
+                       'left mouse button down plus mouse move changes the look direction'];
+    var options = {
+        font : '20px sans-serif'
+    }
+    var instructionCanvases = [];
+    var instructionCanvas;
+    var width = 0;
+    var height = 0;
+    var margin = 2;
+    for (var i = 0; i < instructions.length; i++) {
+        instructionCanvas = Cesium.writeTextToCanvas(instructions[i], options);
+        instructionCanvases.push(instructionCanvas);
+        width = Math.max(width, instructionCanvas.dimensions.width);
+        height += instructionCanvas.dimensions.height + margin;
+    }
+    
+    var instructionQuad = new Cesium.ViewportQuad();
+    instructionQuad.material.destroy();
+    instructionQuad.material = Cesium.Material.fromType(scene.getContext(), Cesium.Material.ImageType);
+    instructionQuad.material.uniforms.image = scene.getContext().createTexture2D({
+        width : width,
+        height : height
+    });;
+    
+    instructionQuad.rectangle.x = 0;
+    instructionQuad.rectangle.y = canvas.clientHeight - height;
+    instructionQuad.rectangle.width = width;
+    instructionQuad.rectangle.height = height;
+    
+    var yOffset = height;
+    for (var j = 0; j < instructionCanvases.length; j++) {
+        instructionCanvas = instructionCanvases[j];
+        yOffset -= instructionCanvas.dimensions.height + margin;
+        instructionQuad.material.uniforms.image.copyFrom(instructionCanvas, 0, yOffset);
+    }
+    primitives.add(instructionQuad);
 
     scene.getScreenSpaceCameraController().enableRotate = false;
     scene.getScreenSpaceCameraController().enableTranslate = false;
@@ -202,7 +243,7 @@ require(['Cesium'], function(Cesium) {
     window.addEventListener('resize', onResize, false);
     onResize();
 
-    canvas.setAttribute('tabindex','0');
+    canvas.setAttribute('tabindex','0'); // needed to put focus on the canvas
     canvas.onclick = function () {
         canvas.focus();
     }
