@@ -484,12 +484,90 @@ defineSuite([
                 grandchildTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
                 return childTile.state === TileState.READY &&
                        typeof grandchildTile.upsampledTerrain === 'undefined';
-            });
+            }, 'child to be loaded and grandchild to be upsampled.');
 
             runs(function() {
                 expect(greatGrandchildTile.state).toBe(TileState.READY);
                 expect(greatGrandchildTile.loadedTerrain).toBeUndefined();
                 expect(greatGrandchildTile.upsampledTerrain).toBeUndefined();
+            });
+        });
+
+        it('uses shared water mask texture for all water', function() {
+            var allWaterTerrainProvider = {
+                    requestTileGeometry : function(x, y, level) {
+                        var real = realTerrainProvider.requestTileGeometry(x, y, level);
+                        if (typeof real === 'undefined') {
+                            return real;
+                        }
+
+                        return when(real, function(terrainData) {
+                            terrainData._waterMask = new Uint8Array([255]);
+                            return terrainData;
+                        });
+                    },
+                    getTilingScheme : function() {
+                        return realTerrainProvider.getTilingScheme();
+                    },
+                    hasWaterMask : function() {
+                        return realTerrainProvider.hasWaterMask();
+                    }
+            };
+
+            waitsFor(function() {
+                rootTile.processStateMachine(context, allWaterTerrainProvider, imageryLayerCollection);
+                return rootTile.state === TileState.READY;
+            }, 'root tile to be ready');
+
+            var childTile = rootTile.getChildren()[0];
+
+            waitsFor(function() {
+                childTile.processStateMachine(context, allWaterTerrainProvider, imageryLayerCollection);
+                return childTile.state === TileState.READY;
+            }, 'child tile to be ready');
+
+            runs(function() {
+                expect(childTile.waterMaskTexture).toBeDefined();
+                expect(childTile.waterMaskTexture).toBe(rootTile.waterMaskTexture);
+            });
+        });
+
+        it('uses shared water mask texture for all land', function() {
+            var allLandTerrainProvider = {
+                    requestTileGeometry : function(x, y, level) {
+                        var real = realTerrainProvider.requestTileGeometry(x, y, level);
+                        if (typeof real === 'undefined') {
+                            return real;
+                        }
+
+                        return when(real, function(terrainData) {
+                            terrainData._waterMask = new Uint8Array([0]);
+                            return terrainData;
+                        });
+                    },
+                    getTilingScheme : function() {
+                        return realTerrainProvider.getTilingScheme();
+                    },
+                    hasWaterMask : function() {
+                        return realTerrainProvider.hasWaterMask();
+                    }
+            };
+
+            waitsFor(function() {
+                rootTile.processStateMachine(context, allLandTerrainProvider, imageryLayerCollection);
+                return rootTile.state === TileState.READY;
+            }, 'root tile to be ready');
+
+            var childTile = rootTile.getChildren()[0];
+
+            waitsFor(function() {
+                childTile.processStateMachine(context, allLandTerrainProvider, imageryLayerCollection);
+                return childTile.state === TileState.READY;
+            }, 'child tile to be ready');
+
+            runs(function() {
+                expect(childTile.waterMaskTexture).toBeDefined();
+                expect(childTile.waterMaskTexture).toBe(rootTile.waterMaskTexture);
             });
         });
     }, 'WebGL');
