@@ -71,7 +71,7 @@ require(['Cesium'], function(Cesium) {
                        'left mouse button down plus mouse move changes the look direction'];
     var options = {
         font : '20px sans-serif'
-    }
+    };
     var instructionCanvases = [];
     var instructionCanvas;
     var width = 0;
@@ -90,7 +90,7 @@ require(['Cesium'], function(Cesium) {
     instructionQuad.material.uniforms.image = scene.getContext().createTexture2D({
         width : width,
         height : height
-    });;
+    });
     
     instructionQuad.rectangle.x = 0;
     instructionQuad.rectangle.y = canvas.clientHeight - height;
@@ -189,8 +189,8 @@ require(['Cesium'], function(Cesium) {
         }
         
         // Change movement speed based on the distance of the camera to the surface of the ellipsoid.
-        var height = ellipsoid.cartesianToCartographic(camera.position).height;
-        var moveRate = height / 100.0;
+        var cameraHeight = ellipsoid.cartesianToCartographic(camera.position).height;
+        var moveRate = cameraHeight / 100.0;
         
         if (moveForward) {
             controller.moveForward(moveRate);
@@ -246,7 +246,7 @@ require(['Cesium'], function(Cesium) {
     canvas.setAttribute('tabindex','0'); // needed to put focus on the canvas
     canvas.onclick = function () {
         canvas.focus();
-    }
+    };
 
     Sandcastle.finishedLoading();
 });
