@@ -119,16 +119,14 @@ define([
             componentsPerAttribute : position3DAndHeightLength,
             offsetInBytes : 0,
             strideInBytes : stride
-        }];
-
-        attributes.push({
+        }, {
             index : TerrainProvider.attributeIndices.textureCoordinates,
             vertexBuffer : buffer,
             componentDatatype : datatype,
             componentsPerAttribute : 2,
             offsetInBytes : position3DAndHeightLength * datatype.sizeInBytes,
             strideInBytes : stride
-        });
+        }];
 
         var indexBuffers = buffers.indices.indexBuffers || {};
         var indexBuffer = indexBuffers[context.getId()];
