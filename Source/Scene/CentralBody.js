@@ -155,8 +155,7 @@ define([
          *
          * @type {Cartesian2}
          */
-        this.logoOffset = Cartesian2.ZERO;
-        this._logoOffset = this.logoOffset;
+        this.logoOffset = Cartesian2.ZERO.clone();
         this._logos = [];
         this._logoQuad = undefined;
 
@@ -746,46 +745,58 @@ define([
             logoData.logos.length = logoData.logoIndex;
         }
 
+        var totalLogoWidth = logoData.totalLogoWidth;
+        var totalLogoHeight = logoData.totalLogoHeight;
+
+        var logoQuad = centralBody._logoQuad;
+        if (totalLogoWidth === 0 || totalLogoHeight === 0) {
+            if (typeof logoQuad !== 'undefined') {
+                logoQuad.material = logoQuad.material && logoQuad.material.destroy();
+                logoQuad.destroy();
+                centralBody._logoQuad = undefined;
+            }
+            return;
+        }
+
+        if (typeof logoQuad === 'undefined') {
+            logoQuad = new ViewportQuad();
+            logoQuad.material.destroy();
+            logoQuad.material = Material.fromType(context, Material.ImageType);
+            logoQuad.material.uniforms.image = undefined;
+
+            centralBody._logoQuad = logoQuad;
+        }
+
+        var logoOffset = centralBody.logoOffset;
+        var rectangle = logoQuad.rectangle;
+        rectangle.x = logoOffset.x;
+        rectangle.y = logoOffset.y;
+        rectangle.width = totalLogoWidth;
+        rectangle.height = totalLogoHeight;
+
         if (logoData.rebuildLogo) {
-            var width = logoData.totalLogoWidth;
-            var height = logoData.totalLogoHeight;
-            var logoRectangle = new BoundingRectangle(centralBody.logoOffset.x, centralBody.logoOffset.y, width, height);
-            if (typeof centralBody._logoQuad === 'undefined') {
-                centralBody._logoQuad = new ViewportQuad();
-                centralBody._logoQuad.rectangle = BoundingRectangle.clone(logoRectangle);
-            } else {
-                centralBody._logoQuad.rectangle = BoundingRectangle.clone(logoRectangle);
-            }
+            var texture = logoQuad.material.uniforms.image;
 
-            var texture = centralBody._logoQuad.material.uniforms.image;
-            if (typeof texture === 'undefined' || !(texture instanceof Texture) ||texture.getWidth() !== width || texture.getHeight() !== height) {
-                if (width === 0 || height === 0) {
-                    centralBody._logoQuad.material.destroy();
-                    centralBody._logoQuad.destroy();
-                    centralBody._logoQuad = undefined;
-                } else {
-                    texture = context.createTexture2D({
-                        width : width,
-                        height : height
-                    });
-                    centralBody._logoQuad.material.destroy();
-                    centralBody._logoQuad.material = Material.fromType(context, Material.ImageType);
-                    centralBody._logoQuad.material.uniforms.image = texture;
-                }
-            }
+            // always delete and recreate the texture to get rid of leftover pixels
+            texture = texture && texture.destroy();
+            texture = context.createTexture2D({
+                width : totalLogoWidth,
+                height : totalLogoHeight
+            });
+            logoQuad.material.uniforms.image = texture;
 
-            var heightOffset = 0;
+            var yOffset = 0;
             for (i = 0, len = logoData.logos.length; i < len; i++) {
                 var logo = logoData.logos[i];
                 if (typeof logo !== 'undefined') {
-                    texture.copyFrom(logo, 0, heightOffset);
-                    heightOffset += logo.height + 2;
+                    texture.copyFrom(logo, 0, yOffset);
+                    yOffset += logo.height + 2;
                 }
             }
         }
 
-        if (typeof centralBody._logoQuad !== 'undefined') {
-            centralBody._logoQuad.update(context, frameState, commandList);
+        if (typeof logoQuad !== 'undefined') {
+            logoQuad.update(context, frameState, commandList);
         }
     }
 
