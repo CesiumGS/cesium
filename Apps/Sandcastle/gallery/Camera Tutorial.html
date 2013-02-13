@@ -114,11 +114,12 @@ require(['Cesium'], function(Cesium) {
     var handler = new Cesium.ScreenSpaceEventHandler(canvas);
 
     var looking = false;
+    var startMousePosition;
     var mousePosition;
     
     handler.setInputAction(function(movement) {
         looking = true;
-        mousePosition = movement.position;
+        mousePosition = startMousePosition = Cesium.Cartesian3.clone(movement.position);
     }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
 
     handler.setInputAction(function(movement) {
@@ -178,12 +179,11 @@ require(['Cesium'], function(Cesium) {
             var width = canvas.clientWidth;
             var height = canvas.clientHeight;
             
-            // Change mouse position x and y to be in the range [-1.0, 1.0].
-            // Coordinate (0.0, 0.0) will be the center of the screen.
-            var x = 2.0 * mousePosition.x / width - 1.0;
-            var y = 2.0 * (height - mousePosition.y) / height - 1.0;
+            // Coordinate (0.0, 0.0) will be where the mouse was clicked.
+            var x = (mousePosition.x - startMousePosition.x) / width;
+            var y = -(mousePosition.y - startMousePosition.y) / height;
             
-            var lookFactor = 0.01;
+            var lookFactor = 0.5;
             controller.lookRight(x * lookFactor);
             controller.lookUp(y * lookFactor);
         }
