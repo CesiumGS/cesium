@@ -183,7 +183,7 @@ require(['Cesium'], function(Cesium) {
             var x = (mousePosition.x - startMousePosition.x) / width;
             var y = -(mousePosition.y - startMousePosition.y) / height;
             
-            var lookFactor = 0.5;
+            var lookFactor = 0.05;
             controller.lookRight(x * lookFactor);
             controller.lookUp(y * lookFactor);
         }
