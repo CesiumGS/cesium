@@ -135,7 +135,7 @@ defineSuite([
 
         // rotation matrix inverses are equal to its transpose
         var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
-        expect(t4.inverse().equalsEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14)).toEqual(true);
+        expect(t4.inverse()).toEqualEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14);
 
         time = time.addHours(23.93447); // add one sidereal day
         var u = Transforms.computeTemeToPseudoFixedMatrix(time);
@@ -157,7 +157,7 @@ defineSuite([
 
         // rotation matrix inverses are equal to its transpose
         var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
-        expect(t4.inverse().equalsEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14)).toEqual(true);
+        expect(t4.inverse()).toEqualEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14);
 
         time = time.addHours(23.93447); // add one sidereal day
         var u = Transforms.computeTemeToPseudoFixedMatrix(time);
@@ -181,7 +181,7 @@ defineSuite([
 
         // rotation matrix inverses are equal to its transpose
         var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
-        expect(t4.inverse().equalsEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14)).toEqual(true);
+        expect(t4.inverse()).toEqualEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14);
 
         time = time.addHours(23.93447); // add one sidereal day
         var resultU = new Matrix3();

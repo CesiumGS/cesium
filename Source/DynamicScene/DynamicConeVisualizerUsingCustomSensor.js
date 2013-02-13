@@ -105,7 +105,6 @@ define([
         this._primitives = scene.getPrimitives();
         this._coneCollection = [];
         this._dynamicObjectCollection = undefined;
-        this._directionsScratch = [];
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
 
@@ -271,7 +270,7 @@ define([
             } else {
                 coneVisualizerIndex = this._coneCollection.length;
                 cone = new CustomSensorVolume();
-                cone.affectedByLighting = false;
+                cone._directionsScratch = [];
                 this._coneCollection.push(cone);
                 this._primitives.add(cone);
             }
@@ -329,7 +328,8 @@ define([
             maximumClockAngle !== cone.maximumClockAngle ||
             innerHalfAngle !== cone.innerHalfAngle ||
             outerHalfAngle !== cone.outerHalfAngle) {
-            cone.setDirections(computeDirections(minimumClockAngle, maximumClockAngle, innerHalfAngle, outerHalfAngle, this._directionsScratch));
+
+            cone.setDirections(computeDirections(minimumClockAngle, maximumClockAngle, innerHalfAngle, outerHalfAngle, cone._directionsScratch));
             cone.innerHalfAngle = innerHalfAngle;
             cone.maximumClockAngle = maximumClockAngle;
             cone.outerHalfAngle = outerHalfAngle;
@@ -351,7 +351,7 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(cone._visualizerPosition) ||
              !orientation.equals(cone._visualizerOrientation))) {
-            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, cone.modelMatrix);
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, cone.modelMatrix);
             position.clone(cone._visualizerPosition);
             orientation.clone(cone._visualizerOrientation);
         }

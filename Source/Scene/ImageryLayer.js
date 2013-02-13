@@ -65,7 +65,35 @@ define([
      * @param {ImageryProvider} imageryProvider The imagery provider to use.
      * @param {Extent} [description.extent=imageryProvider.extent] The extent of the layer.  This extent
      *        can limit the visible portion of the imagery provider.
-     * @param {Number} [description.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
+     * @param {Number|Function} [description.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
+     *                          This can either be a simple number or a function with the signature
+     *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+     *                          imagery tile for which the alpha is required, and it is expected to return
+     *                          the alpha value to use for the tile.
+     * @param {Number|Function} [description.brightness=1.0] The brightness of this layer.  1.0 uses the unmodified imagery
+     *                          color.  Less than 1.0 makes the imagery darker while greater than 1.0 makes it brighter.
+     *                          This can either be a simple number or a function with the signature
+     *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+     *                          imagery tile for which the brightness is required, and it is expected to return
+     *                          the brightness value to use for the tile.  The function is executed for every
+     *                          frame and for every tile, so it must be fast.
+     * @param {Number|Function} [description.contrast=1.0] The contrast of this layer.  1.0 uses the unmodified imagery color.
+     *                          Less than 1.0 reduces the contrast while greater than 1.0 increases it.
+     *                          This can either be a simple number or a function with the signature
+     *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+     *                          imagery tile for which the contrast is required, and it is expected to return
+     *                          the contrast value to use for the tile.  The function is executed for every
+     *                          frame and for every tile, so it must be fast.
+     * @param {Number|Function} [description.gamma=1.0] The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
+     *                          This can either be a simple number or a function with the signature
+     *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+     *                          imagery tile for which the gamma is required, and it is expected to return
+     *                          the gamma value to use for the tile.  The function is executed for every
+     *                          frame and for every tile, so it must be fast.
      * @param {Boolean} [description.show=true] True if the layer is shown; otherwise, false.
      * @param {Number} [description.maximumAnisotropy=maximum supported] The maximum anisotropy level to use
      *        for texture filtering.  If this parameter is not specified, the maximum anisotropy supported
@@ -78,11 +106,58 @@ define([
         description = defaultValue(description, {});
 
         /**
-         * The alpha blending value of this layer, from 0.0 to 1.0.
+         * The alpha blending value of this layer, usually from 0.0 to 1.0.
+         * This can either be a simple number or a function with the signature
+         * <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+         * imagery tile for which the alpha is required, and it is expected to return
+         * the alpha value to use for the tile.  The function is executed for every
+         * frame and for every tile, so it must be fast.
          *
          * @type {Number}
          */
-        this.alpha = defaultValue(description.alpha, 1.0);
+        this.alpha = defaultValue(description.alpha, defaultValue(imageryProvider.defaultAlpha, 1.0));
+
+        /**
+         * The brightness of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0
+         * makes the imagery darker while greater than 1.0 makes it brighter.
+         * This can either be a simple number or a function with the signature
+         * <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+         * imagery tile for which the brightness is required, and it is expected to return
+         * the brightness value to use for the tile.  The function is executed for every
+         * frame and for every tile, so it must be fast.
+         *
+         * @type {Number}
+         */
+        this.brightness = defaultValue(description.brightness, defaultValue(imageryProvider.defaultBrightness, 1.0));
+
+        /**
+         * The contrast of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+         * the contrast while greater than 1.0 increases it.
+         * This can either be a simple number or a function with the signature
+         * <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+         * imagery tile for which the contrast is required, and it is expected to return
+         * the contrast value to use for the tile.  The function is executed for every
+         * frame and for every tile, so it must be fast.
+         *
+         * @type {Number}
+         */
+        this.contrast = defaultValue(description.contrast, defaultValue(imageryProvider.defaultContrast, 1.0));
+
+        /**
+         * The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
+         * This can either be a simple number or a function with the signature
+         * <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+         * imagery tile for which the gamma is required, and it is expected to return
+         * the gamma value to use for the tile.  The function is executed for every
+         * frame and for every tile, so it must be fast.
+         *
+         * @type {Number}
+         */
+        this.gamma = defaultValue(description.gamma, defaultValue(imageryProvider.defaultGamma, 1.0));
 
         /**
          * Determines if this layer is shown.
@@ -113,6 +188,10 @@ define([
         this._isBaseLayer = false;
 
         this._requestImageError = undefined;
+
+        this._nonMipmapSampler = undefined;
+        this._mipmapSampler = undefined;
+        this._reprojectSampler = undefined;
     };
 
     /**
@@ -231,8 +310,26 @@ define([
 
         if (extent.east <= extent.west || extent.north <= extent.south) {
             // There is no overlap between this terrain tile and this imagery
-            // provider, so no skeletons need to be created.
-            return false;
+            // provider.  Unless this is the base layer, no skeletons need to be created.
+            // We stretch texels at the edge of the base layer over the entire globe.
+            if (!this.isBaseLayer()) {
+                return false;
+            }
+
+            var baseImageryExtent = imageryProvider.getExtent().intersectWith(this._extent);
+            var baseTerrainExtent = tile.extent;
+
+            if (baseTerrainExtent.south >= baseImageryExtent.north) {
+                extent.north = extent.south = baseImageryExtent.north;
+            } else if (baseTerrainExtent.north <= baseImageryExtent.south) {
+                extent.north = extent.south = baseImageryExtent.south;
+            }
+
+            if (baseTerrainExtent.west >= baseImageryExtent.east) {
+                extent.west = extent.east = baseImageryExtent.east;
+            } else if (baseTerrainExtent.east <= baseImageryExtent.west) {
+                extent.west = extent.east = baseImageryExtent.west;
+            }
         }
 
         var latitudeClosestToEquator = 0.0;
@@ -262,7 +359,7 @@ define([
         // If the southeast corner of the extent lies very close to the north or west side
         // of the southeast tile, we don't actually need the southernmost or easternmost
         // tiles.
-        // Similarly, if the northwest corner of the extent list very close to the south or east side
+        // Similarly, if the northwest corner of the extent lies very close to the south or east side
         // of the northwest tile, we don't actually need the northernmost or westernmost tiles.
 
         // We define "very close" as being within 1/512 of the width of the tile.
@@ -270,18 +367,18 @@ define([
         var veryCloseY = (tile.extent.east - tile.extent.west) / 512.0;
 
         var northwestTileExtent = imageryTilingScheme.tileXYToExtent(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
-        if (Math.abs(northwestTileExtent.south - extent.north) < veryCloseY) {
+        if (Math.abs(northwestTileExtent.south - extent.north) < veryCloseY && northwestTileCoordinates.y < southeastTileCoordinates.y) {
             ++northwestTileCoordinates.y;
         }
-        if (Math.abs(northwestTileExtent.east - extent.west) < veryCloseX) {
+        if (Math.abs(northwestTileExtent.east - extent.west) < veryCloseX && northwestTileCoordinates.x < southeastTileCoordinates.x) {
             ++northwestTileCoordinates.x;
         }
 
         var southeastTileExtent = imageryTilingScheme.tileXYToExtent(southeastTileCoordinates.x, southeastTileCoordinates.y, imageryLevel);
-        if (Math.abs(southeastTileExtent.north - extent.south) < veryCloseY) {
+        if (Math.abs(southeastTileExtent.north - extent.south) < veryCloseY && southeastTileCoordinates.y > northwestTileCoordinates.y) {
             --southeastTileCoordinates.y;
         }
-        if (Math.abs(southeastTileExtent.west - extent.east) < veryCloseX) {
+        if (Math.abs(southeastTileExtent.west - extent.east) < veryCloseX && southeastTileCoordinates.x > northwestTileCoordinates.x) {
             --southeastTileCoordinates.x;
         }
 
@@ -503,25 +600,30 @@ define([
                 imagery.texture = texture = reprojectedTexture;
         }
 
-        var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
-
         // Use mipmaps if this texture has power-of-two dimensions.
         if (CesiumMath.isPowerOfTwo(texture.getWidth()) && CesiumMath.isPowerOfTwo(texture.getHeight())) {
+            if (typeof this._mipmapSampler === 'undefined') {
+                var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
+                this._mipmapSampler = context.createSampler({
+                    wrapS : TextureWrap.CLAMP,
+                    wrapT : TextureWrap.CLAMP,
+                    minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
+                    magnificationFilter : TextureMagnificationFilter.LINEAR,
+                    maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy))
+                });
+            }
             texture.generateMipmap(MipmapHint.NICEST);
-            texture.setSampler({
-                wrapS : TextureWrap.CLAMP,
-                wrapT : TextureWrap.CLAMP,
-                minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
-                magnificationFilter : TextureMagnificationFilter.LINEAR,
-                maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy))
-            });
+            texture.setSampler(this._mipmapSampler);
         } else {
-            texture.setSampler({
-                wrapS : TextureWrap.CLAMP,
-                wrapT : TextureWrap.CLAMP,
-                minificationFilter : TextureMinificationFilter.LINEAR,
-                magnificationFilter : TextureMagnificationFilter.LINEAR
-            });
+            if (typeof this._nonMipmapSampler === 'undefined') {
+                this._nonMipmapSampler = context.createSampler({
+                    wrapS : TextureWrap.CLAMP,
+                    wrapT : TextureWrap.CLAMP,
+                    minificationFilter : TextureMinificationFilter.LINEAR,
+                    magnificationFilter : TextureMagnificationFilter.LINEAR
+                });
+            }
+            texture.setSampler(this._nonMipmapSampler);
         }
 
         imagery.state = ImageryState.READY;
@@ -616,15 +718,18 @@ define([
             imageryLayer._rsColor = context.createRenderState();
         }
 
-        var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
+        if (typeof imageryLayer._reprojectSampler === 'undefined') {
+            var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
+            imageryLayer._reprojectSampler = context.createSampler({
+                wrapS : TextureWrap.CLAMP,
+                wrapT : TextureWrap.CLAMP,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR,
+                maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
+            });
+        }
 
-        texture.setSampler({
-            wrapS : TextureWrap.CLAMP,
-            wrapT : TextureWrap.CLAMP,
-            minificationFilter : TextureMinificationFilter.LINEAR,
-            magnificationFilter : TextureMagnificationFilter.LINEAR,
-            maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
-        });
+        texture.setSampler(imageryLayer._reprojectSampler);
 
         var width = texture.getWidth();
         var height = texture.getHeight();

@@ -228,4 +228,4 @@ defineSuite([
         ellipsoidPrimitive = scene.getPrimitives().get(0);
         expect(ellipsoidPrimitive.dynamicObject).toEqual(testObject2);
     });
-});
+}, 'WebGL');

@@ -4,6 +4,7 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createCamera',
+         'Specs/createFrameState',
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
@@ -25,6 +26,7 @@ defineSuite([
          createContext,
          destroyContext,
          createCamera,
+         createFrameState,
          frameState,
          pick,
          render,
@@ -62,7 +64,7 @@ defineSuite([
         labels = new LabelCollection();
 
         us = context.getUniformState();
-        us.update(createCamera(context));
+        us.update(createFrameState(createCamera(context)));
     });
 
     afterEach(function() {
@@ -161,97 +163,63 @@ defineSuite([
     });
 
     it('can remove the first label', function() {
-        var one = labels.add({
-            position : {
-                x : 1.0,
-                y : 2.0,
-                z : 3.0
-            }
-        });
-        var two = labels.add({
-            position : {
-                x : 4.0,
-                y : 5.0,
-                z : 6.0
-            }
-        });
+        var one = labels.add();
+        var two = labels.add();
 
-        expect(labels.getLength()).toEqual(2);
+        expect(labels.contains(one)).toEqual(true);
+        expect(labels.contains(two)).toEqual(true);
 
         expect(labels.remove(one)).toEqual(true);
 
-        expect(labels.getLength()).toEqual(1);
-        expect(labels.get(0)).toBe(two);
+        expect(labels.contains(one)).toEqual(false);
+        expect(labels.contains(two)).toEqual(true);
     });
 
     it('can remove the last label', function() {
-        var one = labels.add({
-            position : {
-                x : 1.0,
-                y : 2.0,
-                z : 3.0
-            }
-        });
-        var two = labels.add({
-            position : {
-                x : 4.0,
-                y : 5.0,
-                z : 6.0
-            }
-        });
+        var one = labels.add();
+        var two = labels.add();
 
-        expect(labels.getLength()).toEqual(2);
+        expect(labels.contains(one)).toEqual(true);
+        expect(labels.contains(two)).toEqual(true);
 
         expect(labels.remove(two)).toEqual(true);
 
-        expect(labels.getLength()).toEqual(1);
-        expect(labels.get(0)).toBe(one);
+        expect(labels.contains(one)).toEqual(true);
+        expect(labels.contains(two)).toEqual(false);
     });
 
     it('returns false when removing undefined', function() {
-        labels.add({
-            position : {
-                x : 1.0,
-                y : 2.0,
-                z : 3.0
-            }
-        });
+        labels.add();
         expect(labels.getLength()).toEqual(1);
-
         expect(labels.remove(undefined)).toEqual(false);
         expect(labels.getLength()).toEqual(1);
     });
 
-    it('can add and remove labels', function() {
-        var one = labels.add({
-            position : {
-                x : 1.0,
-                y : 2.0,
-                z : 3.0
-            }
-        });
-        var two = labels.add({
-            position : {
-                x : 4.0,
-                y : 5.0,
-                z : 6.0
-            }
-        });
-        expect(labels.getLength()).toEqual(2);
-        expect(labels.get(0)).toBe(one);
-        expect(labels.get(1)).toBe(two);
+    it('adding and removing multiple labels works', function() {
+        var one = labels.add();
+        var two = labels.add();
+        var three = labels.add();
 
+        expect(labels.remove(one)).toEqual(true);
         expect(labels.remove(two)).toEqual(true);
-        var three = labels.add({
-            position : {
-                x : 7.0,
-                y : 8.0,
-                z : 9.0
-            }
-        });
+
+        expect(one.isDestroyed()).toEqual(true);
+        expect(two.isDestroyed()).toEqual(true);
+        expect(three.isDestroyed()).toEqual(false);
+
+        expect(labels.contains(one)).toEqual(false);
+        expect(labels.contains(two)).toEqual(false);
+        expect(labels.contains(three)).toEqual(true);
+
+        expect(labels.getLength()).toEqual(1);
+        expect(labels.get(0)).toBe(three);
+
+        var four = labels.add();
         expect(labels.getLength()).toEqual(2);
-        expect(labels.get(0)).toBe(one);
-        expect(labels.get(1)).toBe(three);
+        expect(labels.get(0)).toBe(three);
+        expect(labels.get(1)).toBe(four);
+        expect(labels.contains(three)).toEqual(true);
+        expect(labels.contains(four)).toEqual(true);
     });
 
     it('can remove all labels', function() {
@@ -986,7 +954,7 @@ defineSuite([
 
         it('does not equal undefined', function() {
             var label = labels.add();
-            expect(label.equals(undefined)).toEqual(false);
+            expect(label).not.toEqual(undefined);
         });
 
         it('should have a number of glyphs equal to the number of characters', function() {
@@ -1388,8 +1356,8 @@ defineSuite([
         ];
         var bs = BoundingSphere.fromPoints(projectedPositions);
         bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
-        expect(actual.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
-        expect(actual.radius > bs.radius).toEqual(true);
+        expect(bs.center).toEqualEpsilon(actual.center, CesiumMath.EPSILON8);
+        expect(bs.radius).toBeLessThan(actual.radius);
     });
 
     it('computes bounding sphere in 2D', function() {
@@ -1433,7 +1401,7 @@ defineSuite([
         ];
         var bs = BoundingSphere.fromPoints(projectedPositions);
         bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
-        expect(actual.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
-        expect(actual.radius > bs.radius).toEqual(true);
+        expect(bs.center).toEqualEpsilon(actual.center, CesiumMath.EPSILON8);
+        expect(bs.radius).toBeLessThan(actual.radius);
     });
-});
+}, 'WebGL');

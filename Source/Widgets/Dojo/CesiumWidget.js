@@ -8,12 +8,13 @@ define([
         'dojo/on',
         'dijit/_WidgetBase',
         'dijit/_TemplatedMixin',
+        '../../Core/defaultValue',
         '../../Core/BoundingRectangle',
         '../../Core/Ellipsoid',
         '../../Core/computeSunPosition',
-        '../../Core/EventHandler',
+        '../../Core/ScreenSpaceEventHandler',
         '../../Core/FeatureDetection',
-        '../../Core/MouseEventType',
+        '../../Core/ScreenSpaceEventType',
         '../../Core/Cartesian2',
         '../../Core/Cartesian3',
         '../../Core/JulianDate',
@@ -25,6 +26,8 @@ define([
         '../../Scene/BingMapsStyle',
         '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
+        '../../Scene/SkyBox',
+        '../../Scene/SkyAtmosphere',
         'dojo/text!./CesiumWidget.html'
     ], function (
         require,
@@ -35,12 +38,13 @@ define([
         on,
         _WidgetBase,
         _TemplatedMixin,
+        defaultValue,
         BoundingRectangle,
         Ellipsoid,
         computeSunPosition,
-        EventHandler,
+        ScreenSpaceEventHandler,
         FeatureDetection,
-        MouseEventType,
+        ScreenSpaceEventType,
         Cartesian2,
         Cartesian3,
         JulianDate,
@@ -52,6 +56,8 @@ define([
         BingMapsStyle,
         SingleTileImageryProvider,
         PerformanceDisplay,
+        SkyBox,
+        SkyAtmosphere,
         template) {
     "use strict";
 
@@ -61,10 +67,15 @@ define([
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
         dayImageUrl : undefined,
-        nightImageUrl : undefined,
-        specularMapUrl : undefined,
-        cloudsMapUrl : undefined,
-        bumpMapUrl : undefined,
+        /**
+         * Determines if a sky box with stars is drawn around the globe.  This is read-only after construction.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default true
+         * @see SkyBox
+         */
+        showSkyBox : true,
         resizeWidgetOnWindowResize : true,
 
         constructor : function() {
@@ -194,46 +205,42 @@ define([
             on(canvas, 'contextmenu', event.stop);
             on(canvas, 'selectstart', event.stop);
 
-            var context = scene.getContext();
-
-            var imageryUrl = '../../Assets/Imagery/';
-            var maxTextureSize = context.getMaximumTextureSize();
-            if (maxTextureSize < 4095) {
-                // Mobile, or low-end card
-                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_512.jpg');
-            } else {
-                // Desktop
-                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_4096.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_2048.jpg');
-                this.specularMapUrl = this.specularMapUrl || require.toUrl(imageryUrl + 'earthspec1k.jpg');
-                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl(imageryUrl + 'earthcloudmaptrans.jpg');
-                this.bumpMapUrl = this.bumpMapUrl || require.toUrl(imageryUrl + 'earthbump1k.jpg');
-            }
+            var imageryUrl = require.toUrl('../../Assets/Textures/');
+            this.dayImageUrl = defaultValue(this.dayImageUrl, imageryUrl + 'NE2_LR_LC_SR_W_DR_2048.jpg');
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
-            centralBody.showSkyAtmosphere = true;
-            centralBody.showGroundAtmosphere = true;
             centralBody.logoOffset = new Cartesian2(125, 0);
 
             this._configureCentralBodyImagery();
 
             scene.getPrimitives().setCentralBody(centralBody);
 
+            if (this.showSkyBox) {
+                scene.skyBox = new SkyBox({
+                    positiveX: imageryUrl + 'SkyBox/tycho8_px_80.jpg',
+                    negativeX: imageryUrl + 'SkyBox/tycho8_mx_80.jpg',
+                    positiveY: imageryUrl + 'SkyBox/tycho8_py_80.jpg',
+                    negativeY: imageryUrl + 'SkyBox/tycho8_my_80.jpg',
+                    positiveZ: imageryUrl + 'SkyBox/tycho8_pz_80.jpg',
+                    negativeZ: imageryUrl + 'SkyBox/tycho8_mz_80.jpg'
+                });
+            }
+
+            scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
+
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
+            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
-            this.centralBodyCameraController = camera.getControllers().addCentralBody();
-
-            var handler = new EventHandler(canvas);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), MouseEventType.LEFT_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleRightClick'), MouseEventType.RIGHT_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleMouseMove'), MouseEventType.MOVE);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftDown'), MouseEventType.LEFT_DOWN);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftUp'), MouseEventType.LEFT_UP);
-            handler.setMouseAction(lang.hitch(this, '_handleWheel'), MouseEventType.WHEEL);
-            handler.setMouseAction(lang.hitch(this, '_handleRightDown'), MouseEventType.RIGHT_DOWN);
-            handler.setMouseAction(lang.hitch(this, '_handleRightUp'), MouseEventType.RIGHT_UP);
+            var handler = new ScreenSpaceEventHandler(canvas);
+            handler.setInputAction(lang.hitch(this, '_handleLeftClick'), ScreenSpaceEventType.LEFT_CLICK);
+            handler.setInputAction(lang.hitch(this, '_handleRightClick'), ScreenSpaceEventType.RIGHT_CLICK);
+            handler.setInputAction(lang.hitch(this, '_handleMouseMove'), ScreenSpaceEventType.MOUSE_MOVE);
+            handler.setInputAction(lang.hitch(this, '_handleLeftDown'), ScreenSpaceEventType.LEFT_DOWN);
+            handler.setInputAction(lang.hitch(this, '_handleLeftUp'), ScreenSpaceEventType.LEFT_UP);
+            handler.setInputAction(lang.hitch(this, '_handleWheel'), ScreenSpaceEventType.WHEEL);
+            handler.setInputAction(lang.hitch(this, '_handleRightDown'), ScreenSpaceEventType.RIGHT_DOWN);
+            handler.setInputAction(lang.hitch(this, '_handleRightUp'), ScreenSpaceEventType.RIGHT_UP);
 
             if (widget.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {
@@ -255,21 +262,7 @@ define([
             camera.up = this.defaultCamera.up;
             camera.transform = this.defaultCamera.transform;
             camera.frustum = this.defaultCamera.frustum.clone();
-
-            var controllers = camera.getControllers();
-            controllers.removeAll();
-            this.centralBodyCameraController = controllers.addCentralBody();
-        },
-
-        areCloudsAvailable : function() {
-            return typeof this.centralBody.cloudsMapSource !== 'undefined';
-        },
-
-        enableClouds : function(useClouds) {
-            if (this.areCloudsAvailable()) {
-                this.centralBody.showClouds = useClouds;
-                this.centralBody.showCloudShadows = useClouds;
-            }
+            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
         },
 
         enableStatistics : function(showStatistics) {
@@ -283,11 +276,7 @@ define([
         },
 
         showSkyAtmosphere : function(show) {
-            this.centralBody.showSkyAtmosphere = show;
-        },
-
-        showGroundAtmosphere : function(show) {
-            this.centralBody.showGroundAtmosphere = show;
+            this.scene.skyAtmosphere.show = show;
         },
 
         enableStreamingImagery : function(value) {
@@ -311,10 +300,11 @@ define([
             }
         },
 
-        _sunPosition : new Cartesian3(),
+        initializeFrame : function(currentTime) {
+            this.scene.initializeFrame(currentTime);
+        },
 
         update : function(currentTime) {
-            this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
         },
 
         render : function() {
@@ -335,11 +325,6 @@ define([
             } else {
                 centralBody.getImageryLayers().addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
             }
-
-            centralBody.nightImageSource = this.nightImageUrl;
-            centralBody.specularMapSource = this.specularMapUrl;
-            centralBody.cloudsMapSource = this.cloudsMapUrl;
-            centralBody.bumpMapSource = this.bumpMapUrl;
         },
 
         autoStartRenderLoop : true,
@@ -352,6 +337,7 @@ define([
 
             function updateAndRender() {
                 var currentTime = new JulianDate();
+                widget.initializeFrame(currentTime);
                 widget.update(currentTime);
                 widget.render();
                 requestAnimationFrame(updateAndRender);

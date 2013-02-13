@@ -225,7 +225,6 @@ define([
             } else {
                 pyramidVisualizerIndex = this._pyramidCollection.length;
                 pyramid = new CustomSensorVolume();
-                pyramid.affectedByLighting = false;
 
                 this._pyramidCollection.push(pyramid);
                 this._primitives.add(pyramid);
@@ -257,7 +256,7 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(pyramid._visualizerPosition) ||
              !orientation.equals(pyramid._visualizerOrientation))) {
-            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, pyramid.modelMatrix);
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, pyramid.modelMatrix);
             position.clone(pyramid._visualizerPosition);
             orientation.clone(pyramid._visualizerOrientation);
         }

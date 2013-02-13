@@ -57,7 +57,7 @@ defineSuite([
         var rotation = new Matrix3(-1.0,  0.0, 0.0,
                                     0.0, -1.0, 0.0,
                                     0.0,  0.0, 1.0);
-        expect(Quaternion.fromRotationMatrix(rotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toEqual(true);
+        expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(q, CesiumMath.EPSILON15);
     });
 
     it('fromRotationMatrix works when m11 is max', function() {
@@ -65,7 +65,7 @@ defineSuite([
         var rotation = new Matrix3(-1.0, 0.0,  0.0,
                                     0.0, 1.0,  0.0,
                                     0.0, 0.0, -1.0);
-        expect(Quaternion.fromRotationMatrix(rotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toEqual(true);
+        expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(q, CesiumMath.EPSILON15);
     });
 
     it('fromRotationMatrix works when m00 is max', function() {
@@ -73,7 +73,7 @@ defineSuite([
         var rotation = new Matrix3(1.0,  0.0,  0.0,
                                    0.0, -1.0,  0.0,
                                    0.0,  0.0, -1.0);
-        expect(Quaternion.fromRotationMatrix(rotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toEqual(true);
+        expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(q, CesiumMath.EPSILON15);
     });
 
     it('fromRotationMatrix works when trace is greater than zero', function() {
@@ -89,6 +89,17 @@ defineSuite([
         var returnedResult = Quaternion.fromRotationMatrix(rotation, result);
         expect(returnedResult).toEqualEpsilon(q, CesiumMath.EPSILON15);
         expect(returnedResult).toBe(result);
+    });
+
+    it('fromRotationMatrix using a view matrix', function() {
+        var direction = new Cartesian3(-0.2349326833984488, 0.8513513009480378, 0.46904967396353314);
+        var up = new Cartesian3(0.12477198625717335, -0.4521499177166376, 0.8831717858696695);
+        var right = new Cartesian3(0.9639702203483635, 0.26601017702986895, 6.456422901079747e-10);
+        var matrix = new Matrix3( right.x,      right.y,      right.z,
+                                  up.x,         up.y,         up.z,
+                                 -direction.x, -direction.y, -direction.z);
+        var quaternion = Quaternion.fromRotationMatrix(matrix);
+        expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(matrix, CesiumMath.EPSILON12);
     });
 
     it('clone without a result parameter', function() {

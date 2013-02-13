@@ -37,15 +37,37 @@ defineSuite([
         loadImage.createImage = loadImage.defaultCreateImage;
     });
 
-    it('tileXYToQuadKey works for example in Bing Maps documentation', function() {
+    it('tileXYToQuadKey works for examples in Bing Maps documentation', function() {
         // http://msdn.microsoft.com/en-us/library/bb259689.aspx
-        // The level is 2 below instead of the 3 in the documentation because our levels
+        // Levels are off by one compared to the documentation because our levels
         // start at 0 while Bing's start at 1.
+        expect(BingMapsImageryProvider.tileXYToQuadKey(1, 0, 0)).toEqual('1');
+        expect(BingMapsImageryProvider.tileXYToQuadKey(1, 2, 1)).toEqual('21');
         expect(BingMapsImageryProvider.tileXYToQuadKey(3, 5, 2)).toEqual('213');
+        expect(BingMapsImageryProvider.tileXYToQuadKey(4, 7, 2)).toEqual('322');
     });
 
-    it('quadKeyToTileXY works for example in Bing Maps documentation', function() {
-        expect(BingMapsImageryProvider.quadKeyToTileXY('213')).toEqual({x:3, y:5, level:2});
+    it('quadKeyToTileXY works for examples in Bing Maps documentation', function() {
+        expect(BingMapsImageryProvider.quadKeyToTileXY('1')).toEqual({
+            x : 1,
+            y : 0,
+            level : 0
+        });
+        expect(BingMapsImageryProvider.quadKeyToTileXY('21')).toEqual({
+            x : 1,
+            y : 2,
+            level : 1
+        });
+        expect(BingMapsImageryProvider.quadKeyToTileXY('213')).toEqual({
+            x : 3,
+            y : 5,
+            level : 2
+        });
+        expect(BingMapsImageryProvider.quadKeyToTileXY('322')).toEqual({
+            x : 4,
+            y : 7,
+            level : 2
+        });
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -59,73 +81,6 @@ defineSuite([
             });
         }
         expect(constructWithoutServer).toThrow();
-    });
-
-    it('getIntensity returns 1.0 for aerial imagery less than level 8', function() {
-        var provider = new BingMapsImageryProvider({
-            server : 'fake.fake.net',
-            mapStyle : BingMapsStyle.AERIAL,
-            tileDiscardPolicy : new NeverTileDiscardPolicy()
-        });
-
-        expect(provider.getIntensity(0, 0, 0)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 1)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 2)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 3)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 4)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 5)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 6)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 7)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 8)).toEqual(0.2);
-        expect(provider.getIntensity(0, 0, 9)).toEqual(0.2);
-    });
-
-    it('getIntensity returns 1.0 for aerial-with-labels imagery less than level 8', function() {
-        var provider = new BingMapsImageryProvider({
-            server : 'fake.fake.net',
-            mapStyle : BingMapsStyle.AERIAL_WITH_LABELS,
-            tileDiscardPolicy : new NeverTileDiscardPolicy()
-        });
-
-        expect(provider.getIntensity(0, 0, 0)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 1)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 2)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 3)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 4)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 5)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 6)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 7)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 8)).toEqual(0.2);
-        expect(provider.getIntensity(0, 0, 9)).toEqual(0.2);
-    });
-
-    it('getIntensity returns 0.2 for non-aerial imagery', function() {
-        var provider = new BingMapsImageryProvider({
-            server : 'fake.fake.net',
-            mapStyle : BingMapsStyle.ROAD,
-            tileDiscardPolicy : new NeverTileDiscardPolicy()
-        });
-
-        expect(provider.getIntensity(0, 0, 0)).toEqual(0.2);
-        expect(provider.getIntensity(0, 0, 1)).toEqual(0.2);
-        expect(provider.getIntensity(0, 0, 2)).toEqual(0.2);
-        expect(provider.getIntensity(0, 0, 3)).toEqual(0.2);
-        expect(provider.getIntensity(0, 0, 4)).toEqual(0.2);
-        expect(provider.getIntensity(0, 0, 5)).toEqual(0.2);
-        expect(provider.getIntensity(0, 0, 6)).toEqual(0.2);
-        expect(provider.getIntensity(0, 0, 7)).toEqual(0.2);
-        expect(provider.getIntensity(0, 0, 8)).toEqual(0.2);
-        expect(provider.getIntensity(0, 0, 9)).toEqual(0.2);
-    });
-
-    it('getPoleIntensity returns 1.0 for any imagery', function() {
-        var provider = new BingMapsImageryProvider({
-            server : 'fake.fake.net',
-            mapStyle : BingMapsStyle.ROAD,
-            tileDiscardPolicy : new NeverTileDiscardPolicy()
-        });
-
-        expect(provider.getPoleIntensity()).toEqual(1.0);
     });
 
     it('can provide a root tile', function() {

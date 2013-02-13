@@ -32,7 +32,6 @@
         border-bottom: solid 2px #888;
         width: 100%;
         height: 50%;
-        z-index: -1;
     }
     .bottom {
         display: block;
@@ -43,7 +42,6 @@
         border-top: solid 2px #888;
         width: 100%;
         height: 50%;
-        z-index: -1;
     }
     #topbar {
         margin: 5px;
@@ -83,25 +81,15 @@
         var scene = new Cesium.Scene(canvas);
         var primitives = scene.getPrimitives();
 
-        var imageryUrl = '../../../Source/Assets/Imagery/';
+        var imageryUrl = '../../../Source/Assets/Textures/';
         var imageryProvider = new Cesium.SingleTileImageryProvider({
-            url : imageryUrl + 'NE2_50M_SR_W_2048.jpg'
+            url : imageryUrl + 'NE2_LR_LC_SR_W_DR_2048.jpg'
         });
 
         var cb = new Cesium.CentralBody(ellipsoid);
         cb.getImageryLayers().addImageryProvider(imageryProvider);
-        cb.nightImageSource = imageryUrl + 'land_ocean_ice_lights_2048.jpg';
-        cb.specularMapSource = imageryUrl + 'earthspec1k.jpg';
 
-        cb.showSkyAtmosphere = (canvas === canvas3D);
-        cb.showGroundAtmosphere = false;
         primitives.setCentralBody(cb);
-
-        scene.getCamera().getControllers().addCentralBody();
-
-        scene.setAnimation(function () {
-            scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
-        });
 
         // Prevent right-click from opening a context menu.
         canvas.oncontextmenu = function () {
@@ -114,12 +102,24 @@
     var scene3D = createScene(canvas3D);
     var scene2D = createScene(canvas2D);
 
+    scene3D.skyAtmosphere = new Cesium.SkyAtmosphere();
+    
     var transitioner = new Cesium.SceneTransitioner(scene2D);
     transitioner.to2D();
 
-    function tick() {
+    function render3D() {
+        scene3D.initializeFrame();
         scene3D.render();
+    }
+    
+    function render2D() {
+        scene2D.initializeFrame();
         scene2D.render();
+    }
+        
+    function tick() {
+        render3D();
+        render2D();
         Cesium.requestAnimationFrame(tick);
     }
     tick();

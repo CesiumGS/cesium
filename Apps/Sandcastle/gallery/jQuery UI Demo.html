@@ -34,7 +34,6 @@
         border: none;
         width: 100%;
         height: 100%;
-        z-index: -1;
     }
     #toolbar {
         margin: 5px;
@@ -81,27 +80,26 @@
     var cb = new Cesium.CentralBody(ellipsoid);
     cb.getImageryLayers().addImageryProvider(bing);
 
-    var imageryUrl = '../../../Source/Assets/Imagery/';
-    cb.nightImageSource = imageryUrl + 'land_ocean_ice_lights_2048.jpg';
-    cb.specularMapSource = imageryUrl + 'earthspec1k.jpg';
-    if (scene.getContext().getMaximumTextureSize() > 2048) {
-        cb.cloudsMapSource = imageryUrl + 'earthcloudmaptrans.jpg';
-        cb.bumpMapSource = imageryUrl + 'earthbump1k.jpg';
-    }
-    cb.showSkyAtmosphere = true;
-    cb.showGroundAtmosphere = true;
     primitives.setCentralBody(cb);
-
-    scene.getCamera().frustum.near = 1.0;
-    scene.getCamera().getControllers().addCentralBody();
-
+    scene.skyAtmosphere = new Cesium.SkyAtmosphere();
+    var imageryUrl = '../../../Source/Assets/Textures/';
+    scene.skyBox = new Cesium.SkyBox({
+        positiveX: imageryUrl + 'SkyBox/tycho8_px_80.jpg',
+        negativeX: imageryUrl + 'SkyBox/tycho8_mx_80.jpg',
+        positiveY: imageryUrl + 'SkyBox/tycho8_py_80.jpg',
+        negativeY: imageryUrl + 'SkyBox/tycho8_my_80.jpg',
+        positiveZ: imageryUrl + 'SkyBox/tycho8_pz_80.jpg',
+        negativeZ: imageryUrl + 'SkyBox/tycho8_mz_80.jpg'
+    });
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 
-    scene.setAnimation(function() {
-        scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
-    });
+    function animate() {
+        // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
+    }
 
     function tick() {
+        scene.initializeFrame();
+        animate();
         scene.render();
         Cesium.requestAnimationFrame(tick);
     }
@@ -127,20 +125,14 @@
     // 3D is the default view
     $('#mode3D').button("option", { icons: { primary: "ui-icon-check" }}
         ).click(function () {
-            cb.showSkyAtmosphere = true;
-            cb.showGroundAtmosphere = true;
             transitioner.morphTo3D();
         });
 
     $('#modeColumbus').click(function () {
-        cb.showSkyAtmosphere = false;
-        cb.showGroundAtmosphere = false;
         transitioner.morphToColumbusView();
     });
 
     $('#mode2D').click(function () {
-        cb.showSkyAtmosphere = false;
-        cb.showGroundAtmosphere = false;
         transitioner.morphTo2D();
     });
 

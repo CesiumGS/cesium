@@ -13,8 +13,8 @@ void main()
 {
     vec4 p = czm_columbusViewMorph(vec3(u_height, position2D), position3D, u_morphTime);
 
-    v_positionMC = position3D;                                      // position in model coordinates
-    v_positionEC = (czm_modelView * vec4(position3D, 1.0)).xyz;     // position in eye coordinates
+    v_positionMC = position3D;                      // position in model coordinates
+    v_positionEC = (czm_modelView * p).xyz;         // position in eye coordinates
     v_textureCoordinates = textureCoordinates;
-    gl_Position = czm_modelViewProjection * p;                      // position in clip coordinates
+    gl_Position = czm_modelViewProjection * p;      // position in clip coordinates
 }

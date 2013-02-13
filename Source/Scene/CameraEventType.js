@@ -38,7 +38,15 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        WHEEL : new Enumeration(3, 'WHEEL')
+        WHEEL : new Enumeration(3, 'WHEEL'),
+
+        /**
+         * A two-finger touch on a touch surface.
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        PINCH : new Enumeration(4, 'PINCH')
     };
 
     return CameraEventType;

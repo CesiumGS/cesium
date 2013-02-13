@@ -624,4 +624,4 @@ defineSuite([
             });
         }).toThrow();
     });
-});
+}, 'WebGL');

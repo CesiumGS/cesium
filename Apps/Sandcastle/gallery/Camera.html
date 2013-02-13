@@ -51,7 +51,6 @@
         border: none;
         width: 100%;
         height: 100%;
-        z-index: -1;
     }
     #toolbar {
         padding: 2px 5px;
@@ -71,29 +70,64 @@ require([
     on, dom, ToggleButton)
 {
     "use strict";
-
+    
+    function disableInput(scene) {
+        var controller = scene.getScreenSpaceCameraController();
+        controller.enableTranslate = false;
+        controller.enableZoom = false;
+        controller.enableRotate = false;
+        controller.enableTilt = false;
+        controller.enableLook = false;
+    }
+    
+    function enableInput(scene) {
+        var controller = scene.getScreenSpaceCameraController();
+        controller.enableTranslate = true;
+        controller.enableZoom = true;
+        controller.enableRotate = true;
+        controller.enableTilt = true;
+        controller.enableLook = true;
+    }
+    
     function flyToSanDiego(scene) {
         Sandcastle.declare(flyToSanDiego);    // For highlighting in Sandcastle.
-        scene.getCamera().getControllers().addFlight({
-            destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-                Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0)),
-            duration: 3.0
-        });
+        var destination = Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0);
+        
+        // only fly there if it is not the camera's current position
+        if (!Cesium.Ellipsoid.WGS84.cartographicToCartesian(destination).equalsEpsilon(scene.getCamera().getPositionWC(), Cesium.Math.EPSILON6)) {
+            disableInput(scene);
+            var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
+                destination : destination,
+                onComplete : function() {
+                    enableInput(scene);
+                }
+            });
+            scene.getAnimations().add(flight);
+        }
     }
     
     function flyToMyLocation(scene) {
         Sandcastle.declare(flyToMyLocation);    // For highlighting in Sandcastle.
         function fly(position) {
-            scene.getCamera().getControllers().addFlight({
-                destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-                    Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 10000.0)),
-                duration: 3.0
-            });
+            var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
+            destination = Cesium.Ellipsoid.WGS84.cartographicToCartesian(destination);
+            
+            // only fly there if it is not the camera's current position
+            if (!destination.equalsEpsilon(scene.getCamera().getPositionWC(), Cesium.Math.EPSILON6)) {
+                disableInput(scene);
+                var flight = Cesium.CameraFlightPath.createAnimation(scene.getFrameState(), {
+                    destination : destination,
+                    onComplete : function() {
+                        enableInput(scene);
+                    }
+                });
+                scene.getAnimations().add(flight);
+            }
         }
         
         navigator.geolocation.getCurrentPosition(fly);
     }
-    
+
     function viewAnExtent(scene) {
         Sandcastle.declare(viewAnExtent);   // For highlighting in Sandcastle.
         var west = Cesium.Math.toRadians(-77.0);
@@ -102,7 +136,7 @@ require([
         var north = Cesium.Math.toRadians(42.0);
         
         var extent = new Cesium.Extent(west, south, east, north);
-        scene.viewExtent(extent, Cesium.Ellipsoid.WGS84);
+        scene.getCamera().controller.viewExtent(extent, Cesium.Ellipsoid.WGS84);
         
         // Show the extent.  Not required; just for show.
         var polylines = new Cesium.PolylineCollection();
@@ -117,28 +151,118 @@ require([
         scene.getPrimitives().add(polylines);
     }
     
+    function eastNorthUp(scene) {
+        Sandcastle.declare(eastNorthUp);   // For highlighting in Sandcastle.
+        var center = Cesium.Ellipsoid.WGS84.cartographicToCartesian(
+            Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+        var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+
+        // View in east-north-up frame
+        var camera = scene.getCamera();
+        camera.transform = transform;
+        camera.controller.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
+        
+        var controller = scene.getScreenSpaceCameraController();
+        controller.setEllipsoid(Cesium.Ellipsoid.UNIT_SPHERE);
+        controller.enableTilt = false;
+
+        // Zoom in
+        camera.controller.lookAt(
+            new Cesium.Cartesian3(120000.0, 120000.0, 120000.0),
+            Cesium.Cartesian3.ZERO,
+            Cesium.Cartesian3.UNIT_Z);
+
+        // Show reference frame.  Not required.
+        var primitives = scene.getPrimitives();
+        var polylines = new Cesium.PolylineCollection();
+        polylines.modelMatrix = transform;
+        
+        var xAxis = {
+                color : new Cesium.Color(1.0, 0.0, 0.0, 1.0),
+                positions : [
+                    Cesium.Cartesian3.ZERO,
+                    new Cesium.Cartesian3(100000.0, 0.0, 0.0)
+                ]
+        };
+        polylines.add(xAxis);
+        
+        var yAxis = {
+                color : new Cesium.Color(0.0, 1.0, 0.0, 1.0),
+                positions : [
+                    Cesium.Cartesian3.ZERO,
+                    new Cesium.Cartesian3(0.0, 100000.0, 0.0)
+                ]
+        };
+        polylines.add(yAxis);
+        
+        var zAxis = {
+                color : new Cesium.Color(0.0, 0.0, 1.0, 1.0),
+                positions : [
+                    Cesium.Cartesian3.ZERO,
+                    new Cesium.Cartesian3(0.0, 0.0, 100000.0)
+                ]
+        };
+        polylines.add(zAxis);
+        
+        primitives.add(polylines);
+    }
+    
+    function reset(scene) {
+        scene.getPrimitives().removeAll();
+        scene.getAnimations().removeAll();
+        enableInput(scene);
+        
+        var camera = scene.getCamera();
+        if (camera.transform.equals(Cesium.Matrix4.IDENTITY)) {
+            return;
+        }
+        
+        camera.transform = Cesium.Matrix4.IDENTITY;
+        camera.controller.constrainedAxis = undefined;
+        camera.controller.lookAt(
+            new Cesium.Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.0 * Cesium.Ellipsoid.WGS84.getMaximumRadius()),
+            Cesium.Cartesian3.ZERO,
+            Cesium.Cartesian3.UNIT_Z);
+        
+        var controller = scene.getScreenSpaceCameraController();
+        controller.setEllipsoid(Cesium.Ellipsoid.WGS84);
+        controller.enableTilt = true;
+    }
+    
     function createButtons(scene) {
         new ToggleButton({
             label: "Fly to San Diego",
             onClick: function() {
+                reset(scene);
                 flyToSanDiego(scene);
                 Sandcastle.highlight(flyToSanDiego);
             }
         }).placeAt('toolbar');
-        
+
         new ToggleButton({
             label: "Fly to My Location",
             onClick: function() {
+                reset(scene);
                 flyToMyLocation(scene);
                 Sandcastle.highlight(flyToMyLocation);
             }
         }).placeAt('toolbar');
-
+        
         new ToggleButton({
             label: "View an Extent",
             onClick: function() {
+                reset(scene);
                 viewAnExtent(scene);
                 Sandcastle.highlight(viewAnExtent);
+            }
+        }).placeAt('toolbar');
+        
+        new ToggleButton({
+            label: "Set camera reference frame",
+            onClick: function() {
+                reset(scene);
+                eastNorthUp(scene);
+                Sandcastle.highlight(eastNorthUp);
             }
         }).placeAt('toolbar');
     }
@@ -146,6 +270,7 @@ require([
     var widget = new CesiumWidget();
     widget.placeAt(dom.byId('cesiumContainer'));
     widget.startup();
+    
     dom.byId('toolbar').innerHTML = '';
 
     createButtons(widget.scene);

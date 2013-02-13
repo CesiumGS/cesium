@@ -32,32 +32,31 @@
 </head>
 <body class="claro" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
-body {
-    background: #000;
-    color: #eee;
-    font-family: sans-serif;
-    font-size: 9pt;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-.fullSize {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    border: none;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-}
-#toolbar {
-    margin: 5px;
-    padding: 2px 5px;
-    position: absolute;
-}
+    body {
+        background: #000;
+        color: #eee;
+        font-family: sans-serif;
+        font-size: 9pt;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    .fullSize {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        border: none;
+        width: 100%;
+        height: 100%;
+    }
+    #toolbar {
+        margin: 5px;
+        padding: 2px 5px;
+        position: absolute;
+    }
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
@@ -105,9 +104,6 @@ require([
     widget.startup();
     dom.byId('toolbar').innerHTML = '';
 
-    widget.showSkyAtmosphere(false);
-    widget.showGroundAtmosphere(false);
-    widget.scene.getPrimitives().getCentralBody().affectedByLighting = false;
     var transitioner = new Cesium.SceneTransitioner(widget.scene);
     transitioner.to2D();
 

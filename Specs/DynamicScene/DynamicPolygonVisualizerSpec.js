@@ -211,4 +211,4 @@ defineSuite([
         primitive = scene.getPrimitives().get(0);
         expect(primitive.dynamicObject).toEqual(testObject2);
     });
-});
+}, 'WebGL');

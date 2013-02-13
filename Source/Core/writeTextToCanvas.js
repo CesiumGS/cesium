@@ -54,14 +54,14 @@ define([
 
         // in order for measureText to calculate style, the canvas has to be
         // (temporarily) added to the DOM.
-        canvas.style.display = 'hidden';
+        canvas.style.visibility = 'hidden';
         document.body.appendChild(canvas);
 
         var dimensions = measureText(context2D, text);
         canvas.dimensions = dimensions;
 
         document.body.removeChild(canvas);
-        canvas.style.display = undefined;
+        canvas.style.visibility = undefined;
 
         var baseline = dimensions.height - dimensions.ascent;
         canvas.width = dimensions.width;
@@ -74,14 +74,14 @@ define([
         var fill = defaultValue(description.fill, true);
         if (fill) {
             var fillColor = defaultValue(description.fillColor, Color.WHITE);
-            context2D.fillStyle = fillColor.toCSSColor();
+            context2D.fillStyle = fillColor.toCssColorString();
             context2D.fillText(text, 0, y);
         }
 
         var stroke = defaultValue(description.stroke, false);
         if (stroke) {
             var strokeColor = defaultValue(description.strokeColor, Color.BLACK);
-            context2D.strokeStyle = strokeColor.toCSSColor();
+            context2D.strokeStyle = strokeColor.toCssColorString();
             context2D.strokeText(text, 0, y);
         }
 

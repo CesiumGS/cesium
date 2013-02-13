@@ -4,6 +4,7 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createCamera',
+         'Specs/createFrameState',
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
@@ -15,6 +16,7 @@ defineSuite([
          'Core/Extent',
          'Core/Matrix4',
          'Core/Math',
+         'Core/JulianDate',
          'Renderer/BufferUsage',
          'Scene/SceneMode'
      ], function(
@@ -22,6 +24,7 @@ defineSuite([
          createContext,
          destroyContext,
          createCamera,
+         createFrameState,
          frameState,
          pick,
          render,
@@ -33,6 +36,7 @@ defineSuite([
          Extent,
          Matrix4,
          CesiumMath,
+         JulianDate,
          BufferUsage,
          SceneMode) {
     "use strict";
@@ -54,7 +58,7 @@ defineSuite([
         polygon = new Polygon();
 
         us = context.getUniformState();
-        us.update(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z));
+        us.update(createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
     });
 
     afterEach(function() {
@@ -222,18 +226,6 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
-    it('renders without lighting', function() {
-        // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
-        polygon = createPolygon();
-        polygon.affectedByLighting = false;
-
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, polygon);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-    });
-
     it('renders extent', function() {
         // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
 
@@ -384,7 +376,7 @@ defineSuite([
 
         var sphere = BoundingSphere.fromPoints(projectedPositions);
         sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
-        expect(boundingVolume.center.equalsEpsilon(sphere.center, CesiumMath.EPSILON9)).toEqual(true);
+        expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON9);
         expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON9);
     }
 
@@ -480,4 +472,4 @@ defineSuite([
             render(context, frameState, polygon);
         }).toThrow();
     });
-});
+}, 'WebGL');

@@ -15,7 +15,7 @@
 
 	<target name="compile">
 		<mkdir dir="${build.dir}" />
-		<javac destdir="${build.dir}" debug="on" includeantruntime="false">
+		<javac destdir="${build.dir}" debug="on" includeantruntime="false" source="1.6" target="1.6">
 			<src path="${src.dir}" />
 			<classpath>
 				<path refid="task.classpath" />

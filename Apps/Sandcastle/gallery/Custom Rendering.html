@@ -51,7 +51,6 @@
         border: none;
         width: 100%;
         height: 100%;
-        z-index: -1;
     }
     #toolbar {
         margin: 5px;
@@ -388,8 +387,6 @@ require([
         sceneMenu.addChild(new MenuItem({
             label: '2D',
             onClick: function() {
-                centralBody.showSkyAtmosphere = false;
-                centralBody.showGroundAtmosphere = false;
                 transitioner.morphTo2D();
             }
         }));
@@ -397,8 +394,6 @@ require([
         sceneMenu.addChild(new MenuItem({
             label: 'Columbus View',
             onClick: function() {
-                centralBody.showSkyAtmosphere = false;
-                centralBody.showGroundAtmosphere = false;
                 transitioner.morphToColumbusView();
             }
         }));
@@ -406,8 +401,6 @@ require([
         sceneMenu.addChild(new MenuItem({
             label: '3D',
             onClick: function() {
-                centralBody.showSkyAtmosphere = true;
-                centralBody.showGroundAtmosphere = true;
                 transitioner.morphTo3D();
             }
         }));

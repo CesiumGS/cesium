@@ -87,4 +87,4 @@ defineSuite([
             view.update(new JulianDate());
         }).toThrow();
     });
-});
+}, 'WebGL');
