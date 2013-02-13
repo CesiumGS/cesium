@@ -399,6 +399,9 @@ define([
                 traversalQueue.enqueue(tile);
             } else {
                 ++debug.tilesCulled;
+                if (!tile.isRenderable) {
+                    ++debug.tilesWaitingForChildren;
+                }
             }
         }
 
