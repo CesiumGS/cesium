@@ -9,7 +9,8 @@ defineSuite([
          'Scene/ImageryLayerCollection',
          'Scene/TerrainState',
          'Scene/TileState',
-         'Scene/WebMercatorTilingScheme'
+         'Scene/WebMercatorTilingScheme',
+         'ThirdParty/when'
      ], function(
          Tile,
          createContext,
@@ -20,7 +21,8 @@ defineSuite([
          ImageryLayerCollection,
          TerrainState,
          TileState,
-         WebMercatorTilingScheme) {
+         WebMercatorTilingScheme,
+         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -138,6 +140,7 @@ defineSuite([
     describe('processStateMachine', function() {
         var context;
         var alwaysDeferTerrainProvider;
+        var alwaysFailTerrainProvider;
         var realTerrainProvider;
 
         var tilingScheme;
@@ -154,6 +157,23 @@ defineSuite([
                     },
                     getTilingScheme : function() {
                         return tilingScheme;
+                    },
+                    hasWaterMask : function() {
+                        return true;
+                    }
+            };
+
+            alwaysFailTerrainProvider = {
+                    requestTileGeometry : function(x, y, level) {
+                        var deferred = when.defer();
+                        deferred.reject();
+                        return deferred.promise;
+                    },
+                    getTilingScheme : function() {
+                        return tilingScheme;
+                    },
+                    hasWaterMask : function() {
+                        return true;
                     }
             };
 
@@ -172,6 +192,12 @@ defineSuite([
             rootTile = rootTiles[0];
             imageryLayerCollection = new ImageryLayerCollection();
 
+        });
+
+        afterEach(function() {
+            for (var i = 0; i < rootTiles.length; ++i) {
+                rootTiles[i].freeResources();
+            }
         });
 
         it('starts in the START state', function() {
@@ -336,7 +362,134 @@ defineSuite([
             }, 'child to be loaded and grandchild to be re-upsampled');
 
             runs(function() {
+                expect(greatGrandchildTile.upsampledTerrain).toBeDefined();
                 expect(greatGrandchildTile.upsampledTerrain).not.toBe(greatGrandchildUpsampledTerrain);
+            });
+        });
+
+        it('releases previous upsampled water mask when a real one is loaded', function() {
+            var childTile = rootTile.getChildren()[0];
+
+            waitsFor(function() {
+                rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
+                childTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
+                return rootTile.isRenderable && childTile.isRenderable;
+            }, 'root and child tile to be renderable');
+
+            var childWaterMaskTexture;
+            var referenceCount;
+
+            runs(function() {
+               expect(childTile.waterMaskTexture).toBeDefined();
+               childWaterMaskTexture = childTile.waterMaskTexture;
+               referenceCount = childWaterMaskTexture.referenceCount;
+            });
+
+            waitsFor(function() {
+                childTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
+                return childTile.state === TileState.READY;
+            }, 'child tile to be ready');
+
+            runs(function() {
+                expect(childTile.waterMaskTexture).toBeDefined();
+                expect(childTile.waterMaskTexture).not.toBe(childWaterMaskTexture);
+                expect(childWaterMaskTexture.referenceCount + 1).toBe(referenceCount);
+            });
+        });
+
+        it('upsampled terrain is used when real terrain fails to load', function() {
+            var childTile = rootTile.getChildren()[0];
+
+            waitsFor(function() {
+                rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
+                childTile.processStateMachine(context, alwaysFailTerrainProvider, imageryLayerCollection);
+                return rootTile.isRenderable && childTile.isRenderable;
+            }, 'root and child tile to be renderable');
+
+            runs(function() {
+                expect(childTile.loadedTerrain).toBeUndefined();
+                expect(childTile.state).toBe(TileState.READY);
+            });
+        });
+
+        it('child of loaded tile is not re-upsampled or re-loaded if it is already loaded', function() {
+            var childTile = rootTile.getChildren()[0];
+            var grandchildTile = childTile.getChildren()[0];
+
+            waitsFor(function() {
+                rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
+                childTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
+                return rootTile.loadedTerrain.state.value >= TerrainState.RECEIVED &&
+                       childTile.upsampledTerrain.state.value >= TerrainState.RECEIVED;
+            }, 'root to be loaded and child to be upsampled');
+
+            runs(function() {
+                // Mark the grandchild as present even though the child is upsampled.
+                childTile.terrainData._childTileMask = 15;
+            });
+
+            waitsFor(function() {
+                grandchildTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
+                return grandchildTile.state === TileState.READY;
+            }, 'grandchild to be ready');
+
+            runs(function() {
+                expect(grandchildTile.loadedTerrain).toBeUndefined();
+                expect(grandchildTile.upsampledTerrain).toBeUndefined();
+            });
+
+            waitsFor(function() {
+                childTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
+                return childTile.state === TileState.READY;
+            });
+
+            runs(function() {
+                expect(grandchildTile.state).toBe(TileState.READY);
+                expect(grandchildTile.loadedTerrain).toBeUndefined();
+                expect(grandchildTile.upsampledTerrain).toBeUndefined();
+            });
+        });
+
+        it('child of upsampled tile is not re-upsampled if it is already loaded', function() {
+            var childTile = rootTile.getChildren()[0];
+            var grandchildTile = childTile.getChildren()[0];
+            var greatGrandchildTile = grandchildTile.getChildren()[0];
+
+            waitsFor(function() {
+                rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
+                childTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
+                grandchildTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
+                return rootTile.loadedTerrain.state.value >= TerrainState.RECEIVED &&
+                       childTile.upsampledTerrain.state.value >= TerrainState.RECEIVED &&
+                       grandchildTile.upsampledTerrain.state.value >= TerrainState.RECEIVED;
+            }, 'root to be loaded and child and grandchild to be upsampled');
+
+            runs(function() {
+                // Mark the great-grandchild as present even though the grandchild is upsampled.
+                grandchildTile.terrainData._childTileMask = 15;
+            });
+
+            waitsFor(function() {
+                greatGrandchildTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
+                return greatGrandchildTile.state === TileState.READY;
+            }, 'great-grandchild to be ready');
+
+            runs(function() {
+                expect(greatGrandchildTile.loadedTerrain).toBeUndefined();
+                expect(greatGrandchildTile.upsampledTerrain).toBeUndefined();
+            });
+
+            waitsFor(function() {
+                childTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
+                grandchildTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
+                return childTile.state === TileState.READY &&
+                       typeof grandchildTile.upsampledTerrain === 'undefined';
+            });
+
+            runs(function() {
+                expect(greatGrandchildTile.state).toBe(TileState.READY);
+                expect(greatGrandchildTile.loadedTerrain).toBeUndefined();
+                expect(greatGrandchildTile.upsampledTerrain).toBeUndefined();
             });
         });
     }, 'WebGL');

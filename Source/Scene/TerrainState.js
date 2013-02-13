@@ -7,13 +7,12 @@ define(['../Core/Enumeration'], function(Enumeration) {
      */
     var TerrainState = {
         FAILED : new Enumeration(0, 'FAILED'),
-        NOT_AVAILABLE : new Enumeration(1, 'NOT_AVAILABLE'),
-        UNLOADED : new Enumeration(2, 'UNLOADED'),
-        RECEIVING : new Enumeration(3, 'RECEIVING'),
-        RECEIVED : new Enumeration(4, 'RECEIVED'),
-        TRANSFORMING : new Enumeration(5, 'TRANSFORMING'),
-        TRANSFORMED : new Enumeration(6, 'TRANSFORMED'),
-        READY : new Enumeration(7, 'READY')
+        UNLOADED : new Enumeration(1, 'UNLOADED'),
+        RECEIVING : new Enumeration(2, 'RECEIVING'),
+        RECEIVED : new Enumeration(3, 'RECEIVED'),
+        TRANSFORMING : new Enumeration(4, 'TRANSFORMING'),
+        TRANSFORMED : new Enumeration(5, 'TRANSFORMED'),
+        READY : new Enumeration(6, 'READY')
     };
 
     return TerrainState;

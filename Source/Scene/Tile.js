@@ -497,7 +497,7 @@ define([
                 // No further loading or upsampling is necessary.
                 tile.loadedTerrain = undefined;
                 tile.upsampledTerrain = undefined;
-            } else if (loaded.state === TerrainState.FAILED || loaded.state === TerrainState.NOT_AVAILABLE) {
+            } else if (loaded.state === TerrainState.FAILED) {
                 // Loading failed for some reason, or data is simply not available,
                 // so no need to continue trying to load.  Any retrying will happen before we
                 // reach this point.
@@ -518,7 +518,7 @@ define([
 
                     // If the terrain provider has a water mask, "upsample" that as well
                     // by computing texture translation and scale.
-                    if (terrainProvider.hasWaterMask) {
+                    if (terrainProvider.hasWaterMask()) {
                         upsampleWaterMask(tile, context);
                     }
 
@@ -531,7 +531,7 @@ define([
 
                 // No further upsampling is necessary.  We need to continue loading, though.
                 tile.upsampledTerrain = undefined;
-            } else if (upsampled.state === TerrainState.FAILED || upsampled.state === TerrainState.NOT_AVAILABLE) {
+            } else if (upsampled.state === TerrainState.FAILED) {
                 // Upsampling failed for some reason.  This is pretty much a catastrophic failure,
                 // but maybe we'll be saved by loading.
                 tile.upsampledTerrain = undefined;
@@ -627,10 +627,6 @@ define([
                         if (typeof childTile.loadedTerrain === 'undefined') {
                             // No load process is in progress, so start one.
                             childTile.loadedTerrain = new TileTerrain();
-                        } else if (childTile.loadedTerrain.state === TerrainState.NOT_AVAILABLE) {
-                            // The load process has concluded terrain data is not available,
-                            // which is not true.  Reboot the load process.
-                            childTile.loadedTerrain.freeResources();
                         }
                     }
 
