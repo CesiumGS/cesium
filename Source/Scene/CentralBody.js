@@ -262,6 +262,8 @@ define([
     /**
      * Gets the collection of image layers that will be rendered on this central body.
      *
+     * @memberof CentralBody
+     *
      * @returns {ImageryLayerCollection}
      */
     CentralBody.prototype.getImageryLayers = function() {
