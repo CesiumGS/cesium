@@ -99,6 +99,7 @@
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
 	<property name="dojoPath" location="${thirdPartyDirectory}/dojo-release-1.8.3-src" />
+	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-r12/jshint.js" />
 
 	<!-- Outputs -->
 	<property name="buildDirectory" location="Build" />
@@ -132,6 +133,36 @@
 		<attribute name="output" />
 		<element name="demos" type="fileset" />
 	</scriptdef>
+
+	<target name="jsHint">
+		<scriptdef name="runJsHint" language="javascript" src="${tasksDirectory}/runJsHint.js" manager="bsf">
+			<attribute name="jshintpath" />
+			<attribute name="jshintoptions" />
+			<attribute name="failureproperty" />
+			<element name="sourcefiles" type="fileset" />
+			<classpath path="${toolsDirectory}/rhino-1.7R4/js.jar" />
+			<classpath path="${toolsDirectory}/bsf-2.4.0/bsf.jar" />
+			<classpath path="${toolsDirectory}/commons-logging-1.1.1/commons-logging-1.1.1.jar" />
+		</scriptdef>
+
+		<property file="${basedir}/.settings/com.eclipsesource.jshint.ui.prefs" prefix="jsHintEclipseSettings" />
+		<runJsHint jshintpath="${jsHintPath}" jshintoptions="${jsHintEclipseSettings.options}" failureproperty="jsHint.failure">
+			<sourcefiles dir="${basedir}">
+				<include name="Source/**/*.js" />
+				<exclude name="Source/Shaders/**" />
+				<exclude name="Source/ThirdParty/**" />
+				<exclude name="Source/Workers/cesiumWorkerBootstrapper.js" />
+
+				<include name="Apps/**/*.js" />
+				<exclude name="Apps/Sandcastle/Cesium-hint.js" />
+
+				<include name="Specs/**/*.js" />
+
+				<include name="Tools/buildTasks/**/*.js" />
+			</sourcefiles>
+		</runJsHint>
+		<fail if="jsHint.failure" message="JSHint failed!" />
+	</target>
 
 	<target name="combineJavaScript.setNodePathValue">
 		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/windows/node.exe">
