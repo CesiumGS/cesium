@@ -15,6 +15,7 @@ define([
      * Provides details about an error that occurred in an {@link ImageryProvider} or a {@link TerrainProvider}.
      *
      * @alias TileProviderError
+     * @constructor
      *
      * @param {ImageryProvider|TerrainProvider} provider The imagery or terrain provider that experienced the error.
      * @param {String} message A message describing the error.

@@ -26,7 +26,7 @@ define([
     /**
      * A {@link TerrainProvider} that produces geometry by tessellating height maps
      * retrieved from a Cesium terrain server.  The format of the terrain tiles is described on the
-     * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Cesium-Terrain-Server Cesium wiki}.
+     * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Cesium-Terrain-Server|Cesium wiki}.
      *
      * @alias CesiumTerrainProvider
      * @constructor
