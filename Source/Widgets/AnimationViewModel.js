@@ -25,6 +25,7 @@ define(['./Command',
     "use strict";
 
     var _monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var _realtimeShuttleRingAngle = 15;
     var _maxShuttleRingAngle = 105;
 
     function _cancelRealtime(clockViewModel) {
@@ -49,47 +50,38 @@ define(['./Command',
     }
 
     function angle2Multiplier(angle, shuttleRingTicks) {
-        //If the angle is less than 1, just use it for the position
-        if (Math.abs(angle) < 1) {
-            return angle;
-        }
-
-        var minp = 1;
+        var minp = _realtimeShuttleRingAngle;
         var maxp = _maxShuttleRingAngle;
-        var maxv;
+        var maxv = Math.log(shuttleRingTicks[shuttleRingTicks.length - 1]);
         var minv = 0;
-        var scale;
-        if (angle > 0) {
-            maxv = Math.log(shuttleRingTicks[shuttleRingTicks.length - 1]);
-            scale = (maxv - minv) / (maxp - minp);
-            return Math.exp(minv + scale * (angle - minp));
-        }
+        var scale = (maxv - minv) / (maxp - minp);
+        var speed = Math.exp(minv + scale * (Math.abs(angle) - minp));
 
-        maxv = Math.log(-shuttleRingTicks[0]);
-        scale = (maxv - minv) / (maxp - minp);
-        return -Math.exp(minv + scale * (Math.abs(angle) - minp));
+        if (speed > 1e-8) {
+            var round = Math.pow(10, Math.floor((Math.log(speed) / Math.LN10) + 0.0001) - 1);
+            speed = Math.round(speed / round) * round;
+            if (speed > 10) {
+                speed = Math.round(speed);
+            }
+        }
+        if (angle < 0) {
+            speed = -speed;
+        }
+        return speed;
     }
 
     function multiplier2Angle(multiplier, shuttleRingTicks) {
-        if (Math.abs(multiplier) < 1) {
-            return multiplier;
-        }
-
-        var minp = 1;
+        var minp = _realtimeShuttleRingAngle;
         var maxp = _maxShuttleRingAngle;
-        var maxv;
+        var maxv = Math.log(shuttleRingTicks[shuttleRingTicks.length - 1]);
         var minv = 0;
-        var scale;
+        var scale = (maxv - minv) / (maxp - minp);
+        var angle = Math.max(1, (Math.log(Math.abs(multiplier)) - minv) / scale + minp);
 
-        if (multiplier > 0) {
-            maxv = Math.log(shuttleRingTicks[shuttleRingTicks.length - 1]);
-            scale = (maxv - minv) / (maxp - minp);
-            return (Math.log(multiplier) - minv) / scale + minp;
+        if (multiplier < 0) {
+            angle = -angle;
         }
-
-        maxv = Math.log(-shuttleRingTicks[0]);
-        scale = (maxv - minv) / (maxp - minp);
-        return -((Math.log(Math.abs(multiplier)) - minv) / scale + minp);
+        return angle;
     }
 
     /**
@@ -191,8 +183,15 @@ define(['./Command',
             }
 
             var multiplier = clockViewModel.multiplier();
-            if (multiplier % 1 === 0) {
-                return multiplier + 'x';
+            var positiveMultiplier = Math.abs(multiplier);
+            if (positiveMultiplier >= 10 || multiplier % 1 === 0) {
+                return multiplier.toFixed(0) + 'x';
+            }
+            if (positiveMultiplier >= 1) {
+                return multiplier.toFixed(1) + 'x';
+            }
+            if (positiveMultiplier >= 0.1) {
+                return multiplier.toFixed(2) + 'x';
             }
             return multiplier.toFixed(3) + 'x';
         });
@@ -294,9 +293,6 @@ define(['./Command',
                 angle = Math.max(Math.min(angle, _maxShuttleRingAngle), -_maxShuttleRingAngle);
                 var multiplier = angle2Multiplier(angle, that._shuttleRingTicks());
                 if (multiplier !== 0) {
-                    if (Math.abs(multiplier) > 1) {
-                        multiplier = Math.round(multiplier);
-                    }
                     clockViewModel.multiplier(multiplier);
                     clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
                 }
