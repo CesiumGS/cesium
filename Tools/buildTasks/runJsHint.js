@@ -14,7 +14,15 @@ var load = Main.global.load;
 load(jsHintPath); /*global JSHINT*/
 
 var jsHintOptions = eval('({' + attributes.get('jshintoptions') + '})');
+
+var sandcastleJsHintOptionsPath = attributes.get('sandcastlejshintoptionspath');
+load(sandcastleJsHintOptionsPath);/*global sandcastleJsHintOptions*/
+
 var errors = [];
+
+var jsFileRegex = /\.js$/i;
+var htmlFileRegex = /\.html$/i;
+var sandcastleScriptRegex = /<script id="cesium_sandcastle_script">([\S\s]*?)<\/script>/img;
 
 var sourceFilesets = elements.get('sourcefiles');
 for ( var i = 0, len = sourceFilesets.size(); i < len; ++i) {
@@ -34,7 +42,21 @@ for ( var i = 0, len = sourceFilesets.size(); i < len; ++i) {
         var contents = String(FileUtils.readFully(reader));
         reader.close();
 
-        if (!JSHINT(contents, jsHintOptions)) {
+        var source;
+        var options;
+        if (jsFileRegex.test(sourceFilename)) {
+            source = contents;
+            options = jsHintOptions;
+        } else if (htmlFileRegex.test(sourceFilename)) {
+            var result = sandcastleScriptRegex.exec(contents);
+            if (result === null) {
+                continue;
+            }
+            source = result[1];
+            options = sandcastleJsHintOptions;
+        }
+
+        if (!JSHINT(source, options)) {
             JSHINT.errors.forEach(function(error) {
                 if (error) {
                     errors.push(sourceFilename + ': line ' + error.line + ', col ' + error.character + ', ' + error.reason);
