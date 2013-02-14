@@ -351,7 +351,7 @@ defineSuite([
         //We can't numerically validate the real-time clock, but we
         //can at least make sure the code executes.
         var clock = new Clock({
-            clockStep : ClockStep.SYSTEM_CLOCK_MULTIPLIER
+            clockStep : ClockStep.SYSTEM_CLOCK
         });
         var time1 = clock.tick();
 
