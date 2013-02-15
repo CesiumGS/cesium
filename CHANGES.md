@@ -11,6 +11,8 @@ Beta Releases
 * Added `Plane` for representing the equation of a plane.
 * Added a line segment-plane intersection test to `IntersectionTests`.
 * Fixed an issue where a `PolylineCollection` with a model matrix other than the identity would be incorrectly rendered in 2D and Columbus view.
+* Fixed an issue in the `ScreenSpaceCameraController` where disabled mouse events can cause the camera to be moved after being re-enabled.
+* Added interactive extent drawing to the `Picking` Sandcastle example.
 
 ### b13 - 2013-02-01
 

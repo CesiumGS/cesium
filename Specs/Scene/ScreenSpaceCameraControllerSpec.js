@@ -983,6 +983,34 @@ defineSuite([
         expect(camera.up).toEqualEpsilon(camera.right.cross(camera.direction), CesiumMath.EPSILON15);
     });
 
+    it('controller does not modify the camera after re-enabling motion', function() {
+        var frameState = setUp3D();
+        var position = Cartesian3.clone(camera.position);
+        var direction = Cartesian3.clone(camera.direction);
+        var up = Cartesian3.clone(camera.up);
+        var right = Cartesian3.clone(camera.right);
+
+        var startPosition = new Cartesian2(0.0, 0.0);
+        var endPosition = new Cartesian2(canvas.clientWidth, canvas.clientHeight);
+
+        controller.enableRotate = false;
+        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        updateController(frameState);
+
+        expect(camera.position).toEqual(position);
+        expect(camera.direction).toEqual(direction);
+        expect(camera.up).toEqual(up);
+        expect(camera.right).toEqual(right);
+
+        controller.enableRotate = true;
+        updateController(frameState);
+
+        expect(camera.position).toEqual(position);
+        expect(camera.direction).toEqual(direction);
+        expect(camera.up).toEqual(up);
+        expect(camera.right).toEqual(right);
+    });
+
     it('is destroyed', function() {
         expect(controller.isDestroyed()).toEqual(false);
         controller.destroy();
