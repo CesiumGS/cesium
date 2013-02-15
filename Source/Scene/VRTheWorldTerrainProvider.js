@@ -11,11 +11,11 @@ define([
         '../Core/Math',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/RuntimeError',
         './TerrainProvider',
         './TileProviderError',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
-        './WebMercatorTilingScheme',
         '../ThirdParty/when'
     ], function(
         defaultValue,
@@ -29,11 +29,11 @@ define([
         CesiumMath,
         Ellipsoid,
         Event,
+        RuntimeError,
         TerrainProvider,
         TileProviderError,
         GeographicTilingScheme,
         HeightmapTerrainData,
-        WebMercatorTilingScheme,
         when) {
     "use strict";
 
@@ -69,6 +69,9 @@ define([
         }
 
         this._url = description.url;
+        if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
+            this._url += '/';
+        }
 
         this._errorEvent = new Event();
         this._ready = false;
@@ -102,8 +105,9 @@ define([
             var srs = xml.getElementsByTagName('SRS')[0].textContent;
             if (srs === 'EPSG:4326') {
                 that._tilingScheme = new GeographicTilingScheme({ ellipsoid : ellipsoid });
-            } else if (srs === 'EPSG:3857') {
-                that._tilingScheme = new WebMercatorTilingScheme({ ellipsoid : ellipsoid });
+            } else {
+                metadataFailure('SRS ' + srs + ' is not supported.');
+                return;
             }
 
             var tileFormat = xml.getElementsByTagName('TileFormat')[0];
@@ -128,8 +132,8 @@ define([
             that._ready = true;
         }
 
-        function metadataFailure() {
-            var message = 'An error occurred while accessing ' + that._url + '.';
+        function metadataFailure(e) {
+            var message = typeof e === 'undefined' ? 'An error occurred while accessing ' + that._url + '.' : e;
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
         }
 
@@ -155,6 +159,10 @@ define([
      *          pending and the request will be retried later.
      */
     VRTheWorldTerrainProvider.prototype.requestTileGeometry = function(x, y, level) {
+        if (!this.isReady()) {
+            throw new DeveloperError('requestTileGeometry must not be called before isReady returns true.');
+        }
+
         var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
         var url = this._url + level + '/' + x + '/' + (yTiles - y - 1) + '.tif?cesium=true';
 
@@ -202,6 +210,9 @@ define([
      * @returns {Number} The maximum geometric error.
      */
     VRTheWorldTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
+        if (!this.isReady()) {
+            throw new DeveloperError('requestTileGeometry must not be called before isReady returns true.');
+        }
         return this._levelZeroMaximumGeometricError / (1 << level);
     };
 
@@ -232,6 +243,9 @@ define([
      * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the terrain provider is ready.
      */
     VRTheWorldTerrainProvider.prototype.getTilingScheme = function() {
+        if (!this.isReady()) {
+            throw new DeveloperError('requestTileGeometry must not be called before isReady returns true.');
+        }
         return this._tilingScheme;
     };
 

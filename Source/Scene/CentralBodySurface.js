@@ -351,17 +351,6 @@ define([
             }
         }
 
-        // We can't render anything before the level zero tiles exist.
-        if (typeof surface._levelZeroTiles === 'undefined') {
-            if (surface._terrainProvider.isReady()) {
-                var terrainTilingScheme = surface._terrainProvider.getTilingScheme();
-                surface._levelZeroTiles = terrainTilingScheme.createLevelZeroTiles();
-            } else {
-                // Nothing to do until the terrain provider is ready.
-                return;
-            }
-        }
-
         var traversalQueue = surface._tileTraversalQueue;
         traversalQueue.clear();
 
@@ -375,6 +364,17 @@ define([
         surface._tileLoadQueue.clear();
         surface._tileLoadQueue.markInsertionPoint();
         surface._tileReplacementQueue.markStartOfRenderFrame();
+
+        // We can't render anything before the level zero tiles exist.
+        if (typeof surface._levelZeroTiles === 'undefined') {
+            if (surface._terrainProvider.isReady()) {
+                var terrainTilingScheme = surface._terrainProvider.getTilingScheme();
+                surface._levelZeroTiles = terrainTilingScheme.createLevelZeroTiles();
+            } else {
+                // Nothing to do until the terrain provider is ready.
+                return;
+            }
+        }
 
         var cameraPosition = frameState.camera.getPositionWC();
 
