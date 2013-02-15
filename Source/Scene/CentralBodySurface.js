@@ -296,8 +296,10 @@ define([
      */
     CentralBodySurface.prototype.destroy = function() {
         var levelZeroTiles = this._levelZeroTiles;
-        for (var i = 0; i < levelZeroTiles.length; ++i) {
-            levelZeroTiles[i].freeResources();
+        if (typeof levelZeroTiles !== 'undefined') {
+            for (var i = 0; i < levelZeroTiles.length; ++i) {
+                levelZeroTiles[i].freeResources();
+            }
         }
 
         this._imageryLayerCollection.destroy();
