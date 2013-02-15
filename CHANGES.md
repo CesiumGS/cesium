@@ -13,6 +13,8 @@ Beta Releases
 * Added `Plane` for representing the equation of a plane.
 * Added a line segment-plane intersection test to `IntersectionTests`.
 * Fixed an issue where a `PolylineCollection` with a model matrix other than the identity would be incorrectly rendered in 2D and Columbus view.
+* Fixed an issue in the `ScreenSpaceCameraController` where disabled mouse events can cause the camera to be moved after being re-enabled.
+* Added interactive extent drawing to the `Picking` Sandcastle example.
 * Added `HeightmapTessellator` to create a mesh from a heightmap.
 * Improved the lighting used in 2D and Columbus View modes.  In general, the surface lighting in these modes should look just like it does in 3D.
 

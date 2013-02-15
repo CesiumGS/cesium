@@ -60,21 +60,20 @@ define([
 
     /**
      * Creates a new Color specified using red, green, blue, and alpha values
-     * that are in the range of 0 to 255, converting them internally to a
-     * range of 0.0 to 1.0.
+     * that are in the range of 0 to 255, converting them internally to a range of 0.0 to 1.0.
      * @memberof Color
      *
      * @param {Number} [red=255] The red component.
      * @param {Number} [green=255] The green component.
      * @param {Number} [blue=255] The blue component.
      * @param {Number} [alpha=255] The alpha component.
-     * @returns {Color} A new color instance.
+     * @return {Color} A new color instance.
      */
     Color.fromBytes = function(red, green, blue, alpha) {
-        red = defaultValue(red, 255.0) / 255.0;
-        green = defaultValue(green, 255.0) / 255.0;
-        blue = defaultValue(blue, 255.0) / 255.0;
-        alpha = defaultValue(alpha, 255.0) / 255.0;
+        red = Color.byteToFloat(defaultValue(red, 255.0));
+        green = Color.byteToFloat(defaultValue(green, 255.0));
+        blue = Color.byteToFloat(defaultValue(blue, 255.0));
+        alpha = Color.byteToFloat(defaultValue(alpha, 255.0));
         return new Color(red, green, blue, alpha);
     };
 
@@ -190,11 +189,11 @@ define([
 
     /**
      * Converts a 'byte' color component in the range of 0 to 255 into
-     * a 'float' color component range of 0 to 1.0.
+     * a 'float' color component in the range of 0 to 1.0.
      * @memberof Color
      *
      * @param {Number} number The number to be converted.
-     * @returns {number} The converted number.
+     * @return {number} The converted number.
      */
     Color.byteToFloat = function(number) {
         return number / 255.0;
@@ -202,11 +201,11 @@ define([
 
     /**
      * Converts a 'float' color component in the range of 0 to 1.0 into
-     * a 'byte' color component range of 0 to 255.
+     * a 'byte' color component in the range of 0 to 255.
      * @memberof Color
      *
      * @param {Number} number The number to be converted.
-     * @returns {number} The converted number.
+     * @return {number} The converted number.
      */
     Color.floatToByte = function(number) {
         return number === 1.0 ? 255.0 : (number * 256.0) | 0;
@@ -310,6 +309,21 @@ define([
         var green = Color.floatToByte(this.green);
         var blue = Color.floatToByte(this.blue);
         return 'rgba(' + red + ',' + green + ',' + blue + ',' + this.alpha + ')';
+    };
+
+    /**
+     * Converts this color to an array of red, green, blue, and alpha values
+     * that are in the range of 0 to 255.
+     * @memberof Color
+     *
+     * @return {Array} An array containing the red, green, blue, alpha values in the range 0 to 255.
+     */
+    Color.prototype.toBytes = function() {
+        var red = Color.floatToByte(this.red);
+        var green = Color.floatToByte(this.green);
+        var blue = Color.floatToByte(this.blue);
+        var alpha = Color.floatToByte(this.alpha);
+        return [red, green, blue, alpha];
     };
 
     /**
