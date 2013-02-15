@@ -5,25 +5,25 @@
 			<existingjsfiles dir="${shadersDirectory}" includes="**/*.js" excludes="*.profile.js" />
 		</glslToJavascript>
 
-		<parallel>
-			<createCesiumJs output="${sourceDirectory}/Cesium.js">
-				<sourcefiles dir="${sourceDirectory}">
-					<include name="**/*.js" />
-					<exclude name="*.js" />
-					<exclude name="Widgets/**" />
-					<exclude name="Workers/**" />
-					<exclude name="**/*.profile.js" />
-				</sourcefiles>
-			</createCesiumJs>
+		<createCesiumJs output="${sourceDirectory}/Cesium.js">
+			<sourcefiles dir="${sourceDirectory}">
+				<include name="**/*.js" />
+				<exclude name="*.js" />
+				<exclude name="Widgets/**" />
+				<exclude name="Workers/**" />
+				<exclude name="**/*.profile.js" />
+			</sourcefiles>
+		</createCesiumJs>
 
-			<createSpecList output="${specsDirectory}/SpecList.js">
-				<specs dir="${specsDirectory}" includes="**/*.js" excludes="*.js" />
-			</createSpecList>
+		<createSpecList output="${specsDirectory}/SpecList.js">
+			<specs dir="${specsDirectory}" includes="**/*.js" excludes="*.js" />
+		</createSpecList>
 
-			<createGalleryList output="${galleryDirectory}/gallery-index.js">
-				<demos dir="${galleryDirectory}" includes="**/*.html" />
-			</createGalleryList>
-		</parallel>
+		<createGalleryList output="${galleryDirectory}/gallery-index.js">
+			<demos dir="${galleryDirectory}" includes="**/*.html" />
+		</createGalleryList>
+
+		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptions="${jsHintEclipseSettings.options}" />
 	</target>
 
 	<target name="combine" description="Combines all source files into a single stand-alone script." depends="build, combineJavaScript" />
@@ -87,7 +87,8 @@
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
-	<property name="galleryDirectory" location="Apps/Sandcastle/gallery" />
+	<property name="sandcastleDirectory" location="Apps/Sandcastle" />
+	<property name="galleryDirectory" location="${sandcastleDirectory}/gallery" />
 	<property name="specsDirectory" location="Specs" />
 	<property name="toolsDirectory" location="Tools" />
 	<property name="tasksDirectory" location="${toolsDirectory}/buildTasks" />
@@ -99,6 +100,7 @@
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
 	<property name="dojoPath" location="${thirdPartyDirectory}/dojo-release-1.8.3-src" />
+	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-r12/jshint.js" />
 
 	<!-- Outputs -->
 	<property name="buildDirectory" location="Build" />
@@ -108,30 +110,71 @@
 	<property name="buildDocumentationImagesDirectory" location="${buildDocumentationDirectory}/images" />
 	<property name="instrumentedDirectory" location="Instrumented" />
 
-	<scriptdef name="glslToJavascript" language="javascript" src="${tasksDirectory}/glslToJavaScript.js">
+	<path id="javascriptClassPath">
+		<pathelement path="${toolsDirectory}/rhino-1.7R4/js.jar" />
+		<pathelement path="${toolsDirectory}/bsf-2.4.0/bsf.jar" />
+		<pathelement path="${toolsDirectory}/commons-logging-1.1.1/commons-logging-1.1.1.jar" />
+	</path>
+
+	<scriptdef name="glslToJavascript" language="javascript" src="${tasksDirectory}/glslToJavaScript.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<attribute name="stripcomments" />
 		<element name="glslfiles" type="fileset" />
 		<element name="existingjsfiles" type="fileset" />
 	</scriptdef>
 
-	<scriptdef name="extractShaderComments" language="javascript" src="${tasksDirectory}/extractShaderComments.js">
+	<scriptdef name="extractShaderComments" language="javascript" src="${tasksDirectory}/extractShaderComments.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<element name="glslfiles" type="fileset" />
 	</scriptdef>
 
-	<scriptdef name="createCesiumJs" language="javascript" src="${tasksDirectory}/createCesiumJs.js">
+	<scriptdef name="createCesiumJs" language="javascript" src="${tasksDirectory}/createCesiumJs.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<attribute name="output" />
 		<element name="sourcefiles" type="fileset" />
 	</scriptdef>
 
-	<scriptdef name="createSpecList" language="javascript" src="${tasksDirectory}/createSpecList.js">
+	<scriptdef name="createSpecList" language="javascript" src="${tasksDirectory}/createSpecList.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<attribute name="output" />
 		<element name="specs" type="fileset" />
 	</scriptdef>
 
-	<scriptdef name="createGalleryList" language="javascript" src="${tasksDirectory}/createGalleryList.js">
+	<scriptdef name="createGalleryList" language="javascript" src="${tasksDirectory}/createGalleryList.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<attribute name="output" />
 		<element name="demos" type="fileset" />
 	</scriptdef>
+
+	<scriptdef name="createSandcastleJsHintOptions" language="javascript" src="${tasksDirectory}/createSandcastleJsHintOptions.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
+		<attribute name="output" />
+		<attribute name="jshintoptions" />
+	</scriptdef>
+
+	<scriptdef name="runJsHint" language="javascript" src="${tasksDirectory}/runJsHint.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
+		<attribute name="jshintpath" />
+		<attribute name="jshintoptions" />
+		<attribute name="sandcastlejshintoptionspath" />
+		<attribute name="failureproperty" />
+		<element name="sourcefiles" type="fileset" />
+	</scriptdef>
+
+	<property file="${basedir}/.settings/com.eclipsesource.jshint.ui.prefs" prefix="jsHintEclipseSettings" />
+
+	<target name="jsHint" depends="build">
+		<runJsHint jshintpath="${jsHintPath}" jshintoptions="${jsHintEclipseSettings.options}" sandcastlejshintoptionspath="${sandcastleDirectory}/jsHintOptions.js" failureproperty="jsHint.failure">
+			<sourcefiles dir="${basedir}">
+				<include name="Source/**/*.js" />
+				<exclude name="Source/Shaders/**" />
+				<exclude name="Source/ThirdParty/**" />
+				<exclude name="Source/Workers/cesiumWorkerBootstrapper.js" />
+
+				<include name="Apps/**/*.js" />
+				<include name="Apps/Sandcastle/gallery/*.html" />
+				<exclude name="Apps/Sandcastle/Cesium-hint.js" />
+
+				<include name="Specs/**/*.js" />
+
+				<include name="Tools/buildTasks/**/*.js" />
+			</sourcefiles>
+		</runJsHint>
+		<fail if="jsHint.failure" message="JSHint failed!" />
+	</target>
 
 	<target name="combineJavaScript.setNodePathValue">
 		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/windows/node.exe">
