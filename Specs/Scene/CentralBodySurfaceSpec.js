@@ -474,4 +474,50 @@ defineSuite([
             expect(tileCommandCount).toBeGreaterThan(0);
         });
     });
+
+    describe('switching terrain providers', function() {
+        it('clears the replacement queue', function() {
+            updateUntilDone(cb);
+
+            runs(function() {
+                var surface = cb._surface;
+                var replacementQueue = surface._tileReplacementQueue;
+                expect(replacementQueue.count).toBeGreaterThan(0);
+
+                surface.setTerrainProvider(new EllipsoidTerrainProvider());
+                expect(replacementQueue.count).toBe(0);
+            });
+        });
+
+        it('recreates the level zero tiles', function() {
+            var surface = cb._surface;
+
+            var levelZeroTiles = surface._levelZeroTiles;
+            expect(levelZeroTiles.length).toBe(2);
+
+            var levelZero0 = levelZeroTiles[0];
+            var levelZero1 = levelZeroTiles[1];
+
+            surface.setTerrainProvider(new EllipsoidTerrainProvider());
+            levelZeroTiles = surface._levelZeroTiles;
+            expect(levelZeroTiles[0]).not.toBe(levelZero0);
+            expect(levelZeroTiles[1]).not.toBe(levelZero1);
+        });
+
+        it('does nothing if the new provider is the same as the old', function() {
+            var surface = cb._surface;
+            var provider = surface.getTerrainProvider();
+
+            var levelZeroTiles = surface._levelZeroTiles;
+            expect(levelZeroTiles.length).toBe(2);
+
+            var levelZero0 = levelZeroTiles[0];
+            var levelZero1 = levelZeroTiles[1];
+
+            surface.setTerrainProvider(provider);
+            levelZeroTiles = surface._levelZeroTiles;
+            expect(levelZeroTiles[0]).toBe(levelZero0);
+            expect(levelZeroTiles[1]).toBe(levelZero1);
+        });
+    }, 'WebGL');
 }, 'WebGL');
