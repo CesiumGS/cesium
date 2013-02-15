@@ -23,9 +23,9 @@ define([
      * @see CesiumTerrainProvider
      * @see ArcGisImageServerTerrainProvider
      */
-    function TerrainProvider() {
+    var TerrainProvider = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
-    }
+    };
 
     /**
      * Specifies the indices of the attributes of the terrain geometry.
