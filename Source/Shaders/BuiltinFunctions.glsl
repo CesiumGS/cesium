@@ -312,7 +312,7 @@ vec2 czm_ellipsoidWgs84TextureCoordinates(vec3 normal)
 mat3 czm_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
 {
     vec3 tangentMC = normalize(vec3(-positionMC.y, positionMC.x, 0.0));  // normalized surface tangent in model coordinates
-    vec3 tangentEC = normalize(czm_normal * tangentMC);                  // normalized surface tangent in eye coordiantes
+    vec3 tangentEC = normalize(czm_normal3D * tangentMC);                // normalized surface tangent in eye coordiantes
     vec3 bitangentEC = normalize(cross(normalEC, tangentEC));            // normalized surface bitangent in eye coordinates
 
     return mat3(
@@ -399,17 +399,26 @@ czm_material czm_getDefaultMaterial(czm_materialInput materialInput)
     return material;
 }
 
-float getLambertDiffuse(vec3 lightDirection, czm_material material)
+float getLambertDiffuse(vec3 lightDirectionEC, vec3 normalEC)
 {
-    return max(dot(lightDirection, material.normal), 0.0);
+    return max(dot(lightDirectionEC, normalEC), 0.0);
 }
 
-float getSpecular(vec3 lightDirection, vec3 toEye, czm_material material)
+float getLambertDiffuseOfMaterial(vec3 lightDirectionEC, czm_material material)
 {
-    vec3 toReflectedLight = reflect(-lightDirection, material.normal);
-    float specular = max(dot(toReflectedLight, toEye), 0.0);
+    return getLambertDiffuse(lightDirectionEC, material.normal);
+}
 
-    return pow(specular, material.shininess);
+float getSpecular(vec3 lightDirectionEC, vec3 toEyeEC, vec3 normalEC, float shininess)
+{
+    vec3 toReflectedLight = reflect(-lightDirectionEC, normalEC);
+    float specular = max(dot(toReflectedLight, toEyeEC), 0.0);
+    return pow(specular, shininess);
+}
+
+float getSpecularOfMaterial(vec3 lightDirectionEC, vec3 toEyeEC, czm_material material)
+{
+    return getSpecular(lightDirectionEC, toEyeEC, material.normal, material.shininess);
 }
 
 /**
@@ -433,10 +442,10 @@ float getSpecular(vec3 lightDirection, vec3 toEye, czm_material material)
 vec4 czm_phong(vec3 toEye, czm_material material)
 {
     // Diffuse from directional light sources at eye (for top-down and horizon views)
-    float diffuse = getLambertDiffuse(vec3(0.0, 0.0, 1.0), material) + getLambertDiffuse(vec3(0.0, 1.0, 0.0), material);
+    float diffuse = getLambertDiffuseOfMaterial(vec3(0.0, 0.0, 1.0), material) + getLambertDiffuseOfMaterial(vec3(0.0, 1.0, 0.0), material);
 
     // Specular from sun and pseudo-moon
-    float specular = getSpecular(czm_sunDirectionEC, toEye, material) + getSpecular(czm_moonDirectionEC, toEye, material);
+    float specular = getSpecularOfMaterial(czm_sunDirectionEC, toEye, material) + getSpecularOfMaterial(czm_moonDirectionEC, toEye, material);
 
     vec3 ambient = vec3(0.0);
     vec3 color = ambient + material.emission;
@@ -924,4 +933,42 @@ vec3 czm_translateRelativeToEye(vec3 high, vec3 low)
     vec3 lowDifference = low - czm_encodedCameraPositionMCLow;
 
     return highDifference + lowDifference;
+}
+
+/**
+ * @private
+ */
+vec4 czm_getWaterNoise(sampler2D normalMap, vec2 uv, float time, float angleInRadians)
+{
+    float cosAngle = cos(angleInRadians);
+    float sinAngle = sin(angleInRadians);
+
+    // time dependent sampling directions
+    vec2 s0 = vec2(1.0/17.0, 0.0);
+    vec2 s1 = vec2(-1.0/29.0, 0.0);
+    vec2 s2 = vec2(1.0/101.0, 1.0/59.0);
+    vec2 s3 = vec2(-1.0/109.0, -1.0/57.0);
+
+    // rotate sampling direction by specified angle
+    s0 = vec2((cosAngle * s0.x) - (sinAngle * s0.y), (sinAngle * s0.x) + (cosAngle * s0.y));
+    s1 = vec2((cosAngle * s1.x) - (sinAngle * s1.y), (sinAngle * s1.x) + (cosAngle * s1.y));
+    s2 = vec2((cosAngle * s2.x) - (sinAngle * s2.y), (sinAngle * s2.x) + (cosAngle * s2.y));
+    s3 = vec2((cosAngle * s3.x) - (sinAngle * s3.y), (sinAngle * s3.x) + (cosAngle * s3.y));
+
+    vec2 uv0 = (uv/103.0) + (time * s0);
+    vec2 uv1 = uv/107.0 + (time * s1) + vec2(0.23);
+    vec2 uv2 = uv/vec2(897.0, 983.0) + (time * s2) + vec2(0.51);
+    vec2 uv3 = uv/vec2(991.0, 877.0) + (time * s3) + vec2(0.71);
+
+    uv0 = fract(uv0);
+    uv1 = fract(uv1);
+    uv2 = fract(uv2);
+    uv3 = fract(uv3);
+    vec4 noise = (texture2D(normalMap, uv0)) +
+                 (texture2D(normalMap, uv1)) +
+                 (texture2D(normalMap, uv2)) +
+                 (texture2D(normalMap, uv3));
+
+    // average and scale to between -1 and 1
+    return ((noise / 4.0) - 0.5) * 2.0;
 }

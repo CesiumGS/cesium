@@ -1,0 +1,166 @@
+<!--
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.
+ The ASF licenses this file to You under the Apache License, Version 2.0
+ (the "License"); you may not use this file except in compliance with
+ the License.  You may obtain a copy of the License at
+ 
+      http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+-->
+
+$Id: RELEASE-NOTES.txt 597240 2007-11-21 22:50:06Z dennisl $
+
+                           Commons Logging Package
+                                Version 1.1.1
+                                Release Notes
+
+INTRODUCTION:
+============
+
+This release of Apache Commons Logging is a maintenance release, with just a
+couple of fixes for using Commons Logging under restrictive security policies.
+
+All core classes were compiled with Maven using a 1.4.x JDK, with target set
+to 1.1 and source set to 1.2. Commons Logging may work on some
+augmented 1.1 series JREs but it is recommended that those wish to run
+on 1.1 JREs download the source and create a custom implementation by
+stripping out all the complex classloader management code.
+
+For further details, please see the Apache Commons Logging website:
+  http://commons.apache.org/logging/
+
+For the very latest news, hints, FAQs etc. please see the
+Apache Commons Logging wiki site:
+  http://wiki.apache.org/commons/Logging
+
+Note that some containers (some versions of Apache Tomcat and JBoss in
+particular) prevent webapps, ejbs, etc from overriding the commons-logging
+implementation provided by the container. This means that bundling this
+updated implementation with a deployed application may not have any effect.
+See the commons-logging site and/or the wiki for more information.
+
+== New Features Since 1.1.0 ==
+
+None.
+
+== Incompatibilities ==
+
+The protected method LogFactory.getContextClassLoader has been reverted to pre-1.1
+behaviour. In earlier releases, this method did not use an AccessController when
+obtaining the context classloader. In version 1.1 it did. In this release, it has
+reverted to not using an AccessController; any user-level code that needs to obtain
+a context classloader should itself create an AccessController, and call the
+LogFactory.getContextClassLoader method via the doPrivileged method. This fixes a
+potential security issue, where untrusted code could get access to the context
+classloader if a signed Commons Logging library was in the classpath.
+
+== Dependencies ==
+
+Commons Logging has no mandatory dependencies.
+
+Java 1.2 and later are supported. It may be possible to use this release with
+java 1.1 but this has not been tested; the unit tests certainly don't run on
+that version.
+
+== Distributed Jar Files ==
+
+File commons-logging-nn.jar is the one most people will want. It provides the
+base implementation and adapters to a number of popular logging libraries.
+
+File commons-logging-adapters-nn.jar includes only the adapters to various
+concrete logging libraries. When commons-logging-nn.jar or
+commons-logging-api-nn.jar is deployed in a container classpath, then this
+adapters-only jar file should be deployed in the webapp, not the complete Commons
+Logging distribution. This ensures that the core Log/LogFactory classes are only
+deployed via one classloader, thus avoiding "Log4JLogger does not implement Log"
+and similar problems.
+
+File commons-logging-api-nn.jar provides minimal adapters to external logging
+libraries, just the internally implemented SimpleLog and NoOpLog classes
+plus Jdk14Logger (which is currently required by Apache Tomcat).
+
+The file commons-logging-api-nn.jar may be used as a declared dependency for
+projects that care about "transitive dependencies" and can't handle jar files
+such as commons-logging-nn.jar which have "optional" dependencies depending on
+how they are used. In addition, this jar file can be useful for "rebundlers" of
+Commons Logging who recompile the source-code but who may not be able to
+recompile against the full set of supported adapters; such projects should be
+able to at least recreate an equivalent of this jar file.
+
+== General Notes ==
+
+The Apache Commons project has migrated to the Subversion version control system
+(previously, CVS was used). There should be no effect on users of the Commons
+Logging library, but obviously the process of examining the latest source code,
+and of creating patches for Commons Logging has now changed. Please see the
+Apache Commons website for details (http://commons.apache.org/).
+
+The Apache Commons project has now moved to using the Apache JIRA installation
+as its bugtracking system (formerly, the Apache Bugzilla installation was used).
+
+All source files for this release have been updated to reflect the new Apache
+Software Foundation licensing rules. The terms and conditions are unaltered;
+this merely affects how those are presented in the source files. See
+  http://www.apache.org/legal/src-headers.html
+
+This release can be built/tested with Maven 2.0.x as well as Ant. Note that
+building with Maven 1.x is no longer supported. The files used to build Commons
+Logging with Maven 1.x will be removed in a future version of Commons Logging.
+
+== Bugs Fixed ==
+
+* LOGGING-106: Commons Logging 1.1 was completely unusable under a security
+  policy that prevented access to system properties. Even signing/authorising
+  the Commons Logging library was not sufficient. This has been fixed by (a)
+  catching SecurityException and falling back to a sensible default, and (b)
+  using AccessController so Commons Logging can be granted privileges without
+  needing the caller to have them too.
+
+* LOGGING-107: Commons Logging 1.1 auto-discovery failed under a security
+  policy that prevented calls to ClassLoader.getParent. Signing/authorising the
+  Commons Logging library was not sufficient as an AccessController was not used.
+  This has been fixed by catching SecurityException and using an AccessController.
+
+* LOGGING-111, LOGGING-114: Show the contents of chained exceptions, to make
+  debugging easier, in particular when using Commons Logging together with Log4J.
+
+* LOGGING-113: pom.xml in maven repository does not list dependencies as optional.
+
+* LOGGING-115: NPE thrown due to exception message logging.
+
+* LOGGING-117: Unit tests fail on linux with java16.
+
+* LOGGING-118: Generate source and binary archives.
+
+* MEV-392 (http://jira.codehaus.org/browse/MEV-392)
+  As Commons Logging didn't provide a Maven2 pom.xml file, one was helpfully
+  created by people not involved with the commons-logging project and published
+  to the standard maven repositories. Unfortunately this pom declared normal
+  dependencies on all the logging libraries that are supported by the core
+  Commons Logging distribution, meaning they all get pulled into a project that
+  declares a dependency on Commons Logging 1.1. This release now provides an
+  "official" pom.xml which declares these dependencies as optional so they aren't
+  automatically included in projects that depend on Commons Logging 1.1.1.
+
+* (no bug#): Fix thread-safety bug (SimpleDateFormat.format is not thread-safe).
+  Thanks to Martin Wilson of bright-interactive for the bug report.
+
+* (no bug#): Security issue regarding access to context classloader (see
+  incompatibilities section above).
+
+DEPRECATIONS:
+============
+
+    (These are carried forward from Version 1.0.4)
+
+[LogSource]        Previously deprecated, replaced by LogFactory.
+

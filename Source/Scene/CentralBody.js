@@ -1,6 +1,8 @@
 /*global define*/
 define([
+        '../Core/buildModuleUrl',
         '../Core/combine',
+        '../Core/loadImage',
         '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/BoundingRectangle',
@@ -36,15 +38,19 @@ define([
         './EllipsoidTerrainProvider',
         './ImageryLayerCollection',
         './SceneMode',
+        './TerrainProvider',
         './ViewportQuad',
         '../Shaders/CentralBodyFS',
         '../Shaders/CentralBodyFSDepth',
         '../Shaders/CentralBodyFSPole',
         '../Shaders/CentralBodyVS',
         '../Shaders/CentralBodyVSDepth',
-        '../Shaders/CentralBodyVSPole'
+        '../Shaders/CentralBodyVSPole',
+        '../ThirdParty/when'
     ], function(
+        buildModuleUrl,
         combine,
+        loadImage,
         defaultValue,
         destroyObject,
         BoundingRectangle,
@@ -80,13 +86,15 @@ define([
         EllipsoidTerrainProvider,
         ImageryLayerCollection,
         SceneMode,
+        TerrainProvider,
         ViewportQuad,
         CentralBodyFS,
         CentralBodyFSDepth,
         CentralBodyFSPole,
         CentralBodyVS,
         CentralBodyVSDepth,
-        CentralBodyVSPole) {
+        CentralBodyVSPole,
+        when) {
     "use strict";
 
     /**
@@ -103,6 +111,12 @@ define([
         var terrainProvider = new EllipsoidTerrainProvider({ellipsoid : ellipsoid});
         var imageryLayerCollection = new ImageryLayerCollection();
 
+        /**
+         * The terrain provider providing surface geometry for this central body.
+         * @type {TerrainProvider}
+         */
+        this.terrainProvider = terrainProvider;
+
         this._ellipsoid = ellipsoid;
         this._imageryLayerCollection = imageryLayerCollection;
         this._surface = new CentralBodySurface({
@@ -112,7 +126,7 @@ define([
 
         this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
 
-        this._surfaceShaderSet = new CentralBodySurfaceShaderSet(attributeIndices);
+        this._surfaceShaderSet = new CentralBodySurfaceShaderSet(TerrainProvider.attributeIndices);
 
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
@@ -180,6 +194,41 @@ define([
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
 
+        /**
+         * The normal map to use for rendering waves in the ocean.  Setting this property will
+         * only have an effect if the configured terrain provider includes a water mask.
+         *
+         * @type String
+         */
+        this.oceanNormalMapUrl = buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg');
+
+        /**
+         * True if primitives such as billboards, polylines, labels, etc. should be depth-tested
+         * against the terrain surface, or false if such primitives should always be drawn on top
+         * of terrain unless they're on the opposite side of the globe.  The disadvantage of depth
+         * testing primitives against terrain is that slight numerical noise or terrain level-of-detail
+         * switched can sometimes make a primitive that should be on the surface disappear underneath it.
+         *
+         * @type Boolean
+         */
+        this.depthTestAgainstTerrain = false;
+
+        /**
+         * The size of the terrain tile cache, expressed as a number of tiles.  Any additional
+         * tiles beyond this number will be freed, as long as they aren't needed for rendering
+         * this frame.  A larger number will consume more memory but will show detail faster
+         * when, for example, zooming out and then back in.
+         *
+         * @type Number
+         */
+        this.tileCacheSize = 100;
+
+        this._lastOceanNormalMapUrl = undefined;
+        this._oceanNormalMap = undefined;
+        this._zoomedOutOceanSpecularIntensity = 0.5;
+        this._showingPrettyOcean = false;
+        this._hasWaterMask = false;
+
         var that = this;
 
         this._drawUniforms = {
@@ -188,13 +237,14 @@ define([
             },
             u_morphTime : function() {
                 return that.morphTime;
+            },
+            u_zoomedOutOceanSpecularIntensity : function() {
+                return that._zoomedOutOceanSpecularIntensity;
+            },
+            u_oceanNormalMap : function() {
+                return that._oceanNormalMap;
             }
         };
-    };
-
-    var attributeIndices = {
-        position3D : 0,
-        textureCoordinates : 1
     };
 
     /**
@@ -210,6 +260,8 @@ define([
 
     /**
      * Gets the collection of image layers that will be rendered on this central body.
+     *
+     * @memberof CentralBody
      *
      * @returns {ImageryLayerCollection}
      */
@@ -288,10 +340,10 @@ define([
             return;
         }
 
-        if (!terrainProvider.ready) {
+        if (!terrainProvider.isReady()) {
             return;
         }
-        var terrainMaxExtent = terrainProvider.tilingScheme.getExtent();
+        var terrainMaxExtent = terrainProvider.getTilingScheme().getExtent();
 
         var viewProjMatrix = context.getUniformState().getViewProjection();
         var viewport = viewportScratch;
@@ -460,7 +512,7 @@ define([
 
         if (this._mode !== mode || typeof this._rsColor === 'undefined') {
             modeChanged = true;
-            if (mode === SceneMode.SCENE3D) {
+            if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
                 this._rsColor = context.createRenderState({ // Write color and depth
                     cull : {
                         enabled : true
@@ -494,16 +546,23 @@ define([
                     stencil : 0.0
                 });
             } else {
-                this._rsColor = context.createRenderState();
-                this._rsColorWithoutDepthTest = context.createRenderState();
-                this._depthCommand.renderState = context.createRenderState();
+                this._rsColor = context.createRenderState({
+                    cull : {
+                        enabled : true
+                    }
+                });
+                this._rsColorWithoutDepthTest = context.createRenderState({
+                    cull : {
+                        enabled : true
+                    }
+                });
+                this._depthCommand.renderState = context.createRenderState({
+                    cull : {
+                        enabled : true
+                    }
+                });
             }
         }
-
-        var cull = (mode === SceneMode.SCENE3D) || (mode === SceneMode.MORPHING);
-        this._rsColor.cull.enabled = cull;
-        this._rsColorWithoutDepthTest.cull.enabled = cull;
-        this._depthCommand.renderState.cull.enabled = cull;
 
         this._northPoleCommand.renderState = this._rsColorWithoutDepthTest;
         this._southPoleCommand.renderState = this._rsColorWithoutDepthTest;
@@ -549,14 +608,32 @@ define([
                     });
         }
 
+        if (this._surface._terrainProvider.hasWaterMask() &&
+            this.oceanNormalMapUrl !== this._lastOceanNormalMapUrl) {
+
+            this._lastOceanNormalMapUrl = this.oceanNormalMapUrl;
+
+            var that = this;
+            when(loadImage(this.oceanNormalMapUrl, true), function(image) {
+                that._oceanNormalMap = that._oceanNormalMap && that._oceanNormalMap.destroy();
+                that._oceanNormalMap = context.createTexture2D({
+                    source : image
+                });
+            });
+        }
+
         // Initial compile or re-compile if uber-shader parameters changed
         var projectionChanged = this._projection !== projection;
+        var hasWaterMask = this._surface._terrainProvider.hasWaterMask();
+        var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
 
         if (typeof this._surfaceShaderSet === 'undefined' ||
             typeof this._northPoleCommand.shaderProgram === 'undefined' ||
             typeof this._southPoleCommand.shaderProgram === 'undefined' ||
             modeChanged ||
-            projectionChanged) {
+            projectionChanged ||
+            hasWaterMaskChanged ||
+            (typeof this._oceanNormalMap !== 'undefined') !== this._showingPrettyOcean) {
 
             var getPosition3DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition3DMode(position3DWC); }';
             var getPosition2DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition2DMode(position3DWC); }';
@@ -595,14 +672,24 @@ define([
                  CentralBodyVS + '\n' +
                  getPositionMode + '\n' +
                  get2DYPositionFraction;
-            this._surfaceShaderSet.baseFragmentShaderString = CentralBodyFS;
+
+            var showPrettyOcean = hasWaterMask && typeof this._oceanNormalMap !== 'undefined';
+
+            this._surfaceShaderSet.baseFragmentShaderString =
+                (hasWaterMask ? '#define SHOW_REFLECTIVE_OCEAN\n' : '') +
+                (showPrettyOcean ? '#define SHOW_OCEAN_WAVES\n' : '') +
+                '#line 0\n' +
+                CentralBodyFS;
             this._surfaceShaderSet.invalidateShaders();
 
             var poleShaderProgram = this._northPoleCommand.shaderProgram && this._northPoleCommand.shaderProgram.release();
-            poleShaderProgram = shaderCache.getShaderProgram(CentralBodyVSPole, CentralBodyFSPole, attributeIndices);
+            poleShaderProgram = shaderCache.getShaderProgram(CentralBodyVSPole, CentralBodyFSPole, TerrainProvider.attributeIndices);
 
             this._northPoleCommand.shaderProgram = poleShaderProgram;
             this._southPoleCommand.shaderProgram = poleShaderProgram;
+
+            this._showingPrettyOcean = typeof this._oceanNormalMap !== 'undefined';
+            this._hasWaterMask = hasWaterMask;
         }
 
         var cameraPosition = frameState.camera.getPositionWC();
@@ -632,10 +719,21 @@ define([
                 }
             }
 
+            var drawUniforms = this._drawUniforms;
+
+            // Don't show the ocean specular highlights when zoomed out in 2D and Columbus View.
+            if (mode === SceneMode.SCENE3D) {
+                this._zoomedOutOceanSpecularIntensity = 0.5;
+            } else {
+                this._zoomedOutOceanSpecularIntensity = 0.0;
+            }
+
+            this._surface._tileCacheSize = this.tileCacheSize;
+            this._surface.setTerrainProvider(this.terrainProvider);
             this._surface.update(context,
                     frameState,
                     colorCommandList,
-                    this._drawUniforms,
+                    drawUniforms,
                     this._surfaceShaderSet,
                     this._rsColor,
                     this._mode,
@@ -645,10 +743,10 @@ define([
 
             // render depth plane
             if (mode === SceneMode.SCENE3D) {
-                // TODO: clearing depth here will not be acceptable for actual terrain.
-                colorCommandList.push(this._clearDepthCommand);
-
-                colorCommandList.push(this._depthCommand);
+                if (!this.depthTestAgainstTerrain) {
+                    colorCommandList.push(this._clearDepthCommand);
+                    colorCommandList.push(this._depthCommand);
+                }
             }
         }
 
@@ -711,6 +809,8 @@ define([
         this._depthCommand.vertexArray = this._depthCommand.vertexArray && this._depthCommand.vertexArray.destroy();
 
         this._surface = this._surface && this._surface.destroy();
+
+        this._oceanNormalMap = this._oceanNormalMap && this._oceanNormalMap.destroy();
 
         return destroyObject(this);
     };

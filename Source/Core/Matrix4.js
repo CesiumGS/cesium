@@ -1539,26 +1539,26 @@ define([
      *
      * @see Matrix3
      */
-     Matrix4.getRotation = function(matrix, result) {
-         if (typeof matrix === 'undefined') {
-             throw new DeveloperError('matrix is required');
-         }
-         if (typeof result === 'undefined') {
-             return new Matrix3(matrix[0], matrix[4], matrix[8],
-                                matrix[1], matrix[5], matrix[9],
-                                matrix[2], matrix[6], matrix[10]);
-         }
-         result[0] = matrix[0];
-         result[1] = matrix[1];
-         result[2] = matrix[2];
-         result[3] = matrix[4];
-         result[4] = matrix[5];
-         result[5] = matrix[6];
-         result[6] = matrix[8];
-         result[7] = matrix[9];
-         result[8] = matrix[10];
-         return result;
-     };
+    Matrix4.getRotation = function(matrix, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+        if (typeof result === 'undefined') {
+            return new Matrix3(matrix[0], matrix[4], matrix[8],
+                               matrix[1], matrix[5], matrix[9],
+                               matrix[2], matrix[6], matrix[10]);
+        }
+        result[0] = matrix[0];
+        result[1] = matrix[1];
+        result[2] = matrix[2];
+        result[3] = matrix[4];
+        result[4] = matrix[5];
+        result[5] = matrix[6];
+        result[6] = matrix[8];
+        result[7] = matrix[9];
+        result[8] = matrix[10];
+        return result;
+    };
 
      /**
       * Computes the inverse of the provided matrix using Cramers Rule.
