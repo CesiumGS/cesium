@@ -86,6 +86,15 @@
 			</matcher>
 		</filter>
 		<filter>
+			<id>1360870693679</id>
+			<name>Apps/Sandcastle</name>
+			<type>6</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-jsHintOptions.js</arguments>
+			</matcher>
+		</filter>
+		<filter>
 			<id>1338843689105</id>
 			<name>Source/Shaders</name>
 			<type>22</type>
