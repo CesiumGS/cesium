@@ -222,7 +222,7 @@
 
 		<!-- create each combined worker layer -->
 		<antcall target="combineJavaScript.combineWorker">
-			<param name="worker" value="createVerticesFromExtent" />
+		  <param name="worker" value="createVerticesFromHeightmap" />
 		</antcall>
 
 		<!-- copy to build folder with copyright header added at the top -->

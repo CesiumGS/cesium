@@ -24,10 +24,7 @@ define([
         var shaders = this._shaders;
         for ( var keyword in shaders) {
             if (shaders.hasOwnProperty(keyword)) {
-                var shader = shaders[keyword];
-                if (shader !== 'undefined') {
-                    shader.release();
-                }
+                shaders[keyword].release();
             }
         }
 
@@ -64,7 +61,7 @@ define([
                 (applySaturation ? '#define APPLY_SATURATION\n' : '') +
                 (applyGamma ? '#define APPLY_GAMMA\n' : '') +
                 '#define TEXTURE_UNITS ' + textureCount + '\n' +
-                this.baseFragmentShaderString +
+                this.baseFragmentShaderString + '\n' +
                 'vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)\n' +
                 '{\n' +
                 '    vec3 color = initialColor;\n';

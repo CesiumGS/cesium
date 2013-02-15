@@ -19,7 +19,7 @@ define([
         '../Renderer/TextureWrap',
         './GeographicTilingScheme',
         './Imagery',
-        './ImageryProviderError',
+        './TileProviderError',
         './ImageryState',
         './TileImagery',
         './TexturePool',
@@ -46,7 +46,7 @@ define([
         TextureWrap,
         GeographicTilingScheme,
         Imagery,
-        ImageryProviderError,
+        TileProviderError,
         ImageryState,
         TileImagery,
         TexturePool,
@@ -555,7 +555,7 @@ define([
             imagery.image = image;
             imagery.state = ImageryState.RECEIVED;
 
-            ImageryProviderError.handleSuccess(that._requestImageError);
+            TileProviderError.handleSuccess(that._requestImageError);
         }
 
         function failure(e) {
@@ -564,7 +564,7 @@ define([
             imagery.state = ImageryState.FAILED;
 
             var message = 'Failed to obtain image tile X: ' + imagery.x + ' Y: ' + imagery.y + ' Level: ' + imagery.level + '.';
-            that._requestImageError = ImageryProviderError.handleError(
+            that._requestImageError = TileProviderError.handleError(
                     that._requestImageError,
                     imageryProvider,
                     imageryProvider.getErrorEvent(),
@@ -730,7 +730,7 @@ define([
             return this.oneOverMercatorHeight;
         },
 
-        textureDimensions : new Cartesian2(0.0, 0.0),
+        textureDimensions : new Cartesian2(),
         texture : undefined,
         northLatitude : 0,
         southLatitude : 0,
