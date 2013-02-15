@@ -120,10 +120,6 @@ define([
         var ellipsoid = terrainTilingScheme.getEllipsoid();
         this._ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid, Cartesian3.ZERO);
 
-        this._waterMaskSampler = undefined;
-        this._allWaterTexture = undefined;
-        this._allLandTexture = undefined;
-
         this._debug = {
             enableDebugOutput : false,
             boundingSphereTile : undefined,
@@ -310,14 +306,6 @@ define([
             if (typeof debug.boundingSphereVA !== 'undefined') {
                 debug.boundingSphereVA.destroy();
             }
-        }
-
-        if (typeof this._allWaterTexture !== 'undefined') {
-            this._allWaterTexture.destroy();
-        }
-
-        if (typeof this._allLandTexture !== 'undefined') {
-            this._allLandTexture.destroy();
         }
 
         return destroyObject(this);
