@@ -151,9 +151,14 @@ require([
 
     var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
 
+    var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
+        url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
+    });
+
     var terrainProviders = [
         { name : 'CesiumTerrainProvider', provider : terrainProvider },
-        { name : 'EllipsoidTerrainProvider', provider : ellipsoidProvider }
+        { name : 'EllipsoidTerrainProvider', provider : ellipsoidProvider },
+        { name : 'VRTheWorldTerrainProvider', provider : vrTheWorldProvider }
     ];
 
     createTerrainMenu(terrainProviders);
