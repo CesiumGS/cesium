@@ -20,9 +20,7 @@ define([
         './SceneMode',
         './Polyline',
         '../Shaders/PolylineVS',
-        '../Shaders/PolylineFS',
-        '../Renderer/StencilFunction',
-        '../Renderer/StencilOperation'
+        '../Shaders/PolylineFS'
     ], function(
         DeveloperError,
         combine,
@@ -44,9 +42,7 @@ define([
         SceneMode,
         Polyline,
         PolylineVS,
-        PolylineFS,
-        StencilFunction,
-        StencilOperation) {
+        PolylineFS) {
     "use strict";
 
     var SHOW_INDEX = Polyline.SHOW_INDEX;
@@ -139,6 +135,8 @@ define([
         this.modelMatrix = Matrix4.IDENTITY.clone();
         this._modelMatrix = Matrix4.IDENTITY.clone();
         this._sp = undefined;
+        this._rs = undefined;
+        this._rsPick = undefined;
 
         this._boundingVolume = undefined;
         this._boundingVolume2D = undefined;
@@ -476,19 +474,30 @@ define([
         var command;
         polylineBuckets = this._polylineBuckets;
         var sp = this._sp;
+        var useDepthTest = (this.morphTime !== 0.0);
         this._commandLists.removeAll();
         if (typeof polylineBuckets !== 'undefined') {
             if (pass.color) {
+                if (typeof this._rs === 'undefined') {
+                    this._rs = context.createRenderState({
+                        blending : BlendingState.ALPHA_BLEND
+                    });
+                }
+
+                this._rs.depthMask = !useDepthTest;
+                this._rs.depthTest.enabled = useDepthTest;
+                this._rs.lineWidth = clampWidth(context, this.width);
+
                 length = this._colorVertexArrays.length;
                 commands = this._commandLists.colorList;
                 for ( var m = 0; m < length; ++m) {
                     var vaColor = this._colorVertexArrays[m];
-                    var vaOutlineColor = this._outlineColorVertexArrays[m];
+                    //var vaOutlineColor = this._outlineColorVertexArrays[m];
                     buckets = this._colorVertexArrays[m].buckets;
                     bucketLength = buckets.length;
                     var p = commands.length;
-                    commands.length += bucketLength * 3;
-                    for ( var n = 0; n < bucketLength; ++n, p += 3) {
+                    commands.length += bucketLength;
+                    for ( var n = 0; n < bucketLength; ++n, ++p) {
                         bucketLocator = buckets[n];
 
                         command = commands[p];
@@ -503,42 +512,20 @@ define([
                         command.offset = bucketLocator.offset;
                         command.shaderProgram = sp;
                         command.uniformMap = this._uniforms;
-                        command.vertexArray = vaOutlineColor.va;
-                        command.renderState = bucketLocator.rsOne;
-
-                        command = commands[p + 1];
-                        if (typeof command === 'undefined') {
-                            command = commands[p + 1] = new DrawCommand();
-                        }
-
-                        command.boundingVolume = boundingVolume;
-                        command.modelMatrix = modelMatrix;
-                        command.primitiveType = PrimitiveType.LINES;
-                        command.count = bucketLocator.count;
-                        command.offset = bucketLocator.offset;
-                        command.shaderProgram = sp;
-                        command.uniformMap = this._uniforms;
                         command.vertexArray = vaColor.va;
-                        command.renderState = bucketLocator.rsTwo;
-
-                        command = commands[p + 2];
-                        if (typeof command === 'undefined') {
-                            command = commands[p + 2] = new DrawCommand();
-                        }
-
-                        command.boundingVolume = boundingVolume;
-                        command.modelMatrix = modelMatrix;
-                        command.primitiveType = PrimitiveType.LINES;
-                        command.count = bucketLocator.count;
-                        command.offset = bucketLocator.offset;
-                        command.shaderProgram = sp;
-                        command.uniformMap = this._uniforms;
-                        command.vertexArray = vaOutlineColor.va;
-                        command.renderState = bucketLocator.rsThree;
+                        command.renderState = this._rs;
                     }
                 }
             }
             if (pass.pick) {
+                if (typeof this._rsPick === 'undefined') {
+                    this._rsPick = context.createRenderState();
+                }
+
+                this._rsPick.depthMask = !useDepthTest;
+                this._rsPick.depthTest.enabled = useDepthTest;
+                this._rsPick.lineWidth = clampWidth(context, this.width);
+
                 length = this._pickColorVertexArrays.length;
                 commands = this._commandLists.pickList;
                 for ( var a = 0; a < length; ++a) {
@@ -562,7 +549,7 @@ define([
                         command.shaderProgram = sp;
                         command.uniformMap = this._uniforms;
                         command.vertexArray = vaPickColor.va;
-                        command.renderState = bucketLocator.rsPick;
+                        command.renderState = this._rsPick;
                     }
                 }
             }
@@ -615,6 +602,13 @@ define([
         return destroyObject(this);
     };
 
+    function clampWidth(context, value) {
+        var min = context.getMinimumAliasedLineWidth();
+        var max = context.getMaximumAliasedLineWidth();
+
+        return Math.min(Math.max(value, min), max);
+    }
+
     PolylineCollection.prototype._computeNewBuffersUsage = function() {
         var buffersUsage = this._buffersUsage;
         var usageChanged = false;
@@ -660,7 +654,6 @@ define([
         var vertexBufferOffset = [0];
         totalIndices.push(indices);
         var offset = 0;
-        var useDepthTest = (this.morphTime !== 0.0);
         var vertexArrayBuckets = [[]];
         var totalLength = 0;
         var polylineBuckets = this._polylineBuckets;
@@ -669,7 +662,6 @@ define([
         for (x in polylineBuckets) {
             if (polylineBuckets.hasOwnProperty(x)) {
                 bucket = polylineBuckets[x];
-                bucket.updateRenderState(context, useDepthTest);
                 totalLength += bucket.lengthOfPositions;
             }
         }
@@ -987,10 +979,6 @@ define([
     function VertexArrayBucketLocator(count, offset, bucket) {
         this.count = count;
         this.offset = offset;
-        this.rsOne = bucket.rsOne;
-        this.rsTwo = bucket.rsTwo;
-        this.rsThree = bucket.rsThree;
-        this.rsPick = bucket.rsPick;
     }
 
     /**
@@ -1001,10 +989,6 @@ define([
         this.outlineWidth = outlineWidth;
         this.polylines = [];
         this.lengthOfPositions = 0;
-        this.rsOne = undefined;
-        this.rsTwo = undefined;
-        this.rsThree = undefined;
-        this.rsPick = undefined;
         this.mode = mode;
         this.projection = projection;
         this.ellipsoid = projection.getEllipsoid();
@@ -1020,101 +1004,6 @@ define([
         p._actualLength = this.getPolylinePositionsLength(p);
         this.lengthOfPositions += p._actualLength;
         p._bucket = this;
-    };
-
-    /**
-     * @private
-     */
-    PolylineBucket.prototype.updateRenderState = function(context, useDepthTest) {
-        var width = this._clampWidth(context, this.width);
-        var outlineWidth = this._clampWidth(context, this.outlineWidth);
-        var rsOne = this.rsOne || context.createRenderState({
-            colorMask : {
-                red : false,
-                green : false,
-                blue : false,
-                alpha : false
-            },
-            lineWidth : 1,
-            blending : BlendingState.ALPHA_BLEND,
-            stencilTest : {
-                enabled : true,
-                frontFunction : StencilFunction.ALWAYS,
-                backFunction : StencilFunction.ALWAYS,
-                reference : 0,
-                mask : ~0,
-                frontOperation : {
-                    fail : StencilOperation.REPLACE,
-                    zFail : StencilOperation.REPLACE,
-                    zPass : StencilOperation.REPLACE
-                },
-                backOperation : {
-                    fail : StencilOperation.REPLACE,
-                    zFail : StencilOperation.REPLACE,
-                    zPass : StencilOperation.REPLACE
-                }
-            }
-        });
-        rsOne.depthMask = !useDepthTest;
-        rsOne.depthTest.enabled = useDepthTest;
-        rsOne.lineWidth = outlineWidth;
-        this.rsOne = rsOne;
-        var rsTwo = this.rsTwo || context.createRenderState({
-            lineWidth : 1,
-            depthMask : false,
-            blending : BlendingState.ALPHA_BLEND,
-            stencilTest : {
-                enabled : true,
-                frontFunction : StencilFunction.ALWAYS,
-                backFunction : StencilFunction.ALWAYS,
-                reference : 1,
-                mask : ~0,
-                frontOperation : {
-                    fail : StencilOperation.KEEP,
-                    zFail : StencilOperation.KEEP,
-                    zPass : StencilOperation.REPLACE
-                },
-                backOperation : {
-                    fail : StencilOperation.KEEP,
-                    zFail : StencilOperation.KEEP,
-                    zPass : StencilOperation.REPLACE
-                }
-            }
-        });
-        rsTwo.depthTest.enabled = useDepthTest;
-        rsTwo.lineWidth = width;
-        this.rsTwo = rsTwo;
-        var rsThree = this.rsThree || context.createRenderState({
-            lineWidth : 1,
-            depthMask : false,
-            blending : BlendingState.ALPHA_BLEND,
-            stencilTest : {
-                enabled : true,
-                frontFunction : StencilFunction.NOT_EQUAL,
-                backFunction : StencilFunction.NOT_EQUAL,
-                reference : 1,
-                mask : ~0,
-                frontOperation : {
-                    fail : StencilOperation.KEEP,
-                    zFail : StencilOperation.KEEP,
-                    zPass : StencilOperation.KEEP
-                },
-                backOperation : {
-                    fail : StencilOperation.KEEP,
-                    zFail : StencilOperation.KEEP,
-                    zPass : StencilOperation.KEEP
-                }
-            }
-        });
-        rsThree.lineWidth = this.outlineWidth;
-        rsThree.depthTest.enabled = useDepthTest;
-        this.rsThree = rsThree;
-
-        var rsPick = this.rsPick || context.createRenderState();
-        rsPick.depthTest.enabled = useDepthTest;
-        rsPick.lineWidth = outlineWidth;
-        rsPick.depthMask = !useDepthTest;
-        this.rsPick = rsPick;
     };
 
     function intersectsIDL(polyline) {
@@ -1211,16 +1100,6 @@ define([
                 }
             }
         }
-    };
-
-    /**
-     * @private
-     */
-    PolylineBucket.prototype._clampWidth = function(context, value) {
-        var min = context.getMinimumAliasedLineWidth();
-        var max = context.getMaximumAliasedLineWidth();
-
-        return Math.min(Math.max(value, min), max);
     };
 
     /**
