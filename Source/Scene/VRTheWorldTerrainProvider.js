@@ -44,7 +44,7 @@ define([
 
     /**
      * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
-     * retrieved from a MÄK VR-TheWorld server.
+     * retrieved from a {@link http://vr-theworld.com/|VT MÄK VR-TheWorld server}.
      *
      * @alias VRTheWorldTerrainProvider
      * @constructor
@@ -174,7 +174,7 @@ define([
                 buffer : getImagePixels(image),
                 width : that._heightmapWidth,
                 height : that._heightmapHeight,
-                childTileMask : 15, // all children present
+                childTileMask : getChildMask(that, x, y, level),
                 structure : that._terrainDataStructure
             });
         });
@@ -258,6 +258,49 @@ define([
     VRTheWorldTerrainProvider.prototype.isReady = function() {
         return this._ready;
     };
+
+    var extentScratch = new Extent();
+
+    function getChildMask(provider, x, y, level) {
+        var tilingScheme = provider._tilingScheme;
+        var extents = provider._extents;
+        var parentExtent = tilingScheme.tileXYToExtent(x, y, level);
+
+        var childMask = 0;
+
+        for (var i = 0; i < extents.length && childMask !== 15; ++i) {
+            var extent = extents[i];
+            if (extent.maxLevel <= level) {
+                continue;
+            }
+
+            var testExtent = extent.extent;
+
+            var intersection = testExtent.intersectWith(parentExtent, extentScratch);
+            if (!intersection.isEmpty()) {
+                // Parent tile is inside this extent, so at least one child is, too.
+                if (isTileInExtent(tilingScheme, testExtent, x * 2, y * 2, level + 1)) {
+                    childMask |= 4; // northwest
+                }
+                if (isTileInExtent(tilingScheme, testExtent, x * 2 + 1, y * 2, level + 1)) {
+                    childMask |= 8; // northeast
+                }
+                if (isTileInExtent(tilingScheme, testExtent, x * 2, y * 2 + 1, level + 1)) {
+                    childMask |= 1; // southwest
+                }
+                if (isTileInExtent(tilingScheme, testExtent, x * 2 + 1, y * 2 + 1, level + 1)) {
+                    childMask |= 2; // southeast
+                }
+            }
+        }
+
+        return childMask;
+    }
+
+    function isTileInExtent(tilingScheme, extent, x, y, level) {
+        var tileExtent = tilingScheme.tileXYToExtent(x, y, level);
+        return !tileExtent.intersectWith(extent, extentScratch).isEmpty();
+    }
 
     return VRTheWorldTerrainProvider;
 });
