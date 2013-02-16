@@ -102,7 +102,7 @@ define([
         this._layerOrderChanged = false;
 
         var terrainTilingScheme = this._terrainProvider.getTilingScheme();
-        this._levelZeroTiles = terrainTilingScheme.createLevelZeroTiles();
+        this._levelZeroTiles = undefined;
 
         this._tilesToRenderByTextureCount = [];
         this._tileCommands = [];
@@ -174,12 +174,13 @@ define([
 
         // Free and recreate the level zero tiles.
         var levelZeroTiles = this._levelZeroTiles;
-        for (var i = 0; i < levelZeroTiles.length; ++i) {
-            levelZeroTiles[i].freeResources();
+        if (typeof levelZeroTiles !== 'undefined') {
+            for (var i = 0; i < levelZeroTiles.length; ++i) {
+                levelZeroTiles[i].freeResources();
+            }
         }
 
-        var terrainTilingScheme = this._terrainProvider.getTilingScheme();
-        this._levelZeroTiles = terrainTilingScheme.createLevelZeroTiles();
+        this._levelZeroTiles = undefined;
     };
 
     CentralBodySurface.prototype._onLayerAdded = function(layer, index) {
@@ -295,8 +296,10 @@ define([
      */
     CentralBodySurface.prototype.destroy = function() {
         var levelZeroTiles = this._levelZeroTiles;
-        for (var i = 0; i < levelZeroTiles.length; ++i) {
-            levelZeroTiles[i].freeResources();
+        if (typeof levelZeroTiles !== 'undefined') {
+            for (var i = 0; i < levelZeroTiles.length; ++i) {
+                levelZeroTiles[i].freeResources();
+            }
         }
 
         this._imageryLayerCollection.destroy();
@@ -348,11 +351,6 @@ define([
             }
         }
 
-        // We can't render anything before the level zero tiles exist.
-        if (typeof surface._levelZeroTiles === 'undefined') {
-            return;
-        }
-
         var traversalQueue = surface._tileTraversalQueue;
         traversalQueue.clear();
 
@@ -366,6 +364,17 @@ define([
         surface._tileLoadQueue.clear();
         surface._tileLoadQueue.markInsertionPoint();
         surface._tileReplacementQueue.markStartOfRenderFrame();
+
+        // We can't render anything before the level zero tiles exist.
+        if (typeof surface._levelZeroTiles === 'undefined') {
+            if (surface._terrainProvider.isReady()) {
+                var terrainTilingScheme = surface._terrainProvider.getTilingScheme();
+                surface._levelZeroTiles = terrainTilingScheme.createLevelZeroTiles();
+            } else {
+                // Nothing to do until the terrain provider is ready.
+                return;
+            }
+        }
 
         var cameraPosition = frameState.camera.getPositionWC();
 
