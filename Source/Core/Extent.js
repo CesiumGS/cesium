@@ -314,7 +314,7 @@ define([
      * @return {Boolean} True if the extent is empty; otherwise, false.
      */
     Extent.prototype.isEmpty = function() {
-        return (this.west === this.east) && (this.south === this.north);
+        return (this.west >= this.east) && (this.south >= this.north);
     };
 
     var subsampleLlaScratch = new Cartographic();
