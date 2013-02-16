@@ -110,7 +110,7 @@ define([
         this._cameraPosition = cameraPosition;
     };
 
-    var tempVecScratch = new Cartesian3(0.0, 0.0, 0.0);
+    var tempVecScratch = new Cartesian3();
 
     /**
      * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.
@@ -130,19 +130,19 @@ define([
      *
      * @see Occluder#getVisibility
      */
-     Occluder.prototype.isPointVisible = function(occludee) {
-         if (this._horizonDistance !== Number.MAX_VALUE) {
-             var tempVec = Cartesian3.subtract(occludee, this._occluderPosition, tempVecScratch);
-             var temp = this._occluderRadius;
-             temp = tempVec.magnitudeSquared() - (temp * temp);
-             if (temp > 0.0) {
-                 temp = Math.sqrt(temp) + this._horizonDistance;
-                 tempVec = Cartesian3.subtract(occludee, this._cameraPosition, tempVec);
-                 return temp * temp > tempVec.magnitudeSquared();
-             }
-         }
-         return false;
-     };
+    Occluder.prototype.isPointVisible = function(occludee) {
+        if (this._horizonDistance !== Number.MAX_VALUE) {
+            var tempVec = Cartesian3.subtract(occludee, this._occluderPosition, tempVecScratch);
+            var temp = this._occluderRadius;
+            temp = tempVec.magnitudeSquared() - (temp * temp);
+            if (temp > 0.0) {
+                temp = Math.sqrt(temp) + this._horizonDistance;
+                tempVec = Cartesian3.subtract(occludee, this._cameraPosition, tempVec);
+                return temp * temp > tempVec.magnitudeSquared();
+            }
+        }
+        return false;
+    };
 
     /**
     * Determines whether or not a sphere, the <code>occludee</code>, is hidden from view by the occluder.

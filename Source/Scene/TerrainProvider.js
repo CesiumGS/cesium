@@ -18,22 +18,14 @@ define([
      *
      * @alias TerrainProvider
      * @constructor
-     * @private
      *
      * @see EllipsoidTerrainProvider
+     * @see CesiumTerrainProvider
+     * @see ArcGisImageServerTerrainProvider
      */
-    function TerrainProvider() {
-        /**
-         * The tiling scheme used to tile the surface.
-         *
-         * @type TilingScheme
-         */
-        this.tilingScheme = undefined;
-
-        this.levelZeroMaximumGeometricError = undefined;
-
+    var TerrainProvider = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
-    }
+    };
 
     /**
      * Specifies the indices of the attributes of the terrain geometry.
@@ -41,7 +33,7 @@ define([
      * @memberof TerrainProvider
      */
     TerrainProvider.attributeIndices = {
-        position3D : 0,
+        position3DAndHeight : 0,
         textureCoordinates : 1
     };
 
@@ -108,16 +100,23 @@ define([
         return lines;
     }
 
-    TerrainProvider.createTileEllipsoidGeometryFromBuffers = function(context, tile, buffers) {
+    TerrainProvider.createTileEllipsoidGeometryFromBuffers = function(context, buffers, tileTerrain, includesHeights) {
         var datatype = ComponentDatatype.FLOAT;
         var typedArray = buffers.vertices;
         var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
         var stride = 5 * datatype.sizeInBytes;
+        var position3DAndHeightLength = 3;
+
+        if (includesHeights) {
+            stride += datatype.sizeInBytes;
+            ++position3DAndHeightLength;
+        }
+
         var attributes = [{
-            index : TerrainProvider.attributeIndices.position3D,
+            index : TerrainProvider.attributeIndices.position3DAndHeight,
             vertexBuffer : buffer,
             componentDatatype : datatype,
-            componentsPerAttribute : 3,
+            componentsPerAttribute : position3DAndHeightLength,
             offsetInBytes : 0,
             strideInBytes : stride
         }, {
@@ -125,7 +124,7 @@ define([
             vertexBuffer : buffer,
             componentDatatype : datatype,
             componentsPerAttribute : 2,
-            offsetInBytes : 3 * datatype.sizeInBytes,
+            offsetInBytes : position3DAndHeightLength * datatype.sizeInBytes,
             strideInBytes : stride
         }];
 
@@ -145,7 +144,7 @@ define([
             ++indexBuffer.referenceCount;
         }
 
-        tile.vertexArray = context.createVertexArray(attributes, indexBuffer);
+        tileTerrain.vertexArray = context.createVertexArray(attributes, indexBuffer);
     };
 
     /**
@@ -170,58 +169,101 @@ define([
     };
 
     /**
-     * Gets the maximum geometric error allowed in a tile at a given level.
+     * Requests the geometry for a given tile.  This function should not be called before
+     * {@link TerrainProvider#isReady} returns true.  The result must include terrain data and
+     * may optionally include a water mask and an indication of which child tiles are available.
+     *
+     * @memberof TerrainProvider
+     *
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {Promise|TerrainData} A promise for the requested geometry.  If this method
+     *          returns undefined instead of a promise, it is an indication that too many requests are already
+     *          pending and the request will be retried later.
+     */
+    TerrainProvider.prototype.requestTileGeometry = function(x, y, level) {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link TileProviderError}.
+     *
+     * @memberof TerrainProvider
+     *
+     * @returns {Event} The event.
+     */
+    TerrainProvider.prototype.getErrorEvent = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Gets the maximum geometric error allowed in a tile at a given level.  This function should not be
+     * called before {@link TerrainProvider#isReady} returns true.
+     *
+     * @memberof TerrainProvider
      *
      * @param {Number} level The tile level for which to get the maximum geometric error.
      * @returns {Number} The maximum geometric error.
      */
     TerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
-        return this.levelZeroMaximumGeometricError / (1 << level);
-    };
-
-    // Is there a limit on 'level' of the tile that can be passed in?  It seems
-    // natural to have a maxLevel, but this would cause problems if we have hi-res imagery
-    // and low-res terrain.  So I'd say we can continue to refine terrain tiles arbitrarily
-    // until both the terrain and all the imagery layers have no more detail to give.  In that
-    // case, this method is expected to be able to produce geometry for an arbitrarily-deep
-    // tile tree.
-
-    /**
-     * Request the tile geometry from the remote server.  Once complete, the
-     * tile state should be set to RECEIVED.  Alternatively, tile state can be set to
-     * UNLOADED to indicate that the request should be attempted again next update, if the tile
-     * is still needed.
-     *
-     * @param {Tile} The tile to request geometry for.
-     */
-    TerrainProvider.prototype.requestTileGeometry = function(tile) {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 
     /**
-     * Transform the tile geometry from the format requested from the remote server
-     * into a format suitable for resource creation.  Once complete, the tile
-     * state should be set to TRANSFORMED.  Alternatively, tile state can be set to
-     * RECEIVED to indicate that the transformation should be attempted again next update, if the tile
-     * is still needed.
+     * Gets the logo to display when this terrain provider is active.  Typically this is used to credit
+     * the source of the terrain.  This function should not be called before {@link TerrainProvider#isReady} returns true.
      *
-     * @param {Context} context The context to use to create resources.
-     * @param {Tile} tile The tile to transform geometry for.
+     * @memberof TerrainProvider
+     *
+     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     *
+     * @exception {DeveloperError} <code>getLogo</code> must not be called before the terrain provider is ready.
      */
-    TerrainProvider.prototype.transformGeometry = function(context, tile) {
+    TerrainProvider.prototype.getLogo = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 
     /**
-     * Create WebGL resources for the tile using whatever data the transformGeometry step produced.
-     * Once complete, the tile state should be set to READY.  Alternatively, tile state can be set to
-     * TRANSFORMED to indicate that resource creation should be attempted again next update, if the tile
-     * is still needed.
+     * Gets the tiling scheme used by this provider.  This function should
+     * not be called before {@link TerrainProvider#isReady} returns true.
      *
-     * @param {Context} context The context to use to create resources.
-     * @param {Tile} tile The tile to create resources for.
+     * @memberof TerrainProvider
+     *
+     * @returns {GeographicTilingScheme} The tiling scheme.
+     * @see WebMercatorTilingScheme
+     * @see GeographicTilingScheme
+     *
+     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the terrain provider is ready.
      */
-    TerrainProvider.prototype.createResources = function(context, tile) {
+    TerrainProvider.prototype.getTilingScheme = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Gets a value indicating whether or not the provider includes a water mask.  The water mask
+     * indicates which areas of the globe are water rather than land, so they can be rendered
+     * as a reflective surface with animated waves.  This function should not be
+     * called before {@link TerrainProvider#isReady} returns true.
+     *
+     * @memberof TerrainProvider
+     *
+     * @returns {Boolean} True if the provider has a water mask; otherwise, false.
+     */
+    TerrainProvider.prototype.hasWaterMask = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Gets a value indicating whether or not the provider is ready for use.
+     *
+     * @memberof TerrainProvider
+     *
+     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
+     */
+    TerrainProvider.prototype.isReady = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 

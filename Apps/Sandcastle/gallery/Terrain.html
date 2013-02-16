@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Visualize worldwide, high-resolution terrain.">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript">
+    var dojoConfig = {
+        baseUrl : '../../../Source',
+        packages: [
+            { name: 'dojo', location: '../ThirdParty/dojo-release-1.8.3-src/dojo' },
+            { name: 'dijit', location: '../ThirdParty/dojo-release-1.8.3-src/dijit' },
+            { name: 'dojox', location: '../ThirdParty/dojo-release-1.8.3-src/dojox' }
+        ]
+    };
+    </script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
+    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
+</head>
+<body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+<div id="terrainMenu"></div>
+<div id="zoomButtons"></div>
+</div>
+<script id="cesium_sandcastle_script">
+require([
+    'Cesium',
+    'Widgets/Dojo/CesiumViewerWidget',
+    'dijit/DropDownMenu',
+    'dijit/MenuItem',
+    'dijit/form/Button',
+    'dijit/form/DropDownButton'
+], function(
+    Cesium,
+    CesiumViewerWidget,
+    DropDownMenu,
+    MenuItem,
+    Button,
+    DropDownButton) {
+    "use strict";
+
+    function createTerrainMenu(terrainProviders) {
+        var menu = new DropDownMenu();
+        var button = new DropDownButton({
+            label : terrainProviders[0].name,
+            dropDown : menu
+        });
+
+        function createTerrainMenuItem(button, providerInfo) {
+            return new MenuItem({
+                label : providerInfo.name,
+                onClick : function() {
+                    centralBody.terrainProvider = providerInfo.provider;
+                    button.set('label', providerInfo.name);
+                }
+            });
+        }
+
+        for (var i = 0, len = terrainProviders.length; i < len; ++i) {
+            menu.addChild(createTerrainMenuItem(button, terrainProviders[i]));
+        }
+
+        button.placeAt('terrainMenu');
+
+        new Button({
+            label: 'Mount Everest',
+            onClick: function() {
+                var eye, target, up;
+
+                if (scene.mode === Cesium.SceneMode.SCENE3D) {
+                    eye = new Cesium.Cartesian3(294572.0645397696, 5637826.573008351, 2978624.6868285);
+                    target = eye.add(new Cesium.Cartesian3(0.9028130862217908, -0.42449297750082904, -0.06880583840911567));
+                    up = new Cesium.Cartesian3(0.40668971896562117, 0.790807045510862, 0.45741413322152297);
+                    scene.getCamera().controller.lookAt(eye, target, up);
+                } else if (scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
+                    eye = new Cesium.Cartesian3(9684590.891310014, 3114799.076252769, 9849.375792522824);
+                    target = eye.add(new Cesium.Cartesian3(-0.8929328433855669, -0.00005779973945286486, -0.45018988645076763));
+                    up = new Cesium.Cartesian3(-0.4501898855076042, -0.0000291369789812141, 0.8929328452557279);
+                    scene.getCamera().controller.lookAt(eye, target, up);
+                } else {
+                    scene.getCamera().controller.viewExtent(new Cesium.Extent(1.516102969, 0.48744464, 1.518102969, 0.48944464));
+                }
+            }
+        }).placeAt('zoomButtons');
+
+        new Button({
+            label: 'Half Dome',
+            onClick: function() {
+                var eye, target, up;
+
+                if (scene.mode === Cesium.SceneMode.SCENE3D) {
+                    eye = new Cesium.Cartesian3(-2496304.1498512086, -4391818.97382059, 3884176.4503971986);
+                    target = eye.add(new Cesium.Cartesian3(0.9279518715011381, -0.29488412129953234, -0.22792252890604328));
+                    up = new Cesium.Cartesian3(-0.11836693744723503, -0.8130611584421428, 0.5700182635106171);
+                    scene.getCamera().controller.lookAt(eye, target, up);
+                } else if (scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
+                    eye = new Cesium.Cartesian3(-13314946.646404704, 4200941.442507448, 2468.225945515426);
+                    target = eye.add(new Cesium.Cartesian3(0.9624895834866811, 0.04124314776883213, -0.26816562874787864));
+                    up = new Cesium.Cartesian3(0.2679197697914868, 0.011480478929947842, 0.9633728227203466);
+                    scene.getCamera().controller.lookAt(eye, target, up);
+                } else {
+                    scene.getCamera().controller.viewExtent(new Cesium.Extent(-2.08724538, 0.6577939, -2.08524538, 0.6597939));
+                }
+            }
+        }).placeAt('zoomButtons');
+
+        new Button({
+            label: 'San Francisco Bay',
+            onClick: function() {
+                var eye, target, up;
+
+                if (scene.mode === Cesium.SceneMode.SCENE3D) {
+                    eye = new Cesium.Cartesian3(-2674718.9291375633, -4332137.224608461, 3888180.6614196445);
+                    target = eye.add(new Cesium.Cartesian3(-0.40034097132786534, 0.9155843741828319, 0.03784653786617176));
+                    up = new Cesium.Cartesian3(-0.6502679490649945, -0.3129458646313862, 0.6922546353438556);
+                    scene.getCamera().controller.lookAt(eye, target, up);
+                } else if (scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
+                    eye = new Cesium.Cartesian3(-13562569.113918452, 4176598.9965795614, 37656.37201701476);
+                    target = eye.add(new Cesium.Cartesian3(-0.8108519561707095, 0.4023795334200999, -0.42498213639958615));
+                    up = new Cesium.Cartesian3(-0.3806859699462094, 0.18891270085627615, 0.905201736488051);
+                    scene.getCamera().controller.lookAt(eye, target, up);
+                } else {
+                    scene.getCamera().controller.viewExtent(new Cesium.Extent(-2.147621889, 0.64829691, -2.125621889, 0.67029691));
+                }
+            }
+        }).placeAt('zoomButtons');
+    }
+
+    var widget = new CesiumViewerWidget();
+    widget.placeAt('cesiumContainer');
+    widget.fullscreenElement = document.body;
+    widget.startup();
+
+    var scene = widget.scene;
+    var centralBody = scene.getPrimitives().getCentralBody();
+
+    var cesiumTerrainProvider = new Cesium.CesiumTerrainProvider({
+        url : 'http://cesium.agi.com/smallterrain',
+        credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+    });
+
+    var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
+
+    var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
+        url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
+        credit : 'Terrain data courtesy VT MÄK'
+    });
+
+    var terrainProviders = [
+        { name : 'CesiumTerrainProvider', provider : cesiumTerrainProvider },
+        { name : 'EllipsoidTerrainProvider', provider : ellipsoidProvider },
+        { name : 'VRTheWorldTerrainProvider', provider : vrTheWorldProvider }
+    ];
+
+    centralBody.terrainProvider = cesiumTerrainProvider;
+
+    createTerrainMenu(terrainProviders);
+
+    centralBody.logoOffset = new Cesium.Cartesian2(300, 40);
+
+    Sandcastle.finishedLoading();
+});
+</script>
+</body>
+</html>

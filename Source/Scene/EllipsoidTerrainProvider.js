@@ -1,38 +1,18 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
         '../Core/Ellipsoid',
-        '../Core/ExtentTessellator',
-        '../Core/Occluder',
-        '../Core/PlaneTessellator',
-        '../Core/TaskProcessor',
+        '../Core/Event',
+        './HeightmapTerrainData',
         './TerrainProvider',
-        './TileState',
-        './GeographicTilingScheme',
-        '../ThirdParty/when'
+        './GeographicTilingScheme'
     ], function(
         defaultValue,
-        DeveloperError,
-        CesiumMath,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
         Ellipsoid,
-        ExtentTessellator,
-        Occluder,
-        PlaneTessellator,
-        TaskProcessor,
+        Event,
+        HeightmapTerrainData,
         TerrainProvider,
-        TileState,
-        GeographicTilingScheme,
-        when) {
+        GeographicTilingScheme) {
     "use strict";
 
     /**
@@ -41,7 +21,6 @@ define([
      *
      * @alias EllipsoidTerrainProvider
      * @constructor
-     * @private
      *
      * @param {TilingScheme} [description.tilingScheme] The tiling scheme specifying how the ellipsoidal
      * surface is broken into tiles.  If this parameter is not provided, a {@link GeographicTilingScheme}
@@ -52,130 +31,126 @@ define([
      *
      * @see TerrainProvider
      */
-    function EllipsoidTerrainProvider(description) {
+    var EllipsoidTerrainProvider = function EllipsoidTerrainProvider(description) {
         description = defaultValue(description, {});
 
-        /**
-         * The tiling scheme used to tile the surface.
-         *
-         * @type TilingScheme
-         */
-        this.tilingScheme = defaultValue(description.tilingScheme, new GeographicTilingScheme({ ellipsoid : defaultValue(description.ellipsoid, Ellipsoid.WGS84) }));
+        this._tilingScheme = description.tilingScheme;
+        if (typeof this._tilingScheme === 'undefined') {
+            this._tilingScheme = new GeographicTilingScheme({
+                ellipsoid : defaultValue(description.ellipsoid, Ellipsoid.WGS84)
+            });
+        }
 
-        // Note: the 64 below does NOT need to match the actual vertex dimensions.
-        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.getEllipsoid(), 64, this.tilingScheme.getNumberOfXTilesAtLevel(0));
+        // Note: the 64 below does NOT need to match the actual vertex dimensions, because
+        // the ellipsoid is significantly smoother than actual terrain.
+        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.getEllipsoid(), 64, this._tilingScheme.getNumberOfXTilesAtLevel(0));
 
-        this.ready = true;
-    }
+        var width = 16;
+        var height = 16;
+        this._terrainData = new HeightmapTerrainData({
+            buffer : new Uint8Array(width * height),
+            width : 16,
+            height : 16
+        });
+
+        this._errorEvent = new Event();
+    };
+
+    /**
+     * Requests the geometry for a given tile.  This function should not be called before
+     * {@link TerrainProvider#isReady} returns true.  The result includes terrain
+     * data and indicates that all child tiles are available.
+     *
+     * @memberof EllipsoidTerrainProvider
+     *
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {Promise|TerrainData} A promise for the requested geometry.  If this method
+     *          returns undefined instead of a promise, it is an indication that too many requests are already
+     *          pending and the request will be retried later.
+     */
+    EllipsoidTerrainProvider.prototype.requestTileGeometry = function(x, y, level) {
+        return this._terrainData;
+    };
+
+    /**
+     * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link TileProviderError}.
+     *
+     * @memberof EllipsoidTerrainProvider
+     *
+     * @returns {Event} The event.
+     */
+    EllipsoidTerrainProvider.prototype.getErrorEvent = function() {
+        return this._errorEvent;
+    };
 
     /**
      * Gets the maximum geometric error allowed in a tile at a given level.
      *
+     * @memberof EllipsoidTerrainProvider
+     *
      * @param {Number} level The tile level for which to get the maximum geometric error.
      * @returns {Number} The maximum geometric error.
      */
-    EllipsoidTerrainProvider.prototype.getLevelMaximumGeometricError = TerrainProvider.prototype.getLevelMaximumGeometricError;
-
-    /**
-     * Request the tile geometry from the remote server.  Once complete, the
-     * tile state should be set to RECEIVED.  Alternatively, tile state can be set to
-     * UNLOADED to indicate that the request should be attempted again next update, if the tile
-     * is still needed.
-     *
-     * @param {Tile} The tile to request geometry for.
-     */
-    EllipsoidTerrainProvider.prototype.requestTileGeometry = function(tile) {
-        tile.state = TileState.RECEIVED;
+    EllipsoidTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
+        return this._levelZeroMaximumGeometricError / (1 << level);
     };
 
-    var taskProcessor = new TaskProcessor('createVerticesFromExtent');
-
     /**
-     * Transform the tile geometry from the format requested from the remote server
-     * into a format suitable for resource creation.  Once complete, the tile
-     * state should be set to TRANSFORMED.  Alternatively, tile state can be set to
-     * RECEIVED to indicate that the transformation should be attempted again next update, if the tile
-     * is still needed.
+     * Gets the logo to display when this terrain provider is active.  Typically this is used to credit
+     * the source of the terrain.  This function should not be called before {@link EllipsoidTerrainProvider#isReady} returns true.
      *
-     * @param {Context} context The context to use to create resources.
-     * @param {Tile} tile The tile to transform geometry for.
+     * @memberof EllipsoidTerrainProvider
+     *
+     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     *
+     * @exception {DeveloperError} <code>getLogo</code> must not be called before the terrain provider is ready.
      */
-    EllipsoidTerrainProvider.prototype.transformGeometry = function(context, tile) {
-        var tilingScheme = this.tilingScheme;
-        var ellipsoid = tilingScheme.getEllipsoid();
-        var extent = tile.extent;
-
-        tile.center = ellipsoid.cartographicToCartesian(extent.getCenter());
-
-        var width = 16;
-        var height = 16;
-
-        var verticesPromise = taskProcessor.scheduleTask({
-            extent : extent,
-            surfaceHeight : 0,
-            width : width,
-            height : height,
-            relativeToCenter : tile.center,
-            radiiSquared : ellipsoid.getRadiiSquared()
-        });
-
-        if (typeof verticesPromise === 'undefined') {
-            //postponed
-            tile.state = TileState.RECEIVED;
-            return;
-        }
-
-        when(verticesPromise, function(result) {
-            tile.transientData = {
-                vertices : new Float32Array(result),
-                indices : TerrainProvider.getRegularGridIndices(width, height)
-            };
-            tile.state = TileState.TRANSFORMED;
-        }, function(e) {
-            /*global console*/
-            console.error('failed to transform geometry: ' + e);
-            tile.state = TileState.FAILED;
-        });
+    EllipsoidTerrainProvider.prototype.getLogo = function() {
+        return undefined;
     };
 
-    var scratch = new Cartesian3();
+    /**
+     * Gets the tiling scheme used by this provider.  This function should
+     * not be called before {@link EllipsoidTerrainProvider#isReady} returns true.
+     *
+     * @memberof EllipsoidTerrainProvider
+     *
+     * @returns {GeographicTilingScheme} The tiling scheme.
+     * @see WebMercatorTilingScheme
+     * @see GeographicTilingScheme
+     *
+     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the terrain provider is ready.
+     */
+    EllipsoidTerrainProvider.prototype.getTilingScheme = function() {
+        return this._tilingScheme;
+    };
 
     /**
-     * Create WebGL resources for the tile using whatever data the transformGeometry step produced.
-     * Once complete, the tile state should be set to READY.  Alternatively, tile state can be set to
-     * TRANSFORMED to indicate that resource creation should be attempted again next update, if the tile
-     * is still needed.
+     * Gets a value indicating whether or not the provider includes a water mask.  The water mask
+     * indicates which areas of the globe are water rather than land, so they can be rendered
+     * as a reflective surface with animated waves.
      *
-     * @param {Context} context The context to use to create resources.
-     * @param {Tile} tile The tile to create resources for.
+     * @memberof EllipsoidTerrainProvider
+     *
+     * @returns {Boolean} True if the provider has a water mask; otherwise, false.
      */
-    EllipsoidTerrainProvider.prototype.createResources = function(context, tile) {
-        var buffers = tile.transientData;
-        tile.transientData = undefined;
+    EllipsoidTerrainProvider.prototype.hasWaterMask = function() {
+        return false;
+    };
 
-        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
-        tile.maxHeight = 0;
-        tile.boundingSphere3D = BoundingSphere.fromVertices(buffers.vertices, tile.center, 5);
-
-        var ellipsoid = this.tilingScheme.getEllipsoid();
-        var extent = tile.extent;
-        tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
-        tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast());
-        tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNortheast());
-        tile.northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest());
-
-        tile.westNormal = Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(scratch), scratch).normalize();
-        tile.eastNormal = tile.northeastCornerCartesian.negate(scratch).cross(Cartesian3.UNIT_Z, scratch).normalize();
-        tile.southNormal = ellipsoid.geodeticSurfaceNormal(tile.southeastCornerCartesian).cross(tile.southwestCornerCartesian.subtract(tile.southeastCornerCartesian, scratch)).normalize();
-        tile.northNormal = ellipsoid.geodeticSurfaceNormal(tile.northwestCornerCartesian).cross(tile.northeastCornerCartesian.subtract(tile.northwestCornerCartesian, scratch)).normalize();
-
-        var occludeePoint = Occluder.computeOccludeePointFromExtent(tile.extent, ellipsoid);
-        if (typeof occludeePoint !== 'undefined') {
-            Cartesian3.multiplyComponents(occludeePoint, ellipsoid.getOneOverRadii(), occludeePoint);
-        }
-        tile.occludeePointInScaledSpace = occludeePoint;
-
-        tile.state = TileState.READY;
+    /**
+     * Gets a value indicating whether or not the provider is ready for use.
+     *
+     * @memberof EllipsoidTerrainProvider
+     *
+     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
+     */
+    EllipsoidTerrainProvider.prototype.isReady = function() {
+        return true;
     };
 
     return EllipsoidTerrainProvider;
