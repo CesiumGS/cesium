@@ -361,4 +361,39 @@ defineSuite([
             Ellipsoid.WGS84.scaleToGeocentricSurface(undefined);
         }).toThrow();
     });
+
+    it('clone copies any object with the proper structure', function() {
+        var myEllipsoid = {
+                _radii : { x : 1.0, y : 2.0, z : 3.0 },
+                _radiiSquared : { x : 4.0, y : 5.0, z : 6.0 },
+                _radiiToTheFourth : { x: 7.0, y : 8.0, z : 9.0 },
+                _oneOverRadii : { x : 10.0, y : 11.0, z : 12.0 },
+                _oneOverRadiiSquared : { x : 13.0, y : 14.0, z : 15.0 },
+                _minimumRadius : 16.0,
+                _maximumRadius : 17.0,
+                _centerToleranceSquared : 18.0
+        };
+
+        var cloned = Ellipsoid.clone(myEllipsoid);
+        expect(cloned instanceof Ellipsoid).toBe(true);
+        expect(cloned).toEqual(myEllipsoid);
+    });
+
+    it('clone uses result parameter if provided', function() {
+        var myEllipsoid = {
+                _radii : { x : 1.0, y : 2.0, z : 3.0 },
+                _radiiSquared : { x : 4.0, y : 5.0, z : 6.0 },
+                _radiiToTheFourth : { x: 7.0, y : 8.0, z : 9.0 },
+                _oneOverRadii : { x : 10.0, y : 11.0, z : 12.0 },
+                _oneOverRadiiSquared : { x : 13.0, y : 14.0, z : 15.0 },
+                _minimumRadius : 16.0,
+                _maximumRadius : 17.0,
+                _centerToleranceSquared : 18.0
+        };
+
+        var result = new Ellipsoid();
+        var cloned = Ellipsoid.clone(myEllipsoid, result);
+        expect(cloned).toBe(result);
+        expect(cloned).toEqual(myEllipsoid);
+    });
 });

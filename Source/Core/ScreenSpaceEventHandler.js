@@ -286,7 +286,7 @@ define([
         var movement = {
             startPosition : new Cartesian2(this._lastMouseX, this._lastMouseY),
             endPosition : new Cartesian2(pos.x, pos.y),
-            motion : new Cartesian2(0.0, 0.0)
+            motion : new Cartesian2()
         };
 
         var modifier = this._getModifier(event);
@@ -420,7 +420,7 @@ define([
             movement = {
                 startPosition : new Cartesian2(this._lastMouseX, this._lastMouseY),
                 endPosition : new Cartesian2(pos.x, pos.y),
-                motion : new Cartesian2(0.0, 0.0)
+                motion : new Cartesian2()
             };
 
             action = this.getInputAction(ScreenSpaceEventType.MOUSE_MOVE, modifier);
@@ -462,12 +462,12 @@ define([
                     'distance' : {
                         startPosition : new Cartesian2(0, prevDist),
                         endPosition : new Cartesian2(0, dist),
-                        motion : new Cartesian2(0.0, 0.0)
+                        motion : new Cartesian2()
                     },
                     'angleAndHeight' : {
                         startPosition : new Cartesian2(prevAngle, prevCY),
                         endPosition : new Cartesian2(angle, cY),
-                        motion : new Cartesian2(0.0, 0.0)
+                        motion : new Cartesian2()
                     }
                 };
                 action(movement);
