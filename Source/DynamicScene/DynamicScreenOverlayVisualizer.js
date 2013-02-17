@@ -236,13 +236,15 @@ define([
             screenOverlay = this._screenOverlayCollection[screenOverlayVisualizerIndex];
         }
 
+
         position = positionProperty.getValue(time, position);
         width = widthProperty.getValue(time, width);
         height = heightProperty.getValue(time, height);
 
+        screenOverlay.show = show;
+
         if(typeof position !== 'undefined' && typeof width !== 'undefined' && typeof height !== 'undefined') {
-            var boundRectangle = new BoundingRectangle(position.x, position.y, width, height);
-            screenOverlay.setRectangle(boundRectangle);
+            screenOverlay.rectangle = new BoundingRectangle(position.x, position.y, width, height);
         }
 
         var material = dynamicScreenOverlay.material;
