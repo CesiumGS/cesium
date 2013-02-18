@@ -15,10 +15,18 @@ define([
 
     /**
      * A simple clock for keeping track of simulated time.
+     *
      * @alias Clock
      * @constructor
      *
-     * @param {Object} [template] The template object containing the properties to be set on the clock.
+     * @param {JulianDate} [description.startTime] The start time of the clock.
+     * @param {JulianDate} [description.stopTime] The stop time of the clock.
+     * @param {JulianDate} [description.currentTime] The current time.
+     * @param {Number} [description.multiplier=1.0] Determines how much time advances when tick is called, negative values allow for advancing backwards.
+     * @param {ClockStep} [description.clockStep=ClockStep.SYSTEM_CLOCK_MULTIPLIER] Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
+     * @param {ClockRange} [description.clockRange=ClockRange.UNBOUNDED] Determines how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
+     * @param {Boolean} [description.shouldAnimate=true] Determines if tick should actually advance time.
+     *
      * @exception {DeveloperError} startTime must come before stopTime.
      *
      * @see ClockStep
@@ -26,8 +34,7 @@ define([
      * @see JulianDate
      *
      * @example
-     * // Create a clock that loops on Christmas day 2013 and runs
-     * // in real-time.  currentTime will default to startTime.
+     * // Create a clock that loops on Christmas day 2013 and runs in real-time.
      * var clock = new Clock({
      *    startTime : JulianDate.fromIso8601("12-25-2013"),
      *    currentTime : JulianDate.fromIso8601("12-25-2013"),
@@ -36,19 +43,16 @@ define([
      *    clockStep : SYSTEM_CLOCK_MULTIPLIER
      * });
      */
-    var Clock = function(template) {
-        var t = template;
-        if (typeof t === 'undefined') {
-            t = {};
-        }
+    var Clock = function(description) {
+        description = defaultValue(description, {});
 
-        var startTime = t.startTime;
+        var startTime = description.startTime;
         var startTimeUndefined = typeof startTime === 'undefined';
 
-        var stopTime = t.stopTime;
+        var stopTime = description.stopTime;
         var stopTimeUndefined = typeof stopTime === 'undefined';
 
-        var currentTime = t.currentTime;
+        var currentTime = description.currentTime;
         var currentTimeUndefined = typeof currentTime === 'undefined';
 
         if (startTimeUndefined && stopTimeUndefined && currentTimeUndefined) {
@@ -101,33 +105,33 @@ define([
          * elapsed system time since the last call to tick.
          * @type Number
          */
-        this.multiplier = defaultValue(t.multiplier, 1.0);
+        this.multiplier = defaultValue(description.multiplier, 1.0);
 
         /**
          * Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
          * @type ClockStep
          */
-        this.clockStep = defaultValue(t.clockStep, ClockStep.SYSTEM_CLOCK_MULTIPLIER);
+        this.clockStep = defaultValue(description.clockStep, ClockStep.SYSTEM_CLOCK_MULTIPLIER);
 
         /**
-         * Determines how tick should behave when <code>startTime</code> or <code>stopTime</code> is reached.
+         * Determines how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
          * @type ClockRange
          */
-        this.clockRange = defaultValue(t.clockRange, ClockRange.UNBOUNDED);
+        this.clockRange = defaultValue(description.clockRange, ClockRange.UNBOUNDED);
 
         /**
          * Determines if tick should actually advance time.
          * @type ClockRange
          */
-        this.shouldAnimate = defaultValue(t.shouldAnimate, true);
+        this.shouldAnimate = defaultValue(description.shouldAnimate, true);
 
-        this._lastCpuTime = new Date().getTime();
+        this._lastSystemTime = Date.now();
     };
 
     /**
      * Advances the clock from the currentTime based on the current configuration options.
-     * tick should be called every frame, regardless of wether animation is taking place
-     * or not.  To control animation, use the <code>shouldAnimate</code> propery.
+     * tick should be called every frame, regardless of whether animation is taking place
+     * or not.  To control animation, use the <code>shouldAnimate</code> property.
      * @memberof Clock
      *
      * @param {Number} [secondsToTick] optional parameter to force the clock to tick the provided number of seconds,
@@ -135,10 +139,11 @@ define([
      * @returns {JulianDate} The new value of the <code>currentTime</code> property.
      */
     Clock.prototype.tick = function(secondsToTick) {
-        var currentCpuTime = new Date().getTime();
+        var currentSystemTime = Date.now();
+
         if (this.clockStep === ClockStep.SYSTEM_CLOCK) {
             this.currentTime = new JulianDate();
-            this._lastCpuTime = currentCpuTime;
+            this._lastSystemTime = currentSystemTime;
             return this.currentTime;
         }
 
@@ -154,7 +159,7 @@ define([
             if (this.clockStep === ClockStep.TICK_DEPENDENT) {
                 currentTime = currentTime.addSeconds(multiplier);
             } else {
-                var milliseconds = currentCpuTime - this._lastCpuTime;
+                var milliseconds = currentSystemTime - this._lastSystemTime;
                 currentTime = currentTime.addSeconds(multiplier * (milliseconds / 1000.0));
             }
         }
@@ -175,7 +180,7 @@ define([
         }
 
         this.currentTime = currentTime;
-        this._lastCpuTime = currentCpuTime;
+        this._lastSystemTime = currentSystemTime;
         return currentTime;
     };
 
