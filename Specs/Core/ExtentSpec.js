@@ -256,14 +256,34 @@ defineSuite([
         expect(extent.contains(new Cartographic(east + 0.1, north))).toEqual(false);
     });
 
-    it('isEmpty reports an empty extent', function() {
+    it('isEmpty reports a non-empty extent', function() {
+        var extent = new Extent(1.0, 1.0, 2.0, 2.0);
+        expect(extent.isEmpty()).toEqual(false);
+    });
+
+    it('isEmpty reports true for a point', function() {
         var extent = new Extent(2.0, 2.0, 2.0, 2.0);
         expect(extent.isEmpty()).toEqual(true);
     });
 
-    it('isEmpty reports a non-empty extent', function() {
-        var extent = new Extent(1.0, 1.0, 2.0, 2.0);
-        expect(extent.isEmpty()).toEqual(false);
+    it('isEmpty reports true for a north-south line', function() {
+        var extent = new Extent(2.0, 2.0, 2.0, 2.1);
+        expect(extent.isEmpty()).toEqual(true);
+    });
+
+    it('isEmpty reports true for an east-west line', function() {
+        var extent = new Extent(2.0, 2.0, 2.1, 2.0);
+        expect(extent.isEmpty()).toEqual(true);
+    });
+
+    it('isEmpty reports true if north-south direction is degenerate', function() {
+        var extent = new Extent(1.0, 1.1, 2.0, 1.0);
+        expect(extent.isEmpty()).toEqual(true);
+    });
+
+    it('isEmpty reports true if east-west direction is degenerate', function() {
+        var extent = new Extent(1.1, 1.0, 1.0, 2.0);
+        expect(extent.isEmpty()).toEqual(true);
     });
 
     it('subsample works south of the equator', function() {

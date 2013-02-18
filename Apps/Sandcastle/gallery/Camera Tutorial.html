@@ -20,6 +20,13 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+<div>Click on the Cesium display to start.</div>
+<div>w/s - move forward/backward</div>
+<div>a/d - move left/right</div>
+<div>q/e - move up/down</div>
+<div>left mouse button down plus mouse move changes the look direction</div>
+</div>
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
@@ -31,6 +38,12 @@ require(['Cesium'], function(Cesium) {
     var canvas = document.createElement('canvas');
     canvas.className = 'fullSize';
     document.getElementById('cesiumContainer').appendChild(canvas);
+
+    canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
+    canvas.onclick = function() {
+        canvas.focus();
+    };
+
     var scene = new Cesium.Scene(canvas);
 
     scene.skyAtmosphere = new Cesium.SkyAtmosphere();
@@ -63,151 +76,63 @@ require(['Cesium'], function(Cesium) {
     primitives.setCentralBody(centralBody);
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
-    
-    // create viewport quad with keyboard and mouse instructions
-    var instructions = ['w/s - move forward/backward',
-                       'a/d - move left/right',
-                       'q/e - move up/down',
-                       'left mouse button down plus mouse move changes the look direction'];
-    var options = {
-        font : '20px sans-serif'
-    };
-    var instructionCanvases = [];
-    var instructionCanvas;
-    var width = 0;
-    var height = 0;
-    var margin = 2;
-    for (var i = 0; i < instructions.length; i++) {
-        instructionCanvas = Cesium.writeTextToCanvas(instructions[i], options);
-        instructionCanvases.push(instructionCanvas);
-        width = Math.max(width, instructionCanvas.dimensions.width);
-        height += instructionCanvas.dimensions.height + margin;
-    }
-    
-    var instructionQuad = new Cesium.ViewportQuad();
-    instructionQuad.material.destroy();
-    instructionQuad.material = Cesium.Material.fromType(scene.getContext(), Cesium.Material.ImageType);
-    instructionQuad.material.uniforms.image = scene.getContext().createTexture2D({
-        width : width,
-        height : height
-    });
-    
-    instructionQuad.rectangle.x = 0;
-    instructionQuad.rectangle.y = canvas.clientHeight - height;
-    instructionQuad.rectangle.width = width;
-    instructionQuad.rectangle.height = height;
-    
-    var yOffset = height;
-    for (var j = 0; j < instructionCanvases.length; j++) {
-        instructionCanvas = instructionCanvases[j];
-        yOffset -= instructionCanvas.dimensions.height + margin;
-        instructionQuad.material.uniforms.image.copyFrom(instructionCanvas, 0, yOffset);
-    }
-    primitives.add(instructionQuad);
 
+    // disable the default event handlers
     scene.getScreenSpaceCameraController().enableRotate = false;
     scene.getScreenSpaceCameraController().enableTranslate = false;
     scene.getScreenSpaceCameraController().enableZoom = false;
     scene.getScreenSpaceCameraController().enableTilt = false;
     scene.getScreenSpaceCameraController().enableLook = false;
-    
-    var handler = new Cesium.ScreenSpaceEventHandler(canvas);
 
-    var looking = false;
     var startMousePosition;
     var mousePosition;
-    
-    handler.setInputAction(function(movement) {
-        looking = true;
-        mousePosition = startMousePosition = Cesium.Cartesian3.clone(movement.position);
-    }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+    var flags = {
+        looking : false,
+        moveForward : false,
+        moveBackward : false,
+        moveUp : false,
+        moveDown : false,
+        moveLeft : false,
+        moveRight : false
+    };
 
-    handler.setInputAction(function(movement) {
-        mousePosition = movement.endPosition;
-    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    
-    handler.setInputAction(function(position) {
-        looking = false;
-    }, Cesium.ScreenSpaceEventType.LEFT_UP);
-
-    var moveForward = false;
-    var moveBackward = false;
-    var moveUp = false;
-    var moveDown = false;
-    var moveLeft = false;
-    var moveRight = false;
-    
-    document.addEventListener('keypress', function(e) {
-        switch (e.keyCode) {
-        case 'w'.charCodeAt(0):
-            moveForward = true;
-            break;
-        case 's'.charCodeAt(0):
-            moveBackward = true;
-            break;
-        case 'q'.charCodeAt(0):
-            moveUp = true;
-            break;
-        case 'e'.charCodeAt(0):
-            moveDown = true;
-            break;
-        case 'd'.charCodeAt(0):
-            moveRight = true;
-            break;
-        case 'a'.charCodeAt(0):
-            moveLeft = true;
-            break;
-        default:
-            break;
-        }
-    }, false);
-    
-    document.addEventListener('keyup', function (e) {
-        moveForward = false;
-        moveBackward = false;
-        moveUp = false;
-        moveDown = false;
-        moveRight = false;
-        moveLeft = false;
-    }, false);
-    
     function animate() {
         var camera = scene.getCamera();
         var controller = camera.controller;
-        
-        if (looking) {
+
+        if (flags.looking) {
             var width = canvas.clientWidth;
             var height = canvas.clientHeight;
-            
+
             // Coordinate (0.0, 0.0) will be where the mouse was clicked.
             var x = (mousePosition.x - startMousePosition.x) / width;
             var y = -(mousePosition.y - startMousePosition.y) / height;
-            
+
             var lookFactor = 0.05;
             controller.lookRight(x * lookFactor);
             controller.lookUp(y * lookFactor);
         }
-        
+
         // Change movement speed based on the distance of the camera to the surface of the ellipsoid.
         var cameraHeight = ellipsoid.cartesianToCartographic(camera.position).height;
         var moveRate = cameraHeight / 100.0;
-        
-        if (moveForward) {
+
+        if (flags.moveForward) {
             controller.moveForward(moveRate);
         }
-        if (moveBackward) {
+        if (flags.moveBackward) {
             controller.moveBackward(moveRate);
         }
-        if (moveUp) {
+        if (flags.moveUp) {
             controller.moveUp(moveRate);
         }
-        if (moveDown) {
+        if (flags.moveDown) {
             controller.moveDown(moveRate);
         }
-        if (moveLeft) {
+        if (flags.moveLeft) {
             controller.moveLeft(moveRate);
         }
-        if (moveRight) {
+        if (flags.moveRight) {
             controller.moveRight(moveRate);
         }
     }
@@ -219,6 +144,54 @@ require(['Cesium'], function(Cesium) {
         Cesium.requestAnimationFrame(tick);
     }
     tick();
+
+    var handler = new Cesium.ScreenSpaceEventHandler(canvas);
+
+    handler.setInputAction(function(movement) {
+        flags.looking = true;
+        mousePosition = startMousePosition = Cesium.Cartesian3.clone(movement.position);
+    }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+
+    handler.setInputAction(function(movement) {
+        mousePosition = movement.endPosition;
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+    handler.setInputAction(function(position) {
+        flags.looking = false;
+    }, Cesium.ScreenSpaceEventType.LEFT_UP);
+
+    function getFlagForKeyCode(keyCode) {
+        switch (keyCode) {
+        case 'W'.charCodeAt(0):
+            return 'moveForward';
+        case 'S'.charCodeAt(0):
+            return 'moveBackward';
+        case 'Q'.charCodeAt(0):
+            return 'moveUp';
+        case 'E'.charCodeAt(0):
+            return 'moveDown';
+        case 'D'.charCodeAt(0):
+            return 'moveRight';
+        case 'A'.charCodeAt(0):
+            return 'moveLeft';
+        default:
+            return undefined;
+        }
+    }
+
+    document.addEventListener('keydown', function(e) {
+        var flagName = getFlagForKeyCode(e.keyCode);
+        if (typeof flagName !== 'undefined') {
+            flags[flagName] = true;
+        }
+    }, false);
+
+    document.addEventListener('keyup', function(e) {
+        var flagName = getFlagForKeyCode(e.keyCode);
+        if (typeof flagName !== 'undefined') {
+            flags[flagName] = false;
+        }
+    }, false);
 
     // Prevent right-click from opening a context menu.
     canvas.oncontextmenu = function() {
@@ -243,14 +216,8 @@ require(['Cesium'], function(Cesium) {
     window.addEventListener('resize', onResize, false);
     onResize();
 
-    canvas.setAttribute('tabindex','0'); // needed to put focus on the canvas
-    canvas.onclick = function () {
-        canvas.focus();
-    };
-
     Sandcastle.finishedLoading();
 });
-
 </script>
 </body>
 </html>
