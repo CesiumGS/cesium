@@ -1,11 +1,10 @@
 /*global define*/
-define(['../Core/DeveloperError',
+define([
         '../Core/defaultValue',
         '../ThirdParty/knockout'
-        ], function(
-         DeveloperError,
-         defaultValue,
-         knockout) {
+    ], function(
+        defaultValue,
+        knockout) {
     "use strict";
 
     /**
@@ -22,7 +21,7 @@ define(['../Core/DeveloperError',
          * A command object which encapsulates what happens when the button is toggled.
          * @type Command
          */
-        this.command = defaultValue(options.command, undefined);
+        this.command = options.command;
 
         /**
          * An observable boolean indicating if the button is currently toggled.

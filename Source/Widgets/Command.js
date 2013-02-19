@@ -1,15 +1,18 @@
 /*global define*/
-define(['../Core/DeveloperError',
-        '../Core/defaultValue',
-        '../ThirdParty/knockout'
-        ], function(
-         DeveloperError,
-         defaultValue,
-         knockout) {
+define([
+        '../Core/DeveloperError'
+    ], function(
+        DeveloperError) {
     "use strict";
 
     /**
-     * Encapsulate a function so that it can be exposed by ViewModels.
+     * A Command is a function with an extra <code>canExecute</code> observable property to determine
+     * whether the command can be executed.  When executed, a Command function will check the
+     * value of <code>canExecute</code> and throw if false.
+     *
+     * This type describes an interface and is not intended to be instantiated directly.
+     * See {@link createCommand} to create a command from a function.
+     *
      * @alias Command
      * @constructor
      *
@@ -18,16 +21,12 @@ define(['../Core/DeveloperError',
      */
     var Command = function(execute, canExecute) {
         /**
-         * Executes this command.
-         * @type Function
-         */
-        this.execute = execute;
-
-        /**
          * Indicates if this command can currently be executed.
          * @type Observable
          */
-        this.canExecute = defaultValue(canExecute, knockout.observable(true));
+        this.canExecute = undefined;
+
+        throw new DeveloperError('This type should not be instantiated directly.');
     };
 
     return Command;

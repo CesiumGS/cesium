@@ -175,9 +175,9 @@ define(['../Core/destroyObject',
                 viewModel.shuttleRingDragging(true);
                 viewModel.shuttleRingAngle(angle);
             } else if (angle < shuttleRingAngle) {
-                viewModel.slower.execute();
+                viewModel.slower();
             } else if (angle > shuttleRingAngle) {
-                viewModel.faster.execute();
+                viewModel.faster();
             }
             e.preventDefault();
             e.stopPropagation();
@@ -198,8 +198,9 @@ define(['../Core/destroyObject',
 
         var that = this;
         svgElement.addEventListener('click', function() {
-            if (that.viewModel.command.canExecute()) {
-                that.viewModel.command.execute();
+            var command = that.viewModel.command;
+            if (command.canExecute()) {
+                command();
             }
         }, true);
 

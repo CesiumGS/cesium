@@ -1,27 +1,28 @@
 /*global define*/
-define(['./Command',
+define([
+        './createCommand',
         './ToggleButtonViewModel',
-        '../Core/DeveloperError',
         '../Core/binarySearch',
         '../Core/ClockStep',
         '../Core/ClockRange',
         '../Core/Color',
+        '../Core/DeveloperError',
         '../Core/JulianDate',
         '../Core/defaultValue',
         '../ThirdParty/sprintf',
         '../ThirdParty/knockout'
-        ], function(
-         Command,
-         ToggleButtonViewModel,
-         DeveloperError,
-         binarySearch,
-         ClockStep,
-         ClockRange,
-         Color,
-         JulianDate,
-         defaultValue,
-         sprintf,
-         knockout) {
+    ], function(
+        createCommand,
+        ToggleButtonViewModel,
+        binarySearch,
+        ClockStep,
+        ClockRange,
+        Color,
+        DeveloperError,
+        JulianDate,
+        defaultValue,
+        sprintf,
+        knockout) {
     "use strict";
 
     var _monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -49,7 +50,7 @@ define(['./Command',
         return index < 0 ? ~index : index;
     }
 
-    function angle2Multiplier(angle, shuttleRingTicks) {
+    function angleToMultiplier(angle, shuttleRingTicks) {
         //Use a linear scale for -1 to 1 between -15 < angle < 15 degrees
         if (Math.abs(angle) <= _realtimeShuttleRingAngle) {
             return angle / _realtimeShuttleRingAngle;
@@ -71,7 +72,7 @@ define(['./Command',
         return -Math.exp(minv + scale * (Math.abs(angle) - minp));
     }
 
-    function multiplier2Angle(multiplier, shuttleRingTicks, clockViewModel) {
+    function multiplierToAngle(multiplier, shuttleRingTicks, clockViewModel) {
         if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK) {
             return _realtimeShuttleRingAngle;
         }
@@ -128,6 +129,7 @@ define(['./Command',
         this._timeFormatter = knockout.observable(AnimationViewModel.defaultTimeFormatter);
 
         this._canAnimate = knockout.computed(function() {
+            var clockViewModel = that.clockViewModel;
             var clockRange = clockViewModel.clockRange();
 
             if (that.shuttleRingDragging() || clockRange === ClockRange.UNBOUNDED) {
@@ -149,12 +151,13 @@ define(['./Command',
             }
 
             if (!result) {
-                that.clockViewModel.shouldAnimate(false);
+                clockViewModel.shouldAnimate(false);
             }
             return result;
         });
 
         this._isSystemTimeAvailable = knockout.computed(function() {
+            var clockViewModel = that.clockViewModel;
             var clockRange = clockViewModel.clockRange();
             if (clockRange === ClockRange.UNBOUNDED) {
                 return true;
@@ -175,7 +178,7 @@ define(['./Command',
          * @type Observable
          */
         this.timeLabel = knockout.computed(function() {
-            return that._timeFormatter()(clockViewModel.currentTime(), that);
+            return that._timeFormatter()(that.clockViewModel.currentTime(), that);
         });
 
         /**
@@ -183,7 +186,7 @@ define(['./Command',
          * @type Observable
          */
         this.dateLabel = knockout.computed(function() {
-            return that._dateFormatter()(clockViewModel.currentTime(), that);
+            return that._dateFormatter()(that.clockViewModel.currentTime(), that);
         });
 
         /**
@@ -191,6 +194,7 @@ define(['./Command',
          * @type Observable
          */
         this.multiplierLabel = knockout.computed(function() {
+            var clockViewModel = that.clockViewModel;
             if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK) {
                 return 'Today';
             }
@@ -215,12 +219,13 @@ define(['./Command',
                 return !that._isAnimatingObs();
             }),
             toolTip : knockout.observable('Pause'),
-            command : new Command(function() {
-                if (that.clockViewModel.shouldAnimate()) {
-                    _cancelRealtime(that.clockViewModel);
-                    that.clockViewModel.shouldAnimate(false);
+            command : createCommand(function() {
+                var clockViewModel = that.clockViewModel;
+                if (clockViewModel.shouldAnimate()) {
+                    _cancelRealtime(clockViewModel);
+                    clockViewModel.shouldAnimate(false);
                 } else if (that._canAnimate()) {
-                    _unpause(that.clockViewModel);
+                    _unpause(clockViewModel);
                 }
             })
         });
@@ -234,7 +239,8 @@ define(['./Command',
                 return that._isAnimatingObs() && (clockViewModel.multiplier() < 0);
             }),
             toolTip : knockout.observable('Play Reverse'),
-            command : new Command(function() {
+            command : createCommand(function() {
+                var clockViewModel = that.clockViewModel;
                 _cancelRealtime(clockViewModel);
                 var multiplier = clockViewModel.multiplier();
                 if (multiplier > 0) {
@@ -253,7 +259,8 @@ define(['./Command',
                 return that._isAnimatingObs() && clockViewModel.multiplier() > 0 && clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK;
             }),
             toolTip : knockout.observable('Play Forward'),
-            command : new Command(function() {
+            command : createCommand(function() {
+                var clockViewModel = that.clockViewModel;
                 _cancelRealtime(clockViewModel);
                 var multiplier = clockViewModel.multiplier();
                 if (multiplier < 0) {
@@ -277,7 +284,8 @@ define(['./Command',
                 }
                 return 'Current time not in range';
             }),
-            command : new Command(function() {
+            command : createCommand(function() {
+                var clockViewModel = that.clockViewModel;
                 if (clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK) {
                     if (that._isSystemTimeAvailable()) {
                         clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK);
@@ -296,12 +304,13 @@ define(['./Command',
          */
         this.shuttleRingAngle = knockout.computed({
             read : function() {
-                return multiplier2Angle(clockViewModel.multiplier(), that._shuttleRingTicks(), clockViewModel);
+                return multiplierToAngle(clockViewModel.multiplier(), that._shuttleRingTicks(), clockViewModel);
             },
             write : function(angle) {
                 angle = Math.max(Math.min(angle, _maxShuttleRingAngle), -_maxShuttleRingAngle);
                 var ticks = that._shuttleRingTicks();
 
+                var clockViewModel = that.clockViewModel;
                 clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
 
                 //If we are at the max angle, simply return the max value in either direction.
@@ -310,7 +319,7 @@ define(['./Command',
                     return;
                 }
 
-                var multiplier = angle2Multiplier(angle, ticks);
+                var multiplier = angleToMultiplier(angle, ticks);
                 if (multiplier !== 0) {
                     var positiveMultiplier = Math.abs(multiplier);
 
@@ -335,37 +344,31 @@ define(['./Command',
          * The command to decrease the speed of animation.
          * @type Command
          */
-        this.slower = {
-            canExecute : true,
-            execute : function() {
-                _cancelRealtime(that.clockViewModel);
-                var clockViewModel = that.clockViewModel;
-                var shuttleRingTicks = that._shuttleRingTicks();
-                var multiplier = clockViewModel.multiplier();
-                var index = _getTypicalMultiplierIndex(multiplier, shuttleRingTicks) - 1;
-                if (index >= 0) {
-                    clockViewModel.multiplier(shuttleRingTicks[index]);
-                }
+        this.slower = createCommand(function() {
+            var clockViewModel = that.clockViewModel;
+            _cancelRealtime(clockViewModel);
+            var shuttleRingTicks = that._shuttleRingTicks();
+            var multiplier = clockViewModel.multiplier();
+            var index = _getTypicalMultiplierIndex(multiplier, shuttleRingTicks) - 1;
+            if (index >= 0) {
+                clockViewModel.multiplier(shuttleRingTicks[index]);
             }
-        };
+        });
 
         /**
          * The command to increase the speed of animation.
          * @type Command
          */
-        this.faster = {
-            canExecute : true,
-            execute : function() {
-                _cancelRealtime(that.clockViewModel);
-                var clockViewModel = that.clockViewModel;
-                var shuttleRingTicks = that._shuttleRingTicks();
-                var multiplier = clockViewModel.multiplier();
-                var index = _getTypicalMultiplierIndex(multiplier, shuttleRingTicks) + 1;
-                if (index < shuttleRingTicks.length) {
-                    clockViewModel.multiplier(shuttleRingTicks[index]);
-                }
+        this.faster = createCommand(function() {
+            var clockViewModel = that.clockViewModel;
+            _cancelRealtime(clockViewModel);
+            var shuttleRingTicks = that._shuttleRingTicks();
+            var multiplier = clockViewModel.multiplier();
+            var index = _getTypicalMultiplierIndex(multiplier, shuttleRingTicks) + 1;
+            if (index < shuttleRingTicks.length) {
+                clockViewModel.multiplier(shuttleRingTicks[index]);
             }
-        };
+        });
     };
 
     /**
