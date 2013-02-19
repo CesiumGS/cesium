@@ -30,7 +30,6 @@ define([
 
         this._show = defaultValue(description.show, true);
         this._width = defaultValue(description.width, 1.0);
-        this._outlineWidth = defaultValue(description.outlineWidth, 1.0);
         this._color = Color.clone(defaultValue(description.color, Color.WHITE));
         this._outlineColor = Color.clone(defaultValue(description.outlineColor, Color.WHITE));
 
@@ -53,14 +52,11 @@ define([
         this._boundingVolume2D = new BoundingSphere(); // modified in PolylineCollection
     };
 
-    var SHOW_INDEX = Polyline.SHOW_INDEX = 0;
+    var MISC = Polyline.MISC = 0;
     var POSITION_INDEX = Polyline.POSITION_INDEX = 1;
     var COLOR_INDEX = Polyline.COLOR_INDEX = 2;
-    var OUTLINE_COLOR_INDEX = Polyline.OUTLINE_COLOR_INDEX = 3;
-    var WIDTH_INDEX = Polyline.WIDTH_INDEX = 4;
-    var OUTLINE_WIDTH_INDEX = Polyline.OUTLINE_WIDTH_INDEX = 5;
-    var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX = 6;
-    var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES = 7;
+    var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX = 3;
+    var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES = 4;
 
     function makeDirty(polyline, propertyChanged) {
         ++polyline._propertiesChanged[propertyChanged];
@@ -104,7 +100,7 @@ define([
 
         if (value !== this._show) {
             this._show = value;
-            makeDirty(this, SHOW_INDEX);
+            makeDirty(this, MISC);
         }
     };
 
@@ -240,60 +236,7 @@ define([
         var width = this._width;
         if (value !== width) {
             this._width = value;
-            makeDirty(this, WIDTH_INDEX);
-        }
-    };
-
-
-    /**
-     * Gets the outline width of the polyline.
-     * The actual width used is clamped to the minimum and maximum width supported by
-     * the WebGL implementation.  These can be queried with
-     * {@link Context#getMinimumAliasedLineWidth} and {@link Context#getMaximumAliasedLineWidth}.
-     *
-     * @return {Number} The outline width of the polyline.
-     *
-     * @see Polyline#setOutlineWidth
-     * @see Context#getMinimumAliasedLineWidth
-     * @see Context#getMaximumAliasedLineWidth
-     *
-     * @example
-     * // 3 pixel total width, 1 pixel interior width
-     * polyline.width = 1.0;
-     * polyline.outlineWidth = 3.0;
-     */
-    Polyline.prototype.getOutlineWidth = function() {
-        return this._outlineWidth;
-    };
-
-    /**
-     * Sets the outline width of the polyline.
-     * The actual width used is clamped to the minimum and maximum width supported by
-     * the WebGL implementation.  These can be queried with
-     * {@link Context#getMinimumAliasedLineWidth} and {@link Context#getMaximumAliasedLineWidth}.
-     *
-     * @param {Number} value The outline width of the polyline.
-     *
-     * @exception {DeveloperError} value is required.
-     *
-     * @see Polyline#getOutlineWidth
-     * @see Context#getMinimumAliasedLineWidth
-     * @see Context#getMaximumAliasedLineWidth
-     *
-     * @example
-     * // 3 pixel total width, 1 pixel interior width
-     * polyline.width = 1.0;
-     * polyline.outlineWidth = 3.0;
-     */
-    Polyline.prototype.setOutlineWidth = function(value) {
-        if (typeof value === 'undefined') {
-            throw new DeveloperError('value is required.');
-        }
-
-        var outlineWidth = this._outlineWidth;
-        if (value !== outlineWidth) {
-            this._outlineWidth = value;
-            makeDirty(this, OUTLINE_WIDTH_INDEX);
+            makeDirty(this, MISC);
         }
     };
 
@@ -329,7 +272,7 @@ define([
         var outlineColor = this._outlineColor;
         if (!Color.equals(outlineColor, value)) {
             Color.clone(value, outlineColor);
-            makeDirty(this, OUTLINE_COLOR_INDEX);
+            makeDirty(this, COLOR_INDEX);
         }
     };
 
@@ -413,7 +356,6 @@ define([
                typeof other !== 'undefined' &&
                this._show === other._show &&
                this._width === other._width &&
-               this._outlineWidth === other._outlineWidth &&
                this._horizontalOrigin === other._horizontalOrigin &&
                cartesian3ArrayEquals(this._positions, other._positions) &&
                Color.equals(this._color, other._color) &&
