@@ -50,38 +50,51 @@ define(['./Command',
     }
 
     function angle2Multiplier(angle, shuttleRingTicks) {
+        //Use a linear scale for -1 to 1 between -15 < angle < 15 degrees
+        if (Math.abs(angle) <= _realtimeShuttleRingAngle) {
+            return angle / _realtimeShuttleRingAngle;
+        }
+
         var minp = _realtimeShuttleRingAngle;
         var maxp = _maxShuttleRingAngle;
-        var maxv = Math.log(shuttleRingTicks[shuttleRingTicks.length - 1]);
+        var maxv;
         var minv = 0;
-        var scale = (maxv - minv) / (maxp - minp);
-        var speed = Math.exp(minv + scale * (Math.abs(angle) - minp));
+        var scale;
+        if (angle > 0) {
+            maxv = Math.log(shuttleRingTicks[shuttleRingTicks.length - 1]);
+            scale = (maxv - minv) / (maxp - minp);
+            return Math.exp(minv + scale * (angle - minp));
+        }
 
-        if (speed > 1e-8) {
-            var round = Math.pow(10, Math.floor((Math.log(speed) / Math.LN10) + 0.0001) - 1);
-            speed = Math.round(speed / round) * round;
-            if (speed > 10) {
-                speed = Math.round(speed);
-            }
-        }
-        if (angle < 0) {
-            speed = -speed;
-        }
-        return speed;
+        maxv = Math.log(-shuttleRingTicks[0]);
+        scale = (maxv - minv) / (maxp - minp);
+        return -Math.exp(minv + scale * (Math.abs(angle) - minp));
     }
 
-    function multiplier2Angle(multiplier, shuttleRingTicks) {
+    function multiplier2Angle(multiplier, shuttleRingTicks, clockViewModel) {
+        if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK) {
+            return _realtimeShuttleRingAngle;
+        }
+
+        if (Math.abs(multiplier) <= 1) {
+            return multiplier * _realtimeShuttleRingAngle;
+        }
+
         var minp = _realtimeShuttleRingAngle;
         var maxp = _maxShuttleRingAngle;
-        var maxv = Math.log(shuttleRingTicks[shuttleRingTicks.length - 1]);
+        var maxv;
         var minv = 0;
-        var scale = (maxv - minv) / (maxp - minp);
-        var angle = Math.max(1, (Math.log(Math.abs(multiplier)) - minv) / scale + minp);
+        var scale;
 
-        if (multiplier < 0) {
-            angle = -angle;
+        if (multiplier > 0) {
+            maxv = Math.log(shuttleRingTicks[shuttleRingTicks.length - 1]);
+            scale = (maxv - minv) / (maxp - minp);
+            return (Math.log(multiplier) - minv) / scale + minp;
         }
-        return angle;
+
+        maxv = Math.log(-shuttleRingTicks[0]);
+        scale = (maxv - minv) / (maxp - minp);
+        return -((Math.log(Math.abs(multiplier)) - minv) / scale + minp);
     }
 
     /**
@@ -183,17 +196,14 @@ define(['./Command',
             }
 
             var multiplier = clockViewModel.multiplier();
-            var positiveMultiplier = Math.abs(multiplier);
-            if (positiveMultiplier >= 10 || multiplier % 1 === 0) {
+
+            //If it's a whole number, just return it.
+            if (multiplier % 1 === 0) {
                 return multiplier.toFixed(0) + 'x';
             }
-            if (positiveMultiplier >= 1) {
-                return multiplier.toFixed(1) + 'x';
-            }
-            if (positiveMultiplier >= 0.1) {
-                return multiplier.toFixed(2) + 'x';
-            }
-            return multiplier.toFixed(3) + 'x';
+
+            //Convert to decimal string and remove any trailing zeroes
+            return multiplier.toFixed(3).replace(/0{0,3}$/, "") + 'x';
         });
 
         /**
@@ -286,15 +296,37 @@ define(['./Command',
          */
         this.shuttleRingAngle = knockout.computed({
             read : function() {
-                var multiplier = clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK ? clockViewModel.multiplier() : 1.0;
-                return Math.round(multiplier2Angle(multiplier, that._shuttleRingTicks()));
+                return multiplier2Angle(clockViewModel.multiplier(), that._shuttleRingTicks(), clockViewModel);
             },
             write : function(angle) {
                 angle = Math.max(Math.min(angle, _maxShuttleRingAngle), -_maxShuttleRingAngle);
-                var multiplier = angle2Multiplier(angle, that._shuttleRingTicks());
+                var ticks = that._shuttleRingTicks();
+
+                clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
+
+                //If we are at the max angle, simply return the max value in either direction.
+                if (Math.abs(angle) === _maxShuttleRingAngle) {
+                    clockViewModel.multiplier(angle > 0 ? ticks[ticks.length - 1] : ticks[0]);
+                    return;
+                }
+
+                var multiplier = angle2Multiplier(angle, ticks);
                 if (multiplier !== 0) {
+                    var positiveMultiplier = Math.abs(multiplier);
+
+                    if (positiveMultiplier > 100) {
+                        var numDigits = positiveMultiplier.toFixed(0).length - 2;
+                        var divisor = Math.pow(10, numDigits);
+                        multiplier = (Math.round(multiplier / divisor) * divisor) | 0;
+                    } else if (positiveMultiplier > _realtimeShuttleRingAngle) {
+                        multiplier = Math.round(multiplier);
+                    } else if (positiveMultiplier > 1) {
+                        multiplier = +multiplier.toFixed(1);
+                    } else if (positiveMultiplier > 0) {
+                        multiplier = +multiplier.toFixed(2);
+                    }
+
                     clockViewModel.multiplier(multiplier);
-                    clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
                 }
             }
         });
@@ -354,9 +386,6 @@ define(['./Command',
      * @returns The default array of known clock multipliers associated with new instances of the shuttle ring.
      */
     AnimationViewModel.defaultTicks = [//
-    -0.001, -0.002, -0.005, -0.01, -0.02, -0.05, -0.1, -0.25, -0.5, -1.0, -2.0, -5.0, -10.0,//
-    -15.0, -30.0, -60.0, -120.0, -300.0, -600.0, -900.0, -1800.0, -3600.0, -7200.0, -14400.0,//
-    -21600.0, -43200.0, -86400.0, -172800.0, -345600.0, -604800.0,//
     0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0,//
     15.0, 30.0, 60.0, 120.0, 300.0, 600.0, 900.0, 1800.0, 3600.0, 7200.0, 14400.0,//
     21600.0, 43200.0, 86400.0, 172800.0, 345600.0, 604800.0];
@@ -370,23 +399,30 @@ define(['./Command',
     };
 
     /**
-     * Sets the array of known clock multipliers to associate with the shuttle ring.
-     * This sets both the minimum and maximum range of values for the shuttle ring as well
-     * as the values that are snapped to when a single click is made.  The values need
-     * not be in order, as they will be sorted automatically.
+     * Sets the array of positive known clock multipliers to associate with the shuttle ring.
+     * These values will have negative equivalents created for them and sets both the minimum
+     * and maximum range of values for the shuttle ring as well as the values that are snapped
+     * to when a single click is made.  The values need not be in order, as they will be sorted
+     * automatically.
      * @memberof AnimationViewModel
      *
-     * @param ticks The list of known clock multipliers to associate with the shuttle ring.
+     * @param positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
      *
-     * @exception {DeveloperError} ticks is required.
+     * @exception {DeveloperError} positiveTicks is required.
      */
-    AnimationViewModel.prototype.setShuttleRingTicks = function(ticks) {
-        if (typeof ticks === 'undefined') {
-            throw new DeveloperError('ticks is required.');
+    AnimationViewModel.prototype.setShuttleRingTicks = function(positiveTicks) {
+        if (typeof positiveTicks === 'undefined') {
+            throw new DeveloperError('positiveTicks is required.');
         }
-        var copy = ticks.slice(0);
-        copy.sort(numberComparator);
-        this._shuttleRingTicks(copy);
+        var len = positiveTicks.length;
+        var ticks = new Array(len * 2);
+        var iTicks = 0;
+        for ( var iPos = 0; iPos < len; iPos++) {
+            ticks[iTicks++] = positiveTicks[iPos];
+            ticks[iTicks++] = -positiveTicks[iPos];
+        }
+        ticks.sort(numberComparator);
+        this._shuttleRingTicks(ticks);
     };
 
     /**
@@ -460,6 +496,7 @@ define(['./Command',
 
     //Currently exposed for tests.
     AnimationViewModel._maxShuttleRingAngle = _maxShuttleRingAngle;
+    AnimationViewModel._realtimeShuttleRingAngle = _realtimeShuttleRingAngle;
 
     return AnimationViewModel;
 });

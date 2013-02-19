@@ -529,7 +529,6 @@ define([
                 if (index !== shuttleRingTicks.length) {
                     clock.multiplier = shuttleRingTicks[index];
                 } else {
-                    shuttleRingTicks.push(-multiplier);
                     shuttleRingTicks.push(multiplier);
                     clock.multiplier = multiplier;
                 }
@@ -537,7 +536,6 @@ define([
                 var fastestSpeed = Math.round(totalSeconds / 10.0);
                 if (fastestSpeed > shuttleRingTicks[shuttleRingTicks.length - 1]) {
                     shuttleRingTicks.push(fastestSpeed);
-                    shuttleRingTicks.push(-fastestSpeed);
                 }
             }
 

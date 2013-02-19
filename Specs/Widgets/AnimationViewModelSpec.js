@@ -42,6 +42,7 @@ defineSuite([
         expect(viewModel.playReverseViewModel.toggled()).toEqual(false);
         expect(viewModel.playForwardViewModel.toggled()).toEqual(false);
         expect(viewModel.playRealtimeViewModel.toggled()).toEqual(true);
+        expect(viewModel.shuttleRingAngle()).toEqual(AnimationViewModel._realtimeShuttleRingAngle);
     }
 
     it('constructor sets expected properties', function() {
@@ -178,7 +179,22 @@ defineSuite([
 
         clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
         clockViewModel.multiplier(123.1);
-        expectedString = '123.100x';
+        expectedString = '123.1x';
+        expect(animationViewModel.multiplierLabel()).toEqual(expectedString);
+
+        clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
+        clockViewModel.multiplier(123.12);
+        expectedString = '123.12x';
+        expect(animationViewModel.multiplierLabel()).toEqual(expectedString);
+
+        clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
+        clockViewModel.multiplier(123.123);
+        expectedString = '123.123x';
+        expect(animationViewModel.multiplierLabel()).toEqual(expectedString);
+
+        clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
+        clockViewModel.multiplier(123.1236);
+        expectedString = '123.124x';
         expect(animationViewModel.multiplierLabel()).toEqual(expectedString);
 
         clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK);
@@ -508,12 +524,19 @@ defineSuite([
         viewModel.shuttleRingAngle(-AnimationViewModel._maxShuttleRingAngle);
         expect(clockViewModel.multiplier()).toEqual(viewModel.getShuttleRingTicks()[0]);
 
-        //Angles less than 1 are equivalent to the speed
-        viewModel.shuttleRingAngle(0.5);
-        expect(clockViewModel.multiplier()).toEqual(0.5);
+        //AnimationViewModel._realtimeShuttleRingAngle degrees is always 1x
+        viewModel.shuttleRingAngle(AnimationViewModel._realtimeShuttleRingAngle);
+        expect(clockViewModel.multiplier()).toEqual(1);
 
-        viewModel.shuttleRingAngle(-0.5);
-        expect(clockViewModel.multiplier()).toEqual(-0.5);
+        viewModel.shuttleRingAngle(-AnimationViewModel._realtimeShuttleRingAngle);
+        expect(clockViewModel.multiplier()).toEqual(-1);
+
+        //For large values, the shuttleRingAngle should always round to the first two digits.
+        viewModel.shuttleRingAngle(45.0);
+        expect(clockViewModel.multiplier()).toEqual(85.0);
+
+        viewModel.shuttleRingAngle(-90.0);
+        expect(clockViewModel.multiplier()).toEqual(-66000.0);
     });
 
     it('throws when constructed without arguments', function() {
@@ -535,6 +558,14 @@ defineSuite([
         var animationViewModel = new AnimationViewModel(clockViewModel);
         expect(function() {
             animationViewModel.setDateFormatter({});
+        }).toThrow();
+    });
+
+    it('setShuttleRingTicks throws with undefined', function() {
+        var clockViewModel = new ClockViewModel();
+        var animationViewModel = new AnimationViewModel(clockViewModel);
+        expect(function() {
+            animationViewModel.setShuttleRingTicks(undefined);
         }).toThrow();
     });
 });
