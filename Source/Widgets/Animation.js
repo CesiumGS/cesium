@@ -70,13 +70,14 @@ define(['../Core/destroyObject',
         knobOuter.setAttribute('transform', 'rotate(' + angle + ')');
     }
 
+    var _makeColorStringScratch = new Color();
     function _makeColorString(background, gradient) {
         var gradientAlpha = gradient.alpha;
         var backgroundAlpha = 1.0 - gradientAlpha;
-        var red = (background.red * backgroundAlpha) + (gradient.red * gradientAlpha);
-        var green = (background.green * backgroundAlpha) + (gradient.green * gradientAlpha);
-        var blue = (background.blue * backgroundAlpha) + (gradient.blue * gradientAlpha);
-        return 'rgb(' + Math.round(red * 255) + ',' + Math.round(green * 255) + ',' + Math.round(blue * 255) + ')';
+        _makeColorStringScratch.red = (background.red * backgroundAlpha) + (gradient.red * gradientAlpha);
+        _makeColorStringScratch.green = (background.green * backgroundAlpha) + (gradient.green * gradientAlpha);
+        _makeColorStringScratch.blue = (background.blue * backgroundAlpha) + (gradient.blue * gradientAlpha);
+        return _makeColorStringScratch.toCssColorString();
     }
 
     function _rectButton(x, y, path, toolTip) {
