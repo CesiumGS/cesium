@@ -9,13 +9,14 @@ define(function() {
      * @private
      *
      * @param {Imagery} imagery The imagery tile.
-     * @param {Cartesian4} textureCoordinateExtent The texture extent extent of the tile that is covered
+     * @param {Cartesian4} textureCoordinateExtent The texture extent of the tile that is covered
      *        by the imagery, where X=west, Y=south, Z=east, W=north.
      */
     var TileImagery = function(imagery, textureCoordinateExtent) {
         this.imagery = imagery;
         this.textureCoordinateExtent = textureCoordinateExtent;
         this.originalImagery = undefined;
+        this.componentTileImagery = undefined;
         this.textureTranslationAndScale = undefined;
     };
 
@@ -29,6 +30,12 @@ define(function() {
 
         if (typeof this.originalImagery !== 'undefined') {
             this.originalImagery.releaseReference();
+        }
+
+        if (typeof this.componentTileImagery !== 'undefined') {
+            for (var i = 0, len = this.componentTileImagery.length; i < len; ++i) {
+                this.componentTileImagery[i].freeResources();
+            }
         }
     };
 

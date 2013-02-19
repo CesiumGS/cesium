@@ -945,7 +945,7 @@ define([
 
                 var tileImageryCollection = tile.imagery;
                 var imageryIndex = 0;
-                var imageryLen = tileImageryCollection.length;
+                var imageryLen = tile.textures.length;
 
                 do {
                     var numberOfDayTextures = 0;
@@ -978,7 +978,8 @@ define([
                     var applyGamma = false;
 
                     while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
-                        var tileImagery = tileImageryCollection[imageryIndex];
+                        // TODO: [0] is a total hack
+                        var tileImagery = tileImageryCollection[0];
                         var imagery = tileImagery.imagery;
                         var imageryLayer = imagery.imageryLayer;
                         ++imageryIndex;
@@ -991,9 +992,9 @@ define([
                             tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);
                         }
 
-                        uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
-                        uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
-                        uniformMap.dayTextureTexCoordsExtent[numberOfDayTextures] = tileImagery.textureCoordinateExtent;
+                        uniformMap.dayTextures[numberOfDayTextures] = tile.textures[imageryIndex - 1];
+                        uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+                        uniformMap.dayTextureTexCoordsExtent[numberOfDayTextures] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
                         if (typeof imageryLayer.alpha === 'function') {
                             uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
@@ -1047,7 +1048,7 @@ define([
 
                     colorCommandList.push(command);
 
-                    command.shaderProgram = shaderSet.getShaderProgram(context, tileSetIndex, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma);
+                    command.shaderProgram = shaderSet.getShaderProgram(context, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma);
                     command.renderState = renderState;
                     command.primitiveType = TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
                     command.vertexArray = tile.vertexArray;

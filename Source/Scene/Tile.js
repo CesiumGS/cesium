@@ -148,6 +148,8 @@ define([
          */
         this.imagery = [];
 
+        this.textures = [];
+
         /**
          * The distance from the camera to this tile, updated when the tile is selected
          * for rendering.  We can get rid of this if we have a better way to sort by
@@ -338,12 +340,23 @@ define([
         var isRenderable = typeof this.vertexArray !== 'undefined';
         var isDoneLoading = typeof this.loadedTerrain === 'undefined' && typeof this.upsampledTerrain === 'undefined';
 
+        var lastLayer;
+        var layerDoneLoading = true;
+        var layerFirstIndex;
+
         // Transition imagery states
         var tileImageryCollection = this.imagery;
         for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
             var imagery = tileImagery.imagery;
             var imageryLayer = imagery.imageryLayer;
+
+            if (imageryLayer !== lastLayer) {
+                layerDoneLoading = true;
+                layerFirstIndex = i;
+            }
+
+            lastLayer = imageryLayer;
 
             if (imagery.state === ImageryState.PLACEHOLDER) {
                 if (imageryLayer.getImageryProvider().isReady()) {
@@ -368,8 +381,9 @@ define([
             }
 
             if (imagery.state === ImageryState.TEXTURE_LOADED) {
-                imagery.state = ImageryState.TRANSITIONING;
-                imageryLayer._reprojectTexture(context, imagery);
+               // imagery.state = ImageryState.TRANSITIONING;
+                //imageryLayer._reprojectTexture(context, this, tileImagery, imageryLayerCollection);
+                imagery.state = ImageryState.READY;
             }
 
             if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
@@ -401,6 +415,15 @@ define([
 
             if (imageryDoneLoading && typeof tileImagery.textureTranslationAndScale === 'undefined') {
                 tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
+            }
+
+            // If all the imagery for this layer is done loading, create a single texture
+            // for this tile with all of the imagery.
+            layerDoneLoading = layerDoneLoading & imageryDoneLoading;
+            if (layerDoneLoading && (i === len - 1 || tileImageryCollection[i + 1].imagery.imageryLayer !== imageryLayer)) {
+                for (var textureIndex = layerFirstIndex; textureIndex <= i; ++textureIndex) {
+                    imageryLayer._reprojectTexture(context, this, tileImageryCollection[textureIndex], imageryLayerCollection);
+                }
             }
 
             isRenderable = isRenderable && imageryDoneLoading;

@@ -12,6 +12,7 @@ define([
         '../Core/Extent',
         '../Core/Math',
         '../Core/PrimitiveType',
+        '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/MipmapHint',
         '../Renderer/TextureMagnificationFilter',
@@ -25,7 +26,9 @@ define([
         './TexturePool',
         '../ThirdParty/when',
         '../Shaders/ReprojectWebMercatorFS',
-        '../Shaders/ReprojectWebMercatorVS'
+        '../Shaders/ReprojectWebMercatorVS',
+        '../Shaders/CombineTexturesVS',
+        '../Shaders/CombineWebMercatorTexturesFS'
     ], function(
         defaultValue,
         destroyObject,
@@ -39,6 +42,7 @@ define([
         Extent,
         CesiumMath,
         PrimitiveType,
+        BlendingState,
         BufferUsage,
         MipmapHint,
         TextureMagnificationFilter,
@@ -52,7 +56,9 @@ define([
         TexturePool,
         when,
         ReprojectWebMercatorFS,
-        ReprojectWebMercatorVS) {
+        ReprojectWebMercatorVS,
+        CombineTexturesVS,
+        CombineWebMercatorTexturesFS) {
     "use strict";
 
     /**
@@ -403,10 +409,7 @@ define([
         var targetGeometricError = errorRatio * terrainProvider.getLevelMaximumGeometricError(tile.level);
         var imageryLevel = getLevelWithMaximumTexelSpacing(this, targetGeometricError, latitudeClosestToEquator);
         imageryLevel = Math.max(0, imageryLevel);
-        var maximumLevel = imageryProvider.getMaximumLevel();
-        if (imageryLevel > maximumLevel) {
-            imageryLevel = maximumLevel;
-        }
+        imageryLevel = Math.min(imageryLevel, imageryProvider.getMaximumLevel());
 
         var imageryTilingScheme = imageryProvider.getTilingScheme();
         var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getNorthwest(), imageryLevel);
@@ -638,14 +641,52 @@ define([
      * @memberof ImageryLayer
      * @private
      *
-     * @param {Context} context The rendered context to use.
+     * @param {Context} context The renderer context to use.
      * @param {Imagery} imagery The imagery instance to reproject.
      */
-    ImageryLayer.prototype._reprojectTexture = function(context, imagery) {
+    ImageryLayer.prototype._reprojectTexture = function(context, tile, tileImagery, imageryLayerCollection) {
+        var imagery = tileImagery.imagery;
         var texture = imagery.texture;
         var extent = imagery.extent;
 
-        // Reproject this texture if it is not already in a geographic projection and
+        // Find the index of this layer in the layer collection.
+        // TODO: we shouldn't have to search for this here, we should just know it.
+        var imageryLayerIndex;
+        for (var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
+            if (imageryLayerCollection.get(i) === this) {
+                imageryLayerIndex = i;
+                break;
+            }
+        }
+
+        var tileTexture = tile.textures[imageryLayerIndex];
+
+        // Create the tile's texture if it doesn't exist yet.
+        if (typeof tileTexture === 'undefined') {
+            tile.textures[imageryLayerIndex] = tileTexture = context.createTexture2D({
+                width : 256,
+                height : 256
+            });
+
+            if (typeof this._mipmapSampler === 'undefined') {
+                var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
+                this._mipmapSampler = context.createSampler({
+                    wrapS : TextureWrap.CLAMP,
+                    wrapT : TextureWrap.CLAMP,
+                    minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
+                    magnificationFilter : TextureMagnificationFilter.LINEAR,
+                    maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy))
+                });
+            }
+            // TODO: re-enable mipmapping
+            //tileTexture.generateMipmap(MipmapHint.NICEST);
+            //tileTexture.setSampler(this._mipmapSampler);
+        }
+
+        tileImagery.textureTranslationAndScale = this._calculateTextureTranslationAndScale(tile, tileImagery);
+        copyToImageryTextureToTileTexture(this, context, tileImagery, tileTexture);
+
+        /*// Reproject this texture if it is not already in a geographic projection and
         // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
@@ -680,9 +721,197 @@ define([
                 });
             }
             texture.setSampler(this._nonMipmapSampler);
-        }
+        }*/
 
         imagery.state = ImageryState.READY;
+    };
+
+    var uniformMap = {
+            u_textureDimensions : function() {
+                return this.textureDimensions;
+            },
+            u_texture : function() {
+                return this.texture;
+            },
+            u_northLatitude : function() {
+                return this.northLatitude;
+            },
+            u_southLatitude : function() {
+                return this.southLatitude;
+            },
+            u_southMercatorYLow : function() {
+                return this.southMercatorYLow;
+            },
+            u_southMercatorYHigh : function() {
+                return this.southMercatorYHigh;
+            },
+            u_oneOverMercatorHeight : function() {
+                return this.oneOverMercatorHeight;
+            },
+            u_textureTranslationAndScale : function() {
+                return this.textureTranslationAndScale;
+            },
+            u_textureCoordinateExtent : function() {
+                return this.textureCoordinateExtent;
+            },
+
+            textureDimensions : new Cartesian2(),
+            texture : undefined,
+            northLatitude : 0,
+            southLatitude : 0,
+            southMercatorYHigh : 0,
+            southMercatorYLow : 0,
+            oneOverMercatorHeight : 0,
+            textureTranslationAndScale : new Cartesian4(),
+            textureCoordinateExtent : new Cartesian4()
+        };
+
+    function copyToImageryTextureToTileTexture(imageryLayer, context, tileImagery, tileTexture) {
+        if (typeof imageryLayer._fbReproject === 'undefined') {
+            imageryLayer._fbReproject = context.createFramebuffer();
+            imageryLayer._fbReproject.destroyAttachments = false;
+
+            var reprojectMesh = {
+                attributes : {
+                    position : {
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 2,
+                        values : [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
+                    }
+                }
+            };
+
+            var reprojectAttribInds = {
+                position : 0
+            };
+
+            imageryLayer._vaReproject = context.createVertexArrayFromMesh({
+                mesh : reprojectMesh,
+                attributeIndices : reprojectAttribInds,
+                bufferUsage : BufferUsage.STATIC_DRAW
+            });
+
+            imageryLayer._spReproject = context.getShaderCache().getShaderProgram(
+                CombineTexturesVS,
+                CombineWebMercatorTexturesFS,
+                reprojectAttribInds);
+
+            imageryLayer._rsColor = context.createRenderState({
+                blending : BlendingState.ALPHA_BLEND
+            });
+        }
+
+        if (typeof imageryLayer._reprojectSampler === 'undefined') {
+            var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
+            imageryLayer._reprojectSampler = context.createSampler({
+                wrapS : TextureWrap.CLAMP,
+                wrapT : TextureWrap.CLAMP,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR,
+                maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
+            });
+        }
+
+        var imagery = tileImagery.imagery;
+        var texture = imagery.texture;
+        texture.setSampler(imageryLayer._reprojectSampler);
+
+        var width = 256;
+        var height = 256;
+
+        uniformMap.textureDimensions.x = width;
+        uniformMap.textureDimensions.y = height;
+        uniformMap.texture = texture;
+
+        var extent = imagery.extent;
+        uniformMap.northLatitude = extent.north;
+        uniformMap.southLatitude = extent.south;
+
+        var sinLatitude = Math.sin(extent.south);
+        var southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+
+        float32ArrayScratch[0] = southMercatorY;
+        uniformMap.southMercatorYHigh = float32ArrayScratch[0];
+        uniformMap.southMercatorYLow = southMercatorY - float32ArrayScratch[0];
+
+        sinLatitude = Math.sin(extent.north);
+        var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+        uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+
+        uniformMap.textureTranslationAndScale = tileImagery.textureTranslationAndScale;
+        uniformMap.textureCoordinateExtent = tileImagery.textureCoordinateExtent;
+
+        imageryLayer._fbReproject.setColorTexture(tileTexture);
+
+        var renderState = imageryLayer._rsColor;
+        var viewport = renderState.viewport;
+        if (typeof viewport === 'undefined') {
+            viewport = new BoundingRectangle();
+            renderState.viewport = viewport;
+        }
+        viewport.width = width;
+        viewport.height = height;
+
+        context.draw({
+            framebuffer : imageryLayer._fbReproject,
+            shaderProgram : imageryLayer._spReproject,
+            renderState : renderState,
+            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            vertexArray : imageryLayer._vaReproject,
+            uniformMap : uniformMap
+        });
+    }
+
+    ImageryLayer.prototype._createCombinedLayerTexture = function(context, tile, firstLayerImageryIndex, lastLayerImageryIndex) {
+        if (firstLayerImageryIndex === lastLayerImageryIndex && tile.imagery[firstLayerImageryIndex].imagery.x === -1) {
+            return;
+        }
+
+        var combinedImagery = new Imagery(this, -1, -1, 0, tile.extent);
+        combinedImagery.addReference();
+
+        var combinedTileImagery = new TileImagery(combinedImagery, new Cartesian4(0.0, 0.0, 1.0, 1.0));
+
+        var components = tile.imagery.splice(firstLayerImageryIndex, lastLayerImageryIndex - firstLayerImageryIndex + 1, combinedTileImagery);
+
+        var canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 256;
+        var context2d = canvas.getContext('2d');
+        context2d.globalCompositeOperation = 'copy';
+
+        var tileExtent = tile.extent;
+
+        for (var i = 0, len = components.length; i < len; ++i) {
+            var toCopy = components[i];
+
+            var imageryExtent = toCopy.imagery.extent;
+            var overlap = imageryExtent.intersectWith(tileExtent);
+
+            var imageWidth = toCopy.imagery.image.width;
+            var imageHeight = toCopy.imagery.image.height;
+
+            var sx = imageWidth * (overlap.west - imageryExtent.west) / (imageryExtent.east - imageryExtent.west);
+            var sy = imageHeight * (imageryExtent.north - overlap.north) / (imageryExtent.north - imageryExtent.south);
+            var sWidth = imageWidth * (overlap.east - overlap.west) / (imageryExtent.east - imageryExtent.west);
+            var sHeight = imageHeight * (overlap.north - overlap.south) / (imageryExtent.north - imageryExtent.south);
+
+            var dx = 256.0 * (overlap.west - tileExtent.west) / (tileExtent.east - tileExtent.west);
+            var dy = 256.0 * (tileExtent.north - overlap.north) / (tileExtent.north - tileExtent.south);
+            var dWidth = 256.0 * (overlap.east - overlap.west) / (tileExtent.east - tileExtent.west);
+            var dHeight = 256.0 * (overlap.north - overlap.south) / (tileExtent.north - tileExtent.south);
+
+            context2d.drawImage(toCopy.imagery.image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+        }
+
+        combinedImagery.texture = context.createTexture2D({
+            source : canvas
+        });
+
+        combinedTileImagery.componentTileImagery = components;
+        combinedTileImagery.textureTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+
+        combinedImagery.state = ImageryState.READY;
     };
 
     ImageryLayer.prototype.getImageryFromCache = function(x, y, level, imageryExtent) {
@@ -706,38 +935,6 @@ define([
     function getImageryCacheKey(x, y, level) {
         return JSON.stringify([x, y, level]);
     }
-
-    var uniformMap = {
-        u_textureDimensions : function() {
-            return this.textureDimensions;
-        },
-        u_texture : function() {
-            return this.texture;
-        },
-        u_northLatitude : function() {
-            return this.northLatitude;
-        },
-        u_southLatitude : function() {
-            return this.southLatitude;
-        },
-        u_southMercatorYLow : function() {
-            return this.southMercatorYLow;
-        },
-        u_southMercatorYHigh : function() {
-            return this.southMercatorYHigh;
-        },
-        u_oneOverMercatorHeight : function() {
-            return this.oneOverMercatorHeight;
-        },
-
-        textureDimensions : new Cartesian2(),
-        texture : undefined,
-        northLatitude : 0,
-        southLatitude : 0,
-        southMercatorYHigh : 0,
-        southMercatorYLow : 0,
-        oneOverMercatorHeight : 0
-    };
 
     var float32ArrayScratch = typeof Float32Array === 'undefined' ? undefined : new Float32Array(1);
 
