@@ -3,7 +3,7 @@ define(['../Core/DeveloperError',
         '../Core/defaultValue',
         '../Core/Clock',
         '../Core/JulianDate',
-        '../ThirdParty/knockout-2.2.1'
+        '../ThirdParty/knockout'
         ], function(
          DeveloperError,
          defaultValue,

@@ -9,7 +9,7 @@ define(['./Command',
         '../Core/JulianDate',
         '../Core/defaultValue',
         '../ThirdParty/sprintf',
-        '../ThirdParty/knockout-2.2.1'
+        '../ThirdParty/knockout'
         ], function(
          Command,
          ToggleButtonViewModel,

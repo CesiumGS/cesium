@@ -1,7 +1,7 @@
 /*global define*/
 define(['../Core/DeveloperError',
         '../Core/defaultValue',
-        '../ThirdParty/knockout-2.2.1'
+        '../ThirdParty/knockout'
         ], function(
          DeveloperError,
          defaultValue,
