@@ -208,7 +208,6 @@ define([
             // CZML_TODO Determine official defaults
             polyline.setColor(Color.WHITE);
             polyline.setOutlineColor(Color.BLACK);
-            polyline.setOutlineWidth(1);
             polyline.setWidth(1);
         } else {
             polyline = this._polylineCollection.get(polylineVisualizerIndex);
@@ -230,14 +229,6 @@ define([
         property = dynamicPolyline.outlineColor;
         if (typeof property !== 'undefined') {
             polyline.setOutlineColor(property.getValue(time, polyline.getOutlineColor()));
-        }
-
-        property = dynamicPolyline.outlineWidth;
-        if (typeof property !== 'undefined') {
-            var outlineWidth = property.getValue(time);
-            if (typeof outlineWidth !== 'undefined') {
-                polyline.setOutlineWidth(outlineWidth);
-            }
         }
 
         property = dynamicPolyline.width;
