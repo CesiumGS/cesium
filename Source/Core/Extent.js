@@ -306,15 +306,15 @@ define([
     };
 
     /**
-     * Determines if the extent is empty, i.e., if <code>west === east</code>
-     * and <code>south === north</code>.
+     * Determines if the extent is empty, i.e., if <code>west >= east</code>
+     * or <code>south >= north</code>.
      *
      * @memberof Extent
      *
      * @return {Boolean} True if the extent is empty; otherwise, false.
      */
     Extent.prototype.isEmpty = function() {
-        return (this.west === this.east) && (this.south === this.north);
+        return this.west >= this.east || this.south >= this.north;
     };
 
     var subsampleLlaScratch = new Cartographic();
