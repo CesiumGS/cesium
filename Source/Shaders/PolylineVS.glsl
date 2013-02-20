@@ -67,19 +67,24 @@ void main()
     vec4 nextWC = czm_eyeToWindowCoordinates(vec4(nextEC.xyz + positionEC.xyz, 1.0));
     nextWC.xy = normalize(nextWC.xy - positionWC.xy);
     
-    float angle = acos(dot(prevWC.xy, nextWC.xy));
+    float angle = acos(dot(prevWC.xy, nextWC.xy)) * 0.5;
     
     vec2 direction;
-    if (abs(angle - czm_pi) < czm_epsilon1)
+    if (abs(angle - czm_piOverTwo) < czm_epsilon3)
     {
         mat2 rotation = mat2(cos(czm_piOverTwo), sin(czm_piOverTwo), -sin(czm_piOverTwo), cos(czm_piOverTwo));
         direction = rotation * nextWC.xy;
         direction *= width;
     }
+    else if (abs(angle) < czm_epsilon3)
+    {
+        direction = normalize((prevWC.xy + nextWC.xy) * 0.5);
+        direction *= width;
+    }
     else
     {
         direction = normalize((prevWC.xy + nextWC.xy) * 0.5);
-        direction *= width / sin(angle * 0.5);
+        direction *= width / sin(angle);
     }
     
     positionWC.xy += direction * expandDir;
