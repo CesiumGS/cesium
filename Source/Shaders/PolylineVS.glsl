@@ -24,7 +24,7 @@ void main()
 {
     float texCoord = misc.x;
     float expandDir = misc.y;
-    float width = misc.z;
+    float width = misc.z * 0.5;
     float show = misc.w;
     
     vec4 p;
@@ -61,14 +61,20 @@ void main()
     
     vec4 prevEC = czm_modelView * prevDir;
     vec4 nextEC = czm_modelView * nextDir;
-
-    vec4 directionEC = vec4((prevEC.xyz + nextEC.xyz) * 0.5, 0.0);
-    vec4 directionWC = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + directionEC.xyz, 1.0));
-    directionWC.xy = normalize(directionWC.xy - positionWC.xy);
     
-    vec2 direction = expandDir * directionWC.xy;
+    vec4 prevWC = czm_eyeToWindowCoordinates(vec4(prevEC.xyz + positionEC.xyz, 1.0));
+    prevWC.xy = normalize(prevWC.xy - positionWC.xy);
+    vec4 nextWC = czm_eyeToWindowCoordinates(vec4(nextEC.xyz + positionEC.xyz, 1.0));
+    nextWC.xy = normalize(nextWC.xy - positionWC.xy);
     
-    positionWC.xy += direction * width * 0.5;
+    float angle = acos(dot(prevWC.xy, nextWC.xy));
+    float height = width / tan(angle * 0.5);
+    
+    vec2 direction = normalize((prevWC.xy + nextWC.xy) * 0.5);
+    direction *= length(vec2(width, height));
+    direction *= expandDir;
+    
+    positionWC.xy += direction;
     
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     
