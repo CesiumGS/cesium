@@ -760,7 +760,7 @@ define([
                         offsetInBytes : vertexColorBufferOffset
                     }, {
                         index : attributeIndices.misc,
-                        componentsPerAttribute : 2,
+                        componentsPerAttribute : 4,
                         componentDatatype : ComponentDatatype.FLOAT,
                         vertexBuffer : this._miscBuffer,
                         offsetInBytes : vertexMiscBufferOffset
@@ -999,7 +999,7 @@ define([
                     miscArray[miscIndex] = j / positionsLength;     // s tex coord
                     miscArray[miscIndex + 1] = 2 * k - 1;           // expand direction
                     miscArray[miscIndex + 2] = width;
-                    //miscArray[miscIndex + 3] = show;  // TODO
+                    miscArray[miscIndex + 3] = show;
 
                     positionIndex += 6;
                     adjacencyIndex += 8;
@@ -1110,7 +1110,7 @@ define([
                         }
 
                         indices.push(indicesCount, indicesCount + 2, indicesCount + 1);
-                        indices.push(indicesCount, indicesCount + 2, indicesCount + 3);
+                        indices.push(indicesCount + 1, indicesCount + 2, indicesCount + 3);
 
                         count += 6;
                         offset += 6;
@@ -1176,7 +1176,7 @@ define([
                                 }
 
                                 indices.push(indicesCount, indicesCount + 2, indicesCount + 1);
-                                indices.push(indicesCount, indicesCount + 2, indicesCount + 3);
+                                indices.push(indicesCount + 1, indicesCount + 2, indicesCount + 3);
 
                                 count += 6;
                                 offset += 6;
@@ -1220,7 +1220,7 @@ define([
                         }
 
                         indices.push(indicesCount, indicesCount + 2, indicesCount + 1);
-                        indices.push(indicesCount, indicesCount + 2, indicesCount + 3);
+                        indices.push(indicesCount + 1, indicesCount + 2, indicesCount + 3);
 
                         count += 6;
                         offset += 6;

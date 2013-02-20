@@ -11,6 +11,15 @@ varying vec4 v_color;
 
 uniform float u_morphTime;
 
+vec3 sphericalToCartesian(vec2 latLon)
+{
+    float sinTheta = sin(latLon.x);
+    float x = sinTheta * cos(latLon.y);
+    float y = sinTheta * sin(latLon.y);
+    float z = cos(latLon.x);
+    return vec3(x, y, z);
+}
+
 void main() 
 {
     float texCoord = misc.x;
@@ -19,30 +28,48 @@ void main()
     float show = misc.w;
     
     vec4 p;
+    vec4 prevDir;
+    vec4 nextDir;
 
     if (u_morphTime == 1.0)
     {
         p = vec4(czm_translateRelativeToEye(position3DHigh, position3DLow), 1.0);
+        prevDir = vec4(sphericalToCartesian(prev.xy), 0.0);
+        nextDir = vec4(sphericalToCartesian(next.xy), 0.0);
     }
     else if (u_morphTime == 0.0)
     {
         p = vec4(czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy), 1.0);
+        prevDir = vec4(sphericalToCartesian(prev.zw), 0.0);
+        nextDir = vec4(sphericalToCartesian(next.zw), 0.0);
     }
     else
     {
         p = czm_columbusViewMorph(
-        	czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),
+            czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),
             czm_translateRelativeToEye(position3DHigh, position3DLow), 
             u_morphTime);
+        prevDir = czm_columbusViewMorph(sphericalToCartesian(prev.xy), sphericalToCartesian(prev.zw), u_morphTime);
+        nextDir = czm_columbusViewMorph(sphericalToCartesian(next.xy), sphericalToCartesian(next.zw), u_morphTime);
+        
+        prevDir.w = 0.0;
+        nextDir.w = 0.0;
     }
     
-    p.z += expandDir * 100000.0;
     vec4 positionEC = czm_modelViewRelativeToEye * p;
-    //positionEC.xyz *= show;
-    
     vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
-    //positionWC.xy += (vec2(0.0, width * expandDir) * czm_highResolutionSnapScale);
+    
+    vec4 prevEC = czm_modelView * prevDir;
+    vec4 nextEC = czm_modelView * nextDir;
 
+    vec4 directionEC = vec4((prevEC.xyz + nextEC.xyz) * 0.5, 0.0);
+    vec4 directionWC = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + directionEC.xyz, 1.0));
+    directionWC.xy = normalize(directionWC.xy - positionWC.xy);
+    
+    vec2 direction = expandDir * directionWC.xy;
+    
+    positionWC.xy += direction * width * 0.5;
+    
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     
     v_color = color;
