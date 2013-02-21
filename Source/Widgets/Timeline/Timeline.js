@@ -2,10 +2,10 @@
 define([
         './TimelineTrack',
         './TimelineHighlightRange',
-        '../Core/DeveloperError',
-        '../Core/Clock',
-        '../Core/ClockRange',
-        '../Core/JulianDate'
+        '../../Core/DeveloperError',
+        '../../Core/Clock',
+        '../../Core/ClockRange',
+        '../../Core/JulianDate'
     ], function (
          TimelineTrack,
          TimelineHighlightRange,

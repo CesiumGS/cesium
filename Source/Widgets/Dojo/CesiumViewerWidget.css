@@ -1,5 +1,7 @@
-@import url('TimelineWidget.css');
-@import url('../Animation.css');
+@import url('../Timeline/Timeline.css');
+@import url('../Timeline/darker.css');
+@import url('../Animation/Animation.css');
+@import url('../Animation/darker.css');
 
 .cw-node {
     font-family: sans-serif;

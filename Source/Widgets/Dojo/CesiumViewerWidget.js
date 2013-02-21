@@ -14,9 +14,9 @@ define([
         'dijit/form/ToggleButton',
         'dijit/form/DropDownButton',
         'dijit/TooltipDialog',
-        './TimelineWidget',
-        '../Animation',
-        '../AnimationViewModel',
+        '../Timeline/Timeline',
+        '../Animation/Animation',
+        '../Animation/AnimationViewModel',
         '../ClockViewModel',
         '../../Core/defaultValue',
         '../../Core/loadJson',
@@ -75,7 +75,7 @@ define([
         ToggleButton,
         DropDownButton,
         TooltipDialog,
-        TimelineWidget,
+        Timeline,
         Animation,
         AnimationViewModel,
         ClockViewModel,
@@ -543,7 +543,7 @@ define([
 
             clock.currentTime = clock.startTime;
             clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-            this.timelineControl.zoomTo(clock.startTime, clock.stopTime);
+            this.timeline.zoomTo(clock.startTime, clock.stopTime);
         },
 
         /**
@@ -755,7 +755,7 @@ define([
             this.clock = this.clockViewModel.clock;
             var clock = this.clock;
 
-            this.animation = new Animation(this.animationWidget, animationViewModel);
+            this.animation = new Animation(this.animationContainer, animationViewModel);
 
             var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
@@ -774,14 +774,10 @@ define([
                 widget.clockViewModel.shouldAnimate(false);
             }
 
-            var timelineWidget = widget.timelineWidget;
-            timelineWidget.clock = widget.clock;
-            timelineWidget.setupCallback = function(t) {
-                widget.timelineControl = t;
-                t.addEventListener('settime', onTimelineScrub, false);
-                t.zoomTo(clock.startTime, clock.stopTime);
-            };
-            timelineWidget.setupTimeline();
+            var timeline = new Timeline(this.timelineContainer, widget.clock);
+            widget.timeline = timeline;
+            timeline.addEventListener('settime', onTimelineScrub, false);
+            timeline.zoomTo(clock.startTime, clock.stopTime);
 
             var viewHomeButton = widget.viewHomeButton;
             var view2D = widget.view2D;
@@ -1063,7 +1059,7 @@ define([
             } else {
                 currentTime = this.clockViewModel.currentTime();
             }
-            this.timelineControl.updateFromClock();
+            this.timeline.updateFromClock();
             this.visualizers.update(currentTime);
 
             // Update the camera to stay centered on the selected object, if any.

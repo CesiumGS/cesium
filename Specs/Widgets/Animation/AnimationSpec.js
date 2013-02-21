@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
-             'Widgets/Animation',
-             'Widgets/AnimationViewModel',
+             'Widgets/Animation/Animation',
+             'Widgets/Animation/AnimationViewModel',
              'Widgets/ClockViewModel',
              'Core/JulianDate',
              'Core/ClockStep',

@@ -1,10 +1,10 @@
 /*global define*/
-define(['../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/ClockStep',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../ThirdParty/sprintf'
+define(['../../Core/destroyObject',
+        '../../Core/DeveloperError',
+        '../../Core/ClockStep',
+        '../../Core/Color',
+        '../../Core/defaultValue',
+        '../../ThirdParty/sprintf'
         ], function(
          destroyObject,
          DeveloperError,

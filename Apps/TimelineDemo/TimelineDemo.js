@@ -7,10 +7,10 @@ define(['dojo',
         'Core/JulianDate',
         'Core/TimeInterval',
         'Core/requestAnimationFrame',
-        'Widgets/Animation',
+        'Widgets/Animation/Animation',
         'Widgets/ClockViewModel',
-        'Widgets/AnimationViewModel',
-        'Widgets/Timeline'
+        'Widgets/Animation/AnimationViewModel',
+        'Widgets/Timeline/Timeline'
     ], function(
          dojo,
          dijit,

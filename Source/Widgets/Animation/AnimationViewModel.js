@@ -1,16 +1,16 @@
 /*global define*/
 define([
-        './createCommand',
-        './ToggleButtonViewModel',
-        '../Core/binarySearch',
-        '../Core/ClockStep',
-        '../Core/ClockRange',
-        '../Core/Color',
-        '../Core/DeveloperError',
-        '../Core/JulianDate',
-        '../Core/defaultValue',
-        '../ThirdParty/sprintf',
-        '../ThirdParty/knockout'
+        '../createCommand',
+        '../ToggleButtonViewModel',
+        '../../Core/binarySearch',
+        '../../Core/ClockStep',
+        '../../Core/ClockRange',
+        '../../Core/Color',
+        '../../Core/DeveloperError',
+        '../../Core/JulianDate',
+        '../../Core/defaultValue',
+        '../../ThirdParty/sprintf',
+        '../../ThirdParty/knockout'
     ], function(
         createCommand,
         ToggleButtonViewModel,
