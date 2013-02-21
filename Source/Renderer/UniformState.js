@@ -52,6 +52,7 @@ define([
         this._projection = Matrix4.IDENTITY.clone();
         this._infiniteProjection = Matrix4.IDENTITY.clone();
         this._entireFrustum = new Cartesian2();
+        this._pixelSize = 0.0;
 
         this._frameNumber = 1.0;
         this._time = undefined;
@@ -236,6 +237,9 @@ define([
         }
 
         setSunAndMoonDirections(this, frameState);
+
+        var pixelSize = camera.frustum.getPixelSize(frameState.canvasDimensions);
+        this._pixelSize = Math.max(pixelSize.x, pixelSize.y);
 
         this._entireFrustum.x = camera.frustum.near;
         this._entireFrustum.y = camera.frustum.far;
@@ -882,6 +886,13 @@ define([
      */
     UniformState.prototype.getEntireFrustum = function() {
         return this._entireFrustum;
+    };
+
+    /**
+     * TODO
+     */
+    UniformState.prototype.getPixelSize = function() {
+        return this._pixelSize;
     };
 
     /**

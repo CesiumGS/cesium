@@ -1224,6 +1224,23 @@ define([
         },
 
         /**
+         * TODO
+         */
+        czm_pixelSize : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getPixelSize();
+            }
+        },
+
+        /**
          * An automatic GLSL uniform representing the normalized direction to the sun in eye coordinates.
          * This is commonly used for directional lighting computations.
          * <br /><br />

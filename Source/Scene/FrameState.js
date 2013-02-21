@@ -1,5 +1,5 @@
 /*global define*/
-define([], function() {
+define(['../Core/Cartesian2'], function(Cartesian2) {
     "use strict";
 
     /**
@@ -62,6 +62,11 @@ define([], function() {
          * @type Occluder
          */
         this.occluder = undefined;
+
+        /**
+         * TODO
+         */
+        this.canvasDimensions = new Cartesian2();
 
         this.passes = {
                 /**

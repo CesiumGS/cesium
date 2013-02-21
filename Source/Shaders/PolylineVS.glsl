@@ -8,6 +8,8 @@ attribute vec4 color;
 attribute vec4 misc;
 
 varying vec4 v_color;
+varying vec4 v_outlineColor;
+varying float v_textureCoordinate;
 
 uniform float u_morphTime;
 
@@ -54,44 +56,32 @@ void main()
     }
     
     vec4 positionEC = czm_modelViewRelativeToEye * p;
-    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
-    
     vec4 prevEC = czm_modelView * prevDir;
     vec4 nextEC = czm_modelView * nextDir;
     
-    vec4 prevWC = czm_eyeToWindowCoordinates(vec4(prevEC.xyz + positionEC.xyz, 1.0));
-    prevWC.xy = normalize(prevWC.xy - positionWC.xy);
-    vec4 nextWC = czm_eyeToWindowCoordinates(vec4(nextEC.xyz + positionEC.xyz, 1.0));
-    nextWC.xy = normalize(nextWC.xy - positionWC.xy);
-    
-    float angle = acos(dot(prevWC.xy, nextWC.xy)) * 0.5;
-    
-    vec2 direction;
-    if (abs(angle - czm_piOverTwo) < czm_epsilon3)
-    {
-        mat2 rotation = mat2(cos(czm_piOverTwo), sin(czm_piOverTwo), -sin(czm_piOverTwo), cos(czm_piOverTwo));
-        direction = rotation * nextWC.xy;
-        direction *= width;
-    }
-    else if (abs(angle) < czm_epsilon3)
-    {
-        direction = normalize((prevWC.xy + nextWC.xy) * 0.5);
-        direction *= width;
-    }
-    else
-    {
-        direction = normalize((prevWC.xy + nextWC.xy) * 0.5);
-        direction *= width / sin(angle);
-    }
+    vec3 direction = (prevEC.xyz + nextEC.xyz) * 0.5;
+    direction.z = 0.0;
+    direction = normalize(direction);
     
     if (direction.x < 0.0)
     {
         expandDir *= -1.0;
     }
     
-    positionWC.xy += direction * expandDir;
+    float angle = acos(dot(direction, nextEC.xyz));
+    if (abs(angle - czm_piOverTwo) > czm_epsilon1)
+    {
+        width = width / sin(angle);
+    }
+    
+    float pixelSize = czm_pixelSize * abs(positionEC.z);
+    direction = direction * expandDir * width * pixelSize;
+    
+    vec4 positionWC = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + direction, 1.0));
     
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     
     v_color = color;
+    v_outlineColor = color; // TODO;
+    v_textureCoordinate = texCoord;
 }
