@@ -33,7 +33,7 @@ define([
          * An observable string defining the  tool tip.
          * @type Observable
          */
-        this.toolTip = defaultValue(options.toolTip, knockout.observable(''));
+        this.tooltip = defaultValue(options.tooltip, knockout.observable(''));
     };
 
     return ToggleButtonViewModel;

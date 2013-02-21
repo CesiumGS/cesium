@@ -218,7 +218,7 @@ define([
             toggled : knockout.computed(function() {
                 return !that._isAnimatingObs();
             }),
-            toolTip : knockout.observable('Pause'),
+            tooltip : knockout.observable('Pause'),
             command : createCommand(function() {
                 var clockViewModel = that.clockViewModel;
                 if (clockViewModel.shouldAnimate()) {
@@ -238,7 +238,7 @@ define([
             toggled : knockout.computed(function() {
                 return that._isAnimatingObs() && (clockViewModel.multiplier() < 0);
             }),
-            toolTip : knockout.observable('Play Reverse'),
+            tooltip : knockout.observable('Play Reverse'),
             command : createCommand(function() {
                 var clockViewModel = that.clockViewModel;
                 cancelRealtime(clockViewModel);
@@ -258,7 +258,7 @@ define([
             toggled : knockout.computed(function() {
                 return that._isAnimatingObs() && clockViewModel.multiplier() > 0 && clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK;
             }),
-            toolTip : knockout.observable('Play Forward'),
+            tooltip : knockout.observable('Play Forward'),
             command : createCommand(function() {
                 var clockViewModel = that.clockViewModel;
                 cancelRealtime(clockViewModel);
@@ -278,7 +278,7 @@ define([
             toggled : knockout.computed(function() {
                 return clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK;
             }),
-            toolTip : knockout.computed(function() {
+            tooltip : knockout.computed(function() {
                 if (that._isSystemTimeAvailable()) {
                     return 'Today (real-time)';
                 }
@@ -385,8 +385,8 @@ define([
     };
 
     /**
+     * Gets or sets the default array of known clock multipliers associated with new instances of the shuttle ring.
      * @memberof AnimationViewModel
-     * @returns The default array of known clock multipliers associated with new instances of the shuttle ring.
      */
     AnimationViewModel.defaultTicks = [//
     0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0,//

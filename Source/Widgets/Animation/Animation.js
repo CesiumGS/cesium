@@ -219,7 +219,7 @@ define(['../../Core/destroyObject',
 
         this._subscriptions = [//
         subscribeAndEvaluate(viewModel.toggled, this.setToggled, this),//
-        subscribeAndEvaluate(viewModel.toolTip, this.setToolTip, this),//
+        subscribeAndEvaluate(viewModel.tooltip, this.setToolTip, this),//
         subscribeAndEvaluate(viewModel.command.canExecute, this.setEnabled, this)];
     };
 
@@ -267,8 +267,8 @@ define(['../../Core/destroyObject',
         }
     };
 
-    SvgButton.prototype.setToolTip = function(toolTip) {
-        this.svgElement.getElementsByTagName('title')[0].textContent = toolTip;
+    SvgButton.prototype.setToolTip = function(tooltip) {
+        this.svgElement.getElementsByTagName('title')[0].textContent = tooltip;
     };
 
     function resize(that) {
