@@ -36,8 +36,8 @@ define(['dojo',
     function handleSetTime(e) {
         if (typeof timeline !== 'undefined') {
             var scrubJulian = e.timeJulian;
-            animationViewModel.clockViewModel.shouldAnimate(false);
-            animationViewModel.clockViewModel.currentTime(scrubJulian);
+            animationViewModel.clock = false;
+            animationViewModel.clock.currentTime = scrubJulian;
             updateScrubTime(scrubJulian);
         }
     }
@@ -100,7 +100,7 @@ define(['dojo',
         animation = new Animation(dojo.byId('animationWidget'), animationViewModel);
 
         function tick() {
-            var time = clockViewModel.tickAndSynchronize();
+            var time = clock.tick();
             timeline.updateFromClock();
             updateScrubTime(time);
             requestAnimationFrame(tick);

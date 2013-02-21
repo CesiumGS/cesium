@@ -4,12 +4,14 @@ define([
         './JulianDate',
         './ClockStep',
         './ClockRange',
+        './Event',
         './defaultValue'
        ], function(
          DeveloperError,
          JulianDate,
          ClockStep,
          ClockRange,
+         Event,
          defaultValue) {
     "use strict";
 
@@ -125,6 +127,11 @@ define([
          */
         this.shouldAnimate = defaultValue(description.shouldAnimate, true);
 
+        /**
+         * An {@link Event} that is fired whenever <code>tick</code>.
+         */
+        this.onTick = new Event();
+
         this._lastSystemTime = Date.now();
     };
 
@@ -141,46 +148,46 @@ define([
     Clock.prototype.tick = function(secondsToTick) {
         var currentSystemTime = Date.now();
 
+        var currentTime;
         if (this.clockStep === ClockStep.SYSTEM_CLOCK) {
-            this.currentTime = new JulianDate();
-            this._lastSystemTime = currentSystemTime;
-            return this.currentTime;
-        }
+            currentTime = new JulianDate();
+        } else {
+            var startTime = this.startTime;
+            var stopTime = this.stopTime;
+            var multiplier = this.multiplier;
+            var shouldAnimate = this.shouldAnimate;
+            currentTime = this.currentTime;
 
-        var startTime = this.startTime;
-        var stopTime = this.stopTime;
-        var currentTime = this.currentTime;
-        var multiplier = this.multiplier;
-        var shouldAnimate = this.shouldAnimate;
+            if (typeof secondsToTick !== 'undefined') {
+                currentTime = currentTime.addSeconds(secondsToTick);
+            } else if (shouldAnimate) {
+                if (this.clockStep === ClockStep.TICK_DEPENDENT) {
+                    currentTime = currentTime.addSeconds(multiplier);
+                } else {
+                    var milliseconds = currentSystemTime - this._lastSystemTime;
+                    currentTime = currentTime.addSeconds(multiplier * (milliseconds / 1000.0));
+                }
+            }
 
-        if (typeof secondsToTick !== 'undefined') {
-            currentTime = currentTime.addSeconds(secondsToTick);
-        } else if (shouldAnimate) {
-            if (this.clockStep === ClockStep.TICK_DEPENDENT) {
-                currentTime = currentTime.addSeconds(multiplier);
-            } else {
-                var milliseconds = currentSystemTime - this._lastSystemTime;
-                currentTime = currentTime.addSeconds(multiplier * (milliseconds / 1000.0));
-            }
-        }
-
-        if (this.clockRange === ClockRange.CLAMPED) {
-            if (currentTime.lessThan(startTime)) {
-                currentTime = startTime;
-            } else if (currentTime.greaterThan(stopTime)) {
-                currentTime = stopTime;
-            }
-        } else if (this.clockRange === ClockRange.LOOP_STOP) {
-            if (currentTime.lessThan(startTime)) {
-                currentTime = startTime.clone();
-            }
-            while (currentTime.greaterThan(stopTime)) {
-                currentTime = startTime.addSeconds(stopTime.getSecondsDifference(currentTime));
+            if (this.clockRange === ClockRange.CLAMPED) {
+                if (currentTime.lessThan(startTime)) {
+                    currentTime = startTime;
+                } else if (currentTime.greaterThan(stopTime)) {
+                    currentTime = stopTime;
+                }
+            } else if (this.clockRange === ClockRange.LOOP_STOP) {
+                if (currentTime.lessThan(startTime)) {
+                    currentTime = startTime.clone();
+                }
+                while (currentTime.greaterThan(stopTime)) {
+                    currentTime = startTime.addSeconds(stopTime.getSecondsDifference(currentTime));
+                }
             }
         }
 
         this.currentTime = currentTime;
         this._lastSystemTime = currentSystemTime;
+        this.onTick.raiseEvent(this);
         return currentTime;
     };
 

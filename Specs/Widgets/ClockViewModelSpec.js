@@ -78,7 +78,7 @@ defineSuite([
         expect(clockViewModel.clockRange()).toNotEqual(clock.clockRange);
         expect(clockViewModel.shouldAnimate()).toNotEqual(clock.shouldAnimate);
 
-        clockViewModel.tickAndSynchronize();
+        clock.tick();
 
         expect(clockViewModel.startTime()).toEqual(clock.startTime);
         expect(clockViewModel.stopTime()).toEqual(clock.stopTime);
@@ -87,26 +87,5 @@ defineSuite([
         expect(clockViewModel.clockStep()).toEqual(clock.clockStep);
         expect(clockViewModel.clockRange()).toEqual(clock.clockRange);
         expect(clockViewModel.shouldAnimate()).toEqual(clock.shouldAnimate);
-    });
-
-    it('time advances depending on shouldAnimate', function() {
-        var clock = new Clock();
-        clock.startTime = JulianDate.fromIso8601("2012-01-01T00:00:00");
-        clock.stopTime = JulianDate.fromIso8601("2012-01-02T00:00:00");
-        clock.currentTime = JulianDate.fromIso8601("2012-01-01T12:00:00");
-        clock.multiplier = 1;
-        clock.clockStep = ClockStep.TICK_DEPENDENT;
-        clock.clockRange = ClockRange.UNBOUNDED;
-        clock.shouldAnimate = false;
-
-        var clockViewModel = new ClockViewModel(clock);
-        expect(clockViewModel.shouldAnimate()).toEqual(false);
-        expect(clockViewModel.tickAndSynchronize()).toEqual(clock.currentTime);
-
-        clockViewModel.shouldAnimate(true);
-
-        expect(clockViewModel.tickAndSynchronize()).toEqual(clock.currentTime);
-        expect(clock.currentTime).toEqual(JulianDate.fromIso8601("2012-01-01T12:00:01"));
-
     });
 });

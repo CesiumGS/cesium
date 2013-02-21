@@ -24,6 +24,7 @@ define(['../Core/DeveloperError',
     var ClockViewModel = function(clock) {
         clock = defaultValue(clock, new Clock());
         this.clock = clock;
+        this.clock.onTick.addEventListener(this.synchronize, this);
 
         var startTime = knockout.observable(clock.startTime);
         startTime.equalityComparer = JulianDate.equals;
@@ -100,7 +101,7 @@ define(['../Core/DeveloperError',
         };
 
         /**
-         * Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
+         * Determines if calls to <code>Clock.tick</code> are frame dependent or system clock dependent.
          * @type Observable
          */
         this.clockStep = knockout.computed({
@@ -132,7 +133,7 @@ define(['../Core/DeveloperError',
         var shouldAnimate = knockout.observable(clock.shouldAnimate);
 
         /**
-         * Determines if tickAndSynchronize should actually advance time.
+         * Determines if <code>Clock.tick</code> should actually advance time.
          * @type Observable
          */
         this.shouldAnimate = knockout.computed({
@@ -145,20 +146,9 @@ define(['../Core/DeveloperError',
     };
 
     /**
-     * Ticks the underlying clock and updates the view model with its contents.
-     * This should be called as part of the render loop.
-     * @memberof ClockViewModel
-     */
-    ClockViewModel.prototype.tickAndSynchronize = function() {
-        var time = this.clock.tick();
-        this.synchronize();
-        return time;
-    };
-
-    /**
      * Updates the view model with the contents of the underlying clock.
      * Can be called to force an update of the viewModel if the underlying
-     * clock is changed.
+     * clock has changed and <code>Clock.tick</code> has not yet been called.
      * @memberof ClockViewModel
      */
      ClockViewModel.prototype.synchronize = function() {

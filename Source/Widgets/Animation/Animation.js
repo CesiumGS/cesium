@@ -80,7 +80,7 @@ define(['../../Core/destroyObject',
         return _makeColorStringScratch.toCssColorString();
     }
 
-    function _rectButton(x, y, path, toolTip) {
+    function _rectButton(x, y, path) {
         var button = {
             tagName : 'g',
             'class' : 'animation-rectButton',
@@ -105,13 +105,13 @@ define(['../../Core/destroyObject',
                 'xlink:href' : path
             }, {
                 tagName : 'title',
-                textContent : toolTip
+                textContent : ''
             }]
         };
         return _svgFromObject(button);
     }
 
-    function _wingButton(x, y, path, toolTip) {
+    function _wingButton(x, y, path) {
         var button = {
             tagName : 'g',
             'class' : 'animation-rectButton',
@@ -130,7 +130,7 @@ define(['../../Core/destroyObject',
                 'xlink:href' : path
             }, {
                 tagName : 'title',
-                textContent : toolTip
+                textContent : ''
             }]
         };
         return _svgFromObject(button);
@@ -350,13 +350,14 @@ define(['../../Core/destroyObject',
      * // In HTML head, include a link to Animation.css stylesheet,
      * // and in the body, include: &lt;div id="animationWidget"&gt;&lt;/div&gt;
      *
-     * var clockViewModel = new ClockViewModel();
+     * var clock = new Clock();
+     * var clockViewModel = new ClockViewModel(clock);
      * var viewModel = new AnimationViewModel(clockViewModel);
      * var parentNode = document.getElementById("animationWidget");
      * var widget = new Animation(parentNode, viewModel);
      *
      * function tick() {
-     *     clockViewModel.tickAndSynchronize();
+     *     clock.tick();
      *     Cesium.requestAnimationFrame(tick);
      * }
      * Cesium.requestAnimationFrame(tick);
@@ -434,10 +435,10 @@ define(['../../Core/destroyObject',
         var topG = document.createElementNS(_svgNS, 'g');
         this._topG = topG;
 
-        this._realtimeSVG = new SvgButton(_wingButton(3, 4, '#animation_pathClock', viewModel.playRealtimeViewModel.toolTip()), viewModel.playRealtimeViewModel);
-        this._playReverseSVG = new SvgButton(_rectButton(44, 99, '#animation_pathPlayReverse', viewModel.playReverseViewModel.toolTip()), viewModel.playReverseViewModel);
-        this._playForwardSVG = new SvgButton(_rectButton(124, 99, '#animation_pathPlay', viewModel.playForwardViewModel.toolTip()), viewModel.playForwardViewModel);
-        this._pauseSVG = new SvgButton(_rectButton(84, 99, '#animation_pathPause', viewModel.pauseViewModel.toolTip()), viewModel.pauseViewModel);
+        this._realtimeSVG = new SvgButton(_wingButton(3, 4, '#animation_pathClock'), viewModel.playRealtimeViewModel);
+        this._playReverseSVG = new SvgButton(_rectButton(44, 99, '#animation_pathPlayReverse'), viewModel.playReverseViewModel);
+        this._playForwardSVG = new SvgButton(_rectButton(124, 99, '#animation_pathPlay'), viewModel.playForwardViewModel);
+        this._pauseSVG = new SvgButton(_rectButton(84, 99, '#animation_pathPause'), viewModel.pauseViewModel);
 
         var buttonsG = document.createElementNS(_svgNS, 'g');
         buttonsG.appendChild(this._realtimeSVG.svgElement);

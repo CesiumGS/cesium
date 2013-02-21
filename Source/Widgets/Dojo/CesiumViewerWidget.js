@@ -770,8 +770,8 @@ define([
             }
 
             function onTimelineScrub(e) {
-                widget.clockViewModel.currentTime(e.timeJulian);
-                widget.clockViewModel.shouldAnimate(false);
+                widget.clock.currentTime = e.timeJulian;
+                widget.clock.shouldAnimate = false;
             }
 
             var timeline = new Timeline(this.timelineContainer, widget.clock);
@@ -1055,9 +1055,9 @@ define([
         update : function() {
             var currentTime;
             if (this.clockViewModel.owner === this) {
-                currentTime = this.clockViewModel.tickAndSynchronize();
+                currentTime = this.clock.tick();
             } else {
-                currentTime = this.clockViewModel.currentTime();
+                currentTime = this.clock.currentTime;
             }
             this.timeline.updateFromClock();
             this.visualizers.update(currentTime);
