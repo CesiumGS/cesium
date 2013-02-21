@@ -21,5 +21,9 @@ void main()
         discard;
     }
 
+    vec2 translation = u_textureTranslationAndScale.xy;
+    vec2 scale = u_textureTranslationAndScale.zw;
+    geographicUV = geographicUV * scale + translation;
+
     gl_FragColor = texture2D(u_texture, geographicUV);
 }

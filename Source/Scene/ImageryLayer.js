@@ -24,9 +24,11 @@ define([
         './ImageryState',
         './TileImagery',
         './TexturePool',
+        './WebMercatorTilingScheme',
         '../ThirdParty/when',
         '../Shaders/ReprojectWebMercatorFS',
         '../Shaders/ReprojectWebMercatorVS',
+        '../Shaders/CombineGeographicTexturesFS',
         '../Shaders/CombineTexturesVS',
         '../Shaders/CombineWebMercatorTexturesFS'
     ], function(
@@ -54,9 +56,11 @@ define([
         ImageryState,
         TileImagery,
         TexturePool,
+        WebMercatorTilingScheme,
         when,
         ReprojectWebMercatorFS,
         ReprojectWebMercatorVS,
+        CombineGeographicTexturesFS,
         CombineTexturesVS,
         CombineWebMercatorTexturesFS) {
     "use strict";
@@ -203,10 +207,6 @@ define([
         this._imageryCache = {};
         this._texturePool = new TexturePool();
 
-        this._spReproject = undefined;
-        this._vaReproject = undefined;
-        this._fbReproject = undefined;
-
         this._skeletonPlaceholder = new TileImagery(Imagery.createPlaceholder(this));
 
         // The value of the show property on the last update.
@@ -220,9 +220,15 @@ define([
 
         this._requestImageError = undefined;
 
+        // PERFORMANCE_IDEA: these properties can be shared between layers, but not between Contexts.
+        this._spCopyGeographic = undefined;
+        this._spCopyWebMercator = undefined;
+        this._vaCopy = undefined;
+        this._fbCopy = undefined;
+
         this._nonMipmapSampler = undefined;
         this._mipmapSampler = undefined;
-        this._reprojectSampler = undefined;
+        this._copySampler = undefined;
     };
 
     /**
@@ -646,8 +652,6 @@ define([
      */
     ImageryLayer.prototype._reprojectTexture = function(context, tile, tileImagery, imageryLayerCollection) {
         var imagery = tileImagery.imagery;
-        var texture = imagery.texture;
-        var extent = imagery.extent;
 
         // Find the index of this layer in the layer collection.
         // TODO: we shouldn't have to search for this here, we should just know it.
@@ -767,11 +771,11 @@ define([
         };
 
     function copyToImageryTextureToTileTexture(imageryLayer, context, tileImagery, tileTexture) {
-        if (typeof imageryLayer._fbReproject === 'undefined') {
-            imageryLayer._fbReproject = context.createFramebuffer();
-            imageryLayer._fbReproject.destroyAttachments = false;
+        if (typeof imageryLayer._fbCopy === 'undefined') {
+            imageryLayer._fbCopy = context.createFramebuffer();
+            imageryLayer._fbCopy.destroyAttachments = false;
 
-            var reprojectMesh = {
+            var copyMesh = {
                 attributes : {
                     position : {
                         componentDatatype : ComponentDatatype.FLOAT,
@@ -781,29 +785,35 @@ define([
                 }
             };
 
-            var reprojectAttribInds = {
+            var copyAttribInds = {
                 position : 0
             };
 
-            imageryLayer._vaReproject = context.createVertexArrayFromMesh({
-                mesh : reprojectMesh,
-                attributeIndices : reprojectAttribInds,
+            imageryLayer._vaCopy = context.createVertexArrayFromMesh({
+                mesh : copyMesh,
+                attributeIndices : copyAttribInds,
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
 
-            imageryLayer._spReproject = context.getShaderCache().getShaderProgram(
+            // PERFORMANCE_IDEA: only create the shaderprogram we actually need.
+            imageryLayer._spCopyGeographic = context.getShaderCache().getShaderProgram(
+                    CombineTexturesVS,
+                    CombineGeographicTexturesFS,
+                    copyAttribInds);
+
+            imageryLayer._spCopyWebMercator = context.getShaderCache().getShaderProgram(
                 CombineTexturesVS,
                 CombineWebMercatorTexturesFS,
-                reprojectAttribInds);
+                copyAttribInds);
 
             imageryLayer._rsColor = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
         }
 
-        if (typeof imageryLayer._reprojectSampler === 'undefined') {
+        if (typeof imageryLayer._copySampler === 'undefined') {
             var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
-            imageryLayer._reprojectSampler = context.createSampler({
+            imageryLayer._copySampler = context.createSampler({
                 wrapS : TextureWrap.CLAMP,
                 wrapT : TextureWrap.CLAMP,
                 minificationFilter : TextureMinificationFilter.LINEAR,
@@ -814,7 +824,7 @@ define([
 
         var imagery = tileImagery.imagery;
         var texture = imagery.texture;
-        texture.setSampler(imageryLayer._reprojectSampler);
+        texture.setSampler(imageryLayer._copySampler);
 
         var width = 256;
         var height = 256;
@@ -824,24 +834,38 @@ define([
         uniformMap.texture = texture;
 
         var extent = imagery.extent;
-        uniformMap.northLatitude = extent.north;
-        uniformMap.southLatitude = extent.south;
 
-        var sinLatitude = Math.sin(extent.south);
-        var southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+        var tilingScheme = imageryLayer._imageryProvider.getTilingScheme();
 
-        float32ArrayScratch[0] = southMercatorY;
-        uniformMap.southMercatorYHigh = float32ArrayScratch[0];
-        uniformMap.southMercatorYLow = southMercatorY - float32ArrayScratch[0];
+        // Reproject this texture if it is not already in a geographic projection and
+        // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
+        // avoids precision problems in the reprojection transformation while making
+        // no noticeable difference in the georeferencing of the image.
+        var shaderProgram;
+        if (tilingScheme instanceof WebMercatorTilingScheme && (extent.east - extent.west) / texture.getWidth() > 1e-5) {
+            shaderProgram = imageryLayer._spCopyWebMercator;
 
-        sinLatitude = Math.sin(extent.north);
-        var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
-        uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+            uniformMap.northLatitude = extent.north;
+            uniformMap.southLatitude = extent.south;
+
+            var sinLatitude = Math.sin(extent.south);
+            var southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+
+            float32ArrayScratch[0] = southMercatorY;
+            uniformMap.southMercatorYHigh = float32ArrayScratch[0];
+            uniformMap.southMercatorYLow = southMercatorY - float32ArrayScratch[0];
+
+            sinLatitude = Math.sin(extent.north);
+            var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+            uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+        } else {
+            shaderProgram = imageryLayer._spCopyGeographic;
+        }
 
         uniformMap.textureTranslationAndScale = tileImagery.textureTranslationAndScale;
         uniformMap.textureCoordinateExtent = tileImagery.textureCoordinateExtent;
 
-        imageryLayer._fbReproject.setColorTexture(tileTexture);
+        imageryLayer._fbCopy.setColorTexture(tileTexture);
 
         var renderState = imageryLayer._rsColor;
         var viewport = renderState.viewport;
@@ -853,11 +877,11 @@ define([
         viewport.height = height;
 
         context.draw({
-            framebuffer : imageryLayer._fbReproject,
-            shaderProgram : imageryLayer._spReproject,
+            framebuffer : imageryLayer._fbCopy,
+            shaderProgram : shaderProgram,
             renderState : renderState,
             primitiveType : PrimitiveType.TRIANGLE_FAN,
-            vertexArray : imageryLayer._vaReproject,
+            vertexArray : imageryLayer._vaCopy,
             uniformMap : uniformMap
         });
     }
