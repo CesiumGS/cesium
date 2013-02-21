@@ -30,6 +30,15 @@ define(['../../Core/destroyObject',
     var gradientKnobColor = Color.fromCssColorString('rgba(66,67,68,0.3)');
     var gradientPointerColor = Color.fromCssColorString('rgba(0,0,0,0.5)');
 
+    function getElementColor(element) {
+        return Color.fromCssColorString(window.getComputedStyle(element).getPropertyValue('color'));
+    }
+
+    function subscribeAndEvaluate(observable, callback, target) {
+        callback.call(target, observable());
+        return observable.subscribe(callback, target);
+    }
+
     //Dynamically builds an SVG element from a JSON object.
     function svgFromObject(obj) {
         var ele = document.createElementNS(svgNS, obj.tagName);
@@ -194,7 +203,6 @@ define(['../../Core/destroyObject',
         this.svgElement = svgElement;
         this._enabled = undefined;
         this._toggled = undefined;
-        this._subscriptions = [];
 
         var that = this;
         svgElement.addEventListener('click', function() {
@@ -209,21 +217,10 @@ define(['../../Core/destroyObject',
         //bind to SVG, so we we figure that out we can modify our SVG
         //to include the binding information directly.
 
-        var subscriptions = this._subscriptions;
-        subscriptions.push(viewModel.toggled.subscribe(function(value) {
-            that.setToggled(value);
-        }));
-        this.setToggled(viewModel.toggled());
-
-        subscriptions.push(viewModel.toolTip.subscribe(function(value) {
-            that.setToolTip(value);
-        }));
-        this.setToolTip(viewModel.toolTip());
-
-        subscriptions.push(viewModel.command.canExecute.subscribe(function(value) {
-            that.setEnabled(value);
-        }));
-        this.setEnabled(viewModel.command.canExecute());
+        this._subscriptions = [//
+        subscribeAndEvaluate(viewModel.toggled, this.setToggled, this),//
+        subscribeAndEvaluate(viewModel.toolTip, this.setToolTip, this),//
+        subscribeAndEvaluate(viewModel.command.canExecute, this.setEnabled, this)];
     };
 
     SvgButton.prototype.destroy = function() {
@@ -538,11 +535,6 @@ define(['../../Core/destroyObject',
         svg.appendChild(topG);
         parentNode.appendChild(svg);
 
-        //TODO: Since the animation widget uses SVG and has no HTML backing,
-        //we need to wire everything up manually.  Knockout can supposedly
-        //bind to SVG, so we we figure that out we can modify our SVG
-        //to include the binding information directly.
-
         var that = this;
 
         window.addEventListener('resize', function() {
@@ -559,45 +551,36 @@ define(['../../Core/destroyObject',
         this._shuttleRingPointer.addEventListener('mousedown', callBack, true);
         this._knobOuter.addEventListener('mousedown', callBack, true);
 
-        //Keep track of the manual subscriptions so that we can unsubscribe later.
-        var subscriptions = [];
-        this._subscriptions = subscriptions;
+        //TODO: Since the animation widget uses SVG and has no HTML backing,
+        //we need to wire everything up manually.  Knockout can supposedly
+        //bind to SVG, so we we figure that out we can modify our SVG
+        //to include the binding information directly.
 
-        subscriptions.push(viewModel.pauseViewModel.toggled.subscribe(function(value) {
+        this._subscriptions = [//
+        subscribeAndEvaluate(viewModel.pauseViewModel.toggled, function(value) {
             if (value) {
                 that._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPausePointer');
             } else {
                 that._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
             }
-        }));
+        }),
 
-        if (viewModel.pauseViewModel.toggled()) {
-            this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPausePointer');
-        } else {
-            this._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
-        }
-
-        subscriptions.push(viewModel.shuttleRingAngle.subscribe(function(value) {
+        subscribeAndEvaluate(viewModel.shuttleRingAngle, function(value) {
             setShuttleRingPointer(that._shuttleRingPointer, that._knobOuter, value);
-        }));
-        setShuttleRingPointer(this._shuttleRingPointer, this._knobOuter, viewModel.shuttleRingAngle());
+        }),
 
-        subscriptions.push(viewModel.dateLabel.subscribe(function(value) {
+        subscribeAndEvaluate(viewModel.dateLabel, function(value) {
             that._knobDate.childNodes[0].textContent = value;
-        }));
-        this._knobDate.childNodes[0].textContent = viewModel.dateLabel();
+        }),
 
-        subscriptions.push(viewModel.timeLabel.subscribe(function(value) {
+        subscribeAndEvaluate(viewModel.timeLabel, function(value) {
             that._knobTime.childNodes[0].textContent = value;
-        }));
-        this._knobTime.childNodes[0].textContent = viewModel.timeLabel();
+        }),
 
-        subscriptions.push(viewModel.multiplierLabel.subscribe(function(value) {
+        subscribeAndEvaluate(viewModel.multiplierLabel, function(value) {
             that._knobStatus.childNodes[0].textContent = value;
-        }));
-        this._knobStatus.childNodes[0].textContent = viewModel.multiplierLabel();
+        })];
 
-        //Perform initial calculations for scale and theme.
         this.applyThemeChanges();
         resize(this);
     };
@@ -642,14 +625,14 @@ define(['../../Core/destroyObject',
      * animation.applyThemeChanges();
      */
     Animation.prototype.applyThemeChanges = function() {
-        var buttonNormalBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeNormal).getPropertyValue('color'));
-        var buttonHoverBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeHover).getPropertyValue('color'));
-        var buttonToggledBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeSelect).getPropertyValue('color'));
-        var buttonDisabledBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeDisabled).getPropertyValue('color'));
-        var knobBackColor = Color.fromCssColorString(window.getComputedStyle(this._themeKnob).getPropertyValue('color'));
-        var pointerColor = Color.fromCssColorString(window.getComputedStyle(this._themePointer).getPropertyValue('color'));
-        var swooshColor = Color.fromCssColorString(window.getComputedStyle(this._themeSwoosh).getPropertyValue('color'));
-        var swooshHoverColor = Color.fromCssColorString(window.getComputedStyle(this._themeSwooshHover).getPropertyValue('color'));
+        var buttonNormalBackColor = getElementColor(this._themeNormal);
+        var buttonHoverBackColor = getElementColor(this._themeHover);
+        var buttonToggledBackColor = getElementColor(this._themeSelect);
+        var buttonDisabledBackColor = getElementColor(this._themeDisabled);
+        var knobBackColor = getElementColor(this._themeKnob);
+        var pointerColor = getElementColor(this._themePointer);
+        var swooshColor = getElementColor(this._themeSwoosh);
+        var swooshHoverColor = getElementColor(this._themeSwooshHover);
 
         var defsElement = svgFromObject({
             tagName : 'defs',
