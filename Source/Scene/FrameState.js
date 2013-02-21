@@ -64,7 +64,8 @@ define(['../Core/Cartesian2'], function(Cartesian2) {
         this.occluder = undefined;
 
         /**
-         * TODO
+         * The dimensions of the canvas.
+         * @type {Cartesian2}
          */
         this.canvasDimensions = new Cartesian2();
 

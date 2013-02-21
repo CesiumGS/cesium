@@ -889,7 +889,13 @@ define([
     };
 
     /**
-     * TODO
+     * Returns the size of a pixel in meters at a distance of one meter from the camera.
+     *
+     * @memberof UniformState
+     *
+     * @return {Number} Returns the size of a pixel in meters at a distance of one meter from the camera.
+     *
+     * @see czm_pixelSize
      */
     UniformState.prototype.getPixelSize = function() {
         return this._pixelSize;

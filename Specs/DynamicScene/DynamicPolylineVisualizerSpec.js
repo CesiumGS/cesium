@@ -133,7 +133,6 @@ defineSuite([
         expect(primitive.getPositions()).toEqual(testObject.vertexPositions.getValueCartesian(time));
         expect(primitive.getColor()).toEqual(testObject.polyline.color.getValue(time));
         expect(primitive.getOutlineColor()).toEqual(testObject.polyline.outlineColor.getValue(time));
-        expect(primitive.getOutlineWidth()).toEqual(testObject.polyline.outlineWidth.getValue(time));
         expect(primitive.getWidth()).toEqual(testObject.polyline.width.getValue(time));
 
         testObject.vertexPositions = new MockProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112)]);
@@ -147,7 +146,6 @@ defineSuite([
         expect(primitive.getPositions()).toEqual(testObject.vertexPositions.getValueCartesian(time));
         expect(primitive.getColor()).toEqual(testObject.polyline.color.getValue(time));
         expect(primitive.getOutlineColor()).toEqual(testObject.polyline.outlineColor.getValue(time));
-        expect(primitive.getOutlineWidth()).toEqual(testObject.polyline.outlineWidth.getValue(time));
         expect(primitive.getWidth()).toEqual(testObject.polyline.width.getValue(time));
 
         polyline.show = new MockProperty(false);

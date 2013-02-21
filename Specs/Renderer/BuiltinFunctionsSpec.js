@@ -8,6 +8,7 @@ defineSuite([
          'Core/Math',
          'Core/Matrix4',
          'Core/PrimitiveType',
+         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/EncodedCartesian3',
          'Renderer/BufferUsage'
@@ -20,6 +21,7 @@ defineSuite([
          CesiumMath,
          Matrix4,
          PrimitiveType,
+         Cartesian2,
          Cartesian3,
          EncodedCartesian3,
          BufferUsage) {
@@ -169,6 +171,31 @@ defineSuite([
             'void main() { ' +
             '  vec3 p = czm_translateRelativeToEye(u_high, u_low);' +
             '  gl_FragColor = vec4(p == vec3(5.0, 3.0, 1.0)); ' +
+            '}';
+
+        verifyDraw(fs, uniformMap);
+    });
+
+    it('has czm_sphericalToCartesianCoordinates', function() {
+        var normal = new Cartesian3(1.0, 1.0, 1.0).normalize();
+        var latLon = new Cartesian2(Math.acos(normal.z), Math.atan2(normal.y, normal.x));
+
+        var uniformMap = {
+            u_latLon : function() {
+                return latLon;
+            },
+            u_normal : function() {
+                return normal;
+            }
+        };
+
+        var fs =
+            'uniform vec2 u_latLon;' +
+            'uniform vec3 u_normal;' +
+            'void main() {' +
+            '    vec3 cartesian = czm_sphericalToCartesianCoordinates(u_latLon);' +
+            '    vec3 diff = abs(u_normal - cartesian);' +
+            '    gl_FragColor = vec4(all(lessThan(diff, vec3(czm_epsilon6))));' +
             '}';
 
         verifyDraw(fs, uniformMap);
