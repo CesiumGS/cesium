@@ -11,15 +11,6 @@ varying vec4 v_color;
 
 uniform float u_morphTime;
 
-vec3 sphericalToCartesian(vec2 latLon)
-{
-    float sinTheta = sin(latLon.x);
-    float x = sinTheta * cos(latLon.y);
-    float y = sinTheta * sin(latLon.y);
-    float z = cos(latLon.x);
-    return vec3(x, y, z);
-}
-
 void main() 
 {
     float texCoord = misc.x;
@@ -34,23 +25,29 @@ void main()
     if (u_morphTime == 1.0)
     {
         p = vec4(czm_translateRelativeToEye(position3DHigh, position3DLow), 1.0);
-        prevDir = vec4(sphericalToCartesian(prev.xy), 0.0);
-        nextDir = vec4(sphericalToCartesian(next.xy), 0.0);
+        prevDir = vec4(czm_sphericalToCartesianCoordinates(prev.xy), 0.0);
+        nextDir = vec4(czm_sphericalToCartesianCoordinates(next.xy), 0.0);
     }
     else if (u_morphTime == 0.0)
     {
         p = vec4(czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy), 1.0);
-        prevDir = vec4(sphericalToCartesian(prev.zw), 0.0);
-        nextDir = vec4(sphericalToCartesian(next.zw), 0.0);
+        prevDir = vec4(czm_sphericalToCartesianCoordinates(prev.zw), 0.0);
+        nextDir = vec4(czm_sphericalToCartesianCoordinates(next.zw), 0.0);
     }
     else
     {
         p = czm_columbusViewMorph(
-            czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),
-            czm_translateRelativeToEye(position3DHigh, position3DLow), 
-            u_morphTime);
-        prevDir = czm_columbusViewMorph(sphericalToCartesian(prev.xy), sphericalToCartesian(prev.zw), u_morphTime);
-        nextDir = czm_columbusViewMorph(sphericalToCartesian(next.xy), sphericalToCartesian(next.zw), u_morphTime);
+                czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),
+                czm_translateRelativeToEye(position3DHigh, position3DLow), 
+                u_morphTime);
+        prevDir = czm_columbusViewMorph(
+                    czm_sphericalToCartesianCoordinates(prev.xy), 
+                    czm_sphericalToCartesianCoordinates(prev.zw), 
+                    u_morphTime);
+        nextDir = czm_columbusViewMorph(
+                    czm_sphericalToCartesianCoordinates(next.xy), 
+                    czm_sphericalToCartesianCoordinates(next.zw), 
+                    u_morphTime);
         
         prevDir.w = 0.0;
         nextDir.w = 0.0;
@@ -85,6 +82,11 @@ void main()
     {
         direction = normalize((prevWC.xy + nextWC.xy) * 0.5);
         direction *= width / sin(angle);
+    }
+    
+    if (direction.x < 0.0)
+    {
+        expandDir *= -1.0;
     }
     
     positionWC.xy += direction * expandDir;

@@ -936,6 +936,18 @@ vec3 czm_translateRelativeToEye(vec3 high, vec3 low)
 }
 
 /**
+ * TODO
+ */
+vec3 czm_sphericalToCartesianCoordinates(vec2 latLon)
+{
+    float sinTheta = sin(latLon.x);
+    float x = sinTheta * cos(latLon.y);
+    float y = sinTheta * sin(latLon.y);
+    float z = cos(latLon.x);
+    return vec3(x, y, z);
+}
+
+/**
  * @private
  */
 vec4 czm_getWaterNoise(sampler2D normalMap, vec2 uv, float time, float angleInRadians)
