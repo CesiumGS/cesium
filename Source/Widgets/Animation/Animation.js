@@ -14,35 +14,35 @@ define(['../../Core/destroyObject',
          sprintf) {
     "use strict";
 
-    var _svgNS = "http://www.w3.org/2000/svg";
-    var _xlinkNS = "http://www.w3.org/1999/xlink";
+    var svgNS = "http://www.w3.org/2000/svg";
+    var xlinkNS = "http://www.w3.org/1999/xlink";
 
-    var _widgetForDrag;
+    var widgetForDrag;
 
-    var _gradientEnabledColor0 = Color.fromCssColorString('rgba(247,250,255,0.384)');
-    var _gradientEnabledColor1 = Color.fromCssColorString('rgba(143,191,255,0.216)');
-    var _gradientEnabledColor2 = Color.fromCssColorString('rgba(153,197,255,0.098)');
-    var _gradientEnabledColor3 = Color.fromCssColorString('rgba(255,255,255,0.086)');
+    var gradientEnabledColor0 = Color.fromCssColorString('rgba(247,250,255,0.384)');
+    var gradientEnabledColor1 = Color.fromCssColorString('rgba(143,191,255,0.216)');
+    var gradientEnabledColor2 = Color.fromCssColorString('rgba(153,197,255,0.098)');
+    var gradientEnabledColor3 = Color.fromCssColorString('rgba(255,255,255,0.086)');
 
-    var _gradientDisabledColor0 = Color.fromCssColorString('rgba(255,255,255,0.267)');
-    var _gradientDisabledColor1 = Color.fromCssColorString('rgba(255,255,255,0)');
+    var gradientDisabledColor0 = Color.fromCssColorString('rgba(255,255,255,0.267)');
+    var gradientDisabledColor1 = Color.fromCssColorString('rgba(255,255,255,0)');
 
-    var _gradientKnobColor = Color.fromCssColorString('rgba(66,67,68,0.3)');
-    var _gradientPointerColor = Color.fromCssColorString('rgba(0,0,0,0.5)');
+    var gradientKnobColor = Color.fromCssColorString('rgba(66,67,68,0.3)');
+    var gradientPointerColor = Color.fromCssColorString('rgba(0,0,0,0.5)');
 
     //Dynamically builds an SVG element from a JSON object.
-    function _svgFromObject(obj) {
-        var ele = document.createElementNS(_svgNS, obj.tagName);
+    function svgFromObject(obj) {
+        var ele = document.createElementNS(svgNS, obj.tagName);
         for ( var field in obj) {
             if (obj.hasOwnProperty(field) && field !== 'tagName') {
                 if (field === 'children') {
                     var i;
                     var len = obj.children.length;
                     for (i = 0; i < len; ++i) {
-                        ele.appendChild(_svgFromObject(obj.children[i]));
+                        ele.appendChild(svgFromObject(obj.children[i]));
                     }
                 } else if (field.indexOf('xlink:') === 0) {
-                    ele.setAttributeNS(_xlinkNS, field.substring(6), obj[field]);
+                    ele.setAttributeNS(xlinkNS, field.substring(6), obj[field]);
                 } else if (field === 'textContent') {
                     ele.textContent = obj[field];
                 } else {
@@ -53,34 +53,34 @@ define(['../../Core/destroyObject',
         return ele;
     }
 
-    function _svgText(x, y, msg) {
-        var text = document.createElementNS(_svgNS, 'text');
+    function svgText(x, y, msg) {
+        var text = document.createElementNS(svgNS, 'text');
         text.setAttribute('x', x);
         text.setAttribute('y', y);
         text.setAttribute('class', 'animation-svgText');
 
-        var tspan = document.createElementNS(_svgNS, 'tspan');
+        var tspan = document.createElementNS(svgNS, 'tspan');
         tspan.textContent = msg;
         text.appendChild(tspan);
         return text;
     }
 
-    function _setShuttleRingPointer(shuttleRingPointer, knobOuter, angle) {
+    function setShuttleRingPointer(shuttleRingPointer, knobOuter, angle) {
         shuttleRingPointer.setAttribute('transform', 'translate(100,100) rotate(' + angle + ')');
         knobOuter.setAttribute('transform', 'rotate(' + angle + ')');
     }
 
-    var _makeColorStringScratch = new Color();
-    function _makeColorString(background, gradient) {
+    var makeColorStringScratch = new Color();
+    function makeColorString(background, gradient) {
         var gradientAlpha = gradient.alpha;
         var backgroundAlpha = 1.0 - gradientAlpha;
-        _makeColorStringScratch.red = (background.red * backgroundAlpha) + (gradient.red * gradientAlpha);
-        _makeColorStringScratch.green = (background.green * backgroundAlpha) + (gradient.green * gradientAlpha);
-        _makeColorStringScratch.blue = (background.blue * backgroundAlpha) + (gradient.blue * gradientAlpha);
-        return _makeColorStringScratch.toCssColorString();
+        makeColorStringScratch.red = (background.red * backgroundAlpha) + (gradient.red * gradientAlpha);
+        makeColorStringScratch.green = (background.green * backgroundAlpha) + (gradient.green * gradientAlpha);
+        makeColorStringScratch.blue = (background.blue * backgroundAlpha) + (gradient.blue * gradientAlpha);
+        return makeColorStringScratch.toCssColorString();
     }
 
-    function _rectButton(x, y, path) {
+    function rectButton(x, y, path) {
         var button = {
             tagName : 'g',
             'class' : 'animation-rectButton',
@@ -108,10 +108,10 @@ define(['../../Core/destroyObject',
                 textContent : ''
             }]
         };
-        return _svgFromObject(button);
+        return svgFromObject(button);
     }
 
-    function _wingButton(x, y, path) {
+    function wingButton(x, y, path) {
         var button = {
             tagName : 'g',
             'class' : 'animation-rectButton',
@@ -133,14 +133,14 @@ define(['../../Core/destroyObject',
                 textContent : ''
             }]
         };
-        return _svgFromObject(button);
+        return svgFromObject(button);
     }
 
-    function _setShuttleRingFromMouse(widget, e) {
+    function setShuttleRingFromMouse(widget, e) {
         var viewModel = widget.viewModel;
         var shuttleRingDragging = viewModel.shuttleRingDragging();
 
-        if (shuttleRingDragging && (_widgetForDrag !== widget)) {
+        if (shuttleRingDragging && (widgetForDrag !== widget)) {
             return;
         }
 
@@ -171,7 +171,7 @@ define(['../../Core/destroyObject',
             }
             var shuttleRingAngle = viewModel.shuttleRingAngle();
             if (shuttleRingDragging || (clientX < pointerRect.right && clientX > pointerRect.left && clientY > pointerRect.top && clientY < pointerRect.bottom)) {
-                _widgetForDrag = widget;
+                widgetForDrag = widget;
                 viewModel.shuttleRingDragging(true);
                 viewModel.shuttleRingAngle(angle);
             } else if (angle < shuttleRingAngle) {
@@ -182,7 +182,7 @@ define(['../../Core/destroyObject',
             e.preventDefault();
             e.stopPropagation();
         } else {
-            _widgetForDrag = undefined;
+            widgetForDrag = undefined;
             viewModel.shuttleRingDragging(false);
         }
     }
@@ -274,7 +274,7 @@ define(['../../Core/destroyObject',
         this.svgElement.getElementsByTagName('title')[0].textContent = toolTip;
     };
 
-    function _resize(that) {
+    function resize(that) {
         var svg = that._svgNode;
 
         //The width and height as the SVG was originally drawn.
@@ -426,27 +426,27 @@ define(['../../Core/destroyObject',
         this._themeSwoosh = themeEle.childNodes[6];
         this._themeSwooshHover = themeEle.childNodes[7];
 
-        var svg = document.createElementNS(_svgNS, 'svg:svg');
+        var svg = document.createElementNS(svgNS, 'svg:svg');
         this._svgNode = svg;
 
         // Define the XLink namespace that SVG uses
-        svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', _xlinkNS);
+        svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', xlinkNS);
 
-        var topG = document.createElementNS(_svgNS, 'g');
+        var topG = document.createElementNS(svgNS, 'g');
         this._topG = topG;
 
-        this._realtimeSVG = new SvgButton(_wingButton(3, 4, '#animation_pathClock'), viewModel.playRealtimeViewModel);
-        this._playReverseSVG = new SvgButton(_rectButton(44, 99, '#animation_pathPlayReverse'), viewModel.playReverseViewModel);
-        this._playForwardSVG = new SvgButton(_rectButton(124, 99, '#animation_pathPlay'), viewModel.playForwardViewModel);
-        this._pauseSVG = new SvgButton(_rectButton(84, 99, '#animation_pathPause'), viewModel.pauseViewModel);
+        this._realtimeSVG = new SvgButton(wingButton(3, 4, '#animation_pathClock'), viewModel.playRealtimeViewModel);
+        this._playReverseSVG = new SvgButton(rectButton(44, 99, '#animation_pathPlayReverse'), viewModel.playReverseViewModel);
+        this._playForwardSVG = new SvgButton(rectButton(124, 99, '#animation_pathPlay'), viewModel.playForwardViewModel);
+        this._pauseSVG = new SvgButton(rectButton(84, 99, '#animation_pathPause'), viewModel.pauseViewModel);
 
-        var buttonsG = document.createElementNS(_svgNS, 'g');
+        var buttonsG = document.createElementNS(svgNS, 'g');
         buttonsG.appendChild(this._realtimeSVG.svgElement);
         buttonsG.appendChild(this._playReverseSVG.svgElement);
         buttonsG.appendChild(this._playForwardSVG.svgElement);
         buttonsG.appendChild(this._pauseSVG.svgElement);
 
-        var shuttleRingBackPanel = _svgFromObject({
+        var shuttleRingBackPanel = svgFromObject({
             tagName : 'circle',
             'class' : 'animation-shuttleRingBack',
             cx : 100,
@@ -454,7 +454,7 @@ define(['../../Core/destroyObject',
             r : 99
         });
 
-        var shuttleRingSwooshG = _svgFromObject({
+        var shuttleRingSwooshG = svgFromObject({
             tagName : 'g',
             'class' : 'animation-shuttleRingSwoosh',
             children : [{
@@ -474,18 +474,18 @@ define(['../../Core/destroyObject',
             }]
         });
 
-        this._shuttleRingPointer = _svgFromObject({
+        this._shuttleRingPointer = svgFromObject({
             tagName : 'use',
             'class' : 'animation-shuttleRingPointer',
             'xlink:href' : '#animation_pathPointer'
         });
 
-        var knobG = _svgFromObject({
+        var knobG = svgFromObject({
             tagName : 'g',
             transform : 'translate(100,100)'
         });
 
-        this._knobOuter = _svgFromObject({
+        this._knobOuter = svgFromObject({
             tagName : 'circle',
             'class' : 'animation-knobOuter',
             cx : 0,
@@ -495,7 +495,7 @@ define(['../../Core/destroyObject',
 
         var knobInnerAndShieldSize = 61;
 
-        var knobInner = _svgFromObject({
+        var knobInner = svgFromObject({
             tagName : 'circle',
             'class' : 'animation-knobInner',
             cx : 0,
@@ -503,12 +503,12 @@ define(['../../Core/destroyObject',
             r : knobInnerAndShieldSize
         });
 
-        this._knobDate = _svgText(0, -24, '');
-        this._knobTime = _svgText(0, -7, '');
-        this._knobStatus = _svgText(0, -41, '');
+        this._knobDate = svgText(0, -24, '');
+        this._knobTime = svgText(0, -7, '');
+        this._knobStatus = svgText(0, -41, '');
 
         // widget shield catches clicks on the knob itself (even while DOM elements underneath are changing).
-        var knobShield = _svgFromObject({
+        var knobShield = svgFromObject({
             tagName : 'circle',
             'class' : 'animation-blank',
             cx : 0,
@@ -516,7 +516,7 @@ define(['../../Core/destroyObject',
             r : knobInnerAndShieldSize
         });
 
-        var shuttleRingBackG = document.createElementNS(_svgNS, 'g');
+        var shuttleRingBackG = document.createElementNS(svgNS, 'g');
         shuttleRingBackG.setAttribute('class', 'animation-shuttleRingG');
 
         parentNode.appendChild(themeEle);
@@ -546,11 +546,11 @@ define(['../../Core/destroyObject',
         var that = this;
 
         window.addEventListener('resize', function() {
-            _resize(that);
+            resize(that);
         }, true);
 
         var callBack = function(e) {
-            _setShuttleRingFromMouse(that, e);
+            setShuttleRingFromMouse(that, e);
         };
         shuttleRingBackPanel.addEventListener('mousedown', callBack, true);
         shuttleRingSwooshG.addEventListener('mousedown', callBack, true);
@@ -578,9 +578,9 @@ define(['../../Core/destroyObject',
         }
 
         subscriptions.push(viewModel.shuttleRingAngle.subscribe(function(value) {
-            _setShuttleRingPointer(that._shuttleRingPointer, that._knobOuter, value);
+            setShuttleRingPointer(that._shuttleRingPointer, that._knobOuter, value);
         }));
-        _setShuttleRingPointer(this._shuttleRingPointer, this._knobOuter, viewModel.shuttleRingAngle());
+        setShuttleRingPointer(this._shuttleRingPointer, this._knobOuter, viewModel.shuttleRingAngle());
 
         subscriptions.push(viewModel.dateLabel.subscribe(function(value) {
             that._knobDate.childNodes[0].textContent = value;
@@ -599,7 +599,7 @@ define(['../../Core/destroyObject',
 
         //Perform initial calculations for scale and theme.
         this.applyThemeChanges();
-        _resize(this);
+        resize(this);
     };
 
     /**
@@ -651,7 +651,7 @@ define(['../../Core/destroyObject',
         var swooshColor = Color.fromCssColorString(window.getComputedStyle(this._themeSwoosh).getPropertyValue('color'));
         var swooshHoverColor = Color.fromCssColorString(window.getComputedStyle(this._themeSwooshHover).getPropertyValue('color'));
 
-        var defsElement = _svgFromObject({
+        var defsElement = svgFromObject({
             tagName : 'defs',
             children : [{
                 id : 'animation_buttonNormal',
@@ -665,19 +665,19 @@ define(['../../Core/destroyObject',
                 {
                     tagName : 'stop',
                     offset : '0%',
-                    'stop-color' : _makeColorString(buttonNormalBackColor, _gradientEnabledColor0)
+                    'stop-color' : makeColorString(buttonNormalBackColor, gradientEnabledColor0)
                 }, {
                     tagName : 'stop',
                     offset : '12%',
-                    'stop-color' : _makeColorString(buttonNormalBackColor, _gradientEnabledColor1)
+                    'stop-color' : makeColorString(buttonNormalBackColor, gradientEnabledColor1)
                 }, {
                     tagName : 'stop',
                     offset : '46%',
-                    'stop-color' : _makeColorString(buttonNormalBackColor, _gradientEnabledColor2)
+                    'stop-color' : makeColorString(buttonNormalBackColor, gradientEnabledColor2)
                 }, {
                     tagName : 'stop',
                     offset : '81%',
-                    'stop-color' : _makeColorString(buttonNormalBackColor, _gradientEnabledColor3)
+                    'stop-color' : makeColorString(buttonNormalBackColor, gradientEnabledColor3)
                 }]
             }, {
                 id : 'animation_buttonHovered',
@@ -689,19 +689,19 @@ define(['../../Core/destroyObject',
                 children : [{
                     tagName : 'stop',
                     offset : '0%',
-                    'stop-color' : _makeColorString(buttonHoverBackColor, _gradientEnabledColor0)
+                    'stop-color' : makeColorString(buttonHoverBackColor, gradientEnabledColor0)
                 }, {
                     tagName : 'stop',
                     offset : '12%',
-                    'stop-color' : _makeColorString(buttonHoverBackColor, _gradientEnabledColor1)
+                    'stop-color' : makeColorString(buttonHoverBackColor, gradientEnabledColor1)
                 }, {
                     tagName : 'stop',
                     offset : '46%',
-                    'stop-color' : _makeColorString(buttonHoverBackColor, _gradientEnabledColor2)
+                    'stop-color' : makeColorString(buttonHoverBackColor, gradientEnabledColor2)
                 }, {
                     tagName : 'stop',
                     offset : '81%',
-                    'stop-color' : _makeColorString(buttonHoverBackColor, _gradientEnabledColor3)
+                    'stop-color' : makeColorString(buttonHoverBackColor, gradientEnabledColor3)
                 }]
             }, {
                 id : 'animation_buttonToggled',
@@ -713,19 +713,19 @@ define(['../../Core/destroyObject',
                 children : [{
                     tagName : 'stop',
                     offset : '0%',
-                    'stop-color' : _makeColorString(buttonToggledBackColor, _gradientEnabledColor0)
+                    'stop-color' : makeColorString(buttonToggledBackColor, gradientEnabledColor0)
                 }, {
                     tagName : 'stop',
                     offset : '12%',
-                    'stop-color' : _makeColorString(buttonToggledBackColor, _gradientEnabledColor1)
+                    'stop-color' : makeColorString(buttonToggledBackColor, gradientEnabledColor1)
                 }, {
                     tagName : 'stop',
                     offset : '46%',
-                    'stop-color' : _makeColorString(buttonToggledBackColor, _gradientEnabledColor2)
+                    'stop-color' : makeColorString(buttonToggledBackColor, gradientEnabledColor2)
                 }, {
                     tagName : 'stop',
                     offset : '81%',
-                    'stop-color' : _makeColorString(buttonToggledBackColor, _gradientEnabledColor3)
+                    'stop-color' : makeColorString(buttonToggledBackColor, gradientEnabledColor3)
                 }]
             }, {
                 id : 'animation_buttonDisabled',
@@ -737,11 +737,11 @@ define(['../../Core/destroyObject',
                 children : [{
                     tagName : 'stop',
                     offset : '0%',
-                    'stop-color' : _makeColorString(buttonDisabledBackColor, _gradientDisabledColor0)
+                    'stop-color' : makeColorString(buttonDisabledBackColor, gradientDisabledColor0)
                 }, {
                     tagName : 'stop',
                     offset : '75%',
-                    'stop-color' : _makeColorString(buttonDisabledBackColor, _gradientDisabledColor1)
+                    'stop-color' : makeColorString(buttonDisabledBackColor, gradientDisabledColor1)
                 }]
             }, {
                 id : 'animation_blurred',
@@ -819,11 +819,11 @@ define(['../../Core/destroyObject',
                 }, {
                     tagName : 'stop',
                     offset : '60%',
-                    'stop-color' : _makeColorString(pointerColor, _gradientPointerColor)
+                    'stop-color' : makeColorString(pointerColor, gradientPointerColor)
                 }, {
                     tagName : 'stop',
                     offset : '100%',
-                    'stop-color' : _makeColorString(pointerColor, _gradientPointerColor)
+                    'stop-color' : makeColorString(pointerColor, gradientPointerColor)
                 }]
             }, {
                 id : 'animation_shuttleRingPointerPaused',
@@ -859,15 +859,15 @@ define(['../../Core/destroyObject',
                 children : [{
                     tagName : 'stop',
                     offset : '5%',
-                    'stop-color' : _makeColorString(knobBackColor, _gradientEnabledColor0)
+                    'stop-color' : makeColorString(knobBackColor, gradientEnabledColor0)
                 }, {
                     tagName : 'stop',
                     offset : '60%',
-                    'stop-color' : _makeColorString(knobBackColor, _gradientKnobColor)
+                    'stop-color' : makeColorString(knobBackColor, gradientKnobColor)
                 }, {
                     tagName : 'stop',
                     offset : '85%',
-                    'stop-color' : _makeColorString(knobBackColor, _gradientEnabledColor1)
+                    'stop-color' : makeColorString(knobBackColor, gradientEnabledColor1)
                 }]
             }, {
                 id : 'animation_knobInner',
@@ -879,15 +879,15 @@ define(['../../Core/destroyObject',
                 children : [{
                     tagName : 'stop',
                     offset : '5%',
-                    'stop-color' : _makeColorString(knobBackColor, _gradientKnobColor)
+                    'stop-color' : makeColorString(knobBackColor, gradientKnobColor)
                 }, {
                     tagName : 'stop',
                     offset : '60%',
-                    'stop-color' : _makeColorString(knobBackColor, _gradientEnabledColor0)
+                    'stop-color' : makeColorString(knobBackColor, gradientEnabledColor0)
                 }, {
                     tagName : 'stop',
                     offset : '85%',
-                    'stop-color' : _makeColorString(knobBackColor, _gradientEnabledColor3)
+                    'stop-color' : makeColorString(knobBackColor, gradientEnabledColor3)
                 }]
             }, {
                 id : 'animation_pathReset',
