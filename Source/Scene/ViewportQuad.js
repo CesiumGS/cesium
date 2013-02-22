@@ -109,13 +109,10 @@ define([
 
     function getVertexArray(context) {
         // Per-context cache for viewport quads
-        var c = vertexArrayCache[context.getId()];
+        var vertexArray = context.viewportQuadVertexArray;
 
-        if (typeof c !== 'undefined' &&
-            typeof c.vertexArray !== 'undefined') {
-
-            ++c.referenceCount;
-            return c;
+        if (typeof vertexArray !== 'undefined') {
+            return vertexArray;
         }
 
         var mesh = {
@@ -144,30 +141,14 @@ define([
             }
         };
 
-        var va = context.createVertexArrayFromMesh({
+        vertexArray = context.createVertexArrayFromMesh({
             mesh : mesh,
             attributeIndices : attributeIndices,
             bufferUsage : BufferUsage.STATIC_DRAW
         });
 
-        var cachedVA = {
-            vertexArray : va,
-            referenceCount : 1,
-
-            release : function() {
-                if (typeof this.vertexArray !== 'undefined' &&
-                    --this.referenceCount === 0) {
-
-                    // TODO: Schedule this for a few hundred frames later so we don't thrash the cache
-                    this.vertexArray = this.vertexArray.destroy();
-                }
-
-                return undefined;
-            }
-        };
-
-        vertexArrayCache[context.getId()] = cachedVA;
-        return cachedVA;
+        context.viewportQuadVertexArray = vertexArray;
+        return vertexArray;
     }
 
     /**
@@ -194,7 +175,7 @@ define([
 
         if (typeof this._va === 'undefined') {
             this._va = getVertexArray(context);
-            this._overlayCommand.vertexArray = this._va.vertexArray;
+            this._overlayCommand.vertexArray = this._va;
             this._overlayCommand.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
@@ -260,7 +241,6 @@ define([
      * quad = quad && quad.destroy();
      */
     ViewportQuad.prototype.destroy = function() {
-        this._va = this._va && this._va.release();
         this._overlayCommand.shaderProgram = this._overlayCommand.shaderProgram && this._overlayCommand.shaderProgram.release();
 
         return destroyObject(this);
