@@ -652,8 +652,6 @@ define([
         return parent.terrainData.isChildAvailable(parent.x, parent.y, tile.x, tile.y);
     }
 
-    var waterMaskDataByContext = {};
-
     function createWaterMaskTexture(context, waterMask) {
         var result;
 
