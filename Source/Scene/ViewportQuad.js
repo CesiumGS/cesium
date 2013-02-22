@@ -56,6 +56,15 @@ define([
         this._commandLists = new CommandLists();
         this._commandLists.overlayList.push(this._overlayCommand);
 
+        /**
+         * Determines if the viewport quad primitive will be shown.
+         * <p>
+         * The default is <code>true</code>.
+         * </p>
+         *
+         * @type Boolean
+        */
+        this.show = true;
 
         /**
          * The BoundingRectangle defining the quad's position within the viewport.
@@ -170,6 +179,11 @@ define([
      * @exception {DeveloperError} this.rectangle must be defined.
      */
     ViewportQuad.prototype.update = function(context, frameState, commandList) {
+        if (!this.show)
+        {
+            return;
+        }
+
         if (typeof this.material === 'undefined') {
             throw new DeveloperError('this.material must be defined.');
         }
