@@ -107,7 +107,7 @@ define([
 
     function getVertexArray(context) {
         // Per-context cache for viewport quads
-        var vertexArray = context.cache.viewportQuadVertexArray;
+        var vertexArray = context.cache.viewportQuad_vertexArray;
 
         if (typeof vertexArray !== 'undefined') {
             return vertexArray;
@@ -145,7 +145,7 @@ define([
             bufferUsage : BufferUsage.STATIC_DRAW
         });
 
-        context.viewportQuadVertexArray = vertexArray;
+        context.cache.viewportQuad_vertexArray = vertexArray;
         return vertexArray;
     }
 

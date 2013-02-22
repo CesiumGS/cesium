@@ -191,7 +191,7 @@ define([
     };
 
     function getVertexArray(context) {
-        var vertexArray = context.cache.ellipsoidPrimitiveVertexArray;
+        var vertexArray = context.cache.ellipsoidPrimitive_vertexArray;
 
         if (typeof vertexArray !== 'undefined') {
             return vertexArray;
@@ -207,7 +207,7 @@ define([
             bufferUsage: BufferUsage.STATIC_DRAW
         });
 
-        context.cache.ellipsoidPrimitiveVertexArray = vertexArray;
+        context.cache.ellipsoidPrimitive_vertexArray = vertexArray;
         return vertexArray;
     }
 
