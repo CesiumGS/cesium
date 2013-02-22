@@ -137,7 +137,7 @@ require([
     widget.startup();
 
     var visualizers = addCZML(czml, widget.scene, widget.clock);
-    widget.timelineControl.zoomTo(widget.clock.startTime, widget.clock.stopTime);
+    widget.timeline.zoomTo(widget.clock.startTime, widget.clock.stopTime);
 
     // Let's make the playback speed faster
     widget.clock.multiplier = 300.0;
