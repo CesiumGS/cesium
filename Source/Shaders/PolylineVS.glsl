@@ -15,20 +15,6 @@ varying vec4 v_pickColor;
 
 uniform float u_morphTime;
 
-vec4 czm_decodeColor(float encoded)
-{
-    const float bias = -0.55 / 255.0;
-    const vec4 scale = vec4(1.0, 256.0, 65536.0, 16777216.0);
-    vec4 decoded = scale * encoded;
-    float r = floor(decoded.x) / 255.0;
-    float g = fract(decoded.x) + bias;
-    float b = fract(decoded.y) + bias;
-    //float a = fract(decoded.z) + bias;
-    float a = 1.0;
-    
-    return vec4(r, g, b, a);
-}
-
 void main() 
 {
     float texCoord = misc.x;
@@ -98,7 +84,7 @@ void main()
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     
     v_textureCoordinate = texCoord;
-    v_color = czm_decodeColor(color.x);
-    v_outlineColor = czm_decodeColor(color.y);
-    v_pickColor = czm_decodeColor(color.z);
+    v_color = vec4(czm_decodeColor(color.x), 1.0);
+    v_outlineColor = vec4(czm_decodeColor(color.y), 1.0);
+    v_pickColor = vec4(czm_decodeColor(color.z), 1.0);
 }

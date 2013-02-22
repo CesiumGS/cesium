@@ -5,6 +5,7 @@ defineSuite([
          'Specs/createCamera',
          'Specs/createFrameState',
          'Core/BoundingRectangle',
+         'Core/Color',
          'Core/Math',
          'Core/Matrix4',
          'Core/PrimitiveType',
@@ -18,6 +19,7 @@ defineSuite([
          createCamera,
          createFrameState,
          BoundingRectangle,
+         Color,
          CesiumMath,
          Matrix4,
          PrimitiveType,
@@ -196,6 +198,31 @@ defineSuite([
             '    vec3 cartesian = czm_sphericalToCartesianCoordinates(u_latLon);' +
             '    vec3 diff = abs(u_normal - cartesian);' +
             '    gl_FragColor = vec4(all(lessThan(diff, vec3(czm_epsilon6))));' +
+            '}';
+
+        verifyDraw(fs, uniformMap);
+    });
+
+    it('has czm_decodeColor', function() {
+        var color = new Color(0.75, 0.5, 0.25, 1.0);
+        var encoded = Color.encode(color);
+
+        var uniformMap = {
+            u_encoded : function() {
+                return encoded;
+            },
+            u_color : function() {
+                return color;
+            }
+        };
+
+        var fs =
+            'uniform float u_encoded;' +
+            'uniform vec4 u_color;' +
+            'void main() {' +
+            '    vec3 color = czm_decodeColor(u_encoded);' +
+            '    vec3 diff = abs(color - u_color.rgb);' +
+            '    gl_FragColor = vec4(all(lessThan(diff, vec3(czm_epsilon3))));' +
             '}';
 
         verifyDraw(fs, uniformMap);

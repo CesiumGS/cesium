@@ -2,12 +2,12 @@
 define([
         './defaultValue',
         './freezeObject',
-        './Cartesian4',
+        './Cartesian3',
         './DeveloperError'
     ], function(
         defaultValue,
         freezeObject,
-        Cartesian4,
+        Cartesian3,
         DeveloperError) {
     "use strict";
 
@@ -213,20 +213,28 @@ define([
         return number === 1.0 ? 255.0 : (number * 256.0) | 0;
     };
 
-    var scale = new Cartesian4(1.0, 1.0 / Math.pow(2, 8), 1.0 / Math.pow(2, 16), 1.0 / Math.pow(2, 24));
-    var scratch = new Cartesian4();
+    var scale = new Cartesian3(1.0, 1.0 / Math.pow(2, 8), 1.0 / Math.pow(2, 16));
+    var scratch = new Cartesian3();
 
     /**
-     * TODO
-     * @param color
-     * @returns
+     * Encodes the red, green, and blue components of a color into a 32 bit floating point number.
+     *
+     * @param {Color} color The color to be encoded.
+     * @returns {Number} A floating point number representing the encoded red, green, and blue values of the color.
+     *
+     * @exception {DeveloperError} color is required.
+     *
+     * @see czm_decodeColor
      */
     Color.encode = function(color) {
+        if (typeof color === 'undefined') {
+            throw new DeveloperError('color is required.');
+        }
+
         scratch.x = Color.floatToByte(color.red);
         scratch.y = Color.floatToByte(color.green);
         scratch.z = Color.floatToByte(color.blue);
-        scratch.w = Color.floatToByte(color.alpha);
-        return Cartesian4.dot(scratch, scale);
+        return Cartesian3.dot(scratch, scale);
     };
 
     /**

@@ -61,6 +61,20 @@ defineSuite(['Core/Color',
         expect(Color.floatToByte(127 / 255)).toEqual(127);
     });
 
+    it('encodes a color', function() {
+        var color = new Color(0.75, 0.5, 0.25);
+        var encoded = Color.encode(color);
+
+        var red = Math.floor(encoded) / 256.0;
+        var green = encoded - Math.floor(encoded);
+        var blue = encoded * 256.0;
+        blue = blue - Math.floor(blue);
+
+        expect(red).toEqualEpsilon(color.red, CesiumMath.EPSILON3);
+        expect(green).toEqualEpsilon(color.green, CesiumMath.EPSILON3);
+        expect(blue).toEqualEpsilon(color.blue, CesiumMath.EPSILON3);
+    });
+
     it('clone with no parameters returns a new identical copy.', function() {
         var v = new Color(0.1, 0.2, 0.3, 0.4);
         var v2 = v.clone();
