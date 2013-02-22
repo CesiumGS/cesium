@@ -657,13 +657,20 @@ define([
     function createWaterMaskTexture(context, waterMask) {
         var result;
 
-        var contextID = context.getId();
-        var waterMaskData = waterMaskDataByContext[contextID];
+        var waterMaskData = context.cache.tileWaterMaskData;
         if (typeof waterMaskData === 'undefined') {
-            waterMaskData = waterMaskDataByContext[contextID] = {
+            waterMaskData = context.cache.tileWaterMaskData = {
                     allWaterTexture : undefined,
                     allLandTexture : undefined,
-                    sampler : undefined
+                    sampler : undefined,
+                    destroy : function() {
+                        if (typeof this.allWaterTexture !== 'undefined') {
+                            this.allWaterTexture.destroy();
+                        }
+                        if (typeof this.allLandTexture !== 'undefined') {
+                            this.allLandTexture.destroy();
+                        }
+                    }
             };
         }
 
