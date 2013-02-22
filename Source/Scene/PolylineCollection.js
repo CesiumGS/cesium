@@ -947,8 +947,10 @@ define([
     }
 
     var scratchWritePosition = new Cartesian3();
-    var scratchAdjacency = new Cartesian4();
-    var scratchColor = new Color();
+    var scratchWriteAdjacency = new Cartesian4();
+    var scratchWriteColor = new Color();
+    var scratchWriteColorArray = new Array(1);
+    var scratchWriteOutlineColorArray = new Array(1);
 
     /**
      * @private
@@ -960,18 +962,38 @@ define([
             var polyline = polylines[i];
             var width = polyline.getWidth();
             var show = polyline.getShow();
-            var color = polyline.getColor();
-            var outlineColor = polyline.getOutlineColor();
-            //var pickColor = polyline.getPickId(context).normalizedRgb;
             var positions = this._getPositions(polyline);
             var positionsLength = positions.length;
+
+            var colors = polyline.getColors();
+            var colorIncrement = 1;
+            if (typeof colors === 'undefined' || colors.length !== positionsLength) {
+                colors = scratchWriteColorArray;
+                colors[0] = polyline.getDefaultColor();
+                colorIncrement = 0;
+            }
+
+            var outlineColors = polyline.getOutlineColors();
+            var outlineColorIncrement = 1;
+            if (typeof outlineColors === 'undefined' || outlineColors.length !== positionsLength) {
+                outlineColors = scratchWriteOutlineColorArray;
+                outlineColors[0] = polyline.getDefaultOutlineColor();
+                outlineColorIncrement = 0;
+            }
+
+            //var pickColor = polyline.getPickId(context).normalizedRgb;
+            var pickColor = Color.WHITE;
+
+            var vertexColorIndex = 0;
+            var vertexOutlineColorIndex = 0;
+
             for ( var j = 0; j < positionsLength; ++j) {
                 var position = positions[j];
                 scratchWritePosition.x = position.x;
                 scratchWritePosition.y = position.y;
                 scratchWritePosition.z = (this.mode !== SceneMode.SCENE2D) ? position.z : 0.0;
 
-                var adjacencyAngles = computeAdjacencyAngles(position, j, positions, scratchAdjacency);
+                var adjacencyAngles = computeAdjacencyAngles(position, j, positions, scratchWriteAdjacency);
 
                 for (var k = 0; k < 2; ++k) {
                     EncodedCartesian3.writeElements(scratchWritePosition, positionArray, positionIndex);
@@ -988,15 +1010,17 @@ define([
                         adjacencyArray[adjacencyIndex + 7] = adjacencyAngles.w;
                     }
 
-                    scratchColor.red = color.alpha;
-                    scratchColor.green = outlineColor.alpha;
-                    //scratchColor.blue = pickColor.alpha;
+                    var color = colors[vertexColorIndex];
+                    var outlineColor = outlineColors[vertexOutlineColorIndex];
+
+                    scratchWriteColor.red = color.alpha;
+                    scratchWriteColor.green = outlineColor.alpha;
+                    scratchWriteColor.blue = pickColor.alpha;
 
                     colorArray[colorIndex] = Color.encode(color);
                     colorArray[colorIndex + 1] = Color.encode(outlineColor);
-                    //colorArray[colorIndex + 2] = Color.encode(pickColor);
-                    colorArray[colorIndex + 2] = 0.0;
-                    colorArray[colorIndex + 3] = Color.encode(scratchColor);
+                    colorArray[colorIndex + 2] = Color.encode(pickColor);
+                    colorArray[colorIndex + 3] = Color.encode(scratchWriteColor);
 
                     miscArray[miscIndex] = j / positionsLength;     // s tex coord
                     miscArray[miscIndex + 1] = 2 * k - 1;           // expand direction
@@ -1008,6 +1032,9 @@ define([
                     colorIndex += 4;
                     miscIndex += 4;
                 }
+
+                vertexColorIndex += colorIncrement;
+                vertexOutlineColorIndex += outlineColorIncrement;
             }
         }
     };
@@ -1371,6 +1398,8 @@ define([
     };
 
     var scratchColorAlpha = new Color();
+    var scratchColorArray = new Array(1);
+    var scratchOutlineColorArray = new Array(1);
 
     /**
      * @private
@@ -1380,23 +1409,46 @@ define([
         if (positionsLength) {
             positionIndex += this._getPolylineStartIndex(polyline);
 
-            var index = 0;
-            var color = polyline.getColor();
-            var outlineColor = polyline.getOutlineColor();
+            var colors = polyline.getColors();
+            var colorIncrement = 1;
+            if (typeof colors === 'undefined' || colors.length !== positionsLength) {
+                colors = scratchColorArray;
+                colors[0] = polyline.getDefaultColor();
+                colorIncrement = 0;
+            }
+
+            var outlineColors = polyline.getOutlineColors();
+            var outlineColorIncrement = 1;
+            if (typeof outlineColors === 'undefined' || outlineColors.length !== positionsLength) {
+                outlineColors = scratchOutlineColorArray;
+                outlineColors[0] = polyline.getDefaultOutlineColor();
+                outlineColorIncrement = 0;
+            }
+
             //var pickColor = polyline.getPickId(context).normalizedRgb;
+            var pickColor = Color.WHITE;
+
+            var index = 0;
+            var colorIndex = 0;
+            var outlineColorIndex = 0;
+
             var colorsArray = new Float32Array(4 * positionsLength * 2);
             for ( var j = 0; j < positionsLength * 2; ++j) {
+                var color = colors[colorIndex];
+                var outlineColor = outlineColors[outlineColorIndex];
+
                 scratchColorAlpha.red = color.alpha;
                 scratchColorAlpha.green = outlineColor.alpha;
-                //scratchColorAlpha.blue = pickColor.alpha;
+                scratchColorAlpha.blue = pickColor.alpha;
 
                 colorsArray[index] = Color.encode(color);
                 colorsArray[index + 1] = Color.encode(outlineColor);
-                //colorsArray[index + 2] = Color.encode(pickColor);
-                colorsArray[index + 2] = 0.0;
+                colorsArray[index + 2] = Color.encode(pickColor);
                 colorsArray[index + 3] = Color.encode(scratchColorAlpha);
 
                 index += 4;
+                colorIndex += colorIncrement;
+                outlineColorIndex += outlineColorIncrement;
             }
             buffer.copyFromArrayView(colorsArray, 4 * positionIndex * 2);
         }

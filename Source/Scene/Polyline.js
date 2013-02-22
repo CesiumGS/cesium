@@ -32,6 +32,8 @@ define([
         this._width = defaultValue(description.width, 1.0);
         this._color = Color.clone(defaultValue(description.color, Color.WHITE));
         this._outlineColor = Color.clone(defaultValue(description.outlineColor, Color.WHITE));
+        this._perVertexColors = undefined;
+        this._perVertexOutlineColors = undefined;
 
         var positions = description.positions;
         if (typeof positions === 'undefined') {
@@ -109,6 +111,8 @@ define([
      *
      * @memberof Polyline
      *
+     * @return {Array} The polyline's positions.
+     *
      * @see Polyline#setPositions
      */
     Polyline.prototype.getPositions = function() {
@@ -151,30 +155,36 @@ define([
     };
 
     /**
-     * Returns the color of the polyline.
+     * Returns the default color of the polyline. This color is used if per-vertex
+     * colors are not defined.
      *
      * @memberof Polyline
      *
-     * @return {Color} The color of the polyline.
+     * @return {Color} The default color of the polyline.
      *
-     * @see Polyline#setColor
+     * @see Polyline#setDefaultColor
+     * @see Polyline#getColors
+     * @see Polyline#setColors
      */
-    Polyline.prototype.getColor = function() {
+    Polyline.prototype.getDefaultColor = function() {
         return this._color;
     };
 
     /**
-     * Sets the color of the polyline.
+     * Sets the default color of the polyline. This color is used if per-vertex
+     * colors are not defined.
      *
      * @memberof Polyline
      *
-     * @param {Color} value The color of the polyline.
+     * @param {Color} value The default color of the polyline.
      *
      * @exception {DeveloperError} value is required.
      *
-     * @see Polyline#getColor
+     * @see Polyline#getDefaultColor
+     * @see Polyline#getColors
+     * @see Polyline#setColors
      */
-    Polyline.prototype.setColor = function(value) {
+    Polyline.prototype.setDefaultColor = function(value) {
         if (typeof value === 'undefined') {
             throw new DeveloperError('value is required.');
         }
@@ -184,6 +194,46 @@ define([
             Color.clone(value, color);
             makeDirty(this, COLOR_INDEX);
         }
+    };
+
+    /**
+     * Returns the polyline's color at each position.
+     *
+     * @return {Array} The polyline's color at each position.
+     *
+     * @see Polyline#setColors
+     * @see Polyline#getDefaultColor
+     * @see Polyline#SetDefaultColor
+     */
+    Polyline.prototype.getColors = function() {
+        return this._perVertexColors;
+    };
+
+    /**
+     * Defines the color of the polyline at each position.
+     *
+     * @memberof Polyline
+     *
+     * @param {Array} colors The colors of the polyline at each position.
+     *
+     * @exception {DeveloperError} colors is required.
+     * @exception {DeveloperError} colors must have the same number of elements as the positions.
+     *
+     * @see Polyline#getColors
+     * @see Polyline#getDefaultColor
+     * @see Polyline#SetDefaultColor
+     */
+    Polyline.prototype.setColors = function(colors) {
+        if (typeof colors === 'undefined') {
+            throw new DeveloperError('colors is required.');
+        }
+
+        if (typeof colors.length === 'undefined' || colors.length !== this._positions.length) {
+            throw new DeveloperError('colors must have the same number of elements as the positions.');
+        }
+
+        this._perVertexColors = colors;
+        makeDirty(this, COLOR_INDEX);
     };
 
     /**
@@ -241,30 +291,36 @@ define([
     };
 
     /**
-     * Gets the outline color of the polyline.
+     * Gets the default outline color of the polyline. This color is used if per-vertex
+     * outline colors are not defined.
      *
      * @memberof Polyline
      *
-     * @return {Color} The outline color of the polyline.
+     * @return {Color} The default outline color of the polyline.
      *
-     * @see Polyline#setOutlineColor
+     * @see Polyline#setDefaultOutlineColor
+     * @see Polyline#getOutlineColors
+     * @see Polyline#setOutlineColors
      */
-    Polyline.prototype.getOutlineColor = function() {
+    Polyline.prototype.getDefaultOutlineColor = function() {
         return this._outlineColor;
     };
 
     /**
-     * Sets the outline color of the polyline.
+     * Sets the default outline color of the polyline. This color is used if per-vertex
+     * outline colors are not defined.
      *
      * @memberof Polyline
      *
-     * @param {Color} value The outline color of the polyline.
+     * @param {Color} value The default outline color of the polyline.
      *
      * @exception {DeveloperError} value is required.
      *
-     * @see Polyline#getOutlineColor
+     * @see Polyline#getDefaultOutlineColor
+     * @see Polyline#getOutlineColors
+     * @see Polyline#setOutlineColors
      */
-    Polyline.prototype.setOutlineColor = function(value) {
+    Polyline.prototype.setDefaultOutlineColor = function(value) {
         if (typeof value === 'undefined') {
             throw new DeveloperError('value is required.');
         }
@@ -274,6 +330,46 @@ define([
             Color.clone(value, outlineColor);
             makeDirty(this, COLOR_INDEX);
         }
+    };
+
+    /**
+     * Returns the polyline's outline color at each position.
+     *
+     * @return {Array} The polyline's outline color at each position.
+     *
+     * @see Polyline#setOutlineColors
+     * @see Polyline#getDefaultOutlineColor
+     * @see Polyline#SetDefaultOutlineColor
+     */
+    Polyline.prototype.getOutlineColors = function() {
+        return this._perVertexOutlineColors;
+    };
+
+    /**
+     * Defines the outline color of the polyline at each position.
+     *
+     * @memberof Polyline
+     *
+     * @param {Array} colors The outline colors of the polyline at each position.
+     *
+     * @exception {DeveloperError} colors is required.
+     * @exception {DeveloperError} colors must have the same number of elements as the positions.
+     *
+     * @see Polyline#getOutlineColors
+     * @see Polyline#getDefaultOutlineColor
+     * @see Polyline#SetDefaultOutlineColor
+     */
+    Polyline.prototype.setOutlineColors = function(colors) {
+        if (typeof colors === 'undefined') {
+            throw new DeveloperError('colors is required.');
+        }
+
+        if (typeof colors.length === 'undefined' || colors.length !== this._positions.length) {
+            throw new DeveloperError('colors must have the same number of elements as the positions.');
+        }
+
+        this._perVertexOutlineColors = colors;
+        makeDirty(this, COLOR_INDEX);
     };
 
     Polyline.prototype.getPickId = function(context) {
@@ -356,10 +452,11 @@ define([
                typeof other !== 'undefined' &&
                this._show === other._show &&
                this._width === other._width &&
-               this._horizontalOrigin === other._horizontalOrigin &&
                cartesian3ArrayEquals(this._positions, other._positions) &&
                Color.equals(this._color, other._color) &&
-               Color.equals(this._outlineColor, other._outlineColor);
+               Color.equals(this._outlineColor, other._outlineColor) &&
+               colorArrayEquals(this._perVertexColors, this._positions.length, other._perVertexColors, other._positions.length) &&
+               colorArrayEquals(this._perVertexOutlineColors, this._positions.length, other._perVertexOutlineColors, other._positions.length);
     };
 
     function cartesian3ArrayEquals(a, b) {
@@ -368,6 +465,24 @@ define([
         }
         for ( var i = 0, len = a.length; i < len; ++i) {
             if (!Cartesian3.equals(a[i], b[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function colorArrayEquals(a, aPositionsLength, bPositionsLength) {
+        if (typeof a === 'undefined' && typeof b === 'undefined') {
+            return true;
+        }
+        if (a.length !== aPositionsLength && b.length !== bPositionsLength) {
+            return true;
+        }
+        if (a.length !== b.length) {
+            return false;
+        }
+        for ( var i = 0, len = a.length; i < len; ++i) {
+            if (!Color.equals(a[i], b[i])) {
                 return false;
             }
         }
