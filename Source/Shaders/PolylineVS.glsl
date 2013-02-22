@@ -84,7 +84,9 @@ void main()
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     
     v_textureCoordinate = texCoord;
-    v_color = vec4(czm_decodeColor(color.x), 1.0);
-    v_outlineColor = vec4(czm_decodeColor(color.y), 1.0);
-    v_pickColor = vec4(czm_decodeColor(color.z), 1.0);
+    
+    vec3 alphas = czm_decodeColor(color.a);
+    v_color = vec4(czm_decodeColor(color.r), alphas.r);
+    v_outlineColor = vec4(czm_decodeColor(color.g), alphas.g);
+    v_pickColor = vec4(czm_decodeColor(color.b), alphas.b);
 }

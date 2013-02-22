@@ -656,7 +656,7 @@ define([
         if (totalLength > 0) {
             var positionArray = new Float32Array(2 * totalLength * 3 * 2);
             var adjacencyArray = new Float32Array(2 * totalLength * 4 * 2);
-            var colorArray = new Float32Array(totalLength * 3 * 2);
+            var colorArray = new Float32Array(totalLength * 4 * 2);
             var miscArray = new Float32Array(totalLength * 4 * 2);
             var position3DArray;
 
@@ -677,7 +677,7 @@ define([
                     var bucketLength = bucket.lengthOfPositions;
                     positionIndex += 2 * bucketLength * 3 * 2;
                     adjacencyIndex += 2 * bucketLength * 4 * 2;
-                    colorIndex += bucketLength * 3 * 2;
+                    colorIndex += bucketLength * 4 * 2;
                     miscIndex += bucketLength * 4 * 2;
                     offset = bucket.updateIndices(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset);
                 }
@@ -690,7 +690,7 @@ define([
             this._adjacencyBuffer = context.createVertexBuffer(adjacencyArray, this._buffersUsage[POSITION_INDEX].bufferUsage);
             this._colorBuffer = context.createVertexBuffer(colorArray, this._buffersUsage[COLOR_INDEX].bufferUsage);
             this._miscBuffer = context.createVertexBuffer(miscArray, this._buffersUsage[MISC_INDEX].bufferUsage);
-            var colorSizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
+            var colorSizeInBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
             var positionSizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
             var adjacencySizeInBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
             var miscSizeInBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -749,7 +749,7 @@ define([
                         strideInBytes : 2 * adjacencySizeInBytes
                     }, {
                         index : attributeIndices.color,
-                        componentsPerAttribute : 3,
+                        componentsPerAttribute : 4,
                         componentDatatype : ComponentDatatype.FLOAT,
                         vertexBuffer : this._colorBuffer,
                         offsetInBytes : vertexColorBufferOffset
@@ -948,6 +948,7 @@ define([
 
     var scratchWritePosition = new Cartesian3();
     var scratchAdjacency = new Cartesian4();
+    var scratchColor = new Color();
 
     /**
      * @private
@@ -987,10 +988,15 @@ define([
                         adjacencyArray[adjacencyIndex + 7] = adjacencyAngles.w;
                     }
 
+                    scratchColor.red = color.alpha;
+                    scratchColor.green = outlineColor.alpha;
+                    //scratchColor.blue = pickColor.alpha;
+
                     colorArray[colorIndex] = Color.encode(color);
                     colorArray[colorIndex + 1] = Color.encode(outlineColor);
                     //colorArray[colorIndex + 2] = Color.encode(pickColor);
                     colorArray[colorIndex + 2] = 0.0;
+                    colorArray[colorIndex + 3] = Color.encode(scratchColor);
 
                     miscArray[miscIndex] = j / positionsLength;     // s tex coord
                     miscArray[miscIndex + 1] = 2 * k - 1;           // expand direction
@@ -999,7 +1005,7 @@ define([
 
                     positionIndex += 6;
                     adjacencyIndex += 8;
-                    colorIndex += 3;
+                    colorIndex += 4;
                     miscIndex += 4;
                 }
             }
@@ -1364,6 +1370,8 @@ define([
         }
     };
 
+    var scratchColorAlpha = new Color();
+
     /**
      * @private
      */
@@ -1376,15 +1384,21 @@ define([
             var color = polyline.getColor();
             var outlineColor = polyline.getOutlineColor();
             //var pickColor = polyline.getPickId(context).normalizedRgb;
-            var colorsArray = new Float32Array(3 * positionsLength * 2);
+            var colorsArray = new Float32Array(4 * positionsLength * 2);
             for ( var j = 0; j < positionsLength * 2; ++j) {
+                scratchColorAlpha.red = color.alpha;
+                scratchColorAlpha.green = outlineColor.alpha;
+                //scratchColorAlpha.blue = pickColor.alpha;
+
                 colorsArray[index] = Color.encode(color);
                 colorsArray[index + 1] = Color.encode(outlineColor);
                 //colorsArray[index + 2] = Color.encode(pickColor);
                 colorsArray[index + 2] = 0.0;
-                index += 3;
+                colorsArray[index + 3] = Color.encode(scratchColorAlpha);
+
+                index += 4;
             }
-            buffer.copyFromArrayView(colorsArray, 3 * positionIndex * 2);
+            buffer.copyFromArrayView(colorsArray, 4 * positionIndex * 2);
         }
     };
 
