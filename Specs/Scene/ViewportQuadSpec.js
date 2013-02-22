@@ -78,6 +78,15 @@ defineSuite([
         }).toThrow();
     });
 
+    it('does not render when show is false', function() {
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        viewportQuad.show = false;
+        render(context, frameState, viewportQuad);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+    });
+
     it('renders material', function() {
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
