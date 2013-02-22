@@ -468,7 +468,6 @@ define([
             throw new DeveloperError('dateFormatter must be a function');
         }
         this._dateFormatter(dateFormatter);
-        this._dateFormatter.notifySubscribers();
     };
 
     /**
@@ -494,7 +493,6 @@ define([
             throw new DeveloperError('timeFormatter must be a function.');
         }
         this._timeFormatter(timeFormatter);
-        this._timeFormatter.notifySubscribers();
     };
 
     //Currently exposed for tests.
