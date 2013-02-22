@@ -75,6 +75,12 @@ defineSuite(['Core/Color',
         expect(blue).toEqualEpsilon(color.blue, CesiumMath.EPSILON3);
     });
 
+    it('encode throws without a color', function() {
+        expect(function() {
+            return Color.encode();
+        }).toThrow();
+    });
+
     it('clone with no parameters returns a new identical copy.', function() {
         var v = new Color(0.1, 0.2, 0.3, 0.4);
         var v2 = v.clone();
