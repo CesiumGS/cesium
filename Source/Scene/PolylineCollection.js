@@ -20,7 +20,8 @@ define([
         './SceneMode',
         './Polyline',
         '../Shaders/PolylineVS',
-        '../Shaders/PolylineFS'
+        '../Shaders/PolylineFS',
+        '../Shaders/PolylineFSPick'
     ], function(
         DeveloperError,
         combine,
@@ -42,12 +43,11 @@ define([
         SceneMode,
         Polyline,
         PolylineVS,
-        PolylineFS) {
+        PolylineFS,
+        PolylineFSPick) {
     "use strict";
 
     // TODO:
-    //    outline color
-    //    picking
     //    better name than 'misc' for tex coord, expansion direction, show and width attribute
     //    materials
     //    separate by materials
@@ -142,6 +142,7 @@ define([
         this._modelMatrix = Matrix4.IDENTITY.clone();
         this._sp = undefined;
         this._rs = undefined;
+        this._spPick = undefined;
         this._rsPick = undefined;
 
         this._boundingVolume = undefined;
@@ -174,9 +175,11 @@ define([
 
         this._polylinesToUpdate = [];
         this._colorVertexArrays = [];
+        this._pickColorVertexArrays = [];
         this._positionBuffer = undefined;
         this._adjacencyBuffer = undefined;
         this._colorBuffer = undefined;
+        this._pickColorBuffer = undefined;
         this._miscBuffer = undefined;
     };
 
@@ -377,9 +380,6 @@ define([
      * @memberof PolylineCollection
      */
     PolylineCollection.prototype.update = function(context, frameState, commandList) {
-        if (typeof this._sp === 'undefined') {
-            this._sp = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
-        }
         this._removePolylines();
         this._updateMode(frameState);
 
@@ -470,11 +470,15 @@ define([
         var commands;
         var command;
         polylineBuckets = this._polylineBuckets;
-        var sp = this._sp;
         var useDepthTest = (this.morphTime !== 0.0);
         this._commandLists.removeAll();
         if (typeof polylineBuckets !== 'undefined') {
             if (pass.color) {
+                if (typeof this._sp === 'undefined') {
+                    this._sp = context.getShaderCache().getShaderProgram(
+                            PolylineVS, PolylineFS, attributeIndices);
+                }
+
                 if (typeof this._rs === 'undefined') {
                     this._rs = context.createRenderState({
                         blending : BlendingState.ALPHA_BLEND
@@ -488,7 +492,7 @@ define([
                 commands = this._commandLists.colorList;
                 for ( var m = 0; m < length; ++m) {
                     var vaColor = this._colorVertexArrays[m];
-                    buckets = this._colorVertexArrays[m].buckets;
+                    buckets = vaColor.buckets;
                     bucketLength = buckets.length;
                     var p = commands.length;
                     commands.length += bucketLength;
@@ -505,7 +509,7 @@ define([
                         command.primitiveType = PrimitiveType.TRIANGLES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = sp;
+                        command.shaderProgram = this._sp;
                         command.uniformMap = this._uniforms;
                         command.vertexArray = vaColor.va;
                         command.renderState = this._rs;
@@ -514,6 +518,10 @@ define([
             }
 
             if (pass.pick) {
+                if (typeof this._spPick === 'undefined') {
+                    this._spPick = context.getShaderCache().getShaderProgram(
+                            '#define RENDER_FOR_PICK\n\n' + PolylineVS, PolylineFSPick, attributeIndices);
+                }
                 if (typeof this._rsPick === 'undefined') {
                     this._rsPick = context.createRenderState();
                 }
@@ -524,8 +532,8 @@ define([
                 length = this._colorVertexArrays.length;
                 commands = this._commandLists.pickList;
                 for ( var a = 0; a < length; ++a) {
-                    var vaColor = this._colorVertexArrays[a];
-                    buckets = this._colorVertexArrays[a].buckets;
+                    var vaPickColor = this._pickColorVertexArrays[a];
+                    buckets = vaPickColor.buckets;
                     bucketLength = buckets.length;
                     commands.length += bucketLength;
                     for ( var b = 0; b < bucketLength; ++b) {
@@ -541,9 +549,9 @@ define([
                         command.primitiveType = PrimitiveType.TRIANGLES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = sp;
+                        command.shaderProgram = this._spPick;
                         command.uniformMap = this._uniforms;
-                        command.vertexArray = vaColor.va;
+                        command.vertexArray = vaPickColor.va;
                         command.renderState = this._rsPick;
                     }
                 }
@@ -592,6 +600,7 @@ define([
      */
     PolylineCollection.prototype.destroy = function() {
         this._sp = this._sp && this._sp.release();
+        this._spPick = this._spPick && this._spPick.release();
         this._destroyVertexArrays();
         this._destroyPolylines();
         return destroyObject(this);
@@ -657,6 +666,7 @@ define([
             var positionArray = new Float32Array(2 * totalLength * 3 * 2);
             var adjacencyArray = new Float32Array(2 * totalLength * 4 * 2);
             var colorArray = new Float32Array(totalLength * 4 * 2);
+            var pickColorArray = new Uint8Array(totalLength * 4 * 2);
             var miscArray = new Float32Array(totalLength * 4 * 2);
             var position3DArray;
 
@@ -667,7 +677,7 @@ define([
             for (x in polylineBuckets) {
                 if (polylineBuckets.hasOwnProperty(x)) {
                     bucket = polylineBuckets[x];
-                    bucket.write(positionArray, adjacencyArray, colorArray, miscArray, positionIndex, adjacencyIndex, colorIndex, miscIndex, context);
+                    bucket.write(positionArray, adjacencyArray, colorArray, pickColorArray, miscArray, positionIndex, adjacencyIndex, colorIndex, miscIndex, context);
                     if (this._mode === SceneMode.MORPHING) {
                         if (typeof position3DArray === 'undefined') {
                             position3DArray = new Float32Array(2 * totalLength * 3 * 2);
@@ -689,8 +699,10 @@ define([
             }
             this._adjacencyBuffer = context.createVertexBuffer(adjacencyArray, this._buffersUsage[POSITION_INDEX].bufferUsage);
             this._colorBuffer = context.createVertexBuffer(colorArray, this._buffersUsage[COLOR_INDEX].bufferUsage);
+            this._pickColorBuffer = context.createVertexBuffer(pickColorArray, BufferUsage.STATIC_DRAW);
             this._miscBuffer = context.createVertexBuffer(miscArray, this._buffersUsage[MISC_INDEX].bufferUsage);
             var colorSizeInBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
+            var pickColorSizeInBytes = 4 * Uint8Array.BYTES_PER_ELEMENT;
             var positionSizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
             var adjacencySizeInBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
             var miscSizeInBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -708,6 +720,7 @@ define([
                     var prevOffset = 2 * (k * (adjacencySizeInBytes * SIXTYFOURK) - vbo * adjacencySizeInBytes);
                     var nextOffset = adjacencySizeInBytes + prevOffset;
                     var vertexColorBufferOffset = k * (colorSizeInBytes * SIXTYFOURK) - vbo * colorSizeInBytes;
+                    var vertexPickColorBufferOffset = k * (pickColorSizeInBytes * SIXTYFOURK) - vbo * pickColorSizeInBytes;
                     var vertexMiscBufferOffset = k * (miscSizeInBytes * SIXTYFOURK) - vbo * miscSizeInBytes;
                     var attributes = [{
                         index : attributeIndices.position3DHigh,
@@ -761,26 +774,96 @@ define([
                         offsetInBytes : vertexMiscBufferOffset
                     }];
 
+                    var attributesPickColor = [{
+                        index : attributeIndices.position3DHigh,
+                        componentsPerAttribute : 3,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        offsetInBytes : positionHighOffset,
+                        strideInBytes : 2 * positionSizeInBytes
+                    }, {
+                        index : attributeIndices.position3DLow,
+                        componentsPerAttribute : 3,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        offsetInBytes : positionLowOffset,
+                        strideInBytes : 2 * positionSizeInBytes
+                    }, {
+                        index : attributeIndices.position2DHigh,
+                        componentsPerAttribute : 3,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        offsetInBytes : positionHighOffset,
+                        strideInBytes : 2 * positionSizeInBytes
+                    }, {
+                        index : attributeIndices.position2DLow,
+                        componentsPerAttribute : 3,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        offsetInBytes : positionLowOffset,
+                        strideInBytes : 2 * positionSizeInBytes
+                    }, {
+                        index : attributeIndices.prev,
+                        componentsPerAttribute : 4,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        vertexBuffer : this._adjacencyBuffer,
+                        offsetInBytes : prevOffset,
+                        strideInBytes : 2 * adjacencySizeInBytes
+                    }, {
+                        index : attributeIndices.next,
+                        componentsPerAttribute : 4,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        vertexBuffer : this._adjacencyBuffer,
+                        offsetInBytes : nextOffset,
+                        strideInBytes : 2 * adjacencySizeInBytes
+                    }, {
+                        index : attributeIndices.color,
+                        componentsPerAttribute : 4,
+                        normalize : true,
+                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                        vertexBuffer : this._pickColorBuffer,
+                        offsetInBytes : vertexPickColorBufferOffset
+                    }, {
+                        index : attributeIndices.misc,
+                        componentsPerAttribute : 4,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        vertexBuffer : this._miscBuffer,
+                        offsetInBytes : vertexMiscBufferOffset
+                    }];
+
                     if (this._mode === SceneMode.SCENE3D) {
                         attributes[0].vertexBuffer = this._positionBuffer;
                         attributes[1].vertexBuffer = this._positionBuffer;
                         attributes[2].value = [0.0, 0.0, 0.0];
                         attributes[3].value = [0.0, 0.0, 0.0];
+                        attributesPickColor[0].vertexBuffer = this._positionBuffer;
+                        attributesPickColor[1].vertexBuffer = this._positionBuffer;
+                        attributesPickColor[2].value = [0.0, 0.0, 0.0];
+                        attributesPickColor[3].value = [0.0, 0.0, 0.0];
                     } else if (this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW) {
                         attributes[0].value = [0.0, 0.0, 0.0];
                         attributes[1].value = [0.0, 0.0, 0.0];
                         attributes[2].vertexBuffer = this._positionBuffer;
                         attributes[3].vertexBuffer = this._positionBuffer;
+                        attributesPickColor[0].value = [0.0, 0.0, 0.0];
+                        attributesPickColor[1].value = [0.0, 0.0, 0.0];
+                        attributesPickColor[2].vertexBuffer = this._positionBuffer;
+                        attributesPickColor[3].vertexBuffer = this._positionBuffer;
                     } else {
                         attributes[0].vertexBuffer = position3DBuffer;
                         attributes[1].vertexBuffer = position3DBuffer;
                         attributes[2].vertexBuffer = this._positionBuffer;
                         attributes[3].vertexBuffer = this._positionBuffer;
+                        attributesPickColor[0].vertexBuffer = position3DBuffer;
+                        attributesPickColor[1].vertexBuffer = position3DBuffer;
+                        attributesPickColor[2].vertexBuffer = this._positionBuffer;
+                        attributesPickColor[3].vertexBuffer = this._positionBuffer;
                     }
 
                     var va = context.createVertexArray(attributes, indexBuffer);
+                    var vaPickColor = context.createVertexArray(attributesPickColor, indexBuffer);
                     this._colorVertexArrays.push({
                         va : va,
+                        buckets : vertexArrayBuckets[k]
+                    });
+                    this._pickColorVertexArrays.push({
+                        va : vaPickColor,
                         buckets : vertexArrayBuckets[k]
                     });
                 }
@@ -842,8 +925,10 @@ define([
         var length = this._colorVertexArrays.length;
         for ( var t = 0; t < length; ++t) {
             this._colorVertexArrays[t].va.destroy();
+            this._pickColorVertexArrays[t].va.destroy();
         }
         this._colorVertexArrays.length = 0;
+        this._pickColorVertexArrays.length = 0;
     };
 
     PolylineCollection.prototype._updatePolyline = function(polyline, propertyChanged) {
@@ -955,7 +1040,7 @@ define([
     /**
      * @private
      */
-    PolylineBucket.prototype.write = function(positionArray, adjacencyArray, colorArray, miscArray, positionIndex, adjacencyIndex, colorIndex, miscIndex, context) {
+    PolylineBucket.prototype.write = function(positionArray, adjacencyArray, colorArray, pickColorArray, miscArray, positionIndex, adjacencyIndex, colorIndex, miscIndex, context) {
         var polylines = this.polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
@@ -981,8 +1066,7 @@ define([
                 outlineColorIncrement = 0;
             }
 
-            //var pickColor = polyline.getPickId(context).normalizedRgb;
-            var pickColor = Color.WHITE;
+            var pickColor = polyline.getPickId(context).unnormalizedRgb;
 
             var vertexColorIndex = 0;
             var vertexOutlineColorIndex = 0;
@@ -1015,12 +1099,15 @@ define([
 
                     scratchWriteColor.red = color.alpha;
                     scratchWriteColor.green = outlineColor.alpha;
-                    scratchWriteColor.blue = pickColor.alpha;
 
                     colorArray[colorIndex] = Color.encode(color);
                     colorArray[colorIndex + 1] = Color.encode(outlineColor);
-                    colorArray[colorIndex + 2] = Color.encode(pickColor);
-                    colorArray[colorIndex + 3] = Color.encode(scratchWriteColor);
+                    colorArray[colorIndex + 2] = Color.encode(scratchWriteColor);
+
+                    pickColorArray[colorIndex] = pickColor.red;
+                    pickColorArray[colorIndex + 1] = pickColor.green;
+                    pickColorArray[colorIndex + 2] = pickColor.blue;
+                    pickColorArray[colorIndex + 3] = 255;
 
                     miscArray[miscIndex] = j / positionsLength;     // s tex coord
                     miscArray[miscIndex + 1] = 2 * k - 1;           // expand direction
@@ -1352,6 +1439,9 @@ define([
         return newPositions;
     };
 
+
+    var scratchAdjacency = new Cartesian4();
+
     /**
      * @private
      */
@@ -1425,9 +1515,6 @@ define([
                 outlineColorIncrement = 0;
             }
 
-            //var pickColor = polyline.getPickId(context).normalizedRgb;
-            var pickColor = Color.WHITE;
-
             var index = 0;
             var colorIndex = 0;
             var outlineColorIndex = 0;
@@ -1439,12 +1526,10 @@ define([
 
                 scratchColorAlpha.red = color.alpha;
                 scratchColorAlpha.green = outlineColor.alpha;
-                scratchColorAlpha.blue = pickColor.alpha;
 
                 colorsArray[index] = Color.encode(color);
                 colorsArray[index + 1] = Color.encode(outlineColor);
-                colorsArray[index + 2] = Color.encode(pickColor);
-                colorsArray[index + 3] = Color.encode(scratchColorAlpha);
+                colorsArray[index + 2] = Color.encode(scratchColorAlpha);
 
                 index += 4;
                 colorIndex += colorIncrement;

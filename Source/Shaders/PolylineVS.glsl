@@ -7,11 +7,14 @@ attribute vec4 next;
 attribute vec4 color;
 attribute vec4 misc;
 
+
+#ifndef RENDER_FOR_PICK
 varying vec4 v_color;
 varying vec4 v_outlineColor;
 varying float v_textureCoordinate;
-
+#else
 varying vec4 v_pickColor;
+#endif
 
 uniform float u_morphTime;
 
@@ -83,10 +86,12 @@ void main()
     
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     
-    v_textureCoordinate = texCoord;
-    
-    vec3 alphas = czm_decodeColor(color.a);
+#ifndef RENDER_FOR_PICK
+    vec3 alphas = czm_decodeColor(color.b);
     v_color = vec4(czm_decodeColor(color.r), alphas.r);
     v_outlineColor = vec4(czm_decodeColor(color.g), alphas.g);
-    v_pickColor = vec4(czm_decodeColor(color.b), alphas.b);
+    v_textureCoordinate = texCoord;
+#else
+    v_pickColor = color;
+#endif
 }
