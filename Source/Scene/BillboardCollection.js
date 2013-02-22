@@ -551,17 +551,11 @@ define([
     function getDirectionsVertexBuffer(context) {
         var sixteenK = 16 * 1024;
 
-        // Per-context cache for billboard collections
-        context._primitivesCache = context._primitivesCache || {};
-        var primitivesCache = context._primitivesCache;
-        primitivesCache._billboardCollection = primitivesCache._billboardCollection || {};
-        var c = primitivesCache._billboardCollection;
+        var c = getContextCache(context);
 
-        if (c.directionsVertexBuffer) {
+        if (typeof c.directionsVertexBuffer !== 'undefined') {
             return c.directionsVertexBuffer;
         }
-
-        c.directionsVertexBuffer = c.directionsVertexBuffer && c.directionsVertexBuffer.destroy();
 
         var directions = new Uint8Array(sixteenK * 4 * 2);
         for (var i = 0, j = 0; i < sixteenK; ++i) {
@@ -588,13 +582,9 @@ define([
     function getIndexBuffer(context) {
         var sixteenK = 16 * 1024;
 
-        // Per-context cache for billboard collections
-        context._primitivesCache = context._primitivesCache || {};
-        var primitivesCache = context._primitivesCache;
-        primitivesCache._billboardCollection = primitivesCache._billboardCollection || {};
-        var c = primitivesCache._billboardCollection;
+        var c = getContextCache(context);
 
-        if (c.indexBuffer) {
+        if (typeof c.indexBuffer !== 'undefined') {
             return c.indexBuffer;
         }
 
@@ -615,6 +605,26 @@ define([
         c.indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
         c.indexBuffer.setVertexArrayDestroyable(false);
         return c.indexBuffer;
+    }
+
+    function getContextCache(context) {
+        // Per-context cache for billboard collections
+        var c = context.cache.billboardCollection;
+        if (typeof c === 'undefined') {
+            c = context.cache.billboardCollection = {
+                    directionsVertexBuffer : undefined,
+                    indexBuffer : undefined,
+                    destroy : function() {
+                        if (typeof this.directionsVertexBuffer !== 'undefined') {
+                            this.directionsVertexBuffer.destroy();
+                        }
+                        if (typeof this.indexBuffer !== 'undefined') {
+                            this.indexBuffer.destroy();
+                        }
+                    }
+            };
+        }
+        return c;
     }
 
     BillboardCollection.prototype.computeNewBuffersUsage = function() {
