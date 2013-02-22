@@ -216,7 +216,6 @@ define([
      *
      * @param {Array} colors The colors of the polyline at each position.
      *
-     * @exception {DeveloperError} colors is required.
      * @exception {DeveloperError} colors must have the same number of elements as the positions.
      *
      * @see Polyline#getColors
@@ -224,11 +223,7 @@ define([
      * @see Polyline#SetDefaultColor
      */
     Polyline.prototype.setColors = function(colors) {
-        if (typeof colors === 'undefined') {
-            throw new DeveloperError('colors is required.');
-        }
-
-        if (typeof colors.length === 'undefined' || colors.length !== this._positions.length) {
+        if (typeof colors !== 'undefined' && colors.length !== this._positions.length) {
             throw new DeveloperError('colors must have the same number of elements as the positions.');
         }
 
@@ -352,7 +347,6 @@ define([
      *
      * @param {Array} colors The outline colors of the polyline at each position.
      *
-     * @exception {DeveloperError} colors is required.
      * @exception {DeveloperError} colors must have the same number of elements as the positions.
      *
      * @see Polyline#getOutlineColors
@@ -360,11 +354,7 @@ define([
      * @see Polyline#SetDefaultOutlineColor
      */
     Polyline.prototype.setOutlineColors = function(colors) {
-        if (typeof colors === 'undefined') {
-            throw new DeveloperError('colors is required.');
-        }
-
-        if (typeof colors.length === 'undefined' || colors.length !== this._positions.length) {
+        if (typeof colors !== 'undefined' && colors.length !== this._positions.length) {
             throw new DeveloperError('colors must have the same number of elements as the positions.');
         }
 

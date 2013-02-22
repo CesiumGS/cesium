@@ -1044,6 +1044,9 @@ define([
                         this.highlightedObject.outerMaterial = this._originalMaterial;
                     } else if (typeof this.highlightedObject.setColor !== 'undefined') {
                         this.highlightedObject.setColor(this._originalColor);
+                    } else if (typeof this.highlightedObject.setDefaultColor !== 'undefined') {
+                        this.highlightedObject.setDefaultColor(this._originalColor);
+                        this.highlightedObject.setColors(this._colors);
                     }
                 }
                 this.highlightedObject = selectedObject;
@@ -1054,9 +1057,13 @@ define([
                     } else if (typeof selectedObject.outerMaterial !== 'undefined') {
                         this._originalMaterial = selectedObject.outerMaterial;
                         selectedObject.outerMaterial = this.highlightMaterial;
-                    } else if (typeof this.highlightedObject.setColor !== 'undefined') {
+                    } else if (typeof selectedObject.setColor !== 'undefined') {
                         this._originalColor = Color.clone(selectedObject.getColor(), this._originalColor);
                         selectedObject.setColor(this.highlightColor);
+                    } else if (typeof selectedObject.setDefaultColor !== 'undefined') {
+                        this._originalColor = Color.clone(selectedObject.getDefaultColor(), this._originalColor);
+                        this._colors = (typeof selectedObject.setColors !== 'undefined') ? selectedObject.getColors() : undefined;
+                        selectedObject.setDefaultColor(this.highlightColor);
                     }
                 }
             }
