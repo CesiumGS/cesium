@@ -14,7 +14,7 @@ void main()
     materialInput.positionMC = v_positionMC;
     
     //Convert tangent space material normal to eye space
-    materialInput.normalEC = mix(czm_normal[0], normalize(czm_normal * czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0))), u_morphTime); // +x is up in Columbus view   
+    materialInput.normalEC = normalize(czm_normal3D * czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));
     materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(v_positionMC, materialInput.normalEC);
     
     //Convert view vector to world space
