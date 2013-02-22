@@ -551,10 +551,9 @@ define([
     function getDirectionsVertexBuffer(context) {
         var sixteenK = 16 * 1024;
 
-        var c = getContextCache(context);
-
-        if (typeof c.directionsVertexBuffer !== 'undefined') {
-            return c.directionsVertexBuffer;
+        var directionsVertexBuffer = context.cache.billboardCollection_directionsVertexBuffer;
+        if (typeof directionsVertexBuffer !== 'undefined') {
+            return directionsVertexBuffer;
         }
 
         var directions = new Uint8Array(sixteenK * 4 * 2);
@@ -574,18 +573,18 @@ define([
 
         // PERFORMANCE_IDEA:  Should we reference count billboard collections, and eventually delete this?
         // Is this too much memory to allocate up front?  Should we dynamically grow it?
-        c.directionsVertexBuffer = context.createVertexBuffer(directions, BufferUsage.STATIC_DRAW);
-        c.directionsVertexBuffer.setVertexArrayDestroyable(false);
-        return c.directionsVertexBuffer;
+        directionsVertexBuffer = context.createVertexBuffer(directions, BufferUsage.STATIC_DRAW);
+        directionsVertexBuffer.setVertexArrayDestroyable(false);
+        context.cache.billboardCollection_directionsVertexBuffer = directionsVertexBuffer;
+        return directionsVertexBuffer;
     }
 
     function getIndexBuffer(context) {
         var sixteenK = 16 * 1024;
 
-        var c = getContextCache(context);
-
-        if (typeof c.indexBuffer !== 'undefined') {
-            return c.indexBuffer;
+        var indexBuffer = context.cache.billboardCollection_indexBuffer;
+        if (typeof indexBuffer !== 'undefined') {
+            return indexBuffer;
         }
 
         var length = sixteenK * 6;
@@ -602,29 +601,10 @@ define([
 
         // PERFORMANCE_IDEA:  Should we reference count billboard collections, and eventually delete this?
         // Is this too much memory to allocate up front?  Should we dynamically grow it?
-        c.indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-        c.indexBuffer.setVertexArrayDestroyable(false);
-        return c.indexBuffer;
-    }
-
-    function getContextCache(context) {
-        // Per-context cache for billboard collections
-        var c = context.cache.billboardCollection;
-        if (typeof c === 'undefined') {
-            c = context.cache.billboardCollection = {
-                    directionsVertexBuffer : undefined,
-                    indexBuffer : undefined,
-                    destroy : function() {
-                        if (typeof this.directionsVertexBuffer !== 'undefined') {
-                            this.directionsVertexBuffer.destroy();
-                        }
-                        if (typeof this.indexBuffer !== 'undefined') {
-                            this.indexBuffer.destroy();
-                        }
-                    }
-            };
-        }
-        return c;
+        indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        indexBuffer.setVertexArrayDestroyable(false);
+        context.cache.billboardCollection_indexBuffer = indexBuffer;
+        return indexBuffer;
     }
 
     BillboardCollection.prototype.computeNewBuffersUsage = function() {
