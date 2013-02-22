@@ -62,6 +62,27 @@ require([
             blue  : 0.0,
             alpha : 0.75
         });
+        
+        // set a polyline's color per position
+        var perPositionColoredPolyline = polylines.add();
+        Sandcastle.declare(perPositionColoredPolyline); // For highlighting on mouseover in Sandcastle.
+        perPositionColoredPolyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+            Cesium.Cartographic.fromDegrees(-115.0, 45.0),
+            Cesium.Cartographic.fromDegrees(-95.0, 45.0)
+        ]));
+        perPositionColoredPolyline.setColors([
+            {
+                red : 0.0,
+                green : 1.0,
+                blue : 0.0,
+                alpha : 0.5,
+            }, {
+                red : 1.0,
+                green : 0.0,
+                blue : 0.0,
+                alpha : 1.0
+            }
+        ]);
 
         // Set a polyline's width
         var widePolyline = polylines.add();
