@@ -2,10 +2,12 @@
 define([
         './defaultValue',
         './freezeObject',
+        './Cartesian4',
         './DeveloperError'
     ], function(
         defaultValue,
         freezeObject,
+        Cartesian4,
         DeveloperError) {
     "use strict";
 
@@ -209,6 +211,22 @@ define([
      */
     Color.floatToByte = function(number) {
         return number === 1.0 ? 255.0 : (number * 256.0) | 0;
+    };
+
+    var scale = new Cartesian4(1.0, 1.0 / Math.pow(2, 8), 1.0 / Math.pow(2, 16), 1.0 / Math.pow(2, 24));
+    var scratch = new Cartesian4();
+
+    /**
+     * TODO
+     * @param color
+     * @returns
+     */
+    Color.encode = function(color) {
+        scratch.x = Color.floatToByte(color.red);
+        scratch.y = Color.floatToByte(color.green);
+        scratch.z = Color.floatToByte(color.blue);
+        scratch.w = Color.floatToByte(color.alpha);
+        return Cartesian4.dot(scratch, scale);
     };
 
     /**
