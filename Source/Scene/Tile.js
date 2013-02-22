@@ -678,9 +678,9 @@ define([
     function createWaterMaskTexture(context, waterMask) {
         var result;
 
-        var waterMaskData = context.cache.tileWaterMaskData;
+        var waterMaskData = context.cache.tile_waterMaskData;
         if (typeof waterMaskData === 'undefined') {
-            waterMaskData = context.cache.tileWaterMaskData = {
+            waterMaskData = context.cache.tile_waterMaskData = {
                     allWaterTexture : undefined,
                     allLandTexture : undefined,
                     sampler : undefined,
