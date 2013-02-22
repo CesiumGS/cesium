@@ -105,11 +105,9 @@ define([
         textureCoordinates : 1
     };
 
-    var vertexArrayCache = {};
-
     function getVertexArray(context) {
         // Per-context cache for viewport quads
-        var vertexArray = context.viewportQuadVertexArray;
+        var vertexArray = context.cache.viewportQuadVertexArray;
 
         if (typeof vertexArray !== 'undefined') {
             return vertexArray;
