@@ -3,15 +3,17 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
     "use strict";
 
     /**
-     * Observables are used by view models in the Widgets layer
-     * in order to allow for two-way data binding and implement
-     * a Model-View-View-Model (MVVM) based architecture.
+     * Observable properties are used to implement two-way data binding in
+     * Cesium's Model-View-View-Model (MVVM) based widget architecture.
      *
-     * You get their current value by simply calling them as a function
-     * with no parameters.
+     * To retrieve an Observable's value, call it as a function with no
+     * parameters.
      *
-     * You set their current value (if writable) but calling them as a
-     * function with a single argument defining the new value.
+     * To set an Observable's value, call it as a function with a single
+     * parameter.
+     *
+     * This type describes an interface and is not intended to be instantiated
+     * directly.
      *
      * @alias Observable
      * @constructor

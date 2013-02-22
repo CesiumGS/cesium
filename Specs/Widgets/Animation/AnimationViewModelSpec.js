@@ -296,7 +296,7 @@ defineSuite([
         //Should now be paused
         verifyPausedState(viewModel);
 
-        //Reversing in start state while bounded should have no affect
+        //Reversing in start state while bounded should have no effect
         viewModel.playReverseViewModel.command();
         verifyPausedState(viewModel);
 
@@ -374,7 +374,7 @@ defineSuite([
         //Should now be paused
         verifyPausedState(viewModel);
 
-        //Playing in stop state while bounded should have no affect
+        //Playing in stop state while bounded should have no effect
         viewModel.playForwardViewModel.command();
         verifyPausedState(viewModel);
 
@@ -384,7 +384,7 @@ defineSuite([
         verifyForwardState(viewModel);
     });
 
-    it('slower has no affect if at the slowest speed', function() {
+    it('slower has no effect if at the slowest speed', function() {
         var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
         var slowestSpeed = viewModel.getShuttleRingTicks()[0];
@@ -393,7 +393,7 @@ defineSuite([
         expect(clockViewModel.multiplier()).toEqual(slowestSpeed);
     });
 
-    it('faster has no affect if at the faster speed', function() {
+    it('faster has no effect if at the faster speed', function() {
         var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
         var fastestSpeed = viewModel.getShuttleRingTicks()[viewModel.getShuttleRingTicks().length - 1];
@@ -402,7 +402,7 @@ defineSuite([
         expect(clockViewModel.multiplier()).toEqual(fastestSpeed);
     });
 
-    it('slower and faster cycle threw defined multipliers', function() {
+    it('slower and faster cycle through defined multipliers', function() {
         var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
 
