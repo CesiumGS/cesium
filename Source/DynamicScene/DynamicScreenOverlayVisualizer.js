@@ -224,6 +224,7 @@ define([
             } else {
                 screenOverlayVisualizerIndex = this._screenOverlayCollection.length;
                 screenOverlay = new ViewportQuad();
+                screenOverlay.material = Material.fromType(context, Material.ColorType);
 
                 this._screenOverlayCollection.push(screenOverlay);
                 this._primitives.add(screenOverlay);
@@ -231,7 +232,6 @@ define([
             dynamicObject._screenOverlayVisualizerIndex = screenOverlayVisualizerIndex;
             screenOverlay.dynamicObject = dynamicObject;
 
-            screenOverlay.material = Material.fromType(context, Material.ColorType);
         } else {
             screenOverlay = this._screenOverlayCollection[screenOverlayVisualizerIndex];
         }
