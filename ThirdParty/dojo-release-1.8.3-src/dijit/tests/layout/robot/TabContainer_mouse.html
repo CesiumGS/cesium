@@ -1,0 +1,344 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot TabContainer Mouse Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx",
+				"dojo/dom", "dojo/dom-geometry", "dojo/on", "dojo/query",
+				"dijit/tests/helpers", "dojo/domReady!"
+			], function(doh, robot, dom, geom, on, query, helpers){
+
+				robot.initRobot('../test_TabContainer.html');
+
+				var registry, focus;
+
+				doh.register("setup", [
+					function setup(){
+						// get pointers to singletons loaded on test page
+						registry = robot.window.require("dijit/registry");
+						focus = robot.window.require("dijit/focus");
+					}
+				]);
+	
+				doh.register("general", [
+					{
+						name: "tab hover state",
+						timeout: 5000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							// workaround DOH robot bug where iframe overlay not removed
+							robot.mouseClick({left: true}, 500);
+
+							robot.mouseMoveAt('mainTabContainer_tablist_tab3', 500);
+
+							on.once(dom.byId('mainTabContainer_tablist_tab3'), "mouseover", function(){
+								setTimeout(d.getTestCallback(function(){
+									// Check that .dijitTabHover class was applied
+									var tabHover = query(".dijitTabHover #mainTabContainer_tablist_tab3");
+									doh.is(1, tabHover.length);
+								}), 0);
+							});
+							
+							return d;
+						}
+					},
+					{
+						name: "click on a tab",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							robot.mouseMoveAt('mainTabContainer_tablist_tab3', 500);
+							robot.mouseClick({left: true}, 500);
+							robot.mouseClick({left: true}, 500);
+							
+							var tc = registry.byId("mainTabContainer");
+							
+							robot.sequence(d.getTestCallback(function(){
+								// verify tab button is selected
+								doh.is('mainTabContainer_tablist_tab3', focus.curNode.id, "verify chosen tab is in its chosen state and focused");
+
+								// verify pane is shown
+								doh.is("tab3", tc.selectedChildWidget.id, "verify that the appropiate contentpane is displayed");
+								doh.t(helpers.isVisible(registry.byId("tab3")), "tab3 shown");
+								doh.t(helpers.isHidden(registry.byId("tab2")), "tab2 hidden");
+							}), 500);
+							
+							return d;
+						}
+					},
+					{
+						name: "scrolling",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							// save original position of one of the tab labels
+							var pos0 = geom.position("mainTabContainer_tablist_tab2").x,
+								pos1,
+								pos2;
+
+							// Initially scrolled all the way to the left, so left scroll button
+							// should be disabled
+							doh.t(registry.byId("mainTabContainer_tablist_leftBtn").get("disabled"), "left scroll button disabled");
+							doh.f(registry.byId("mainTabContainer_tablist_rightBtn").get("disabled"), "right scroll button enabled");
+
+							// Scroll to the right
+							robot.mouseMoveAt('mainTabContainer_tablist_rightBtn', 500);
+							robot.mouseClick({left: true}, 500);
+							robot.sequence(d.getTestErrback(function(){
+								pos1 = geom.position("mainTabContainer_tablist_tab2").x;
+								doh.t(pos1 < pos0, "scrolled to the right: " + pos1 + " < " + pos0);
+								doh.f(registry.byId("mainTabContainer_tablist_leftBtn").get("disabled"), "left scroll button enabled");
+							}), 500);
+							
+							// And then scroll back to the left
+							robot.mouseMoveAt('mainTabContainer_tablist_leftBtn', 500);
+							robot.mouseClick({left: true}, 500);
+							robot.sequence(d.getTestCallback(function(){
+								pos2 = geom.position("mainTabContainer_tablist_tab2").x;
+								doh.t(pos2 > pos1, "scrolled to the left: " + pos2 + " > " + pos1);
+							}), 500);
+							
+							return d;
+						}
+					},
+					{
+						name: "close button hover state",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							robot.mouseMoveAt(query('.dijitTabCloseButton', registry.byId("mainTabContainer_tablist_tab3").domNode)[0], 500);
+							
+							// verify the close button is in its hover state
+							robot.sequence(d.getTestCallback(function(){
+								var closeHover = query(".dijitTabCloseButtonHover", registry.byId("mainTabContainer_tablist_tab3").domNode);
+								doh.is(1, closeHover.length, "close button hover CSS");
+							}), 500);
+							
+							return d;
+						}
+					},
+					{
+						name: "close a tab",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							robot.mouseMoveAt(query('.dijitTabCloseButton', registry.byId("mainTabContainer_tablist_tab3").domNode)[0], 500);
+							robot.mouseClick({left: true}, 500);
+							
+							var tc = registry.byId("mainTabContainer");
+							robot.sequence(d.getTestCallback(function(){
+								doh.is(6, tc.getChildren().length);
+							}), 500);
+							
+							return d;
+						}
+					},
+					{
+						name: "choose a tab from TabContainer's menu",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							robot.mouseMoveAt("mainTabContainer_tablist_menuBtn", 500);
+							robot.mouseClick({left: true}, 500);
+							robot.mouseMoveAt("tab4href_stcMi", 500);
+							robot.mouseClick({left: true}, 1000);
+							
+							// verify SplitContainer tab is displayed (but it doesn't get focus, see #10727)
+							robot.sequence(d.getTestCallback(function(){
+								// Check that tab button is scrolled correctly into view
+								// TODO: this check won't work in RTL mode
+								var tc = registry.byId("mainTabContainer");
+
+								var leftButton = dom.byId("mainTabContainer_tablist_leftBtn");
+								var tablistLeft = geom.position(leftButton).x + geom.position(leftButton).w;
+	
+								var rightButton = dom.byId("mainTabContainer_tablist_rightBtn");
+								var tablistRight = geom.position(rightButton).x;
+	
+								var tab = registry.byId("mainTabContainer_tablist_tab4href");
+	
+								var tabLeft = geom.position(tab.domNode).x;
+								var tabRight = geom.position(tab.domNode).x + geom.position(tab.domNode).w;
+	
+								var isTabVisible = (tablistLeft < tabLeft && tablistRight > tabRight);
+
+								doh.t(isTabVisible, "verify tab is in display area");
+								
+								// And verify that pane is shown
+								doh.is("tab4href", tc.selectedChildWidget.id, "verify that the appropriate contentpane is displayed");
+								doh.t(helpers.isVisible(registry.byId("tab4href")), "tab4 shown");
+								doh.t(helpers.isHidden(registry.byId("tab1")), "tab1 hidden");
+							}), 1000);
+							
+							return d;
+						}
+					}
+				]);
+
+				doh.register("disabled tabs", [
+					{
+						name: "setup",
+						runTest: function(){
+							tc = registry.byId("mainTabContainer");
+							tc.selectChild(registry.byId("tab1"));
+							registry.byId("tab2").set("closable", true);
+							registry.byId("tab2").set("disabled", true);
+						}
+					},
+					{
+						name: "click disabled tab",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							robot.mouseMoveAt('mainTabContainer_tablist_tab2', 500);
+							robot.mouseClick({left: true}, 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.is("tab1", tc.selectedChildWidget.id, "selected pane not changed");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "close disabled tab",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							var nChildren = tc.getChildren().length;
+							robot.mouseMoveAt(query('.dijitTabCloseButton', registry.byId("mainTabContainer_tablist_tab2").domNode)[0], 500);
+							robot.mouseClick({left: true}, 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.is(nChildren, tc.getChildren().length, "num children didn't change");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "choose disabled tab from TabContainer's menu",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							robot.mouseMoveAt("mainTabContainer_tablist_menuBtn", 500);
+							robot.mouseClick({left: true}, 500);
+							robot.mouseMoveAt("tab2_stcMi", 500);
+							robot.mouseClick({left: true}, 1000);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.is("tab1", tc.selectedChildWidget.id, "selected pane not changed");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "re-enable tab",
+						runTest: function(){
+							registry.byId("tab2").set("disabled", false);
+						}
+					},
+					{
+						name: "click enabled tab",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							robot.mouseMoveAt('mainTabContainer_tablist_tab2', 500);
+							robot.mouseClick({left: true}, 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.is("tab2", tc.selectedChildWidget.id, "selected pane changed");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "close enabled tab",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							var nChildren = tc.getChildren().length;
+							robot.mouseMoveAt(query('.dijitTabCloseButton', registry.byId("mainTabContainer_tablist_tab2").domNode)[0], 500);
+							robot.mouseClick({left: true}, 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.is(nChildren-1, tc.getChildren().length, "num children decreased");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("initially disabled tab", [
+					{
+						name: "setup",
+						runTest: function(){
+							tc = registry.byId("nomenu");
+							tc.selectChild(registry.byId("nomenu_tab2"));
+						}
+					},
+					{
+						name: "click disabled tab",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							robot.mouseMoveAt("nomenu_tablist_nomenu_tab3", 500);
+							robot.mouseClick({left: true}, 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.is("nomenu_tab2", tc.selectedChildWidget.id, "selected pane not changed");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "close disabled tab",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							var nChildren = tc.getChildren().length;
+							robot.mouseMoveAt(query('.dijitTabCloseButton', registry.byId("nomenu_tablist_nomenu_tab3").domNode)[0], 500);
+							robot.mouseClick({left: true}, 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.is(nChildren, tc.getChildren().length, "num children didn't change");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

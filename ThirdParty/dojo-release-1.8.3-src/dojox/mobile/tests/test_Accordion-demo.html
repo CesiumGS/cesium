@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Accordion</title>
+
+	<link href="../themes/common/dijit/dijit.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonBlackRightArrow16.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonWhiteDownArrow16.css" rel="stylesheet"/>
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','Accordion','TabBar','dijit.Calendar']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/Accordion",
+			"dojox/mobile/ContentPane",
+			"dojox/mobile/TabBar",
+			"dojox/mobile/ScrollableView"
+		]);
+	</script>
+
+	<style type="text/css">
+		html,body{
+			height: 100%;
+		}
+		.myPane {
+			background-image: -webkit-gradient(linear, left top, left bottom, from(#dcdcdc), to(#FFFFFF));
+			font-family: Times New Roman, Helvetica;
+			color: black;
+		}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="group1" data-dojo-type="dojox.mobile.View">
+		<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"segmentedControl", fixed:"top"'>
+			<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='moveTo:"view1"'>Fixed</li>
+			<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='moveTo:"view2", selected:true'>Multi</li>
+			<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='moveTo:"view3"'>Single</li>
+		</ul>
+
+		<div id="view1" data-dojo-type="dojox.mobile.ScrollableView">
+			<div data-dojo-type="dojox.mobile.Accordion" data-dojo-props='fixedHeight:true, roundRect:true' style="height:400px;">
+				<div data-dojo-type="dojox.mobile.ScrollableView" style="background-color:white"
+					data-dojo-props='label:"ScrollableView", height:"inherit", icon1:"mblDomButtonBlackRightArrow16", icon2:"mblDomButtonWhiteDownArrow16", propagatable:false, appBars:false'>
+					<div style="padding:10px;color:black;">
+						A<br>B<br>C<br>D<br>E<br>F<br>G<br>H<br>I<br>J<br>K<br>L<br>M<br>N<br>O<br>P<br>Q<br>R<br>S<br>T<br>U<br>V<br>W<br>X<br>Y<br>Z
+					</div>
+				</div>
+				<div data-dojo-type="dojox.mobile.ContentPane" data-dojo-props='label:"External Content", icon1:"mblDomButtonBlackRightArrow16", icon2:"mblDomButtonWhiteDownArrow16", href:"data/fragment1.html"'>
+				</div>
+				<div data-dojo-type="dojox.mobile.ContentPane" data-dojo-props='label:"RoundRectList", icon1:"mblDomButtonBlackRightArrow16", icon2:"mblDomButtonWhiteDownArrow16"'>
+					<ul data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='iconBase:"images/tab-icon-11h.png"'>
+						<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"Off"'>
+							u1space
+						</li>
+						<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"Off"'>
+							u2space
+						</li>
+						<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"Off"'>
+							Wi-Fi
+						</li>
+					</ul>
+				</div>
+				<div data-dojo-type="dojox.mobile.ContentPane" data-dojo-props='label:"Dojo", icon1:"mblDomButtonBlackRightArrow16", icon2:"mblDomButtonWhiteDownArrow16"' class="myPane">
+					<div style="padding:10px">
+						<div style="font-size: 24px">Unbeatable JavaScript Tools</div>
+						<div style="border-top: 1px dashed gray;margin: 20px"></div>
+						<img alt="" src="images/dojo-logo1.png" style="float:left;margin-right:5px">
+						<p>Dojo saves you time, delivers powerful performance, and scales with your development process. It's the toolkit experienced developers turn to for building superior desktop and mobile web experiences.</p>
+						<p>Dojo's powerful, lightweight core makes common tasks quicker and easier. Animate elements, manipulate the DOM, and query with easy CSS syntax, all without sacrificing performance.</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="view2" data-dojo-type="dojox.mobile.ScrollableView" data-dojo-props='selected:true'>
+			<div data-dojo-type="dojox.mobile.Accordion" data-dojo-props='iconBase:"images/icons16.png"'>
+				<div data-dojo-type="dojox.mobile.ScrollableView" style="background-color:white"
+					data-dojo-props='label:"ScrollableView", iconPos1:"16,16,16,16", height:"100px", propagatable:false, appBars:false'>
+					<div style="padding:10px;color:black;">
+						A<br>B<br>C<br>D<br>E<br>F<br>G<br>H<br>I<br>J<br>K<br>L<br>M<br>N<br>O<br>P<br>Q<br>R<br>S<br>T<br>U<br>V<br>W<br>X<br>Y<br>Z
+					</div>
+				</div>
+				<div data-dojo-type="dojox.mobile.ContentPane" data-dojo-props='label:"External Content", iconPos1:"16,32,16,16", href:"data/fragment1.html"'>
+				</div>
+				<div data-dojo-type="dojox.mobile.ContentPane" data-dojo-props='label:"RoundRectList", iconPos1:"16,48,16,16"'>
+					<ul data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='iconBase:"images/tab-icon-11h.png"'>
+						<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"Off"'>
+							u1space
+						</li>
+						<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"Off"'>
+							u2space
+						</li>
+						<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"Off"'>
+							Wi-Fi
+						</li>
+					</ul>
+				</div>
+				<div data-dojo-type="dojox.mobile.ContentPane" data-dojo-props='label:"Dojo", iconPos1:"32,16,16,16"' class="myPane">
+					<div style="padding:10px">
+						<div style="font-size: 24px">Unbeatable JavaScript Tools</div>
+						<div style="border-top: 1px dashed gray;margin: 20px"></div>
+						<img alt="" src="images/dojo-logo1.png" style="float:left;margin-right:5px">
+						<p>Dojo saves you time, delivers powerful performance, and scales with your development process. It's the toolkit experienced developers turn to for building superior desktop and mobile web experiences.</p>
+						<p>Dojo's powerful, lightweight core makes common tasks quicker and easier. Animate elements, manipulate the DOM, and query with easy CSS syntax, all without sacrificing performance.</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="view3" data-dojo-type="dojox.mobile.ScrollableView">
+			<div data-dojo-type="dojox.mobile.Accordion" data-dojo-props='singleOpen:true'>
+				<div data-dojo-type="dojox.mobile.ScrollableView" style="background-color:white"
+					data-dojo-props='label:"ScrollableView", height:"100px", propagatable:false, appBars:false'>
+					<div style="padding:10px;color:black;">
+						A<br>B<br>C<br>D<br>E<br>F<br>G<br>H<br>I<br>J<br>K<br>L<br>M<br>N<br>O<br>P<br>Q<br>R<br>S<br>T<br>U<br>V<br>W<br>X<br>Y<br>Z
+					</div>
+				</div>
+				<div data-dojo-type="dojox.mobile.ContentPane" data-dojo-props='label:"External Content", href:"data/fragment1.html"'>
+				</div>
+				<div data-dojo-type="dojox.mobile.ContentPane" data-dojo-props='label:"RoundRectList"'>
+					<ul data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='iconBase:"images/tab-icon-11h.png"'>
+						<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"Off"'>
+							u1space
+						</li>
+						<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"Off"'>
+							u2space
+						</li>
+						<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"Off"'>
+							Wi-Fi
+						</li>
+					</ul>
+				</div>
+				<div data-dojo-type="dojox.mobile.ContentPane" data-dojo-props='label:"Dojo"' class="myPane">
+					<div style="padding:10px">
+						<div style="font-size: 24px">Unbeatable JavaScript Tools</div>
+						<div style="border-top: 1px dashed gray;margin: 20px"></div>
+						<img alt="" src="images/dojo-logo1.png" style="float:left;margin-right:5px">
+						<p>Dojo saves you time, delivers powerful performance, and scales with your development process. It's the toolkit experienced developers turn to for building superior desktop and mobile web experiences.</p>
+						<p>Dojo's powerful, lightweight core makes common tasks quicker and easier. Animate elements, manipulate the DOM, and query with easy CSS syntax, all without sacrificing performance.</p>
+					</div>
+				</div>
+				<div data-dojo-type="dojox.mobile.ContentPane" data-dojo-props='label:"Calendar (Lazy)", lazy:true' height="304px">
+					<div style="padding:10px">
+						<div data-dojo-type="dijit.CalendarLite"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="group2" data-dojo-type="dojox.mobile.ScrollableView">
+	  group2
+	</div>
+
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='fixed:"bottom"' style="border-bottom:none;">
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon1:"images/tab-icon-16.png", icon2:"images/tab-icon-16h.png", selected:true, moveTo:"group1"'>Group1</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon1:"images/tab-icon-15.png", icon2:"images/tab-icon-15h.png", moveTo:"group2"'>Group2</li>
+	</ul>
+</body>
+</html>

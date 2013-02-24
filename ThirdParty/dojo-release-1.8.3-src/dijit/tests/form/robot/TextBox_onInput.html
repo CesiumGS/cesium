@@ -1,0 +1,132 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot TextBox onInput Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_validate.html');
+
+				var widget;
+				doh.register("onInput", [
+					{
+						name: "focus",
+						timeout: 2000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							widget = dijit.byId('q01');
+							var handler = widget.connect(widget.focusNode, "onfocus",
+								function(){
+									widget.disconnect(handler);
+									setTimeout(d.getTestCallback(function(){
+										doh.t(true);
+									}), 0);
+								}
+							);
+							setTimeout(function(){ dijit.byId('q01').focus(); }, 1); // return d before calling onfocus
+							return d;
+						}
+					},
+					{
+						name: "space",
+						timeout: 2000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var handler = widget.connect(widget, "onInput",
+								function(e){
+									var expEvt = expected.shift() || { type: null, charOrCode: null };
+									if(expEvt.type != e.type || expEvt.charOrCode !== e.charOrCode || expEvt.ctrlKey != e.ctrlKey || expEvt.shiftKey != e.shiftKey || expEvt.altKey != e.altKey){
+										widget.disconnect(handler);
+										d.getTestCallback(function(){
+											doh.is(expEvt.type, e.type);
+											doh.is(expEvt.charOrCode, e.charOrCode);
+											doh.is(expEvt.ctrlKey, e.ctrlKey);
+											doh.is(expEvt.shiftKey, e.shiftKey);
+											doh.is(expEvt.altKey, e.altKey);
+										})(); // fail asap
+									}else if(expected.length == 0){
+										setTimeout(d.getTestCallback(function(){
+											widget.disconnect(handler);
+										}), 100); // wait to see if an extra onInput event arrives
+									}
+								}
+							);
+							var expected = [ { type: "keypress", charOrCode: ' ', ctrlKey: false, shiftKey: false, altKey: false } ];
+							doh.robot.keyPress(dojo.keys.SPACE, 100, {});
+
+							return d;
+						}
+					},
+					{
+						name: "test all",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var handler = widget.connect(widget, "onInput",
+								function(e){
+									var expEvt = expected.shift() || { type: null, charOrCode: null, ctrlKey: false, shiftKey: false, altKey: false };
+									if(expEvt.charOrCode == ' '/*the end sentinal*/ || (expEvt.type != e.type || expEvt.charOrCode !== e.charOrCode || expEvt.ctrlKey != e.ctrlKey || (expEvt.shiftKey != null && expEvt.shiftKey != e.shiftKey) || expEvt.altKey != e.altKey)){
+										widget.disconnect(handler);
+										d.getTestCallback(function(){
+											var hint = "Expected: " + 
+												dojo.toJson({ type: expEvt.type, charOrCode: expEvt.charOrCode, ctrlKey: expEvt.ctrlKey, shiftKey: expEvt.shiftKey, altKey: expEvt.altKey }) +
+												", Actual " +
+												dojo.toJson({ type: e.type, charOrCode: e.charOrCode, ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, altKey: e.altKey });
+											doh.is(expEvt.type, e.type, hint);
+											doh.is(expEvt.charOrCode, e.charOrCode, hint);
+											doh.is(expEvt.ctrlKey, e.ctrlKey, hint);
+											doh.is(expEvt.altKey, e.altKey, hint);
+											doh.t(expEvt.shiftKey == null || expEvt.shiftKey == e.shiftKey, hint);
+										})();
+									}
+								}
+							);
+							var expected = [
+								{ type: "keypress", charOrCode: 'a', ctrlKey: false, shiftKey: false, altKey: false },
+								{ type: "keypress", charOrCode: 'Z', ctrlKey: false, shiftKey: true, altKey: false },
+								{ type: "keypress", charOrCode: '0', ctrlKey: false, shiftKey: null, altKey: false },
+								{ type: "keypress", charOrCode: '_', ctrlKey: false, shiftKey: null, altKey: false },
+								{ type: "keypress", charOrCode: '-', ctrlKey: false, shiftKey: null, altKey: false },
+								{ type: "keypress", charOrCode: '+', ctrlKey: false, shiftKey: null, altKey: false },
+								{ type: "keypress", charOrCode: '=', ctrlKey: false, shiftKey: null, altKey: false },
+								{ type: "keypress", charOrCode: '/', ctrlKey: false, shiftKey: null, altKey: false },
+								{ type: "keypress", charOrCode: '*', ctrlKey: false, shiftKey: null, altKey: false },
+								{ type: "keypress", charOrCode: '.', ctrlKey: false, shiftKey: null, altKey: false },
+								{ type: "keypress", charOrCode: 'Q', ctrlKey: false, shiftKey: true, altKey: false },
+								{ type: "keydown", charOrCode: 'C', ctrlKey: true, shiftKey: false, altKey: false },
+								{ type: "keydown", charOrCode: dojo.keys.RIGHT_ARROW, ctrlKey: false, shiftKey: false, altKey: false },
+								{ type: "keydown", charOrCode: dojo.keys.ENTER, ctrlKey: true, shiftKey: false, altKey: true },
+								{ type: "keydown", charOrCode: dojo.keys.TAB, ctrlKey: false, shiftKey: false, altKey: false },
+								{ type: "keypress", charOrCode: ' ', ctrlKey: false, shiftKey: false, altKey: false }
+							];
+							doh.robot.typeKeys('aZ0_-+=/*.', 100, 2000);
+							doh.robot.keyPress('q', 200, { shift: true });
+							doh.robot.keyPress('c', 200, { ctrl: true });
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 200, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 200, { ctrl: true, shift: false, alt: true });
+							doh.robot.keyPress(dojo.keys.TAB, 200, {});
+							doh.robot.keyPress(dojo.keys.TAB, 500, { shift: true });
+							doh.robot.keyPress(dojo.keys.SPACE, 500, {});
+
+							return d;
+						}
+					}
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>_HasDropDown unit test</title>
+<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+<script type="text/javascript" src="../../dojo/dojo.js"
+		djConfig="isDebug: true, parseOnLoad: false"></script>
+<script type="text/javascript" src="_testCommon.js"></script>
+
+<script type="text/javascript">
+require([
+	"doh/runner",
+	"dojo/_base/declare", "dojo/keys", "dojo/on", "dojo/_base/window",
+	"dijit/_HasDropDown", "dijit/_WidgetBase", "dijit/_TemplatedMixin",
+	"dijit/tests/helpers", "dojo/domReady!"
+], function(doh, declare, keys, on, win,
+			_HasDropDown, _WidgetBase, _TemplatedMixin, helpers){
+
+
+	var SimplePopup = declare([_WidgetBase, _TemplatedMixin], {
+		// summary:
+		//		A trivial popup widget
+
+		label: "i'm a popup",
+		templateString: "<span>${label}</span>"
+	});
+
+	var SimpleDropDownButton = declare([_WidgetBase, _TemplatedMixin, _HasDropDown], {
+		// summary:
+		//		A button that shows a popup.
+
+		label: "show popup",
+		popupLabel: "i'm a popup",
+		orient: ["below"],
+
+		templateString: "<button>${label}</button>",
+
+		postCreate: function(){
+			this.inherited(arguments);
+			this.dropDown = new SimplePopup({
+				id: this.id + "_popup",
+				label: this.popupLabel
+			});
+		}
+	});
+
+	var NonFocusableDropDownButton = declare([_WidgetBase, _TemplatedMixin, _HasDropDown], {
+		// summary:
+		//		A non-focusable "button" that shows a popup.   Should work for mouse, although not for keyboard.
+
+		label: "show popup (non-focusable)",
+		orient: ["below"],
+
+		templateString: "<span>${label}</span>",
+
+		postCreate: function(){
+			this.inherited(arguments);
+			this.dropDown = new SimplePopup({
+				id: this.id + "_popup",
+				label: "popup from non-focusable"
+			});
+		}
+	});
+
+	// Synthetic events.   Could alternately use robot.
+	function key(node, key){
+		on.emit(node, "keydown", {
+			keyCode: key
+		});
+		on.emit(node, "keyup", {
+			keyCode: key
+		});
+	}
+	function click(node){
+		on.emit(node, "mousedown", {
+			left: true
+		});
+		on.emit(node, "mouseup", {
+			left: true
+		});
+		on.emit(node, "click", {});
+	}
+
+	doh.register("basic", [
+		function setup(){
+			dd = new SimpleDropDownButton({id: "dd"}).placeAt(win.body());
+			popup = dd.dropDown;
+			doh.t(!!popup, "popup exists");
+		},
+		function open(){
+			var d = new doh.Deferred();
+			click(dd.domNode);
+			setTimeout(d.getTestCallback(function(){
+				doh.t(helpers.isVisible(popup), "popup visible");
+			}), 10);
+			return d;
+		},
+		function close(){
+			dd.closeDropDown();
+			doh.t(helpers.isHidden(popup), "popup hidden");
+		},
+		function openBySpace(){
+			var d = new doh.Deferred();
+			key(dd.domNode, keys.SPACE);
+			setTimeout(d.getTestCallback(function(){
+				doh.t(!!popup, "popup exists");
+				doh.t(helpers.isVisible(popup), "popup visible again");
+			}), 10);
+			return d;
+		},
+		function close2(){
+			dd.closeDropDown();
+			doh.t(helpers.isHidden(popup), "popup hidden again");
+		}
+		// TODO: open by down arrow
+	]);
+
+
+	doh.register("non focusable", [
+		function setup(){
+			ndd = new NonFocusableDropDownButton({id: "ndd"}).placeAt(win.body());
+			popup = ndd.dropDown;
+			doh.t(!!popup, "popup exists");
+		},
+		function open(){
+			var d = new doh.Deferred();
+			click(ndd.domNode);
+			setTimeout(d.getTestCallback(function(){
+				doh.t(helpers.isVisible(popup), "popup visible");
+			}), 10);
+			return d;
+		},
+		function close(){
+			ndd.closeDropDown();
+		}
+	]);
+
+	doh.run();
+});
+</script>
+</head>
+<body class="claro">
+<h1>_HasDropDown Unit Test</h1>
+</body>
+</html>

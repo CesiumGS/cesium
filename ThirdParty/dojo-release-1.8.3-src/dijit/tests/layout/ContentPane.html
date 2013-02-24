@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>ContentPane DOH test</title>
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../../themes/claro/claro.css";
+		@import "../css/dijitTests.css";
+
+		.box {
+			border: 1px solid black;
+			padding: 8px;
+		}
+
+		.dijitTestWidget {
+			border: 1px dashed red;
+			background-color: #C0E209 ;
+		}
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true"></script>
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+
+		dojo.require("dojo.parser");
+		dojo.require("dojo.data.ItemFileReadStore");
+
+		dojo.require("dijit._Widget");
+		dojo.require("dijit._TemplatedMixin");
+		dojo.require("dijit._WidgetsInTemplateMixin");
+		dojo.require("dijit._Container");
+		dojo.require("dijit.layout._LayoutWidget");
+		dojo.require("dijit.layout.StackContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.Dialog");
+
+
+		dojo.ready(function(){
+			// create a do nothing, only for test widget
+			dojo.declare("TestWidget",
+				[dijit._Widget, dijit._TemplatedMixin], {
+				templateString: "<span class='dijitTestWidget'></span>"
+			});
+
+			doh.register("pane1",
+				[
+					{
+						name: "no_autoparse",
+						runTest: function(t){
+							if(dijit.byId("pane1")){
+								throw doh._AssertFailure("Page got autoparsed when it shouldn't");
+							}
+						}
+					}
+				]
+			);
+
+			var pane2, MyWidget;
+
+			doh.registerGroup("pane2",
+				[
+					{
+						name: "clear_content",
+						setUp: function(t){
+							pane2 = new dijit.layout.ContentPane({
+								preventCache: true
+							}, dojo.byId("pane2"));
+							pane2.set("content", "");// pass undefined on purpose
+						},
+						runTest: function(t){
+							doh.is(0, dijit._Widget.prototype.getChildren.call(pane2).length);
+							doh.is("", pane2.domNode.innerHTML)
+						}
+					},
+					{
+						name: "setContent_String",
+						setUp: function(){
+							pane2.set("content", "");
+						},
+						runTest: function(t){
+							var msg = "<h3>a simple html string</h3>";
+							pane2.set("content", msg);
+							doh.is(msg, pane2.domNode.innerHTML.toLowerCase());
+						}
+					},
+					{
+						name: "setContent_DOMNode",
+						setUp: function(t){
+							var div = dojo.doc.createElement('div');
+							div.innerHTML = "set('content', [DOMNode] )";
+							div.setAttribute('data-dojo-type', 'TestWidget');
+							pane2.set("content", div);
+						},
+						runTest: function(t){
+							doh.is(1, dijit._Widget.prototype.getChildren.call(pane2).length);
+						},
+						tearDown: function(t){
+							pane2.set("content", ""); // clear content for next test
+						}
+					},
+					{
+						name: "setContent_NodeList",
+						setUp: function(t){
+							var div = dojo.doc.createElement('div');
+							div.innerHTML = "<div data-dojo-type='TestWidget'>above</div>"
+											+"Testing!<div><p><span><b>Deep nested</b></span></p></div>"
+											+"<div data-dojo-type='TestWidget'>below</div>";
+
+							var list = div.childNodes;
+							pane2.set("content", div.childNodes);
+						},
+						runTest: function(t){
+							doh.is(2, dijit._Widget.prototype.getChildren.call(pane2).length);
+
+							//regular DOM check
+							var children = pane2.domNode.childNodes;
+							doh.is(4, children.length);
+							doh.is("Testing!", children[1].nodeValue);
+							doh.is("div", children[2].nodeName.toLowerCase());
+							doh.is("<p><span><b>deep nested</b></span></p>", children[2].innerHTML.toLowerCase());
+						}
+					},
+					{
+						name: "setContent_dojo_NodeList",
+						setUp: function(t){
+							pane2.set("content", "");
+						},
+						runTest: function(t){
+							var div = dojo.doc.createElement('div');
+							div.innerHTML = "<div data-dojo-type='TestWidget'>above</div>"
+										+"Testing!<div><p><span><b>Deep nested</b></span></p></div>"
+										+"<div data-dojo-type='TestWidget'>below</div>";
+
+							var list = new dojo.NodeList();
+							dojo.forEach(div.childNodes, function(n){
+								list.push(n.cloneNode(true));
+							});
+
+							pane2.set("content", list);
+							doh.is(4, pane2.domNode.childNodes.length);
+						}
+					},
+					{
+						name: "extractContent",
+						runTest: function(t){
+							var def = pane2.extractContent;
+							doh.f(def);
+
+							// test that it's actually working
+							pane2.extractContent = true;
+							pane2.set("content", '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" '
+								+'"http://www.w3.org/TR/html4/strict.dtd">'
+								+'<html><head><style>body{font-weight:bold;}</style></head>'
+								+'<body>extractContent test</body></html>');
+
+							doh.is("extractContent test", pane2.domNode.innerHTML);
+
+							// reset back to default
+							pane2.extractContent = def;
+						}
+					},
+					{
+						name: "setContent_widget", // for #12348
+						setUp: function(t){
+							// declare a widget whose template contains a non-templated widget
+							MyWidget = dojo.declare([dijit._Widget, dijit._TemplatedMixin, dijit._WidgetsInTemplateMixin], {
+								templateString: '<div><div '
+									+ 'data-dojo-type="dijit/layout/StackContainer"></div></div>'
+							});
+						},
+						runTest: function(t){
+							var w = new MyWidget(), dfd = new doh.Deferred();
+							pane2.set("content", w).then(function(){
+									dfd.callback(true);
+								}, function(e){
+									dfd.errback(e);
+							});
+							return dfd;
+						}
+					}
+				]
+			);
+
+			// Tests for doLayout parameter.
+			// When this parameter is true, the single ContentPane child is resized
+			// to match the size of the ContentPane.
+			// See also ContentPaneLayout.html.
+			var pane5;
+			doh.registerGroup("doLayout",
+				[
+					{
+						name: "simple",
+						setUp: function(t){
+							pane5 = new dijit.layout.ContentPane({
+								content:"<div data-dojo-type='dijit/layout/StackContainer'></div>"
+							}).placeAt(dojo.body());
+							pane5.startup();
+						},
+						runTest: function(t){
+							// since there's just a single child it should be marked
+							// for layout/resize along w/the ContentPane
+							doh.t(pane5._singleChild);
+						},
+						tearDown: function(t){
+							pane5.destroyRecursive();
+						}
+					},
+					{
+						name: "doLayout=false",
+						setUp: function(t){
+							pane5 = new dijit.layout.ContentPane({
+								content:
+									"<div data-dojo-type='dijit/layout/StackContainer'></div>",
+								doLayout: false
+							}).placeAt(dojo.body());
+							pane5.startup();
+						},
+						runTest: function(t){
+							// since doLayout=false shouldn't try to resize child
+							doh.f(pane5._singleChild);
+						},
+						tearDown: function(t){
+							pane5.destroyRecursive();
+						}
+					},
+					{
+						name: "mixed content",
+						setUp: function(t){
+							pane5 = new dijit.layout.ContentPane({
+								content:
+									"<span>hello world</span>" +
+									"<div data-dojo-type='dijit/layout/StackContainer'></div>"
+							}).placeAt(dojo.body());
+							pane5.startup();
+						},
+						runTest: function(t){
+							// since there's plain HTML along with the widget, ContentPane shouldn't try to adjust
+							// this size of the widget (since that would cover up the other HTML)
+							doh.f(pane5._singleChild);
+						},
+						tearDown: function(t){
+							pane5.destroyRecursive();
+						}
+					},
+					{
+						name: "two widgets",
+						setUp: function(t){
+							pane5 = new dijit.layout.ContentPane({
+								content:
+									"<div data-dojo-type='dijit/layout/StackContainer'></div>" +
+									"<div data-dojo-type='dijit/layout/StackContainer'></div>"
+							}).placeAt(dojo.body());
+							pane5.startup();
+						},
+						runTest: function(t){
+							// since there are multiple children, neither should be marked
+							// for layout/resize along w/the ContentPane
+							doh.f(pane5._singleChild);
+						},
+						tearDown: function(t){
+							pane5.destroyRecursive();
+						}
+					},
+					{
+						name: "dojo.data",
+						setUp: function(t){
+							pane5 = new dijit.layout.ContentPane({
+								content:
+									"<div data-dojo-type='dojo/data/ItemFileReadStore' data-dojo-id='dd'></div>" +
+									"<div data-dojo-type='dijit/layout/StackContainer' id='sc'></div>"
+							}).placeAt(dojo.body());
+							pane5.startup();
+						},
+						runTest: function(t){
+							// there are two children but one is invisible, so the other should be marked
+							// for layout/resize along w/the ContentPane
+							doh.t(dd, "dd exists");
+							doh.t(dijit.byId("sc"), "sc exists");
+							doh.is(dijit.byId("sc"), pane5._singleChild, "pane5._singleChild");
+						},
+						tearDown: function(t){
+							pane5.destroyRecursive();
+						}
+					},
+					{
+						name: "script tags ignored",
+						setUp: function(t){
+							pane5 = new dijit.layout.ContentPane({
+								content:
+									"<scri" + "pt></scri" + "pt>" +
+									"<div data-dojo-type='dijit/layout/StackContainer' id='sc'></div>"
+							}).placeAt(dojo.body());
+							pane5.startup();
+						},
+						runTest: function(t){
+							// script tag should be ignored, should be detected as single child
+							doh.t(pane5._singleChild, "script tag ignored, marked as single child");
+						},
+						tearDown: function(t){
+							pane5.destroyRecursive();
+						}
+					}
+				]
+			);
+
+			dojo.declare("TestContained",
+				dijit.layout._LayoutWidget, {
+					startup: function(){
+						this.inherited(arguments);
+						this._started = true;
+					},
+					resize: function(){
+						this.inherited(arguments);
+						this._resized = true;
+					}
+				}
+			);
+
+			var container;
+			doh.register("ContentPane as _Container-like widget",
+				[
+					{
+						name: "creation",
+						runTest: function(t){
+							container = new dijit.layout.ContentPane();
+							container.placeAt(dojo.body(), "last");
+							container.startup();
+							t.is(0, container.getChildren().length, "number of children before set('content', ...)");
+							container.set('content',
+								'<span>plain non-widget content</span>' +
+								'<div><span>' +
+									'<div id="zero" data-dojo-type="TestContained"></div>' +
+									'<div id="one" data-dojo-type="TestContained"></div>' +
+								'</span></div>' +
+								'<div id="two" data-dojo-type="TestContained"></div>' +
+								'<div id="three" data-dojo-type="dijit/_Widget"></div>'
+							);
+
+							// Since ContentPane is a container it should call startup
+							// on it's children
+							t.t(dijit.byId('two')._started, "started");
+
+							// Also, Layout widgets expect resize() to be
+							// called by their parent
+							t.t(dijit.byId('two')._resized, "resized");
+						}
+					},
+					{
+						name: "getChildren",
+						runTest: function(t){
+							var children = container.getChildren();
+							t.is(4, children.length, "number of children");
+							t.is("zero", children[0].id);
+							t.is("one", children[1].id);
+							t.is("two", children[2].id);
+							t.is("three", children[3].id);
+						}
+					},
+
+					{
+						name: "deferred resize",
+						runTest: function(t){
+							// This tests that startup isn't called on the child widgets
+							// until the contentpane is made visible
+
+							var hiddenCP = new dijit.layout.ContentPane({style: {display: "none"}});
+							hiddenCP.placeAt(dojo.body(), "last");
+							hiddenCP.startup();
+
+							t.is(0, hiddenCP.getChildren().length, "number of children before set('content', ...)");
+							hiddenCP.set('content',
+								'<span>plain non-widget content</span>' +
+								'<div><span>' +
+									'<div id="deferredZero" data-dojo-type="TestContained"></div>' +
+									'<div id="deferredOne" data-dojo-type="TestContained"></div>' +
+								'</span></div>' +
+								'<div id="deferredTwo" data-dojo-type="TestContained"></div>' +
+								'<div id="deferredThree" data-dojo-type="dijit/_Widget"></div>'
+							);
+
+							t.f(dijit.byId('deferredTwo')._resized, "not resized yet");
+
+							hiddenCP.set("style", {display: "block"});
+							hiddenCP._onShow();
+
+							t.t(dijit.byId('deferredTwo')._resized, "resized");
+						}
+					}
+
+/***
+					,
+					{
+						name: "addChild",
+						runTest: function(t){
+							var afterTwo = new TestContained({id: "twoPointFive"});
+							container.addChild(afterTwo, 3);
+
+							// Make sure child was added and is in order
+							var children = container.getChildren();
+							t.is(5, children.length);
+							t.is("zero", children[0].id);
+							t.is("one", children[1].id);
+							t.is("two", children[2].id);
+							t.is("twoPointFive", children[3].id);
+							t.is("three", children[4].id);
+
+							// Since ContentPane is a container it should call startup
+							// on it's children
+							t.t(afterTwo._started, "started");
+
+							// Also, Layout widgets expect resize() to be
+							// called by their parent
+							t.t(afterTwo._resized, "resized");
+						}
+					},
+					{
+						name: "removeChild",
+						runTest: function(t){
+							var children = container.getChildren();
+							t.is(5, children.length);
+							container.removeChild(dijit.byId("zero"));
+							container.removeChild(1); // should remove "two" - because zero is already removed
+							children = container.getChildren();
+							t.is(3, children.length);
+							t.is("one", children[0].id);
+							t.is("three", children[2].id);
+						}
+					}
+****/
+				]
+			);
+
+			// Test that popup widgets in a ContentPane are created and deleted correctly
+			doh.register("popup test", [
+				function create(){
+					dojo.parser.parse(dojo.byId("popupTest"));
+					doh.t(dijit.byId("popupPane"), "popup ContentPane created");
+					doh.t(dijit.byId("dialog"), "dialog created");
+					doh.is(dojo.body(), dijit.byId("dialog").domNode.parentNode, "dialog child of <body>");
+				},
+				function destroy(){
+					dijit.byId("popupPane").destroyRecursive();
+					doh.f(dijit.byId("popupPane"), "popup ContentPane destroyed");
+					doh.f(dijit.byId("dialog"), "dialog widget destroyed");
+					doh.f(dojo.byId("dialog"), "dialog DOMNode gone too");
+				}
+			]);
+
+			// Test that startup() on child widgets and plain JS objects is called at the correct time
+
+			var nwStartupCalls = 0, nwDestroyCalls = 0;
+			dojo.declare("NonWidget", null, {
+				// summary: doesn't extend _Widget, used to test that startup() is still called
+				startup: function(){
+					if(!this._started){
+						nwStartupCalls++;
+						this._started = true;
+					}
+				},
+				destroyRecursive: function(){
+					nwDestroyCalls++;
+				}
+			});
+
+			doh.register("startup", [
+				function startupAfter(){
+					var cp1 = new dijit.layout.ContentPane({
+						content: "<div id='startup-c1' data-dojo-type='TestContained'></div>"
+					}).placeAt(dojo.body());
+					
+					var child = dijit.byId("startup-c1");
+					doh.t(child, "child widget created");
+					doh.f(child._started, "child widget not started yet");
+					
+					cp1.startup();
+					
+					doh.t(child._started, "starting ContentPane starts child widget");
+				},
+				function startupBefore(){
+					var cp2 = new dijit.layout.ContentPane({}).placeAt(dojo.body());
+					cp2.startup();
+					
+					cp2.set("content", "<div id='startup-c2' data-dojo-type='TestContained'></div>");
+					var child = dijit.byId("startup-c2");
+					doh.t(child, "child widget created");
+					doh.t(child._started, "child widget started");
+				}
+			]);
+
+			// Tests for when ContentPane contains objects not descended from _WidgetBase,
+			// like dojo.Dnd.Source
+			doh.register("non widget", [
+				function startupAndDestroy(){
+					// even non-widgets inside of ContentPane (like dojo.dnd.Source) should have
+					// startup called on them
+					dojo.parser.parse(dojo.byId("nonWidgetTest"));
+					doh.is(1, nwStartupCalls, "startup() on non-widgets called on parse");
+
+					nwp.set("content", "<div><div data-dojo-type='NonWidget' data-dojo-id='nw2'></div></div>");
+					doh.is(2, nwStartupCalls, "startup() called on non-widgets via set(content, ...)");
+					doh.is(1, nwDestroyCalls, "resetting the ContentPane content destroyed the old non-widget content");
+
+					// And also check that destroying ContentPane destroys the non-widget
+					nwp.destroyRecursive();
+					doh.is(2, nwDestroyCalls, "destroying ContentPane destroyed NonWidget content");
+				}
+			]);
+
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro">
+	<h2>dijit.layout.ContentPane DOH test</h2>
+	<h3>Test designed to run on localhost (minimize impact from network latency)</h3>
+
+	<h4>This should NOT be parsed automatically</h4>
+	<div id="pane1" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='"class":"box"'>
+		<div data-dojo-type='TestWidget'>If this has a different background and a red border, the page parsed when it shouldn't</div>
+	</div>
+	<br/><h3>Testing ContentPane</h3>
+	<div id='pane2' class='box'>
+		Even though the entire page isn't scanned for widgets,
+		any sub widgets of a ContentPane will be created when a ContentPane is created<br/>
+		<span id="2_zero" data-dojo-type='TestWidget'>This should have a backgroundcolor and a border</span>
+		<div id="2_one" data-dojo-type="dijit/_Widget"></div>
+		<div id="2_two" data-dojo-type="dijit/_Widget"></div>
+		<div id="2_three" data-dojo-type="dijit/_Widget"></div>
+	</div>
+	<br/><br/>
+
+	<!-- for container tests -->
+	<div id="container" data-dojo-type="dijit/layout/ContentPane">
+		<div id="zero" data-dojo-type="TestContained"></div>
+		<div id="one" data-dojo-type="TestContained"></div>
+		<div id="two" data-dojo-type="TestContained"></div>
+		<div id="three" data-dojo-type="dijit/_Widget"></div>
+	</div>
+	<div id="outside" data-dojo-type="dijit/_Widget"></div>
+	<div id="outsideCont" data-dojo-type="TestContained"></div>
+
+	<!-- for testing popup widgets inside of a content pane -->
+	<div id="popupTest">
+		<div id="popupPane" data-dojo-type="dijit/layout/ContentPane">
+			<div id="dialog" data-dojo-type="dijit/Dialog">
+				hello world
+			</div>
+		</div>
+	</div>
+
+	<!-- for testing non-widgets inside of a content pane -->
+	<div id="nonWidgetTest">
+		<div id="nonWidgetPane" data-dojo-type="dijit/layout/ContentPane" data-dojo-id="nwp">
+			<div data-dojo-type="NonWidget" data-dojo-id="nw1"></div>
+		</div>
+	</div>
+
+</body>
+</html>

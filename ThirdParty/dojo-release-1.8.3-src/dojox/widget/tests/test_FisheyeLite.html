@@ -1,0 +1,333 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+	<title>A responsive Fisheye-like FisheyeLite widget | The Dojo Toolkit</title>
+	<style type="text/css">
+
+	    body, html { margin:0; padding:0; width:100%;
+			font-family:Arial,sans-serif;
+		}
+		a { letter-spacing:0.1em; }
+		#list {
+			position:absolute; left:0px; cursor:pointer;
+		}
+		#container { margin:0 auto; width:400px; }
+		#list ul {
+			width:175px;
+			list-style-type:none;
+		}
+		.fisheyeTarget {
+			font-weight:bold;
+			font-size:19px;
+		}
+		#container li {
+			text-align:right;
+			padding-bottom:12px;
+		}
+		.ilk {
+			border-top:1px solid #999;
+			color:#666;
+			font:14px Arial,sans-serif;
+		}
+		#inlineList li {
+			margin-top:20px;
+			margin-bottom:20px;
+			padding:20px;
+			border:2px solid #ededed;
+			display:inline;
+			background:#fff;
+		}
+		
+		#lineHeightTest {
+			text-align:center;
+			position:relative;
+			overflow:visible;
+		}
+		span.line {
+			margin:10px;
+			padding:3px;
+			line-height:22px;
+			font:10px Arial,sans-serif;
+			display:block;
+		}
+		.imgBounce {
+			padding:0;
+			width:35px; height:35px;
+			vertical-align:middle;
+			position:relative;
+			top:0;
+		}
+	</style>
+	<script type="text/javascript">
+		var djConfig = { isDebug:true, parseOnLoad:true };
+	</script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async:true"></script>
+	<script type="text/javascript">
+        require([
+            "dijit/registry",
+            "dojox/widget/FisheyeLite",
+            "dojo/parser",
+            "dojo/query",
+            "dojo/fx/easing",
+            "dojo/on",
+            "dojo/_base/Deferred",
+            "dojo/domReady!"
+        ], function(registry, FisheyeLite, parser, query, easing, on, Deferred){
+
+    		var beenDestroyed = false;
+    		var hasInit = false;
+    		var init = function(e){
+			
+    			if(e && !beenDestroyed){ return; }
+    			e && e.preventDefault();
+			
+    			// turn li's in this page into fisheye items, presumtiously:	
+    			query("li.bounce").instantiate(dojox.widget.FisheyeLite,{});
+
+    			var l = query("span.line")
+    				.instantiate(dojox.widget.FisheyeLite,{
+    				// make a widget from each of the lines in the lineHeightTest
+    					properties: {
+    						fontSize:1.75
+    					},
+    					easeOut: easing.backInOut,
+    					durationOut: 500
+    				});
+				
+    			if(!hasInit){
+    				on(l, "click",function(e){
+    				// you can still access the onclick of the real node
+    					alert(e.target.innerHTML);
+    				});
+    			}
+
+    			var lm = query("a").instantiate(dojox.widget.FisheyeLite,{
+    				properties:{
+    					fontSize:1.15,
+    					letterSpacing:2.85
+    				}
+    			});
+    			if(!hasInit){
+    			// stop anchors from doing _anything_	
+    				on(lm, "click", function(){
+    				  //TODO: stop event  
+    				});
+    			}
+
+    			query(".imgBounce").instantiate(dojox.widget.FisheyeLite,{
+    				// all the images need a width and a height (well, not need,
+    				// but to scale you do)				
+    				properties: {
+    					height:1.75,
+    					width:1.75
+    				}
+    			});
+			
+    			// show the new non-numeric multiplier version of fisheyelite
+    			query(".advancedProps").instantiate(dojox.widget.FisheyeLite,{
+    				properties:{
+    					height: {
+    						end: 100
+    					}
+    				}
+    			})
+			
+    			// 
+    			var vv = 0;
+    			var r = registry.byClass("dojox.widget.FisheyeLite")._hash;
+    			for(var l in r){
+    				vv++;
+    			}
+			
+    			// a few in markup, mostly from the query()'ies:
+    			console.log("fisheyes on this page: ", vv);
+				
+    			beenDestroyed = false;
+    			hasInit = true;
+    		};
+		
+    		var destroyAll = function(e){
+    			e && e.preventDefault();
+    			if(confirm("really?")){
+    				dijit.registry.filter(function(w){
+    					return w && w.declaredClass == "dojox.widget.FisheyeLite";
+    				}).forEach(function(w){
+    					w.destroy(true);
+    				});
+    				beenDestroyed = true;
+    			}
+    		};
+    		
+    		Deferred.when(parser.parse(), function(){
+			    init();
+    			query("#restore").on("click",init);
+    			query("#destroy").on("click",destroyAll);
+			});
+		});
+	</script>
+    </head>
+    <body class="tundra">
+		<div id="container">
+			
+			<div id="list">
+				<ul>
+					<li class="bounce"><span class="fisheyeTarget">Dojo</span><br><div class="ilk">the javascript toolkit</div></li>
+					<li class="bounce"><span class="fisheyeTarget">Dijit</span><br><div class="ilk">UI y mas - themeable, plugable.</div></li>
+					<li class="bounce"><span class="fisheyeTarget">DojoX</span><br><div class="ilk">extensions, experimentals, extras. innovation.</div></li>
+					<li class="bounce"><span class="fisheyeTarget">Dojo</span><br><div class="ilk">the javascript toolkit</div></li>
+					<li class="bounce"><span class="fisheyeTarget">Dijit</span><br><div class="ilk">UI y mas - themeable, plugable.</div></li>
+					<li class="bounce"><span class="fisheyeTarget">DojoX</span><br><div class="ilk">extensions, experimentals, extras. innovation.</div></li>
+					<li class="bounce"><span class="fisheyeTarget">Dojo</span><br><div class="ilk">the javascript toolkit</div></li>
+					<li class="bounce"><span class="fisheyeTarget">Dijit</span><br><div class="ilk">UI y mas - themeable, plugable.</div></li>
+				</ul>
+			</div>
+		
+			<h2>A paragraph: (with links)</h2>
+		
+				<p>
+				Lorem ipsum dolor sit amet, <a href="#">consectetuer</a> adipiscing elit. Aenean
+				semper sagittis velit. Cras in mi. Duis porta mauris ut ligula.
+				Proin porta rutrum lacus. <a href="#">Etiam</a> consequat scelerisque quam. Nulla
+				facilisi.  Maecenas luctus venenatis nulla. In sit amet dui non mi
+				semper iaculis.  Sed molestie tortor at ipsum. <a href="#">Morbi</a> dictum rutrum
+				magna. Sed vitae risus.
+				</p>
+
+			<h3>read the fine print:</h3>
+				
+				<p>
+					<input type="button" onclick="dijit.byId('l1').show()" value="show first" />
+					<input type="button" onclick="dijit.byId('l1').hide()" value="hide first" />
+					<input type="button" onclick="dijit.byId('l3').show()" value="show third" />
+					<input type="button" onclick="dijit.byId('l3').hide()" value="hide third" />					
+				</p>
+
+				<div id="lineHeightTest">
+					<span id="l1" class="line">Aliquam vitae enim. Duis scelerisque metus auctor est venenatis</span>
+					<span class="line">imperdiet. Fusce dignissim porta augue. Nulla vestibulum. Integer</span>
+					<span id="l3" class="line">lorem nunc, ullamcorper a, commodo ac, malesuada sed, dolor. Aenean</span>
+					<span class="line">id mi in massa bibendum suscipit. Integer eros. Nullam suscipit</span>
+					<span id="l5" class="line">mauris. In pellentesque. Mauris ipsum est, pharetra semper,</span>
+					<span class="line">pharetra in, viverra quis, tellus. Etiam purus.</span>
+				</div>
+
+				<div>
+					<div data-dojo-type="dojox/widget/FisheyeLite" data-dojo-props="fontSize:1.25" style="padding:3px"
+					><a id='destroy' href="#" class="fisheyeTarget">test destroy()</a></div>
+
+					<div data-dojo-type="dojox/widget/FisheyeLite" data-dojo-props="fontSize:1.25" style="padding:3px"
+					><a id='restore' href="#" class="fisheyeTarget">restore</a></div>
+				</div>
+
+				<p>
+				Lorem ipsum dolor sit amet, <a href="#">consectetuer</a> adipiscing elit. Aenean
+				semper sagittis velit. Cras in mi. Duis porta mauris ut ligula.
+				Proin porta rutrum lacus. <a href="#">Etiam</a> consequat scelerisque quam. Nulla
+				facilisi.  Maecenas luctus venenatis nulla. In sit amet dui non mi
+				semper iaculis.  Sed molestie tortor at ipsum. <a href="#">Morbi</a> dictum rutrum
+				magna. Sed vitae risus.
+				</p>
+				<p>
+				Lorem ipsum dolor sit amet, <a href="#">consectetuer</a> adipiscing elit. Aenean
+				semper sagittis velit. Cras in mi. Duis porta mauris ut ligula.
+				Proin porta rutrum lacus. <a href="#">Etiam</a> consequat scelerisque quam. Nulla
+				facilisi.  Maecenas luctus venenatis nulla. In sit amet dui non mi
+				semper iaculis.  Sed molestie tortor at ipsum. <a href="#">Morbi</a> dictum rutrum
+				magna. Sed vitae risus.
+				</p>
+				<p>
+				Lorem ipsum dolor sit amet, <a href="#">consectetuer</a> adipiscing elit. Aenean
+				semper sagittis velit. Cras in mi. Duis porta mauris ut ligula.
+				Proin porta rutrum lacus. <a href="#">Etiam</a> consequat scelerisque quam. Nulla
+				facilisi.  Maecenas luctus venenatis nulla. In sit amet dui non mi
+				semper iaculis.  Sed molestie tortor at ipsum. <a href="#">Morbi</a> dictum rutrum
+				magna. Sed vitae risus.
+				</p>
+				<p>
+				Lorem ipsum dolor sit amet, <a href="#">consectetuer</a> adipiscing elit. Aenean
+				semper sagittis velit. Cras in mi. Duis porta mauris ut ligula.
+				Proin porta rutrum lacus. <a href="#">Etiam</a> consequat scelerisque quam. Nulla
+				facilisi.  Maecenas luctus venenatis nulla. In sit amet dui non mi
+				semper iaculis.  Sed molestie tortor at ipsum. 
+				</p>
+				
+				<h3>another list: (no target, or ilk)</h3>
+				<div style="height:125px; position:relative;">
+					<div style="position:absolute; width:600px;">
+						<ul id="inlineList">
+							<li class="bounce">Foo</li>
+							<li class="bounce">Bar</li>
+							<li class="bounce">Baz</li>
+							<li class="bounce">Bam</li>
+						</ul>	
+					</div>
+				</div>
+				
+				<h3>oh right, Images:</h3>
+				
+				<div style="position:relative; height:60px;"><div style="position:absolute">
+					<img src="images/fisheye_1.png" class="imgBounce" onClick="alert('clicked img 1')"/>
+					<img src="images/fisheye_2.png" class="imgBounce" onClick="alert('clicked img 2')"/>
+					<img src="images/fisheye_3.png" class="imgBounce" onClick="alert('clicked img 3')"/>
+					<img src="images/fisheye_4.png" class="imgBounce" />
+					<img src="images/fisheye_3.png" class="imgBounce" onClick="alert('clicked img 3')"/>
+					<img src="images/fisheye_2.png" class="imgBounce" onClick="alert('clicked img 2')"/>
+					<img src="images/fisheye_1.png" class="imgBounce" onClick="alert('clicked img 1')"/>
+				</div></div>
+				
+				<div style="position:relative; float:left; width:1px; left:-75px; top:0;">
+					<img src="images/fisheye_1.png" class="imgBounce" onClick="alert('clicked img 1')"/><br>
+					<img src="images/fisheye_2.png" class="imgBounce" onClick="alert('clicked img 2')"/><br>
+					<img src="images/fisheye_3.png" class="imgBounce" onClick="alert('clicked img 3')"/><br>
+					<img src="images/fisheye_4.png" class="imgBounce" /><br>
+					<img src="images/fisheye_3.png" class="imgBounce" onClick="alert('clicked img 3')"/><br>
+					<img src="images/fisheye_2.png" class="imgBounce" onClick="alert('clicked img 2')"/><br>
+					<img src="images/fisheye_1.png" class="imgBounce" onClick="alert('clicked img 1')"/>
+				</div>
+				
+				<p data-dojo-type="dojox/widget/FisheyeLite"
+				   data-dojo-props="padding:1.55"
+				   style="padding:12px; text-align:justify;">
+					
+				Aliquam vitae enim. Duis scelerisque metus auctor est venenatis
+				imperdiet. Fusce dignissim porta augue. Nulla vestibulum. Integer
+				lorem nunc, ullamcorper a, commodo ac, malesuada sed, dolor. Aenean
+				id mi in massa bibendum suscipit. Integer eros. Nullam suscipit
+				mauris. In pellentesque. Mauris ipsum est, pharetra semper,
+				pharetra in, viverra quis, tellus. Etiam purus. Quisque egestas,
+				tortor ac cursus lacinia, felis leo adipiscing nisi, et rhoncus
+				elit dolor eget eros. Fusce ut quam. Suspendisse eleifend leo vitae
+				ligula. Nulla facilisi. Nulla rutrum, erat vitae lacinia dictum,
+				pede purus imperdiet lacus, ut semper velit ante id metus. Praesent
+				massa dolor, porttitor sed, pulvinar in, consequat ut, leo. Nullam
+				nec est. Aenean id risus blandit tortor pharetra congue.
+				Suspendisse pulvinar.
+				</p>
+				
+				<p class="advancedProps" style="height:25px; background:#000">Lorem</p>
+				<p class="advancedPropsToo" data-dojo-type="dojox/widget/FisheyeLite"
+					style="height:25px; background:#000"
+					data-dojo-props="height:{end:150}, /*easeIn: fx._defaultEasing, easeOut: fx._defaultEasing,*/ durationOut: 175"
+				>Lorem</p>
+				
+				<p>the end</p>
+				
+				<p>Aliquam vitae enim. Duis scelerisque metus auctor est venenatis
+				imperdiet. Fusce dignissim porta augue. Nulla vestibulum. Integer
+				lorem nunc, ullamcorper a, commodo ac, malesuada sed, dolor. Aenean
+				id mi in massa bibendum suscipit. Integer eros. Nullam suscipit
+				mauris. In pellentesque. Mauris ipsum est, pharetra semper,
+				pharetra in, viverra quis, tellus. Etiam purus. Quisque egestas,
+				tortor ac cursus lacinia, felis leo adipiscing nisi, et rhoncus
+				elit dolor eget eros. Fusce ut quam. Suspendisse eleifend leo vitae
+				ligula. Nulla facilisi. Nulla rutrum, erat vitae lacinia dictum,
+				pede purus imperdiet lacus, ut semper velit ante id metus. Praesent
+				massa dolor, porttitor sed, pulvinar in, consequat ut, leo. Nullam
+				nec est. Aenean id risus blandit tortor pharetra congue.
+				Suspendisse pulvinar.
+				</p>
+				
+				
+		</div>	
+    </body>
+</html>

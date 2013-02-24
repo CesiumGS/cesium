@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Radio Button Tests</title>
+<script type="text/javascript" src="../../deviceTheme.js"></script>
+<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+<script language="JavaScript" type="text/javascript">
+require([
+	"dojo/dom-construct", // dojo.place
+	"dojo/dom-class", // dojo.hasClass
+	"dojo/ready", // dojo.ready
+	"dijit/registry",  // dijit.byId
+	"doh/runner",	//doh functions
+	"dojox/mobile/RadioButton",
+	"dojox/mobile",				// This is a mobile app.
+	"dojox/mobile/View",		// This mobile app uses mobile view
+	"dojox/mobile/compat",		// This mobile app supports running on desktop browsers
+	"dojox/mobile/parser"		// This mobile app uses declarative programming with fast mobile parser
+], function(domConst, domClass, ready, registry, runner, RadioButton){
+
+	function _createRadioButtonDeclaratively(buttonId) {
+		return registry.byId(buttonId);
+	};
+	
+	function _createRadioButtonProgrammatically(buttonValue, buttonName, placeHolderId){
+		var button = new RadioButton({value:buttonValue, name:buttonName});
+		runner.assertNotEqual(null, button);
+		domConst.place(button.domNode, placeHolderId, "replace");
+		button.startup();
+		return button;
+	};
+	
+	function _createRadioButtonProgrammaticallyWithSourceNodeReference(buttonValue, buttonName, buttonId){
+		return new RadioButton({value:buttonValue, name:buttonName}, buttonId);
+	};
+
+	function _assertCorrectRadioButton(button1, button2, button3){
+		runner.assertNotEqual(null, button1, button1.toString());
+		runner.assertNotEqual(null, button2, button2.toString());
+		runner.assertNotEqual(null, button3, button3.toString());
+		
+		runner.assertFalse(button1.checked, button1.toString());
+		runner.assertFalse(button2.checked, button2.toString());
+		runner.assertFalse(button3.checked, button3.toString());
+		
+		button1.set("checked", true);
+		runner.assertTrue(button1.checked, button1.toString());
+		runner.assertFalse(button2.checked, button2.toString());
+		runner.assertFalse(button3.checked, button3.toString());
+		
+		button2.set("checked", true);
+		runner.assertFalse(button1.checked, button1.toString());
+		runner.assertTrue(button2.checked, button2.toString());
+		runner.assertFalse(button3.checked, button3.toString());
+	};
+	
+	function _showView2(){
+		var view1 = registry.byId("view1");
+		view1.performTransition("view2", 1, "none");
+	};
+
+	ready(function(){
+		runner.register("dojox.mobile.test.doh.ButtonTests", [
+			function testInView1(){
+				var button11 = _createRadioButtonDeclaratively("view1-button11");
+				var button12 = _createRadioButtonDeclaratively("view1-button12");
+				var button13 = _createRadioButtonDeclaratively("view1-button13");
+				
+				var button21 = _createRadioButtonProgrammatically("1", "view1-button2", "view1-button21");
+				var button22 = _createRadioButtonProgrammatically("2", "view1-button2", "view1-button22");
+				var button23 = _createRadioButtonProgrammatically("3", "view1-button2", "view1-button23");
+
+				var button31 = _createRadioButtonProgrammaticallyWithSourceNodeReference("1", "view1-button3", "view1-button31");
+				var button32 = _createRadioButtonProgrammaticallyWithSourceNodeReference("2", "view1-button3", "view1-button32");
+				var button33 = _createRadioButtonProgrammaticallyWithSourceNodeReference("3", "view1-button3", "view1-button33");
+		
+				_assertCorrectRadioButton(button11, button12, button13);
+				_assertCorrectRadioButton(button21, button22, button23);
+				_assertCorrectRadioButton(button31, button32, button33);
+			},
+			function testInView2(){
+				var button11 = _createRadioButtonDeclaratively("view2-button11");
+				var button12 = _createRadioButtonDeclaratively("view2-button12");
+				var button13 = _createRadioButtonDeclaratively("view2-button13");
+				
+				var button21 = _createRadioButtonProgrammatically("1", "view2-button2", "view2-button21");
+				var button22 = _createRadioButtonProgrammatically("2", "view2-button2", "view2-button22");
+				var button23 = _createRadioButtonProgrammatically("3", "view2-button2", "view2-button23");
+
+				var button31 = _createRadioButtonProgrammaticallyWithSourceNodeReference("1", "view2-button3", "view2-button31");
+				var button32 = _createRadioButtonProgrammaticallyWithSourceNodeReference("2", "view2-button3", "view2-button32");
+				var button33 = _createRadioButtonProgrammaticallyWithSourceNodeReference("3", "view2-button3", "view2-button33");
+				
+				_showView2();
+				
+				_assertCorrectRadioButton(button11, button12, button13);
+				_assertCorrectRadioButton(button21, button22, button23);
+				_assertCorrectRadioButton(button31, button32, button33);
+			}
+		]);
+		runner.run();
+	});
+})
+</script>
+</head>
+<body>
+	<div id="view1" data-dojo-type="dojox.mobile.View" selected="true">
+		<h1>View 1</h1>
+		<input id="view1-button11" type="radio" name="view1-button1" value="1" data-dojo-type="dojox.mobile.RadioButton">
+		<input id="view1-button12" type="radio" name="view1-button1" value="2" data-dojo-type="dojox.mobile.RadioButton">
+		<input id="view1-button13" type="radio" name="view1-button1" value="3" data-dojo-type="dojox.mobile.RadioButton">
+		<br>
+		<div id="view1-button21"></div>
+		<div id="view1-button22"></div>
+		<div id="view1-button23"></div>
+		<br>
+		<input id="view1-button31" type="radio">
+		<input id="view1-button32" type="radio">
+		<input id="view1-button33" type="radio">
+	</div>
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<h1>View 2</h1>
+		<input id="view2-button11" type="radio" name="view2-button1" value="1" data-dojo-type="dojox.mobile.RadioButton">
+		<input id="view2-button12" type="radio" name="view2-button1" value="2" data-dojo-type="dojox.mobile.RadioButton">
+		<input id="view2-button13" type="radio" name="view2-button1" value="3" data-dojo-type="dojox.mobile.RadioButton">
+		<br>
+		<div id="view2-button21"></div>
+		<div id="view2-button22"></div>
+		<div id="view2-button23"></div>
+		<br>
+		<input id="view2-button31" type="radio">
+		<input id="view2-button32" type="radio">
+		<input id="view2-button33" type="radio">
+	</div>
+</body>
+</html>

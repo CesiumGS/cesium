@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Button</title>
+		<link href="../../themes/iphone/iphone.css" rel="stylesheet"/>
+		<style>
+		.redButton {
+			border-color: #cc3333;
+			background-image: url(../images/red-button-bg.png);
+			background: -webkit-gradient(linear, left top, left bottom, from(#D3656D), to(#BC1320), color-stop(0.5, #C9404B), color-stop(0.5, #BC1421));
+		}
+		.redButtonSelected {
+			background-image: url(../images/red-button-sel-bg.png);
+			background: -webkit-gradient(linear, left top, left bottom, from(#AF333C), to(#880E17), color-stop(0.5, #952B33), color-stop(0.5, #870F18));
+		}
+		</style>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			//dojo.require("dojo.parser"); // Use the lightweight parser.
+			dojo.require("dojox.mobile.parser");
+			dojo.require("dojox.mobile");
+			dojo.require("dojox.mobile.Button");
+			dojo.requireIf(!dojo.isWebKit, "dojox.mobile.compat");
+
+	        dojo.require("doh.runner");
+
+			dojo.addOnLoad(function(){
+				var demoWidget = new dojox.mobile.Button({"class":"mblBlueButton", style:"width:120px", label:"Default Button"});
+				dojo.doc.body.appendChild(demoWidget.domNode);
+
+				var child = dojo.create("P", null, dojo.doc.body);
+
+				demoWidget = new dojox.mobile.Button({"class":"redButton", style:"width:120px", label:"Custom Button"});
+				dojo.doc.body.appendChild(demoWidget.domNode);
+
+				doh.register("dojox.mobile.test.doh.Button", [
+					function test_Button_Verification(){
+						var demoWidget = dijit.byId("dojox_mobile_Button_0");
+						doh.assertEqual('mblButton mblBlueButton', demoWidget.domNode.className);
+						doh.assertEqual('Default Button', demoWidget.domNode.childNodes[0].nodeValue);
+						demoWidget = dijit.byId("dojox_mobile_Button_1");
+						doh.assertEqual('mblButton redButton', demoWidget.domNode.className);
+						doh.assertEqual('Custom Button', demoWidget.domNode.childNodes[0].nodeValue);
+					}
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+	<body style="padding: 20px;visibility:visible">
+	</body>
+</html>

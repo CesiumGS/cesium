@@ -1,0 +1,294 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Test Hindi/Arabic numerals</title>
+
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true, extraLocale: ['ar-eg','hi-in']"></script>
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit.form.NumberTextBox");
+			dojo.require("dijit.form.CurrencyTextBox");
+			dojo.require("dijit.form.DateTextBox");
+			dojo.require("dijit.form.ValidationTextBox");
+			dojo.require("dojo.date.locale");
+			dojo.require("dojo.date.stamp");
+			dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+			dojo.require("doh.runner");
+		</script>
+		<script src="test_i18n.js"></script>
+		<script type="text/javascript">
+			dojo.ready(function(){
+				doh.register("parse", function(){
+					dojo.parser.parse();
+				});
+				doh.register("t", getAllTestCases());
+				doh.run();
+			});
+		</script>
+
+		<script>
+			function gen4DateFormat(testCases, language, locale, date, shortVal, shortCmt, mediumVal, mediumCmt, longVal, longCmt, fullVal, fullCmt){
+				testCases.push({
+				  attrs: {constraints: language.indexOf("hi") == 0 ? "{formatLength:'short', localeDigit: true}" : "{formatLength:'short'}", lang: language},
+				  desc: "Locale: <b>" + locale + "</b> Format: <b>Short</b>",
+				  value: date,
+				  expValue: shortVal,
+				  comment: shortCmt
+				});
+				testCases.push({
+				  attrs: {constraints: language.indexOf("hi") == 0 ? "{formatLength:'medium', localeDigit: true}" : "{formatLength:'medium'}", lang: language},
+				  desc: "Locale: <b>" + locale + "</b> Format: <b>Medium</b>",
+				  value: date,
+				  expValue: mediumVal,
+				  comment: mediumCmt
+				});
+				testCases.push({
+				  attrs: {constraints: language.indexOf("hi") == 0 ? "{formatLength:'long', localeDigit: true}" : "{formatLength:'long'}", lang: language},
+				  desc: "Locale: <b>" + locale + "</b> Format: <b>Long</b>",
+				  value: date,
+				  expValue: longVal,
+				  comment: longCmt
+				});
+				testCases.push({
+				  attrs: {constraints: language.indexOf("hi") == 0 ? "{formatLength:'full', localeDigit: true}" : "{formatLength:'full'}", lang: language},
+				  desc: "Locale: <b>" + locale + "</b> Format: <b>Full</b>",
+				  value: date,
+				  expValue: fullVal,
+				  comment: fullCmt
+				});
+			}
+		</script>
+		<style type="text/css">
+			@import "../../themes/claro/document.css";
+			@import "../../themes/claro/claro.css";
+			@import "../css/dijitTests.css";
+
+			.title {
+				background-color:#ddd;
+			}
+
+			.hint {
+				background-color:#eee;
+			}
+
+			.testExample {
+				background-color:#fbfbfb;
+				padding:1em;
+				margin-bottom:1em;
+				border:1px solid #bfbfbf;
+			}
+
+			.dojoTitlePaneLabel label {
+				font-weight:bold;
+			}
+
+			td {white-space:nowrap}
+		</style>
+	</head>
+
+	<body class="claro">
+		<h1 class="testTitle">Dijit TextBox Globalization Test for Number</h1>
+
+<!--		<h2 class="testTitle">Press the following button to start all test after this page is loaded.</h2>
+		<button id="startButton" onclick="startTest()">Start Test</button>-->
+		<p>
+			Before start this test, make sure the <b>dojo/cldr/nls</b> contains the data for "ar-eg" and "hi-in". If not, convert these CLDR data and put them there.
+		</p>
+
+		<script>
+		(function(){
+
+			genFormatTestCases("Number Format", "dijit.form.NumberTextBox", [
+				{ attrs: {lang: "ar-eg"},
+				  desc: "Locale: ar_EG",
+				  value: "12345.067",
+				  expValue: "12٬345٫067",
+				  comment: ""
+				},
+				{ attrs: {lang: "ar-eg"},
+				  desc: "Locale: ar_EG",
+				  value: "-12345.067",
+				  expValue: "12٬345٫067-",
+				  comment: ""
+				},
+
+				{ attrs: {lang: "ar-eg", constraints: "{localeDigit: true}"},
+				  desc: "Locale: ar_EG",
+				  value: "12345.067",
+				  expValue: "١٢\u066C٣٤٥\u066B٠٦٧",
+				  comment: "<a href='currency.html#cmt_2'>See #2 (currency.html).</a>"
+				},
+				{ attrs: {lang: "ar-eg", constraints: "{localeDigit: true}"},
+				  desc: "Locale: ar_EG",
+				  value: "-12345.067",
+				  expValue: "١٢\u066C٣٤٥\u066B٠٦٧-",
+				  comment: "<a href='currency.html#cmt_2'>See #2 (currency.html).</a>"
+				},
+
+				{ attrs: {lang: "hi-in", constraints: "{localeDigit: true}"},
+				  desc: "Locale: hi_IN",
+				  value: "123456789.068",
+				  expValue: "१२,३४,५६,७८९.०६८",
+				  comment: "<a href='currency.html#cmt_2'>See #2 (currency.html).</a>"
+				},
+				{ attrs: {lang: "hi-in", constraints: "{localeDigit: true}"},
+				  desc: "Locale: hi_IN",
+				  value: "-123456789.068",
+				  expValue: "-१२,३४,५६,७८९.०६८",
+				  comment: "<a href='currency.html#cmt_2'>See #2 (currency.html).</a>"
+				}
+			]);
+
+			genValidateTestCases("Number Validate", "dijit.form.NumberTextBox", [
+
+				{ attrs: {lang: "ar-eg"},
+				  desc: "Locale: ar_EG",
+				  value: 12345.067,
+				  expValue: "12٬345٫067",
+				  comment: ""
+				},
+				{ attrs: {lang: "ar-eg"},
+				  desc: "Locale: ar_EG",
+				  value: -12345.067,
+				  expValue: "12٬345٫067-",
+				  comment: ""
+				},
+
+				{ attrs: {lang: "ar-eg", constraints: "{localeDigit: true}"},
+				  desc: "Locale: ar_EG",
+				  value: 12345.067,
+				  expValue: "١٢\u066C٣٤٥\u066B٠٦٧",
+				  comment: "<a href='currency.html#cmt_2'>See #2 (currency.html).</a>"
+				},
+				{ attrs: {lang: "ar-eg", constraints: "{localeDigit: true}"},
+				  desc: "Locale: ar_EG",
+				  value: -12345.067,
+				  expValue: "١٢\u066C٣٤٥\u066B٠٦٧-",
+				  comment: "<a href='currency.html#cmt_2'>See #2 (currency.html).</a>"
+				},
+
+				{ attrs: {lang: "hi-in", constraints: "{localeDigit: true}"},
+				  desc: "Locale: hi_IN",
+				  value: 123456789.068,
+				  expValue: "१२,३४,५६,७८९.०६८",
+				  comment: "<a href='currency.html#cmt_2'>See #2 (currency.html).</a>"
+				},
+				{ attrs: {lang: "hi-in", constraints: "{localeDigit: true}"},
+				  desc: "Locale: hi_IN",
+				  value: -123456789.068,
+				  expValue: "-१२,३४,५६,७८९.०६८",
+				  comment: "<a href='currency.html#cmt_2'>See #2 (currency.html).</a>"
+				}
+			]);
+
+			genFormatTestCases("Currency Format", "dijit.form.CurrencyTextBox", [
+
+				{ attrs: {Currency: "EGP", lang: "ar-eg"},
+				  desc: "Locale: <b>ar_EG</b> Currency: <b>EGP</b>",
+				  value: "123456789.46",
+				  expValue: "&#x062C;.&#x0645;.\u200F 123&#x066C;456&#x066C;789&#x066B;46",
+				  comment: ""
+				},
+				{ attrs: {Currency: "EGP", lang: "ar-eg"},
+				  desc: "Locale: <b>ar_EG</b> Currency: <b>EGP</b>",
+				  value: "-123456789.46",
+				  expValue: "&#x062C;.&#x0645;.\u200F 123&#x066C;456&#x066C;789&#x066B;46-",
+				  comment: ""
+				},
+
+				{ attrs: {Currency: "EGP", lang: "ar-eg", constraints: "{localeDigit: true}"},
+				  desc: "Locale: <b>ar_EG</b> Currency: <b>EGP</b>",
+				  value: "123456789.46",
+				  expValue: "&#x062C;.&#x0645;.\u200F ١٢٣\u066C٤٥٦\u066C٧٨٩\u066B٤٦",
+				  comment: "<a href='#cmt_3'>See #3.</a> Failed in Firefox. <a href='#cmt_2'>See #2.</a>"
+				},
+				{ attrs: {Currency: "EGP", lang: "ar-eg", constraints: "{localeDigit: true}"},
+				  desc: "Locale: <b>ar_EG</b> Currency: <b>EGP</b>",
+				  value: "-123456789.46",
+				  expValue: "&#x062C;.&#x0645;.\u200F ١٢٣\u066C٤٥٦\u066C٧٨٩\u066B٤٦-",
+				  comment: "<a href='#cmt_3'>See #3.</a> Failed in Firefox. <a href='#cmt_2'>See #2.</a>"
+				}
+			]);
+
+			genValidateTestCases("Currency Validate", "dijit.form.CurrencyTextBox", [
+
+				{ attrs: {Currency: "EGP", lang: "ar-eg"},
+				  desc: "Locale: <b>ar_EG</b> Currency: <b>EGP</b>",
+				  value: 123456789.46,
+				  expValue: "&#x062C;.&#x0645;.\u200F 123&#x066C;456&#x066C;789&#x066B;46",
+				  comment: "Failed in Firefox. <a href='#cmt_2'>See #2.</a>"
+				},
+				{ attrs: {Currency: "EGP", lang: "ar-eg"},
+				  desc: "Locale: <b>ar_EG</b> Currency: <b>EGP</b>",
+				  value: -123456789.46,
+				  expValue: "&#x062C;.&#x0645;.\u200F 123&#x066C;456&#x066C;789&#x066B;46-",
+				  comment: "Failed in Firefox. <a href='#cmt_2'>See #2.</a>"
+				},
+
+				{ attrs: {Currency: "EGP", lang: "ar-eg", constraints: "{localeDigit: true}"},
+				  desc: "Locale: <b>ar_EG</b> Currency: <b>EGP</b>",
+				  value: 123456789.46,
+				  expValue: "&#x062C;.&#x0645;.\u200F ١٢٣\u066C٤٥٦\u066C٧٨٩\u066B٤٦",
+				  comment: "<a href='#cmt_3'>See #3.</a> Failed in Firefox. <a href='#cmt_2'>See #2.</a>"
+				},
+				{ attrs: {Currency: "EGP", lang: "ar-eg", constraints: "{localeDigit: true}"},
+				  desc: "Locale: <b>ar_EG</b> Currency: <b>EGP</b>",
+				  value: -123456789.46,
+				  expValue: "&#x062C;.&#x0645;.\u200F ١٢٣\u066C٤٥٦\u066C٧٨٩\u066B٤٦-",
+				  comment: "<a href='#cmt_3'>See #3.</a> Failed in Firefox. <a href='#cmt_2'>See #2.</a>"
+				}
+			]);
+
+			var testCases = [];
+			gen4DateFormat(testCases, "ar-eg", "ar_EG", "2005-07-31",
+				"31/7/2005", "", "31/07/2005", "", "31 &#x064A;&#x0648;&#x0644;&#x064A;&#x0648;&#x2C; 2005", "", "&#x0627;&#x0644;&#x0623;&#x062D;&#x062F;&#x2C; 31 &#x064A;&#x0648;&#x0644;&#x064A;&#x0648;&#x2C; 2005", "");
+			gen4DateFormat(testCases, "hi-in", "hi_IN", "2005-07-31",
+				"२००५-०७-३१", "<a href='currency.html#cmt_3'>See #3 (currency.html).</a>", "२००५ जुलाई ३१", "<a href='currency.html#cmt_3'>See #3 (currency.html).</a>", "२००५ जुलाई ३१", "<a href='currency.html#cmt_3'>See #3 (currency.html).</a>", "रविवार, २००५ जुलाई ३१", "<a href='currency.html#cmt_3'>See #3 (currency.html).</a>");
+			genFormatTestCases("Date Format", "dijit.form.DateTextBox", testCases);
+
+			testCases = [];
+			gen4DateFormat(testCases, "ar-eg", "ar_EG", new Date(2005, 6, 31),
+				"31/7/2005", "", "31/07/2005", "", "31 &#x064A;&#x0648;&#x0644;&#x064A;&#x0648;&#x2C; 2005", "", "&#x0627;&#x0644;&#x0623;&#x062D;&#x062F;&#x2C; 31 &#x064A;&#x0648;&#x0644;&#x064A;&#x0648;&#x2C; 2005", "");
+			gen4DateFormat(testCases, "hi-in", "hi_IN", new Date(2005, 6, 31),
+				"२००५-०७-३१", "<a href='currency.html#cmt_3'>See #3 (currency.html).</a>", "२००५ जुलाई ३१", "<a href='currency.html#cmt_3'>See #3 (currency.html).</a>", "२००५ जुलाई ३१", "<a href='currency.html#cmt_3'>See #3 (currency.html).</a>", "रविवार, २००५ जुलाई ३१", "<a href='currency.html#cmt_3'>See #3 (currency.html).</a>");
+			genValidateTestCases("Date Validate", "dijit.form.DateTextBox", testCases);
+
+		})();
+
+		</script>
+	</body>
+</html>
+
+<!--
+				testCases.push({
+				  attrs: {constraints: language.indexOf("hi") == 0 ? "{formatLength:'short', localeDigit: true}" : "{formatLength:'short'}", lang: language},
+				  desc: "Locale: <b>" + locale + "</b> Format: <b>Short</b>",
+				  value: date,
+				  expValue: short,
+				  comment: shortCmt
+				});
+				testCases.push({
+				  attrs: {constraints: language.indexOf("hi") == 0 ? "{formatLength:'medium', localeDigit: true}" : "{formatLength:'medium'}", lang: language},
+				  desc: "Locale: <b>" + locale + "</b> Format: <b>Medium</b>",
+				  value: date,
+				  expValue: medium,
+				  comment: mediumCmt
+				});
+				testCases.push({
+				  attrs: {constraints: language.indexOf("hi") == 0 ? "{formatLength:'long', localeDigit: true}" : "{formatLength:'long'}", lang: language},
+				  desc: "Locale: <b>" + locale + "</b> Format: <b>Long</b>",
+				  value: date,
+				  expValue: long,
+				  comment: longCmt
+				});
+				testCases.push({
+				  attrs: {constraints: language.indexOf("hi") == 0 ? "{formatLength:'full', localeDigit: true}" : "{formatLength:'full'}", lang: language},
+				  desc: "Locale: <b>" + locale + "</b> Format: <b>Full</b>",
+				  value: date,
+				  expValue: full,
+				  comment: fullCmt
+-->
+

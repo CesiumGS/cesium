@@ -1,0 +1,70 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Tension test.</title>
+    <style>
+        @import "../../../dojo/resources/dojo.css";
+        @import "../../../dijit/themes/tundra/tundra.css";
+        @import "../../../dijit/tests/css/dijitTests.css";
+    </style>
+    <style>
+        .dojoxLegendNode {border: 1px solid #ccc; margin: 5px 10px 5px 10px; padding: 3px}
+        .dojoxLegendText {vertical-align: text-top; padding-right: 10px}
+    </style>
+    <script src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+    <script>
+        dojo.require("dojox.charting.Chart");
+		dojo.require("dojox.charting.Theme");
+        dojo.require("dojox.charting.axis2d.Default");
+        dojo.require("dojox.charting.plot2d.Default");
+        dojo.require("dojox.charting.widget.Legend");
+        
+        var data = [{x: 1, y: 1}, {x: 1, y: 2}, {x: 2, y: 2}, {x: 2, y: 1}];
+        
+        makeObjects = function(){
+            var theme = new dojox.charting.Theme({
+                    chart:    {fill: null}, // no background
+                    plotarea: {fill: null}, // no background
+                    colors: ["red", "green", "blue", "orange"]
+                });
+            var chart = new dojox.charting.Chart("test_chart").
+                    setTheme(theme).
+                    addAxis("x", {natural: true, min: 0, max: 3}).
+                    addAxis("y", {vertical: true, natural: true, min: 0, max: 3}).
+                    addPlot("S tension", {tension: "S"}).
+                    addSeries("\"S\" tension", data, {plot: "S tension"}).
+                    addPlot("x tension", {tension: "x"}).
+                    addSeries("\"x\" tension", data, {plot: "x tension"}).
+                    addPlot("X tension", {tension: "X"}).
+                    addSeries("\"X\" tension", data, {plot: "X tension"}).
+                    addPlot("no tension", {markers: true, tension: ""}).
+                    addSeries("No Tension", data, {plot: "no tension"}).
+                    render();
+            var legend = new dojox.charting.widget.Legend({chart: chart}, "test_legend");
+        };
+        
+        dojo.addOnLoad(makeObjects);
+    </script>
+</head>
+<body class="tundra">
+    <h1>Tension test.</h1>
+    <!--<p><button onclick="makeObjects();">Go</button></p>-->
+    <div id="test_chart" style="width: 400px; height: 400px;"></div>
+    <div id="test_legend"></div>
+    <p>That's all Folks!</p>
+</body>
+</html>

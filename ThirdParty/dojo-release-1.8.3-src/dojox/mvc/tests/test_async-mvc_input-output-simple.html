@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Simple Input-Output Data Binding Example</title>
+		<style type="text/css">
+			@import "css/app-format.css";
+			@import "../../../dijit/themes/claro/claro.css";
+		</style>
+		<script type="text/javascript">
+			require = {
+				parseOnLoad: 0,
+				isDebug: 1,
+				async: 1, 
+				mvc: {debugBindings: true}
+			};
+		</script>
+		<script type="text/javascript" src="../../../dojo/dojo.js"></script>
+		<script type="text/javascript">
+			require([
+				"dojo/parser",
+				"dojo/Stateful",
+				"dijit/form/Button",
+				"dijit/form/TextBox",
+				"dojo/domReady!"
+			], function(parser, Stateful){
+				model = new Stateful({First: "John", Last: "Doe", Email: "jdoe@example.com"});
+				parser.parse();
+			});
+		</script>
+	</head>
+	<body class="claro">
+		<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<div id="wrapper">
+			<div id="header">
+				<div id="navigation"></div>
+				<div id="headerInsert">
+					<h1>Input Ouput Sync</h1>
+					<h2>Data Binding Example</h2>
+				</div>
+			</div>
+			<div id="main">
+				<div id="leftNav"></div>
+				<div id="mainContent">
+					<div class="row">
+						<label class="cell" for="firstnameInput">First:</label>
+						<input class="cell" id="firstnameInput" data-dojo-type="dijit.form.TextBox" 
+								data-dojo-props="value: at(model, 'First')">
+						<!-- Content in output below will always be in sync with value of textbox above -->
+						(first name is: <span data-dojo-type="dijit._WidgetBase" 
+								data-dojo-props="_setValueAttr: {node: 'domNode', type: 'innerText'}, 
+																value: at(model, 'First')"></span>)
+					</div>
+					<div class="row">
+						<label class="cell" for="lastnameInput">Last:</label>
+						<input class="cell" id="lastnameInput" data-dojo-type="dijit.form.TextBox" 
+								data-dojo-props="value: at(model, 'Last')">
+						(last name is: <span data-dojo-type="dijit._WidgetBase" 
+								data-dojo-props="_setValueAttr: {node: 'domNode', type: 'innerText'}, 
+																value: at(model, 'Last')"></span>)
+					</div>
+					<div class="row">
+						<label class="cell" for="emailInput">Email:</label>
+						<input class="cell" id="emailInput" data-dojo-type="dijit.form.TextBox" 
+								data-dojo-props="value: at(model, 'Email')">
+						(email is: <span data-dojo-type="dijit._WidgetBase" 
+								data-dojo-props="_setValueAttr: {node: 'domNode', type: 'innerText'}, 
+														value: at(model, 'Email')"></span>)
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

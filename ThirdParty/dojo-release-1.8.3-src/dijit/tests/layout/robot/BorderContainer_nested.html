@@ -1,0 +1,156 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot BorderContainer nested Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx",
+				"dojo/_base/array", "dojo/dom", "dojo/dom-geometry", "dojo/keys",
+				"dijit/tests/helpers", "dijit/tests/layout/robot/borderContainerTestFunctions", "dojo/domReady!"
+			], function(doh, robot, array, dom, geom, keys, helpers, bcTest){
+
+				function checkLayoutPriorityBC(){
+					bcTest.checkAbove("top bar above second top bar", "top1", "top2");
+					bcTest.checkAbove("second top bar above inner top bar", "top2", "top3");
+					bcTest.checkLeft("outer left vs. inner left", "left1", "left2");
+					bcTest.checkLeft("inner left vs. inner top", "left2", "top3");
+					bcTest.checkLeft("inner left vs. inner bottom", "left2", "bottom3");
+					bcTest.checkAbove("inner top vs. center", "top3", "center");
+					bcTest.checkAbove("center vs. inner bottom", "center", "bottom3");
+					bcTest.checkLeft("inner right vs. inner top", "top3", "right2");
+					bcTest.checkLeft("inner right vs. center", "center", "right2");
+					bcTest.checkAbove("inner bottom bar above second bottom bar", "bottom3", "bottom2");
+					bcTest.checkAbove("second bottom bar above bottom bar", "bottom2", "bottom1");
+				}
+
+				robot.initRobot('../test_BorderContainer_nested.html');
+
+				var registry;
+
+				doh.register("setup", [
+					function setup(){
+						// get pointers to singletons loaded on test page
+						registry = robot.window.require("dijit/registry");
+					}
+				]);
+
+				doh.register("initial layout", [
+					function nestedBC(){
+						bcTest.checkBCpanes(registry.byId("nbc"));
+						doh.t(helpers.isVisible(registry.byId("nbc")));
+						bcTest.checkInside("nbc", "tc");
+					},
+					function layoutPriorityBC(){
+						registry.byId("tc").selectChild(registry.byId("pbc"));	
+						doh.t(helpers.isVisible(registry.byId("pbc")), "second pane visible");
+
+						// Check layout of BorderContainer panes relative to each other
+						checkLayoutPriorityBC();
+
+						// Check that all panes within BC borders
+						var children = registry.byId("pbc").getChildren();
+						doh.is(11, children.length, "# of children");
+						array.forEach(children, function(child){
+							bcTest.checkInside(child, registry.byId("pbc"));
+						});
+					}							
+				]);
+
+				// Verify that tab stops are as per original markup (i.e., children are still in the
+				// logical order specified in the original markup)
+				doh.register("tabIndex", function tabstops(){
+					var tabstops = tabOrder(registry.byId("pbc").domNode);
+					doh.is(21, tabstops.length);
+					doh.is("tabstop #1", tabstops[0].value);
+					doh.is("tabstop #3", tabstops[2].value);
+					doh.is("tabstop #5", tabstops[4].value);
+					doh.is("tabstop #7", tabstops[6].value);
+					doh.is("tabstop #9", tabstops[8].value);
+					doh.is("tabstop #11", tabstops[10].value);
+					doh.is("tabstop #12", tabstops[11].value);
+					doh.is("tabstop #14", tabstops[13].value);
+					doh.is("tabstop #16", tabstops[15].value);
+					doh.is("tabstop #18", tabstops[17].value);
+					doh.is("tabstop #20", tabstops[19].value);
+				});
+
+				doh.register("keyboard", [
+					{
+						name: "top1",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var top1Size, centerSize;
+
+							robot.sequence(function(){
+								dom.byId("top1_splitter").focus();
+								
+								top1Size = geom.position("top1");
+								centerSize = geom.position("center");
+							}, 500, 500);
+
+							robot.keyPress(keys.DOWN_ARROW, 500, {});
+							robot.keyPress(keys.DOWN_ARROW, 500, {});
+							robot.keyPress(keys.DOWN_ARROW, 500, {});
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(bcTest.within(top1Size.h + 3, geom.position("top1").h, 0.5), "top size increased");
+								doh.t(bcTest.within(centerSize.h - 3, geom.position("center").h, 0.5), "center size decreased");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "right1",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var right1Size, centerSize, top2Size, bottom1Size;
+
+							robot.sequence(function(){
+								dom.byId("right1_splitter").focus();
+								
+								right1Size = geom.position("right1");
+								centerSize = geom.position("center");
+								top2Size = geom.position("top2");
+								bottom1Size = geom.position("bottom1");
+							}, 500, 500);
+
+							robot.keyPress(keys.LEFT_ARROW, 500, {});
+							robot.keyPress(keys.LEFT_ARROW, 500, {});
+							robot.keyPress(keys.LEFT_ARROW, 500, {});
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(bcTest.within(right1Size.w + 3, geom.position("right1").w, 0.5), "right size increased");
+								doh.t(bcTest.within(centerSize.w - 3, geom.position("center").w, 0.5), "center size decreased");
+								doh.t(bcTest.within(centerSize.w - 3, geom.position("top3").w, 0.5), "inner top size decreased");
+								doh.t(bcTest.within(centerSize.w - 3, geom.position("bottom3").w, 0.5), "inner bottom size decreased");
+								doh.t(bcTest.within(top2Size.h, geom.position("top2").h, 0.5), "top2 height unchanged");
+								doh.t(bcTest.within(top2Size.w, geom.position("top2").w, 0.5), "top2 width unchanged");
+								doh.t(bcTest.within(bottom1Size.h, geom.position("bottom1").h, 0.5), "bottom1 height unchanged");
+								doh.t(bcTest.within(bottom1Size.w, geom.position("bottom1").w, 0.5), "bottom1 width unchanged");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

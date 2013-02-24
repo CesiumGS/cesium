@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>DOH Async Simple Input - Output Group example</title>
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+			@import "../../../../dijit/themes/claro/claro.css";
+		</style>
+<script type="text/javascript" djConfig="parseOnLoad:0,isDebug:1,async:1" src="../../../../dojo/dojo.js"></script>
+<script type="text/javascript">
+ 		var model;
+ 
+		require([
+		'dojo/parser',
+        'dojox/mvc',
+        'dojo/ready',
+		'dojox/mvc/Group',
+		'dojox/mvc/Output',
+		'dojo/parser',
+		'dijit/form/Form',
+		'dijit/form/TextBox',
+		'dijit/form/Button'], function(parser, mvc, ready){
+
+			var order = {"First" : 0};
+			model = mvc.newStatefulModel({data : order});
+
+			var zip = {"First" : 0};
+			zipmodel = mvc.newStatefulModel({data : zip});
+
+			require([
+						'doh/runner', 'dijit/dijit'
+					], function(){
+					require([
+						'dojo/domReady!'
+						], function(){
+							parser.parse();
+							var detailsGroup = dijit.byId('detailsGroup');
+							detailsGroup.set('ref', model);
+
+						// should be able to verify all of the inputs 
+						doh.register("check initial values and bindings", [{
+							name : "initial",
+							runTest : function() {
+								doh.is("Priority: 0", dojo.byId("one").innerHTML,"One should be set to Priority: 0");
+								doh.is("0", dojo.byId("two").innerHTML,"One should be set to Priority: 0");
+								doh.is("Priority: 0", dojo.byId("three").innerHTML,"One should be set to Priority: 0");
+								doh.is("0", dojo.byId("four").innerHTML,"One should be set to Priority: 0");
+								doh.is("0",  dijit.byId("FirstWork").get('value'),"FirstWork should be 0");
+								doh.is("0",  dijit.byId("First").get('value'),"FirstWork should be 0");
+							}
+						}]);
+
+						doh.register("update first name", [{
+							name : "Update-First-Name",
+							runTest : function() {
+								var first1, bind1, addr1;
+								//test first relevant false
+								first1 = dijit.byId("First");
+								first1.set("value",2);
+								if (first1) {
+									doh.is("Priority: 0", dojo.byId("one").innerHTML,"One should be set to Priority: 0");
+									doh.is("0", dojo.byId("two").innerHTML,"One should be set to Priority: 0");
+									doh.is("Priority: 2", dojo.byId("three").innerHTML,"One should be set to Priority: 0");
+									doh.is("2", dojo.byId("four").innerHTML,"One should be set to Priority: 0");
+									doh.is("2",  dijit.byId("FirstWork").get('value'),"FirstWork should be 0");
+									doh.is("2",  dijit.byId("First").get('value'),"FirstWork should be 0");
+								}
+							}
+						}]);
+
+						doh.register("test ref set 0", [{
+							name : "test-ref-set-0",
+							runTest : function() {
+								var first1, bind1, addr1;
+								//test first relevant false
+								first1 = dijit.byId("First");
+								first1.set("value",0);
+								if (first1) {
+									doh.is("Priority: 0", dojo.byId("one").innerHTML,"One should be set to Priority: 0");
+									doh.is("0", dojo.byId("two").innerHTML,"One should be set to Priority: 0");
+									doh.is("Priority: 0", dojo.byId("three").innerHTML,"One should be set to Priority: 0");
+									doh.is("0", dojo.byId("four").innerHTML,"One should be set to Priority: 0");
+									doh.is("0",  dijit.byId("FirstWork").get('value'),"FirstWork should be 0");
+									doh.is("0",  dijit.byId("First").get('value'),"FirstWork should be 0");
+								}
+							}
+						}]);
+						doh.run();
+
+
+					});
+				});	
+		}); 
+		</script>
+</head>
+<body>
+	<br>
+	<span> There should be "Priority : zero" here ===></span>
+	<span id="one" data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: zipmodel.First, exprchar:'#'">Priority: #{this.value}</span>
+	<span><== there should be "Priority : zero" here.</span>
+	<br>
+	<span> There should be a zero here ===></span>
+	<span id="two" data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: zipmodel.First, exprchar:'#'"></span>
+	<span><== there should be a zero here.</span>
+	<br>
+
+	<div data-dojo-type="dijit.form.Form">
+			<div id="detailsGroup" data-dojo-type="dojox.mvc.Group">
+				Working sample
+				<span> There should be "Priority : zero" here ===></span>
+				<span id="three" data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: 'First'">Priority: ${this.value}</span>
+				<span><== there should be "Priority : zero" here.</span>
+				<br>
+				Working sample 2
+				<span> There should be a zero here ===></span>
+				<span id="four" data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: 'First'"></span>
+				<span><== there should be a zero here.</span>
+				<br>
+				<br>
+				<ul>
+					<li>
+					<label for="FirstWork">Working</label> 				
+					<input name="FirstWork" id="FirstWork" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'First'" /></li>
+				</ul>
+				Here, id is the same as ref, this was not working before the fix for 14491
+				<ul>
+					<li>
+					<label for="First">Not working</label>
+					<input name="First" id="First" data-dojo-type="dijit.form.TextBox" data-dojo-props="ref: 'First'" /></li>
+					<!--	<input name="First" id="First" data-dojo-type="dijit.form.TextBox" /></li> -->
+				</ul>
+			</div>
+		</div>
+	</body>
+
+</html>

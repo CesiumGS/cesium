@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+
+<html>
+	<head >
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>ComboBox with _BidiSupport</title>
+
+	<style>
+		@import "../../../themes/claro/document.css";
+		@import "../../../../util/doh/robot/robot.css";
+		@import "../../css/dijitTests.css";
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../../dijit/themes/claro/claro.css"/>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			data-dojo-config="parseOnLoad: true, isDebug: true">
+		</script>		
+
+		<script type="text/JavaScript">
+			dojo.require("dijit.form.ComboBox");
+			dojo.require("dijit._BidiSupport");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+			
+	//				dojo.ready(init);
+
+		</script>
+	</head>
+	<body class="claro">
+		<label for="fruitLtr"> <b>I'm a LTR ComboBox </b> </label>
+		<br>
+		<select id="fruitLtr" 
+			data-dojo-type="dijit/form/ComboBox"
+			data-dojo-props='name:"fruitLtr",
+			textDir:"ltr"'>
+				<option >Apples!</option>
+				<option >Oranges!</option>
+				<option selected>Pears!</option>
+				<option >&#1513;&#1500;&#1493;&#1501; &#1500;&#1499;&#1501;!</option>
+				<option >&#1514;&#1508;&#1493;&#1495; &#1488;&#1491;&#1502;&#1492;!</option>
+		</select>
+		<br>
+		<label for="fruitRtl"> <b>I'm a RTL ComboBox </b> </label>
+		<br>
+		<select id="fruitRtl" 
+			data-dojo-type="dijit/form/ComboBox"
+			data-dojo-props='name:"fruitRtl",
+			textDir:"rtl"'>
+				<option >Apples!</option>
+				<option >Oranges!</option>
+				<option selected>Pears!</option>
+				<option >&#1513;&#1500;&#1493;&#1501; &#1500;&#1499;&#1501;!</option>
+				<option >&#1514;&#1508;&#1493;&#1495; &#1488;&#1491;&#1502;&#1492;!</option>
+		</select>
+		<br>
+		<label for="fruitContextual"> <b>I'm a Contextual ComboBox </b> </label>
+		<br>
+		<select id="fruitContextual" 
+			data-dojo-type="dijit/form/ComboBox"
+			data-dojo-props='name:"fruitContextual",
+			autoComplete:false,
+			textDir:"auto"'>
+				<option >@Apples!</option>
+				<option >:Oranges!</option>
+				<option selected>Pears!</option>
+				<option >*&#1514;&#1508;&#1493;&#1495; &#1488;&#1491;&#1502;&#1492;!</option>
+				<option >:&#1513;&#1500;&#1493;&#1501; &#1500;&#1499;&#1501;!</option>
+		</select>
+		<br>
+		<label for="fruitContextualAC"> <b>I'm a Contextual ComboBox </b> </label>
+		<br>
+		<select id="fruitContextualAC" 
+			data-dojo-type="dijit/form/ComboBox"
+			data-dojo-props='name:"fruitContextualAc",				
+			textDir:"auto"'>
+				<option >@Apples!</option>
+				<option >:Oranges!</option>
+				<option selected>Pears!</option>
+				<option >:&#1513;&#1500;&#1493;&#1501; &#1500;&#1499;&#1501;!</option>
+				<option >*&#1514;&#1508;&#1493;&#1495; &#1488;&#1491;&#1502;&#1492;!</option>
+		</select>
+		
+	</body>
+</html>

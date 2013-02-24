@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html style="overflow:hidden"> <!-- hide the scroll bars on ie6, to work around a doh robot bug-->
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Editor Test: ToggleDir Plugin (page in RTL)</title>
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.Editor");
+		dojo.require("dijit._editor.plugins.ToggleDir");
+		dojo.require("dijit._editor.plugins.TabIndent");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+	</script>
+</head>
+<body class="claro" dir="rtl">
+<div style="position:absolute;left:0;" id=dummy>Text</div>
+	<div style="border: 1px dotted black;">
+		<div id="ed0" data-dojo-type="dijit/Editor" data-dojo-props='extraPlugins:[{name:"dijit/_editor/plugins/ToggleDir"}]'>
+			<ol><li>the toggleDir plugin provides an extra button to switch text direction (BiDi). Useful when right-to-left 
+					languages are used with left-to-right languages.</li></ol>
+		</div>
+	</div>
+</body>
+</html>

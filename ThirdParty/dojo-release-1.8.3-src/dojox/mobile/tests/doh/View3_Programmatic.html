@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<title>View</title>
+	<link href="../../themes/iphone/iphone.css" rel="stylesheet"/>
+	<style>
+	html,body{
+		height: 100%;
+		overflow: hidden;
+	}
+	.list1 li{
+		border-style: solid;
+		border-width: 1px 0px 1px 0px;
+		border-top-color: #BABABC;
+		border-bottom-color: #89898C;
+		background-color: #ACACAF;
+		line-height: 0px;
+	}
+	.list1 li table{
+		line-height: normal;
+	}
+	.list1 li:nth-child(even){
+		background-color: #97979B;
+	}
+	#list2 li:nth-child(even){
+		background-color: #eeeeee;
+	}
+	#categ1 {
+		font-size: 18px;
+	}
+	#categ1 li{
+		line-height: 70px;
+	}
+	.lnk {
+		font-size: 14px;
+		color: #0B5199;
+		text-decoration: none;
+	}
+	.content {
+		padding:0px 10px;
+		background-color: white;
+	}
+	p {
+		font-family: Helvetica;
+		font-size: 12px;
+	}
+	.title {
+		color: blue;
+		margin-bottom: 4px;
+	}
+	.subtitle {
+		font-style: italic;
+		color: gray;
+		margin: 0px;
+		margin-bottom: 4px;
+	}
+	.subsubtitle {
+		margin: 16px 0px 0px 0px;
+	}
+	.lst {
+		margin: 0px;
+		padding: 0px 14px;
+	}
+	.lst li {
+		font-family: Helvetica;
+		font-size: 12px;
+		margin: 0px;
+		list-style-type: square;
+	}
+	</style>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+	<script language="JavaScript" type="text/javascript">
+		//dojo.require("dojo.parser"); // Use the lightweight parser.
+		dojo.require("dojox.mobile.parser");
+		dojo.require("dojox.mobile");
+		dojo.require("dojox.mobile.SwapView");
+		dojo.require("dojox.mobile.IconContainer");
+		dojo.requireIf(!dojo.isWebKit, "dojox.mobile.compat");
+		dojo.requireIf(!dojo.isWebKit, "dojo.fx");
+		dojo.requireIf(!dojo.isWebKit, "dojo.fx.easing");
+
+        dojo.require("doh.runner");
+		dojo.addOnLoad(function(){
+
+			var view = new dojox.mobile.SwapView({id:"foo", selected:"true"});
+			dojo.doc.body.appendChild(view.domNode);
+			var demoWidget = new dojox.mobile.RoundRectCategory({label:"Page flipping demo"});
+//			view.addChild(demoWidget);
+			demoWidget.placeAt(view.containerNode);
+
+			demoWidget = new dojox.mobile.RoundRect({innerHTML:"Swipe the screen left or right to flip between the views. There are 4 views in this demo. Vertical scrolling and page indicator are not supported."});
+//			view.addChild(demoWidget);
+			demoWidget.placeAt(view.containerNode);
+			view.startup();
+
+			view = new dojox.mobile.SwapView({id:"bar"});
+			dojo.doc.body.appendChild(view.domNode);
+			view.startup();
+			var list = new dojox.mobile.RoundRectList();
+			demoWidget = new dojox.mobile.ListItem({className:"mblVariableHeight"});
+//			demoWidget.domNode.style = {font-size:"10px"};
+//			view.addChild(list);
+			list.placeAt(view.containerNode);
+			demoWidget.domNode.innerHTML ='1. <a href="#" class="lnk">Dojo: Traditional Karate-do Spirit</a><br> Sarah Connor Hardcover<br> Eligible for FREE Super Saver Shipping<br> <font color="red">$14.50 (50%)</font> In Stock<br> # (531)';
+			list.addChild(demoWidget);
+//			view.startup();
+
+
+			
+			view = new dojox.mobile.SwapView({id:"icon1"});
+			demoWidget = new dojox.mobile.Heading({label:"Icon Container 1"});
+			dojo.doc.body.appendChild(view.domNode);
+//			view.addChild(demoWidget);
+			demoWidget.placeAt(view.containerNode);
+//			container = new dojox.mobile.IconContainer();
+
+
+			view.startup();
+			doh.register("dojox.mobile.test.doh.View", [
+				{
+					name: "test View Verification",
+					timeout: 4000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						setTimeout(d.getTestCallback(function(){
+							demoWidget = dijit.byId("foo");
+							doh.assertEqual('f', demoWidget.get("scrollDir"));
+							doh.assertEqual('mblView mblSwapView', demoWidget.domNode.className);
+							doh.assertEqual('', demoWidget.domNode.style.display);
+						}));
+						return d;
+					}
+				}
+			]);
+			doh.run();
+		});
+	</script>
+</head>
+<body>
+</body>
+</html>

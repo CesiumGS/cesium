@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>CarouselItem</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','Carousel','PageIndicator']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/connect",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/CarouselItem"
+		]);
+	</script>
+<style>
+.mblCarouselItem {
+	height: 150px;
+	margin: 0 10px;
+	float: left;
+}
+</style>
+</head>
+<body style="visibility:hidden;background-color:#6D6D6D">
+	<div data-dojo-type="dojox.mobile.CarouselItem"
+		data-dojo-props='src:"images/glass1.jpg", headerText:"My Header", footerText:"My Footer"'></div>
+
+	<div data-dojo-type="dojox.mobile.CarouselItem"
+		data-dojo-props='src:"images/glass1.jpg", headerText:"My Header"'></div>
+
+	<div data-dojo-type="dojox.mobile.CarouselItem"
+		data-dojo-props='src:"images/glass1.jpg", footerText:"My Footer"'></div>
+
+	<div data-dojo-type="dojox.mobile.CarouselItem"
+		data-dojo-props='src:"images/glass1.jpg"'></div>
+
+
+	<div style="position:absolute;width:100%;height:150px;border:1px dashed red;"></div>
+</body>
+</html>

@@ -351,7 +351,7 @@ define([
      * @see Transforms#computeIcrfToFixedMatrix
      * @see Transforms#computeFixedToIcrfMatrix
      */
-    Transforms.earthOrientationParameters = new EarthOrientationParameters();
+    Transforms.earthOrientationParameters = EarthOrientationParameters.NONE;
 
     var ttMinusTai = 32.184;
     var j2000ttDays = 2451545.0;

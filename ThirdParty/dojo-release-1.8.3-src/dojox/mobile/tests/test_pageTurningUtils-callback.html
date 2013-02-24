@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<title>Page Turning</title>
+	<link href="../themes/common/PageTurning.css" rel="stylesheet">
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/connect",
+			"dojo/dom",
+			"dojo/ready",
+			"dojox/mobile/pageTurningUtils",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(connect, dom, ready, pageTurningUtils){
+			utils = new pageTurningUtils();
+			
+			ready(function(){
+				// Set property values to pageTurningUtils object
+				utils.init(285, 388);
+				
+				// Initialize catalog node
+				utils.initCatalog(dom.byId("catalog"));
+				
+				// Connect to onPageTurned callback function
+				connect.connect(utils, "onPageTurned", null, function(pageNode){
+					dom.byId("msgArea").innerHTML = "onPageTurned: " + pageNode.id;
+				});
+			});
+			
+			prev = function(){
+				dom.byId("msgArea").innerHTML = "onPageTurned: ";
+				utils.turnToPrev();
+			};
+			
+			next = function(){
+				dom.byId("msgArea").innerHTML = "onPageTurned: ";
+				utils.turnToNext();
+			};
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="view1" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">Page Turning</h1>
+		<div style="margin:5px;">
+			<button onclick="prev()" style="width:50px">Prev</button>
+			<button onclick="next()" style="width:50px">Next</button>
+		</div>
+		<div id="msgArea" style="margin:10px;">onPageTurned: </div>
+		<div id="catalog" style="margin:10px;">
+			<div id="page1">
+				<img alt="" id="front1" src="images/pic1.jpg"/>
+				<div id="back1"></div>
+			</div>
+			<div id="page2">
+				<img alt="" id="front2" src="images/pic2.jpg"/>
+				<div id="back2"></div>
+			</div>
+			<div id="page3">
+				<img alt="" id="front3" src="images/pic3.jpg"/>
+				<div id="back3"></div>
+			</div>
+			<div id="page4">
+				<img alt="" id="front4" src="images/pic4.jpg"/>
+				<div id="back4"></div>
+			</div>
+			<div id="page5">
+				<img alt="" id="front5" src="images/pic5.jpg"/>
+				<div id="back5"></div>
+			</div>
+			<div id="page6">
+				<img alt="" id="front6" src="images/pic6.jpg"/>
+				<div id="back6"></div>
+			</div>
+			<div id="page7">
+				<img alt="" id="front7" src="images/pic7.jpg"/>
+				<div id="back7"></div>
+			</div>
+			<div id="page8">
+				<img alt="" id="front8" src="images/pic8.jpg"/>
+				<div id="back8"></div>
+			</div>
+			<div id="page9">
+				<img alt="" id="front9" src="images/pic9.jpg"/>
+				<div id="back9"></div>
+			</div>
+			<div id="page10">
+				<img alt="" id="front10" src="images/pic10.jpg"/>
+				<div id="back10"></div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

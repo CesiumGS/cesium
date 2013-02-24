@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../themes/TreeMap.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true">
+	</script>
+
+	<script type="text/javascript">
+
+		require(["dojo/ready", "dojo/dom", "dojox/treemap/TreeMap",
+			"dojo/store/Memory", "dojox/color/MeanColorModel", "dojo/_base/Color"],
+			function(ready, dom, TreeMap, Memory, MeanColorModel, Color) {
+				ready(function(){
+					var dataStore = new Memory({idProperty: "label", data:
+							[
+								{ label: "France", sales: 500, profit: 50, region: "EU" },
+								{ label: "Germany", sales: 450, profit: 48, region: "EU" },
+								{ label: "UK", sales: 700, profit: 60, region: "EU" },
+								{ label: "USA", sales: 2000, profit: 250, region: "America" },
+								{ label: "Canada", sales: 600, profit: 30, region: "America" },
+								{ label: "Brazil", sales: 450, profit: 30, region: "America" },
+								{ label: "China", sales: 500, profit: 40, region: "Asia" },
+								{ label: "Japan", sales: 900, profit: 100, region: "Asia" }
+							]
+					});
+					var colorModel = new MeanColorModel(new Color(Color.named.red), new Color(Color.named.green));
+					new TreeMap({store: dataStore,
+								areaAttr: "sales",
+								colorFunc: function(item){
+									// use benefit % instead of absolute profit
+									return item.profit / item.sales;
+								},
+								groupAttrs: ["region"],
+								colorModel: colorModel,
+								query: function(item){
+									return item.sales > 500;
+								}}, dom.byId("treeMap"));
+				});
+			}
+		);
+	</script>
+</head>
+<body>
+	<div id="treeMap" style="width:640px;height:640px"></div>
+</body>
+</html>

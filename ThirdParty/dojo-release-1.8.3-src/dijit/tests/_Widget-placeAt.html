@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+
+	<title>_Widget.placeAt tests</title>
+
+	<!-- test decoration styles -->
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: load the dojo base -->
+	<script type="text/javascript" src="../../dojo/dojo.js" data-dojo-config="isDebug:true, async:true" ></script>
+	<!-- for theme-switching, only for dijit -->
+	<script type="text/javascript" src="../../dijit/tests/_testCommon.js"></script>
+
+	<script type="text/javascript">
+		require([
+			"doh/runner", "dojo/_base/declare", "dojo/dom",
+			"dijit/_WidgetBase", "dijit/form/Button",
+			"dijit/layout/ContentPane", "dijit/layout/TabContainer", "dijit/layout/BorderContainer",
+			"dojo/domReady!"
+		], function(doh, declare, dom, _WidgetBase, Button, ContentPane, TabContainer, BorderContainer){
+
+			var SimpleWidget = declare(_WidgetBase, {
+				buildRendering: function(){
+					this.domNode = document.createElement("div");
+					this.containerNode = document.createElement("div");
+					this.domNode.appendChild(this.containerNode);
+				}
+			});
+
+			var simple, pane1, pane2, pane3, pane4, pane5;
+			doh.register("parent without addChild", [
+				function placeAsDOMNodeChild(){
+					// create a SimpleWidget
+					simple = (new SimpleWidget({id: "simple"})).placeAt("container");
+					doh.is(dom.byId("container"), simple.domNode.parentNode, "simple is child of container");
+				},
+
+				function placeAsWidgetChild(){
+					// add the child to the SimpleWidget now
+					pane1 = (new ContentPane({ title: "pane1" })).placeAt(simple);
+					doh.is(pane1, simple.getChildren()[0], "pane1 is child of SimpleWidget");
+					doh.is(simple.containerNode, pane1.domNode.parentNode, "pane1 added to simple.containerNode not simple.domNode")
+				},
+
+				function placeAsWidgetChildOrdered(){
+					// add this child (created second) as the new first child
+					pane2 = (new ContentPane({ title: "pane2" })).placeAt("simple", 0);
+					doh.is(simple.containerNode, pane2.domNode.parentNode, "pane2 added to simple.containerNode not simple.domNode")
+					doh.is(pane2, simple.getChildren()[0], "pane2 is new first child of SimpleWidget");
+					doh.is(pane1, simple.getChildren()[1], "pane1 is now second child of SimpleWidget");
+				},
+
+				function placeBeforeDomNode(){
+					var button = (new Button({})).placeAt(dom.byId("container"), "before");
+					doh.is(dom.byId("container"), button.domNode.nextSibling, "button is before tab container");
+				},
+
+				function placeBeforeDomNodeId(){
+					var button = (new Button({})).placeAt("container", "before");
+					doh.is(dom.byId("container"), button.domNode.nextSibling, "button is before tab container");
+				},
+
+				function placeFirstWidget(){
+					simple.startup();
+					pane4 = (new ContentPane({ title: "pane4" })).placeAt("simple", "first");
+					doh.is(simple.containerNode, pane4.domNode.parentNode, "pane4 added to simple.containerNode not simple.domNode")
+					doh.is(pane4, simple.getChildren()[0], "pane4 is new first child of SimpleWidget");
+					doh.t(pane4._started, "pane4 was automatically started because simple was already started")
+				},
+				function placeLastWidget(){
+					pane5 = (new ContentPane({ title: "pane5" })).placeAt(simple.containerNode, "last");
+					doh.is(pane5, simple.getChildren()[simple.getChildren().length-1], "pane5 is new last child of SimpleWidget");
+					doh.t(pane5._started, "pane5 was automatically started because simple was already started")
+				}
+			]);
+
+			var tc;
+			doh.register("TabContainer parent", [
+				function placeAsDOMNodeChild(){
+					// create a TabContainer
+					tc = (new TabContainer({
+						id: "tc",
+						style: "height:200px; width:200px"
+					}, "tabContainerThinger")).placeAt("container");
+
+					doh.is(dom.byId("container"), tc.domNode.parentNode, "TabContainer is child of container");
+				},
+
+				function placeAsWidgetChild(){
+					// add the child to the TabContainer now:
+					pane1 = (new ContentPane({ title: "pane1" })).placeAt(tc);
+
+					doh.is(pane1, tc.getChildren()[0], "pane1 is child of TabContainer");
+				},
+
+				function placeAsWidgetChildOrdered(){
+					// add this child (created second) as the first tab:
+					pane2 = (new ContentPane({ title: "pane2" })).placeAt(tc, 0);
+
+					doh.is(pane2, tc.getChildren()[0], "pane2 is new first child of TabContainer");
+					doh.is(pane1, tc.getChildren()[1], "pane1 is now second child of TabContainer");
+				},
+
+				function placeAsWidgetIdChild(){
+					// add the child to the TabContainer now:
+					pane3 = (new ContentPane({ title: "pane1" })).placeAt("tc");
+
+					doh.is(pane3, tc.getChildren()[2], "pane3 is child of TabContainer");
+				},
+
+				function startup(){
+					// just starting the TabContainer so we can do some more tests
+					tc.startup();
+					tc.selectChild(pane2);
+				},
+
+				function placeAsFirst(){
+					pane2.set("content","button should appear BEFORE this text");
+
+					// create a button, and add it to pane2 before the above text
+					var button = (new Button({
+						label:"alert",
+						onClick: function(){
+							alert('woot');
+						}
+					})).placeAt(pane2.containerNode, "first");
+
+					doh.is(button.domNode, pane2.containerNode.firstChild, "button is first child");
+					doh.is(3, button.domNode.nextSibling.nodeType, "button went before other content");
+				},
+
+				function placeBefore(){
+					// And a button, this time we'll place it before the TabContainer's dom.
+					// placeAt(refWidget, "before"/"after"/"replace") isn't supported in general,
+					// especially not when the grandparent has addChild()/removeChild() methods, but testing
+					// here for regressions in what does work
+					var otherButton = new Button({
+						label:"destroy TabContainer",
+						onClick:function(){
+							tc.destroyRecursive();
+						}
+					});
+					otherButton.placeAt("tc", "before");
+
+					// make sure it went before tc.domNode, not before tc.containerNode
+					doh.is(tc.domNode, otherButton.domNode.nextSibling, "otherButton is before tab container");
+
+					// since it doesn't have a widget parent it should have been started
+					doh.f(otherButton._started, "button wasn't started");
+				}
+			]);
+
+			doh.register("startup tests", [
+				function startup(){
+					var bc = new BorderContainer({
+						id: "bc",
+						style: "width:600px; height:400px"
+					});
+					bc.placeAt(dojo.body());
+					doh.is(dojo.body(), bc.domNode.parentNode, "BorderContainer parentNode == dojo.body()");
+
+					// add a center pane before BC startup
+					var centerStarted;
+					var center = new ContentPane({
+						region: "center",
+						content: "<p>center</p>"
+					});
+					dojo.connect(center, "startup", function(){ centerStarted = true; });
+					center.placeAt(bc);
+					doh.f(centerStarted, "center not started");	// shouldn't be started since BC itself isn't started
+					doh.is(bc, center.getParent(), "center ContentPane parent == BorderContainer");
+
+					// start BorderContainer
+					bc.startup();
+					doh.t(centerStarted, "center started");	// should be started along with BC
+
+					// add a left pane after startup
+					var leftStarted;
+					var left = new ContentPane({
+						region: "left",
+						content: "<p>wowzers</p>",
+						style: "width:100px"
+					});
+					dojo.connect(left, "startup", function(){ leftStarted = true; });
+					left.placeAt("bc");
+					doh.is(bc, left.getParent(), "left ContentPane parent == BorderContainer");
+					doh.t(leftStarted, "left ContentPane automatically started since BorderContainer was already started");
+
+					// add a top pane, and add content
+					var topStarted;
+					var top = new ContentPane({
+						region: "top",
+						style: "height:100px"
+					});
+					dojo.connect(top, "startup", function(){ topStarted = true; });
+					top.placeAt(bc).set("content","<div>some HTML text</div>");
+					doh.is(bc, top.getParent(), "top ContentPane parent == BorderContainer");
+					doh.t(topStarted, "top ContentPane automatically started since BorderContainer was already started");
+				}
+			]);
+
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro">
+	<h1 class="testTitle">_Widget.placeAt tests</h1>
+
+	<div id="container">
+	</div>
+</body>
+</html>

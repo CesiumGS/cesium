@@ -416,7 +416,7 @@ define([
         return result;
     };
 
-    DynamicPositionProperty.prototype._getValueRangeInReferenceFrame = function(start, stop, currentTime, referenceFrame, result) {
+    DynamicPositionProperty.prototype._getValueRangeInReferenceFrame = function(start, stop, currentTime, referenceFrame, maximumStep, result) {
         if (typeof start === 'undefined') {
             throw new DeveloperError('start is required');
         }
@@ -475,9 +475,10 @@ define([
                 //Iterate over all interval times and add the ones that fall in our
                 //time range.  Note that times can contain data outside of
                 //the intervals range.  This is by design for use with interpolation.
-                var t;
-                for (t = 0; t < times.length; t++) {
-                    current = times[t];
+                var t = 0;
+                var len = times.length;
+                current = times[t];
+                while(t < len) {
                     if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
                         tmp = this._getValueInReferenceFrame(currentTime, referenceFrame, result[r]);
                         if (typeof tmp !== 'undefined') {
@@ -491,6 +492,16 @@ define([
                             result[r++] = tmp;
                         }
                     }
+
+                    if (t < (len - 1)) {
+                        var next = times[t + 1];
+                        if (current.getSecondsDifference(next) > maximumStep) {
+                            current = current.addSeconds(maximumStep);
+                            continue;
+                        }
+                    }
+                    t++;
+                    current = times[t];
                 }
             } else {
                 //If times is undefined, it's because the interval contains a single position

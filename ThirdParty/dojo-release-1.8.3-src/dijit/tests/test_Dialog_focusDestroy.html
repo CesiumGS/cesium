@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Dialog Widget Dojo Tests</title>
+
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "css/dijitTests.css";
+
+		body { font-family : sans-serif; }
+		form { margin-bottom : 0; }
+		table { border: none; }
+		#dialog3_underlay { background-color: #027 }
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.Dialog");
+		dojo.require("dijit.form.Button");
+
+    //-sie
+    //the dojo.required code might not be here yet!
+    dojo.ready(function(){
+
+		// make dojo.toJson() print dates correctly (this feels a bit dirty)
+		createAndShow= function(){
+			var node = document.createElement("div");
+			dojo.body().appendChild(node);
+			var dlg = new dijit.Dialog({ title: "test input focus" }, node);
+
+			var input = document.createElement("input");
+			dojo.attr(input,"tabIndex","0");
+			dlg.containerNode.appendChild(input);
+
+			var btn = new dijit.form.Button({ id:"destroyButton", label: "Close" });
+			dlg.containerNode.appendChild(btn.domNode);
+
+			dojo.connect(btn, "onClick", function(){
+				console.log("destroying, while visible");
+				dlg.destroy();
+
+			});
+			dlg.show();
+		}
+
+    });
+	</script>
+</head>
+<body class="claro" role="main">
+
+	<h1 class="testTitle">Dijit layout.Dialog tests</h1>
+
+	<p>If you input this box, you can type. You should be able to type and use backspace/etc
+	when you destroy the visible dialog. refs <a href="http://trac.dojotoolkit.org/ticket/5351">#5351</a>
+	</p>
+
+	<label for="testInput">testInput:</label><input id="testInput" name="foo" value="bar" />
+
+	<button id="showDialog" data-dojo-type="dijit/form/Button" data-dojo-props='onClick:function(){ createAndShow() }'>Show Dialog</button>
+
+</body>
+</html>

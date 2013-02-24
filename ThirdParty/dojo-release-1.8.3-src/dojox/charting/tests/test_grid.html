@@ -1,0 +1,48 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+	<title>Chart 2D</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="isDebug: true, async: true"></script>
+	<script type="text/javascript">
+		require([
+		"dojo/ready",
+		"dojo/dom",
+		"dojox/charting/Chart",
+		"dojox/charting/axis2d/Default",
+		"dojox/charting/plot2d/Lines",	
+		"dojox/charting/plot2d/Grid"],
+		function(ready, dom, Chart, Axis, Lines, Grid){
+			ready(function(){
+				var chart = new Chart(dom.byId("chart")).
+						addAxis("x", { fixLower: "minor", fixUpper: "minor", natural: true  }).
+						addAxis("y", { vertical: true, fixLower: "major", fixUpper: "major", includeZero: true }).
+						addPlot("default", { type: Lines }).
+						addPlot("grid", { type: Grid, renderOnAxis: false, majorVLine: { color: "green", width: 3 }, majorHLine: { color: "red", width: 3 } }).
+						addSeries("Series A", [ 2, 1, 0.5, -1, -2 ] ).
+						render();
+			});
+	});
+	</script>
+	</head>
+	<body>
+		<h1>Grid</h1>
+			<div id="chart" style="width:400px; height:300px"></div>
+	</body>
+</html>

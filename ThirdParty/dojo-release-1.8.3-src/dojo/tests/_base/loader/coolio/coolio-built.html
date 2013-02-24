@@ -1,0 +1,64 @@
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="../../../../../dijit/themes/claro/claro.css" />
+
+		<script type="text/javascript">
+			var startTime = (new Date()).getTime();
+			var dojoConfig = {
+				async:/async/.test(location.search),
+				baseUrl:".",
+				packages:[{
+					name:"dojo",
+					location:"../coolioBuilt/dojo",
+				},{
+					name:"dijit",
+					location:"../coolioBuilt/dijit",
+				},{
+					name:"dojox",
+					location:"../coolioBuilt/dojox",
+				},{
+					name:"cdojo",
+					location:"../coolioBuilt/dojo"
+				},{
+					name:"cdijit",
+					location:"../coolioBuilt/dijit"
+			    },{
+					name:"coolio",
+					location:"../coolioBuilt/coolio"
+				}],
+				map:{
+					cdojo:{dojo:"cdojo", dijit:"cdijit"},
+					cdijit:{dojo:"cdojo", dijit:"cdijit"},
+					coolio:{dojo:"cdojo", dijit:"cdijit"}
+				},
+				deps:["dojo", "cdojo"]
+			};
+		</script>
+		<script type="text/javascript" src="../coolioBuilt/dojo/dojo.js"></script>
+		<script type="text/javascript">
+			var coolioCalendarMid = /legacy/.test(location.search) ? "coolio/calendar" : "coolio/calendar-amd";
+			require(["dojo/parser", coolioCalendarMid, "dojo/ready", "dijit/Calendar"], function(parser, calendar, ready){
+				ready(function(){
+					// dojo/main loaded the parser...
+					parser.parse();
+					calendar("c1");
+					console.log("total load time: " + ((new Date()).getTime() - startTime) / 1000 + "s");
+					console.log(dojo);
+					console.log(dijit);
+					console.log(cdojo);
+					console.log(cdijit);
+					console.log("dojo._scopeName=" + dojo._scopeName);
+					console.log("cdojo._scopeName=" + cdojo._scopeName);
+					console.log("dijit._scopeName=" + dijit._scopeName);
+					console.log("cdijit._scopeName=" + cdijit._scopeName);
+				});
+			});
+		</script>
+	</head>
+	<body class=" claro ">
+		<p>A Coolio Calendar</p>
+		<div id="c1"></div>
+		<p>A Dijit Calendar</p>
+		<div dojoType="dijit.Calendar" onChange="dojo.byId('formatted').innerHTML=dojo.date.locale.format(arguments[0], {formatLength: 'full', selector:'date'})"> </div>
+	</body>
+</html>

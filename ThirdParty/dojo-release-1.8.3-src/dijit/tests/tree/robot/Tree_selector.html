@@ -1,0 +1,255 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Tree selector Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<!-- functions to help test -->
+		<script type="text/javascript" src="Tree_dnd.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.window");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			function clickItem(modifiers){
+				var i;
+				for(i = 0; i < modifiers.length; i++){
+					doh.robot.keyDown(modifiers[i], 250);
+				}
+				doh.robot.mouseClick({left: true}, 250);
+				for(i = modifiers.length - 1; i >= 0; i--){
+					doh.robot.keyUp(modifiers[i], 250);
+				}
+			}
+
+			function pressEnter(modifiers){
+				var i;
+				for(i = 0; i < modifiers.length; i++){
+					doh.robot.keyDown(modifiers[i], 250);
+				}
+				
+				// Use ENTER on mac because meta-space controls the IME (switching input language),
+				// but SPACE on IE6 because ctrl-shift-ENTER doesn't do anything (although not sure
+				// why we are testing ctrl-shift combination anyway)
+				doh.robot.keyPress(dojo.isMac ? dojo.keys.ENTER : dojo.keys.SPACE, 250);
+
+				for(i = modifiers.length - 1; i >= 0; i--){
+					doh.robot.keyUp(modifiers[i], 250);
+				}
+			}
+			function mouseSelect(tree, item, modifiers, k){
+				doh.robot.mouseMoveAt(item.domNode, 250, 200);
+				clickItem(modifiers);
+				doh.robot.sequence(k);
+			}
+			function keyboardSelect(tree, item, modifiers, k){
+				var curFocus = dojo.global.dijit._curFocus,
+					focused = dojo.isDescendant(curFocus, "itemTree");
+				if(!focused){
+					doh.robot.keyPress(dojo.keys.TAB, 250);
+					doh.robot.sequence(function(){ keyboardSelect(tree, item, modifiers, k); }, 250);
+					return;
+				}
+				
+				focused_node = curFocus.parentNode.parentNode.parentNode;
+				var diff = dojo.position(item.domNode).y - dojo.position(focused_node).y;
+				if(diff != 0){
+					if(diff > 0){
+						doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500);
+					}else{
+						doh.robot.keyPress(dojo.keys.UP_ARROW, 500);
+					}
+				}else{
+					pressEnter(modifiers);
+					doh.robot.sequence(k);
+					return;
+				}
+				doh.robot.sequence(function(){ keyboardSelect(tree, item, modifiers, k); }, 500);
+            }
+			
+			function getSelected(tree){
+				//in IE, for(var i in object) will not honor the order the properties are set
+				//(it's in the order properties are first set even delete a property won't 
+				//change it)
+				var selected = tree.dndController.getSelectedTreeNodes();
+				selected.sort(function(a, b){return a.item.id<b.item.id?-1:1});
+				return selected;
+			}
+			function testSingleItem(selector, clicker){
+				var d = new doh.Deferred();
+				
+				// Find the fruitsTreeNode category
+				var fruitsTreeNode = findTreeNode("itemTree", "Fruits");
+				var tree = registry.byId("itemTree");
+				
+				// select fruit item
+				selector(tree, fruitsTreeNode, [], function(){
+					doh.robot.sequence(d.getTestErrback(function(){
+						var selected = getSelected(tree);
+						
+						doh.is(1, selected.length);
+						doh.is(fruitsTreeNode, selected[0]);
+						
+						//ctrl-click the item to deselect it
+						clicker([dojo.isMac ? dojo.keys.META : dojo.keys.CTRL]);
+						
+						doh.robot.sequence(d.getTestCallback(function(){
+							var selected = getSelected(tree);
+							
+							doh.is(0, selected.length);
+						}), 500);
+					}), 500);
+				});
+				return d;
+			}
+			function testCtrlSelect(selector, clicker){
+				var d = new doh.Deferred();
+				
+				// Find the fruitsTreeNode category
+				var fruitsTreeNode = findTreeNode("itemTree", "Fruits");
+				var tree = registry.byId("itemTree");
+				
+				// select fruit item
+				selector(tree, fruitsTreeNode, [], function(){
+					doh.robot.sequence(function(){
+						dojo.window.scrollIntoView("itemTree");
+					}, 500);
+					
+					// ctrl-click Cereals item
+					var cerealsTreeNode = findTreeNode("itemTree", "Cereals");
+					selector(tree, cerealsTreeNode, 
+							 [dojo.isMac ? dojo.keys.META : dojo.keys.CTRL], function(){
+						 doh.robot.sequence(d.getTestCallback(function(){
+							 var selected = getSelected(tree);
+							 
+							 doh.is(2, selected.length);
+							 doh.is(fruitsTreeNode, selected[0]);
+							 doh.is(cerealsTreeNode, selected[1]);
+							 doh.is(cerealsTreeNode, tree.dndController.anchor, 'anchor should be the Cereals item');
+						 }), 500); });
+				});
+				return d;
+			}
+			function _getCtrlShiftTest(selector, keys){ 
+				return function(){
+					var d = new doh.Deferred();
+					
+					// Find the fruitsTreeNode category
+					var fruitsTreeNode = findTreeNode("itemTree", "Fruits");
+					var cerealsTreeNode = findTreeNode("itemTree", "Cereals");
+					var vegetablesTreeNode = findTreeNode("itemTree", "Vegetables");
+					var tree = registry.byId("itemTree");
+					
+					// select fruit item (no modifiers)
+					selector(tree, fruitsTreeNode, [], atFruits);
+
+					function atFruits(){
+						// shift-select Cereals item
+                        selector(tree, cerealsTreeNode, keys, atCereals);
+					}
+					function atCereals(){ 
+						doh.robot.sequence(d.getTestErrback(function(){
+							var selected = getSelected(tree);
+						
+							doh.is(3, selected.length);
+							doh.is(fruitsTreeNode, selected[0]);
+							doh.is(vegetablesTreeNode, selected[1]);
+							doh.is(cerealsTreeNode, selected[2]);
+							doh.is(fruitsTreeNode, tree.dndController.anchor, 'anchor should not change 1');
+						
+							// shift-select Vegetables item
+                            keyboardSelect(tree, vegetablesTreeNode, keys, atVegetables);
+						}));
+					}
+									
+					function atVegetables(){
+						doh.robot.sequence(d.getTestCallback(function(){
+							var selected = getSelected(tree);
+							doh.is(2, selected.length);
+							doh.is(fruitsTreeNode, selected[0]);
+							doh.is(vegetablesTreeNode, selected[1]);
+							doh.is(fruitsTreeNode, tree.dndController.anchor, 'anchor should not change 2'); 
+						}));
+					}
+
+					return d;
+				};
+			}
+			dojo.ready(function(){
+				var controller = '', ind=window.location.href.indexOf("?controller=");
+				
+				if(ind > -1){
+					controller = window.location.href.substr(ind + 12);
+					controller = controller.split('&')[0];
+				}
+				doh.robot.initRobot('../test_Tree_DnD.html?testController=' + controller);
+
+				setup();
+
+				doh.register("focus page", {
+					name: "focus page",
+					timeout: 20000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						doh.robot.mouseMove(10, 10, 100, 100);
+						doh.robot.mouseClick({left:true}, 100);
+						doh.robot.sequence(function(){
+                            //Focus the page, so tabbing will work.
+							d.callback(true);
+						}, 250);
+						return d;
+					}
+				});
+				doh.register("item selection (keyboard)", itemSelection(keyboardSelect, pressEnter) );
+				doh.register("item selection (mouse)", itemSelection(mouseSelect, clickItem) );
+
+				// Failsafe to clear pressed keys in case above tests timeout etc.
+				doh.register("clear pressed keys", function(){
+					var d = new doh.Deferred();
+					dojo.forEach([dojo.keys.META, dojo.keys.CTRL, dojo.keys.SHIFT], function(key){
+						doh.robot.keyUp(key, 250);
+					});
+					doh.robot.sequence(function(){
+						d.callback(true);
+					});
+					return d;
+				});
+
+				function itemSelection(selector, clicker){
+					return [
+						{
+							name: "select/deselect a single item",
+							timeout: 15000,
+							runTest: function(){ return testSingleItem(selector, clicker); }
+						},
+						{
+							name: "ctrl select",
+							timeout: 15000,
+							runTest: function(){ return testCtrlSelect(selector, clicker); }
+						},
+						{
+							name: "shift select",
+							timeout: 15000,
+							runTest: _getCtrlShiftTest(selector, [dojo.keys.SHIFT])
+						},
+						{
+							name: "ctrl shift select",
+							timeout: 15000,
+							runTest: _getCtrlShiftTest(selector, [dojo.isMac ? dojo.keys.META : dojo.keys.CTRL, dojo.keys.SHIFT])
+						}
+					];
+				}
+				
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

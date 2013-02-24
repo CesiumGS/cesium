@@ -246,7 +246,7 @@ define([
                     endPosition : new Cartesian2(
                             object[lastMovementName].endPosition.x + object[lastMovementName].motion.x * d,
                             object[lastMovementName].endPosition.y + object[lastMovementName].motion.y * d),
-                    motion : new Cartesian2(0.0, 0.0)
+                    motion : new Cartesian2()
                 };
             }
 
@@ -371,9 +371,9 @@ define([
         var wheelZoom = controller._zoomWheelHandler;
         var pinch = controller._pinchHandler;
         var translating = translate.isMoving() && translate.getMovement();
-        var rightZooming = rightZoom.isMoving();
-        var wheelZooming = wheelZoom.isMoving();
-        var pinching = pinch.isMoving();
+        var rightZooming = rightZoom.isMoving() && rightZoom.getMovement();
+        var wheelZooming = wheelZoom.isMoving() && wheelZoom.getMovement();
+        var pinching = pinch.isMoving() && pinch.getMovement();
 
         if (translate.isButtonDown() || rightZoom.isButtonDown() || wheelZooming) {
             controller._animationCollection.removeAll();
@@ -514,11 +514,11 @@ define([
 
     function updateCV(controller) {
         var zoom = controller._zoomHandler;
-        var zoomimg = zoom && zoom.isMoving();
+        var zoomimg = zoom.isMoving() && zoom.getMovement();
         var wheelZoom = controller._zoomWheelHandler;
-        var wheelZooming = wheelZoom.isMoving();
+        var wheelZooming = wheelZoom.isMoving() && wheelZoom.getMovement();
         var pinch = controller._pinchHandler;
-        var pinching = pinch.isMoving();
+        var pinching = pinch.isMoving()  && pinch.getMovement();
         var translate = controller._translateHandler;
         var translating = translate.isMoving() && translate.getMovement();
         var rotate = controller._rotateHandler;
@@ -526,7 +526,7 @@ define([
         var spin = controller._spinHandler;
         var spinning = spin.isMoving() && spin.getMovement();
         var look = controller._lookHandler;
-        var looking = look && look.isMoving();
+        var looking = look.isMoving() && look.getMovement();
 
         var buttonDown = rotate.isButtonDown() || spin.isButtonDown() || translate.isButtonDown() || zoom.isButtonDown() || looking || wheelZooming || pinching;
 
@@ -929,10 +929,10 @@ define([
         var rightZoom = controller._zoomHandler;
         var wheelZoom = controller._zoomWheelHandler;
         var pinch = controller._pinchHandler;
-        var spinning = spin && spin.isMoving();
-        var rightZooming = rightZoom && rightZoom.isMoving();
-        var wheelZooming = wheelZoom && wheelZoom.isMoving();
-        var pinching = pinch && pinch.isMoving();
+        var spinning = spin.isMoving() && spin.getMovement();
+        var rightZooming = rightZoom.isMoving() && rightZoom.getMovement();
+        var wheelZooming = wheelZoom.isMoving() && wheelZoom.getMovement();
+        var pinching = pinch.isMoving() && pinch.getMovement();
         var rotate = controller._rotateHandler;
         var rotating = rotate.isMoving() && rotate.getMovement();
         var look = controller._lookHandler;

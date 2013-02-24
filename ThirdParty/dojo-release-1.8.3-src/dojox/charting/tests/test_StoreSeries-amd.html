@@ -1,0 +1,189 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>StoreSeries Test</title>
+<link rel="stylesheet" href="../../../dijit/themes/claro/document.css"/>
+<link rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+<link rel="stylesheet" href="../../../dijit/tests/css/dijitTests.css"/>
+<style>
+	.dojoxLegendNode {border: 1px solid #ccc; margin: 5px 10px 5px 10px; padding: 3px;}
+	.dojoxLegendText {vertical-align: text-top; padding-right: 10px}
+	
+	#charts {
+		clear: both;
+		margin-bottom: 50px;
+	}
+	.chart-area {
+		float: left;
+		border: 1px solid #ccc;
+		width:	450px;
+		height: 350px;
+		margin: 3px;
+	}
+	.chart {
+		width:	450px;
+		height: 300px;
+	}
+</style>
+<script src="../../../dojo/dojo.js" data-dojo-config="isDebug: false, async: true"></script>
+<script>
+	require(["dojo/ready", "dojox/charting/Chart", "dojox/charting/StoreSeries", "dojox/charting/themes/ThreeD",
+	"dojox/charting/widget/Legend", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Markers",
+	"dojox/charting/plot2d/Columns", "dojox/charting/plot2d/Pie", "dojox/charting/action2d/Tooltip",
+	"dojox/charting/action2d/MoveSlice", "dojox/charting/action2d/Magnify", "dojox/charting/action2d/Shake",
+	"dojo/store/Memory", "dojo/store/Observable","dijit/form/NumberSpinner", "dojo/_base/lang", "dojo/_base/array",
+	"dojo/_base/xhr", "dojo/dom-construct", "dojo/dom", "dojo/aspect"],
+	function(ready, Chart, StoreSeries, ThreeD, Legend, Default, Markers, Columns, Pie, Tooltip, MoveSlice, Magnify, Shake,
+		Memory, Observable, NumberSpinner,
+		lang, arr, xhr, domConstruct, dom, aspect){
+	
+	xhr.get({
+		url: "stock.json",
+		sync: true,
+		handleAs: "json"
+	}).then(function(data){
+		store = Observable(new Memory({data:data}));
+	});
+	
+	function addLegend(chart, node){
+		var legend = new Legend({chart: chart}, node);
+		aspect.after(chart, "render", lang.hitch(legend, "refresh"));
+	}
+	
+	var templates = {
+		low:   "<strong>{0}</strong>: <strong>low {1}</strong> &ndash; {2} &ndash; {3}",
+		price: "<strong>{0}</strong>: {1} &ndash; <strong>price {2}</strong> &ndash; {3}",
+		high:  "<strong>{0}</strong>: {1} &ndash; {2} &ndash; <strong>high {3}</strong>"
+	};
+	
+	function valTrans(value, object){
+		return {
+			y: object[value],
+			tooltip: lang.replace(
+				templates[value],
+				arr.map(["symbol", "low", "price", "high"], function(field){
+					return object[field];
+				})
+			)
+		};
+	}
+	
+	var chartL, chartC, chartP;
+	
+	makeCharts = function(){
+		chartL = new Chart("lines").
+				setTheme(ThreeD).
+				addAxis("x", {fixLower: "major", fixUpper: "major", natural: true, majorTickStep: 5}).
+				addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", includeZero: true}).
+				addPlot("default", {type: Markers}).
+				addSeries("Price", new StoreSeries(
+					store, {query: {}}, "price"));
+		new Magnify(chartL);
+		new Tooltip(chartL);
+		chartL.render();
+		addLegend(chartL, "lines_legend");
+
+		chartC = new Chart("cols").
+				setTheme(ThreeD).
+				addAxis("x", {natural: true}).
+				addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", includeZero: true}).
+				addPlot("default", {type: Columns}).
+				addSeries("Low", new StoreSeries(
+					store, {query: {}}, lang.hitch(null, valTrans, "low"))).
+				addSeries("Price", new StoreSeries(
+					store, {query: {}}, lang.hitch(null, valTrans, "price"))).
+				addSeries("High", new StoreSeries(
+					store, {query: {}}, lang.hitch(null, valTrans, "high")));
+		new Shake(chartC, "default", {shiftY: 0});
+		new Tooltip(chartC);
+		chartC.render();
+		addLegend(chartC, "cols_legend");
+		
+		chartP = new dojox.charting.Chart("pie").
+				setTheme(ThreeD).
+				addPlot("default", {type: Pie, radius: 125}).
+				addSeries("Price", new StoreSeries(
+					store, {query: {}}, {y: "price", text: "symbol", tooltip: "price"}));
+		new Tooltip(chartP);
+		new MoveSlice(chartP);
+		chartP.render();
+		addLegend(chartP, "pie_legend");
+	};
+
+	makeSpinners = function(objects){
+		arr.forEach(objects, function(m){
+			var nm = m.symbol;
+			var num = m.price;
+			console.log(nm, num);
+			var w = new NumberSpinner({
+				onChange: function(val){
+					val = val===0 ? 0.01 : val; //HACKS the no label-when-zero bug
+					console.log("OC:", nm, val);
+					m.price = val;
+					store.put(m);
+					//store.setValues(m, "historicPrice", store.getValues("historicPrice").push(val));
+					console.log("OC:", nm, val);
+				},
+				value: num,
+				constraints: {min:0, max:10,places:2},
+				className: "myField",
+				intermediateChanges: true
+			});
+			domConstruct.place('<label>'+nm+'</label>', dom.byId("spinners"), "last")
+			domConstruct.place(w.domNode, "spinners", "last")
+		});
+		
+		var labels = arr.map(objects, function(object, index){
+				return {
+					value: index + 1,
+					text:  object.symbol
+				}
+			});
+		chartC.addAxis("x", {natural: true, labels: labels}).render();
+	};
+
+	ready(function(){
+		makeCharts();
+		makeSpinners(store.query({}));
+	});
+});
+</script>
+
+</head>
+
+<body class="claro">
+	<h1>StoreSeries Test</h1>
+	<p>
+		Use the spinner fields at the bottom to change the data. The charts listen to store changes an update automatically.
+	</p>
+	<div id="charts">
+		<div class="chart-area">
+			<div id="lines_legend"></div>
+			<div id="lines" class="chart"></div>
+		</div>
+		<div class="chart-area">
+			<div id="cols_legend"></div>
+			<div id="cols" class="chart"></div>
+		</div>	
+		<div class="chart-area">
+			<div id="pie_legend"></div>
+			<div id="pie" class="chart"></div>
+		</div>
+	</div>
+	<div id="spinners"></div>
+</body>
+</html>

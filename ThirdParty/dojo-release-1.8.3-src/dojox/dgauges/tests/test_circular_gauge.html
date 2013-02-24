@@ -1,0 +1,199 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Dojo Gauge Test</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/claro/claro.css";
+			@import "style.css";
+		</style>
+		<script type="text/javascript">
+			var djConfig = {
+				parseOnLoad: true,
+				async: true
+			}
+		</script>
+		<script type="text/javascript" src="../../../dojo/dojo.js">
+		</script>
+		<script type="text/javascript">
+			require(["dojo/on", "dojo/_base/kernel", "dojo/parser", "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dojox/dgauges/components/default/CircularLinearGauge", "dojox/dgauges/components/default/SemiCircularLinearGauge", "dojox/dgauges/CircularRangeIndicator", "dijit/form/Button"]);
+		</script>
+	</head>
+	<body class="claro">
+		<div data-dojo-type="dijit.layout.BorderContainer" gutters="true" liveSplitters="true" id="borderContainer">
+			<div data-dojo-type="dijit.layout.ContentPane" style="background-color: #fafafa;" splitter="true" region="center">
+				<div id="g1" data-dojo-type="dojox.dgauges.components.default.CircularLinearGauge">
+				</div>
+			</div>
+			<div data-dojo-type="dijit.layout.ContentPane" style="background-color: #fafafa; width:800px" splitter="true" region="right">
+				<div id="g2" data-dojo-type="dojox.dgauges.components.default.SemiCircularLinearGauge">
+				</div>
+			</div>
+			<div data-dojo-type="dijit.layout.ContentPane" splitter="true" region="top" style="height:30;">
+				<button data-dojo-type="dijit.form.Button" type="button">
+					Set 15
+					<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="evt">
+						require(["dijit/registry"],
+							function(registry) {
+								registry.byId("g1").set("value", 15);
+								registry.byId("g2").set("value", 15);
+							}
+						);
+					</script>
+				</button>
+				<button data-dojo-type="dijit.form.Button" type="button">
+					Alert current values
+					<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="evt">
+						require(["dijit/registry"],
+							function(registry) {
+								alert(registry.byId("g1").get("value") + " and " + registry.byId("g2").get("value"));
+							}
+						);
+					</script>
+				</button>
+				<button data-dojo-type="dijit.form.Button" type="button">
+					Change Scale Props.
+					<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="evt">
+						require(["dijit/registry"],
+							function(registry) {
+								var gauge = registry.byId("g1");
+								gauge.getElement("scale").set("startAngle", 0);
+								gauge.getElement("scale").set("endAngle", 180);
+								gauge.getElement("scale").set("orientation", "cclockwise");
+							}
+						);
+					</script>
+				</button>
+				<button data-dojo-type="dijit.form.Button" type="button">
+					Change tick stroke
+					<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="evt">
+						require(["dijit/registry"],
+							function(registry) {
+								var gauge = registry.byId("g1");
+								gauge.getElement("scale").set("tickStroke", {color:"#999999", width:1});
+							}
+						);
+					</script>
+				</button>				
+				<button data-dojo-type="dijit.form.Button" type="button">
+					Change Scaler Props.
+					<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="evt">
+						require(["dijit/registry"],
+							function(registry) {
+								var gauge = registry.byId("g1");
+								gauge.getElement("scale").scaler.set("minorTicksEnabled", false);
+								gauge.getElement("scale").scaler.set("minimum", 50);
+								gauge.getElement("scale").scaler.set("maximum", 250);
+								gauge.getElement("scale").scaler.set("majorTickInterval", 20);
+							}
+						);
+					</script>
+				</button>
+				<button data-dojo-type="dijit.form.Button" type="button">
+					Add range indicator
+					<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="evt">
+						require(["dijit/registry"],
+							function(registry) {
+								var gauge = registry.byId("g1");
+								var ri = new dojox.dgauges.CircularRangeIndicator();
+								ri.set("start", 60);
+								ri.set("value", 100);
+								ri.set("radius", 60);
+								gauge.getElement("scale").addIndicator("ri", ri, false);
+							}
+						);
+					</script>
+				</button>
+				<button data-dojo-type="dijit.form.Button" type="button">
+					Change needle
+					<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="evt">
+						require(["dijit/registry"],
+							function(registry) {
+								var gauge = registry.byId("g1");
+								gauge.getElement("scale").getIndicator("indicator").set("indicatorShapeFunc", 
+									function(group, indicator){
+										return group.createPolyline([0, -5, indicator.scale.radius - 2, 0, 0, 5, 0, -5]).setStroke({
+											color: "#333333", 
+											width: 0.25}).setFill([0, 0, 220]);
+									});  
+							}
+						); 
+					</script>
+				</button>
+				<button data-dojo-type="dijit.form.Button" type="button">
+					Remove needle
+					<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="evt">
+						require(["dijit/registry"],
+							function(registry) {
+								var gauge = registry.byId("g1");
+								gauge.getElement("scale").removeIndicator("indicator");
+							}
+						);
+					</script>
+				</button>
+				<button data-dojo-type="dijit.form.Button" type="button">
+					Listen for events
+					<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="evt">
+						require(["dijit/registry"],
+							function(registry) {
+								var gauge = registry.byId("g1");
+								gauge.on("startEditing", function(event){console.log(event.indicator.value);});
+								gauge.on("endEditing", function(event){console.log(event.indicator.value);});
+							}
+						);
+					</script>
+				</button>
+				<button data-dojo-type="dijit.form.Button" type="button">
+					No interaction
+					<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="evt">
+						require(["dijit/registry"],
+							function(registry) {
+								var gauge = registry.byId("g1");
+								gauge.getElement("scale").getIndicator("indicator").set("interactionMode", "none");
+							}
+						);
+					</script>
+				</button>
+				<button data-dojo-type="dijit.form.Button" type="button">
+					Indicator interaction
+					<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="evt">
+						require(["dijit/registry"],
+							function(registry) {
+								var gauge = registry.byId("g1");
+								gauge.getElement("scale").getIndicator("indicator").set("interactionMode", "mouse"); 
+								gauge.getElement("scale").getIndicator("indicator").set("interactionArea", "indicator");
+							}
+						);
+					</script>
+				</button>
+				<button data-dojo-type="dijit.form.Button" type="button">
+					Gauge interaction
+					<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="evt">
+						require(["dijit/registry"],
+							function(registry) {
+								var gauge = registry.byId("g1");
+								gauge.getElement("scale").getIndicator("indicator").set("interactionMode", "mouse"); 
+								gauge.getElement("scale").getIndicator("indicator").set("interactionArea", "gauge");
+							}
+						);
+					</script>
+				</button>
+				<button data-dojo-type="dijit.form.Button" type="button">
+					Change background colors
+					<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="evt">
+						require(["dijit/registry"],
+							function(registry) {
+								var gauge = registry.byId("g1");
+								gauge.set("borderColor", "#FF7800");
+								gauge.set("fillColor", "#FFFF00");
+								gauge = registry.byId("g2"); 
+								gauge.set("borderColor", "#FF7800");
+								gauge.set("fillColor", "#FFFF00");
+							}
+						);
+					</script>
+				</button>
+			</div>
+		</div>
+	</body>
+</html>

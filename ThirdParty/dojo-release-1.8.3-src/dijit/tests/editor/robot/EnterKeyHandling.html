@@ -1,0 +1,555 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Editor/EnterKeyHandling Plugin Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.DeferredList");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			function dom2string(root){
+				// summary:
+				//		Simple dump of the HTML inside an editor, skipping
+				//		attributes altogether.   Similar to `dijit._editor.getNodeHtml`
+				//		(maybe want to switch to using that).
+				var out = [];
+
+				function recurse(children){
+					var i=0, node = children[i++];
+					while(node){
+						switch(node.nodeType){
+						case 1:	// normal node
+							if(node.childNodes.length){
+								out.push("<" + node.tagName.toLowerCase() + ">");
+								recurse(node.childNodes);
+								out.push("</" + node.tagName.toLowerCase() + ">");
+							}else{
+								out.push("<" + node.tagName.toLowerCase() + "/>");
+							}
+							break;
+						case 3:	// text
+							var text = dojo.trim(node.textContent || node.data).
+										replace('\u00a0', "&nbsp;");
+							if(text){
+								out.push(text);
+							}
+							break;
+						}
+						node = children[i++];
+					}
+				}
+
+				recurse(root.childNodes);
+				return out.join("");
+			}
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../EnterKeyHandling.html');
+
+				var metaKey = dojo.isMac? {meta: true} : {ctrl: true};
+				
+				doh.register("init", [
+					{
+						name: "wait for editors to load",
+						timeout: 5000,
+						runTest: function(){
+							return new dojo.DeferredList(
+								dijit.registry.filter(function(w){ return w.onLoadDeferred; }).map(function(w){ return w.onLoadDeferred; })
+							);
+						}
+					}
+				]);
+
+				// Tests for BR mode
+				doh.register("blockNodeForEnter=BR", [
+					{
+						name: "wait for editors to load",
+						timeout: 5000,
+						runTest: function(){
+						    return new dojo.DeferredList(
+						        dijit.registry.filter(function(w){ return w.onLoadDeferred; }).map(function(w){ return w.onLoadDeferred; })
+						    );
+						}
+					},
+					{
+						name: "type in some text",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var br = dijit.byId("br");
+							br.set("value", "");
+							br.focus();
+							
+							doh.robot.mouseMoveAt(br.iframe, 500);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});
+							
+							// tab to the MenuBar... then focus should automatically shift to "File" menu,
+							for(var i=0; i<4; i++){
+								doh.robot.typeKeys("ab345", 500);
+								doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							}
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// get('value') should call the post-filter which recombines the separate <p> nodes into bigger
+								// paragraphs.
+								var value = br.get('value');
+								value = value.replace(/&nbsp;/g, "");
+								value = value.replace(/ /g, "");
+								value = value.replace(/\xA0/g, "");
+								doh.is('ab345<br/>ab345<br/>ab345<br/>ab345<br/>',
+										value,
+										"get('value')");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "copy and paste",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var br = dijit.byId("br");
+							br.set("value", "");
+							br.focus();
+							
+							doh.robot.mouseMoveAt(br.iframe, 500);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});
+								
+							doh.robot.typeKeys("testingCopyAndPaste", 500);
+							doh.robot.keyPress("a", 500, metaKey);	// select all
+							doh.robot.keyPress("c", 500, metaKey);	// copy
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {shift: false});
+							doh.robot.sequence(d.getTestCallback(function(){
+								// get('value') should call the post-filter which recombines the separate <p> nodes into bigger
+								// paragraphs.
+								var value = br.get('value');
+								value = value.replace(/ /g, "");
+								value = value.replace(/\xA0/g, "");
+								if(dojo.isWebKit && !dojo.isMac){
+									// Work around webkit bug:
+									// http://code.google.com/p/chromium/issues/detail?id=106551
+									// Should hopefully be fixed in Chrome 19.
+									value = value.replace(/\n/g, "");
+									value = value.replace(/\r\f/g, "");
+								}
+								
+								// Safari may end with a trailing/extra br, so we need to remove it.
+								if(/<br\/><br\/>$/.test(value)){
+									value = value.substring(0, value.length - 5);
+								}
+								doh.is('testingCopyAndPastetestingCopyAndPastetestingCopyAndPaste<br/>',
+										value,
+										"get('value')");
+							}), 1000);
+							return d;
+						}
+					},					
+					{
+						name: "copy and paste split",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var br = dijit.byId("br");
+							br.set("value", "");
+							br.focus();
+							
+							doh.robot.mouseMoveAt(br.iframe, 500);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});
+								
+							doh.robot.typeKeys("testingCopyAndPaste", 500);
+							doh.robot.keyPress("a", 500, metaKey);	// select all
+							doh.robot.keyPress("c", 500, metaKey);	// copy
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.sequence(d.getTestCallback(function(){
+								// get('value') should call the post-filter which recombines the separate <p> nodes into bigger
+								// paragraphs.
+								var value = br.get('value');
+								value = value.replace(/ /g, "");
+								if(dojo.isWebKit && !dojo.isMac){
+									// Work around webkit bug:
+									// http://code.google.com/p/chromium/issues/detail?id=106551
+									// Should hopefully be fixed in Chrome 19.
+									value = value.replace(/\n/g, "");
+									value = value.replace(/\r\f/g, "");
+								}
+								
+
+								// Safari may end with a trailing/extra br, so we need to remove it.
+								if(/aste<br\/>$/.test(value)){
+									value = value.substring(0, value.length - 5);
+								}
+								doh.is('testingCopyAndPastetestingCopyAndPastetestingCopyAndP<br/>aste',
+										value,
+										"get('value')");
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+				
+				doh.register("Split tests", [
+					{
+						name: "Test div line split",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							// The initial input was a div with a line of text with a bold tag in the middle.
+							// we want to focus on the bold and enter there, splitting it.
+							var editor = dijit.byId("div2");
+							dojo.window.scrollIntoView(editor.iframe);
+							var node = dojo.byId("boldLine0", editor.document);
+
+							doh.robot.mouseMoveAt(editor.iframe, 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor._sCall("selectElementChildren", [node]);
+							}), 500);
+							
+							// Keyboard kill the selection and shift position between I and S.
+							if(!dojo.isMoz || dojo.isMac){ doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 100, {}); }
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 100, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Do tests here.
+								var val = editor.get("value");
+								// Check that it split the is into two and that the bold and div were properly split.
+								doh.t(val.indexOf("It <b id=\"boldLine0\">I</b></div>") > 0, "start");
+								doh.t(val.indexOf("<div><b>S</b>") > 0, "end");
+							}), 500);
+
+							return d;
+						}
+
+					},
+					{
+						name: "Test div line split style clone",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							// The initial input was a div with a line of text with a bold tag in the middle.
+							// we want to focus on the bold and enter there, splitting it.
+							var editor = dijit.byId("div3");
+							dojo.window.scrollIntoView(editor.iframe);
+							var node = dojo.byId("boldLine1", editor.document);
+							
+							doh.robot.mouseMoveAt(editor.iframe, 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor._sCall("selectElementChildren", [node]);
+							}), 500);
+							
+							// Keyboard kill the selection and shift position between I and S.
+							if(!dojo.isMoz || dojo.isMac){ doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 100, {}); }
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 100, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Do tests here.
+								var val = editor.get("value");
+								// Check that it split the is into two and that the bold and div were properly split.
+								val = val.toLowerCase();
+								doh.t(/it <b\s+id="boldline1"\s+style\s*=\s*"\s*font-size:\s*4em;?\s*">i<\/b><\/div>/.test(val), "start");
+								doh.t(/<div><b\s+style\s*=\s*"\s*font-size:\s*4em;?\s*">s<\/b>/.test(val), "end");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "Test div line split font clone",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							// The initial input was a div with a line of text with a font tag in the middle.
+							// we want to focus on the font and enter there, splitting it.
+							var editor = dijit.byId("div4");
+							dojo.window.scrollIntoView(editor.iframe);
+							var node = dojo.byId("fontLine1", editor.document);
+							
+							doh.robot.mouseMoveAt(editor.iframe, 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor._sCall("selectElementChildren", [node]);
+							}), 500);
+							
+							// Keyboard kill the selection and shift position between I and S.
+							if(!dojo.isMoz || dojo.isMac){ doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 100, {}); }
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 100, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Do tests here.
+								var val = editor.get("value");
+								// Check that it split the is into two and that the bold and div were properly split.
+								val = val.toLowerCase();
+								doh.t(/it <font\s+id="fontline1"\s+size\s*=\s*"\s*5?\s*">i<\/font><\/div>/.test(val),"font not set on first line");
+								doh.t(/<div><font\s+size\s*=\s*"\s*5?\s*">s<\/font>/.test(val),"font not set on split line");
+							}), 500);
+
+							return d;
+						}
+					},					
+					{
+						name: "copy and paste DIV",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var editor = dijit.byId("div3");
+							dojo.window.scrollIntoView(editor.iframe);
+							editor.set("value", "");
+							editor.focus();
+							
+							doh.robot.mouseMoveAt(editor.iframe, 500);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});
+								
+							doh.robot.typeKeys("testingCopyAndPaste", 500);
+							doh.robot.keyPress("a", 500, metaKey);	// select all
+							doh.robot.keyPress("c", 500, metaKey);	// copy
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.sequence(d.getTestCallback(function(){
+								var value = editor.get('value');
+								value = value.replace(/\xA0/g, "");
+								if(dojo.isWebKit && !dojo.isMac){
+									// Work around webkit bug:
+									// http://code.google.com/p/chromium/issues/detail?id=106551
+									// Should hopefully be fixed in Chrome 19.
+									value = value.replace(/\n/g, "");
+									value = value.replace(/\r\f/g, "");
+								}
+								doh.is('<div>testingCopyAndPastetestingCopyAndPastetestingCopyAndPaste</div><div></div>',
+										value,
+										"get('value')");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "copy and paste DIV split",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var editor = dijit.byId("div3");
+							dojo.window.scrollIntoView(editor.iframe);
+							editor.set("value", "");
+							editor.focus();
+							
+							doh.robot.mouseMoveAt(editor.iframe, 500);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});
+								
+							doh.robot.typeKeys("testingCopyAndPaste", 500);
+							doh.robot.keyPress("a", 500, metaKey);	// select all
+							doh.robot.keyPress("c", 500, metaKey);	// copy
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.sequence(d.getTestCallback(function(){
+								// get('value') should call the post-filter which recombines the separate <p> nodes into bigger
+								// paragraphs.
+								var value = editor.get('value');
+								value = value.replace(/\xA0/g, "");
+								if(dojo.isWebKit && !dojo.isMac){
+									// Work around webkit bug:
+									// http://code.google.com/p/chromium/issues/detail?id=106551
+									// Should hopefully be fixed in Chrome 19.
+									value = value.replace(/\n/g, "");
+									value = value.replace(/\r\f/g, "");
+								}
+								
+
+								doh.is('<div>testingCopyAndPastetestingCopyAndPastetestingCopyAndP</div><div>aste</div>',
+									value,
+									"get('value')");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "Test p line split",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							// The initial input was a div with a line of text with a bold tag in the middle.
+							// we want to focus on the bold and enter there, splitting it.
+							var editor = dijit.byId("p2");
+							dojo.window.scrollIntoView(editor.iframe);
+							var node = dojo.byId("boldLine2", editor.document);
+							
+							doh.robot.mouseMoveAt(editor.iframe, 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor._sCall("selectElementChildren", [node]);
+							}), 500);
+							
+							// Keyboard kill the selection and shift position between I and S.
+							if(!dojo.isMoz || dojo.isMac){ doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 100, {}); }
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 100, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Do tests here.
+								var val = editor.get("value");
+								// Check that it split the is into two and that the bold and div were properly split.
+								doh.t(val.indexOf("It <b id=\"boldLine2\">I</b></p>") > 0, "start");
+								doh.t(val.indexOf("<p><b>S</b>") > 0, "end");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "shift enter to replace all content in p",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var editor = dijit.byId("p2");
+							editor.set('value','<p>ab</p>');
+							var selection=dijit.range.getSelection(editor.window);
+							selection.removeAllRanges();
+							var range=dijit.range.create(editor.window);
+							range.setStart(editor.editNode.firstChild, 0);
+							range.setEnd(editor.editNode.firstChild, 1);
+							selection.addRange(range);
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {shift: true});
+							doh.robot.sequence(d.getTestCallback(function(){
+								var val = editor.get("value");
+								doh.is(val, '<p><br /></p>');
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "copy and paste P",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var editor = dijit.byId("p2");
+							dojo.window.scrollIntoView(editor.iframe);
+							editor.set("value", "");
+							editor.focus();
+							
+							doh.robot.mouseMoveAt(editor.iframe, 500);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});
+								
+							doh.robot.typeKeys("testingCopyAndPaste", 500);
+							doh.robot.keyPress("a", 500, metaKey);	// select all
+							doh.robot.keyPress("c", 500, metaKey);	// copy
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.sequence(d.getTestCallback(function(){
+								var value = editor.get('value');
+								value = value.replace(/\xA0/g, "");
+								if(dojo.isWebKit && !dojo.isMac){
+									// Work around webkit bug:
+									// http://code.google.com/p/chromium/issues/detail?id=106551
+									// Should hopefully be fixed in Chrome 19.
+									value = value.replace(/\n/g, "");
+									value = value.replace(/\r\f/g, "");
+								}
+								
+								doh.is('<p>testingCopyAndPastetestingCopyAndPastetestingCopyAndPaste</p><p></p>',
+									value,
+									"get('value')");
+							}), 1000);
+							return d;
+						}
+					},					
+					{
+						name: "copy and paste P split",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var editor = dijit.byId("p2");
+							dojo.window.scrollIntoView(editor.iframe);
+							editor.set("value", "");
+							editor.focus();
+							
+							doh.robot.mouseMoveAt(editor.iframe, 500);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.keyPress(dojo.keys.BACKSPACE, 500, {});
+								
+							doh.robot.typeKeys("testingCopyAndPaste", 500);
+							doh.robot.keyPress("a", 500, metaKey);	// select all
+							doh.robot.keyPress("c", 500, metaKey);	// copy
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress("v", 500, metaKey);	// paste
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							doh.robot.sequence(d.getTestCallback(function(){
+								// get('value') should call the post-filter which recombines the separate <p> nodes into bigger
+								// paragraphs.
+								var value = editor.get('value');
+								value = value.replace(/\xA0/g, "");
+								if(dojo.isWebKit && !dojo.isMac){
+									// Work around webkit bug:
+									// http://code.google.com/p/chromium/issues/detail?id=106551
+									// Should hopefully be fixed in Chrome 19.
+									value = value.replace(/\n/g, "");
+									value = value.replace(/\r\f/g, "");
+								}
+								
+								doh.is('<p>testingCopyAndPastetestingCopyAndPastetestingCopyAndP</p><p>aste</p>',
+										value,
+										"get('value')");
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

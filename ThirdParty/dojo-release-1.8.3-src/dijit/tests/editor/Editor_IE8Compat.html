@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=8">
+		<title>Demo: Basic Editor</title>
+		<link rel="stylesheet" href="../../themes/claro/claro.css" />
+		<script src="../../../dojo/dojo.js"
+				data-dojo-config="async: true, parseOnLoad: true"></script>
+		<script>
+			// Include the class
+			require(["dojo/has", "dijit/Editor", "dojo/parser", "dojo/domReady!"], function(has){
+				console.log("has(ie) == " + has("ie"));
+			});
+		</script>
+	</head>
+	<body class="claro">
+		<h1>Test of Editor on IE9 in IE8 Compatibility mode</h1>
+		<div data-dojo-type="dijit.Editor" id="editor1"></div>
+	</body>
+</html>

@@ -39,38 +39,45 @@ define([
         }
 
         return when(url, function(url) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', url, true);
-
-            if (typeof headers !== 'undefined') {
-                for ( var key in headers) {
-                    if (headers.hasOwnProperty(key)) {
-                        xhr.setRequestHeader(key, headers[key]);
-                    }
-                }
-            }
-
-            xhr.responseType = 'arraybuffer';
-
             var deferred = when.defer();
 
-            xhr.onload = function(e) {
-                if (xhr.status === 200) {
-                    deferred.resolve(xhr.response);
-                } else {
-                    deferred.reject(new RequestErrorEvent(xhr.status, xhr.response));
-                }
-            };
-
-            xhr.onerror = function(e) {
-                deferred.reject(new RequestErrorEvent());
-            };
-
-            xhr.send();
+            loadArrayBuffer.load(url, headers, deferred);
 
             return deferred.promise;
         });
     };
+
+    // This is broken out into a separate function so that it can be mocked for testing purposes.
+    loadArrayBuffer.load = function(url, headers, deferred) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+
+        if (typeof headers !== 'undefined') {
+            for ( var key in headers) {
+                if (headers.hasOwnProperty(key)) {
+                    xhr.setRequestHeader(key, headers[key]);
+                }
+            }
+        }
+
+        xhr.responseType = 'arraybuffer';
+
+        xhr.onload = function(e) {
+            if (xhr.status === 200) {
+                deferred.resolve(xhr.response);
+            } else {
+                deferred.reject(new RequestErrorEvent(xhr.status, xhr.response));
+            }
+        };
+
+        xhr.onerror = function(e) {
+            deferred.reject(new RequestErrorEvent());
+        };
+
+        xhr.send();
+    };
+
+    loadArrayBuffer.defaultLoad = loadArrayBuffer.load;
 
     return loadArrayBuffer;
 });

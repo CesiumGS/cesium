@@ -214,7 +214,8 @@ define([
     };
 
     /**
-     * Gets state information about the current scene.
+     * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
+     * function, the previous frame's state is returned.
      *
      * @memberof Scene
      */
@@ -458,11 +459,7 @@ define([
      * DOC_TBA
      * @memberof Scene
      */
-    Scene.prototype.initializeFrame = function(time) {
-        if (typeof time === 'undefined') {
-            time = new JulianDate();
-        }
-
+    Scene.prototype.initializeFrame = function() {
         // Destroy released shaders once every 120 frames to avoid thrashing the cache
         if (this._shaderFrameCount++ === 120) {
             this._shaderFrameCount = 0;
@@ -470,36 +467,31 @@ define([
         }
 
         this._animations.update();
-
-        var us = this.getUniformState();
-        var frameState = this._frameState;
-
         this._camera.controller.update(this.mode, this.scene2D);
         this._screenSpaceCameraController.update(this.mode);
-
-        var frameNumber = CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0);
-        updateFrameState(this, frameNumber, time);
-        frameState.passes.color = true;
-        frameState.passes.overlay = true;
     };
 
     /**
      * DOC_TBA
      * @memberof Scene
      */
-    Scene.prototype.render = function() {
-        // Destroy released shaders once every 120 frames to avoid thrashing the cache
-        if (this._shaderFrameCount++ === 120) {
-            this._shaderFrameCount = 0;
-            this._context.getShaderCache().destroyReleasedShaderPrograms();
+    Scene.prototype.render = function(time) {
+        if (typeof time === 'undefined') {
+            time = new JulianDate();
         }
 
         var us = this.getUniformState();
         var frameState = this._frameState;
+
+        var frameNumber = CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0);
+        updateFrameState(this, frameNumber, time);
+        frameState.passes.color = true;
+        frameState.passes.overlay = true;
+
         us.update(frameState);
 
         this._commandList.length = 0;
-        this._primitives.update(this._context, this._frameState, this._commandList);
+        this._primitives.update(this._context, frameState, this._commandList);
 
         createPotentiallyVisibleSet(this, 'colorList');
         executeCommands(this);

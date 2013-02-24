@@ -1,0 +1,402 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Calendar A11Y Test</title>
+
+		<style>
+			@import "../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx",
+				"dojo/_base/array", "dojo/date", "dojo/date/locale", "dojo/dom", "dojo/keys", "dojo/_base/lang",
+				"dojo/query", "dojo/sniff",
+				"dijit/tests/helpers", "dojo/domReady!"
+			], function(doh, robot, array, date, datelocale, dom, keys, lang, query, has, helpers){
+
+				robot.initRobot('../test_Calendar.html');
+
+				doh.register(function setup(){
+					// get pointer to registry in the iframe
+					registry = robot.window.require("dijit/registry");
+					dfocus = robot.window.require("dijit/focus");
+				});
+
+				// refs to Calendar widgets
+				var cal1, cal5;
+
+				// log of calls to onChange handler
+				var changes = [];
+
+				doh.register("API", [
+					function noValue(){
+						// refs to Calendar widget
+						cal1 = registry.byId('calendar1');
+
+						// Although Calendar and DateTextBox prototypes defined value as Date("")
+						// (so that the parser knows value is a Date rather than a string),
+						// the convention is to use null to represent a blank DateTextBox or Calendar w/no selection
+						doh.is(null, registry.byId("calendar1").get("value"), 'initial get("value"), no selection');
+
+						cal1.set("value", new Date(2009, 8, 16));
+						doh.is(0, date.compare(new Date(2009, 8, 16), cal1.get('value')), 'get("value") after set');
+
+						cal1.set("value", null);
+						doh.is(null, cal1.get("value"), 'get("value") after set to null');
+					},
+
+					function initialValue(){
+						cal5 = registry.byId("calendar5");
+
+						var selectedDate = query(".dijitCalendarSelectedDate", cal5.domNode);
+						doh.is(1, selectedDate.length, "date is selected");
+						doh.is("14", helpers.innerText(selectedDate[0]), "selected date");
+
+						var selectedMonth = query(".dijitCalendarCurrentMonthLabel", cal5.domNode);
+						doh.is(1, selectedMonth.length, "month is selected");
+						doh.is("March", helpers.innerText(selectedMonth[0]), "selected month");
+
+						var selectedYear = query(".dijitCalendarSelectedYear", cal5.domNode);
+						doh.is(1, selectedYear.length, "year is selected");
+						doh.is("2008", helpers.innerText(selectedYear[0]), "selected year");
+					}
+				]);
+				
+				// Test aria roles, etc.
+				doh.register("aria", function(){
+					// test all days are loaded correctly
+					var dateCells = registry.byId("calendar1").dateCells;
+					array.forEach(dateCells, function(cellNode){
+						doh.is("false", cellNode.getAttribute("aria-selected"), "aria-selected should be false at startup");
+						doh.is(undefined, cellNode.getAttribute("aria-disabled should be undefined at startup"), "aria-disabled");
+					});
+										
+					// disable weekends
+					array.forEach(registry.toArray(), function(c){
+						if(c.isDisabledDate){
+							c.isDisabledDate = datelocale.isWeekend;
+							c._populateGrid();
+						}
+					});
+					
+					// select a day
+					registry.byId("calendar1").set("value",  new Date(2009, 8, 15));
+					
+					array.forEach(dateCells, function(cellNode, index){
+						var selected = cellNode.getAttribute("aria-selected");
+						var disabled = cellNode.getAttribute("aria-disabled");
+						helpers.innerText(cellNode)==="15" ? doh.is("true", selected, "aria-selected should be true: "+helpers.innerText(cellNode))
+											       : doh.is("false", selected, "aria-selected should still be true: "+helpers.innerText(cellNode));
+						(index%7==0) || (index%7==6) ? doh.is("true", disabled, "aria-disabled should be true for weekends: "+index)
+													 : doh.t((disabled==undefined || disabled=="" || disabled=="false"), "aria-disabled should still be undefined, 'false', or ''. Index was: "+index+" Value was: "+disabled);
+					});
+					
+					// enable all again
+					array.forEach(registry.toArray(), function(c){
+						if(c.isDisabledDate){
+							c.isDisabledDate = function(){return false;};
+							c._populateGrid();
+						}
+					});
+					
+					// select a different day
+					registry.byId("calendar1").set("value",  new Date(2009, 8, 17));
+					
+					array.forEach(dateCells, function(cellNode, index){
+						var selected = cellNode.getAttribute("aria-selected");
+						var disabled = cellNode.getAttribute("aria-disabled");
+						helpers.innerText(cellNode)==="17" ? doh.is("true", selected, "aria-selected should be true for day 17: "+helpers.innerText(cellNode))
+											       : doh.is("false", selected, "aria-selected should be false again: "+helpers.innerText(cellNode));
+						doh.t((disabled==undefined || disabled=="" || disabled=="false"), "aria-disabled should be undefined, 'false', or '' again");
+					});
+					
+				});
+
+				// Tabindex test makes sure that there's exactly one tab stop on the calendar at all times
+				doh.register("tabindex", [
+					{
+						name: "forward",
+						timeout: 10000,
+						setUp: function(){
+							cal1.set("value", new Date(2009, 8, 16));
+
+							dom.byId("before").focus();
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Tab in
+							robot.keyPress(keys.TAB, 1000, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is(16, helpers.innerText(dfocus.curNode), "first tab goes to selected day");
+							})), 500);
+
+							// Move around some
+							robot.keyPress(keys.RIGHT_ARROW, 0, {});
+							robot.keyPress(keys.DOWN_ARROW, 500, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is(24, helpers.innerText(dfocus.curNode), "move around some");
+							})), 500);
+
+							// Tab out
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								doh.is("after", dfocus.curNode.id, "next tab leaves calendar");
+							})), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "reverse",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// shift-tab back into calendar, should go to previously focused day
+							robot.keyPress(keys.TAB, 500, {shift: true});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is(24, helpers.innerText(dfocus.curNode), "shift-tab returns to previously focused day");
+							})), 500);
+
+							// shift-tab out
+							robot.keyPress(keys.TAB, 500, {shift: true});
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								doh.is("before", dfocus.curNode.id, "next shift-tab leaves calendar");
+							})), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "advance a month",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Tab in
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is(24, helpers.innerText(dfocus.curNode), "first tab goes to selected day");
+							})), 500);
+
+							// Move to next month
+							robot.keyPress(keys.PAGE_DOWN, 0, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is(24, helpers.innerText(dfocus.curNode), "moved to same day, but new month");
+							})), 500);
+
+							// Tab out
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								doh.is("after", dfocus.curNode.id, "next tab leaves calendar");
+							})), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "reverse again",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// shift-tab back into calendar, should go to previously focused day
+							robot.keyPress(keys.TAB, 500, {shift: true});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is(24, helpers.innerText(dfocus.curNode), "shift-tab returns to previously focused day");
+							})), 500);
+
+							// shift-tab out
+							robot.keyPress(keys.TAB, 500, {shift: true});
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								doh.is("before", dfocus.curNode.id, "next shift-tab leaves calendar");
+							})), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				// Make sure that all the navigation and selection keystrokes work
+				doh.register("navigation", [
+					{
+						name: "arrow navigation",
+						timeout: 10000,
+						setUp: function(){
+							// refs to Calendar widget
+						    	cal1 = registry.byId('calendar1');
+							cal1.set("value", new Date(2009, 8, 16));
+
+					    	// setup onChange handler to monitor onChange calls on cal1
+							cal1.on("change", function(val){
+								console.log('onchange w/value: ', val);
+								changes.push(val);
+							});
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.sequence(function(){
+								// monitor onchange events
+								changes = [];
+								cal1.focus();
+							}, 500);
+
+							// Initial conditions
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								// 16th is selected
+								var selected = query(".dijitCalendarSelectedDate", cal1.domNode);
+								doh.is(1, selected.length, "one selected node");
+								doh.is("16", helpers.innerText(selected[0]));
+
+								// initial focus is on selected value
+								doh.is("16", helpers.innerText(dfocus.curNode));
+
+								// and get("value") working
+								doh.is(0, date.compare(new Date(2009, 8, 16), cal1.get('value')), 'get("value")');
+							})), 1000);
+
+							// Mouse moves around focus without changing value
+							robot.keyPress(keys.RIGHT_ARROW, 500, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								// focus moved from 16 to 17
+								doh.is(17, helpers.innerText(dfocus.curNode));
+
+								doh.is(0, date.compare(new Date(2009, 8, 16), cal1.get('value')), 'value unchanged');
+								
+								// 16th is still selected
+								var selected = query(".dijitCalendarSelectedDate", cal1.domNode);
+								doh.is(1, selected.length, "one selected node");
+								doh.is("16", helpers.innerText(selected[0]));
+							})), 500);
+							robot.keyPress(keys.RIGHT_ARROW, 0, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is(18, helpers.innerText(dfocus.curNode));
+							})), 500);
+							robot.keyPress(keys.DOWN_ARROW, 0, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is(25, helpers.innerText(dfocus.curNode));
+							})), 500);
+							robot.keyPress(keys.LEFT_ARROW, 0, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is(24, helpers.innerText(dfocus.curNode));
+							})), 500);
+							robot.keyPress(keys.UP_ARROW, 0, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is(17, helpers.innerText(dfocus.curNode));
+							})), 500);
+							robot.keyPress(keys.UP_ARROW, 0, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is(10, helpers.innerText(dfocus.curNode));
+							})), 500);
+							robot.keyPress(keys.ENTER, 0, {});
+
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								var value = cal1.get('value');
+								doh.is(0, date.compare(new Date(2009, 8, 10), value), 'actual value is ' + value);
+								doh.is(1, changes.length, 'onchange events');
+								doh.is(0, date.compare(new Date(2009, 8, 10), changes[0]),
+										'value reported by onchange: ' + changes[0] +
+										', should be ' + new Date(2009, 8, 10));
+							})), 1000);
+							return d;
+						}
+					},
+					{
+						name: "month navigation",
+						timeout: 5000,
+						setUp: function(){
+							// refs to Calendar widget
+					   	 	cal1 = registry.byId('calendar1');
+							cal1.set("value", new Date(2008, 0, 31));
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.sequence(function(){
+								cal1.focus();
+							}, 500);
+
+							robot.keyPress(keys.PAGE_DOWN, 1000, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								// focus moved from jan 31 to feb 29
+								doh.is(29, helpers.innerText(dfocus.curNode));
+
+								doh.is(0, date.compare(new Date(2008, 0, 31), cal1.get('value')), 'value unchanged (first page down)');
+
+								// month label should have changed
+								var monthLabel = query(".dijitCalendarCurrentMonthLabel", cal1.domNode);
+								doh.is(1, monthLabel.length, "one month label");
+								doh.is("February", helpers.innerText(monthLabel[0]));
+
+								// jan 31 from previous month still visible, should be shown as selected
+								var selected = query(".dijitCalendarSelectedDate", cal1.domNode);
+								doh.is(1, selected.length, "no selected node");
+							})), 500);
+
+							robot.keyPress(keys.PAGE_DOWN, 500, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								// focus moved from jan 31 to feb 29
+								doh.is(29, helpers.innerText(dfocus.curNode));
+
+								doh.is(0, date.compare(new Date(2008, 0, 31), cal1.get('value')), 'value unchanged (second page down)');
+								
+								// since january no longer visible, no selected date should be visible
+								var selected = query(".dijitCalendarSelectedDate", cal1.domNode);
+								doh.is(0, selected.length, "no selected node");
+							})), 500);
+
+							robot.keyPress(keys.SPACE, 500, {});
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								var value = cal1.get('value');
+								doh.is(0, date.compare(new Date(2008, 2, 29), value), 'actual value is ' + value);
+							})), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "month+year navigation",
+						timeout: 5000,
+						setUp: function(){
+							// refs to Calendar widget
+						    	cal1 = registry.byId('calendar1');
+							cal1.set("value", new Date(2008, 1, 15));
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.sequence(function(){
+								cal1.focus();
+							}, 500);
+
+							robot.keyPress(keys.END, 1000, {});
+							// Chrome switches tabs with ctrl+page up/down (not even a keydown is generated), yet not Safari.
+							// I don't see a way to do feature-detection since browser window focus is lost.
+							robot.keyPress(keys.PAGE_DOWN, 500, has("chrome") ? {alt:true} : {ctrl:true});
+							robot.keyPress(keys.PAGE_UP, 500, has("chrome") ? {alt:true} : {ctrl:true});
+							robot.keyPress(keys.PAGE_UP, 500, has("chrome") ? {alt:true} : {ctrl:true});
+							robot.keyPress(keys.ENTER, 500);
+
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								var value = cal1.get('value');
+								doh.is(0, date.compare(new Date(2007, 1, 28), value), 'actual value is ' + value);
+							})), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

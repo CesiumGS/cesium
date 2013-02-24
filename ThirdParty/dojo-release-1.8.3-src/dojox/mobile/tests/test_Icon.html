@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>domButtons</title>
+
+	<script type="text/javascript" src="../deviceTheme.js"
+		data-dojo-config="mblThemeFiles: ['base','dojox/mobile/themes/common/domButtons.css']"></script>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/ready",
+			"dojox/mobile/Icon",
+			"dojox/mobile/parser",
+			"dojox/mobile/compat"
+		], function(ready, Icon){
+			ready(function(){
+				// online (=connected to the document) instantiation
+				var icon1 = new Icon({icon:"images/tab-icon-23h.png"}, document.getElementById("icon1"));
+				var icon2 = new Icon({icon:"images/tab-icons.png",iconPos:"29,116,29,29"}, document.getElementById("icon2"));
+				var icon3 = new Icon({icon:"mblDomButtonBlueCircleArrow"}, document.getElementById("icon3"));
+
+				// offline (=disconnected to the document) instantiation
+				var icon4 = new Icon({icon:"images/tab-icon-23h.png"});
+				document.body.appendChild(icon4.domNode);
+				var icon5 = new Icon({icon:"images/tab-icons.png",iconPos:"29,116,29,29"});
+				document.body.appendChild(icon5.domNode);
+				var icon6 = new Icon({icon:"mblDomButtonBlueCircleArrow"});
+				document.body.appendChild(icon6.domNode);
+			});
+		});
+	</script>
+</head>
+<body>
+  markup:
+  <div data-dojo-type="dojox.mobile.Icon" data-dojo-props='icon:"images/tab-icon-23h.png"'></div>
+  <div data-dojo-type="dojox.mobile.Icon" data-dojo-props='icon:"images/tab-icons.png",iconPos:"29,116,29,29"'></div>
+  <div data-dojo-type="dojox.mobile.Icon" data-dojo-props='icon:"mblDomButtonBlueCircleArrow"'></div>
+  <hr>online:
+  <div id="icon1"></div>
+  <div id="icon2"></div>
+  <div id="icon3"></div>
+  <hr>offline:
+</body>
+</html>

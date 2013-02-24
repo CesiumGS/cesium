@@ -144,7 +144,7 @@ define([
         }
 
         polyline.setShow(true);
-        polyline.setPositions(positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, time, this._referenceFrame, polyline.getPositions()));
+        polyline.setPositions(positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, time, this._referenceFrame, 60.0, polyline.getPositions()));
 
         property = dynamicPath.color;
         if (typeof property !== 'undefined') {

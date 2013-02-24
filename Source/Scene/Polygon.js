@@ -461,7 +461,7 @@ define([
         var textureCoordinates = new Float32Array(2 * (length / 3));
         var j = 0;
 
-        var rotation = Quaternion.fromAxisAngle(tangentPlane._normal, angle, appendTextureCoordinatesQuaternion);
+        var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, appendTextureCoordinatesQuaternion);
         var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
 
         // PERFORMANCE_IDEA:  Instead of storing texture coordinates per-vertex, we could
@@ -495,7 +495,7 @@ define([
     var computeBoundingRectangleMatrix3 = new Matrix3();
 
     function computeBoundingRectangle(tangentPlane, positions, angle, result) {
-        var rotation = Quaternion.fromAxisAngle(tangentPlane._normal, angle, computeBoundingRectangleQuaternion);
+        var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, computeBoundingRectangleQuaternion);
         var textureMatrix = Matrix3.fromQuaternion(rotation,computeBoundingRectangleMatrix3);
 
         var minX = Number.POSITIVE_INFINITY;

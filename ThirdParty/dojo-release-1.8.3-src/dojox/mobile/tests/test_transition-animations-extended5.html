@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Extended Transitions 5</title>
+
+	<link href="../themes/common/transitions.css" rel="stylesheet"/>
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','IconContainer']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/IconContainer"
+		]);
+	</script>
+
+	<style>
+	html,body {
+		height: 100%;
+		overflow: hidden;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="view1" data-dojo-type="dojox.mobile.View" style="height:100%;">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Top", href:"test_transition-animations.html", transition:"none"'>View 1</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Extended Transitions 5</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-9.png", moveTo:"view2", transition:"swirl"'>
+				Swirl
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png", moveTo:"view3", transition:"swirl", transitionDir:-1'>
+				Swirl (Reverse)
+			</li>
+			<!-- 1.8 -->
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"view2", transition:"swap"'>
+				Swap
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"view3", transition:"swap", transitionDir:-1'>
+				Swap (Reverse)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-7.png", moveTo:"view2", transition:"cube"'>
+				Cube
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-6.png", moveTo:"view3", transition:"cube", transitionDir:-1'>
+				Cube (Reverse)
+			</li>
+			<!-- 1.8 -->
+		</ul>
+	</div>
+
+	<div id="view2" data-dojo-type="dojox.mobile.View" style="height:100%;">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Top", href:"test_transition-animations.html", transition:"none"'>View 2</h1>
+		<h2 data-dojo-type="dojox.mobile.EdgeToEdgeCategory">Extended Transitions 5</h2>
+		<ul data-dojo-type="dojox.mobile.EdgeToEdgeList">
+			<!-- 1.8 -->
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-9.png", moveTo:"view3", transition:"swirl"'>
+				Swirl
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png", moveTo:"view1", transition:"swirl", transitionDir:-1'>
+				Swirl (Reverse)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"view3", transition:"swap"'>
+				Swap
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"view1", transition:"swap", transitionDir:-1'>
+				Swap (Reverse)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-7.png", moveTo:"view3", transition:"cube"'>
+				Cube
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-6.png", moveTo:"view1", transition:"cube", transitionDir:-1'>
+				Cube (Reverse)
+			</li>
+			<!-- 1.8 -->
+		</ul>
+	</div>
+
+	<div id="view3" data-dojo-type="dojox.mobile.View" style="height:100%;">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Top", href:"test_transition-animations.html", transition:"none"'>View 3</h1>
+		<ul data-dojo-type="dojox.mobile.IconContainer">
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"Swirl", icon:"images/icon9.png", lazy:true, moveTo:"view1", transition:"swirl"'></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"Swirl (Reverse)", icon:"images/icon2.png", lazy:true, moveTo:"view2", transition:"swirl", transitionDir:-1'></li>
+			<!-- 1.8 -->
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"Swap", icon:"images/icon3.png", moveTo:"view1", transition:"swap"'></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"Swap (Reverse)", icon:"images/icon1.png", moveTo:"view2", transition:"swap", transitionDir:-1'></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"Cube", icon:"images/icon7.png", moveTo:"view1", transition:"cube"'></li>
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"Cube (Reverse)", icon:"images/icon6.png", moveTo:"view2", transition:"cube", transitionDir:-1'></li>
+			<!-- 1.8 -->
+		</ul>
+	</div>
+
+</body>
+</html>

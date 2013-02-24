@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>List with domButtons</title>
+
+	<link href="../themes/common/domButtons.css" rel="stylesheet"/>
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/array",
+			"dojo/_base/connect",
+			"dojo/_base/window",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(array, connect, win, ready, registry){
+			function setRightIcon2Value(id, val){
+				var txt = win.doc.createTextNode(val);
+				registry.byId(id).rightIcon2Node.firstChild.firstChild.appendChild(txt);
+			}
+			function setIconValue(id, val){
+				var txt = win.doc.createTextNode(val);
+				registry.byId(id).iconNode.firstChild.firstChild.firstChild.firstChild.appendChild(txt);
+			}
+			ready(function(){
+				setRightIcon2Value("item1", "32");
+				setRightIcon2Value("item2", "5");
+				setRightIcon2Value("item3", "108");
+				setIconValue("item42", "3");
+				array.forEach(registry.byId("list1").getChildren(), function(w){
+					connect.connect(w.iconNode, "onclick", w, function(e){
+						console.log(this);
+						registry.byId("list1").removeChild(this);
+					});
+				});
+				array.forEach(registry.byId("list5").getChildren(), function(w){
+					connect.connect(w.iconNode, "onclick", w, function(e){
+						console.log(this);
+						registry.byId("list5").removeChild(this);
+					});
+				});
+			});
+		});
+	</script>
+	<style>
+	#item1, #item2, #item3 {
+		font-weight: normal;
+		font-size: 12px;
+	}
+	.subject {
+		font: bold 16px Helvetica;
+	}
+	.textBox {
+		overflow: hidden;
+	}
+	
+	/* Note: The class name of DOM buttons must start with "mblDomButton". */
+	
+	/* === My Custom Button1 ==*/
+	.mblDomButtonMyCustomButton1 {
+		position: relative;
+		width: 30px;
+		height: 30px;
+		border-width: 1px;
+		border-style: outset;
+		border-color: #A5A2A5;
+		color: white;
+		-webkit-border-radius: 3px;
+		background-color: #D6D3D6;
+		background: -webkit-gradient(linear, left top, left bottom, from(#EFF3EF), to(#BDBEBD));
+	}
+	.mblDomButtonMyCustomButton1 > DIV {
+		position: absolute;
+		top: 13px;
+		left: 5px;
+		width: 20px;
+		height: 4px;
+		margin: 0px;
+		font-size: 1px;
+		background-color: red;
+		-webkit-border-radius: 2px;
+		-webkit-transform: rotate(45deg);
+	}
+	.mblDomButtonMyCustomButton1 > DIV > DIV {
+		position: absolute;
+		top: -8px;
+		left: 8px;
+		width: 4px;
+		height: 20px;
+		margin: 0px;
+		font-size: 1px;
+		background-color: red;
+		-webkit-border-radius: 2px;
+	}
+	
+	/* === My Custom Button2 ==*/
+	.mblDomButtonMyCustomButton2 {
+		position: relative;
+		width: 29px;
+		height: 29px;
+	}
+	
+	.mblDomButtonMyCustomButton2 > DIV {
+		position: relative;
+		top: 2px;
+		left: 2px;
+		width: 22px;
+		height: 22px;
+		border: 1px solid #B5B6B5;
+		-webkit-border-radius: 12px;
+		-webkit-box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+	}
+	.mblDomButtonMyCustomButton2 > DIV > DIV {
+		position: relative;
+		top: 2px;
+		left: 2px;
+		width: 18px;
+		height: 18px;
+		-webkit-border-radius: 9px;
+		background-color: green;
+	}
+	.mblDomButtonMyCustomButton2 > DIV > DIV > DIV {
+		position: relative;
+		color: white;
+		text-align: center;
+		line-height: 17px;
+		font-size: 14px;
+	}
+	.mblDomButtonMyCustomButton2 > DIV > DIV > DIV > DIV {
+		display: none;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="view1" data-dojo-type="dojox.mobile.View" data-dojo-props='selected:true'>
+		<h1 data-dojo-type="dojox.mobile.Heading">View 1</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">RoundRectList</h2>
+		<ul id="list1" data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"mblDomButtonRedCircleMinus"
+			   , moveTo:"view2", arrowClass:"mblDomButtonSilverCircleDownArrow"'>
+				Slide
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"mblDomButtonRedCircleMinus"
+			   , moveTo:"view2", arrowClass:"mblDomButtonSilverCircleGreenButton"'>
+				Flip
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"mblDomButtonRedCircleMinus"
+			   , moveTo:"view2", arrowClass:"mblDomButtonSilverCircleRedCross"'>
+				Fade
+			</li>
+		</ul>
+	</div>
+
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Back", moveTo:"view1"'>View 2</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Dom Button with Text</h2>
+		<ul id="list2" data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='variableHeight:true'>
+			<li id="item1" data-dojo-type="dojox.mobile.ListItem"
+				data-dojo-props='icon:"mblDomButtonBlueBall", moveTo:"view3", rightIcon2:"mblDomButtonGrayRoundRect"'>
+				<div class="textBox">
+					<div class="subject">Dojo: Traditional Karate-do Spirit</div>
+					Sarah Connor Hardcover<br>
+					Eligible for FREE Super Saver Shipping<br>
+					<span style="color:red">$14.50 (50%)</span> In Stock
+				</div>
+			</li>
+			<li id="item2" data-dojo-type="dojox.mobile.ListItem"
+				data-dojo-props='icon:"mblDomButtonTransparent19", moveTo:"view3", rightIcon2:"mblDomButtonGrayRoundRect"'>
+				<div class="textBox">
+					<div class="subject">Japanese Martial Arts Dojo</div>
+					Martin Parker Hardcover<br>
+					<span style="color:red">$14.00 (60%)</span> In Stock
+				</div>
+			</li>
+			<li id="item3" data-dojo-type="dojox.mobile.ListItem"
+				data-dojo-props='icon:"mblDomButtonGreenBall", moveTo:"view3", rightIcon2:"mblDomButtonGrayRoundRect"'>
+				<div class="textBox">
+					<div class="subject">Total Solar Eclipse</div>
+					Steven Young Hardcover<br>
+					Get it by Mar. 2 if you order in the next <span style="color:green"><b>16 hours</b></span><br>
+					Eligible for FREE Super Saver Shipping<br>
+					<span style="color:red">$9.50 (62%)</span> In Stock
+				</div>
+			</li>
+		</ul>
+	</div>
+
+	<div id="view3" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Back", moveTo:"view2"'>View 3</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Variable Height List</h2>
+		<ul id="list3" data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='variableHeight:true'>
+			<li data-dojo-type="dojox.mobile.ListItem"
+				data-dojo-props='moveTo:"view4", arrowClass:"mblDomButtonBlueCircleArrow"'>
+				Top 10 news stories of the decade
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem"
+				data-dojo-props='moveTo:"view4", arrowClass:"mblDomButtonBlueCircleArrow"'>
+				Create client-side diagrammatic interaction in Web applications with GFX
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem"
+				data-dojo-props='moveTo:"view4", arrowClass:"mblDomButtonBlueCircleArrow"'>
+				Explores advanced topics in the new Java framework for implementing and consuming REST-based Web services, Part 3
+			</li>
+		</ul>
+	</div>
+
+	<div id="view4" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Back", moveTo:"view3"'>View 4</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Custom DOM Buttons</h2>
+		<ul id="list4" data-dojo-type="dojox.mobile.RoundRectList">
+			<li id="item41" data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"mblDomButtonMyCustomButton1", moveTo:"view5"'>
+				My Custom Button 1
+			</li>
+			<li id="item42" data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"mblDomButtonMyCustomButton2", moveTo:"view5"'>
+				My Custom Button 2
+			</li>
+		</ul>
+	</div>
+
+	<div id="view5" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Back", moveTo:"view4"'>View 5</h1>
+		<h2 data-dojo-type="dojox.mobile.EdgeToEdgeCategory">EdgeToEdgeList</h2>
+		<ul id="list5" data-dojo-type="dojox.mobile.EdgeToEdgeList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"mblDomButtonRedCircleMinus"'>
+				Airplane Mode
+				<div data-dojo-type="dojox.mobile.Switch"></div>
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"mblDomButtonRedCircleMinus", rightText:"mac", moveTo:"view1"'>
+				Wi-Fi
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"mblDomButtonRedCircleMinus", rightText:"AcmePhone", moveTo:"view1"'>
+				Carrier
+			</li>
+		</ul>
+	</div>
+</body>
+</html>

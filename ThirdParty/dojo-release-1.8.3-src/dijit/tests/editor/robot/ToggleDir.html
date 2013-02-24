@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot ToggleDir Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.DeferredList");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_ToggleDir.html');
+					
+				var metaKey = {ctrl: true};
+					
+				doh.register("testToggleDir", [
+					{
+						name: "wait for editors to load",
+						timeout: 5000,
+						runTest: function(){
+						    return new dojo.DeferredList(
+						        dijit.registry.filter(function(w){ return w.onLoadDeferred; }).map(function(w){ return w.onLoadDeferred; })
+						    );
+						}
+					},
+					{
+						name: "toggleDir_toggleOn",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt(dojo.query(".dijitEditorIconToggleDir")[0], 1000);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.mouseMoveAt("ed0", 1000);
+							doh.robot.mouseClick({left:true}, 500);
+							if(!dojo.isOpera){
+								doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500);
+								doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500, {shift: true});
+							}
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								var editor = dijit.byId("ed0");
+								if(!dojo.isOpera){ /*This test is not valid in opera because the rtl test ends up being the same as the ltr test, therefore, there is no way to disnguish between the two.*/
+									var selection = dijit.range.getSelection(editor.window);
+									if(selection && selection.rangeCount){				
+										var range = selection.getRangeAt(0);
+										var firstNode = range.startContainer;
+										var startOffset = range.startOffset;
+										var selectedText = firstNode.nodeValue.charAt(startOffset);
+										doh.is(".", selectedText);
+									}else{
+										doh.t(false);
+									}
+								}
+								
+								var editDoc = editor.editorObject.contentWindow.document.documentElement;
+			                    editDoc = editDoc.getElementsByTagName("body")[0];
+			                    doh.is("rtl", editDoc.dir);
+							
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "toggleDir_toggleOff",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt(dojo.query(".dijitEditorIconToggleDir")[0], 1000);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.mouseMoveAt("ed0", 1000);
+							doh.robot.mouseClick({left:true}, 500);
+							if(!dojo.isOpera){
+								doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500);
+								doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {shift: true});
+							}
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								var editor = dijit.byId("ed0");
+								if(!dojo.isOpera){
+									var selection = dijit.range.getSelection(editor.window);
+									if(selection && selection.rangeCount){				
+										var range = selection.getRangeAt(0);
+										var firstNode = range.startContainer;
+										var startOffset = range.startOffset;
+										var selectedText = firstNode.nodeValue.charAt(startOffset);
+										doh.is(".", selectedText);
+									}else{
+										doh.t(false);
+									}
+								}
+								var editDoc = editor.editorObject.contentWindow.document.documentElement;
+			                    editDoc = editDoc.getElementsByTagName("body")[0];
+			                    doh.is("ltr", editDoc.dir);
+							}), 1000);
+							return d;
+						}
+					}					
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

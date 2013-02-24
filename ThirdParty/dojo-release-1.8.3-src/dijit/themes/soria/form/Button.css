@@ -1,0 +1,122 @@
+
+/*****
+		dijit.form.Button
+		dijit.form.DropDownButton
+		dijit.form.ComboButton
+		dijit.form.ComboBox (partial)
+		dijit.form.Spinner (partial) (TODO: create NumberSpinner.css file like claro has)
+ *****/
+
+.soria .dijitButtonNode {
+	/* enabled state - inner */
+	border: 1px solid #8ba0bd;
+	border-bottom:1px solid #657c9c;
+	padding: 0.1em 0.2em 0.2em 0.2em;
+	background: #bcd5f0 url("../images/buttonEnabled.png") repeat-x top left;
+}
+
+.soria .dijitButtonText {
+	text-align: center;
+	padding: 0 0.3em;
+}
+.soria .dijitInputField {
+	padding: 0; /* set padding:0 for .soria .dijitSelect .dijitButtonText but with a low priority rule that can be easily trumped by the user */
+}
+
+.soria .dijitArrowButton {
+	color: #111;
+}
+
+.soria .dijitComboButton .dijitDownArrowButton {
+	padding-right:4px;
+}
+
+.soria .dijitTextBoxReadOnly,
+.soria .dijitTextBoxReadOnly .dijitButtonNode,
+.soria .dijitButtonDisabled .dijitButtonNode,
+.soria .dijitToggleButtonDisabled .dijitButtonNode,
+.soria .dijitDropDownButtonDisabled .dijitButtonNode,
+.soria .dijitComboButtonDisabled .dijitButtonNode,
+.soria .dijitTextBoxDisabled,
+.soria .dijitTextBoxDisabled .dijitButtonNode {
+	/* disabled state - inner */
+	border-color: #b9bbdd #b9bbdd #b9bbdd #b9bbdd;
+	background:#c3d3e5 url("../images/buttonDisabled.png") top repeat-x;
+	opacity: 0.60;
+}
+.dj_ie6 .soria .dijitReadOnly input,
+.dj_ie7 .soria .dijitReadOnly input,
+.dj_ie6 .soria .dijitComboButtonDisabled .dijitButtonText,
+.dj_ie7 .soria .dijitComboButtonDisabled .dijitButtonText {
+	/* opacity doesn't work on table node in IE, work around here */
+	color: #aaa;
+}
+.soria .dijitButtonHover .dijitButtonNode,
+.soria .dijitButtonNodeHover,
+.soria .dijitToggleButtonHover .dijitButtonNode,
+.soria .dijitDropDownButtonHover .dijitButtonNode,
+.soria .dijitButtonContentsHover,
+.soria .dijitUpArrowButtonHover,
+.soria .dijitDownArrowButtonHover {
+	/* hover state - inner */
+	/* TODO: change from Hover to Selected so that button is still highlighted while drop down is being used */
+	color:#243C5F;
+	background:#acc5e2 url("../images/buttonHover.png") repeat-x top left;
+}
+
+.soria .dijitButtonActive .dijitButtonNode,
+.soria .dijitToggleButtonActive .dijitButtonNode,
+.soria .dijitDropDownButtonActive .dijitButtonNode,
+.soria .dijitComboButtonActive .dijitButtonContents,
+.soria .dijitStackController .dijitToggleButtonChecked .dijitButtonNode {
+	/* active state - inner (for when you are pressing a normal button, or
+	 * when a radio-type button is in a depressed state
+	 */
+	border-color:#657c9c;
+	background: #91b4e5 url("../images/buttonActive.png") top left repeat-x;
+}
+.soria .dijitUpArrowButtonActive,
+.soria .dijitDownArrowButtonActive {
+	/* same as above except don't adjust border color (it's controlled by the containing Spinner/ComboBox) */
+	background: #91b4e5 url("../images/buttonActive.png") top left repeat-x;
+}
+
+
+.soria .dijitArrowButtonInner {
+	background-image: url("../images/spriteArrows.png");
+	background-repeat: no-repeat;
+	background-position: 0 center;
+	width: 11px;
+	height: 11px;
+}
+.soria .dijitComboBox .dijitArrowButtonInner {
+        background-position: 0 center;
+}
+.soria .dijitLeftArrowButton .dijitArrowButtonInner {
+	background-position: -11px center;
+}
+.soria .dijitUpArrowButton .dijitArrowButtonInner {
+	background-position: -22px center;
+}
+.soria .dijitRightArrowButton .dijitArrowButtonInner {
+	background-position: -33px center;
+}
+.dj_ie6 .soria .dijitArrowButtonInner {
+	background-image: url("../images/spriteArrows.gif");
+}
+.dj_ie .soria .dijitSpinner .dijitUpArrowButton .dijitArrowButtonInner {
+	margin-top: 1px; /* image has too many blank pixels on top */
+}
+.soria .dijitSpinnerButtonContainer {
+	width: auto;
+	padding: 0;
+}
+.soria .dijitSpinner .dijitArrowButton {
+	width: 15px;
+}
+.soria .dijitSpinner .dijitSpinnerButtonInner {
+	width: 15px;
+}
+.soria .dijitSpinner .dijitArrowButtonInner .dijitInputField {
+	padding: 0;
+}

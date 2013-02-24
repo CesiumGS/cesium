@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Dynamic ScrollableView (app header / app footer)</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/ready",
+			"dojox/mobile/Heading",
+			"dojox/mobile/ScrollableView",
+			"dojox/mobile/RoundRectCategory",
+			"dojox/mobile/RoundRectList",
+			"dojox/mobile/ListItem",
+			"dojox/mobile/RoundRect",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(ready, Heading, ScrollableView, RoundRectCategory, RoundRectList, ListItem, RoundRect){
+			ready(function(){
+				// ==== App Header has to be at the top position ====
+				var heading1 = new Heading({
+					label: "Fixed App Header",
+					fixed: "top"
+				}, "heading1");
+				heading1.startup();
+
+				// ==== view1 ====
+				var view1 = new ScrollableView(null, "view1");
+
+				var categ1 = new RoundRectCategory({
+					label: "Documents"
+				});
+				categ1.placeAt(view1.containerNode);
+
+				var list1 = new RoundRectList();
+				list1.placeAt(view1.containerNode);
+
+				var counter = 4;
+				for(var i = 1; i <= 3; i++){
+					var item1 = new ListItem({
+						icon: "images/i-icon-"+i+".png",
+						label: "Document 000"+counter,
+						moveTo: "view2"
+					});
+					list1.addChild(item1);
+					counter++;
+				}
+
+				view1.startup();
+
+				// ==== view2 ====
+				var view2 = new ScrollableView(null, "view2");
+
+				var rect1 = new RoundRect();
+				rect1.containerNode.innerHTML = "Go Back";
+				rect1.placeAt(view2.containerNode);
+				rect1.connect(rect1.domNode, "onclick", function(){
+					view2.performTransition("view1", -1, "slide");
+				});
+
+				view2.startup();
+
+				// ==== App Footer has to be at the last position ====
+				var heading2 = new Heading({
+					label: "Fixed App Footer",
+					fixed: "bottom"
+				}, "heading2");
+				heading2.startup();
+
+				// ==== Initialize each view when the dom is ready ====
+				view1.findAppBars();
+				view1.resize();
+				view2.findAppBars();
+				view2.resize();
+			});
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="heading1"></div>
+	<div id="view1"></div>
+	<div id="view2"></div>
+	<div id="heading2"></div>
+</body>
+</html>

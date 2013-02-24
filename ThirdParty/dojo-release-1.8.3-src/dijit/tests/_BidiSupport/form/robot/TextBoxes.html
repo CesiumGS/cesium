@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>doh.robot TextBox textDir Tests</title>
+	
+		<title>doh.robot Bidi Test</title>
+
+		<style>
+			@import "../../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../../dojo/dojo.js">
+		</script>
+			
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_TextBoxes.html');
+				
+				// execute some test as soon as the widget gets focus
+				var focusThenRun = function(widget, fcn){
+					if(!widget.focused){
+						var handler = widget.connect(widget, '_onFocus', function(){
+							widget.disconnect(handler);
+							setTimeout(fcn, 1);
+						});
+						widget.focus();
+					}else{
+						fcn();
+					}
+				};
+				var pos, range, textBox, modifier = dojo.isMac ? {meta: true} : {ctrl: true};
+
+				doh.register("LTR textBox", [
+					{
+						name: "initial text direction of empty 'ltrTextBox'",
+						
+						setUp: function(){
+							textBox = dijit.byId("ltrTextBox");
+						},
+
+						runTest: function(){
+							doh.is("ltr",textBox.focusNode.dir,"direction of :" + textBox.id);
+						}
+					},				
+					{
+						name: "write in English in 'ltrTextBox'",
+						timeout: 3000,
+						
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							focusThenRun(textBox, function(){
+								doh.robot.typeKeys('Hello', 1, 300);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is("ltr",textBox.focusNode.dir, "direction of :" + textBox.id);
+								}), 400);
+							});
+
+							return d;
+						}
+					},
+					{
+						name: "paste Hebrew in 'ltrTextBox'",
+						timeout: 5000,
+
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							focusThenRun(textBox, function(){
+								doh.robot.setClipboard("\u05e9\u05dc\u05d5\u05dd\u0021",'text/html');
+								doh.robot.keyPress("a", 400, modifier);
+								doh.robot.keyPress("v", 300, modifier);
+								// select text from the left side of the textbox
+								doh.robot.mouseMoveAt(textBox.focusNode, 500, 1, 5, textBox.focusNode.offsetHeight >> 1);
+								doh.robot.mousePress({left:true}, 500);
+								doh.robot.mouseMoveAt(textBox.focusNode, 500, 1000, 20, textBox.focusNode.offsetHeight >> 1);
+								doh.robot.mouseRelease({left:true}, 500);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is("ltr",textBox.focusNode.dir,"direction of :" + textBox.id);
+									// verify text was selected from the left side of the textbox
+									if(textBox.focusNode.selectionEnd){
+										doh.t(textBox.focusNode.selectionEnd > textBox.focusNode.selectionStart, "selected text " + textBox.focusNode.selectionStart + '. ' + textBox.focusNode.selectionEnd);
+									}else{
+									        range = dojo.global.window.document.selection.createRange();
+										pos = range.getBoundingClientRect();
+										doh.t(pos.right > pos.left, "selected text " + pos.left + '. ' + pos.right);
+									}
+								}), 400);
+							});
+
+							return d;
+						}
+					}
+				]);				
+				
+				doh.register("RTL textBox", [
+					{
+						name: "initial text direction of empty 'rtlTextBox'",
+
+						setUp: function(){
+							textBox = dijit.byId("rtlTextBox");
+							textBox.domNode.scrollIntoView();
+						},
+
+						runTest: function(){
+							doh.is("rtl",textBox.focusNode.dir,"direction of :" + textBox.id);
+						}
+					},
+					{
+						name: "write in English in 'rtlTextBox'",
+						timeout: 5000,
+
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							focusThenRun(textBox, function(){
+								doh.robot.typeKeys('Hello', 1, 300);
+								// select text from the right side of the textbox
+								doh.robot.mouseMoveAt(textBox.focusNode, 50, 100, textBox.focusNode.offsetWidth-5, textBox.focusNode.offsetHeight >> 1);
+								doh.robot.mousePress({left:true}, 500);
+								doh.robot.mouseMoveAt(textBox.focusNode, 50, 1000, textBox.focusNode.offsetWidth-20, textBox.focusNode.offsetHeight >> 1);
+								doh.robot.mouseRelease({left:true}, 500);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is("rtl",textBox.focusNode.dir,"direction of :" + textBox.id);
+									// verify text was selected from the right side of the textbox
+									if(textBox.focusNode.selectionEnd){
+										doh.t(textBox.focusNode.selectionEnd > textBox.focusNode.selectionStart, "selected text " + textBox.focusNode.selectionStart + '. ' + textBox.focusNode.selectionEnd);
+									}else{
+									        range = dojo.global.window.document.selection.createRange();
+										pos = range.getBoundingClientRect();
+										doh.t(pos.right > pos.left, "selected text " + pos.left + '. ' + pos.right);
+									}
+								}), 400);
+							});
+
+							return d;
+						}
+					},				
+					{
+						name: "paste Hebrew in 'rtlTextBox'",
+						timeout: 4000,
+
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							focusThenRun(textBox, function(){
+								doh.robot.setClipboard("\u05e9\u05dc\u05d5\u05dd\u0021",'text/html');
+
+								doh.robot.keyPress("a", 400, modifier);
+								doh.robot.keyPress("v", 300, modifier);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is("rtl",textBox.focusNode.dir,"direction of :" + textBox.id);
+								}), 400);
+							});
+
+							return d;
+						}
+					}
+				]);	
+
+				doh.register("Contextual textBox", [
+					{
+						name: "initial text direction of empty 'contextualTextBox'",
+
+						setUp: function(){
+							textBox = dijit.byId("contextualTextBox");
+							textBox.domNode.scrollIntoView();
+						},
+
+						runTest: function(){
+							doh.is("auto",textBox.textDir,"textDir of :" + textBox.id);
+						}
+					},
+					{
+						name: "write in English in 'contextualTextBox'",
+						timeout: 5000,
+
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							focusThenRun(textBox, function(){
+								doh.robot.setClipboard("Hello",'text/html');
+
+								doh.robot.keyPress("v", 600, modifier);
+								// select text from the left side of the textbox
+								doh.robot.mouseMoveAt(textBox.focusNode, 50, 100, 5, textBox.focusNode.offsetHeight >> 1);
+								doh.robot.mousePress({left:true}, 500);
+								doh.robot.mouseMoveAt(textBox.focusNode, 50, 1000, 20, textBox.focusNode.offsetHeight >> 1);
+								doh.robot.mouseRelease({left:true}, 500);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is("ltr",textBox.focusNode.dir,"direction of :" + textBox.id);
+									// verify text was selected from the left side of the textbox
+									if(textBox.focusNode.selectionEnd){
+										doh.t(textBox.focusNode.selectionEnd > textBox.focusNode.selectionStart, "selected text " + textBox.focusNode.selectionStart + '. ' + textBox.focusNode.selectionEnd);
+									}else{
+									        range = dojo.global.window.document.selection.createRange();
+										pos = range.getBoundingClientRect();
+										doh.t(pos.right > pos.left, "selected text " + pos.left + '. ' + pos.right);
+									}
+								}), 300);	
+							});					
+
+							return d;
+						}
+					},
+					{
+						name: "text direction paste Hebrew before English",
+						timeout: 5000,
+
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							focusThenRun(textBox, function(){
+								doh.robot.setClipboard("\u05d0\u05e0\u05d9\u0020\u05d0\u05d5\u05de\u05e8\u05ea\u003a\u0020",'text/html');
+
+								dojo.isMac ? doh.robot.keyPress("a", 100, {ctrl:true}): doh.robot.keyPress(dojo.keys.HOME, 100, {});
+
+								doh.robot.keyPress("v", 400, modifier);
+								// select text from the right side of the textbox
+								doh.robot.mouseMoveAt(textBox.focusNode, 50, 100, textBox.focusNode.offsetWidth-5, textBox.focusNode.offsetHeight >> 1);
+								doh.robot.mousePress({left:true}, 500);
+								doh.robot.mouseMoveAt(textBox.focusNode, 50, 1000, textBox.focusNode.offsetWidth-20, textBox.focusNode.offsetHeight >> 1);
+								doh.robot.mouseRelease({left:true}, 500);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is("rtl",textBox.focusNode.dir,"direction of :" + textBox.id);
+									// verify text was selected from the right side of the textbox
+									if(textBox.focusNode.selectionEnd){
+										doh.t(textBox.focusNode.selectionEnd > textBox.focusNode.selectionStart, "selected text " + textBox.focusNode.selectionStart + '. ' + textBox.focusNode.selectionEnd);
+									}else{
+									        range = dojo.global.window.document.selection.createRange();
+										pos = range.getBoundingClientRect();
+										doh.t(pos.right > pos.left, "selected text " + pos.left + '. ' + pos.right);
+									}
+								}), 400);
+							});
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("test the programmatic textBox in the tab container", [
+					{
+						name: "initial direction of the textBoxs",
+
+						setUp: function(){
+							textBox1 = dijit.byId("programmatic1");
+							textBox2 = dijit.byId("programmatic2");
+							textBox3 = dijit.byId("programmatic3");
+						},
+
+						runTest: function(){
+							doh.is("ltr",textBox1.focusNode.dir,"Initial direction of - 'programmatic'");
+							doh.is("rtl",textBox2.focusNode.dir,"Initial direction of - 'programmatic'");
+							doh.is("ltr",textBox3.focusNode.dir,"Initial direction of - 'programmatic'");
+						}
+					},
+					{
+						name: "direction of textBoxs after change value button in second tab is pressed",
+
+						runTest: function(){
+							var button = dojo.byId("changeValue");
+
+							button.click();
+
+							doh.is("ltr",textBox1.focusNode.dir,"Initial direction of - 'programmatic'");
+							doh.is("rtl",textBox2.focusNode.dir,"Initial direction of - 'programmatic'");
+							doh.is("rtl",textBox3.focusNode.dir,"Initial direction of - 'programmatic'");
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

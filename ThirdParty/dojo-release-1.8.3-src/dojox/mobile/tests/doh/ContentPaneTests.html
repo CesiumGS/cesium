@@ -1,0 +1,245 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>ContentPane Tests</title>
+<link href="css/test.css" rel="stylesheet"/>
+<script type="text/javascript" src="../../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="parseOnLoad: true, async: true"></script>
+<script language="JavaScript" type="text/javascript">
+	var WIDGET_CLASSNAME1 = "mblContentPane";
+	var WIDGET2_CLASSNAME1 = "mblRoundRect";
+	var WIDGET2_CLASSNAME2 = "mblShadow";
+	var WIDGET_INNERHTML1 = "Pane 1 : Thank you!";
+	var WIDGET_INNERHTML2 = "Pane 2 : HTML fragment example";
+	var WIDGET_INNERHTML3 = "Pane 3 : Thank you!";
+	var WIDGET_INNERHTML4 = "Pane 4 : HTML fragment example";
+	var WIDGET_INNERHTML5 = "Pane 5 : DOM Tree";
+
+	require([
+		"dojo/_base/connect",
+		"dojo/dom-construct", // dojo.place, dojo.create
+		"dojo/dom-class", // dojo.hasClass
+		"dojo/ready", // dojo.ready
+		"dojo/string", // dojo.trim
+		"dijit/registry",  // dijit.byId
+		"doh/runner",	//doh functions
+		"dojox/mobile/ContentPane",
+		"dojox/mobile",				// This is a mobile app.
+		"dojox/mobile/View",		// This mobile app uses mobile view
+		"dojox/mobile/compat",		// This mobile app supports running on desktop browsers
+		"dojox/mobile/parser",		// This mobile app uses declarative programming with fast mobile parser
+		"dojox/mobile/RoundRect"
+	], function(connect, domConst, domClass, ready, string, registry, runner, ContentPane){
+		function _initContentPane(widgetIds){
+			registry.byId(widgetIds[0]).set("content", "<div data-dojo-type='dojox.mobile.RoundRect' shadow='true'>Pane 3 : Thank you!</div>");
+			registry.byId(widgetIds[1]).set("href", "fragment2.html");
+
+			var dom = domConst.create("DIV", {
+				dojoType: "dojox.mobile.RoundRect",
+				shadow: "true"
+			});
+			dom.innerHTML = "Pane 5 : DOM Tree";
+			registry.byId(widgetIds[2]).set("content", dom);
+			
+		}
+		function _createContentPaneProgrammatically(widgetIds, placeHolderId){
+			var r = new ContentPane({id:widgetIds[0], content:"<div data-dojo-type='dojox.mobile.RoundRect' shadow='true'>Pane 1 : Thank you!</div>"});
+			domConst.place(r.domNode, placeHolderId[0], "replace");
+			r.startup();
+			r = new ContentPane({id:widgetIds[1], href:"fragment1.html"});
+			domConst.place(r.domNode, placeHolderId[1], "replace");
+			r.startup();
+			r = new ContentPane({id:widgetIds[2]});
+			domConst.place(r.domNode, placeHolderId[2], "replace");
+			r.startup();
+			r = new ContentPane({id:widgetIds[3]});
+			domConst.place(r.domNode, placeHolderId[3], "replace");
+			r.startup();
+			r = new ContentPane({id:widgetIds[4]});
+			domConst.place(r.domNode, placeHolderId[4], "replace");
+			r.startup();
+		}
+		function _createContentPaneProgrammaticallyWithSourceNodeReference(widgetIds){
+			new ContentPane({content:"<div data-dojo-type='dojox.mobile.RoundRect' shadow='true'>Pane 1 : Thank you!</div>"}, widgetIds[0]);
+			new ContentPane({href:"fragment1.html"}, widgetIds[1]);
+			new ContentPane({}, widgetIds[2]);
+			new ContentPane({}, widgetIds[3]);
+			new ContentPane({}, widgetIds[4]);
+
+		}
+		function _assertCorrectContentPanes(widgetIds){
+			var widget = registry.byId(widgetIds[0]);
+			_assertCorrectContentPane(widget, WIDGET_INNERHTML1);
+			widget = registry.byId(widgetIds[1]);
+			_assertCorrectContentPane(widget, WIDGET_INNERHTML2);
+			widget = registry.byId(widgetIds[2]);
+			_assertCorrectContentPane(widget, WIDGET_INNERHTML3);
+			widget = registry.byId(widgetIds[3]);
+			_assertCorrectContentPane(widget, WIDGET_INNERHTML4);
+			widget = registry.byId(widgetIds[4]);
+			_assertCorrectContentPane(widget, WIDGET_INNERHTML5);
+		}
+		function _assertCorrectContentPane(widget, titleText){
+			runner.assertNotEqual(null, widget, "ContentPane: Did not instantiate.");
+			runner.assertTrue(dojo.hasClass(widget.domNode, WIDGET_CLASSNAME1), WIDGET_CLASSNAME1 + " id=" + widget.domNode.id);
+			var c = widget.getChildren();
+			runner.assertNotEqual(null, c, "ContentPane: Does not have children (null).");
+			runner.assertNotEqual(undefined, c, "ContentPane: Does not have children (undefined).");
+			runner.assertNotEqual(null, c[0], "ContentPane: Did not instantiate first child (null). id=" + 
+				widget.domNode.id + " c=" + c + " c[0]=" + c[0]);
+			runner.assertNotEqual(undefined, c[0], "ContentPane: Did not instantiate first child (undefined). id=" + 
+				widget.domNode.id + " c=" + c + " c[0]=" + c[0]);
+			runner.assertTrue(dojo.hasClass(c[0].domNode, WIDGET2_CLASSNAME1), WIDGET2_CLASSNAME1 + " id=" + c[0].domNode.id);
+			runner.assertTrue(dojo.hasClass(c[0].domNode, WIDGET2_CLASSNAME2), WIDGET2_CLASSNAME2 + " id=" + c[0].domNode.id);
+			runner.assertEqual(titleText, string.trim(c[0].domNode.innerHTML.replace(/\r\n/g,"")), "id=" + c[0].domNode.id);
+		}
+		function _showView2(){
+			var view1 = registry.byId("view1");
+			view1.performTransition("view2", 1, "none");
+		}
+		ready(function(){
+			_initContentPane(["view1-pane3","view1-pane4","view1-pane5"]);
+			_createContentPaneProgrammatically(["view1-pane6","view1-pane7","view1-pane8","view1-pane9","view1-pane10"], 
+				["view1-pane6place","view1-pane7place","view1-pane8place","view1-pane9place","view1-pane10place"]);
+			_initContentPane(["view1-pane8","view1-pane9","view1-pane10"]);
+			_createContentPaneProgrammaticallyWithSourceNodeReference(["view1-pane11","view1-pane12","view1-pane13","view1-pane14","view1-pane15"]);
+			_initContentPane(["view1-pane13","view1-pane14","view1-pane15"]);
+
+			_showView2();
+			_initContentPane(["view2-pane3","view2-pane4","view2-pane5"]);
+			_createContentPaneProgrammatically(["view2-pane6","view2-pane7","view2-pane8","view2-pane9","view2-pane10"], 
+				["view2-pane6place","view2-pane7place","view2-pane8place","view2-pane9place","view2-pane10place"]);
+			_initContentPane(["view2-pane8","view2-pane9","view2-pane10"]);
+			_createContentPaneProgrammaticallyWithSourceNodeReference(["view2-pane11","view2-pane12","view2-pane13","view2-pane14","view2-pane15"]);
+			_initContentPane(["view2-pane13","view2-pane14","view2-pane15"]);
+
+			runner.register("dojox.mobile.test.doh.ContentPane", [
+				{
+					name: "ContentPane Verification1",
+					timeout: 4000,
+					runTest: function(){
+						var widget = registry.byId("view1-pane14");
+						var d = new runner.Deferred();
+						var handle1 = connect.connect(widget, "loadHandler", this, d.getTestCallback(function(){
+							connect.disconnect(handle1);
+							// The loading of the content of the different ContentPane instances is performed 
+							// asynchronously in an undefined order. Hence the use of setTimeout such that the
+							// checks are performed after the loading of all ContentPanes in view1.
+							setTimeout(function() {
+								_assertCorrectContentPanes(["view1-pane1","view1-pane2","view1-pane3","view1-pane4","view1-pane5"]);
+								_assertCorrectContentPanes(["view1-pane6","view1-pane7","view1-pane8","view1-pane9","view1-pane10"]);
+								_assertCorrectContentPanes(["view1-pane11","view1-pane12","view1-pane13","view1-pane14","view1-pane15"]);
+							}, 500);
+						}));
+						return d;
+					}
+				},
+				{
+					name: "ContentPane Verification2",
+					timeout: 4000,
+					runTest: function(){
+						var widget = registry.byId("view2-pane14");
+						var d = new runner.Deferred();
+						var handle2 = connect.connect(widget, "loadHandler", this, d.getTestCallback(function(){
+							connect.disconnect(handle2);
+							// The loading of the content of the different ContentPane instances is performed 
+							// asynchronously in an undefined order. Hence the use of setTimeout such that the
+							// checks are performed after the loading of all ContentPanes in view2.
+							setTimeout(function() {
+								_assertCorrectContentPanes(["view2-pane1","view2-pane2","view2-pane3","view2-pane4","view2-pane5"]);
+								_assertCorrectContentPanes(["view2-pane6","view2-pane7","view2-pane8","view2-pane9","view2-pane10"]);
+								_assertCorrectContentPanes(["view2-pane11","view2-pane12","view2-pane13","view2-pane14","view2-pane15"]);
+							}, 1500);
+						}));
+						// Transitioning to the view before filling it avoids errors in Chrome when testing the 
+						// presence of children. Double-checking need about what are the expectations.
+						// _showView2();
+						return d;
+					}
+				}
+			]);
+			
+			runner.run();
+
+		});
+	})
+</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="view1" dojoType="dojox.mobile.View">
+		<h1>View 1</h1>
+
+		<div id="view1-pane1" data-dojo-type="dojox.mobile.ContentPane"
+		     data-dojo-props='content:"&lt;div data-dojo-type=&apos;dojox.mobile.RoundRect&apos; shadow=&apos;true&apos;&gt;Pane 1 : Thank you!&lt;/div&gt;"'></div>
+
+		<div id="view1-pane2" data-dojo-type="dojox.mobile.ContentPane"
+		     data-dojo-props='href:"fragment1.html"'></div>
+
+		<div id="view1-pane3" data-dojo-type="dojox.mobile.ContentPane"></div>
+
+		<div id="view1-pane4" data-dojo-type="dojox.mobile.ContentPane"></div>
+
+		<div id="view1-pane5" data-dojo-type="dojox.mobile.ContentPane"></div>
+		<hr/>
+		<div id="view1-pane6place"></div>
+
+		<div id="view1-pane7place"></div>
+
+		<div id="view1-pane8place"></div>
+
+		<div id="view1-pane9place"></div>
+
+		<div id="view1-pane10place"></div>
+		<hr/>
+		<div id="view1-pane11"></div>
+
+		<div id="view1-pane12"></div>
+
+		<div id="view1-pane13"></div>
+
+		<div id="view1-pane14"></div>
+
+		<div id="view1-pane15"></div>
+
+	</div>
+	<div id="view2" dojoType="dojox.mobile.View">
+		<h1>View 2</h1>
+
+		<div id="view2-pane1" data-dojo-type="dojox.mobile.ContentPane"
+		     data-dojo-props='content:"&lt;div data-dojo-type=&apos;dojox.mobile.RoundRect&apos; shadow=&apos;true&apos;&gt;Pane 1 : Thank you!&lt;/div&gt;"'></div>
+
+		<div id="view2-pane2" data-dojo-type="dojox.mobile.ContentPane"
+		     data-dojo-props='href:"fragment1.html"'></div>
+
+		<div id="view2-pane3" data-dojo-type="dojox.mobile.ContentPane"></div>
+
+		<div id="view2-pane4" data-dojo-type="dojox.mobile.ContentPane"></div>
+
+		<div id="view2-pane5" data-dojo-type="dojox.mobile.ContentPane"></div>
+		<hr/>
+		<div id="view2-pane6place"></div>
+
+		<div id="view2-pane7place"></div>
+
+		<div id="view2-pane8place"></div>
+
+		<div id="view2-pane9place"></div>
+
+		<div id="view2-pane10place"></div>
+		<hr/>
+		<div id="view2-pane11"></div>
+
+		<div id="view2-pane12"></div>
+
+		<div id="view2-pane13"></div>
+
+		<div id="view2-pane14"></div>
+
+		<div id="view2-pane15"></div>
+
+	</div>
+</body>
+</html>

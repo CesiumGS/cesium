@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Grouped Views</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblForceBookmarkable: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/bookmarkable",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		]);
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="view1" data-dojo-type="dojox.mobile.View" data-dojo-props='selected:true'>
+		<div id="view11" data-dojo-type="dojox.mobile.View" data-dojo-props='selected:true'>
+			<h1 data-dojo-type="dojox.mobile.Heading">View 1-1</h1>
+			<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Grouped View Example</h2>
+			<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
+				<pre style="font-size:12px">
+ - View 1 (container)
+     |
+     *-- View 1-1
+         View 1-2
+ - View 2</pre>
+			</div>
+			<ul data-dojo-type="dojox.mobile.RoundRectList">
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"view12", transition:"slide"'>
+					View 1-2
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"view2", transition:"slide"'>
+					View 2
+				</li>
+			</ul>
+		</div>
+
+		<div id="view12" data-dojo-type="dojox.mobile.View">
+			<h1 data-dojo-type="dojox.mobile.Heading">View 1-2</h1>
+			<ul data-dojo-type="dojox.mobile.RoundRectList">
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"view11", transition:"slide", transitionDir:-1'>
+					View 1-1
+				</li>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"view2", transition:"slide"'>
+					View 2
+				</li>
+			</ul>
+		</div>
+	</div>
+
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">View 2</h1>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"view1", transition:"slide", transitionDir:-1'>
+				View 1
+			</li>
+		</ul>
+	</div>
+</body>
+</html>

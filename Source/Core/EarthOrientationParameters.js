@@ -2,6 +2,7 @@
 define([
         './binarySearch',
         './defaultValue',
+        './freezeObject',
         './loadJson',
         './EarthOrientationParametersSample',
         './JulianDate',
@@ -14,6 +15,7 @@ define([
     function(
         binarySearch,
         defaultValue,
+        freezeObject,
         loadJson,
         EarthOrientationParametersSample,
         JulianDate,
@@ -103,6 +105,27 @@ define([
             });
         }
     };
+
+    /**
+     * A default {@link EarthOrientationParameters} instance that returns zero for all EOP values.
+     */
+    EarthOrientationParameters.NONE = freezeObject({
+            getPromiseToLoad : function() {
+                return when();
+            },
+            compute : function(date, result) {
+                if (typeof result === 'undefined') {
+                    result = new EarthOrientationParametersSample(0.0, 0.0, 0.0, 0.0, 0.0);
+                } else {
+                    result.xPoleWander = 0.0;
+                    result.yPoleWander = 0.0;
+                    result.xPoleOffset = 0.0;
+                    result.yPoleOffset = 0.0;
+                    result.ut1MinusUtc = 0.0;
+                }
+                return result;
+            }
+    });
 
     /**
      * Gets a promise that, when resolved, indicates that the EOP data has been loaded and is
@@ -237,8 +260,8 @@ define([
             return;
         }
 
-        eop._samples = eopData.samples;
-        eop._dates = [];
+        var samples = eop._samples = eopData.samples;
+        var dates = eop._dates = [];
 
         eop._dateColumn = dateColumn;
         eop._xPoleWanderRadiansColumn = xPoleWanderRadiansColumn;
@@ -252,8 +275,6 @@ define([
         eop._lastIndex = undefined;
 
         var lastTaiMinusUtc;
-        var samples = eop._samples;
-        var dates = eop._dates;
 
         var addNewLeapSeconds = eop._addNewLeapSeconds;
 

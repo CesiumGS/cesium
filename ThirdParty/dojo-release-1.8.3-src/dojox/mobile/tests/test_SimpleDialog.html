@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Simple Dialog Test</title>
+
+	<link href="../themes/common/domButtons.css" rel="stylesheet"/>
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','SimpleDialog','TextBox','Button','Slider']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/dom",
+			"dijit/registry",
+			"dojox/mobile/ProgressIndicator",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/SimpleDialog",
+			"dojox/mobile/TextBox",
+			"dojox/mobile/Button",
+			"dojox/mobile/Slider"
+		], function(dom, registry, ProgressIndicator){
+			show = function(dlg){
+				registry.byId(dlg).show();
+			}
+			hide = function(dlg){
+				registry.byId(dlg).hide();
+			}
+			var prog;
+			show_progress_indicator = function(dlg,cont){
+				show(dlg);
+				var container = dom.byId(cont);
+				prog = ProgressIndicator.getInstance();
+				container.appendChild(prog.domNode);
+				prog.start();
+				setTimeout(function(){
+					hide_progress_indicator(dlg);
+				}, 5000);
+			}
+			hide_progress_indicator = function(dlg){
+				prog.stop();
+				hide(dlg);
+			}
+		});
+
+	</script>
+
+	<style>
+		.mblSimpleDialogInput {
+			margin: 7px 0 14px;
+			width: 260px;
+		}
+		.mblSimpleDialogButton {
+			margin: 7px 0 0;
+			width: 262px;
+			font-size: 17px;
+			font-weight: bold;
+			opacity: 0.95;
+		}
+		.mblSimpleDialogButton2l {
+			float: left;
+			width: 127px;
+			margin: 7px 0 0;
+			font-size: 17px;
+			font-weight: bold;
+			opacity: 0.95;
+		}
+		.mblSimpleDialogButton2r {
+			float: right;
+			width: 127px;
+			margin: 7px 0 0;
+			font-size: 17px;
+			font-weight: bold;
+			opacity: 0.95;
+		}
+		.mblSimpleDialog .mblProgressIndicator {
+			position: relative;
+			margin: 14px 0 7px;
+			top: 0;
+		}
+
+		.mblSimpleDialog .mblListItem {
+			text-align: left;
+		}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="dlg_message" data-dojo-type="dojox.mobile.SimpleDialog">
+		<div class="mblSimpleDialogTitle">Information</div>
+		<div class="mblSimpleDialogText">This is a sample dialog.</div>
+		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton" style="width:100px;" onclick="hide('dlg_message')">OK</button>
+	</div>
+
+	<div id="dlg_confirm" data-dojo-type="dojox.mobile.SimpleDialog">
+		<div class="mblSimpleDialogTitle">Rain Alert</div>
+		<div class="mblSimpleDialogText">Do you have an umbrella?</div>
+		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton" onclick="hide('dlg_confirm')">No</button>
+		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton mblBlueButton" onclick="hide('dlg_confirm')">Yes</button>
+	</div>
+	
+	<div id="dlg_login" data-dojo-type="dojox.mobile.SimpleDialog">
+		<div class="mblSimpleDialogTitle">Mobile Community</div>
+		<div class="mblSimpleDialogText">Enter your ID and Password</div>
+		<input data-dojo-type="dojox.mobile.TextBox" class="mblSimpleDialogInput" type="text" data-dojo-props='selectOnClick:true, placeHolder:"ID"' style="margin-bottom: 0;" required>
+		<input data-dojo-type="dojox.mobile.TextBox" class="mblSimpleDialogInput" type="password" data-dojo-props='selectOnClick:true, placeHolder:"Password"' style="margin-top: 0;" required>
+		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton2l" onclick="hide('dlg_login')">Cancel</button>
+		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton2r mblBlueButton" onclick="hide('dlg_login')">OK</button>
+	</div>
+
+	<div id="dlg_progress" data-dojo-type="dojox.mobile.SimpleDialog">
+		<div class="mblSimpleDialogText">Please wait for 5 seconds.</div>
+		<div class="mblSimpleDialogText" id="progress_indicator_container"></div>
+		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton mblRedButton" onclick="hide_progress_indicator('dlg_progress')">Cancel</button>
+	</div>
+
+	<div id="dlg_volume" data-dojo-type="dojox.mobile.SimpleDialog">
+		<div class="mblSimpleDialogTitle">Volume</div>
+		<div class="mblSimpleDialogText">Ringtone</div>
+		<input data-dojo-type="dojox.mobile.Slider" value="0" min="0" max="20" step="0.1" type="range" style="width:90%;">
+		<div class="mblSimpleDialogText">Media</div>
+		<input data-dojo-type="dojox.mobile.Slider" value="0" min="0" max="20" step="0.1" type="range" style="width:90%;">
+		<div class="mblSimpleDialogText">Alarm</div>
+		<input data-dojo-type="dojox.mobile.Slider" value="0" min="0" max="20" step="0.1" type="range" style="width:90%;">
+		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton2l" onclick="hide('dlg_volume')">OK</button>
+		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton2r" onclick="hide('dlg_volume')">Cancel</button>
+	</div>
+
+	<div id="dlg_select" data-dojo-type="dojox.mobile.SimpleDialog">
+		<div class="mblSimpleDialogTitle">Animation</div>
+		<ul data-dojo-type="dojox.mobile.EdgeToEdgeList" data-dojo-props='select:"single"'>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='checkClass:"mblDomButtonSilverCircleGreenButton", uncheckClass:"mblDomButtonSilverCircleGrayButton"'>
+				No animations
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='checkClass:"mblDomButtonSilverCircleGreenButton", uncheckClass:"mblDomButtonSilverCircleGrayButton"'>
+				Some animations
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='checkClass:"mblDomButtonSilverCircleGreenButton", uncheckClass:"mblDomButtonSilverCircleGrayButton", checked:true'>
+				All animations
+			</li>
+		</ul>
+		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton" style="width:60%;" onclick="hide('dlg_select')">Cancel</button>
+	</div>
+
+	<div id="view" data-dojo-type="dojox.mobile.View" data-dojo-props='selected:true'>
+		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
+			Message Box <button onclick="show('dlg_message')">Show Dialog</button>
+		</div>
+		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
+			Confirmation Dialog <button onclick="show('dlg_confirm')">Show Dialog</button>
+		</div>
+		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
+			Login Dialog <button onclick="show('dlg_login')">Show Dialog</button>
+		</div>
+		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
+			Progress Indicator <button onclick="show_progress_indicator('dlg_progress','progress_indicator_container')">Show Dialog</button>
+		</div>
+		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
+			Volume Control <button onclick="show('dlg_volume')">Show Dialog</button>
+		</div>
+		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
+			Selectable List <button onclick="show('dlg_select')">Show Dialog</button>
+		</div>
+	</div>
+			
+</body>
+</html>

@@ -45,8 +45,8 @@ define([
         }
 
         this._ellipsoid = ellipsoid;
-        this._cameraPosition = new Cartesian3(0.0, 0.0, 0.0);
-        this._cameraPositionInScaledSpace = new Cartesian3(0.0, 0.0, 0.0);
+        this._cameraPosition = new Cartesian3();
+        this._cameraPositionInScaledSpace = new Cartesian3();
         this._distanceToLimbInScaledSpaceSquared = 0.0;
 
         // setCameraPosition fills in the above values
@@ -95,7 +95,7 @@ define([
         return this._cameraPosition;
     };
 
-    var scratchCartesian = new Cartesian3(0.0, 0.0, 0.0);
+    var scratchCartesian = new Cartesian3();
 
     /**
      * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.

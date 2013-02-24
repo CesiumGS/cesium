@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>testing query()</title>
+		<style type="text/css">
+			@import "../../resources/dojo.css";
+		</style>
+		<script type="text/javascript" src="../../dojo.js" data-dojo-config="isDebug: true, async: true"></script>
+		<script type="text/javascript">
+			// Use selector specified in URL (ex: query.html?selector=lite), defaulting to acme if unspecified
+			var specified = window.location.search.substr(1).match(/selector=(.*)/);
+			var selector = specified ? specified[0].split("=")[1] : "acme";
+
+			require(["dojo", "doh", "dojo/query!"+selector, "dojo/sniff", "dojo/io/iframe", "dojo/domReady!"],
+					function(dojo, doh, dq, has){
+				query = dq; // make a global
+
+				function createDocument(xml){
+					var fauxXhr = { responseText: xml };
+					if("DOMParser" in dojo.global){
+						var parser = new DOMParser();
+						fauxXhr.responseXML = parser.parseFromString(xml, "text/xml");
+					}
+					// kludge: use dojo.xhr contentHandler for XML to process IE XMLDOC as needed
+					return dojo._contentHandlers["xml"](fauxXhr); // DOMDocument
+				}
+
+				// Tests that should work for any selector engine (lite or acme)
+				// .class, #id, tag, and star, attribute selectors, and child (>), descendant (space),and union (,)
+				// combinators. With a native selector engine, the lite engine does not support pseudo classes.
+				doh.register("css2", [
+					// basic sanity checks
+					"doh.is(4, (query('h3')).length);",
+					"doh.is(1, (query('#t')).length);",
+					"doh.is(1, (query('#bug')).length);",
+					"doh.is(4, (query('#t h3')).length);",
+					"doh.is(1, (query('div#t')).length);",
+					"doh.is(4, (query('div#t h3')).length);",
+					"doh.is(0, (query('span#t')).length);",
+					"doh.is(0, (query('.bogus')).length);",
+					"doh.is(0, (query('.bogus', dojo.byId('container'))).length);",
+					"doh.is(0, (query('#bogus')).length);",
+					"doh.is(0, (query('#bogus', dojo.byId('container'))).length);",
+					"doh.is(1, (query('#t div > h3')).length);",
+					"doh.is(2, (query('.foo')).length);",
+					"doh.is(1, (query('.foo.bar')).length);",
+					"doh.is(2, (query('.baz')).length);",
+					"doh.is(3, (query('#t > h3')).length);",
+					
+					// this fails on IE8 because qSA completely fails on unknown elements. not sure how to fix this other than completely disable qSA on IE8, which would be an unacceptable performance regression
+					//"doh.t(query.matches(query('section')[0],'section'));",
+
+					"doh.is(2, (query('#baz,#foo,#t')).length);",
+					"doh.is(0, (query(null)).length);",
+
+					//"doh.is(1, (query('#bug')).length);",
+
+					// syntactic equivalents
+					"doh.is(12, (query('#t > *')).length);",
+					"doh.is(3, (query('.foo > *')).length);",
+
+					// with a root, by ID
+					"doh.is(3, (query('> *', 'container')).length);",
+					"doh.is(3, (query('> *, > h3', 'container')).length);",
+					"doh.is(3, (query('> h3', 't')).length);",
+
+					// compound queries
+					"doh.is(2, (query('.foo, .bar')).length);",
+					"doh.is(2, (query('.foo,.bar')).length);",
+
+					// multiple class attribute
+					"doh.is(1, (query('.foo.bar')).length);",
+					"doh.is(2, (query('.foo')).length);",
+					"doh.is(2, (query('.baz')).length);",
+
+					// case sensitivity
+					"doh.is(1, (query('span.baz')).length);",
+					"doh.is(1, (query('sPaN.baz')).length);",
+					"doh.is(1, (query('SPAN.baz')).length);",
+					"doh.is(1, query('.fooBar').length);",
+					
+					// attribute selectors
+					"doh.is(3, (query('[foo]')).length);",
+
+					// attribute substring selectors
+					"doh.is(1, (query('[foo$=\"thud\"]')).length);",
+					"doh.is(1, (query('[foo$=thud]')).length);",
+					"doh.is(1, (query('[foo$=\"thudish\"]')).length);",
+					"doh.is(1, (query('#t [foo$=thud]')).length);",
+					"doh.is(1, (query('#t [title$=thud]')).length);",
+					"doh.is(0, (query('#t span[title$=thud ]')).length);",
+					"doh.is(1, (query('[id$=\\'55555\\']')).length);",
+					"doh.is(2, (query('[foo~=\"bar\"]')).length);",
+					"doh.is(2, (query('[ foo ~= \"bar\" ]')).length);",
+					"doh.is(2, (query('[foo|=\"bar\"]')).length);",
+					"doh.is(1, (query('[foo|=\"bar-baz\"]')).length);",
+					"doh.is(0, (query('[foo|=\"baz\"]')).length);",
+					// TODO: ^=, *=
+
+					// descendant selectors
+					"doh.is(3, query('> *', 'container').length);",
+					"doh.is(2, query('> [qux]', 'container').length);",
+					"doh.is('child1', query('> [qux]', 'container')[0].id);",
+					"doh.is('child3', query('> [qux]', 'container')[1].id);",
+					"doh.is(3, query('> *', 'container').length);",
+					"doh.is(3, query('>*', 'container').length);",
+					"doh.is('passed', query('#bug')[0].value);",
+
+					// bug 9071
+					"doh.is(2, (query('a', 't4')).length);",
+					"doh.is(2, (query('p a', 't4')).length);",
+					"doh.is(2, (query('div p', 't4')).length);",
+					"doh.is(2, (query('div p a', 't4')).length);",
+					"doh.is(2, (query('.subA', 't4')).length);",
+					"doh.is(2, (query('.subP .subA', 't4')).length);",
+					"doh.is(2, (query('.subDiv .subP', 't4')).length);",
+					"doh.is(2, (query('.subDiv .subP .subA', 't4')).length);",
+
+					// failed scope arg
+					"doh.is(0, (query('*', 'thinger')).length);",
+					"doh.is(0, (query('div#foo').length));",
+
+					// escaping special characters with quotes (http://www.w3.org/TR/CSS21/syndata.html#strings)
+					// bug 10651
+					'doh.is(1, query(\'option[value="a+b"]\', "attrSpecialChars").length);',
+					'doh.is(1, query(\'option[value="a~b"]\', "attrSpecialChars").length);',
+					'doh.is(1, query(\'option[value="a^b"]\', "attrSpecialChars").length);',
+					'doh.is(1, query(\'option[value="a,b"]\', "attrSpecialChars").length);',
+
+					// selector with substring that contains equals sign (bug 7479)
+					"doh.is(1, query(\"a[href*='foo=bar']\", 'attrSpecialChars').length);",
+
+					// selector with substring that contains brackets (bug 9193, 11189, 13084)
+					'doh.is(1, query(\'input[name="data[foo][bar]"]\', "attrSpecialChars").length);',
+					'doh.is(1, query(\'input[name="foo[0].bar"]\', "attrSpecialChars").length);',
+					'doh.is(1, query(\'input[name="test[0]"]\', "attrSpecialChars").length);',
+
+					// escaping special characters with backslashes (http://www.w3.org/TR/CSS21/syndata.html#characters)
+					// selector with substring that contains brackets (bug 9193, 11189, 13084)
+					// eval() converts 4 backslashes --> 1 by the time dojo.query() sees the string
+					'doh.is(1, query("input[name=data\\\\[foo\\\\]\\\\[bar\\\\]]", "attrSpecialChars").length);',
+					'doh.is(1, query("input[name=foo\\\\[0\\\\]\\\\.bar]", "attrSpecialChars").length);',
+
+					// cross-document queries
+					{
+						name: "crossDocumentQuery",
+						setUp: function(){
+							this.t3 = window.frames["t3"];
+							this.doc = dojo.io.iframe.doc(t3);
+							this.doc.open();
+							this.doc.write([
+								"<html><head>",
+								"<title>inner document</title>",
+								"</head>",
+								"<body>",
+								"<div id='st1'><h3>h3 <span>span <span> inner <span>inner-inner</span></span></span> endh3 </h3></div>",
+								"</body>",
+								"</html>"
+							].join(""));
+						},
+						runTest: function(){
+							doh.is(1, query('h3', dojo.byId("st1", this.doc)).length);
+							// use a long query to force a test of the XPath system on FF. see bug #7075
+							doh.is(1, query('h3 > span > span > span', dojo.byId("st1", this.doc)).length);
+							doh.is(1, query('h3 > span > span > span', this.doc.body.firstChild).length);
+						}
+					},
+
+					// escaping of ":" chars inside an ID
+					function silly_IDs1(){
+						doh.t(document.getElementById("silly:id::with:colons"), "getElementById");
+						doh.is(1, query("#silly\\:id\\:\\:with\\:colons").length, "query(\"#silly\\:id\\:\\:with\\:colons\")");
+						doh.is(1, query("#silly\\~id").length, "query(\"#silly\\~id\")");
+					},
+					function NodeList_identity(){
+						var foo = new dojo.NodeList([dojo.byId("container")]);
+						doh.is(foo, query(foo));
+					},
+					function xml(){
+						var doc = createDocument([
+							"<ResultSet>",
+							"<Result>One</Result>",
+							"<RESULT>Two</RESULT>",
+							"<result><nested>Three</nested></result>",
+							"<result>Four</result>",
+							"</ResultSet>"
+						].join("")
+						);
+						var de = doc.documentElement;
+
+						doh.is(2, query("result", de).length, "all lower");
+
+						//doh.is(1, query("result>nested", de).length, "nested XML");
+						doh.is(1, query("Result", de).length, "mixed case");
+						doh.is(1, query("RESULT", de).length, "all upper");
+						doh.is(0, query("resulT", de).length, "no match");
+						doh.is(0, query("rEsulT", de).length, "no match");
+					},
+					function xml_attrs(){
+						if(!has("ie")){	// remove if() when #14880 is fixed
+							var doc = createDocument([
+								"<ResultSet>",
+								"<RESULT thinger='blah'>ONE</RESULT>",
+								"<RESULT thinger='gadzooks'><CHILD>Two</CHILD></RESULT>",
+								"</ResultSet>"
+							].join(""));
+							var de = doc.documentElement;
+
+							doh.is(2, query("RESULT", de).length, "result elements");
+							doh.is(0, query("RESULT[THINGER]", de).length, "result elements with attrs (wrong)");
+							doh.is(2, query("RESULT[thinger]", de).length, "result elements with attrs");
+							doh.is(1, query("RESULT[thinger=blah]", de).length, "result elements with attr value");
+							doh.is(1, query("RESULT > CHILD", de).length, "Using child operator");
+						} // remove when #14880 is fixed
+					},
+					function sort(){
+						var i = query("div");
+						// smoke test
+						i.sort(function(a,b){ return 1; })
+					}
+				]);
+
+				// Tests for CSS2.1+, and also CSS2 pseudo selectors (which aren't supported by selector=css2 or
+				// selector=lite)
+				if(/css2.1|css3|acme/.test(selector)){
+					doh.register("css2.1", [
+						// first-child
+						"doh.is(1, (query('h1:first-child')).length);",
+						"doh.is(2, (query('h3:first-child')).length);",
+
+						// + sibling selector
+						"doh.is(1, (query('.foo+ span')).length);",
+						"doh.is(1, (query('.foo+span')).length);",
+						"doh.is(1, (query('.foo +span')).length);",
+						"doh.is(1, (query('.foo + span')).length);"
+					]);
+				}
+
+				// Tests for CSS3+
+				if(/css3|acme/.test(selector)){
+					doh.register("css3", [
+						// sub-selector parsing
+						"doh.is(1, query('#t span.foo:not(:first-child)').length);",
+
+						// ~ sibling selector
+						"doh.is(4, (query('.foo~ span')).length);",
+						"doh.is(4, (query('.foo~span')).length);",
+						"doh.is(4, (query('.foo ~span')).length);",
+						"doh.is(4, (query('.foo ~ span')).length);",
+						"doh.is(1, (query('#foo~ *')).length);",
+						"doh.is(1, (query('#foo ~*')).length);",
+						"doh.is(1, (query('#foo ~*')).length);",
+						"doh.is(1, (query('#foo ~ *')).length);",
+						// "t.is(0, (query('[ foo ~= \"\\'bar\\'\" ]')).length);",
+
+						// nth-child tests
+						"doh.is(2, query('#t > h3:nth-child(odd)').length);",
+						"doh.is(3, query('#t h3:nth-child(odd)').length);",
+						"doh.is(3, query('#t h3:nth-child(2n+1)').length);",
+						"doh.is(1, query('#t h3:nth-child(even)').length);",
+						"doh.is(1, query('#t h3:nth-child(2n)').length);",
+						"doh.is(1, query('#t h3:nth-child(2n+3)').length);",
+						"doh.is(2, query('#t h3:nth-child(1)').length);",
+						"doh.is(1, query('#t > h3:nth-child(1)').length);",
+						"doh.is(3, query('#t :nth-child(3)').length);",
+						"doh.is(0, query('#t > div:nth-child(1)').length);",
+						"doh.is(7, query('#t span').length);",
+						"doh.is(3, query('#t > *:nth-child(n+10)').length);",
+						"doh.is(1, query('#t > *:nth-child(n+12)').length);",
+						"doh.is(10, query('#t > *:nth-child(-n+10)').length);",
+						"doh.is(5, query('#t > *:nth-child(-2n+10)').length);",
+						"doh.is(6, query('#t > *:nth-child(2n+2)').length);",
+						"doh.is(5, query('#t > *:nth-child(2n+4)').length);",
+						"doh.is(5, query('#t > *:nth-child(2n+4)').length);",
+						"doh.is(5, query('#t> *:nth-child(2n+4)').length);",
+						// TODO: uncomment these two tests when #14879 fixed
+						//"doh.is(12, query('#t > *:nth-child(n-5)').length);",
+						//"doh.is(12, query('#t >*:nth-child(n-5)').length);",
+						"doh.is(6, query('#t > *:nth-child(2n-5)').length);",
+						"doh.is(6, query('#t>*:nth-child(2n-5)').length);",
+						// TODO: uncomment when #14879 fixed
+						// "doh.is(dojo.byId('_foo'), query('.foo:nth-child(2)')[0]);",
+						"doh.is(query('style')[0], query(':nth-child(2)')[0]);",
+
+						// :checked pseudo-selector
+						"doh.is(2, query('#t2 > :checked').length);",
+						"doh.is(dojo.byId('checkbox2'), query('#t2 > input[type=checkbox]:checked')[0]);",
+						"doh.is(dojo.byId('radio2'), query('#t2 > input[type=radio]:checked')[0]);",
+						// This :checked selector is only defined for elements that have the checked property, option elements are not specified by the spec (http://www.w3.org/TR/css3-selectors/#checked) and not universally supported 
+						//"doh.is(2, query('#t2select option:checked').length);",
+
+						"doh.is(1, query('#radio1:disabled').length);",
+						"doh.is(0, query('#radio1:enabled').length);",
+						"doh.is(0, query('#radio2:disabled').length);",
+						"doh.is(1, query('#radio2:enabled').length);",
+
+
+						// :empty pseudo-selector
+						"doh.is(4, query('#t > span:empty').length);",
+						"doh.is(6, query('#t span:empty').length);",
+						"doh.is(0, query('h3 span:empty').length);",
+						"doh.is(1, query('h3 :not(:empty)').length);"
+					]);
+				}
+
+				// Tests for ACME specific functionality (not part of CSS3)
+				if(selector == "acme"){
+					doh.register("acme", [
+						// Case insensitive class selectors (#8775, #14874).
+						// In standards mode documents, querySelectorAll() is case-sensitive about class selectors,
+						// but acme is case-insensitive for backwards compatibility.
+						"doh.is(1, query('.fooBar').length);",
+
+						// sub-selector parsing
+						// TODO: move this test to CSS3 section when #14875 is fixed
+						"doh.is(1, query('#t span.foo:not(span:first-child)').length);",
+
+						// special characters in attribute values without backslashes.
+						// supported by acme but apparently not standard, see http://www.w3.org/TR/CSS21/syndata.html#characters
+						function attrSpecialCharsNoEscape(){
+							// bug 10651
+							doh.is(1, query('option[value=a+b]', 'attrSpecialChars').length, "value=a+b");
+							doh.is(1, query('option[value=a~b]', 'attrSpecialChars').length, "value=a~b");
+							doh.is(1, query('option[value=a^b]', 'attrSpecialChars').length, "value=a^b");
+						},
+
+						// implied * after > (non-standard syntax)
+						"doh.is(12, (query('#t >')).length);",
+						"doh.is(3, (query('.foo >')).length);",
+						"doh.is(3, query('>', 'container').length);",
+						"doh.is(0, query('> .not-there').length);",
+						"doh.is(1, (query('#foo ~')).length);",
+						"doh.is(1, (query('#foo~')).length);",
+
+						// implied * before and after + and ~ (non-standard syntax)
+						"doh.is(1, query('+', 'container').length);",
+						"doh.is(3, query('~', 'container').length);",
+
+						// check for correct document order
+						// not sure if this is guaranteed by css3, so putting in acme section
+						function domOrder() {
+							var inputs = query(".upperclass .lowerclass input");
+							doh.is("notbug", inputs[0].id);
+							doh.is("bug", inputs[1].id);
+							doh.is("checkbox1", inputs[2].id);
+							doh.is("checkbox2", inputs[3].id);
+							doh.is("radio1", inputs[4].id);
+							doh.is("radio2", inputs[5].id);
+							doh.is("radio3", inputs[6].id);
+						},
+
+						// TODO: move to css2 section after #7869 fixed for lite engine (on IE)
+						function xml_nthchild(){
+							var doc = createDocument([
+								"<ResultSet>",
+								"<result>One</result>",
+								"<result>Two</result>",
+								"<result>Three</result>",
+								"<result>Four</result>",
+								"</ResultSet>"
+							].join("")
+							);
+							var de = doc.documentElement;
+							doh.is("Four", query("result:nth-child(4)", de)[0].firstChild.data, "fourth child");
+						}
+					]);
+				}
+				doh.runOnLoad();
+			});
+		</script>
+	</head>
+	<body class="upperclass">
+		<h1>Testing dojo/query module.</h1>
+		<p>Specify ?selector=lite/css2/css2.1/css3/acme on URL to get specific test.</p>
+		<div id="t" class="lowerclass">
+			<h3>h3 <span>span</span> endh3 </h3>
+			<!-- comment to throw things off -->
+			<div class="foo bar" id="_foo">
+				<h3>h3</h3>
+				<span id="foo"></span>
+				<span></span>
+			</div>
+			<h3>h3</h3>
+			<h3 class="baz foobar" title="thud">h3</h3>
+			<span class="fooBar baz foo"></span>
+			<span foo="bar"></span>
+			<span foo="baz bar thud"></span>
+			<!-- FIXME: should foo="bar-baz-thud" match? [foo$=thud] ??? -->
+			<span foo="bar-baz-thudish" id="silly:id::with:colons"></span>
+			<div id="container">
+				<div id="child1" qux="true"></div>
+				<div id="child2"></div>
+				<div id="child3" qux="true"></div>
+			</div>
+			<div id="silly~id" qux="true"></div>
+			<input id="notbug" name="bug" type="hidden" value="failed"> 
+			<input id="bug" type="hidden" value="passed"> 
+		</div>
+		<div id="t2" class="lowerclass">
+			<input type="checkbox" name="checkbox1" id="checkbox1" value="foo">
+			<input type="checkbox" name="checkbox2" id="checkbox2" value="bar" checked>
+
+			<input type="radio" disabled="true" name="radio" id="radio1" value="thinger">
+			<input type="radio" name="radio" id="radio2" value="stuff" checked>
+			<input type="radio" name="radio" id="radio3" value="blah">
+		</div>
+		<select id="t2select" multiple="multiple">
+			<option>0</option>
+			<option selected="selected">1</option>
+			<option selected="selected">2</option>
+		</select>
+		
+		<iframe id="t3" name="t3" src="../../resources/blank.html"></iframe>
+		<div id="t4">
+			<div id="one" class="subDiv">
+				<p class="one subP"><a class="subA">one</a></p>
+				<div id="two" class="subDiv">
+					<p class="two subP"><a class="subA">two</a></p>
+				</div>
+			</div>
+		</div>
+		<section></section>
+		<div id='other'>
+		  <div id='abc55555'></div>
+		  <div id='abd55555efg'></div>
+		  <div id='55555abc'></div>
+		  <div id='1'></div>
+		  <div id='2c'></div>
+		  <div id='3ch'></div>
+		  <div id='4chr'></div>
+		  <div id='5char'></div>
+		  <div id='6chars'></div>
+		</div>
+		
+		<div id="attrSpecialChars">
+			<select name="special">
+				<!-- tests for special characters in attribute values (characters that are part of query syntax) -->
+				<option value="a+b">1</option>
+				<option value="a~b">2</option>
+				<option value="a^b">3</option>
+				<option value="a,b">4</option>
+			</select>
+
+			<!-- tests for quotes in attribute values -->
+			<a href="foo=bar">hi</a>
+			<!-- tests for brackets in attribute values -->
+			<input name="data[foo][bar]">
+			<!-- attribute name with a dot, goes down separate code path -->
+			<input name="foo[0].bar">
+			<input name="test[0]">
+		</div>
+	</body>
+</html>
+

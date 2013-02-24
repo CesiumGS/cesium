@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Loan Form (Using DOJO within MVC Support)</title>
+		<style type="text/css">
+			@import "css/app-format.css";
+			@import "../../../dijit/themes/claro/claro.css";
+		</style>
+		<script type="text/javascript" data-dojo-config="parseOnLoad:0,isDebug:1,async:1,mvc:{debugBindings:1}" src="../../../dojo/dojo.js"></script>
+		<script type="text/javascript">
+			var lookup, loanModel, validHousingPercentConverter = {
+				format: function(value){
+					return value <= 33;
+				}
+			}, nonZeroRelevanceConverter = {
+				format: function(value){
+					return value <= 0;
+				}
+			};
+
+			require([
+				"dojo/_base/array",
+				"dojo/_base/declare",
+				"dojo/_base/lang",
+				"dojo/request/xhr",
+				"dojo/parser",
+				"dojox/charting/Chart",
+				"dojox/charting/themes/PlotKit/blue",
+				"dojox/mvc/at",
+				"dojo/Stateful",
+				"dojox/mvc/StatefulSeries",
+				"dijit/form/TextBox",
+				"dijit/form/Button",
+				"dijit/form/ValidationTextBox",
+				"dijit/form/NumberTextBox",
+				"dojox/charting/plot2d/Pie",
+				"dojox/mvc/_TextBoxExtensions",
+				"dojox/mvc/Group",
+				"dojox/mvc/ModelRefController",
+				"dojox/mvc/Output",
+				"dojo/domReady!"
+			], function(array, declare, lang, dxhr, parser, Chart, blue, at, Stateful, StatefulSeries){
+
+				lookup = function(model){
+					if(isNaN(model.get("Zip"))){ return; }
+					dxhr.get("zips/" + model.get("Zip") + ".json", {
+						content: {postalcode: model.get("Zip"), country: model.get("County")},
+						preventCache: true,
+						handleAs: "json"
+					}).then(function(data){
+						model.set("City", data.postalcodes[0].placeName);
+						model.set("County", data.postalcodes[0].adminName2);
+						model.set("State", data.postalcodes[0].adminCode1);
+						model.set("isZipValid", true);
+					}, function(e){
+						model.set("City", "");
+						model.set("County", "");
+						model.set("State", "");
+						model.set("isZipValid", false);
+					});	
+				};
+
+				function getNewValue(model, prop, name, value){
+					return prop == name ? value : model.get(prop);
+				}
+
+				function recomputeTotalAndPercentages(model, name, value){
+					var mortgage = getNewValue(model, "Mortgage", name, value);
+					var taxes = getNewValue(model, "Taxes", name, value);
+					var otherHousing = getNewValue(model, "OtherHousing", name, value);
+					var totalHousing = mortgage + taxes + otherHousing;
+			
+					var baseIncome = getNewValue(model, "BaseIncome", name, value);
+					var bonusIncome = getNewValue(model, "BonusIncome", name, value);
+					var totalIncome = baseIncome + bonusIncome;
+			
+					var housingPercentage = Math.round(totalHousing / totalIncome * 100);
+			
+					model.set("HousingPercent", housingPercentage);
+					model.set("TotalHousing", totalHousing);
+					model.set("TotalIncome", totalIncome);
+			
+					model[name] = value;
+				}
+
+				loanModel = new Stateful({
+					Name: "John Doe",
+					Street: "",
+					City: "",
+					County: "",
+					State: "",
+					Zip: "",
+					Country: "US",
+					TotalIncome: 0,
+					BaseIncome: 50000,
+					BonusIncome: 10000,
+					TotalHousing: 2700,
+					HousingPercent: 5,
+					Mortgage: 1000,
+					Taxes: 500,
+					OtherHousing: 1200,
+					_MortgageSetter: function(value){
+						recomputeTotalAndPercentages(this, "Mortgage", value);
+					},
+					_TaxesSetter: function(value){
+						recomputeTotalAndPercentages(this, "Taxes", value);
+					},
+					_OtherHousingSetter: function(value){
+						recomputeTotalAndPercentages(this, "OtherHousing", value);
+					},
+					_BaseIncomeSetter: function(value){
+						recomputeTotalAndPercentages(this, "BaseIncome", value);
+					},
+					_BonusIncomeSetter: function(value){
+						recomputeTotalAndPercentages(this, "BonusIncome", value);
+					}
+				});
+
+				parser.parse();
+
+				new Chart("expenseChart")
+				 .setTheme(blue)
+				 .addPlot("default", {type: "Pie"})
+				 .addSeries("default", new StatefulSeries([at(loanModel, "Mortgage"), 
+				                       at(loanModel, "Taxes"), at(loanModel, "OtherHousing")])).render();
+			});
+		</script>
+	</head>
+	<body class="claro" style="background-image: url(images/validating_form_pattern.png)">
+		<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<div id="wrapper">
+			<div id="addressLookupController" class="dijitDisplayNone" 
+				data-dojo-type="dojox.mvc.ModelRefController"
+			 	data-dojo-props="model: loanModel, ownProps: {_setZipAttr: 1, _setCountyAttr: 1}">
+				<script type="dojo/method" event="_setZipAttr" args="value">
+					var changed = this.model.Zip != value;
+					this.model._changeAttrValue("Zip", value);
+					if(changed){
+						lookup(this.model);
+					}
+					return this;
+				</script>
+				<script type="dojo/method" event="_setCountyAttr" args="value">
+					var changed = this.model.County != value;
+					this.model._changeAttrValue("County", value);
+					if(changed){
+						lookup(this.model);
+					}
+					return this;
+				</script>
+			</div>
+			<div id="header">
+				<div id="navigation">
+				</div>
+				<div id="headerInsert">
+					<h1>Big Red Loan</h1>
+					<h2>The one to choose when you're in the red...</h2>
+				</div>
+			</div>
+			<div id="main">
+				<div id="leftNav"></div>
+				<div id="mainContent" data-dojo-type="dojox.mvc.Group" 
+						data-dojo-props="target: at('widget:addressLookupController')">
+					<h3>Borrower information</h3>
+					<hr size="6" class="rule"/>
+					<div class="spacer"></div>
+					<div class="row">
+						<div class="cell"><label for="borrowerInput">Name:</label></div>
+						<div class="cell">
+							<input id="borrowerInput" data-dojo-type="dijit.form.TextBox" 
+									data-dojo-props="value: at('rel:', 'Name')"/>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell"><label for="zipInput">Zipcode (try 10706):</label></div>
+						<div class="cell">
+							<input id="zipInput" data-dojo-type="dijit.form.NumberTextBox"
+							 data-dojo-props="value: at('rel:', 'Zip'), 
+							 				valid: at('rel:', 'isZipValid')"
+							 constraints="{pattern:'#'}" regExp="\d{5}" required="true" invalidMessage="Invalid Zip Code."/>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell"><label for="cityInput">City:</label></div>
+						<div class="cell">
+							<input id="cityInput" data-dojo-type="dijit.form.TextBox" 
+								data-dojo-props="value: at('rel:', 'City')"/>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell"><label for="countyInput">County:</label></div>
+						<div class="cell">
+							<input id="countyInput" data-dojo-type="dijit.form.TextBox" 
+											data-dojo-props="value: at('rel:', 'County')"/>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell"><label for="stateInput">State:</label></div>
+						<div class="cell">
+							<input id="stateInput" data-dojo-type="dijit.form.TextBox" 
+										data-dojo-props="value: at('rel:', 'State')"/>
+						</div>
+					</div>
+					<div class="spacer"></div>
+					<h3>Expenses</h3>
+					<hr size="6" class="rule"/>
+					<div class="spacer"></div>
+					<table style="width:900px;">
+						<tr style="width:900px;">
+							<td style="width:400px;">
+								<div class="row">
+									<div class="cell"><label for="housing">Mortgage:</label></div>
+									<div class="cell">
+										<input id="housing" data-dojo-type="dijit.form.NumberTextBox" 
+												data-dojo-props="value: at('rel:', 'Mortgage')"/>
+									</div>
+								</div>
+								<div class="row">
+									<div class="cell">
+										<label>Real Estate Taxes:</label>
+									</div>
+									<div class="cell">
+										<input id="taxes" data-dojo-type="dijit.form.NumberTextBox" 
+												data-dojo-props="value: at('rel:', 'Taxes')"/>
+									</div>
+								</div>
+								<div class="row">
+									<div class="cell"><label>Other Housing:</label></div>
+									<div class="cell">
+										<input id="otherHousing" type="text" data-dojo-type="dijit.form.NumberTextBox" 
+												data-dojo-props="value: at('rel:', 'OtherHousing')"/>
+									</div>
+								</div>
+								<div class="row">
+									<div class="cell"><label for="transportation">Total Housing:</label></div>
+									<div class="cell">
+										<input id="totalHousing" data-dojo-type="dijit.form.NumberTextBox"
+										 data-dojo-props="value: at('rel:', 'TotalHousing'),
+										                  disabled: at('rel:', 'TotalHousing').direction(at.from).transform(nonZeroRelevanceConverter)"/>
+									</div>
+								</div>
+							</td>
+							<td style="width:200px;">
+								<div id="expenseChart" style="display:block; width: 150px; height: 150px;"></div>
+							</td>
+						</tr>
+					</table>
+					<h3>Income</h3>
+					<hr size="6" class="rule"/>
+					<div class="spacer"></div>
+					<div class="row">
+						<div class="cell"><label for="baseIncome">Base Income:</label></div>
+						<div class="cell">
+							<input id="baseIncome" type="text" data-dojo-type="dijit.form.NumberTextBox" 
+									data-dojo-props="value: at('rel:', 'BaseIncome')"/>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell"><label>Bonus Income:</label></div>
+						<div class="cell">
+							<input id="bonusIncome" type="text" data-dojo-type="dijit.form.NumberTextBox" 
+									data-dojo-props="value: at('rel:', 'BonusIncome')"/>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell"><label for="total">Total Income:</label></div>
+						<div class="cell">
+							<input id="total" data-dojo-type="dijit.form.NumberTextBox" 
+									data-dojo-props="value: at('rel:', 'TotalIncome')"/>
+						</div>
+					</div>
+					<h3>Analysis</h3>
+					<hr size="6" class="rule"/>
+					<div class="spacer"></div>
+					<div class="row">
+						<div class="cell"><label for="percentHousing">Percent housing (under 33%):</label></div>
+						<div class="cell">
+							<input id="percentHousing" data-dojo-type="dijit.form.NumberTextBox"
+							 data-dojo-props="value: at('rel:', 'HousingPercent'),
+							                  valid: at('rel:', 'HousingPercent').direction(at.from).transform(validHousingPercentConverter),
+							                  disabled: at('rel:', 'HousingPercent').direction(at.from).transform(nonZeroRelevanceConverter)"
+							 invalidMessage="Housing should be less than 1/3 total expenses!"/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,42 @@
+<html>
+	<head>
+		<title>testing dom-style</title>
+		<style type="text/css">
+			@import "../resources/dojo.css";
+			.nodeStyle
+			{
+				padding: 1px 2px 3px 4px;
+			}
+		</style>
+		<script type="text/javascript" src="../dojo.js" data-dojo-config="isDebug:true"></script>
+		<script type="text/javascript">
+			require(["dojo", "doh", "dojo/dom-style", "dojo/dom", "dojo/domReady!"], function(dojo, doh, domStyle, dom){
+				doh.register([
+					{
+						name: "getComputedStyle",
+						runTest: function(t){
+							try {
+								var node = dom.byId('node'),
+									s = domStyle.getComputedStyle(node);
+								doh.t(s !== null);
+								// Create a node on the fly,
+								// IE < 9 has issue with currentStyle when creating elements on the fly.
+								node = document.createElement('div');
+								domStyle.set(node, 'nodeStyle');
+								s = domStyle.getComputedStyle(node);
+								doh.t(s !== null);
+							} catch (err) {
+								console.error(err);
+								doh.t(false);
+							}
+						}
+					}
+				]);
+				doh.runOnLoad();
+			});
+		</script>
+	</head>
+	<body>
+	<div id="node" style="padding: 1px 2px 3px 4px;"></div>
+	</body>
+</html>

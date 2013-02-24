@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Static Master/Detail Pattern -- Multiple Address Detail example</title>
+
+		<script src="../../../../dojo/dojo.js"
+				type="text/javascript"
+				djConfig="parseOnLoad: true, isDebug: true">
+		</script>
+		<style type="text/css">
+			@import "css/app-format.css";
+			@import "../../../../dijit/themes/claro/claro.css";
+		</style>
+		<script type="text/javascript" >
+			dojo.require("dojox.mvc");
+			dojo.require("dojox.mvc.Output");
+			dojo.require("dojox.mvc.Group");
+			dojo.require("dojox.mvc.Repeat");
+			dojo.require("dijit.form.TextBox");
+			dojo.require("dijit.form.Button");
+			dojo.require("dojo.store.Memory");
+			dojo.require("dojo.parser");
+			dojo.require("dojo._base.lang");
+
+			var search_results_init1 =
+			[{
+				"Query" : "Engineers1",
+				"Results" : [
+					{
+						"First"	  : "Anne1",
+						"Last"	  : "Ackerman1"
+					},
+					{
+						"First"	  : "Ben1",
+						"Last"	  : "Beckham1"
+					},
+					{
+						"First"	  : "Chad1",
+						"Last"	  : "Chapman1"
+					}
+				]
+			}];
+			var search_results_init2 =
+			[{
+				"Query" : "Engineers2",
+				"Results" : [
+					{
+						"First"	  : "Anne2",
+						"Last"	  : "Ackerman2"
+					},
+					{
+						"First"	  : "Ben2",
+						"Last"	  : "Beckham2"
+					}
+				]
+			}];
+			var search_results_init3 =
+			[{
+				"Query" : "Engineers3",
+				"Results" : [
+					{
+						"First"	  : "",
+						"Last"	  : ""
+					}
+				]
+			}];
+
+			var memStore1 = new dojo.store.Memory({data : search_results_init1});
+			var model1 = dojox.mvc.newStatefulModel({ store : memStore1 })[0];
+			var memStore2 = new dojo.store.Memory({data : search_results_init2});
+			var model2 = dojox.mvc.newStatefulModel({ store : memStore2 })[0];
+			var memStore3 = new dojo.store.Memory({data : search_results_init3});
+			var model3 = dojox.mvc.newStatefulModel({ store : memStore3 })[0];
+		</script>
+	</head>
+	<body class="claro">
+		<div id="wrapper">
+			<div id="header">
+				<div id="navigation"></div>
+				<div id="headerInsert">
+					<h1>Input Ouput Sync</h1>
+					<h2>Data Binding Example</h2>
+				</div>
+			</div>
+			<div id="main">
+				<div id="leftNav"></div>
+				<div id="mainContent">
+					<div class="row">
+						<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){dijit.byId('outergroupId').set('ref',model1);}">Swap Model1</button>
+						<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){dijit.byId('outergroupId').set('ref',model2);}">Swap Model2</button>
+						<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){dijit.byId('outergroupId').set('ref',model3);}">Swap Model3</button>
+						<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){swapData();}">Test Swap Data</button>
+					</div>
+					<div id="outergroupId"	 data-dojo-type="dojox.mvc.Group" data-dojo-props="ref: 'model1'">
+						<div id="repeatId" data-dojo-type="dojox.mvc.Repeat" data-dojo-props="ref: 'Results'">
+							<div class="row" data-dojo-type="dojox.mvc.Group" data-dojo-props="ref: '${this.index}'">
+								<label class="cell" for="nameInput${this.index}">Name:</label>
+								<input class="cell" data-dojo-type="dijit.form.TextBox" id="nameInput${this.index}" data-dojo-props="ref: 'First'"/>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+							<span>
+								Model1 Output is ==>  
+							</span>
+					<div id="outergroupIdOutput"	 data-dojo-type="dojox.mvc.Group" data-dojo-props="ref: 'model1'">
+						<div id="repeatIdOutput" data-dojo-type="dojox.mvc.Repeat" data-dojo-props="ref: 'Results'">
+							<div class="row" data-dojo-type="dojox.mvc.Group" data-dojo-props="ref: '${this.index}'">
+								<input class="cell" data-dojo-type="dijit.form.TextBox" id="nameInputOut${this.index}" data-dojo-props="ref: 'First'"/>
+								<span  class="cell"> Name${this.index} is 
+								</span>
+								<span  class="cell" data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: 'First'"></span>
+							</div>
+						</div>
+					</div>
+
+					<!--<div class="row" data-dojo-type="dojox.mvc.Group" data-dojo-props="ref: 'model1.Results[0]'">
+							<span id="firstnameOutput10" data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: 'First'">
+								Name1 is "${this.value}" : 
+							</span>
+							</div>
+							<span id="firstnameOutput11" data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: model1.Results[1].First">
+								Name2 is "${this.value}" : 
+							</span>
+							<span id="firstnameOutput12" data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: model1.Results[2].First">
+								Name3 is "${this.value}"  
+							</span>
+					</div>
+					-->
+					<div class="row">
+							<span>
+								Model2 Output is ==>  
+							</span>
+							
+							<span id="firstnameOutput20" data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: model2.Results[0].First">
+								Name1 is "${this.value}" : 
+							</span>
+							<span id="firstnameOutput21" data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: model2.Results[1].First">
+								Name2 is "${this.value}"  
+							</span>
+					</div>
+					<div class="row">
+							<span>
+								Model3 Output is ==>  
+							</span>
+							<span id="firstnameOutput30" data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: model3.Results[0].First">
+								Name1 is "${this.value}"  
+							</span>
+					</div>					
+					<br/>Model:
+					<button id="reset" type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){model1.reset();model2.reset();model3.reset();}">Reset all</button>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			function swapData(index) {
+				//model1 = model2;
+				//model1.Results = model2.Results;
+				
+				//for(var x in src){
+				//	var o = src.get(x);
+				//	if(o && dojo._base.lang.isObject(o) && dojo._base.lang.isFunction(o.get)){
+				//		dest[x].set('value', o);
+				//	}
+				//}
+				//for(var n = this._containedWidgets.length - 1; n > -1; n--){
+		/*	this will remove all and add the new ones, it works and updates...	
+				var dest = model1.Results;
+				var src = dojo._base.lang.clone(model2.Results);
+				for(var i=dest.length-1; i>-1; i--){
+					dest.remove(i);
+				}
+				for(var i=0; i<src.length; i++){
+					dest.add(i,src[i]);
+				}
+		*/		
+
+		//	this will try to set the index for each item, it should update too
+		/*
+				var dest = model1.Results;
+				var src = dojo._base.lang.clone(model2.Results);
+				src.forceBuild = true;	
+				for(var i=dest.length-1; i>-1; i--){
+					if(src.length > i){
+						src[i].forceBuild = true;	
+						dest.set(i,src[i]);
+					}else{
+						dest.remove(i);
+					}
+				}
+		*/
+				//var dest = searchRecords.Results;
+				//var src = searchRecords2.Results.toPlainObject();
+				var dest = model1.Results;
+				var src = dojo._base.lang.clone(model2.Results);
+				if(dest){
+				for(var x in dest){
+					if(dest && dest[x].First){
+					src[x].First.forceBuild = true;	
+					dest[x].First.set('value',src[x].First);
+					src[x].Last.forceBuild = true;	
+					dest[x].Last.set('value',src[x].Last);
+					}
+				}
+				}
+		
+				//model1.Results.add("3",model2.Results[0]);
+				//model1.Results._copyStatefulProperties(model2.Results,model1.Results);
+				//model1.Results[0].First.set('value', model2.Results[0].First);
+				//model1.Results[1].First.set('value', model2.Results[1].First);
+				//model.First.set('value', 'Jane'); 
+				//dijit.byId('outergroupId').set('ref',model1);
+				//var widget = dijit.byId("detailsGroup");
+				//widget.set("ref", index);
+				//var detailsBanner = dojo.byId("detailsBanner");
+				//detailsBanner.innerHTML = "Details for result index: " + index;
+			}
+		</script>
+	</body>
+</html>

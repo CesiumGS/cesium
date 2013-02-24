@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>dijit.Tree / dijit.tree.ObjectStoreModel automated test</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, async: true"></script>
+
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/array",
+			"dojo/aspect",
+			"dojo/dom-class",
+			"dojo/on",
+			"dojo/ready",
+			"dojo/_base/window",
+			"dojo/store/Memory",
+			"dojo/store/Observable",
+			"dijit/Tree",
+			"dijit/tree/ObjectStoreModel",
+			"dijit/tree/dndSource",
+			"doh/runner",
+			"dijit/tests/helpers"	// functions to help test
+		], function(array, aspect, domClass, on, ready, win, Memory, Observable,
+					Tree, ObjectStoreModel, dndSource, doh, helpers){
+
+			var myStore, myModel, myTree, myTree2;
+
+			// dijit.TreeNodes
+			var world, europe, asia, africa, kenya;
+
+			ready(function(){
+				doh.register("setup", function(){
+					// Create test store.
+					myStore = new Memory({
+						data: [
+							{ id: "earth", name:"The earth", type:"planet", population: "6 billion"},
+							{ id: "AF", name:"Africa", type:"continent", population:"900 million", area: "30,221,532 sq km",
+									timezone: "-1 UTC to +4 UTC", parent: "earth"},
+								{ id: "EG", name:"Egypt", type:"country", parent: "AF" },
+								{ id: "KE", name:"Kenya", type:"country", parent: "AF" },
+									{ id: "Nairobi", name:"Nairobi", type:"city", parent: "KE" },
+									{ id: "Mombasa", name:"Mombasa", type:"city", parent: "KE" },
+								{ id: "SD", name:"Sudan", type:"country", parent: "AF" },
+									{ id: "Khartoum", name:"Khartoum", type:"city", parent: "SD" },
+							{ id: "AS", name:"Asia", type:"continent", parent: "earth" },
+								{ id: "CN", name:"China", type:"country", parent: "AS" },
+								{ id: "IN", name:"India", type:"country", parent: "AS" },
+								{ id: "RU", name:"Russia", type:"country", parent: "AS" },
+								{ id: "MN", name:"Mongolia", type:"country", parent: "AS" },
+							{ id: "OC", name:"Oceania", type:"continent", population:"21 million", parent: "earth"},
+								{ id: "AU", name:"Australia", type:"country", population:"21 million", parent: "OC"},
+							{ id: "EU", name:"Europe", type:"continent", parent: "earth" },
+								{ id: "DE", name:"Germany", type:"country", parent: "EU" },
+								{ id: "FR", name:"France", type:"country", parent: "EU" },
+								{ id: "ES", name:"Spain", type:"country", parent: "EU" },
+								{ id: "IT", name:"Italy", type:"country", parent: "EU" },
+							{ id: "NA", name:"North America", type:"continent", parent: "earth" },
+								{ id: "MX", name:"Mexico", type:"country",  population:"108 million", area:"1,972,550 sq km",
+										parent: "NA" },
+									{ id: "Mexico City", name:"Mexico City", type:"city", population:"19 million", timezone:"-6 UTC", parent: "MX"},
+									{ id: "Guadalajara", name:"Guadalajara", type:"city", population:"4 million", timezone:"-6 UTC", parent: "MX" },
+								{ id: "CA", name:"Canada", type:"country",  population:"33 million", area:"9,984,670 sq km", parent: "NA" },
+									{ id: "Ottawa", name:"Ottawa", type:"city", population:"0.9 million", timezone:"-5 UTC", parent: "CA"},
+									{ id: "Toronto", name:"Toronto", type:"city", population:"2.5 million", timezone:"-5 UTC", parent: "CA" },
+								{ id: "US", name:"United States of America", type:"country", parent: "NA" },
+							{ id: "SA", name:"South America", type:"continent", parent: "earth" },
+								{ id: "BR", name:"Brazil", type:"country", population:"186 million", parent: "SA" },
+								{ id: "AR", name:"Argentina", type:"country", population:"40 million", parent: "SA" }
+						]
+					});
+
+					// Since dojo.store.Memory doesn't have various store methods we need, we have to add them manually
+					myStore.getChildren = function(object){
+						// Add a getChildren() method to store for the data model where
+						// children objects point to their parent (aka relational model)
+						return this.query({parent: this.getIdentity(object)});
+					};
+
+					aspect.around(myStore, "put", function(originalPut){
+						// To support DnD, the store must support put(child, {parent: parent}).
+						// Since our store is relational, that just amounts to setting child.parent
+						// to the parent"s id.
+						return function(obj, options){
+							if(options && options.parent){
+								obj.parent = options.parent.id;
+							}
+							return originalPut.call(myStore, obj, options);
+						}
+					});
+
+					// Wrap the store in Observable so that updates to the store are reflected
+					myStore = new Observable(myStore);
+					doh.t(myStore, "store created");
+
+					// Create the model
+					myModel = new ObjectStoreModel({store: myStore, query: {id: "earth"}});
+					doh.t(myModel, "model created");
+				});
+
+				doh.register("basic", [
+					function create(){
+						var d = new doh.Deferred();
+
+						myTree = new dijit.Tree({
+							id: "myTree",
+							model: myModel,
+							persist: false,		// persist==true is too hard to test
+							dndController: dndSource
+						}).placeAt(win.body());
+						doh.t(myTree, "tree created");
+
+						myTree.startup();
+
+						world = myTree.rootNode;
+
+						// Give the tree time to load, and the do checks that it
+						// loaded correctly
+						setTimeout(d.getTestCallback(function(){
+							doh.t(world, "root node exists");
+							doh.is("The earth", world.label, "world node label");
+							doh.t(world.isExpanded, "root node is expanded");
+
+							var children = world.getChildren();
+							doh.is(6, children.length, "six children");
+							doh.is("Africa", children[0].label, "first child");
+							doh.f(children[0].isExpanded, "first child not expanded");
+							doh.is("South America", children[5].label, "last child");
+
+							// Last child has special CSS for drawing the grid lines
+							doh.f(domClass.contains(children[3].domNode, "dijitTreeIsLast"), "middle node doesn't have dijitTreeIsLast");
+							doh.t(domClass.contains(children[5].domNode, "dijitTreeIsLast"), "last node has dijitTreeIsLast");
+						}), 750);
+						return d;
+					},
+
+					function openEurope(){
+						var d = new doh.Deferred();
+
+						europe = world.getChildren()[3];
+						doh.is("Europe", europe.label, "europe node label");
+						doh.t(europe, "europe node exists");
+
+						// Click on Europe to open it
+						on.emit(europe.expandoNode, "click", {bubbles: true});
+
+						// Give the children time to load, and the do checks that they
+						// loaded correctly
+						setTimeout(d.getTestCallback(function(){
+							doh.t(europe.isExpanded, "europe node is expanded");
+
+							var children = europe.getChildren();
+							doh.is(4, children.length, "children count");
+							doh.is("Germany", children[0].label, "first child");
+							doh.f(children[0].isExpanded, "first child not expanded");
+							doh.is("Italy", children[3].label, "last child");
+
+							// Last child has special CSS for drawing the grid lines
+							doh.f(domClass.contains(children[1].domNode, "dijitTreeIsLast"), "middle node doesn't have dijitTreeIsLast");
+							doh.t(domClass.contains(children[3].domNode, "dijitTreeIsLast"), "last node has dijitTreeIsLast");
+						}), 750);
+						return d;
+					},
+
+					function openAsia(){
+						var d = new doh.Deferred();
+
+						asia = world.getChildren()[1];
+						doh.is("Asia", asia.label, "asia node label");
+						doh.t(asia, "europe node exists");
+
+						// Click on Europe to open it
+						on.emit(asia.expandoNode, "click", {bubbles: true});
+
+						// Give the children time to load, and the do checks that they
+						// loaded correctly
+						setTimeout(d.getTestCallback(function(){
+							doh.t(asia.isExpanded, "asia node is expanded");
+
+							var children = asia.getChildren();
+							doh.is(4, children.length, "children count");
+							doh.is("China", children[0].label, "first child");
+							doh.is("Mongolia", children[3].label, "last child");
+						}), 750);
+						return d;
+					}
+				]);
+
+				doh.register("data store binding", [
+					function itemUpdate(){
+						// Test that Tree noticed when data store items change, and updates accordingly
+
+						myStore.put({ id: "ES", name:"España", type:"country", parent: "EU" });
+						doh.is("España", innerText(europe.getChildren()[2].labelNode), "label changed");
+					},
+
+					function topLevelItemDelete(){
+						// Delete a top level item.
+
+						// Remove "South America"
+						myStore.remove("SA");
+
+						var children = world.getChildren();
+						doh.is(5, children.length, "five children");
+						doh.is("North America", children[4].label, "last child");
+						doh.t(domClass.contains(children[4].domNode, "dijitTreeIsLast"),
+								"North america has become the last node so it gets the CSS class for that");
+					},
+
+					function nestedItemDelete(){
+						// Delete a nested item
+
+						// Remove "China"
+						myStore.remove("CN");
+
+						var children = asia.getChildren();
+						doh.is(3, children.length, "three children");
+					},
+
+					function topLevelItemInsert(){
+						// Create a new top level item as last child.
+						// ForestStoreModel needs to realize that the top level children have changed and notify Tree.
+
+						myStore.add({
+							id: "PA",
+							name:"Pacifica",
+							type:"continent",
+							parent: "earth"
+						});
+
+						var children = world.getChildren();
+						doh.is(6, children.length, "six children");
+						doh.is("Pacifica", children[5].label, "last child");
+						doh.f(domClass.contains(children[4].domNode, "dijitTreeIsLast"),
+							"North America no longer last child");
+						doh.t(domClass.contains(children[5].domNode, "dijitTreeIsLast"),
+							"Pacifica is last child");
+					},
+
+					function topLevelItemModify(){
+						// Modify a top level item so it"s no longer top level.
+
+						myStore.put({
+							id: "PA",
+							name:"Pacifica",
+							type:"continent",
+							parent: "AS"
+						});
+
+						doh.is(5, world.getChildren().length, "world children");
+						doh.is(4, asia.getChildren().length, "asia children");
+					},
+
+					function nestedItemModify(){
+						// Modify a nested item so it matches the query for top level items in the tree.
+
+						myStore.put({
+							id: "PA",
+							name:"Pacifica",
+							type:"continent",
+							parent: "earth"
+						});
+
+						doh.is(6, world.getChildren().length, "world children");
+						doh.is(3, asia.getChildren().length, "asia children");
+					}
+				]);
+
+				doh.register("DnD", [
+					// Drag Germany from Europe to Asia
+					function dragGermanyToAsia(){
+						var asiaItem = myStore.get("AS"),
+							europeItem = myStore.get("EU"),
+							germanyItem = myStore.get("DE");
+						myModel.pasteItem(germanyItem, europeItem, asiaItem);
+						doh.is(3, europe.getChildren().length, "europe children");
+						doh.is(4, asia.getChildren().length, "asia children");
+						doh.is("Germany", asia.getChildren()[3].label, "last child of asia");
+					},
+
+					// Drag Germany from Asia to Europe
+					function dragGermanyToEurope(){
+						var asiaItem = myStore.get("AS"),
+							europeItem = myStore.get("EU"),
+							germanyItem = myStore.get("DE");
+						myModel.pasteItem(germanyItem, asiaItem, europeItem);
+						doh.is(3, asia.getChildren().length, "asia children");
+						doh.is(4, europe.getChildren().length, "europe children");
+						doh.is("Germany", europe.getChildren()[3].label, "last child of europe");
+					},
+
+					function openAfrica(){
+						var d = new doh.Deferred();
+
+						africa = world.getChildren()[0];
+						doh.is("Africa", africa.label, "africa node label");
+						doh.t(africa, "africa node exists");
+
+						// Click on Africa to open it
+						on.emit(africa.expandoNode, "click", {bubbles: true});
+
+						// Give the children time to load, and the do checks that they
+						// loaded correctly
+						setTimeout(d.getTestCallback(function(){
+							doh.t(africa.isExpanded, "node is expanded");
+
+							var children = africa.getChildren();
+							doh.is(3, children.length, "children count");
+						}), 750);
+						return d;
+					},
+
+					function openKenya(){
+						var d = new doh.Deferred();
+
+						kenya = africa.getChildren()[1];
+						doh.t(kenya, "kenya node exists");
+						doh.is("Kenya", kenya.label, "kenya node label");
+
+						// Click on Kenya to open it
+						on.emit(kenya.expandoNode, "click", {bubbles: true});
+
+						// Give the children time to load, and the do checks that they
+						// loaded correctly
+						setTimeout(d.getTestCallback(function(){
+							doh.t(kenya.isExpanded, "node is expanded");
+
+							var children = kenya.getChildren();
+							doh.is(2, children.length, "children count");
+						}), 750);
+						return d;
+					},
+
+					// Dragging open node to make sure it stays open.
+					function dragKenyaToAsia(){
+						var asiaItem = myStore.get("AS"),
+							africaItem = myStore.get("AF"),
+							kenyaItem = myStore.get("KE");
+						myModel.pasteItem(kenyaItem, africaItem, asiaItem);
+						doh.is(4, asia.getChildren().length, "asia children");
+						doh.is("Kenya", asia.getChildren()[3].label, "last child of asia");
+						doh.is(kenya, asia.getChildren()[3], "same TreeNode as before");
+						doh.t(kenya.isExpanded, "node is still expanded");
+						doh.is(2, kenya.getChildren().length, "same children count as before");
+					},
+
+					// Put Kenya back in Africa
+					function dragKenyaToAfrica(){
+						var asiaItem = myStore.get("AS"),
+							africaItem = myStore.get("AF"),
+							kenyaItem = myStore.get("KE");
+						myModel.pasteItem(kenyaItem, asiaItem, africaItem);
+						doh.is(3, asia.getChildren().length, "asia children");
+						doh.is(3, africa.getChildren().length, "africa children");
+					}
+
+				]);
+
+				doh.register("paths", [
+					function getPath(){
+						var france = europe.getChildren()[0];
+
+						// Select the node.   can't emit "click" because dndSelector listens for mousedown & mouseup.
+						// And before the mousedown, we need a mouseover event, so _dndContainer.js set this.current.
+						on.emit(france.labelNode, "mouseover", {bubbles: true});
+						on.emit(france.labelNode, "mousedown", {button: dojo.mouseButtons.LEFT, bubbles: true});
+						on.emit(france.labelNode, "mouseup", {button: dojo.mouseButtons.LEFT, bubbles: true});
+
+						var path = myTree.get("path");
+						doh.is("earth, EU, FR",
+								array.map(myTree.get("path"), function(obj){ return obj.id; }).join(", "),
+								"serialized path");
+					},
+					{
+						name: "createWithPath",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							myTree2 = new dijit.Tree({
+								id: "myTree2",
+								model: myModel,
+								persist: false,		// persist==true is too hard to test
+								dndController: dndSource,
+								path: ["earth", "EU", "IT"]
+							}).placeAt(win.body());
+							doh.t(myTree2, "myTree2 created");
+
+							myTree2.startup();
+
+							setTimeout(d.getTestCallback(function(){
+								doh.t(myTree2.rootNode, "root node exists");
+								doh.t(myTree2.rootNode.isExpanded, "root node is expanded");
+								doh.t(myTree2.rootNode.getChildren()[3].isExpanded, "europe node is expanded");
+								doh.is("Italy", myTree2.selectedNode.label, "selected correct node");
+							}), 2000);
+
+							return d;
+						}
+					},
+					function copyPath(){
+						var d = new doh.Deferred();
+
+						myTree.set("path", myTree2.get("path")).then(d.getTestCallback(function(){
+							doh.t(world.isExpanded, "root node is expanded");
+							doh.t(world.getChildren()[3].isExpanded, "europe node is expanded");
+							doh.is("Italy", myTree.get("selectedNode").label, "selected correct node");
+						}));
+
+						return d;
+					},
+
+					{
+						name: "copyPathByIds",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							myTree.set("path", ["earth", "NA", "CA", "Ottawa"]).then(d.getTestErrback(function(){
+								var path = array.map(myTree.get("path"), function(item){ return item.id; });
+								doh.is(["earth", "NA", "CA", "Ottawa"], path, "path got set on myTree");
+
+								myTree2.set("path", path).then(d.getTestCallback(function(){
+									doh.t(myTree2.rootNode.isExpanded, "root node is expanded");
+									doh.t(myTree2.rootNode.getChildren()[4].isExpanded, "north america node is expanded");
+									doh.t(myTree2.rootNode.getChildren()[4].getChildren()[1].isExpanded, "canada node is expanded");
+									doh.is("Ottawa", myTree2.get("selectedNode").label, "selected correct node");
+								}));
+							}));
+
+							return d;
+						}
+					},
+
+					function setPathToNull(){
+						var d = new doh.Deferred();
+
+						myTree2.set("path", []).then(d.getTestCallback(function(){
+							doh.is(null, myTree2.get("selectedNode"), "no selected node");
+						}));
+						return d;
+					},
+
+					function setPathToRoot(){
+						var d = new doh.Deferred();
+
+						myTree2.set("path", ["earth"]).then(d.getTestCallback(function(){
+							doh.is(myTree2.rootNode, myTree2.get("selectedNode"), "selected root node");
+						}));
+						return d;
+					},
+
+					function setPaths(){
+						var d = new doh.Deferred();
+
+						myTree2.set("paths", [["earth","AF","KE","Nairobi"],
+											  ["earth","NA","MX","Guadalajara"]]).then(d.getTestCallback(function(){
+								  var ids = dojo.map(myTree2.selectedItems, function(x){return myTree2.model.getIdentity(x);}).sort();
+								  doh.is(["Guadalajara", "Nairobi"], ids);
+							  }));
+						return d;
+					},
+					function setEmptyPath(){
+						var d = new doh.Deferred();
+
+						// this should fail because not even the root node is specified
+						myTree2.set("path", []).then(
+							function(){
+								d.errback("Should have gotten error trying to set path to null");
+							},
+							d.getTestCallback(function(e){
+								doh.t(e instanceof Tree.PathError, "got PathError");
+							})
+						);
+					},
+					function setInvalidPath(){
+						var d = new doh.Deferred();
+						myTree2.set("path", ["earth","AF","KE","Narnia"]).then(
+							function(){
+								d.errback("Should have gotten error trying to set path to null");
+							},
+							d.getTestCallback(function(e){
+								doh.t(e instanceof Tree.PathError, "got PathError");
+							})
+						);
+					}
+
+				]);
+
+				doh.register("destroy", [
+					function destroyTree(){
+						// Just running this to make sure we don"t get an exception
+						console.log("destroying tree");
+						myTree.destroy();
+						myTree2.destroy();
+					}
+				]);
+
+				doh.register("delete selected node", [
+					{
+						name: "create",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							myTree = new dijit.Tree({
+								id: "myTree",
+								model: myModel,
+								persist: false,		// persist==true is too hard to test
+								path: ["earth", "EU", "IT"]
+							}).placeAt(win.body());
+							doh.t(myTree, "tree created");
+
+							myTree.startup();
+
+							myTree.onLoadDeferred.then(d.getTestCallback(function(){
+								doh.is("IT", myTree.get("selectedItem").id);
+							}));
+
+							return d;
+						}
+					},
+
+					function deleteSelectedItem(){
+						myStore.remove("IT");
+					},
+
+					function selectNewItem(){
+						// Since EU is already open this set("path", ...) should execute immediately
+						myTree.set("path", ["earth", "EU", "FR"]);
+						doh.is("FR", myTree.get("selectedItem").id);
+					}
+				]);
+
+
+				doh.register("nobidi", [
+					// Make sure that Tree doesn't have spurious lang="" dir="" on nodes
+					function noLangDir(){
+						doh.t(myTree.rootNode, "root node exists");
+						doh.t(myTree.rootNode.isExpanded, "root node is expanded");
+						doh.f(domClass.contains(myTree.rootNode, "lang"), "no (empty) lang attribute on root TreeNode");
+						doh.f(domClass.contains(myTree.rootNode, "dir"), "no (empty) dir attribute on root TreeNode");
+
+						var children = myTree.rootNode.getChildren();
+						doh.f(domClass.contains(children[2], "lang"), "no (empty) lang attribute on child TreeNode");
+						doh.f(domClass.contains(children[2], "dir"), "no (empty) dir attribute on child TreeNode");
+					}
+				]);
+
+				doh.register("expand/contract", [
+					{
+						name: "initiallyExpanded",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							myTree = new dijit.Tree({
+								id: "myTreeExpand",
+								model: myModel,
+								persist: false,		// persist==true is too hard to test
+								autoExpand: true
+							}).placeAt(win.body());
+							doh.t(myTree, "tree created");
+
+							myTree.startup();
+
+							world = myTree.rootNode;
+
+							myTree.onLoadDeferred.then(d.getTestCallback(function(){
+								doh.t(world, "root node exists");
+								doh.t(world.isExpanded, "root node is expanded");
+
+								var children = world.getChildren();
+								doh.is(6, children.length, "world children");
+								doh.t(children[0].isExpanded, "Africa expanded");
+								doh.t(children[0].getChildren()[2].isExpanded, "Kenya expanded too");
+								doh.is(2, children[0].getChildren()[2].getChildren().length, "Kenya children");
+								doh.t(children[4].isExpanded, "North America expanded");
+								doh.is(3, children[4].getChildren().length, "North America children");
+							}));
+
+							return d;
+						}
+					},
+					{
+						name: "collapseAll",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							myTree.collapseAll().then(d.getTestCallback(function(){
+								doh.t(world, "root node exists");
+								doh.f(world.isExpanded, "root node collapsed");
+
+								var children = world.getChildren();
+								doh.is(6, children.length, "world children");
+								doh.f(children[0].isExpanded, "Africa collapsed");
+								doh.f(children[0].getChildren()[2].iscollapsed, "Kenya collapsed too");
+								doh.is(2, children[0].getChildren()[2].getChildren().length, "Kenya children");
+								doh.f(children[4].isExpanded, "North America collapsed");
+								doh.is(3, children[4].getChildren().length, "North America children");
+							}));
+
+							return d;
+						}
+					},
+					{
+						name: "expandAll",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							myTree.destroy();
+
+							myTree = new dijit.Tree({
+								id: "myTreeExpand",
+								model: myModel,
+								persist: false,		// persist==true is too hard to test
+								autoExpand: false
+							}).placeAt(win.body());
+							doh.t(myTree, "tree created");
+
+							myTree.startup();
+
+							world = myTree.rootNode;
+
+							myTree.onLoadDeferred.then(d.getTestErrback(function(){
+								doh.t(world, "root node exists");
+								doh.t(world.isExpanded, "root node is expanded");
+
+								var children = world.getChildren();
+								doh.is(6, children.length, "world children");
+								doh.f(children[0].isExpanded, "Africa collapsed");
+
+								myTree.expandAll().then(d.getTestCallback(function(){
+									var children = world.getChildren();
+									doh.t(children[0].isExpanded, "Africa expanded");
+									doh.t(children[0].getChildren()[2].isExpanded, "Kenya expanded too");
+									doh.t(children[4].isExpanded, "North America expanded");
+									doh.is(3, children[4].getChildren().length, "North America children");
+								}));
+							}));
+
+							return d;
+						}
+					},
+					{
+						name: "collapseShowRootFalseTree",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							myTree.destroy();
+
+							myTree = new dijit.Tree({
+								id: "myTreeExpand",
+								model: myModel,
+								persist: false,		// persist==true is too hard to test
+								showRoot: false
+							}).placeAt(win.body());
+							doh.t(myTree, "tree created");
+
+							myTree.startup();
+
+							world = myTree.rootNode;
+
+							myTree.onLoadDeferred.then(d.getTestErrback(function(){
+								myTree._expandNode(myTree.rootNode.getChildren()[0]).then(d.getTestErrback(function(){
+									var children = world.getChildren();
+									doh.t(children[0].isExpanded, "Africa collapsed");
+
+									myTree.collapseAll().then(d.getTestCallback(function(){
+										doh.t(world, "root node exists");
+										doh.t(world.isExpanded, "root node expanded (because it's hidden");
+
+										doh.f(children[0].isExpanded, "Africa collapsed");
+										doh.t(helpers.isVisible(children[0]), "Africa node visible");
+									}));
+								}));
+							}));
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});	// end of ready()
+ 		});	// end of require()
+	</script>
+
+</head>
+<body class="claro" role="main">
+
+	<h1 class="testTitle">dijit.Tree using dijit.tree.ObjectStore (against dojo.store) Automated Test</h1>
+
+</body>
+</html>

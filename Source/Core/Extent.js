@@ -52,26 +52,41 @@ define([
     };
 
     /**
+     * Duplicates an Extent.
+     *
+     * @memberof Extent
+     *
+     * @param {Extent} extent The extent to clone.
+     * @param {Extent} [result] The object onto which to store the result, or undefined if a new instance should be created.
+     * @return {Extent} The modified result parameter or a new Extent instance if none was provided.
+     */
+    Extent.clone = function(extent, result) {
+        if (typeof result === 'undefined') {
+            return new Extent(extent.west, extent.south, extent.east, extent.north);
+        }
+        result.west = extent.west;
+        result.south = extent.south;
+        result.east = extent.east;
+        result.north = extent.north;
+        return result;
+    };
+
+    /**
      * Duplicates this Extent.
+     *
+     * @memberof Extent
      *
      * @param {Extent} [result] The object onto which to store the result.
      * @return {Extent} The modified result parameter or a new Extent instance if none was provided.
      */
     Extent.prototype.clone = function(result) {
-        if (typeof result === 'undefined') {
-            return new Extent(this.west, this.south, this.east, this.north);
-        }
-        result.west = this.west;
-        result.south = this.south;
-        result.east = this.east;
-        result.north = this.north;
-        return result;
+        return Extent.clone(this, result);
     };
 
     /**
      * Compares the provided Extent with this Extent componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Cartesian3
+     * @memberof Extent
      *
      * @param {Extent} [other] The Extent to compare.
      * @return {Boolean} <code>true</code> if the Extents are equal, <code>false</code> otherwise.
@@ -291,15 +306,15 @@ define([
     };
 
     /**
-     * Determines if the extent is empty, i.e., if <code>west === east</code>
-     * and <code>south === north</code>.
+     * Determines if the extent is empty, i.e., if <code>west >= east</code>
+     * or <code>south >= north</code>.
      *
      * @memberof Extent
      *
      * @return {Boolean} True if the extent is empty; otherwise, false.
      */
     Extent.prototype.isEmpty = function() {
-        return (this.west === this.east) && (this.south === this.north);
+        return this.west >= this.east || this.south >= this.north;
     };
 
     var subsampleLlaScratch = new Cartographic();

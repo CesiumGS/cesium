@@ -1,0 +1,54 @@
+html.mobile, .mobile body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+.mobile body {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: none;
+  background-color: #d0d0d0;
+  font-family: Helvetica;
+  font-size: 17px;
+  color: black;
+}
+/* Button Colors */
+.mblColorBlue {
+  color: white;
+  background-color: #2362dd;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#7a9de9), to(#2362dd));
+}
+
+.mblColorBlue45 {
+  background-image: -webkit-gradient(linear, left top, right bottom, from(#7a9de9), to(#2362dd));
+}
+/* Default Button Colors */
+.mblColorDefault {
+  color: black;
+  background-color: #a4a4a4;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#e2e2e2), to(#a4a4a4));
+}
+
+.mblColorDefault45 {
+  background-image: -webkit-gradient(linear, left top, right bottom, from(#e2e2e2), to(#a4a4a4));
+}
+
+.mblColorDefaultSel {
+  color: white;
+  background-color: #666666;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#bbbbbb), to(#666666));
+}
+
+.mblColorDefaultSel45 {
+  background-image: -webkit-gradient(linear, left top, right bottom, from(#bbbbbb), to(#666666));
+}
+
+.mblSpriteIcon {
+  position: absolute;
+}
+.mblSpriteIconParent {
+  position: relative;
+  font-size: 1px;
+}
+.mblImageIcon {
+  vertical-align: top;
+}

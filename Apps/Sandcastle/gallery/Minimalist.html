@@ -10,37 +10,11 @@
     <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js"></script>
     <script type="text/javascript" src="../Sandcastle-warn.js"></script>
 </head>
-<body data-sandcastle-bucket="bucket-plain.html" data-sandcastle-title="Cesium (standalone)">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-plain.html" data-sandcastle-title="Cesium (standalone)">
 <style>
-    body {
-        background: #000;
-        color: #eee;
-        font-family: sans-serif;
-        font-size: 9pt;
-        padding: 0;
-        margin: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-    }
-    .fullSize {
-        display: block;
-        position: absolute;
-        top: 0;
-        left: 0;
-        border: none;
-        width: 100%;
-        height: 100%;
-    }
-    #toolbar {
-        margin: 5px;
-        padding: 2px 5px;
-        position: absolute;
-    }
+    @import url(../templates/bucket.css);
 </style>
-
 <div id="cesiumContainer" class="fullSize"></div>
-<div id="toolbar">Loading...</div>
 <script id="cesium_sandcastle_script">
 (function () {
     "use strict";
@@ -57,17 +31,18 @@
         url : imageryUrl + 'NE2_LR_LC_SR_W_DR_2048.jpg'
     });
 
-    var cb = new Cesium.CentralBody(ellipsoid);
-    cb.getImageryLayers().addImageryProvider(imageryProvider);
-    primitives.setCentralBody(cb);
+    var centralBody = new Cesium.CentralBody(ellipsoid);
+    centralBody.getImageryLayers().addImageryProvider(imageryProvider);
+    primitives.setCentralBody(centralBody);
     scene.skyAtmosphere = new Cesium.SkyAtmosphere();
+    var skyBoxBaseUrl = imageryUrl + 'SkyBox/tycho2t3_80';
     scene.skyBox = new Cesium.SkyBox({
-        positiveX: imageryUrl + 'SkyBox/tycho8_px_80.jpg',
-        negativeX: imageryUrl + 'SkyBox/tycho8_mx_80.jpg',
-        positiveY: imageryUrl + 'SkyBox/tycho8_py_80.jpg',
-        negativeY: imageryUrl + 'SkyBox/tycho8_my_80.jpg',
-        positiveZ: imageryUrl + 'SkyBox/tycho8_pz_80.jpg',
-        negativeZ: imageryUrl + 'SkyBox/tycho8_mz_80.jpg'
+        positiveX : skyBoxBaseUrl + '_px.jpg',
+        negativeX : skyBoxBaseUrl + '_mx.jpg',
+        positiveY : skyBoxBaseUrl + '_py.jpg',
+        negativeY : skyBoxBaseUrl + '_my.jpg',
+        positiveZ : skyBoxBaseUrl + '_pz.jpg',
+        negativeZ : skyBoxBaseUrl + '_mz.jpg'
     });
 
     function animate() {
@@ -104,8 +79,6 @@
     };
     window.addEventListener('resize', onResize, false);
     onResize();
-    
-    document.getElementById('toolbar').innerHTML = '';
 }());
 </script>
 </body>

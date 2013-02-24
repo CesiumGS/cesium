@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Rating</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base'],mblUserAgent:'iPhone'"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/window",
+			"dojox/mobile/Rating",
+			"dojox/mobile"
+		], function(win, Rating){
+			var widget = new Rating({
+				image: "images/star-orange.png",
+				numStars: 10,
+				value: 5.5
+			});
+			win.body().appendChild(widget.domNode);
+		});
+	</script>
+</head>
+<body>
+<h3>Programmatic Example</h3>
+</body>
+</html>

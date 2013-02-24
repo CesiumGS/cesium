@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>DOH Async Simple Input - Output Group example</title>
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+			@import "../../../../dijit/themes/claro/claro.css";
+		</style>
+<script type="text/javascript" djConfig="parseOnLoad:0,isDebug:1,async:1" src="../../../../dojo/dojo.js"></script>
+<script type="text/javascript">
+ 		var model;
+ 
+		require([
+		'dojo/parser',
+        'dojox/mvc',
+		'dojox/mvc/Group',
+		'dojox/mvc/Output',
+		'dojo/parser',
+		'dijit/form/TextBox',
+		'dijit/form/Button'], function(){
+
+			// The dojox.mvc.StatefulModel class creates a data model instance
+			// where each leaf within the data model is decorated with dojo.Stateful
+			// properties that widgets can bind to and watch for their changes.
+			model = dojox.mvc.newStatefulModel({ data : { "First" : "John", "Last" : "Doe", "Email" : "jdoe@example.com" }});
+				require([
+					'doh/runner', 'dijit/dijit'
+				], function(){
+				require([
+					'dojo/domReady!'
+					], function(){
+						doh.register("parse", function() {
+							dojo.parser.parse();
+
+							var detailsGroup = dijit.byId('detailsGroup');
+							detailsGroup.set('ref', model);
+
+						});
+						// should be able to verify all of the inputs 
+						doh.register("check initial values and bindings", [{
+							name : "initial",
+							runTest : function() {
+								doh.is("John", dijit.byId("First").get('value'),"First should be John");
+								doh.is("John",  dijit.byId("dojox_mvc_Output_0").get('value'),"dojox_mvc_Output_0 should be John");
+
+								doh.is("Doe", dijit.byId("lastnameInput").get('value'),"lastnameInput should be Doe");
+								doh.is("Doe",  dijit.byId("dojox_mvc_Output_1").get('value'),"dojox_mvc_Output_1 should be Doe");
+
+								doh.is("jdoe@example.com", dijit.byId("emailInput").get('value'),"emailInput should be jdoe@example.com");
+								doh.is("jdoe@example.com",  dijit.byId("dojox_mvc_Output_2").get('value'),"dojox_mvc_Output_2 should be jdoe@example.com");
+							}
+						}]);
+
+						doh.register("update first name", [{
+							name : "Update-First-Name",
+							runTest : function() {
+								var first1, bind1, addr1;
+								//test first relevant false
+								first1 = dijit.byId("First");
+								first1.set("value","John-update");
+								if (first1) {
+									doh.is("John-update", dijit.byId("First").get('value'),"First should be John");
+									doh.is("John-update",  dijit.byId("dojox_mvc_Output_0").get('value'),"dojox_mvc_Output_0 should be John");
+								}
+							}
+						}]);
+						doh.register("update last name", [{
+							name : "Update-Last-Name",
+							runTest : function() {
+								var last;
+								//test first relevant false
+								last = dijit.byId("lastnameInput");
+								last.set("value","Doe-update");
+								if (last) {
+									doh.is("Doe-update", dijit.byId("lastnameInput").get('value'),"lastnameInput should be Doe-update");
+									doh.is("Doe-update",  dijit.byId("dojox_mvc_Output_1").get('value'),"dojox_mvc_Output_1 should be Doe-update");
+								}
+							}
+						}]);
+						doh.register("update last name", [{
+							name : "Update-Last-Name",
+							runTest : function() {
+								var last;
+								//test first relevant false
+								email = dijit.byId("emailInput");
+								email.set("value","jdoe-update@example.com");
+								if (email) {
+									doh.is("jdoe-update@example.com", dijit.byId("emailInput").get('value'),"emailInput should be jdoe-update@example.com");
+									doh.is("jdoe-update@example.com",  dijit.byId("dojox_mvc_Output_2").get('value'),"dojox_mvc_Output_2 should be jdoe-update@example.com");
+								}
+							}
+						}]);
+						doh.register("reset back to initial values and bindings", [{
+							name : "reset_test",
+							runTest : function() {
+								model.reset();
+								doh.is("John", dijit.byId("First").get('value'),"First should be John");
+								doh.is("John",  dijit.byId("dojox_mvc_Output_0").get('value'),"dojox_mvc_Output_0 should be John");
+
+								doh.is("Doe", dijit.byId("lastnameInput").get('value'),"lastnameInput should be Doe");
+								doh.is("Doe",  dijit.byId("dojox_mvc_Output_1").get('value'),"dojox_mvc_Output_1 should be Doe");
+
+								doh.is("jdoe@example.com", dijit.byId("emailInput").get('value'),"emailInput should be jdoe@example.com");
+								doh.is("jdoe@example.com",  dijit.byId("dojox_mvc_Output_2").get('value'),"dojox_mvc_Output_2 should be jdoe@example.com");
+							}
+						}]);
+
+						doh.run();
+
+					});
+				});	
+		}); 
+		</script>
+</head>
+	<body class="claro">
+		<div id="wrapper">
+			<div id="header">
+				<div id="navigation"></div>
+				<div id="headerInsert">
+					<h1>Async Input Ouput Test</h1>
+					<h2>Data Binding Example</h2>
+				</div>
+			</div>
+			<div id="main">
+				<div id="leftNav"></div>
+				<div id="detailsGroup" dojoType="dojox.mvc.Group">
+					<div class="row">
+						<label class="cell" for="First">First:</label>
+						<input class="cell" id="First" data-dojo-type="dijit.form.TextBox"
+									data-dojo-props="ref: model.First"></input>
+						<!-- Content in output below will always be in sync with value of textbox above -->
+						<span data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: 'First'">
+						(first name is: ${this.value})
+						</span>
+					</div>
+				<div class="row">
+					<label class="cell" for="lastnameInput">Last:</label>
+					<input class="cell" id="lastnameInput" data-dojo-type="dijit.form.TextBox"
+									data-dojo-props="ref: model.Last"></input>
+					<span data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: 'Last'">
+						(last name is: ${this.value})
+					</span>
+				</div>
+				<div class="row">
+					<label class="cell" for="emailInput">Email:</label>
+					<input class="cell" id="emailInput" data-dojo-type="dijit.form.TextBox"
+									data-dojo-props="ref: model.Email"></input>
+					<span data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: 'Email'">
+					(email is: ${this.value})
+					</span>
+				</div>
+					<br/>Model:
+					<button id="reset" type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){model.reset();}">Reset</button>
+				</div>
+			</div>
+		</div>
+	</body>
+
+</html>

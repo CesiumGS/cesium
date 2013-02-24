@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<title>Multi-directional document test</title>
+
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		data-dojo-config="extraLocale: ['en','ar','he'], isDebug: true"></script>
+
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dojo.data.ItemFileReadStore");
+
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.Tree");
+		dojo.require("dijit.tree.ForestStoreModel");
+
+		dojo.require("dijit.Menu");
+		dojo.require("dijit.MenuItem");
+		dojo.require("dijit.PopupMenuItem");
+
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.form.DropDownButton");
+		dojo.require("dijit.form.ComboButton");
+		dojo.require("dijit.form.ToggleButton");
+
+		dojo.require("dijit.ColorPalette");
+		dojo.require("dijit.Toolbar");
+		dojo.require("dijit.TooltipDialog");
+
+		dojo.require("dijit.form.TextBox");
+		dojo.require("dijit.form.DateTextBox");
+		dojo.require("dijit.form.NumberSpinner");
+		dojo.require("dijit.form.ComboBox");
+
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.layout.ContentPane");
+
+		dojo.require("dojo.parser");
+		dojo.require("dojo.on");
+
+		dojo.require("doh.runner");
+
+		function checkLeft(/*Widget*/ left, /*Widget*/ right){
+			if(left.domNode) left = left.domNode;
+			if(right.domNode) right = right.domNode;
+
+			var lp = dojo.position(left, true),
+				rp = dojo.position(right, true);
+
+			doh.t(lp.x+lp.w-0.1 <= rp.x,
+				left.id + " to left of " + right.id + dojo.toJson(lp) + dojo.toJson(rp)
+			);
+		}
+
+		dojo.ready(function(){
+			doh.register("setup", [
+				function parse(){
+					dojo.parser.parse();
+				},
+				{
+					name: "wait for tab container load",
+					timeout: 5000,
+					runTest: function(){
+						return dijit.byId("ltr_tc_cp").onLoadDeferred;
+					}
+				},
+				{
+					name: "wait for tree load",
+					timeout: 5000,
+					runTest: function(){
+						return dijit.byId("ltr_tc_tree").onLoadDeferred;
+					}
+				}
+			]);
+
+			doh.register("Test bidi toolbar", [
+				{
+					name: "toolbar checkLeft",
+					runTest: function(){
+						//Check that the order of the menu buttons is correct
+						checkLeft(dijit.byId("ltr_ToolbarCutButton"), dijit.byId("ltr_ToolbarDropDown"));
+						checkLeft(dijit.byId("ltr_ToolbarDropDown"), dijit.byId("ltr_ToolbarColorDropDown"));
+						checkLeft(dijit.byId("ltr_ToolbarColorDropDown"), dijit.byId("ltr_ToolbarComboButton"));
+						checkLeft(dijit.byId("rtl_ToolbarComboButton"), dijit.byId("rtl_ToolbarColorDropDown"));
+						checkLeft(dijit.byId("rtl_ToolbarColorDropDown"), dijit.byId("rtl_ToolbarDropDown"));
+						checkLeft(dijit.byId("rtl_ToolbarDropDown"), dijit.byId("rtl_ToolbarCutButton"));
+					}
+				},
+				{
+					name: "ltr_ToolbarDropDown",
+					runTest: function(){
+						dijit.byId("ltr_ToolbarDropDown").openDropDown();
+
+						checkLeft(dojo.byId("ltr_l1"), dijit.byId("ltr_i1"));
+						checkLeft(dojo.byId("ltr_l2"), dijit.byId("ltr_i2"));
+						checkLeft(dojo.byId("ltr_l3"), dijit.byId("ltr_i3"));
+
+						doh.is("ltr", dojo.byId("widget_ltr_i1").dir);
+						doh.is("ltr", dojo.byId("widget_ltr_i2").dir);
+						doh.is("ltr", dojo.byId("widget_ltr_i3").dir);
+						doh.is("ltr", dijit.byId("ltr_button").dir);
+					}
+				},
+				{
+					name: "rtl_ToolbarDropDown",
+					runTest: function(){
+						dijit.byId("rtl_ToolbarDropDown").openDropDown();
+
+						checkLeft(dijit.byId("rtl_i1"), dojo.byId("rtl_l1"));
+						checkLeft(dijit.byId("rtl_i2"), dojo.byId("rtl_l2"));
+						checkLeft(dijit.byId("rtl_i3"), dojo.byId("rtl_l3"));
+
+						doh.is("rtl", dojo.byId("widget_rtl_i1").dir);
+						doh.is("rtl", dojo.byId("widget_rtl_i2").dir);
+						doh.is("rtl", dojo.byId("widget_rtl_i3").dir);
+						doh.is("rtl", dijit.byId("rtl_button").dir);
+					}
+				},
+				{
+					name: "ltr_ToolbarMenuDropDown",
+					runTest: function(){
+						dijit.byId("ltr_ToolbarComboButton").openDropDown();
+
+						var icon = dijit.byId("ltr_mi1").iconNode;
+						var label = dijit.byId("ltr_mi1").containerNode;
+						checkLeft(icon, label);
+					}
+				},
+				{
+					name: "ltr_Toolbar_nested_menu",
+					runTest: function(){
+						dojo.on.emit(dijit.byId("ltr_popup_mi1").domNode, "click",  {
+							bubbles: true,
+							cancelable: true,
+							which: 1
+						});
+						var icon = dijit.byId("ltr_popup_mi1").iconNode;
+						var label = dijit.byId("ltr_popup_mi1").containerNode;
+						checkLeft(icon, label);
+					}
+				},
+				{
+					name: "rtl_ToolbarMenuDropDown",
+					runTest: function(){
+						dijit.byId("rtl_ToolbarComboButton").openDropDown();
+
+						var icon = dijit.byId("rtl_mi1").iconNode;
+						var label = dijit.byId("rtl_mi1").containerNode;
+						checkLeft(label, icon);
+					}
+				},
+				{
+					name: "rtl_Toolbar_nested_menu",
+					runTest: function(){
+						dojo.on.emit(dijit.byId("rtl_popup_mi1").domNode, "click",  {
+							bubbles: true,
+							cancelable: true,
+							which: 1
+						});
+
+						var icon = dijit.byId("rtl_popup_mi1").iconNode;
+						var label = dijit.byId("rtl_popup_mi1").containerNode;
+						checkLeft(label, icon);
+					}
+				}
+			]);
+
+			doh.register("Test bidi tab container", [
+				{
+					name: "ltr TabContainer",
+					runTest: function(){
+						// Check that the order of the tabs is correct
+						checkLeft(dijit.byId("ltr_tc_tablist_ltr_tc_cp"), dijit.byId("ltr_tc_tablist_ltr_tc_tree"));
+
+						// Check the fields on each of the first tabs
+						doh.is("ltr", dijit.byId("ltr_tc_cp").dir);
+
+						var combo = dojo.query("input[value='dijit']", dojo.byId("ltr_tc_cp"))[0];
+						var arrow = dojo.query(".dijitButtonNode", dojo.byId("ltr_tc_cp"))[0];
+						checkLeft(combo, arrow);
+					}
+				},
+				{
+					name: "rtl TabContainer",
+					runTest: function(){
+						// Check that the order of the tabs is correct
+						checkLeft(dijit.byId("rtl_tc_tablist_rtl_tc_tree"), dijit.byId("rtl_tc_tablist_rtl_tc_cp"));
+
+						// Check the fields on each of the first tabs
+						doh.is("rtl", dijit.byId("rtl_tc_cp").dir);
+
+						combo = dojo.query("input[value='dijit']", dojo.byId("rtl_tc_cp"))[0];
+						arrow = dojo.query(".dijitButtonNode", dojo.byId("rtl_tc_cp"))[0];
+						checkLeft(arrow, combo);
+					}
+				}
+			]);
+
+			doh.register("Tree", [
+				{
+					name: "ltr_tree",
+					runTest: function(){
+						dijit.byId("ltr_tc").selectChild("ltr_tc_tree");
+
+						var rowNodes = dojo.query(".dijitTreeRow", dojo.byId("ltr_tc_tree"));
+
+						dojo.forEach(rowNodes, function(rowNode){
+							var expando = dojo.query(".dijitTreeExpando", rowNode)[0];
+							var label = dojo.query(".dijitTreeContent", rowNode)[0];
+							checkLeft(expando, label);
+						});
+					}
+				},
+				{
+					name: "rtl_tree",
+					runTest: function(){
+						dijit.byId("rtl_tc").selectChild("rtl_tc_tree");
+
+						var rowNodes = dojo.query(".dijitTreeRow", dojo.byId("rtl_tc_tree"));
+
+						dojo.forEach(rowNodes, function(rowNode){
+							var expando = dojo.query(".dijitTreeExpando", rowNode)[0];
+							var label = dojo.query(".dijitTreeContent", rowNode)[0];
+							checkLeft(label, expando);
+						});
+					}
+				}
+			]);
+
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro">
+
+	<h1 class="testTitle">Multi-directional document test</h1>
+
+	<div data-dojo-id="continentStore" data-dojo-type="dojo/data/ItemFileReadStore" data-dojo-props='url:"_data/countries.json"'></div>
+	<div data-dojo-id="continentModel" data-dojo-type="dijit/tree/ForestStoreModel" data-dojo-props='store:continentStore, query:{type:"continent"},
+		rootId:"continentRoot", rootLabel:"Continents", childrenAttrs:["children"]'></div>
+
+	<div id="right" dir="rtl" lang="ar-eg" style="float: right; width: 500px;">
+		<h2>RTL</h2>
+
+		<div data-dojo-type="dijit/Toolbar"
+				><div id="rtl_ToolbarCutButton" data-dojo-type="dijit/form/Button" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconCut", showLabel:false'>Cut</div
+				><div id="rtl_ToolbarDropDown" data-dojo-type="dijit/form/DropDownButton" data-dojo-props='iconClass:"plusIcon", showLabel:true'>
+					<span>שיח</span>
+					<div data-dojo-type="dijit/TooltipDialog" data-dojo-props='title:"Enter Login information"'>
+						<table>
+							<tr>
+								<td><label id="rtl_l1">שם:</label></td>
+								<td><input id="rtl_i1" data-dojo-type="dijit/form/TextBox"/></td>
+							</tr>
+							<tr>
+								<td><label id="rtl_l2">תאריך:</label></td>
+								<td><input id="rtl_i2" data-dojo-type="dijit/form/DateTextBox"/></td>
+							</tr>
+							<tr>
+								<td><label id="rtl_l3">גיל:</label></td>
+								<td><input id="rtl_i3" data-dojo-type="dijit/form/NumberSpinner"/></td>
+							</tr>
+							<tr>
+								<td colspan="2" style="text-align:center;">
+									<button id="rtl_button" data-dojo-type="dijit/form/Button" data-dojo-props='type:"submit", name:"submit"'>כניסה</button>
+								</td>
+							</tr>
+						</table>
+					</div
+				></div
+				><div id="rtl_ToolbarColorDropDown" data-dojo-type="dijit/form/DropDownButton" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconBackColor", showLabel:true'>
+					<span>لوحة الألوان</span>
+					<div id="rtl_colorPalette" data-dojo-type="dijit/ColorPalette" data-dojo-props='style:"display:none;", palette:"7x10", onChange:function(){ console.log(this.value); }'></div>
+				</div
+				><div id="rtl_ToolbarComboButton" data-dojo-type="dijit/form/ComboButton" data-dojo-props='optionsTitle:"save options", iconClass:"plusIcon", showLabel:true'>
+					<span>القائمة</span>
+					<div data-dojo-type="dijit/Menu" data-dojo-props='style:"display:none;"'>
+						<div id="rtl_mi1" data-dojo-type="dijit/MenuItem" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconSave"'>حفظ</div>
+						<div data-dojo-type="dijit/MenuItem">حفظ ك</div>
+						<div id="rtl_popup_mi1" data-dojo-type="dijit/PopupMenuItem" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconForeColor"'>
+							<span>فرعية</span>
+							<div data-dojo-type="dijit/Menu">
+								<div data-dojo-type="dijit/MenuItem">Submenu Item One</div>
+								<div data-dojo-type="dijit/MenuItem">Submenu Item Two</div>
+								<div data-dojo-type="dijit/PopupMenuItem">
+									<span>Deeper Submenu</span>
+									<div data-dojo-type="dijit/Menu">
+										<div data-dojo-type="dijit/MenuItem">Sub-sub-menu Item One</div>
+										<div data-dojo-type="dijit/MenuItem">Sub-sub-menu Item Two</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div
+		></div>
+		<div id="rtl_tc" data-dojo-type="dijit/layout/TabContainer" data-dojo-props='style:"width: 450px; height: 300px; margin-top: 1em;"'>
+			<div id="rtl_tc_cp" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"رابط", closable:true, href:"layout/doc0.html"'></div>
+			<div id="rtl_tc_tree" data-dojo-type="dijit/Tree" data-dojo-props='model:continentModel, openOnClick:true, title:"עץ", closable:true'></div>
+		</div>
+	</div>
+
+	<div id="left" dir="ltr" lang="en-us" style="width: 500px; float: left;">
+		<h2>LTR</h2>
+
+		<div data-dojo-type="dijit/Toolbar"
+				><div id="ltr_ToolbarCutButton" data-dojo-type="dijit/form/Button" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconCut", showLabel:false'>Cut</div
+				><div id="ltr_ToolbarDropDown" data-dojo-type="dijit/form/DropDownButton" data-dojo-props='iconClass:"plusIcon", showLabel:true'>
+					<span>TooltipDialog</span>
+					<div data-dojo-type="dijit/TooltipDialog" data-dojo-props='title:"Enter Login information"'>
+						<table>
+							<tr>
+								<td><label id="ltr_l1">Name:</label></td>
+								<td><input id="ltr_i1" data-dojo-type="dijit/form/TextBox"/></td>
+							</tr>
+							<tr>
+								<td><label id="ltr_l2">Date:</label></td>
+								<td><input id="ltr_i2" data-dojo-type="dijit/form/DateTextBox"/></td>
+							</tr>
+							<tr>
+								<td><label id="ltr_l3">Age:</label></td>
+								<td><input id="ltr_i3" data-dojo-type="dijit/form/NumberSpinner"/></td>
+							</tr>
+							<tr>
+								<td colspan="2" style="text-align:center;">
+									<button id="ltr_button" data-dojo-type="dijit/form/Button" data-dojo-props='type:"submit", name:"submit"'>Login</button></td>
+							</tr>
+						</table>
+					</div
+				></div
+				><div id="ltr_ToolbarColorDropDown" data-dojo-type="dijit/form/DropDownButton" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconBackColor", showLabel:true'>
+					<span>ColorPalette</span>
+					<div id="ltr_colorPalette" data-dojo-type="dijit/ColorPalette" data-dojo-props='style:"display:none;", palette:"7x10", onChange:function(){ console.log(this.value); }'></div>
+				</div
+				><div id="ltr_ToolbarComboButton" data-dojo-type="dijit/form/ComboButton" data-dojo-props='optionsTitle:"save options", iconClass:"plusIcon", showLabel:true'>
+					<span>Menu</span>
+					<div data-dojo-type="dijit/Menu" data-dojo-props='style:"display none;"'>
+						<div id="ltr_mi1" data-dojo-type="dijit/MenuItem"  data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconSave"'>Save</div>
+						<div data-dojo-type="dijit/MenuItem">Save As</div>
+						<div id="ltr_popup_mi1" data-dojo-type="dijit/PopupMenuItem">
+							<span>Enabled Submenu</span>
+							<div data-dojo-type="dijit/Menu">
+								<div data-dojo-type="dijit/MenuItem">Submenu Item One</div>
+								<div data-dojo-type="dijit/MenuItem">Submenu Item Two</div>
+								<div data-dojo-type="dijit/PopupMenuItem">
+									<span>Deeper Submenu</span>
+									<div data-dojo-type="dijit/Menu">
+										<div data-dojo-type="dijit/MenuItem">Sub-sub-menu Item One</div>
+										<div data-dojo-type="dijit/MenuItem">Sub-sub-menu Item Two</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div
+		></div>
+
+		<div id="ltr_tc" data-dojo-type="dijit/layout/TabContainer" data-dojo-props='style:"width: 450px; height: 300px; margin-top: 1em;"'>
+			<div id="ltr_tc_cp" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Href", closable:true, href:"layout/doc0.html"'></div>
+			<div id="ltr_tc_tree" data-dojo-type="dijit/Tree" data-dojo-props='model:continentModel, openOnClick:true, title:"Tree", closable:true'></div>
+		</div>
+
+	</div>
+
+</body>
+</html>

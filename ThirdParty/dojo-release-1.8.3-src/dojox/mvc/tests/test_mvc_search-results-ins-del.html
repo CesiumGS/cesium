@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Static Master/Detail Pattern -- Search Results example</title>
+		<script src="../../../dojo/dojo.js" type="text/javascript" 
+				data-dojo-config="parseOnLoad: 0, isDebug: true, mvc: {debugBindings: true}">
+		</script>
+		<style type="text/css">
+			@import "css/app-format.css";
+			@import "../../../dijit/themes/claro/claro.css";
+		</style>
+		<script type="text/javascript">
+			var data = [
+				{
+					id: "1",
+					Group: "Engineer",
+					First: "Anne",
+					Last: "Ackerman",
+					Location: "NY",
+					Office: "1S76",
+					Email: "a.a@test.com",
+					Tel: "123-764-8237",
+					Fax: "123-764-8228"
+				},
+				{
+					id: "2",
+					Group: "Engineer",
+					First: "Ben",
+					Last : "Beckham",
+					Location: "NY",
+					Office: "5N47",
+					Email: "b.b@test.com",
+					Tel: "123-764-8599",
+					Fax: "123-764-8600"
+				},
+				{
+					id: "3",
+					Group: "Engineer",
+					First: "Chad",
+					Last: "Chapman",
+					Location: "CA",
+					Office: "1278",
+					Email: "c.c@test.com",
+					Tel: "408-764-8237",
+					Fax: "408-764-8228"
+				},
+				{
+					id: "4",
+					Group: "Engineer",
+					First: "David",
+					Last: "Durham",
+					Location: "NJ",
+					Office: "C12",
+					Email: "d.d@test.com",
+					Tel: "514-764-8237",
+					Fax: "514-764-8228"
+				},
+				{
+					id: "5",
+					Group: "Engineer",
+					First: "Emma",
+					Last: "Eklof",
+					Location: "NY",
+					Office: "4N76",
+					Email: "e.e@test.com",
+					Tel: "123-764-1234",
+					Fax: "123-764-4321"
+				},
+				{
+					id: "6",
+					Group: "Manager",
+					First: "Fred",
+					Last: "Fisher",
+					Location: "NJ",
+					Office: "V89",
+					Email: "f.f@test.com",
+					Tel: "514-764-8567",
+					Fax: "514-764-8000"
+				},
+				{
+					id: "7",
+					Group: "Manager",
+					First: "George",
+					Last: "Garnett",
+					Location: "NY",
+					Office: "7S11",
+					Email: "gig@test.com",
+					Tel: "123-999-8599",
+					Fax: "123-999-8600"
+				},
+				{
+					id: "8",
+					Group: "Accountant",
+					First: "Hunter",
+					Last: "Huffman",
+					Location: "CA",
+					Office: "6532",
+					Email: "h.h@test.com",
+					Tel: "408-874-8237",
+					Fax: "408-874-8228"
+				},
+				{
+					id: "9",
+					Group: "Accountant",
+					First: "Irene",
+					Last: "Ira",
+					Location: "NJ",
+					Office: "F09",
+					Email: "i.i@test.com",
+					Tel: "514-764-6532",
+					Fax: "514-764-7300"
+				},
+				{
+					id: "10",
+					Group: "Accountant",
+					First: "John",
+					Last: "Jacklin",
+					Location: "CA",
+					Office: "6701",
+					Email: "j.j@test.com",
+					Tel: "408-764-1234",
+					Fax: "408-764-4321"
+				}
+			], ctrl;
+
+			require([
+				"dojo/_base/declare",
+				"dojo/when",
+				"dojo/parser",
+				"dojo/Stateful",
+				"dojo/store/Memory",
+				"dojox/mvc/EditStoreRefListController",
+				"dijit/form/Button",
+				"dijit/form/TextBox",
+				"dijit/form/ComboBox",
+				"dojox/mvc/Group",
+				"dojox/mvc/Output",
+				"dojox/mvc/Repeat",
+				"dojo/domReady!"
+			], function(declare, when, parser, Stateful, Memory, EditStoreRefListController){
+
+				var inited,
+				 ctrlClass = declare([EditStoreRefListController], {
+					cursorIndex: 0,
+					group: "",
+					groupTyped: "",
+					_refModelProp: "model",
+
+					addEmpty: function(){
+						this.model.push(new Stateful({id:Math.random(), Group: this.groupTyped, First: "", Last: "", Location: "", Office: "", Email: "", Tel: "", Fax: ""}));
+						this.set("cursorIndex", this.get("length") - 1);
+					},
+
+					remove: function(idx){
+						this.model.splice(idx, 1);
+						if(this.get("cursorIndex") < 0){
+							this.set("cursorIndex", this.get("length") - 1);
+						}
+					},
+
+					_setGroupAttr: function(value){
+						this.set("groupTyped", value);
+						var old = this.group;
+						if(old === value){ return; }
+						when(this.queryStore({Group: value}), function(){
+							if(!inited){
+								parser.parse();
+								inited = true;
+							}
+						});
+						this._set("group", value);
+					}
+				});
+
+				ctrl = new ctrlClass({store: new Memory({data: data})});
+				ctrl.set("group", "Engineer");
+			});
+		 </script>
+	</head>
+	<body class="claro" style="background-image: url(images/master_detail.png)">
+		<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<div id="wrapper">
+			<div id="header">
+				<div id="navigation"></div>
+				<div id="headerInsert">
+					<h1>Employee Search</h1>
+					<h2>Master Detail Example - Repeat with insert and delete.</h2>
+				</div>
+			</div>
+			<div id="main">
+				<div id="leftNav"></div>
+					<div id="mainContent">
+						<div class="row">
+						<div class="spacer"></div>
+							<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){ ctrl.commit(); }">Commit All</button>
+							<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){ ctrl.reset(); }">Reset to last saved</button>
+						</div>
+						<div class="spacer"></div>
+						<div>
+							Try "Engineer", "Manager", or "Accountant":
+						</div>
+						<div class="row">
+							<label class="cell" for="queryInput">Search for:</label>
+				<!--		<input class="cell" id="queryInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at(ctrl, 'groupTyped')"> -->
+							<select id="setvaluetest" data-dojo-type="dijit.form.ComboBox" data-dojo-props="value: at(ctrl, 'groupTyped')">
+								<option value="Engineer">Engineer</option>
+								<option value="Manager">Manager</option>
+								<option value="Accountant">Accountant</option>
+							</select>							
+							<button type="button" data-dojo-type="dijit.form.Button"
+							 data-dojo-props="onClick: function(){ ctrl.set('group', ctrl.get('groupTyped')); }">Search</button>
+						</div>
+						<div class="spacer"></div>
+						<div id="searchBanner">
+							Search Results for group: <span data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at(ctrl, 'group')"></span>
+						</div>
+						<div data-dojo-type="dojox.mvc.Repeat" data-dojo-props="children: at(ctrl, 'model')">
+							<div class="row" data-dojo-type="dijit._WidgetBase" data-dojo-props="target: at('rel:', ${this.index})">
+								<label class="cell" for="nameInput${this.index}">Name:</label>
+								<input class="cell" data-dojo-type="dijit.form.TextBox" id="nameInput${this.index}"
+								 data-dojo-props="value: at('rel:', 'First')">
+								<button type="button" data-dojo-type="dijit.form.Button"
+								 data-dojo-props="onClick: function(){ ctrl.set('cursorIndex', ${this.index}); }">Details</button>
+								<button type="button" data-dojo-type="dijit.form.Button"
+								 data-dojo-props="onClick: function(){ ctrl.addEmpty(); }">+</button>
+								<button type="button" data-dojo-type="dijit.form.Button"
+								 data-dojo-props="onClick: function(){ ctrl.remove(${index}); }">-</button>
+							</div>
+						</div>
+						<div class="spacer"></div>
+						<div id="detailsBanner">
+							Details for result index:
+							<span data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at(ctrl, 'cursorIndex')"></span>
+						</div>
+						<div id="detailsGroup" data-dojo-type="dojox.mvc.Group" data-dojo-props="target: at(ctrl, 'cursor')">
+							<div class="row">
+								<label class="cell" for="firstInput">First Name:</label>
+								<input class="cell" id="firstInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'First')">
+							</div>
+							<div class="row">
+								<label class="cell" for="lastInput">Last Name:</label>
+								<input class="cell" id="lastInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Last')">
+							</div>
+							<div class="row">
+								<label class="cell" for="locationInput">Location:</label>
+								<input class="cell" id="locationInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Location')">
+							</div>
+							<div class="row">
+								<label class="cell" for="officeInput">Office:</label>
+								<input class="cell" id="officeInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Office')">
+							</div>
+							<div class="row">
+								<label class="cell" for="emailInput">Email:</label>
+								<input class="cell" id="emailInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Email')">
+							</div>
+							<div class="row">
+								<label class="cell" for="telInput">Telephone:</label>
+								<input class="cell" id="telInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Tel')">
+							</div>
+							<div class="row">
+								<label class="cell" for="faxInput">Fax:</label>
+								<input class="cell" id="faxInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Fax')">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+	</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>dijit.layout.BorderContainer Test</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, parseOnLoad: true"></script>
+
+	<!-- only needed for alternate theme testing: do NOT use in your code! -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.form.FilteringSelect");
+	</script>
+</head>
+<body class="claro">
+
+	<h2 class="testTitle">dijit.layout.BorderContainer tests</h2>
+
+	<p>
+		The second tab holds a single BorderContainer but specifying layoutPriority on it's children to have multiple children
+		for each region.
+	</p>
+	<p>
+		The first tab holds a BorderContainer which nests another BorderContainer, simulating multiple children in a single region.
+	</p>
+
+	<div id="tc" data-dojo-type="dijit/layout/TabContainer" data-dojo-props='style:"width:800px;height:600px;"'>
+		<div id="nbc" data-dojo-type="dijit/layout/BorderContainer" data-dojo-props='title:"Nested BC"'>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"left", style:"background-color: #acb386; width: 100px;"'>
+				left
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"right", style:"background-color: #acb386; width: 100px;"'>
+				right
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"top", style:"background-color: #b39b86; height: 100px;"'>
+				top bar
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"bottom", style:"background-color: #b39b86; height: 100px;"'>
+				bottom bar
+			</div>
+
+			<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props='region:"center", design:"sidebar"'>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"left", style:"background-color: #acb386; width: 100px;"'>
+					left inner
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"right", style:"background-color: #acb386; width: 100px;"'>
+					right inner
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"top", style:"background-color: #b39b86; height: 100px;"'>
+					inner top bar
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"bottom", style:"background-color: #b39b86; height: 100px;"'>
+					inner bottom bar
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"center", style:"background-color: #f5ffbf; padding: 10px;"'>
+					main panel with <a href="http://www.dojotoolkit.org/">a link</a>.<br />
+					(to check we're copying children around properly).<br />
+					<select data-dojo-type="dijit/form/FilteringSelect">
+						<option value="1">foo</option>
+						<option value="2">bar</option>
+						<option value="3">baz</option>
+					</select>
+					Here's some text that comes AFTER the combo box.
+				</div>
+			</div>
+		</div>
+
+		<div id="pbc" data-dojo-type="dijit/layout/BorderContainer" data-dojo-props='title:"layoutPriority BC"'>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"top1", region:"top", splitter:true, layoutPriority: 1, style:"background-color: #077; color: white; height: 50px;"'>
+				top bar (layoutPriority == 1)
+				<input id="top1_input" value="tabstop #1"/>
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"top2", region:"top", splitter:true, layoutPriority: 2, style:"background-color: #f5ffbf; height: 50px;"'>
+				second top bar (layoutPriority == 2)
+				<input id="top2_input" value="tabstop #3"/>
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"left1", region:"left", splitter:true, layoutPriority: 3, style:"background-color: #770; width: 100px;"'>
+				left (layoutPriority == 3)
+				<input id="left1_input" value="tabstop #5"/>
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"left2", region:"left", splitter:true, layoutPriority: 4, style:"background-color: #acb386; width: 100px;"'>
+				inner left (layoutPriority == 4)
+				<input id="left2_input" value="tabstop #7"/>
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"top3", region:"top", splitter:true, layoutPriority: 5, style:"background-color: #b39b86; height: 50px;"'>
+				inner top bar (layoutPriority == 5)
+				<input id="top3_input" value="tabstop #9"/>
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"center", region:"center", style:"background-color: #f5ffbf; padding: 10px;"'>
+				center
+				<input id="center_input" value="tabstop #11"/>
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"bottom3", region:"bottom", splitter:true, layoutPriority: 5, style:"background-color: #b39b86; height: 50px;"'>
+				inner bottom bar (layoutPriority == 5)
+				<input id="bottom3_input" value="tabstop #12"/>
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"right2", region:"right", splitter:true, layoutPriority: 4, style:"background-color: #acb386; width: 100px;"'>
+				inner right (layoutPriority == 4)
+				<input id="right2_input" value="tabstop #14"/>
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"right1", region:"right", splitter:true, layoutPriority: 3, style:"background-color: #770; width: 100px;"'>
+				right (layoutPriority == 3)
+				<input id="right1_input" value="tabstop #16"/>
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id:"bottom2", region:"bottom", splitter:true, layoutPriority: 2, style:"background-color: #f5ffbf; height: 50px;"'>
+				second bottom bar (layoutPriority == 2)
+				<input id="bottom2_input" value="tabstop #18"/>
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='id: "bottom1", region:"bottom", splitter:true, layoutPriority: 1, style:"background-color: #077; color: white; height: 50px;"'>
+				bottom bar (layoutPriority == 1)
+				<input id="bottom1_input" value="tabstop #20"/>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

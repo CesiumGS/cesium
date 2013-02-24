@@ -1,0 +1,371 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Checkbox a11y Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_CheckBox.html');
+
+				doh.register("Checkbox a11y",[
+					{
+						timeout:5000,
+						name:"uncheck cb0 a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+
+							dijit.byId("cb1").focus();
+							doh.robot.keyPress(dojo.keys.TAB, 500, {
+								shift: true
+							});
+							doh.robot.keyPress(dojo.keys.SPACE, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(dojo.byId('cb0').checked, "cb0 was checked");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						timeout:5000,
+						name:"check cb1 a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.TAB, 500);
+							doh.robot.keyPress(dojo.keys.SPACE, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(dijit.byId('cb1').checked, "cb1 was not checked");
+								doh.is("true", dojo.byId('cb1').getAttribute("aria-checked"), "aria-checked");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						timeout:7000,
+						name:"uncheck cb2 a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.TAB, 500);
+							doh.robot.keyPress(dojo.keys.TAB, 1000);
+							doh.robot.keyPress(dojo.keys.SPACE, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(dijit.byId('cb2').checked, "cb2 was checked");
+								doh.is("false", dojo.byId('cb2').getAttribute("aria-checked"), "aria-checked");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						timeout:7000,
+						name:"cb4 readonly a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.TAB, 500);
+							doh.robot.keyPress(dojo.keys.TAB, 1000);
+							doh.robot.keyPress(dojo.keys.SPACE, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(dijit.byId('cb4').checked, "cb4 was not checked");
+								doh.is("true", dojo.byId('cb4').getAttribute("aria-checked"), "aria-checked");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						timeout:9000,
+						name:"cb6 uncheck a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.TAB, 500);
+							doh.robot.keyPress(dojo.keys.TAB, 1000);
+							doh.robot.keyPress(dojo.keys.TAB, 1000);
+							doh.robot.keyPress(dojo.keys.SPACE, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(dijit.byId('cb6').checked, "cb6 was checked");
+								doh.is("false", dojo.byId('cb6').getAttribute("aria-checked"), "aria-checked");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						timeout:3000,
+						name:"cb6 check a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.SPACE, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(dijit.byId('cb6').checked, "cb6 was not checked");
+								doh.is("true", dojo.byId('cb6').getAttribute("aria-checked"), "aria-checked");
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("Radio button a11y",[
+					{
+						timeout:6000,
+						name:"weather enabled a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+ 
+							dijit.byId("g1rb2").focus();
+							dijit.byId("g1rb3").set("disabled",false);
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(dijit.byId('g1rb1').checked, "news was checked");
+								doh.f(dijit.byId('g1rb2').checked, "talk was checked");
+								doh.t(dijit.byId('g1rb3').checked, "weather was not checked");
+								doh.is("false", dojo.byId('g1rb1').getAttribute("aria-checked")||"false", "aria-checked 1");
+								doh.is("false", dojo.byId('g1rb2').getAttribute("aria-checked")||"false", "aria-checked 2");
+								doh.is("true", dojo.byId('g1rb3').getAttribute("aria-checked"), "aria-checked 3");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						timeout:6000,
+						name:"change value to county a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+ 
+							dijit.byId("g2rb1").focus();
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 1000);
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500);
+							doh.robot.keyPress(dojo.keys.SPACE, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(dijit.byId('g2rb3').checked, "country was not checked");
+								doh.f(dijit.byId('g2rb2').checked, "oldies was checked");
+								doh.f(dijit.byId('g2rb1').checked, "top 40 was checked");
+								doh.is("false", dojo.byId('g2rb1').getAttribute("aria-checked")||"false", "aria-checked 1");
+								doh.is("false", dojo.byId('g2rb2').getAttribute("aria-checked")||"false", "aria-checked 2");
+								doh.is("true", dojo.byId('g2rb3').getAttribute("aria-checked"), "aria-checked 3");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						timeout:4000,
+						name:"change value to top 40 a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+ 
+							doh.robot.keyPress(dojo.keys.UP_ARROW, 500);
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(dijit.byId('g2rb3').checked, "country was checked");
+								doh.f(dijit.byId('g2rb2').checked, "oldies was checked");
+								doh.t(dijit.byId('g2rb1').checked, "top 40 was not checked");
+								doh.is("true", dojo.byId('g2rb1').getAttribute("aria-checked"), "aria-checked 1");
+								doh.is("false", dojo.byId('g2rb2').getAttribute("aria-checked")||"false", "aria-checked 2");
+								doh.is("false", dojo.byId('g2rb3').getAttribute("aria-checked")||"false", "aria-checked 3");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						timeout:11000,
+						name:"enable b1 a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+ 
+							doh.robot.keyPress(dojo.keys.TAB, 500);
+							doh.robot.keyPress(dojo.keys.TAB, 1000);
+							doh.robot.keyPress(dojo.keys.TAB, 1000);
+							doh.robot.keyPress(dojo.keys.TAB, 1000);
+							doh.robot.keyPress(dojo.keys.SPACE, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(dijit.byId('b1').checked, "b1 was not checked");
+								doh.f(dijit.byId('b2').checked, "b2 was checked");
+								doh.f(dijit.byId('c1').checked, "c1 was checked");
+								doh.f(dijit.byId('c2').checked, "c2 was checked");
+								doh.f(dijit.byId('d1').checked, "d1 was checked");
+								doh.f(dijit.byId('d2').checked, "d2 was checked");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						timeout:3000,
+						name:"enable b2 a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+ 
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(dijit.byId('b1').checked, "b1 was checked");
+								doh.t(dijit.byId('b2').checked, "b2 was not checked");
+								doh.f(dijit.byId('c1').checked, "c1 was checked");
+								doh.f(dijit.byId('c2').checked, "c2 was checked");
+								doh.f(dijit.byId('d1').checked, "d1 was checked");
+								doh.f(dijit.byId('d2').checked, "d2 was checked");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						timeout:5000,
+						name:"enable c1 a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+ 
+							doh.robot.keyPress(dojo.keys.TAB, 500);
+							doh.robot.keyPress(dojo.keys.SPACE, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(dijit.byId('b1').checked, "b1 was checked");
+								doh.t(dijit.byId('b2').checked, "b2 was not checked");
+								doh.t(dijit.byId('c1').checked, "c1 was not checked");
+								doh.f(dijit.byId('c2').checked, "c2 was checked");
+								doh.f(dijit.byId('d1').checked, "d1 was checked");
+								doh.f(dijit.byId('d2').checked, "d2 was checked");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						timeout:3000,
+						name:"enable c2 a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+ 
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(dijit.byId('b1').checked, "b1 was checked");
+								doh.t(dijit.byId('b2').checked, "b2 was not checked");
+								doh.f(dijit.byId('c1').checked, "c1 was checked");
+								doh.t(dijit.byId('c2').checked, "c2 was not checked");
+								doh.f(dijit.byId('d1').checked, "d1 was checked");
+								doh.f(dijit.byId('d2').checked, "d2 was checked");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						timeout:6000,
+						name:"enable d2 a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+ 
+							doh.robot.keyPress(dojo.keys.TAB, 500);
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 1000);
+							doh.robot.keyPress(dojo.keys.SPACE, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(dijit.byId('b1').checked, "b1 was checked");
+								doh.t(dijit.byId('b2').checked, "b2 was not checked");
+								doh.f(dijit.byId('c1').checked, "c1 was checked");
+								doh.t(dijit.byId('c2').checked, "c2 was not checked");
+								doh.f(dijit.byId('d1').checked, "d1 was checked");
+								doh.t(dijit.byId('d2').checked, "d2 was not checked");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						timeout:3000,
+						name:"enable d1 a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+ 
+							doh.robot.keyPress(dojo.keys.UP_ARROW, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(dijit.byId('b1').checked, "b1 was checked");
+								doh.t(dijit.byId('b2').checked, "b2 was not checked");
+								doh.f(dijit.byId('c1').checked, "c1 was checked");
+								doh.t(dijit.byId('c2').checked, "c2 was not checked");
+								doh.t(dijit.byId('d1').checked, "d1 was not checked");
+								doh.f(dijit.byId('d2').checked, "d2 was checked");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						timeout:5000,
+						name:"enable coffee a11y",
+						runTest:function(){
+							var d = new doh.Deferred();
+ 
+							doh.robot.keyPress(dojo.keys.TAB, 500);
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(dijit.byId('g4rb1').checked, "tea was checked");
+								doh.t(dijit.byId('g4rb2').checked, "coffee was not checked");
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("CheckBox watch",
+					[
+						function w(){
+							var cb = dijit.byId('cb2');
+							cb.set("checked", true);
+
+							var oldWatch, newWatch;
+							cb.watch("checked", function(name, o, n){
+								oldWatch = o;
+								newWatch = n;
+							});
+
+							cb.set("checked", false);
+							doh.t(oldWatch, "old value was checked");
+							doh.f(newWatch, "new value is unchecked");
+
+							cb.set("checked", true);
+							doh.f(oldWatch, "old value was unchecked");
+							doh.t(newWatch, "new value is checked");
+						}
+					]
+				);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>_TimePicker DOH Test</title>
+
+	<style>
+		@import "../../dojo/resources/dojo.css";
+		@import "css/dijitTests.css";
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, parseOnLoad: false"></script>
+
+	<!-- only needed for alternate theme testing: do NOT use in your code! -->
+	<script type="text/javascript" src="_testCommon.js"></script>
+
+
+	<script type="text/javascript">
+		dojo.require('doh.runner');
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit._TimePicker");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+		dojo.require("dijit.tests.helpers");	// functions to help test
+
+		dojo.ready(function(){
+
+			doh.register("parse", function(){
+				dojo.parser.parse();
+			});
+
+			doh.register("tests",
+				function extended_range(){
+					var t1 = dijit.byId("t1");
+					t1.set('value', new Date("December 11, 2011 00:09:30"));
+					doh.is(8, t1.timeMenu.children.length, 'num entries 1');
+					doh.is(new Date("January 1, 1970 00:00:00"), t1.timeMenu.children[0].date, 'first date 1');
+					doh.is(new Date("January 1, 1970 01:45:00"), t1.timeMenu.children[t1.timeMenu.children.length-1].date, 'last date 1');
+
+					t1.set('value', new Date("December 11, 2011 23:30:00"));
+					doh.is(8, t1.timeMenu.children.length, 'num entries 2');
+					doh.is(new Date("January 1, 1970 22:00:00"), t1.timeMenu.children[0].date, 'first date 2');
+					doh.is(new Date("January 1, 1970 23:45:00"), t1.timeMenu.children[t1.timeMenu.children.length-1].date, 'last date 2');
+				},
+				function truncated_range(){
+					var t2 = dijit.byId("t2");
+					t2.set('value', new Date("December 11, 2011 00:00:00"));
+					doh.is(10, t2.timeMenu.children.length, 'num entries 1');
+					doh.is(new Date("January 1, 1970 00:00:00"), t2.timeMenu.children[0].date, 'first date 1');
+					doh.is(new Date("January 1, 1970 02:15:00"), t2.timeMenu.children[t2.timeMenu.children.length-1].date, 'last date 1');
+
+					t2.set('value', new Date("December 11, 2011 23:59:59"));
+					doh.is(10, t2.timeMenu.children.length, 'num entries 2');
+					doh.is(new Date("January 1, 1970 21:30:00"), t2.timeMenu.children[0].date, 'first date 2');
+					doh.is(new Date("January 1, 1970 23:45:00"), t2.timeMenu.children[t2.timeMenu.children.length-1].date, 'last date 2');
+
+					t2.set('filterString', "5:3");
+					doh.is(2, t2.timeMenu.children.length, 'num entries 3');
+					doh.is(new Date("January 1, 1970 05:30:00"), t2.timeMenu.children[0].date, 'first date 3');
+					doh.is(new Date("January 1, 1970 17:30:00"), t2.timeMenu.children[t2.timeMenu.children.length-1].date, 'last date 3');
+				},
+				function scrolling(){
+					var t3 = dijit.byId("t3");
+					t3.set('value', new Date("December 11, 2011 00:45:00"));
+					doh.is(7, t3.timeMenu.children.length, 'num entries 1');
+					doh.is(new Date("January 1, 1970 00:00:00"), t3.timeMenu.children[0].date, 'first date 1a');
+					doh.is(new Date("January 1, 1970 01:30:00"), t3.timeMenu.children[t3.timeMenu.children.length-1].date, 'last date 1a');
+					t3._onArrowUp(0);
+					t3._onArrowUp(-1);
+					doh.is(new Date("January 1, 1970 00:00:00"), t3.timeMenu.children[0].date, 'first date 1b');
+					doh.is(new Date("January 1, 1970 01:30:00"), t3.timeMenu.children[t3.timeMenu.children.length-1].date, 'last date 1b');
+					t3._onArrowDown(0);
+					t3._onArrowDown(-1);
+					doh.is(new Date("January 1, 1970 00:15:00"), t3.timeMenu.children[0].date, 'first date 1c');
+					doh.is(new Date("January 1, 1970 01:45:00"), t3.timeMenu.children[t3.timeMenu.children.length-1].date, 'last date 1c');
+
+					t3.set('value', new Date("December 11, 2011 23:00:00"));
+					doh.is(7, t3.timeMenu.children.length, 'num entries 2');
+					doh.is(new Date("January 1, 1970 22:15:00"), t3.timeMenu.children[0].date, 'first date 2a');
+					doh.is(new Date("January 1, 1970 23:45:00"), t3.timeMenu.children[t3.timeMenu.children.length-1].date, 'last date 2a');
+					t3._onArrowDown(0);
+					t3._onArrowDown(-1);
+					doh.is(new Date("January 1, 1970 22:15:00"), t3.timeMenu.children[0].date, 'first date 2b');
+					doh.is(new Date("January 1, 1970 23:45:00"), t3.timeMenu.children[t3.timeMenu.children.length-1].date, 'last date 2b');
+					t3._onArrowUp(0);
+					t3._onArrowUp(-1);
+					doh.is(new Date("January 1, 1970 22:00:00"), t3.timeMenu.children[0].date, 'first date 2c');
+					doh.is(new Date("January 1, 1970 23:30:00"), t3.timeMenu.children[t3.timeMenu.children.length-1].date, 'last date 2c');
+				}
+			);
+
+			doh.run();
+		});
+	</script>
+
+</head>
+<body class="claro">
+	<h1 class="testTitle">dijit._TimePicker automated tests (non-robot)</h1>
+	
+	<label for="t1">t1</label>
+	<input data-dojo-type="dijit/_TimePicker" id="t1" class="dijitInline" data-dojo-props='visibleRange:"T02:00:00", constraints:{selector:"time"}' />
+	
+	<label for="t2">t2</label>
+	<input data-dojo-type="dijit/_TimePicker" id="t2" class="dijitInline" data-dojo-props='visibleRange:"T02:45:00", constraints:{selector:"time"}' />
+	
+	<label for="t3">t3</label>
+	<input data-dojo-type="dijit/_TimePicker" id="t3" class="dijitInline" data-dojo-props='visibleRange:"T01:45:00", constraints:{selector:"time"}' />
+</body>
+</html>

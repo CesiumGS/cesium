@@ -1,0 +1,175 @@
+{
+	"id": "multiSceneApp",
+	"name": "Multi Scene App",
+	"description": "A multiSceneApp",
+	"splash": "splash",
+
+	"dependencies": [
+        "dojox/mobile/View", //Temporary work around for getting a null when calling getParent
+		"dojox/mobile/TabBar",
+		"dojox/mobile/RoundRect",
+		"dojox/mobile/TabBarButton",
+		"dojox/mobile/Button",
+		"dojox/mobile/RoundRect",
+		"dojox/mobile/Heading"
+	],
+	// Modules for the app.  The are basically used as the second
+	// array of mixins in a dojo.declare().  Modify the top level behavior
+	// of the app, how it processes the config or any other life cycle
+	// by creating and including one or more of these
+	"modules": [
+		//"dojox/app/module/env",
+        //"dojox/app/module/lifecycle"
+		//"dojox/app/module/phonegap",
+		//"dojox/app/module/somePlugin"
+	],
+	
+	"controllers": [
+		"dojox/app/controllers/History"
+	],
+
+	//stores we are using 
+	"stores": {},
+
+	"template": "./application.html",
+	"definition" : "none",
+
+	//models and instantiation parameters for the models. Including 'type' as a property allows
+	//one to overide the class that will be used for the model.  By default it is dojox/mvc/model
+	"models": {}, 
+
+	//the name of the scene to load when the app is initialized.
+	"defaultView": "home", 
+
+	"defaultTransition": "slide",
+	//scenes are groups of views and models loaded at once	
+	"views": {
+
+		//simple scene which loads all views and shows the default first
+		"home": { 
+			"definition" : "none",
+			"dependencies":["dojox/mobile/RoundRectList","dojox/mobile/ListItem", "dojox/mobile/EdgeToEdgeCategory"],
+			"template": "./templates/simple/home.html"
+		},
+
+		"main":{
+			//all views in the main scene will be bound to the user model
+			"models": [],
+			"definition" : "none",
+			"template": "./simple.html",
+			"defaultView": "main",
+			"defaultTransition": "slide",
+			//the views available to this scene
+			"views": { 
+				"main":{
+					"definition" : "none",
+					"template": "./templates/simple/main.html"
+				},
+				"second":{
+					"definition" : "none",
+					"template": "./templates/simple/second.html"
+				},
+				"third":{
+					"definition" : "none",
+					"template": "./templates/simple/third.html"
+				}
+			},
+			"dependencies":["dojox/mobile/RoundRectList","dojox/mobile/ListItem","dojox/mobile/EdgeToEdgeCategory","dojox/mobile/EdgeToEdgeList"]
+		},
+		//simple scene which loads all views and shows the default first
+		"tabscene": { 
+			//all views in the second scene will be bound to the user model
+			"models": [],
+			"definition" : "none",
+			"template": "./tabScene.html",
+			"defaultView": "tab1",
+			"defaultTransition": "flip",
+			//the views available to this scene
+			"views": { 
+				"tab1":{
+					"definition" : "none",
+					"template": "./templates/tabs/tab1.html"
+				},
+				"tab2":{
+					"definition" : "none",
+					"template": "./templates/tabs/tab2.html"
+				},
+				"tab3":{
+					"definition" : "none",
+					"template": "./templates/tabs/tab3.html"
+				}
+			},
+			"dependencies":["dojox/mobile/RoundRectList","dojox/mobile/ListItem", "dojox/mobile/EdgeToEdgeCategory"]
+		},
+		//simple scene which loads all views and shows the default first
+		"gallery": { 
+			//all views in the main scene will be bound to the user model
+			"models": [],
+	
+			"defaultView": "welcome",
+			"defaultTransition": "flip",
+			"template": "./gallery.html",
+			//the views available to this scene
+			"views": { 
+				"welcome": {
+					"template": "./templates/gallery/welcome.html"
+				},
+				"tabbar": {
+					"template": "./templates/gallery/tabbar.html"
+				},
+				"navigation": {
+					"template": "./templates/gallery/navigation.html"
+				},
+				"map": {
+					"template": "./templates/gallery/map.html"
+				},
+				"list": {
+					"template": "./templates/gallery/list.html"
+				},
+				"jsonp": {
+					"template": "./templates/gallery/jsonp.html"
+				},
+				"icons": {
+					"template": "./templates/gallery/icons.html"
+				},
+				"headings": {
+					"template": "./templates/gallery/headings.html"
+				},
+				"forms": {
+					"template": "./templates/gallery/forms.html"
+				},
+				"flippableViews": {
+					"template": "./templates/gallery/flippableViews.html"
+				},
+				"buttons": {
+					"template": "./templates/gallery/buttonScene.html",
+					"defaultView": "tab1",
+					"views": {
+						"tab1":{
+							"template": "./templates/gallery/buttons/tab1.html"
+						},
+						"tab2":{
+							"template": "./templates/gallery/buttons/tab2.html"
+						},
+						"tab3":{
+							"template": "./templates/gallery/buttons/tab3.html"
+						}
+					}
+				},
+				"animations": {
+					"template": "./templates/gallery/animations.html"
+				},
+				"ajaxLoad": {
+					"template": "./templates/gallery/ajaxLoad.html"
+				},
+				"ajax": {
+					"template": "./templates/gallery/ajax.html"
+				}
+			},
+
+			"dependencies": [
+				"dojox/mobile/Button"
+			]
+		}
+	}	
+}

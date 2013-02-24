@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<title>FixedSplitter Test</title>
+
+	<link href="../themes/iphone/FixedSplitter.css" rel="stylesheet"/>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile/ContentPane",
+			"dojox/mobile/FixedSplitter"
+		]);
+	</script>
+
+	<style type="text/css">
+		html, body{
+			width: 100%;
+			height: 100%;
+			padding: 0px;
+			margin: 0px;
+			overflow: hidden;
+		}
+	</style>
+</head>
+<body>
+	<div data-dojo-type="dojox.mobile.FixedSplitter" style="width:100%;height:100%;" data-dojo-props='orientation:"V"'>
+		<div data-dojo-type="dojox.mobile.ContentPane" style="background-color:yellow;height:20%" href="data/FixedSplitterfragment1.html">
+		</div>
+
+		<div data-dojo-type="dojox.mobile.FixedSplitter" style="width:100%;height:100%;" data-dojo-props='orientation:"H"'>
+			<div data-dojo-type="dojox.mobile.ContentPane" style="background-color:pink;width:20%;" href="data/FixedSplitterfragment2.html">
+			</div>
+			<div data-dojo-type="dojox.mobile.ContentPane" style="background-color:cyan;" href="data/FixedSplitterfragment3.html">
+			</div>
+		</div>
+	</div>
+</body>
+</html>

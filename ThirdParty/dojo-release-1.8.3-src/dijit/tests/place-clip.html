@@ -1,0 +1,269 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dijit/place on clipped nodes unit test</title>
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "../themes/claro/claro.css";
+		@import "css/dijitTests.css";
+
+		html, body, div {
+			border: none;
+			margin: 0px;
+			padding: 0px;
+		}
+
+		.around {
+			/* the around-node (ex: a ComboBox or TextBox) */
+			color: white;
+			background: blue;
+		}
+
+		.clip {
+			/* ancestor of an around-node that clips the around-node */
+			display: inline-block;
+			#display: inline;
+			overflow: hidden;
+			background: gray;
+
+			padding: 10px 0px;
+			margin: 0px 100px;
+			width: 100px;
+		}
+
+		#popup {
+			position: absolute;
+			width: 25px;
+			background: red;
+			color: white;
+		}
+	</style>
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, parseOnLoad: true"></script>
+	<script type="text/javascript" src="_testCommon.js"></script>
+
+	<script type="text/javascript">
+		require([
+			"doh/runner",
+			"dojo/dom", "dojo/dom-geometry", "dojo/window",
+			"dijit/place", "dojo/parser", "dojo/domReady!"
+		], function(doh, dom, domGeometry, winUtils, place){
+
+			// The around nodes
+			var aroundOne = dom.byId("around1"),
+				aroundTwo = dom.byId("around2"),
+				aroundThree = dom.byId("around3"),
+				abs1 = dom.byId("absAround1"),
+				abs2 = dom.byId("absAround2"),
+				abs3 = dom.byId("absAround3");
+
+			// The popup (aka dropdown)
+			var popup = dom.byId("popup"),
+				pp,
+				ret;
+
+			doh.register("aroundOne", [
+				function plain(t){
+					ret = place.around(popup, aroundOne, [
+						"before-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(100, pp.x + pp.w, "popup hugs left side of clipping div");
+
+					ret = place.around(popup, aroundOne, [
+						"after-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(200, pp.x, "popup hugs right side of clipping div");
+				},
+				function aroundOneScrolled(t){
+					// Programatically scroll to the right
+					dom.byId("clip1").scrollLeft = 50;
+
+					// Same tests as before
+					ret = place.around(popup, aroundOne, [
+						"before-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(100, pp.x + pp.w, "popup hugs left side of clipping div");
+
+					ret = place.around(popup, aroundOne, [
+						"after-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(200, pp.x, "popup hugs right side of clipping div");
+				},
+				function aroundOneScrollbar(t){
+					// Show scroll bar
+					dom.byId("clip1").style.overflow = "scroll";
+
+					// Same tests as before
+					ret = place.around(popup, aroundOne, [
+						"before-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(100, pp.x + pp.w, "popup hugs left side of clipping div");
+
+					ret = place.around(popup, aroundOne, [
+						"after-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(200, pp.x, "popup hugs right side of clipping div");
+				}
+
+			]);
+
+			doh.register("aroundTwo", [
+				function plain(t){
+					ret = place.around(popup, aroundTwo, [
+						"before-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(100, pp.x + pp.w, "popup hugs left side of outer clipping div");
+
+					ret = place.around(popup, aroundTwo, [
+						"after-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(200, pp.x, "popup hugs right side of outer clipping div");
+				}
+			]);
+
+			doh.register("aroundThree", [
+				function plain(t){
+					ret = place.around(popup, aroundThree, [
+						"before-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(150, pp.x + pp.w, "popup hugs left side of inner clipping div");
+
+					ret = place.around(popup, aroundThree, [
+						"after-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(250, pp.x, "popup hugs right side of inner clipping div");
+				}
+			]);
+
+			doh.register("absolutely positioned nodes", [
+				function aroundNodeAbsolute(t){
+					ret = place.around(popup, abs1, [
+						"before-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(50, pp.x + pp.w, "popup hugs left side of absolutely positioned around node");
+
+					ret = place.around(popup, abs1, [
+						"after-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(350, pp.x, "popup hugs right side of absolutely positioned around node");
+				},
+				function aroundNodeParentAbsolute(t){
+					ret = place.around(popup, abs2, [
+						"before-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(60, pp.x + pp.w, "popup hugs left side of absolutely positioned around node wrapper");
+
+					ret = place.around(popup, abs2, [
+						"after-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(120, pp.x, "popup hugs right side of absolutely positioned around node wrapper");
+				},
+				function absoluteInRelative(t){
+					ret = place.around(popup, abs3, [
+						"before-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(110, pp.x + pp.w, "popup hugs left side of position:absolute parent");
+
+					ret = place.around(popup, abs3, [
+						"after-centered"
+					], true);
+
+					pp = domGeometry.position(popup);
+					doh.is(170, pp.x, "popup hugs right side of position:relative grandparent (which clips parent)");
+				}
+			]);
+			doh.run();
+		});
+
+	</script>
+</head>
+<body class="claro" dir="ltr">
+	<h1>Dijit Place Clipping Unit Test</h1>
+
+	<!-- the popup "widget" -->
+	<div id="popup">
+		p
+	</div>
+
+	<!-- around node one is clipped by surrounding div. -->
+	<div id="clip1" class="clip">
+		<div id="around1" class="around" style="width: 500px; height: 50px;">123456789abcdef</div>
+	</div>
+
+	<!-- around node one is clipped by clip2b, and even more by clip2a -->
+	<br/>
+	<div id="clip2a" class="clip">
+		<div id="clip2b" style="width: 200px; margin: 0px; background: white" class="clip">
+			<div id="noclip2">
+				<div id="around2" class="around" style="width: 500px; height: 50px;">123456789abcdef</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- around node one is clipped by clip3b, but not by clip2a since that is bigger -->
+	<br/>
+	<div id="clip3a" style="width: 200px; background: yellow; padding: 10px 50px;" class="clip">
+		<div id="clip3b" style="margin: 0px" class="clip">
+			<div id="noclip3">
+				<div id="around3" class="around" style="width: 500px; height: 50px;">123456789abcdef</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- position absolute around node is not affected by a parent with width set
+		(unless parent has position:relative or position:absolute) -->
+	<br/>
+	<div id="clip4" class="clip">
+		<div id="absAround1" class="around" style="width: 300px; height: 50px; position: absolute; left: 50px; top:500px;">absolute</div>
+	</div>
+
+	<!-- here the around node absAround2 is position:static, but it's parent clip5b is position:absolute,
+		so the grandparent clip5a is irrelevant -->
+	<br/>
+	<div id="clip5a" style="width: 50px; background: yellow; padding: 10px 50px;" class="clip">
+		<div id="clip5b" style="position: absolute; left: 60px; top: 600px; width: 60px; background: navy; margin: 0px;" class="clip">
+			<div id="absAround2" class="around" style="width: 500px; height: 50px;">parent absolute</div>
+		</div>
+	</div>
+
+	<!-- here the around node absAround3 is position:static, it's parent clip6b is position:absolute,
+		but the grandparent clip6a is position:relative, so it can clip -->
+	<br/>
+	<div id="clip6a" style="width: 70px; height: 70px; background: #adff2f; padding: 0px; position: relative;" class="clip">
+		<div id="clip6b" style="position: absolute; left: 10px; top: 0px; width: 150px; background: navy; margin: 0px;" class="clip">
+			<div id="absAround3" class="around" style="width: 500px; height: 50px;">grandparent relative</div>
+		</div>
+	</div>
+</body>
+</html>

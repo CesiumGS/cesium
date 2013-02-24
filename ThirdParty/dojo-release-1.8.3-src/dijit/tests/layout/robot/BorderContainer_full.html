@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot BorderContainer full Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx", "dojo/dom", "dojo/dom-geometry", "dojo/window",
+				"dijit/tests/helpers", "dijit/tests/layout/robot/borderContainerTestFunctions", "dojo/domReady!"
+			], function(doh, robot, dom, geom, window, helpers, bcTest){
+
+				robot.initRobot('../test_BorderContainer_full.html');
+
+				var registry;
+
+				doh.register("setup", [
+					function setup(){
+						// get pointers to singletons loaded on test page
+						registry = robot.window.require("dijit/registry");
+					}
+				]);
+
+				doh.register("API", [
+					function initialConditions(){
+						var bc = registry.byId("main");
+						bcTest.checkBCpanes(bc);
+						doh.t(5, bc.getChildren().length, "# of children");
+					},
+					
+					function testFullScreen(){
+						var borderContainerPos = geom.position(dom.byId("main"));
+						var view = window.getBox();
+						doh.t( borderContainerPos.h-view.h < 3);
+						doh.t( borderContainerPos.w-view.w < 3);
+					}
+				]);
+
+				doh.register("mouse", [
+					{
+						name: "expand right pane",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							var oTop = geom.position(dom.byId("main-top")),
+								oCenter = geom.position(dom.byId("main-center")),
+								oRight = geom.position(dom.byId("main-trailing")),
+								oBottom = geom.position(dom.byId("main-bottom"));
+
+							// Drag slider to expand pane
+							var size = geom.position("main-trailing_splitter");
+							robot.mouseMoveAt("main-trailing_splitter", 500);
+							robot.mousePress({left: true}, 500);
+							robot.mouseMoveAt("main-trailing_splitter", 500, 100,
+								size.w/2 + (geom.isBodyLtr() ? -100 : 100), size.h/2);
+							robot.mouseRelease({left: true}, 500);
+							robot.sequence(d.getTestCallback(function(){
+								var nTop = geom.position(dom.byId("main-top")),
+									nCenter = geom.position(dom.byId("main-center")),
+									nRight = geom.position(dom.byId("main-trailing")),
+									nBottom = geom.position(dom.byId("main-bottom"));
+
+								doh.t(bcTest.within(oRight.w + 100, nRight.w, 10), "right width went from " + oRight.w + " to " + nRight.w);
+								doh.t(bcTest.within(oTop.w - 100, nTop.w, 10), "top width went from " + oTop.w + " to " + nTop.w);
+								doh.t(bcTest.within(oCenter.w - 100, nCenter.w, 10), "center width went from " + oCenter.w + " to " + nCenter.w);
+								doh.t(bcTest.within(oBottom.w - 100, nBottom.w, 10), "bottom width went from " + nBottom.w + " to " + nBottom.w);
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "shrink bottom pane",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							var oTop = geom.position(dom.byId("main-top")),
+								oCenter = geom.position(dom.byId("main-center")),
+								oRight = geom.position(dom.byId("main-trailing")),
+								oBottom = geom.position(dom.byId("main-bottom"));
+
+							// Drag slider to shrink pane
+							var size = geom.position("main-bottom_splitter");
+							robot.mouseMoveAt("main-bottom_splitter", 500);
+							robot.mousePress({left: true}, 500);
+							robot.mouseMoveAt("main-bottom_splitter", 500, 100, size.w/2, size.h/2 + 10);
+							robot.mouseRelease({left: true}, 500);
+							robot.sequence(d.getTestCallback(function(){
+								var nTop = geom.position(dom.byId("main-top")),
+									nCenter = geom.position(dom.byId("main-center")),
+									nRight = geom.position(dom.byId("main-trailing")),
+									nBottom = geom.position(dom.byId("main-bottom"));
+
+								doh.t(bcTest.within(oBottom.h - 10, nBottom.h, 10), "bottom height went from " + oBottom.h + " to " + nBottom.h);
+								doh.t(bcTest.within(oCenter.h + 10, nCenter.h, 10), "center height went from " + oCenter.h + " to " + nCenter.h);
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

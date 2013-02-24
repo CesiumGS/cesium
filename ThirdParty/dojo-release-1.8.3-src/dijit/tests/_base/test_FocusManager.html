@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+
+<!-- Remove in 2.0, replaced by dijit/tests/focus.html -->
+
+<html>
+<head>
+	<title>dijit.focus Test</title>
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../../themes/claro/claro.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="isDebug: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.focus");		// dijit.focus()
+		dojo.require("dijit._base.focus");	// dijit.getFocus()
+		dojo.require("dijit._editor.selection");	// accessed by robot test
+		var savedFocus, fakeWidget;
+		dojo.ready(function(){
+			fakeWidget = { domNode: dojo.byId("save") };
+			dojo.subscribe("focusNode", function(node){ console.log("focused on " + (node?(node.id||node.tagName):"nothing"));});
+		});
+		function save(){
+			savedFocus = dijit.getFocus(fakeWidget);
+			console.debug("saved focus: ", savedFocus);
+
+		}
+		function restore(){
+			dijit.focus(savedFocus);
+			console.log("restored focus to: ", savedFocus);
+		}
+	</script>
+</head>
+<body style="background-color: #fff; color: black; padding: 0; margin: 0" class="claro">
+
+	<h3>Focus/Selection Save/Restore Test</h3>
+	<p>This is for testing whether focus and selection can be saved and restored by the focus manager.</p>
+	<p>
+		If you press the "Save focus" button, it should save the focus, but not the selection.
+		This is because merely pressing that button makes the focused textarea/input lose focus,
+		which also loses the selection.  (We fudge things by saving the previously focused element rather
+		than the currently focused one.)
+	</p>
+	<p>
+		If you press the "Save focus/selection state after 3 seconds" button, and then focus an input/textarea
+		and select some text, it should (after three seconds) save both the focused element and the selection.
+	</p>
+	<p id="selectableText" style="color: darkred">This paragraph contains text to select for testing purposes.</p>
+	<form style="border: 2px solid blue;">
+		<input id=input1 value=tom autocomplete=off><br>
+		<input id=input2 value=jones autocomplete=off><br>
+		<textarea id=textarea autocomplete=off>hello there!</textarea><br>
+		<button id=button>push me</button>
+	</form>
+
+	<button id="save" onclick="save();">Save focus</button>
+	<button id="delay_save" onclick="console.log('set timer for func'); setTimeout(save, 3000);">Save focus/selection state after 3 seconds</button>
+	<button id="restore" onclick="restore();">Restore focus/selection state</button>
+
+</body>
+</html>

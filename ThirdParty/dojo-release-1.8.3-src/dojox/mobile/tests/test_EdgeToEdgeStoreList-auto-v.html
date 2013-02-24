@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>EdgeToEdgeStoreList - Auto Load</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/connect",
+			"dojo/_base/window",
+			"dojo/store/Cache",
+			"dojo/store/JsonRest",
+			"dojo/store/Memory",
+			"dojo/store/Observable",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/EdgeToEdgeStoreList"
+		], function(connect, win, Cache, JsonRest, Memory, Observable, ready, registry){
+			//var url = "data/fruits.json";
+			var url = "data/fake_service.php";
+			var memoryStore = new Memory({idProperty:"label"});
+			var restStore = new JsonRest({idProperty:"label", target: url});
+			store = new Cache(restStore, memoryStore);
+
+			var start = 1,
+				count = 5,
+				list = null;
+			function loadMore(){
+				setTimeout(function(){ // to simulate network latency
+					list.setQuery({start:start, count:count});
+					start += count;
+				}, 1000);
+			};
+
+			ready(function(){
+				list = registry.byId("list");
+				list.setStore(store, {start:start, count:count});
+				start += count;
+				connect.connect(win.global, "onscroll", null, function(e){
+					var h = win.global.innerHeight||win.doc.documentElement.clientHeight||win.doc.documentElement.offsetHeight;
+					if(win.body().scrollTop + h === win.body().offsetHeight){
+						loadMore();
+					}
+				})
+			});
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" id="head1">EdgeToEdgeStoreList</h1>
+		<ul data-dojo-type="dojox.mobile.EdgeToEdgeStoreList" id="list" data-dojo-props='append:true'></ul>
+	</div>
+</body>
+</html>

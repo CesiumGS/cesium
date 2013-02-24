@@ -1,0 +1,338 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>DojoX Dialog example</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/claro/claro.css">
+	<link rel="stylesheet" href="../Dialog/Dialog.css">
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+
+		/* this is how you style underlays */	
+		#thirdTest_underlay { background-color: #000 }
+		#fourthTest_underlay,
+		#secondTest_underlay { background-color: #369 }
+	</style>		
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="async:true, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+	
+	<script type="text/javascript">
+	    require(["dojo/parser","dojox/widget/DialogSimple", "dojox/widget/Dialog", "dojo/fx/easing", "dijit/form/Button", "dojo/domReady!"], function(){
+	                    
+			// a programatic test:
+			var thinger = new dojox.widget.Dialog({
+				title:"foobar",
+				dimensions: [200,200],
+				draggable:false,
+				easing: dojo.fx.easing.elasticOut,
+				sizeDuration:900,
+				sizeMethod:"combine"
+			},"codeMade");
+			thinger.startup();
+			
+
+			// make the "stock" buttons dijit Buttons, but skip the 
+			// dojoType="" for the purists.
+			dojo.query("button")
+				.forEach(function(n){
+					var oc = dojo.attr(n, "onclick");
+					var button = new dijit.form.Button({
+						onClick: oc
+					}, n)
+				});
+
+			// programatic with content: 
+			var thing2 = new dojox.widget.Dialog({
+				content:"<p>I am teh inner content</p>"
+			});
+			thing2.startup();
+				
+			new dijit.form.Button({
+				onClick:function(){
+					thing2.show()
+				},
+				label:"show prog."
+			}).placeAt("testholder");
+
+			// test double show (but #9147)
+			var dblDialog = new dojox.widget.Dialog({
+				content:"<p>.show() is called twice on me</p>"
+			});
+			dblDialog.startup();
+
+			new dijit.form.Button({
+				onClick:function(){
+					dblDialog.show();
+					dblDialog.show(); // intentially calling show() on an already shown dialog
+				},
+				label:"double show."
+			}).placeAt("testholder");
+	       
+	        dojo.parser.parse();
+	        
+	    });
+
+	</script>
+</head>
+<body class="claro">
+
+	<h1 class="testTitle">dojox.widget.Dialog module tests</h1>
+	
+	<p>This is the DojoX version of the dijit.Dialog. It is both very simple, and very different.</p>
+
+	<div id='testholder' class="tests">
+		
+		<h2>dojox.widget.DialogSimple</h2>
+		
+		<p>A Simple subclass mixing the capabilities of dojox.layout.ContentPane with default
+			dijit.Dialog styles
+		</p>
+		
+		<button onclick="dijit.byId('stest').show()">DialogSimple</button>
+		<div id="stest" dojoType="dojox.widget.DialogSimple" style="width:200px">
+			<h2 style="margin-top:0">Wow!</h2>
+			<p style="margin-top:0">Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+			ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+			nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+			lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+			est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+			dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+			nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+			pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos
+			hymenaeos.
+			</p>
+		</div>
+
+		<button onclick="dijit.byId('stestjs').show()">DialogSimple:exejs</button>
+		<div id="stestjs" title="Check the Console" 
+			dojoType="dojox.widget.DialogSimple" style="width:200px" executeScripts="true" href="withjs.html"
+		></div>
+		
+		<h2>dojox.widget.Dialog</h2>
+		<p>Fancy. Has more options. Different styles, too.</p>
+		
+		<button onclick="dijit.byId('firstTest').show()">Defaults only</button>
+		
+		<div id="firstTest" dojoType="dojox.widget.Dialog" title="A Dialog Thinger">
+			<p style="margin-top:0">Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+			ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+			nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+			lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+			est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+			dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+			nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+			pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos
+			hymenaeos.
+			</p>
+		</div>
+	
+		<button onclick="dijit.byId('secondTest').show()">Size to viewport, default padding (35)</button>
+	
+		<div id="secondTest" dojoType="dojox.widget.Dialog" sizeToViewport="true" title="A Dialog Thinger">
+			<p style="margin-top:0">Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+			ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+			nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+			lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+			est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+			dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+			nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+			pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos
+			hymenaeos.
+			</p>
+		</div>
+
+		<button onclick="dijit.byId('thirdTest').show()">Size to viewport + 100 padding</button>
+	
+		<div id="thirdTest" dojoType="dojox.widget.Dialog" sizeToViewport="true" viewportPadding="100" title="A Dialog Thinger">
+			<p style="margin-top:0">Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+			ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+			nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+			lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+			est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+			dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+			nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+			pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos
+			hymenaeos.
+			</p>
+		</div>
+
+		<button onclick="dijit.byId('fourthTest').show()">dimensions 600 x 420</button>	
+		<div id="fourthTest" dojoType="dojox.widget.Dialog" dimensions="[600,420]" title="A Dialog Thinger">
+			<p style="margin-top:0">Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+			ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+			nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+			lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+			est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+			dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+			nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+			pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos
+			hymenaeos.
+			</p>
+		</div>
+
+		<button onclick="dijit.byId('anotherTest').show()">sizeDuration and easing</button>	
+		<div id="anotherTest" dojoType="dojox.widget.Dialog" sizeToViewport="true" 
+			viewportPadding="150" easing="dojo.fx.easing.backOut" sizeDuration="1400" 
+			title="A Dialog Thinger"
+		>
+			<h2 style="margin-top:0">Wow!</h2>
+			<p style="margin-top:0">Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+			ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+			nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+			lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+			est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+			dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+			nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+			pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos
+			hymenaeos.
+			</p>
+		</div>
+
+		<button onclick="dijit.byId('hrefText').show()">href + defaults</button>
+		<div id="hrefText" dojoType="dojox.widget.Dialog" href="../../../dijit/tests/layout/getResponse.php?delay=3000&messId=3"></div>
+		
+		<button onclick="dijit.byId('yetanotherTest').show()">showTitle</button>	
+		<div id="yetanotherTest" dojoType="dojox.widget.Dialog" showTitle="true" title="I am A title!!!">
+			<h2 style="margin-top:0">Wow!</h2>
+			<p style="margin-top:0">
+				Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+			ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+			nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+			lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+			est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+			dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+			nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+			pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos
+			hymenaeos.
+				Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+			ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+			nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+			lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+			est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+			dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+			nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+			pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos
+			hymenaeos.
+				Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+			ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+			nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+			lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+			est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+			dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+			nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+			pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos
+			hymenaeos.
+				Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+			ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+			nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+			lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+			est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+			dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+			nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+			pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos
+			hymenaeos.
+				Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+			ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+			nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+			lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+			est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+			dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+			nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+			pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos
+			hymenaeos.
+				Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+			ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+			nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+			lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+			est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+			dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+			nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+			pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos
+			hymenaeos.
+			</p>
+		</div>
+	
+		<button onclick="dijit.byId('yetanotherTest2').show()">draggable</button>	
+		<div id="yetanotherTest2" dojoType="dojox.widget.Dialog" draggable="true" showTitle="true" title="I am A title!!!">
+			<h2 style="margin-top:0">Wow!</h2>
+			<p style="margin-top:0">Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+			ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+			nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+			lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+			est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+			dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+			nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+			pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos
+			hymenaeos.
+			</p>
+		</div>
+	
+		<button onclick="dijit.byId('yetanotherTest3').show()">method = combine, easing</button>	
+		<div id="yetanotherTest3" dojoType="dojox.widget.Dialog" sizeMethod="combine"
+		 	easing="dojo.fx.easing.bounceOut" sizeDuration="600">
+			<h2 style="margin-top:0">Wow!</h2>
+			<p style="margin-top:0">Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+			ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+			nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+			lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+			est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+			dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+			nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+			pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos
+			hymenaeos.
+			</p>
+		</div>
+	
+		<button onclick="dijit.byId('codeMade').show()">programatic</button>
+		<div id="codeMade"><h2 style="margin-top:0">Wow!</h2><p>A small dialog</p></div>
+
+		<button onclick="dijit.byId('modaltest').show()">modal:true</button>
+		<div id="modaltest" dojoType="dojox.widget.Dialog" modal="true"
+		 	easing="dojo.fx.easing.bounceOut" sizeDuration="600">
+			<h2 style="margin-top:0">Wow!</h2>
+			<p style="margin-top:0">Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+			ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+			nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+			lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+			est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+			dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+			nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+			pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos
+			hymenaeos.
+			</p>
+		</div>
+	
+	</div>
+
+	<p>There are several additional parameters to define how you want to display the dialog. It makes 
+		<em>some</em> assumption about how you want to size your pane.</p>
+		 
+	<p>That's all folks, all of the supported options have buttons and inline tests.</p>
+	<p>The names of these will be reversed in Dojo 2.0, should they survive the migration</p>
+	
+</body>
+</html>
+

@@ -1,0 +1,100 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>GFX Test: Test the functions defined in _base</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+		<script type="text/javascript" src="../../../util/doh/runner.js"></script>
+		<script type="text/javascript">
+			dojo.require("doh.runner");
+			dojo.require("dojox.gfx");
+			dojo.require("dojox.gfx._base");
+		</script>
+		<script type="text/javascript">
+			dojo.addOnLoad(function(){
+				var drawing, t;
+				doh.register("GFX: _base Tests", [
+					{
+						name: "splitFontString",
+						timeout: 1000,
+						setUp: function(){
+							if(!drawing){
+								var dn = dojo.byId("gfxObject");
+								drawing = dojox.gfx.createSurface(dn, 300, 300);
+								t = drawing.createText({ 
+									 x: 100,
+									 y: 100,
+									 text:"Hello Gfx!"
+								}).setFill("black");
+							}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+							try{
+								var s = "italic small-caps bold 12px arial,sans-serif";
+								var font = dojox.gfx.splitFontString(s);
+								doh.assertEqual("italic", font.style, "Unexpected Values for font style.");
+								doh.assertEqual("small-caps", font.variant, "Unexpected values for font variant.");
+								doh.assertEqual("bold", font.weight, "Unexpected values for font weight.");
+								doh.assertEqual("12px", font.size, "Unexpected values for font size.");
+								doh.assertEqual("arial,sans-serif", font.family, "Unexpected values for font family.");
+								t.setFont(s);
+								s = "italic small-caps bold 12px/30px Georgia";
+								font = dojox.gfx.splitFontString(s);
+								doh.assertEqual("italic", font.style, "Unexpected Values for font style.");
+								doh.assertEqual("small-caps", font.variant, "Unexpected values for font variant.");
+								doh.assertEqual("bold", font.weight, "Unexpected values for font weight.");
+								doh.assertEqual("12px", font.size, "Unexpected values for font size.");
+								doh.assertEqual("Georgia", font.family, "Unexpected values for font family.");
+								t.setFont(s);
+								s = "italic normal normal 150% arial";
+								font = dojox.gfx.splitFontString(s);
+								doh.assertEqual("italic", font.style, "Unexpected Values for font style.");
+								doh.assertEqual("normal", font.variant, "Unexpected values for font variant.");
+								doh.assertEqual("normal", font.weight, "Unexpected values for font weight.");
+								doh.assertEqual("150%", font.size, "Unexpected values for font size.");
+								doh.assertEqual("arial", font.family, "Unexpected values for font family.");
+								t.setFont(s);
+								
+								d.callback(true);
+							}catch(e){
+								d.errback(e);
+							}
+							return d;
+						}
+					},{
+						name: "makeFontString",
+						timeout: 1000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							try{
+								var font = dojox.gfx.makeFontString({
+									style:"italic",
+									variant:"small-caps",
+									weight:"bold",
+									size:"12px",
+									family:"arial,sans-serif"
+								});
+								var expected = "italic small-caps bold 12px arial,sans-serif";
+								doh.assertEqual(expected, font, "Unexpected value for font sting.");
+								
+								d.callback(true);
+							}catch(e){
+								d.errback(e);
+							}
+							return d;
+						}
+					}
+				]);
+				doh.run();
+			});
+			</script>
+	</head>
+	<body>
+		<div id="gfxObject" style="width: 500px; height: 500px;font-weight:bold;"></div>
+	</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>AMD Loader Test</title> 
+		<script type="text/javascript">
+			dojoConfig = {
+				parseOnLoad: false,
+				mblHideAddressBar: false,	
+				mblAndroidWorkaround: false,
+                mblAlwaysHideAddressBar: false,
+				traceSet:{
+					"loader-inject":0,
+					"loader-define":0,
+					"loader-runFactory":0,
+					"loader-execModule":0,
+					"loader-execModule-out":0,
+					"loader-defineModule":0
+				},
+				hasCache:{
+					"config-dojo-loader-catches":1
+				},
+				async:true
+			}
+		</script>
+		<script type="text/javascript" src="../../../dojo.js"></script>
+		<script>
+			function testRequire(deps, sync){
+				console.log("test require error start");
+				require(["dojo/_base/Deferred"], function(Deferred){
+					var def1 = new Deferred();
+					var def2 = new Deferred();
+					
+					// test done when def1 resolved.
+					Deferred.when(def1, function(){
+						console.log("def1 resolved, test success.");
+					},
+					function(){
+						console.log("def1 reject, error occurred in testing");
+					});
+					
+					// resolve def1 if def2 resolved.
+					Deferred.when(def2, function(){
+						console.log("def2 resolved, will resolve def1.");
+						def1.resolve("def1 success");
+					},
+					function(){
+						console.log("def2 reject, will reject def1");
+						def1.reject("def1 reject");
+					});
+					
+					//resolve def2 if require dependencies done
+					var requireSignal;
+					requireSignal = require.on("error", function(error){
+						if(def2.fired != -1){
+							return;
+						}
+						console.error("get error event in require on.", error);
+						def2.reject("load dependencies error.");
+						requireSignal.remove();
+					});
+				
+					try {
+						var dependences = [];
+						dependences.push(deps);
+						require(dependences, function(){
+							def2.resolve("def2 resolved");
+							requireSignal.remove();
+						});
+					}catch(ex){
+						console.error("catch in require. ", ex);
+						requireSignal.remove();
+					}
+				});
+			}
+			
+			function testRequireNoexist(count, exist){
+				var str = exist?"exist ":"noexist ";
+				console.log("test "+str+count+" times start...");
+				var deps;
+				if(exist){
+					deps = ["dojo/_base/lang"];
+				}else{
+					deps = ["dojo/error/noexist"];
+				}
+				var startTime = new Date().getTime();
+				for(var i=0; i<count; i++){
+					var requireSignal;
+					requireSignal = require.on("error", function(error){
+						console.error("get error event in require on.", error);
+						requireSignal.remove();
+					});
+				
+					try {
+						require(deps, function(){
+							requireSignal.remove();
+						});
+					}catch(ex){
+						console.error("catch in require. ", ex);
+						requireSignal.remove();
+					}
+				}
+				var endTime = new Date().getTime();
+				console.log("test done. costs: "+(endTime-startTime)+"ms");
+			}
+		</script>
+	</head>
+	<body>
+		<h1>See the logs in console.</h1>
+		<p>Issue 1:<br/> This is the dojo AMD loader(require) async test.<br/>
+		 Click on "test require success" button to test require success.<br/>
+		 Click on "test require error" button to test require error and process require error.<br/>
+		 <font color="red">Click on "test require error" button again, the console output nothing, but the expect is output error again like before.</font>
+		<p>
+		<input type="button" value="test require async success" onclick="testRequire('dojo/_base/lang')" />
+		<input type="button" value="test require async error" onclick="testRequire('dojo/require/error')" /><br/>
+		
+		<p>Issue 2:<br/> This is the dojo AMD loader(require) sync test. <b>Please modify dojoConfig.async=false first.</b><br/>
+		 Click on "test require sync success" button to test require plugin success.<br/>
+		 Click on "test require sync error" button to test require plugin error and process require error.<br/>
+		 <font color="red">You can see the 404 Not Found error and catch in require output.<br/>
+		 This error is catched in catch statement, but not trigger require.on("error"). Not sure this is a defect of dojo AMD loader, but seems an error should trigger require.on("error")</font>
+		<p>
+		<input type="button" value="test require sync success" onclick="testRequire('dojo/_base/lang', true)" />
+		<input type="button" value="test require sync error" onclick="testRequire('dojo/require/error', true)" /><br/>
+		
+		<p>Issue 3:<br/> This is the dojo AMD loader plugin(dojo/text) test.<br/>
+		 Click on "test require plugin success" button to test require plugin success.<br/>
+		 Click on "test require plugin error" button to test require plugin error and process require error.<br/>
+		 <font color="red">You can see xhr plugin throw Unable to load ./requireerror.html status:404 error, but require.on("error") not be triggered as expect.<br/>
+		 In fact, require.on("error") is triggered by "timeout" error event after 30 seconds.</font>
+		<p>
+		<input type="button" value="test require plugin success" onclick="testRequire('dojo/text!./onerror.html')" />
+		<input type="button" value="test require plugin error" onclick="testRequire('dojo/text!./requireerror.html')" /><br/>
+		
+		<p>Issue 4:<br/> require not exist module test.<br/>
+		<font color="red">This test is the same as issue 1. require a not exist module more than one times will cause the require waiting list increament, and each new require will check the waiting list. If the waiting list is too big, the require perform is very low.
+		Click on "100", "1000", "10000" and "100000" button to test. You can see require a not exist module 10000 times is cannot tolerant, the browser almost crush when require 100000 times.
+		</font>
+		
+		<p>
+		<input type="button" value="Exist 100" onclick="testRequireNoexist(100, true)" />
+		<input type="button" value="Exist 1000" onclick="testRequireNoexist(1000, true)" />
+		<input type="button" value="Exist 10000" onclick="testRequireNoexist(10000, true)" />
+		<input type="button" value="Exist 100000" onclick="testRequireNoexist(100000, true)" />
+		<br/>
+		<input type="button" value="NoExist 100" onclick="testRequireNoexist(100)" />
+		<input type="button" value="NoExist 1000" onclick="testRequireNoexist(1000)" />
+		<input type="button" value="NoExist 10000" onclick="testRequireNoexist(10000)" />
+		<input type="button" value="NoExist 100000" onclick="testRequireNoexist(100000)" />
+	</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>ValuePickerSlot</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','ValuePicker']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/ValuePickerSlot"
+		], function(registry){
+			spin = function(steps){
+				registry.byId("picker1").spin(steps);
+				registry.byId("picker2").spin(steps);
+			};
+		});
+	</script>
+	<style>
+	</style>
+</head>
+<body style="visibility:hidden;background-color:#424142;padding:10px;">
+	<div id="foo" data-dojo-type="dojox.mobile.View">
+		<div id="picker1" data-dojo-type="dojox.mobile.ValuePickerSlot"
+		     data-dojo-props='labelFrom:1, labelTo:3'
+		     style="width:72px;float:left"></div>
+		<div id="picker2" data-dojo-type="dojox.mobile.ValuePickerSlot"
+		     data-dojo-props="labels:['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']"
+		     style="width:72px;float:left;margin-left:10px;"></div>
+		<p style="clear:both;height:10px"></p>
+		<input type="button" onclick="spin(1)" value="+1">
+		<input type="button" onclick="spin(-1)" value="&minus;1">
+	</div>
+</body>
+</html>

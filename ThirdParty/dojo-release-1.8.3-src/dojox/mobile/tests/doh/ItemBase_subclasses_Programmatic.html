@@ -1,0 +1,312 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>ListItem Programmatic 3</title>
+<script type="text/javascript" src="../../deviceTheme.js"></script>
+<script type="text/javascript" src="../../../../dojo/dojo.js" 
+	data-dojo-config="async: true, parseOnLoad: true"></script>
+<script language="JavaScript" type="text/javascript">
+	require([
+		"dojo/_base/declare",
+		"dojox/mobile/parser",
+		"dojo/ready", // dojo.ready
+		"dijit/registry",  // dijit.byId
+		"doh/runner",	// doh functions
+		"dojox/mobile/Heading",
+		"dojox/mobile/ListItem",
+		"dojox/mobile/IconItem",
+		"dojox/mobile/IconContainer",
+		"dojox/mobile/IconMenuItem",
+		"dojox/mobile/IconMenu",
+		"dojox/mobile/TabBarButton",
+		"dojox/mobile/TabBar",
+		"dojox/mobile/ToolBarButton",
+		"dojox/mobile",				// This is a mobile app.
+		"dojox/mobile/View",		// This mobile app uses mobile view
+		"dojox/mobile/compat"		// This mobile app supports running on desktop browsers
+	], function(declare, parser, ready, registry, runner, 
+				Heading, ListItem, IconItem, IconContainer,
+				IconMenuItem, IconMenu, TabBarButton, TabBar, ToolBarButton){
+
+		// This test mimics a particular case which happens in dojox/mvc due to 
+		// the binding mechanism: the values of widget properties are set before 
+		// the widget is actually started, that is before this.inherited completed. 
+		// This holds for the following properties:
+		// ListItem: icon, checked, deleteIcon, rightIcon, rightIcon2, uncheckIcon.
+		// IconItem: icon
+		// IconMenuItem: icon
+		// TabBarButton: icon (icon1 and icon2 are not delayed)
+		// ToolBarButton: icon
+		// For these properties, the widgets use a mechanism which reapplies the setters 
+		// once the startup is completed. 
+		// The present test checks that these properties have the expected values even
+		// if the setters are called before startup completion.
+					
+		function _createListItem1(){
+			var MyListItem1 = declare(
+				"dojox.mobile.MyListItem1",
+				ListItem,	{
+				startup: function(){
+					this.set("checked", true);
+					this.inherited(arguments);
+				}
+			});
+			var list = registry.byId("listInSelectMode");
+			var item = new MyListItem1();
+			list.addChild(item);
+			return item;
+		};
+		function _assertCorrectListItem1(widget){
+			runner.assertTrue(widget.get("checked"), 
+				"'checked' property not correctly set if setter called before startup completed");
+		};
+		
+		// 2. Test the icon-related properties for a ListItem added to a list which is in "select" mode.
+		// In "select" mode, the values of the properties "rightIcon" and "uncheckIcon" are overridden 
+		// by the setter of "checked".
+		function _createListItem2(){
+			var MyListItem2 = declare(
+				"dojox.mobile.MyListItem2",
+				ListItem,	{
+				startup: function(){
+					this.set("icon", "../images/a-icon1.png");
+					this.set("deleteIcon", "../images/a-icon2.png");
+					this.set("rightIcon", "../images/a-icon3.png");
+					this.set("rightIcon2", "../images/a-icon4.png");
+					this.set("uncheckIcon", "../images/a-icon5.png");
+
+					this.inherited(arguments);
+				}
+			});
+			var list = registry.byId("listInSelectMode");
+			var item = new MyListItem2();
+			list.addChild(item);
+			return item;
+		};
+		function _assertCorrectListItem2(widget){
+			runner.assertEqual("../images/a-icon1.png", widget.get("icon"),
+				"'icon' property not correctly set if setter called before startup completed (list in select mode)");
+			runner.assertEqual("../images/a-icon2.png", widget.get("deleteIcon"),
+				"'deleteIcon' property not correctly set if setter called before startup completed (list in select mode)");
+			runner.assertEqual("mblDomButtonCheck", widget.get("rightIcon"),
+			 	"'rightIcon' property not correctly set if setter called before startup completed (list in select mode)");
+			runner.assertEqual("../images/a-icon4.png", widget.get("rightIcon2"),
+				"'rightIcon2' property not correctly set if setter called before startup completed (list in select mode)");
+			runner.assertEqual(undefined, widget.get("uncheckIcon"),
+				"'uncheckIcon' property not correctly set if setter called before startup completed (list in select mode)");
+		};
+		
+		// 3. Test the icon-related properties for a ListItem added to a list which is not in "select" mode.
+		// In this case, the values of the properties "rightIcon" and "uncheckIcon" are not overridden 
+		// by the setter of "checked" (because the setter is not called).).
+		function _createListItem3(){
+			var MyListItem3 = declare(
+				"dojox.mobile.MyListItem3",
+				ListItem,	{
+				startup: function(){
+					// This mimics what happens in dojox/mvc due to the binding mechanism:
+					// the values of properties are set before the widget is actually started,
+					// that is before this.inherited completed its execution.
+					// The properties below are among those for which ListItem uses a mechanism 
+					// which reapplies the setters once the startup is completed. 
+					this.set("icon", "../images/a-icon1.png");
+					this.set("deleteIcon", "../images/a-icon2.png");
+					this.set("rightIcon", "../images/a-icon3.png");
+					this.set("rightIcon2", "../images/a-icon4.png");
+					this.set("uncheckIcon", "../images/a-icon5.png");
+
+					this.inherited(arguments);
+				}
+			});
+			var list = registry.byId("listNotInSelectMode");
+			var item = new MyListItem3();
+			list.addChild(item);
+			return item;
+		};
+		function _assertCorrectListItem3(widget){
+			runner.assertEqual("../images/a-icon1.png", widget.get("icon"),
+				"'icon' property not correctly set if setter called before startup completed (list not in select mode)");
+			runner.assertEqual("../images/a-icon2.png", widget.get("deleteIcon"),
+				"'deleteIcon' property not correctly set if setter called before startup completed (list not in select mode)");
+			runner.assertEqual("../images/a-icon3.png", widget.get("rightIcon"),
+			 	"'rightIcon' property not correctly set if setter called before startup completed (list not in select mode)");
+			runner.assertEqual("../images/a-icon4.png", widget.get("rightIcon2"),
+				"'rightIcon2' property not correctly set if setter called before startup completed (list not in select mode)");
+			runner.assertEqual("../images/a-icon5.png", widget.get("uncheckIcon"),
+				"'uncheckIcon' property not correctly set if setter called before startup completed (list not in select mode)");
+		};
+		
+		// 4. Test the icon property for an IconItem added to an IconContainer
+		function _createIconItem(){
+			var MyIconItem = declare(
+				"dojox.mobile.MyIconItem",
+				IconItem,	{
+				startup: function(){
+					this.set("icon", "../images/a-icon1.png");
+					this.inherited(arguments);
+				}
+			});
+			var list = registry.byId("iconContainer");
+			var item = new MyIconItem();
+			list.addChild(item);
+			return item;
+		};
+		function _assertCorrectIconItem(widget){
+			runner.assertEqual("../images/a-icon1.png", widget.get("icon"),
+				"'icon' property not correctly set if setter called before startup completed (IconItem)");
+		};
+		
+		// 5. Test the icon property for an IconMenuItem added to an IconMenu
+		function _createIconMenuItem(){
+			var MyIconMenuItem = declare(
+				"dojox.mobile.MyIconMenuItem",
+				IconMenuItem,	{
+				startup: function(){
+					this.set("icon", "../images/a-icon1.png");
+					this.inherited(arguments);
+				}
+			});
+			var list = registry.byId("iconMenu");
+			var item = new MyIconMenuItem();
+			list.addChild(item);
+			return item;
+		};
+		function _assertCorrectIconMenuItem(widget){
+			runner.assertEqual("../images/a-icon1.png", widget.get("icon"),
+				"'icon' property not correctly set if setter called before startup completed (IconMenuItem)");
+		};
+		
+		// 6. Test the icon1 and icon2 properties for a TabBarButton added to a TabBar
+		function _createTabBarButton(){
+			var MyTabBarButton = declare(
+				"dojox.mobile.MyTabBarButton",
+				TabBarButton,	{
+				startup: function(){
+					this.set("icon", "../images/a-icon1.png");
+					this.set("icon1", "../images/a-icon2.png");
+					this.set("icon2", "../images/a-icon3.png");
+					this.inherited(arguments);
+				}
+			});
+			var list = registry.byId("tabBar");
+			var item = new MyTabBarButton();
+			list.addChild(item);
+			return item;
+		};
+		function _assertCorrectIconTabBarButton(widget){
+			runner.assertEqual("../images/a-icon1.png", widget.get("icon"),
+			 	"'icon' property not correctly set if setter called before startup completed (TabBarButton)");
+			runner.assertEqual("../images/a-icon2.png", widget.get("icon1"),
+				"'icon1' property not correctly set if setter called before startup completed (TabBarButton)");
+			runner.assertEqual("../images/a-icon3.png", widget.get("icon2"),
+				"'icon2' property not correctly set if setter called before startup completed (TabBarButton)");
+		};
+		
+		// 7. Test the icon property for a ToolBarButton added to a parent
+		function _createToolBarButton(){
+			var MyToolBarButton = declare(
+				"dojox.mobile.MyToolBarButton",
+				ToolBarButton,	{
+				startup: function(){
+					this.set("icon", "../images/a-icon1.png");
+					this.inherited(arguments);
+				}
+			});
+			var list = registry.byId("toolBar");
+			var item = new MyToolBarButton();
+			list.addChild(item);
+			return item;
+		};
+		function _assertCorrectIconToolBarButton(widget){
+			runner.assertEqual("../images/a-icon1.png", widget.get("icon"),
+				"'icon' property not correctly set if setter called before startup completed (ToolBarButton)");
+		};
+		
+		ready(function(){
+			runner.register("dojox.mobile.test.doh.ItemBase_subclasses_Programmatic", [
+				{
+					name: "ItemBase_subclasses_Programmatic ListItem.checked",
+					timeout: 2000,
+					runTest: function(){
+						var widget = _createListItem1();
+						_assertCorrectListItem1(widget);
+					}
+				},
+				{
+					name: "ItemBase_subclasses_Programmatic ListItem.icon (select mode)",
+					timeout: 2000,
+					runTest: function(){
+						var widget = _createListItem2();
+						_assertCorrectListItem2(widget);
+					}
+				},
+				{
+					name: "ItemBase_subclasses_Programmatic ListItem.icon (not select mode)",
+					timeout: 2000,
+					runTest: function(){
+						var widget = _createListItem3();
+						_assertCorrectListItem3(widget);
+					}
+				},
+				{
+					name: "ItemBase_subclasses_Programmatic IconItem.icon",
+					timeout: 2000,
+					runTest: function(){
+						var widget = _createIconItem();
+						_assertCorrectIconItem(widget);
+					}
+				},
+				{
+					name: "ItemBase_subclasses_Programmatic IconMenuItem.icon",
+					timeout: 2000,
+					runTest: function(){
+						var widget = _createIconMenuItem();
+						_assertCorrectIconMenuItem(widget);
+					}
+				},
+				{
+					name: "ItemBase_subclasses_Programmatic TabBarButton.icon/icon1/icon2",
+					timeout: 2000,
+					runTest: function(){
+						var widget = _createTabBarButton();
+						_assertCorrectIconTabBarButton(widget);
+					}
+				},
+				{
+					name: "ItemBase_subclasses_Programmatic ToolBarButton.icon",
+					timeout: 2000,
+					runTest: function(){
+						var widget = _createToolBarButton();
+						_assertCorrectIconToolBarButton(widget);
+					}
+				}
+			]);
+			runner.run();
+		});
+	});
+</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="view" data-dojo-type="dojox/mobile/View" selected="true">
+		<h1 data-dojo-type="dojox/mobile/Heading">RoundRectList</h1>
+		<!-- A list in single select mode -->
+		<ul id="listInSelectMode" data-dojo-type="dojox/mobile/RoundRectList" 
+			data-dojo-props="select:'single'">
+		</ul>
+		<!-- A list which is not in a select mode -->
+		<ul id="listNotInSelectMode" data-dojo-type="dojox/mobile/RoundRectList">
+		</ul>
+		<ul id="iconContainer" data-dojo-type="dojox/mobile/IconContainer">
+		</ul>
+		<ul id="iconMenu" data-dojo-type="dojox/mobile/IconMenu">
+		</ul>
+		<ul id="tabBar" data-dojo-type="dojox/mobile/TabBar">
+		</ul>
+		<div id="toolBar" data-dojo-type="dojox/mobile/Heading">
+		</div>
+	</div>
+</body>
+</html>

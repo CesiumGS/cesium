@@ -1,0 +1,31 @@
+/* dojox.mobile.TextArea */
+.mblTextArea {
+  font-family: Helvetica;
+  font-size: 17px;
+  font-weight: bold;
+  color: #324f85;
+  
+  padding-left: 8px;
+  padding-right: 1px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+
+  border-bottom-width: 0;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border-bottom-style: solid;
+  border-bottom-color: #ADAAAD;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+/* dojox.mobile.ExpandingTextArea */
+.mblExpandingTextArea {
+  margin: 0px;
+}
+button.baseBtn {
+  font-family: Helvetica;
+  font-size: 17px;
+  font-weight: bold;
+  height: 40px;
+  margin-bottom: 8px;
+}

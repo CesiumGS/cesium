@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Custom ValuePicker</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','ValuePicker']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/ValuePicker"
+		]);
+	</script>
+</head>
+<body style="visibility:hidden;background-color:#424142;">
+	<div data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">Custom ValuePicker</h1>
+		<div id="spin1" data-dojo-type="dojox.mobile.ValuePicker">
+			<div data-dojo-type="dojox.mobile.ValuePickerSlot"
+				data-dojo-props="labels:['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']"
+				style="text-align:center;width:40px;"></div>
+			<div data-dojo-type="dojox.mobile.ValuePickerSlot"
+				data-dojo-props='labelFrom:3000, labelTo:3100'
+				style="width:70px;"></div>
+			<div data-dojo-type="dojox.mobile.ValuePickerSlot"
+				data-dojo-props='labelFrom:0, labelTo:9'
+				style="width:50px;"></div>
+			<div data-dojo-type="dojox.mobile.ValuePickerSlot"
+				data-dojo-props="labels:['pt','px','cm']"
+				style="width:50px;"></div>
+		</div>
+	</div>
+</body>
+</html>

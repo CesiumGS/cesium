@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>_CheckBoxMixin tests</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../../themes/dijit.css";
+
+		#table {
+			margin: 0;
+			padding: 2px;
+		}
+		#table, .dijit, BUTTON {
+			font-family: monospace;
+			font-size: 12pt;
+		}
+		#table .layout {
+			padding: 2px;
+			font-size: 100%;
+			margin: 0;
+		}
+		INPUT#mobile_attributes {
+			-webkit-appearance: radio;
+			width:32px;
+			height:32px;
+			border-radius: 0;
+		}
+		INPUT#mobile_events:not(:checked){
+			background-color:rgba(255,0,0,1);
+			border-radius: 32px;
+		}
+		INPUT#mobile_events {
+			width:32px;
+			height:32px;
+			background-color:rgba(0,0,255,1);
+			border-radius: 32px;
+		}
+		INPUT#mobile_programmatic {
+			width:32px;
+			height:32px;
+			background-color:rgba(0,0,0,0);
+			border:0 none rgba(0,0,0,0);
+			border-radius: 0;
+		}
+		INPUT#mobile_programmatic:not(:checked){
+			opacity:0;
+		}
+		.dijitCheckBox {
+			vertical-align: baseline !important;
+		}
+	</style>
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.form.CheckBox");
+		dojo.require("dojox.mobile.CheckBox");
+
+		dojo.ready(function(){
+
+			doh.register("attributes", [
+				{
+					name: "dijit",
+					runTest: function(){
+						var dijit_attributes = dijit.byId('dijit_attributes');
+						doh.is("something", dijit_attributes.focusNode.value, 'dijit HTML element original value');
+						doh.t(dijit_attributes.get('checked'), "dijit original get('checked')");
+						doh.t(!!dijit_attributes.focusNode.checked, 'dijit HTML element originally checked');
+						doh.t(dojo.hasClass(dijit_attributes.domNode, dijit_attributes.baseClass+"Checked"), "dijit baseClass checked");
+						dijit_attributes.set('value', "something else");
+						dijit_attributes.set('checked', false);
+						doh.f(dijit_attributes.get('checked'), "dijit get('checked')");
+						doh.t(!dijit_attributes.focusNode.checked, 'dijit HTML element unchecked');
+						doh.f(dojo.hasClass(dijit_attributes.domNode, dijit_attributes.baseClass+"Checked"), "dijit baseClass not checked");
+						doh.t(dojo.hasClass(dijit_attributes.domNode, dijit_attributes.baseClass), "dijit baseClass");
+						doh.t(dojo.hasClass(dijit_attributes.domNode, "mblRedButton"), "dijit original class");
+						doh.is("something else", dijit_attributes.focusNode.value, 'dijit HTML element value');
+					}
+	 			},
+				{
+					name: "mobile",
+					runTest: function(){
+						var mobile_attributes = dijit.byId('mobile_attributes');
+						doh.is("something", mobile_attributes.focusNode.value, 'mobile HTML element original value');
+						doh.t(mobile_attributes.get('checked'), "mobile original get('checked')");
+						doh.t(!!mobile_attributes.focusNode.checked, 'mobile HTML element originally checked');
+						doh.t(dojo.hasClass(mobile_attributes.domNode, mobile_attributes.baseClass+"Checked"), "mobile baseClass checked");
+						mobile_attributes.set('checked', false);
+						mobile_attributes.set('value', "something else");
+						doh.f(mobile_attributes.get('checked'), "mobile get('checked')");
+						doh.t(!mobile_attributes.focusNode.checked, 'mobile HTML element unchecked');
+						doh.f(dojo.hasClass(mobile_attributes.domNode, mobile_attributes.baseClass+"Checked"), "mobile baseClass not checked");
+						doh.t(dojo.hasClass(mobile_attributes.domNode, mobile_attributes.baseClass), "mobile baseClass");
+						doh.t(dojo.hasClass(mobile_attributes.domNode, "mblRedButton"), "mobile original class");
+						doh.is("something else", mobile_attributes.focusNode.value, 'mobile HTML element value');
+					}
+	 			}
+			]);
+
+			doh.register("events", [
+				{
+					name: "dijit",
+					timeout: 2000,
+					runTest: function(){
+						var
+							d = new doh.Deferred(),
+							dijit_events = dijit.byId('dijit_events'),
+							calledOnClick = false,
+							nop = function(){ return false; };
+
+						function onChange(v){
+							dijit_events.set('onChange', nop);
+							d.callback(true);
+						}
+						dijit_events.set('onChange', onChange);
+						dijit_events._onClick({ preventDefault: nop });
+
+						return d;
+					}
+	 			},
+				{
+					name: "mobile",
+					timeout: 2000,
+					runTest: function(){
+						var
+							d = new doh.Deferred(),
+							mobile_events = dijit.byId('mobile_events'),
+							nop = function(){ return false; };
+
+						function onChange(){
+							mobile_events.set('onChange', nop);
+							d.callback(true);
+						}
+						mobile_events.set("onChange", onChange);
+						setTimeout(function(){ mobile_events.focusNode.click({ preventDefault: nop }); }, 0);
+
+						return d;
+					}
+	 			}
+			]);
+
+			doh.register("programmatic", [
+				{
+					name: "dijit",
+					timeout: 2000,
+					runTest: function(){
+						new dijit.form.CheckBox({id:"dijit_programmatic", checked:true,"aria-label":"check3dijit"}).placeAt("dijit_programmatic_container", "first");
+						var dijit_programmatic = dijit.byId('dijit_programmatic');
+						var pos = dojo.position(dijit_programmatic.domNode, true);
+						doh.t(pos.w > 0 && pos.h > 0 && pos.x > 0 && pos.y > 0, 'dijit position');
+						doh.t(dijit_programmatic.get('checked'), 'dijit widget checked');
+						doh.t(!!dijit_programmatic.focusNode.checked, 'dijit HTML element checked');
+					}
+	 			},
+				{
+					name: "mobile",
+					timeout: 2000,
+					runTest: function(){
+						new dojox.mobile.CheckBox({id:"mobile_programmatic", checked:true,"aria-label":"check3mobile"}).placeAt("mobile_programmatic_container", "first");
+						var mobile_programmatic = dijit.byId('mobile_programmatic');
+						if(dojo.isIE < 8){ // older IE ignores setting checked after creation but before appending to the DOM
+							dojo.attr(mobile_programmatic.focusNode, "checked", mobile_programmatic.checked);
+						}
+						var pos = dojo.position(mobile_programmatic.domNode, true);
+						doh.t(pos.w > 0 && pos.h > 0 && pos.x > 0 && pos.y > 0, 'mobile position');
+						doh.t(!!mobile_programmatic.focusNode.checked, 'mobile HTML element checked');
+						doh.t(mobile_programmatic.get('checked'), 'mobile widget checked');
+					}
+	 			}
+			]);
+
+			var widgets = dijit.findWidgets(dojo.byId('onClickTests'));
+			dojo.forEach(widgets, function(widget){
+				widget.focusNode.click();
+				var id = widget.id;
+				var widgetVal = widget.checked;
+				var testId = "t" + id.substr(1);
+				dojo.byId(testId).click();
+				var expectedVal = !!dojo.byId(testId).checked;
+				var widgetNodeVal = !!dojo.byId(id).checked;
+				doh.register("onclick " + id,
+					function(){
+						doh.is(expectedVal, widgetVal, 'widget value');
+						doh.is(expectedVal, widgetNodeVal, 'hidden node');
+					}
+				)
+			});
+
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro" role="main">
+	<h1 class="testTitle">_CheckBoxMixin (dijit and mobile) non-robot tests</h1>
+
+	<table id="table">
+		<tr>
+			<th class="layout">&nbsp;</th>
+			<th class="layout">dijit</th>
+			<th class="layout">mobile</th>
+		</tr>
+		<tr>
+			<td class="layout">attributes</td>
+			<td class="layout"><input id="dijit_attributes"  aria-label="check1dijit" data-dojo-type="dijit/form/CheckBox" data-dojo-props='checked: true, "class":"mblRedButton", value:"something"'/></td>
+			<td class="layout"><input type="checkbox" aria-label="check1mobile" value="something" class="mblRedButton" checked id="mobile_attributes" dojoType="dojox/mobile/CheckBox"/></td>
+		</tr>
+		<tr>
+		<tr>
+			<td class="layout">Events</td>
+			<td class="layout"><input id="dijit_events" aria-label="check2dijit" data-dojo-type="dijit/form/CheckBox" data-dojo-props='onClick:function(){ return true; }' /></td>
+			<td class="layout"><input type="checkbox" aria-label="check2mobile" id="mobile_events" data-dojo-type="dojox/mobile/CheckBox" data-dojo-props='onClick:function(){ return true; }' /></td>
+		</tr>
+		<tr>
+			<td class="layout">Programmatic</td>
+			<td class="layout" id="dijit_programmatic_container"></td>
+			<td class="layout" id="mobile_programmatic_container"></td>
+		</tr>
+	</table>
+	<div id="onClickTests" style="font-family:monospace;">
+			before click: checked=true,&nbsp; onclick handler: return false, after click:
+			<input aria-label="t1"  aria-label="t1" id="t1" type="checkbox" checked onclick="return false;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w1" aria-label="w1" id="w1" type="checkbox" checked onclick="return false;"><br>
+		before click: checked=true,&nbsp; onclick handler: return true,&nbsp;  after click:
+			<input aria-label="t2" aria-label="t2" id="t2" type="checkbox" checked onclick="return true;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w2" aria-label="w2" id="w2" type="checkbox" checked onclick="return true;"><br>
+		before click: checked=true,&nbsp; onclick handler: return false, after click:
+			<input aria-label="t3" aria-label="t3" id="t3" type="checkbox" checked onclick="return false;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w3" aria-label="w3" id="w3" type="checkbox" checked onclick="return false;"><br>
+		before click: checked=true,&nbsp; onclick handler: return true,&nbsp;  after click:
+			<input aria-label="t4" id="t4" type="checkbox" checked onclick="return true;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w4" id="w4" type="checkbox" checked onclick="return true;"><br>
+		before click: checked=false, onclick handler: return false, after click:
+			<input aria-label="t5" id="t5" type="checkbox" onclick="return false;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w5" id="w5" type="checkbox" onclick="return false;"><br>
+		before click: checked=false, onclick handler: return true,&nbsp;  after click:
+			<input aria-label="t6" id="t6" type="checkbox" onclick="return true;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w6" id="w6" type="checkbox" onclick="return true;"><br>
+		before click: checked=false, onclick handler: return false, after click:
+			<input aria-label="t7" id="t7" type="checkbox" onclick="return false;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w7" id="w7" type="checkbox" onclick="return false;"><br>
+		before click: checked=false, onclick handler: return true,&nbsp;  after click:
+			<input aria-label="t8" id="t8" type="checkbox" onclick="return true;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w8" id="w8" type="checkbox" onclick="return true;"><br>
+		before click: checked=true,&nbsp; onclick handler: no return, after click:
+			<input aria-label="t11" id="t11" type="checkbox" checked onclick="return;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w11" id="w11" type="checkbox" checked onclick="return;"><br>
+		before click: checked=false, onclick handler: no return, after click:
+			<input aria-label="t15" id="t15" type="checkbox" onclick="return;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w15" id="w15" type="checkbox" onclick="return;"><br>
+		before click: checked=true,&nbsp; onclick handler: checked=false and return false, after click:
+			<input id="t101" aria-label="t101" type="checkbox" checked onclick="this.checked=false;return false;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w101" id="w101" type="checkbox" checked onclick="dijit.byId(this.id).set('checked',false);return false;"><br>
+		before click: checked=true,&nbsp; onclick handler: checked=false and return true,&nbsp;  after click:
+			<input aria-label="t102" id="t102" type="checkbox" checked onclick="this.checked=false;return true;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w102" id="w102" type="checkbox" checked onclick="dijit.byId(this.id).set('checked',false);return true;"><br>
+		before click: checked=true,&nbsp; onclick handler: checked=true&nbsp;  and return false, after click:
+			<input aria-label="t103" id="t103" type="checkbox" checked onclick="this.checked=true;return false;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w103" id="w103" type="checkbox" checked onclick="dijit.byId(this.id).set('checked',true);return false;"><br>
+		before click: checked=true,&nbsp; onclick handler: checked=true&nbsp;  and return true,&nbsp;  after click:
+			<input aria-label="t104" id="t104" type="checkbox" checked onclick="this.checked=true;return true;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w104" id="w104" type="checkbox" checked onclick="dijit.byId(this.id).set('checked',true);return true;"><br>
+		before click: checked=false, onclick handler: checked=false and return false, after click:
+			<input aria-label="t105" id="t105" type="checkbox" onclick="this.checked=false;return false;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w105" id="w105" type="checkbox" onclick="dijit.byId(this.id).set('checked',false);return false;"><br>
+		before click: checked=false, onclick handler: checked=false and return true,&nbsp;  after click:
+			<input aria-label="t106" id="t106" type="checkbox" onclick="this.checked=false;return true;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w106" id="w106" type="checkbox" onclick="dijit.byId(this.id).set('checked',false);return true;"><br>
+		before click: checked=false, onclick handler: checked=true&nbsp;  and return false, after click:
+			<input aria-label="t107" id="t107" type="checkbox" onclick="this.checked=true;return false;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w107" id="w107" type="checkbox" onclick="dijit.byId(this.id).set('checked',true);return false;"><br>
+		before click: checked=false, onclick handler: checked=true&nbsp;  and return true,&nbsp;  after click:
+			<input aria-label="t108" id="t108" type="checkbox" onclick="this.checked=true;return true;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w108" id="w108" type="checkbox" onclick="dijit.byId(this.id).set('checked',true);return true;"><br>
+		before click: checked=true,&nbsp; onclick handler: checked=false and no return, after click:
+			<input aria-label="t111" aria-label="t111" id="t111" type="checkbox" checked onclick="this.checked=false;return;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w111" aria-label="w111" id="w111" type="checkbox" checked onclick="dijit.byId(this.id).set('checked',false);return;"><br>
+		before click: checked=true,&nbsp; onclick handler: checked=true&nbsp;  and no return, after click:
+			<input aria-label="t113" aria-label="t113" id="t113" type="checkbox" checked onclick="this.checked=true;return;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w113" aria-label="w113" id="w113" type="checkbox" checked onclick="dijit.byId(this.id).set('checked',true);return;"><br>
+		before click: checked=false, onclick handler: checked=false and no return, after click:
+			<input aria-label="t115" aria-label="t115" id="t115" type="checkbox" onclick="this.checked=false;return;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w115" aria-label="w115" id="w115" type="checkbox" onclick="dijit.byId(this.id).set('checked',false);return;"><br>
+		before click: checked=false, onclick handler: checked=true&nbsp;  and no return, after click:
+			<input aria-label="t117" aria-label="t117" id="t117" type="checkbox" onclick="this.checked=true;return;">
+			<input data-dojo-type="dijit/form/CheckBox" aria-label="w117" aria-label="w117" id="w117" type="checkbox" onclick="dijit.byId(this.id).set('checked',true);return;"><br>
+	</div>
+</body>
+</html>

@@ -8,10 +8,15 @@
     }
 
     window.Sandcastle = {
-        'bucket' : bucket,
-        'declare' : function () {},
-        'highlight' : function () {},
-        'registered' : []
+        bucket : bucket,
+        declare : function() {
+        },
+        highlight : function() {
+        },
+        registered : [],
+        finishedLoading : function() {
+            document.body.className = document.body.className.replace(/(?:\s|^)sandcastle-loading(?:\s|$)/, ' ');
+        }
     };
 
     if (window.location.protocol === 'file:') {

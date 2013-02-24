@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Programmatic Repeat example, using a store with save, commit and reset</title>
+
+		<style>
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+			@import "css/app-format.css";
+		</style>
+
+		<!-- required: the default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+		<!-- required: dojo.js -->
+		<script src="../../../dojo/dojo.js" type="text/javascript" data-dojo-config="parseOnLoad: 0, isDebug: 1, mvc:{debugBindings:1}"></script>
+		<script type="text/javascript" src="./helpers.js"></script>
+
+		<script type="text/javascript">
+			require([
+				"dojo/_base/array",
+				"dojo/_base/declare",
+				"dojo/_base/lang",
+				"dojo/dom",
+				"dojo/parser",
+				"dojo/Stateful",
+				"dojo/store/JsonRest",
+				"dijit/registry",
+				"dijit/_WidgetBase",
+				"dojox/mvc/at",
+				"dojox/mvc/getStateful",
+				"dojox/mvc/EditStoreRefController",
+				"dojox/mvc/ListController",
+				"dojox/mvc/Repeat",
+				"dojox/mvc/StatefulArray",
+				"dijit/form/TextBox",
+				"dijit/form/Button",
+				"dojox/mvc/Group",
+				"dojo/domReady!"
+			], function(array, declare, lang, ddom, parser, Stateful, JsonRest, registry, _WidgetBase, at, getStateful, EditStoreRefController, ListController, Repeat, StatefulArray){
+
+				var ctrlClass = declare([_WidgetBase, EditStoreRefController, ListController], {
+					idProperty: "Serial",
+					store: new JsonRest({target: require.toUrl("dojox/mvc/tests/regression/_data/mvcRepeatData.json")}),
+					getStatefulOptions: {
+						getType: function(v){
+							return (v || {}).identifier ? "root" : lang.isArray(v) ? "array" : v !== null && v !== void 0 && {}.toString.call(v) == "[object Object]" ? "object" : "value";
+						},
+						getStatefulRoot: function(root){
+							return this.getStatefulArray(root.items);
+						},
+						getStatefulArray: function(a){
+							return new StatefulArray(array.map(a, function(item){ return getStateful(item, this); }, this));
+						},
+						getStatefulObject: function(o){
+							var stateful = new Stateful();
+							for(var s in o){
+								stateful[s] = getStateful(o[s], this);
+							}
+							return stateful;
+						},
+						getStatefulValue: function(v){
+							return v;
+						}
+					},
+					commitCurrent: function(){
+						var id = this.cursor[this.idProperty];
+						for(var i = 0; i < this.originalModel.length; i++){
+							if(this.originalModel[i][this.idProperty] == id){
+								this.originalModel.set(i, this.cloneModel(this.cursor));
+								break;
+							}
+						}
+						this.store.put(this.cursor);
+					}
+				});
+				(ctrl = (new ctrlClass({srcNodeRef: ddom.byId("detailsGroup"), cursorIndex: 0}))).startup();
+
+				var repeatClass = declare("my.Repeat", Repeat, {
+					templateString: '<div class="row" data-dojo-type="dojox.mvc.Group" data-dojo-props="target: at(\'rel:\', \'${this.index}\')">'
+					 + '<label class="cell">Name:</label>'
+					 + '<input id="${id}_textbox${index}" class="cell" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at(\'rel:\', \'First\')"></input>'
+					 + '<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){ ctrl.set(\'cursorIndex\', \'${this.index}\'); }">Details</button>'
+					 + '</div>'
+				});
+
+				(new repeatClass({children: at(ctrl, "model")}).placeAt('repeat2')).startup();
+
+				parser.parse();
+
+				ctrl.queryStore({});
+			});
+		</script>
+	</head>
+	<body class="claro">
+		<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<div id="wrapper">
+			<div id="header">
+				<div id="navigation">
+				</div>
+				<div id="headerInsert">
+					<h1>Master Detail Example - With repeat container, using a store, with save, commit and reset.</h1>
+				</div>
+			</div>
+			<div id="main">
+				<div id="leftNav"></div>
+				<div id="mainContent">
+					<div id="searchBanner">Search Results for term: </div>
+					<table>
+						<tbody>
+							<tr>
+								<td>
+									<div>
+										<div>Programatic Repeat using my.Repeat and its templateString: </div>
+										<div id="repeat2"></div>
+									</div>
+								</td>
+								<td>
+									<div>
+										<div>Declarative Repeat using my.Repeat does not pass templateString: </div>
+										<div id="repeatId2" data-dojo-type="my.Repeat" data-dojo-props="children: at(ctrl, 'model')"></div>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<div class="spacer"></div>
+					<div id="detailsBanner">Details for selected index:</div>
+					<div id="detailsGroup">
+						<div class="row">
+							<label class="cell" for="firstInput">First Name:</label>
+							<input class="cell" id="firstInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'First')"></input>
+						</div>
+						<div class="row">
+							<label class="cell" for="lastInput">Last Name:</label>
+							<input class="cell" id="lastInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Last')"></input>
+						</div>
+						<div class="row">
+							<label class="cell" for="locationInput">Location:</label>
+							<input class="cell" id="locationInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Location')"></input>
+						</div>
+						<div class="row">
+							<label class="cell" for="officeInput">Office:</label>
+							<input class="cell" id="officeInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Office')"></input>
+						</div>
+						<div class="row">
+							<label class="cell" for="emailInput">Email:</label>
+							<input class="cell" id="emailInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Email')"></input>
+						</div>
+						<div class="row">
+							<label class="cell" for="telInput">Telephone:</label>
+							<input class="cell" id="telInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Tel')"></input>
+						</div>
+						<div class="row">
+							<label class="cell" for="faxInput">Fax:</label>
+							<input class="cell" id="faxInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Fax')"></input>
+						</div>
+						<div class="row">
+						<div class="spacer"></div>
+							<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){ ctrl.commitCurrent(); }">Save Item</button>
+							<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){ ctrl.commit();}">Commit All</button>
+							<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){ ctrl.reset(); }">Reset to last saved</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

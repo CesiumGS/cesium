@@ -1,12 +1,16 @@
 /*global defineSuite*/
 defineSuite([
          'Core/PolylinePipeline',
+         'Core/Cartesian3',
          'Core/Cartographic',
-         'Core/Ellipsoid'
+         'Core/Ellipsoid',
+         'Core/Transforms'
      ], function(
          PolylinePipeline,
+         Cartesian3,
          Cartographic,
-         Ellipsoid) {
+         Ellipsoid,
+         Transforms) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -16,7 +20,7 @@ defineSuite([
         var p2 = new Cartographic.fromDegrees(-80.2264393, 25.7889689);    // Miami, FL
         var positions = [ellipsoid.cartographicToCartesian(p1),
                          ellipsoid.cartographicToCartesian(p2)];
-        var segments = PolylinePipeline.wrapLongitude(ellipsoid, positions);
+        var segments = PolylinePipeline.wrapLongitude(positions);
         expect(segments.length).toEqual(1);
         expect(segments[0].length).toEqual(2);
     });
@@ -27,7 +31,20 @@ defineSuite([
         var p2 = new Cartographic.fromDegrees(2.0, 25.0);
         var positions = [ellipsoid.cartographicToCartesian(p1),
                          ellipsoid.cartographicToCartesian(p2)];
-        var segments = PolylinePipeline.wrapLongitude(ellipsoid, positions);
+        var segments = PolylinePipeline.wrapLongitude(positions);
+        expect(segments.length).toEqual(2);
+        expect(segments[0].length).toEqual(2);
+        expect(segments[1].length).toEqual(2);
+    });
+
+    it('wrapLongitude breaks polyline into segments with model matrix', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var center = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(-179.0, 39.0));
+        var matrix = Transforms.eastNorthUpToFixedFrame(center, ellipsoid);
+
+        var positions = [ new Cartesian3(0.0, 0.0, 0.0),
+                          new Cartesian3(0.0, 100000000.0, 0.0)];
+        var segments = PolylinePipeline.wrapLongitude(positions, matrix);
         expect(segments.length).toEqual(2);
         expect(segments[0].length).toEqual(2);
         expect(segments[1].length).toEqual(2);

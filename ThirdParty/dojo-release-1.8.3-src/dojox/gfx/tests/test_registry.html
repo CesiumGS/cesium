@@ -1,0 +1,116 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>GFX Test: Test the shape registry</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+		<script type="text/javascript" src="../../../util/doh/runner.js"></script>
+		<script type="text/javascript">
+			dojo.require("doh.runner");
+			dojo.require("dojox.gfx");
+			dojo.require("dojox.gfx.shape");
+		</script>
+		<script type="text/javascript">
+			dojo.addOnLoad(function(){
+				var drawing;
+				var ta;
+				doh.register("GFX: Registry Tests", [
+					{
+						name: "dojox.gfx.shape.register",
+						timeout: 1000,
+						runTest: function(t){
+							var obj = {
+								declaredClass: 'module.sub.foo'
+							};
+							// register
+							var id = dojox.gfx.shape.register(obj);
+							t.t(dojo.isString(id) && id.length>0, "checking register() return value.");
+							var ret = dojox.gfx.shape.byId(id);
+							t.t(ret === obj, "Checking byId() after register().");
+							var obj2 = {declaredClass: 'module.sub.foo'};
+							var ret2 = dojox.gfx.shape.register(obj2);
+							t.t(dojo.isString(ret2) && ret2.length>0, "checking register() with same declaredClass.");
+							t.t(ret2 != id, "checking _uid unicity.");
+							//dispose
+							obj.getUID =function(){return id;};
+							dojox.gfx.shape.dispose(obj);
+							ret = dojox.gfx.shape.byId(id);
+							t.t(!ret, "Checking dojox.gfx.shape.dispose().");
+							// optional recursive dispose
+						}
+					},
+					{
+						name:"recursive dispose",
+						runTest: function(t){
+
+							var obj = {
+								declaredClass: 'module.sub.foo',
+								children:[
+									{ declaredClass: "foo.bar" },
+									{ declaredClass: "bar.foo" }
+								]
+							};
+							var id1 = dojox.gfx.shape.register(obj);
+							obj.getUID =function(){return id1;};
+							var id2 = dojox.gfx.shape.register(obj.children[0]);
+							obj.children[0].getUID =function(){return id2;};
+							var id3 = dojox.gfx.shape.register(obj.children[1]);
+							obj.children[1].getUID =function(){return id3;};
+							dojox.gfx.shape.dispose(obj, true);
+							var ret = dojox.gfx.shape.byId(id1);
+							t.t(!ret, "Shape id1 not disposed (recursive dispose).");
+							ret = dojox.gfx.shape.byId(id2);
+							t.t(!ret, "Child id2 not disposed (recursive dispose).");
+							ret = dojox.gfx.shape.byId(id3);
+							t.t(!ret, "Child id3 not disposed (recursive dispose).");
+						}
+					},
+					{
+						name: "shape registration",
+						timeout: 1000,
+						setUp: function(){
+							if (!drawing) {
+								var dn = dojo.byId("gfxObject");
+								drawing = dojox.gfx.createSurface(dn, 300, 300);
+							}
+						},
+						runTest: function(t){
+							var dic={};
+							dojo.forEach(["Group", "Rect", "Ellipse", "Circle", "Line", "Polyline", "Image", "Text", "Path", "TextPath"], function(name, idx, values){
+								// no TextPath in Silverlight
+								if (idx == values.length-1 && dojox.gfx.renderer=='silverlight')
+									return;
+								var s = drawing["create"+name]();
+								t.t(s.getUID() && s.getUID().length>0,"Checking automatic shape registration for "+name);
+								var o = dojox.gfx.shape.byId(s.getUID());
+								t.t(o === s, "Checking dojox.gfx.shape.byId()");
+								// rawNode binding
+								var p = s.rawNode.tag ? 'tag' : '__gfxObject__';
+								t.t(s.rawNode[p] == s.getUID(),"Checking rawNode<->gfx binding.");
+								dic[name] = s.getUID();
+							});
+							// successive registration
+							dojo.forEach(["Group", "Rect", "Ellipse", "Circle", "Line", "Polyline", "Image", "Text", "Path", "TextPath"], function(name, idx, values){
+								// no TextPath in Silverlight
+								if (idx == values.length-1 && dojox.gfx.renderer=='silverlight')
+									return;
+								var s = drawing["create"+name]();
+								var id = s.getUID();
+								t.t(dic[name] != id, "Checking unicity.");
+							});
+						}
+					}
+				]);
+				doh.run();
+			});
+			</script>
+	</head>
+	<body class="tundra">
+		<h1>Test of GFX registry functions</h1>
+		<div id="gfxObject"></div>
+	</body>
+</html>

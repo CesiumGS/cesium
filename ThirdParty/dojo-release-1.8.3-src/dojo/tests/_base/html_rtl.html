@@ -1,0 +1,158 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html dir="rtl">
+	<head>
+		<title>testing Core HTML/DOM/CSS/Style utils</title>
+		<style type="text/css">
+			@import "../../resources/dojo.css";
+		</style>
+		<script type="text/javascript" src="../../dojo.js" data-dojo-config="isDebug:true"></script>
+		<script type="text/javascript">
+			require(["dojo", "doh", "dojo/sniff", "dojo/domReady!"], function(dojo, doh, has){
+			
+				doh.register("rtl", 
+					[
+						{
+							name: "coordsWithScrolling",
+							timeout: 1000,
+							runTest: function(t){
+								var d = new doh.Deferred();
+								setTimeout(d.getTestErrback(function(){ // allow browsers time to return the scroll point back to the last position
+									scrollTo(100, 50); // scroll a little
+									scrollBy(-50, 0); // net 50px horizontal movement: back-n-forth scrolling helps with different browsers
+									setTimeout(d.getTestCallback(function(){ // time to scroll
+										var pos = dojo.position('rect100', true);
+										t.is(100, pos.y, "y pos should be 100 after vertical scroll");
+										t.is(100, pos.x, "x pos should be 100 after horizontal scroll");
+									}), 100);
+								}), 100);
+								return d;
+							}
+						},
+
+						{
+							name: "eventClientXY_IE",
+							timeout: 1000,
+							runTest: function(t){
+								if(!has("ie")){ return; }
+
+								var
+								d = new doh.Deferred(),
+								rect = dojo.byId("rect100"),
+								handler = dojo.connect(rect.offsetParent, "onclick", null,
+									d.getTestErrback(function(e){
+										// move the rectangle to the mouse point
+										dojo.disconnect(handler);
+										rect.style.left = e.pageX + "px";
+										rect.style.top = e.pageY + "px";
+										handler = dojo.connect(rect, 'ondblclick', null,
+											d.getTestCallback(function(e){
+												var offsetX = (event||e).offsetX,
+													offsetY = (event||e).offsetY;
+												dojo.disconnect(handler);
+												t.is(0, offsetX);
+												t.is(0, offsetY);
+											}));
+										setTimeout(d.getTestErrback(function(){
+											if(!document.createEvent){
+												rect.fireEvent('ondblclick');
+											}else{
+												var clickEvent = document.createEvent("MouseEvent");
+												clickEvent.initMouseEvent("dblclick", true, true, window, 0,0,0,0,0,0,0,0,0,0,null);
+												rect.dispatchEvent(clickEvent);
+											}
+										}), 100); // time to move rect to cursor position
+									}));
+								setTimeout(d.getTestErrback(function(){
+									if(!document.createEvent){
+										rect.offsetParent.fireEvent('onclick');
+									}else{
+										var clickEvent = document.createEvent("MouseEvent");
+										clickEvent.initMouseEvent("click", true, true, window, 0,0,0,0,0,0,0,0,0,0,null);
+										rect.offsetParent.dispatchEvent(clickEvent);
+									}
+
+								}), 100); // time to finish any pre-scrolling
+								return d;
+							}
+						},
+
+						{
+							name: "testScrolledPosition",
+							timeout: 10000,
+							runTest: function(t){
+								var d = new doh.Deferred(),
+									control = dojo.doc.getElementById('control');
+								control.resultReady = d.getTestCallback(function(){
+									t.is("EQUAL", control.testResult);
+								});
+								runScrollingTest(control);
+								return d;
+							}
+						}
+					]
+				);
+
+				// test to make sure position() works with a variety of scrollbars
+				dojo.forEach(["None", "Horz", "Vert", "Both"], function(scroll){
+					dojo.forEach(["Quirks", "Strict"], function(doctype){
+						dojo.forEach(["Small", "Large"], function(size){
+							var id = "scrolling" + doctype + "Iframe" + scroll + size;
+							doh.register(id, {
+								name: "test_" + id,
+								timeout: 4000,
+								runTest: function(t){
+									var d = new doh.Deferred(),
+										s = document.createElement('SPAN');
+									s.loaded = function(iframe){
+										// resultReady is called from inside the iframe
+										iframe.resultReady = d.getTestCallback(function(){
+											t.is('EQUAL', iframe.testResult);
+										});
+										iframe.runScrollingTest(iframe);
+									};
+									s.innerHTML = '<iframe class="iframeTest" id="' + id + '" src="scrolling' + doctype + 'Iframe.html?rtl&' + scroll + '&' + size +'" frameborder="0" onload="this.parentNode.loaded(this)" style="background-color:gray;" allowtransparency></iframe>';
+									dojo.byId("iframeContainer").appendChild(s);
+									return d;
+								}
+							});
+						});
+					});
+				});
+
+				doh.runOnLoad();
+			});
+		</script>
+		<style type="text/css">
+			#rect100 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 100px;
+				top: 100px;
+				width: 100px;
+				height: 100px;
+				border: 0px;
+				padding: 0px;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			.iframeTest {
+				border: 5px solid black;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>testing Core HTML/DOM/CSS/Style utils</h1>
+		<div id="rect100">
+			100px rect, abs, 
+			mouse point is at top-left after the test "eventClientXY"
+		</div>
+		<div id="rect_vert" style="height:1600px;">show vertical scrollbar</div>
+		<div id="rect_horz" style="width:1600px;position:relative;right:-200px;">show horizonal scrollbar</div>
+		<br>
+		<script type="text/javascript" src="scrollingIframe.js"></script>
+		<div id="iframeContainer"></div>
+	</body>
+</html>

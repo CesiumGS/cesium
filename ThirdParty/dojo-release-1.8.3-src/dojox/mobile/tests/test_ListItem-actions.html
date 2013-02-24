@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>ListItem Actions</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/connect",
+			"dojo/_base/window",
+			"dojo/dom-construct",
+			"dojo/ready",
+			"dijit/registry",
+			"dojo/data/ItemFileReadStore",
+			"dojox/mobile/ProgressIndicator",
+			"dojox/mobile/ListItem",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/ScrollableView",
+			"dojox/mobile/RoundRectDataList",
+			"dojox/mobile/ContentPane"
+		], function(connect, win, domConstruct, ready, registry, ItemFileReadStore, ProgressIndicator, ListItem, parser){
+			var static_data = { 
+				items: [ 
+					{label: "Apple", moveTo: "home", icon: "images/i-icon-1.png"},
+					{label: "Banana", moveTo: "home", icon: "images/i-icon-2.png"},
+					{label: "Cherry", moveTo: "home", icon: "images/i-icon-3.png"},
+					{label: "Grape", moveTo: "home", icon: "images/i-icon-4.png"},
+					{label: "Kiwi", moveTo: "home", icon: "images/i-icon-5.png"},
+					{label: "Lemon", moveTo: "home", icon: "images/i-icon-6.png"},
+					{label: "Melon", moveTo: "home", icon: "images/i-icon-7.png"},
+					{label: "Orange", moveTo: "home", icon: "images/i-icon-8.png"},
+					{label: "Peach", moveTo: "home", icon: "images/i-icon-9.png"}
+				]
+			};
+
+			// Update existing view content and make transition
+			myAction1 = function(){
+				var rect = registry.byId("rect1");
+				rect.containerNode.innerHTML = new Date();
+				this.transitionTo("view1");
+			}
+
+			// Load content into existing view and make transition
+			myAction2 = function(){
+				var view2 = registry.byId("view2"); // destination view
+				var listItem = this;
+				var prog = ProgressIndicator.getInstance();
+				win.body().appendChild(prog.domNode);
+				prog.start();
+				view2.destroyDescendants();
+
+				/*
+				var url = "http://..."; // or var url = listItem.url;
+				dojo.xhrGet({
+					url: url,
+					handleAs: "text",
+					load: function(response, ioArgs){
+						var container = view2.containerNode;
+						container.innerHTML = response;
+						parser.parse(container);
+						prog.stop();
+						listItem.transitionTo("view2");
+					}
+				});
+				*/
+				setTimeout(function(){ // network latency simulation
+					var markup = '<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props=\'back:"Home", moveTo:"home"\'>Loaded View 1</h1>' +
+						'<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props=\'shadow:true\'>Thank you!</div>';
+					var container = view2.containerNode;
+					container.innerHTML = markup;
+					parser.parse(container);
+					prog.stop();
+					listItem.transitionTo("view2");
+				}, 5000);
+			}
+
+			// Make transition and load content into existing view
+			myAction3 = function(){
+				var view3 = registry.byId("view3"); // destination view
+				var listItem = this;
+				var prog = ProgressIndicator.getInstance();
+				win.body().appendChild(prog.domNode);
+				prog.start();
+				view3.destroyDescendants();
+				listItem.transitionTo("view3");
+
+				/*
+				var url = "http://..."; // or var url = listItem.url;
+				dojo.xhrGet({
+					url: url,
+					handleAs: "text",
+					load: function(response, ioArgs){
+						var container = view3.containerNode;
+						container.innerHTML = response;
+						parser.parse(container);
+						prog.stop();
+					}
+				});
+				*/
+				setTimeout(function(){ // network latency simulation
+					var markup = '<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props=\'back:"Home", moveTo:"home"\'>Loaded View 2</h1>' +
+						'<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props=\'shadow:true\'>Gracias!</div>';
+					var container = view3.containerNode;
+					container.innerHTML = markup;
+					parser.parse(container);
+					prog.stop();
+				}, 5000);
+			}
+
+			// Create a new view and make transition
+			myAction4 = function(){
+				if(!registry.byId("view4")){
+					var view4 = new dojox.mobile.View({
+						id: "view4",
+						selected: true
+					}, domConstruct.create("DIV", null, win.body()));
+					view4.startup();
+
+					var heading1 = new dojox.mobile.Heading({
+						label: "Dynamic View",
+						back: "Home",
+						moveTo: "home"
+					});
+					heading1.placeAt(view4.containerNode);
+					heading1.startup();
+
+					var categ1 = new dojox.mobile.RoundRectCategory({
+						label: "Documents"
+					});
+					categ1.placeAt(view4.containerNode);
+					categ1.startup();
+
+					var list1 = new dojox.mobile.RoundRectList();
+					list1.placeAt(view4.containerNode);
+					list1.startup();
+
+					var counter = 4;
+					for(var i = 1; i <= 3; i++){
+						var item1 = new dojox.mobile.ListItem({
+							icon: "images/i-icon-"+i+".png",
+							label: "Document 000"+counter
+						});
+						item1.placeAt(list1.containerNode);
+						item1.startup();
+						counter++;
+					}
+				}
+				this.transitionTo("view4");
+			}
+
+			// Update DataList
+			myAction5 = function(){
+				var list1 = registry.byId("list1");
+				if(!list1.store){
+					var store1 = new ItemFileReadStore({data: static_data});
+					list1.setStore(store1, {label: '*e'}); // items whose label ends with 'e'
+				}
+				this.transitionTo("view5");
+			}
+
+			// Partial Update using dojox.mobile.ContentPane
+			myAction6 = function(){
+				var pane1 = registry.byId("pane1");
+				if(!pane1.domNode.innerHTML){ // nothing has been loaded yet
+					connect.connect(pane1, "onLoad", this, function(){
+						// onLoad fires when the content is ready
+						this.transitionTo("view6");
+					});
+					pane1.set("href", "data/fragment1.html");
+				}else{
+					this.transitionTo("view6");
+				}
+			}
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="home" data-dojo-type="dojox.mobile.View" data-dojo-props='selected:true'>
+		<h1 data-dojo-type="dojox.mobile.Heading">Action and Transition</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">ListItem Actions</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"#", transition:"slide", onClick:myAction1'>
+				Update View
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png", moveTo:"#", transition:"slide", onClick:myAction2'>
+				Load and Move (async)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"#", transition:"slide", onClick:myAction3'>
+				Move and Load (async)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-4.png", moveTo:"#", transition:"slide", onClick:myAction4'>
+				Create View
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-5.png", moveTo:"#", transition:"slide", onClick:myAction5'>
+				Data List
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-6.png", moveTo:"#", transition:"slide", onClick:myAction6'>
+				Partial Update (async)
+			</li>
+		</ul>
+	</div>
+
+	<div id="view1" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"home"'>Current Status</h1>
+		Local Time:
+		<div id="rect1" data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'></div>
+	</div>
+
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+	</div>
+
+	<div id="view3" data-dojo-type="dojox.mobile.View">
+	</div>
+
+	<div id="view5" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">RoundRectDataList</h1>
+		<ul id="list1" data-dojo-type="dojox.mobile.RoundRectDataList"></ul>
+	</div>
+
+	<div id="view6" data-dojo-type="dojox.mobile.ScrollableView">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"home", fixed:"top"'>Partial Update</h1>
+		Dynamic Content:
+		<div id="pane1" data-dojo-type="dojox.mobile.ContentPane"></div>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"home", transitionDir:-1'>
+				Home
+			</li>
+		</ul>
+	</div>
+</body>
+</html>

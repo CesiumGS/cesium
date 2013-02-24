@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Dijit Tree Custom Label Test</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dojo.data.ItemFileReadStore");
+		dojo.require("dijit.Tree");
+		dojo.require("dijit.tree.ForestStoreModel");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+		
+		dojo.ready(function(){
+			doh.register("Test custom label",
+				[
+					{
+						name: "testLabels",
+						timeout: 1000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							setTimeout(d.getTestCallback(function(){
+								var nameTree = dijit.byId("nameTree");
+								var nameChildren = nameTree.rootNode.getChildren();
+								doh.is("Arizona", nameChildren[3].label);
+								doh.is("Colorado", nameChildren[9].label);
+								
+								var codeTree = dijit.byId("codeTree");
+								var codeChildren = codeTree.rootNode.getChildren();
+								doh.is("AZ", codeChildren[3].label);
+								doh.is("CO", codeChildren[9].label);
+								
+								var customTree = dijit.byId("customTree");
+								var customChildren = customTree.rootNode.getChildren();
+								doh.is("Arizona (AZ)", customChildren[3].label);
+								doh.is("Colorado (CO)", customChildren[9].label);
+							}), 500);
+							
+							return d;
+						}
+					}
+				]
+			);
+
+			doh.run();
+		});
+
+	</script>
+</head>
+<body class="claro" role="main">
+
+	<h1 class="testTitle">Dijit Tree Custom Label Test</h1>
+
+	<div data-dojo-id="store" data-dojo-type="dojo/data/ItemFileReadStore" data-dojo-props='url:"../_data/states.json"'></div>
+
+	<h2>Standard label (state names)</h2>
+	<div data-dojo-id="nameModel" data-dojo-type="dijit/tree/ForestStoreModel" data-dojo-props='store:store, rootLabel:"States"'></div>
+	<div id="nameTree" data-dojo-type="dijit/Tree" data-dojo-props='model:nameModel, openOnClick:true'></div>
+
+	<h2>LabelAttr (state abbreviation)</h2>
+	<div data-dojo-id="codeModel" data-dojo-type="dijit/tree/ForestStoreModel" data-dojo-props='store:store, rootLabel:"States", labelAttr:"abbreviation"'></div>
+	<div id="codeTree" data-dojo-type="dijit/Tree" data-dojo-props='model:codeModel, openOnClick:true'></div>
+
+	<h2>Custom label via callback</h2>
+	<div data-dojo-id="customModel" data-dojo-type="dijit/tree/ForestStoreModel" data-dojo-props='store:store'>
+		<script type="dojo/method" data-dojo-event="getLabel" data-dojo-args="item">
+			if(item.root){ return "States"; }
+			return (store.getLabel(item) + " (" + store.getIdentity(item) + ")");
+		</script>
+	</div>
+	<div id="customTree" data-dojo-type="dijit/Tree" data-dojo-props='model:customModel, openOnClick:true'></div>
+
+
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="A starting point for creating Cesium applications (uses Bing imagery).">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.2/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source'
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+<div>Click on the Cesium display to start.</div>
+<div>w/s - move forward/backward</div>
+<div>a/d - move left/right</div>
+<div>q/e - move up/down</div>
+<div>left mouse button down plus mouse move changes the look direction</div>
+</div>
+<script id="cesium_sandcastle_script">
+require(['Cesium'], function(Cesium) {
+    "use strict";
+
+    //A real application should require only the subset of modules that
+    //are actually used, instead of requiring the Cesium module, which
+    //includes everything.
+
+    var canvas = document.createElement('canvas');
+    canvas.className = 'fullSize';
+    document.getElementById('cesiumContainer').appendChild(canvas);
+
+    canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
+    canvas.onclick = function() {
+        canvas.focus();
+    };
+
+    var scene = new Cesium.Scene(canvas);
+
+    scene.skyAtmosphere = new Cesium.SkyAtmosphere();
+
+    var skyBoxBaseUrl = '../../../Source/Assets/Textures/SkyBox/tycho2t3_80';
+    scene.skyBox = new Cesium.SkyBox({
+        positiveX : skyBoxBaseUrl + '_px.jpg',
+        negativeX : skyBoxBaseUrl + '_mx.jpg',
+        positiveY : skyBoxBaseUrl + '_py.jpg',
+        negativeY : skyBoxBaseUrl + '_my.jpg',
+        positiveZ : skyBoxBaseUrl + '_pz.jpg',
+        negativeZ : skyBoxBaseUrl + '_mz.jpg'
+    });
+
+    var primitives = scene.getPrimitives();
+
+    // Bing Maps
+    var bing = new Cesium.BingMapsImageryProvider({
+        url : 'http://dev.virtualearth.net',
+        mapStyle : Cesium.BingMapsStyle.AERIAL,
+        // Some versions of Safari support WebGL, but don't correctly implement
+        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+    });
+
+    var ellipsoid = Cesium.Ellipsoid.WGS84;
+    var centralBody = new Cesium.CentralBody(ellipsoid);
+    centralBody.getImageryLayers().addImageryProvider(bing);
+
+    primitives.setCentralBody(centralBody);
+
+    var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
+
+    // disable the default event handlers
+    scene.getScreenSpaceCameraController().enableRotate = false;
+    scene.getScreenSpaceCameraController().enableTranslate = false;
+    scene.getScreenSpaceCameraController().enableZoom = false;
+    scene.getScreenSpaceCameraController().enableTilt = false;
+    scene.getScreenSpaceCameraController().enableLook = false;
+
+    var startMousePosition;
+    var mousePosition;
+    var flags = {
+        looking : false,
+        moveForward : false,
+        moveBackward : false,
+        moveUp : false,
+        moveDown : false,
+        moveLeft : false,
+        moveRight : false
+    };
+
+    function animate() {
+        var camera = scene.getCamera();
+        var controller = camera.controller;
+
+        if (flags.looking) {
+            var width = canvas.clientWidth;
+            var height = canvas.clientHeight;
+
+            // Coordinate (0.0, 0.0) will be where the mouse was clicked.
+            var x = (mousePosition.x - startMousePosition.x) / width;
+            var y = -(mousePosition.y - startMousePosition.y) / height;
+
+            var lookFactor = 0.05;
+            controller.lookRight(x * lookFactor);
+            controller.lookUp(y * lookFactor);
+        }
+
+        // Change movement speed based on the distance of the camera to the surface of the ellipsoid.
+        var cameraHeight = ellipsoid.cartesianToCartographic(camera.position).height;
+        var moveRate = cameraHeight / 100.0;
+
+        if (flags.moveForward) {
+            controller.moveForward(moveRate);
+        }
+        if (flags.moveBackward) {
+            controller.moveBackward(moveRate);
+        }
+        if (flags.moveUp) {
+            controller.moveUp(moveRate);
+        }
+        if (flags.moveDown) {
+            controller.moveDown(moveRate);
+        }
+        if (flags.moveLeft) {
+            controller.moveLeft(moveRate);
+        }
+        if (flags.moveRight) {
+            controller.moveRight(moveRate);
+        }
+    }
+
+    function tick() {
+        scene.initializeFrame();
+        animate();
+        scene.render();
+        Cesium.requestAnimationFrame(tick);
+    }
+    tick();
+
+    var handler = new Cesium.ScreenSpaceEventHandler(canvas);
+
+    handler.setInputAction(function(movement) {
+        flags.looking = true;
+        mousePosition = startMousePosition = Cesium.Cartesian3.clone(movement.position);
+    }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+
+    handler.setInputAction(function(movement) {
+        mousePosition = movement.endPosition;
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+    handler.setInputAction(function(position) {
+        flags.looking = false;
+    }, Cesium.ScreenSpaceEventType.LEFT_UP);
+
+    function getFlagForKeyCode(keyCode) {
+        switch (keyCode) {
+        case 'W'.charCodeAt(0):
+            return 'moveForward';
+        case 'S'.charCodeAt(0):
+            return 'moveBackward';
+        case 'Q'.charCodeAt(0):
+            return 'moveUp';
+        case 'E'.charCodeAt(0):
+            return 'moveDown';
+        case 'D'.charCodeAt(0):
+            return 'moveRight';
+        case 'A'.charCodeAt(0):
+            return 'moveLeft';
+        default:
+            return undefined;
+        }
+    }
+
+    document.addEventListener('keydown', function(e) {
+        var flagName = getFlagForKeyCode(e.keyCode);
+        if (typeof flagName !== 'undefined') {
+            flags[flagName] = true;
+        }
+    }, false);
+
+    document.addEventListener('keyup', function(e) {
+        var flagName = getFlagForKeyCode(e.keyCode);
+        if (typeof flagName !== 'undefined') {
+            flags[flagName] = false;
+        }
+    }, false);
+
+    // Prevent right-click from opening a context menu.
+    canvas.oncontextmenu = function() {
+        return false;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Example resize handler
+
+    var onResize = function() {
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+
+        if (canvas.width === width && canvas.height === height) {
+            return;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        scene.getCamera().frustum.aspectRatio = width / height;
+    };
+    window.addEventListener('resize', onResize, false);
+    onResize();
+
+    Sandcastle.finishedLoading();
+});
+</script>
+</body>
+</html>

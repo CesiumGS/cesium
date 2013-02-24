@@ -1,0 +1,5 @@
+define(
+({
+	insertEntity: "Inserisci simbolo"
+})
+);

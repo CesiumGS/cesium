@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>TabBar - syncWithViews</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','TabBar']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/ScrollableView",
+			"dojox/mobile/TabBar"
+		]);
+	</script>
+
+	<style>
+	html, body{
+		height: 100%;
+		overflow: hidden;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="featured" data-dojo-type="dojox.mobile.ScrollableView">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='fixed:"top"'>Featured</h1>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"categ"'>
+				Next View
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"updates", transitionDir:-1'>
+				Previous View
+			</li>
+		</ul>
+	</div>
+
+	<div id="categ" data-dojo-type="dojox.mobile.ScrollableView">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='fixed:"top"'>Category</h1>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"top25"'>
+				Next View
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"featured", transitionDir:-1'>
+				Previous View
+			</li>
+		</ul>
+	</div>
+
+	<div id="top25" data-dojo-type="dojox.mobile.ScrollableView">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='fixed:"top"'>Top 25</h1>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"search"'>
+				Next View
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"categ", transitionDir:-1'>
+				Previous View
+			</li>
+		</ul>
+	</div>
+
+	<div id="search" data-dojo-type="dojox.mobile.ScrollableView">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='fixed:"top"'>Search</h1>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"updates"'>
+				Next View
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"top25", transitionDir:-1'>
+				Previous View
+			</li>
+		</ul>
+	</div>
+
+	<div id="updates" data-dojo-type="dojox.mobile.ScrollableView">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='fixed:"top"'>Updates</h1>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"featured"'>
+				Next View
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='moveTo:"search", transitionDir:-1'>
+				Previous View
+			</li>
+		</ul>
+	</div>
+
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='fixed:"bottom", syncWithViews:true' style="border-bottom:none;">
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon1:"images/tab-icon-16.png", icon2:"images/tab-icon-16h.png", moveTo:"featured"'>Featured</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon1:"images/tab-icon-15.png", icon2:"images/tab-icon-15h.png", moveTo:"categ"'>Categories</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon1:"images/tab-icon-10.png", icon2:"images/tab-icon-10h.png", moveTo:"top25"'>Top 25</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon1:"images/tab-icon-11.png", icon2:"images/tab-icon-11h.png", moveTo:"search"'>Search</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='icon1:"images/tab-icon-13.png", icon2:"images/tab-icon-13h.png", moveTo:"updates"'>Updates</li>
+	</ul>
+</body>
+</html>

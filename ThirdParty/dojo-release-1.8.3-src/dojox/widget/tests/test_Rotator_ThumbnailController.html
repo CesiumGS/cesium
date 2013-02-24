@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>dojox.widget.rotator.ThumbnailController Test</title>
+	<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+
+	.rotator{
+		background-color:#fff;
+		border:solid 1px #e5e5e5;
+		width:500px;
+		height:375px;
+		overflow:hidden;
+	}
+	.rotator img{
+		background-color:#fff;
+		width:500px;
+		height:375px;
+		overflow:hidden;
+	}
+	.dojoxRotatorThumb{
+		display:inline-block;
+		width:240px;
+		height:180px;
+		margin:2px;
+	}
+	.dojoxRotatorThumb img{
+		width:240px;
+		height:180px;
+	}
+	.dojoxRotatorThumbSelected{
+		border:solid 2px #00f;
+		margin:0;
+	}
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, selectorEngine: 'acme'"></script>
+	<script type="text/javascript">
+		require([
+			"dojo/parser",
+			"dojo/domReady!",
+			"dojox/widget/AutoRotator",
+			"dojox/widget/rotator/Fade",
+			"dojox/widget/rotator/ThumbnailController"
+		], function(parser) {
+			parser.parse();
+		})
+	</script>
+</head>
+<body>
+
+	<h1 class="testTitle">dojox.widget.rotator.ThumbnailController Test</h1>
+	
+	<div class="test1">
+		
+		<div data-dojo-type="dojox/widget/AutoRotator" class="rotator"
+			 data-dojo-id="myRotator"
+			 data-dojo-props="duration: 1000, transition: 'dojox.widget.rotator.crossFade'">
+			<img src="../../image/tests/images/chris1_lg.jpg" thumbsrc="../../image/tests/images/chris1_sm.jpg" alt="Image 1"/>
+			<img src="../../image/tests/images/chris2_lg.jpg" thumbsrc="../../image/tests/images/chris2_sm.jpg" alt="Image 2"/>
+			<img src="../../image/tests/images/chris3_lg.jpg" thumbsrc="../../image/tests/images/chris3_sm.jpg" alt="Image 3"/>
+		</div>
+
+		<div data-dojo-type="dojox/widget/rotator/ThumbnailController"
+			 data-dojo-props="rotator: myRotator"></div>
+		
+	</div>
+	
+</body>
+</html>

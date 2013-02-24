@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Edge To Edge Data List Tests</title>
+<script type="text/javascript" src="../../deviceTheme.js"></script>
+<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+<script language="JavaScript" type="text/javascript">
+var IsEdgeToEdgeList = true;
+</script>
+<script type="text/javascript" src="DataListTests.js"></script>
+</head>
+<body>
+	<div id="view1" data-dojo-type="dojox.mobile.View" selected="true">
+		<h1>View 1</h1>
+		<ul id="view1-dataList1" data-dojo-type="dojox.mobile.EdgeToEdgeDataList" store="fruits11" query="{label: '*'}"></ul>
+		<div id="view1-dataList2"></div>
+		<ul id="view1-dataList3"></ul>
+	</div>
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<h1>View 2</h1>
+		<ul id="view2-dataList1" data-dojo-type="dojox.mobile.EdgeToEdgeDataList" store="fruits21" query="{label: '*'}"></ul>
+		<div id="view2-dataList2"></div>
+		<ul id="view2-dataList3"></ul>
+	</div>
+</body>
+</html>

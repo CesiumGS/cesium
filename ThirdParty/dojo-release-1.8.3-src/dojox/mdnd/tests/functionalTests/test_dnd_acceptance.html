@@ -1,0 +1,72 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<title>Dnd Acceptance Test</title>
+		
+		<link rel="stylesheet" type="text/css" href="../../../../dojo/resources/dojo.css" />
+		<link rel="stylesheet" type="text/css" href="../../../../dojo/tests/dnd/dndDefault.css" />
+		<link rel="stylesheet" type="text/css" href="../../../../dijit/themes/tundra/tundra.css" />
+		<link rel="stylesheet" type="text/css" href="../../../../dijit/tests/css/dijitTests.css" />
+		
+		<link rel="stylesheet" type="text/css" href="../../resources/dnd.css" />
+		<link rel="stylesheet" type="text/css" href="../resources/test_dnd.css" />
+		
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="parseOnLoad:true, isDebug:false"></script>
+	
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("dojox.mdnd.AreaManager");
+			dojo.require("dojox.mdnd.DropIndicator");
+			dojo.require("dojox.mdnd.dropMode.VerticalDropMode");
+			
+			var init = function(){
+				var m = dojox.mdnd.areaManager();
+				m.areaClass = "dndArea";
+				m.dragHandleClass = "dragHandle";
+				m.registerByClass();
+			};
+			
+			dojo.addOnLoad(init);
+		</script>
+	</head>
+	<body class="tundra">
+		<div id="main">
+			<h1>Drag and Drop</h1>
+			<div style="position:absolute; top:80px; left:50px;">
+				<h2>Accepts Type1 items</h2>
+				<div class="dndArea container" accept="type1">
+					<div class="dndItem" dndType="type1">
+						<div class="title dragHandle">Item Type 1</div>
+						<div>
+							<p>Proin aliquet accumsan nunc. Duis nec tortor.</p>
+						</div>
+					</div>
+					<div class="dndItem simpleBlock" dndType="type2">
+						<div class="title dragHandle">Item Type2</div>
+						<div>
+							<p>Proin aliquet accumsan nunc. Duis nec tortor.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div style="position:absolute; top:80px; left:350px;">
+				<h2>Accepts Type2 items</h2>
+				<div class="dndArea container" accept="type2">
+				</div>
+			</div>
+			
+			<div style="position:absolute; top:80px; left:650px;">
+				<h2>Accepts both Type1 & Type2 items</h2>
+				<div class="dndArea container" accept="type1, type2">
+					<div class="dndItem" dndType="type2, type1">
+						<div class="title dragHandle">Item Type 1 and Type 2</div>
+						<p>Proin aliquet accumsan nunc. Duis nec tortor.</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

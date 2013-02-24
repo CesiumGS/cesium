@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>MVC DOH Test</title>
+
+		<style>
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+			@import "css/app-format.css";
+		</style>
+
+		<!-- required: the default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+		<!-- required: dojo.js -->
+		<script src="../../../dojo/dojo.js" type="text/javascript" data-dojo-config="isDebug: 1, parseOnLoad: 0"></script>
+		<script type="text/javascript" src="./helpers.js"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner",
+				"dojo/parser",
+				"dojo/when",
+				"dijit/registry",
+				"dojox/mvc/getStateful",
+				"dojox/mvc/ModelRefController",
+				"dojox/mvc/tests/test_templatedWidget/myMvcTemplated",
+				"dojo/domReady!"
+			], function(doh, parser, when, registry, getStateful, ModelRefController, myMvcTemplated){
+				ctrl = new ModelRefController({model: getStateful([
+					{
+						First: "Anne",
+						Last: "Ackerman",
+						Location: "NY",
+						Office: "1S76",
+						Email: "a.a@test.com",
+						Tel: "123-764-8237",
+						Fax: "123-764-8228"
+					}, {
+						First: "Ben",
+						Last: "Beckham",
+						Location: "NY",
+						Office: "5N47",
+						Email: "b.b@test.com",
+						Tel: "123-764-8599",
+						Fax: "123-764-8600"
+					}, {
+						First: "John",
+						Last: "Jacklin",
+						Location: "CA",
+						Office: "6701",
+						Email: "j.j@test.com",
+						Tel: "408-764-1234",
+						Fax: "408-764-4321"
+					}
+				])});
+
+				when(parser.parse(), function(){
+					// should be able to verify all of the inputs
+					doh.register("Check values", [
+						{
+							name : "Input0",
+							runTest: function(){
+								doh.is("Anne", registry.byId("nameInput0").value, "nameInput0 should be Anne");
+								doh.is("Anne", registry.byId("anameInput0").value, "anameInput0 should be Anne");
+								doh.is("Anne", registry.byId("bnameInput0").value, "bnameInput0 should be Anne");
+								doh.is("Anne", registry.byId("9nameInput0").value, "9nameInput0 should be Anne");
+							}
+						}, {
+							name : "Input1",
+							runTest: function(){
+								doh.is("Ben", registry.byId("nameInput1").value, "nameInput1 should be Ben");
+								doh.is("Ben", registry.byId("anameInput1").value, "anameInput1 should be Ben");
+								doh.is("Ben", registry.byId("bnameInput1").value, "bnameInput1 should be Ben");
+								doh.is("Ben", registry.byId("9nameInput1").value, "9nameInput1 should be Ben");
+							}
+						}, {
+							name : "Input2",
+							runTest: function(){
+								doh.is("John", registry.byId("nameInput2").value, "nameInput2 should be John");
+								doh.is("John", registry.byId("anameInput2").value, "anameInput2 should be John");
+								doh.is("John", registry.byId("bnameInput2").value, "bnameInput2 should be John");
+								doh.is("John", registry.byId("9nameInput2").value, "9nameInput2 should be John");
+							}
+						}
+					]);
+
+					doh.run();
+				});
+			});
+		</script>
+	</head>
+	<body class="claro" style="background-image: url(./images/master_detail.png)">
+		<div id="wrapper">
+			<div id="main">
+				<div id="leftNav"></div>
+				<div id="mainContent">
+					<div>
+						Test exprchar. Widget template test uses exprchar of # and others for template:#{this.index} etc.
+					</div>
+					<br/>
+					<div id="container2" data-dojo-type="dojox.mvc.tests.test_templatedWidget.myMvcTemplated" data-dojo-props="ctrl: ctrl"></div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>ValuePicker Time Picker</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','ValuePicker']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/ValuePickerTimePicker"
+		], function(registry){
+			gotoToday = function(){
+				registry.byId("picker1").reset();
+			}
+			showSelectedValue = function(){
+				var w = registry.byId("picker1");
+				var values = w.get("values");
+				document.getElementById("msg").innerHTML =
+					values[0] + ":" + values[1];
+			}
+		});
+	</script>
+
+	<style>
+	#picker1 {
+		margin: 20px;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div data-dojo-type="dojox.mobile.View">
+		<div data-dojo-type="dojox.mobile.Heading">
+			<span data-dojo-type="dojox.mobile.ToolBarButton" onClick="showSelectedValue()" data-dojo-props='label:"OK"'></span>
+			<span data-dojo-type="dojox.mobile.ToolBarButton" onClick="gotoToday()" data-dojo-props='label:"Now"'></span>
+		</div>
+		<div id="picker1" data-dojo-type="dojox.mobile.ValuePickerTimePicker"></div>
+		<div id="msg"></div>
+	</div>
+</body>
+</html>

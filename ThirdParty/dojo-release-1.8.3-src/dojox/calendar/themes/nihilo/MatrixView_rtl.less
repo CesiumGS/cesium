@@ -1,0 +1,71 @@
+@import "MatrixViewCommon.less";
+
+.nihilo .dojoxCalendarMatrixViewRtl .dojoxCalendarGrid {
+	right: @row-header-width;
+	left: 0;
+}
+
+.nihilo .dojoxCalendarMatrixViewRtl .dojoxCalendarGridTable td {			
+	text-align: left;
+	border-bottom: @inner-border;
+	border-left: @inner-border;
+	border-right: none;
+}
+
+.nihilo .dojoxCalendarMatrixViewRtl .dojoxCalendarGridTable td span{
+	padding-left: 2px;
+}
+
+.nihilo .dojoxCalendarMatrixViewRtl .dojoxCalendarGridTable td.last-child	{
+	border-left: @outer-border;
+}
+
+.nihilo .dojoxCalendarMatrixViewRtl .dojoxCalendarContainer {
+	right: @row-header-width;
+	left: 0;
+}
+
+.nihilo .dojoxCalendarMatrixViewRtl .dojoxCalendarContainerTable td {
+	border-bottom: solid 1px transparent;
+	border-right: solid 1px transparent;
+	text-align: right;
+	vertical-align: top;		
+}
+
+.nihilo .dojoxCalendarMatrixViewRtl .dojoxCalendarYearColumnHeader{
+	position: absolute;
+	right: 0;
+	left: auto;
+}
+
+.nihilo .dojoxCalendarMatrixViewRtl .dojoxCalendarColumnHeader {
+	right: @row-header-width;
+	left: 0;
+}
+
+.nihilo .dojoxCalendarMatrixView .dojoxCalendarColumnHeaderTable td {	
+	border-left: @outer-border;
+	border-right: none;
+}
+
+.nihilo .dojoxCalendarMatrixViewRtl .dojoxCalendarRowHeader {
+	right: 0;
+	left: auto;
+}
+
+.nihilo .dojoxCalendarMatrixViewRtl .dojoxCalendarEvent.dojoxCalendarHorizontal .labels {
+	text-align: right;
+}
+
+.nihilo .dojoxCalendarMatrixViewRtl .dojoxCalendarEvent.dojoxCalendarLabel .labels {
+	text-align: right;
+}
+
+.nihilo .dojoxCalendarMatrixViewRtl .dojoxCalendarEvent .resizeStartHandle {
+	right: 0;
+}
+
+.nihilo .dojoxCalendarMatrixViewRtl .dojoxCalendarEvent .resizeEndHandle {
+	left:0;
+	right:auto;
+}

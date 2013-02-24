@@ -1,0 +1,138 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	
+	<head>
+		
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		
+		<title>Month Column View Sample: Tablet</title>				
+		<style type="text/css">
+			@import "../themes/iphone/MonthColumnView.css";
+			@import "monthtablet.css";
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/dijit.css";
+			@import "../../../dijit/themes/claro/claro.css";
+		</style>
+	</head>
+	
+	<body>
+			<script type="text/javascript" 
+						data-dojo-config="async: true, parseOnLoad: true"
+		 				src="../../../dojo/dojo.js"></script>
+		
+			<script type="text/javascript">
+
+			require(["dojo/ready", "dojo/_base/declare", "dojo/on", "dojo/date/locale", "dojo/parser", "dojo/date", "dojo/_base/lang",
+					"dojo/dom", "dojo/dom-construct", "dojo/dom-class", "dojo/_base/window",
+					"dijit/registry", "dojo/query", "dojox/calendar/MonthColumnView", "dojox/calendar/Touch", 
+					"dojox/calendar/MobileVerticalRenderer", "dojox/calendar/time", "dojo/store/Memory", "dojo/store/Observable",
+					 "dojo/_base/fx"],
+
+				function(ready, declare, on, locale, parser, date, lang, dom, domConstruct, domClass, win, registry, query,
+					MonthColumnView, CalendarTouch, VerticalRenderer, time, Memory, Observable, fx){
+
+					ready(function(){
+
+						// Calendar model creation
+						
+						var dateClassObj = Date;
+						
+						var modelBase = [
+							{day: 0, start: [0,0], duration: 1440, allDay:true},
+							{day: 1, start: [6,0], duration: 240},
+							{day: 1, start: [10,0], duration: 240},
+							{day: 1, start: [16,0], duration: 60},
+							{day: 2, start: [8,0], duration: 120},
+							{day: 2, start: [10,0], duration: 120},
+							{day: 2, start: [16,0], duration: 120},
+							{day: 3, start: [8,0], duration: 1440*2},
+							{day: 5, start: [0,0], duration: 1440, allDay:true},
+							{day: 6, start: [0,0], duration: 2*1440, allDay:true}
+						];
+						
+						
+						var someData = [];
+						
+						var startOfMonth = new Date();
+						startOfMonth = time.floorToMonth(startOfMonth, Date);
+												
+						var id;
+						
+							for (var i=0; i<modelBase.length; i++) {
+								id = (modelBase.length)+i;
+								var newObj = {
+									id: id,
+									summary: "New Event " + id,
+									startTime: new dateClassObj(startOfMonth.getTime()),
+									endTime: new dateClassObj(startOfMonth.getTime()),									
+								}
+	
+								newObj.startTime = date.add(newObj.startTime, "day", Math.floor(Math.random()*30));
+								newObj.startTime.setHours(modelBase[i].start[0]);
+								newObj.startTime.setMinutes(modelBase[i].start[1]);
+	
+								newObj.endTime = date.add(newObj.startTime, "minute", modelBase[i].duration);
+								
+								if(modelBase[i].allDay != undefined){
+									newObj.allDay = modelBase[i].allDay; 
+								}
+	
+								someData.push(newObj);
+							}
+							
+						
+						id++;
+						
+						// Calendar creation & configuration
+						
+						monthView = declare([MonthColumnView, CalendarTouch])({							
+							store: new Observable(new Memory({data: someData})),
+							startDate: startOfMonth,
+							verticalRenderer: VerticalRenderer,
+							columnCount: 1							
+						}, "calendarNode");
+
+						// Events management
+						
+						monthView.on("gridDoubleClick", function(e){
+
+							// create a event when double-clicking on grid.
+							var d = monthView.floorToDay(e.date, true);
+
+							var item = {
+								id: id,
+								summary: "New event " + id,
+								startTime: d,
+								endTime: date.add(d, "day", 1),
+								calendar: id % 2 == 0 ? "cal1" : "cal2"
+							};
+							id++;
+							monthView.store.add(item);
+							
+							monthView.set("selectedItem", item);
+							monthView.set("focusedItem", item);							
+						});
+
+																																				
+																													
+						fx.fadeOut({
+							node:"loadingPanel", 
+							onEnd: function(node){
+								node.parentNode.removeChild(node)
+							}}).play(500);
+
+					});
+			});
+			</script>
+			
+			<div id="loadingPanel" style="position:absolute;z-index:10;width:100%;height:100%;background:#ffffff;text-align: center">
+				<span style="background: #DBEB8F">Loading...</span>
+			</div>
+						
+			<div id="calendarNode"></div>					
+
+	</body>
+</html>

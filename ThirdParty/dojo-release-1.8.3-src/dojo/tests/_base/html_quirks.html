@@ -1,0 +1,328 @@
+<html>
+	<!--
+		we use a quirks-mode DTD on purpose to ensure that things go tilt. Wheee!!
+	-->
+	<head>
+		<title>testing Core HTML/DOM/CSS/Style utils in quirks mode</title>
+		<style type="text/css">
+			@import "../../resources/dojo.css";
+		</style>
+		<script type="text/javascript" src="../../dojo.js" data-dojo-config="isDebug:true"></script>
+		<script type="text/javascript">
+			require(["dojo", "doh", "dojo/sniff", "dojo/domReady!"], function(dojo, doh, has){
+				doh.register("t", 
+					[
+						"t.is(100, dojo.marginBox('sq100').w);",
+						"t.is(100, dojo.marginBox('sq100').h);",
+
+						"t.is(120, dojo.marginBox('sq100margin10').w);",
+						"t.is(120, dojo.marginBox('sq100margin10').h);",
+						"t.is(100, dojo.contentBox('sq100margin10').w);",
+						"t.is(100, dojo.contentBox('sq100margin10').h);",
+
+						// FIXME: the 'correct' w is not 100 on Safari WebKit (2.0.4 [419.3]), the right-margin extends to the document edge
+						//"t.is(100, dojo.marginBox('sq100nopos').w);",
+						"t.is(100, dojo.marginBox('sq100nopos').h);",
+
+						function coordsBasic(t){
+							var pos = dojo.position("sq100", false);
+							// console.debug(pos);
+							t.is(100, pos.x);
+							t.is(100, pos.y);
+							t.is(100, pos.w);
+							t.is(100, pos.h);
+						},
+						function coordsMargin(t){
+							// position() is getting us the border-box location
+							var pos = dojo.position("sq100margin10", false);
+							t.is(260, pos.x);
+							t.is(110, pos.y);
+							t.is(100, pos.w);
+							t.is(100, pos.h);
+							pos = dojo.marginBox("sq100margin10");
+							t.is(120, pos.w);
+							t.is(120, pos.h);
+							// Though coords shouldn't be used, test it for backward compatibility.
+							// coords returns the border-box location and margin-box size
+							pos = dojo.coords("sq100margin10", false);
+							t.is(260, pos.x);
+							t.is(110, pos.y);
+							t.is(120, pos.w);
+							t.is(120, pos.h);
+						},
+						function coordsBorder(t){
+							var pos = dojo.position("sq100border10", false);
+							t.is(100, pos.x);
+							t.is(400, pos.y);
+						},
+						function sq100nopos(t){
+							var pos = dojo.position("sq100nopos", false);
+							// console.debug(pos);
+							t.is(0, pos.x);
+							t.t(pos.y > 0);
+							// FIXME: the 'correct' w is not 100 on Safari WebKit (2.0.4 [419.3]), the right-margin extends to the document edge
+							//t.is(100, pos.w);
+							t.is(100, pos.h);
+						}
+					]
+				);
+				if(has("ie") <= 9){
+					// IE collapses padding in quirks mode. We just report on it.
+					doh.register("t", 
+						[
+							"t.is(120, dojo.marginBox('sq100margin10pad10').w);",
+							"t.is(120, dojo.marginBox('sq100margin10pad10').h);",
+
+							"t.is(100, dojo.marginBox('sq100pad10').w);",
+							"t.is(100, dojo.marginBox('sq100pad10').h);",
+
+							"t.is(100, dojo.marginBox('sq100ltpad10').w);",
+							"t.is(100, dojo.marginBox('sq100ltpad10').h);",
+							"t.is(90, dojo.contentBox('sq100ltpad10').w);",
+							"t.is(90, dojo.contentBox('sq100ltpad10').h);",
+
+							"t.is(110, dojo.marginBox('sq100ltpad10rbmargin10').w);",
+							"t.is(110, dojo.marginBox('sq100ltpad10rbmargin10').h);",
+
+							"t.is(100, dojo.marginBox('sq100border10').w);",
+							"t.is(100, dojo.marginBox('sq100border10').h);",
+							"t.is(80, dojo.contentBox('sq100border10').w);",
+							"t.is(80, dojo.contentBox('sq100border10').h);",
+
+							"t.is(120, dojo.marginBox('sq100border10margin10').w);",
+							"t.is(120, dojo.marginBox('sq100border10margin10').h);",
+							"t.is(80, dojo.contentBox('sq100border10margin10').w);",
+							"t.is(80, dojo.contentBox('sq100border10margin10').h);",
+
+							"t.is(120, dojo.marginBox('sq100border10margin10pad10').w);",
+							"t.is(120, dojo.marginBox('sq100border10margin10pad10').h);",
+							"t.is(60, dojo.contentBox('sq100border10margin10pad10').w);",
+							"t.is(60, dojo.contentBox('sq100border10margin10pad10').h);"
+						]
+					);
+				}else{
+					doh.register("t", 
+						[
+							"t.is(140, dojo.marginBox('sq100margin10pad10').w);",
+							"t.is(140, dojo.marginBox('sq100margin10pad10').h);",
+
+							"t.is(120, dojo.marginBox('sq100pad10').w);",
+							"t.is(120, dojo.marginBox('sq100pad10').h);",
+
+							"t.is(110, dojo.marginBox('sq100ltpad10').w);",
+							"t.is(110, dojo.marginBox('sq100ltpad10').h);",
+							"t.is(100, dojo.contentBox('sq100ltpad10').w);",
+							"t.is(100, dojo.contentBox('sq100ltpad10').h);",
+
+							"t.is(120, dojo.marginBox('sq100ltpad10rbmargin10').w);",
+							"t.is(120, dojo.marginBox('sq100ltpad10rbmargin10').h);",
+
+							"t.is(120, dojo.marginBox('sq100border10').w);",
+							"t.is(120, dojo.marginBox('sq100border10').h);",
+							"t.is(100, dojo.contentBox('sq100border10').w);",
+							"t.is(100, dojo.contentBox('sq100border10').h);",
+
+							"t.is(140, dojo.marginBox('sq100border10margin10').w);",
+							"t.is(140, dojo.marginBox('sq100border10margin10').h);",
+							"t.is(100, dojo.contentBox('sq100border10margin10').w);",
+							"t.is(100, dojo.contentBox('sq100border10margin10').h);",
+
+							"t.is(160, dojo.marginBox('sq100border10margin10pad10').w);",
+							"t.is(160, dojo.marginBox('sq100border10margin10pad10').h);",
+							"t.is(100, dojo.contentBox('sq100border10margin10pad10').w);",
+							"t.is(100, dojo.contentBox('sq100border10margin10pad10').h);"
+						]
+					);
+				}
+
+				doh.runOnLoad();
+			});
+		</script>
+		<style type="text/css">
+			html, body {
+				padding: 0px;
+				margin: 0px;
+				border: 0px;
+			}
+
+			#sq100 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 100px;
+				top: 100px;
+				width: 100px;
+				height: 100px;
+				border: 0px;
+				padding: 0px;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#sq100margin10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 250px;
+				top: 100px;
+				width: 100px;
+				height: 100px;
+				border: 0px;
+				padding: 0px;
+				margin: 10px;
+				overflow: hidden;
+			}
+
+			#sq100margin10pad10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 400px;
+				top: 100px;
+				width: 100px;
+				height: 100px;
+				border: 0px;
+				padding: 10px;
+				margin: 10px;
+				overflow: hidden;
+			}
+
+			#sq100pad10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 100px;
+				top: 250px;
+				width: 100px;
+				height: 100px;
+				border: 0px;
+				padding: 10px;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#sq100ltpad10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 250px;
+				top: 250px;
+				width: 100px;
+				height: 100px;
+				border: 0px;
+				padding-left: 10px;
+				padding-top: 10px;
+				padding-right: 0px;
+				padding-bottom: 0px;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#sq100ltpad10rbmargin10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 400px;
+				top: 250px;
+				width: 100px;
+				height: 100px;
+				border: 0px;
+				padding-left: 10px;
+				padding-top: 10px;
+				padding-right: 0px;
+				padding-bottom: 0px;
+				margin-left: 0px;
+				margin-top: 0px;
+				margin-right: 10px;
+				margin-bottom: 10px;
+				overflow: hidden;
+			}
+
+			#sq100border10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 100px;
+				top: 400px;
+				width: 100px;
+				height: 100px;
+				border: 10px solid yellow;
+				padding: 0px;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#sq100border10margin10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 250px;
+				top: 400px;
+				width: 100px;
+				height: 100px;
+				border: 10px solid yellow;
+				padding: 0px;
+				margin: 10px;
+				overflow: hidden;
+			}
+
+			#sq100border10margin10pad10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 400px;
+				top: 400px;
+				width: 100px;
+				height: 100px;
+				border: 10px solid yellow;
+				padding: 10px;
+				margin: 10px;
+				overflow: hidden;
+			}
+
+			#sq100nopos {
+				background-color: black;
+				color: white;
+				width: 100px;
+				height: 100px;
+				padding: 0px;
+				margin: 0px;
+			}
+
+		</style>
+	</head>
+	<body>
+		<h1>testing Core HTML/DOM/CSS/Style utils</h1>
+		<div id="sq100">
+			100px square, abs
+		</div>
+		<div id="sq100margin10">
+			100px square, abs, 10px margin
+		</div>
+		<div id="sq100margin10pad10">
+			100px square, abs, 10px margin, 10px padding
+		</div>
+		<div id="sq100pad10">
+			100px square, abs, 10px padding
+		</div>
+		<div id="sq100ltpad10">
+			100px square, abs, 10px left and top padding
+		</div>
+		<div id="sq100ltpad10rbmargin10">
+			100px square, abs, 10px left and top padding, 10px bottom and right margin
+		</div>
+		<div id="sq100border10">
+			100px square, abs, 10px yellow border
+		</div>
+		<div id="sq100border10margin10">
+			100px square, abs, 10px yellow border, 10px margin
+		</div>
+		<div id="sq100border10margin10pad10">
+			100px square, abs, 10px yellow border, 10px margin, 10px padding
+		</div>
+		<div id="sq100nopos">
+			100px square, no positioning
+		</div>
+	</body>
+</html>
+

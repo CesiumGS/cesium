@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html style="width:100%;height:100%;overflow:hidden;">
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Dojo Repeat Selection Test</title>
+
+	<style type="text/css">
+		@import "../../../../dijit/themes/dijit.css";
+		@import "../../../../dijit/themes/claro/document.css";
+		@import "../../../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../../dijit/themes/claro/claro.css"/>
+
+	<style>
+		.bordercontainer-nopadding .dijitContentPane, .bordercontainer-nopadding .dijitSplitContainer-dijitContentPane, .bordercontainer-nopadding .dijitBorderContainer-dijitContentPane {
+			padding: 0;
+		}
+
+		.bordercontainer-nopadding .dijitMenuBar {
+			border-width: 0 0 1px 0;
+		}
+
+		.view .dijitMenu {
+			border-width: 0;
+		}
+
+		.view .dijitMenuItemHover {
+			background-color: inherit;
+			background-image: none;
+		}
+
+		.view .dijitMenuItemSelected {
+			background-color: #abd6ff;
+			background-image: url("images/standardGradient.png");
+			background-repeat: repeat-x;
+			background-image: -moz-linear-gradient(rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 100%);
+			background-image: -webkit-linear-gradient(rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 100%);
+			background-image: -o-linear-gradient(rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 100%);
+			background-image: -ms-linear-gradient(rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 100%);
+			_background-image: none;
+		}
+
+		.view td.dijitMenuItemLabel {
+			width: 100%;
+			padding: 6px;
+		}
+
+		.view td.dijitMenuItemIconCell {
+			padding: 6px;
+		}
+
+		.dijitBorderContainerNoGutter > .form {
+			padding: 6px;
+		}
+
+		.row {
+			width: 100%;
+			display: inline-block;
+			padding: 6px;
+			-box-sizing: border-box;
+			-moz-box-sizing: border-box;
+			-webkit-box-sizing: border-box;
+		}
+
+		.cell {
+			width: 100%;
+			display:inline-block;
+			-box-sizing: border-box;
+			-moz-box-sizing: border-box;
+			-webkit-box-sizing: border-box;
+		}
+
+		.complete {
+			text-decoration: line-through;
+		}
+	</style>
+
+	<script type="text/javascript">
+		dojoConfig = {async: 1, isDebug: 1, mvc: {debugBindings: 1}};
+	</script>
+	<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+	<script type="text/javascript">
+		var ViewMenuBarData, DetailMenuBarData, initialRows;
+		var selectionStatusConverter = {
+			format: function(value){
+				return this.target.uniqueId == (value || {}).uniqueId;
+			},
+			parse: function(value){
+				if(!value){ throw new Error(); } // Stop copying the new value for unchecked case
+				for(var a = this.source.inModel, i = 0; i < a.length; i++){
+					if(a[i].uniqueId == this.target.uniqueId){
+						return a[i];
+					}
+				}
+			}
+		}, priorityConverter = {
+			format: function(value){
+				return "dijitIcon dijitMenuItemIconCell " + (value <= 1 ? "dijitIconError" : "");
+			}
+		}, completeConverter = {
+			format: function(value){
+				return "dijitMenuItemLabel" + (value ? " complete" : "");
+			}
+		},subjectConverter = {
+			format: function(value){
+				return value || "(No subject)";
+			}
+		};
+
+		require([
+			"doh/runner",
+			"dojox",
+			"dojo/_base/declare",
+			"dojo/_base/lang",
+			"dojo/dom",
+			"dojo/dom-class",
+			"dojo/query",
+			"dojo/parser",
+			"dojo/Stateful",
+			"dijit/registry",
+			"dijit/Menu",
+			"dojox/mvc/at",
+			"dojox/mvc/getStateful",
+			"dijit/form/CheckBox",
+			"dijit/form/DateTextBox",
+			"dijit/form/Select",
+			"dijit/form/TextBox",
+			"dijit/layout/BorderContainer",
+			"dijit/layout/ContentPane",
+			"dijit/Editor",
+			"dijit/MenuBar",
+			"dijit/MenuBarItem",
+			"dijit/MenuItem",
+			"dojox/mvc/_atBindingExtension",
+			"dojox/mvc/EditModelRefController",
+			"dojox/mvc/ListController",
+			"dojox/mvc/StatefulArray",
+			"dojox/mvc/Group",
+			"dojox/mvc/WidgetList",
+			"dojox/mvc/_InlineTemplateMixin"
+		], function(doh, dojox, declare, lang, ddom, domClass, query, parser, Stateful, registry, Menu, at, getStateful){
+
+			var uniqueIdSeq = 3;
+
+			initialRows = getStateful([
+				{
+					uniqueId: 0,
+					Completed: false,
+					Subject: "Pick up my kids",
+					Due: new Date((new Date()).getTime() + 48 * 3600000),
+					Priority: 1,
+					Description: "At the kindergarden"
+				},
+				{
+					uniqueId: 1,
+					Completed: true,
+					Subject: "Take dojox.mvc learning course",
+					Due: new Date((new Date()).getTime() + 72 * 3600000),
+					Priority: 2,
+					Description: "Need to find course material at http://dojotoolkit.org/"
+				},
+				{
+					uniqueId: 2,
+					Completed: false,
+					Subject: "Wash my car",
+					Due: new Date((new Date()).getTime() + 120 * 3600000),
+					Priority: 3,
+					Description: "Need to buy a cleaner before that"
+				}
+			]);
+
+			ViewMenuBarData = getStateful([
+				{
+					label: "New",
+					onClick: function(){
+						var ctl = registry.byId("listCtl");
+						var payload = getStateful({
+							uniqueId: uniqueIdSeq++,
+							Completed: false,
+							Subject: "",
+							Due: new Date(""),
+							Priority: 2,
+							Description: ""
+						});
+						ctl.inModel.unshift(payload);
+						ctl.set("cursor", payload);
+					}
+				},
+				{
+					label: "Delete",
+					onClick: function(){
+						var ctl = registry.byId("listCtl");
+						var idx = ctl.get("cursorIndex");
+						if(idx >= 0){
+							ctl.inModel.splice(idx, 1);
+						}
+						if(idx < ctl.inModel.get("length")){
+							ctl.set("cursorIndex", idx);
+						}
+					}
+				}
+			]);
+
+			DetailMenuBarData = getStateful([
+				{
+					label: "Save",
+					onClick: function(){
+						registry.byId("listCtl").commit();
+					}
+				},
+				{
+					label: "Cancel",
+					onClick: function(){
+						var ctl = registry.byId("listCtl");
+						ctl.reset();
+					}
+				}
+			]);
+
+			domClass.add(ddom.byId("loading"), "dijitDisplayNone");
+			domClass.remove(ddom.byId("main"), "dijitDisplayNone");
+			parser.parse();
+
+			doh.register("Test values and bindings", [
+				{
+					name: "Initial",
+					runTest: function(){
+						doh.t(ddom.byId("viewcheckbox0").checked, "First view row should be checked");
+						doh.t(domClass.contains(ddom.byId("viewiconimg0"), "dijitIconError"), "First view row should contain explanation mark");
+						doh.t(domClass.contains(ddom.byId("viewtext1"), "complete"), "Second view row should be marked as complete");
+						doh.is("Wash my car", ddom.byId("viewtext2").innerHTML, "Third view row should exist");
+						doh.f(ddom.byId("viewtext3"), "Fourth row shouldn't exist");
+						doh.is("Pick up my kids", ddom.byId("subject").value, "The subject field should be of the first row");
+					}
+				},
+				{
+					name: "Navigate",
+					runTest: function(){
+						ddom.byId("viewcheckbox1").click();
+						doh.is("Take dojox.mvc learning course", ddom.byId("subject").value, "The subject field should be of the second row");
+						ddom.byId("viewcheckbox2").click();
+						doh.is("3", ((query("#priority input[data-dojo-attach-point='valueNode']") || [])[0] || {}).value, "The due field should be of the third row");
+					}
+				},
+				{
+					name: "EditToCancel",
+					runTest: function(){
+						ddom.byId("viewcheckbox0").click();
+						var completed = ddom.byId("completed");
+						completed.click();
+						var subject = registry.byId("subject");
+						subject.set("displayedValue", "Pick up my wife");
+						doh.f(domClass.contains(ddom.byId("viewtext0"), "complete"), "First view row shouldn't be marked as complete yet");
+						doh.is("Pick up my kids", ddom.byId("viewtext0").innerHTML, "First view row's subject shouldn't be updated yet");
+						registry.byId("dijit_MenuBarItem_3").onClick();
+						doh.is("Pick up my kids", subject.get("displayedValue"), "Subject should be set back to the original one");
+						doh.f(completed.checked, "Completed checkbox should be set back to unchecked");
+					}
+				},
+				{
+					name: "EditToSave",
+					runTest: function(){
+						ddom.byId("viewcheckbox0").click();
+						var completed = ddom.byId("completed");
+						completed.click();
+						var subject = registry.byId("subject");
+						subject.set("displayedValue", "Pick up my wife");
+						doh.f(domClass.contains(ddom.byId("viewtext0"), "complete"), "First view row shouldn't be marked as complete yet");
+						doh.is("Pick up my kids", ddom.byId("viewtext0").innerHTML, "First view row's subject shouldn't be updated yet");
+						registry.byId("dijit_MenuBarItem_2").onClick();
+						doh.t(domClass.contains(ddom.byId("viewtext0"), "complete"), "First view row should be marked as complete");
+						doh.is("Pick up my wife", ddom.byId("viewtext0").innerHTML, "First view row's subject should be updated");
+					}
+				},
+				{
+					name: "Delete",
+					runTest: function(){
+						registry.byId("dijit_MenuBarItem_1").onClick();
+						doh.is("Take dojox.mvc learning course", ddom.byId("subject").value, "The subject field should be of the (formerly) second row");
+						doh.f(ddom.byId("viewtext2"), "Third row shouldn't exist");
+					}
+				},
+				{
+					name: "Create",
+					runTest: function(){
+						registry.byId("dijit_MenuBarItem_0").onClick();
+						var viewtext = ddom.byId("viewtext0");
+						doh.is("(No subject)", viewtext.innerHTML, "First row's subject shouldn't be set yet");
+					}
+				}
+			]);
+
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro" style="width:100%;height:100%;margin:0;padding:0;overflow:hidden;">
+		<script type="dojo/require">at: "dojox/mvc/at"</script>
+	<table id="loading" style="width:100%;height:100%;" border="0" cellpadding="0" cellspacing="0">
+		<tbody>
+			<tr>
+				<td align="center">Loading...</td>
+			</tr>
+		</tbody>
+	</table>
+	<div id="main" class="dijitDisplayNone" style="width:100%;height:100%;">
+		<span id="listCtl" data-dojo-type="dojox.mvc.ListController" data-dojo-mixins="dojox.mvc.EditModelRefController"
+		 data-dojo-props="_refInModelProp: 'inModel', _refSourceModelProp: 'cursor', _refModelProp: 'model', inModel: initialRows, cursorIndex: 0, holdModelUntilCommit: true"></span>
+		<div class="bordercontainer-nopadding" data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="persist: false, gutters: true, style: 'height: 100%; width: 100%;'">
+			<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'left', style: 'background-color: white; width: 48ex', splitter: true">
+				<div data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="persist: false, gutters: false">
+					<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'top'">
+						<div data-dojo-type="dojox/mvc/WidgetList"
+							data-dojo-mixins="dijit/MenuBar"
+							data-dojo-props="children: ViewMenuBarData"
+							data-mvc-child-type="dijit/MenuBarItem"
+							data-mvc-child-props="'*': at(this.target, '*')"></div>
+					</div>
+					<div class="view" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'center'">
+						<table border="0" cellspacing="0" cellpadding="0">
+							<tbody data-dojo-type="dojox/mvc/WidgetList"
+								data-dojo-mixins="dojox/mvc/_InlineTemplateMixin"
+								data-dojo-props="children: at('widget:listCtl', 'inModel')">
+								<script type="dojox/mvc/InlineTemplate">
+									<tr>
+										<td class="dijitMenuItemIconCell">
+											<input id="viewcheckbox${indexAtStartup}" data-dojo-type="dijit.form.CheckBox"
+											 data-dojo-props="uniqueId: at('rel:', 'uniqueId'),
+											                  checked: at('widget:listCtl', 'cursor').transform(selectionStatusConverter)">
+										</td>
+										<td class="dijitMenuItemIconCell">
+											<img id="viewiconimg${indexAtStartup}" src="../../../../dojo/resources/blank.gif" data-dojo-type="dijit._WidgetBase"
+											 data-dojo-props="_setDomClassAttr: {node: 'domNode', type: 'class'}, domClass: at('rel:', 'Priority').direction(at.from).transform(priorityConverter)">
+										</td>
+										<td id="viewtext${indexAtStartup}" data-dojo-type="dijit._WidgetBase"
+										 data-dojo-props="Subject: at('rel:', 'Subject').direction(at.from).transform(subjectConverter),
+										                  _setDomClassAttr: {node: 'domNode', type: 'class'}, domClass: at('rel:', 'Completed').direction(at.from).transform(completeConverter),
+										                  _setSubjectAttr: {node: 'domNode', type: 'innerText'}">
+										</td>
+									</tr>
+								</script>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'center', style: 'background-color: white;'">
+				<div data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="persist: false, gutters: false">
+					<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'top'">
+						<div data-dojo-type="dojox/mvc/WidgetList"
+							data-dojo-mixins="dijit/MenuBar"
+							data-dojo-props="children: DetailMenuBarData"
+							data-mvc-child-type="dijit/MenuBarItem"
+							data-mvc-child-props="'*': at(this.target, '*')"></div>
+					</div>
+					<div class="form" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'center', target: at('widget:listCtl', 'model')">
+						<div class="row">
+							<span class="cell">
+								<label for="completed">Completed:</label>
+								<input id="completed" data-dojo-type="dijit.form.CheckBox" data-dojo-props="checked: at('rel:', 'Completed')">
+							</span>
+						</div>
+						<div class="row">
+							<label class="cell" for="subject">Subject:</label>
+							<input class="cell" id="subject" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Subject')">
+						</div>
+						<div class="row">
+							<label class="cell" for="priority">Priority:</label>
+							<span class="cell">
+								<select id="priority" data-dojo-type="dijit.form.Select" data-dojo-props="value: at('rel:', 'Priority')">
+									<option value="1">1</option>
+									<option value="2">2</option>
+									<option value="3">3</option>
+								</select>
+							</span>
+						</div>
+						<div class="row">
+							<label class="cell" for="due">Due:</label>
+							<span class="cell">
+								<input id="due" data-dojo-type="dijit.form.DateTextBox"
+								 data-dojo-props="required: false, constraints: {datePattern: 'MMMM dd yyyy'}, value: at('rel:', 'Due')">
+							</span>
+						</div>
+						<div class="row">
+							<span class="cell">Description:</span>
+							<div class="cell" data-dojo-type="dijit.Editor"
+							 data-dojo-props="plugins: ['bold', 'italic', 'underline'], height: '200', value: at('rel:', 'Description')"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

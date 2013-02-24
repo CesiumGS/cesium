@@ -1,0 +1,200 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<style type="text/css">
+		body, html { width:100%; height:100%; margin:0; padding:0 }
+		#borderContainer { width:100%; height:100% }
+	</style>
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../themes/TreeMap.css";
+		@import "../themes/DrillDownUp.css";
+		@import "../../../dijit/themes/claro/claro.css";
+	</style>
+
+	<script type="text/javascript">
+		var djConfig = {
+			parseOnLoad: false,
+			async: true
+		}
+	</script>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js">
+	</script>
+
+	<script type="text/javascript">
+
+		var groupByChanged, sizeByChanged, colorByChanged,
+				thresholdChanged, neutralChanged, MyTreeMap, refreshData;
+
+		require(["dojo/ready", "dojo/dom", "dojo/_base/Color", "dojo/_base/declare", "dojo/parser",
+			"dijit/registry",
+			"dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dojox/treemap/TreeMap",
+			"dojox/color/MeanColorModel", "dojox/data/CsvStore", "dojo/store/DataStore",
+			"dojo/store/Observable",
+			"dijit/form/RadioButton", "dijit/form/ComboBox", "dijit/form/Button", "dojox/treemap/Keyboard",
+			"dojox/treemap/DrillDownUp"],
+			function(ready, dom, Color, declare, parser, registry, BorderContainer, ContentPane, TreeMap,
+					 MeanColorModel, CsvStore, DataStore, Observable, RadioButton, ComboBox, Button, Keyboard,
+					 DrillDownUp) {
+
+				var colorModel = new MeanColorModel(new Color(Color.named.green), new Color(Color.named.red));
+				var store = new DataStore({ store: new CsvStore({url: "freight.csv"}) });
+
+				ready(function(){
+					MyTreeMap = declare([TreeMap, Keyboard, DrillDownUp]);
+					parser.parse();
+					var treeMap = registry.byId("treeMap");
+					treeMap.set("colorModel", colorModel);
+					treeMap.set("tooltipFunc",
+							function(data, store) { return "Total Trade:" + data["Trade"]; });
+					treeMap.set("store", Observable(store));
+					treeMap.on("change", function(){
+						console.log("toto");
+					});
+				});
+
+				groupByChanged = function(value){
+					var groupBy = null;
+					if(dom.byId("g2").checked){
+						groupBy = ["Mode"];
+					} else if(dom.byId("g3").checked){
+						groupBy = ["State"];
+					}else if(dom.byId("g4").checked){
+						groupBy = ["Mode", "State"];
+					}
+					var treeMap = registry.byId("treeMap");
+					if(groupBy != null){
+						treeMap.set("groupAttrs", groupBy);
+					}else{
+						treeMap.set("groupAttrs", null);
+					}
+				}
+
+				sizeByChanged = function(value){
+					var sizeBy = null;
+					if(dom.byId("s2").checked){
+						sizeBy = "Trade";
+					}else if(dom.byId("s3").checked){
+						sizeBy = "Exports";
+					}else if(dom.byId("s4").checked){
+						sizeBy = "Imports";
+					}
+					var treeMap = registry.byId("treeMap");
+					treeMap.set("areaAttr", sizeBy);
+				}
+
+				colorByChanged = function(value){
+					var colorBy = null;
+					if(dom.byId("c2").checked){
+						colorBy = "Trade";
+					}else if(dom.byId("c3").checked){
+						colorBy = "Exports";
+					}else if(dom.byId("c4").checked){
+						colorBy = "Imports";
+					}
+					var treeMap = registry.byId("treeMap");
+					treeMap.set("colorAttr", colorBy);
+				}
+
+				thresholdChanged = function(value){
+					var treeMap = registry.byId("treeMap");
+					treeMap.set("labelThreshold", value);
+				};
+
+				neutralChanged = function(value){
+					var treeMap = registry.byId("treeMap");
+					if(value){
+						var newModel = new MeanColorModel(new Color(Color.named.green), new Color(Color.named.red));
+						newModel.computeNeutral = function(min, max, sum, values){
+							return sum / values.length;
+						}
+						treeMap.set("colorModel", newModel);
+					}else{
+						treeMap.set("colorModel", colorModel);
+					}
+				}
+			});
+	</script>
+
+</head>
+
+<body class="claro">
+
+<div dojoType="dijit.layout.BorderContainer" design="sidebar" gutters="true" liveSplitters="true" id="borderContainer">
+	<div dojoType="dijit.layout.ContentPane" splitter="true" region="center">
+		<div id="treeMap" dojoType="MyTreeMap" labelAttr="Name" selectionMode="multiple"
+			 style="width: 100%; height: 100%;">
+		</div>
+	</div>
+	<div dojoType="dijit.layout.ContentPane" splitter="true" region="trailing"  style="width: 200px;">
+		<label>Group by:</label>
+		<br/>
+		<input type="radio" dojoType="dijit.form.RadioButton" name="groupBy" id="g1" checked value="none" onChange="groupByChanged" />
+		<label for="g1">None</label>
+		<br/>
+		<input type="radio" dojoType="dijit.form.RadioButton" name="groupBy" id="g2" value="continent" onChange="groupByChanged" />
+		<label for="g2">Mode</label>
+		<br/>
+		<input type="radio" dojoType="dijit.form.RadioButton" name="groupBy" id="g3" value="government" onChange="groupByChanged" />
+		<label for="g3">State</label>
+		<br/>
+		<input type="radio" dojoType="dijit.form.RadioButton" name="groupBy" id="g4" value="government" onChange="groupByChanged" />
+		<label for="g4">Mode then State</label>
+		<br/>
+		<br/>
+		<br/>
+		<label>Size by:</label>
+		<br/>
+		<input type="radio" dojoType="dijit.form.RadioButton" name="sizeBy" id="s1" checked value="none" onChange="sizeByChanged" />
+		<label for="s1">None</label>
+		<br/>
+		<input type="radio" dojoType="dijit.form.RadioButton" name="sizeBy" id="s2" onChange="sizeByChanged" />
+		<label for="s2">Trade</label>
+		<br/>
+		<input type="radio" dojoType="dijit.form.RadioButton" name="sizeBy" id="s3" onChange="sizeByChanged" />
+		<label for="s3">Exports</label>
+		<br/>
+		<input type="radio" dojoType="dijit.form.RadioButton" name="sizeBy" id="s4" onChange="sizeByChanged" />
+		<label for="s3">Imports</label>
+		<br/>
+		<br/>
+		<br/>
+		<label>Color by:</label>
+		<br/>
+		<input type="radio" dojoType="dijit.form.RadioButton" name="colorBy" id="c1" checked value="none" onChange="colorByChanged"/>
+		<label for="c1">None</label>
+		<br/>
+		<input type="radio" dojoType="dijit.form.RadioButton" name="colorBy" id="c2" onChange="colorByChanged" />
+		<label for="c2">Trade</label>
+		<br/>
+		<input type="radio" dojoType="dijit.form.RadioButton" name="colorBy" id="c3" onChange="colorByChanged" />
+		<label for="c3">Exports</label>
+		<br/>
+		<input type="radio" dojoType="dijit.form.RadioButton" name="colorBy" id="c4" onChange="colorByChanged" />
+		<label for="c4">Imports</label>
+		<br/>
+		<br/>
+		<br/>
+		<label>Label threshold</label>
+		<br/>
+		<select id="labelThreshold" dojoType="dijit.form.ComboBox" onChange="thresholdChanged">
+			<option selected>NaN</option>
+			<option>1</option>
+			<option>2</option>
+		</select>
+		<br/>
+		<br/>
+		<br/>
+		<label>Mean/Average neutral value</label>
+		<br/>
+		<select id="neutral" dojoType="dijit.form.CheckBox" onChange="neutralChanged">
+		</select>
+	</div>
+</div>
+
+</body>
+
+</html>

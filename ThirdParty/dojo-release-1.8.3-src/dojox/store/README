@@ -1,0 +1,52 @@
+-------------------------------------------------------------------------------
+DojoX Stores (data)
+-------------------------------------------------------------------------------
+Version 1.8
+Release date: 06/13/2012
+-------------------------------------------------------------------------------
+Project state:
+LightstreamerStore:	beta
+-------------------------------------------------------------------------------
+[   ]	l18n support?
+[   ]	a11y support?
+-------------------------------------------------------------------------------
+Credits
+LightstreamerStore:	Kris Zyp (kris@sitepen.com)
+					Tom Trenka (ttrenka@gmail.com)
+					Lightstreamer (http://lightstreamer.com)
+-------------------------------------------------------------------------------
+Project description
+
+DojoX Stores is intended to serve as a place where experimental stores based
+on the dojo.store APIs can live.  At the time of writing, only the 
+LightstreamerStore is available, but more stores may be added in the future.
+
+The LightstreamerStore is a lightweight object store that is intended to be
+used with the Lightstreamer Web Client and the Lightstreamer Server.  It allows
+one to connect to a Lightstreamer server and get continuous updates (depending
+on the data adapter and mode used).  Because it requires the Lightstreamer
+server, unit tests are not functional here; there is a demonstration of it in 
+action (URL to be determined).
+
+Note, as of Dojo 1.8, the LightstreamerStore should now be downloaded either
+from their GitHub repository, or through CPM. The new version will work with
+Version 5 of their library, which is now fully AMD-compliant.
+
+-------------------------------------------------------------------------------
+Dependencies:
+
+The main dependency of the LightstreamerStore is dojo/store/util/QueryResults.
+-------------------------------------------------------------------------------
+Documentation
+
+LightstreamerStore: inline API documentation is included.
+-------------------------------------------------------------------------------
+Installation instructions
+
+Download the Dojo distribution and set up your Lightstreamer instance, and go!
+-------------------------------------------------------------------------------
+Additional Notes
+
+LightstreamerStore: The main place to hook your code to is to define an "observe"
+	function on the results from a query; this function will be passed a JSON-like
+	object, with which you can do anything you want.

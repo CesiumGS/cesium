@@ -1,0 +1,68 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>TabBar</title>
+		<link href="../../themes/iphone/iphone.css" rel="stylesheet"/>
+		<style>
+		.label {
+			font-family: "Helvetica Neue", Helvetica;
+			font-size: 13px;
+			margin-top: 20px;
+		}
+		.view {
+			font-size: 30px;
+			margin-top: 30px;
+			text-align: center;
+		}
+		</style>
+
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			//dojo.require("dojo.parser"); // Use the lightweight parser.
+			dojo.require("dojox.mobile.parser");
+			dojo.require("dojox.mobile");
+			dojo.require("dojox.mobile.TabBar");
+			dojo.requireIf(!dojo.isWebKit, "dojox.mobile.compat");
+	        dojo.require("doh.runner");
+		</script>
+		<script type="text/javascript" src="TestUtil.js"></script>
+		<script type="text/javascript" src="TabBar.js"></script>
+	</head>
+	<body>
+		<div class="label">Segmented Control</div>
+		<ul dojoType="dojox.mobile.TabBar" barType="segmentedControl">
+			<li dojoType="dojox.mobile.TabBarButton" moveTo="view1" selected="true">New</li>
+			<li dojoType="dojox.mobile.TabBarButton" moveTo="view2">What's Hot</li>
+			<li dojoType="dojox.mobile.TabBarButton" moveTo="view3">Genius</li>
+		</ul>
+
+		<div class="label">Tab Bar</div>
+		<ul dojoType="dojox.mobile.TabBar">
+			<li dojoType="dojox.mobile.TabBarButton" icon1="../images/tab-icon-16.png" icon2="../images/tab-icon-16h.png" moveTo="view1" selected="true">New</li>
+			<li dojoType="dojox.mobile.TabBarButton" icon1="../images/tab-icon-15.png" icon2="../images/tab-icon-15h.png" moveTo="view2">What's Hot</li>
+			<li dojoType="dojox.mobile.TabBarButton" icon1="../images/tab-icon-10.png" icon2="../images/tab-icon-10h.png" moveTo="view3">Genius</li>
+		</ul>
+
+		<div class="label">Tab Bar (CSS Sprite)</div>
+		<ul dojoType="dojox.mobile.TabBar" iconBase="../images/tab-icons.png">
+			<li dojoType="dojox.mobile.TabBarButton" iconPos1="0,0,29,29" iconPos2="29,0,29,29" selected="true">Featured</li>
+			<li dojoType="dojox.mobile.TabBarButton" iconPos1="0,29,29,29" iconPos2="29,29,29,29">Categories</li>
+			<li dojoType="dojox.mobile.TabBarButton" iconPos1="0,58,29,29" iconPos2="29,58,29,29">Top 25</li>
+			<li dojoType="dojox.mobile.TabBarButton" iconPos1="0,87,29,29" iconPos2="29,87,29,29">Search</li>
+			<li dojoType="dojox.mobile.TabBarButton" iconPos1="0,116,29,29" iconPos2="29,116,29,29">Updates</li>
+		</ul>
+
+		<div id="view1" dojoType="dojox.mobile.View" selected="true">
+			<div class="view">View 1</div>
+		</div>
+		<div id="view2" dojoType="dojox.mobile.View">
+			<div class="view">View 2</div>
+		</div>
+		<div id="view3" dojoType="dojox.mobile.View">
+			<div class="view">View 3</div>
+		</div>
+	</body>
+</html>

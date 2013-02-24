@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>_Templated tests</title>
+		<script type="text/javascript" src="../../dojo/dojo.js"
+			data-dojo-config="isDebug: true"></script>
+		<script type="text/javascript">
+			dojo.require("doh.runner");
+
+			dojo.require("dojo.parser");
+
+			dojo.require("dijit._WidgetBase");
+			dojo.require("dijit._Widget");
+			dojo.require("dijit._TemplatedMixin");
+			dojo.require("dijit._WidgetsInTemplateMixin");
+
+			dojo.require("dijit.layout.LayoutContainer");
+
+			function getOuterHTML(/*DomNode*/ node){
+				var wrapper = dojo.doc.createElement("div");
+				wrapper.appendChild(node);
+				return wrapper.innerHTML.toLowerCase();		// IE prints <BUTTON> rather than <button>; normalize it.
+			}
+
+			dojo.ready(function(){
+				// Template with no variables (should be cached as a DOM tree)
+				dojo.declare("SimpleTemplate", [dijit._Widget, dijit._TemplatedMixin], {
+					id: "test1",
+					_setIdAttr: null,	// override _Widget to not copy id to domNode
+
+					templateString: "<button type='button'><span>hello &lt; world</span></button>"
+				});
+
+				// Template with variables
+				dojo.declare("VariableTemplate", [dijit._Widget, dijit._TemplatedMixin], {
+					id: "test2",
+					_setIdAttr: null,	// override _Widget to not copy id to domNode
+
+					num: 5,
+					bool: false,
+					text: "hello <\"' world",
+
+					templateString: "<button><span num=\"${num}\" value=\"${bool}\">${text}</span></button>"
+				});
+
+				// Template with ! variables (for literal substitution)
+				dojo.declare("ExclamationVariableTemplate", [dijit._Widget, dijit._TemplatedMixin], {
+					markup: "<span>hello world</span>",
+
+					templateString: "<div>${!markup}</div>"
+				});
+
+				// Template that starts with special node (has to be constructed inside a <tbody>)
+				dojo.declare("TableRowTemplate", [dijit._Widget, dijit._TemplatedMixin], {
+					id: "test3",
+					_setIdAttr: null,	// override _Widget to not copy id to domNode
+					text: "bar",
+
+					templateString: "<tr><td>${text}</td></tr>"
+				});
+
+				// Illegal substitution variable name
+				dojo.declare("IllegalSubstitution", [dijit._Widget, dijit._TemplatedMixin], {
+					templateString: "<tr><td>${fake}</td></tr>"
+				});
+
+				// data-dojo-attach-point
+				dojo.declare("AttachPoint", [dijit._Widget, dijit._TemplatedMixin], {
+					templateString: "<div style='border: 1px solid red'>" +
+										"<button data-dojo-attach-point='buttonNode,focusNode'>hi</button>" +
+										'<span><input data-dojo-attach-point="inputNode" value="input"/></span>' +
+										"<span data-dojo-attach-point='containerNode'></span>" +
+									"</div>"
+				});
+
+				// data-dojo-attach-event
+				dojo.declare("AttachEvent", [dijit._Widget, dijit._TemplatedMixin], {
+					click: function(){ this.clickCalled=true; },
+					onfocus: function(){ this.focusCalled=true; },
+					focus2: function(){ this.focus2Called=true; },
+					templateString: "<table style='border: 1px solid blue'><tr>" +
+										"<td><button type='button' data-dojo-attach-point='left' data-dojo-attach-event='onclick: click, onfocus'>left</button></td>" +
+										"<td><button type='button' data-dojo-attach-point='right' data-dojo-attach-event='onclick: click, onfocus: focus2'>right</button></td>" +
+									"</tr></table>"
+				});
+
+				var testW;
+
+				doh.register("_TemplatedMixin",
+					[
+						function simple(t){
+							var widget=new SimpleTemplate();
+							var wrapper=dojo.byId("simpleWrapper");
+							wrapper.appendChild(widget.domNode);
+							
+							// Different browsers have different orders for type=button and widgetid=... so simplify
+							// by just removing the type=button.
+							t.is('<button widgetid=\"test1\"><span>hello &lt; world</span></button>', wrapper.innerHTML.toLowerCase().replace(/ type="?button"?/, ""));
+						},
+
+						function variables(t){
+							var widget=new VariableTemplate();
+							var span = widget.domNode.getElementsByTagName("span")[0];
+							var text = span.innerHTML;
+							t.is("5", span.getAttribute("num"));
+							t.is("false", span.getAttribute("value"));
+							t.is("hello &lt;\"' world", text);
+						},
+						function variables2(t){
+							var widget = new VariableTemplate({id: "myid", num: -5, bool: true, text: ""});
+							var span = widget.domNode.getElementsByTagName("span")[0];
+							var text = span.innerHTML;
+							t.is("-5", span.getAttribute("num"));
+							t.is("true", span.getAttribute("value"));
+							t.is("", text);
+						},
+						function variablesWithExclamation(t){
+							var widget=new ExclamationVariableTemplate();
+
+							// ExclamationVariableTemplate should create markup like
+							//		<div><span>hello world</span></div>
+							// The <span> comes from the ${!markup} variable.
+							var span = dojo.query("> *", widget.domNode);
+							t.is(1, span.length, "dom node has one child");
+							t.is("SPAN", span[0].nodeName.toUpperCase(), "which is a span");
+							t.is("hello world", span[0].innerHTML, "and the text is set correctly too");
+						},
+
+						function table(t){
+							var widget=new TableRowTemplate({text: "hello"});
+							var wrapper = dojo.byId("trWrapper");
+							wrapper.appendChild(widget.domNode);
+							var actual = wrapper.innerHTML.toLowerCase().replace(/\r/g, "").replace(/\n/g, "");
+							t.is('<tr widgetid="test3"><td>hello</td></tr>', actual);
+						},
+						function illegal(t){
+							var hadException=false;
+							try{
+								var widget=new IllegalSubstitution();
+							}catch(e){
+								console.log(e);
+								hadException=true;
+							}
+							t.t(hadException);
+						},
+						function attachPoint(t){
+							var widget=new AttachPoint();
+							var wrapper = dojo.byId("attachPointWrapper");
+							wrapper.appendChild(widget.domNode);
+							t.is(widget.containerNode.tagName.toLowerCase(), "span");
+							t.is(widget.buttonNode.tagName.toLowerCase(), "button");
+							t.is(widget.focusNode.tagName.toLowerCase(), "button");
+							t.is(widget.inputNode.tagName.toLowerCase(), "input");
+						},
+						function attachEvent(t){
+							var deferred = new doh.Deferred();
+							var widget = new AttachEvent();
+							var wrapper = dojo.byId("attachEventWrapper");
+							wrapper.appendChild(widget.domNode);
+							widget.left.focus();
+							widget.right.focus();
+							setTimeout(deferred.getTestCallback(function(){
+								t.t(widget.focusCalled, "left focused");
+								t.t(widget.focus2Called, "right focused");
+							}), 50);
+							return deferred;
+						},
+
+						function widgetsInTemplateLifecycle(t){
+
+							var result = [], expected = [1,1,0,2,2,3];
+
+							// widgetsInTemplateLifecycle
+							dojo.declare("SubThing", dijit._Widget, {
+								postCreate:function(){
+									this.inherited(arguments);
+									result.push(1);
+								},
+								startup:function(){
+									this.inherited(arguments);
+									result.push(2);
+								}
+							});
+
+							dojo.declare("ParentThing", [dijit._Widget, dijit._TemplatedMixin, dijit._WidgetsInTemplateMixin], {
+								templateString: "<div>" +
+													"<span data-dojo-type='SubThing'>a</span>" +
+													"<div data-dojo-type='dijit.layout.LayoutContainer'>" +
+														"<span data-dojo-type='SubThing'>b</span>" +
+													"</div>" +
+												"</div>",
+								postCreate:function(){
+									// children postcreate (x2) called before this postCreate
+									this.inherited(arguments);
+									result.push(0);
+								},
+								startup: function(){
+									// then children startup (x2) then our startup
+									// (we can call inherited after push(), and change the order)
+									this.inherited(arguments);
+									result.push(3);
+								}
+							});
+
+							new ParentThing().startup();
+
+							t.is(expected.length, result.length);
+							dojo.forEach(expected, function(r){
+								t.is(r, result.shift());
+							});
+
+						},
+
+						// Test IE problem having "length" as data-dojo-attach-point name
+						function length(){
+							var MyWidget = dojo.declare([dijit._WidgetBase, dijit._TemplatedMixin], {
+								name: "",
+								templateString:
+									"<div>" +
+										"<input data-dojo-attach-point='focusNode' name='${name}'>" +
+										"<span data-dojo-attach-point='spanNode'>" +
+									"</div>"
+							});
+							var widget = new MyWidget({name: "length"});
+							doh.isNot(undefined, widget.focusNode, "focusNode");
+							doh.isNot(undefined, widget.spanNode, "spanNode");
+						}
+					]
+				);
+
+				// This is more of a test of _WidgetBase, but putting here for convenience
+				// since it tests the case when srcNodeRef is swapped for a widget's template
+				doh.register("srcNodeRef", [
+					function replaceMe(){
+						var prev = dojo.byId("replaceMe").previousSibling;
+
+						// This should swap out the <span id="replaceMe"> w/the widget
+						var widget = new SimpleTemplate({}, "replaceMe");
+
+						// Make sure the swap occurred
+						doh.is(widget.domNode, prev.nextSibling, "swapped");
+						doh.is(null, dojo.byId("replaceMe"), "original node removed");
+
+						// For garbage collection widget.srcNodeRef should also be cleared
+						doh.is(null, widget.srcNodeRef, "srcNodeRef cleared");
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+	<body>
+		<h1>_Templated test</h1>
+		<div id="simpleWrapper"></div>
+		<table><tbody id="trWrapper"></tbody></table>
+		<div id="attachPointWrapper"></div>
+		<div id="attachEventWrapper"></div>
+		<span id="replaceMe"></span>
+	</body>
+</html>

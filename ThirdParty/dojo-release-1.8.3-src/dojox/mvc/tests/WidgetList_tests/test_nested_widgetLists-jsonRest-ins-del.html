@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Nested WidgetList example</title>
+		<script src="../../../../dojo/dojo.js" type="text/javascript"
+		data-dojo-config="parseOnLoad: 0, isDebug: true, mvc: {debugBindings: true}"></script>
+		<style type="text/css">
+			@import "../css/app-format.css";
+			@import "../../../../dijit/themes/claro/claro.css";
+		</style>
+		<script type="text/javascript">
+			var ctrl;
+
+			require(["dojo/_base/declare", "dojo/when", "dojo/parser", "dojo/Stateful", "dojo/store/JsonRest", "dojo/_base/kernel", 
+			"dijit/registry", "dojox/mvc/EditStoreRefListController", "dijit/form/Button", "dijit/form/TextBox", "dijit/form/ComboBox", 
+			"dojox/mvc/Group", "dojox/mvc/Output", "dojox/mvc/Templated", "dojox/mvc/WidgetList", "dojo/domReady!"], 
+			function(declare, when, parser, Stateful, JsonRest, kernel, registry, EditStoreRefListController) {
+
+				var inited, ctrlClass = declare([EditStoreRefListController], {
+					cursorIndex : 0,
+					group : "",
+					groupTyped : "",
+					_refModelProp : "model",
+
+					addEmpty : function() {
+						this.model.push(new Stateful({
+							id : Math.random(),
+							Group : this.groupTyped,
+							First : "",
+							Last : "",
+							Location : "",
+							Office : "",
+							Email : "",
+							Tel : [{
+								"name" : "Home",
+								"number" : ""
+							}]
+						}));
+						this.set("cursorIndex", this.get("length") - 1);
+					},
+
+					remove : function(idx) {
+						this.model.splice(idx, 1);
+						if (this.get("cursorIndex") < 0) {
+							this.set("cursorIndex", this.get("length") - 1);
+						}
+					},
+
+					phoneAddEmpty : function() {
+						this.cursor.Tel.push(new Stateful({
+							"name" : "Home",
+							"number" : ""
+						}));
+						// this is needed for when a new person is added, those phones would not be added correctly without this
+						registry.byId("telRepeat").set("children", at('rel:', 'Tel'));
+						registry.byId("emailInput").focus();
+						// this is done to force it to scroll to the bottom so you can see that it was added.
+					},
+
+					phoneRemove : function(idx) {
+						this.cursor.Tel.splice(idx, 1);
+						registry.byId("telRepeat").set("children", at('rel:', 'Tel'));
+					},
+
+					_setGroupAttr : function(value) {
+						this.set("groupTyped", value);
+						var old = this.group;
+						if (old === value) {
+							return;
+						}
+						when(this.queryStore({
+							Group : value
+						}), function() {
+							if (!inited) {
+								parser.parse();
+								inited = true;
+							}
+						});
+						this._set("group", value);
+					}
+				});
+
+				ctrl = new ctrlClass({
+					store : new JsonRest({
+						target : kernel.moduleUrl("dojox.mvc.tests.regression._data", "jsonRestRepeatData.json")
+					})
+				});
+				ctrl.set("group", "Engineer");
+			});
+		</script>
+	</head>
+	<body class="claro" style="background-image: url(../images/master_detail.png)">
+		<script type="dojo/require">
+			at: "dojox/mvc/at"
+		</script>
+		<div id="wrapper">
+			<div id="header">
+				<div id="navigation"></div>
+				<div id="headerInsert">
+					<h1>Nested WidgetLists</h1>
+					<h2>Nested WidgetLists one for the people and one for their phones, select person and use Details to add or remove a phone.</h2>
+				</div>
+			</div>
+			<div id="main">
+				<div id="leftNav"></div>
+				<div id="mainContent">
+					<div class="fullrow">
+						<div class="spacer"></div>
+						<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){ ctrl.commit(); }">
+							Commit All
+						</button>
+						<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){ ctrl.reset(); }">
+							Reset to last saved
+						</button>
+					</div>
+					<div class="spacer"></div>
+					<div id="searchBanner">
+						People with multiple phone numbers:
+					</div>
+
+					<div data-dojo-type="dojox/mvc/WidgetList"
+					data-dojo-mixins="dojox/mvc/_InlineTemplateMixin"
+					data-dojo-props="children: at(ctrl, 'model')">
+						<script type="dojox/mvc/InlineTemplate">
+							<div>
+							<label class="fixedcell" for="nameInput${indexAtStartup}">Name:</label>
+							<input class="fixedcell" data-dojo-type="dijit.form.TextBox" id="nameInput${indexAtStartup}"
+							data-dojo-props="value: at('rel:', 'First')">
+							<button type="button" data-dojo-type="dijit.form.Button"
+							data-dojo-props="onClick: function(){ ctrl.set('cursorIndex', ${indexAtStartup}); }">Details</button>
+							<button type="button" data-dojo-type="dijit.form.Button"
+							data-dojo-props="onClick: function(){ ctrl.addEmpty(); }">+</button>
+							<button type="button" data-dojo-type="dijit.form.Button"
+							data-dojo-props="onClick: function(){ ctrl.remove(${indexAtStartup}); }">-</button>
+
+							<!-- try to add nested widgetList here -->
+							<div data-dojo-type="dojox/mvc/WidgetList"
+							data-dojo-mixins="dojox/mvc/_InlineTemplateMixin"
+							data-dojo-props="children: at('rel:', 'Tel')">
+							<script type="dojox/mvc/InlineTemplate">
+							<div>
+							<div class="fullrow">
+							<div class="fixedcell"></div>
+							<label class="fixedcell" data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at('rel:', 'name')"></label>
+							<input class="fixedcell" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'number')">
+							</div>
+						</script>
+					</div>
+
+				</div>
+				</script>
+
+				<div class="spacer"></div>
+				<div class="fullrow">
+					<div id="detailsBanner" class="fullrow">
+						<div class="fixedcell"></div>
+						<div class="fixedcell">
+							Details for result index:
+						</div>
+						<span data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at(ctrl, 'cursorIndex')"></span>
+					</div>
+				</div>
+				<div id="detailsGroup" data-dojo-type="dojox.mvc.Group" data-dojo-props="target: at(ctrl, 'cursor')">
+					<div class="fullrow">
+						<label class="fixedcell" for="firstInput">First Name:</label>
+						<input class="fixedcell" id="firstInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'First')">
+					</div>
+					<div class="fullrow">
+						<label class="fixedcell" for="lastInput">Last Name:</label>
+						<input class="fixedcell" id="lastInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Last')">
+					</div>
+					<div class="fullrow">
+						<label class="fixedcell" for="locationInput">Location:</label>
+						<input class="fixedcell" id="locationInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Location')">
+					</div>
+					<div class="fullrow">
+						<label class="fixedcell" for="officeInput">Office:</label>
+						<input class="fixedcell" id="officeInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Office')">
+					</div>
+					<div class="fullrow">
+						<label class="fixedcell">Phones:</label>
+						<button type="button" data-dojo-type="dijit.form.Button"
+						data-dojo-props="onClick: function(){ ctrl.phoneAddEmpty(); }">
+							+
+						</button>
+					</div>
+					<div data-dojo-type="dojox/mvc/WidgetList" id="telRepeat"
+					data-dojo-mixins="dojox/mvc/_InlineTemplateMixin"
+					data-dojo-props="children: at('rel:', 'Tel')">
+						<script type="dojox/mvc/InlineTemplate">
+							<div>
+							<div class="fullrow">
+							<div class="fixedcell"></div>
+							<input class="fixedcell" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'name')">
+							<input class="fixedcell" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'number')">
+							<button type="button" data-dojo-type="dijit.form.Button"
+							data-dojo-props="onClick: function(){ ctrl.phoneRemove(${indexAtStartup}); }">-</button>
+							</div>
+							</div>
+						</script>
+					</div>
+					<div class="fullrow">
+						<label class="fixedcell" for="emailInput">Email:</label>
+						<input class="fixedcell" id="emailInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Email')">
+					</div>
+				</div>
+			</div>
+		</div>
+		</div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>ColorPalette Test</title>
+
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true, async:0, extraLocale: ['en-us', 'es-mx']"></script>
+
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="_testCommon.js"></script>
+
+	<script type="text/javascript">
+		var palette;
+	
+		function programatic(){ 
+			var date0 = new Date();
+			palette = new dijit.ColorPalette({palette: "7x10", id: "prog"}, dojo.byId("programPalette"));
+			console.log("creation time for 7x10 palette: " + (new Date() - date0) );
+		}
+
+		function setColor(color){
+			var theSpan = dojo.byId("outputSpan");
+			theSpan.style.color = color;
+			theSpan.innerHTML = color;
+		}
+
+		var async= 0;
+		if(async){
+			require(["dijit/dijit", "dijit/ColorPalette", "dojo/parser", "dojo/domReady!"], programatic);
+		}else{
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit.ColorPalette");
+			dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+			dojo.ready(programatic);
+		}
+	</script>
+</head>
+
+<body class="claro">
+
+	<h1 class="testTitle">dijit.ColorPalette test:</h1>
+
+	<p>Large color palette (7x10), English tooltips:</p>
+	<input id="beforeBig" value="for tabIndex testing"/>
+	<div id="big" data-dojo-type="dijit/ColorPalette" data-dojo-props='onChange:function(){ setColor(this.value); }, lang:"en-us", summary:"This is the palette summary"'></div>
+	Test color is: <span id="outputSpan"></span>.
+	<input id="afterBig" value="for tabIndex testing"/>
+
+	<p>Small color palette (3x4), Spanish tooltips:</p>
+	<input id="beforeSmall" value="for tabIndex testing"/>
+	<div id="small" data-dojo-type="dijit/ColorPalette" data-dojo-props='palette:"3x4", lang:"es-mx"'></div>
+	<input id="afterSmall" value="for tabIndex testing"/>
+
+	<p>Default color palette (7x10) created programatically:</p>
+	<div id="programPalette"></div>
+
+	<p>ColorPalette with value pre-selected, using old style parser parameters:</p>
+	<input id="beforeValuePreselected" value="for tabIndex testing"/>
+	<div id="valuePreselected" dojoType="dijit.ColorPalette" value="#0000ff"></div>
+	<input id="afterValuePreselected" value="for tabIndex testing"/>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Heading</title>
+
+	<script type="text/javascript" src="../deviceTheme.js"
+		data-dojo-config="mblThemeFiles: ['base','TabBar','dojox/mobile/themes/common/domButtons.css']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/dom",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/TabBar"
+		], function(dom, ready, registry){
+			var btn1;
+			setIcon = function(flag){
+				if(flag == 1){
+					btn1.set("iconPos", "");
+					btn1.set("icon", "mblDomButtonWhitePlus");
+				}else if(flag == 2){
+					btn1.set("iconPos", "");
+					btn1.set("icon", "images/tab-icon-33w.png");
+				}else if(flag == 3){
+					btn1.set("iconPos", "29,116,29,29");
+					btn1.set("icon", "images/tab-icons.png");
+				}else if(flag == 4){
+					btn1.set("iconPos", "");
+					btn1.set("icon", "");
+				}
+			}
+			setSelected = function(flag){
+				btn1.set("selected", flag);
+			}
+			setLabel = function(){
+				btn1.set("label", dom.byId("txt1").value);
+			}
+
+			ready(function(){
+				btn1 = registry.byId("btn1");
+			});
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='label:"Arrow"'>
+		<span id="btn1" data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='light:false'>MMMM</span>
+	</div>
+	<table style="margin:20px">
+		<tr>
+			<td style="margin-right:20px">Icon</td>
+			<td><input id="icon1" type="radio" name="icon" onclick="setIcon(1)"><label for="icon1">DOM Buttn</label>
+				<input id="icon2" type="radio" name="icon" onclick="setIcon(2)"><label for="icon2">Image</label>
+				<input id="icon3" type="radio" name="icon" onclick="setIcon(3)"><label for="icon3">Sprite</label>
+				<input id="icon4" type="radio" name="icon" onclick="setIcon(4)" checked><label for="icon4">none</label></td>
+		</tr>
+		<tr>
+			<td style="margin-right:20px">Selected</td>
+			<td><input id="sel1" type="radio" name="selected" onclick="setSelected(true)" value="on"><label for="sel1">on</label>
+				<input id="sel2" type="radio" name="selected" onclick="setSelected(false)" value="off" checked><label for="sel2">off</label></td>
+		</tr>
+		<tr>
+			<td style="margin-right:20px">Label</td>
+			<td><input id="txt1" type="text" value="MMMM"> <input type="button" value="Set" onclick="setLabel()"></td>
+		</tr>
+	</table>
+</body>
+</html>

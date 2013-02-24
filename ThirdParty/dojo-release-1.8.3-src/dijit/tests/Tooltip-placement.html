@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Dojo Tooltip Placement Test</title>
+
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "css/dijitTests.css";
+		
+		div {font-size:9px}
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		data-dojo-config="isDebug: true"></script>
+
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="_testCommon.js"></script>
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dijit.Tooltip");
+		
+		dojo.ready(function(){
+			doh.register("setup", function(){
+				dijit._MasterTooltip.prototype.duration = 0.05; // speed up tooltip fading
+				var view = dojo.window.getBox();
+				var width = view.w;
+				var height = view.h;
+				
+				if(width < 600){
+					//Make the larger tooltips smaller so they fit on the page and pass all tests
+					dojo.byId("test2").setAttribute("promptMessage", "really really really really really really really really really really really really really really really really really really really really");
+					dojo.byId("test5").setAttribute("promptMessage", "really really really really really really really really really really really really really really really really really really really really");
+					dojo.byId("test12").setAttribute("promptMessage", "really really really really really really really really really really really really really really really really really really really really");
+					dojo.byId("test17").setAttribute("promptMessage", "really really really really really really really really really really really really really really really really really really really really");
+					dojo.byId("test19").setAttribute("promptMessage", "really really really really really really really really really really really really really really really really really really really really");
+				}else if(width > 1200){
+					//Make a shorter tooltip longer in order to span the whole width
+					dojo.byId("test1").setAttribute("promptMessage", "really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a");
+					dojo.byId("test4").setAttribute("promptMessage", "really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br>a");
+					dojo.byId("test10").setAttribute("promptMessage", "really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br>a");
+					dojo.byId("test20").setAttribute("promptMessage", "really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br>a");
+				}
+				
+				if(height < 600){
+					//Make the taller tooltips shorter
+					for(var i=1;i<22;i++){
+						if(i==7){
+							//skip
+						}else{
+							dojo.byId("test"+i+"_tall_skinny").setAttribute("promptMessage", "<br><br><br><br>a");
+						}
+					}
+				}
+				
+				dojo.style("test1", "width", width*(0.3)+"px");
+				dojo.style("test1_tall_skinny", "width", width*(0.3)+"px");
+				dojo.style("test2", "width", width*(0.6)+"px");
+				dojo.style("test2_tall_skinny", "width", width*(0.6)+"px");
+				dojo.style("test3", "width", width*(0.9)+"px");
+				dojo.style("test3_tall_skinny", "width", width*(0.9)+"px");
+				dojo.style("test4", "width", width*(0.3)+"px");
+				dojo.style("test4_tall_skinny", "width", width*(0.3)+"px");
+				dojo.style("test5", "width", width*(0.6)+"px");
+				dojo.style("test5_tall_skinny", "width", width*(0.6)+"px");
+				dojo.style("test6", "width", width*(0.9)+"px");
+				dojo.style("test6_tall_skinny", "width", width*(0.9)+"px");
+				dojo.style("test7", "width", width*(1.1)+"px");
+				dojo.style("test8", "width", width*(0.2)+"px");
+				dojo.style("test8_tall_skinny", "width", width*(0.2)+"px");
+				dojo.style("test9", "width", width*(0.3)+"px");
+				dojo.style("test9_tall_skinny", "width", width*(0.3)+"px");
+				dojo.style("test10", "width", width*(0.6)+"px");
+				dojo.style("test10_tall_skinny", "width", width*(0.6)+"px");
+				dojo.style("test11", "width", width*(0.9)+"px");
+				dojo.style("test11_tall_skinny", "width", width*(0.9)+"px");
+				dojo.style("test12", "width", width*(0.3)+"px");
+				dojo.style("test12_tall_skinny", "width", width*(0.3)+"px");
+				dojo.style("test13", "width", width*(0.6)+"px");
+				dojo.style("test13_tall_skinny", "width", width*(0.6)+"px");
+				dojo.style("test14", "width", width*(0.9)+"px");
+				dojo.style("test14_tall_skinny", "width", width*(0.9)+"px");
+				dojo.style("test15", "width", width*(0.9)+"px");
+				dojo.style("test15_tall_skinny", "width", width*(0.9)+"px");
+				dojo.style("test16", "width", width*(0.3)+"px");
+				dojo.style("test16_tall_skinny", "width", width*(0.3)+"px");
+				dojo.style("test17", "width", width*(0.6)+"px");
+				dojo.style("test17_tall_skinny", "width", width*(0.6)+"px");
+				dojo.style("test18", "width", width*(0.9)+"px");
+				dojo.style("test18_tall_skinny", "width", width*(0.9)+"px");
+				dojo.style("test19", "width", width*(0.3)+"px");
+				dojo.style("test19_tall_skinny", "width", width*(0.3)+"px");
+				dojo.style("test20", "width", width*(0.6)+"px");
+				dojo.style("test20_tall_skinny", "width", width*(0.6)+"px");
+				dojo.style("test21", "width", width*(0.9)+"px");
+				dojo.style("test21_tall_skinny", "width", width*(0.9)+"px");
+			});
+
+			//Verify the following is true:
+			//	1. The tooltip is displayed to the right or the left of the textbox
+			//	2. The tooltip arrow is next to the textbox
+			//	3. The user can view the entire tooltip on the screen OR the tooltip is displayed on the side with the largest width available
+			//	4. If the tooltip is not completely visible, verify that it uses all available height
+			function testRightOrLeft(textbox, verifyFullWidthIsUtilized){
+				verifyTooltipArrowPosition(textbox);
+
+				var textboxPos = dojo.position(textbox);
+				var tooltipContainerPos = dojo.position(dojo.query(".dijitTooltip")[0]);
+				
+				var xDiff = textboxPos.x - tooltipContainerPos.x - tooltipContainerPos.w;
+				var toTheLeft = xDiff >= -0.5 && xDiff < 2;
+
+				xDiff = tooltipContainerPos.x - textboxPos.x - textboxPos.w;
+				var toTheRight = xDiff >= -0.5 && xDiff < 2;
+
+				doh.t(toTheLeft || toTheRight, "The tooltip was not to the left or right");
+
+				var tooltip = dijit.Tooltip._masterTT.containerNode;
+				var tooltipPos = dojo.position(tooltip);
+
+				var view = dojo.window.getBox();
+				var isIE6 = dojo.isIE < 7;
+				//verify the entire width is utilized.  Small tooltips will not utilize the entire width.
+				if(verifyFullWidthIsUtilized && !isIE6 && !dojo.isOpera){
+					if(toTheLeft){
+						doh.t(tooltipContainerPos.w + 3/*space in between arrow and textbox*/ >= textboxPos.x, "The entire width was not utilized to the left");					
+					}else{
+						doh.t(tooltipContainerPos.w + 3/*space in between arrow and textbox*/ >= view.w - tooltipContainerPos.x, "The entire width was not utilized to the right");
+					}
+				}
+			
+				//If we cannot view the entire tooltip, verify they side with the most space was choosen and the entire height was utilized.
+				var canViewEntireTooltip = (tooltipContainerPos.x + tooltipContainerPos.w <= view.w+1) && 
+										   (tooltipPos.y + tooltipPos.h <= view.h+1);			
+				if(!canViewEntireTooltip && !isIE6 && !dojo.isOpera){
+					if(toTheLeft){
+						//verify there is more space on the left than the right
+						doh.t(textboxPos.x >= (view.w - textboxPos.x - textboxPos.w), "There is not more space on the left than the right");
+					}else{
+						doh.t(textboxPos.x <= (view.w - textboxPos.x - textboxPos.w), "There is not more space on the right than the left");
+					}
+					//verify the entire height is utilized
+					doh.t(tooltipPos.h >= view.h, "The entire height was not utilized. Tooltip height="+tooltipPos.h+". View height="+view.h);
+				}
+			}
+			
+			function toTheLeftOrRight(textbox){
+				var textboxPos = dojo.position(textbox);
+				var tooltipContainerPos = dojo.position(dojo.query(".dijitTooltip")[0]);
+				
+				var xDiff = textboxPos.x - tooltipContainerPos.x - tooltipContainerPos.w;
+				var toTheLeft = xDiff >= -1 && xDiff < 2;
+
+				xDiff = tooltipContainerPos.x - textboxPos.x - textboxPos.w;
+				var toTheRight = xDiff >= -1 && xDiff < 2;
+
+				doh.t(toTheLeft || toTheRight, "The tooltip was not to the left or right");
+			}
+			
+			//Verify the tooltip arrow is next to the textbox
+			function verifyTooltipArrowPosition(textbox){
+				var textboxPos = dojo.position(textbox);
+				var tooltipConnectorPos = dojo.position(dojo.query(".dijitTooltipConnector")[0]);
+				
+				var middleOfTextbox = textboxPos.y + (textboxPos.h / 2);
+				var middleOfTooltipConnector = tooltipConnectorPos.y + (tooltipConnectorPos.h /2);
+
+				var yDiff = middleOfTextbox - middleOfTooltipConnector;
+				var yAxisValid = yDiff <= 2 && yDiff >= -1.5; //tooltip arrow is at a similar y coord as the box
+				doh.t(yAxisValid, "Y axis is invalid. yDiff was: "+yDiff);
+			}
+			
+			// Test for when the tooltip has large words or nowrap so that it can't be displayed properly,
+			// given the space available.   Verify the following is true:
+			//	   1. The tooltip arrow is next to the textbox
+			// Note that tooltip text may be cut off if there wasn't enough room to display the tooltip
+			// to the left/right of the anchor node
+			function testNoWrapOrLargeWords(textbox){
+				verifyTooltipArrowPosition(textbox);
+			}
+		
+			function testAboveBelow(textbox, verifyConnectorPosition){
+				var textboxPos = dojo.position(textbox);
+				var tooltipConnectorPos = dojo.position(dojo.query(".dijitTooltipConnector")[0]);
+				var tooltipContainerPos = dojo.position(dojo.query(".dijitTooltip")[0]);
+
+				if(verifyConnectorPosition){
+					var xAxisValid = textboxPos.x <= tooltipConnectorPos.x && tooltipConnectorPos.x <= (textboxPos.x + textboxPos.w);
+					doh.t(xAxisValid, "X axis is invalid");
+				}
+			
+				//verify the tooltip is above or below the textbox
+				var yDiff = textboxPos.y - tooltipContainerPos.y - tooltipContainerPos.h;
+				var above = yDiff >= -0.5 && yDiff < 1;
+	
+				yDiff = tooltipContainerPos.y - textboxPos.y - textboxPos.h;
+				var below = yDiff >= -0.5 && yDiff < 1;
+			
+				doh.t(above || below, "above || below");
+			}
+
+			for(var i=1; i<=21; i++){
+				if(i==7){ continue; }
+				(function(i){
+					// Need the closure to run tests on each node, rather than repeating on "test21" node
+					var node = dojo.byId("test"+i),
+						skinnyNode = dojo.byId("test"+i+"_tall_skinny"),
+						nowrapTest = (i==3 || i==6 || i==8 || i==9 || i==13 || i==16 || i==21);
+					doh.register("test" + i, [
+						{
+							name: "test"+i+"_tall_skinny",
+							runTest: function(){
+								var d = new doh.Deferred();
+								dojo.window.scrollIntoView(skinnyNode);
+								dijit.Tooltip.show(skinnyNode.getAttribute("promptMessage"), skinnyNode);
+								setTimeout(d.getTestCallback(function(){
+									// use timeout to wait for fade out of tooltip from old position, and fade in to new position
+									testRightOrLeft(skinnyNode, false);
+								}), 100);
+								return d;
+							}
+						},
+						{
+							name: "test"+i,
+							runTest: function(){
+								var d = new doh.Deferred();
+								dojo.window.scrollIntoView(node);
+								dijit.Tooltip.show(node.getAttribute("promptMessage"), node);
+								setTimeout(d.getTestCallback(function(){
+									// use timeout to wait for fade out of tooltip from old position, and fade in to new position
+									if(nowrapTest){
+										// For nowrap tests  we should only verify the arrow is pointing to the textbox
+										testNoWrapOrLargeWords(node);
+									}else{
+										testRightOrLeft(node, true);
+									}
+								}), 100);
+								return d;
+							}
+						},
+						{
+							name: "test"+i+"_lrs",
+							runTest: function(){
+								var d = new doh.Deferred();
+								dijit.Tooltip.show("!", node);
+								setTimeout(d.getTestCallback(function(){
+									// use timeout to wait for fade out of tooltip from old position, and fade in to new position
+									testRightOrLeft(node, false);
+								}), 100);
+								return d;
+							}
+						},
+						{
+							name: "test"+i+"_abs",
+							runTest: function(){
+								var d = new doh.Deferred();
+								dojo.window.scrollIntoView(node);
+								dijit.Tooltip.hide(node);	// needed since show() below matches node & content of show() above
+								dijit.Tooltip.show("!", node, ["below", "above"]);
+								setTimeout(d.getTestCallback(function(){
+									// use timeout to wait for fade out of tooltip from old position, and fade in to new position
+									testAboveBelow(node, true);
+								}), 100);
+								return d;
+							}
+						},
+						{
+							name: "test"+i+"_ab",
+							runTest: function(){
+								var d = new doh.Deferred();
+								dijit.Tooltip.show(node.getAttribute("promptMessage"), node, ["below", "above"]);
+								setTimeout(d.getTestCallback(function(){
+									// use timeout to wait for fade out of tooltip from old position, and fade in to new position
+									if(nowrapTest){
+										// For nowrap tests we should only verify the arrow is pointing to the textbox
+										// (in most cases it's off the screen)
+										testAboveBelow(node, false);
+									}else{
+										testAboveBelow(node, true);
+									}
+								}), 100);
+								return d;
+							}
+						},
+						{
+							name: "test"+i+"_ab_tall_skinny",
+							runTest: function(){
+								var d = new doh.Deferred();
+								dojo.window.scrollIntoView(skinnyNode);
+								dijit.Tooltip.show(skinnyNode.getAttribute("promptMessage"), skinnyNode, ["below", "above"]);
+								setTimeout(d.getTestCallback(function(){
+									// use timeout to wait for fade out of tooltip from old position, and fade in to new position
+									testAboveBelow(skinnyNode, true);
+								}), 100);
+								return d;
+							}
+						}
+					]);
+				})(i);	// end closure
+			}
+
+			doh.register("anchor inside overflowed div", [
+				{
+					name: "test22",
+					runTest: function(){
+						var d = new doh.Deferred();
+						var node = dojo.byId("test22");
+						var cp = dojo.byId("test22_cp");
+						dojo.window.scrollIntoView(cp);
+						dijit.Tooltip.hide(node);	// needed since show() below matches node & content of show() above
+						dijit.Tooltip.show(node.getAttribute("promptMessage"), node);
+						setTimeout(d.getTestCallback(function(){
+							// use timeout to wait for fade out of tooltip from old position, and fade in to new position
+							toTheLeftOrRight(cp, true);
+						}), 100);
+						return d;
+					}
+				},
+				{
+					name: "test23",
+					runTest: function(){
+						var d = new doh.Deferred();
+						var node = dojo.byId("test23");
+						var cp = dojo.byId("test23_cp");
+						dijit.Tooltip.show(node.getAttribute("promptMessage"), node, null, true);
+						setTimeout(d.getTestCallback(function(){
+							// use timeout to wait for fade out of tooltip from old position, and fade in to new position
+							toTheLeftOrRight(cp, true);
+						}), 100);
+						return d;
+					}
+				}
+			]);
+
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro">
+<table>
+
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test1" promptMessage='really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>	
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test1_tall_skinny" name="test1_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test2" promptMessage='really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really really really really really really really really really really really really reallybig'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test2_tall_skinny" name="test2_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test3" promptMessage='reallyreallylonggermanwordreallyreallyreallyreallyreallyreallyreallylongword big'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test3_tall_skinny" name="test3_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test4" promptMessage='really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test4_tall_skinny" name="test4_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test5" promptMessage='really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallybig'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test5_tall_skinny" name="test5_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test6" promptMessage="<div style='white-space: nowrap'>really really really really big</div>"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test6_tall_skinny" name="test6_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test7" name="test7"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test8" promptMessage="<div style='white-space: nowrap'>really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a</div>"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test8_tall_skinny" name="test8_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<br><br>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test9" promptMessage='reallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallylongword'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test9_tall_skinny" name="test9_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test10" promptMessage='really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test10_tall_skinny" name="test10_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test11" promptMessage='a a a a a a a a a a a a a a a a a a a a a a a a a a a a<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test11_tall_skinny" name="test11_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test12" promptMessage='really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really really big'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test12_tall_skinny" name="test12_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test13" promptMessage="<div style='white-space: nowrap'>really really really really really really really really really really really really really really really really really big</div>"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test13_tall_skinny" name="test13_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test14" promptMessage='really really really really really really really really really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really really big'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test14_tall_skinny" name="test14_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test15" promptMessage='a a a a a a a a a a a a a a a a a a<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test15_tall_skinny" name="test15_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<br>
+	</td>
+	</tr>	
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test16" promptMessage='reallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallylongword big word really big word'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test16_tall_skinny" name="test16_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test17" promptMessage='really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really really big'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test17_tall_skinny" name="test17_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test18" promptMessage='a a a a a a a a a a a a a a a a a a a a a a<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test18_tall_skinny" name="test18_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test19" promptMessage='really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really really big'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test19_tall_skinny" name="test19_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test20" promptMessage='really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test20_tall_skinny" name="test20_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test21" promptMessage='reallyreallyreallyreallyreallyreallylongword<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test21_tall_skinny" name="test21_tall_skinny" promptMessage='<br><br><br><br><br><br><br><br><br><br><br>a'/>
+	</td>
+	</tr>
+</table>
+
+<div id="test22_cp" style="height:90px; width:100px; padding:0px; overflow: auto;">
+   <input type="text" id="test22" style="fontSize:100pt" promptMessage='test overflow'/>
+<br><br><br><br><br>
+</div>
+
+<table width='100%' align='left'><tr><td width='95%'></td><td style="width:5%">
+<div id="test23_cp" dir='rtl' style="height:100px; width:100px; border:1px; overflow:scroll">
+   <input type="text" id="test23" dir='rtl' style="fontSize:20pt" promptMessage='test overflow'/>
+</div>
+</td></tr></table>
+
+</body>
+</html>

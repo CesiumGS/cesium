@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<!-- IE8 beta 2 incorrectly sets TEXTAREA scrollHeight when using strict DTD -->
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Dojo dijit.form.Textarea Widget Test</title>
+
+		<style type="text/css">
+			@import "../../themes/claro/document.css";
+			@import "../css/dijitTests.css";
+
+			br { margin-bottom: 4em; }
+		</style>
+
+		<!-- required: the default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			data-dojo-config="isDebug: true, parseOnLoad: true"></script>
+
+		<!-- only needed for alternate theme testing: -->
+		<script type="text/javascript" src="../_testCommon.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit.form.Textarea");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("dijit.layout.TabContainer");
+			dojo.require("dojo.parser");
+		</script>
+
+	</head>
+	<body class="claro" role="main">
+
+		<h1 class="testTitle">Auto-sizing Textarea Widget Test</h1>
+
+		<!--    to test form submission, you'll need to create an action handler similar to
+		        http://www.utexas.edu/teamweb/cgi-bin/generic.cgi -->
+		<form id="form1" action="" name="example" method="GET">
+			<fieldset class="dijitReset" style="width:800px;">
+			<legend>Various dijit.form.Textarea widgets</legend>
+			<label for="blank">dijit.form.Textarea, initially blank:</label>
+			<textarea id="blank" data-dojo-type="dijit/form/Textarea" data-dojo-props='style:{ fontSize:"24px" }'></textarea>
+			<br>
+
+			<label for="simple">dijit.form.Textarea, inline with maxLength=50:</label>
+			<textarea id="simple" data-dojo-type="dijit/form/Textarea" data-dojo-props='name:"simpleTextArea", maxLength:"50", style:{width:"33%"},
+	         		onChange:function(val){ dojo.byId("ocSimple").value = val; },
+	         		onFocus:function(){ console.log("user focus handler"); },
+	         		onBlur:function(){ console.log("user blur handler"); }
+				'>this is a very simple resizable text area</textarea>
+			<label for="ocSimple">onChange:</label><textarea id="ocSimple" readOnly>not fired yet!</textarea>
+			<br>
+
+			<label for="plain">Native HTML textarea, for comparison: </label><textarea name="plainTextArea" id="plain" rows="3">
+				this is a native text area
+				for comparison
+			</textarea>
+			<br>
+
+			<div data-dojo-type="dijit/layout/TabContainer" data-dojo-props='persist:true, tabStrip:true, style:{width:"100%", height:"20em"}, "aria-label":"tabContainer"'>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Tab 1", "aria-label":"contentpane"'>
+					<label for="programmatic">dijit.form.Textarea in TabContainer, programmatically created with custom styling:</label>
+					<div id="programmaticContainer"></div>
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Tab 2"'>
+					<input type="button" onclick="programmaticTextarea.set('value', 'new value for programmatic textarea\nmore text for testing\nmore\neven more\nvery last line');" value="change value"/>
+				</div>
+			</div>
+			</fieldset>
+			<script type="text/javascript">
+				// See if we can make a widget in script
+				dojo.ready(function(){
+					programmaticTextarea = new dijit.form.Textarea({
+						id: "programmatic",
+						name: "programmaticTextArea",
+						cols: "70",
+						value: "created programatically with\ncustom border, padding,\nmargin",
+						style: {display:"block", border:"5px solid gray", padding:"11px", margin:"7px", fontSize:"14px", minHeight:"49px", maxHeight:"125px"}
+					});
+					setTimeout(function(){ programmaticTextarea.placeAt("programmaticContainer"); }, 500); // make sure sizing can happen later
+				});
+			</script>
+			<br>
+
+
+			<label for="largeTextArea">dijit.form.Textarea, initially full:</label>
+<!--	&#8234; and &#8236; are inserted solely for testing purposes to mark the beginning and end of left-to-right text so that 
+	cogniscent browsers don't render garbled punctuation nor exhibit strange home/end key behavior while in right-to-left mode -->
+			<textarea id="largeTextArea" data-dojo-type="dijit/form/Textarea" data-dojo-props='name:"largeTextArea", style:{ width:"90%" }'>
+&#8234;This is a textarea with a LOT of content.&#8236;
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla &#8234;facilisi.&#8236;
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla &#8234;facilisi.&#8236;
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla &#8234;facilisi.&#8236;
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla &#8234;facilisi.&#8236;
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla &#8234;facilisi.&#8236;
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla &#8234;facilisi.&#8236;
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla &#8234;facilisi.&#8236;
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla &#8234;facilisi.&#8236;
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla &#8234;facilisi.&#8236;
+
+&#8234;This is the end.&#8236;</textarea>
+
+			<h2>Set properties for every dijit.form.Textarea</h2>			
+			<script>
+				function setAttr(attr, value){
+					dijit.registry.byClass('dijit.form.Textarea').forEach(function(widget){ widget.set(attr, value);});
+				}
+			</script>
+			<input type="button" onclick="setAttr('readOnly', false);" value="Remove readOnly"/>
+			<input type="button" onclick="setAttr('readOnly', true);" value="Set readOnly"/>
+			<input type="button" onclick="setAttr('disabled', true);" value="Disable"/>
+			<input type="button" onclick="setAttr('disabled', false);" value="Enable"/>
+
+			<h2>Submit page as form</h2>
+			<div>
+				<button type="button" name="button" onclick="displayData();">view data</button>
+				<input type="submit" name="submit" />
+			</div>
+			<script type="text/javascript">
+				function displayData(){
+					var f = dojo.byId("form1");
+					var s = "";
+					for(var i = 0; i < f.elements.length; i++){
+						var elem = f.elements[i];
+						if(elem.name == "button" || !dojo.isString(elem.value)){ continue; }
+						s += elem.name + ":[" + elem.value + "]\n";
+					}
+					console.log(s);
+				}
+			</script>
+
+		</form>
+	</body>
+</html>

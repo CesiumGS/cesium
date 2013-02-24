@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Variable Height List (Round Rectangle)</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		]);
+	</script>
+	<style>
+		.content {
+			padding:0px 10px;
+			background-color: white;
+		}
+		p {
+			font-family: Helvetica;
+			font-size: 12px;
+		}
+		.title {
+			color: blue;
+			margin-bottom: 4px;
+		}
+		.subtitle {
+			font-style: italic;
+			color: gray;
+			margin: 0px;
+			margin-bottom: 4px;
+		}
+		.subsubtitle {
+			margin: 16px 0px 0px 0px;
+		}
+		.lst {
+			margin: 0px;
+			padding: 0px 14px;
+		}
+		.lst li {
+			font-family: Helvetica;
+			font-size: 12px;
+			margin: 0px;
+			list-style-type: square;
+		}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="home" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">Variable Height List Item</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Top Stories</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='variableHeight:true'>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"#article", transition:"slide"'>
+				Top 10 news stories of the decade
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png", moveTo:"#article", transition:"flip"'>
+				Create client-side diagrammatic interaction in Web applications with GFX
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"#article", transition:"fade"'>
+				Explores advanced topics in the new Java framework for implementing and consuming REST-based Web services, Part 3
+			</li>
+		</ul>
+	</div>
+
+	<div id="article" data-dojo-type="dojox.mobile.View" style="color:black;background-color:white;height:100%">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"#home"'>Article</h1>
+		<div class="content">
+			<h3 class="title">Did you know?</h3>
+			<h4 class="subtitle">Features of dojox.mobile</h4>
+			<h5 class="subsubtitle">No images are used</h5>
+			<ul class="lst">
+			  	<li>UI parts consist of DOM and CSS3.</li>
+				<li>Only application icons are images.</li>
+			</ul>
+			<p>For example, none of the UI parts below are images.<br></p>
+			<img src="images/not-images.png">
+
+			<h5 class="subsubtitle">Removed dependencies on the dojo modules as much as possible</h5>
+			<ul class="lst">
+			  	<li>No dependencies even on some of the essential core modules like Templated, Container, Contained, dojo.query, or dojo.parser.</li>
+			</ul>
+
+			<h5 class="subsubtitle">Support for CSS sprite</h5>
+			<ul class="lst">
+				<li>Application icon images can be aggregated into a single file to reduce the number of http requests.</li>
+			</ul>
+
+			<h5 class="subsubtitle">Possible to use the webkitMobile build option (when PC browser support is unnecessary)</h5>
+			<ul class="lst">
+				<li>Drops IE and Firefox-specific code at build time, and thus reduces the dojo core size</li>
+			</ul>
+		</div>
+	</div>
+</body>
+</html>

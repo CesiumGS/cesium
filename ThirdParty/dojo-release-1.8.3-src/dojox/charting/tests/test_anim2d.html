@@ -1,0 +1,108 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+	<title>Chart 2D: Animation tests</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+	<script type="text/javascript">
+
+        dojo.require("dojox.charting.Chart");
+        dojo.require("dojox.charting.axis2d.Default");
+        dojo.require("dojox.charting.plot2d.ClusteredColumns");
+        dojo.require("dojox.charting.plot2d.StackedAreas");
+
+		dojo.require("dojox.charting.themes.Shrooms");
+		dojo.require("dojox.charting.themes.PlotKit.blue");
+		dojo.require("dojox.charting.themes.PlotKit.cyan");
+		dojo.require("dojox.charting.themes.PlotKit.green");
+		dojo.require("dojox.charting.themes.Ireland");
+		dojo.require("dojox.charting.themes.SageToLime");
+		dojo.require("dojox.charting.themes.Minty");
+		dojo.require("dojox.charting.themes.Tufte");
+
+		dojo.require("dojox.dtl");
+		dojo.require("dojox.dtl.Context");
+		charts = [
+			{
+				description: "Clustered columns with positive and negative values, readable theme, 1-second animate-in.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						setTheme(dojox.charting.themes.Tufte).
+						addAxis("x", { fixLower: "minor", fixUpper: "minor", natural: true }).
+						addAxis("y", { vertical: true, fixLower: "major", fixUpper: "major", includeZero: true }).
+						addPlot("default", { type: "ClusteredColumns", gap: 10, animate: { duration: 1000 } }).
+						addSeries("Series A", [ 2, 1, 0.5, -1, -2 ] ).
+						addSeries("Series B", [ -2, -1, -0.5, 1, 2 ] ).
+						addSeries("Series C", [ 1, 0.5, -1, -2, -3 ] ).
+						addSeries("Series D", [ 0.7, 1.5, -1.2, -1.25, 3 ] ).
+						render();
+				}
+			},
+			
+			{
+				description: "StackedAreas 3-second animate-in.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						setTheme(dojox.charting.themes.Tufte).
+						addAxis("x", { fixLower: "minor", fixUpper: "minor", natural: true }).
+						addAxis("y", { vertical: true, fixLower: "major", fixUpper: "major", includeZero: true }).
+						addPlot("default", { type: "StackedAreas", gap: 10, animate: { duration: 3000 } }).
+						addSeries("Series A", [ 2, 1, 0.5, 1, 1.5 ] ).
+						addSeries("Series B", [ 0, 1, 0.5, 1, 0.5 ] ).
+						addSeries("Series C", [ 1, 0.5, 0, 2, 3 ] ).
+						addSeries("Series D", [ 0.7, 1.5, 1.2, 1.25, 1 ] ).
+						render();
+				}
+			}
+		];
+		var now = function(){
+			return (new Date()).getTime();
+		};
+
+
+		dojo.addOnLoad(function(){
+			var defaultStyle = { width: "400px", height: "200px" };
+			var tmpl = new dojox.dtl.Template(dojo.byId("template").value);
+			var context = new dojox.dtl.Context({ charts: charts });
+			dojo.byId("charts").innerHTML = tmpl.render(context);
+
+			dojo.forEach(charts, function(item, idx){
+				var start = now();
+				var n = dojo.byId("chart_"+idx);
+				dojo.style(n, item.style||defaultStyle);
+				item.makeChart(n);
+				console.debug((now()-start), "ms to create:", (idx+1)+":", item.description);
+			});
+		});
+
+	</script>
+</head>
+<body>
+	<textarea id="template" style="display: none;">
+		{% for item in charts %}
+			<p>{{ forloop.counter }}: {{ item.description }}</p>
+			<div id="chart_{{ forloop.counter0 }}"></div>
+		{% endfor %}
+	</textarea>
+
+	<h1>Chart 2D: Animation tests</h1>
+
+	<div id="charts"></div>
+</body>
+</html>

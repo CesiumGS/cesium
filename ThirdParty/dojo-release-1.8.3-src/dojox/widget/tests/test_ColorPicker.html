@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+	
+	<title>Dojox ColorPicker Test</title>
+	
+	<!-- required: a default theme file, and ColorPicker css -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+	<link rel="stylesheet" href="../ColorPicker/ColorPicker.css">
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css"; 
+		#absolutey {
+			position:absolute;
+			top: 62px;
+			left: 362px;
+		}
+	</style>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes 
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+-->	
+	<script type="text/javascript">
+		dojo.require("dojox.widget.ColorPicker");
+		dojo.require("dijit.form.Button");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+
+		// generic onChange handler:
+		var handler = function(val,id){
+			dojo.byId(id).value = val;
+		};
+
+		dojo.addOnLoad(function(){
+			dojo.connect(dijit.byId("testFocusButton"), "onClick", function(){
+			dijit.byId("picker").focus();
+			});
+		});
+	</script>
+</head>
+<body class="tundra" role="main">
+
+	<h1 class="testTitle">Dojox ColorPicker test</h1>
+
+	<h3>defaults:</h3>
+	<div id="picker" dojoType="dojox.widget.ColorPicker"
+		value="#9ebf6c"
+		onChange="handler(arguments[0],'onchangeOne')"
+	></div>
+	<p><label for="onchangeOne">Current value: </label><input readonly="true" id="onchangeOne" value="???" /></p>
+	
+	<h3>no animation, no hsv, no rgb, no webSafe info:</h3>
+	<div id="pickerToo" dojoType="dojox.widget.ColorPicker"
+		animatePoint="false"
+		showHsv="false"
+		showRgb="false"	
+		webSafe="false"
+		onChange="handler(arguments[0],'onchangeTwo')"
+	></div>
+	<p><label for="onchangeTwo">Current value: </label><input readonly="true" id="onchangeTwo" value="???" /></p>
+	
+	<h3>Fires onChange a lot:</h3>
+	<div id="pickerLive" dojoType="dojox.widget.ColorPicker"
+		webSafe="false"
+		liveUpdate="true"
+		onChange="handler(arguments[0],'onchangeThree')"
+	></div>
+	<p><label for="onchangeThree">Current value: </label><input readonly="true" id="onchangeThree" value="???" /></p>
+	
+	<div id="absolutey">
+		<h3>To See how it positions in an absolute node (editor plugin, input popup)</h3>
+		<input dojoType="dojox.widget.ColorPicker" value="#ededed">
+	</div>
+
+	<button id="testFocusButton" type="button" dojoType="dijit.form.Button">Click to focus first widget</button>
+	
+	<p>that's all folks!</p>
+
+</body>
+</html>

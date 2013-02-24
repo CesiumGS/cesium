@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html dir="ltr">
+<head>
+	<title>Test Pagination plugin of dojox.grid.EnhancedGrid</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<link rel=stylesheet href="support/common.css"/>
+	<style type="text/css">
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+			padding-right: 10em;
+		}
+		.title {
+			text-align:center;
+			margin:1em;
+		}
+ 		#grid{
+			width: 100em;
+			height: 30em;
+		}
+		#API-btn-grp{
+			margin: 1em;
+		}
+	</style>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug:false, parseOnLoad: true"></script>
+	<script type="text/javascript" src="../../../../dijit/tests/_testCommon.js"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojox.grid.EnhancedGrid");
+		dojo.require("dojox.grid.enhanced.plugins.Pagination");
+		dojo.require("dojo.parser");
+		dojo.require('dijit.form.NumberTextBox');
+		dojo.require('dijit.form.Button');
+		dojo.require('dijit.form.Select');
+		
+		var layout = [{
+			cells: [
+				{ field: "id", name:"Identity", datatype:"number", width: 4},
+				{ field: "Genre", name:"Genre", datatype:"string", width: 10},
+				{ field: "Artist", name:"Artist", datatype:"string", width: 10},
+				{ field: "Year", name:"Year", datatype:"string", width: 2.5},
+				{ field: "Album", name:"Album", datatype:"string", width: 10},
+				{ field: "Name", name:"Name", datatype:"string", width: 8},
+				{ field: "Length", name:"Length", datatype:"string", width: 4},
+				{ field: "Track", name:"Track", datatype:"number", width: 3},
+				{ field: "Composer", name:"Composer", datatype:"string", width: 12},
+				{ field: "Download Date", name:"Download Date", datatype:"date", width: 12},
+				{ field: "Last Played", name:"Last Played", datatype:"time", width: 6},
+				{ field: "Heard", name: "Checked", datatype:"boolean", width: 6}
+			]
+		}];
+		var plugins = {
+			pagination: {
+				pageSizes: [10, 25, 30, 50, 100, Infinity],// Array, custom the items per page button
+				description: true,	// boolean, custom whether or not the description will be displayed
+				sizeSwitch: true,	// boolean, custom whether or not the page size switch will be displayed
+				pageStepper: true,	// boolean, custom whether or not the page step will be displayed
+				gotoButton: true,	// boolean, custom whether or not the goto page button will be displayed
+				maxPageStep: 10,	// Integer, custom how many page step will be displayed
+				position: "bottom",	// String, custom the position of the pagination bar. There're two options: top, bottom
+				defaultPage: 2, 	// Integer, which page will be displayed by default 
+				defaultPageSize: 25 // Integer, what page size will be used by default
+			}
+		};
+		
+		var grid;
+		dojo.ready(function(){
+			grid = dijit.byId("grid");
+		});
+		
+		function currentPageSize(){
+			grid.currentPageSize(dijit.byId("pagesize").value);
+		}
+		
+		function currentPage(){
+			grid.currentPage(dijit.byId("page").value);
+		}
+		
+		function scrollToRow(){
+			grid.scrollToRow(dijit.byId("row").value - 1);
+		}
+	</script>
+	<script type="text/javascript" src="support/test_write_store_music.js"></script>
+</head>
+<body class="claro">
+	<h1 class="title">dojox.grid.EnhancedGrid - Pagination</h1>
+	<div id='API-btn-grp'>
+		<input data-dojo-type="dijit.form.NumberTextBox" id="pagesize" data-dojo-id="pagesize" data-dojo-props="style:{width:'40px'}"></input>
+		<button data-dojo-type="dijit.form.Button" onclick="currentPageSize()">Set Page Size</button>
+		 | 
+		<button data-dojo-type="dijit.form.Button" onclick="grid.firstPage()">first page</button>
+		<button data-dojo-type="dijit.form.Button" onclick="grid.prevPage()">previous page</button>
+		 | 
+		Page: 
+		<input data-dojo-type="dijit.form.NumberTextBox" id="page" data-dojo-id="page" data-dojo-props="style:{width:'40px'}"></input>
+		<button data-dojo-type="dijit.form.Button" onclick="currentPage()">Go</button>
+		 | 
+		<button data-dojo-type="dijit.form.Button" onclick="grid.nextPage()">next page</button>
+		<button data-dojo-type="dijit.form.Button" onclick="grid.lastPage()">last page</button>
+		 | 
+		Goto specific row: 
+		<input data-dojo-type="dijit.form.NumberTextBox" id="row" data-dojo-id="row" data-dojo-props="style:{width:'40px'}"></input>
+		<button data-dojo-type="dijit.form.Button" onclick="scrollToRow()">Go</button>
+	</div>
+	<div id="gridContainer">
+		<div id="grid" dojoType="dojox.grid.EnhancedGrid" store="test_store[0]" structure="layout" plugins="plugins" summary="A customized grid summary"></div>
+	</div><br/>
+	<p><strong>Note:</strong> To see the tundra theme, just append <b style="color:blue;">?theme=tundra</b> to the URL.</p>
+</body>
+</html>

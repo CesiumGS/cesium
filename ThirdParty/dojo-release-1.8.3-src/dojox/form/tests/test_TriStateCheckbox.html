@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>TriStateCheckBox Widget Demo</title>
+		<style type="text/css">
+			@import "../../../dijit/themes/claro/document.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+			@import "../resources/TriStateCheckBox.css";
+			label {
+				margin-right: 0.80em;
+				line-height: 25px;
+				vertical-align: middle;
+			}
+		</style>
+		<!-- required: the default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="isDebug: true">
+		</script>
+		<!-- only needed for alternate theme testing: -->
+		<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+		<script type="text/javascript">
+			require(["dojo/_base/kernel", "dojo/parser", "dojo/ready", "dojo/dom", "dojo/json", "dijit/registry", 
+			         "dojox/form/TriStateCheckBox", "dijit/form/Button", "dijit/form/Form"],
+			function(kernel, parser, ready, dom, JSON, registry, TriStateCheckBox){
+				kernel.global["registry"] = registry;
+				reportChecked = function(checked){
+					dom.byId("oncheckedoutput").innerHTML = checked;
+				}
+				reportValueChanged = function(value){
+					dom.byId("onvaluechangedoutput").innerHTML = registry.byId("cb7").get("value");
+				}
+				reportValueChanged2 = function(value){
+					dom.byId("onvaluechangedoutput2").innerHTML = registry.byId("cb8").get("value");
+				}
+				defaultSubmitHandler = function(values){
+					console.debug('actual submitted values: ' + JSON.stringify(values));
+					dom.byId("submitoutput").innerHTML = JSON.stringify(values);
+				}
+				submittedValues = defaultSubmitHandler;
+				
+				ready(function(){
+					parser.parse();
+					var params = {id: "cb6", name: "cb6", checked: true };
+					new TriStateCheckBox(params, "cb6");
+					new TriStateCheckBox({
+						id: "cb11",
+						checked: "mixed"
+					}, "cb11");
+				});
+			});
+		</script>
+	</head>
+	<body class="claro" role="main">
+		<h1 class="testTitle">Dojox TriStateCheckBoxes Test</h1>
+		<p>
+			Here are some TriStateCheckBoxes.  Try clicking, and hovering, tabbing, and using the space bar to select:
+		</p>
+		<!--    to test form submission, you'll need to create an action handler similar to
+		http://www.utexas.edu/teamweb/cgi-bin/generic.cgi -->
+		<form id="myForm" data-dojo-type="dijit/form/Form" data-dojo-props='action:"../../../dijit/tests/formAction.html", method:"", target:"formSubmitIframe"'>
+			<input type="checkbox" id="cb0" checked/>
+			<label for="cb0" style="vertical-align: top; line-height: 1em;">
+				cb0: Vanilla (non-dojo) checkbox (for comparison purposes)
+			</label>
+			<br/>
+			<h2>Standard TriStateCheckbox</h2>
+			<input id="cb1" data-dojo-id="cb1" data-dojo-type="dojox/form/TriStateCheckBox" value="foo" name="cb1" data-dojo-props='onClick:function(){ console.log("clicked cb1") }'/>
+			<label for="cb1">
+				cb1: Standard TriStateCheckbox, with value=foo, clicking generates console log messages
+			</label>
+			<button data-dojo-type="dijit/form/Button" onclick="alert(dijit.byId('cb1').get('value'));">
+				get('value')
+			</button>
+			<br/>
+			<input type="checkbox" id="cb2" data-dojo-type="dojox/form/TriStateCheckBox" name="cb2" data-dojo-props='onChange:reportChecked, checked:true'/>
+			<label for="cb2">
+				cb2: Standard TriStateCheckbox, with default value, initially turned on.
+			</label>
+			<span>"onChange" handler displays attribute 'checked': [<span id="oncheckedoutput"></span>]</span>
+			<button data-dojo-type="dijit/form/Button" onclick="alert(dijit.byId('cb2').get('value'));">
+				get('value')
+			</button>
+			<br/>
+			<input type="checkbox" id="cb3" data-dojo-type="dojox/form/TriStateCheckBox" disabled="disabled" name="cb3" />
+			<label for="cb3">
+				cb3: Disabled TriStateCheckbox
+			</label>
+			<br/>
+			<input type="checkbox" id="cb4" data-dojo-type="dojox/form/TriStateCheckBox" name="cb4" data-dojo-props='readOnly:true, checked:true'/>
+			<label for="cb4">
+				cb4: ReadOnly TriStateCheckbox, turned on
+			</label>
+			<br/>
+			<input type="checkbox" id="cb5" data-dojo-type="dojox/form/TriStateCheckBox" name="cb5" value="" data-dojo-props='onClick:function(){ console.log("clicked cb5"); }'/>
+			<label for="cb5">
+				cb5: Standard TriStateCheckbox, with specified value="", clicking generates console log messages
+			</label>
+			<button data-dojo-type="dijit/form/Button" onclick="alert(dijit.byId('cb5').get('value'));">
+				get('value')
+			</button>
+			<br/>
+			<input type="checkbox" id="cb6" type="text"/>
+			<label for="cb6">
+				cb6: Instantiated from script
+			</label>
+			<br/>
+			<input type="checkbox" id="cb7" data-dojo-type="dojox/form/TriStateCheckBox" name="cb7" data-dojo-props="onChange:reportValueChanged"/>
+			<label for="cb7">
+				cb7: Standard TriStateCheckbox.
+			</label>
+			<button type="button" data-dojo-type="dijit/form/Button">
+				<span>disable</span>
+				<script type="dojo/on" data-dojo-event="click">
+					registry.byId("cb7").set("disabled", true);
+				</script>
+			</button>
+			<button type="button" data-dojo-type="dijit/form/Button">
+				<span>enable</span>
+				<script type="dojo/on" data-dojo-event="click">
+					registry.byId("cb7").set("disabled",false);
+				</script>
+			</button>
+			<button type="button" data-dojo-type="dijit/form/Button">
+				<span>set value to "fish"</span>
+				<script type="dojo/on" data-dojo-event="click">
+					registry.byId("cb7").set("value", "fish");
+				</script>
+			</button>
+			<button type="button" data-dojo-type="dijit/form/Button">
+				<span>Reset value+checked</span>
+				<script type="dojo/on" data-dojo-event="click">
+					registry.byId("cb7").reset();
+					regisrty.byId("cb7").set("checked", true);
+				</script>
+			</button>
+			<span>"onChange" handler displays 'value': [<span id="onvaluechangedoutput"></span>]</span>
+			<br/>
+			<h2>Customized TriStateCheckbox</h2>
+			<input type="checkbox" id="cb8" data-dojo-type="dojox/form/TriStateCheckBox" name="cb8" data-dojo-props='onChange:reportValueChanged2, values:["Done", "Half done"]'/>
+			<label for="cb8">
+				cb8: TriStateCheckbox with specified values=["Done", "Half done"].
+			</label>
+			<span>"onChange" handler displays 'value': [<span id="onvaluechangedoutput2"></span>]</span>
+			<br/>
+			<input type="checkbox" id="cb9" data-dojo-id="cb9" data-dojo-type="dojox/form/TriStateCheckBox" name="cb9" data-dojo-props='states:["mixed", true, false]'/>
+			<label for="cb9">
+				cb9: TriStateCheckbox with customized states cycle: ["mixed", true, false]
+			</label>
+			<br/>
+			<input type="checkbox" id="cb10" data-dojo-id="cb10" data-dojo-type="dojox/form/TriStateCheckBox" name="cb10" data-dojo-props="states:[true, false]"/>
+			<label for="cb10">
+				cb10: TriStateCheckbox with customized states cycle: [true, false]
+			</label>
+			<br/>
+			<input type="checkbox" id="cb11" name="cb11" />
+			<label for="cb11">
+				cb11: TriStateCheckBox created programatically with a value of "mixed"
+			</label>
+			<br/>
+			<button type="submit" data-dojo-type="dijit/form/Button" value="Submit">
+				Submit
+			</button>
+			<button type="reset" data-dojo-type="dijit/form/Button">
+				HTML Reset
+			</button>
+		</form>
+		<br/>
+		<span>Actual submitted values: <span id="submitoutput"></span></span>
+		<iframe name="formSubmitIframe" src="about:blank" onload="if(this.values)submittedValues(this.values)" style="display:none;"></iframe>
+	</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojox QueryReadStore+FilteringSelect Demo</title>
+	<style type="text/css">
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true, useCommentedJson:true"></script>
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">Dojox QueryReadStore + FilteringSelect demo</h1>
+ 
+	<h2>Everything is created ONLY in markup</h2>
+	<div style="float:left;">
+		<div dojoType="dojox.data.QueryReadStore"
+			jsId="store1"
+			doClientPaging="true"
+			url="../tests/stores/QueryReadStore.php"
+			requestMethod="post"></div>
+		<div dojoType="dijit.form.FilteringSelect" id="fs1" store="store1" pageSize="10" autoComplete="false"></div>
+		<button dojoType="dijit.form.Button" onclick="dijit.byId('fs1').reset()">reset</button>
+	</div>
+	<div style="float:left; margin-left:5em;">
+		var w = dijit.byId("fs1");
+		<br /><input id="value1" type="text" /> = w.value
+		<br /><input id="itemId1" type="text" /> = w.item ? w.store.getValue(w.item, "id") : "-"
+		<br /><input id="displayedValue1" type="text" /> = w.get('displayedValue')
+		<br /><input id="isValid1" type="text" /> = w.isValid()
+		<br /><button dojoType="dijit.form.Button" onclick="refresh1()">refresh</button>
+	</div>
+
+	<script type="text/javascript">
+		dojo.require("dojox.data.QueryReadStore");
+		dojo.require("dijit.form.FilteringSelect");
+		dojo.require("dijit.form.Button");
+		dojo.require("dojo.parser");
+		
+		var w = null;
+		var refresh1 = function() {
+			dojo.byId("value1").value = w.value;
+			dojo.byId("itemId1").value = w.item ? w.store.getValue(w.item, "id") : "-";
+			dojo.byId("displayedValue1").value = w.get('displayedValue');
+			dojo.byId("isValid1").value = w.isValid();
+		};
+		dojo.addOnLoad(function() {
+			w = dijit.byId("fs1");
+			dojo.connect(w.domNode, "onkeyup", refresh1);
+			dojo.connect(w, "onBlur", refresh1);
+			dojo.connect(w, "onChange", refresh1);
+			refresh1();
+		});
+	</script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>RoundRectList - inherit</title>
+
+	<link href="../themes/common/domButtons.css" rel="stylesheet"/>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		]);
+	</script>
+	<style>
+	.textBox {
+		overflow: hidden;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="home" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">News</h1>
+
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Image Icon</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='
+			variableHeight:true,
+			deleteIconBase:"images/i-icon-1.png",
+			iconBase:"images/i-icon-2.png",
+			rightIconBase:"images/i-icon-4.png",
+			rightIcon2Base:"images/i-icon-3.png"'>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div class="textBox">
+					Image Icon.<br>
+					Explores advanced topics in the new Java framework for implementing and consuming REST-based Web services, Part 1
+				</div>
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div class="textBox">
+					Image Icon.<br>
+					Explores advanced topics in the new Java framework for implementing and consuming REST-based Web services, Part 2
+				</div>
+			</li>
+		</ul>
+
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Sprite Icon</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='
+			variableHeight:true,
+			deleteIconBase:"images/i-icon-all.png", deleteIconPos:"0,0,29,29",
+			iconBase:"images/i-icon-all.png", iconPos:"0,29,29,29",
+			rightIconBase:"images/i-icon-all.png", rightIconPos:"0,87,29,29",
+			rightIcon2Base:"images/i-icon-all.png", rightIcon2Pos:"0,58,29,29"'>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div class="textBox">
+					Sprite Icon.<br>
+					Explores advanced topics in the new Java framework for implementing and consuming REST-based Web services, Part 1
+				</div>
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div class="textBox">
+					Sprite Icon.<br>
+					Explores advanced topics in the new Java framework for implementing and consuming REST-based Web services, Part 2
+				</div>
+			</li>
+		</ul>
+
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Dom Button</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='
+			variableHeight:true,
+			deleteIconBase:"mblDomButtonRedCircleMinus",
+			iconBase:"mblDomButtonSilverCircleDownArrow",
+			rightIconBase:"mblDomButtonSilverCircleGreenButton",
+			rightIcon2Base:"mblDomButtonSilverCircleOrangeButton"'>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div class="textBox">
+					Dom Button.<br>
+					Explores advanced topics in the new Java framework for implementing and consuming REST-based Web services, Part 1
+				</div>
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				<div class="textBox">
+					Dom Button.<br>
+					Explores advanced topics in the new Java framework for implementing and consuming REST-based Web services, Part 2
+				</div>
+			</li>
+		</ul>
+
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Check List</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='
+			select:"multiple",
+			variableHeight:true,
+			checkClass:"images/i-icon-1.png"'>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				Image Icon.<br>
+				Explores advanced topics in the new Java framework for implementing and consuming REST-based Web services, Part 1
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				Image Icon.<br>
+				Explores advanced topics in the new Java framework for implementing and consuming REST-based Web services, Part 2
+			</li>
+		</ul>
+
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Check List (with unchecked icon)</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='
+			select:"multiple",
+			variableHeight:true,
+			checkClass:"images/i-icon-1.png",
+			uncheckClass:"images/i-icon-2.png"'>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				Image Icon.<br>
+				Explores advanced topics in the new Java framework for implementing and consuming REST-based Web services, Part 1
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem">
+				Image Icon.<br>
+				Explores advanced topics in the new Java framework for implementing and consuming REST-based Web services, Part 2
+			</li>
+		</ul>
+	</div>
+</body>
+</html>

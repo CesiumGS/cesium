@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+
+	<title>Container</title>
+
+	<script type="text/javascript" src="../../dojo/dojo.js" data-dojo-config="isDebug: true"></script>
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dijit._Widget");
+		dojo.require("dijit._Container");
+		dojo.require("dijit._Contained");
+
+		dojo.require("dojo.parser");
+
+		dojo.ready(function(){
+			dojo.declare("TestContainer",
+				[dijit._Widget, dijit._Container], { }
+			);
+	
+			dojo.declare("TestContained",
+				[dijit._Widget, dijit._Contained], {}
+			);
+
+			doh.register("parse", function(){
+				dojo.parser.parse();
+			});
+
+			doh.register("dijit._Container",
+				[
+					{
+						name: "getChildren",
+						runTest: function(t){
+							console.log("getChildren test");
+							var c = dijit.byId("container");
+							var children = c.getChildren();
+							t.is(4, children.length);
+							t.is("zero", children[0].id);
+							t.is("one", children[1].id);
+							t.is("two", children[2].id);
+							t.is("three", children[3].id);
+						}
+					},
+					{
+						name: "_getSiblingOfChild",
+						runTest: function(t){
+							var c = dijit.byId("container");
+							var children = c.getChildren();
+							t.is("one", c._getSiblingOfChild(children[0], 1).id);
+							t.is("two", c._getSiblingOfChild(children[1], 1).id);
+							t.is("three", c._getSiblingOfChild(children[2], 1).id);
+							t.is(null, c._getSiblingOfChild(children[3], 1));
+							t.is(null, c._getSiblingOfChild(children[0], -1));
+							t.is("zero", c._getSiblingOfChild(children[1], -1).id);
+							t.is("one", c._getSiblingOfChild(children[2], -1).id);
+							t.is("two", c._getSiblingOfChild(children[3], -1).id);
+						}
+					},
+					{
+						name: "getIndexOfChild",
+						runTest: function(t){
+							var c = dijit.byId("container");
+							t.is(0, c.getIndexOfChild(dijit.byId("zero")));
+							t.is(1, c.getIndexOfChild(dijit.byId("one")));
+							t.is(2, c.getIndexOfChild(dijit.byId("two")));
+							t.is(3, c.getIndexOfChild(dijit.byId("three")));
+							t.is(-1, c.getIndexOfChild(dijit.byId("outside")));
+							t.is(-1, c.getIndexOfChild(dijit.byId("outsideCont")));
+						}
+					},
+					{
+						name: "getIndexInParent",
+						runTest: function(t){
+							t.is(0, dijit.byId("zero").getIndexInParent());
+							t.is(1, dijit.byId("one").getIndexInParent());
+							t.is(2, dijit.byId("two").getIndexInParent());
+							t.is(-1, dijit.byId("outsideCont").getIndexInParent());
+						}
+					},
+					{
+						name: "removeChild",
+						runTest: function(t){
+							var c = dijit.byId("container");
+							var children = c.getChildren();
+							t.is(4, children.length);
+							c.removeChild(dijit.byId("zero"));
+							c.removeChild(1); // should remove "two" - because zero is already removed
+							children = c.getChildren();
+							t.is(2, children.length);
+							t.is("one", children[0].id);
+							t.is("three", children[1].id);
+						}
+					},
+					{
+						name: "addChild",
+						runTest: function(t){
+							var c = dijit.byId("container");
+
+							// Add child at beginning
+							c.addChild(dijit.byId("zero"), 0);
+							children = c.getChildren();
+							t.is(3, children.length);
+							t.is("zero", children[0].id, "after addChild(zero), zero");
+							t.is("one", children[1].id, "after addChild(zero), one");
+							t.is("three", children[2].id, "after addChild(zero), three");
+
+							// Add child in middle
+							c.addChild(dijit.byId("two"), 2);
+							children = c.getChildren();
+							t.is(4, children.length);
+							t.is("zero", children[0].id, "after addChild(two), zero");
+							t.is("one", children[1].id, "after addChild(two), one");
+							t.is("two", children[2].id, "after addChild(two), two");
+							t.is("three", children[3].id, "after addChild(two), three");
+
+							// Add child at end
+							c.addChild(new TestContained({id: "four"}));
+							children = c.getChildren();
+							t.is(5, children.length);
+							t.is("zero", children[0].id, "after addChild(four), zero");
+							t.is("one", children[1].id, "after addChild(four), one");
+							t.is("two", children[2].id, "after addChild(four), two");
+							t.is("three", children[3].id, "after addChild(four), three");
+							t.is("four", children[4].id, "after addChild(four), three");
+						}
+					}
+				]
+			);
+
+			doh.run();
+		});
+
+	</script>
+</head>
+<body class="claro">
+
+	<div id="container" data-dojo-type="TestContainer">
+		<!-- comment just to make sure that numbering isn't thrown off -->
+		<div id="zero" data-dojo-type="TestContained"></div>
+		<div id="one" data-dojo-type="TestContained"></div>
+		<div id="two" data-dojo-type="TestContained"></div>
+		<div id="three" data-dojo-type="dijit/_Widget"></div>
+	</div>
+	<div id="outside" data-dojo-type="dijit/_Widget"></div>
+	<div id="outsideCont" data-dojo-type="TestContained"></div>
+</body>
+</html>

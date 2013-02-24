@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot CrossWindow Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_CrossWindow.html');
+
+				doh.register("CrossWindow", [
+					{
+						name: "Create widget on main window",
+						timeout: 2000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var widget = dijit.byId("simple_0");
+								doh.t(widget, "The first widget was not created");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "Pop up new window",
+						timeout: 3000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("popupLink", 100, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var widget = dijit.byId("simple3");
+								doh.t(widget, "The 3rd widget was not created");
+								doh.is("mainpage", widget.domNode.ownerDocument.body.id);
+								doh.is("Templated in IE Popup Test", widget.domNode.ownerDocument.title);
+
+								widget = dijit.byId("simple2");
+								doh.t(widget, "The 2nd widget was not created");
+								doh.is("popup", widget.domNode.ownerDocument.body.id);
+								doh.is("IE Cross Window", widget.domNode.ownerDocument.title);
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

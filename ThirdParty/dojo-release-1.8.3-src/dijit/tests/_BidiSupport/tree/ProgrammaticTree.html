@@ -1,0 +1,214 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html dir="ltr">
+    <head>
+        <style type="text/css">
+            body, html { font-family:helvetica,arial,sans-serif; font-size:90%; }
+        </style>
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			data-dojo-config="parseOnLoad: true, isDebug: true">
+		</script>
+		<link id="themeStyles" rel="stylesheet" href="../../../../dijit/themes/claro/claro.css"/>
+        <script type="text/javascript">
+            dojo.require("doh.runner");
+			dojo.require("dojo.data.ItemFileReadStore");
+            dojo.require("dijit.Tree");
+            dojo.require("dijit._BidiSupport");
+            dojo.addOnLoad(function() {
+                var store = new dojo.data.ItemFileReadStore({
+                    url: "../../../../dijit/tests/_BidiSupport/_data/countriesHeb.json"
+                });
+                var treeModel = new dijit.tree.ForestStoreModel({
+                   store: store,
+                    query: {
+                        "type": "continent"
+                    },
+                    rootId: "root",
+                    rootLabel: "Continents!",
+                    childrenAttrs: ["children"]
+                });
+                new dijit.Tree({
+ 					textDir: "ltr",
+                    model: treeModel
+                },
+                "treeLtr");
+				new dijit.Tree({
+ 					textDir: "rtl",
+                    model: treeModel
+                },
+                "treeRtl");
+                new dijit.Tree({
+ 					textDir: "auto",
+                    model: treeModel
+                },
+                "treeAuto");
+				var treeRtl, treeLtr, treeAuto, buttonLtr, buttonRtl, buttonAuto;
+				function testNodeAuto(node,textDir){
+					doh.is(node.tree._checkContextual(node.label), node.labelNode.dir, "direction of " + node.tree.id +" : rootNode");
+					if(!node.item.children){
+						return;
+					}
+					dojo.forEach(node.getChildren(), function(childNode){
+						//doh.is(textDir, childNode.labelNode.dir, "direction of " + childNode.tree.id + " element: " + i);
+						testNodeAuto(childNode,textDir);
+					});
+				}
+				function testNode(node,textDir){
+					doh.is(textDir, node.labelNode.dir, "direction of " + node.tree.id +" : rootNode");
+					if(!node.item.children){
+						return;
+					}
+					dojo.forEach(node.getChildren(), function(childNode){
+						//doh.is(textDir, childNode.labelNode.dir, "direction of " + childNode.tree.id + " element: " + i);
+						testNode(childNode,textDir);
+					});
+				}
+				function expandedNodesTextDirTest(tree, textDir){
+					textDir == "auto" ? testNodeAuto(tree.rootNode, textDir) : testNode(tree.rootNode, textDir);
+				}
+				doh.register("initial", [
+					{
+						name: "initial dirs",
+						setUp: function(){
+							treeRtl = dijit.byId("treeRtl");
+							treeLtr = dijit.byId("treeLtr");
+							treeAuto = dijit.byId("treeAuto");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+							setTimeout(d.getTestCallback(function(){
+								doh.is("rtl", treeRtl.rootNode.labelNode.dir, "direction of treeRtl: rootNode");
+								doh.is("ltr", treeLtr.rootNode.labelNode.dir, "direction of treeLtr: rootNode");
+								doh.is("ltr", treeAuto.rootNode.labelNode.dir, "direction of treeAuto: rootNode");
+								var rtlChildren = treeRtl.rootNode.getChildren(), ltrChildren = treeLtr.rootNode.getChildren(),
+									autoChildren = treeAuto.rootNode.getChildren();
+								for(var i = 0 ; i < rtlChildren.length ; i++){
+									doh.is("rtl", rtlChildren[i].labelNode.dir, "direction of treeRtl element: " + i);
+									doh.is("ltr", ltrChildren[i].labelNode.dir, "direction of treeLtr element: " + i);
+									doh.is(treeAuto._checkContextual(autoChildren[i].label), autoChildren[i].labelNode.dir, "direction of treeAuto element: " + autoChildren[i].label);
+								}
+							}), 100);
+							return d;
+						}
+					},
+					{
+						name: "expanded RTL",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							treeRtl.expandAll().then(d.getTestCallback(function(){
+								expandedNodesTextDirTest(treeRtl, "rtl");
+							}));
+							return d;
+						}
+					},
+					{
+						name: "expanded LTR",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							treeLtr.expandAll().then(d.getTestCallback(function(){
+								expandedNodesTextDirTest(treeLtr, "ltr");
+							}));
+							return d;
+						}
+					},
+					{
+						name: "expanded AUTO",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							treeAuto.expandAll().then(d.getTestCallback(function(){
+								expandedNodesTextDirTest(treeAuto, "auto");
+							}));
+							return d;
+						}
+					}
+				]);
+				doh.register("Dynamic change textDir", [
+					{
+						name: 'check "set("textDir", textDir)" function',
+						setUp: function(){
+							treeRtl = dijit.byId("treeRtl");
+							treeLtr = dijit.byId("treeLtr");
+							treeAuto = dijit.byId("treeAuto");
+							buttonLtr = dojo.byId("buttonLtr");
+							buttonRtl = dojo.byId("buttonRtl");
+							buttonAuto = dojo.byId("buttonAuto");
+						},
+						runTest: function(){
+							dijit.byId("treeRtl").set("textDir", "ltr");
+							expandedNodesTextDirTest(treeRtl, "ltr");
+							expandedNodesTextDirTest(treeAuto, "auto");
+						}
+					},
+					{
+						name: 'set using the buttons: LTR',
+						runTest: function(){
+							buttonLtr.click();
+							expandedNodesTextDirTest(treeRtl, "ltr");
+							expandedNodesTextDirTest(treeLtr, "ltr");
+							expandedNodesTextDirTest(treeAuto, "ltr");
+						}
+					},
+					{
+						name: 'set using the buttons: RTL',
+						runTest: function(){
+							buttonRtl.click();
+							expandedNodesTextDirTest(treeRtl, "rtl");
+							expandedNodesTextDirTest(treeLtr, "rtl");
+							expandedNodesTextDirTest(treeAuto, "rtl");
+						}
+					},
+					{
+						name: 'set using the buttons: AUTO',
+						runTest: function(){
+							buttonAuto.click();
+							expandedNodesTextDirTest(treeRtl, "auto");
+							expandedNodesTextDirTest(treeLtr, "auto");
+							expandedNodesTextDirTest(treeAuto, "auto");
+						}
+					}
+				]);
+				doh.run();
+            });
+        </script>
+    </head>
+    <body class=" claro ">
+		<table>
+			<tr><td>
+					<label for="treeLtr" >
+						<b>  I'm a LTR Tree   </b>
+					</label>
+					<div id="treeLtr"></div>
+				</td>
+				<td>
+					<label for="treeRtl" >
+						<b>  I'm a RTL Tree   </b>
+					</label>
+					<div id="treeRtl"></div>
+				</td>
+				<td>
+					<label for="treeAuto" >
+						<b>  I'm a Contextual Tree   </b>
+					</label>
+					<div id="treeAuto"></div>
+				</td>
+			</tr>
+		</table>
+		<input id="buttonRtl" type="button" value="RTL"
+			onclick="dijit.byId('treeLtr').set('textDir','rtl');
+				dijit.byId('treeRtl').set('textDir','rtl');
+				dijit.byId('treeAuto').set('textDir','rtl');"
+		/>
+		<input id="buttonLtr" type="button" value="LTR"
+			onclick="dijit.byId('treeLtr').set('textDir','ltr');
+				dijit.byId('treeRtl').set('textDir','ltr');
+				dijit.byId('treeAuto').set('textDir','ltr');"
+		/>
+		<input id="buttonAuto" type="button" value="AUTO"
+			onclick="dijit.byId('treeLtr').set('textDir','auto');
+				dijit.byId('treeRtl').set('textDir','auto');
+				dijit.byId('treeAuto').set('textDir','auto');"
+		/>
+    </body>
+</html>

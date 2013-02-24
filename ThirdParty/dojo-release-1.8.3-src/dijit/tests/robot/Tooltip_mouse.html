@@ -1,0 +1,289 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot Tooltip Mouse Test</title>
+
+		<style>
+			@import "../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+		require([
+				"doh/runner", "dojo/robotx",
+				"dojo/dom", "dojo/dom-geometry", "dojo/_base/lang", "dojo/query", "dojo/window",
+				"dijit/tests/helpers", "dojo/domReady!"
+			], function(doh, robot, dom, domGeom, lang, query, winUtils, helpers){
+				robot.initRobot('../test_Tooltip.html');
+
+				// Pointer to master tooltip.  This gets set in the first test when the
+				// first tooltip is shown
+				var masterTT;
+
+				doh.register(function setup(){
+					// get pointer to registry in the iframe
+					registry = robot.window.require("dijit/registry");
+					dfocus = robot.window.require("dijit/focus");
+					Tooltip = robot.window.require("dijit/Tooltip");
+				});
+
+				doh.register("dijit.Tooltip mouse tests", [
+					{
+						name: "show on mouse over",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								around = dom.byId("four");
+
+							robot.mouseMoveAt("four", 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								// At this point the master tooltip should have been created, so save in
+								// global variable
+								masterTT = Tooltip._masterTT;
+
+								doh.t(masterTT && helpers.isVisible(masterTT.domNode), "tooltip shown");
+							}), 2000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "hide on unhover",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Move off of the "button w/tooltip" to node which doesn't have a tooltip
+							robot.mouseMoveAt(query("h1")[0], 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isHidden(masterTT.domNode), "tooltip hidden");
+							}), 2000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "click to focus, then mouse away",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.mouseMoveAt("id1", 500);
+							robot.mouseClick({left: true}, 500);
+
+							robot.sequence(d.getTestErrback(function(){
+								doh.t(masterTT && helpers.isVisible(masterTT.domNode), "tooltip shown");
+								doh.is("id1", dfocus.curNode && dfocus.curNode.id, "node is focused");
+							}), 2000);
+
+							// Move off of the focused node to node which doesn't have a tooltip
+							robot.mouseMoveAt(query("h1")[0], 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isHidden(masterTT.domNode), "tooltip hidden");
+							}), 2000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("Tooltip on Menu", [
+					{
+						name: "show tooltip on MenuItem",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Click the DropDownButton to open the Menu
+							robot.mouseMoveAt("ddb", 500);
+							robot.mouseClick({left: true}, 500);
+
+							// Move over the MenuItem to show the tooltip
+							robot.mouseMoveAt("copy", 2000);
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isVisible(masterTT.domNode), "tooltip shown");
+								doh.is("tooltip for copy", lang.trim(helpers.innerText(masterTT.domNode)), "tooltip text");
+							}), 750);
+
+							return d;
+						}
+					},
+
+					{
+						name: "hide Tooltip on Menu close",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Click the MenuItem to close the menu
+							robot.mouseClick({left: true}, 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(helpers.isHidden(registry.byId("ddm").domNode), "menu hidden");
+								doh.t(masterTT && helpers.isHidden(masterTT.domNode), "tooltip hidden");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("Tooltip in TitlePane", [
+					{
+						name: "show tooltip on span in TitlePane",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.mouseMoveAt("tpTooltipTarget", 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isVisible(masterTT.domNode), "tooltip shown");
+								doh.is("tooltip on TitlePane span", lang.trim(helpers.innerText(masterTT.domNode)), "tooltip text");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("Mouse over nested div", [
+					{
+						name: "mouse over nested div",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Start with mouse to the left of the nested divs
+							robot.mouseMoveAt("nested", 500, 0, -50, 0);
+
+							// Then move to inner div.   The onmouseenter event will occur with evt.target == inner div
+							robot.mouseMoveAt("nested", 500, 0);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isVisible(masterTT.domNode), "tooltip shown");
+
+								var tooltipPos = domGeom.position(masterTT.domNode),
+									anchorPos = domGeom.position("nested");
+								doh.t(tooltipPos.x >= anchorPos.x + anchorPos.w,
+										"tooltip pos " + tooltipPos.x + " > anchor right edge at " +
+												anchorPos.x + " + " + anchorPos.w);
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("Delegation", [
+					function scrollIntoView(){
+						// Scroll the whole table into view to make tooltip position tests work correctly
+						winUtils.scrollIntoView("myTable");
+					},
+					{
+						name: "mouse over row 1",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.mouseMoveAt("myTable-row1", 500, 0);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isVisible(masterTT.domNode), "tooltip shown");
+								doh.is("Tooltip for row 1", lang.trim(helpers.innerText(masterTT.domNode)), "tooltip text");
+
+								var tooltipPos = domGeom.position(masterTT.domNode),
+									anchorPos = domGeom.position("myTable-row1");
+								doh.t(tooltipPos.y + tooltipPos.h/2 >= anchorPos.y,
+										"tooltip pos " + tooltipPos.y + " height " + tooltipPos.h +
+										"anchor " + anchorPos.y + " + height " + anchorPos.h);
+								doh.t(tooltipPos.y + tooltipPos.h/2 <= anchorPos.y + anchorPos.h,
+										"tooltip pos " + tooltipPos.y + " height " + tooltipPos.h +
+										"anchor " + anchorPos.y + " + height " + anchorPos.h);
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "mouse over row 3",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.mouseMoveAt("myTable-row3", 500, 0);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isVisible(masterTT.domNode), "tooltip shown");
+								doh.is("Tooltip for row 3", lang.trim(helpers.innerText(masterTT.domNode)), "tooltip text");
+
+								var tooltipPos = domGeom.position(masterTT.domNode),
+									anchorPos = domGeom.position("myTable-row3");
+								doh.t(tooltipPos.y + tooltipPos.h/2 >= anchorPos.y,
+										"tooltip pos " + tooltipPos.y + " height " + tooltipPos.h +
+										"anchor " + anchorPos.y + " + height " + anchorPos.h);
+								doh.t(tooltipPos.y + tooltipPos.h/2 <= anchorPos.y + anchorPos.h,
+										"tooltip pos " + tooltipPos.y + " height " + tooltipPos.h +
+										"anchor " + anchorPos.y + " + height " + anchorPos.h);
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "mouse over row 4",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.mouseMoveAt("myTable-row4", 500, 0);
+
+							robot.sequence(d.getTestCallback(function(){
+								// should be no tooltip for rows >= 4
+								doh.t(masterTT && helpers.isHidden(masterTT.domNode), "tooltip hidden");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "mouse over row 2",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.mouseMoveAt("myTable-row2", 500, 0);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && helpers.isVisible(masterTT.domNode), "tooltip shown");
+								doh.is("Tooltip for row 2", lang.trim(helpers.innerText(masterTT.domNode)), "tooltip text");
+
+								var tooltipPos = domGeom.position(masterTT.domNode),
+									anchorPos = domGeom.position("myTable-row2");
+								doh.t(tooltipPos.y + tooltipPos.h/2 >= anchorPos.y,
+										"tooltip pos " + tooltipPos.y + " height " + tooltipPos.h +
+										"anchor " + anchorPos.y + " + height " + anchorPos.h);
+								doh.t(tooltipPos.y + tooltipPos.h/2 <= anchorPos.y + anchorPos.h,
+										"tooltip pos " + tooltipPos.y + " height " + tooltipPos.h +
+										"anchor " + anchorPos.y + " + height " + anchorPos.h);
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

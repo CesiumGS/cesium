@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Heading Tests</title>
+<link href="css/test.css" rel="stylesheet"/>
+<script type="text/javascript" src="../../deviceTheme.js"></script>
+<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+<script language="JavaScript" type="text/javascript">
+	var TEXTAREA_ROWS = 3;
+	var TEXTAREA_COLS = 20;
+	var TEXTAREA_INNERHTML = "ExpandingTextArea";
+	var TEXTAREA_NEW_VALUE = "This is mobile ExpandingTextArea.\nThis text area is automaticaly Expanding.\nHello dojox.mobile";
+	var WIDGET_CLASSNAME1 = "mblHeading";
+	var WIDGET_CLASSNAME2 = "mblHeadingCenterTitle";
+	var WIDGET_SPANTITLE_CLASSNAME = "mblHeadingSpanTitle";
+	var WIDGET_DIVTITLE_CLASSNAME = "mblHeadingDivTitle";
+	var WIDGET_BUTTON_CLASSNAME = "mblToolBarButton mblToolBarButtonHasLeftArrow";
+	var WIDGET_BUTTON_HEAD_CLASSNAME = "mblToolBarButtonArrow mblToolBarButtonLeftArrow mblColorDefault mblColorDefault45";
+	var WIDGET_BUTTON_HEAD_CLASSNAME_IE = "mblToolBarButtonArrow mblToolBarButtonLeftArrow";
+	var WIDGET_BUTTON_BODY_CLASSNAME = "mblToolBarButtonBody mblColorDefault";
+	var WIDGET_TITLE_TEXT1 = "View 1";
+	var WIDGET_TITLE_TEXT2 = "View 2";
+	var WIDGET_BACK_TEXT = "Settings";
+	var WIDGET_HEIGHT1 = "44";
+	var WIDGET_OFFSETHEIGHT1 = 44;
+	var WIDGET_OFFSETHEIGHT2 = 90;
+
+	require([
+		"dojo/sniff",
+		"dojo/dom-construct", // dojo.place
+		"dojo/dom-class", // dojo.hasClass
+		"dojo/ready", // dojo.ready
+		"dojo/_base/lang", // lang.trim
+		"dijit/registry",  // dijit.byId
+		"doh/runner",	// doh functions
+		"dojox/mobile/Heading",
+		"dojox/mobile",				// This is a mobile app.
+		"dojox/mobile/View",		// This mobile app uses mobile view
+		"dojox/mobile/compat",		// This mobile app supports running on desktop browsers
+		"dojox/mobile/parser"		// This mobile app uses declarative programming with fast mobile parser
+	], function(has, domConst, domClass, ready, lang, registry, runner, Heading){
+
+		function _createHeadingDeclaratively(widgetId) {
+			return registry.byId(widgetId);
+		};
+
+		function _createHeadingProgrammatically(placeHolderId, widgetId, labelText){
+			// Create SwapView
+			var r = new Heading({id:widgetId, back:"Settings", moveTo:"settings", label:labelText});
+			runner.assertNotEqual(null, r);
+			domConst.place(r.domNode, placeHolderId, "replace");
+			r.startup();
+			
+			return r;
+		};
+
+		function _createHeadingProgrammaticallyWithSourceNodeReference(widgetId){
+			// Create IconContainer
+			var r = new Heading({back:"Settings", moveTo:"settings"}, widgetId);
+
+			r.startup();
+			return r;
+		};
+
+		function _assertCorrectHeading(widget, titleText, backText, backClassName){
+			runner.assertNotEqual(null, widget, "IconItem: Did not instantiate.");
+			runner.assertTrue(domClass.contains(widget.domNode, WIDGET_CLASSNAME1), WIDGET_CLASSNAME1 + " id=" + widget.domNode.id);
+	//		runner.assertTrue(domClass.contains(widget.domNode, WIDGET_CLASSNAME2), WIDGET_CLASSNAME2 + " id=" + widget.domNode.id);
+			runner.assertEqual(WIDGET_OFFSETHEIGHT1, widget.domNode.offsetHeight, "style.height id=" + widget.domNode.id);
+			runner.assertEqual(WIDGET_SPANTITLE_CLASSNAME, widget.labelNode.className);
+			runner.assertEqual(WIDGET_DIVTITLE_CLASSNAME, widget.labelDivNode.className);
+			runner.assertEqual(titleText, widget.labelNode.innerHTML, "widget.labelNode.innerHTML");
+			runner.assertEqual(titleText, widget.labelDivNode.innerHTML, "widget.labelDivNode.innerHTML");
+			runner.assertEqual(backClassName, widget.backButton.domNode.className);
+			runner.assertEqual(has("ie") ? WIDGET_BUTTON_HEAD_CLASSNAME_IE : WIDGET_BUTTON_HEAD_CLASSNAME,
+			    // calling trim() because of a blank that ToolBarButton.js adds at the end of widget's className attribute value 
+				lang.trim(widget.backButton.arrowNode.className));
+			runner.assertEqual(WIDGET_BUTTON_BODY_CLASSNAME, widget.backButton.bodyNode.className);
+			runner.assertEqual(backText, widget.backButton.labelNode.innerHTML, "widget.labelDivNode.innerHTML");
+		};
+
+		function _showView2(){
+			var view1 = registry.byId("view1");
+			view1.performTransition("view2", 1, "none");
+		};
+
+		ready(function(){
+			runner.register("dojox.mobile.test.doh.Heading", [
+				{
+					name: "Heading Verification1",
+					timeout: 4000,
+					runTest: function(){
+						var widget1 = _createHeadingDeclaratively("dojox_mobile_Heading_0");
+						var widget2 = _createHeadingProgrammatically("view1-Heading2place", "view1-Heading2", WIDGET_TITLE_TEXT1);
+						var widget3 = _createHeadingProgrammaticallyWithSourceNodeReference("view1-Heading3");
+
+						_assertCorrectHeading(widget1, WIDGET_TITLE_TEXT1, WIDGET_BACK_TEXT, WIDGET_BUTTON_CLASSNAME);
+						_assertCorrectHeading(widget2, WIDGET_TITLE_TEXT1, WIDGET_BACK_TEXT, WIDGET_BUTTON_CLASSNAME);
+						_assertCorrectHeading(widget3, WIDGET_TITLE_TEXT1, WIDGET_BACK_TEXT, WIDGET_BUTTON_CLASSNAME);
+
+					}
+				},
+				{
+					name: "Heading Verification2",
+					timeout: 4000,
+					runTest: function(){
+						var widget1 = _createHeadingDeclaratively("dojox_mobile_Heading_1");
+						var widget2 = _createHeadingProgrammatically("view2-Heading2place", "view2-Heading2", WIDGET_TITLE_TEXT2);
+						var widget3 = _createHeadingProgrammaticallyWithSourceNodeReference("view2-Heading3");
+
+						var d = new runner.Deferred();
+						var handle2 = dojo.subscribe("/dojox/mobile/afterTransitionIn", d.getTestCallback(function(view){
+							if(view.id=="view2"){
+								dojo.unsubscribe(handle2);
+							}
+							var widget1 = registry.byId("dojox_mobile_Heading_1");
+							var widget2 = registry.byId("view2-Heading2");
+							var widget3 = registry.byId("view2-Heading3");
+							_assertCorrectHeading(widget1, WIDGET_TITLE_TEXT2, WIDGET_BACK_TEXT, WIDGET_BUTTON_CLASSNAME);
+							_assertCorrectHeading(widget2, WIDGET_TITLE_TEXT2, WIDGET_BACK_TEXT, WIDGET_BUTTON_CLASSNAME);
+							_assertCorrectHeading(widget3, WIDGET_TITLE_TEXT2, WIDGET_BACK_TEXT, WIDGET_BUTTON_CLASSNAME);
+						}));
+						_showView2();
+						return d;
+					}
+				}
+			]);
+			runner.run();
+		});
+	})
+</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="view1" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Settings", moveTo:"settings", label:"View 1"'></h1>
+		<div id="view1-Heading2place"></div>
+		<h1 id="view1-Heading3">View 1</h1>
+	</div>
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Settings", moveTo:"settings", label:"View 2"'></h1>
+		<div id="view2-Heading2place"></div>
+		<h1 id="view2-Heading3">View 2</h1>
+	</div>
+	<div id="settings" data-dojo-type="dojox.mobile.View">
+		<h1>settings</h1>
+	</div>
+</body>
+</html>

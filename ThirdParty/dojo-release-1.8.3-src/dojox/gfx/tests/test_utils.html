@@ -1,0 +1,208 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>GFX Test: Test the basic utils functions</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+		<script type="text/javascript" src="../../../util/doh/runner.js"></script>
+		<script type="text/javascript">
+			dojo.require("doh.runner");
+			dojo.require("dojox.gfx");
+			dojo.require("dojox.gfx.utils");
+		</script>
+		<script type="text/javascript">
+			dojo.addOnLoad(function(){
+				var drawing;
+				var ta;
+				doh.register("GFX: Utils Tests", [
+					{
+						name: "toJson",
+						timeout: 1000,
+						setUp: function(){
+							if(!drawing){
+								var dn = dojo.byId("gfxObject");
+								drawing = dojox.gfx.createSurface(dn, 300, 300);
+								drawing.createRect({ 
+									 width:  100,
+									 height: 100,
+									 x: 100,
+									 y: 100
+								}).setFill("blue").setStroke("black");
+								drawing.createImage({width:200,height:200,src:'http://demos.dojotoolkit.org/demos/resources/images/no_thumb.gif'});
+							}
+							if(!ta){
+								ta = dojo.byId("outputArea");
+							}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+							try{
+								var json = dojox.gfx.utils.toJson(drawing);
+								doh.assertTrue(json != null, "Checking that non-null was returned.");
+								ta.value = json;
+								var obj = dojo.fromJson(json);
+								doh.assertTrue(1, obj.length, "Checking that the json is an array of one entry.");
+								doh.assertTrue(obj[0].shape != null, "Checking that a toplevel shape object is present.");
+								doh.assertEqual("rect", obj[0].shape.type, "Checking that the shape type is rect.");
+								doh.assertEqual(100, obj[0].shape.width, "Checking that the width is 100.");
+								doh.assertEqual(100, obj[0].shape.height, "Checking that the height is 100.");
+								d.callback(true);
+							}catch(e){
+								d.errback(e);
+							}
+							return d;
+						}
+					},
+					{
+						name: "fromJson",
+						timeout: 1000,
+						setUp: function(){
+							if(!drawing){
+								var dn = dojo.byId("gfxObject");
+								drawing = dojox.gfx.createSurface(dn, 300, 300);
+								drawing.createRect({ 
+									 width:  100,
+									 height: 100,
+									 x: 100,
+									 y: 100
+								}).setFill("blue").setStroke("black");
+								drawing.createImage({width:200,height:200,src:'http://demos.dojotoolkit.org/demos/resources/images/no_thumb.gif'});
+							}
+							if(!ta){
+								ta = dojo.byId("outputArea");
+							}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+							try{
+								var json = dojox.gfx.utils.toJson(drawing);
+								doh.assertTrue(json != null, "Checking that non-null was returned.");
+								var targetNode = dojo.byId("scratchObject");
+								var tempSurface = dojox.gfx.createSurface(targetNode, 300, 300);
+								dojox.gfx.utils.fromJson(tempSurface, json);
+
+								var nsJson = dojox.gfx.utils.toJson(tempSurface);
+								tempSurface.destroy();
+
+								var obj = dojo.fromJson(nsJson);
+								doh.assertTrue(1, obj.length, "Checking that the json is an array of one entry.");
+								doh.assertTrue(obj[0].shape != null, "Checking that a toplevel shape object is present.");
+								doh.assertEqual("rect", obj[0].shape.type, "Checking that the shape type is rect.");
+								doh.assertEqual(100, obj[0].shape.width, "Checking that the width is 100.");
+								doh.assertEqual(100, obj[0].shape.height, "Checking that the height is 100.");
+								d.callback(true);
+							}catch(e){
+								d.errback(e);
+							}
+							return d;
+						}
+					},
+					{
+						name: "toSvg",
+						timeout: 10000,
+						setUp: function(){
+							if(!drawing){
+								var dn = dojo.byId("gfxObject");
+								drawing = dojox.gfx.createSurface(dn, 300, 300);
+								drawing.createRect({ 
+									 width:  100,
+									 height: 100,
+									 x: 100,
+									 y: 100
+								}).setFill("blue").setStroke("black");
+								drawing.createImage({width:200,height:200,src:'http://demos.dojotoolkit.org/demos/resources/images/no_thumb.gif'});
+							}
+							if(!ta){
+								ta = dojo.byId("outputArea");
+							}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+							var def= dojox.gfx.utils.toSvg(drawing);
+							def.addCallback(function(svg){
+								try{
+									doh.assertTrue(svg != null, "Checking that non-null was returned.");
+									ta.value = svg;
+									doh.assertTrue(svg.length > 0, "Checking that svg length > 0");
+									var low = svg.toLowerCase();
+									doh.assertTrue(low.indexOf("<svg") === 0, "Checking that the string starts with SVG open tag.");
+									doh.assertTrue(low.indexOf("xmlns:xlink=\"http://www.w3.org/1999/xlink\"") !== -1, "Checking the xmlns:xlink attribute.");
+									doh.assertFalse(/\s+href\s*=/g.test(low), "Checking there's no href attributes.");
+									doh.assertTrue(low.indexOf("xlink:href=") !== -1, "Checking the xlink:href attribute.");
+									doh.assertTrue(low.indexOf("<img") === -1, "Checking the <img> cleanup.");
+									doh.assertTrue(svg.indexOf("__gfxObject__") === -1, "Checking __gfxObject__ attribute cleanup.");
+									d.callback(true);
+								}catch(e){
+									d.errback(e);
+								}
+							});
+							def.addErrback(function(e){
+								d.errback(e);
+							});
+							return d;
+						}
+					},
+					{
+						name: "serialize/deserialize",
+						timeout: 1000,
+						setUp: function(){
+							if(!drawing){
+								var dn = dojo.byId("gfxObject");
+								drawing = dojox.gfx.createSurface(dn, 300, 300);
+								drawing.createRect({ 
+									 width:  100,
+									 height: 100,
+									 x: 100,
+									 y: 100
+								}).setFill("blue").setStroke("black");
+							}
+							if(!ta){
+								ta = dojo.byId("outputArea");
+							}
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+							try{
+								var sObj = dojox.gfx.utils.serialize(drawing);
+								doh.assertTrue(sObj != null, "Checking that non-null was returned.");
+
+								//Lets try to deserialize it!
+								var targetNode = dojo.byId("scratchObject");
+								var tempSurface = dojox.gfx.createSurface(targetNode, 300, 300);
+								dojox.gfx.utils.deserialize(tempSurface, sObj);
+								var nsJson = dojox.gfx.utils.toJson(tempSurface);
+								tempSurface.destroy();
+
+								var obj = dojo.fromJson(nsJson);
+								doh.assertTrue(1, obj.length, "Checking that the json is an array of one entry.");
+								doh.assertTrue(obj[0].shape != null, "Checking that a toplevel shape object is present.");
+								doh.assertEqual("rect", obj[0].shape.type, "Checking that the shape type is rect.");
+								doh.assertEqual(100, obj[0].shape.width, "Checking that the width is 100.");
+								doh.assertEqual(100, obj[0].shape.height, "Checking that the height is 100.");
+								d.callback(true);
+							}catch(e){
+								d.errback(e);
+							}
+							return d;
+						}
+					}
+				]);
+				doh.run();
+			});
+			</script>
+	</head>
+	<body class="tundra">
+		<h1>Test of GFX Utils functions</h1>
+		<p>This page is intended for testing of the functions of the utils package, such as toJson, fromJson, and toSvg.</p>
+		<p>This test is not adapted for Silverlight or Canvas.</p>
+		<div id="gfxObject"></div>
+		<div id="scratchObject"></div>
+		<div>
+			<textarea style="width: 100%; height: 300px" id="outputArea"></textarea>
+		</div>
+	</body>
+</html>

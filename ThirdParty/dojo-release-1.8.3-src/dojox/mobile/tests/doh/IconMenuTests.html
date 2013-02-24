@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Accordion Tests</title>
+
+	<script type="text/javascript" src="../../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','IconMenu']"></script>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+	<style type="text/css">
+		@import "../../themes/common/domButtons/DomButtonBlackRightArrow16.css";
+		@import "../../themes/common/domButtons/DomButtonWhiteDownArrow16.css";
+		@import "../../themes/common/dijit/dijit.css";
+		html,body{
+			height: 100%;
+		}
+		.myPane {
+			background-image: -webkit-gradient(linear, left top, left bottom, from(#dcdcdc), to(#FFFFFF));
+			font-family: Times New Roman, Helvetica;
+			color: black;
+		}
+	</style>
+
+	<script type="text/javascript">
+		var WIDGET_PROPS = [{icon:"../images/tab-icon-36w.png", selected:true},
+							{icon:"../images/tab-icon-32w.png"},
+							{icon:"../images/tab-icon-30w.png"},
+							{icon:"../images/tab-icon-16w.png"},
+							{icon:"../images/tab-icon-19w.png"},
+							{icon:"../images/tab-icon-29w.png"}];
+		var WIDGET_LABELS = [{label:"Mute"},
+							{label:"Keypad"},
+							{label:"Settings"},
+							{label:"Info"},
+							{label:"Tour"},
+							{label:"Contacts"}];
+		var WIDGET_CLASS = "mblIconMenu";
+		var WIDGET_ICON_SEL = "mblIconMenuItemSel";
+		var ITEM_NUM = 6;
+		var CHILDWIDGET_CLASSNAME1 = "mblIconMenuItem";
+		var CHILDWIDGET_CLASSNAME2 = "mblIconMenuItemFirstColumn";
+		var CHILDWIDGET_CLASSNAME3 = "mblIconMenuItemLastColumn";
+		var CHILDWIDGET_CLASSNAME4 = "mblIconMenuItemFirstRow";
+		var CHILDWIDGET_CLASSNAME5 = "mblIconMenuItemLastRow";
+		var COL_NUM = 3;
+
+		require([
+			"dojo/_base/array",
+			"dojo/_base/lang", // dojo.mixin
+			"dojo/dom-construct", // dojo.place
+			"dojo/dom-class", // dojo.hasClass
+			"dojo/ready", // dojo.ready
+			"dijit/registry",  // dijit.byId
+			"doh/runner",	//doh functions
+			"dojox/mobile/IconMenuItem",
+			"dojox/mobile/IconMenu",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/View"
+		], function(array, lang, domConst, domClass, ready, registry, runner, IconMenuItem, IconMenu){
+			function _createAccordionDeclaratively(widgetId){
+				return registry.byId(widgetId);
+			}
+			
+			function _createAccordionProgrammatically(placeHolderId, widgetId){
+				var r = new IconMenu({id:widgetId, style:{width:"274px", height:"210px", margin:"20px"}, cols:"3"});
+				runner.assertNotEqual(null, r);
+				domConst.place(r.domNode, placeHolderId, "replace");
+				r.startup();
+				var childWidget, prop;
+				for(var i = 0, len =Math.min(WIDGET_PROPS.length, WIDGET_LABELS.length); i<len ;i++){
+					childWidget = IconMenuItem(lang.mixin(prop, WIDGET_PROPS[i], WIDGET_LABELS[i]));
+					r.addChild(childWidget);
+				}
+				return r;
+			}
+			
+			function _createAccordionProgrammaticallyWithSourceNodeReference(widgetId, childWidgetId){
+				var r = new IconMenu({cols:"3"}, widgetId);
+				r.startup();
+				children = array.filter(r.domNode.childNodes, function(node){ return node.nodeType == 1; });
+				var childWidget;
+				for(var i = 0, len =Math.min(WIDGET_PROPS.length, children.length); i<len ;i++){
+					childWidget = IconMenuItem(WIDGET_PROPS[i], children[i]);
+					r.addChild(childWidget);
+				}
+				return r;
+			}
+
+			function _assertCorrectAccordion(widget){
+				runner.assertEqual(WIDGET_CLASS, widget.domNode.className, "id= " + widget.domNode.id);
+
+				var childWidgets = widget.getChildren();
+				runner.assertEqual(ITEM_NUM, childWidgets.length, "id= " + widget.domNode.id + " childWidgets.length=" + childWidgets.length);
+
+				runner.assertTrue(domClass.contains(childWidgets[0].domNode, WIDGET_ICON_SEL), WIDGET_ICON_SEL + " id=" + childWidgets[0].domNode.id);
+				for(var i=0;i< ITEM_NUM;i++){
+	 				runner.assertEqual(WIDGET_LABELS[i].label, dojo.trim(childWidgets[i].labelNode.innerHTML.replace(/\r\n|\n|\t/g,"")), "id=" + childWidgets[i].domNode.id);
+	 				switch(i % COL_NUM){
+						case 0:
+							runner.assertTrue(domClass.contains(childWidgets[i].domNode, CHILDWIDGET_CLASSNAME2), CHILDWIDGET_CLASSNAME2 + " id=" + childWidgets[i].domNode.id);
+							break;
+						case (COL_NUM-1):
+							runner.assertTrue(domClass.contains(childWidgets[i].domNode, CHILDWIDGET_CLASSNAME3), CHILDWIDGET_CLASSNAME3 + " id=" + childWidgets[i].domNode.id);
+							break;
+					}
+	 				switch(Math.floor(i / COL_NUM)){
+						case 0:
+							runner.assertTrue(domClass.contains(childWidgets[i].domNode, CHILDWIDGET_CLASSNAME4), CHILDWIDGET_CLASSNAME4 + " id=" + childWidgets[i].domNode.id);
+							break;
+						case (Math.floor(ITEM_NUM/COL_NUM) -1):
+							runner.assertTrue(domClass.contains(childWidgets[i].domNode, CHILDWIDGET_CLASSNAME5), CHILDWIDGET_CLASSNAME5 + " id=" + childWidgets[i].domNode.id);
+							break;
+					}
+				}
+			}
+
+			function _showView2(){
+				var view1 = registry.byId("view1");
+				view1.performTransition("view2", 1, "none");
+			}
+			dojo.ready(function(){
+				doh.register("dojox.mobile.test.doh.AccordionTests", [
+					function testInView1(){
+						var widget1 = _createAccordionDeclaratively("dojox_mobile_IconMenu_0");
+						var widget2 = _createAccordionProgrammatically("view1-IconMenu2place", "view1-IconMenu2");
+						var widget3 = _createAccordionProgrammaticallyWithSourceNodeReference("view1-IconMenu3");
+
+						_assertCorrectAccordion(widget1);
+						_assertCorrectAccordion(widget2);
+						_assertCorrectAccordion(widget3);
+					},
+					function testInView2(){
+						var widget1 = _createAccordionDeclaratively("dojox_mobile_IconMenu_1");
+						var widget2 = _createAccordionProgrammatically("view2-IconMenu2place", "view2-IconMenu2place");
+						var widget3 = _createAccordionProgrammaticallyWithSourceNodeReference("view2-IconMenu3");
+
+						_showView2();
+
+						_assertCorrectAccordion(widget1);
+						_assertCorrectAccordion(widget2);
+						_assertCorrectAccordion(widget3);
+					}
+				]);
+				runner.run();
+			});
+		})
+	</script>
+
+</head>
+<body>
+	<div id="view1" data-dojo-type="dojox.mobile.View">
+		<h1>View 1</h1>
+		<ul data-dojo-type="dojox.mobile.IconMenu" style="width:274px;height:210px;margin:20px;" data-dojo-props='cols:3'>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Mute", icon:"../images/tab-icon-36w.png", selected:true'></li>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Keypad", icon:"../images/tab-icon-32w.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Settings", icon:"../images/tab-icon-30w.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Info", icon:"../images/tab-icon-16w.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Tour", icon:"../images/tab-icon-19w.png", moveTo:"view2", transition:"slide", closeOnAction:true'></li>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Contacts", icon:"../images/tab-icon-29w.png"'></li>
+		</ul>
+		<div id="view1-IconMenu2place"></div>
+		<div id="view1-IconMenu3" style="width:274px;height:210px;margin:20px;" >
+			<li>Mute</li>
+			<li>Keypad</li>
+			<li>Settings</li>
+			<li>Info</li>
+			<li>Tour</li>
+			<li>Contacts</li>
+		</div>
+	</div>
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<h1>View 2</h1>
+		<ul data-dojo-type="dojox.mobile.IconMenu" style="width:274px;height:210px;margin:20px;" data-dojo-props='cols:3'>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Mute", icon:"../images/tab-icon-36w.png", selected:true'></li>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Keypad", icon:"../images/tab-icon-32w.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Settings", icon:"../images/tab-icon-30w.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Info", icon:"../images/tab-icon-16w.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Tour", icon:"../images/tab-icon-19w.png", moveTo:"view2", transition:"slide", closeOnAction:true'></li>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Contacts", icon:"../images/tab-icon-29w.png"'></li>
+		</ul>
+		<div id="view2-IconMenu2place"></div>
+		<div id="view2-IconMenu3" style="width:274px;height:210px;margin:20px;" >
+			<li>Mute</li>
+			<li>Keypad</li>
+			<li>Settings</li>
+			<li>Info</li>
+			<li>Tour</li>
+			<li>Contacts</li>
+		</div>
+	</div>
+</body>
+</html>

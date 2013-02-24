@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot bgIframe Test</title>
+
+		<style>
+			@import "../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx",
+				"dojo/_base/array", "dojo/dom", "dojo/on", "dojo/sniff",
+				"dijit/tests/helpers", "dojo/domReady!"
+			], function(doh, robot, array, dom, on, has, helpers){
+
+				robot.initRobot('../test_bgIframe.html');
+
+				doh.register(function setup(){
+					// get pointer to registry in the iframe
+					registry = robot.window.require("dijit/registry");
+				});
+
+				array.forEach(["applet", "xapp"], function(xId){
+					doh.register(xId, [
+					{
+						name: "dialog_" + xId,
+						timeout: 15000,
+						runTest: function(){
+							if(has("webkit")){ return; }  // TODO: Remove skip-test for non-WebKit after #11822 is fixed
+							var d = new doh.Deferred();
+
+							var wasClicked = false;
+							var connection;
+							
+							// dhow the dialog
+							robot.mouseMoveAt("showDialog", 500,  1);
+							robot.mouseClick({left: true}, 500);
+							
+							// drag the dialog on top of the applet
+							robot.mouseMoveAt(registry.byId("dialog").titleNode, 2000,  1);
+							robot.mousePress({left: true}, 500);
+							robot.mouseMoveAt(xId, 500,  1000);
+							robot.mouseRelease({left: true}, 500);
+							
+							robot.sequence(function(){
+								connection = on(registry.byId("dialog").containerNode, "click", function(e){ wasClicked = true; });
+							}, 500); 
+							
+							// dlick on the dialog
+							robot.mouseMoveAt(registry.byId("dialog").containerNode, 1, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							robot.sequence(d.getTestCallback(function(){
+								connection.remove();
+								// derify the native select did not disappear
+								doh.t(helpers.isVisible(dom.byId("dropDown_" + xId, robot.doc)), "The native select is not visible");
+								
+								registry.byId("dialog").hide();
+								
+								doh.t(wasClicked, "Dialog was not visible because the onclick did not fire.");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "tooltip_" + xId,
+						timeout: 8000,
+						runTest: function(){
+							if(!has("ie")){ return; }  // TODO: Remove skip-test for non-IE after #11822 is fixed
+							var d = new doh.Deferred();
+
+							var tooltipWasClicked = false;
+							var connection, oldHide;
+							
+							// dhow the tooltip
+							robot.mouseMoveAt("two_" + xId, 500, 1);
+							
+							robot.sequence(function(){ 
+								var tooltip = registry.byId("dijit__MasterTooltip_0");
+								oldHide = tooltip.hide;
+								tooltip.hide = function(aroundNode){
+									// don't allow the tooltip to be hidden
+								};
+								connection = on(tooltip.domNode, "click",
+									function(e){
+										tooltipWasClicked = true;
+										tooltip.hide = oldHide;
+										tooltip.hide(tooltip.aroundNode);
+									}
+								);
+							}, 2000); 
+							
+							// Click on the tooltip
+							robot.mouseMoveAt("dijit__MasterTooltip_0", 1, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							robot.sequence(d.getTestCallback(function(){
+								connection.remove();
+								doh.t(tooltipWasClicked, "The tooltip is not visible because the onclick event was not fired.");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "dateTextBox_" + xId,
+						timeout: 7000,
+						runTest: function(){
+							if(!has("ie")){ return; }  // TODO: Remove skip-test for non-IE after #11822 is fixed
+							var d = new doh.Deferred();
+
+							var wasClicked = false;
+							var connection;
+							
+							// Show the popup
+							var textbox = registry.byId("dateText_" + xId);
+							robot.mouseMoveAt(textbox._buttonNode, 500, 1);
+							robot.mouseClick({left: true}, 500);
+							
+							robot.sequence(function(){
+								connection = on(registry.byId("dateText_"+xId+"_popup").domNode, "click", function(e){ wasClicked = true; });
+							}, 2000); 
+							
+							// Click on the popup
+							robot.mouseMoveAt("dateText_"+xId+"_popup", 1, 1, 10, 10);
+							robot.mouseClick({left: true}, 500);
+							
+							robot.sequence(d.getTestCallback(function(){
+								connection.remove();
+								doh.t(wasClicked);
+							}), 1000);
+
+							return d;
+						}
+					}
+					]);
+				});
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

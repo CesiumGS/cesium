@@ -1,0 +1,455 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Calendar Sample: Desktop</title>				
+		<style type="text/css">
+			@import "../themes/claro/Calendar.css";
+			@import "../themes/claro/MonthColumnView.css";
+			@import "calendar.css";			
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/dijit.css";
+			@import "../../../dijit/themes/claro/claro.css";
+		</style>			
+	</head>
+	
+	<body class="claro">
+		<script type="text/javascript" 
+						data-dojo-config="async: true, parseOnLoad: true, paths : {'demo' : '../dojox/calendar/tests'}"
+		 				src="../../../dojo/dojo.js"></script>
+		
+		<script type="text/javascript">
+
+			require([
+				"dojo/ready",  
+				"dojo/_base/lang", 
+				"dojo/_base/array", 
+				"dojo/_base/fx", 
+				"dojo/on", 
+				"dojo/date/locale", 
+				"dojo/parser",
+				"dojo/dom", 
+				"dojo/dom-construct", 
+				"dojo/store/Memory", 
+				"dojo/store/Observable",	
+				"demo/ExtendedCalendar", 
+				"dijit/Calendar",  
+				"dijit/TitlePane", 
+				"dijit/layout/BorderContainer", 
+				"dijit/layout/ContentPane", 
+				"dijit/form/CheckBox", 
+				"dijit/form/TextBox", 
+				"dijit/form/DateTextBox",	
+				"dijit/form/TimeTextBox", 
+				"dijit/form/Button", 
+				"dijit/form/ComboBox",
+				"dijit/Menu", 
+				"dijit/MenuItem"
+			],
+			
+			function(
+				ready, 
+				lang, 
+				arr, 
+				fx, 
+				on, 
+				locale, 
+				parser, 
+				dom, 
+				domConstruct,
+				Memory, 
+				Observable, 
+				ExtendedCalendar){
+
+					ready(function(){
+										
+						var hints = [
+							"Hint: Create an event by clicking and dragging on the grid while maintaining the control key",
+							"Hint: Drill down the view by clicking row or column header cells",
+							"Hint: Drill down the view by double-clicking a grid cell while maintaining the shift and control key",
+							"Hint: Drill up by double-clicking the grid while maintaining the shift key",
+							"Hint: Move an event by clicking on it and dragging it",
+							"Hint: Resize an event by clicking on one of its ends and dragging it"
+						];
+						
+						hintIdx = 0;
+						dom.byId("hint").innerHTML = hints[0];
+												
+						setInterval(function(){
+							fx.fadeOut({node: "hint", 
+								onEnd: function(){
+									hintIdx = hintIdx+1>hints.length-1 ? 0 : hintIdx+1;
+									dom.byId("hint").innerHTML = hints[hintIdx];
+									fx.fadeIn({node: "hint"}).play(500); 									
+								}
+							}).play(500);
+						}, 10000);
+																	
+						calendar.set("cssClassFunc", function(item){
+							// Use custom css class on renderers depending of a parameter (calendar). 
+							return item.calendar == "cal1" ? "Calendar1" : "Calendar2"
+						});
+						
+						// Calendar model creation
+						
+						var modelBase = [
+							{day: 1, start: [10,00], duration: 1400},
+							{day: 2, start: [10,30], duration: 120},
+							{day: 2, start: [12,0], duration: 240},
+							{day: 3, start: [6,0], duration: 180},
+							{day: 3, start: [0,0], duration: 2880, allDay: true}
+						];
+						
+						var someData = [];
+												
+						var startOfWeek = calendar.floorToWeek(new calendar.dateClassObj());
+						
+						for (var id=0; id<modelBase.length; id++) {
+							var newObj = {
+								id: id,
+								summary: "New Event " + id,
+								startTime: new calendar.dateClassObj(startOfWeek.getTime()),
+								endTime: new calendar.dateClassObj(startOfWeek.getTime()),
+								calendar: id%2 == 0 ? "cal1" : "cal2",
+								allDay: modelBase[id].allDay
+							}
+
+							newObj.startTime = calendar.dateModule.add(newObj.startTime, "day", modelBase[id].day);
+							newObj.startTime.setHours(modelBase[id].start[0]);
+							newObj.startTime.setMinutes(modelBase[id].start[1]);
+
+							newObj.endTime = calendar.dateModule.add(newObj.startTime, "minute", modelBase[id].duration);
+
+							someData.push(newObj);
+						}
+						
+						calendar.set("store", new Observable(new Memory({data: someData})));
+						calendar.set("date", startOfWeek);
+						
+						calendar.on("gridDoubleClick", function(e){
+							
+							if(e.triggerEvent.ctrlKey && e.triggerEvent.shiftKey){
+								// drill down
+								calendar.set("date", e.date);
+								calendar.set("dateIntervalSteps", 1);
+								calendar.set("dateInterval", "day");								
+								return;
+							}
+							
+							if(e.triggerEvent.shiftKey){
+								// drill up								
+								var dis = calendar.get("dateIntervalSteps");
+								var di = calendar.get("dateInterval");
+								var d = e.date;
+								switch(e.source.viewKind){
+									case "columns":
+										if(dis == 1){
+											di = "day";
+											dis = 7;
+											d = calendar.floorToWeek(e.date);
+										}else{
+											di = "month";
+											dis = 1;
+										}																			
+										break;
+									case "matrix":
+										di = "month";
+										dis = 6;
+										break;																										
+								}
+								calendar.set("date", e.date);
+								calendar.set("dateIntervalSteps", dis);
+								calendar.set("dateInterval", di);								
+								return;
+							}
+									
+						});
+						
+						// Enable creation of event interactively by ctrl clicking grid.
+						var createItem = function(view, d, e){
+						
+							var cal1 = calendar1CB.get("checked");
+							var cal2 = calendar2CB.get("checked");
+						
+							// create item by maintaining control key
+							if(!e.ctrlKey || e.shiftKey || e.altKey || (!cal1 && !cal2)){
+								return null;
+							}
+						
+							// create a new event
+							var start, end;
+							var colView = calendar.columnView;
+							var cal = calendar.dateModule;
+							
+							if(view == colView){
+								start = calendar.floorDate(d, "minute", colView.timeSlotDuration);
+								end = cal.add(start, "minute", colView.timeSlotDuration); 
+							}else{
+								start = calendar.floorToDay(d);
+								end = cal.add(start, "day", 1);
+							}
+							
+							var item = {
+								id: id,
+								summary: "New event " + id,
+								startTime: start,
+								endTime: end,
+								calendar: cal1 ? "cal1" : "cal2",
+								allDay: view.viewKind != "columns" // use viewKind to manage secondary sheet of columns view
+							};
+							
+							id++;	
+							
+							return item;							
+						}
+						
+						calendar.set("createOnGridClick", true);
+						calendar.set("createItemFunc", createItem);		
+						
+						// filter out event according to their calendar
+						var calendarVisibility = [true, true];
+						
+						var itemToRendererKindFunc = function(item){
+							if(item.cssClass == "Calendar1" && calendarVisibility[0] ||
+								item.cssClass == "Calendar2" && calendarVisibility[1]){
+									return this._defaultItemToRendererKindFunc(item);
+								}
+							return null
+						}
+						
+						calendar.columnView.set("itemToRendererKindFunc", itemToRendererKindFunc);
+						calendar.columnView.secondarySheet.set("itemToRendererKindFunc", itemToRendererKindFunc);
+						calendar.matrixView.set("itemToRendererKindFunc", itemToRendererKindFunc);
+						calendar.monthColumnView.set("itemToRendererKindFunc", itemToRendererKindFunc);
+						
+						// show context menu on right clicking an event
+						calendar.on("itemContextMenu", function(e){
+							dojo.stopEvent(e.triggerEvent);
+							calendarContextMenu._openMyself({ 
+								target: e.renderer.domNode, 
+								coords: {x: e.triggerEvent.pageX, y: e.triggerEvent.pageY} 
+							});
+						});
+						
+						contextMenuDelete.on("click", function(){
+							arr.forEach(calendar.selectedItems, function(item){
+								calendar.store.remove(item.id);
+							}); 							
+						});
+						
+						// refresh item panel on event selection.
+						var editedItem;
+						
+						selectionChanged = function(item){
+							
+							var itemNull = item == null;
+							
+							widgets = [itemSummaryEditor, itemStartDateEditor, itemStartTimeEditor, itemEndDateEditor, 
+								itemEndTimeEditor, calendarEditor, allDayCB, deleteItemButton, updateItemButton];
+							
+							arr.forEach(widgets, function(w){
+								w.set("disabled", itemNull);
+								w.set("value", null, false);
+							});
+							
+							editedItem = itemNull ? null : lang.mixin({}, item); 
+							
+							if(!itemNull){
+							
+								var allDay = item.allDay === true;
+								
+								itemStartTimeEditor.set("disabled", allDay);
+								itemEndTimeEditor.set("disabled", allDay);
+																
+								itemSummaryEditor.set("value", item.summary);
+								itemStartDateEditor.set("value", item.startTime);
+								itemStartTimeEditor.set("value", item.startTime);
+								itemEndDateEditor.set("value", item.endTime);
+								itemEndTimeEditor.set("value", item.endTime);
+								calendarEditor.set("value", item.calendar == "cal1" ? "Calendar 1" : "Calendar 2");																					
+								allDayCB.set("checked", allDay, false);
+							}																						
+						}
+						
+						calendar.on("change", function(e){							
+							selectionChanged(e.newValue);							
+						});	
+						
+						calendar.on("itemEditEnd", function(e){
+							selectionChanged(e.item);
+						});
+						
+						// configure item properties panel
+						calendar.on("timeIntervalChange", function(e){
+							dateChooser.set("value", e.startTime);
+						});
+						
+						allDayCB.on("change", function(value){
+							
+							itemStartTimeEditor.set("disabled", value);
+							itemEndTimeEditor.set("disabled", value);
+							
+							var d;
+							if(value){
+								d = itemStartTimeEditor.get("value");
+								calendar.floorToDay(d, true);
+								itemStartTimeEditor.set("value", d);
+								d = itemEndTimeEditor.get("value");
+								calendar.floorToDay(d, true);
+								itemEndTimeEditor.set("value", d);
+								
+								if(!calendar.isStartOfDay(editedItem.endTime)){
+									d = itemEndDateEditor.get("value");
+									calendar.floorToDay(d, true);
+									d = calendar.dateModule.add(d, "day", 1);
+									itemEndDateEditor.set("value", d);
+								}
+								
+							}else{
+								editedItem.startTime.setHours(8);
+								editedItem.endTime.setHours(9);
+								itemStartTimeEditor.set("value", editedItem.startTime);
+								itemEndTimeEditor.set("value", editedItem.endTime);
+								d = itemEndDateEditor.get("value");
+								calendar.floorToDay(d, true);
+								d = calendar.dateModule.add(d, "day", -1);
+								itemEndDateEditor.set("value", d);
+							}
+							
+						});
+						
+						var mergeDateTime = function(isStart){
+							var dateEditor = isStart ? itemStartDateEditor : itemEndDateEditor;
+							var timeEditor = isStart ? itemStartTimeEditor : itemEndTimeEditor;
+							var date = dateEditor.get("value");
+							var time = timeEditor.get("value");
+							date.setHours(time.getHours());
+							date.setMinutes(time.getMinutes());
+							return date;
+						};
+						
+						updateItemButton.on("click", function(value){
+							
+							if (editedItem != null) {
+								editedItem.summary = itemSummaryEditor.get("value");
+								if(allDayCB.get("value")){
+									if(!calendar.isStartOfDay(editedItem.startTime)){
+										editedItem.startTime = calendar.floorToDay(itemStartDateEditor.get("value"), true);
+									}
+									if(!calendar.isStartOfDay(editedItem.endTime)){
+										editedItem.endTime = calendar.floorToDay(itemEndDateEditor.get("value"), true);
+									}			
+									editedItem.allDay = true;						
+								}else{
+									editedItem.startTime = mergeDateTime(true);
+									editedItem.endTime = mergeDateTime(false);
+									delete editedItem.allDay;
+								}
+								
+								var calValue = calendarEditor.get("value");
+								editedItem.calendar = calValue == "Calendar 1" ? "cal1" : "cal2";
+								calendar.store.put(editedItem);
+							}
+							
+						});
+						
+						deleteItemButton.on("click", function(value){
+							if (editedItem != null) {
+								calendar.store.remove(editedItem.id);
+							}
+						});
+																										
+						// Synchronize date picker.															
+						dateChooser.set("value", startOfWeek);
+						dateChooser.on("change", function(e){
+							var d = dateChooser.get("value");
+							calendar.set("date", d);
+						});						
+										
+						calendar1CB.on("change", function(v){
+							calendarVisibility[0] = v;
+							calendar.currentView.invalidateLayout();
+						});
+						
+						calendar2CB.on("change", function(v){
+							calendarVisibility[1] = v;
+							calendar.currentView.invalidateLayout();
+						});											
+						
+						// Hide loading panel when application is ready
+						fx.fadeOut({
+							node:"loadingPanel", 
+							onEnd: function(node){
+								node.parentNode.removeChild(node)
+							}}).play(500);
+
+					});
+			});
+			</script>
+			
+			<div id="loadingPanel" style="position:absolute;z-index:10;width:100%;height:100%;background:#ffffff">
+				<span style="background: #DBEB8F;padding:2px">Loading...</span>
+			</div>
+			
+			<div data-dojo-type="dijit.layout.BorderContainer" style="width:100%;height:100%" data-dojo-props="design:'sidebar', gutters:true" >
+		    <div data-dojo-type="dijit.layout.ContentPane" style="width:200px" data-dojo-props="splitter:false, region:'leading'">
+		        <div data-dojo-id="dateChooser" data-dojo-type="dijit.Calendar" style="width:100%"></div>
+						<div data-dojo-type="dijit.TitlePane" data-dojo-props="title:'Calendars', style:'margin-top:10px;'" >
+							<div>
+								<input type="checkbox" data-dojo-id="calendar1CB" data-dojo-type="dijit.form.CheckBox" checked="true"/>
+								<label for="calendar1CB">Calendar 1</label>
+							</div>
+									
+							<div style="margin-top:5px">
+								<input type="checkbox" data-dojo-id="calendar2CB" data-dojo-type="dijit.form.CheckBox" checked="true"/>
+								<label for="calendar2CB">Calendar 2</label>
+							</div>
+						</div>
+						<div data-dojo-type="dijit.TitlePane" data-dojo-props="title:'Event properties', style:'margin-top:10px;'" >
+							<div><span class="propertyTitle">Summary:</span></div>
+							<div data-dojo-id="itemSummaryEditor" data-dojo-type="dijit.form.TextBox" style="width:165px;" data-dojo-props="disabled:true"></div>
+							<div style="margin-top:10px"><span class="propertyTitle">Start:</span></div>
+							<div>
+								<div data-dojo-id="itemStartDateEditor" data-dojo-type="dijit.form.DateTextBox" style="width:90px;"  data-dojo-props="disabled:true"></div>
+								<div data-dojo-id="itemStartTimeEditor" data-dojo-type="dijit.form.TimeTextBox" style="width:70px;" data-dojo-props="disabled:true" ></div>
+							</div>
+							<div style="margin-top:10px"><span class="propertyTitle">End:</span></div>
+							<div>
+								<div data-dojo-id="itemEndDateEditor" data-dojo-type="dijit.form.DateTextBox" style="width:90px;" data-dojo-props="disabled:true" ></div>
+								<div data-dojo-id="itemEndTimeEditor" data-dojo-type="dijit.form.TimeTextBox" style="width:70px;" data-dojo-props="disabled:true" ></div>
+							</div>
+							<div style="margin-top:10px"><span class="propertyTitle">Calendar:</span></div>
+							<select data-dojo-id="calendarEditor" data-dojo-type="dijit.form.ComboBox"  style="width:165px;" data-dojo-props="disabled:true" >
+								<option>Calendar 1</option>
+								<option>Calendar 2</option>									
+							</select>
+							<div style="margin-top:10px">
+								<input type="checkbox" data-dojo-id="allDayCB" data-dojo-type="dijit.form.CheckBox" checked="false" data-dojo-props="disabled:true" />
+								<label for="allDayCB">All day</label>
+							</div>	
+							<div style="margin-top:10px; text-align:right">
+								<span style="text-align:left">
+									<button data-dojo-id="deleteItemButton" class="deleteButton" data-dojo-type="dijit.form.Button"  data-dojo-props="disabled:true">Delete</button>
+								</span>
+								<span style="text-align:right">
+									<button data-dojo-id="updateItemButton" data-dojo-type="dijit.form.Button" data-dojo-props="disabled:true" >Update</button>
+								</span>
+							</div>
+						</div>
+		    </div>
+		    <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="splitter:false, region:'center'">
+		        <div data-dojo-id="calendar" data-dojo-type="demo.ExtendedCalendar" 
+					style="position:absolute;left:10px;top:10px;bottom:30px;right:10px">
+					<div data-dojo-type="dijit.Menu" data-dojo-id="calendarContextMenu" style="display: none;">
+		                <div data-dojo-type="dijit.MenuItem" data-dojo-id="contextMenuDelete" data-dojo-props="iconClass:'dijitIcon dijitIconDelete'">Delete</div>
+		            </div>	
+			    </div>
+	   	        <div id="hint" style="position:absolute;left:10px;height:15px;bottom:10px;right:10px;color:#999;overflow:auto"></div> 
+	
+			</div>																							
+		</div>																		
+						
+	</body>
+</html>

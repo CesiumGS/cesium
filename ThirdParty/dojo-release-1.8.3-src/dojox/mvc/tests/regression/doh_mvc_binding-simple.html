@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>MVC DOH Test</title>
+
+	<style>
+		@import "../../../../dojo/resources/dojo.css";
+		@import "../../../../dijit/tests/css/dijitTests.css";
+		@import "css/app-format.css";
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script src="../../../../dojo/dojo.js" type="text/javascript"
+		djConfig="isDebug: true">
+	</script>
+	<script type="text/javascript" src="./helpers.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dojox.mvc");
+		dojo.require("dojox.mvc.Output");
+		dojo.require("dijit.form.TextBox");
+		dojo.require("dijit.form.NumberTextBox");
+		dojo.require("dijit.form.ValidationTextBox");
+		dojo.require("dijit.form.Button");
+		dojo.require("dojo.parser");
+
+		// The dojox.mvc.StatefulModel class creates a data model instance
+		// where each leaf within the data model is decorated with dojo.Stateful
+		// properties that widgets can bind to and watch for their changes.
+		var model = dojox.mvc.newStatefulModel({ data : 
+			{	"First" : "John", 
+				"Last" : "Doe", 
+				"Email" : "jdoe@example.com", 
+				"Num" : 3 
+			}
+		});
+
+		function testFirstRelevance(newValue) {
+			//newValue = model.First.value;
+			if ( newValue !== "0" ) return true;
+			else return false;
+		}
+
+		function testFirstReadOnly(newValue) {
+			if ( newValue !== "2" && newValue !== "3"  ) return false;
+			else return true;
+		}
+
+		function testNumValid(newValue) {
+			if ( newValue !== 1 && newValue !== "1"	 && newValue !== "3") return true;
+			else return false;
+		}
+
+		function testRequired(newValue) {
+			if ( newValue !== 4 && newValue !== "4") return false;
+			else return true;
+		}
+
+		function testLastRelevance(newValue) {
+			//newValue = model.First.value;
+			if ( newValue !== "0" ) return true;
+			else return false;
+		}
+
+		function testLastValid(newValue) {
+			if ( newValue !== "1" ) return true;
+			else return false;
+		}
+		
+		  
+		function init(){
+			// bindSelfProperties tests
+			//"readOnly"
+		}
+		  
+	</script>
+
+	<script type="text/javascript">
+		dojo.require('doh.runner');
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dojo.parser"); // scan page for widgets and instantiate them
+
+		dojo.addOnLoad(function() {
+
+		doh.register("parse", function() {
+			dojo.parser.parse();
+		});
+
+		// Setup Bindings
+		dojox.mvc.bind(model.First, "value", model.First, "readOnly", testFirstReadOnly, true);
+		dojox.mvc.bind(model.First, "value", model.First, "relevant", testFirstRelevance, true);
+		dojox.mvc.bind(model.First, "value", model.First, "valid", testNumValid, true);
+		dojox.mvc.bind(model.Num, "value", model.Num, "valid", testNumValid, true);
+
+		// bind tests bind Last value to Email relevant and valid
+		dojox.mvc.bind(model.Last, "value", model.Email, "relevant", testFirstRelevance, true);
+		dojox.mvc.bind(model.Last, "value", model.Email, "valid", testNumValid, true);
+		dojox.mvc.bind(model.Last, "value", model.Email, "readOnly", testFirstReadOnly, true);
+		dojox.mvc.bind(model.Last, "value", model.Email, "required", testRequired, true);
+		dojox.mvc.bind(model.Last, "value", model.Email, "value");
+
+		// should be able to verify all of the inputs 
+		doh.register("check initial values and bindings", [{
+			name : "initial",
+			runTest : function() {
+				// First test an empty array
+				var m = new dojox.mvc.newStatefulModel({ data: {arr: []} });
+				doh.is([],m.arr.toPlainObject(),"m.arr.toPlainObject()should be [].");
+				doh.is("object",typeof m.arr.toPlainObject(),"m.arr.toPlainObject() should be an object (array)");
+				doh.is(0,m.arr.toPlainObject().length,"m.arr.toPlainObject().length should be 0 for [].");
+
+				var m2 = new dojox.mvc.newStatefulModel({ data: {str: ""} });
+				doh.is("",m2.str.toPlainObject(),"m2.str.toPlainObject()should be [].");
+				doh.is("string",typeof m2.str.toPlainObject(),"m2.str.toPlainObject() should be a string.");
+				doh.is(0,m2.str.toPlainObject().length,"m2.str.toPlainObject().length should be 0 for an empty string.");
+
+
+				var first1, bind1, addr1;
+				//test serialInput
+				first1 = dijit.byId("firstnameInput");
+				if (first1) {
+					bind1 = first1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.f(bind1.readOnly,"bind1.readOnly should be false");
+						//doh.t(bind1.relevant,"bind1.relevant should be true");
+						doh.f(bind1.required,"bind1.required should be false");
+						//doh.t(bind1.valid,"bind1.valid should be true");
+					}
+				}
+				//test emailInput
+				addr1 = dijit.byId("emailInput");
+				if (addr1) {
+					bind1 = addr1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.f(bind1.readOnly,"bind1.readOnly should be false");
+						//doh.t(bind1.relevant,"bind1.relevant should be true");
+						doh.f(bind1.required,"bind1.required should be false");
+						//doh.t(bind1.valid,"bind1.valid should be true");
+					}
+				}
+			}
+		}]);
+
+		doh.register("check FirstUpdate", [{
+			name : "testFirstUpdate",
+			runTest : function() {
+				//setRef("addrGroup", masterRecord.BillTo);
+				var first1, bind1, addr1;
+				//test first relevant false
+				first1 = dijit.byId("firstnameInput");
+				first1.set("value","0");
+				if (first1) {
+					bind1 = first1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.f(bind1.readOnly,"bind1.readOnly should be false");
+						doh.f(bind1.relevant,"bind1.relevant should be false");
+						doh.f(bind1.required,"bind1.required should be false");
+						doh.t(bind1.valid,"bind1.valid should be true");
+					}
+				}
+				//test first valid false
+				first1.set("value","1");
+				if (first1) {
+					bind1 = first1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.f(bind1.readOnly,"bind1.readOnly should be false for value = 1");
+						doh.t(bind1.relevant,"bind1.relevant should be true for value = 1");
+						doh.f(bind1.required,"bind1.required should be false for value = 1");
+						doh.f(bind1.valid,"bind1.valid should be false for value = 1");
+					}
+				}
+				//test first readOnly true
+				first1.set("value","2");
+				if (first1) {
+					bind1 = first1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.t(bind1.relevant,"bind1.relevant should be true for value = 2");
+						doh.f(bind1.required,"bind1.required should be false for value = 2");
+						doh.t(bind1.valid,"bind1.valid should be true for value = 2");
+						doh.t(bind1.readOnly,"bind1.readOnly should be true for value = 2");
+					}
+				}
+				//test first readOnly true and valid false
+				first1.set("value","3");
+				if (first1) {
+					bind1 = first1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.t(bind1.readOnly,"bind1.readOnly should be true for value = 3");
+						doh.t(bind1.relevant,"bind1.relevant should be true for value = 3");
+						doh.f(bind1.required,"bind1.required should be false for value = 3");
+						doh.f(bind1.valid,"bind1.valid should be false for value = 3");
+					}
+				}
+				//test first back to original
+				first1.set("value","5");
+				if (first1) {
+					bind1 = first1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.f(bind1.readOnly,"bind1.readOnly should be false for value = 5");
+						doh.t(bind1.relevant,"bind1.relevant should be true for value = 5");
+						doh.f(bind1.required,"bind1.required should be false for value = 5");
+						doh.t(bind1.valid,"bind1.valid should be ture for value = 5");
+					}
+				}
+			}
+		}]);
+
+
+		doh.register("check NumUpdate", [{
+			name : "testNumUpdate",
+			runTest : function() {
+				var first1, bind1, addr1;
+				//test first valid false
+				num1 = dijit.byId("numInput");
+				num1.set("value",1);
+				if (num1) {
+					bind1 = num1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.f(bind1.readOnly,"bind1.readOnly should be false for value = 1");
+						//doh.t(bind1.relevant,"bind1.relevant should be true for value = 1");
+						doh.f(bind1.required,"bind1.required should be false for value = 1");
+						doh.f(bind1.valid,"bind1.valid should be false for value = 1");
+					}
+				}				
+				num1.set("value",5);
+				if (num1) {
+					bind1 = num1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.f(bind1.readOnly,"bind1.readOnly should be false for value = 5");
+						//doh.t(bind1.relevant,"bind1.relevant should be true for value = 5");
+						doh.f(bind1.required,"bind1.required should be false for value = 5");
+						doh.t(bind1.valid,"bind1.valid should be true for value = 5");
+					}
+				}				
+			}
+		}]);
+
+		doh.register("check emailUpdate", [{
+			name : "testNumUpdate",
+			runTest : function() {
+				var last1, email1, bind1, addr1;
+				//test first valid false
+				last1 = dijit.byId("lastnameInput");
+				email1 = dijit.byId("emailInput");
+				
+				//test last = 5 for original
+				last1.set("value","5");
+				if (email1) {
+					bind1 = email1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.f(bind1.readOnly,"bind1.readOnly should be false for email value = 5");
+						//doh.t(bind1.relevant,"bind1.relevant should be true for email value = 5");
+						doh.f(bind1.required,"bind1.required should be false for email value = 5");
+						doh.t(bind1.valid,"bind1.valid should be true for email value = 5");
+					}
+				}				
+				//test last = 0 for email relevant = false
+				last1.set("value","0");
+				if (email1) {
+					bind1 = email1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.f(bind1.readOnly,"bind1.readOnly should be false for email value = 0");
+						doh.f(bind1.relevant,"bind1.relevant should be false for email value = 0");
+						doh.f(bind1.required,"bind1.required should be false for email value = 0");
+						doh.t(bind1.valid,"bind1.valid should be true for email value = 0");
+					}
+				}				
+				//test last = 1 for email valid = false
+				last1.set("value","1");
+				if (email1) {
+					bind1 = email1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.f(bind1.readOnly,"bind1.readOnly should be false for email value = 1");
+						//doh.t(bind1.relevant,"bind1.relevant should be true for email value = 1");
+						doh.f(bind1.required,"bind1.required should be false for email value = 1");
+						doh.f(bind1.valid,"bind1.valid should be false for email value = 1");
+					}
+				}				
+				//test last = 2 for email readOnly true
+				last1.set("value","2");
+				if (email1) {
+					bind1 = email1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.t(bind1.readOnly,"bind1.readOnly should be true for email value = 2");
+						//doh.t(bind1.relevant,"bind1.relevant should be true for email value = 2");
+						doh.f(bind1.required,"bind1.required should be false for email value = 2");
+						doh.t(bind1.valid,"bind1.valid should be true for email value = 2");
+					}
+				}				
+				//test last = 3 for email readOnly true and email valid = false
+				last1.set("value","3");
+				if (email1) {
+					bind1 = email1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.t(bind1.readOnly,"bind1.readOnly should be true for email value = 3");
+						//doh.t(bind1.relevant,"bind1.relevant should be true for email value = 3");
+						doh.f(bind1.required,"bind1.required should be false for email value = 3");
+						doh.f(bind1.valid,"bind1.valid should be false for email value = 3");
+					}
+				}				
+				//test last = 4 for email required true 
+				last1.set("value","4");
+				if (email1) {
+					bind1 = email1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.f(bind1.readOnly,"bind1.readOnly should be false for email value = 4");
+						//doh.t(bind1.relevant,"bind1.relevant should be true for email value = 4");
+						doh.t(bind1.required,"bind1.required should be true for email value = 4");
+						doh.t(bind1.valid,"bind1.valid should be true for email value = 4");
+					}
+				}				
+
+				//test last = 5 for back to original
+				last1.set("value","5");
+				if (email1) {
+					bind1 = email1.get("binding");
+					if (bind1 && bind1.isInstanceOf(dojox.mvc.StatefulModel)) {
+						doh.f(bind1.readOnly,"bind1.readOnly should be false for email value = 5");
+						//doh.t(bind1.relevant,"bind1.relevant should be true for email value = 5");
+						doh.f(bind1.required,"bind1.required should be false for email value = 5");
+						doh.t(bind1.valid,"bind1.valid should be true for email value = 5");
+					}
+				}				
+			
+			}
+		}]);
+
+		doh.run();
+
+		});
+	</script>
+</head>
+
+	<body class="claro">
+		<div id="wrapper">
+		<div id="header">
+		  <div id="navigation">
+		  </div>
+		  <div id="headerInsert">
+			<h1>Binding Tests</h1>
+		  </div>
+		</div>
+		<div id="main">
+		  <div id="leftNav">
+		  </div>
+		  <div id="mainContent">
+			<h2>Bind Self Tests</h2>
+			<div class="row">
+				<label style="display:inline-block; width:100%; text-align:left;">First: Enter 0 to test for Relevant false (use Reset to re-enable)</label>
+				<label style="display:inline-block; width:100%; text-align:left;">First: Enter 1 to test for Valid false.</label>
+				<label style="display:inline-block; width:100%; text-align:left;">First: Enter 2 to test for ReadOnly false (use Reset to re-enable)</label>
+				<label style="display:inline-block; width:100%; text-align:left;">First: Enter 3 to test for ReadOnly false and Valid false (use Reset to re-enable)</label>
+			</div>			
+			<div class="row">
+				<label class="cell" for="firstnameInput">First:</label>
+				<input class="cell" id="firstnameInput" data-dojo-type="dijit.form.ValidationTextBox"
+									data-dojo-props="ref: model.First"/>
+				<!-- Content in output below will always be in sync with value of textbox above -->
+				<span id="tout" data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: model.First">
+					(first name is: ${this.value})
+				</span>
+				
+			</div>
+		   <div class="row">
+				<label class="cell" for="firstnameInput"></label>
+				<span data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: model.First">
+					Relevant is:  ${this.ref.relevant}, Valid is: ${this.ref.valid}, ReadOnly is: ${this.ref.readOnly})
+				</span>			   
+			</div>
+			<div class="row">
+				<label style="display:inline-block; width:100%; text-align:left;">Num: Enter 1 for Valid false</label>
+			</div>
+			<div class="row">
+				<label class="cell" for="numInput">Num:</label>
+				<input class="cell" id="numInput" data-dojo-type="dijit.form.NumberTextBox"
+									data-dojo-props="ref: model.Num"/>
+				<span data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: model.Num">
+					(num is: ${this.value})
+				</span>
+			</div>
+			<h2>Bind Tests</h2>
+			<div class="row">
+				<label style="display:inline-block; width:100%; text-align:left;">Last: Enter 0 to test for Relevant false for Email.</label>
+				<label style="display:inline-block; width:100%; text-align:left;">Last: Enter 1 to test for Valid false for Email.</label>
+				<label style="display:inline-block; width:100%; text-align:left;">Last: Enter 2 to test for ReadOnly true for Email.</label>
+				<label style="display:inline-block; width:100%; text-align:left;">Last: Enter 3 to test for ReadOnly true and Valid false for Email.</label>
+				<label style="display:inline-block; width:100%; text-align:left;">Last: Enter 4 to test for Required true for Email.</label>
+			</div>			
+			
+			<div class="row">
+				<label class="cell" for="lastnameInput">Last:</label>
+				<input class="cell" id="lastnameInput" data-dojo-type="dijit.form.TextBox"
+									data-dojo-props="ref: model.Last"/>
+				<span data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: model.Last">
+					(last name is: ${this.value})
+				</span>
+			</div>
+			<div class="row">
+				<label class="cell" for="emailInput">Email:</label>
+				<input class="cell" id="emailInput" data-dojo-type="dijit.form.ValidationTextBox"
+									data-dojo-props="ref: model.Email"/>
+				<span data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: model.Email">
+					(email is: ${this.value})
+				</span>
+			</div>
+		   <div class="row">
+				<label class="cell" for="emailInput"></label>
+				<span id="emailOut" data-dojo-type="dojox.mvc.Output" data-dojo-props="ref: model.Email">
+					Relevant is:  ${dijit.byId("emailInput").ref.relevant}, Valid is: ${this.ref.valid}, ReadOnly is: ${this.ref.readOnly}, Required is: ${this.ref.required})
+				</span>
+		   </div>
+			
+			<br/>Model:
+			<button id="reset" type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){doReset()}">Reset</button>
+		  </div>
+		</div></div>
+		<script type="text/javascript">
+			function doReset() {
+				model.reset();
+			}
+		</script>
+		
+	</body>
+
+</html>

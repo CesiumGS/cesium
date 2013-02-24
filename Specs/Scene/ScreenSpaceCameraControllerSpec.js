@@ -860,7 +860,7 @@ defineSuite([
 
         moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
-        expect(camera.position).toEqual(position);
+        expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON8);
         expect(camera.direction).toEqualEpsilon(camera.position.negate().normalize(), CesiumMath.EPSILON15);
         expect(camera.direction.cross(camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
         expect(camera.right.cross(camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
@@ -933,7 +933,7 @@ defineSuite([
         moveMouse(MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
 
-        expect(camera.position).toEqualEpsilon(axis.multiplyByScalar(camera.position.magnitude()), CesiumMath.EPSILON9);
+        expect(camera.position).toEqualEpsilon(axis.multiplyByScalar(camera.position.magnitude()), CesiumMath.EPSILON8);
         expect(camera.direction).toEqualEpsilon(axis.negate(), CesiumMath.EPSILON15);
         expect(Cartesian3.dot(camera.up, axis)).toBeLessThan(CesiumMath.EPSILON2);
         expect(camera.right).toEqualEpsilon(camera.direction.cross(camera.up), CesiumMath.EPSILON15);
@@ -981,6 +981,34 @@ defineSuite([
         expect(camera.direction).toEqualEpsilon(camera.position.normalize().negate(), CesiumMath.EPSILON15);
         expect(camera.right).toEqualEpsilon(axis, CesiumMath.EPSILON15);
         expect(camera.up).toEqualEpsilon(camera.right.cross(camera.direction), CesiumMath.EPSILON15);
+    });
+
+    it('controller does not modify the camera after re-enabling motion', function() {
+        var frameState = setUp3D();
+        var position = Cartesian3.clone(camera.position);
+        var direction = Cartesian3.clone(camera.direction);
+        var up = Cartesian3.clone(camera.up);
+        var right = Cartesian3.clone(camera.right);
+
+        var startPosition = new Cartesian2(0.0, 0.0);
+        var endPosition = new Cartesian2(canvas.clientWidth, canvas.clientHeight);
+
+        controller.enableRotate = false;
+        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        updateController(frameState);
+
+        expect(camera.position).toEqual(position);
+        expect(camera.direction).toEqual(direction);
+        expect(camera.up).toEqual(up);
+        expect(camera.right).toEqual(right);
+
+        controller.enableRotate = true;
+        updateController(frameState);
+
+        expect(camera.position).toEqual(position);
+        expect(camera.direction).toEqual(direction);
+        expect(camera.up).toEqual(up);
+        expect(camera.right).toEqual(right);
     });
 
     it('is destroyed', function() {

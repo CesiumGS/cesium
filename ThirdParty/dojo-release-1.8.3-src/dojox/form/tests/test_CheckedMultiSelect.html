@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+	<head>
+
+		<title>dojox.form.CheckedMultiSelect</title>
+
+		<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/claro/claro.css">
+		<link rel="stylesheet" href="../resources/CheckedMultiSelect.css">
+
+		<style>
+			@import url(../../../dojo/resources/dojo.css);
+			@import url(../../../dijit/tests/css/dijitTests.css);
+			.ark { text-decoration: underline; }
+		</style>
+
+	    <script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, async: true"></script>
+		
+		<script src="../../../dijit/tests/_testCommon.js"></script>
+
+	    <script type="text/javascript">
+	    	require(["doh", "dojo/_base/array", "dojo/_base/lang", "dojo/dom-form", "dojo/on", "dojo/parser", "dojo/ready", 
+	    		"dojox/form/CheckedMultiSelect", "dijit/form/Button", "dijit/form/Form", "dojo/data/ItemFileReadStore", 
+	    		"dojo/data/ItemFileWriteStore"
+	    	], function(doh, array, lang, domForm, on, parser, ready, CheckedMultiSelect, Button, Form, ItemFileReadStore, 
+	    		ItemFileWriteStore){
+
+				var data = {
+					identifier: "value",
+					label: "label",
+					items: [
+						{value: "AL", label: "Alabama"},
+						{value: "AK", label: "Alaska"},
+						{value: "AZ", label: "Arizona"},
+						{value: "AR", label: "Arkansas"},
+						{value: "CA", label: "California"},
+						{value: "CO", label: "Colorado"},
+						{value: "CT", label: "Connecticut"}
+					]
+				};
+				
+				readStore = new ItemFileReadStore({data:lang.clone(data)});
+				writeStore = new ItemFileWriteStore({data:lang.clone(data)});
+				
+				var numOptions = 0;
+				var addNum = 10;
+				var testType;
+				// Uncomment below line to run perf tests - note SLOW to run
+				//testType = "perf";
+			
+				ready(function(){
+					parser.parse();
+
+					doh.register("tests",
+						[
+							function test_setValue(t){
+								t.is(["VA","WA"], form.get("value").ms1);
+								t.is(["TX","GA"], form.get("value").ms2);
+								ms1.set("value", ["TN","CA"]);
+								t.is(["TN","CA"], form.get("value").ms1);
+								ms1.invertSelection();
+								t.is(["VA","WA","FL"], form.get("value").ms1);
+							},
+							function test_addSelected(t){
+								array.forEach(ms2.getOptions(ms2.get("value")), function(i){
+									ms2.removeOption(i);
+									ms1.addOption(i);
+								});
+								t.is([], form.get("value").ms2);
+								ms1.invertSelection();
+								t.is(["TN","CA"], form.get("value").ms1);
+							},
+							function delete_selected(t){
+								t.is(["TN","CA"], ms1.get("value"));
+								var d = new doh.Deferred();
+								ms1.removeOption("CA");
+								window.setTimeout(function(){
+									try{
+										t.is(["TN"], ms1.get("value"));
+										d.callback(true);
+									}catch(e){ d.errback(e); }
+								}, 100);
+								return d;
+							},
+							function test_storeBased(t){
+								t.is([], ms4.get("value"));
+								ms4.set("value", ["CA","AL"]);
+								t.is(["AL","CA"], ms4.get("value"));
+							},
+							function test_changeSelected(t){
+								t.is([], ms5.get("value"));
+								ms5.set("value", ["AL", "AK"]);
+								var d = new doh.Deferred();
+								var cb = function(item){
+									try{
+										writeStore.setValue(item, "label", "North Pole");
+										try{
+											t.is(["AL","AK"], ms5.get("value"));
+											t.is(writeStore.getValue(item, "label"), 
+													array.filter(ms5._getChildren(), function(n){return n.option.value==="AK";})[0].labelNode.innerHTML);
+											d.callback(true);
+										}catch(e){ d.errback(e);}
+									}
+									catch(e){
+										d.errback(e);
+									}
+								}
+								writeStore.fetchItemByIdentity({identity: "AK", onItem: cb});
+								return d;
+							},
+							function test_deleteNonSelected(t){
+								t.is(["AL","AK"], ms5.get("value"));
+								var d = new doh.Deferred();
+								var cb = function(item){
+									try{
+										t.is(7, ms5._getChildren().length);
+										writeStore.deleteItem(item);
+										try{
+											t.is(["AL","AK"], ms5.get("value"));
+											t.is(6, ms5._getChildren().length);
+											d.callback(true);
+										}catch(e){ d.errback(e);}
+									}catch (e){
+										d.errback(e);
+									}
+								}
+								writeStore.fetchItemByIdentity({identity: "AZ", onItem: cb});
+								return d;
+							},
+							function test_deleteSelected(t){
+								t.is(["AL","AK"], ms5.get("value"));
+								var d = new doh.Deferred();
+								var cb = function(item){
+									try{
+										t.is(6, ms5._getChildren().length);
+										writeStore.deleteItem(item);
+										try{
+											t.is(["AL"], ms5.get("value"));
+											t.is(5, ms5._getChildren().length);
+											d.callback(true);
+										}catch(e){ d.errback(e);}
+									}catch (e){
+										d.errback(e);
+									}
+								}
+								writeStore.fetchItemByIdentity({identity: "AK", onItem: cb});
+								return d;
+							},
+							function test_newItem(t){
+								t.is(["AL"], ms5.get("value"));
+								t.is(5, ms5._getChildren().length);
+								ms5.set("value", ["AL","NY"]);
+								t.is(["AL"], ms5.get("value"));
+								var d = new doh.Deferred();
+								writeStore.newItem({value: "NY", label: "New York"});
+								try{
+									t.is(6, ms5._getChildren().length);
+									ms5.set("value", ["AL","NY"]);
+									t.is(["AL","NY"], ms5.get("value"));
+									d.callback(true);
+								}catch(e){d.errback(e);}
+								return d;
+							},
+							function test_formDegrade(t){
+								var form = domForm.toObject("form");
+								t.is(form.ms1, ["TN"], "form is set properly");
+								t.is(form.ms4, ["AL", "CA"], "form is set properly");
+							},
+							{
+								name: "test_performance_single",
+								testType: testType,
+								trialDuration: 100,
+								trialIterations: 100,
+								trialDelay: 100,
+								runTest: function(t){
+									var opt = {value: "Test", label: "Test Option"};
+									ms3.addOption(opt);
+									ms3.removeOption(opt);
+								}
+							},
+							{
+								name: "test_performance_separate",
+								testType: testType,
+								trialDuration: 100,
+								trialIterations: 100,
+								trialDelay: 100,
+								setUp: function(t){
+									var opts = t.options = [];
+									for(var i = 0; i < addNum; i++){
+										opts.push({value: i + "", label: "Option " + (i + 1)});
+									}
+								},
+								runTest: function(t){
+									array.forEach(t.options, function(opt){
+										ms3.addOption(opt);
+									});
+									array.forEach(t.options, function(opt){
+										ms3.removeOption(opt);
+									});
+								},
+								tearDown: function(t){
+									delete t.options;
+								}
+							},
+							{
+								name: "test_performance_batch",
+								testType: testType,
+								trialDuration: 100,
+								trialIterations: 100,
+								trialDelay: 100,
+								setUp: function(t){
+									var opts = t.options = [];
+									for(var i = 0; i < addNum; i++){
+										opts.push({value: i + "", label: "Option " + (i + 1)});
+									}
+								},
+								runTest: function(t){
+									ms3.addOption(t.options);
+									ms3.removeOption(t.options);
+								},
+								tearDown: function(t){
+									delete t.options;
+								}
+							}
+						]
+					);
+					doh.run();
+					on(ms1, "change", function(val){
+						console.log("First Select Changed to " + val);
+					});
+					on(ss1, "change", function(val){
+						console.log("First Radio Select Changed to " + val);
+					});
+		    	});
+			});
+		</script>
+	</head>	
+	<body class="claro">
+		<h1 class="testTitle">Test: dojox.form.CheckedMultiSelect</h1>
+		<form data-dojo-type="dijit/form/Form" id="form" data-dojo-id="form">
+			<h2>Check Boxes</h2>
+			<select data-dojo-id="ms1" multiple="true" name="ms1" data-dojo-type="dojox.form.CheckedMultiSelect">
+				<option value="TN">Tennessee</option>
+				<option value="VA" selected="selected">Virginia</option>
+				<option value="WA" selected="selected">Washington</option>
+				<option value="FL">Florida</option>
+				<option value="CA">California</option>
+			</select>
+			<select data-dojo-id="ms2" multiple="true" name="ms2" data-dojo-type="dojox.form.CheckedMultiSelect">
+				<option value="UT">Utah</option>
+				<option value="TX" selected="selected">Texas</option>
+				<option value="GA" selected="selected">Georgia</option>
+				<option value="ID">Idaho</option>
+				<option value="WY">Wyoming</option>
+				<option value="OR">Oregon</option>
+				<option value="PA">Pennsylvania</option>
+			</select>
+			<select data-dojo-id="ms3" multiple="true" name="ms3" data-dojo-type="dojox.form.CheckedMultiSelect">
+			</select>
+		<hr>
+			<h2>Radio Buttons</h2>
+			<select data-dojo-id="ss1" name="ss1" data-dojo-type="dojox.form.CheckedMultiSelect">
+				<option value="TN">Tennessee</option>
+				<option value="VA" selected="selected">Virginia</option>
+				<option value="WA">Washington</option>
+				<option value="FL">Florida</option>
+				<option value="CA">California</option>
+			</select>
+			<select data-dojo-id="ss2" name="ss2" value="TX" data-dojo-type="dojox.form.CheckedMultiSelect">
+				<option value="UT">Utah</option>
+				<option value="TX">Texas</option>
+				<option value="GA">Georgia</option>
+				<option value="ID">Idaho</option>
+				<option value="WY">Wyoming</option>
+				<option value="OR">Oregon</option>
+				<option value="PA">Pennsylvania</option>
+			</select>
+			<select data-dojo-id="ss3" name="ss3" data-dojo-type="dojox.form.CheckedMultiSelect">
+			</select>
+		<hr>
+			<h4 class="testSubtitle">Store-based</h4>
+			<select data-dojo-id="ms4" multiple="true" size="5" name="ms4" store="readStore" data-dojo-type="dojox.form.CheckedMultiSelect">
+			</select>
+			<select data-dojo-id="ms5" multiple="true" size="5" name="ms5" store="writeStore" data-dojo-type="dojox.form.CheckedMultiSelect">
+			</select>
+		<hr>
+			<h4 class="testSubtitle">Validation</h4>
+			<select data-dojo-id="rq1" multiple="true" required="true" name="rq1" store="readStore" data-dojo-type="dojox.form.CheckedMultiSelect"
+				invalidMessage="You need to select at least one"
+			></select>
+			<button data-dojo-type="dijit.form.Button">
+				Validate
+				<script type='dojo/on' data-dojo-event='click'>
+					var isvalid = rq1.isValid();
+					console.warn("isvalid?", isvalid, form, form.validate);
+					try{
+						rq1.validate();
+						form.validate();
+					}catch(e){
+						console.log(e);
+					}
+					console.warn("validated");
+				</script>
+			</button>
+		<hr>
+			<button data-dojo-type="dijit.form.Button">
+				<script type="dojo/on" data-dojo-event="click">
+					console.dir(form.get("value"));
+				</script>
+				Get Values
+			</button>
+			<button data-dojo-type="dijit.form.Button">
+				<script type="dojo/on" data-dojo-event="click">
+					numOptions++;
+					ms3.addOption({value: numOptions + "", label: "Option " + (numOptions)});
+				</script>
+				Add Check Option
+			</button>
+			<button data-dojo-type="dijit.form.Button">
+				<script type="dojo/on" data-dojo-event="click">
+					numOptions++;
+					ss3.addOption({value: numOptions + "", label: "Option " + (numOptions)});
+				</script>
+				Add Radio Option
+			</button>
+			<button data-dojo-type="dijit.form.Button">
+				<script type="dojo/on" data-dojo-event="click">
+					ms3.set("disabled", !ms3.disabled);
+					ss3.set("disabled", !ss3.disabled);
+				</script>
+				Toggle Disabled
+			</button>
+			<button data-dojo-type="dijit.form.Button">
+				<script type="dojo/on" data-dojo-event="click">
+					ms2.set("readOnly", !ms2.readOnly);
+					ss2.set("readOnly", !ss2.readOnly);
+				</script>
+				Toggle Read Only
+			</button>
+			<button data-dojo-type="dijit.form.Button">
+				<script type="dojo/on" data-dojo-event="click">
+					ms1.invertSelection(true);
+				</script>
+				Invert Selection
+			</button>
+			<button data-dojo-type="dijit.form.Button">
+				<script type="dojo/on" data-dojo-event="click">
+					console.log(ms1.get("displayedValue"));
+				</script>
+				Get Displayed Value
+			</button>
+		</form>
+	</body>
+</html>

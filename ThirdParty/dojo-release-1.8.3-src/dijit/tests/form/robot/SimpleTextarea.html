@@ -1,0 +1,135 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot SimpleTextArea Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_SimpleTextarea.html');
+
+				doh.register("dijit.form.SimpleTextarea", [
+					{
+						name: "tab",
+						timeout: 15000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							dojo.global.scrollTo(0,0);
+							doh.robot.mouseMove(10,10);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.keyPress(dojo.keys.TAB, 1000, {});
+							doh.robot.sequence(function(){ dijit.byId('ta1').set('value', null) }, 1000); 
+							doh.robot.typeKeys("hi", 500, 500);
+							doh.robot.keyPress(dojo.keys.TAB, 1000, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("hi", dojo.byId('oc1').value);
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "onchange",
+						timeout: 15000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var changed = false;
+							dijit.byId("ta1").set("onChange", function(e){console.log(e); changed = true; });
+
+							doh.robot.mouseMoveAt("ta1", 500);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.typeKeys("hello", 500, 1000);
+							
+							//blur to trigger onChange
+							doh.robot.mouseMoveAt("ta2", 500); 
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(changed, "onchange event was not fired");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "maxlength",
+						timeout: 15000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var changed = false;
+							dijit.byId("ta1").set("maxLength", "5");
+
+							doh.robot.mouseMoveAt("ta1", 500);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.typeKeys("mississippi", 500, 2000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("missi", dojo.byId('ta1').value);
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "testReset",
+						timeout: 15000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("resetButton", 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("shichashaw, textarea text baw.", dojo.trim(dojo.byId('ta1').value));
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "testGetValue",
+						timeout: 15000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("getValueButton", 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(dojo.byId('gv1').value, dojo.byId('ta1').value);
+							}), 1000);
+							return d;
+						}
+					}
+					,
+					{
+						name: "testNull",
+						timeout: 15000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("setNullButton", 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("", dojo.byId('ta1').value);
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

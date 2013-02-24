@@ -1,0 +1,870 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<!--
+	we use a strict-mode DTD to ensure that the box model is the same for these
+	basic tests
+-->
+<html>
+	<head>
+		<title>testing Core HTML/DOM/CSS/Style utils</title>
+		<style type="text/css">
+			@import "../../resources/dojo.css";
+		</style>
+		<script type="text/javascript" src="../../dojo.js" data-dojo-config="isDebug:true"></script>
+		<script type="text/javascript">
+			require(["dojo", "doh", "dojo/sniff", "dojo/domReady!"], function(dojo, doh, has){
+
+				function getIframeDocument(/*DOMNode*/iframeNode){
+					//summary: Returns the document object associated with the iframe DOM Node argument.
+					var doc = iframeNode.contentDocument || // W3
+						(
+							(iframeNode.contentWindow)&&(iframeNode.contentWindow.document)
+						) ||  // IE
+						(
+							(iframeNode.name)&&(document.frames[iframeNode.name])&&
+							(documendoh.frames[iframeNode.name].document)
+						) || null;
+					return doc;
+				}
+
+				// IE gets confused by the iframe when you press Refresh so load them dynamically
+				var iframe_div = dojo.byId('iframe_div');
+				dojo.addOnWindowUnload(function(){
+					iframe_div.innerHTML = 'unloading';
+				});
+				setTimeout(function(){
+					iframe_div.innerHTML = '<iframe src="absStrictIframe.html" name="iframe_strict" id="iframe_strict" \
+						style="border:3px solid black; padding:4px; margin:5px; background-color:black;" \
+						scrolling=yes allowtransparency=true></iframe>\
+					<iframe src="absQuirksIframe.html" name="iframe_quirks" id="iframe_quirks" \
+						style="border:3px solid black; padding:4px; margin:5px; background-color:black;" \
+						scrolling=yes allowtransparency=true></iframe>'; //'balanced
+				}, 0);
+
+				doh.register("t",
+					[
+						"doh.is(null, dojo.byId('nonExistantId'));",
+						"doh.is(null, dojo.byId(null));",
+						"doh.is(null, dojo.byId(''));",
+						"doh.is(undefined, dojo.byId(undefined));",
+
+						"doh.is(100, dojo.marginBox('sq100').w);",
+						"doh.is(100, dojo.marginBox('sq100').h);",
+						"doh.is(100, dojo._getMarginSize('sq100').w);",
+						"doh.is(100, dojo._getMarginSize('sq100').h);",
+
+						"doh.is(120, dojo.marginBox('sq100margin10').w);",
+						"doh.is(120, dojo.marginBox('sq100margin10').h);",
+						"doh.is(100, dojo.contentBox('sq100margin10').w);",
+						"doh.is(100, dojo.contentBox('sq100margin10').h);",
+
+						"doh.is(140, dojo.marginBox('sq100margin10pad10').w);",
+						"doh.is(140, dojo.marginBox('sq100margin10pad10').h);",
+						"doh.is(140, dojo._getMarginSize('sq100margin10pad10').w);",
+						"doh.is(140, dojo._getMarginSize('sq100margin10pad10').h);",
+
+						"doh.is(120, dojo.marginBox('sq100pad10').w);",
+						"doh.is(120, dojo.marginBox('sq100pad10').h);",
+
+						"doh.is(110, dojo.marginBox('sq100ltpad10').w);",
+						"doh.is(110, dojo.marginBox('sq100ltpad10').h);",
+						"doh.is(100, dojo.contentBox('sq100ltpad10').w);",
+						"doh.is(100, dojo.contentBox('sq100ltpad10').h);",
+
+						"doh.is(120, dojo.marginBox('sq100ltpad10rbmargin10').w);",
+						"doh.is(120, dojo.marginBox('sq100ltpad10rbmargin10').h);",
+
+						"doh.is(120, dojo.marginBox('sq100border10').w);",
+						"doh.is(120, dojo.marginBox('sq100border10').h);",
+						"doh.is(100, dojo.contentBox('sq100border10').w);",
+						"doh.is(100, dojo.contentBox('sq100border10').h);",
+
+						"doh.is(140, dojo.marginBox('sq100border10margin10').w);",
+						"doh.is(140, dojo.marginBox('sq100border10margin10').h);",
+						"doh.is(100, dojo.contentBox('sq100border10margin10').w);",
+						"doh.is(100, dojo.contentBox('sq100border10margin10').h);",
+
+						"doh.is(160, dojo.marginBox('sq100border10margin10pad10').w);",
+						"doh.is(160, dojo.marginBox('sq100border10margin10pad10').h);",
+						"doh.is(100, dojo.contentBox('sq100border10margin10pad10').w);",
+						"doh.is(100, dojo.contentBox('sq100border10margin10pad10').h);",
+
+						// FIXME: the 'correct' w is not 100 on Safari WebKit (2.0.4 [419.3]), the right-margin extends to the document edge
+						// "doh.is(100, dojo.marginBox('sq100nopos').w);",
+						"doh.is(100, dojo.marginBox('sq100nopos').h);",
+
+						"doh.is(10, dojo._getPadExtents(dojo.byId('sq100ltpad10rbmargin10')).l);",
+						"doh.is(10, dojo._getPadExtents(dojo.byId('sq100ltpad10rbmargin10')).t);",
+						"doh.is(10, dojo._getPadExtents(dojo.byId('sq100ltpad10rbmargin10')).w);",
+						"doh.is(10, dojo._getPadExtents(dojo.byId('sq100ltpad10rbmargin10')).h);",
+
+						"doh.is(0, dojo._getMarginExtents(dojo.byId('sq100ltpad10rbmargin10')).l);",
+						"doh.is(0, dojo._getMarginExtents(dojo.byId('sq100ltpad10rbmargin10')).t);",
+						"doh.is(10, dojo._getMarginExtents(dojo.byId('sq100ltpad10rbmargin10')).w);",
+						"doh.is(10, dojo._getMarginExtents(dojo.byId('sq100ltpad10rbmargin10')).h);",
+
+						"doh.is(10, dojo._getBorderExtents(dojo.byId('sq100border10margin10pad10')).l);",
+						"doh.is(10, dojo._getBorderExtents(dojo.byId('sq100border10margin10pad10')).t);",
+						"doh.is(20, dojo._getBorderExtents(dojo.byId('sq100border10margin10pad10')).w);",
+						"doh.is(20, dojo._getBorderExtents(dojo.byId('sq100border10margin10pad10')).h);",
+
+						"doh.is(20, dojo._getPadBorderExtents(dojo.byId('sq100border10margin10pad10')).l);",
+						"doh.is(20, dojo._getPadBorderExtents(dojo.byId('sq100border10margin10pad10')).t);",
+						"doh.is(40, dojo._getPadBorderExtents(dojo.byId('sq100border10margin10pad10')).w);",
+						"doh.is(40, dojo._getPadBorderExtents(dojo.byId('sq100border10margin10pad10')).h);",
+
+						function scrollUp(){
+							scrollTo(0, 0);
+						},
+
+						function coordsBasic(t){
+							var pos = dojo.position("sq100", false);
+							// console.debug(pos);
+							doh.is(100, pos.x);
+							doh.is(100, pos.y);
+							doh.is(100, pos.w);
+							doh.is(100, pos.h);
+						},
+						function coordsMargin(t){
+							// position() is getting us the border-box location
+							var pos = dojo.position("sq100margin10", false);
+							doh.is(260, pos.x);
+							doh.is(110, pos.y);
+							doh.is(100, pos.w);
+							doh.is(100, pos.h);
+							pos = dojo.marginBox("sq100margin10");
+							doh.is(120, pos.w);
+							doh.is(120, pos.h);
+							// Though coords shouldn't be used, test it for backward compatibility.
+							// coords returns the border-box location and margin-box size
+							pos = dojo.coords("sq100margin10", false);
+							doh.is(260, pos.x);
+							doh.is(110, pos.y);
+							doh.is(120, pos.w);
+							doh.is(120, pos.h);
+						},
+						function coordsBorder(t){
+							var pos = dojo.position("sq100border10", false);
+							doh.is(100, pos.x);
+							doh.is(400, pos.y);
+						},
+						function sq100nopos(t){
+							var pos = dojo.position("sq100nopos", false);
+							// console.debug(pos);
+							doh.is(0, pos.x);
+							doh.t(pos.y > 0);
+							// FIXME: the 'correct' w is not 100 on Safari WebKit (2.0.4 [419.3]), the right-margin extends to the document edge
+							// doh.is(100, pos.w);
+							doh.is(100, pos.h);
+						},
+						function coordsScrolled(t) {
+							var s = document.createElement('div');
+							var c = document.createElement('div');
+							document.body.appendChild(s);
+							s.appendChild(c);
+							var x=257, y= 285;
+							with (s.style) {
+								position = 'absolute';
+								overflow = 'scroll';
+								border = "10px solid black";
+							}
+							dojo.marginBox(s, {l: x, t: y, w: 100, h: 100});
+							dojo.marginBox(c, {l: 0, t: 0, w: 500, h: 500});
+							s.scrollTop = 200;
+							var pos = dojo.position(s, true);
+							doh.is(x, pos.x);
+							doh.is(y, pos.y);
+						},
+						{
+							name: "coordsIframe",
+							timeout: 2000,
+							runTest: function(){
+								var def = new doh.Deferred();
+								setTimeout(function(){ try{
+									var oldLtr = dojo._isBodyLtr();
+									var oldQuirks = has("quirks");
+									dojo.withGlobal(dojo.byId('iframe_quirks').win, function(){
+										doh.t(has("quirks"), "has('quirks') == true in quirks/iframe");
+										doh.f(dojo._isBodyLtr(), "isBodyLtr == false in RTL/iframe");
+										var pos = dojo.position('iframe_00_quirks');
+										doh.t(pos.x===0, "quirks iframe element x == 0 (x,y,w,h="+pos.x+","+pos.y+","+pos.w+","+pos.h+")");
+										doh.t(pos.y===0, "quirks iframe element y == 0 (x,y,w,h="+pos.x+","+pos.y+","+pos.w+","+pos.h+")");
+										doh.t(pos.w>0, "quirks iframe element w > 0 (x,y,w,h="+pos.x+","+pos.y+","+pos.w+","+pos.h+")");
+										doh.t(pos.h>0, "quirks iframe element h > 0 (x,y,w,h="+pos.x+","+pos.y+","+pos.w+","+pos.h+")");
+									});
+									dojo.withGlobal(dojo.byId('iframe_strict').win, function(){
+										doh.f(has("quirks"), "has('quirks') == false in strict/ifraee");
+										doh.f(dojo._isBodyLtr(), "isBodyLtr == false in RTL/iframe");
+										var pos = dojo.position('iframe_00_strict');
+										doh.t(pos.x===0, "strict iframe element x == 0 (x,y,w,h="+pos.x+","+pos.y+","+pos.w+","+pos.h+")");
+										doh.t(pos.y===0, "strict iframe element y == 0 (x,y,w,h="+pos.x+","+pos.y+","+pos.w+","+pos.h+")");
+										doh.t(pos.w>0, "strict iframe element w > 0 (x,y,w,h="+pos.x+","+pos.y+","+pos.w+","+pos.h+")");
+										doh.t(pos.h>0, "strict iframe element h > 0 (x,y,w,h="+pos.x+","+pos.y+","+pos.w+","+pos.h+")");
+									});
+									doh.t(!oldLtr == !dojo._isBodyLtr(), "isBodyLtr restored after withGlobal");
+									doh.is(oldQuirks, has("quirks"), "has('quirks') restored after withGlobal");
+									def.callback(true);
+								}catch(e){ def.errback(e); } }, 1000);
+								return def;
+							}
+						},
+						"doh.is(1, dojo.style('sq100nopos', 'opacity'));",
+
+						// never compare floating numbers directly!
+						"doh.is((0.1).toFixed(4), Number(dojo.style('sq100nopos', 'opacity', 0.1)).toFixed(4));",
+						"doh.is((0.8).toFixed(4), Number(dojo.style('sq100nopos', 'opacity', 0.8)).toFixed(4));",
+						function styleObject(){
+							dojo.style('sq100nopos', { 'opacity': 0.1 });
+							doh.is((0.1).toFixed(4), Number(dojo.style('sq100nopos', 'opacity')).toFixed(4));
+							dojo.style('sq100nopos', { 'opacity': 0.8 });
+							doh.is((0.8).toFixed(4), Number(dojo.style('sq100nopos', 'opacity')).toFixed(4));
+						},
+
+						"doh.is('static', dojo.style('sq100nopos', 'position'));",
+						function getBgcolor(t){
+							var bgc = dojo.style('sq100nopos', 'backgroundColor');
+							doh.t((bgc == "rgb(0, 0, 0)")||(bgc == "black")||(bgc == "#000000"));
+						},
+						function isDescendant(t){
+							doh.t(dojo.isDescendant("sq100", dojo.body()));
+							doh.t(dojo.isDescendant("sq100", dojo.doc));
+							doh.t(dojo.isDescendant("sq100", "sq100"));
+							doh.t(dojo.isDescendant(dojo.byId("sq100"), "sq100"));
+							doh.f(dojo.isDescendant("sq100", dojo.byId("sq100").firstChild));
+							doh.t(dojo.isDescendant(dojo.byId("sq100").firstChild, "sq100"));
+						},
+						function isDescendantIframe(t){
+							var bif = dojo.byId("blah");
+							// this test barely makes sense. disabling it for now.
+							// doh.t(dojo.isDescendant(bif.contentDocument.getElementById("subDiv"), bif.parentNode));
+							var subDiv = getIframeDocument(bif).getElementById("subDiv");
+							doh.t(dojo.isDescendant(subDiv, subDiv));
+							doh.t(dojo.isDescendant(subDiv, subDiv.parentNode));
+							doh.f(dojo.isDescendant(subDiv.parentNode, subDiv));
+
+						},
+						function testClassFunctions(t){
+							var node = dojo.byId("sq100");
+							dojo.removeClass(node);
+							dojo.addClass(node, "a");
+							doh.is("a", node.className, "class is a");
+							dojo.removeClass(node, "c");
+							doh.is("a", node.className, "class is still a");
+							t.assertTrue(dojo.hasClass(node, "a"), "class is a, test for a");
+							t.assertFalse(dojo.hasClass(node, "b"), "class is a, test for b");
+							dojo.addClass(node, "b");
+							doh.is("a b", node.className, "class is a b");
+							t.assertTrue(dojo.hasClass(node, "a"), "class is a b, test for a");
+							t.assertTrue(dojo.hasClass(node, "b"), "class is a b, test for b");
+							dojo.removeClass(node, "a");
+							doh.is("b", node.className, "class is b");
+							t.assertFalse(dojo.hasClass(node, "a"), "class is b, test for a");
+							t.assertTrue(dojo.hasClass(node, "b"), "class is b, test for b");
+							dojo.toggleClass(node, "a");
+							doh.is("b a", node.className, "class is b a");
+							t.assertTrue(dojo.hasClass(node, "a"), "class is b a, test for a");
+							t.assertTrue(dojo.hasClass(node, "b"), "class is b a, test for b");
+							dojo.toggleClass(node, "a");
+							doh.is("b", node.className, "class is b (again)");
+							t.assertFalse(dojo.hasClass(node, "a"), "class is b (again), test for a");
+							t.assertTrue(dojo.hasClass(node, "b"), "class is b (again), test for b");
+							dojo.toggleClass(node, "b");
+							doh.is("", node.className, "class is blank");
+							t.assertFalse(dojo.hasClass(node, "a"), "class is blank, test for a");
+							t.assertFalse(dojo.hasClass(node, "b"), "class is blank, test for b");
+							dojo.removeClass(node, "c");
+							t.assertTrue(!node.className, "no class");
+							var acuWorked = true;
+							try{
+								dojo.addClass(node);
+							}catch(e){
+								acuWorked = false;
+							}
+							doh.is(true, acuWorked, "addClass handles undefined class");
+							dojo.addClass(node, "a");
+							dojo.replaceClass(node, "b", "a");
+							t.assertTrue(dojo.hasClass(node, "b"), "class is b after replacing a, test for b");
+							t.assertFalse(dojo.hasClass(node, "a"), "class is b after replacing a, test for not a");
+							
+							dojo.replaceClass(node, "", "b");
+							t.assertFalse(dojo.hasClass(node, "b"), "class b should be removed, with no class added");
+							t.is("", node.className, "The className is empty");
+							
+							dojo.addClass(node, "b a");
+							dojo.replaceClass(node, "c", "");
+							t.is("b a c", node.className, 
+								"The className is  is 'b a c' after using an empty string in replaceClass");
+							
+							t.f(dojo.hasClass(document, "ab"), "hasClass on document should not throw error");
+						},
+						function testAddRemoveClassMultiple(t){
+							var node = dojo.byId("sq100");
+							dojo.removeClass(node);
+							dojo.addClass(node, "a");
+							t.is("a", node.className, "class is a");
+							dojo.addClass(node, "a b");
+							t.is("a b", node.className, "class is a b");
+							dojo.addClass(node, "b a");
+							t.is("a b", node.className, "class is still a b");
+							dojo.addClass(node, ["a", "c"]);
+							t.is("a b c", node.className, "class is a b c");
+							dojo.removeClass(node, "c a");
+							t.is("b", node.className, "class is b");
+							dojo.removeClass(node);
+							t.is("", node.className, "empty class");
+							dojo.addClass(node, "  c   b   a ");
+							t.is("c b a", node.className, "class is c b a");
+							dojo.removeClass(node, " c b ");
+							t.is("a", node.className, "class is a");
+							dojo.removeClass(node, ["a", "c"]);
+							t.is("", node.className, "empty class");
+							dojo.addClass(node, "a b");
+							dojo.replaceClass(node, "c", "a b");
+							t.is("c", node.className, "class is c");
+							dojo.replaceClass(node, "");
+							t.is("", node.className, "empty class");
+							node.className = "";
+						},
+						function getTypeInput(t){
+							doh.f(dojo.hasAttr(dojo.byId("input-no-type"), "type"));
+							doh.is(null, dojo.attr(dojo.byId("input-no-type"), "type"));
+							doh.t(dojo.hasAttr(dojo.byId("input-with-type"), "type"));
+							doh.is("checkbox", dojo.attr(dojo.byId("input-with-type"), "type"));
+						},
+						function getWithString(t){
+							doh.f(dojo.hasAttr("input-no-type", "type"));
+							doh.is(null, dojo.attr("input-no-type", "type"));
+							doh.t(dojo.hasAttr("input-with-type", "type"));
+							doh.is("checkbox", dojo.attr("input-with-type", "type"));
+						},
+						function attrId(t){
+							doh.t(dojo.hasAttr("div-no-tabindex", "id"));
+							doh.is("div-no-tabindex", dojo.attr("div-no-tabindex", "id"));
+							var div = document.createElement("div");
+							doh.f(dojo.hasAttr(div, "id"));
+							doh.is(null, dojo.attr(div, "id"));
+							dojo.attr(div, "id", "attrId1");
+							doh.t(dojo.hasAttr(div, "id"));
+							doh.is("attrId1", dojo.attr(div, "id"));
+							dojo.removeAttr(div, "id");
+							doh.f(dojo.hasAttr(div, "id"));
+							doh.is(null, dojo.attr(div, "id"));
+						},
+						function getTabindexDiv(t){
+							doh.f(dojo.hasAttr("div-no-tabindex", "tabIndex"));
+							doh.t(dojo.attr("div-no-tabindex", "tabIndex") <= 0);
+							doh.t(dojo.hasAttr("div-tabindex-minus-1", "tabIndex"));
+							if(!has("opera")){
+								// Opera (at least <= 9) does not support tabIndex="-1"
+								doh.is(-1, dojo.attr("div-tabindex-minus-1", "tabIndex"));
+							}
+							doh.t(dojo.hasAttr("div-tabindex-0", "tabIndex"));
+							doh.is(0, dojo.attr("div-tabindex-0", "tabIndex"));
+							doh.is(1, dojo.attr("div-tabindex-1", "tabIndex"));
+						},
+						function getTabindexInput(t){
+							if(!has("ie") || has("ie") >= 8){
+								// IE6/7 always reports tabIndex as defined
+								doh.f(dojo.hasAttr("input-no-tabindex", "tabIndex"));
+								doh.f(dojo.attr("input-no-tabindex", "tabIndex"));
+							}
+							doh.t(dojo.hasAttr("input-tabindex-minus-1", "tabIndex"));
+							if(!has("opera")){
+								// Opera (at least <= 9) does not support tabIndex="-1"
+								doh.is(-1, dojo.attr("input-tabindex-minus-1", "tabIndex"));
+							}
+							doh.t(dojo.hasAttr("input-tabindex-0", "tabIndex"));
+							doh.is(0, dojo.attr("input-tabindex-0", "tabIndex"));
+							doh.is(1, dojo.attr("input-tabindex-1", "tabIndex"));
+						},
+						function setTabindexDiv(t){
+							var div = document.createElement("div");
+							doh.is(null, dojo.attr(div, "tabIndex"));
+							dojo.attr(div, "tabIndex", -1);
+							if(!has("opera")){
+								// Opera (at least <= 9) does not support tabIndex="-1"
+								doh.is(-1, dojo.attr(div, "tabIndex"));
+							}
+							dojo.attr(div, "tabIndex", 0);
+							doh.is(0, dojo.attr(div, "tabIndex"));
+							dojo.attr(div, "tabIndex", 1);
+							doh.is(1, dojo.attr(div, "tabIndex"));
+						},
+						function setTabindexInput(t){
+							var input = document.createElement("input");
+							doh.t(dojo.attr(input, "tabIndex") <= 0);
+							dojo.attr(input, "tabIndex", -1);
+							if(!has("opera")){
+								// Opera (at least <= 9) does not support tabIndex="-1"
+								doh.is(-1, dojo.attr(input, "tabIndex"));
+							}
+							dojo.attr(input, "tabIndex", 0);
+							doh.is(0, dojo.attr(input, "tabIndex"));
+							dojo.attr(input, "tabIndex", 1);
+							doh.is(1, dojo.attr(input, "tabIndex"));
+						},
+						function removeTabindexFromDiv(t){
+							var div = document.createElement("div");
+							dojo.attr(div, "tabIndex", 1);
+							doh.is(1, dojo.attr(div, "tabIndex"));
+							dojo.removeAttr(div, "tabIndex");
+							doh.is(null, dojo.attr(div, "tabIndex"));
+						},
+						function removeDisabledFromInput(t){
+							var input = document.createElement("input");
+							dojo.attr(input, "disabled", true);
+							doh.t(dojo.attr(input, "disabled"));
+							dojo.removeAttr(input, "disabled");
+							doh.f(dojo.attr(input, "disabled"));
+						},
+						function removeTabindexFromInput(t){
+							var input = document.createElement("input");
+							dojo.attr(input, "tabIndex", 1);
+							doh.is(1, dojo.attr(input, "tabIndex"));
+							dojo.removeAttr(input, "tabIndex");
+							doh.is(null, dojo.attr(input, "tabIndex"));
+						},
+						function setReadonlyInput(t){
+							var input = document.createElement("input");
+							doh.f(dojo.attr(input, "readonly"));
+							dojo.attr(input, "readonly", true);
+							doh.is(true, dojo.attr(input, "readonly"));
+							dojo.attr(input, "readonly", false);
+							doh.is(false, dojo.attr(input, "readonly"));
+						},
+						function attr_map(t){
+							var input = document.createElement("input"),
+								input2 = document.createElement("input");
+							var ctr= 0;
+							dojo.attr(input, {
+								"class": "thinger blah",
+								"tabIndex": 1,
+								"type": "text",
+								"onfocus": function(e){
+									ctr++;
+								}
+							});
+							dojo.body().appendChild(input);
+							dojo.body().appendChild(input2);
+							doh.is(1, dojo.attr(input, "tabIndex"), "tabIndex");
+							if(!has("ie") || has("ie") > 7){
+								// IE6/7 treats type="text" as missing, even if it was
+								// explicitly specified
+								doh.is("text", dojo.attr(input, "type"), "type");
+							}
+							doh.is(0, ctr, "onfocus ctr == 0");
+							doh.t(dojo.hasClass(input, "thinger"), "hasClass of thinger");
+							doh.t(dojo.hasClass(input, "blah"), "hasClass of blah");
+							var def = new doh.Deferred();
+							input.focus();
+							setTimeout(def.getTestErrback(function(){
+								doh.is(1, ctr, "onfocus ctr == 1");
+								input2.focus();
+								setTimeout(def.getTestErrback(function(){
+									input.focus();
+									setTimeout(def.getTestCallback(function(){
+										doh.is(2, ctr, "onfocus ctr == 2");
+									}), 10);
+								}), 10);
+							}), 10);
+							return def;
+						},
+						function attr_reconnect(t){
+							var input = document.createElement("input"),
+								input2 = document.createElement("input");
+							var ctr = 0;
+							dojo.attr(input, "type", "text");
+							dojo.attr(input, "onfocus", function(e){ ctr++; });
+							dojo.attr(input, "onfocus", function(e){ ctr++; });
+							dojo.attr(input, "onfocus", function(e){ ctr++; });
+							dojo.body().appendChild(input);
+							dojo.body().appendChild(input2);
+							if(!has("ie") || has("ie") > 7){
+								// IE6/7 treats type="text" as missing, even if it was
+								// explicitly specified
+								doh.is("text", dojo.attr(input, "type"));
+							}
+							doh.is(0, ctr);
+							var def = new doh.Deferred();
+							input.focus();
+							setTimeout(def.getTestErrback(function(){
+								doh.is(1, ctr, "onfocus ctr == 1");
+								input2.focus();
+								setTimeout(def.getTestErrback(function(){
+									input.focus();
+									setTimeout(def.getTestCallback(function(){
+										doh.is(2, ctr, "onfocus ctr == 2");
+									}), 10);
+								}), 10);
+							}), 10);
+							return def;
+						},
+						function attrSpecials(){
+							var node = document.createElement("div");
+							dojo.body().appendChild(node);
+							dojo.attr(node, {
+								style: {
+									opacity: 0.5,
+									width: "30px",
+									border: "1px solid black"
+								}
+							});
+							doh.is(0.5, dojo.style(node, "opacity"));
+							doh.is(30, dojo.style(node, "width"));
+							doh.is(1, dojo.style(node, "borderWidth"));
+							dojo.attr(node, {
+								innerHTML: "howdy!"
+							});
+							doh.is("howdy!", node.innerHTML);
+							doh.is("howdy!", dojo.attr(node, "innerHTML"));
+							dojo.attr(node, "innerHTML", "<span>howdy!</span>");
+							doh.is(1, node.firstChild.nodeType);
+							doh.is("span", node.firstChild.nodeName.toLowerCase());
+							doh.is("<span>howdy!</span>", node.innerHTML.toLowerCase());
+							doh.is("<span>howdy!</span>", dojo.attr(node, "innerHTML").toLowerCase());
+						},
+						function testLabelForAttr(t){
+							// create label with no for attribute make sure requesting
+							// it as for and html for returns null
+							var label = document.createElement("label");
+							if(!has("ie")){
+								// IE always assumes that "for" is present
+								doh.f(dojo.attr(label, "for"));
+								doh.f(dojo.attr(label, "htmlFor"));
+							}
+							// add a for attribute and test that can get by requesting for
+							dojo.attr(label, "for", "testId");
+							doh.is("testId", dojo.attr(label, "for"));
+							// add as htmlFor and make sure it is returned when requested as htmlFor
+							var label2 = document.createElement("label");
+							dojo.attr(label2, "htmlFor", "testId2");
+							doh.is("testId2", dojo.attr(label2, "htmlFor"));
+							// check than when requested as for or htmlFor attribute is found
+							doh.t(dojo.hasAttr(label, "for"));
+							doh.t(dojo.hasAttr(label2, "htmlfor"));
+							// test from markup
+							var labelNoFor = dojo.byId("label-no-for");
+							// make sure testing if has attribute using for or htmlFor 
+							// both return null when no value set
+							if(!has("ie")){
+								// IE always assumes that "for" is present
+								doh.f(dojo.hasAttr(labelNoFor, "for"));
+								doh.f(dojo.hasAttr(labelNoFor, "htmlFor"));
+							}
+							var labelWithFor = dojo.byId("label-with-for");
+							// when markup includes for make certain testing if has attribute
+							// using for or htmlFor returns true
+							doh.t(dojo.hasAttr(labelWithFor, "for"));
+							doh.t(dojo.hasAttr(labelWithFor, "htmlFor"));
+							// when markup include for attrib make sure can retrieve using for or htmlFor
+							doh.is("input-with-label", dojo.attr(labelWithFor, "for"));
+							doh.is("input-with-label", dojo.attr(labelWithFor, "htmlFor"));
+						},
+						function attrInnerHtmlDiv(t){
+							var n = dojo.create("div", {
+									innerHTML: "1<em>2</em>3"
+								}, dojo.body());
+							doh.is("1<em>2</em>3", n.innerHTML.toLowerCase());
+							dojo.destroy(n);
+						},
+						function attrInnerHtmlTable(t){
+							var n = dojo.create("table", {
+									innerHTML: "<thead><tr><th>1st!</th></tr></thead><tbody></tbody>"
+								}, dojo.body());
+							doh.is("<thead><tr><th>1st!</th></tr></thead><tbody></tbody>",
+								n.innerHTML.toLowerCase().replace(/\s+/g, ""));
+							dojo.destroy(n);
+						},
+						function attrInputTextValue(t){
+							doh.is("123", dojo.byId("input-text-value").value);
+							doh.is("123", dojo.attr("input-text-value", "value"));
+							dojo.attr("input-text-value", "value", "abc");
+							doh.is("abc", dojo.byId("input-text-value").value);
+							doh.is("abc", dojo.attr("input-text-value", "value"));
+							dojo.byId("input-text-value").value = "xyz";
+							doh.is("xyz", dojo.byId("input-text-value").value);
+							doh.is("xyz", dojo.attr("input-text-value", "value"));
+							dojo.byId("input-text-value").value = "123"; // fixes initialization problem when the test is reloaded
+						},
+						function testInputDisabled(t){
+							doh.f(dojo.attr("input-no-disabled", "disabled"));
+							doh.t(dojo.attr("input-with-disabled", "disabled"));
+							doh.t(dojo.attr("input-with-disabled-true", "disabled"));
+						},
+						function testIframeDestroy10095(t){
+							var iframeWin = dojo.byId('10095_iframe').win;
+							doh.t(!iframeWin.document.getElementById('10095_textbox'), "reloaded iframe element destroyed");
+						},
+						function testGCSsvg(t){
+							var s = dojo.getComputedStyle(dojo.byId("rect1"));
+							doh.t(typeof s != "undefined", "dojo.getComputedStyle succeeded on an svg shape");
+						}
+					]
+				);
+				// test to make sure position() works with a variety of scrollbars
+				dojo.forEach(["None", "Vert", "Both"], function(scroll){
+					dojo.forEach(["Quirks", "Strict"], function(doctype){
+						var id = "scrolling" + doctype + "Iframe" + scroll;
+						doh.register(id, {
+							name: "test_" + id,
+							timeout: 4000,
+							runTest: function(t){
+								var d = new doh.Deferred(),
+									s = document.createElement('SPAN');
+								s.loaded = function(iframe){
+									// resultReady is called from inside the iframe
+									iframe.resultReady = d.getTestCallback(function(){
+										t.is('EQUAL', iframe.testResult);
+									});
+									iframe.runScrollingTest(iframe);
+								};
+								s.innerHTML = '<iframe class="iframeTest" id="' + id + '" src="scrolling' + doctype + 'Iframe.html?ltr&' + scroll + '&large" frameborder="0" onload="this.parentNode.loaded(this)" style="background-color:gray;" allowtransparency></iframe>';
+								dojo.byId("iframeContainer").appendChild(s);
+								return d;
+							}
+						});
+					});
+				});
+
+				doh.runOnLoad();
+			});
+		</script>
+		<style type="text/css">
+			html, body {
+				padding: 0px;
+				margin: 0px;
+				border: 0px;
+			}
+
+			#sq100 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 100px;
+				top: 100px;
+				width: 100px;
+				height: 100px;
+				border: 0px;
+				padding: 0px;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#sq100margin10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 250px;
+				top: 100px;
+				width: 100px;
+				height: 100px;
+				border: 0px;
+				padding: 0px;
+				margin: 10px;
+				overflow: hidden;
+			}
+
+			#sq100margin10pad10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 400px;
+				top: 100px;
+				width: 100px;
+				height: 100px;
+				border: 0px;
+				padding: 10px;
+				margin: 10px;
+				overflow: hidden;
+			}
+
+			#sq100pad10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 100px;
+				top: 250px;
+				width: 100px;
+				height: 100px;
+				border: 0px;
+				padding: 10px;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#sq100ltpad10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 250px;
+				top: 250px;
+				width: 100px;
+				height: 100px;
+				border: 0px;
+				padding-left: 10px;
+				padding-top: 10px;
+				padding-right: 0px;
+				padding-bottom: 0px;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#sq100ltpad10rbmargin10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 400px;
+				top: 250px;
+				width: 100px;
+				height: 100px;
+				border: 0px;
+				padding-left: 10px;
+				padding-top: 10px;
+				padding-right: 0px;
+				padding-bottom: 0px;
+				margin-left: 0px;
+				margin-top: 0px;
+				margin-right: 10px;
+				margin-bottom: 10px;
+				overflow: hidden;
+			}
+
+			#sq100border10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 100px;
+				top: 400px;
+				width: 100px;
+				height: 100px;
+				border: 10px solid yellow;
+				padding: 0px;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#sq100border10margin10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 250px;
+				top: 400px;
+				width: 100px;
+				height: 100px;
+				border: 10px solid yellow;
+				padding: 0px;
+				margin: 10px;
+				overflow: hidden;
+			}
+
+			#sq100border10margin10pad10 {
+				background-color: black;
+				color: white;
+				position: absolute;
+				left: 400px;
+				top: 400px;
+				width: 100px;
+				height: 100px;
+				border: 10px solid yellow;
+				padding: 10px;
+				margin: 10px;
+				overflow: hidden;
+			}
+
+			#sq100nopos {
+				background-color: black;
+				color: white;
+				width: 100px;
+				height: 100px;
+				padding: 0px;
+				margin: 0px;
+			}
+
+			#scrollingStrictIframe,
+			#scrollingQuirksIframe {
+				border: 10px solid black;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>testing Core HTML/DOM/CSS/Style utils</h1>
+		<div id="sq100">
+			100px square, abs
+		</div>
+		<div id="sq100margin10">
+			100px square, abs, 10px margin
+		</div>
+		<div id="sq100margin10pad10">
+			100px square, abs, 10px margin, 10px padding
+		</div>
+		<div id="sq100pad10">
+			100px square, abs, 10px padding
+		</div>
+		<div id="sq100ltpad10">
+			100px square, abs, 10px left and top padding
+		</div>
+		<div id="sq100ltpad10rbmargin10">
+			100px square, abs, 10px left and top padding, 10px bottom and right margin
+		</div>
+		<div id="sq100border10">
+			100px square, abs, 10px yellow border
+		</div>
+		<div id="sq100border10margin10">
+			100px square, abs, 10px yellow border, 10px margin
+		</div>
+		<div id="sq100border10margin10pad10">
+			100px square, abs, 10px yellow border, 10px margin, 10px padding
+		</div>
+		<div id="sq100nopos">
+			100px square, no positioning
+		</div>
+
+		<iframe id="blah" name="blah" src="javascript:'&lt;html&gt&lt;body&gt;&lt;div id=subDiv&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;'"></iframe>
+
+		<script type="text/javascript">
+		var reloaded = false;
+		function iframe10095loaded() {
+			require(["dojo", "dojo/domReady!"], function(dojo) {
+				var iframeWin = dojo.byId('10095_iframe').win;
+				dojo.withGlobal(iframeWin, function(){ dojo.destroy(dojo.byId('10095_textbox')) });
+				if(!reloaded){
+					reloaded = true;
+					dojo.byId('10095_iframe').src=iframeWin.frameElement.src;
+				}
+			});
+		}
+		</script>
+		<iframe id="10095_iframe" style="display:none;" src="javascript:'&lt;html&gt;&lt;head&gt;&lt;script&gt;frameElement.win=window&lt;/script&gt;&lt;/head&gt;&lt;body&gt;&lt;input id=10095_textbox&gt;&lt;/body&gt;&lt;/html&gt;'" onload="iframe10095loaded()"></iframe>
+
+		<div id='iframe_div' style="position:absolute;top:0;left:500px;"></div>
+
+		<div id="div-no-tabindex"></div>
+		<div id="div-tabindex-minus-1" tabIndex="-1"></div>
+		<div id="div-tabindex-0" tabIndex="0"></div>
+		<div id="div-tabindex-1" tabIndex="1"></div>
+
+		<div>
+			<input id="input-no-type">
+			<input id="input-with-type" type="checkbox">
+			<input id="input-no-tabindex">
+			<input id="input-tabindex-minus-1" tabIndex="-1">
+			<input id="input-tabindex-0" tabIndex="0">
+			<input id="input-tabindex-1" tabIndex="1">
+			<input id="input-text-value" type="text" value="123">
+			<input id="input-no-disabled" type="text">
+			<input id="input-with-disabled" type="text" disabled>
+			<input id="input-with-disabled-true" disabled="disabled">
+		</div>
+		<div>
+			<label id="label-no-for">label with no for </label><input type="text" id="label-test-input">
+			<label id="label-with-for" for="input-with-label">label with for </label><input type="text" id="input-with-label">
+		</div>
+
+		<div id="iframeContainer"></div>
+
+		<!-- SVG element to test dojo.getComputedStyle on IE9 (#14103) -->
+		<svg id="surface" xmlns="http://www.w3.org/2000/svg" width="100px" height="100px">
+			<rect id="rect1" fill="rgb(255, 0, 0)" x="0" y="0" width="80" height="60" ry="0" rx="0" fill-rule="evenodd"/>
+		</svg>
+	</body>
+</html>

@@ -1,6 +1,6 @@
-/*global console*/
 (function() {
     "use strict";
+    /*global console*/
 
     if (typeof window.Cesium === 'undefined') {
         console.error('Cesium not built, run the combine build script first.');
