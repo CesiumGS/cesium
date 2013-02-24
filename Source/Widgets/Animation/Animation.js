@@ -145,7 +145,7 @@ define(['../../Core/destroyObject',
         return svgFromObject(button);
     }
 
-    function setShuttleRingFromMouse(widget, e) {
+    function setShuttleRingFromMouseOrTouch(widget, e) {
         var viewModel = widget.viewModel;
         var shuttleRingDragging = viewModel.shuttleRingDragging();
 
@@ -153,13 +153,22 @@ define(['../../Core/destroyObject',
             return;
         }
 
-        if (e.type === 'mousedown' || (shuttleRingDragging && e.type === 'mousemove')) {
+        if (e.type === 'mousedown' || (shuttleRingDragging && e.type === 'mousemove') ||
+                (e.type === 'touchstart' && e.touches.length === 1) ||
+                (shuttleRingDragging && e.type === 'touchmove' && e.touches.length === 1)) {
             var centerX = widget._centerX;
             var centerY = widget._centerY;
             var svg = widget._svgNode;
             var rect = svg.getBoundingClientRect();
-            var clientX = e.clientX;
-            var clientY = e.clientY;
+            var clientX;
+            var clientY;
+            if (e.type === 'touchstart' || e.type === 'touchmove') {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
 
             if (!shuttleRingDragging &&
                 (clientX > rect.right ||
@@ -542,14 +551,20 @@ define(['../../Core/destroyObject',
         }, true);
 
         var callBack = function(e) {
-            setShuttleRingFromMouse(that, e);
+            setShuttleRingFromMouseOrTouch(that, e);
         };
         shuttleRingBackPanel.addEventListener('mousedown', callBack, true);
+        shuttleRingBackPanel.addEventListener('touchstart', callBack, true);
         shuttleRingSwooshG.addEventListener('mousedown', callBack, true);
+        shuttleRingSwooshG.addEventListener('touchstart', callBack, true);
         document.addEventListener('mousemove', callBack, true);
+        document.addEventListener('touchmove', callBack, true);
         document.addEventListener('mouseup', callBack, true);
+        document.addEventListener('touchend', callBack, true);
         this._shuttleRingPointer.addEventListener('mousedown', callBack, true);
+        this._shuttleRingPointer.addEventListener('touchstart', callBack, true);
         this._knobOuter.addEventListener('mousedown', callBack, true);
+        this._knobOuter.addEventListener('touchstart', callBack, true);
 
         //TODO: Since the animation widget uses SVG and has no HTML backing,
         //we need to wire everything up manually.  Knockout can supposedly
