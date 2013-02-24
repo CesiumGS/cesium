@@ -234,7 +234,7 @@ define([
             if (typeof url !== 'undefined' && existingMaterial.currentUrl !== url) {
                 existingMaterial.currentUrl = url;
                 if (typeof existingMaterial.video !== 'undefined') {
-                    document.body.removeChild(video);
+                    document.body.removeChild(existingMaterial.video);
                 }
                 video = existingMaterial.video = document.createElement('video');
                 document.body.appendChild(video);
