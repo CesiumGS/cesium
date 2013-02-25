@@ -16,6 +16,8 @@ define([
      * whether the command can be executed.  When executed, a Command function will check the
      * value of <code>canExecute</code> and throw if false.
      *
+     * @exports createCommand
+     *
      * @param {Function} func The function to execute.
      * @param {Observable} [canExecute=true] An observable indicating if the function can currently be executed.
      */
