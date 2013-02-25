@@ -1064,6 +1064,7 @@ define([
                         this._originalColor = Color.clone(selectedObject.getDefaultColor(), this._originalColor);
                         this._colors = (typeof selectedObject.setColors !== 'undefined') ? selectedObject.getColors() : undefined;
                         selectedObject.setDefaultColor(this.highlightColor);
+                        selectedObject.setColors(undefined);
                     }
                 }
             }

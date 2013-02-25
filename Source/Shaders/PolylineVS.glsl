@@ -82,9 +82,7 @@ void main()
     float pixelSize = czm_pixelSize * abs(positionEC.z);
     direction = direction * expandDir * width * pixelSize;
     
-    vec4 positionWC = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + direction, 1.0));
-    
-    gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
+    gl_Position = czm_projection * vec4(positionEC.xyz + direction, 1.0) * show;
     
 #ifndef RENDER_FOR_PICK
     vec3 alphas = czm_decodeColor(color.b);
