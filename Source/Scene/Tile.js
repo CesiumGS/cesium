@@ -148,7 +148,8 @@ define([
          */
         this.imagery = [];
 
-        this.parentTextures = [];
+        this.inheritedTextureLevels = [];
+        this.inheritedTextures = [];
         this.textures = [];
 
         /**
@@ -415,18 +416,20 @@ define([
                     tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
                 }
 
-                // If all the imagery for this layer is done loading, create a single texture
-                // for this tile with all of the imagery.
                 allTexturesLoaded = allTexturesLoaded && imageryDoneLoading;
 
                 isRenderable = isRenderable && imageryDoneLoading;
                 isDoneLoading = isDoneLoading && imageryDoneLoading;
             }
 
+            // If all the imagery for this layer is done loading, create a single texture
+            // for this tile with all of the imagery.
             if (allTexturesLoaded) {
                 for (i = 0; i < len; ++i) {
                     imageryLayer._reprojectTexture(context, this, layerImageryCollection[i], imageryLayerCollection);
                 }
+
+                propagateTexturesToDescendants(this, this, layerIndex);
             }
         }
 
@@ -439,6 +442,19 @@ define([
             }
         }
     };
+
+    function propagateTexturesToDescendants(sourceTile, parentTile, layerIndex) {
+        if (typeof parentTile.children === 'undefined') {
+            return;
+        }
+
+        for (var i = 0, len = parentTile.children; i < len; ++i) {
+            var child = parentTile.children[i];
+            child.inheritedTextureLevels[layerIndex] = sourceTile.level;
+            child.inheritedTextures[layerIndex] = sourceTile.textures[layerIndex];
+            propagateTexturesToDescendants(sourceTile, child, layerIndex);
+        }
+    }
 
     var cartesian3Scratch = new Cartesian3();
     var cartesian3Scratch2 = new Cartesian3();
@@ -455,8 +471,34 @@ define([
             tile.loadedTerrain = new TileTerrain();
         }
 
+        var i, len;
+
+        // Link to ancestor textures
+        var parent = tile.parent;
+        var inheritedTextures = tile.inheritedTextures;
+        var inheritedTextureLevels = tile.inheritedTextureLevels;
+        if (typeof parent !== 'undefined') {
+            var parentTextures = parent.textures;
+            var parentInheritedTextures = parent.inheritedTextures;
+            var parentInheritedTextureLevels = parent.inheritedTextureLevels;
+
+            for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
+                var parentTexture = parentTextures[i];
+                if (typeof parentTexture !== 'undefined') {
+                    // Parent has a texture for this layer, so link to it.
+                    inheritedTextures[i] = parentTexture;
+                    inheritedTextureLevels[i] = parent.level;
+                } else {
+                    // Parent does not have a texture for this layer, so link to the
+                    // texture the parent inherited from its parent.
+                    inheritedTextures[i] = parentInheritedTextures[i];
+                    inheritedTextureLevels[i] = parentInheritedTextureLevels[i];
+                }
+            }
+        }
+
         // Map imagery tiles to this terrain tile
-        for (var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
+        for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
                 layer._createTileImagerySkeletons(tile, terrainProvider);
