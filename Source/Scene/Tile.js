@@ -148,8 +148,8 @@ define([
          */
         this.imagery = [];
 
-        this.inheritedTextureLevels = [];
         this.inheritedTextures = [];
+        this.inheritedTextureTranslationAndScale = [];
         this.textures = [];
 
         /**
@@ -351,6 +351,10 @@ define([
             var layerImageryCollection = tileImageryCollection[layerIndex];
             var imageryLayer = imageryLayerCollection.get(layerIndex);
 
+            isRenderable = isRenderable &&
+                           (typeof this.textures[layerIndex] !== 'undefined' ||
+                            typeof this.inheritedTextures[layerIndex] !== 'undefined');
+
             var allTexturesLoaded = true;
 
             for (var i = 0, len = layerImageryCollection.length; i < len; ++i) {
@@ -418,7 +422,6 @@ define([
 
                 allTexturesLoaded = allTexturesLoaded && imageryDoneLoading;
 
-                isRenderable = isRenderable && imageryDoneLoading;
                 isDoneLoading = isDoneLoading && imageryDoneLoading;
             }
 
@@ -476,23 +479,23 @@ define([
         // Link to ancestor textures
         var parent = tile.parent;
         var inheritedTextures = tile.inheritedTextures;
-        var inheritedTextureLevels = tile.inheritedTextureLevels;
+        var inheritedTextureTranslationAndScale = tile.inheritedTextureTranslationAndScale;
         if (typeof parent !== 'undefined') {
             var parentTextures = parent.textures;
             var parentInheritedTextures = parent.inheritedTextures;
-            var parentInheritedTextureLevels = parent.inheritedTextureLevels;
+            var parentInheritedTextureTranslationAndScale = parent.inheritedTextureTranslationAndScale;
 
             for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
                 var parentTexture = parentTextures[i];
                 if (typeof parentTexture !== 'undefined') {
                     // Parent has a texture for this layer, so link to it.
                     inheritedTextures[i] = parentTexture;
-                    inheritedTextureLevels[i] = parent.level;
+                    inheritedTextureTranslationAndScale[i] = parent.level;
                 } else {
                     // Parent does not have a texture for this layer, so link to the
                     // texture the parent inherited from its parent.
                     inheritedTextures[i] = parentInheritedTextures[i];
-                    inheritedTextureLevels[i] = parentInheritedTextureLevels[i];
+                    inheritedTextureTranslationAndScale[i] = parentInheritedTextureTranslationAndScale[i];
                 }
             }
         }

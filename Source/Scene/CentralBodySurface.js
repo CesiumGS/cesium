@@ -524,9 +524,10 @@ define([
 
     function addTileToRenderList(surface, tile) {
         var readyTextureCount = 0;
-        var tileTextures = tile.textures;
-        for ( var i = 0, len = tileTextures.length; i < len; ++i) {
-            if (typeof tileTextures[i] !== 'undefined') {
+        var textures = tile.textures;
+        var inheritedTextures = tile.inheritedTextures;
+        for (var i = 0, len = textures.length; i < len; ++i) {
+            if (typeof textures[i] !== 'undefined' || typeof inheritedTextures[i] !== 'undefined') {
                 ++readyTextureCount;
             }
         }
@@ -982,17 +983,21 @@ define([
                 var applySaturation = false;
                 var applyGamma = false;
 
-                for (var textureIndex = 0, textureCount = tile.textures.length; textureIndex < textureCount; ++textureIndex) {
-                    var texture = tile.textures[textureIndex];
-                    var imageryLayer = imageryLayerCollection.get(textureIndex);
+                var textureCount = Math.max(tile.textures.length, tile.inheritedTextures.length);
 
-                    if (typeof texture === 'undefined') {
+                for (var textureIndex = 0; textureIndex < textureCount; ++textureIndex) {
+                    var texture = tile.textures[textureIndex];
+                    var inheritedTexture = tile.inheritedTextures[textureIndex];
+
+                    if (typeof texture === 'undefined' && typeof inheritedTexture === 'undefined') {
                         continue;
                     }
 
-                    uniformMap.dayTextures[numberOfDayTextures] = texture;
+                    uniformMap.dayTextures[numberOfDayTextures] = typeof texture !== 'undefined' ? texture : inheritedTexture;
                     uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
                     uniformMap.dayTextureTexCoordsExtent[numberOfDayTextures] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+
+                    var imageryLayer = imageryLayerCollection.get(textureIndex);
 
                     var imagery = tile; // TODO: hack hack
                     if (typeof imageryLayer.alpha === 'function') {
