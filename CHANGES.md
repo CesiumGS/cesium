@@ -13,8 +13,8 @@ Beta Releases
       * AnimationController.js has been deleted.
       * `ClockStep.SYSTEM_CLOCK_DEPENDENT` was renamed to `ClockStep.SYSTEM_CLOCK_MULTIPLIER`
       * `ClockStep.SYSTEM_CLOCK` was added to have the clock always match the system time.
-      * `ClockRange.LOOP` was renamed to `ClockRang.LOOP_STOP` and now only loops in the forward direction.
-      * `Clock.reverseTick` was removed, simply negate `Clock.multipler` and pass it to `Clock.tick`.
+      * `ClockRange.LOOP` was renamed to `ClockRange.LOOP_STOP` and now only loops in the forward direction.
+      * `Clock.reverseTick` was removed, simply negate `Clock.multiplier` and pass it to `Clock.tick`.
       * `Clock.shouldAnimate` was added to indicate if `Clock.tick` should actually advance time.
       * The Timeline widget was moved into the Widgets/Timeline subdirectory. 
       * `Dojo/TimelineWidget` was removed.  You should use the non-toolkit specific Timeline widget directly.
