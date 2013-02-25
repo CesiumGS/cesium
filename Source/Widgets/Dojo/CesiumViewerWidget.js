@@ -14,15 +14,18 @@ define([
         'dijit/form/ToggleButton',
         'dijit/form/DropDownButton',
         'dijit/TooltipDialog',
-        './TimelineWidget',
+        '../Timeline/Timeline',
+        '../Animation/Animation',
+        '../Animation/AnimationViewModel',
+        '../ClockViewModel',
         '../../Core/defaultValue',
         '../../Core/loadJson',
+        '../../Core/binarySearch',
         '../../Core/BoundingRectangle',
         '../../Core/Clock',
         '../../Core/ClockStep',
         '../../Core/ClockRange',
         '../../Core/Extent',
-        '../../Core/AnimationController',
         '../../Core/Ellipsoid',
         '../../Core/Iso8601',
         '../../Core/Fullscreen',
@@ -72,15 +75,18 @@ define([
         ToggleButton,
         DropDownButton,
         TooltipDialog,
-        TimelineWidget,
+        Timeline,
+        Animation,
+        AnimationViewModel,
+        ClockViewModel,
         defaultValue,
         loadJson,
+        binarySearch,
         BoundingRectangle,
         Clock,
         ClockStep,
         ClockRange,
         Extent,
-        AnimationController,
         Ellipsoid,
         Iso8601,
         Fullscreen,
@@ -187,6 +193,8 @@ define([
          * var endUserOptions = {
          *     'source' : 'file.czml', // The relative URL of the CZML file to load at startup.
          *     'lookAt' : '123abc',    // The CZML ID of the object to track at startup.
+         *     'theme'  : 'light',     // Use the dark-text-on-light-background theme.
+         *     'loop'   : 0,           // Disable looping at end time, pause there instead.
          *     'stats'  : 1,           // Enable the FPS performance display.
          *     'debug'  : 1,           // Full WebGL error reporting at substantial performance cost.
          * };
@@ -483,14 +491,6 @@ define([
             }
         },
 
-        _updateSpeedIndicator : function() {
-            if (this.animationController.isAnimating()) {
-                this.speedIndicator.innerHTML = this.clock.multiplier + 'x realtime';
-            } else {
-                this.speedIndicator.innerHTML = this.clock.multiplier + 'x realtime (paused)';
-            }
-        },
-
         /**
          * Apply the animation settings from a CZML buffer.
          * @function
@@ -498,25 +498,52 @@ define([
          */
         setTimeFromBuffer : function() {
             var clock = this.clock;
-
-            this.animReverse.set('checked', false);
-            this.animPause.set('checked', true);
-            this.animPlay.set('checked', false);
+            var shuttleRingTicks = AnimationViewModel.defaultTicks.slice(0);
 
             var availability = this.dynamicObjectCollection.computeAvailability();
             if (availability.start.equals(Iso8601.MINIMUM_VALUE)) {
                 clock.startTime = new JulianDate();
                 clock.stopTime = clock.startTime.addDays(1);
                 clock.clockRange = ClockRange.UNBOUNDED;
+                clock.multiplier = 60.0;
             } else {
                 clock.startTime = availability.start;
                 clock.stopTime = availability.stop;
-                clock.clockRange = ClockRange.LOOP;
+                if (typeof this.endUserOptions.loop === 'undefined' || this.endUserOptions.loop === '1') {
+                    clock.clockRange = ClockRange.LOOP_STOP;
+                } else {
+                    clock.clockRange = ClockRange.CLAMPED;
+                }
+                var totalSeconds = clock.startTime.getSecondsDifference(clock.stopTime);
+                var multiplier = Math.round(totalSeconds / 120.0);
+                if (multiplier < 1) {
+                    multiplier = 1;
+                }
+
+                var index = binarySearch(shuttleRingTicks, multiplier, function(left, right) {
+                    return left - right;
+                });
+                if (index < 0) {
+                    index = ~index;
+                }
+                if (index !== shuttleRingTicks.length) {
+                    clock.multiplier = shuttleRingTicks[index];
+                } else {
+                    shuttleRingTicks.push(multiplier);
+                    clock.multiplier = multiplier;
+                }
+
+                var fastestSpeed = Math.round(totalSeconds / 10.0);
+                if (fastestSpeed > shuttleRingTicks[shuttleRingTicks.length - 1]) {
+                    shuttleRingTicks.push(fastestSpeed);
+                }
             }
 
-            clock.multiplier = 60;
+            this.animationViewModel.setShuttleRingTicks(shuttleRingTicks);
+
             clock.currentTime = clock.startTime;
-            this.timelineControl.zoomTo(clock.startTime, clock.stopTime);
+            clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+            this.timeline.zoomTo(clock.startTime, clock.stopTime);
         },
 
         /**
@@ -633,6 +660,10 @@ define([
             on(canvas, 'contextmenu', event.stop);
             on(canvas, 'selectstart', event.stop);
 
+            if (typeof widget.endUserOptions.theme === 'undefined' || widget.endUserOptions.theme !== 'light') {
+                widget.cesiumNode.className += ' cesium-darker';
+            }
+
             if (typeof widget.endUserOptions.debug !== 'undefined' && widget.endUserOptions.debug) {
                 this.enableWebGLDebugging = true;
             }
@@ -651,8 +682,7 @@ define([
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
 
-            // This logo is replicated by the imagery selector button, so it's hidden here.
-            centralBody.logoOffset = new Cartesian2(-100, -100);
+            centralBody.logoOffset = new Cartesian2(308, 28);
 
             this._configureCentralBodyImagery();
 
@@ -712,25 +742,22 @@ define([
                 on(dropBox, 'dragexit', event.stop);
             }
 
-            var currentTime = new JulianDate();
-            if (typeof this.animationController === 'undefined') {
-                if (typeof this.clock === 'undefined') {
-                    this.clock = new Clock({
-                        startTime : currentTime.addDays(-0.5),
-                        stopTime : currentTime.addDays(0.5),
-                        currentTime : currentTime,
-                        clockStep : ClockStep.SYSTEM_CLOCK_DEPENDENT,
-                        multiplier : 1
-                    });
-                }
-                this.animationController = new AnimationController(this.clock);
-            } else {
-                this.clock = this.animationController.clock;
+            var animationViewModel = this.animationViewModel;
+            if (typeof animationViewModel === 'undefined') {
+                var clockViewModel = new ClockViewModel();
+                clockViewModel.owner = this;
+                clockViewModel.shouldAnimate(true);
+                animationViewModel = new AnimationViewModel(clockViewModel);
             }
+            this.animationViewModel = animationViewModel;
+            this.clockViewModel = animationViewModel.clockViewModel;
 
-            var animationController = this.animationController;
-            var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
+            this.clock = this.clockViewModel.clock;
             var clock = this.clock;
+
+            this.animation = new Animation(this.animationContainer, animationViewModel);
+
+            var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
@@ -742,66 +769,15 @@ define([
                 widget.enableStatistics(true);
             }
 
-            this._lastTimeLabelClock = clock.currentTime;
-            this._lastTimeLabelDate = Date.now();
-            this.timeLabelElement = this.timeLabel.containerNode;
-            this.timeLabelElement.innerHTML = clock.currentTime.toDate().toUTCString();
-
-            var animReverse = this.animReverse;
-            var animPause = this.animPause;
-            var animPlay = this.animPlay;
-
-            on(this.animReset, 'Click', function() {
-                animationController.reset();
-                animReverse.set('checked', false);
-                animPause.set('checked', true);
-                animPlay.set('checked', false);
-            });
-
-            function onAnimPause() {
-                animationController.pause();
-                animReverse.set('checked', false);
-                animPause.set('checked', true);
-                animPlay.set('checked', false);
-            }
-
-            on(animPause, 'Click', onAnimPause);
-
-            on(animReverse, 'Click', function() {
-                animationController.playReverse();
-                animReverse.set('checked', true);
-                animPause.set('checked', false);
-                animPlay.set('checked', false);
-            });
-
-            on(animPlay, 'Click', function() {
-                animationController.play();
-                animReverse.set('checked', false);
-                animPause.set('checked', false);
-                animPlay.set('checked', true);
-            });
-
-            on(widget.animSlow, 'Click', function() {
-                animationController.slower();
-            });
-
-            on(widget.animFast, 'Click', function() {
-                animationController.faster();
-            });
-
             function onTimelineScrub(e) {
                 widget.clock.currentTime = e.timeJulian;
-                onAnimPause();
+                widget.clock.shouldAnimate = false;
             }
 
-            var timelineWidget = widget.timelineWidget;
-            timelineWidget.clock = widget.clock;
-            timelineWidget.setupCallback = function(t) {
-                widget.timelineControl = t;
-                t.addEventListener('settime', onTimelineScrub, false);
-                t.zoomTo(clock.startTime, clock.stopTime);
-            };
-            timelineWidget.setupTimeline();
+            var timeline = new Timeline(this.timelineContainer, widget.clock);
+            widget.timeline = timeline;
+            timeline.addEventListener('settime', onTimelineScrub, false);
+            timeline.zoomTo(clock.startTime, clock.stopTime);
 
             var viewHomeButton = widget.viewHomeButton;
             var view2D = widget.view2D;
@@ -857,7 +833,6 @@ define([
             var imageryRoad = widget.imageryRoad;
             var imagerySingleTile = widget.imagerySingleTile;
             var imageryOptions = [imageryAerial, imageryAerialWithLabels, imageryRoad, imagerySingleTile];
-            var bingHtml = imagery.containerNode.innerHTML;
 
             imagery.startup();
 
@@ -865,10 +840,8 @@ define([
                 return function() {
                     if (style) {
                         widget.setStreamingImageryMapStyle(style);
-                        imagery.containerNode.innerHTML = bingHtml;
                     } else {
                         widget.enableStreamingImagery(false);
-                        imagery.containerNode.innerHTML = 'Imagery';
                     }
 
                     imageryOptions.forEach(function(o) {
@@ -1079,24 +1052,22 @@ define([
          * @memberof CesiumViewerWidget.prototype
          * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
-        update : function(currentTime) {
-
-            this._updateSpeedIndicator();
-            this.timelineControl.updateFromClock();
-            this.visualizers.update(currentTime);
-
-            if ((Math.abs(currentTime.getSecondsDifference(this._lastTimeLabelClock)) >= 1.0) ||
-                    ((Date.now() - this._lastTimeLabelDate) > 200)) {
-                this.timeLabelElement.innerHTML = currentTime.toDate().toUTCString();
-                this._lastTimeLabelClock = currentTime;
-                this._lastTimeLabelDate = Date.now();
+        update : function() {
+            var currentTime;
+            if (this.clockViewModel.owner === this) {
+                currentTime = this.clock.tick();
+            } else {
+                currentTime = this.clock.currentTime;
             }
+            this.timeline.updateFromClock();
+            this.visualizers.update(currentTime);
 
             // Update the camera to stay centered on the selected object, if any.
             var viewFromTo = this._viewFromTo;
             if (typeof viewFromTo !== 'undefined') {
                 viewFromTo.update(currentTime);
             }
+            return currentTime;
         },
 
         /**
@@ -1165,9 +1136,20 @@ define([
         autoStartRenderLoop : true,
 
         /**
+         * Updates and renders the scene to reflect the current time.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
+        updateAndRender : function() {
+            this.initializeFrame();
+            this.render(this.update());
+        },
+
+        /**
          * This is a simple render loop that can be started if there is only one <code>CesiumViewerWidget</code>
          * on your page.  If you wish to customize your render loop, avoid this function and instead
-         * use code similar to one of the following examples.
+         * use code similar to the following example.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
@@ -1175,61 +1157,19 @@ define([
          * @see CesiumViewerWidget#autoStartRenderLoop
          * @example
          * // This takes the place of startRenderLoop for a single widget.
-         *
-         * var animationController = widget.animationController;
-         * function updateAndRender() {
-         *     var currentTime = animationController.update();
-         *     widget.initializeFrame();
-         *     widget.update(currentTime);
-         *     widget.render(currentTime);
-         *     requestAnimationFrame(updateAndRender);
-         * }
-         * requestAnimationFrame(updateAndRender);
-         * @example
-         * // This example requires widget1 and widget2 to share an animationController
-         * // (for example, widget2's constructor was called with a copy of widget1's
-         * // animationController).
-         *
-         * function updateAndRender() {
-         *     var currentTime = animationController.update();
-         *     widget1.initializeFrame();
-         *     widget2.initializeFrame();
-         *     widget1.update(currentTime);
-         *     widget2.update(currentTime);
-         *     widget1.render(currentTime);
-         *     widget2.render(currentTime);
-         *     requestAnimationFrame(updateAndRender);
-         * }
-         * requestAnimationFrame(updateAndRender);
-         * @example
-         * // This example uses separate animationControllers for widget1 and widget2.
-         * // These widgets can animate at different rates and pause individually.
-         *
-         * function updateAndRender() {
-         *     var time1 = widget1.animationController.update();
-         *     var time2 = widget2.animationController.update();
-         *     widget1.initializeFrame();
-         *     widget2.initializeFrame();
-         *     widget1.update(time1);
-         *     widget2.update(time2);
-         *     widget1.render(time1);
-         *     widget2.render(time2);
-         *     requestAnimationFrame(updateAndRender);
-         * }
-         * requestAnimationFrame(updateAndRender);
+         *  var widget = this;
+         *  function updateAndRender() {
+         *      widget.updateAndRender();
+         *      requestAnimationFrame(updateAndRender);
+         *  }
+         *  requestAnimationFrame(updateAndRender);
          */
         startRenderLoop : function() {
             var widget = this;
-            var animationController = widget.animationController;
-
             function updateAndRender() {
-                var currentTime = animationController.update();
-                widget.initializeFrame();
-                widget.update(currentTime);
-                widget.render(currentTime);
+                widget.updateAndRender();
                 requestAnimationFrame(updateAndRender);
             }
-
             requestAnimationFrame(updateAndRender);
         }
     });
