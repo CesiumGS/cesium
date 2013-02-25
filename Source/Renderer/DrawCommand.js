@@ -5,7 +5,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
     /**
      * Represents a command to the renderer for drawing.
      *
-     * @alias Command
+     * @alias DrawCommand
      * @constructor
      */
     var DrawCommand = function() {
