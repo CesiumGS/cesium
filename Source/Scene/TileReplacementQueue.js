@@ -65,8 +65,10 @@ define([
 
             var imagery = tileToTrim.imagery;
             for (var i = 0, len = imagery.length; shouldRemoveTile && i < len; ++i) {
-                var tileImagery = imagery[i];
-                shouldRemoveTile = tileImagery.imagery.state !== ImageryState.TRANSITIONING;
+                var tileLayer = imagery[i];
+                for (var j = 0, jlen = tileLayer.length; shouldRemoveTile && j < jlen; ++j) {
+                    shouldRemoveTile = tileLayer[j].imagery.state !== ImageryState.TRANSITIONING;
+                }
             }
 
             if (shouldRemoveTile) {

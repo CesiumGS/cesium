@@ -148,6 +148,7 @@ define([
          */
         this.imagery = [];
 
+        this.parentTextures = [];
         this.textures = [];
 
         /**
@@ -295,9 +296,12 @@ define([
 
         var i, len;
 
-        var imageryList = this.imagery;
-        for (i = 0, len = imageryList.length; i < len; ++i) {
-            imageryList[i].freeResources();
+        var layerList = this.imagery;
+        for (i = 0, len = layerList.length; i < len; ++i) {
+            var layerImagery = layerList[i];
+            for (var j = 0, jlen = layerImagery.length; j < jlen; ++j) {
+                layerImagery[j].freeResources();
+            }
         }
         this.imagery.length = 0;
 
@@ -340,98 +344,94 @@ define([
         var isRenderable = typeof this.vertexArray !== 'undefined';
         var isDoneLoading = typeof this.loadedTerrain === 'undefined' && typeof this.upsampledTerrain === 'undefined';
 
-        var lastLayer;
-        var layerDoneLoading = true;
-        var layerFirstIndex;
-
         // Transition imagery states
         var tileImageryCollection = this.imagery;
-        for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
-            var tileImagery = tileImageryCollection[i];
-            var imagery = tileImagery.imagery;
-            var imageryLayer = imagery.imageryLayer;
+        for (var layerIndex = 0, layerCount = tileImageryCollection.length; layerIndex < layerCount; ++layerIndex) {
+            var layerImageryCollection = tileImageryCollection[layerIndex];
+            var imageryLayer = imageryLayerCollection.get(layerIndex);
 
-            if (imageryLayer !== lastLayer) {
-                layerDoneLoading = true;
-                layerFirstIndex = i;
-            }
+            var allTexturesLoaded = true;
 
-            lastLayer = imageryLayer;
+            for (var i = 0, len = layerImageryCollection.length; i < len; ++i) {
+                var tileImagery = layerImageryCollection[i];
+                var imagery = tileImagery.imagery;
 
-            if (imagery.state === ImageryState.PLACEHOLDER) {
-                if (imageryLayer.getImageryProvider().isReady()) {
-                    // Remove the placeholder and add the actual skeletons (if any)
-                    // at the same position.  Then continue the loop at the same index.
-                    tileImagery.freeResources();
-                    tileImageryCollection.splice(i, 1);
-                    imageryLayer._createTileImagerySkeletons(this, terrainProvider, i);
-                    --i;
-                    len = tileImageryCollection.length;
-                }
-            }
-
-            if (imagery.state === ImageryState.UNLOADED) {
-                imagery.state = ImageryState.TRANSITIONING;
-                imageryLayer._requestImagery(imagery);
-            }
-
-            if (imagery.state === ImageryState.RECEIVED) {
-                imagery.state = ImageryState.TRANSITIONING;
-                imageryLayer._createTexture(context, imagery);
-            }
-
-            if (imagery.state === ImageryState.TEXTURE_LOADED) {
-               // imagery.state = ImageryState.TRANSITIONING;
-                //imageryLayer._reprojectTexture(context, this, tileImagery, imageryLayerCollection);
-                imagery.state = ImageryState.READY;
-            }
-
-            if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
-                // re-associate TileImagery with a parent Imagery that is not failed or invalid.
-                var parent = imagery.parent;
-                while (typeof parent !== 'undefined' && (parent.state === ImageryState.FAILED || parent.state === ImageryState.INVALID)) {
-                    parent = parent.parent;
+                if (imagery.state === ImageryState.PLACEHOLDER) {
+                    if (imageryLayer.getImageryProvider().isReady()) {
+                        // Remove the placeholder and add the actual skeletons (if any)
+                        // at the same position.  Then continue the loop at the same index.
+                        tileImagery.freeResources();
+                        layerImageryCollection.splice(i, 1);
+                        imageryLayer._createTileImagerySkeletons(this, terrainProvider, i);
+                        --i;
+                        len = layerImageryCollection.length;
+                    }
                 }
 
-                // If there's no valid parent, remove this TileImagery from the tile.
-                if (typeof parent === 'undefined') {
-                    tileImagery.freeResources();
-                    tileImageryCollection.splice(i, 1);
-                    --i;
-                    len = tileImageryCollection.length;
-                    continue;
+                if (imagery.state === ImageryState.UNLOADED) {
+                    imagery.state = ImageryState.TRANSITIONING;
+                    imageryLayer._requestImagery(imagery);
                 }
 
-                // use that parent imagery instead, storing the original imagery
-                // in originalImagery to keep it alive
-                tileImagery.originalImagery = imagery;
+                if (imagery.state === ImageryState.RECEIVED) {
+                    imagery.state = ImageryState.TRANSITIONING;
+                    imageryLayer._createTexture(context, imagery);
+                }
 
-                parent.addReference();
-                tileImagery.imagery = parent;
-                imagery = parent;
+                if (imagery.state === ImageryState.TEXTURE_LOADED) {
+                   // imagery.state = ImageryState.TRANSITIONING;
+                    //imageryLayer._reprojectTexture(context, this, tileImagery, imageryLayerCollection);
+                    imagery.state = ImageryState.READY;
+                }
+
+                if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
+                    // re-associate TileImagery with a parent Imagery that is not failed or invalid.
+                    var parent = imagery.parent;
+                    while (typeof parent !== 'undefined' && (parent.state === ImageryState.FAILED || parent.state === ImageryState.INVALID)) {
+                        parent = parent.parent;
+                    }
+
+                    // If there's no valid parent, remove this TileImagery from the tile.
+                    if (typeof parent === 'undefined') {
+                        tileImagery.freeResources();
+                        tileImageryCollection.splice(i, 1);
+                        --i;
+                        len = tileImageryCollection.length;
+                        continue;
+                    }
+
+                    // use that parent imagery instead, storing the original imagery
+                    // in originalImagery to keep it alive
+                    tileImagery.originalImagery = imagery;
+
+                    parent.addReference();
+                    tileImagery.imagery = parent;
+                    imagery = parent;
+                }
+
+                var imageryDoneLoading = imagery.state === ImageryState.READY;
+
+                if (imageryDoneLoading && typeof tileImagery.textureTranslationAndScale === 'undefined') {
+                    tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
+                }
+
+                // If all the imagery for this layer is done loading, create a single texture
+                // for this tile with all of the imagery.
+                allTexturesLoaded = allTexturesLoaded && imageryDoneLoading;
+
+                isRenderable = isRenderable && imageryDoneLoading;
+                isDoneLoading = isDoneLoading && imageryDoneLoading;
             }
 
-            var imageryDoneLoading = imagery.state === ImageryState.READY;
-
-            if (imageryDoneLoading && typeof tileImagery.textureTranslationAndScale === 'undefined') {
-                tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
-            }
-
-            // If all the imagery for this layer is done loading, create a single texture
-            // for this tile with all of the imagery.
-            layerDoneLoading = layerDoneLoading & imageryDoneLoading;
-            if (layerDoneLoading && (i === len - 1 || tileImageryCollection[i + 1].imagery.imageryLayer !== imageryLayer)) {
-                for (var textureIndex = layerFirstIndex; textureIndex <= i; ++textureIndex) {
-                    imageryLayer._reprojectTexture(context, this, tileImageryCollection[textureIndex], imageryLayerCollection);
+            if (allTexturesLoaded) {
+                for (i = 0; i < len; ++i) {
+                    imageryLayer._reprojectTexture(context, this, layerImageryCollection[i], imageryLayerCollection);
                 }
             }
-
-            isRenderable = isRenderable && imageryDoneLoading;
-            isDoneLoading = isDoneLoading && imageryDoneLoading;
         }
 
         // The tile becomes renderable when the terrain and all imagery data are loaded.
-        if (i === len && isRenderable) {
+        if (isRenderable) {
             this.isRenderable = true;
 
             if (isDoneLoading) {

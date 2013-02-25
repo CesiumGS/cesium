@@ -350,14 +350,14 @@ define([
      *
      * @param {Tile} tile The terrain tile.
      * @param {TerrainProvider} terrainProvider The terrain provider associated with the terrain tile.
-     * @param {Number} insertionPoint The position to insert new skeletons before in the tile's imagery lsit.
      * @returns {Boolean} true if this layer overlaps any portion of the terrain tile; otherwise, false.
      */
-    ImageryLayer.prototype._createTileImagerySkeletons = function(tile, terrainProvider, insertionPoint) {
+    ImageryLayer.prototype._createTileImagerySkeletons = function(tile, terrainProvider) {
         var imageryProvider = this._imageryProvider;
 
-        if (typeof insertionPoint === 'undefined') {
-            insertionPoint = tile.imagery.length;
+        var layerImageryCollection = tile.imagery[this._layerIndex];
+        if (typeof layerImageryCollection === 'undefined') {
+            layerImageryCollection = tile.imagery[this._layerIndex] = [];
         }
 
         if (!imageryProvider.isReady()) {
@@ -365,7 +365,7 @@ define([
             // Instead, add a placeholder so that we'll know to create
             // the skeletons once the provider is ready.
             this._skeletonPlaceholder.imagery.addReference();
-            tile.imagery.splice(insertionPoint, 0, this._skeletonPlaceholder);
+            layerImageryCollection.push(this._skeletonPlaceholder);
             return true;
         }
 
@@ -507,8 +507,8 @@ define([
 
                 var texCoordsExtent = new Cartesian4(minU, minV, maxU, maxV);
                 var imagery = this.getImageryFromCache(i, j, imageryLevel, imageryExtent);
-                tile.imagery.splice(insertionPoint, 0, new TileImagery(imagery, texCoordsExtent));
-                ++insertionPoint;
+
+                layerImageryCollection.push(new TileImagery(imagery, texCoordsExtent));
             }
         }
 
@@ -653,21 +653,11 @@ define([
     ImageryLayer.prototype._reprojectTexture = function(context, tile, tileImagery, imageryLayerCollection) {
         var imagery = tileImagery.imagery;
 
-        // Find the index of this layer in the layer collection.
-        // TODO: we shouldn't have to search for this here, we should just know it.
-        var imageryLayerIndex;
-        for (var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
-            if (imageryLayerCollection.get(i) === this) {
-                imageryLayerIndex = i;
-                break;
-            }
-        }
-
-        var tileTexture = tile.textures[imageryLayerIndex];
+        var tileTexture = tile.textures[this._layerIndex];
 
         // Create the tile's texture if it doesn't exist yet.
         if (typeof tileTexture === 'undefined') {
-            tile.textures[imageryLayerIndex] = tileTexture = context.createTexture2D({
+            tile.textures[this._layerIndex] = tileTexture = context.createTexture2D({
                 width : 256,
                 height : 256
             });
@@ -885,58 +875,6 @@ define([
             uniformMap : uniformMap
         });
     }
-
-    ImageryLayer.prototype._createCombinedLayerTexture = function(context, tile, firstLayerImageryIndex, lastLayerImageryIndex) {
-        if (firstLayerImageryIndex === lastLayerImageryIndex && tile.imagery[firstLayerImageryIndex].imagery.x === -1) {
-            return;
-        }
-
-        var combinedImagery = new Imagery(this, -1, -1, 0, tile.extent);
-        combinedImagery.addReference();
-
-        var combinedTileImagery = new TileImagery(combinedImagery, new Cartesian4(0.0, 0.0, 1.0, 1.0));
-
-        var components = tile.imagery.splice(firstLayerImageryIndex, lastLayerImageryIndex - firstLayerImageryIndex + 1, combinedTileImagery);
-
-        var canvas = document.createElement('canvas');
-        canvas.width = 256;
-        canvas.height = 256;
-        var context2d = canvas.getContext('2d');
-        context2d.globalCompositeOperation = 'copy';
-
-        var tileExtent = tile.extent;
-
-        for (var i = 0, len = components.length; i < len; ++i) {
-            var toCopy = components[i];
-
-            var imageryExtent = toCopy.imagery.extent;
-            var overlap = imageryExtent.intersectWith(tileExtent);
-
-            var imageWidth = toCopy.imagery.image.width;
-            var imageHeight = toCopy.imagery.image.height;
-
-            var sx = imageWidth * (overlap.west - imageryExtent.west) / (imageryExtent.east - imageryExtent.west);
-            var sy = imageHeight * (imageryExtent.north - overlap.north) / (imageryExtent.north - imageryExtent.south);
-            var sWidth = imageWidth * (overlap.east - overlap.west) / (imageryExtent.east - imageryExtent.west);
-            var sHeight = imageHeight * (overlap.north - overlap.south) / (imageryExtent.north - imageryExtent.south);
-
-            var dx = 256.0 * (overlap.west - tileExtent.west) / (tileExtent.east - tileExtent.west);
-            var dy = 256.0 * (tileExtent.north - overlap.north) / (tileExtent.north - tileExtent.south);
-            var dWidth = 256.0 * (overlap.east - overlap.west) / (tileExtent.east - tileExtent.west);
-            var dHeight = 256.0 * (overlap.north - overlap.south) / (tileExtent.north - tileExtent.south);
-
-            context2d.drawImage(toCopy.imagery.image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-        }
-
-        combinedImagery.texture = context.createTexture2D({
-            source : canvas
-        });
-
-        combinedTileImagery.componentTileImagery = components;
-        combinedTileImagery.textureTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
-
-        combinedImagery.state = ImageryState.READY;
-    };
 
     ImageryLayer.prototype.getImageryFromCache = function(x, y, level, imageryExtent) {
         var cacheKey = getImageryCacheKey(x, y, level);
