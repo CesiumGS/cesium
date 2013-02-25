@@ -11,7 +11,9 @@ attribute vec4 misc;
 #ifndef RENDER_FOR_PICK
 varying vec4 v_color;
 varying vec4 v_outlineColor;
-varying float v_textureCoordinate;
+varying vec2 v_textureCoordinates;
+varying float v_width;
+varying vec3 v_positionEC;
 #else
 varying vec4 v_pickColor;
 #endif
@@ -82,13 +84,16 @@ void main()
     float pixelSize = czm_pixelSize * abs(positionEC.z);
     direction = direction * expandDir * width * pixelSize;
     
-    gl_Position = czm_projection * vec4(positionEC.xyz + direction, 1.0) * show;
+    positionEC = vec4(positionEC.xyz + direction, 1.0);
+    gl_Position = czm_projection * positionEC * show;
     
 #ifndef RENDER_FOR_PICK
     vec3 alphas = czm_decodeColor(color.b);
     v_color = vec4(czm_decodeColor(color.r), alphas.r);
     v_outlineColor = vec4(czm_decodeColor(color.g), alphas.g);
-    v_textureCoordinate = texCoord;
+    v_textureCoordinates = vec2(texCoord, clamp(expandDir, 0.0, 1.0));
+    v_width = width * 2.0;
+    v_positionEC = positionEC.xyz;
 #else
     v_pickColor = color;
 #endif

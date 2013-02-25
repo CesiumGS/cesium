@@ -19,6 +19,7 @@ define([
         '../Renderer/DrawCommand',
         './SceneMode',
         './Polyline',
+        '../Shaders/Noise',
         '../Shaders/PolylineVS',
         '../Shaders/PolylineFS',
         '../Shaders/PolylineFSPick'
@@ -42,6 +43,7 @@ define([
         DrawCommand,
         SceneMode,
         Polyline,
+        Noise,
         PolylineVS,
         PolylineFS,
         PolylineFSPick) {
@@ -50,12 +52,12 @@ define([
     // TODO:
     //    better name than 'misc' for tex coord, expansion direction, show and width attribute
     //    materials
-    //    separate by materials
     //    adjacency info in 2d at idl
 
-    var MISC_INDEX = Polyline.MISC;
+    var MISC_INDEX = Polyline.MISC_INDEX;
     var POSITION_INDEX = Polyline.POSITION_INDEX;
     var COLOR_INDEX = Polyline.COLOR_INDEX;
+    var MATERIAL_INDEX = Polyline.MATERIAL_INDEX;
     //POSITION_SIZE_INDEX is needed for when the polyline's position array changes size.
     //When it does, we need to recreate the indicesBuffer.
     var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX;
@@ -140,7 +142,6 @@ define([
          */
         this.modelMatrix = Matrix4.IDENTITY.clone();
         this._modelMatrix = Matrix4.IDENTITY.clone();
-        this._sp = undefined;
         this._rs = undefined;
         this._spPick = undefined;
         this._rsPick = undefined;
@@ -159,9 +160,10 @@ define([
 
         // The buffer usage for each attribute is determined based on the usage of the attribute over time.
         this._buffersUsage = [
-                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}, // MISC
+                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}, // MISC_INDEX
                               {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}, // POSITION_INDEX
-                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}  // COLOR_INDEX
+                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}, // COLOR_INDEX
+                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}  // MATERIAL_INDEX
         ];
 
         this._mode = undefined;
@@ -415,8 +417,9 @@ define([
                     }
                 }
             }
-            //if a polyline's positions size changes, we need to recreate the vertex arrays and vertex buffers because the indices will be different.
-            if (properties[POSITION_SIZE_INDEX] || properties[MISC_INDEX] || createVertexArrays) {
+            // if a polyline's positions size changes, we need to recreate the vertex arrays and vertex buffers because the indices will be different.
+            // if a polyline's material changes, we need to recreate the VAOs and VBOs because they will be batched differenty.
+            if (properties[POSITION_SIZE_INDEX] || properties[MATERIAL_INDEX] || createVertexArrays) {
                 this._createVertexArrays(context);
             } else {
                 length = polylinesToUpdate.length;
@@ -474,11 +477,6 @@ define([
         this._commandLists.removeAll();
         if (typeof polylineBuckets !== 'undefined') {
             if (pass.color) {
-                if (typeof this._sp === 'undefined') {
-                    this._sp = context.getShaderCache().getShaderProgram(
-                            PolylineVS, PolylineFS, attributeIndices);
-                }
-
                 if (typeof this._rs === 'undefined') {
                     this._rs = context.createRenderState({
                         blending : BlendingState.ALPHA_BLEND
@@ -509,8 +507,8 @@ define([
                         command.primitiveType = PrimitiveType.TRIANGLES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
-                        command.uniformMap = this._uniforms;
+                        command.shaderProgram = bucketLocator.shaderProgram;
+                        command.uniformMap = combine([this._uniforms, bucketLocator.material._uniforms], false, false);
                         command.vertexArray = vaColor.va;
                         command.renderState = this._rs;
                     }
@@ -659,6 +657,7 @@ define([
         for (x in polylineBuckets) {
             if (polylineBuckets.hasOwnProperty(x)) {
                 bucket = polylineBuckets[x];
+                bucket.updateShader(context);
                 totalLength += bucket.lengthOfPositions;
             }
         }
@@ -871,18 +870,29 @@ define([
         }
     };
 
+    PolylineCollection.prototype._createMaterialHash = function(material) {
+        var hash = material.type;
+        var uniforms = material._uniforms;
+        for (var uniform in uniforms) {
+            if (uniforms.hasOwnProperty(uniform)) {
+                hash += '_' + uniform + '_' + uniforms[uniform]();
+            }
+        }
+
+        return hash;
+    };
+
     PolylineCollection.prototype._sortPolylinesIntoBuckets = function() {
         var polylineBuckets = this._polylineBuckets = {};
         var polylines = this._polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
             var p = polylines[i];
-            var width = p.getWidth();
-            // TODO separate by material
-            var hash = 'W' + width;
+            var material = p.getMaterial();
+            var hash = this._createMaterialHash(material);
             var value = polylineBuckets[hash];
             if (typeof value === 'undefined') {
-                value = polylineBuckets[hash] = new PolylineBucket(width, this._mode, this._projection, this._modelMatrix);
+                value = polylineBuckets[hash] = new PolylineBucket(material, this._mode, this._projection, this._modelMatrix);
             }
             value.addPolyline(p);
         }
@@ -950,18 +960,21 @@ define([
     /**
      * @private
      */
-    function VertexArrayBucketLocator(count, offset) {
+    function VertexArrayBucketLocator(count, offset, bucket) {
         this.count = count;
         this.offset = offset;
+        this.shaderProgram = bucket.shaderProgram;
+        this.material = bucket.material;
     }
 
     /**
      * @private
      */
-    var PolylineBucket = function(width, mode, projection, modelMatrix) {
-        this.width = width;
+    var PolylineBucket = function(material, mode, projection, modelMatrix) {
         this.polylines = [];
         this.lengthOfPositions = 0;
+        this.material = material;
+        this.shaderProgram = undefined;
         this.mode = mode;
         this.projection = projection;
         this.ellipsoid = projection.getEllipsoid();
@@ -977,6 +990,25 @@ define([
         p._actualLength = this.getPolylinePositionsLength(p);
         this.lengthOfPositions += p._actualLength;
         p._bucket = this;
+    };
+
+    /**
+     * @private
+     */
+    PolylineBucket.prototype.updateShader = function(context) {
+        if (typeof this.shaderProgram !== 'undefined') {
+            return;
+        }
+
+        var fsSource =
+            '#line 0\n' +
+            Noise +
+            '#line 0\n' +
+            this.material.shaderSource +
+            '#line 0\n' +
+            PolylineFS;
+
+        this.shaderProgram = context.getShaderCache().getShaderProgram(PolylineVS, fsSource, attributeIndices);
     };
 
     function intersectsIDL(polyline) {
@@ -1196,7 +1228,7 @@ define([
      */
     PolylineBucket.prototype._updateIndices3D = function(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset) {
         var vaCount = vertexArrayBuckets.length - 1;
-        var bucketLocator = new VertexArrayBucketLocator(0, offset);
+        var bucketLocator = new VertexArrayBucketLocator(0, offset, this);
         vertexArrayBuckets[vaCount].push(bucketLocator);
         var count = 0;
         var indices = totalIndices[totalIndices.length - 1];
@@ -1221,7 +1253,7 @@ define([
                             bucketLocator.count = count;
                             count = 0;
                             offset = 0;
-                            bucketLocator = new VertexArrayBucketLocator(0, 0);
+                            bucketLocator = new VertexArrayBucketLocator(0, 0, this);
                             vertexArrayBuckets[++vaCount] = [bucketLocator];
                         }
 
@@ -1243,7 +1275,7 @@ define([
                     bucketLocator.count = count;
                     offset = 0;
                     count = 0;
-                    bucketLocator = new VertexArrayBucketLocator(0, 0);
+                    bucketLocator = new VertexArrayBucketLocator(0, 0, this);
                     vertexArrayBuckets[++vaCount] = [bucketLocator];
                 }
             }
@@ -1258,7 +1290,7 @@ define([
      */
     PolylineBucket.prototype._updateIndices2D = function(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset) {
         var vaCount = vertexArrayBuckets.length - 1;
-        var bucketLocator = new VertexArrayBucketLocator(0, offset);
+        var bucketLocator = new VertexArrayBucketLocator(0, offset, this);
         vertexArrayBuckets[vaCount].push(bucketLocator);
         var count = 0;
         var indices = totalIndices[totalIndices.length - 1];
@@ -1287,7 +1319,7 @@ define([
                                     bucketLocator.count = count;
                                     count = 0;
                                     offset = 0;
-                                    bucketLocator = new VertexArrayBucketLocator(0, 0);
+                                    bucketLocator = new VertexArrayBucketLocator(0, 0, this);
                                     vertexArrayBuckets[++vaCount] = [bucketLocator];
                                 }
 
@@ -1314,7 +1346,7 @@ define([
                         bucketLocator.count = count;
                         offset = 0;
                         count = 0;
-                        bucketLocator = new VertexArrayBucketLocator(0, 0);
+                        bucketLocator = new VertexArrayBucketLocator(0, 0, this);
                         vertexArrayBuckets[++vaCount] = [bucketLocator];
                     }
                 }
@@ -1331,7 +1363,7 @@ define([
                             bucketLocator.count = count;
                             count = 0;
                             offset = 0;
-                            bucketLocator = new VertexArrayBucketLocator(0, 0);
+                            bucketLocator = new VertexArrayBucketLocator(0, 0, this);
                             vertexArrayBuckets[++vaCount] = [bucketLocator];
                         }
 
@@ -1353,7 +1385,7 @@ define([
                     bucketLocator.count = count;
                     offset = 0;
                     count = 0;
-                    bucketLocator = new VertexArrayBucketLocator(0, 0);
+                    bucketLocator = new VertexArrayBucketLocator(0, 0, this);
                     vertexArrayBuckets[++vaCount] = [bucketLocator];
                 }
             }

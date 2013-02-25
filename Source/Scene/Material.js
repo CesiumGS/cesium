@@ -33,7 +33,8 @@ define([
         '../Shaders/Materials/Water',
         '../Shaders/Materials/WoodMaterial',
         '../Shaders/Materials/RimLightingMaterial',
-        '../Shaders/Materials/ErosionMaterial'
+        '../Shaders/Materials/ErosionMaterial',
+        '../Shaders/Materials/PolylineMaterial'
     ], function(
         when,
         loadImage,
@@ -68,7 +69,8 @@ define([
         WaterMaterial,
         WoodMaterial,
         RimLightingMaterial,
-        ErosionMaterial) {
+        ErosionMaterial,
+        PolylineMaterial) {
     "use strict";
 
     /**
@@ -1171,6 +1173,15 @@ define([
             time : 1.0
         },
         source : ErosionMaterial
+    });
+
+    Material.PolylineType = 'Polyline';
+    Material._materialCache.addMaterial(Material.PolylineType, {
+        type : Material.PolylineType,
+        uniforms : {
+            outlineWidth : 0.0
+        },
+        source : PolylineMaterial
     });
 
     return Material;

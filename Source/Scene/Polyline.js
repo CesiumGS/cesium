@@ -6,7 +6,8 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color',
-        '../Core/PolylinePipeline'
+        '../Core/PolylinePipeline',
+        './Material'
     ], function(
         defaultValue,
         DeveloperError,
@@ -14,10 +15,12 @@ define([
         BoundingSphere,
         Cartesian3,
         Color,
-        PolylinePipeline) {
+        PolylinePipeline,
+        Material) {
     "use strict";
 
     var EMPTY_OBJECT = {};
+    var defaultOutlineColor = new Color(1.0, 1.0, 1.0, 0.0);
 
     /**
      * DOC_TBA
@@ -31,9 +34,14 @@ define([
         this._show = defaultValue(description.show, true);
         this._width = defaultValue(description.width, 1.0);
         this._color = Color.clone(defaultValue(description.color, Color.WHITE));
-        this._outlineColor = Color.clone(defaultValue(description.outlineColor, Color.WHITE));
+        this._outlineColor = Color.clone(defaultValue(description.outlineColor, defaultOutlineColor));
         this._perVertexColors = undefined;
         this._perVertexOutlineColors = undefined;
+
+        this._material = description.material;
+        if (typeof this._material === 'undefined') {
+            this._material = Material.fromType(undefined, Material.PolylineType);
+        }
 
         var positions = description.positions;
         if (typeof positions === 'undefined') {
@@ -54,11 +62,12 @@ define([
         this._boundingVolume2D = new BoundingSphere(); // modified in PolylineCollection
     };
 
-    var MISC = Polyline.MISC = 0;
+    var MISC_INDEX = Polyline.MISC_INDEX = 0;
     var POSITION_INDEX = Polyline.POSITION_INDEX = 1;
     var COLOR_INDEX = Polyline.COLOR_INDEX = 2;
-    var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX = 3;
-    var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES = 4;
+    var MATERIAL_INDEX = Polyline.MATERIAL_INDEX = 3;
+    var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX = 4;
+    var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES = 5;
 
     function makeDirty(polyline, propertyChanged) {
         ++polyline._propertiesChanged[propertyChanged];
@@ -102,7 +111,7 @@ define([
 
         if (value !== this._show) {
             this._show = value;
-            makeDirty(this, MISC);
+            makeDirty(this, MISC_INDEX);
         }
     };
 
@@ -152,6 +161,27 @@ define([
         this._positions = value;
         this._boundingVolume = BoundingSphere.fromPoints(this._positions, this._boundingVolume);
         makeDirty(this, POSITION_INDEX);
+    };
+
+    /**
+     * TODO
+     * @returns
+     */
+    Polyline.prototype.getMaterial = function() {
+        return this._material;
+    };
+
+    /**
+     * TODO
+     * @param material
+     */
+    Polyline.prototype.setMaterial = function(material) {
+        if (typeof material === 'undefined') {
+            throw new DeveloperError('material is required.');
+        }
+
+        this._material = material;
+        makeDirty(this, MATERIAL_INDEX);
     };
 
     /**
@@ -281,7 +311,7 @@ define([
         var width = this._width;
         if (value !== width) {
             this._width = value;
-            makeDirty(this, MISC);
+            makeDirty(this, MISC_INDEX);
         }
     };
 
