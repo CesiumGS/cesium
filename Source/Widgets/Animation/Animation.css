@@ -1,0 +1,141 @@
+.animation-theme {
+    visibility: hidden;
+    display: block;
+    position: absolute;
+    z-index: -100;
+}
+.animation-themeNormal {
+    color: #E5F2FE;
+}
+.animation-themeHover {
+    color: #ABD6FF;
+}
+.animation-themeSelect {
+    color: #E5F2FE;
+}
+.animation-themeDisabled {
+    color: #EFEFEF;
+}
+.animation-themeKnob {
+    color: #E1E2E3;
+}
+.animation-themePointer {
+    color: #FA5;
+}
+.animation-themeSwoosh {
+    color: #ACE;
+}
+.animation-themeSwooshHover {
+    color: #BDF;
+}
+.animation-svgText {
+    fill: #111;
+    font-family: Sans-Serif;
+    font-size: 15px;
+    text-anchor: middle;
+}
+.animation-blank {
+    fill: #000;
+    fill-opacity: 0.01;  /* This must be clickable, so it can't be 'fill: none'. */
+    stroke: none;
+}
+.animation-rectButton {
+    cursor: pointer;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.animation-rectButton .animation-buttonPath {
+    fill: #111;
+}
+.animation-rectButton .animation-buttonGlow {
+    fill: #fff;
+    stroke: none;
+    /* Widget will add: filter: url(#animation_blurred); */
+    display: none;
+}
+.animation-rectButton .animation-buttonMain {
+    /* Widget will add: fill: url(#animation_buttonNormal); */
+    stroke: #759DC0;
+    stroke-width: 1.2;
+}
+.animation-buttonToggled .animation-buttonGlow {
+    display: block;
+    fill: #FFAA2A;
+}
+.animation-buttonToggled .animation-buttonMain {
+    /* Widget will add: fill: url(#animation_buttonToggled); */
+    stroke: #EA0;
+}
+.animation-rectButton:hover .animation-buttonGlow {
+    display: block;
+}
+.animation-rectButton:hover .animation-buttonMain {
+    /* Widget will add: fill: url(#animation_buttonHovered); */
+    stroke: #759DC0;
+}
+.animation-buttonToggled:hover .animation-buttonGlow {
+    fill: #fff;
+}
+.animation-buttonToggled:hover .animation-buttonMain {
+    stroke: #EA0;
+}
+.animation-rectButton:active .animation-buttonMain {
+    fill: #ABD6FF;
+}
+.animation-buttonDisabled {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.animation-buttonDisabled .animation-buttonMain {
+    /* Widget will add: fill: url(#animation_buttonDisabled); */
+    stroke: #D3D3D3;
+}
+.animation-buttonDisabled .animation-buttonPath {
+    fill: #818181;
+}
+.animation-buttonDisabled .animation-buttonGlow {
+    display: none;
+}
+.animation-shuttleRingBack {
+    fill: #FAFAFA;
+    fill-opacity: 1;
+    stroke: #AEAEAE;
+    stroke-width: 1.2;
+}
+.animation-shuttleRingG {
+    cursor: pointer;
+}
+.animation-shuttleRingSwoosh line {
+    stroke: #8AC;
+    stroke-width: 3;
+    stroke-opacity: 0.2;
+    stroke-linecap: round;
+}
+/* Widget will add:
+.animation-shuttleRingG .animation-shuttleRingSwoosh {
+    fill: url(#animation_shuttleRingSwooshGradient);
+}
+.animation-shuttleRingG:hover .animation-shuttleRingSwoosh {
+    fill: url(#animation_shuttleRingSwooshHovered);
+}
+*/
+.animation-shuttleRingPointer {
+    /* Widget will add: fill: url(#animation_shuttleRingPointerGradient); */
+    cursor: pointer;
+}
+.animation-shuttleRingPausePointer {
+    /* Widget will add: fill: url(#animation_shuttleRingPointerPaused); */
+    cursor: pointer;
+}
+.animation-knobOuter {
+    /* Widget will add: fill: url(#animation_knobOuter); */
+    cursor: pointer;
+    stroke: #A5A5A5;
+    stroke-width: 1.2;
+}
+.animation-knobInner {
+    /* Widget will add: fill: url(#animation_knobInner); */
+    cursor: pointer;
+}
