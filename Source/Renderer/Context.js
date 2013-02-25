@@ -254,6 +254,18 @@ define([
 
         this._defaultTexture = undefined;
         this._defaultCubeMap = undefined;
+
+        /**
+         * A cache of objects tied to this context.  Just before the Context is destroyed,
+         * <code>destroy</code> will be invoked on each object in this object literal that has
+         * such a method.  This is useful for caching any objects that might otherwise
+         * be stored globally, except they're tied to a particular context, and to manage
+         * their lifetime.
+         *
+         * @private
+         * @type {Object}
+         */
+        this.cache = {};
     };
 
     Context.prototype._enableOrDisable = function(glEnum, enable) {
@@ -2794,6 +2806,17 @@ define([
     };
 
     Context.prototype.destroy = function() {
+        // Destroy all objects in the cache that have a destroy method.
+        var cache = this.cache;
+        for (var property in cache) {
+            if (cache.hasOwnProperty(property)) {
+                var propertyValue = cache[property];
+                if (typeof propertyValue.destroy !== 'undefined') {
+                    propertyValue.destroy();
+                }
+            }
+        }
+
         this._shaderCache = this._shaderCache.destroy();
         this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
         this._defaultCubeMap = this._defaultCubeMap && this._defaultCubeMap.destroy();
