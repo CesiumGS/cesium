@@ -461,7 +461,7 @@ define([
         return true;
     }
 
-    function colorArrayEquals(a, aPositionsLength, bPositionsLength) {
+    function colorArrayEquals(a, aPositionsLength, b, bPositionsLength) {
         if (typeof a === 'undefined' && typeof b === 'undefined') {
             return true;
         }

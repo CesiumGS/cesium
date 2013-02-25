@@ -1520,18 +1520,21 @@ define([
             var outlineColorIndex = 0;
 
             var colorsArray = new Float32Array(4 * positionsLength * 2);
-            for ( var j = 0; j < positionsLength * 2; ++j) {
-                var color = colors[colorIndex];
-                var outlineColor = outlineColors[outlineColorIndex];
+            for ( var j = 0; j < positionsLength; ++j) {
+                var color = Color.encode(colors[colorIndex]);
+                var outlineColor = Color.encode(outlineColors[outlineColorIndex]);
 
                 scratchColorAlpha.red = color.alpha;
                 scratchColorAlpha.green = outlineColor.alpha;
+                var alpha = Color.encode(scratchColorAlpha);
 
-                colorsArray[index] = Color.encode(color);
-                colorsArray[index + 1] = Color.encode(outlineColor);
-                colorsArray[index + 2] = Color.encode(scratchColorAlpha);
+                for (var k = 0; k < 2; ++k) {
+                    colorsArray[index] = color;
+                    colorsArray[index + 1] = outlineColor;
+                    colorsArray[index + 2] = alpha;
+                    index += 4;
+                }
 
-                index += 4;
                 colorIndex += colorIncrement;
                 outlineColorIndex += outlineColorIncrement;
             }
