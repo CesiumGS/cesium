@@ -453,7 +453,7 @@ define([
 
         for (var i = 0, len = parentTile.children; i < len; ++i) {
             var child = parentTile.children[i];
-            child.inheritedTextureLevels[layerIndex] = sourceTile.level;
+            child.inheritedTextureTranslationAndScale[layerIndex] = computeTranslationAndScaleForInheritedTexture(child, sourceTile);
             child.inheritedTextures[layerIndex] = sourceTile.textures[layerIndex];
             propagateTexturesToDescendants(sourceTile, child, layerIndex);
         }
@@ -490,12 +490,27 @@ define([
                 if (typeof parentTexture !== 'undefined') {
                     // Parent has a texture for this layer, so link to it.
                     inheritedTextures[i] = parentTexture;
-                    inheritedTextureTranslationAndScale[i] = parent.level;
+                    inheritedTextureTranslationAndScale[i] = computeTranslationAndScaleForInheritedTexture(tile, parent);
                 } else {
                     // Parent does not have a texture for this layer, so link to the
                     // texture the parent inherited from its parent.
-                    inheritedTextures[i] = parentInheritedTextures[i];
-                    inheritedTextureTranslationAndScale[i] = parentInheritedTextureTranslationAndScale[i];
+                    var ancestor = parent.parent;
+                    while (typeof ancestor !== 'undefined' && typeof ancestor.textures[i] === 'undefined') {
+                        ancestor = ancestor.parent;
+                    }
+
+                    if (typeof ancestor !== 'undefined') {
+                        inheritedTextures[i] = parentInheritedTextures[i];
+                        inheritedTextureTranslationAndScale[i] = computeTranslationAndScaleForInheritedTexture(tile, ancestor);
+                    }
+
+                    /*var parentToChild = computeTranslationAndScaleForInheritedTexture(tile, parent);
+                    var sourceToParent = parentInheritedTextureTranslationAndScale[i];
+                    inheritedTextureTranslationAndScale[i] = new Cartesian4(
+                            sourceToParent.x * parentToChild.z + parentToChild.x,
+                            sourceToParent.y * parentToChild.w + parentToChild.y,
+                            parentToChild.z * sourceToParent.z,
+                            parentToChild.w * sourceToParent.w);*/
                 }
             }
         }
@@ -521,6 +536,22 @@ define([
         tile.northeastCornerCartesian.negate(cartesian3Scratch).cross(Cartesian3.UNIT_Z, cartesian3Scratch).normalize(tile.eastNormal);
         ellipsoid.geodeticSurfaceNormal(southeastCornerCartesian, cartesian3Scratch).cross(tile.southwestCornerCartesian.subtract(southeastCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(tile.southNormal);
         ellipsoid.geodeticSurfaceNormal(northwestCornerCartesian, cartesian3Scratch).cross(tile.northeastCornerCartesian.subtract(northwestCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(tile.northNormal);
+    }
+
+    function computeTranslationAndScaleForInheritedTexture(tile, ancestor) {
+        var ancestorExtent = ancestor.extent;
+        var tileExtent = tile.extent;
+        var tileWidth = tileExtent.east - tileExtent.west;
+        var tileHeight = tileExtent.north - tileExtent.south;
+
+        var scaleX = tileWidth / (ancestorExtent.east - ancestorExtent.west);
+        var scaleY = tileHeight / (ancestorExtent.north - ancestorExtent.south);
+
+        return new Cartesian4(
+                scaleX * (tileExtent.west - ancestorExtent.west) / tileWidth,
+                scaleY * (tileExtent.south - ancestorExtent.south) / tileHeight,
+                scaleX,
+                scaleY);
     }
 
     function processTerrainStateMachine(tile, context, terrainProvider) {

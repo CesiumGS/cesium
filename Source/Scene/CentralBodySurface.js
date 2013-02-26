@@ -993,8 +993,17 @@ define([
                         continue;
                     }
 
-                    uniformMap.dayTextures[numberOfDayTextures] = typeof texture !== 'undefined' ? texture : inheritedTexture;
-                    uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+                    if (typeof texture !== 'undefined') {
+                        uniformMap.dayTextures[numberOfDayTextures] = texture;
+                        uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+                    } else {
+                        if (typeof tile.inheritedTextureTranslationAndScale[textureIndex] === 'undefined') {
+                            console.log('translation and scale not set');
+                        }
+                        uniformMap.dayTextures[numberOfDayTextures] = inheritedTexture;
+                        uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = tile.inheritedTextureTranslationAndScale[textureIndex];
+                    }
+
                     uniformMap.dayTextureTexCoordsExtent[numberOfDayTextures] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
                     var imageryLayer = imageryLayerCollection.get(textureIndex);
