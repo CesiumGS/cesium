@@ -40,7 +40,7 @@ define([
 
         this._material = description.material;
         if (typeof this._material === 'undefined') {
-            this._material = Material.fromType(undefined, Material.PolylineType);
+            this._material = Material.fromType(undefined, Material.PolylineOutlineType);
         }
 
         var positions = description.positions;

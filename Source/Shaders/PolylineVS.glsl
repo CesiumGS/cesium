@@ -14,6 +14,9 @@ varying vec4 v_outlineColor;
 varying vec2 v_textureCoordinates;
 varying float v_width;
 varying vec3 v_positionEC;
+varying vec2 v_positionWC;
+varying vec2 v_endPointWC;
+varying vec2 v_nextWC;
 #else
 varying vec4 v_pickColor;
 #endif
@@ -70,10 +73,10 @@ void main()
     
     vec4 p0 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + prevEC.xyz * pixelSize, 1.0));
     vec4 p1 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + nextEC.xyz * pixelSize, 1.0));
-    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
+    vec4 endPointWC = czm_eyeToWindowCoordinates(positionEC);
     
-    vec2 nextWC = normalize(p0.xy - positionWC.xy);
-    vec2 prevWC = normalize(p1.xy - positionWC.xy);
+    vec2 nextWC = normalize(p0.xy - endPointWC.xy);
+    vec2 prevWC = normalize(p1.xy - endPointWC.xy);
     vec2 normal = normalize(vec2(nextWC.y, - nextWC.x));
     
     vec2 direction = normalize((nextWC + prevWC) * 0.5);
@@ -87,9 +90,9 @@ void main()
     {
         width = width / sin(angle);
     }
-    
-    positionWC.xy += direction * width * expandDir;
-    gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0) * show;
+
+    vec4 positionWC = vec4(endPointWC.xy + direction * width * expandDir, -endPointWC.z, 1.0);
+    gl_Position = czm_viewportOrthographic * positionWC * show;
     
 #ifndef RENDER_FOR_PICK
     vec3 alphas = czm_decodeColor(color.b);
@@ -98,6 +101,9 @@ void main()
     v_textureCoordinates = vec2(texCoord, clamp(expandDir, 0.0, 1.0));
     v_width = width * 2.0;
     v_positionEC = positionEC.xyz;
+    v_positionWC = positionWC.xy;
+    v_endPointWC = endPointWC.xy;
+    v_nextWC = nextWC;
 #else
     v_pickColor = color;
 #endif

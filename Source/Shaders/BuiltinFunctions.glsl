@@ -1027,3 +1027,16 @@ vec4 czm_getWaterNoise(sampler2D normalMap, vec2 uv, float time, float angleInRa
     // average and scale to between -1 and 1
     return ((noise / 4.0) - 0.5) * 2.0;
 }
+
+/**
+ * TODO
+ */
+float czm_pointLineDistance(czm_ray ray, vec3 point)
+{
+    vec3 origin = ray.origin;
+    vec3 direction = ray.direction;
+    //float t = dot(direction, point - origin) / dot(direction, direction);
+    float t = dot(direction, point - origin);
+    return distance(point, czm_pointAlongRay(ray, t));
+}
+

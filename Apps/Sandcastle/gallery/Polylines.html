@@ -62,6 +62,9 @@ require([
             blue  : 0.0,
             alpha : 0.75
         });
+        coloredPolyline.setWidth(10);
+        coloredPolyline.setMaterial(Cesium.Material.fromType(undefined, Cesium.Material.PolylineGlowType));
+        
         
         // set a polyline's color per position
         var perPositionColoredPolyline = polylines.add();
@@ -96,7 +99,7 @@ require([
         widePolyline.setWidth(10.0);
         
         // Set the polyline's material to have an outline
-        var material = Cesium.Material.fromType(undefined, Cesium.Material.PolylineType);
+        var material = Cesium.Material.fromType(undefined, Cesium.Material.PolylineOutlineType);
         material.uniforms.outlineWidth = 5.0;
         widePolyline.setMaterial(material);
         widePolyline.setDefaultOutlineColor({
