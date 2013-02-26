@@ -93,7 +93,12 @@ require([
             Cesium.Cartographic.fromDegrees(-105.0, 35.0),
             Cesium.Cartographic.fromDegrees(-100.0, 32.0)
         ]));
-        widePolyline.setWidth(5);
+        widePolyline.setWidth(10.0);
+        
+        // Set the polyline's material to have an outline
+        var material = Cesium.Material.fromType(undefined, Cesium.Material.PolylineType);
+        material.uniforms.outlineWidth = 5.0;
+        widePolyline.setMaterial(material);
         widePolyline.setDefaultOutlineColor({
             red : 1.0,
             green : 0.0,

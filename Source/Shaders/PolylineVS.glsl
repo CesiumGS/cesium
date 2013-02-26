@@ -66,26 +66,30 @@ void main()
     vec4 prevEC = czm_modelView * prevDir;
     vec4 nextEC = czm_modelView * nextDir;
     
-    vec3 direction = (prevEC.xyz + nextEC.xyz) * 0.5;
-    direction.z = 0.0;
-    direction = normalize(direction);
+    float pixelSize = czm_pixelSize * abs(positionEC.z);
     
-    if (direction.x < 0.0)
+    vec4 p0 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + prevEC.xyz * pixelSize, 1.0));
+    vec4 p1 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + nextEC.xyz * pixelSize, 1.0));
+    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
+    
+    vec2 nextWC = normalize(p0.xy - positionWC.xy);
+    vec2 prevWC = normalize(p1.xy - positionWC.xy);
+    vec2 normal = normalize(vec2(nextWC.y, - nextWC.x));
+    
+    vec2 direction = normalize((nextWC + prevWC) * 0.5);
+    if (dot(direction, normal) < 0.0)
     {
-        expandDir *= -1.0;
+        direction = -direction;
     }
     
-    float angle = acos(dot(direction, nextEC.xyz));
+    float angle = acos(dot(direction, nextWC));
     if (abs(angle - czm_piOverTwo) > czm_epsilon1)
     {
         width = width / sin(angle);
     }
     
-    float pixelSize = czm_pixelSize * abs(positionEC.z);
-    direction = direction * expandDir * width * pixelSize;
-    
-    positionEC = vec4(positionEC.xyz + direction, 1.0);
-    gl_Position = czm_projection * positionEC * show;
+    positionWC.xy += direction * width * expandDir;
+    gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0) * show;
     
 #ifndef RENDER_FOR_PICK
     vec3 alphas = czm_decodeColor(color.b);
