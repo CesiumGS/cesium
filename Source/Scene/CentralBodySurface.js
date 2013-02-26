@@ -7,6 +7,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/CubeMapEllipsoidTessellator',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -43,6 +44,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         CubeMapEllipsoidTessellator,
         DeveloperError,
         Ellipsoid,
@@ -526,7 +528,8 @@ define([
         var readyTextureCount = 0;
         var textures = tile.textures;
         var inheritedTextures = tile.inheritedTextures;
-        for (var i = 0, len = textures.length; i < len; ++i) {
+        var layerCount = Math.max(tile.textures.length, tile.inheritedTextures.length);
+        for (var i = 0, len = layerCount; i < len; ++i) {
             if (typeof textures[i] !== 'undefined' || typeof inheritedTextures[i] !== 'undefined') {
                 ++readyTextureCount;
             }
@@ -799,6 +802,12 @@ define([
             u_dayTextures : function() {
                 return this.dayTextures;
             },
+            u_parentTextures : function() {
+                return this.parentTextures;
+            },
+            u_textureBlendFactor : function() {
+                return this.textureBlendFactor;
+            },
             u_dayTextureTranslationAndScale : function() {
                 return this.dayTextureTranslationAndScale;
             },
@@ -838,12 +847,21 @@ define([
             u_waterMaskTranslationAndScale : function() {
                 return this.waterMaskTranslationAndScale;
             },
+            u_distanceToScreenSpaceError : function() {
+                return this.distanceToScreenSpaceError;
+            },
+            u_maxScreenSpaceError : function() {
+                return this.maxScreenSpaceError;
+            },
+
 
             center3D : undefined,
             modifiedModelView : new Matrix4(),
             tileExtent : new Cartesian4(),
 
             dayTextures : [],
+            parentTextures : [],
+            textureBlendFactor : [],
             dayTextureTranslationAndScale : [],
             dayTextureTexCoordsExtent : [],
             dayTextureAlpha : [],
@@ -858,7 +876,10 @@ define([
             southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(),
 
             waterMask : undefined,
-            waterMaskTranslationAndScale : new Cartesian4()
+            waterMaskTranslationAndScale : new Cartesian4(),
+
+            distanceToScreenSpaceError : 0.0,
+            maxScreenSpaceError : 0.0
         };
     }
 
@@ -993,16 +1014,47 @@ define([
                         continue;
                     }
 
-                    if (typeof texture !== 'undefined') {
-                        uniformMap.dayTextures[numberOfDayTextures] = texture;
-                        uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
-                    } else {
-                        if (typeof tile.inheritedTextureTranslationAndScale[textureIndex] === 'undefined') {
-                            console.log('translation and scale not set');
-                        }
-                        uniformMap.dayTextures[numberOfDayTextures] = inheritedTexture;
-                        uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = tile.inheritedTextureTranslationAndScale[textureIndex];
+                    var textureBlendFactor = 0.0;
+
+                    if (typeof texture === 'undefined') {
+                        texture = context.getDefaultTexture();
+                        textureBlendFactor = 1.0;
+                    } else if (typeof inheritedTexture === 'undefined') {
+                        inheritedTexture = context.getDefaultTexture();
+                        textureBlendFactor = -1.0;
                     }
+
+                    var parentTranslationAndScale = tile.inheritedTextureTranslationAndScale[textureIndex];
+                    if (typeof parentTranslationAndScale === 'undefined') {
+                        parentTranslationAndScale = Cartesian4.ZERO;
+                    }
+
+                    uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = parentTranslationAndScale;
+                    uniformMap.dayTextures[numberOfDayTextures] = texture;
+                    uniformMap.parentTextures[numberOfDayTextures] = inheritedTexture;
+                    uniformMap.textureBlendFactor[numberOfDayTextures] = textureBlendFactor;
+
+                    var canvas = context.getCanvas();
+                    var height = canvas.clientHeight;
+
+                    var camera = frameState.camera;
+                    var frustum = camera.frustum;
+                    var fovy = frustum.fovy;
+
+                    var latitudeClosestToEquator = 0.0;
+                    if (tile.extent.south > 0.0) {
+                        latitudeClosestToEquator = tile.extent.south;
+                    } else if (tile.extent.north < 0.0) {
+                        latitudeClosestToEquator = tile.extent.north;
+                    }
+
+                    var ellipsoid = surface._terrainProvider.getTilingScheme().getEllipsoid();
+                    var west = ellipsoid.cartographicToCartesian(new Cartographic(tile.extent.west, latitudeClosestToEquator));
+                    var nextToWest = ellipsoid.cartographicToCartesian(new Cartographic(tile.extent.west + (tile.extent.east - tile.extent.west) / 255, latitudeClosestToEquator));
+                    var texelSpacing = nextToWest.subtract(west).magnitude();
+
+                    uniformMap.distanceToScreenSpaceError = (texelSpacing * height) / (2 * Math.tan(0.5 * fovy));
+                    uniformMap.maxScreenSpaceError = 2.0;
 
                     uniformMap.dayTextureTexCoordsExtent[numberOfDayTextures] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 

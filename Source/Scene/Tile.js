@@ -313,6 +313,15 @@ define([
             this.children = undefined;
         }
 
+        this.inheritedTextures.length = 0;
+        this.inheritedTextureTranslationAndScale.length = 0;
+
+        for (i = 0, len = this.textures.length; i < len; ++i) {
+            this.textures[i].destroy();
+        }
+
+        this.textures.length = 0;
+
         this.freeVertexArray();
     };
 
@@ -430,7 +439,10 @@ define([
             if (allTexturesLoaded) {
                 for (i = 0; i < len; ++i) {
                     imageryLayer._reprojectTexture(context, this, layerImageryCollection[i], imageryLayerCollection);
+                    layerImageryCollection[i].freeResources();
                 }
+
+                layerImageryCollection.length = 0;
 
                 propagateTexturesToDescendants(this, this, layerIndex);
             }
@@ -451,7 +463,7 @@ define([
             return;
         }
 
-        for (var i = 0, len = parentTile.children; i < len; ++i) {
+        for (var i = 0, len = parentTile.children.length; i < len; ++i) {
             var child = parentTile.children[i];
             child.inheritedTextureTranslationAndScale[layerIndex] = computeTranslationAndScaleForInheritedTexture(child, sourceTile);
             child.inheritedTextures[layerIndex] = sourceTile.textures[layerIndex];
@@ -483,7 +495,6 @@ define([
         if (typeof parent !== 'undefined') {
             var parentTextures = parent.textures;
             var parentInheritedTextures = parent.inheritedTextures;
-            var parentInheritedTextureTranslationAndScale = parent.inheritedTextureTranslationAndScale;
 
             for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
                 var parentTexture = parentTextures[i];

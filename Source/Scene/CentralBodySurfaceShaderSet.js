@@ -62,7 +62,7 @@ define([
                 (applyGamma ? '#define APPLY_GAMMA\n' : '') +
                 '#define TEXTURE_UNITS ' + textureCount + '\n' +
                 this.baseFragmentShaderString + '\n' +
-                'vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)\n' +
+                'vec3 computeDayColor(vec3 initialColor, float textureLevelOfDetailFactor, vec2 textureCoordinates)\n' +
                 '{\n' +
                 '    vec3 color = initialColor;\n';
 
@@ -71,6 +71,8 @@ define([
                     'color = sampleAndBlend(\n' +
                     '   color,\n' +
                     '   u_dayTextures[' + i + '],\n' +
+                    '   u_parentTextures[' + i + '],\n' +
+                    '   clamp(textureLevelOfDetailFactor + u_textureBlendFactor[' + i + '], 0.0, 1.0),\n' +
                     '   textureCoordinates,\n' +
                     '   u_dayTextureTexCoordsExtent[' + i + '],\n' +
                     '   u_dayTextureTranslationAndScale[' + i + '],\n' +

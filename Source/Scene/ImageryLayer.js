@@ -1027,7 +1027,8 @@ define([
 
         var twoToTheLevelPower = levelZeroMaximumTexelSpacing / texelSpacing;
         var level = Math.log(twoToTheLevelPower) / Math.log(2);
-        var rounded = Math.round(level);
+        //var rounded = Math.round(level);
+        var rounded = Math.ceil(level);
         return rounded | 0;
     }
 
