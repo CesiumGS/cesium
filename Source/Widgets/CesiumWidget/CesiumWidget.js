@@ -1,8 +1,8 @@
 /*global define*/
 define([
+        '../ClockViewModel',
         '../../Core/buildModuleUrl',
         '../../Core/Cartesian2',
-        '../../Core/Clock',
         '../../Core/DefaultProxy',
         '../../Core/defaultValue',
         '../../Core/DeveloperError',
@@ -16,9 +16,9 @@ define([
         '../../Scene/SkyBox',
         '../../Scene/SkyAtmosphere'
     ], function(
+        ClockViewModel,
         buildModuleUrl,
         Cartesian2,
-        Clock,
         DefaultProxy,
         defaultValue,
         DeveloperError,
@@ -46,7 +46,7 @@ define([
      * @param {DOMElement|String} container The DOM element, or ID of a page element, that will contain the widget.
      * @param {Object} [options={}] Configuration options for the widget.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for the central body in the scene.
-     * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
+     * @param {Clock} [options.clockViewModel=new ClockViewModel()] The clock to use to control current time.
      * @param {Boolean} [options.showStars=true] Whether stars are drawn around the globe.
      * @param {Boolean} [options.showSkyAtmosphere=true] Whether a sky atmosphere is drawn around the globe.
      * @param {Boolean} [options.autoResize=true] Whether to automatically resize the widget when the browser window resizes. This is needed when the widget fills the browser window, or is part of a fluid layout where the size of the widget changes as the window changes size.
@@ -66,10 +66,11 @@ define([
 
         options = defaultValue(options, {});
 
-        this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        this.clock = options.clock;
-        if (typeof this.clock === 'undefined') {
-            this.clock = new Clock();
+        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this.clockViewModel = options.clockViewModel;
+        if (typeof this.clockViewModel === 'undefined') {
+            this.clockViewModel = new ClockViewModel();
+            this.clockViewModel.clock.multiplier = 10000;
         }
 
         /**
@@ -115,9 +116,10 @@ define([
 
         this.scene = new Scene(this.canvas);
 
-        this.centralBody = new CentralBody(this.ellipsoid);
-        this.centralBody.logoOffset = new Cartesian2(125, 0);
-        this.scene.getPrimitives().setCentralBody(this.centralBody);
+        var centralBody = new CentralBody(this._ellipsoid);
+        centralBody.logoOffset = new Cartesian2(125, 0);
+        this.scene.getPrimitives().setCentralBody(centralBody);
+        this.centralBody = centralBody;
 
         var imageryProvider = options.imageryProvider;
         if (typeof imageryProvider === 'undefined') {
@@ -128,17 +130,21 @@ define([
                 proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('http://cesium.agi.com/proxy/')
             });
         }
+        centralBody.getImageryLayers().addImageryProvider(imageryProvider);
 
-        this.imageryLayer = this.centralBody.getImageryLayers().addImageryProvider(imageryProvider);
+        if (typeof options.terrainProvider !== 'undefined') {
+            centralBody.terrainProvider = options.terrainProvider;
+        }
 
-        this.transitioner = new SceneTransitioner(this.scene, this.ellipsoid);
+        this.transitioner = new SceneTransitioner(this.scene, this._ellipsoid);
 
         this.resize();
 
+        this._needResize = false;
         var autoResize = defaultValue(options.autoResize, true);
         if (autoResize) {
             window.addEventListener('resize', function() {
-                widget.resize();
+                widget._needResize = true;
             }, false);
         }
 
@@ -158,7 +164,7 @@ define([
         var width = this.canvas.clientWidth;
         var height = this.canvas.clientHeight;
 
-        if (typeof this.scene === 'undefined' || (this.canvas.width === width && this.canvas.height === height)) {
+        if (this.canvas.width === width && this.canvas.height === height) {
             return;
         }
 
@@ -178,9 +184,14 @@ define([
      * Update and re-render the scene.  This function is called automatically.
      */
     CesiumWidget.prototype.render = function() {
+        if (this._needResize) {
+            this.resize();
+            this._needResize = false;
+        }
+
         if (this._showSkyAtmosphere !== this.showSkyAtmosphere) {
             if (this.showSkyAtmosphere) {
-                this.scene.skyAtmosphere = new SkyAtmosphere();
+                this.scene.skyAtmosphere = new SkyAtmosphere(this._ellipsoid);
             } else {
                 if (typeof this.scene.skyAtmosphere !== 'undefined') {
                     this.scene.skyAtmosphere.destroy();
@@ -200,18 +211,13 @@ define([
                     positiveZ : getDefaultSkyBoxUrl('pz'),
                     negativeZ : getDefaultSkyBoxUrl('mz')
                 });
-            } else {
-                if (typeof this.scene.skyBox !== 'undefined') {
-                    this.scene.skyBox.destroy();
-                }
-                this.scene.skyBox = undefined;
+            } else if (typeof this.scene.skyBox !== 'undefined') {
+                this.scene.skyBox = this.scene.skyBox.destroy();
             }
             this._showStars = this.showStars;
         }
 
-        this.clock.tick();
-
-        var currentTime = this.clock.currentTime;
+        var currentTime = this.clockViewModel.clock.tick();
         this.scene.initializeFrame();
         this.scene.render(currentTime);
     };
