@@ -3,11 +3,13 @@ define([
         '../Core/destroyObject',
         '../Core/BoundingRectangle',
         '../Renderer/PixelFormat',
+        './Material',
         './ViewportQuad'
     ], function(
         destroyObject,
         BoundingRectangle,
         PixelFormat,
+        Material,
         ViewportQuad) {
     "use strict";
 
@@ -59,8 +61,7 @@ define([
         this._lastFpsSampleTime = undefined;
         this._frameCount = 0;
 
-        this._quad = new ViewportQuad(new BoundingRectangle(0, 0, 0, 0));
-        this._quad.enableBlending = true;
+        this._quad = undefined;
 
         this._time = undefined;
         this._texture = undefined;
@@ -132,12 +133,18 @@ define([
             }
         }
 
+        if (typeof this._quad === 'undefined') {
+            this._quad = new ViewportQuad();
+            this._quad.material = Material.fromType(context, Material.ImageType);
+            this._quad.material.uniforms.image = undefined;
+        }
+
         if (typeof this._texture === 'undefined') {
             this._texture = context.createTexture2D({
                 source : this._canvas,
                 pixelFormat : PixelFormat.RGBA
             });
-            this._quad.setTexture(this._texture);
+            this._quad.material.uniforms.image = this._texture;
         } else {
             this._texture.copyFrom(this._canvas);
         }
@@ -145,7 +152,7 @@ define([
         var viewportHeight = context.getCanvas().clientHeight;
         if (viewportHeight !== this._viewportHeight) {
             this._viewportHeight = viewportHeight;
-            this._quad.setRectangle(new BoundingRectangle(this._rectangle.x, viewportHeight - canvasHeight - this._rectangle.y, canvasWidth, canvasHeight));
+            this._quad.rectangle = new BoundingRectangle(this._rectangle.x, viewportHeight - canvasHeight - this._rectangle.y, canvasWidth, canvasHeight);
         }
 
         this._quad.update(context, frameState, commandList);
