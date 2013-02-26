@@ -206,8 +206,8 @@ define([
             polyline.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            polyline.setColor(Color.WHITE);
-            polyline.setOutlineColor(Color.BLACK);
+            polyline.setDefaultColor(Color.WHITE);
+            polyline.setDefaultOutlineColor(Color.BLACK);
             polyline.setWidth(1);
         } else {
             polyline = this._polylineCollection.get(polylineVisualizerIndex);
@@ -223,12 +223,12 @@ define([
 
         var property = dynamicPolyline.color;
         if (typeof property !== 'undefined') {
-            polyline.setColor(property.getValue(time, polyline.getColor()));
+            polyline.setDefaultColor(property.getValue(time, polyline.getDefaultColor()));
         }
 
         property = dynamicPolyline.outlineColor;
         if (typeof property !== 'undefined') {
-            polyline.setOutlineColor(property.getValue(time, polyline.getOutlineColor()));
+            polyline.setDefaultOutlineColor(property.getValue(time, polyline.getDefaultOutlineColor()));
         }
 
         property = dynamicPolyline.width;
