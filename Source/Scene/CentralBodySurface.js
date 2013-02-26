@@ -1049,8 +1049,8 @@ define([
                     }
 
                     var ellipsoid = surface._terrainProvider.getTilingScheme().getEllipsoid();
-                    var west = ellipsoid.cartographicToCartesian(new Cartographic(tile.extent.west, latitudeClosestToEquator));
-                    var nextToWest = ellipsoid.cartographicToCartesian(new Cartographic(tile.extent.west + (tile.extent.east - tile.extent.west) / 255, latitudeClosestToEquator));
+                    var west = ellipsoid.cartographicToCartesian(new Cartographic(tile.extent.west, latitudeClosestToEquator, tile.minimumHeight / 127.0));
+                    var nextToWest = ellipsoid.cartographicToCartesian(new Cartographic(tile.extent.west + (tile.extent.east - tile.extent.west) / 255.0, latitudeClosestToEquator, tile.maximumHeight / 127.0));
                     var texelSpacing = nextToWest.subtract(west).magnitude();
 
                     uniformMap.distanceToScreenSpaceError = (texelSpacing * height) / (2 * Math.tan(0.5 * fovy));
