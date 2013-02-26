@@ -229,6 +229,9 @@ define([
         this._showingPrettyOcean = false;
         this._hasWaterMask = false;
 
+        this.showLodFactor = false;
+        this._showLodFactor = undefined;
+
         var that = this;
 
         this._drawUniforms = {
@@ -626,6 +629,7 @@ define([
         var projectionChanged = this._projection !== projection;
         var hasWaterMask = this._surface._terrainProvider.hasWaterMask();
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
+        var hasShowLodFactorChanged = this.showLodFactor !== this._showLodFactor;
 
         if (typeof this._surfaceShaderSet === 'undefined' ||
             typeof this._northPoleCommand.shaderProgram === 'undefined' ||
@@ -633,6 +637,7 @@ define([
             modeChanged ||
             projectionChanged ||
             hasWaterMaskChanged ||
+            hasShowLodFactorChanged ||
             (typeof this._oceanNormalMap !== 'undefined') !== this._showingPrettyOcean) {
 
             var getPosition3DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition3DMode(position3DWC); }';
@@ -678,6 +683,7 @@ define([
             this._surfaceShaderSet.baseFragmentShaderString =
                 (hasWaterMask ? '#define SHOW_REFLECTIVE_OCEAN\n' : '') +
                 (showPrettyOcean ? '#define SHOW_OCEAN_WAVES\n' : '') +
+                (this.showLodFactor ? '#define SHOW_LOD_FACTOR\n' : '') +
                 '#line 0\n' +
                 CentralBodyFS;
             this._surfaceShaderSet.invalidateShaders();
@@ -690,6 +696,7 @@ define([
 
             this._showingPrettyOcean = typeof this._oceanNormalMap !== 'undefined';
             this._hasWaterMask = hasWaterMask;
+            this._showLodFactor = this.showLodFactor;
         }
 
         var cameraPosition = frameState.camera.getPositionWC();

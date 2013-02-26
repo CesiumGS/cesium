@@ -133,6 +133,13 @@ require([
                 }
             }
         }).placeAt('zoomButtons');
+
+        new Button({
+            label : 'Show LOD Factor',
+            onClick : function() {
+                centralBody.showLodFactor = !centralBody.showLodFactor;
+            }
+        }).placeAt('zoomButtons');
     }
 
     var widget = new CesiumViewerWidget();
