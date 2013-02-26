@@ -4,7 +4,7 @@
 }
 
 .cesium-loadingIndicator {
-    background-image: url(./Images/ajax-loader.gif);
+    background-image: url(../Images/ajax-loader.gif);
     background-position: center;
     background-repeat: no-repeat;
     display: none;
@@ -18,7 +18,7 @@
 }
 
 .cesium-logo {
-    background-image: url(./Images/Cesium_Logo_overlay.png);
+    background-image: url(../Images/Cesium_Logo_overlay.png);
     display: block;
     position: absolute;
     bottom: 4px;
