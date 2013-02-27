@@ -55,6 +55,7 @@ define([
         '../../Scene/SceneMode',
         '../../Scene/SkyBox',
         '../../Scene/SkyAtmosphere',
+        '../../Scene/WebMercatorTilingScheme',
         '../../DynamicScene/processCzml',
         '../../DynamicScene/DynamicObjectView',
         '../../DynamicScene/DynamicObjectCollection',
@@ -117,6 +118,7 @@ define([
         SceneMode,
         SkyBox,
         SkyAtmosphere,
+        WebMercatorTilingScheme,
         processCzml,
         DynamicObjectView,
         DynamicObjectCollection,
@@ -1112,7 +1114,15 @@ define([
                     if (imageLayers.getLength() > 1) {
                         imageLayers.remove(imageLayers.get(0));
                     }
-                    imageLayers.addImageryProvider(new TileCoordinatesImageryProvider());
+//                    imageLayers.addImageryProvider(new TileCoordinatesImageryProvider({
+//                        tilingScheme : new WebMercatorTilingScheme({
+//                            numberOfLevelZeroTilesX : 2,
+//                            numberOfLevelZeroTilesY : 2
+//                        })
+//                    }));
+//                    imageLayers.addImageryProvider(new TileCoordinatesImageryProvider({
+//                        color : 'rgb(255,0,0)'
+//                    }));
                     imageLayers.lowerToBottom(newLayer);
                 }
             } else {

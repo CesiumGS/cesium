@@ -1048,12 +1048,16 @@ define([
                         latitudeClosestToEquator = tile.extent.north;
                     }
 
+                    var latitudeFactor = Math.cos(latitudeClosestToEquator);
+
                     var ellipsoid = surface._terrainProvider.getTilingScheme().getEllipsoid();
                     var west = ellipsoid.cartographicToCartesian(new Cartographic(tile.extent.west, latitudeClosestToEquator, tile.minimumHeight / 127.0));
                     var nextToWest = ellipsoid.cartographicToCartesian(new Cartographic(tile.extent.west + (tile.extent.east - tile.extent.west) / 255.0, latitudeClosestToEquator, tile.maximumHeight / 127.0));
                     var texelSpacing = nextToWest.subtract(west).magnitude();
 
-                    uniformMap.distanceToScreenSpaceError = (texelSpacing * height) / (2 * Math.tan(0.5 * fovy));
+                    var maxGeometricError = latitudeFactor * surface._terrainProvider.getLevelMaximumGeometricError(tile.level);
+
+                    uniformMap.distanceToScreenSpaceError = (maxGeometricError * height) / (2 * Math.tan(0.5 * fovy));
                     uniformMap.maxScreenSpaceError = 2.0;
 
                     uniformMap.dayTextureTexCoordsExtent[numberOfDayTextures] = new Cartesian4(0.0, 0.0, 1.0, 1.0);

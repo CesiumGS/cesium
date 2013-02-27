@@ -31,6 +31,7 @@ define([
         description = defaultValue(description, {});
 
         this._tilingScheme = defaultValue(description.tilingScheme, new GeographicTilingScheme());
+        this._color = defaultValue(description.color, 'yellow');
         this._errorEvent = new Event();
     };
 
@@ -175,7 +176,7 @@ define([
 //        context.fillStyle = 'rgb(200,0,0)';
 //        context.fillRect(1, 1, 254, 254);
 
-        context.strokeStyle = 'rgb(255, 255, 0)';
+        context.strokeStyle = this._color;
         context.lineWidth = 2;
         context.strokeRect(1, 1, 255, 255);
 
@@ -184,7 +185,7 @@ define([
         context.textAlign = 'center';
         context.fillStyle = 'black';
         context.fillText(label, 127, 127);
-        context.fillStyle = 'yellow';
+        context.fillStyle = this._color;
         context.fillText(label, 124, 124);
 
         return canvas;

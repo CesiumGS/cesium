@@ -111,7 +111,10 @@ void main()
 {
     float distanceToFragment = length(v_positionEC);
     float screenSpaceError = u_distanceToScreenSpaceError / distanceToFragment;
-    float textureLevelOfDetailFactor = clamp((u_maxScreenSpaceError - screenSpaceError) / screenSpaceError, 0.0, 1.0);
+    float parentSSE = screenSpaceError * 2.0;
+    //float textureLevelOfDetailFactor = clamp((u_maxScreenSpaceError - screenSpaceError) / screenSpaceError, 0.0, 1.0);
+    float middle = (parentSSE + screenSpaceError) / 2.0;
+    float textureLevelOfDetailFactor = clamp((u_maxScreenSpaceError - middle) / (parentSSE - middle), 0.0, 1.0);
 
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
@@ -132,6 +135,18 @@ void main()
 
 #ifdef SHOW_LOD_FACTOR
     color = vec4(textureLevelOfDetailFactor, textureLevelOfDetailFactor, textureLevelOfDetailFactor, 1.0);
+    if (textureLevelOfDetailFactor < 0.0)
+    {
+        color.r = -textureLevelOfDetailFactor + 0.25;
+        color.g = 0.0;
+        color.b = 1.0 - color.r;
+    }
+    else if (textureLevelOfDetailFactor > 1.0)
+    {
+        color.r = 0.0;
+        color.g = textureLevelOfDetailFactor - 1.0;
+        color.b = 1.0 - color.g;
+    }
 #endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
