@@ -1,13 +1,15 @@
 /*global define*/
-define(['../../Core/defaultValue',
-        '../../Core/Fullscreen'
+define(['./FullscreenViewModel',
+        '../../Core/DeveloperError',
+        '../../ThirdParty/knockout'
         ], function(
-            defaultValue,
-            Fullscreen) {
+         FullscreenViewModel,
+         DeveloperError,
+         knockout) {
     "use strict";
 
     /**
-     * A single button widget for entering and existing fullscreen mode.
+     * A single button widget for toggling fullscreen mode.
      *
      * @alias FullscreenWidget
      * @constructor
@@ -18,51 +20,31 @@ define(['../../Core/defaultValue',
      *
      * @see Fullscreen
      */
-    var FullscreenWidget = function(container) {
-        var widgetNode;
-
-        if (Fullscreen.isFullscreenEnabled()) {
-            widgetNode = document.createElement('div');
-            widgetNode.className = 'fullscreen';
-            container.appendChild(widgetNode);
-
-            if (Fullscreen.isFullscreen()) {
-                widgetNode.classList.toggle('fullscreen-exit');
-            }
-
-            document.addEventListener(Fullscreen.getFullscreenChangeEventName(), function() {
-                widgetNode.classList.toggle('fullscreen-exit');
-            });
-
-            var that = this;
-            widgetNode.addEventListener('click', function() {
-                if (Fullscreen.isFullscreen()) {
-                    Fullscreen.exitFullscreen();
-                } else {
-                    Fullscreen.requestFullscreen(that.fullscreenElement);
-                }
-            });
+    var FullscreenWidget = function(container, viewModel) {
+        if (typeof container === 'undefined') {
+            throw new DeveloperError('container is required');
         }
 
         /**
-         * Gets or sets HTML element to place into fullscreen mode when the
-         * corresponding button is pressed.  By default, the entire page will
-         * enter fullscreen. By specifying another container, only that
-         * container will be in fullscreen.
+         * Gets the viewModel being used by the widget.
          *
-         * @type {Element}
+         * @type {FullscreenViewModel}
          * @memberof FullscreenWidget
-         * @default document.body
          */
-        this.fullscreenElement = document.body;
+        this.viewModel = typeof viewModel === 'undefined' ? new FullscreenViewModel() : viewModel;
 
         /**
-         * Gets the div created by this widget to represent the fullscreen button.
+         * Gets the actual button created by this widget.
          *
          * @type {Element}
          * @memberof FullscreenWidget
          */
-        this.widgetNode = widgetNode;
+        this.button = document.createElement('button');
+        this.button.className = 'fullscreen';
+        this.button.setAttribute("data-bind", 'attr: { title: tooltip }, css: { "fullscreen-exit": toggled }, click: command, enable: isFullscreenEnabled');
+        container.appendChild(this.button);
+
+        knockout.applyBindings(this.viewModel);
     };
 
     return FullscreenWidget;
