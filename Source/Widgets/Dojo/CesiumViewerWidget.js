@@ -756,7 +756,7 @@ define([
             }
 
             this.fullscreen = new FullscreenWidget(this.fullscreenContainer);
-            this.fullscreen.fullscreenElement = this.cesiumNode;
+            this.fullscreen.viewModel.fullscreenElement(this.cesiumNode);
 
             var animationViewModel = this.animationViewModel;
             if (typeof animationViewModel === 'undefined') {

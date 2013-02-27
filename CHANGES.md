@@ -8,7 +8,7 @@ Beta Releases
 * Breaking changes:
    * `IntersectionTests.rayPlane` now takes the new `Plane` type instead of separate `planeNormal` and `planeD` arguments.
    * Renamed `ImageryProviderError` to `TileProviderError`.
-   * Removed `CesiumViewerWidget.fullScreenElement`, instead use the `CesiumViewerWidget.fullscreen.fullScreenElement` property.
+   * Removed `CesiumViewerWidget.fullScreenElement`, instead use the `CesiumViewerWidget.fullscreen.viewModel.fullScreenElement` observable property.
    * Major refactoring of both animation and widgets systems as we move to an MVVM-like architecture for user interfaces.
       * New `Animation` widget for controlling playback.
       * AnimationController.js has been deleted.
