@@ -59,7 +59,8 @@ define([
         '../../DynamicScene/DynamicObjectView',
         '../../DynamicScene/DynamicObjectCollection',
         '../../DynamicScene/VisualizerCollection',
-        'dojo/text!./CesiumViewerWidget.html'
+        'dojo/text!./CesiumViewerWidget.html',
+        '../../Scene/TileCoordinatesImageryProvider'
     ], function (
         require,
         declare,
@@ -120,7 +121,8 @@ define([
         DynamicObjectView,
         DynamicObjectCollection,
         VisualizerCollection,
-        template) {
+        template,
+        TileCoordinatesImageryProvider) {
     "use strict";
 
     /**
@@ -1110,6 +1112,7 @@ define([
                     if (imageLayers.getLength() > 1) {
                         imageLayers.remove(imageLayers.get(0));
                     }
+                    imageLayers.addImageryProvider(new TileCoordinatesImageryProvider());
                     imageLayers.lowerToBottom(newLayer);
                 }
             } else {

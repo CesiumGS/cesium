@@ -317,7 +317,9 @@ define([
         this.inheritedTextureTranslationAndScale.length = 0;
 
         for (i = 0, len = this.textures.length; i < len; ++i) {
-            this.textures[i].destroy();
+            if (typeof this.textures[i] !== 'undefined') {
+                this.textures[i].destroy();
+            }
         }
 
         this.textures.length = 0;
