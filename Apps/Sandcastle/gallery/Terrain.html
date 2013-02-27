@@ -137,8 +137,8 @@ require([
 
     var widget = new CesiumViewerWidget();
     widget.placeAt('cesiumContainer');
-    widget.fullscreenElement = document.body;
     widget.startup();
+    widget.fullscreen.fullscreenElement = document.body;
 
     var scene = widget.scene;
     var centralBody = scene.getPrimitives().getCentralBody();
