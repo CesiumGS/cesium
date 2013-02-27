@@ -790,8 +790,13 @@ define([
             viewColumbus.set('checked', false);
 
             if (Fullscreen.isFullscreenEnabled()) {
+                if (Fullscreen.isFullscreen()) {
+                    viewFullscreen.iconNode.classList.toggle('cw-exitFullscreen');
+                }
+
                 on(document, Fullscreen.getFullscreenChangeEventName(), function() {
                     widget.resize();
+                    viewFullscreen.iconNode.classList.toggle('cw-exitFullscreen');
                 });
 
                 on(viewFullscreen, 'Click', function() {

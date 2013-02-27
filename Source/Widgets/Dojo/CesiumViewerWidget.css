@@ -30,7 +30,7 @@
     position: absolute;
     bottom: 0;
     left: 169px;
-    right: 2px;
+    right: 29px;
     height: 27px;
     padding: 0;
     margin: 0;
@@ -44,7 +44,7 @@
     left: 0;
     padding: 0;
     width: 169px;
-    height: 112px;    
+    height: 112px;
 }
 
 .cw-cesiumLogo {
@@ -82,7 +82,24 @@
 }
 
 .cw-viewFullscreen {
-    background-position: -120px 0;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    border: solid 1px #E5F2FE;
+    background-color: #FFF;
+    background-image: url(../Images/enterFullscreen.svg);
+    background-size: 27px 27px;
+    width: 27px;
+    height: 27px;
+}
+
+.cw-exitFullscreen {
+    background-image: url(../Images/exitFullscreen.svg);
+}
+
+.cesium-darker .cw-viewFullscreen {
+    border: solid 1px #888;
+    background-color: #222;
 }
 
 .cw-viewButtons {
