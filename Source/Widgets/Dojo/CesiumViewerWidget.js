@@ -296,6 +296,8 @@ define([
                 frustum.top = frustum.right * (height / width);
                 frustum.bottom = -frustum.top;
             }
+
+            this.setLogoOffset(this.cesiumLogo.offsetWidth + this.cesiumLogo.offsetLeft + 10, 28);
         },
 
         /**
@@ -655,8 +657,6 @@ define([
             }
             this._started = true;
 
-            this.resize();
-
             on(canvas, 'contextmenu', event.stop);
             on(canvas, 'selectstart', event.stop);
 
@@ -681,8 +681,6 @@ define([
             this.skyBoxBaseUrl = defaultValue(this.skyBoxBaseUrl, imageryUrl + 'SkyBox/tycho2t3_80');
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
-
-            centralBody.logoOffset = new Cartesian2(308, 28);
 
             this._configureCentralBodyImagery();
 
@@ -864,6 +862,8 @@ define([
             }
 
             this._camera3D = this.scene.getCamera().clone();
+
+            this.resize();
 
             if (this.autoStartRenderLoop) {
                 this.startRenderLoop();
