@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        '../Core/Color'
+        '../../Core/Color'
        ],
         function(
          Color) {
