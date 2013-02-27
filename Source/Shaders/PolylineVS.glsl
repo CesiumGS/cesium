@@ -14,9 +14,6 @@ varying vec4 v_outlineColor;
 varying vec2 v_textureCoordinates;
 varying float v_width;
 varying vec3 v_positionEC;
-varying vec2 v_positionWC;
-varying vec2 v_endPointWC;
-varying vec2 v_nextWC;
 #else
 varying vec4 v_pickColor;
 #endif
@@ -77,7 +74,7 @@ void main()
     
     vec2 nextWC = normalize(p0.xy - endPointWC.xy);
     vec2 prevWC = normalize(p1.xy - endPointWC.xy);
-    vec2 normal = normalize(vec2(nextWC.y, - nextWC.x));
+    vec2 normal = normalize(vec2(nextWC.y, -nextWC.x));
     
     vec2 direction = normalize((nextWC + prevWC) * 0.5);
     if (dot(direction, normal) < 0.0)
@@ -101,9 +98,6 @@ void main()
     v_textureCoordinates = vec2(texCoord, clamp(expandDir, 0.0, 1.0));
     v_width = width * 2.0;
     v_positionEC = positionEC.xyz;
-    v_positionWC = positionWC.xy;
-    v_endPointWC = endPointWC.xy;
-    v_nextWC = nextWC;
 #else
     v_pickColor = color;
 #endif

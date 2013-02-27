@@ -8,12 +8,14 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 {
     czm_material material = czm_getDefaultMaterial(materialInput);
     
-    float halfInteriorWidth = (v_width - outlineWidth * 2.0) / (v_width * 2.0);
+    float halfInteriorWidth = 0.5 - outlineWidth / v_width;
     float s = step(0.5 - halfInteriorWidth, materialInput.st.t);
     s *= 1.0 - step(0.5 + halfInteriorWidth, materialInput.st.t);
     
-    material.diffuse = mix(v_outlineColor.rgb, v_color.rgb, s);
-    material.alpha = mix(v_outlineColor.a, v_color.a, s);
+    vec4 color = mix(v_outlineColor, v_color, s);
+    
+    material.diffuse = color.rgb;
+    material.alpha = color.a;
     
     return material;
 }
