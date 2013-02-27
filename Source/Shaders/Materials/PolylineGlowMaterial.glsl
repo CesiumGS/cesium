@@ -13,13 +13,18 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     ray.origin = vec3(v_endPointWC, 0.0);
     ray.direction = vec3(normalize(v_nextWC), 0.0);
     
-    float d = czm_pointLineDistance(ray, vec3(v_positionWC, 0.0));
-    d /= v_width * 2.0;
-    d = 1.0 - 6.0 * d;
+    float interiorWidth = 0.5;
     
-    material.diffuse = v_color.rgb;
-    material.emission = v_color.rgb * d;
-    material.alpha = d;
+    float d = czm_pointLineDistance(ray, vec3(v_positionWC, 0.0));
+    float alpha = 1.0 - 12.0 * d / (v_width * 12.0);
+    vec4 color = vec4(v_color.rgb * alpha, alpha);
+    
+    //d = 1.0 - step(interiorWidth, d);
+    //vec4 currentColor = d * v_color;
+    //material.diffuse = currentColor.rgb;
+    
+    material.emission = color.rgb;
+    material.alpha = alpha;
     
     return material;
 }

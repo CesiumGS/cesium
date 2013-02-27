@@ -62,8 +62,9 @@ require([
             blue  : 0.0,
             alpha : 0.75
         });
-        coloredPolyline.setWidth(10);
-        coloredPolyline.setMaterial(Cesium.Material.fromType(undefined, Cesium.Material.PolylineGlowType));
+        coloredPolyline.setWidth(10.0);
+        var material = Cesium.Material.fromType(undefined, Cesium.Material.PolylineGlowType);
+        coloredPolyline.setMaterial(material);
         
         
         // set a polyline's color per position
