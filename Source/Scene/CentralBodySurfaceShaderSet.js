@@ -70,15 +70,15 @@ define([
                 fs +=
                     'color = sampleAndBlend(\n' +
                     '   color,\n' +
-                    '   u_dayTextures[' + i + '],\n' +
+                    '   u_layerTexture[' + i + '],\n' +
                     '   textureCoordinates,\n' +
-                    '   u_dayTextureTranslationAndScale[' + i + '],\n' +
-                    '   u_dayTextureAlpha[' + i + '],\n' +
-                    '   u_dayTextureBrightness[' + i + '],\n' +
-                    '   u_dayTextureContrast[' + i + '],\n' +
-                    '   u_dayTextureHue[' + i + '],\n' +
-                    '   u_dayTextureSaturation[' + i + '],\n' +
-                    '   u_dayTextureOneOverGamma[' + i + ']);\n';
+                    '   u_layerTranslationAndScale[' + i + '],\n' +
+                    '   u_layerAlpha[' + i + '],\n' +
+                    '   u_layerBrightness[' + i + '],\n' +
+                    '   u_layerContrast[' + i + '],\n' +
+                    '   u_layerHue[' + i + '],\n' +
+                    '   u_layerSaturation[' + i + '],\n' +
+                    '   u_layerOneOverGamma[' + i + ']);\n';
             }
 
             fs +=

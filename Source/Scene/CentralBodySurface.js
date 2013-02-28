@@ -799,41 +799,32 @@ define([
             u_modifiedModelView : function() {
                 return this.modifiedModelView;
             },
-            u_dayTextures : function() {
-                return this.dayTextures;
+            u_layerTexture : function() {
+                return this.layerTexture;
             },
-            u_parentTextures : function() {
-                return this.parentTextures;
+            u_layerTranslationAndScale : function() {
+                return this.layerTranslationAndScale;
             },
-            u_textureBlendFactor : function() {
-                return this.textureBlendFactor;
+            u_layerAlpha : function() {
+                return this.layerAlpha;
             },
-            u_dayTextureTranslationAndScale : function() {
-                return this.dayTextureTranslationAndScale;
+            u_layerBrightness : function() {
+                return this.layerBrightness;
             },
-            u_dayTextureTexCoordsExtent : function() {
-                return this.dayTextureTexCoordsExtent;
+            u_layerContrast : function() {
+                return this.layerContrast;
             },
-            u_dayTextureAlpha : function() {
-                return this.dayTextureAlpha;
+            u_layerHue : function() {
+                return this.layerHue;
             },
-            u_dayTextureBrightness : function() {
-                return this.dayTextureBrightness;
+            u_layerSaturation : function() {
+                return this.layerSaturation;
             },
-            u_dayTextureContrast : function() {
-                return this.dayTextureContrast;
+            u_layerOneOverGamma : function() {
+                return this.layerOneOverGamma;
             },
-            u_dayTextureHue : function() {
-                return this.dayTextureHue;
-            },
-            u_dayTextureSaturation : function() {
-                return this.dayTextureSaturation;
-            },
-            u_dayTextureOneOverGamma : function() {
-                return this.dayTextureOneOverGamma;
-            },
-            u_dayIntensity : function() {
-                return this.dayIntensity;
+            u_layerIntensity : function() {
+                return this.layerIntensity;
             },
             u_southAndNorthLatitude : function() {
                 return this.southAndNorthLatitude;
@@ -847,39 +838,26 @@ define([
             u_waterMaskTranslationAndScale : function() {
                 return this.waterMaskTranslationAndScale;
             },
-            u_distanceToScreenSpaceError : function() {
-                return this.distanceToScreenSpaceError;
-            },
-            u_maxScreenSpaceError : function() {
-                return this.maxScreenSpaceError;
-            },
-
 
             center3D : undefined,
             modifiedModelView : new Matrix4(),
             tileExtent : new Cartesian4(),
 
-            dayTextures : [],
-            parentTextures : [],
-            textureBlendFactor : [],
-            dayTextureTranslationAndScale : [],
-            dayTextureTexCoordsExtent : [],
-            dayTextureAlpha : [],
-            dayTextureBrightness : [],
-            dayTextureContrast : [],
-            dayTextureHue : [],
-            dayTextureSaturation : [],
-            dayTextureOneOverGamma : [],
-            dayIntensity : 0.0,
+            layerTexture : [],
+            layerTranslationAndScale : [],
+            layerAlpha : [],
+            layerBrightness : [],
+            layerContrast : [],
+            layerHue : [],
+            layerSaturation : [],
+            layerOneOverGamma : [],
+            layerIntensity : 0.0,
 
             southAndNorthLatitude : new Cartesian2(),
             southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(),
 
             waterMask : undefined,
-            waterMaskTranslationAndScale : new Cartesian4(),
-
-            distanceToScreenSpaceError : 0.0,
-            maxScreenSpaceError : 0.0
+            waterMaskTranslationAndScale : new Cartesian4()
         };
     }
 
@@ -1021,59 +999,58 @@ define([
                         textureTranslationAndScale = tile.inheritedTextureTranslationAndScale[textureIndex];
                     }
 
-                    uniformMap.dayTextures[numberOfDayTextures] = texture;
-                    uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = textureTranslationAndScale;
+                    uniformMap.layerTexture[numberOfDayTextures] = texture;
+                    uniformMap.layerTranslationAndScale[numberOfDayTextures] = textureTranslationAndScale;
 
                     var imageryLayer = imageryLayerCollection.get(textureIndex);
 
                     var imagery = tile; // TODO: hack hack
                     if (typeof imageryLayer.alpha === 'function') {
-                        uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        uniformMap.layerAlpha[numberOfDayTextures] = imageryLayer.alpha(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
                     } else {
-                        uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
+                        uniformMap.layerAlpha[numberOfDayTextures] = imageryLayer.alpha;
                     }
 
                     if (typeof imageryLayer.brightness === 'function') {
-                        uniformMap.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        uniformMap.layerBrightness[numberOfDayTextures] = imageryLayer.brightness(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
                     } else {
-                        uniformMap.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness;
+                        uniformMap.layerBrightness[numberOfDayTextures] = imageryLayer.brightness;
                     }
-                    applyBrightness = uniformMap.dayTextureBrightness[numberOfDayTextures] !== ImageryLayer.DEFAULT_BRIGHTNESS;
+                    applyBrightness = uniformMap.layerBrightness[numberOfDayTextures] !== ImageryLayer.DEFAULT_BRIGHTNESS;
 
                     if (typeof imageryLayer.contrast === 'function') {
-                        uniformMap.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        uniformMap.layerContrast[numberOfDayTextures] = imageryLayer.contrast(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
                     } else {
-                        uniformMap.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast;
+                        uniformMap.layerContrast[numberOfDayTextures] = imageryLayer.contrast;
                     }
-                    applyContrast = uniformMap.dayTextureContrast[numberOfDayTextures] !== ImageryLayer.DEFAULT_CONTRAST;
+                    applyContrast = uniformMap.layerContrast[numberOfDayTextures] !== ImageryLayer.DEFAULT_CONTRAST;
 
                     if (typeof imageryLayer.hue === 'function') {
-                        uniformMap.dayTextureHue[numberOfDayTextures] = imageryLayer.hue(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        uniformMap.layerHue[numberOfDayTextures] = imageryLayer.hue(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
                     } else {
-                        uniformMap.dayTextureHue[numberOfDayTextures] = imageryLayer.hue;
+                        uniformMap.layerHue[numberOfDayTextures] = imageryLayer.hue;
                     }
-                    applyHue = uniformMap.dayTextureHue[numberOfDayTextures] !== ImageryLayer.DEFAULT_HUE;
+                    applyHue = uniformMap.layerHue[numberOfDayTextures] !== ImageryLayer.DEFAULT_HUE;
 
                     if (typeof imageryLayer.saturation === 'function') {
-                        uniformMap.dayTextureSaturation[numberOfDayTextures] = imageryLayer.saturation(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        uniformMap.layerSaturation[numberOfDayTextures] = imageryLayer.saturation(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
                     } else {
-                        uniformMap.dayTextureSaturation[numberOfDayTextures] = imageryLayer.saturation;
+                        uniformMap.layerSaturation[numberOfDayTextures] = imageryLayer.saturation;
                     }
-                    applySaturation = uniformMap.dayTextureSaturation[numberOfDayTextures] !== ImageryLayer.DEFAULT_SATURATION;
+                    applySaturation = uniformMap.layerSaturation[numberOfDayTextures] !== ImageryLayer.DEFAULT_SATURATION;
 
                     if (typeof imageryLayer.gamma === 'function') {
-                        uniformMap.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        uniformMap.layerOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
                     } else {
-                        uniformMap.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma;
+                        uniformMap.layerOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma;
                     }
-                    applyGamma = uniformMap.dayTextureOneOverGamma[numberOfDayTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
+                    applyGamma = uniformMap.layerOneOverGamma[numberOfDayTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
 
                     ++numberOfDayTextures;
                 }
 
                 // trim texture array to the used length so we don't end up using old textures
                 // which might get destroyed eventually
-                uniformMap.dayTextures.length = numberOfDayTextures;
                 uniformMap.waterMask = tile.waterMaskTexture;
                 Cartesian4.clone(tile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 

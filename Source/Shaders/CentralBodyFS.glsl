@@ -3,17 +3,14 @@
 uniform float u_morphTime;
 
 #if TEXTURE_UNITS > 0
-uniform sampler2D u_dayTextures[TEXTURE_UNITS];
-uniform sampler2D u_parentTextures[TEXTURE_UNITS];
-uniform float u_textureBlendFactor[TEXTURE_UNITS];
-uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
-uniform float u_dayTextureAlpha[TEXTURE_UNITS];
-uniform float u_dayTextureBrightness[TEXTURE_UNITS];
-uniform float u_dayTextureContrast[TEXTURE_UNITS];
-uniform float u_dayTextureHue[TEXTURE_UNITS];
-uniform float u_dayTextureSaturation[TEXTURE_UNITS];
-uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
-uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
+uniform sampler2D u_layerTexture[TEXTURE_UNITS];
+uniform vec4 u_layerTranslationAndScale[TEXTURE_UNITS];
+uniform float u_layerAlpha[TEXTURE_UNITS];
+uniform float u_layerBrightness[TEXTURE_UNITS];
+uniform float u_layerContrast[TEXTURE_UNITS];
+uniform float u_layerHue[TEXTURE_UNITS];
+uniform float u_layerSaturation[TEXTURE_UNITS];
+uniform float u_layerOneOverGamma[TEXTURE_UNITS];
 #endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
@@ -97,22 +94,6 @@ void main()
 #endif
 
     vec4 color = vec4(startDayColor, 1.0);
-
-#ifdef SHOW_LOD_FACTOR
-    color = vec4(textureLevelOfDetailFactor, textureLevelOfDetailFactor, textureLevelOfDetailFactor, 1.0);
-    if (textureLevelOfDetailFactor < 0.0)
-    {
-        color.r = -textureLevelOfDetailFactor + 0.25;
-        color.g = 0.0;
-        color.b = 1.0 - color.r;
-    }
-    else if (textureLevelOfDetailFactor > 1.0)
-    {
-        color.r = 0.0;
-        color.g = textureLevelOfDetailFactor - 1.0;
-        color.b = 1.0 - color.g;
-    }
-#endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
     vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
