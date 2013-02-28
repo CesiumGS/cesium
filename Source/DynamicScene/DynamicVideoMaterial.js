@@ -183,6 +183,7 @@ define([
      * @param {Material} [existingMaterial] An existing material to be modified.  If the material is undefined or not an Image Material, a new instance is created.
      * @returns The modified existingMaterial parameter or a new Image Material instance if existingMaterial was undefined or not a Image Material.
      */
+    var seekFunction;
     DynamicVideoMaterial.prototype.getValue = function(time, context, existingMaterial) {
         if (typeof existingMaterial === 'undefined' || (existingMaterial.type !== Material.ImageType)) {
             existingMaterial = Material.fromType(context, Material.ImageType);
@@ -234,6 +235,7 @@ define([
             if (typeof url !== 'undefined' && existingMaterial.currentUrl !== url) {
                 existingMaterial.currentUrl = url;
                 if (typeof existingMaterial.video !== 'undefined') {
+                    existingMaterial.video.removeEventListener("seeked", seekFunction, false);
                     document.body.removeChild(existingMaterial.video);
                 }
                 video = existingMaterial.video = document.createElement('video');
@@ -242,7 +244,7 @@ define([
                 video.preload = 'auto';
                 video.addEventListener("loadeddata", function() {
                     //console.log("load event fired");
-                    var seekFunction = createSeekFunction(context, video, existingMaterial);
+                    seekFunction = createSeekFunction(context, video, existingMaterial);
                     video.addEventListener("seeked", seekFunction, false);
                     seekFunction();
                 }, false);
