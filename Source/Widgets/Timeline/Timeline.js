@@ -75,6 +75,7 @@ define([
         } else {
             this._topElement = id;
         }
+
         this._clock = clock;
         this._scrubJulian = clock.currentTime;
         this._mainTicSpan = -1;
@@ -138,6 +139,9 @@ define([
         this.addEventListener = function(type, listener, useCapture) {
             widget._topElement.addEventListener(type, listener, useCapture);
         };
+
+        clock.onTick.addEventListener(this.updateFromClock, this);
+        this.updateFromClock();
     }
 
     Timeline.prototype.addHighlightRange = function(color, heightInPx) {
