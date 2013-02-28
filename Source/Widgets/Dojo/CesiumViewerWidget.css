@@ -49,7 +49,7 @@
     height: 112px;
 }
 
-.cw-fullscreenContainer  {
+.cw-fullscreenContainer {
     position: absolute;
     bottom: 0;
     right: 0;
@@ -123,6 +123,7 @@
     background-position: center;
     background-repeat: no-repeat;
     background-image: url(../Images/ajax-loader.gif);
+}
 
 @media only screen and (min-width: 600px) and (max-width: 900px) {
     .cw-animationContainer {
