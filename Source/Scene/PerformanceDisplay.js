@@ -150,7 +150,11 @@ define([
         var viewportHeight = context.getCanvas().clientHeight;
         if (viewportHeight !== this._viewportHeight) {
             this._viewportHeight = viewportHeight;
-            this._quad.rectangle = new BoundingRectangle(this._rectangle.x, viewportHeight - canvasHeight - this._rectangle.y, canvasWidth, canvasHeight);
+            var rect = this._quad.rectangle;
+            rect.x = this._rectangle.x;
+            rect.y = viewportHeight - canvasHeight - this._rectangle.y;
+            rect.width = canvasWidth;
+            rect.height = canvasHeight;
         }
 
         this._quad.update(context, frameState, commandList);

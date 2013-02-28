@@ -67,7 +67,7 @@ define([
         this.show = true;
 
         if (typeof rectangle === 'undefined') {
-            rectangle = new BoundingRectangle(0, 0, 10, 10);
+            rectangle = new BoundingRectangle();
         }
 
         /**
@@ -78,7 +78,7 @@ define([
          * @example
          * viewportQuad.rectangle = new BoundingRectangle(0, 0, 80, 40);
          */
-        this.rectangle = rectangle;
+        this.rectangle = BoundingRectangle.clone(rectangle);
 
         if (typeof material === 'undefined') {
             material = Material.fromType(undefined, Material.ColorType);
