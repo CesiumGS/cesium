@@ -41,14 +41,14 @@ define([
      * @alias ViewportQuad
      * @constructor
      *
-     * @param {BoundingRectangle} rectangle The BoundingRectangle defining the quad's position within the viewport.
+     * @param {Material} [material] The {@link Material} defining the surface appearance of the viewport quad.
      *
      * @example
      * var viewportQuad = new ViewportQuad();
      * var viewportQuad = new BoundingRectangle(0, 0, 80, 40);
      * viewportQuad.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
      */
-    var ViewportQuad = function(rectangle) {
+    var ViewportQuad = function(material) {
 
         this._va = undefined;
         this._overlayCommand = new DrawCommand();
@@ -76,6 +76,10 @@ define([
          */
         this.rectangle = new BoundingRectangle(0, 0, 10, 10);
 
+        if (typeof material === 'undefined') {
+            material = Material.fromType(undefined, Material.ColorType);
+            material.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
+        }
 
         /**
          * The surface appearance of the viewport quad.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
@@ -95,8 +99,7 @@ define([
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = Material.fromType(undefined, Material.ColorType);
-        this.material.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
+        this.material = material;
         this._material = undefined;
     };
 

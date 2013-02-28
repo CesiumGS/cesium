@@ -134,9 +134,7 @@ define([
         }
 
         if (typeof this._quad === 'undefined') {
-            this._quad = new ViewportQuad();
-            this._quad.material = Material.fromType(context, Material.ImageType);
-            this._quad.material.uniforms.image = undefined;
+            this._quad = new ViewportQuad(Material.fromType(context, Material.ImageType));
         }
 
         if (typeof this._texture === 'undefined') {
