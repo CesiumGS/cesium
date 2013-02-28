@@ -8,6 +8,7 @@ Beta Releases
 * Breaking changes:
    * `IntersectionTests.rayPlane` now takes the new `Plane` type instead of separate `planeNormal` and `planeD` arguments.
    * Renamed `ImageryProviderError` to `TileProviderError`.
+   * Removed `CesiumViewerWidget.fullScreenElement`, instead use the `CesiumViewerWidget.fullscreen.viewModel.fullScreenElement` observable property.
    * Major refactoring of both animation and widgets systems as we move to an MVVM-like architecture for user interfaces.
       * New `Animation` widget for controlling playback.
       * AnimationController.js has been deleted.
@@ -27,6 +28,7 @@ Beta Releases
 * Added `HeightmapTessellator` to create a mesh from a heightmap.
 * Added `JulianDate.equals`
 * Improved the lighting used in 2D and Columbus View modes.  In general, the surface lighting in these modes should look just like it does in 3D.
+* Added `FullscreenWidget` which is a simple, single-button widget that toggles fullscreen mode of the specified element.
 
 ### b13 - 2013-02-01
 

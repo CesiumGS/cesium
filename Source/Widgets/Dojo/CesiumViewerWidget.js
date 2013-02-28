@@ -17,6 +17,7 @@ define([
         '../Timeline/Timeline',
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
+        '../Fullscreen/FullscreenWidget',
         '../ClockViewModel',
         '../../Core/defaultValue',
         '../../Core/loadJson',
@@ -28,7 +29,6 @@ define([
         '../../Core/Extent',
         '../../Core/Ellipsoid',
         '../../Core/Iso8601',
-        '../../Core/Fullscreen',
         '../../Core/computeSunPosition',
         '../../Core/ScreenSpaceEventHandler',
         '../../Core/FeatureDetection',
@@ -78,6 +78,7 @@ define([
         Timeline,
         Animation,
         AnimationViewModel,
+        FullscreenWidget,
         ClockViewModel,
         defaultValue,
         loadJson,
@@ -89,7 +90,6 @@ define([
         Extent,
         Ellipsoid,
         Iso8601,
-        Fullscreen,
         computeSunPosition,
         ScreenSpaceEventHandler,
         FeatureDetection,
@@ -240,18 +240,31 @@ define([
          * @see CesiumViewerWidget#resize
          */
         resizeWidgetOnWindowResize: true,
+
         /**
-         * The HTML element to place into fullscreen mode when the corresponding
-         * button is pressed.  If undefined, only the widget itself will
-         * go into fullscreen mode.  By specifying another container, such
-         * as document.body, this property allows an application to retain
-         * any overlaid or surrounding elements when in fullscreen.
+         * The fullscreen widget, configured to put only the viewer widget
+         * into fullscreen mode by default.
          *
-         * @type {Object}
+         * @type {FullscreenWidget}
          * @memberof CesiumViewerWidget.prototype
-         * @default undefined
          */
-        fullscreenElement : undefined,
+        fullscreen: undefined,
+
+        /**
+         * The animation widget.
+         *
+         * @type {Animation}
+         * @memberof CesiumViewerWidget.prototype
+         */
+        animation: undefined,
+
+        /**
+         * The timeline widget.
+         *
+         * @type {Timeline}
+         * @memberof CesiumViewerWidget.prototype
+         */
+        timeline: undefined,
 
         // for Dojo use only
         constructor : function() {
@@ -740,6 +753,8 @@ define([
                 on(dropBox, 'dragexit', event.stop);
             }
 
+            this.fullscreen = new FullscreenWidget(this.fullscreenContainer, this.cesiumNode);
+
             var animationViewModel = this.animationViewModel;
             if (typeof animationViewModel === 'undefined') {
                 var clockViewModel = new ClockViewModel();
@@ -781,27 +796,10 @@ define([
             var view2D = widget.view2D;
             var view3D = widget.view3D;
             var viewColumbus = widget.viewColumbus;
-            var viewFullscreen = widget.viewFullscreen;
 
             view2D.set('checked', false);
             view3D.set('checked', true);
             viewColumbus.set('checked', false);
-
-            if (Fullscreen.isFullscreenEnabled()) {
-                on(document, Fullscreen.getFullscreenChangeEventName(), function() {
-                    widget.resize();
-                });
-
-                on(viewFullscreen, 'Click', function() {
-                    if (Fullscreen.isFullscreen()) {
-                        Fullscreen.exitFullscreen();
-                    } else {
-                        Fullscreen.requestFullscreen(defaultValue(widget.fullscreenElement, widget.cesiumNode));
-                    }
-                });
-            } else {
-                domStyle.set(viewFullscreen.domNode, 'display', 'none');
-            }
 
             on(viewHomeButton, 'Click', function() {
                 widget.viewHome();
