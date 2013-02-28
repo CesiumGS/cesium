@@ -44,7 +44,7 @@
     left: 0;
     padding: 0;
     width: 169px;
-    height: 112px;    
+    height: 112px;
 }
 
 .cw-cesiumLogo {
@@ -115,4 +115,30 @@
     background-position: center;
     background-repeat: no-repeat;
     background-image: url(../Images/ajax-loader.gif);
+}
+
+@media only screen and (min-width: 600px) and (max-width: 900px) {
+    .cw-animationContainer {
+        width: 136px;
+        height: 90px;
+    }
+    .cw-timelineContainer {
+        left: 137px;
+    }
+    .cw-cesiumLogo {
+        left: 146px;
+    }
+}
+
+@media only screen and (max-width: 599px) {
+    .cw-animationContainer {
+        width: 106px;
+        height: 70px;
+    }
+    .cw-timelineContainer {
+        left: 107px;
+    }
+    .cw-cesiumLogo {
+        left: 116px;
+    }
 }
