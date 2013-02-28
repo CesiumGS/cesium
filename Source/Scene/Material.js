@@ -34,8 +34,9 @@ define([
         '../Shaders/Materials/WoodMaterial',
         '../Shaders/Materials/RimLightingMaterial',
         '../Shaders/Materials/ErosionMaterial',
-        '../Shaders/Materials/PolylineOutlineMaterial',
-        '../Shaders/Materials/PolylineGlowMaterial'
+        '../Shaders/Materials/PolylineArrowMaterial',
+        '../Shaders/Materials/PolylineGlowMaterial',
+        '../Shaders/Materials/PolylineOutlineMaterial'
     ], function(
         when,
         loadImage,
@@ -71,8 +72,9 @@ define([
         WoodMaterial,
         RimLightingMaterial,
         ErosionMaterial,
-        PolylineOutlineMaterial,
-        PolylineGlowMaterial) {
+        PolylineArrowMaterial,
+        PolylineGlowMaterial,
+        PolylineOutlineMaterial) {
     "use strict";
 
     /**
@@ -1177,6 +1179,18 @@ define([
         source : ErosionMaterial
     });
 
+    Material.PolylineArrowType = 'PolylineArrow';
+    Material._materialCache.addMaterial(Material.PolylineArrowType, {
+        type : Material.PolylineArrowType,
+        source : PolylineArrowMaterial
+    });
+
+    Material.PolylineGlowType = 'PolylineGlow';
+    Material._materialCache.addMaterial(Material.PolylineGlowType, {
+        type : Material.PolylineGlowType,
+        source : PolylineGlowMaterial
+    });
+
     Material.PolylineOutlineType = 'PolylineOutline';
     Material._materialCache.addMaterial(Material.PolylineOutlineType, {
         type : Material.PolylineOutlineType,
@@ -1184,12 +1198,6 @@ define([
             outlineWidth : 0.0
         },
         source : PolylineOutlineMaterial
-    });
-
-    Material.PolylineGlowType = 'PolylineGlow';
-    Material._materialCache.addMaterial(Material.PolylineGlowType, {
-        type : Material.PolylineGlowType,
-        source : PolylineGlowMaterial
     });
 
     return Material;

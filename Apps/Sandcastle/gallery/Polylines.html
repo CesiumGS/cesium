@@ -57,14 +57,14 @@ require([
             Cesium.Cartographic.fromDegrees(-85.0, 40.0)
         ]));
         coloredPolyline.setDefaultColor({
-            red   : 0.0,
+            red   : 1.0,
             green : 1.0,
-            blue  : 1.0,
+            blue  : 0.0,
             alpha : 1.0
         });
         coloredPolyline.setWidth(20.0);
-        var material = Cesium.Material.fromType(undefined, Cesium.Material.PolylineGlowType);
-        coloredPolyline.setMaterial(material);
+        var glowMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineGlowType);
+        coloredPolyline.setMaterial(glowMaterial);
         
         
         // set a polyline's color per position
@@ -100,9 +100,9 @@ require([
         widePolyline.setWidth(10.0);
         
         // Set the polyline's material to have an outline
-        var material = Cesium.Material.fromType(undefined, Cesium.Material.PolylineOutlineType);
-        material.uniforms.outlineWidth = 5.0;
-        widePolyline.setMaterial(material);
+        var outlineMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineOutlineType);
+        outlineMaterial.uniforms.outlineWidth = 5.0;
+        widePolyline.setMaterial(outlineMaterial);
         widePolyline.setDefaultOutlineColor({
             red : 1.0,
             green : 0.0,
@@ -121,11 +121,11 @@ require([
         Sandcastle.declare(localPolyline);  // For highlighting on mouseover in Sandcastle.
         localPolyline.setPositions([
             new Cesium.Cartesian3(0.0, 0.0, 0.0),
-            new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
-            new Cesium.Cartesian3(900000.0, -100000.0, 0.0),
-            new Cesium.Cartesian3(900000.0, 100000.0, 0.0),
             new Cesium.Cartesian3(1000000.0, 0.0, 0.0)
         ]);
+        localPolyline.setWidth(10.0);
+        var arrowMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineArrowType);
+        localPolyline.setMaterial(arrowMaterial);
         primitives.add(localPolylines);
     }
 

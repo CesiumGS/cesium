@@ -1140,7 +1140,7 @@ define([
                     pickColorArray[colorIndex + 2] = pickColor.blue;
                     pickColorArray[colorIndex + 3] = 255;
 
-                    miscArray[miscIndex] = j / positionsLength;     // s tex coord
+                    miscArray[miscIndex] = j / (positionsLength - 1);     // s tex coord
                     miscArray[miscIndex + 1] = 2 * k - 1;           // expand direction
                     miscArray[miscIndex + 2] = width;
                     miscArray[miscIndex + 3] = show;
