@@ -753,8 +753,7 @@ define([
                 on(dropBox, 'dragexit', event.stop);
             }
 
-            this.fullscreen = new FullscreenWidget(this.fullscreenContainer);
-            this.fullscreen.viewModel.fullscreenElement(this.cesiumNode);
+            this.fullscreen = new FullscreenWidget(this.fullscreenContainer, this.cesiumNode);
 
             var animationViewModel = this.animationViewModel;
             if (typeof animationViewModel === 'undefined') {

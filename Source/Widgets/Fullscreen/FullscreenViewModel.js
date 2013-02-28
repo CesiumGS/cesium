@@ -21,13 +21,22 @@ define(['../createCommand',
      */
     var FullscreenViewModel = function(fullscreenElement) {
         var that = this;
-
         var isFullscreen = knockout.observable(Fullscreen.isFullscreen());
-        var isFullscreenEnabled = knockout.observable(Fullscreen.isFullscreenEnabled());
+        var tmp = knockout.observable(Fullscreen.isFullscreenEnabled());
+        var isFullscreenEnabled = knockout.computed({
+            read : function() {
+                return tmp();
+            },
+            write : function(value) {
+                tmp(value && Fullscreen.isFullscreenEnabled());
+            }
+        });
 
         /**
          * Indicates if fullscreen functionality is possible.
          * @type Observable
+         *
+         * @see Fullscreen.isFullscreenEnabled
          */
         this.isFullscreenEnabled = isFullscreenEnabled;
 

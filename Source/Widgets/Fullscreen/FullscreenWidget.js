@@ -15,29 +15,28 @@ define(['./FullscreenViewModel',
      * @constructor
      *
      * @param {Element} container The parent HTML container node for this widget.
+     * @param {Element} [fullscreenElement=document.body] The element to be placed into fullscreen mode.
      *
      * @exception {DeveloperError} container is required.
      *
      * @see Fullscreen
      */
-    var FullscreenWidget = function(container, viewModel) {
+    var FullscreenWidget = function(container, fullscreenElement) {
         if (typeof container === 'undefined') {
             throw new DeveloperError('container is required');
         }
 
         /**
          * Gets the viewModel being used by the widget.
-         *
-         * @type {FullscreenViewModel}
          * @memberof FullscreenWidget
+         * @type {FullscreenViewModel}
          */
-        this.viewModel = typeof viewModel !== 'undefined' ? viewModel : new FullscreenViewModel();
+        this.viewModel = new FullscreenViewModel(fullscreenElement);
 
         /**
          * Gets the actual button created by this widget.
-         *
-         * @type {Element}
          * @memberof FullscreenWidget
+         * @type {Element}
          */
         this.button = document.createElement('button');
         this.button.className = 'fullscreen';
