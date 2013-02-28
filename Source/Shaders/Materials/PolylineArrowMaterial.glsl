@@ -14,8 +14,9 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     float upperSlope = (upperBase.y - tip.y) / (upperBase.x - tip.x);
     float lowerSlope = (lowerBase.y - tip.y) / (lowerBase.x - tip.x);
     
-    float s = step(0.25, st.t);
-    s *= 1.0 - step(0.75, st.t);
+    float halfWidth = 0.15;
+    float s = step(0.5 - halfWidth, st.t);
+    s *= 1.0 - step(0.5 + halfWidth, st.t);
     s *= 1.0 - step(base, st.s);
     
     float t = step(base, materialInput.st.s);
