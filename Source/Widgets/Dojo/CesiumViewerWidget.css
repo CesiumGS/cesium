@@ -117,7 +117,7 @@
     background-image: url(../Images/ajax-loader.gif);
 }
 
-@media only screen and (min-width: 600px) and (max-width: 1200px) {
+@media only screen and (min-width: 600px) and (max-width: 900px) {
     .cw-animationContainer {
         width: 136px;
         height: 90px;
