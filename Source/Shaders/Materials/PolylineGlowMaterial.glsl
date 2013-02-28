@@ -29,7 +29,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     val1 = val1 * val1 * (3.0 - (2.0 * val1));
     val1 = pow(val1, 0.5); //makes the transition nicer
     
-    vec4 currentColor = vec4(v_color.rgb * alpha, alpha);
+    vec4 currentColor = vec4(mix(vec3(0.0), v_color.rgb, 2.0), alpha);
     vec4 midColor = (currentColor + v_color) * 0.5;
     vec4 color = mix(midColor, currentColor, val1);
     
