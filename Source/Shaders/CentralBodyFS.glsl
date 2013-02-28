@@ -1,5 +1,4 @@
 //#define SHOW_TILE_BOUNDARIES
-//#define SHOW_TEXTURE_BOUNDARIES
 
 uniform float u_morphTime;
 
@@ -37,91 +36,57 @@ varying vec2 v_textureCoordinates;
 vec3 sampleAndBlend(
     vec3 previousColor,
     sampler2D texture,
-    sampler2D parentTexture,
-    float textureBlendFactor,
     vec2 tileTextureCoordinates,
-    vec4 textureCoordinateExtent,
     vec4 textureCoordinateTranslationAndScale,
-    float textureAlpha,
-    float textureBrightness,
-    float textureContrast,
-    float textureHue,
-    float textureSaturation,
-    float textureOneOverGamma)
+    float layerAlpha,
+    float layerBrightness,
+    float layerContrast,
+    float layerHue,
+    float layerSaturation,
+    float layerOneOverGamma)
 {
-    // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
-    //    tileTextureCoordinates.s < textureCoordinateExtent.s ||
-    //    tileTextureCoordinates.s > textureCoordinateExtent.p ||
-    //    tileTextureCoordinates.t < textureCoordinateExtent.t ||
-    //    tileTextureCoordinates.t > textureCoordinateExtent.q
-    // In other words, the alpha is zero if the fragment is outside the extent
-    // covered by this texture.  Would an actual 'if' yield better performance?
-    vec2 alphaMultiplier = step(textureCoordinateExtent.st, tileTextureCoordinates); 
-    textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
-    
-    alphaMultiplier = step(vec2(0.0), textureCoordinateExtent.pq - tileTextureCoordinates);
-    textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
-    
     vec2 translation = textureCoordinateTranslationAndScale.xy;
     vec2 scale = textureCoordinateTranslationAndScale.zw;
     vec2 textureCoordinates = tileTextureCoordinates * scale + translation;
-    vec4 thisSample = texture2D(texture, tileTextureCoordinates);
-    vec4 parentSample = texture2D(parentTexture, textureCoordinates);
-    vec4 sample = mix(thisSample, parentSample, textureBlendFactor);
+    vec4 sample = texture2D(texture, textureCoordinates);
 
     vec3 color = sample.rgb;
     float alpha = sample.a;
     
 #ifdef APPLY_BRIGHTNESS
-    color = mix(vec3(0.0), color, textureBrightness);
+    color = mix(vec3(0.0), color, layerBrightness);
 #endif
 
 #ifdef APPLY_CONTRAST
-    color = mix(vec3(0.5), color, textureContrast);
+    color = mix(vec3(0.5), color, layerContrast);
 #endif
 
 #ifdef APPLY_HUE
-    color = czm_hue(color, textureHue);
+    color = czm_hue(color, layerHue);
 #endif
 
 #ifdef APPLY_SATURATION
-    color = czm_saturation(color, textureSaturation);
+    color = czm_saturation(color, layerSaturation);
 #endif
 
 #ifdef APPLY_GAMMA
-    color = pow(color, vec3(textureOneOverGamma));
+    color = pow(color, vec3(layerOneOverGamma));
 #endif
 
-#ifdef SHOW_TEXTURE_BOUNDARIES
-    if (textureCoordinates.x < (1.0/256.0) || textureCoordinates.x > (255.0/256.0) ||
-        textureCoordinates.y < (1.0/256.0) || textureCoordinates.y > (255.0/256.0))
-    {
-        color = vec3(1.0);
-        alpha = 1.0;
-    }
-#endif
-
-    return mix(previousColor, color, alpha * textureAlpha);
+    return mix(previousColor, color, alpha * layerAlpha);
 }
 
-vec3 computeDayColor(vec3 initialColor, float textureLevelOfDetailFactor, vec2 textureCoordinates);
+vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates);
 vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec3 imageryColor, float specularMapValue);
 
 void main()
 {
-    float distanceToFragment = length(v_positionEC);
-    float screenSpaceError = u_distanceToScreenSpaceError / distanceToFragment;
-    float parentSSE = screenSpaceError * 2.0;
-    //float textureLevelOfDetailFactor = clamp((u_maxScreenSpaceError - screenSpaceError) / screenSpaceError, 0.0, 1.0);
-    float middle = (parentSSE + screenSpaceError) / 2.0;
-    float textureLevelOfDetailFactor = clamp((u_maxScreenSpaceError - middle) / (parentSSE - middle), 0.0, 1.0);
-
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
     // coordinates strictly in the 0-1 range.
     vec3 initialColor = vec3(0.0, 0.0, 0.5);
-    vec3 startDayColor = computeDayColor(initialColor, textureLevelOfDetailFactor, clamp(v_textureCoordinates, 0.0, 1.0));
+    vec3 startDayColor = computeDayColor(initialColor, clamp(v_textureCoordinates, 0.0, 1.0));
 
 #ifdef SHOW_TILE_BOUNDARIES
     if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||

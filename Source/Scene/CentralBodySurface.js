@@ -896,6 +896,7 @@ define([
     var tileExtentScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();
     var centerEyeScratch = new Cartesian4();
+    var noTranslationOrScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
     function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState) {
         var viewMatrix = frameState.camera.getViewMatrix();
@@ -1009,58 +1010,19 @@ define([
                 for (var textureIndex = 0; textureIndex < textureCount; ++textureIndex) {
                     var texture = tile.textures[textureIndex];
                     var inheritedTexture = tile.inheritedTextures[textureIndex];
+                    var textureTranslationAndScale = noTranslationOrScale;
 
                     if (typeof texture === 'undefined' && typeof inheritedTexture === 'undefined') {
                         continue;
                     }
 
-                    var textureBlendFactor = 0.0;
-
                     if (typeof texture === 'undefined') {
-                        texture = context.getDefaultTexture();
-                        textureBlendFactor = 1.0;
-                    } else if (typeof inheritedTexture === 'undefined') {
-                        inheritedTexture = context.getDefaultTexture();
-                        textureBlendFactor = -1.0;
+                        texture = inheritedTexture;
+                        textureTranslationAndScale = tile.inheritedTextureTranslationAndScale[textureIndex];
                     }
 
-                    var parentTranslationAndScale = tile.inheritedTextureTranslationAndScale[textureIndex];
-                    if (typeof parentTranslationAndScale === 'undefined') {
-                        parentTranslationAndScale = Cartesian4.ZERO;
-                    }
-
-                    uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = parentTranslationAndScale;
                     uniformMap.dayTextures[numberOfDayTextures] = texture;
-                    uniformMap.parentTextures[numberOfDayTextures] = inheritedTexture;
-                    uniformMap.textureBlendFactor[numberOfDayTextures] = textureBlendFactor;
-
-                    var canvas = context.getCanvas();
-                    var height = canvas.clientHeight;
-
-                    var camera = frameState.camera;
-                    var frustum = camera.frustum;
-                    var fovy = frustum.fovy;
-
-                    var latitudeClosestToEquator = 0.0;
-                    if (tile.extent.south > 0.0) {
-                        latitudeClosestToEquator = tile.extent.south;
-                    } else if (tile.extent.north < 0.0) {
-                        latitudeClosestToEquator = tile.extent.north;
-                    }
-
-                    var latitudeFactor = Math.cos(latitudeClosestToEquator);
-
-                    var ellipsoid = surface._terrainProvider.getTilingScheme().getEllipsoid();
-                    var west = ellipsoid.cartographicToCartesian(new Cartographic(tile.extent.west, latitudeClosestToEquator, tile.minimumHeight / 127.0));
-                    var nextToWest = ellipsoid.cartographicToCartesian(new Cartographic(tile.extent.west + (tile.extent.east - tile.extent.west) / 255.0, latitudeClosestToEquator, tile.maximumHeight / 127.0));
-                    var texelSpacing = nextToWest.subtract(west).magnitude();
-
-                    var maxGeometricError = latitudeFactor * surface._terrainProvider.getLevelMaximumGeometricError(tile.level);
-
-                    uniformMap.distanceToScreenSpaceError = (maxGeometricError * height) / (2 * Math.tan(0.5 * fovy));
-                    uniformMap.maxScreenSpaceError = 2.0;
-
-                    uniformMap.dayTextureTexCoordsExtent[numberOfDayTextures] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+                    uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = textureTranslationAndScale;
 
                     var imageryLayer = imageryLayerCollection.get(textureIndex);
 
