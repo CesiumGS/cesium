@@ -2,6 +2,8 @@
 @import url('../Timeline/darker.css');
 @import url('../Animation/Animation.css');
 @import url('../Animation/darker.css');
+@import url('../Fullscreen/FullscreenWidget.css');
+@import url('../Fullscreen/darker.css');
 
 .cw-node {
     font-family: sans-serif;
@@ -30,7 +32,7 @@
     position: absolute;
     bottom: 0;
     left: 169px;
-    right: 2px;
+    right: 29px;
     height: 27px;
     padding: 0;
     margin: 0;
@@ -45,6 +47,16 @@
     padding: 0;
     width: 169px;
     height: 112px;
+}
+
+.cw-fullscreenContainer {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 0;
+    width: 29px;
+    height: 29px;
+    overflow: hidden;
 }
 
 .cw-cesiumLogo {
@@ -79,10 +91,6 @@
 
 .cw-viewColumbus {
     background-position: -72px 0;
-}
-
-.cw-viewFullscreen {
-    background-position: -120px 0;
 }
 
 .cw-viewButtons {
