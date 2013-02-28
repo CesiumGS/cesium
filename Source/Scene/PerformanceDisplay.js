@@ -134,7 +134,7 @@ define([
         }
 
         if (typeof this._quad === 'undefined') {
-            this._quad = new ViewportQuad(Material.fromType(context, Material.ImageType));
+            this._quad = new ViewportQuad(undefined, Material.fromType(context, Material.ImageType));
         }
 
         if (typeof this._texture === 'undefined') {

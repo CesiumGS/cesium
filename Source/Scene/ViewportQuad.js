@@ -41,14 +41,14 @@ define([
      * @alias ViewportQuad
      * @constructor
      *
+     * @param {BoundingRectangle} [rectangle] The {@link BoundingRectangle} defining the quad's position within the viewport.
      * @param {Material} [material] The {@link Material} defining the surface appearance of the viewport quad.
      *
      * @example
-     * var viewportQuad = new ViewportQuad();
-     * var viewportQuad = new BoundingRectangle(0, 0, 80, 40);
+     * var viewportQuad = new ViewportQuad(new BoundingRectangle(0, 0, 80, 40));
      * viewportQuad.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
      */
-    var ViewportQuad = function(material) {
+    var ViewportQuad = function(rectangle, material) {
 
         this._va = undefined;
         this._overlayCommand = new DrawCommand();
@@ -66,6 +66,10 @@ define([
         */
         this.show = true;
 
+        if (typeof rectangle === 'undefined') {
+            rectangle = new BoundingRectangle(0, 0, 10, 10);
+        }
+
         /**
          * The BoundingRectangle defining the quad's position within the viewport.
          *
@@ -74,7 +78,7 @@ define([
          * @example
          * viewportQuad.rectangle = new BoundingRectangle(0, 0, 80, 40);
          */
-        this.rectangle = new BoundingRectangle(0, 0, 10, 10);
+        this.rectangle = rectangle;
 
         if (typeof material === 'undefined') {
             material = Material.fromType(undefined, Material.ColorType);
