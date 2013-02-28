@@ -51,7 +51,6 @@ define([
 
     // TODO:
     //    better name than 'misc' for tex coord, expansion direction, show and width attribute
-    //    materials
     //    adjacency info in 2d at idl
 
     var MISC_INDEX = Polyline.MISC_INDEX;
@@ -1553,24 +1552,26 @@ define([
 
             var colorsArray = new Float32Array(4 * positionsLength * 2);
             for ( var j = 0; j < positionsLength; ++j) {
-                var color = Color.encode(colors[colorIndex]);
-                var outlineColor = Color.encode(outlineColors[outlineColorIndex]);
-
+                var color = colors[colorIndex];
+                var outlineColor = outlineColors[outlineColorIndex];
                 scratchColorAlpha.red = color.alpha;
                 scratchColorAlpha.green = outlineColor.alpha;
-                var alpha = Color.encode(scratchColorAlpha);
+
+                var encodedColor = Color.encode(color);
+                var encodedOutlineColor = Color.encode(outlineColor);
+                var encodedAlpha = Color.encode(scratchColorAlpha);
 
                 for (var k = 0; k < 2; ++k) {
-                    colorsArray[index] = color;
-                    colorsArray[index + 1] = outlineColor;
-                    colorsArray[index + 2] = alpha;
+                    colorsArray[index] = encodedColor;
+                    colorsArray[index + 1] = encodedOutlineColor;
+                    colorsArray[index + 2] = encodedAlpha;
                     index += 4;
                 }
 
                 colorIndex += colorIncrement;
                 outlineColorIndex += outlineColorIncrement;
             }
-            buffer.copyFromArrayView(colorsArray, 4 * positionIndex * 2);
+            buffer.copyFromArrayView(colorsArray, 4 * Float32Array.BYTES_PER_ELEMENT * positionIndex * 2);
         }
     };
 
