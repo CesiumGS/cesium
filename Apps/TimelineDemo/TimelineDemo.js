@@ -101,7 +101,6 @@ define(['dojo',
 
         function tick() {
             var time = clock.tick();
-            timeline.updateFromClock();
             updateScrubTime(time);
             requestAnimationFrame(tick);
         }
