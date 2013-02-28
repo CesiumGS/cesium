@@ -55,21 +55,13 @@ define([
      * @see Event#removeEventListener
      *
      * @exception {DeveloperError} listener is required and must be a function.
-     * @exception {DeveloperError} listener is already subscribed.
      */
     Event.prototype.addEventListener = function(listener, scope) {
         if (typeof listener !== 'function') {
             throw new DeveloperError('listener is required and must be a function.');
         }
 
-        var thisListeners = this._listeners;
-        var index = thisListeners.indexOf(listener);
-
-        if (index !== -1) {
-            throw new DeveloperError('listener is already subscribed.');
-        }
-
-        thisListeners.push(listener);
+        this._listeners.push(listener);
         this._scopes.push(scope);
     };
 
@@ -78,6 +70,7 @@ define([
      * @memberof Event
      *
      * @param {Function} listener The function to be unregistered.
+     * @param {Object} [scope] The scope that was originally passed to addEventListener.
      *
      * @see Event#addEventListener
      * @see Event#raiseEvent
@@ -85,13 +78,21 @@ define([
      * @exception {DeveloperError} listener is required and must be a function.
      * @exception {DeveloperError} listener is not subscribed.
      */
-    Event.prototype.removeEventListener = function(listener) {
+    Event.prototype.removeEventListener = function(listener, scope) {
         if (typeof listener !== 'function') {
             throw new DeveloperError('listener is required and must be a function.');
         }
 
         var thisListeners = this._listeners;
-        var index = thisListeners.indexOf(listener);
+        var thisScopes = this._scopes;
+
+        var index = -1;
+        for ( var i = 0; i < thisListeners.length; i++) {
+            if (thisListeners[i] === listener && thisScopes[i] === scope) {
+                index = i;
+                break;
+            }
+        }
 
         if (index === -1) {
             throw new DeveloperError('listener is not subscribed.');
