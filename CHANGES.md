@@ -4,7 +4,7 @@ Change Log
 Beta Releases
 -------------
 
-### b14 - 2013-xx-xx
+### b14 - 2013-03-01
 * Breaking changes:
    * `IntersectionTests.rayPlane` now takes the new `Plane` type instead of separate `planeNormal` and `planeD` arguments.
    * Renamed `ImageryProviderError` to `TileProviderError`.
