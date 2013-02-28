@@ -1067,7 +1067,6 @@ define([
             } else {
                 currentTime = this.clock.currentTime;
             }
-            this.timeline.updateFromClock();
             this.visualizers.update(currentTime);
 
             // Update the camera to stay centered on the selected object, if any.
