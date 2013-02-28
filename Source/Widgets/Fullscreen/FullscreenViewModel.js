@@ -1,9 +1,11 @@
 /*global define*/
 define(['../createCommand',
+        '../../Core/defaultValue',
         '../../Core/Fullscreen',
         '../../ThirdParty/knockout'
         ], function(
             createCommand,
+            defaultValue,
             Fullscreen,
             knockout) {
     "use strict";
@@ -13,13 +15,15 @@ define(['../createCommand',
      * @alias FullscreenViewModel
      * @constructor
      *
+     * @param {Element} [fullscreenElement=document.body] The element to be placed into fullscreen mode.
+     *
      * @see FullscreenWidget
      */
-    var FullscreenViewModel = function() {
+    var FullscreenViewModel = function(fullscreenElement) {
         var that = this;
 
         var isFullscreen = knockout.observable(Fullscreen.isFullscreen());
-        var isFullscreenEnabled = knockout.observable(Fullscreen.isFullscreenEnabled);
+        var isFullscreenEnabled = knockout.observable(Fullscreen.isFullscreenEnabled());
 
         /**
          * Indicates if fullscreen functionality is possible.
@@ -64,7 +68,7 @@ define(['../createCommand',
          *
          * @type {Observable}
          */
-        this.fullscreenElement = knockout.observable(document.body);
+        this.fullscreenElement = knockout.observable(defaultValue(fullscreenElement, document.body));
 
         document.addEventListener(Fullscreen.getFullscreenChangeEventName(), function() {
             isFullscreen(Fullscreen.isFullscreen());

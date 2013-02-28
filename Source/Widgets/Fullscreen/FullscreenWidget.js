@@ -31,7 +31,7 @@ define(['./FullscreenViewModel',
          * @type {FullscreenViewModel}
          * @memberof FullscreenWidget
          */
-        this.viewModel = typeof viewModel === 'undefined' ? new FullscreenViewModel() : viewModel;
+        this.viewModel = typeof viewModel !== 'undefined' ? viewModel : new FullscreenViewModel();
 
         /**
          * Gets the actual button created by this widget.
@@ -41,7 +41,7 @@ define(['./FullscreenViewModel',
          */
         this.button = document.createElement('button');
         this.button.className = 'fullscreen';
-        this.button.setAttribute("data-bind", 'attr: { title: tooltip }, css: { "fullscreen-exit": toggled }, click: command, enable: isFullscreenEnabled');
+        this.button.setAttribute('data-bind', 'attr: { title: tooltip }, css: { "fullscreen-exit": toggled }, click: command, enable: isFullscreenEnabled');
         container.appendChild(this.button);
 
         knockout.applyBindings(this.viewModel, this.button);
