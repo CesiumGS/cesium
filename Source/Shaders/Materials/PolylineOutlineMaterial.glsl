@@ -8,7 +8,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 {
     czm_material material = czm_getDefaultMaterial(materialInput);
     
-    float halfInteriorWidth = 0.5 - outlineWidth / v_width;
+    float halfInteriorWidth =  0.5 * (v_width - outlineWidth) / v_width;
     float s = step(0.5 - halfInteriorWidth, materialInput.st.t);
     s *= 1.0 - step(0.5 + halfInteriorWidth, materialInput.st.t);
     

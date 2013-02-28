@@ -24,7 +24,7 @@ void main()
 {
     float texCoord = misc.x;
     float expandDir = misc.y;
-    float width = misc.z * 0.5;
+    float width = misc.z;
     float show = misc.w;
     
     vec4 p;
@@ -84,12 +84,13 @@ void main()
     
     float angle = acos(dot(direction, nextWC));
     float sinAngle = sin(angle);
+    float expandWidth = width * 0.5;
     if (abs(sinAngle) > czm_epsilon1 * 2.5)
     {
-        width = width / sinAngle;
+        expandWidth = expandWidth / sinAngle;
     }
 
-    vec4 positionWC = vec4(endPointWC.xy + direction * width * expandDir, -endPointWC.z, 1.0);
+    vec4 positionWC = vec4(endPointWC.xy + direction * expandWidth * expandDir, -endPointWC.z, 1.0);
     gl_Position = czm_viewportOrthographic * positionWC * show;
     
 #ifndef RENDER_FOR_PICK
@@ -97,7 +98,7 @@ void main()
     v_color = vec4(czm_decodeColor(color.r), alphas.r);
     v_outlineColor = vec4(czm_decodeColor(color.g), alphas.g);
     v_textureCoordinates = vec2(texCoord, clamp(expandDir, 0.0, 1.0));
-    v_width = width * 2.0;
+    v_width = width;
     v_positionEC = positionEC.xyz;
 #else
     v_pickColor = color;
