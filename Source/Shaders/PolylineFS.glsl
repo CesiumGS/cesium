@@ -5,7 +5,7 @@ void main()
 {
     czm_materialInput materialInput;
     
-    materialInput.s = v_textureCoordinates.r;
+    materialInput.s = v_textureCoordinates.s;
     materialInput.st = v_textureCoordinates;
     materialInput.str = vec3(v_textureCoordinates, 0.0);
     

@@ -10,6 +10,7 @@ define([
         '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -34,6 +35,7 @@ define([
         '../Shaders/Materials/WoodMaterial',
         '../Shaders/Materials/RimLightingMaterial',
         '../Shaders/Materials/ErosionMaterial',
+        '../Shaders/Materials/FadeMaterial',
         '../Shaders/Materials/PolylineArrowMaterial',
         '../Shaders/Materials/PolylineGlowMaterial',
         '../Shaders/Materials/PolylineOutlineMaterial'
@@ -48,6 +50,7 @@ define([
         defaultValue,
         destroyObject,
         Cartesian2,
+        Cartesian3,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -72,6 +75,7 @@ define([
         WoodMaterial,
         RimLightingMaterial,
         ErosionMaterial,
+        FadeMaterial,
         PolylineArrowMaterial,
         PolylineGlowMaterial,
         PolylineOutlineMaterial) {
@@ -1177,6 +1181,20 @@ define([
             time : 1.0
         },
         source : ErosionMaterial
+    });
+
+    Material.FadeType = 'Fade';
+    Material._materialCache.addMaterial(Material.FadeType, {
+        type : Material.FadeType,
+        uniforms : {
+            fadeInAlpha : 1.0,
+            fadeOutAlpha : 0.0,
+            maxDistance : 0.5,
+            repeat : true,
+            time : Cartesian3.ZERO.clone(),
+            color : new Color(1.0, 0.0, 0.0, 1.0)
+        },
+        source : FadeMaterial
     });
 
     Material.PolylineArrowType = 'PolylineArrow';
