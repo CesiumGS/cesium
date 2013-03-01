@@ -7,7 +7,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     
     vec2 st = materialInput.st;
     
-    float base = 0.75;
+    float base = 1.0 - dFdx(st.s) * 10.0;
     vec2 upperBase = vec2(base, 1.0);
     vec2 lowerBase = vec2(base, 0.0);
     vec2 tip = vec2(1.0, 0.5);
