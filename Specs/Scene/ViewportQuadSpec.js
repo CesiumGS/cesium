@@ -57,6 +57,18 @@ defineSuite([
         us = undefined;
     });
 
+    it('constructs with a rectangle', function() {
+        var rectangle = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
+        var quad = new ViewportQuad(rectangle);
+        expect(quad.rectangle).toEqual(rectangle);
+    });
+
+    it('constructs with a material', function() {
+        var material = Material.fromType(undefined, Material.ErosionType);
+        var quad = new ViewportQuad(undefined, material);
+        expect(quad.material.type).toEqual(material.type);
+    });
+
     it('gets the default color', function() {
         expect(viewportQuad.material.uniforms.color).toEqual(
             new Color(1.0, 1.0, 1.0, 1.0));
@@ -76,6 +88,15 @@ defineSuite([
         expect(function() {
             render(context, frameState, viewportQuad);
         }).toThrow();
+    });
+
+    it('does not render when show is false', function() {
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        viewportQuad.show = false;
+        render(context, frameState, viewportQuad);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
     it('renders material', function() {

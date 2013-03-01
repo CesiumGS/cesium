@@ -551,17 +551,10 @@ define([
     function getDirectionsVertexBuffer(context) {
         var sixteenK = 16 * 1024;
 
-        // Per-context cache for billboard collections
-        context._primitivesCache = context._primitivesCache || {};
-        var primitivesCache = context._primitivesCache;
-        primitivesCache._billboardCollection = primitivesCache._billboardCollection || {};
-        var c = primitivesCache._billboardCollection;
-
-        if (c.directionsVertexBuffer) {
-            return c.directionsVertexBuffer;
+        var directionsVertexBuffer = context.cache.billboardCollection_directionsVertexBuffer;
+        if (typeof directionsVertexBuffer !== 'undefined') {
+            return directionsVertexBuffer;
         }
-
-        c.directionsVertexBuffer = c.directionsVertexBuffer && c.directionsVertexBuffer.destroy();
 
         var directions = new Uint8Array(sixteenK * 4 * 2);
         for (var i = 0, j = 0; i < sixteenK; ++i) {
@@ -580,22 +573,18 @@ define([
 
         // PERFORMANCE_IDEA:  Should we reference count billboard collections, and eventually delete this?
         // Is this too much memory to allocate up front?  Should we dynamically grow it?
-        c.directionsVertexBuffer = context.createVertexBuffer(directions, BufferUsage.STATIC_DRAW);
-        c.directionsVertexBuffer.setVertexArrayDestroyable(false);
-        return c.directionsVertexBuffer;
+        directionsVertexBuffer = context.createVertexBuffer(directions, BufferUsage.STATIC_DRAW);
+        directionsVertexBuffer.setVertexArrayDestroyable(false);
+        context.cache.billboardCollection_directionsVertexBuffer = directionsVertexBuffer;
+        return directionsVertexBuffer;
     }
 
     function getIndexBuffer(context) {
         var sixteenK = 16 * 1024;
 
-        // Per-context cache for billboard collections
-        context._primitivesCache = context._primitivesCache || {};
-        var primitivesCache = context._primitivesCache;
-        primitivesCache._billboardCollection = primitivesCache._billboardCollection || {};
-        var c = primitivesCache._billboardCollection;
-
-        if (c.indexBuffer) {
-            return c.indexBuffer;
+        var indexBuffer = context.cache.billboardCollection_indexBuffer;
+        if (typeof indexBuffer !== 'undefined') {
+            return indexBuffer;
         }
 
         var length = sixteenK * 6;
@@ -612,9 +601,10 @@ define([
 
         // PERFORMANCE_IDEA:  Should we reference count billboard collections, and eventually delete this?
         // Is this too much memory to allocate up front?  Should we dynamically grow it?
-        c.indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-        c.indexBuffer.setVertexArrayDestroyable(false);
-        return c.indexBuffer;
+        indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        indexBuffer.setVertexArrayDestroyable(false);
+        context.cache.billboardCollection_indexBuffer = indexBuffer;
+        return indexBuffer;
     }
 
     BillboardCollection.prototype.computeNewBuffersUsage = function() {

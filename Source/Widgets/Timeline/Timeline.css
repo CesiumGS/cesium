@@ -1,7 +1,7 @@
 .timelineMain {
 	position: relative;
 	left: 0;
-	top: 0;
+	bottom: 0;
 	overflow: hidden;
 	border: solid 1px #888;
 }
@@ -25,29 +25,26 @@
 .timelineNeedle {
 	position: absolute;
 	left: 0;
-	top: 0;
+	top: 1.7em;
+	bottom: 0;
 	width: 1px;
-	height: 100%;
-	z-index: 50;
 	background: #F00;
 }
 
 .timelineBar {
-	position: relative;
-	left: 0;
-	top: 0;
-	overflow: hidden;
-	/*border: solid 1px #888;*/
-	width: 100%;
-	height: 1.7em;
-	z-index: 100;
-	background-color: #fafafa;
-	background-repeat: repeat-x;
-	background: -webkit-linear-gradient(top, #eee, #fff, #fafafa);
-	background: -moz-linear-gradient(top, #eee, #fff, #fafafa);
-	background: -ms-linear-gradient(top, #eee, #fff, #fafafa);
-	background: -o-linear-gradient(top, #eee, #fff, #fafafa);
-	background: linear-gradient(top, #eee, #fff, #fafafa);
+    position: relative;
+    left: 0;
+    top: 0;
+    overflow: hidden;
+    /*border: solid 1px #888;*/
+    width: 100%;
+    height: 1.7em;
+    background-color: #fafafa;
+    background: -moz-linear-gradient(top, #eeeeee 0%, #ffffff 50%, #fafafa 100%); /* FF3.6+ */
+    background: -webkit-linear-gradient(top, #eeeeee 0%,#ffffff 50%,#fafafa 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top, #eeeeee 0%,#ffffff 50%,#fafafa 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top, #eeeeee 0%,#ffffff 50%,#fafafa 100%); /* IE10+ */
+    background: linear-gradient(to bottom, #eeeeee 0%,#ffffff 50%,#fafafa 100%); /* W3C */
 }
 
 .timelineRuler {
@@ -107,7 +104,7 @@
 	position: absolute;
 	width: 16px;
 	height: 16px;
-	background-image: url("Images/TimelineIcons.png");
+	background-image: url("../Images/TimelineIcons.png");
 	background-repeat: no-repeat;
-	z-index: 10;
+	z-index: 1;
 }
