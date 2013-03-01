@@ -310,7 +310,7 @@ define([
                 frustum.bottom = -frustum.top;
             }
 
-            this.setLogoOffset(this.cesiumLogo.offsetWidth + this.cesiumLogo.offsetLeft + 10, 28);
+            this.setLogoOffset(this.agiLogo.offsetWidth + this.agiLogo.offsetLeft + 10, 28);
         },
 
         /**

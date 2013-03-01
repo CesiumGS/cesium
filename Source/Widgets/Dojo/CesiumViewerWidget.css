@@ -114,8 +114,8 @@
 .cw-agiLogo {
     display: block;
     position: absolute;
-    bottom: 65px;
-    left: 125px;
+    bottom: 30px;
+    left: 305px;
     text-decoration: none;
     background-image: url(../Images/AGILogo3_overlay.png);
     background-size: 60px 30px;
@@ -152,6 +152,9 @@
     .cw-cesiumLogo {
         left: 146px;
     }
+	.cw-agiLogo {
+		left: 272px;
+	}
 }
 
 @media only screen and (max-width: 599px) {
@@ -165,4 +168,7 @@
     .cw-cesiumLogo {
         left: 116px;
     }
+	.cw-agiLogo {
+		left: 242px;
+	}
 }
