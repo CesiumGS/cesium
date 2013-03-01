@@ -8,7 +8,7 @@ We love pull requests.  We promptly [review](https://github.com/AnalyticalGraphi
 
 or
 
-* Every commit is signed-off on to indicate agreement to the Developer Certificate of Origin (DCO).  The DCO was originally developed for the Linux kernel, and its text is here: [SubmittingPatches](https://github.com/wking/signed-off-by/blob/ab5bce80ad2259b47202b28905efff0d04032709/Documentation/SubmittingPatches).  Like the CLA, you retain copyright to your contributions, and we have the right to use them and incorporate them into Cesium.  A comment with a sign-off has a line like the following at the bottom:
+* Every commit is signed-off on to indicate agreement to the Developer Certificate of Origin (DCO).  The DCO was originally developed for the Linux kernel, and its text is here: [SubmittingPatches](https://github.com/wking/signed-off-by/blob/ab5bce80ad2259b47202b28905efff0d04032709/Documentation/SubmittingPatches).  Like the CLA, you retain copyright to your contributions, and we have the right to use them and incorporate them into Cesium.  A commit with a sign-off has a line like the following at the bottom:
 
 ```
 Signed-off-by: First-name Last-name <email-address>
