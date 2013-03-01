@@ -1,0 +1,16 @@
+.fullscreen {
+    border: solid 1px #9BBFDF;
+    background-color: #DFEFFF;
+    background-image: url(../Images/enterFullscreen.svg);
+    background-size: 100% 100%;
+    width: 100%;
+    height: 100%;
+}
+
+.fullscreen:hover {
+    background-color: #A9D5FF;
+}
+
+.fullscreen-exit {
+    background-image: url(../Images/exitFullscreen.svg);
+}

@@ -2,6 +2,8 @@
 @import url('../Timeline/darker.css');
 @import url('../Animation/Animation.css');
 @import url('../Animation/darker.css');
+@import url('../Fullscreen/FullscreenWidget.css');
+@import url('../Fullscreen/darker.css');
 
 .cw-node {
     font-family: sans-serif;
@@ -30,7 +32,7 @@
     position: absolute;
     bottom: 0;
     left: 169px;
-    right: 2px;
+    right: 29px;
     height: 27px;
     padding: 0;
     margin: 0;
@@ -44,7 +46,17 @@
     left: 0;
     padding: 0;
     width: 169px;
-    height: 112px;    
+    height: 112px;
+}
+
+.cw-fullscreenContainer {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 0;
+    width: 29px;
+    height: 29px;
+    overflow: hidden;
 }
 
 .cw-cesiumLogo {
@@ -81,10 +93,6 @@
     background-position: -72px 0;
 }
 
-.cw-viewFullscreen {
-    background-position: -120px 0;
-}
-
 .cw-viewButtons {
     display: block;
     position: absolute;
@@ -115,4 +123,30 @@
     background-position: center;
     background-repeat: no-repeat;
     background-image: url(../Images/ajax-loader.gif);
+}
+
+@media only screen and (min-width: 600px) and (max-width: 900px) {
+    .cw-animationContainer {
+        width: 136px;
+        height: 90px;
+    }
+    .cw-timelineContainer {
+        left: 137px;
+    }
+    .cw-cesiumLogo {
+        left: 146px;
+    }
+}
+
+@media only screen and (max-width: 599px) {
+    .cw-animationContainer {
+        width: 106px;
+        height: 70px;
+    }
+    .cw-timelineContainer {
+        left: 107px;
+    }
+    .cw-cesiumLogo {
+        left: 116px;
+    }
 }
