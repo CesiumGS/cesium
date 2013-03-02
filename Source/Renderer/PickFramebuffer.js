@@ -56,8 +56,8 @@ define([
             this._fb = this._fb && this._fb.destroy();
             this._fb = context.createFramebuffer({
                 colorRenderbuffer : context.createRenderbuffer(),
-                depthStencilRenderbuffer : context.createRenderbuffer({
-                    format : RenderbufferFormat.DEPTH_STENCIL
+                depthRenderbuffer : context.createRenderbuffer({
+                    format : RenderbufferFormat.DEPTH_COMPONENT16
                 })
             });
         }
