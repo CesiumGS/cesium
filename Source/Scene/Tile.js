@@ -344,11 +344,6 @@ define([
     };
 
     Tile.prototype.processStateMachine = function(context, terrainProvider, imageryLayerCollection) {
-        if (this.state === TileState.START) {
-            prepareNewTile(this, terrainProvider, imageryLayerCollection);
-            this.state = TileState.LOADING;
-        }
-
         if (this.state === TileState.LOADING) {
             processTerrainStateMachine(this, context, terrainProvider);
         }
@@ -478,22 +473,22 @@ define([
     var southeastScratch = new Cartesian3();
     var northwestScratch = new Cartesian3();
 
-    function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
-        var upsampleTileDetails = getUpsampleTileDetails(tile);
+    Tile.prototype.prepareNewTile = function(terrainProvider, imageryLayerCollection) {
+        var upsampleTileDetails = getUpsampleTileDetails(this);
         if (typeof upsampleTileDetails !== 'undefined') {
-            tile.upsampledTerrain = new TileTerrain(upsampleTileDetails);
+            this.upsampledTerrain = new TileTerrain(upsampleTileDetails);
         }
 
-        if (isDataAvailable(tile)) {
-            tile.loadedTerrain = new TileTerrain();
+        if (isDataAvailable(this)) {
+            this.loadedTerrain = new TileTerrain();
         }
 
         var i, len;
 
         // Link to ancestor textures
-        var parent = tile.parent;
-        var inheritedTextures = tile.inheritedTextures;
-        var inheritedTextureTranslationAndScale = tile.inheritedTextureTranslationAndScale;
+        var parent = this.parent;
+        var inheritedTextures = this.inheritedTextures;
+        var inheritedTextureTranslationAndScale = this.inheritedTextureTranslationAndScale;
         if (typeof parent !== 'undefined') {
             var parentTextures = parent.textures;
             var parentInheritedTextures = parent.inheritedTextures;
@@ -503,7 +498,7 @@ define([
                 if (typeof parentTexture !== 'undefined') {
                     // Parent has a texture for this layer, so link to it.
                     inheritedTextures[i] = parentTexture;
-                    inheritedTextureTranslationAndScale[i] = computeTranslationAndScaleForInheritedTexture(tile, parent);
+                    inheritedTextureTranslationAndScale[i] = computeTranslationAndScaleForInheritedTexture(this, parent);
                 } else {
                     // Parent does not have a texture for this layer, so link to the
                     // texture the parent inherited from its parent.
@@ -514,7 +509,7 @@ define([
 
                     if (typeof ancestor !== 'undefined') {
                         inheritedTextures[i] = parentInheritedTextures[i];
-                        inheritedTextureTranslationAndScale[i] = computeTranslationAndScaleForInheritedTexture(tile, ancestor);
+                        inheritedTextureTranslationAndScale[i] = computeTranslationAndScaleForInheritedTexture(this, ancestor);
                     }
 
                     /*var parentToChild = computeTranslationAndScaleForInheritedTexture(tile, parent);
@@ -532,24 +527,24 @@ define([
         for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
-                layer._createTileImagerySkeletons(tile, terrainProvider);
+                layer._createTileImagerySkeletons(this, terrainProvider);
             }
         }
 
-        var ellipsoid = tile.tilingScheme.getEllipsoid();
+        var ellipsoid = this.tilingScheme.getEllipsoid();
 
         // Compute tile extent boundaries for estimating the distance to the tile.
-        var extent = tile.extent;
-        ellipsoid.cartographicToCartesian(extent.getSouthwest(), tile.southwestCornerCartesian);
+        var extent = this.extent;
+        ellipsoid.cartographicToCartesian(extent.getSouthwest(), this.southwestCornerCartesian);
         var southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast(), southeastScratch);
-        ellipsoid.cartographicToCartesian(extent.getNortheast(), tile.northeastCornerCartesian);
+        ellipsoid.cartographicToCartesian(extent.getNortheast(), this.northeastCornerCartesian);
         var northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest(), northwestScratch);
 
-        Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(cartesian3Scratch), cartesian3Scratch).normalize(tile.westNormal);
-        tile.northeastCornerCartesian.negate(cartesian3Scratch).cross(Cartesian3.UNIT_Z, cartesian3Scratch).normalize(tile.eastNormal);
-        ellipsoid.geodeticSurfaceNormal(southeastCornerCartesian, cartesian3Scratch).cross(tile.southwestCornerCartesian.subtract(southeastCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(tile.southNormal);
-        ellipsoid.geodeticSurfaceNormal(northwestCornerCartesian, cartesian3Scratch).cross(tile.northeastCornerCartesian.subtract(northwestCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(tile.northNormal);
-    }
+        Cartesian3.UNIT_Z.cross(this.southwestCornerCartesian.negate(cartesian3Scratch), cartesian3Scratch).normalize(this.westNormal);
+        this.northeastCornerCartesian.negate(cartesian3Scratch).cross(Cartesian3.UNIT_Z, cartesian3Scratch).normalize(this.eastNormal);
+        ellipsoid.geodeticSurfaceNormal(southeastCornerCartesian, cartesian3Scratch).cross(this.southwestCornerCartesian.subtract(southeastCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(this.southNormal);
+        ellipsoid.geodeticSurfaceNormal(northwestCornerCartesian, cartesian3Scratch).cross(this.northeastCornerCartesian.subtract(northwestCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(this.northNormal);
+    };
 
     function computeTranslationAndScaleForInheritedTexture(tile, ancestor) {
         var ancestorExtent = ancestor.extent;

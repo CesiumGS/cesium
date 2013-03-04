@@ -669,6 +669,11 @@ define([
 
     function queueTileLoad(surface, tile) {
         surface._tileLoadQueue.insertBeforeInsertionPoint(tile);
+
+        if (tile.state === TileState.START) {
+            tile.prepareNewTile(surface._terrainProvider, surface._imageryLayerCollection);
+            tile.state = TileState.LOADING;
+        }
     }
 
     function processTileLoadQueue(surface, context, frameState) {
