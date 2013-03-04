@@ -29,7 +29,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     float u = length(vec2(s, t));
     vec4 color = mix(fadeInColor, fadeOutColor, u);
     
-    material.diffuse = color.rgb;
+    material.emission = color.rgb;
     material.alpha = color.a;
     
     return material;
