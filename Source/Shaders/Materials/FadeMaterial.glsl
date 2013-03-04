@@ -26,8 +26,9 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     vec2 st = materialInput.st;
     float t = getTime(time.x, st.s);
     float u = getTime(time.y, st.t);
-    float v = clamp(t * u, 0.0, 1.0);
-    float alpha = mix(fadeInAlpha * color.a, fadeOutAlpha * color.a, v);
+    
+    float v = (1.0 - t) * (1.0 - u);
+    float alpha = mix(fadeOutAlpha * color.a, fadeInAlpha * color.a, v);
     
     material.diffuse = color.rgb;
     material.alpha = alpha;
