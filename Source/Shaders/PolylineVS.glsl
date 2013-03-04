@@ -63,31 +63,51 @@ void main()
     }
     
     vec4 positionEC = czm_modelViewRelativeToEye * p;
-    vec4 prevEC = czm_modelView * prevDir;
-    vec4 nextEC = czm_modelView * nextDir;
-    
-    float pixelSize = czm_pixelSize * abs(positionEC.z);
-    
-    vec4 p0 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + prevEC.xyz * pixelSize, 1.0));
-    vec4 p1 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + nextEC.xyz * pixelSize, 1.0));
     vec4 endPointWC = czm_eyeToWindowCoordinates(positionEC);
     
-    vec2 nextWC = normalize(p0.xy - endPointWC.xy);
-    vec2 prevWC = normalize(p1.xy - endPointWC.xy);
-    vec2 normal = normalize(vec2(nextWC.y, -nextWC.x));
-    
-    vec2 direction = normalize((nextWC + prevWC) * 0.5);
-    if (dot(direction, normal) < 0.0)
-    {
-        direction = -direction;
-    }
-    
-    float angle = acos(dot(direction, nextWC));
-    float sinAngle = sin(angle);
+    float pixelSize = czm_pixelSize * abs(positionEC.z);
     float expandWidth = width * 0.5;
-    if (abs(sinAngle) > czm_epsilon1 * 2.5)
+    vec4 prevEC, nextEC, p0, p1;
+    vec2 direction, nextWC, prevWC;
+    
+    if (czm_equalsEpsilon(prevDir, vec4(0.0), czm_epsilon7))
     {
-        expandWidth = expandWidth / sinAngle;
+        nextEC = czm_modelView * nextDir;
+        p1 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + nextEC.xyz * pixelSize, 1.0));
+        nextWC = normalize(p1.xy - endPointWC.xy);
+        direction = normalize(vec2(nextWC.y, -nextWC.x));
+    }
+    else if (czm_equalsEpsilon(nextDir, vec4(0.0), czm_epsilon7))
+    {
+        prevEC = czm_modelView * prevDir;
+        p0 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + prevEC.xyz * pixelSize, 1.0));
+        prevWC = normalize(p0.xy - endPointWC.xy);
+        direction = -normalize(vec2(prevWC.y, -prevWC.x));
+    }
+    else
+    {
+	    prevEC = czm_modelView * prevDir;
+	    nextEC = czm_modelView * nextDir;
+	    
+	    p0 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + prevEC.xyz * pixelSize, 1.0));
+	    p1 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + nextEC.xyz * pixelSize, 1.0));
+	    
+	    prevWC = normalize(p0.xy - endPointWC.xy);
+	    nextWC = normalize(p1.xy - endPointWC.xy);
+	    vec2 normal = normalize(vec2(nextWC.y, -nextWC.x));
+	    
+	    direction = normalize((nextWC + prevWC) * 0.5);
+	    if (dot(direction, normal) < 0.0)
+	    {
+	        direction = -direction;
+	    }
+	    
+	    float angle = acos(dot(direction, nextWC));
+	    float sinAngle = sin(angle);
+	    if (abs(sinAngle) > czm_epsilon1 * 2.5)
+	    {
+	        expandWidth = expandWidth / sinAngle;
+	    }
     }
 
     vec4 positionWC = vec4(endPointWC.xy + direction * expandWidth * expandDir, -endPointWC.z, 1.0);

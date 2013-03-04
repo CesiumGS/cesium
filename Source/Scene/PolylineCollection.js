@@ -1030,16 +1030,13 @@ define([
 
     function computeAdjacencyAngles(position, index, positions, result, modelMatrix) {
         // TODO handle cross idl
-        var currentPosition = position;
         if (typeof result === 'undefined') {
             result = new Cartesian4();
         }
 
         var prev = computeAdjacencyAnglesPosition;
         if (index === 0) {
-            prev = (typeof modelMatrix === 'undefined') ? Cartesian3.clone(positions[1], prev) : Matrix4.multiplyByPoint(modelMatrix, positions[1], prev);
-            Cartesian3.subtract(prev, currentPosition, prev);
-            Cartesian3.negate(prev, prev);
+            Cartesian3.ZERO.clone(prev);
         } else {
             prev = (typeof modelMatrix === 'undefined') ? Cartesian3.clone(positions[index - 1], prev) : Matrix4.multiplyByPoint(modelMatrix, positions[index - 1], prev);
             Cartesian3.subtract(prev, position, prev);
@@ -1050,7 +1047,7 @@ define([
 
         var next = computeAdjacencyAnglesPosition;
         if (index === positions.length - 1) {
-            Cartesian3.negate(prev, next);
+            Cartesian3.ZERO.clone(next);
         } else {
             next = (typeof modelMatrix === 'undefined') ? Cartesian3.clone(positions[index + 1], next) : Matrix4.multiplyByPoint(modelMatrix, positions[index + 1], next);
             Cartesian3.subtract(next, position, next);
