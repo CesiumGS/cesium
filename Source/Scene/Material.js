@@ -10,7 +10,6 @@ define([
         '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/Cartesian2',
-        '../Core/Cartesian3',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -50,7 +49,6 @@ define([
         defaultValue,
         destroyObject,
         Cartesian2,
-        Cartesian3,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -1187,12 +1185,15 @@ define([
     Material._materialCache.addMaterial(Material.FadeType, {
         type : Material.FadeType,
         uniforms : {
-            fadeInAlpha : 1.0,
-            fadeOutAlpha : 0.0,
+            fadeInColor : new Color(1.0, 0.0, 0.0, 1.0),
+            fadeOutColor : new Color(0.0, 0.0, 0.0, 0.0),
             maxDistance : 0.5,
             repeat : true,
-            time : Cartesian3.ZERO.clone(),
-            color : new Color(1.0, 0.0, 0.0, 1.0)
+            fadeDirection : {
+                x : true,
+                y : true
+            },
+            time : Cartesian2.ZERO.clone()
         },
         source : FadeMaterial
     });

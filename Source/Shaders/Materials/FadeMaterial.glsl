@@ -1,10 +1,9 @@
-uniform float fadeInAlpha;
-uniform float fadeOutAlpha;
+uniform vec4 fadeInColor;
+uniform vec4 fadeOutColor;
 uniform float maxDistance;
 uniform bool repeat;
-uniform vec3 time;
-
-uniform vec4 color;
+uniform vec2 fadeDirection;
+uniform vec2 time;
 
 float getTime(float t, float coord)
 {
@@ -24,14 +23,14 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     czm_material material = czm_getDefaultMaterial(materialInput);
     
     vec2 st = materialInput.st;
-    float t = getTime(time.x, st.s);
-    float u = getTime(time.y, st.t);
+    float s = getTime(time.x, st.s) * fadeDirection.s;
+    float t = getTime(time.y, st.t) * fadeDirection.t;
     
-    float v = (1.0 - t) * (1.0 - u);
-    float alpha = mix(fadeOutAlpha * color.a, fadeInAlpha * color.a, v);
+    float u = length(vec2(s, t));
+    vec4 color = mix(fadeInColor, fadeOutColor, u);
     
     material.diffuse = color.rgb;
-    material.alpha = alpha;
+    material.alpha = color.a;
     
     return material;
 }
