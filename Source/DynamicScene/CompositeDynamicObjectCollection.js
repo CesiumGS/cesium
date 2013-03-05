@@ -132,7 +132,7 @@ define([
             for (iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
                 collection = thisCollections[iCollection];
                 collection.compositeCollection = undefined;
-                collection.objectPropertiesChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged);
+                collection.objectPropertiesChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged, this);
             }
 
             //Make a copy of the new collections.

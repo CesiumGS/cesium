@@ -5,7 +5,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
     /**
      * Represents a command to the renderer for clearing.
      *
-     * @alias Command
+     * @alias ClearCommand
      * @constructor
      *
      * @param {ClearState} [clearState] The clear state.

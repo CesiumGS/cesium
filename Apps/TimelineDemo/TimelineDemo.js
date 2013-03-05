@@ -2,22 +2,32 @@
 define(['dojo',
         'dijit/dijit',
         'Core/Clock',
+        'Core/ClockRange',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
-        'Widgets/Timeline'
+        'Core/requestAnimationFrame',
+        'Widgets/Animation/Animation',
+        'Widgets/ClockViewModel',
+        'Widgets/Animation/AnimationViewModel',
+        'Widgets/Timeline/Timeline'
     ], function(
          dojo,
          dijit,
          Clock,
+         ClockRange,
          Color,
          JulianDate,
          TimeInterval,
+         requestAnimationFrame,
+         Animation,
+         ClockViewModel,
+         AnimationViewModel,
          Timeline) {
     "use strict";
 
     var startDatePart, endDatePart, startTimePart, endTimePart;
-    var timeline, clock, endBeforeStart, timeElement;
+    var timeline, clock, endBeforeStart, containerElement, animationViewModel, animation;
 
     function updateScrubTime(julianDate) {
         document.getElementById('mousePos').innerHTML = timeline.makeLabel(julianDate) + ' UTC';
@@ -26,6 +36,7 @@ define(['dojo',
     function handleSetTime(e) {
         if (typeof timeline !== 'undefined') {
             var scrubJulian = e.timeJulian;
+            clock.shouldAnimate = false;
             clock.currentTime = scrubJulian;
             updateScrubTime(scrubJulian);
         }
@@ -60,8 +71,8 @@ define(['dojo',
             //'<br/>Epoch: ' + timeline.makeLabel(e.epochJulian) + ' UTC' +
             '<br/>Start: ' + timeline.makeLabel(e.startJulian) + ' UTC' +
             '<br/>&nbsp;Stop: ' + timeline.makeLabel(e.endJulian) + ' UTC' +
-            '<br/>Span: ' + spanToString(e.totalSpan) +
-            '<br/>Tic: ' + spanToString(e.mainTicSpan);
+            '<br/>&nbsp;Span: ' + spanToString(e.totalSpan) +
+            '<br/>&nbsp;&nbsp;Tic: ' + spanToString(e.mainTicSpan);
         updateScrubTime(clock.currentTime);
     }
 
@@ -69,17 +80,31 @@ define(['dojo',
         clock = new Clock({
             startTime : startJulian,
             currentTime : scrubJulian,
-            stopTime : endJulian
+            stopTime : endJulian,
+            clockRange : ClockRange.LOOP_STOP,
+            multiplier : 60,
+            shouldAnimate : true
         });
 
         timeline = new Timeline('time1', clock);
         timeline.addEventListener('settime', handleSetTime, false);
         timeline.addEventListener('setzoom', handleSetZoom, false);
 
-        timeline.addTrack(new TimeInterval(startJulian, startJulian.addSeconds(60*60)), 8, Color.RED, new Color(0.75, 0.75, 0.75, 0.5));
-        timeline.addTrack(new TimeInterval(endJulian.addSeconds(-60*60), endJulian), 8, Color.GREEN);
+        timeline.addTrack(new TimeInterval(startJulian, startJulian.addSeconds(60 * 60)), 8, Color.RED, new Color(0.55, 0.55, 0.55, 0.25));
+        timeline.addTrack(new TimeInterval(endJulian.addSeconds(-60 * 60), endJulian), 8, Color.LIME);
         var middle = startJulian.getSecondsDifference(endJulian) / 4;
-        timeline.addTrack(new TimeInterval(startJulian.addSeconds(middle), startJulian.addSeconds(middle * 3)), 8, Color.BLUE, new Color(0.75, 0.75, 0.75, 0.5));
+        timeline.addTrack(new TimeInterval(startJulian.addSeconds(middle), startJulian.addSeconds(middle * 3)), 8, Color.DEEPSKYBLUE, new Color(0.55, 0.55, 0.55, 0.25));
+
+        var clockViewModel = new ClockViewModel(clock);
+        animationViewModel = new AnimationViewModel(clockViewModel);
+        animation = new Animation(dojo.byId('animationWidget'), animationViewModel);
+
+        function tick() {
+            var time = clock.tick();
+            updateScrubTime(time);
+            requestAnimationFrame(tick);
+        }
+        tick();
     }
 
     // Adjust start/end dates in reaction to any calendar/time clicks
@@ -97,10 +122,10 @@ define(['dojo',
         if (startJulian && endJulian) {
             if (startJulian.getSecondsDifference(endJulian) < 0.1) {
                 endBeforeStart.style.display = 'block';
-                timeElement.style.visibility = 'hidden';
+                containerElement.style.visibility = 'hidden';
             } else {
                 endBeforeStart.style.display = 'none';
-                timeElement.style.visibility = 'visible';
+                containerElement.style.visibility = 'visible';
                 if (!timeline) {
                     makeTimeline(startJulian, startJulian, endJulian);
                 }
@@ -146,13 +171,37 @@ define(['dojo',
         newDatesSelected();
     }
 
+    // React to theme changes
+    //
+    function setThemeLight() {
+        document.body.className = 'claro';
+        dijit.byId('themeSelector').set('label', 'Theme: Light');
+        animation.applyThemeChanges();
+    }
+    function setThemeDark() {
+        document.body.className = 'claro cesium-darker';
+        dijit.byId('themeSelector').set('label', 'Theme: Dark');
+        animation.applyThemeChanges();
+    }
+    function cycleTheme() {
+        if (document.body.className === 'claro') {
+            setThemeDark();
+        } else {
+            setThemeLight();
+        }
+    }
+
     dojo.ready(function() {
         endBeforeStart = document.getElementById('endBeforeStart');
-        timeElement = document.getElementById('time1');
+        containerElement = document.getElementById('timelineAndAnimation');
         dojo.connect(dijit.byId('startCal'), 'onChange', newStartDateSelected);
         dojo.connect(dijit.byId('endCal'), 'onChange', newEndDateSelected);
         dojo.connect(dijit.byId('startTimeSel'), 'onChange', newStartTimeSelected);
         dojo.connect(dijit.byId('endTimeSel'), 'onChange', newEndTimeSelected);
+
+        dojo.connect(dijit.byId('themeSelector'), 'onClick', cycleTheme);
+        dojo.connect(dijit.byId('themeLight'), 'onClick', setThemeLight);
+        dojo.connect(dijit.byId('themeDark'), 'onClick', setThemeDark);
 
         dijit.byId('startTimeSel').set('value', 'T00:00:00');
         dijit.byId('endTimeSel').set('value', 'T24:00:00');
