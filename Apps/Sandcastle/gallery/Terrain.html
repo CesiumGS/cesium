@@ -137,8 +137,8 @@ require([
 
     var widget = new CesiumViewerWidget();
     widget.placeAt('cesiumContainer');
-    widget.fullscreenElement = document.body;
     widget.startup();
+    widget.fullscreen.viewModel.fullscreenElement(document.body);
 
     var scene = widget.scene;
     var centralBody = scene.getPrimitives().getCentralBody();
@@ -164,8 +164,6 @@ require([
     centralBody.terrainProvider = cesiumTerrainProvider;
 
     createTerrainMenu(terrainProviders);
-
-    centralBody.logoOffset = new Cesium.Cartesian2(300, 40);
 
     Sandcastle.finishedLoading();
 });

@@ -83,7 +83,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="b13" />
+	<property name="version" value="b14" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -382,8 +382,10 @@
 				<exclude name="dojo/resources/blank.gif" />
 				<exclude name="dijit/**/*.png" />
 				<exclude name="dijit/**/*.gif" />
+				<exclude name="dijit/**/*.svg" />
 				<exclude name="Widgets/**/*.png" />
 				<exclude name="Widgets/**/*.gif" />
+				<exclude name="Widgets/**/*.svg" />
 
 				<!-- always keep assets -->
 				<exclude name="Assets/**" />
