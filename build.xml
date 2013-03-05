@@ -83,7 +83,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="b13" />
+	<property name="version" value="b14" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -96,6 +96,7 @@
 	<property name="rjsPath" location="${thirdPartyDirectory}/requirejs-2.1.2/r.js" />
 	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.2.3/almond.js" />
 	<property name="jscoveragePath" location="${toolsDirectory}/jscoverage-0.5.1/jscoverage.exe" />
+	<property name="rhinoJarPath" location="${toolsDirectory}/rhino-1.7R4/js.jar" />
 	<property name="documentationImagesDirectory" location="Documentation/Images" />
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
@@ -111,7 +112,7 @@
 	<property name="instrumentedDirectory" location="Instrumented" />
 
 	<path id="javascriptClassPath">
-		<pathelement path="${toolsDirectory}/rhino-1.7R4/js.jar" />
+		<pathelement path="${rhinoJarPath}" />
 		<pathelement path="${toolsDirectory}/bsf-2.4.0/bsf.jar" />
 		<pathelement path="${toolsDirectory}/commons-logging-1.1.1/commons-logging-1.1.1.jar" />
 	</path>
@@ -222,7 +223,7 @@
 
 		<!-- create each combined worker layer -->
 		<antcall target="combineJavaScript.combineWorker">
-		  <param name="worker" value="createVerticesFromHeightmap" />
+			<param name="worker" value="createVerticesFromHeightmap" />
 		</antcall>
 
 		<!-- copy to build folder with copyright header added at the top -->
@@ -332,10 +333,12 @@
 
 		<java classname="org.mozilla.javascript.tools.shell.Main" fork="true">
 			<classpath>
-				<pathelement location="${dojoPath}/util/shrinksafe/js.jar" />
+				<pathelement location="${rhinoJarPath}" />
 				<pathelement location="${dojoPath}/util/closureCompiler/compiler.jar" />
 			</classpath>
 			<sysproperty key="java.util.logging.config.file" value="${toolsDirectory}/dojoBuildLogging.properties" />
+			<arg line="-opt -1" />
+			<arg line="-f ${toolsDirectory}/envjs-1.2/env.rhino.1.2.js" />
 			<arg line="${dojoPath}/dojo/dojo.js" />
 			<arg line="baseUrl=${dojoPath}/dojo" />
 			<arg line="load=build" />
@@ -379,8 +382,10 @@
 				<exclude name="dojo/resources/blank.gif" />
 				<exclude name="dijit/**/*.png" />
 				<exclude name="dijit/**/*.gif" />
+				<exclude name="dijit/**/*.svg" />
 				<exclude name="Widgets/**/*.png" />
 				<exclude name="Widgets/**/*.gif" />
+				<exclude name="Widgets/**/*.svg" />
 
 				<!-- always keep assets -->
 				<exclude name="Assets/**" />

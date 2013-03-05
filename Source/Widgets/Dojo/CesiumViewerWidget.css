@@ -1,4 +1,9 @@
-@import url('TimelineWidget.css');
+@import url('../Timeline/Timeline.css');
+@import url('../Timeline/darker.css');
+@import url('../Animation/Animation.css');
+@import url('../Animation/darker.css');
+@import url('../Fullscreen/FullscreenWidget.css');
+@import url('../Fullscreen/darker.css');
 
 .cw-node {
     font-family: sans-serif;
@@ -26,57 +31,39 @@
 .cw-timelineContainer {
     position: absolute;
     bottom: 0;
-    width: 100%;
+    left: 169px;
+    right: 29px;
     height: 27px;
     padding: 0;
+    margin: 0;
     overflow: hidden;
     font-size: 14px;
 }
 
-.cw-timeline {
-    margin: 0 2px;
+.cw-animationContainer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding: 0;
+    width: 169px;
+    height: 112px;
 }
 
-.cw-animationIcon {
-    background-image: url('../Images/animationBar.png');
-    background-repeat: no-repeat;
-    width: 24px;
-    height: 24px;
-}
-
-.cw-bingIcon {
-    background-image: url('../Images/Bing_Logo_51x19_White.png');
-    background-repeat: no-repeat;
-    background-position: center;
-    width: 51px;
-    height: 24px;
-}
-
-.cw-animReverse {
-    background-position: -24px 0;
-}
-
-.cw-animPause {
-    background-position: -72px 0;
-}
-
-.cw-animPlay {
-    background-position: -120px 0;
-}
-
-.cw-animFast {
-    background-position: -144px 0;
-}
-
-.cw-animSlow {
-    background-position: -168px 0;
+.cw-fullscreenContainer {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 0;
+    width: 29px;
+    height: 29px;
+    overflow: hidden;
 }
 
 .cw-cesiumLogo {
     display: block;
     position: absolute;
-    bottom: 68px;
-    left: 5px;
+    bottom: 32px;
+    left: 179px;
     text-decoration: none;
     background-image: url(../Images/Cesium_Logo_overlay.png);
     width: 118px;
@@ -85,40 +72,6 @@
 
 .cw-cesiumLogo img {
     border: none;
-}
-
-.cw-animButtons {
-    display: block;
-    position: absolute;
-    bottom: 31px;
-    left: 6px;
-}
-
-.cw-speedIndicator {
-    opacity: 0;
-    background: rgba(42, 42, 42, 0.8);
-    color: #eee;
-    font-size: 12px;
-    z-index: 20;
-    padding: 5px 10px;
-    border-radius: 4px;
-    -moz-transition-property: opacity;
-    -moz-transition-duration: 0.2s;
-    -webkit-transition-property: opacity;
-    -webkit-transition-duration: 0.2s;
-    transition-property: opacity;
-    transition-duration: 0.2s;
-}
-
-.cw-animButtons:hover .cw-speedIndicator {
-    opacity: 1;
-}
-
-.cw-timeLabel {
-    display: block;
-    position: absolute;
-    bottom: 31px;
-    right: 6px;
 }
 
 .cw-viewIcon {
@@ -140,10 +93,6 @@
     background-position: -72px 0;
 }
 
-.cw-viewFullscreen {
-    background-position: -120px 0;
-}
-
 .cw-viewButtons {
     display: block;
     position: absolute;
@@ -153,6 +102,8 @@
 
 .cw-imagerySelector {
     display: block;
+    font-family: sans-serif;
+    font-size: 9pt;
 }
 
 .claro .dijitToggleButtonChecked .dijitButtonNode {
@@ -172,4 +123,30 @@
     background-position: center;
     background-repeat: no-repeat;
     background-image: url(../Images/ajax-loader.gif);
+}
+
+@media only screen and (min-width: 600px) and (max-width: 900px) {
+    .cw-animationContainer {
+        width: 136px;
+        height: 90px;
+    }
+    .cw-timelineContainer {
+        left: 137px;
+    }
+    .cw-cesiumLogo {
+        left: 146px;
+    }
+}
+
+@media only screen and (max-width: 599px) {
+    .cw-animationContainer {
+        width: 106px;
+        height: 70px;
+    }
+    .cw-timelineContainer {
+        left: 107px;
+    }
+    .cw-cesiumLogo {
+        left: 116px;
+    }
 }

@@ -190,47 +190,25 @@ define([
         };
     };
 
-    // Per-context cache for ellipsoids
-    var vertexArrayCache = {};
-
     function getVertexArray(context) {
-        var c = vertexArrayCache[context.getId()];
+        var vertexArray = context.cache.ellipsoidPrimitive_vertexArray;
 
-        if (typeof c !== 'undefined' &&
-            typeof c.vertexArray !== 'undefined') {
-
-            ++c.referenceCount;
-            return c;
+        if (typeof vertexArray !== 'undefined') {
+            return vertexArray;
         }
 
         var mesh = BoxTessellator.compute({
             dimensions : new Cartesian3(2.0, 2.0, 2.0)
         });
 
-        var va = context.createVertexArrayFromMesh({
+        vertexArray = context.createVertexArrayFromMesh({
             mesh: mesh,
             attributeIndices: attributeIndices,
             bufferUsage: BufferUsage.STATIC_DRAW
         });
 
-        var cachedVA = {
-            vertexArray : va,
-            referenceCount : 1,
-
-            release : function() {
-                if (typeof this.vertexArray !== 'undefined' &&
-                    --this.referenceCount === 0) {
-
-                    // PERFORMANCE_IDEA: Schedule this for a few hundred frames later so we don't thrash the cache
-                    this.vertexArray = this.vertexArray.destroy();
-                }
-
-                return undefined;
-            }
-        };
-
-        vertexArrayCache[context.getId()] = cachedVA;
-        return cachedVA;
+        context.cache.ellipsoidPrimitive_vertexArray = vertexArray;
+        return vertexArray;
     }
 
     /**
@@ -314,7 +292,7 @@ define([
                 this._sp = context.getShaderCache().getShaderProgram(EllipsoidVS, fsSource, attributeIndices);
 
                 colorCommand.primitiveType = PrimitiveType.TRIANGLES;
-                colorCommand.vertexArray = this._va.vertexArray;
+                colorCommand.vertexArray = this._va;
                 colorCommand.renderState = this._rs;
                 colorCommand.shaderProgram = this._sp;
                 colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
@@ -349,7 +327,7 @@ define([
                 this._pickSP = context.getShaderCache().getShaderProgram(EllipsoidVS, pickFS, attributeIndices);
 
                 pickCommand.primitiveType = PrimitiveType.TRIANGLES;
-                pickCommand.vertexArray = this._va.vertexArray;
+                pickCommand.vertexArray = this._va;
                 pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = combine([this._uniforms, pickMaterial._uniforms], false, false);
@@ -402,7 +380,6 @@ define([
      */
     EllipsoidPrimitive.prototype.destroy = function() {
         this._sp = this._sp && this._sp.release();
-        this._va = this._va && this._va.release();
         this._pickSP = this._pickSP && this._pickSP.release();
         this._pickId = this._pickId && this._pickId.destroy();
         return destroyObject(this);

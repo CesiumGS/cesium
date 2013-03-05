@@ -16,7 +16,7 @@ defineSuite([
         var clock = new Clock();
         expect(clock.stopTime).toEqual(clock.startTime.addDays(1));
         expect(clock.startTime).toEqual(clock.currentTime);
-        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_DEPENDENT);
+        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
         expect(clock.clockRange).toEqual(ClockRange.UNBOUNDED);
         expect(clock.multiplier).toEqual(1.0);
     });
@@ -26,7 +26,7 @@ defineSuite([
         var stop = JulianDate.fromTotalDays(112);
         var currentTime = JulianDate.fromTotalDays(13);
         var step = ClockStep.TICK_DEPENDENT;
-        var range = ClockRange.LOOP;
+        var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
         var clock = new Clock({
             currentTime : currentTime,
@@ -49,7 +49,7 @@ defineSuite([
         var stop = JulianDate.fromTotalDays(112);
         var currentTime = JulianDate.fromTotalDays(12);
         var step = ClockStep.TICK_DEPENDENT;
-        var range = ClockRange.LOOP;
+        var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
         var clock = new Clock({
             clockStep : step,
@@ -70,7 +70,7 @@ defineSuite([
         var stop = JulianDate.fromTotalDays(112);
         var currentTime = JulianDate.fromTotalDays(13);
         var step = ClockStep.TICK_DEPENDENT;
-        var range = ClockRange.LOOP;
+        var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
         var clock = new Clock({
             currentTime : currentTime,
@@ -92,7 +92,7 @@ defineSuite([
         var stop = JulianDate.fromTotalDays(13);
         var currentTime = JulianDate.fromTotalDays(12);
         var step = ClockStep.TICK_DEPENDENT;
-        var range = ClockRange.LOOP;
+        var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
         var clock = new Clock({
             currentTime : currentTime,
@@ -113,7 +113,7 @@ defineSuite([
         var stop = JulianDate.fromTotalDays(13);
         var currentTime = JulianDate.fromTotalDays(12);
         var step = ClockStep.TICK_DEPENDENT;
-        var range = ClockRange.LOOP;
+        var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
         var clock = new Clock({
             clockStep : step,
@@ -135,7 +135,7 @@ defineSuite([
         var stop = JulianDate.fromTotalDays(13);
         var currentTime = JulianDate.fromTotalDays(12);
         var step = ClockStep.TICK_DEPENDENT;
-        var range = ClockRange.LOOP;
+        var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
         var clock = new Clock({
             clockStep : step,
@@ -156,7 +156,7 @@ defineSuite([
         var stop = JulianDate.fromTotalDays(13);
         var currentTime = JulianDate.fromTotalDays(12);
         var step = ClockStep.TICK_DEPENDENT;
-        var range = ClockRange.LOOP;
+        var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
         var clock = new Clock({
             currentTime : currentTime,
@@ -178,7 +178,7 @@ defineSuite([
         var stop = JulianDate.fromTotalDays(1);
         var currentTime = JulianDate.fromTotalDays(0.5);
         var step = ClockStep.TICK_DEPENDENT;
-        var range = ClockRange.LOOP;
+        var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
         var clock = new Clock({
             currentTime : currentTime,
@@ -204,7 +204,7 @@ defineSuite([
         var stop = JulianDate.fromTotalDays(1);
         var currentTime = JulianDate.fromTotalDays(0.5);
         var step = ClockStep.TICK_DEPENDENT;
-        var range = ClockRange.LOOP;
+        var range = ClockRange.LOOP_STOP;
         var multiplier = -1.5;
         var clock = new Clock({
             currentTime : currentTime,
@@ -282,7 +282,7 @@ defineSuite([
         var stop = JulianDate.fromTotalDays(1);
         var currentTime = JulianDate.fromTotalDays(1);
         var step = ClockStep.TICK_DEPENDENT;
-        var range = ClockRange.LOOP;
+        var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
         var clock = new Clock({
             currentTime : currentTime,
@@ -303,13 +303,14 @@ defineSuite([
         expect(clock.currentTime).toEqual(currentTime);
     });
 
-    it('Tick dependant clock step loops animating backwards.', function() {
+    it('Tick dependant clock step stops at start when animating backwards with ClockRange.LOOP_STOP.', function() {
         var start = JulianDate.fromTotalDays(0);
         var stop = JulianDate.fromTotalDays(1);
+
         var currentTime = JulianDate.fromTotalDays(0);
         var step = ClockStep.TICK_DEPENDENT;
-        var range = ClockRange.LOOP;
-        var multiplier = -1.5;
+        var range = ClockRange.LOOP_STOP;
+        var multiplier = -100.0;
         var clock = new Clock({
             currentTime : currentTime,
             clockStep : step,
@@ -318,18 +319,13 @@ defineSuite([
             stopTime : stop,
             clockRange : range
         });
-        expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = stop.addSeconds(multiplier);
-        expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
-
-        currentTime = currentTime.addSeconds(multiplier);
-        expect(currentTime).toEqual(clock.tick());
-        expect(clock.currentTime).toEqual(currentTime);
+        expect(start).toEqual(clock.tick());
+        expect(start).toEqual(clock.currentTime);
     });
 
-    it('Tick dependant clock step stops at end when animating .', function() {
+    it('Tick dependant clock step stops at end when animating forwards.', function() {
         var start = JulianDate.fromTotalDays(0);
         var stop = JulianDate.fromTotalDays(1);
 
@@ -355,7 +351,7 @@ defineSuite([
         //We can't numerically validate the real-time clock, but we
         //can at least make sure the code executes.
         var clock = new Clock({
-            clockStep : ClockStep.SYSTEM_DEPENDENT
+            clockStep : ClockStep.SYSTEM_CLOCK
         });
         var time1 = clock.tick();
 
@@ -387,36 +383,11 @@ defineSuite([
         expect(start).toEqual(clock.currentTime);
     });
 
-    it('Tick followed by tickReverse gets you back to the same time.', function() {
-        var start = JulianDate.fromTotalDays(0);
-        var stop = JulianDate.fromTotalDays(1);
-        var currentTime = JulianDate.fromTotalDays(0);
-        var step = ClockStep.TICK_DEPENDENT;
-        var range = ClockRange.UNBOUNDED;
-        var multiplier = 1.5;
-        var clock = new Clock({
-            currentTime : currentTime,
-            clockStep : step,
-            multiplier : multiplier,
-            startTime : start,
-            stopTime : stop,
-            clockRange : range
-        });
-
-        expect(clock.currentTime).toEqual(currentTime);
-        currentTime = currentTime.addSeconds(multiplier);
-        clock.tick();
-        expect(clock.currentTime).toEqual(currentTime);
-        clock.reverseTick();
-        currentTime = currentTime.addSeconds(-multiplier);
-        expect(clock.currentTime).toEqual(currentTime);
-    });
-
     it('Passing parameter to tick ticks that many seconds.', function() {
         var start = JulianDate.fromTotalDays(0);
         var stop = JulianDate.fromTotalDays(1);
         var currentTime = JulianDate.fromTotalDays(0);
-        var step = ClockStep.SYSTEM_CLOCK_DEPENDENT;
+        var step = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
         var range = ClockRange.UNBOUNDED;
         var multiplier = 10000;
         var clock = new Clock({
