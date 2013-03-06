@@ -674,11 +674,15 @@ define([
                 });
             }
             // TODO: re-enable mipmapping
-            //tileTexture.generateMipmap(MipmapHint.NICEST);
-            //tileTexture.setSampler(this._mipmapSampler);
+            tileTexture.generateMipmap(MipmapHint.NICEST);
+            tileTexture.setSampler(this._mipmapSampler);
         }
 
         copyToImageryTextureToTileTexture(this, context, tile, tileImagery, tileTexture, layerIndex);
+    };
+
+    ImageryLayer.prototype._finalizeTexture = function(context, tile, imageryLayerCollection, layerIndex) {
+        tile.textures[layerIndex].generateMipmap(MipmapHint.NICEST);
     };
 
     var uniformMap = {

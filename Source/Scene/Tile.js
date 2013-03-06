@@ -452,6 +452,8 @@ define([
                     }
                 }
 
+                imageryLayer._finalizeTexture(context, this, imageryLayerCollection, layerIndex);
+
                 propagateTexturesToDescendants(context, this, this, imageryLayerCollection, layerIndex);
             }
         }
@@ -492,6 +494,7 @@ define([
 
                     if (typeof child.textures[layerIndex] !== 'undefined') {
                         imageryLayer._reprojectTexture(context, child, tileImagery, imageryLayerCollection, layerIndex);
+                        imageryLayer._finalizeTexture(context, child, imageryLayerCollection, layerIndex);
                     }
                 }
             }
