@@ -673,7 +673,6 @@ define([
                     maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy))
                 });
             }
-            // TODO: re-enable mipmapping
             tileTexture.generateMipmap(MipmapHint.NICEST);
             tileTexture.setSampler(this._mipmapSampler);
         }

@@ -540,6 +540,7 @@ define([
                 } else {
                     // Parent does not have a texture for this layer, so link to the
                     // texture the parent inherited from its parent.
+                    // TODO
                     var ancestor = parent.parent;
                     while (typeof ancestor !== 'undefined' && typeof ancestor.textures[i] === 'undefined') {
                         ancestor = ancestor.parent;
