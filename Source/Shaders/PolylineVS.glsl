@@ -75,14 +75,14 @@ void main()
         nextEC = czm_modelView * nextDir;
         p1 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + nextEC.xyz * pixelSize, 1.0));
         nextWC = normalize(p1.xy - endPointWC.xy);
-        direction = normalize(vec2(nextWC.y, -nextWC.x));
+        direction = -normalize(vec2(nextWC.y, -nextWC.x));
     }
     else if (czm_equalsEpsilon(nextDir, vec4(0.0), czm_epsilon7))
     {
         prevEC = czm_modelView * prevDir;
         p0 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + prevEC.xyz * pixelSize, 1.0));
         prevWC = normalize(p0.xy - endPointWC.xy);
-        direction = -normalize(vec2(prevWC.y, -prevWC.x));
+        direction = normalize(vec2(prevWC.y, -prevWC.x));
     }
     else
     {
@@ -94,7 +94,7 @@ void main()
 	    
 	    prevWC = normalize(p0.xy - endPointWC.xy);
 	    nextWC = normalize(p1.xy - endPointWC.xy);
-	    vec2 normal = normalize(vec2(nextWC.y, -nextWC.x));
+	    vec2 normal = -normalize(vec2(nextWC.y, -nextWC.x));
 	    
 	    direction = normalize((nextWC + prevWC) * 0.5);
 	    if (dot(direction, normal) < 0.0)
