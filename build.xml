@@ -382,8 +382,10 @@
 				<exclude name="dojo/resources/blank.gif" />
 				<exclude name="dijit/**/*.png" />
 				<exclude name="dijit/**/*.gif" />
+				<exclude name="dijit/**/*.svg" />
 				<exclude name="Widgets/**/*.png" />
 				<exclude name="Widgets/**/*.gif" />
+				<exclude name="Widgets/**/*.svg" />
 
 				<!-- always keep assets -->
 				<exclude name="Assets/**" />
