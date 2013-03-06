@@ -1,3 +1,5 @@
+#extension GL_OES_standard_derivatives : enable // TODO check for support
+
 varying vec4 v_color;
 varying float v_width;
 
