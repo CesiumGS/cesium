@@ -367,6 +367,11 @@ define([
                 var tileImagery = layerImageryCollection[i];
                 var imagery = tileImagery.imagery;
 
+                if (typeof imagery === 'undefined') {
+                    // This is a placeholder for parent imagery.
+                    continue;
+                }
+
                 if (imagery.state === ImageryState.PLACEHOLDER) {
                     if (imageryLayer.getImageryProvider().isReady()) {
                         // Remove the placeholder and add the actual skeletons (if any)
@@ -395,35 +400,31 @@ define([
                     imagery.state = ImageryState.READY;
                 }
 
-                if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
-                    // re-associate TileImagery with a parent Imagery that is not failed or invalid.
-                    var parent = imagery.parent;
-                    while (typeof parent !== 'undefined' && (parent.state === ImageryState.FAILED || parent.state === ImageryState.INVALID)) {
-                        parent = parent.parent;
-                    }
-
-                    // If there's no valid parent, remove this TileImagery from the tile.
-                    if (typeof parent === 'undefined') {
-                        tileImagery.freeResources();
-                        tileImageryCollection.splice(i, 1);
-                        --i;
-                        len = tileImageryCollection.length;
-                        continue;
-                    }
-
-                    // use that parent imagery instead, storing the original imagery
-                    // in originalImagery to keep it alive
-                    tileImagery.originalImagery = imagery;
-
-                    parent.addReference();
-                    tileImagery.imagery = parent;
-                    imagery = parent;
-                }
-
                 var imageryDoneLoading = imagery.state === ImageryState.READY;
 
                 if (imageryDoneLoading && typeof tileImagery.textureTranslationAndScale === 'undefined') {
                     tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
+                }
+
+                if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
+                    // This Imagery instance is useless, but keep the TileImagery around to
+                    // tell us what portion of this tile should be copied from its parent.
+                    imagery.releaseReference();
+                    imagery = undefined;
+                    tileImagery.imagery = undefined;
+
+                    // Find an ancestor tile with a texture
+                    var sourceTile = this.parent;
+                    while (typeof sourceTile !== 'undefined' && typeof sourceTile.textures[layerIndex] === 'undefined') {
+                        sourceTile = sourceTile.parent;
+                    }
+
+                    // TODO: what if there's no ancestor with a texture?
+                    if (typeof sourceTile !== 'undefined') {
+                        tileImagery.textureTranslationAndScale = computeTranslationAndScaleForInheritedTexture(this, sourceTile);
+                    }
+
+                    imageryDoneLoading = true;
                 }
 
                 allTexturesLoaded = allTexturesLoaded && imageryDoneLoading;
@@ -434,12 +435,21 @@ define([
             // If all the imagery for this layer is done loading, create a single texture
             // for this tile with all of the imagery.
             if (allTexturesLoaded) {
-                for (i = 0; i < len; ++i) {
-                    imageryLayer._reprojectTexture(context, this, layerImageryCollection[i], imageryLayerCollection);
-                    layerImageryCollection[i].freeResources();
-                }
+                for (i = 0; i < len; ) {
+                    imageryLayer._reprojectTexture(context, this, layerImageryCollection[i], imageryLayerCollection, layerIndex);
 
-                layerImageryCollection.length = 0;
+                    if (typeof layerImageryCollection[i].imagery === 'undefined') {
+                        // This imagery instance indicates we should pull the parent imagery, which may not
+                        // be loaded yet.  We need to leave it in place so that when the parent imagery is loaded,
+                        // we can re-apply this portion of our texture.
+                        ++i;
+                    } else {
+                        // We no longer needs this imagery, so remove it.
+                        layerImageryCollection[i].freeResources();
+                        layerImageryCollection.splice(i, 1);
+                        --len;
+                    }
+                }
 
                 propagateTexturesToDescendants(this, this, layerIndex);
             }

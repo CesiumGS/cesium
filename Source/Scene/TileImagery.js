@@ -16,7 +16,6 @@ define(function() {
         this.imagery = imagery;
         this.textureCoordinateExtent = textureCoordinateExtent;
         this.originalImagery = undefined;
-        this.componentTileImagery = undefined;
         this.textureTranslationAndScale = undefined;
     };
 
@@ -26,16 +25,12 @@ define(function() {
      * @memberof TileImagery
      */
     TileImagery.prototype.freeResources = function() {
-        this.imagery.releaseReference();
+        if (typeof this.imagery !== 'undefined') {
+            this.imagery.releaseReference();
+        }
 
         if (typeof this.originalImagery !== 'undefined') {
             this.originalImagery.releaseReference();
-        }
-
-        if (typeof this.componentTileImagery !== 'undefined') {
-            for (var i = 0, len = this.componentTileImagery.length; i < len; ++i) {
-                this.componentTileImagery[i].freeResources();
-            }
         }
     };
 

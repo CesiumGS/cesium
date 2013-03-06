@@ -653,9 +653,7 @@ define([
      * @param {Context} context The renderer context to use.
      * @param {Imagery} imagery The imagery instance to reproject.
      */
-    ImageryLayer.prototype._reprojectTexture = function(context, tile, tileImagery, imageryLayerCollection) {
-        var imagery = tileImagery.imagery;
-
+    ImageryLayer.prototype._reprojectTexture = function(context, tile, tileImagery, imageryLayerCollection, layerIndex) {
         var tileTexture = tile.textures[this._layerIndex];
 
         // Create the tile's texture if it doesn't exist yet.
@@ -680,47 +678,7 @@ define([
             //tileTexture.setSampler(this._mipmapSampler);
         }
 
-        tileImagery.textureTranslationAndScale = this._calculateTextureTranslationAndScale(tile, tileImagery);
-        copyToImageryTextureToTileTexture(this, context, tileImagery, tileTexture);
-
-        /*// Reproject this texture if it is not already in a geographic projection and
-        // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
-        // avoids precision problems in the reprojection transformation while making
-        // no noticeable difference in the georeferencing of the image.
-        if (!(this._imageryProvider.getTilingScheme() instanceof GeographicTilingScheme) &&
-            (extent.east - extent.west) / texture.getWidth() > 1e-5) {
-                var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.extent);
-                texture.destroy();
-                imagery.texture = texture = reprojectedTexture;
-        }
-
-        // Use mipmaps if this texture has power-of-two dimensions.
-        if (CesiumMath.isPowerOfTwo(texture.getWidth()) && CesiumMath.isPowerOfTwo(texture.getHeight())) {
-            if (typeof this._mipmapSampler === 'undefined') {
-                var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
-                this._mipmapSampler = context.createSampler({
-                    wrapS : TextureWrap.CLAMP,
-                    wrapT : TextureWrap.CLAMP,
-                    minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
-                    magnificationFilter : TextureMagnificationFilter.LINEAR,
-                    maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy))
-                });
-            }
-            texture.generateMipmap(MipmapHint.NICEST);
-            texture.setSampler(this._mipmapSampler);
-        } else {
-            if (typeof this._nonMipmapSampler === 'undefined') {
-                this._nonMipmapSampler = context.createSampler({
-                    wrapS : TextureWrap.CLAMP,
-                    wrapT : TextureWrap.CLAMP,
-                    minificationFilter : TextureMinificationFilter.LINEAR,
-                    magnificationFilter : TextureMagnificationFilter.LINEAR
-                });
-            }
-            texture.setSampler(this._nonMipmapSampler);
-        }*/
-
-        imagery.state = ImageryState.READY;
+        copyToImageryTextureToTileTexture(this, context, tile, tileImagery, tileTexture, layerIndex);
     };
 
     var uniformMap = {
@@ -763,7 +721,7 @@ define([
             textureCoordinateExtent : new Cartesian4()
         };
 
-    function copyToImageryTextureToTileTexture(imageryLayer, context, tileImagery, tileTexture) {
+    function copyToImageryTextureToTileTexture(imageryLayer, context, tile, tileImagery, tileTexture, layerIndex) {
         if (typeof imageryLayer._fbCopy === 'undefined') {
             imageryLayer._fbCopy = context.createFramebuffer();
             imageryLayer._fbCopy.destroyAttachments = false;
@@ -816,7 +774,21 @@ define([
         }
 
         var imagery = tileImagery.imagery;
-        var texture = imagery.texture;
+
+        var texture;
+        var extent;
+        var tilingScheme = imageryLayer._imageryProvider.getTilingScheme();
+        var allowReproject;
+        if (typeof imagery !== 'undefined') {
+            texture = imagery.texture;
+            extent = imagery.extent;
+            allowReproject = true;
+        } else {
+            texture = tile.inheritedTextures[layerIndex];
+            tilingScheme = tile.tilingScheme;
+            allowReproject = false;
+        }
+
         texture.setSampler(imageryLayer._copySampler);
 
         var width = 256;
@@ -826,16 +798,12 @@ define([
         uniformMap.textureDimensions.y = height;
         uniformMap.texture = texture;
 
-        var extent = imagery.extent;
-
-        var tilingScheme = imageryLayer._imageryProvider.getTilingScheme();
-
         // Reproject this texture if it is not already in a geographic projection and
         // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
         var shaderProgram;
-        if (tilingScheme instanceof WebMercatorTilingScheme && (extent.east - extent.west) / texture.getWidth() > 1e-5) {
+        if (allowReproject && tilingScheme instanceof WebMercatorTilingScheme && (extent.east - extent.west) / texture.getWidth() > 1e-5) {
             shaderProgram = imageryLayer._spCopyWebMercator;
 
             uniformMap.northLatitude = extent.north;

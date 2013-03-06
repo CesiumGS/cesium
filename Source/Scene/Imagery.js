@@ -19,13 +19,6 @@ define([
         this.y = y;
         this.level = level;
 
-        if (level !== 0) {
-            var parentX = x / 2 | 0;
-            var parentY = y / 2 | 0;
-            var parentLevel = level - 1;
-            this.parent = imageryLayer.getImageryFromCache(parentX, parentY, parentLevel);
-        }
-
         this.state = ImageryState.UNLOADED;
         this.imageUrl = undefined;
         this.image = undefined;
