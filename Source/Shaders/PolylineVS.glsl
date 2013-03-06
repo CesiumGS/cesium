@@ -40,8 +40,8 @@ void main()
     else if (u_morphTime == 0.0)
     {
         p = vec4(czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy), 1.0);
-        prevDir = vec4(czm_sphericalToCartesianCoordinates(prev.zw), 0.0);
-        nextDir = vec4(czm_sphericalToCartesianCoordinates(next.zw), 0.0);
+        prevDir = vec4(czm_sphericalToCartesianCoordinates(prev.zw).zxy, 0.0);
+        nextDir = vec4(czm_sphericalToCartesianCoordinates(next.zw).zxy, 0.0);
     }
     else
     {
