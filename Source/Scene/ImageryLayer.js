@@ -777,15 +777,15 @@ define([
 
         var texture;
         var extent;
-        var tilingScheme = imageryLayer._imageryProvider.getTilingScheme();
+        var tilingScheme;
         var allowReproject;
         if (typeof imagery !== 'undefined') {
             texture = imagery.texture;
             extent = imagery.extent;
+            tilingScheme = imageryLayer._imageryProvider.getTilingScheme();
             allowReproject = true;
         } else {
             texture = tile.inheritedTextures[layerIndex];
-            tilingScheme = tile.tilingScheme;
             allowReproject = false;
         }
 

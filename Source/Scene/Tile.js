@@ -435,6 +435,7 @@ define([
             // If all the imagery for this layer is done loading, create a single texture
             // for this tile with all of the imagery.
             if (allTexturesLoaded) {
+                // TODO: with TileImagerys inherited from an ancestor, this gets executed too often.
                 for (i = 0; i < len; ) {
                     imageryLayer._reprojectTexture(context, this, layerImageryCollection[i], imageryLayerCollection, layerIndex);
 
@@ -451,7 +452,7 @@ define([
                     }
                 }
 
-                propagateTexturesToDescendants(this, this, layerIndex);
+                propagateTexturesToDescendants(context, this, this, imageryLayerCollection, layerIndex);
             }
         }
 
@@ -465,16 +466,40 @@ define([
         }
     };
 
-    function propagateTexturesToDescendants(sourceTile, parentTile, layerIndex) {
+    function propagateTexturesToDescendants(context, sourceTile, parentTile, imageryLayerCollection, layerIndex) {
         if (typeof parentTile.children === 'undefined') {
             return;
         }
+
+        var imageryLayer = imageryLayerCollection.get(layerIndex);
 
         for (var i = 0, len = parentTile.children.length; i < len; ++i) {
             var child = parentTile.children[i];
             child.inheritedTextureTranslationAndScale[layerIndex] = computeTranslationAndScaleForInheritedTexture(child, sourceTile);
             child.inheritedTextures[layerIndex] = sourceTile.textures[layerIndex];
-            propagateTexturesToDescendants(sourceTile, child, layerIndex);
+
+            // If this tile has any placeholder TileImagery instances for ancestor textures, we need to update
+            // those portions of the child tile's texture.
+            var tileImagerys = child.imagery[layerIndex];
+            if (typeof tileImagerys !== 'undefined') {
+                for (var tileImageryIndex = 0; tileImageryIndex < tileImagerys.length; ++tileImageryIndex) {
+                    var tileImagery = tileImagerys[tileImageryIndex];
+                    if (typeof tileImagery.imagery !== 'undefined') {
+                        continue;
+                    }
+
+                    tileImagery.textureTranslationAndScale = child.inheritedTextureTranslationAndScale[layerIndex];
+
+                    if (typeof child.textures[layerIndex] !== 'undefined') {
+                        imageryLayer._reprojectTexture(context, child, tileImagery, imageryLayerCollection, layerIndex);
+                    }
+                }
+            }
+
+            // Recurse on children until we reach a tile with its own texture.
+            if (typeof child.textures[layerIndex] === 'undefined') {
+                propagateTexturesToDescendants(context, sourceTile, child, imageryLayerCollection, layerIndex);
+            }
         }
     }
 
