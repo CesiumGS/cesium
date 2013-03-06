@@ -538,26 +538,14 @@ define([
                     inheritedTextures[i] = parentTexture;
                     inheritedTextureTranslationAndScale[i] = computeTranslationAndScaleForInheritedTexture(this, parent);
                 } else {
-                    // Parent does not have a texture for this layer, so link to the
-                    // texture the parent inherited from its parent.
-                    // TODO
-                    var ancestor = parent.parent;
-                    while (typeof ancestor !== 'undefined' && typeof ancestor.textures[i] === 'undefined') {
-                        ancestor = ancestor.parent;
-                    }
-
-                    if (typeof ancestor !== 'undefined') {
-                        inheritedTextures[i] = parentInheritedTextures[i];
-                        inheritedTextureTranslationAndScale[i] = computeTranslationAndScaleForInheritedTexture(this, ancestor);
-                    }
-
-                    /*var parentToChild = computeTranslationAndScaleForInheritedTexture(tile, parent);
-                    var sourceToParent = parentInheritedTextureTranslationAndScale[i];
+                    var parentToChild = computeTranslationAndScaleForInheritedTexture(this, parent);
+                    var sourceToParent = parent.inheritedTextureTranslationAndScale[i];
+                    inheritedTextures[i] = parentInheritedTextures[i];
                     inheritedTextureTranslationAndScale[i] = new Cartesian4(
-                            sourceToParent.x * parentToChild.z + parentToChild.x,
-                            sourceToParent.y * parentToChild.w + parentToChild.y,
+                            parentToChild.x * sourceToParent.z + sourceToParent.x,
+                            parentToChild.y * sourceToParent.w + sourceToParent.y,
                             parentToChild.z * sourceToParent.z,
-                            parentToChild.w * sourceToParent.w);*/
+                            parentToChild.w * sourceToParent.w);
                 }
             }
         }
