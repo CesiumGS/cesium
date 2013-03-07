@@ -22,6 +22,16 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * @type Framebuffer
          */
         this.framebuffer = undefined;
+
+        /**
+        *
+        */
+       this.debug = {
+           /**
+            *
+            */
+           creator : undefined
+       };
     };
 
     /**
