@@ -77,7 +77,7 @@ define([
             throw new DeveloperError('sources properties must all be the same type.');
         }
 
-        this._command = new DrawCommand();
+        this._command = new DrawCommand(this);
         this._cubeMap = undefined;
         this._sources = sources;
 

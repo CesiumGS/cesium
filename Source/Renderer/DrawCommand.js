@@ -36,8 +36,10 @@ define([
      *
      * @alias DrawCommand
      * @constructor
+     *
+     * @param {Object}[owner=undefined] The object who created this command.
      */
-    var DrawCommand = function() {
+    var DrawCommand = function(owner) {
         /**
          * The bounding volume of the geometry.
          * @type DOC_TBA
@@ -109,11 +111,11 @@ define([
         this.executeInClosestFrustum = false;
 
         /**
-         * TODO
+         * The object who created this command.  This is useful for debugging command execution.
          *
          * @type Object
          */
-        this.owner = undefined;
+        this.owner = owner;
 
         /**
          * TODO

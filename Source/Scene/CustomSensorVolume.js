@@ -64,8 +64,8 @@ define([
         this._pickId = undefined;
         this._pickIdThis = t._pickIdThis || this;
 
-        this._colorCommand = new DrawCommand();
-        this._pickCommand = new DrawCommand();
+        this._colorCommand = new DrawCommand(this);
+        this._pickCommand = new DrawCommand(this);
         this._commandLists = new CommandLists();
 
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = PrimitiveType.TRIANGLES;

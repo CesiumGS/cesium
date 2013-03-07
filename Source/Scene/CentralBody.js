@@ -131,15 +131,15 @@ define([
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
 
-        this._clearDepthCommand = new ClearCommand();
+        this._clearDepthCommand = new ClearCommand(undefined, this);
 
-        this._depthCommand = new DrawCommand();
+        this._depthCommand = new DrawCommand(this);
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
         this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
 
-        this._northPoleCommand = new DrawCommand();
+        this._northPoleCommand = new DrawCommand(this);
         this._northPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
-        this._southPoleCommand = new DrawCommand();
+        this._southPoleCommand = new DrawCommand(this);
         this._southPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
 
         this._drawNorthPole = false;

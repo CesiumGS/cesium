@@ -493,7 +493,7 @@ define([
 
                         command = commands[p];
                         if (typeof command === 'undefined') {
-                            command = commands[p] = new DrawCommand();
+                            command = commands[p] = new DrawCommand(this);
                         }
 
                         command.boundingVolume = boundingVolume;
@@ -508,7 +508,7 @@ define([
 
                         command = commands[p + 1];
                         if (typeof command === 'undefined') {
-                            command = commands[p + 1] = new DrawCommand();
+                            command = commands[p + 1] = new DrawCommand(this);
                         }
 
                         command.boundingVolume = boundingVolume;
@@ -523,7 +523,7 @@ define([
 
                         command = commands[p + 2];
                         if (typeof command === 'undefined') {
-                            command = commands[p + 2] = new DrawCommand();
+                            command = commands[p + 2] = new DrawCommand(this);
                         }
 
                         command.boundingVolume = boundingVolume;
@@ -551,7 +551,7 @@ define([
 
                         command = commands[b];
                         if (typeof command === 'undefined') {
-                            command = commands[b] = new DrawCommand();
+                            command = commands[b] = new DrawCommand(this);
                         }
 
                         command.boundingVolume = boundingVolume;

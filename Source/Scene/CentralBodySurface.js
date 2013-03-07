@@ -755,7 +755,7 @@ define([
             uniformMap2.dayTextureTexCoordsExtent[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
             uniformMap2.dayTextureAlpha[0] = 1.0;
 
-            var boundingSphereCommand = new DrawCommand();
+            var boundingSphereCommand = new DrawCommand(tile);
             boundingSphereCommand.shaderProgram = shaderSet.getShaderProgram(context, 0);
             boundingSphereCommand.renderState = renderState;
             boundingSphereCommand.primitiveType = PrimitiveType.LINES;
@@ -953,7 +953,7 @@ define([
                     ++tileCommandIndex;
                     var command = tileCommands[tileCommandIndex];
                     if (typeof command === 'undefined') {
-                        command = new DrawCommand();
+                        command = new DrawCommand(tile);
                         tileCommands[tileCommandIndex] = command;
                         tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap();
                     }

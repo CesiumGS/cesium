@@ -1086,9 +1086,8 @@ define([
             for (j = 0; j < vaLength; ++j) {
                 command = commands[j];
                 if (typeof command === 'undefined') {
-                    command = commands[j] = new DrawCommand();
+                    command = commands[j] = new DrawCommand(this);
 command.debugShowBoundingVolume = true;
-command.owner = this;
                 }
 
                 command.boundingVolume = boundingVolume;
@@ -1123,7 +1122,7 @@ command.owner = this;
             for (j = 0; j < vaLength; ++j) {
                 command = commands[j];
                 if (typeof command === 'undefined') {
-                    command = commands[j] = new DrawCommand();
+                    command = commands[j] = new DrawCommand(this);
                 }
 
                 command.boundingVolume = boundingVolume;

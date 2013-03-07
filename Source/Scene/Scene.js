@@ -87,15 +87,13 @@ define([
         this._commandList = [];
         this._frustumCommandsList = [];
 
-        this._clearColorCommand = new ClearCommand();
-        this._clearColorCommand.clearState = context.createClearState({
-            color : new Color()
-        });
-        this._clearDepthStencilCommand = new ClearCommand();
-        this._clearDepthStencilCommand.clearState = context.createClearState({
-            depth : 1.0,
-            stencil : 0.0
-        });
+        this._clearColorCommand = new ClearCommand(context.createClearState({
+                color : new Color()
+            }), this);
+        this._clearDepthStencilCommand = new ClearCommand(context.createClearState({
+                depth : 1.0,
+                stencil : 0.0
+            }), this);
 
         /**
          * The {@link SkyBox} used to draw the stars.

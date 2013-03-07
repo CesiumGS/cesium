@@ -31,12 +31,11 @@ define([
         this._height = 0;
 
         // Clear to black.  Since this is the background color, no objects will be black
-        this._clearCommand = new ClearCommand();
-        this._clearCommand.clearState = context.createClearState({
-            color : new Color(0.0, 0.0, 0.0, 1.0),
-            depth : 1.0,
-            stencil : 0
-        });
+        this._clearCommand = new ClearCommand(context.createClearState({
+                color : new Color(0.0, 0.0, 0.0, 1.0),
+                depth : 1.0,
+                stencil : 0
+            }), this);
     };
 
     /**
