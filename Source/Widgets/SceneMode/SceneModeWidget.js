@@ -88,6 +88,7 @@ define(['./SceneModeViewModel',
         };
 
         document.addEventListener('mousedown', this._closeDropdown);
+        document.addEventListener('touchstart', this._closeDropdown);
     };
 
     /**
@@ -97,6 +98,7 @@ define(['./SceneModeViewModel',
      */
     SceneModeWidget.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._closeDropdown);
+        document.removeEventListener('touchstart', this._closeDropdown);
         var container = this.container;
         knockout.cleanNode(container);
         container.removeChild(this.button);

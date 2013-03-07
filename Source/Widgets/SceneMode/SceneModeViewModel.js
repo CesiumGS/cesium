@@ -69,7 +69,7 @@ define(['../../Core/DeveloperError',
         */
         this.morphTo2D = createCommand(function() {
             if (sceneMode() === SceneMode.MORPHING) {
-                transitioner.completeMorph();
+                transitioner.endMorph();
             }
             transitioner.morphTo2D();
             dropDownVisible(false);
@@ -81,7 +81,7 @@ define(['../../Core/DeveloperError',
         */
         this.morphTo3D = createCommand(function() {
             if (sceneMode() === SceneMode.MORPHING) {
-                transitioner.completeMorph();
+                transitioner.endMorph();
             }
             transitioner.morphTo3D();
             dropDownVisible(false);
@@ -93,7 +93,7 @@ define(['../../Core/DeveloperError',
         */
         this.morphToColumbusView = createCommand(function() {
             if (sceneMode() === SceneMode.MORPHING) {
-                transitioner.completeMorph();
+                transitioner.endMorph();
             }
             transitioner.morphToColumbusView();
             dropDownVisible(false);

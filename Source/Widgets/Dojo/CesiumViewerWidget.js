@@ -776,7 +776,7 @@ define([
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
-            this.scenModeWidget = new SceneModeWidget(this.sceneModeContainer, transitioner);
+            this.sceneModeWidget = new SceneModeWidget(this.sceneModeContainer, transitioner);
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);

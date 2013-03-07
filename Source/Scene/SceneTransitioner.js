@@ -143,7 +143,7 @@ define([
          */
         this.onTransitionComplete = new Event();
 
-        this._completeMorph = undefined;
+        this._endMorph = undefined;
     };
 
     //immediately set the morph time of all objects in the scene
@@ -270,7 +270,7 @@ define([
         camera.direction = this._camera2D.direction.clone();
         camera.up = this._camera2D.up.clone();
 
-        this._completeMorph = undefined;
+        this._endMorph = undefined;
         this.onTransitionComplete.raiseEvent(this, this._previousMode, SceneMode.SCENE2D);
     };
 
@@ -306,7 +306,7 @@ define([
             camera.up = this._cameraCV.up.clone();
             camera.right = camera.direction.cross(camera.up);
         }
-        this._completeMorph = undefined;
+        this._endMorph = undefined;
         this.onTransitionComplete.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW);
     };
 
@@ -343,7 +343,7 @@ define([
             camera.direction = this._camera3D.direction.clone();
             camera.up = this._camera3D.up.clone();
         }
-        this._completeMorph = undefined;
+        this._endMorph = undefined;
         this.onTransitionComplete.raiseEvent(this, this._previousMode, SceneMode.SCENE3D);
     };
 
@@ -364,14 +364,14 @@ define([
     /**
      * Cancels an actively running morph.
      *
-     * @exception DeveloperError completeMorph can only be called while morphing.
+     * @exception DeveloperError endMorph can only be called while morphing.
      * @memberof SceneTransitioner
      */
-    SceneTransitioner.prototype.completeMorph = function() {
-        if (typeof this._completeMorph === 'undefined') {
-            throw new DeveloperError('completeMorph can only be called while morphing');
+    SceneTransitioner.prototype.endMorph = function() {
+        if (typeof this._endMorph === 'undefined') {
+            throw new DeveloperError('endMorph can only be called while morphing');
         }
-        this._completeMorph();
+        this._endMorph();
     };
 
     SceneTransitioner.prototype._createMorphHandler = function(endMorphFunction) {
@@ -380,16 +380,16 @@ define([
         if (this.endMorphOnMouseInput) {
             this._morphHandler = new ScreenSpaceEventHandler(this._scene.getCanvas());
 
-            var completeMorph = function() {
+            var endMorph = function() {
                 that._morphCancelled = true;
                 endMorphFunction.call(that);
             };
 
-            this._completeMorph = completeMorph;
-            this._morphHandler.setInputAction(completeMorph, ScreenSpaceEventType.LEFT_DOWN);
-            this._morphHandler.setInputAction(completeMorph, ScreenSpaceEventType.MIDDLE_DOWN);
-            this._morphHandler.setInputAction(completeMorph, ScreenSpaceEventType.RIGHT_DOWN);
-            this._morphHandler.setInputAction(completeMorph, ScreenSpaceEventType.WHEEL);
+            this._endMorph = endMorph;
+            this._morphHandler.setInputAction(endMorph, ScreenSpaceEventType.LEFT_DOWN);
+            this._morphHandler.setInputAction(endMorph, ScreenSpaceEventType.MIDDLE_DOWN);
+            this._morphHandler.setInputAction(endMorph, ScreenSpaceEventType.RIGHT_DOWN);
+            this._morphHandler.setInputAction(endMorph, ScreenSpaceEventType.WHEEL);
         }
     };
 
