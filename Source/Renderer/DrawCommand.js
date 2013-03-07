@@ -193,7 +193,8 @@ define([
             command.renderState = rs;
             command.shaderProgram = sp;
             command.uniformMap = combine([uniforms, material._uniforms], false, false);
-            command.modelMatrix = Matrix4.multiplyByTranslation(defaultValue(this.modelMatrix, Matrix4.IDENTITY), this.boundingVolume.center);
+            var m = Matrix4.multiplyByTranslation(defaultValue(this.modelMatrix, Matrix4.IDENTITY), this.boundingVolume.center);
+            command.modelMatrix = Matrix4.fromTranslation(new Cartesian3(m[12], m[13], m[14]));
 
             command.execute(context, framebuffer);
 
