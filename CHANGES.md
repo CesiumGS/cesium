@@ -4,17 +4,13 @@ Change Log
 Beta Releases
 -------------
 ### b15 - 2013-04-01
+
 * Breaking changes:
    * Removed `view2D`, `view3D`, and `viewColumbus` properties from `CesiumViewerWidget`.  Use the `sceneModeWidget` property instead.
-* Added `SceneModeWidget` and associated objects.  This is a new single-button widget for transitioning among scene modes.
-* Added 'onTransitionStart` and `onTransitionComplete` events to `SceneModeTransitioner`.
-
-### b15 - 2013-04-01
-
-* Breaking changes:
-   *
 * Added `BoundingSphere.fromCornerPoints`.
 * Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
+* Added `SceneModeWidget` and associated objects.  This is a new single-button widget for transitioning among scene modes.
+* Added 'onTransitionStart` and `onTransitionComplete` events to `SceneModeTransitioner`.
 
 ### b14 - 2013-03-01
 
