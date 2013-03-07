@@ -35,6 +35,48 @@ define([
     };
 
     /**
+     * Creates a Cartesian2 from two consecutive elements in an array.
+     * @memberof Cartesian2
+     *
+     * @param {Array} values The array whose two consecutive elements correspond to the x and y components, respectively.
+     * @param {Number} [offset=0] The offset into the array of the first element, which corresponds to the x component.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     *
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     *
+     * @exception {DeveloperError} values is required.
+     * @exception {DeveloperError} offset + 2 is greater than the length of the array.
+     *
+     * @example
+     * // Create a Cartesian2 with (1.0, 2.0)
+     * var v = [1.0, 2.0];
+     * var p = Cartesian2.fromArray(v);
+     *
+     * // Create a Cartesian2 with (1.0, 2.0) using an offset into an array
+     * var v2 = [0.0, 0.0, 1.0, 2.0];
+     * var p2 = Cartesian2.fromArray(v2, 2);
+     */
+    Cartesian2.fromArray = function(values, offset, result) {
+        if (typeof values === 'undefined') {
+            throw new DeveloperError('values is required.');
+        }
+
+        if (offset + 2 > values.length) {
+            throw new DeveloperError('offset + 2 is greater than the length of the array.');
+        }
+
+        offset = defaultValue(offset, 0);
+
+        if (typeof result === 'undefined') {
+            result = new Cartesian2();
+        }
+
+        result.x = values[offset + 0];
+        result.y = values[offset + 1];
+        return result;
+    };
+
+    /**
      * Duplicates a Cartesian2 instance.
      * @memberof Cartesian2
      *
@@ -144,6 +186,32 @@ define([
      */
     Cartesian2.magnitude = function(cartesian) {
         return Math.sqrt(Cartesian2.magnitudeSquared(cartesian));
+    };
+
+    var distanceScratch = new Cartesian2();
+
+    /**
+     * Computes the distance between two points
+     * @memberof Cartesian2
+     *
+     * @param {Cartesian2} left The first point to compute the distance from.
+     * @param {Cartesian2} right The second point to compute the distance to.
+     *
+     * @return {Number} The distance between two points.
+     *
+     * @exception {DeveloperError} left and right are required.
+     *
+     * @example
+     * // Returns 1.0
+     * var d = Cartesian2.distance(new Cartesian2(1.0, 0.0), new Cartesian2(2.0, 0.0));
+     */
+    Cartesian2.distance = function(left, right) {
+        if ((typeof left === 'undefined') || (typeof right === 'undefined')) {
+            throw new DeveloperError('left and right are required.');
+        }
+
+        Cartesian2.subtract(left, right, distanceScratch);
+        return Cartesian2.magnitude(distanceScratch);
     };
 
     /**
