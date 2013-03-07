@@ -125,6 +125,23 @@ defineSuite([
         expect(cartesian.magnitude()).toEqual(Math.sqrt(86.0));
     });
 
+    it('distance', function() {
+        var distance = Cartesian4.distance(new Cartesian4(1.0, 0.0, 0.0, 0.0), new Cartesian4(2.0, 0.0, 0.0, 0.0));
+        expect(distance).toEqual(1.0);
+    });
+
+    it('distance throws without left', function() {
+        expect(function() {
+            Cartesian4.distance();
+        }).toThrow();
+    });
+
+    it('distance throws without right', function() {
+        expect(function() {
+            Cartesian4.distance(Cartesian4.UNIT_X);
+        }).toThrow();
+    });
+
     it('normalize works without a result parameter', function() {
         var cartesian = new Cartesian4(2.0, 0.0, 0.0, 0.0);
         var expectedResult = new Cartesian4(1.0, 0.0, 0.0, 0.0);

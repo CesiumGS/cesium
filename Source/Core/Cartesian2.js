@@ -188,6 +188,32 @@ define([
         return Math.sqrt(Cartesian2.magnitudeSquared(cartesian));
     };
 
+    var distanceScratch = new Cartesian2();
+
+    /**
+     * Computes the distance between two points
+     * @memberof Cartesian2
+     *
+     * @param {Cartesian2} left The first point to compute the distance from.
+     * @param {Cartesian2} right The second point to compute the distance to.
+     *
+     * @return {Number} The distance between two points.
+     *
+     * @exception {DeveloperError} left and right are required.
+     *
+     * @example
+     * // Returns 1.0
+     * var d = Cartesian2.distance(new Cartesian2(1.0, 0.0), new Cartesian2(2.0, 0.0));
+     */
+    Cartesian2.distance = function(left, right) {
+        if ((typeof left === 'undefined') || (typeof right === 'undefined')) {
+            throw new DeveloperError('left and right are required.');
+        }
+
+        Cartesian2.subtract(left, right, distanceScratch);
+        return Cartesian2.magnitude(distanceScratch);
+    };
+
     /**
      * Computes the normalized form of the supplied Cartesian.
      * @memberof Cartesian2

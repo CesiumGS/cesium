@@ -179,6 +179,32 @@ define([
         return Math.sqrt(Cartesian4.magnitudeSquared(cartesian));
     };
 
+    var distanceScratch = new Cartesian4();
+
+    /**
+     * Computes the 4-space distance between two points
+     * @memberof Cartesian4
+     *
+     * @param {Cartesian4} left The first point to compute the distance from.
+     * @param {Cartesian4} right The second point to compute the distance to.
+     *
+     * @return {Number} The distance between two points.
+     *
+     * @exception {DeveloperError} left and right are required.
+     *
+     * @example
+     * // Returns 1.0
+     * var d = Cartesian4.distance(new Cartesian4(1.0, 0.0, 0.0, 0.0), new Cartesian4(2.0, 0.0, 0.0, 0.0));
+     */
+    Cartesian4.distance = function(left, right) {
+        if ((typeof left === 'undefined') || (typeof right === 'undefined')) {
+            throw new DeveloperError('left and right are required.');
+        }
+
+        Cartesian4.subtract(left, right, distanceScratch);
+        return Cartesian4.magnitude(distanceScratch);
+    };
+
     /**
      * Computes the normalized form of the supplied Cartesian.
      * @memberof Cartesian4
