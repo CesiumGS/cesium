@@ -482,8 +482,6 @@ define([
         return result;
     };
 
-
-
     /**
      * Computes a bounding sphere from the corner points of an axis-aligned bounding box.  The sphere
      * tighly and fully encompases the box.
