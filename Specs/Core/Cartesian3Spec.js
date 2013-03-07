@@ -41,6 +41,35 @@ defineSuite([
         expect(cartesian).toEqualEpsilon(existing, CesiumMath.EPSILON15);
     });
 
+    it('fromArray creates a Cartesian3', function() {
+        var cartesian = Cartesian3.fromArray([1.0, 2.0, 3.0]);
+        expect(cartesian).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+    });
+
+    it('fromArray with an offset creates a Cartesian3', function() {
+        var cartesian = Cartesian3.fromArray([0.0, 1.0, 2.0, 3.0, 0.0], 1);
+        expect(cartesian).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+    });
+
+    it('fromArray creates a Cartesian3 with a result parameter', function() {
+        var cartesian = new Cartesian3();
+        var result = Cartesian3.fromArray([1.0, 2.0, 3.0], 0, cartesian);
+        expect(result).toBe(cartesian);
+        expect(result).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+    });
+
+    it('fromArray throws without values', function() {
+        expect(function() {
+            Cartesian3.fromArray();
+        }).toThrow();
+    });
+
+    it('fromArray throws with an invalid offset', function() {
+        expect(function() {
+            Cartesian3.fromArray([0.0, 0.0, 0.0], 1);
+        }).toThrow();
+    });
+
     it('clone without a result parameter', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
         var result = cartesian.clone();
@@ -101,6 +130,23 @@ defineSuite([
     it('magnitude', function() {
         var cartesian = new Cartesian3(3.0, 4.0, 5.0);
         expect(cartesian.magnitude()).toEqual(Math.sqrt(50.0));
+    });
+
+    it('distance', function() {
+        var distance = Cartesian3.distance(new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0));
+        expect(distance).toEqual(1.0);
+    });
+
+    it('distance throws without left', function() {
+        expect(function() {
+            Cartesian3.distance();
+        }).toThrow();
+    });
+
+    it('distance throws without right', function() {
+        expect(function() {
+            Cartesian3.distance(Cartesian3.UNIT_X);
+        }).toThrow();
     });
 
     it('normalize works without a result parameter', function() {

@@ -4,12 +4,16 @@ Change Log
 Beta Releases
 -------------
 
-### b15 - 2013-04-xx
+### b15 - 2013-04-01
+
 * Breaking changes:
    *
+* Added `BoundingSphere.fromCornerPoints`.
+* Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `DynamicPath.resoltuion` property for setting the maximum step size, in seconds, to take when sampling a position for path visualization. 
 
 ### b14 - 2013-03-01
+
 * Breaking changes:
    * Major refactoring of both animation and widgets systems as we move to an MVVM-like architecture for user interfaces.
       * New `Animation` widget for controlling playback.
