@@ -198,7 +198,6 @@ define(['../../Core/destroyObject',
                 viewModel.faster();
             }
             e.preventDefault();
-            e.stopPropagation();
         } else {
             widgetForDrag = undefined;
             viewModel.shuttleRingDragging(false);
