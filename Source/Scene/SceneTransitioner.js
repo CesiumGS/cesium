@@ -1,7 +1,9 @@
 /*global define*/
 define([
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Math',
+        '../Core/Event',
         '../Core/ScreenSpaceEventHandler',
         '../Core/ScreenSpaceEventType',
         '../Core/Ellipsoid',
@@ -16,7 +18,9 @@ define([
         './SceneMode'
     ], function(
         destroyObject,
+        DeveloperError,
         CesiumMath,
+        Event,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         Ellipsoid,
@@ -38,6 +42,10 @@ define([
      * @constructor
      */
     var SceneTransitioner = function(scene, ellipsoid) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required');
+        }
+
         this._scene = scene;
         this._ellipsoid = ellipsoid || Ellipsoid.WGS84;
         var canvas = scene.getCanvas();
@@ -58,7 +66,6 @@ define([
                                     1.0, 0.0, 0.0, 0.0,
                                     0.0, 1.0, 0.0, 0.0,
                                     0.0, 0.0, 0.0, 1.0);
-
         this._camera2D = {
             position : position,
             direction : direction,
@@ -123,6 +130,20 @@ define([
          * @type {Boolean}
          */
         this.endMorphOnMouseInput = true;
+
+        /**
+         * DOC_TBA
+         * @type {Event}
+         */
+        this.onTransitionStart = new Event();
+
+        /**
+         * DOC_TBA
+         * @type {Event}
+         */
+        this.onTransitionComplete = new Event();
+
+        this._cancelMorph = undefined;
     };
 
     //immediately set the morph time of all objects in the scene
@@ -228,24 +249,65 @@ define([
      * DOC_TBA
      * @memberof SceneTransitioner
      */
-    SceneTransitioner.prototype.to2D = function() {
+    SceneTransitioner.prototype.getScene = function() {
+        return this._scene;
+    };
+
+    SceneTransitioner.prototype._complete2D = function() {
         var scene = this._scene;
 
-        if (scene.mode !== SceneMode.SCENE2D) {
-            scene.mode = SceneMode.SCENE2D;
-            setMorphTime(scene, 0.0);
+        scene.mode = SceneMode.SCENE2D;
+        setMorphTime(scene, 0.0);
 
-            this._destroyMorphHandler();
+        destroyMorphHandler(this);
 
-            updateFrustums(this);
-            var camera = scene.getCamera();
-            camera.transform = this._camera2D.transform.clone();
+        updateFrustums(this);
+        var camera = scene.getCamera();
+        camera.transform = this._camera2D.transform.clone();
 
-            // TODO: Match incoming columbus-view or 3D position
-            camera.position = this._camera2D.position.clone();
-            camera.direction = this._camera2D.direction.clone();
-            camera.up = this._camera2D.up.clone();
+        // TODO: Match incoming columbus-view or 3D position
+        camera.position = this._camera2D.position.clone();
+        camera.direction = this._camera2D.direction.clone();
+        camera.up = this._camera2D.up.clone();
+
+        this._cancelMorph = undefined;
+        this.onTransitionComplete.raiseEvent(this, this._previousMode, SceneMode.SCENE2D);
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof SceneTransitioner
+     */
+    SceneTransitioner.prototype.to2D = function() {
+        this._previousMode = this._scene.mode;
+        if (this._previousMode !== SceneMode.SCENE2D) {
+            this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D);
+            this._complete2D();
         }
+    };
+
+    SceneTransitioner.prototype._completeColumbusView = function() {
+        var scene = this._scene;
+        scene.mode = SceneMode.COLUMBUS_VIEW;
+        setMorphTime(scene, 0.0);
+
+        destroyMorphHandler(this);
+
+        updateFrustums(this);
+        var camera = scene.getCamera();
+        camera.transform = this._cameraCV.transform.clone();
+
+        if (this._previousModeMode !== SceneMode.MORPHING || this._morphCancelled) {
+            this._morphCancelled = false;
+
+            // TODO: Match incoming 2D or 3D position
+            camera.position = this._cameraCV.position.clone();
+            camera.direction = this._cameraCV.direction.clone();
+            camera.up = this._cameraCV.up.clone();
+            camera.right = camera.direction.cross(camera.up);
+        }
+        this._cancelMorph = undefined;
+        this.onTransitionComplete.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW);
     };
 
     /**
@@ -254,28 +316,35 @@ define([
      */
     SceneTransitioner.prototype.toColumbusView = function() {
         var scene = this._scene;
-        var previousMode = scene.mode;
+        this._previousMode = scene.mode;
 
-        if (scene.mode !== SceneMode.COLUMBUS_VIEW) {
-            scene.mode = SceneMode.COLUMBUS_VIEW;
-            setMorphTime(scene, 0.0);
-
-            this._destroyMorphHandler();
-
-            updateFrustums(this);
-            var camera = scene.getCamera();
-            camera.transform = this._cameraCV.transform.clone();
-
-            if (previousMode !== SceneMode.MORPHING || this._morphCancelled) {
-                this._morphCancelled = false;
-
-                // TODO: Match incoming 2D or 3D position
-                camera.position = this._cameraCV.position.clone();
-                camera.direction = this._cameraCV.direction.clone();
-                camera.up = this._cameraCV.up.clone();
-                camera.right = camera.direction.cross(camera.up);
-            }
+        if (this._previousMode !== SceneMode.COLUMBUS_VIEW) {
+            this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW);
+            this._completeColumbusView();
         }
+    };
+
+    SceneTransitioner.prototype._complete3D = function() {
+        var scene = this._scene;
+        scene.mode = SceneMode.SCENE3D;
+        setMorphTime(scene, 1.0);
+
+        destroyMorphHandler(this);
+
+        updateFrustums(this);
+        var camera = scene.getCamera();
+        camera.transform = Matrix4.IDENTITY.clone();
+
+        if (this._previousMode !== SceneMode.MORPHING || this._morphCancelled) {
+            this._morphCancelled = false;
+
+            // TODO: Match incoming columbus-view or 2D position
+            camera.position = this._camera3D.position.clone();
+            camera.direction = this._camera3D.direction.clone();
+            camera.up = this._camera3D.up.clone();
+        }
+        this._cancelMorph = undefined;
+        this.onTransitionComplete.raiseEvent(this, this._previousMode, SceneMode.SCENE3D);
     };
 
     /**
@@ -284,27 +353,19 @@ define([
      */
     SceneTransitioner.prototype.to3D = function() {
         var scene = this._scene;
-        var previousMode = scene.mode;
+        this._previousMode = scene.mode;
 
         if (scene.mode !== SceneMode.SCENE3D) {
-            scene.mode = SceneMode.SCENE3D;
-            setMorphTime(scene, 1.0);
-
-            this._destroyMorphHandler();
-
-            updateFrustums(this);
-            var camera = scene.getCamera();
-            camera.transform = Matrix4.IDENTITY.clone();
-
-            if (previousMode !== SceneMode.MORPHING || this._morphCancelled) {
-                this._morphCancelled = false;
-
-                // TODO: Match incoming columbus-view or 2D position
-                camera.position = this._camera3D.position.clone();
-                camera.direction = this._camera3D.direction.clone();
-                camera.up = this._camera3D.up.clone();
-            }
+            this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D);
+            this._complete3D();
         }
+    };
+
+    SceneTransitioner.prototype.cancelMorph = function() {
+        if (typeof this._cancelMorph === 'undefined') {
+            throw new DeveloperError('not morphing');
+        }
+        this._cancelMorph();
     };
 
     SceneTransitioner.prototype._createMorphHandler = function(endMorphFunction) {
@@ -317,6 +378,8 @@ define([
                 that._morphCancelled = true;
                 endMorphFunction.call(that);
             };
+
+            this._cancelMorph = cancelMorph;
             this._morphHandler.setInputAction(cancelMorph, ScreenSpaceEventType.LEFT_DOWN);
             this._morphHandler.setInputAction(cancelMorph, ScreenSpaceEventType.MIDDLE_DOWN);
             this._morphHandler.setInputAction(cancelMorph, ScreenSpaceEventType.RIGHT_DOWN);
@@ -324,14 +387,14 @@ define([
         }
     };
 
-    SceneTransitioner.prototype._destroyMorphHandler = function() {
-        var animations = this._scene.getAnimations();
-        for ( var i = 0; i < this._currentAnimations.length; ++i) {
-            animations.remove(this._currentAnimations[i]);
+    function destroyMorphHandler(transitioner) {
+        var animations = transitioner._scene.getAnimations();
+        for ( var i = 0; i < transitioner._currentAnimations.length; ++i) {
+            animations.remove(transitioner._currentAnimations[i]);
         }
-        this._currentAnimations.length = 0;
-        this._morphHandler = this._morphHandler && this._morphHandler.destroy();
-    };
+        transitioner._currentAnimations.length = 0;
+        transitioner._morphHandler = transitioner._morphHandler && transitioner._morphHandler.destroy();
+    }
 
     SceneTransitioner.prototype._changeCameraTransform = function(camera, transform) {
         var pos = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
@@ -673,20 +736,22 @@ define([
      * @memberof SceneTransitioner
      */
     SceneTransitioner.prototype.morphTo2D = function() {
-        var previousMode = this._scene.mode;
+        this._previousMode = this._scene.mode;
 
-        if (previousMode === SceneMode.SCENE2D || previousMode === SceneMode.MORPHING) {
+        if (this._previousMode === SceneMode.SCENE2D || this._previousMode === SceneMode.MORPHING) {
             return;
         }
+        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.MORPHING);
+        this._previousMode = SceneMode.MORPHING;
 
         updateFrustums(this);
         this._scene.mode = SceneMode.MORPHING;
-        this._createMorphHandler(this.to2D);
+        this._createMorphHandler(this._complete2D);
 
-        if (previousMode === SceneMode.COLUMBUS_VIEW) {
-            this._sceneCVTo2D(this.morphDuration2D, this.to2D);
+        if (this._previousMode === SceneMode.COLUMBUS_VIEW) {
+            this._sceneCVTo2D(this.morphDuration2D, this._complete2D);
         } else {
-            this._scene3DTo2D(this.morphDuration2D, this.to2D);
+            this._scene3DTo2D(this.morphDuration2D, this._complete2D);
         }
     };
 
@@ -695,20 +760,22 @@ define([
      * @memberof SceneTransitioner
      */
     SceneTransitioner.prototype.morphToColumbusView = function() {
-        var previousMode = this._scene.mode;
+        this._previousMode = this._scene.mode;
 
-        if (previousMode === SceneMode.COLUMBUS_VIEW || previousMode === SceneMode.MORPHING) {
+        if (this._previousMode === SceneMode.COLUMBUS_VIEW || this._previousMode === SceneMode.MORPHING) {
             return;
         }
+        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.MORPHING);
+        this._previousMode = SceneMode.MORPHING;
 
         updateFrustums(this);
         this._scene.mode = SceneMode.MORPHING;
-        this._createMorphHandler(this.toColumbusView);
+        this._createMorphHandler(this._completeColumbusView);
 
-        if (previousMode === SceneMode.SCENE2D) {
-            this._scene2DToCV(this.morphDurationColumbusView, this.toColumbusView);
+        if (this._previousMode === SceneMode.SCENE2D) {
+            this._scene2DToCV(this.morphDurationColumbusView, this._completeColumbusView);
         } else {
-            this._scene3DToCV(this.morphDurationColumbusView, this._cameraCV, this.toColumbusView);
+            this._scene3DToCV(this.morphDurationColumbusView, this._cameraCV, this._completeColumbusView);
         }
     };
 
@@ -718,20 +785,22 @@ define([
      */
     SceneTransitioner.prototype.morphTo3D = function() {
         var scene = this._scene;
-        var previousMode = scene.mode;
+        this._previousMode = scene.mode;
 
-        if (previousMode === SceneMode.SCENE3D || previousMode === SceneMode.MORPHING) {
+        if (this._previousMode === SceneMode.SCENE3D || this._previousMode === SceneMode.MORPHING) {
             return;
         }
+        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.MORPHING);
+        this._previousMode = SceneMode.MORPHING;
 
         updateFrustums(this);
         scene.mode = SceneMode.MORPHING;
-        this._createMorphHandler(this.to3D);
+        this._createMorphHandler(this._complete3D);
 
-        if (previousMode === SceneMode.SCENE2D) {
-            this._scene2DTo3D(this.morphDuration3D, this.to3D);
+        if (this._previousMode === SceneMode.SCENE2D) {
+            this._scene2DTo3D(this.morphDuration3D, this._complete3D);
         } else {
-            this._sceneCVTo3D(this.morphDuration3D, this.to3D);
+            this._sceneCVTo3D(this.morphDuration3D, this._complete3D);
         }
     };
 
@@ -768,7 +837,7 @@ define([
      * transitioner = transitioner && transitioner.destroy();
      */
     SceneTransitioner.prototype.destroy = function() {
-        this._destroyMorphHandler();
+        destroyMorphHandler(this);
         return destroyObject(this);
     };
 

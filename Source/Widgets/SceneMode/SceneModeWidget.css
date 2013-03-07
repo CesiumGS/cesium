@@ -1,0 +1,29 @@
+.sceneModeCommon {
+	border: solid 1px #9BBFDF;
+	background-color: #DFEFFF;
+	background-size: 100% 100%;
+	width: 100%;
+	height: 100%;
+	display: block;
+	position: relative;
+}
+
+.sceneModeCommon:hover {
+	background-color: #A9D5FF;
+}
+
+.sceneModeWidget {
+    background-image: url(../Images/enterFullscreen.svg);
+}
+
+.sceneMode3D {
+	background-image: url(../Images/exitFullscreen.svg);
+}
+
+.sceneMode2D {
+	background-image: url(../Images/enterFullscreen-darker.svg);
+}
+
+.sceneModeColumbusView {
+	background-image: url(../Images/exitFullscreen-darker.svg);
+}

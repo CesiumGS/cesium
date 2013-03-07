@@ -4,6 +4,7 @@
 @import url('../Animation/darker.css');
 @import url('../Fullscreen/FullscreenWidget.css');
 @import url('../Fullscreen/darker.css');
+@import url('../SceneMode/SceneModeWidget.css');
 
 .cw-node {
     font-family: sans-serif;
@@ -81,23 +82,18 @@
     height: 24px;
 }
 
-.cw-view2D {
-    background-position: -24px 0;
-}
-
-.cw-view3D {
-    background-position: -48px 0;
-}
-
-.cw-viewColumbus {
-    background-position: -72px 0;
-}
-
 .cw-viewButtons {
     display: block;
     position: absolute;
     top: 5px;
     right: 5px;
+}
+
+.cw-sceneModeContainer {
+    position: absolute;
+	display: block;
+    width: 32px;
+    height: 32px;
 }
 
 .cw-imagerySelector {

@@ -18,6 +18,7 @@ define([
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
         '../Fullscreen/FullscreenWidget',
+        '../SceneMode/SceneModeWidget',
         '../ClockViewModel',
         '../../Core/defaultValue',
         '../../Core/loadJson',
@@ -79,6 +80,7 @@ define([
         Animation,
         AnimationViewModel,
         FullscreenWidget,
+        SceneModeWidget,
         ClockViewModel,
         defaultValue,
         loadJson,
@@ -774,6 +776,8 @@ define([
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
+            this.scenModeWidget = new SceneModeWidget(this.sceneModeContainer, transitioner);
+
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);
             }
@@ -793,34 +797,9 @@ define([
             timeline.zoomTo(clock.startTime, clock.stopTime);
 
             var viewHomeButton = widget.viewHomeButton;
-            var view2D = widget.view2D;
-            var view3D = widget.view3D;
-            var viewColumbus = widget.viewColumbus;
-
-            view2D.set('checked', false);
-            view3D.set('checked', true);
-            viewColumbus.set('checked', false);
 
             on(viewHomeButton, 'Click', function() {
                 widget.viewHome();
-            });
-            on(view2D, 'Click', function() {
-                view2D.set('checked', true);
-                view3D.set('checked', false);
-                viewColumbus.set('checked', false);
-                transitioner.morphTo2D();
-            });
-            on(view3D, 'Click', function() {
-                view2D.set('checked', false);
-                view3D.set('checked', true);
-                viewColumbus.set('checked', false);
-                transitioner.morphTo3D();
-            });
-            on(viewColumbus, 'Click', function() {
-                view2D.set('checked', false);
-                view3D.set('checked', false);
-                viewColumbus.set('checked', true);
-                transitioner.morphToColumbusView();
             });
 
             var imagery = widget.imagery;
