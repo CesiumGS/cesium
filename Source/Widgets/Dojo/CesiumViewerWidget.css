@@ -5,6 +5,7 @@
 @import url('../Fullscreen/FullscreenWidget.css');
 @import url('../Fullscreen/darker.css');
 @import url('../SceneMode/SceneModeWidget.css');
+@import url('../SceneMode/darker.css');
 
 .cw-node {
     font-family: sans-serif;
@@ -90,9 +91,8 @@
 }
 
 .cw-sceneModeContainer {
-    position: absolute;
-	display: block;
-    width: 32px;
+    display: block;
+    width: 96px;
     height: 32px;
 }
 
