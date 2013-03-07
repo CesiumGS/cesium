@@ -157,6 +157,13 @@ define([
          */
         this.farToNearRatio = 1000.0;
 
+        /**
+         * TODO
+         *
+         * @type Function
+         */
+        this.debugCommandFilter = undefined;
+
         // initial guess at frustums.
         var near = this._camera.frustum.near;
         var far = this._camera.frustum.far;
@@ -394,6 +401,14 @@ define([
         }
     }
 
+    function executeCommand(command, scene, context, framebuffer) {
+        if (scene.debugCommandFilter && !scene.debugCommandFilter(command)) {
+            return;
+        }
+
+        command.execute(context, framebuffer);
+    }
+
     function executeCommands(scene, framebuffer) {
         var camera = scene._camera;
         var frustum = camera.frustum.clone();
@@ -413,11 +428,11 @@ define([
         us.updateFrustum(frustum);
 
         if (typeof skyBoxCommand !== 'undefined') {
-            skyBoxCommand.execute(context, framebuffer);
+            executeCommand(skyBoxCommand, scene, context, framebuffer);
         }
 
         if (typeof skyAtmosphereCommand !== 'undefined') {
-            skyAtmosphereCommand.execute(context, framebuffer);
+            executeCommand(skyAtmosphereCommand, scene, context, framebuffer);
         }
 
         var clearDepthStencil = scene._clearDepthStencilCommand;
@@ -437,7 +452,7 @@ define([
             var commands = frustumCommands.commands;
             var length = commands.length;
             for (var j = 0; j < length; ++j) {
-                commands[j].execute(context, framebuffer);
+                executeCommand(commands[j], scene, context, framebuffer);
             }
         }
     }
@@ -450,7 +465,7 @@ define([
             var commandList = commandLists[i].overlayList;
             var commandListLength = commandList.length;
             for (var j = 0; j < commandListLength; ++j) {
-                commandList[j].execute(context);
+                executeCommand(commandList[j], scene, context);
             }
         }
     }

@@ -109,19 +109,18 @@ define([
         this.executeInClosestFrustum = false;
 
         /**
+         * TODO
          *
+         * @type Object
          */
-        this.debug = {
-            /**
-             *
-             */
-            creator : undefined,
+        this.owner = undefined;
 
-            /**
-             *
-             */
-            showBoundingVolume : false
-        };
+        /**
+         * TODO
+         *
+         * @type Boolean
+         */
+        this.debugShowBoundingVolume = false;
     };
 
     /**
@@ -136,7 +135,7 @@ define([
         context.draw(this, framebuffer);
 
         // Debug code to draw bounding volume for command.  Not optimized!
-        if (this.debug.showBoundingVolume && typeof this.boundingVolume !== 'undefined') {
+        if (this.debugShowBoundingVolume && typeof this.boundingVolume !== 'undefined') {
             var r = this.boundingVolume.radius;
             var radii = new Cartesian3(r, r, r);
 

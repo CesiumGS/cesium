@@ -24,14 +24,11 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
         this.framebuffer = undefined;
 
         /**
-        *
-        */
-       this.debug = {
-           /**
-            *
-            */
-           creator : undefined
-       };
+         * TODO
+         *
+         * @type Object
+         */
+        this.owner = undefined;
     };
 
     /**
