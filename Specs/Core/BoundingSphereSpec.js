@@ -293,7 +293,7 @@ defineSuite([
     });
 
     it('fromCornerPoints with a result parameter', function() {
-        var sphere = new BoundingSphere;
+        var sphere = new BoundingSphere();
         var result = BoundingSphere.fromCornerPoints(new Cartesian3(0.0, -1.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), sphere);
         expect(result).toBe(sphere);
         expect(result).toEqual(new BoundingSphere(Cartesian3.ZERO, 1.0));
