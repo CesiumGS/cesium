@@ -9,7 +9,15 @@ Beta Releases
 * Added `SceneModeWidget` and associated objects.  This is a new single-button widget for transitioning among scene modes.
 * Added 'onTransitionStart` and `onTransitionComplete` events to `SceneModeTransitioner`.
 
+### b15 - 2013-04-01
+
+* Breaking changes:
+   *
+* Added `BoundingSphere.fromCornerPoints`.
+* Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
+
 ### b14 - 2013-03-01
+
 * Breaking changes:
    * Major refactoring of both animation and widgets systems as we move to an MVVM-like architecture for user interfaces.
       * New `Animation` widget for controlling playback.
