@@ -26,6 +26,35 @@ defineSuite([
         expect(cartesian.y).toEqual(2.0);
     });
 
+    it('fromArray creates a Cartesian2', function() {
+        var cartesian = Cartesian2.fromArray([1.0, 2.0]);
+        expect(cartesian).toEqual(new Cartesian2(1.0, 2.0));
+    });
+
+    it('fromArray with an offset creates a Cartesian2', function() {
+        var cartesian = Cartesian2.fromArray([0.0, 1.0, 2.0, 0.0], 1);
+        expect(cartesian).toEqual(new Cartesian2(1.0, 2.0));
+    });
+
+    it('fromArray creates a Cartesian2 with a result parameter', function() {
+        var cartesian = new Cartesian2();
+        var result = Cartesian2.fromArray([1.0, 2.0], 0, cartesian);
+        expect(result).toBe(cartesian);
+        expect(result).toEqual(new Cartesian2(1.0, 2.0));
+    });
+
+    it('fromArray throws without values', function() {
+        expect(function() {
+            Cartesian2.fromArray();
+        }).toThrow();
+    });
+
+    it('fromArray throws with an invalid offset', function() {
+        expect(function() {
+            Cartesian2.fromArray([0.0, 0.0], 1);
+        }).toThrow();
+    });
+
     it('clone without a result parameter', function() {
         var cartesian = new Cartesian2(1.0, 2.0);
         var result = cartesian.clone();

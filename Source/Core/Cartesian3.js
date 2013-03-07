@@ -72,7 +72,7 @@ define([
      * Creates a Cartesian3 from three consecutive elements in an array.
      * @memberof Cartesian3
      *
-     * @param {Array} values The Spherical to be converted to Cartesian3.
+     * @param {Array} values The array whose three consecutive elements correspond to the x, y, and z components, respectively.
      * @param {Number} [offset=0] The offset into the array of the first element, which corresponds to the x component.
      * @param {Cartesian3} [result] The object onto which to store the result.
      *
