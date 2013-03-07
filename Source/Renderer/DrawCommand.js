@@ -1,34 +1,5 @@
 /*global define*/
-define([
-        '../Core/DeveloperError',
-        '../Core/defaultValue',
-        '../Core/BoxTessellator',
-        '../Core/Cartesian3',
-        '../Core/combine',
-        '../Core/Matrix4',
-        '../Core/MeshFilters',
-        '../Core/PrimitiveType',
-        '../Renderer/CullFace',
-        '../Renderer/BlendingState',
-        '../Renderer/BufferUsage',
-        '../Scene/Material',
-        '../Shaders/EllipsoidVS',
-        '../Shaders/EllipsoidFS'
-    ], function(
-        DeveloperError,
-        defaultValue,
-        BoxTessellator,
-        Cartesian3,
-        combine,
-        Matrix4,
-        MeshFilters,
-        PrimitiveType,
-        CullFace,
-        BlendingState,
-        BufferUsage,
-        Material,
-        EllipsoidVS,
-        EllipsoidFS) {
+define(function() {
     "use strict";
 
     /**
@@ -135,73 +106,6 @@ define([
      */
     DrawCommand.prototype.execute = function(context, framebuffer) {
         context.draw(this, framebuffer);
-
-        // Debug code to draw bounding volume for command.  Not optimized!
-        if (this.debugShowBoundingVolume && typeof this.boundingVolume !== 'undefined') {
-            var r = this.boundingVolume.radius;
-            var radii = new Cartesian3(r, r, r);
-
-// TODO: material is part of Scene; not renderer.
-            var material = Material.fromType(context, Material.ColorType);
-            var uniforms = {
-                u_radii : function() {
-                    return radii;
-                },
-                u_oneOverEllipsoidRadiiSquared : function() {
-                    return new Cartesian3(
-                        1.0 / (radii.x * radii.x),
-                        1.0 / (radii.y * radii.y),
-                        1.0 / (radii.z * radii.z));
-                }
-            };
-
-            var attributeIndices = {
-                position : 0
-            };
-
-            var fsSource =
-                '#line 0\n' +
-                material.shaderSource +
-                '#line 0\n' +
-                EllipsoidFS;
-
-            var sp = context.getShaderCache().getShaderProgram(EllipsoidVS, fsSource, attributeIndices);
-            var rs = context.createRenderState({
-                cull : {
-                    enabled : true,
-                    face : CullFace.FRONT
-                },
-                depthTest : {
-                    enabled : true
-                },
-                depthMask : false,
-                blending : BlendingState.ALPHA_BLEND
-            });
-
-            var mesh = BoxTessellator.compute({
-                dimensions : new Cartesian3(2.0, 2.0, 2.0)
-            });
-
-            var va = context.createVertexArrayFromMesh({
-                mesh: mesh,
-                attributeIndices: attributeIndices,
-                bufferUsage: BufferUsage.STATIC_DRAW
-            });
-
-            var command = new DrawCommand();
-            command.primitiveType = PrimitiveType.TRIANGLES;
-            command.vertexArray = va;
-            command.renderState = rs;
-            command.shaderProgram = sp;
-            command.uniformMap = combine([uniforms, material._uniforms], false, false);
-            var m = Matrix4.multiplyByTranslation(defaultValue(this.modelMatrix, Matrix4.IDENTITY), this.boundingVolume.center);
-            command.modelMatrix = Matrix4.fromTranslation(new Cartesian3(m[12], m[13], m[14]));
-
-            command.execute(context, framebuffer);
-
-            va.destroy();
-            sp.release();
-        }
     };
 
     return DrawCommand;

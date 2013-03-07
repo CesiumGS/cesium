@@ -29,7 +29,8 @@ define([
         './FrameState',
         './OrthographicFrustum',
         './PerspectiveOffCenterFrustum',
-        './FrustumCommands'
+        './FrustumCommands',
+        './EllipsoidPrimitive'
     ], function(
         CesiumMath,
         Color,
@@ -60,7 +61,8 @@ define([
         FrameState,
         OrthographicFrustum,
         PerspectiveOffCenterFrustum,
-        FrustumCommands) {
+        FrustumCommands,
+        EllipsoidPrimitive) {
     "use strict";
 
     /**
@@ -405,6 +407,22 @@ define([
         }
 
         command.execute(context, framebuffer);
+
+        // TODO: not when picking
+        if (command.debugShowBoundingVolume && typeof command.boundingVolume !== 'undefined') {
+            // Debug code to draw bounding volume for command.  Not optimized!
+            var sphere = new EllipsoidPrimitive();
+
+            var r = command.boundingVolume.radius;
+            var m = Matrix4.multiplyByTranslation(defaultValue(command.modelMatrix, Matrix4.IDENTITY), command.boundingVolume.center);
+            sphere.modelMatrix = Matrix4.fromTranslation(new Cartesian3(m[12], m[13], m[14]));
+            sphere.radii = new Cartesian3(r, r, r);
+
+            var commandList = [];
+            sphere.update(context, scene._frameState, commandList);
+            commandList[0].colorList[0].execute(context, framebuffer);
+            sphere.destroy();
+        }
     }
 
     function executeCommands(scene, framebuffer) {
