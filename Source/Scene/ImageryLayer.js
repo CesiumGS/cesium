@@ -640,16 +640,19 @@ define([
     };
 
     /**
-     * Reproject a texture to a {@link GeographicProjection}, if necessary, and generate
-     * mipmaps for the geographic texture.
+     * Copies an imagery tile to the terrain tile's texture for the corresponding layer, reprojecting
+     * from Web Mercator to Geographic along the way, if necessary.  Mip levels are not filled until
+     * _finalizeTexture is called.
      *
      * @memberof ImageryLayer
      * @private
      *
      * @param {Context} context The renderer context to use.
-     * @param {Imagery} imagery The imagery instance to reproject.
+     * @param {Tile} tile The tile to which to copy imagery.
+     * @param {TileImagery} tileImagery Specifies how the imagery is mapped to the tile.
+     * @param {Number} layerIndex The index of this layer in the {@link ImageryLayerCollection}.
      */
-    ImageryLayer.prototype._reprojectTexture = function(context, tile, tileImagery, imageryLayerCollection, layerIndex) {
+    ImageryLayer.prototype._copyImageryToTile = function(context, tile, tileImagery, layerIndex) {
         var tileTexture = tile.textures[this._layerIndex];
 
         // Create the tile's texture if it doesn't exist yet.
@@ -676,7 +679,20 @@ define([
         copyToImageryTextureToTileTexture(this, context, tile, tileImagery, tileTexture, layerIndex);
     };
 
-    ImageryLayer.prototype._finalizeTexture = function(context, tile, imageryLayerCollection, layerIndex) {
+    /**
+     * Finalizes a tile's texture for this layer to prepare it for rendering.  Specifically, this method
+     * generates mipmaps for the texture.  It should be called after one or more calls to
+     * {@link ImageryLayer#_copyImageryToTile} and before the tile is rendered.  It can be called
+     * multiple times if the texture is updated over multiple render frames.
+     *
+     * @memberof ImageryLayer
+     * @private
+     *
+     * @param {Context} context The renderer context to use.
+     * @param {Tile} tile The tile with the texture to finalize.
+     * @param {Number} layerIndex The index of this layer in the {@link ImageryLayerCollection}.
+     */
+    ImageryLayer.prototype._finalizeTexture = function(context, tile, layerIndex) {
         tile.textures[layerIndex].generateMipmap(MipmapHint.NICEST);
     };
 

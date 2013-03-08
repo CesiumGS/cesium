@@ -395,8 +395,7 @@ define([
                 }
 
                 if (imagery.state === ImageryState.TEXTURE_LOADED) {
-                   // imagery.state = ImageryState.TRANSITIONING;
-                    //imageryLayer._reprojectTexture(context, this, tileImagery, imageryLayerCollection);
+                    // TODO: unnecessary extra state.
                     imagery.state = ImageryState.READY;
                 }
 
@@ -437,7 +436,7 @@ define([
             if (allTexturesLoaded) {
                 // TODO: with TileImagerys inherited from an ancestor, this gets executed too often.
                 for (i = 0; i < len; ) {
-                    imageryLayer._reprojectTexture(context, this, layerImageryCollection[i], imageryLayerCollection, layerIndex);
+                    imageryLayer._copyImageryToTile(context, this, layerImageryCollection[i], layerIndex);
 
                     if (typeof layerImageryCollection[i].imagery === 'undefined') {
                         // This imagery instance indicates we should pull the parent imagery, which may not
@@ -452,7 +451,7 @@ define([
                     }
                 }
 
-                imageryLayer._finalizeTexture(context, this, imageryLayerCollection, layerIndex);
+                imageryLayer._finalizeTexture(context, this, layerIndex);
 
                 propagateTexturesToDescendants(context, this, this, imageryLayerCollection, layerIndex);
             }
