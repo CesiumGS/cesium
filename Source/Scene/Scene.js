@@ -158,14 +158,14 @@ define([
         this.farToNearRatio = 1000.0;
 
         /**
-         * A function that determines what commands are executed for debugging.  As shown in the examples below,
-         * the function receives the command's owner as an argument, and returns a boolean indicating if the
-         * command should be executed.
+         * This property is for debugging only; it is not for production use.
          * <p>
-         * The default is <code>undefined</code>, indicating that all commands get executed.
+         * A function that determines what commands are executed.  As shown in the examples below,
+         * the function receives the command's <code>owner</code> as an argument, and returns a boolean indicating if the
+         * command should be executed.
          * </p>
          * <p>
-         * This property is for debugging only; it is not for production use.
+         * The default is <code>undefined</code>, indicating that all commands are executed.
          * </p>
          *
          * @type Function

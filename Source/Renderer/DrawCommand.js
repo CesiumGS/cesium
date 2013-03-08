@@ -16,7 +16,7 @@ define(function() {
          * <p>
          * For best rendering performance, use the tightest possible bounding volume.  Although
          * <code>undefined</code> is allowed, always try to provide a bounding volume to
-         * allow the tightest possible near and far plans to be computed for the scene, and
+         * allow the tightest possible near and far planes to be computed for the scene, and
          * minimize the number of frustums needed.
          * </p>
          *
@@ -129,7 +129,7 @@ define(function() {
          * The object who created this command.  This is useful for debugging command
          * execution; it allows you to see who created a command when you only have a
          * reference to the command, and can be used to selectively execute commands
-         * with {@link cene#debugCommandFilter}.
+         * with {@link Scene#debugCommandFilter}.
          *
          * @type Object
          *
@@ -140,9 +140,9 @@ define(function() {
         this.owner = owner;
 
         /**
-         * Draws the {@see DrawCommand#boundingVolume} for this command, assuming it is a sphere, when the command executes.
-         * <p>
          * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the {@link DrawCommand#boundingVolume} for this command, assuming it is a sphere, when the command executes.
          * </p>
          *
          * @type Boolean

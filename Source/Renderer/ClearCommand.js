@@ -34,7 +34,7 @@ define(function() {
          * The object who created this command.  This is useful for debugging command
          * execution; it allows you to see who created a command when you only have a
          * reference to the command, and can be used to selectively execute commands
-         * with {@link cene#debugCommandFilter}.
+         * with {@link Scene#debugCommandFilter}.
          *
          * @type Object
          *
