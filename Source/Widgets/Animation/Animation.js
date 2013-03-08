@@ -214,12 +214,14 @@ define(['../../Core/destroyObject',
         this._toggled = undefined;
 
         var that = this;
-        svgElement.addEventListener('click', function() {
+        this._clickFunction = function() {
             var command = that.viewModel.command;
             if (command.canExecute()) {
                 command();
             }
-        }, true);
+        };
+
+        svgElement.addEventListener('click', this._clickFunction, true);
 
         //TODO: Since the animation widget uses SVG and has no HTML backing,
         //we need to wire everything up manually.  Knockout can supposedly
@@ -233,6 +235,7 @@ define(['../../Core/destroyObject',
     };
 
     SvgButton.prototype.destroy = function() {
+        this.svgElement.removeEventListener('click', this._clickFunction, true);
         var subscriptions = this._subscriptions;
         for ( var i = 0, len = subscriptions.length; i < len; i++) {
             subscriptions[i].dispose();
@@ -459,6 +462,7 @@ define(['../../Core/destroyObject',
             cy : 100,
             r : 99
         });
+        this._shuttleRingBackPanel = shuttleRingBackPanel;
 
         var shuttleRingSwooshG = svgFromObject({
             tagName : 'g',
@@ -479,6 +483,7 @@ define(['../../Core/destroyObject',
                 y2 : 22
             }]
         });
+        this._shuttleRingSwooshG = shuttleRingSwooshG;
 
         this._shuttleRingPointer = svgFromObject({
             tagName : 'use',
@@ -545,26 +550,28 @@ define(['../../Core/destroyObject',
         parentNode.appendChild(svg);
 
         var that = this;
-
-        window.addEventListener('resize', function() {
+        this._resizeCallback = function() {
             resize(that);
-        }, true);
+        };
+        window.addEventListener('resize', this._resizeCallback, true);
 
-        var callBack = function(e) {
+        var mouseCallback = function(e) {
             setShuttleRingFromMouseOrTouch(that, e);
         };
-        shuttleRingBackPanel.addEventListener('mousedown', callBack, true);
-        shuttleRingBackPanel.addEventListener('touchstart', callBack, true);
-        shuttleRingSwooshG.addEventListener('mousedown', callBack, true);
-        shuttleRingSwooshG.addEventListener('touchstart', callBack, true);
-        document.addEventListener('mousemove', callBack, true);
-        document.addEventListener('touchmove', callBack, true);
-        document.addEventListener('mouseup', callBack, true);
-        document.addEventListener('touchend', callBack, true);
-        this._shuttleRingPointer.addEventListener('mousedown', callBack, true);
-        this._shuttleRingPointer.addEventListener('touchstart', callBack, true);
-        this._knobOuter.addEventListener('mousedown', callBack, true);
-        this._knobOuter.addEventListener('touchstart', callBack, true);
+        this._mouseCallback = mouseCallback;
+
+        shuttleRingBackPanel.addEventListener('mousedown', mouseCallback, true);
+        shuttleRingBackPanel.addEventListener('touchstart', mouseCallback, true);
+        shuttleRingSwooshG.addEventListener('mousedown', mouseCallback, true);
+        shuttleRingSwooshG.addEventListener('touchstart', mouseCallback, true);
+        document.addEventListener('mousemove', mouseCallback, true);
+        document.addEventListener('touchmove', mouseCallback, true);
+        document.addEventListener('mouseup', mouseCallback, true);
+        document.addEventListener('touchend', mouseCallback, true);
+        this._shuttleRingPointer.addEventListener('mousedown', mouseCallback, true);
+        this._shuttleRingPointer.addEventListener('touchstart', mouseCallback, true);
+        this._knobOuter.addEventListener('mousedown', mouseCallback, true);
+        this._knobOuter.addEventListener('touchstart', mouseCallback, true);
 
         //TODO: Since the animation widget uses SVG and has no HTML backing,
         //we need to wire everything up manually.  Knockout can supposedly
@@ -606,6 +613,21 @@ define(['../../Core/destroyObject',
      * @memberof Animation
      */
     Animation.prototype.destroy = function() {
+        var mouseCallback = this._mouseCallback;
+        window.removeEventListener('resize', this._resizeCallback, true);
+        this._shuttleRingBackPanel.removeEventListener('mousedown', mouseCallback, true);
+        this._shuttleRingBackPanel.removeEventListener('touchstart', mouseCallback, true);
+        this._shuttleRingSwooshG.removeEventListener('mousedown', mouseCallback, true);
+        this._shuttleRingSwooshG.removeEventListener('touchstart', mouseCallback, true);
+        document.removeEventListener('mousemove', mouseCallback, true);
+        document.removeEventListener('touchmove', mouseCallback, true);
+        document.removeEventListener('mouseup', mouseCallback, true);
+        document.removeEventListener('touchend', mouseCallback, true);
+        this._shuttleRingPointer.removeEventListener('mousedown', mouseCallback, true);
+        this._shuttleRingPointer.removeEventListener('touchstart', mouseCallback, true);
+        this._knobOuter.removeEventListener('mousedown', mouseCallback, true);
+        this._knobOuter.removeEventListener('touchstart', mouseCallback, true);
+
         this.parentNode.removeChild(this._svgNode);
         this.parentNode.removeChild(this._theme);
         this._realtimeSVG.destroy();
