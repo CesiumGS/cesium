@@ -2,11 +2,15 @@
 defineSuite([
          'Scene/Scene',
          'Core/Color',
+         'Renderer/DrawCommand',
+         'Renderer/CommandLists',
          'Specs/createScene',
          'Specs/destroyScene'
      ], function(
          Scene,
          Color,
+         DrawCommand,
+         CommandLists,
          createScene,
          destroyScene) {
     "use strict";
@@ -55,6 +59,53 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
         expect(scene.getContext().readPixels()).toEqual([0, 0, 255, 255]);
+    });
+
+    function getMockPrimitive(command) {
+        return {
+            update : function(context, frameState, commandList) {
+                var commandLists = new CommandLists();
+                commandLists.colorList.push(command);
+                commandList.push(commandLists);
+            },
+            destroy : function() {
+            }
+        };
+    }
+
+    it('debugCommandFilter filters commands', function() {
+        var c = new DrawCommand();
+        c.execute = function() {};
+        spyOn(c, 'execute');
+
+        scene.getPrimitives().add(getMockPrimitive(c));
+
+        scene.debugCommandFilter = function(command) {
+            return command !== c;   // Do not execute command
+        };
+
+        scene.initializeFrame();
+        scene.render();
+        expect(c.execute).not.toHaveBeenCalled();
+
+        scene.getPrimitives().removeAll();
+        scene.debugCommandFilter = undefined;
+    });
+
+
+    it('debugCommandFilter does not filter commands', function() {
+        var c = new DrawCommand();
+        c.execute = function() {};
+        spyOn(c, 'execute');
+
+        scene.getPrimitives().add(getMockPrimitive(c));
+
+        expect(scene.debugCommandFilter).toBeUndefined();
+        scene.initializeFrame();
+        scene.render();
+        expect(c.execute).toHaveBeenCalled();
+
+        scene.getPrimitives().removeAll();
     });
 
     it('isDestroyed', function() {
