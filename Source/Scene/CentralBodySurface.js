@@ -1021,35 +1021,35 @@ define([
                     } else {
                         uniformMap.layerBrightness[numberOfDayTextures] = imageryLayer.brightness;
                     }
-                    applyBrightness = uniformMap.layerBrightness[numberOfDayTextures] !== ImageryLayer.DEFAULT_BRIGHTNESS;
+                    applyBrightness = applyBrightness || uniformMap.layerBrightness[numberOfDayTextures] !== ImageryLayer.DEFAULT_BRIGHTNESS;
 
                     if (typeof imageryLayer.contrast === 'function') {
                         uniformMap.layerContrast[numberOfDayTextures] = imageryLayer.contrast(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
                     } else {
                         uniformMap.layerContrast[numberOfDayTextures] = imageryLayer.contrast;
                     }
-                    applyContrast = uniformMap.layerContrast[numberOfDayTextures] !== ImageryLayer.DEFAULT_CONTRAST;
+                    applyContrast = applyContrast || uniformMap.layerContrast[numberOfDayTextures] !== ImageryLayer.DEFAULT_CONTRAST;
 
                     if (typeof imageryLayer.hue === 'function') {
                         uniformMap.layerHue[numberOfDayTextures] = imageryLayer.hue(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
                     } else {
                         uniformMap.layerHue[numberOfDayTextures] = imageryLayer.hue;
                     }
-                    applyHue = uniformMap.layerHue[numberOfDayTextures] !== ImageryLayer.DEFAULT_HUE;
+                    applyHue = applyHue || uniformMap.layerHue[numberOfDayTextures] !== ImageryLayer.DEFAULT_HUE;
 
                     if (typeof imageryLayer.saturation === 'function') {
                         uniformMap.layerSaturation[numberOfDayTextures] = imageryLayer.saturation(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
                     } else {
                         uniformMap.layerSaturation[numberOfDayTextures] = imageryLayer.saturation;
                     }
-                    applySaturation = uniformMap.layerSaturation[numberOfDayTextures] !== ImageryLayer.DEFAULT_SATURATION;
+                    applySaturation = applySaturation || uniformMap.layerSaturation[numberOfDayTextures] !== ImageryLayer.DEFAULT_SATURATION;
 
                     if (typeof imageryLayer.gamma === 'function') {
                         uniformMap.layerOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
                     } else {
                         uniformMap.layerOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma;
                     }
-                    applyGamma = uniformMap.layerOneOverGamma[numberOfDayTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
+                    applyGamma = applyGamma || uniformMap.layerOneOverGamma[numberOfDayTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
 
                     ++numberOfDayTextures;
                 }
