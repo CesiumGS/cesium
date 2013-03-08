@@ -8,6 +8,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/Math',
+        '../Core/Matrix4',
         './HorizontalOrigin',
         './VerticalOrigin',
         './SceneMode'
@@ -20,6 +21,7 @@ define([
         Cartesian4,
         Cartographic,
         CesiumMath,
+        Matrix4,
         HorizontalOrigin,
         VerticalOrigin,
         SceneMode) {
@@ -582,11 +584,17 @@ define([
         return undefined;
     };
 
-    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, clampToPixel, uniformState) {
+    var scratchViewportTransform = new Matrix4();
+    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, clampToPixel, uniformState, frameState, viewport) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
 
+        var camera = frameState.camera;
+        var view = camera.getViewMatrix();
+        var projection = camera.frustum.getProjectionMatrix();
+        var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, scratchViewportTransform);
+
         // Model to eye coordinates
-        var mv = uniformState.getView().multiply(modelMatrix);
+        var mv = view.multiply(modelMatrix);
         var positionEC = mv.multiplyByPoint(position);
 
         // Apply eye offset, e.g., czm_eyeOffset
@@ -596,11 +604,11 @@ define([
         positionEC.z += zEyeOffset.z;
 
         // Eye to window coordinates, e.g., czm_eyeToWindowCoordinates
-        var q = uniformState.getProjection().multiplyByVector(positionEC); // clip coordinates
+        var q = projection.multiplyByVector(positionEC); // clip coordinates
         q.x /= q.w; // normalized device coordinates
         q.y /= q.w;
         q.z /= q.w;
-        var positionWC = uniformState.getViewportTransformation().multiplyByPoint(q); // window coordinates
+        var positionWC = viewportTransformation.multiplyByPoint(q); // window coordinates
 
         // Apply pixel offset
         var po = pixelOffset.multiplyByScalar(uniformState.getHighResolutionSnapScale());
@@ -621,30 +629,38 @@ define([
      *
      * @memberof Billboard
      *
-     * @param {UniformState} uniformState The same state object passed to {@link BillboardCollection#update}.
+     * @param {UniformState} uniformState The uniform state.
+     * @param {FrameState} frameState The same state object passed to {@link BillboardCollection#update}.
      *
      * @return {Cartesian2} The screen-space position of the billboard.
      *
      * @exception {DeveloperError} Billboard must be in a collection.
      * @exception {DeveloperError} uniformState is required.
+     * @exception {DeveloperError} frameState is required.
      *
      * @see Billboard#setEyeOffset
      * @see Billboard#setPixelOffset
      *
      * @example
-     * console.log(b.computeScreenSpacePosition(scene.getUniformState()).toString());
+     * console.log(b.computeScreenSpacePosition(scene.getUniformState(), scene.getFrameState()).toString());
      */
-    Billboard.prototype.computeScreenSpacePosition = function(uniformState) {
+    Billboard.prototype.computeScreenSpacePosition = function(uniformState, frameState) {
         var billboardCollection = this._billboardCollection;
         if (typeof billboardCollection === 'undefined') {
             throw new DeveloperError('Billboard must be in a collection.  Was it removed?');
         }
 
-        if (!uniformState) {
+        if (typeof uniformState === 'undefined') {
             throw new DeveloperError('uniformState is required.');
         }
 
-        return Billboard._computeScreenSpacePosition(billboardCollection.modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, this.clampToPixel, uniformState);
+        if (typeof frameState === 'undefined') {
+            throw new DeveloperError('frameState is required.');
+        }
+
+        var modelMatrix = billboardCollection.modelMatrix;
+        var viewport = billboardCollection._viewport;
+        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, this.clampToPixel, uniformState, frameState, viewport);
     };
 
     /**

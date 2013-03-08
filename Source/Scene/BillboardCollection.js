@@ -13,6 +13,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/PrimitiveType',
         '../Core/BoundingSphere',
+        '../Core/BoundingRectangle',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/CommandLists',
@@ -37,6 +38,7 @@ define([
         IndexDatatype,
         PrimitiveType,
         BoundingSphere,
+        BoundingRectangle,
         BlendingState,
         BufferUsage,
         CommandLists,
@@ -145,6 +147,8 @@ define([
         this._maxScale = 1.0;
         this._maxPixelOffset = 0.0;
         this._allHorizontalCenter = true;
+
+        this._viewport = new BoundingRectangle();
 
         this._baseVolume = new BoundingSphere();
         this._baseVolume2D = new BoundingSphere();
@@ -891,7 +895,7 @@ define([
     var scratchCanvasDimensions = new Cartesian2();
     var scratchToCenter = new Cartesian3();
     var scratchProj = new Cartesian3();
-    function updateBoundingVolume(collection, context, frameState, boundingVolume) {
+    function updateBoundingVolume(collection, frameState, boundingVolume) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
 
@@ -906,9 +910,8 @@ define([
         var proj = camera.getDirectionWC().multiplyByScalar(toCenter.dot(camera.getDirectionWC()), scratchProj);
         var distance = Math.max(0.0, proj.magnitude() - boundingVolume.radius);
 
-        var canvas = context.getCanvas();
-        scratchCanvasDimensions.x = canvas.clientWidth;
-        scratchCanvasDimensions.y = canvas.clientHeight;
+        scratchCanvasDimensions.x = collection._viewport.width;
+        scratchCanvasDimensions.y = collection._viewport.height;
         var pixelSize = frustum.getPixelSize(scratchCanvasDimensions, distance);
         pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
@@ -1049,6 +1052,10 @@ define([
             return;
         }
 
+        var canvas = context.getCanvas();
+        this._viewport.width = canvas.clientWidth;
+        this._viewport.height = canvas.clientHeight;
+
         var boundingVolume;
         var modelMatrix = Matrix4.IDENTITY;
         if (frameState.mode === SceneMode.SCENE3D) {
@@ -1057,7 +1064,7 @@ define([
         } else if (typeof this._baseVolume2D !== 'undefined') {
             boundingVolume = BoundingSphere.clone(this._baseVolume2D, this._boundingVolume);
         }
-        updateBoundingVolume(this, context, frameState, boundingVolume);
+        updateBoundingVolume(this, frameState, boundingVolume);
 
         var pass = frameState.passes;
         var va;

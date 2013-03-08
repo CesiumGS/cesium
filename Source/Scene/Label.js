@@ -632,7 +632,7 @@ define([
      *
      * @memberof Label
      *
-     * @param {UniformState} uniformState The same state object passed to {@link LabelCollection#update}.
+     * @param {UniformState} uniformState The uniform state.
      * @param {FrameState} frameState The same state object passed to {@link LabelCollection#update}.
      *
      * @return {Cartesian2} The screen-space position of the label.
@@ -656,9 +656,10 @@ define([
 
         var labelCollection = this._labelCollection;
         var modelMatrix = labelCollection.modelMatrix;
+        var viewport = labelCollection._billboardCollection._viewport;
         var actualPosition = Billboard._computeActualPosition(this._position, frameState, labelCollection.morphTime, modelMatrix);
 
-        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, labelCollection.clampToPixel, uniformState);
+        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, labelCollection.clampToPixel, uniformState, frameState, viewport);
     };
 
     /**

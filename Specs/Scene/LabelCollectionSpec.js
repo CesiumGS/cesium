@@ -858,19 +858,24 @@ defineSuite([
         });
 
         it('can compute screen space position (1)', function() {
+            labels.clampToPixel = false;
             var label = labels.add({
+                text : 'abc',
                 position : {
                     x : 0.0,
                     y : 0.0,
                     z : 0.0
                 }
             });
+            labels.update(context, frameState, []);
 
-            expect(label.computeScreenSpacePosition(us, frameState).equals(new Cartesian2(0.5, 0.5)));
+            expect(label.computeScreenSpacePosition(us, frameState)).toEqual(new Cartesian2(0.5, 0.5));
         });
 
         it('can compute screen space position (2)', function() {
+            labels.clampToPixel = false;
             var label = labels.add({
+                text : 'abc',
                 position : {
                     x : 0.0,
                     y : 0.0,
@@ -881,12 +886,15 @@ defineSuite([
                     y : 2.0
                 }
             });
+            labels.update(context, frameState, []);
 
-            expect(label.computeScreenSpacePosition(us, frameState).equals(new Cartesian2(1.5, 2.5)));
+            expect(label.computeScreenSpacePosition(us, frameState)).toEqual(new Cartesian2(1.5, 2.5));
         });
 
         it('can compute screen space position (3)', function() {
+            labels.clampToPixel = false;
             var label = labels.add({
+                text : 'abc',
                 position : {
                     x : 0.0,
                     y : 0.0,
@@ -898,6 +906,7 @@ defineSuite([
                     z : 0.0
                 }
             });
+            labels.update(context, frameState, []);
 
             var p = label.computeScreenSpacePosition(us, frameState);
             expect(p.x).toBeGreaterThan(0.5);
