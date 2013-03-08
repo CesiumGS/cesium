@@ -679,7 +679,7 @@ define([
             tileTexture.setSampler(this._mipmapSampler);
         }
 
-        copyToImageryTextureToTileTexture(this, context, tile, tileImagery, tileTexture, layerIndex);
+        copyImageryTextureToTileTexture(this, context, tile, tileImagery, tileTexture, layerIndex);
     };
 
     /**
@@ -741,7 +741,7 @@ define([
 
     var float32ArrayScratch = typeof Float32Array === 'undefined' ? undefined : new Float32Array(1);
 
-    function copyToImageryTextureToTileTexture(imageryLayer, context, tile, tileImagery, tileTexture, layerIndex) {
+    function copyImageryTextureToTileTexture(imageryLayer, context, tile, tileImagery, tileTexture, layerIndex) {
         if (typeof imageryLayer._fbCopy === 'undefined') {
             imageryLayer._fbCopy = context.createFramebuffer();
             imageryLayer._fbCopy.destroyAttachments = false;
@@ -907,9 +907,7 @@ define([
 
         var twoToTheLevelPower = levelZeroMaximumTexelSpacing / texelSpacing;
         var level = Math.log(twoToTheLevelPower) / Math.log(2);
-        //var rounded = Math.round(level);
-        var rounded = Math.ceil(level);
-        //var rounded = Math.floor(level);
+        var rounded = Math.round(level);
         return rounded | 0;
     }
 
