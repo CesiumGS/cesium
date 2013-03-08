@@ -742,6 +742,11 @@ define([
     var float32ArrayScratch = typeof Float32Array === 'undefined' ? undefined : new Float32Array(1);
 
     function copyImageryTextureToTileTexture(imageryLayer, context, tile, tileImagery, tileTexture, layerIndex) {
+        // We can't copy the imagery until we know how to translate and scale it.
+        if (typeof tileImagery.textureTranslationAndScale === 'undefined') {
+            return;
+        }
+
         if (typeof imageryLayer._fbCopy === 'undefined') {
             imageryLayer._fbCopy = context.createFramebuffer();
             imageryLayer._fbCopy.destroyAttachments = false;

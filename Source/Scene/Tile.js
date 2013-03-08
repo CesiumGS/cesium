@@ -147,6 +147,7 @@ define([
          * @type Array
          */
         this.imagery = [];
+        this.missingImagery = undefined;
 
         this.inheritedTextures = [];
         this.inheritedTextureTranslationAndScale = [];
@@ -350,8 +351,8 @@ define([
             processTerrainStateMachine(this, context, terrainProvider);
         }
 
-        var isRenderable = typeof this.vertexArray !== 'undefined';
-        var isDoneLoading = typeof this.loadedTerrain === 'undefined' && typeof this.upsampledTerrain === 'undefined';
+        var isTileRenderable = typeof this.vertexArray !== 'undefined';
+        var isTileDoneLoading = typeof this.loadedTerrain === 'undefined' && typeof this.upsampledTerrain === 'undefined';
 
         // Transition imagery states
         var tileImageryCollection = this.imagery;
@@ -363,16 +364,19 @@ define([
 
             var imageryLayer = imageryLayerCollection.get(layerIndex);
 
-            isRenderable = isRenderable &&
-                           (layerImageryCollection.length === 0 ||
-                            typeof this.textures[layerIndex] !== 'undefined' ||
-                            typeof this.inheritedTextures[layerIndex] !== 'undefined');
+            isTileRenderable = isTileRenderable &&
+                               (layerImageryCollection.length === 0 ||
+                                typeof this.textures[layerIndex] !== 'undefined' ||
+                                typeof this.inheritedTextures[layerIndex] !== 'undefined');
 
-            var allTexturesLoaded = true;
+            var isLayerDoneLoading = true;
+
+            var tileImagery;
+            var imagery;
 
             for (var i = 0, len = layerImageryCollection.length; i < len; ++i) {
-                var tileImagery = layerImageryCollection[i];
-                var imagery = tileImagery.imagery;
+                tileImagery = layerImageryCollection[i];
+                imagery = tileImagery.imagery;
 
                 if (typeof imagery === 'undefined') {
                     // This is a placeholder for parent imagery.
@@ -406,58 +410,66 @@ define([
                     imagery.state = ImageryState.READY;
                 }
 
-                var imageryDoneLoading = imagery.state === ImageryState.READY;
-
-                if (imageryDoneLoading && typeof tileImagery.textureTranslationAndScale === 'undefined') {
+                if (imagery.state === ImageryState.READY && typeof tileImagery.textureTranslationAndScale === 'undefined') {
                     tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
                 }
 
-                if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
-                    // This Imagery instance is useless, but keep the TileImagery around to
-                    // tell us what portion of this tile should be copied from its parent.
-                    imagery.releaseReference();
-                    imagery = undefined;
-                    tileImagery.imagery = undefined;
+                var isImageryDoneLoading = imagery.state === ImageryState.READY ||
+                                           imagery.state === ImageryState.FAILED ||
+                                           imagery.state === ImageryState.INVALID;
 
-                    // Find an ancestor tile with a texture
-                    var sourceTile = this.parent;
-                    while (typeof sourceTile !== 'undefined' && typeof sourceTile.textures[layerIndex] === 'undefined') {
-                        sourceTile = sourceTile.parent;
-                    }
-
-                    if (typeof sourceTile !== 'undefined') {
-                        tileImagery.textureTranslationAndScale = computeTranslationAndScaleForInheritedTexture(this, sourceTile);
-                    }
-
-                    imageryDoneLoading = true;
-                }
-
-                allTexturesLoaded = allTexturesLoaded && imageryDoneLoading;
-
-                isDoneLoading = isDoneLoading && imageryDoneLoading;
+                isLayerDoneLoading = isLayerDoneLoading && isImageryDoneLoading;
+                isTileDoneLoading = isTileDoneLoading && isImageryDoneLoading;
             }
 
-            // If all the imagery for this layer is done loading, create a single texture
+            // Once all the imagery for this layer is done loading, create a single texture
             // for this tile with all of the imagery.
-            if (allTexturesLoaded) {
+            if (isLayerDoneLoading) {
                 var texturesCopied = false;
-                // TODO: with TileImagerys inherited from an ancestor, this gets executed too often.
-                for (i = 0; i < len; ) {
+                for (i = 0; i < len; ++i) {
+                    tileImagery = layerImageryCollection[i];
+                    imagery = tileImagery.imagery;
+
+                    var keepTileImagery = false;
+                    if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
+                        // This failed/invalid Imagery instance is useless, but keep the TileImagery around to
+                        // tell us what portion of this tile should be copied from its parent.
+                        imagery.releaseReference();
+                        imagery = undefined;
+                        tileImagery.imagery = undefined;
+
+                        // Find an ancestor tile with a texture
+                        var sourceTile = this.parent;
+                        while (typeof sourceTile !== 'undefined' && typeof sourceTile.textures[layerIndex] === 'undefined') {
+                            sourceTile = sourceTile.parent;
+                        }
+
+                        if (typeof sourceTile !== 'undefined') {
+                            tileImagery.textureTranslationAndScale = computeTranslationAndScaleForInheritedTexture(this, sourceTile);
+                        } else {
+                            tileImagery.textureTranslationAndScale = undefined;
+                        }
+
+                        if (typeof this.missingImagery === 'undefined') {
+                            this.missingImagery = [];
+                        }
+                        var missingLayerImagery = this.missingImagery[layerIndex];
+                        if (typeof missingLayerImagery === 'undefined') {
+                            missingLayerImagery = this.missingImagery[layerIndex] = [];
+                        }
+                        missingLayerImagery.push(tileImagery);
+                        keepTileImagery = true;
+                    }
+
                     texturesCopied = true;
                     imageryLayer._copyImageryToTile(context, this, layerImageryCollection[i], layerIndex);
 
-                    if (typeof layerImageryCollection[i].imagery === 'undefined') {
-                        // This imagery instance indicates we should pull the parent imagery, which may not
-                        // be loaded yet.  We need to leave it in place so that when the parent imagery is loaded,
-                        // we can re-apply this portion of our texture.
-                        ++i;
-                    } else {
-                        // We no longer needs this imagery, so remove it.
-                        layerImageryCollection[i].freeResources();
-                        layerImageryCollection.splice(i, 1);
-                        --len;
+                    if (!keepTileImagery) {
+                        tileImagery.freeResources();
                     }
                 }
+
+                layerImageryCollection.length = 0;
 
                 if (texturesCopied) {
                     imageryLayer._finalizeTexture(context, this, layerIndex);
@@ -468,10 +480,10 @@ define([
 
         // The tile becomes renderable when the terrain is loaded and textures for all layers, either real
         // or inherited from parent, are available.
-        if (isRenderable) {
+        if (isTileRenderable) {
             this.isRenderable = true;
 
-            if (isDoneLoading) {
+            if (isTileDoneLoading) {
                 this.state = TileState.READY;
             }
         }
@@ -489,21 +501,19 @@ define([
             child.inheritedTextureTranslationAndScale[layerIndex] = computeTranslationAndScaleForInheritedTexture(child, sourceTile);
             child.inheritedTextures[layerIndex] = sourceTile.textures[layerIndex];
 
-            // If this tile has any placeholder TileImagery instances for ancestor textures, we need to update
-            // those portions of the child tile's texture.
-            var tileImagerys = child.imagery[layerIndex];
-            if (typeof tileImagerys !== 'undefined') {
-                for (var tileImageryIndex = 0; tileImageryIndex < tileImagerys.length; ++tileImageryIndex) {
-                    var tileImagery = tileImagerys[tileImageryIndex];
-                    if (typeof tileImagery.imagery !== 'undefined') {
-                        continue;
-                    }
+            // If this tile has any missing (failed/invalid) TileImagery instances, we need to update those portions
+            // of the child tile's texture with the new inherited texture.
+            if (typeof child.missingImagery !== 'undefined') {
+                var missingImagery = child.missingImagery[layerIndex];
+                if (typeof missingImagery !== 'undefined') {
+                    for (var missingImageryIndex = 0; missingImageryIndex < missingImagery.length; ++missingImageryIndex) {
+                        var tileImagery = missingImagery[missingImageryIndex];
+                        tileImagery.textureTranslationAndScale = child.inheritedTextureTranslationAndScale[layerIndex];
 
-                    tileImagery.textureTranslationAndScale = child.inheritedTextureTranslationAndScale[layerIndex];
-
-                    if (typeof child.textures[layerIndex] !== 'undefined') {
-                        imageryLayer._copyImageryToTile(context, child, tileImagery, layerIndex);
-                        imageryLayer._finalizeTexture(context, child, layerIndex);
+                        if (typeof child.textures[layerIndex] !== 'undefined') {
+                            imageryLayer._copyImageryToTile(context, child, tileImagery, layerIndex);
+                            imageryLayer._finalizeTexture(context, child, layerIndex);
+                        }
                     }
                 }
             }
