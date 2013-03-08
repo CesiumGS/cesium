@@ -50,10 +50,6 @@ define([
         if (this.referenceCount === 0) {
             this.imageryLayer.removeImageryFromCache(this);
 
-            if (typeof this.parent !== 'undefined') {
-                this.parent.releaseReference();
-            }
-
             if (typeof this.image !== 'undefined' && typeof this.image.destroy !== 'undefined') {
                 this.image.destroy();
             }
