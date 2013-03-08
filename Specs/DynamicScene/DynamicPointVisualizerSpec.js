@@ -137,11 +137,14 @@ defineSuite([
         expect(bb._visualizerOutlineWidth).toEqual(testObject.point.outlineWidth.getValue(time));
         expect(bb._visualizerPixelSize).toEqual(testObject.point.pixelSize.getValue(time));
 
-        testObject.position = new MockProperty(new Cartesian3(5678, 1234, 1293434));
-        point.color = new MockProperty(new Color(0.1, 0.2, 0.3, 0.4));
-        point.pixelSize = new MockProperty(2.5);
-        point.outlineColor = new MockProperty(new Color(0.5, 0.6, 0.7, 0.8));
-        point.outlineWidth = new MockProperty(12.5);
+        //There used to be a caching but with point visualizers.
+        //In order to verify it actually detect changes properly, we modify existing values
+        //here rather than creating new ones.
+        new Cartesian3(5678, 1234, 1293434).clone(testObject.position.value);
+        new Color(0.1, 0.2, 0.3, 0.4).clone(point.color.value);
+        point.pixelSize.value = 2.5;
+        new Color(0.5, 0.6, 0.7, 0.8).clone(point.outlineColor.value);
+        point.outlineWidth.value = 12.5;
 
         visualizer.update(time);
         expect(bb.getShow()).toEqual(testObject.point.show.getValue(time));
