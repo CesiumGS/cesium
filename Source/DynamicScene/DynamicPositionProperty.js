@@ -468,6 +468,12 @@ define([
             if (typeof nextInterval !== 'undefined' && stop.greaterThan(nextInterval.start)) {
                 loopStop = nextInterval.start;
             }
+
+            var sampling = false;
+            var sampleStepsToTake;
+            var sampleStepsTaken;
+            var sampleStepSize;
+
             var property = interval.data;
             var currentInterval = property._intervals.get(0);
             var times = currentInterval.data.times;
@@ -494,12 +500,26 @@ define([
                     }
 
                     if (t < (len - 1)) {
-                        var next = times[t + 1];
-                        if (current.getSecondsDifference(next) > maximumStep) {
-                            current = current.addSeconds(maximumStep);
+                        if (!sampling) {
+                            var next = times[t + 1];
+                            var secondsUntilNext = current.getSecondsDifference(next);
+                            sampling = secondsUntilNext > maximumStep;
+
+                            if (sampling) {
+                                sampleStepsToTake = Math.floor(secondsUntilNext / maximumStep);
+                                sampleStepsTaken = 0;
+                                sampleStepSize = secondsUntilNext / Math.max(sampleStepsToTake, 2);
+                                sampleStepsToTake = Math.max(sampleStepsToTake - 2, 1);
+                            }
+                        }
+
+                        if (sampling && sampleStepsTaken < sampleStepsToTake) {
+                            current = current.addSeconds(sampleStepSize);
+                            sampleStepsTaken++;
                             continue;
                         }
                     }
+                    sampling = false;
                     t++;
                     current = times[t];
                 }
