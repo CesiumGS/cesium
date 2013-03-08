@@ -2,6 +2,8 @@
 defineSuite([
          'Scene/Scene',
          'Core/Color',
+         'Core/Cartesian3',
+         'Core/BoundingSphere',
          'Renderer/DrawCommand',
          'Renderer/CommandLists',
          'Specs/createScene',
@@ -9,6 +11,8 @@ defineSuite([
      ], function(
          Scene,
          Color,
+         Cartesian3,
+         BoundingSphere,
          DrawCommand,
          CommandLists,
          createScene,
@@ -92,7 +96,6 @@ defineSuite([
         scene.debugCommandFilter = undefined;
     });
 
-
     it('debugCommandFilter does not filter commands', function() {
         var c = new DrawCommand();
         c.execute = function() {};
@@ -104,6 +107,21 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
         expect(c.execute).toHaveBeenCalled();
+
+        scene.getPrimitives().removeAll();
+    });
+
+    it('debugShowBoundingVolume draws a bounding sphere', function() {
+        var c = new DrawCommand();
+        c.execute = function() {};
+        c.debugShowBoundingVolume = true;
+        c.boundingVolume = new BoundingSphere(Cartesian3.ZERO, 7000000.0);
+
+        scene.getPrimitives().add(getMockPrimitive(c));
+
+        scene.initializeFrame();
+        scene.render();
+        expect(scene.getContext().readPixels()[0]).not.toEqual(0);  // Red bounding sphere
 
         scene.getPrimitives().removeAll();
     });
