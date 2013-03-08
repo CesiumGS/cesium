@@ -509,8 +509,9 @@ define([
             result = new BoundingSphere();
         }
 
-        Cartesian3.add(corner, oppositeCorner, result.center);
-        Cartesian3.multiplyByScalar(result.center, 0.5, result.center);
+        var center = result.center;
+        Cartesian3.add(corner, oppositeCorner, center);
+        Cartesian3.multiplyByScalar(center, 0.5, center);
         result.radius = Cartesian3.distance(center, oppositeCorner);
         return result;
     };
