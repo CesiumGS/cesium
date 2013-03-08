@@ -10,6 +10,7 @@ Beta Releases
    *
 * Added `BoundingSphere.fromCornerPoints`.
 * Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
+* `Billboard.computeScreenSpacePosition` now takes a `FrameState` argument in addition to a `UniformState` argument.
 
 ### b14 - 2013-03-01
 
