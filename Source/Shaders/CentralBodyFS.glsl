@@ -23,9 +23,6 @@ uniform float u_zoomedOutOceanSpecularIntensity;
 uniform sampler2D u_oceanNormalMap;
 #endif
 
-uniform float u_distanceToScreenSpaceError;
-uniform float u_maxScreenSpaceError;
-
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec2 v_textureCoordinates;

@@ -55,13 +55,11 @@ define([
         '../../Scene/SceneMode',
         '../../Scene/SkyBox',
         '../../Scene/SkyAtmosphere',
-        '../../Scene/WebMercatorTilingScheme',
         '../../DynamicScene/processCzml',
         '../../DynamicScene/DynamicObjectView',
         '../../DynamicScene/DynamicObjectCollection',
         '../../DynamicScene/VisualizerCollection',
-        'dojo/text!./CesiumViewerWidget.html',
-        '../../Scene/TileCoordinatesImageryProvider'
+        'dojo/text!./CesiumViewerWidget.html'
     ], function (
         require,
         declare,
@@ -118,13 +116,11 @@ define([
         SceneMode,
         SkyBox,
         SkyAtmosphere,
-        WebMercatorTilingScheme,
         processCzml,
         DynamicObjectView,
         DynamicObjectCollection,
         VisualizerCollection,
-        template,
-        TileCoordinatesImageryProvider) {
+        template) {
     "use strict";
 
     /**
@@ -1111,15 +1107,6 @@ define([
                     if (imageLayers.getLength() > 1) {
                         imageLayers.remove(imageLayers.get(0));
                     }
-//                    imageLayers.addImageryProvider(new TileCoordinatesImageryProvider({
-//                        tilingScheme : new WebMercatorTilingScheme({
-//                            numberOfLevelZeroTilesX : 2,
-//                            numberOfLevelZeroTilesY : 2
-//                        })
-//                    }));
-//                    imageLayers.addImageryProvider(new TileCoordinatesImageryProvider({
-//                        color : 'rgb(255,0,0)'
-//                    }));
                     imageLayers.lowerToBottom(newLayer);
                 }
             } else {
