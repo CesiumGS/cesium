@@ -85,22 +85,22 @@ defineSuite([
     });
 
     it('getNumberOfListeners returns the correct number', function() {
-        var callBack1 = function() {
+        var callback1 = function() {
         };
 
-        var callBack2 = function() {
+        var callback2 = function() {
         };
 
         var e = new Event();
         expect(e.getNumberOfListeners()).toEqual(0);
 
-        e.addEventListener(callBack1);
+        e.addEventListener(callback1);
         expect(e.getNumberOfListeners()).toEqual(1);
 
-        e.addEventListener(callBack2);
+        e.addEventListener(callback2);
         expect(e.getNumberOfListeners()).toEqual(2);
 
-        e.removeEventListener(callBack2);
+        e.removeEventListener(callback2);
         expect(e.getNumberOfListeners()).toEqual(1);
     });
 

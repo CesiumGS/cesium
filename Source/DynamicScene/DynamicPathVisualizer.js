@@ -144,7 +144,14 @@ define([
         }
 
         polyline.setShow(true);
-        polyline.setPositions(positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, time, this._referenceFrame, 60.0, polyline.getPositions()));
+
+        var resolution = 60.0;
+        property = dynamicPath.resolution;
+        if (typeof property !== 'undefined') {
+            resolution = property.getValue(time);
+        }
+
+        polyline.setPositions(positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.getPositions()));
 
         property = dynamicPath.color;
         if (typeof property !== 'undefined') {
