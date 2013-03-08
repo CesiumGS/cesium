@@ -101,8 +101,6 @@ define([
         this._imageryLayerCollection.layerMoved.addEventListener(CentralBodySurface.prototype._onLayerMoved, this);
         this._imageryLayerCollection.layerShownOrHidden.addEventListener(CentralBodySurface.prototype._onLayerShownOrHidden, this);
 
-        this._layerOrderChanged = false;
-
         var terrainTilingScheme = this._terrainProvider.getTilingScheme();
         this._levelZeroTiles = undefined;
 
@@ -190,24 +188,30 @@ define([
             return;
         }
 
+        function insertUndefined(array, index) {
+            if (index >= array.length) {
+                array[index] = undefined;
+            } else {
+                array.splice(index, 0, null);
+                array[index] = undefined;
+            }
+        }
+
         // create TileImagerys for this layer for all previously loaded tiles
-        if (layer.show) {
-            var tile = this._tileReplacementQueue.head;
-            while (typeof tile !== 'undefined') {
-                tile.imagery.splice(index, 0, null);
-                tile.imagery[index] = undefined;
+        var tile = this._tileReplacementQueue.head;
+        while (typeof tile !== 'undefined') {
+            insertUndefined(tile.imagery, index);
+            insertUndefined(tile.textures, index);
+            insertUndefined(tile.inheritedTextures, index);
+            insertUndefined(tile.inheritedTextureTranslationAndScale, index);
 
-                if (layer._createTileImagerySkeletons(tile, this._terrainProvider)) {
-                    tile.state = TileState.LOADING;
-                }
+            tile.state = TileState.LOADING;
 
-                tile.textures.splice(index, 0, null);
-                tile.textures[index] = undefined;
-
-                tile = tile.replacementNext;
+            if (layer.show) {
+                layer._createTileImagerySkeletons(tile, this._terrainProvider);
             }
 
-            this._layerOrderChanged = true;
+            tile = tile.replacementNext;
         }
     };
 
@@ -219,58 +223,95 @@ define([
         // destroy TileImagerys for this layer for all previously loaded tiles
         var tile = this._tileReplacementQueue.head;
         while (typeof tile !== 'undefined') {
-            // TODO
             var tileImageryCollection = tile.imagery;
+            var layerTileImageryCollection = tileImageryCollection[index];
 
-            var startIndex = -1;
-            var numDestroyed = 0;
-            for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
-                var tileImagery = tileImageryCollection[i];
-                var imagery = tileImagery.imagery;
-                if (imagery.imageryLayer === layer) {
-                    if (startIndex === -1) {
-                        startIndex = i;
-                    }
-
+            if (typeof layerTileImageryCollection !== 'undefined') {
+                for (var i = 0, len = layerTileImageryCollection.length; i < len; ++i) {
+                    var tileImagery = layerTileImageryCollection[i];
                     tileImagery.freeResources();
-                    ++numDestroyed;
-                } else if (startIndex !== -1) {
-                    // iterated past the section of TileImagerys belonging to this layer, no need to continue.
-                    break;
                 }
             }
 
-            if (startIndex !== -1) {
-                tileImageryCollection.splice(startIndex, numDestroyed);
+            tile.imagery.splice(index, 1);
+
+            if (typeof tile.textures[index] !== 'undefined') {
+                tile.textures[index].destroy();
             }
+            tile.textures.splice(index, 1);
+            tile.inheritedTextures.splice(index, 1);
+            tile.inheritedTextureTranslationAndScale.splice(index, 1);
+
             // If the base layer has been removed, mark the tile as non-renderable.
             if (layer.isBaseLayer()) {
                 tile.isRenderable = false;
             }
+
+            tile.state = TileState.LOADING;
 
             tile = tile.replacementNext;
         }
     };
 
     CentralBodySurface.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
-        // TODO
         if (typeof this._levelZeroTiles === 'undefined') {
             return;
         }
 
-        this._layerOrderChanged = true;
+        function moveArrayItem(array, newIndex, oldIndex) {
+            var item = array[oldIndex];
+            array.splice(oldIndex, 1);
+            if (newIndex > array.length) {
+                array[newIndex] = item;
+            } else {
+                array.splice(newIndex, 0, item);
+            }
+        }
+
+        // Move the layer for all previously loaded tiles.
+        var tile = this._tileReplacementQueue.head;
+        while (typeof tile !== 'undefined') {
+            moveArrayItem(tile.imagery, newIndex, oldIndex);
+            moveArrayItem(tile.textures, newIndex, oldIndex);
+            moveArrayItem(tile.inheritedTextures, newIndex, oldIndex);
+            moveArrayItem(tile.inheritedTextureTranslationAndScale, newIndex, oldIndex);
+
+            tile = tile.replacementNext;
+        }
     };
 
     CentralBodySurface.prototype._onLayerShownOrHidden = function(layer, index, show) {
-        // TODO
         if (typeof this._levelZeroTiles === 'undefined') {
             return;
         }
 
-        if (show) {
-            this._onLayerAdded(layer, index);
-        } else {
-            this._onLayerRemoved(layer, index);
+        var tile = this._tileReplacementQueue.head;
+        while (typeof tile !== 'undefined') {
+            if (show) {
+                if (layer._createTileImagerySkeletons(tile, this._terrainProvider)) {
+                    tile.state = TileState.LOADING;
+                }
+            } else {
+                var layerImagery = tile.imagery[index];
+                if (typeof layerImagery !== 'undefined') {
+                    for (var i = 0, len = layerImagery.length; i < len; ++i) {
+                        var tileImagery = layerImagery[i];
+                        if (typeof tileImagery !== 'undefined') {
+                            tileImagery.freeResources();
+                        }
+                    }
+                    tile.imagery[index] = undefined;
+                }
+
+                if (typeof tile.textures[index] !== 'undefined') {
+                    tile.textures[index].destroy();
+                }
+                tile.textures[index] = undefined;
+                tile.inheritedTextures[index] = undefined;
+                tile.inheritedTextureTranslationAndScale[index] = undefined;
+            }
+
+            tile = tile.replacementNext;
         }
     };
 
@@ -332,18 +373,6 @@ define([
 
     function updateLayers(surface) {
         surface._imageryLayerCollection._update();
-
-        if (surface._layerOrderChanged) {
-            surface._layerOrderChanged = false;
-
-            // Sort the TileImagery instances in each tile by the layer index.
-            var tile = surface._tileReplacementQueue.head;
-            while (typeof tile !== 'undefined') {
-                // TODO
-                tile.imagery.sort(sortTileImageryByLayerIndex);
-                tile = tile.replacementNext;
-            }
-        }
     }
 
     function selectTilesForRendering(surface, context, frameState) {
@@ -402,6 +431,7 @@ define([
         var levelZeroTiles = surface._levelZeroTiles;
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
             tile = levelZeroTiles[i];
+            surface._tileReplacementQueue.markTileRendered(tile);
             if (tile.state !== TileState.READY) {
                 queueTileLoad(surface, tile);
             }
@@ -671,6 +701,7 @@ define([
         surface._tileLoadQueue.insertBeforeInsertionPoint(tile);
 
         if (tile.state === TileState.START) {
+            surface._tileReplacementQueue.markTileRendered(tile);
             tile.prepareNewTile(surface._terrainProvider, surface._imageryLayerCollection);
             tile.state = TileState.LOADING;
         }

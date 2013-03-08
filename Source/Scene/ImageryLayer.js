@@ -206,7 +206,7 @@ define([
         this._skeletonPlaceholder = new TileImagery(Imagery.createPlaceholder(this));
 
         // The value of the show property on the last update.
-        this._show = false;
+        this._show = undefined;
 
         // The index of this layer in the ImageryLayerCollection.
         this._layerIndex = -1;
@@ -657,7 +657,10 @@ define([
 
         // Create the tile's texture if it doesn't exist yet.
         if (typeof tileTexture === 'undefined') {
-            tile.textures[this._layerIndex] = tileTexture = this._texturePool.createTexture2D(context, {
+            // PERFORMANCE_IDEA: use texture pooling here?  But if we do, we need to clear
+            // the texture before using it, because imagery might not completely overlap this
+            // terrain tile.
+            tile.textures[this._layerIndex] = tileTexture = context.createTexture2D({
                 width : 256,
                 height : 256
             });

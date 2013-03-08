@@ -300,8 +300,10 @@ define([
         var layerList = this.imagery;
         for (i = 0, len = layerList.length; i < len; ++i) {
             var layerImagery = layerList[i];
-            for (var j = 0, jlen = layerImagery.length; j < jlen; ++j) {
-                layerImagery[j].freeResources();
+            if (typeof layerImagery !== 'undefined') {
+                for (var j = 0, jlen = layerImagery.length; j < jlen; ++j) {
+                    layerImagery[j].freeResources();
+                }
             }
         }
         this.imagery.length = 0;
@@ -355,10 +357,15 @@ define([
         var tileImageryCollection = this.imagery;
         for (var layerIndex = 0, layerCount = tileImageryCollection.length; layerIndex < layerCount; ++layerIndex) {
             var layerImageryCollection = tileImageryCollection[layerIndex];
+            if (typeof layerImageryCollection === 'undefined') {
+                continue;
+            }
+
             var imageryLayer = imageryLayerCollection.get(layerIndex);
 
             isRenderable = isRenderable &&
-                           (typeof this.textures[layerIndex] !== 'undefined' ||
+                           (layerImageryCollection.length === 0 ||
+                            typeof this.textures[layerIndex] !== 'undefined' ||
                             typeof this.inheritedTextures[layerIndex] !== 'undefined');
 
             var allTexturesLoaded = true;
@@ -434,8 +441,10 @@ define([
             // If all the imagery for this layer is done loading, create a single texture
             // for this tile with all of the imagery.
             if (allTexturesLoaded) {
+                var texturesCopied = false;
                 // TODO: with TileImagerys inherited from an ancestor, this gets executed too often.
                 for (i = 0; i < len; ) {
+                    texturesCopied = true;
                     imageryLayer._copyImageryToTile(context, this, layerImageryCollection[i], layerIndex);
 
                     if (typeof layerImageryCollection[i].imagery === 'undefined') {
@@ -451,9 +460,10 @@ define([
                     }
                 }
 
-                imageryLayer._finalizeTexture(context, this, layerIndex);
-
-                propagateTexturesToDescendants(context, this, this, imageryLayerCollection, layerIndex);
+                if (texturesCopied) {
+                    imageryLayer._finalizeTexture(context, this, layerIndex);
+                    propagateTexturesToDescendants(context, this, this, imageryLayerCollection, layerIndex);
+                }
             }
         }
 
@@ -492,8 +502,8 @@ define([
                     tileImagery.textureTranslationAndScale = child.inheritedTextureTranslationAndScale[layerIndex];
 
                     if (typeof child.textures[layerIndex] !== 'undefined') {
-                        imageryLayer._reprojectTexture(context, child, tileImagery, imageryLayerCollection, layerIndex);
-                        imageryLayer._finalizeTexture(context, child, imageryLayerCollection, layerIndex);
+                        imageryLayer._copyImageryToTile(context, child, tileImagery, layerIndex);
+                        imageryLayer._finalizeTexture(context, child, layerIndex);
                     }
                 }
             }
@@ -531,20 +541,23 @@ define([
             var parentInheritedTextures = parent.inheritedTextures;
 
             for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
-                var parentTexture = parentTextures[i];
-                if (typeof parentTexture !== 'undefined') {
-                    // Parent has a texture for this layer, so link to it.
-                    inheritedTextures[i] = parentTexture;
-                    inheritedTextureTranslationAndScale[i] = computeTranslationAndScaleForInheritedTexture(this, parent);
-                } else {
-                    var parentToChild = computeTranslationAndScaleForInheritedTexture(this, parent);
-                    var sourceToParent = parent.inheritedTextureTranslationAndScale[i];
-                    inheritedTextures[i] = parentInheritedTextures[i];
-                    inheritedTextureTranslationAndScale[i] = new Cartesian4(
-                            parentToChild.x * sourceToParent.z + sourceToParent.x,
-                            parentToChild.y * sourceToParent.w + sourceToParent.y,
-                            parentToChild.z * sourceToParent.z,
-                            parentToChild.w * sourceToParent.w);
+                var layer = imageryLayerCollection.get(i);
+                if (layer.show) {
+                    var parentTexture = parentTextures[i];
+                    if (typeof parentTexture !== 'undefined') {
+                        // Parent has a texture for this layer, so link to it.
+                        inheritedTextures[i] = parentTexture;
+                        inheritedTextureTranslationAndScale[i] = computeTranslationAndScaleForInheritedTexture(this, parent);
+                    } else if (typeof parentInheritedTextures[i] !== 'undefined') {
+                        var parentToChild = computeTranslationAndScaleForInheritedTexture(this, parent);
+                        var sourceToParent = parent.inheritedTextureTranslationAndScale[i];
+                        inheritedTextures[i] = parentInheritedTextures[i];
+                        inheritedTextureTranslationAndScale[i] = new Cartesian4(
+                                parentToChild.x * sourceToParent.z + sourceToParent.x,
+                                parentToChild.y * sourceToParent.w + sourceToParent.y,
+                                parentToChild.z * sourceToParent.z,
+                                parentToChild.w * sourceToParent.w);
+                    }
                 }
             }
         }
