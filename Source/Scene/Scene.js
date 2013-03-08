@@ -90,12 +90,12 @@ define([
         this._frustumCommandsList = [];
 
         this._clearColorCommand = new ClearCommand(this, context.createClearState({
-                color : new Color()
-            }));
+            color : new Color()
+        }));
         this._clearDepthStencilCommand = new ClearCommand(this, context.createClearState({
-                depth : 1.0,
-                stencil : 0.0
-            }));
+            depth : 1.0,
+            stencil : 0.0
+        }));
 
         /**
          * The {@link SkyBox} used to draw the stars.
@@ -158,9 +158,33 @@ define([
         this.farToNearRatio = 1000.0;
 
         /**
-         * TODO
+         * A function that determines what commands are executed for debugging.  As shown in the examples below,
+         * the function receives the command's owner as an argument, and returns a boolean indicating if the
+         * command should be executed.
+         * <p>
+         * The default is <code>undefined</code>, indicating that all commands get executed.
+         * </p>
+         * <p>
+         * This property is for debugging only; it is not for production use.
+         * </p>
          *
          * @type Function
+         * @default undefined
+         *
+         * @see DrawCommand
+         * @see ClearCommand
+         *
+         * @example
+         * // Do not execute any commands.
+         * scene.debugCommandFilter = function(command) {
+         *     return false;
+         * };
+         *
+         * // Execute only the billboard's commands.  That is, only draw the billboard.
+         * var billboards = new BillboardCollection();
+         * scene.debugCommandFilter = function(command) {
+         *     return command.owner === billboards;
+         * };
          */
         this.debugCommandFilter = undefined;
 

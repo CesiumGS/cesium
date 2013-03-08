@@ -32,10 +32,10 @@ define([
 
         // Clear to black.  Since this is the background color, no objects will be black
         this._clearCommand = new ClearCommand(this, context.createClearState({
-                color : new Color(0.0, 0.0, 0.0, 1.0),
-                depth : 1.0,
-                stencil : 0
-            }));
+            color : new Color(0.0, 0.0, 0.0, 1.0),
+            depth : 1.0,
+            stencil : 0
+        }));
     };
 
     /**

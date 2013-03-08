@@ -51,10 +51,6 @@ require([
                 imageIndex : 0
             });
             scene.getPrimitives().add(billboards);
-
-            scene.debugCommandFilter = function(command) {
-                return command.owner === billboards;
-            };
         };
         image.src = '../images/Cesium_Logo_overlay.png';
     }

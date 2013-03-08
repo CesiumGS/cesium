@@ -25,9 +25,14 @@ define(function() {
         this.framebuffer = undefined;
 
         /**
-         * The object who created this command.  This is useful for debugging command execution.
+         * The object who created this command.  This is useful for debugging command
+         * execution; it allows you to see who created a command when you only have a
+         * reference to the command, and can be used to selectively execute commands
+         * with {@link cene#debugCommandFilter}.
          *
          * @type Object
+         *
+         * @see Scene#debugCommandFilter
          */
         this.owner = owner;
     };

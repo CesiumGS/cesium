@@ -1087,7 +1087,6 @@ define([
                 command = commands[j];
                 if (typeof command === 'undefined') {
                     command = commands[j] = new DrawCommand(this);
-command.debugShowBoundingVolume = true;
                 }
 
                 command.boundingVolume = boundingVolume;
