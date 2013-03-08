@@ -483,6 +483,39 @@ define([
     };
 
     /**
+     * Computes a bounding sphere from the corner points of an axis-aligned bounding box.  The sphere
+     * tighly and fully encompases the box.
+     *
+     * @memberof BoundingSphere
+     *
+     * @param {Number} [corner] The minimum height over the extent.
+     * @param {Number} [oppositeCorner] The maximum height over the extent.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     *
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     *
+     * @exception {DeveloperError} corner and oppositeCorner are required.
+     *
+     * @example
+     * // Create a bounding sphere around the unit cube
+     * var sphere = BoundingSphere.fromCornerPoints(new Cartesian3(-0.5, -0.5, -0.5), new Cartesian3(0.5, 0.5, 0.5));
+     */
+    BoundingSphere.fromCornerPoints = function(corner, oppositeCorner, result) {
+        if ((typeof corner === 'undefined') || (typeof oppositeCorner === 'undefined')) {
+            throw new DeveloperError('corner and oppositeCorner are required.');
+        }
+
+        if (typeof result === 'undefined') {
+            result = new BoundingSphere();
+        }
+
+        Cartesian3.add(corner, oppositeCorner, result.center);
+        Cartesian3.multiplyByScalar(result.center, 0.5, result.center);
+        result.radius = Cartesian3.distance(center, oppositeCorner);
+        return result;
+    };
+
+    /**
      * Duplicates a BoundingSphere instance.
      * @memberof BoundingSphere
      *
