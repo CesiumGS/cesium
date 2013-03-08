@@ -29,7 +29,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.clear(new ClearCommand(context.createClearState({
+        context.clear(new ClearCommand(undefined, context.createClearState({
             color : {
                 red : 1.0,
                 green : 1.0,
@@ -44,7 +44,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        var command = new ClearCommand(context.createClearState({
+        var command = new ClearCommand(undefined, context.createClearState({
             color : {
                 red : 1.0,
                 green : 1.0,
@@ -61,7 +61,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.clear(new ClearCommand(context.createClearState({
+        context.clear(new ClearCommand(undefined, context.createClearState({
             color : {
                 red : 1.0,
                 green : 1.0,
@@ -79,7 +79,7 @@ defineSuite([
     });
 
     it('clears with scissor test', function() {
-        context.clear(new ClearCommand(context.createClearState({
+        context.clear(new ClearCommand(undefined, context.createClearState({
             color : {
                 red : 1.0,
                 green : 1.0,
@@ -89,7 +89,7 @@ defineSuite([
         })));
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
-        context.clear(new ClearCommand(context.createClearState({
+        context.clear(new ClearCommand(undefined, context.createClearState({
             color : {
                 red : 0.0,
                 green : 0.0,
@@ -108,7 +108,7 @@ defineSuite([
         })));
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
-        context.clear(new ClearCommand(context.createClearState({
+        context.clear(new ClearCommand(undefined, context.createClearState({
             color : {
                 red : 0.0,
                 green : 0.0,
@@ -137,7 +137,7 @@ defineSuite([
             colorTexture : colorTexture
         });
 
-        context.clear(new ClearCommand(context.createClearState({
+        context.clear(new ClearCommand(undefined, context.createClearState({
             framebuffer : framebuffer,
             color : {
                 red : 0.0,
@@ -158,7 +158,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.clear(new ClearCommand(context.createClearState({
+        context.clear(new ClearCommand(undefined, context.createClearState({
             color : {
                 red : 1.0,
                 green : 1.0,
@@ -169,7 +169,7 @@ defineSuite([
         })));
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
-        context.clear(new ClearCommand(context.createClearState({
+        context.clear(new ClearCommand(undefined, context.createClearState({
             color : {
                 red : 0.0,
                 green : 0.0,

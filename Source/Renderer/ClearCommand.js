@@ -8,10 +8,10 @@ define(function() {
      * @alias ClearCommand
      * @constructor
      *
-     * @param {ClearState}[clearState=undefined] The clear state.
      * @param {Object}[owner=undefined] The object who created this command.
+     * @param {ClearState}[clearState=undefined] The clear state.
      */
-    var ClearCommand = function(clearState, owner) {
+    var ClearCommand = function(owner, clearState) {
         /**
          * The clear state.  If this property is undefined, a default clear state is used.
          * @type Object

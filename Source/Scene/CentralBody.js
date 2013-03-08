@@ -131,7 +131,7 @@ define([
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
 
-        this._clearDepthCommand = new ClearCommand(undefined, this);
+        this._clearDepthCommand = new ClearCommand(this);
 
         this._depthCommand = new DrawCommand(this);
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
