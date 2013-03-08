@@ -27,6 +27,17 @@ define([
         when) {
     "use strict";
 
+    /**
+     * An {@link ImageryProvider} that draws a box around every rendered tile in the tiling scheme, and draws
+     * a label inside it indicating the X, Y, Level coordinates of the tile.  This is mostly useful for
+     * debugging terrain and imagery rendering problems.
+     *
+     * @alias TileCoordinatesImageryProvider
+     * @constructor
+     *
+     * @param {TilingScheme} [description.tilingScheme] The tiling scheme for which to draw tiles.
+     * @param {String} [description.color] The color to draw the tile box and label, specified as a CSS color string.
+     */
     var TileCoordinatesImageryProvider = function TileCoordinatesImageryProvider(description) {
         description = defaultValue(description, {});
 
@@ -172,9 +183,6 @@ define([
         canvas.width = 256;
         canvas.height = 256;
         var context = canvas.getContext('2d');
-
-//        context.fillStyle = 'rgb(200,0,0)';
-//        context.fillRect(1, 1, 254, 254);
 
         context.strokeStyle = this._color;
         context.lineWidth = 2;

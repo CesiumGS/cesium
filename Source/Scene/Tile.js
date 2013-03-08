@@ -425,7 +425,6 @@ define([
                         sourceTile = sourceTile.parent;
                     }
 
-                    // TODO: what if there's no ancestor with a texture?
                     if (typeof sourceTile !== 'undefined') {
                         tileImagery.textureTranslationAndScale = computeTranslationAndScaleForInheritedTexture(this, sourceTile);
                     }
@@ -467,7 +466,8 @@ define([
             }
         }
 
-        // The tile becomes renderable when the terrain and all imagery data are loaded.
+        // The tile becomes renderable when the terrain is loaded and textures for all layers, either real
+        // or inherited from parent, are available.
         if (isRenderable) {
             this.isRenderable = true;
 
