@@ -546,12 +546,13 @@ define([
         var parent = this.parent;
         var inheritedTextures = this.inheritedTextures;
         var inheritedTextureTranslationAndScale = this.inheritedTextureTranslationAndScale;
+        var layer;
         if (typeof parent !== 'undefined') {
             var parentTextures = parent.textures;
             var parentInheritedTextures = parent.inheritedTextures;
 
             for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
-                var layer = imageryLayerCollection.get(i);
+                layer = imageryLayerCollection.get(i);
                 if (layer.show) {
                     var parentTexture = parentTextures[i];
                     if (typeof parentTexture !== 'undefined') {
@@ -574,7 +575,7 @@ define([
 
         // Map imagery tiles to this terrain tile
         for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
-            var layer = imageryLayerCollection.get(i);
+            layer = imageryLayerCollection.get(i);
             if (layer.show) {
                 layer._createTileImagerySkeletons(this, terrainProvider);
             }
