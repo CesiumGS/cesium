@@ -23,6 +23,7 @@ defineSuite([
                     rgbaf : [0.1, 0.1, 0.1, 0.1]
                 },
                 width : 1.0,
+                resolution : 23.0,
                 outlineColor : {
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
@@ -39,6 +40,7 @@ defineSuite([
         expect(dynamicObject.path).toBeDefined();
         expect(dynamicObject.path.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.path.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.width);
+        expect(dynamicObject.path.resolution.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.resolution);
         expect(dynamicObject.path.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(dynamicObject.path.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.outlineWidth);
         expect(dynamicObject.path.leadTime.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.leadTime);
@@ -54,6 +56,7 @@ defineSuite([
                     rgbaf : [0.1, 0.1, 0.1, 0.1]
                 },
                 width : 1.0,
+                resolution : 23.0,
                 outlineColor : {
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
@@ -73,6 +76,7 @@ defineSuite([
         expect(dynamicObject.path).toBeDefined();
         expect(dynamicObject.path.color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.path.width.getValue(validTime)).toEqual(pathPacket.path.width);
+        expect(dynamicObject.path.resolution.getValue(validTime)).toEqual(pathPacket.path.resolution);
         expect(dynamicObject.path.outlineColor.getValue(validTime)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(dynamicObject.path.outlineWidth.getValue(validTime)).toEqual(pathPacket.path.outlineWidth);
         expect(dynamicObject.path.leadTime.getValue(validTime)).toEqual(pathPacket.path.leadTime);
@@ -105,26 +109,29 @@ defineSuite([
         objectToMerge.path.show = 5;
         objectToMerge.path.leadTime = 6;
         objectToMerge.path.trailTime = 7;
+        objectToMerge.path.resolution = 8;
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.path = new DynamicPath();
-        targetObject.path.color = 8;
-        targetObject.path.width = 9;
-        targetObject.path.outlineColor = 10;
-        targetObject.path.outlineWidth = 11;
-        targetObject.path.show = 12;
-        targetObject.path.leadTime = 13;
-        targetObject.path.trailTime = 14;
+        targetObject.path.color = 9;
+        targetObject.path.width = 10;
+        targetObject.path.outlineColor = 11;
+        targetObject.path.outlineWidth = 12;
+        targetObject.path.show = 13;
+        targetObject.path.leadTime = 14;
+        targetObject.path.trailTime = 15;
+        targetObject.path.resolution = 16;
 
         DynamicPath.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.path.color).toEqual(8);
-        expect(targetObject.path.width).toEqual(9);
-        expect(targetObject.path.outlineColor).toEqual(10);
-        expect(targetObject.path.outlineWidth).toEqual(11);
-        expect(targetObject.path.show).toEqual(12);
-        expect(targetObject.path.leadTime).toEqual(13);
-        expect(targetObject.path.trailTime).toEqual(14);
+        expect(targetObject.path.color).toEqual(9);
+        expect(targetObject.path.width).toEqual(10);
+        expect(targetObject.path.outlineColor).toEqual(11);
+        expect(targetObject.path.outlineWidth).toEqual(12);
+        expect(targetObject.path.show).toEqual(13);
+        expect(targetObject.path.leadTime).toEqual(14);
+        expect(targetObject.path.trailTime).toEqual(15);
+        expect(targetObject.path.resolution).toEqual(16);
     });
 
     it('mergeProperties creates and configures an undefined path', function() {
@@ -137,6 +144,7 @@ defineSuite([
         objectToMerge.path.show = 5;
         objectToMerge.path.leadTime = 6;
         objectToMerge.path.trailTime = 7;
+        objectToMerge.path.resolution = 8;
         var targetObject = new DynamicObject('targetObject');
 
         DynamicPath.mergeProperties(targetObject, objectToMerge);
@@ -163,6 +171,7 @@ defineSuite([
         targetObject.path.show = 5;
         targetObject.path.leadTime = 6;
         targetObject.path.trailTime = 7;
+        targetObject.path.resolution = 8;
         DynamicPath.mergeProperties(targetObject, objectToMerge);
 
         expect(targetObject.path.color).toEqual(1);
@@ -172,6 +181,7 @@ defineSuite([
         expect(targetObject.path.show).toEqual(5);
         expect(targetObject.path.leadTime).toEqual(6);
         expect(targetObject.path.trailTime).toEqual(7);
+        expect(targetObject.path.resolution).toEqual(8);
     });
 
     it('undefineProperties works', function() {

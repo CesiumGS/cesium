@@ -57,6 +57,11 @@ function(
          */
         this.width = undefined;
         /**
+         * A DynamicProperty of type CzmlNumber which determines the maximum step size, in seconds, to take when sampling the position.
+         * @type DynamicProperty
+         */
+        this.resolution = undefined;
+        /**
          * A DynamicProperty of type CzmlNumber which determines the number of seconds in front of the object to show.
          * @type DynamicProperty
          */
@@ -117,6 +122,15 @@ function(
                 pathUpdated = true;
             }
             width.processCzmlIntervals(pathData.width, interval);
+        }
+
+        if (typeof pathData.resolution !== 'undefined') {
+            var resolution = path.resolution;
+            if (typeof resolution === 'undefined') {
+                path.resolution = resolution = new DynamicProperty(CzmlNumber);
+                pathUpdated = true;
+            }
+            resolution.processCzmlIntervals(pathData.resolution, interval);
         }
 
         if (typeof pathData.outlineColor !== 'undefined') {
@@ -189,6 +203,7 @@ function(
 
             targetpath.color = defaultValue(targetpath.color, pathToMerge.color);
             targetpath.width = defaultValue(targetpath.width, pathToMerge.width);
+            targetpath.resolution = defaultValue(targetpath.resolution, pathToMerge.resolution);
             targetpath.outlineColor = defaultValue(targetpath.outlineColor, pathToMerge.outlineColor);
             targetpath.outlineWidth = defaultValue(targetpath.outlineWidth, pathToMerge.outlineWidth);
             targetpath.show = defaultValue(targetpath.show, pathToMerge.show);
