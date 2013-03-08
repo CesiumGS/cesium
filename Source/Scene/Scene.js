@@ -432,14 +432,17 @@ define([
 
         command.execute(context, framebuffer);
 
-        // TODO: not when picking
-        if (command.debugShowBoundingVolume && typeof command.boundingVolume !== 'undefined') {
-            // Debug code to draw bounding volume for command.  Not optimized!
-            var sphere = new EllipsoidPrimitive();
+        if (command.debugShowBoundingVolume &&
+            typeof command.boundingVolume !== 'undefined' &&
+            typeof command.framebuffer === 'undefined') {       // Only for color pass; not pick, shadows, etc.
 
+            // Debug code to draw bounding volume for command.  Not optimized!
+            // Assumes bounding volume is a bounding sphere.
             var r = command.boundingVolume.radius;
             var m = Matrix4.multiplyByTranslation(defaultValue(command.modelMatrix, Matrix4.IDENTITY), command.boundingVolume.center);
-            sphere.modelMatrix = Matrix4.fromTranslation(new Cartesian3(m[12], m[13], m[14]));
+
+            var sphere = new EllipsoidPrimitive();
+            sphere.modelMatrix = Matrix4.fromTranslation(Cartesian3.fromArray(m, 12));
             sphere.radii = new Cartesian3(r, r, r);
 
             var commandList = [];

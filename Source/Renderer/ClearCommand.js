@@ -14,13 +14,19 @@ define(function() {
     var ClearCommand = function(owner, clearState) {
         /**
          * The clear state.  If this property is undefined, a default clear state is used.
+         *
          * @type Object
+         *
+         * @default undefined
          */
         this.clearState = clearState;
 
         /**
          * The framebuffer to clear.
+         *
          * @type Framebuffer
+         *
+         * @default undefined
          */
         this.framebuffer = undefined;
 
@@ -31,6 +37,8 @@ define(function() {
          * with {@link cene#debugCommandFilter}.
          *
          * @type Object
+         *
+         * @default undefined
          *
          * @see Scene#debugCommandFilter
          */
