@@ -26,8 +26,6 @@ define([
         './TexturePool',
         './WebMercatorTilingScheme',
         '../ThirdParty/when',
-        '../Shaders/ReprojectWebMercatorFS',
-        '../Shaders/ReprojectWebMercatorVS',
         '../Shaders/CombineGeographicTexturesFS',
         '../Shaders/CombineTexturesVS',
         '../Shaders/CombineWebMercatorTexturesFS'
@@ -58,8 +56,6 @@ define([
         TexturePool,
         WebMercatorTilingScheme,
         when,
-        ReprojectWebMercatorFS,
-        ReprojectWebMercatorVS,
         CombineGeographicTexturesFS,
         CombineTexturesVS,
         CombineWebMercatorTexturesFS) {
@@ -724,6 +720,8 @@ define([
             textureCoordinateExtent : new Cartesian4()
         };
 
+    var float32ArrayScratch = typeof Float32Array === 'undefined' ? undefined : new Float32Array(1);
+
     function copyToImageryTextureToTileTexture(imageryLayer, context, tile, tileImagery, tileTexture, layerIndex) {
         if (typeof imageryLayer._fbCopy === 'undefined') {
             imageryLayer._fbCopy = context.createFramebuffer();
@@ -870,117 +868,6 @@ define([
 
     function getImageryCacheKey(x, y, level) {
         return JSON.stringify([x, y, level]);
-    }
-
-    var float32ArrayScratch = typeof Float32Array === 'undefined' ? undefined : new Float32Array(1);
-
-    function reprojectToGeographic(imageryLayer, context, texture, extent) {
-        if (typeof imageryLayer._fbReproject === 'undefined') {
-            imageryLayer._fbReproject = context.createFramebuffer();
-            imageryLayer._fbReproject.destroyAttachments = false;
-
-            var reprojectMesh = {
-                attributes : {
-                    position : {
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 2,
-                        values : [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
-                    }
-                }
-            };
-
-            var reprojectAttribInds = {
-                position : 0
-            };
-
-            imageryLayer._vaReproject = context.createVertexArrayFromMesh({
-                mesh : reprojectMesh,
-                attributeIndices : reprojectAttribInds,
-                bufferUsage : BufferUsage.STATIC_DRAW
-            });
-
-            imageryLayer._spReproject = context.getShaderCache().getShaderProgram(
-                ReprojectWebMercatorVS,
-                ReprojectWebMercatorFS,
-                reprojectAttribInds);
-
-            imageryLayer._rsColor = context.createRenderState();
-        }
-
-        if (typeof imageryLayer._reprojectSampler === 'undefined') {
-            var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
-            imageryLayer._reprojectSampler = context.createSampler({
-                wrapS : TextureWrap.CLAMP,
-                wrapT : TextureWrap.CLAMP,
-                minificationFilter : TextureMinificationFilter.LINEAR,
-                magnificationFilter : TextureMagnificationFilter.LINEAR,
-                maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
-            });
-        }
-
-        texture.setSampler(imageryLayer._reprojectSampler);
-
-        var width = texture.getWidth();
-        var height = texture.getHeight();
-
-        uniformMap.textureDimensions.x = width;
-        uniformMap.textureDimensions.y = height;
-        uniformMap.texture = texture;
-
-        uniformMap.northLatitude = extent.north;
-        uniformMap.southLatitude = extent.south;
-
-        var sinLatitude = Math.sin(extent.south);
-        var southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
-
-        float32ArrayScratch[0] = southMercatorY;
-        uniformMap.southMercatorYHigh = float32ArrayScratch[0];
-        uniformMap.southMercatorYLow = southMercatorY - float32ArrayScratch[0];
-
-        sinLatitude = Math.sin(extent.north);
-        var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
-        uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
-
-        var outputTexture = imageryLayer._texturePool.createTexture2D(context, {
-            width : width,
-            height : height,
-            pixelFormat : texture.getPixelFormat(),
-            pixelDatatype : texture.getPixelDatatype(),
-            preMultiplyAlpha : texture.getPreMultiplyAlpha()
-        });
-
-        // Allocate memory for the mipmaps.  Failure to do this before rendering
-        // to the texture via the FBO, and calling generateMipmap later,
-        // will result in the texture appearing blank.  I can't pretend to
-        // understand exactly why this is.
-        outputTexture.generateMipmap(MipmapHint.NICEST);
-
-        imageryLayer._fbReproject.setColorTexture(outputTexture);
-
-        context.clear(context.createClearState({
-            framebuffer : imageryLayer._fbReproject,
-            color : new Color(0.0, 0.0, 0.0, 0.0)
-        }));
-
-        var renderState = imageryLayer._rsColor;
-        var viewport = renderState.viewport;
-        if (typeof viewport === 'undefined') {
-            viewport = new BoundingRectangle();
-            renderState.viewport = viewport;
-        }
-        viewport.width = width;
-        viewport.height = height;
-
-        context.draw({
-            framebuffer : imageryLayer._fbReproject,
-            shaderProgram : imageryLayer._spReproject,
-            renderState : renderState,
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
-            vertexArray : imageryLayer._vaReproject,
-            uniformMap : uniformMap
-        });
-
-        return outputTexture;
     }
 
     /**
