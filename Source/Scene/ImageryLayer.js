@@ -657,7 +657,7 @@ define([
 
         // Create the tile's texture if it doesn't exist yet.
         if (typeof tileTexture === 'undefined') {
-            tile.textures[this._layerIndex] = tileTexture = context.createTexture2D({
+            tile.textures[this._layerIndex] = tileTexture = this._texturePool.createTexture2D(context, {
                 width : 256,
                 height : 256
             });
