@@ -7,10 +7,11 @@ Beta Releases
 
 * Breaking changes:
    * Removed `view2D`, `view3D`, and `viewColumbus` properties from `CesiumViewerWidget`.  Use the `sceneModeWidget` property instead.
+* Added `SceneModeWidget` and associated objects.  This is a new single-button widget for transitioning among scene modes.
 * Added `BoundingSphere.fromCornerPoints`.
 * Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
-* Added `SceneModeWidget` and associated objects.  This is a new single-button widget for transitioning among scene modes.
 * Added 'onTransitionStart` and `onTransitionComplete` events to `SceneModeTransitioner`.
+* Added `DynamicPath.resolution` property for setting the maximum step size, in seconds, to take when sampling a position for path visualization. 
 
 ### b14 - 2013-03-01
 
