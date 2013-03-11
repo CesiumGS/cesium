@@ -30,6 +30,7 @@
 <div id="toolbar">
 <div id="terrainMenu"></div>
 <div id="zoomButtons"></div>
+<div id="sampleButtons"></div>
 </div>
 <script id="cesium_sandcastle_script">
 require([
@@ -133,40 +134,105 @@ require([
                 }
             }
         }).placeAt('zoomButtons');
-    }
+        
+        var terrainSamplePoints;
+        function elevationSuccess() {
+            Cesium.when.all([Cesium.loadImage('../images/facility.gif')])
+            .then(function(images) {
+                var ellipsoid = Cesium.Ellipsoid.WGS84;
+                var billboards = new Cesium.BillboardCollection();
+                var labels = new Cesium.LabelCollection();
+                var textureAtlas = scene.getContext().createTextureAtlas({images : images});
+                billboards.setTextureAtlas(textureAtlas);
+                
+                for( var i = 0; i < terrainSamplePoints.length; ++i ){
+                    var pt = terrainSamplePoints[i];
+                    billboards.add({
+                        position : ellipsoid.cartographicToCartesian(pt),
+                        scale : 0.7,
+                        imageIndex : 0
+                    });
 
-    var widget = new CesiumViewerWidget();
-    widget.placeAt('cesiumContainer');
-    widget.startup();
-    widget.fullscreen.viewModel.fullscreenElement(document.body);
+                    labels.add({
+                        position : ellipsoid.cartographicToCartesian(pt),
+                        text : pt.height.toFixed(1),
+                        horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                        scale : 0.3,
+                        pixelOffset : new Cesium.Cartesian2(0,8),
+                        fillColor : new Cesium.Color(1,0,0),
+                        outlineColor : Cesium.Color.WHITE
+                    });
 
-    var scene = widget.scene;
-    var centralBody = scene.getPrimitives().getCentralBody();
+                }
+                scene.getPrimitives().add(billboards);
+                scene.getPrimitives().add(labels);
+            });
+        }
+        
+        new Button({
+            label: 'Sample Everest Terrain',
+            onClick: function() {
+                var nx = 40;
+                var ny = 40;
+                var lat = Cesium.Math.toRadians(27.988);
+                var lon = Cesium.Math.toRadians(86.925);
+                var sz = 0.005;
+                var e = new Cesium.Extent(lon-sz,lat-sz,lon+sz,lat+sz);
+                terrainSamplePoints = new Array();
+                for( var y = 0; y < ny; ++y ) {
+                    for( var x = 0; x < nx; ++x ) {
+                        var a = x / (nx-1);
+                        var b = y / (ny-1);
+                        
+                        var lon = e.west * (1.0-a) + e.east * a;
+                        var lat = e.south * (1.0-b) + e.north * b;
+                        var pt = new Cesium.Cartographic(lon,lat,1000);
+                        terrainSamplePoints.push(pt);
+                    }
+                }
+                
+                Cesium.when(Cesium.terrainSample(centralBody.terrainProvider, 9, scene.getContext(), terrainSamplePoints), elevationSuccess);
+                }
+            }).placeAt('sampleButtons');
+        }
 
-    var cesiumTerrainProvider = new Cesium.CesiumTerrainProvider({
-        url : 'http://cesium.agi.com/smallterrain',
-        credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+        var widget = new CesiumViewerWidget();
+        widget.placeAt('cesiumContainer');
+        widget.startup();
+        widget.fullscreen.viewModel.fullscreenElement(document.body);
+
+        var scene = widget.scene;
+        var centralBody = scene.getPrimitives().getCentralBody();
+
+        var cesiumTerrainProvider = new Cesium.CesiumTerrainProvider({
+            url : 'http://cesium.agi.com/smallterrain',
+            credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+        });
+
+        var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
+
+        var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
+            url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
+            credit : 'Terrain data courtesy VT MÄK'
+        });
+
+        var terrainProviders = [{
+            name : 'CesiumTerrainProvider',
+            provider : cesiumTerrainProvider
+        }, {
+            name : 'EllipsoidTerrainProvider',
+            provider : ellipsoidProvider
+        }, {
+            name : 'VRTheWorldTerrainProvider',
+            provider : vrTheWorldProvider
+        }];
+
+        centralBody.terrainProvider = cesiumTerrainProvider;
+
+        createTerrainMenu(terrainProviders);
+
+        Sandcastle.finishedLoading();
     });
-
-    var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
-
-    var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
-        url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
-        credit : 'Terrain data courtesy VT MÄK'
-    });
-
-    var terrainProviders = [
-        { name : 'CesiumTerrainProvider', provider : cesiumTerrainProvider },
-        { name : 'EllipsoidTerrainProvider', provider : ellipsoidProvider },
-        { name : 'VRTheWorldTerrainProvider', provider : vrTheWorldProvider }
-    ];
-
-    centralBody.terrainProvider = cesiumTerrainProvider;
-
-    createTerrainMenu(terrainProviders);
-
-    Sandcastle.finishedLoading();
-});
 </script>
 </body>
 </html>
