@@ -1,30 +1,30 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/JulianDate',
-        '../Core/TimeInterval',
-        '../Core/TimeIntervalCollection',
-        '../Core/Iso8601',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/DeveloperError',
+        '../Core/Ellipsoid',
+        '../Core/Iso8601',
+        '../Core/JulianDate',
         '../Core/Matrix3',
         '../Core/ReferenceFrame',
+        '../Core/TimeInterval',
+        '../Core/TimeIntervalCollection',
         '../Core/Transforms',
         './CzmlCartesian3',
         './CzmlCartographic',
         './DynamicProperty'
     ], function(
-        DeveloperError,
-        Ellipsoid,
-        JulianDate,
-        TimeInterval,
-        TimeIntervalCollection,
-        Iso8601,
         Cartesian3,
         Cartographic,
+        DeveloperError,
+        Ellipsoid,
+        Iso8601,
+        JulianDate,
         Matrix3,
         ReferenceFrame,
+        TimeInterval,
+        TimeIntervalCollection,
         Transforms,
         CzmlCartesian3,
         CzmlCartographic,
@@ -92,8 +92,8 @@ define([
         }
 
         var interval = this._cachedInterval;
-        if (this._cachedTime !== time) {
-            this._cachedTime = time;
+        if (!JulianDate.equals(this._cachedTime, time)) {
+            this._cachedTime = JulianDate.clone(time, this._cachedTime);
             if (typeof interval === 'undefined' || !interval.contains(time)) {
                 interval = this._propertyIntervals.findIntervalContainingDate(time);
                 this._cachedInterval = interval;
@@ -136,8 +136,8 @@ define([
         }
 
         var interval = this._cachedInterval;
-        if (this._cachedTime !== time) {
-            this._cachedTime = time;
+        if (!JulianDate.equals(this._cachedTime, time)) {
+            this._cachedTime = JulianDate.clone(time, this._cachedTime);
             if (typeof interval === 'undefined' || !interval.contains(time)) {
                 interval = this._propertyIntervals.findIntervalContainingDate(time);
                 this._cachedInterval = interval;
@@ -375,8 +375,8 @@ define([
         }
 
         var interval = this._cachedInterval;
-        if (this._cachedTime !== time) {
-            this._cachedTime = time;
+        if (!JulianDate.equals(this._cachedTime, time)) {
+            this._cachedTime = JulianDate.clone(time, this._cachedTime);
             if (typeof interval === 'undefined' || !interval.contains(time)) {
                 interval = this._propertyIntervals.findIntervalContainingDate(time);
                 this._cachedInterval = interval;
