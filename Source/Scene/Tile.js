@@ -405,11 +405,6 @@ define([
                     imageryLayer._createTexture(context, imagery);
                 }
 
-                if (imagery.state === ImageryState.TEXTURE_LOADED) {
-                    // TODO: unnecessary extra state.
-                    imagery.state = ImageryState.READY;
-                }
-
                 if (imagery.state === ImageryState.READY && typeof tileImagery.textureTranslationAndScale === 'undefined') {
                     tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
                 }

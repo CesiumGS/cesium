@@ -636,7 +636,7 @@ define([
 
         imagery.texture = texture;
         imagery.image = undefined;
-        imagery.state = ImageryState.TEXTURE_LOADED;
+        imagery.state = ImageryState.READY;
     };
 
     /**

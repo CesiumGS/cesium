@@ -151,21 +151,11 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return imagery.state === ImageryState.TEXTURE_LOADED;
-        }, 'texture to load');
-
-        var textureBeforeReprojection;
-        runs(function() {
-            textureBeforeReprojection = imagery.texture;
-            layer._reprojectTexture(context, imagery);
-        });
-
-        waitsFor(function() {
             return imagery.state === ImageryState.READY;
         }, 'texture to be ready');
 
         runs(function() {
-            expect(textureBeforeReprojection).not.toEqual(imagery.texture);
+            expect(imagery.texture).toBeDefined();
             imagery.releaseReference();
         });
     });
