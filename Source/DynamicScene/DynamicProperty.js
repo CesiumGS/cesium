@@ -107,7 +107,7 @@ define([
         }
         this.valueType = valueType;
         this._intervals = new TimeIntervalCollection();
-        this._cachedDate = undefined;
+        this._cachedTime = undefined;
         this._cachedInterval = undefined;
     };
 
@@ -305,7 +305,7 @@ define([
     DynamicProperty.prototype._addCzmlIntervalUnwrapped = function(start, stop, unwrappedInterval, epoch, interpolationAlgorithmType, interpolationDegree) {
         var thisIntervals = this._intervals;
         var existingInterval = thisIntervals.findInterval(start, stop);
-        this._cachedDate = undefined;
+        this._cachedTime = undefined;
         this._cachedInterval = undefined;
 
         var intervalData;
