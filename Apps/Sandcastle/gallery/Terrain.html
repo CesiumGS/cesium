@@ -196,43 +196,38 @@ require([
             }).placeAt('sampleButtons');
         }
 
-        var widget = new CesiumViewerWidget();
-        widget.placeAt('cesiumContainer');
-        widget.startup();
-        widget.fullscreen.viewModel.fullscreenElement(document.body);
+    var widget = new CesiumViewerWidget();
+    widget.placeAt('cesiumContainer');
+    widget.startup();
+    widget.fullscreen.viewModel.fullscreenElement(document.body);
 
-        var scene = widget.scene;
-        var centralBody = scene.getPrimitives().getCentralBody();
+    var scene = widget.scene;
+    var centralBody = scene.getPrimitives().getCentralBody();
 
-        var cesiumTerrainProvider = new Cesium.CesiumTerrainProvider({
-            url : 'http://cesium.agi.com/smallterrain',
-            credit : 'Terrain data courtesy Analytical Graphics, Inc.'
-        });
-
-        var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
-
-        var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
-            url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
-            credit : 'Terrain data courtesy VT MÄK'
-        });
-
-        var terrainProviders = [{
-            name : 'CesiumTerrainProvider',
-            provider : cesiumTerrainProvider
-        }, {
-            name : 'EllipsoidTerrainProvider',
-            provider : ellipsoidProvider
-        }, {
-            name : 'VRTheWorldTerrainProvider',
-            provider : vrTheWorldProvider
-        }];
-
-        centralBody.terrainProvider = cesiumTerrainProvider;
-
-        createTerrainMenu(terrainProviders);
-
-        Sandcastle.finishedLoading();
+    var cesiumTerrainProvider = new Cesium.CesiumTerrainProvider({
+        url : 'http://cesium.agi.com/smallterrain',
+        credit : 'Terrain data courtesy Analytical Graphics, Inc.'
     });
+
+    var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
+
+    var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
+        url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
+        credit : 'Terrain data courtesy VT MÄK'
+    });
+
+    var terrainProviders = [
+        { name : 'CesiumTerrainProvider', provider : cesiumTerrainProvider },
+        { name : 'EllipsoidTerrainProvider', provider : ellipsoidProvider },
+        { name : 'VRTheWorldTerrainProvider', provider : vrTheWorldProvider }
+    ];
+
+    centralBody.terrainProvider = cesiumTerrainProvider;
+
+    createTerrainMenu(terrainProviders);
+
+    Sandcastle.finishedLoading();
+});
 </script>
 </body>
 </html>
