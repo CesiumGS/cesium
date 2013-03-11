@@ -149,17 +149,15 @@ defineSuite([
             runs(function() {
                 // All tiles should have one or more associated images.
                 forEachRenderedTile(surface, 1, undefined, function(tile) {
-                    expect(tile.imagery.length).toBeGreaterThan(0);
-                    for (var i = 0; i < tile.imagery.length; ++i) {
-                        expect(tile.imagery[i].imagery.imageryLayer).toEqual(layer);
-                    }
+                    expect(tile.textures.length).toBeGreaterThan(layer._layerIndex);
+                    expect(tile.textures[layer._layerIndex]).toBeDefined();
                 });
 
                 layerCollection.remove(layer);
 
                 // All associated images should be gone.
                 forEachRenderedTile(surface, 1, undefined, function(tile) {
-                    expect(tile.imagery.length).toEqual(0);
+                    expect(tile.textures.length).toEqual(0);
                 });
             });
         });
@@ -168,7 +166,7 @@ defineSuite([
             var layerCollection = cb.getImageryLayers();
 
             layerCollection.removeAll();
-            layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+            var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
             updateUntilDone(cb);
 
@@ -184,14 +182,10 @@ defineSuite([
             runs(function() {
                 // All tiles should have one or more associated images.
                 forEachRenderedTile(surface, 1, undefined, function(tile) {
-                    expect(tile.imagery.length).toBeGreaterThan(0);
-                    var hasImageFromLayer2 = false;
-                    for (var i = 0; i < tile.imagery.length; ++i) {
-                        if (tile.imagery[i].imagery.imageryLayer === layer2) {
-                            hasImageFromLayer2 = true;
-                        }
-                    }
-                    expect(hasImageFromLayer2).toEqual(true);
+                    expect(tile.textures.length).toBeGreaterThan(layer._layerIndex);
+                    expect(tile.textures.length).toBeGreaterThan(layer2._layerIndex);
+                    expect(layer._layerIndex).not.toEqual(layer2._layerIndex);
+                    expect(tile.textures[layer2._layerIndex]).toBeDefined();
                 });
             });
         });
@@ -205,23 +199,24 @@ defineSuite([
 
             updateUntilDone(cb);
 
+            var oldIndex1;
+            var oldIndex2;
+            var layer1Textures = [];
+            var layer2Textures = [];
+
             runs(function() {
                 forEachRenderedTile(surface, 1, undefined, function(tile) {
-                    expect(tile.imagery.length).toBeGreaterThan(0);
-                    var indexOfFirstLayer1 = tile.imagery.length;
-                    var indexOfLastLayer1 = -1;
-                    var indexOfFirstLayer2 = tile.imagery.length;
-                    for (var i = 0; i < tile.imagery.length; ++i) {
-                        if (tile.imagery[i].imagery.imageryLayer === layer1) {
-                            indexOfFirstLayer1 = Math.min(indexOfFirstLayer1, i);
-                            indexOfLastLayer1 = i;
-                        } else {
-                            expect(tile.imagery[i].imagery.imageryLayer).toEqual(layer2);
-                            indexOfFirstLayer2 = Math.min(indexOfFirstLayer2, i);
-                        }
-                    }
-                    expect(indexOfFirstLayer1).toBeLessThan(indexOfFirstLayer2);
-                    expect(indexOfLastLayer1).toBeLessThan(indexOfFirstLayer2);
+                    expect(tile.textures.length).toBeGreaterThan(layer1._layerIndex);
+                    expect(tile.textures.length).toBeGreaterThan(layer2._layerIndex);
+                    expect(layer1._layerIndex).not.toEqual(layer2._layerIndex);
+
+                    expect(layer2._layerIndex).toBeGreaterThan(layer1._layerIndex);
+
+                    oldIndex1 = layer1._layerIndex;
+                    oldIndex2 = layer2._layerIndex;
+
+                    layer1Textures.push(tile.textures[layer1._layerIndex]);
+                    layer2Textures.push(tile.textures[layer2._layerIndex]);
                 });
 
                 layerCollection.raiseToTop(layer1);
@@ -230,22 +225,19 @@ defineSuite([
             updateUntilDone(cb);
 
             runs(function() {
+                var index = 0;
                 forEachRenderedTile(surface, 1, undefined, function(tile) {
-                    expect(tile.imagery.length).toBeGreaterThan(0);
-                    var indexOfFirstLayer2 = tile.imagery.length;
-                    var indexOfLastLayer2 = -1;
-                    var indexOfFirstLayer1 = tile.imagery.length;
-                    for (var i = 0; i < tile.imagery.length; ++i) {
-                        if (tile.imagery[i].imagery.imageryLayer === layer2) {
-                            indexOfFirstLayer2 = Math.min(indexOfFirstLayer2, i);
-                            indexOfLastLayer2 = i;
-                        } else {
-                            expect(tile.imagery[i].imagery.imageryLayer).toEqual(layer1);
-                            indexOfFirstLayer1 = Math.min(indexOfFirstLayer1, i);
-                        }
-                    }
-                    expect(indexOfFirstLayer2).toBeLessThan(indexOfFirstLayer1);
-                    expect(indexOfLastLayer2).toBeLessThan(indexOfFirstLayer1);
+                    expect(tile.textures.length).toBeGreaterThan(layer1._layerIndex);
+                    expect(tile.textures.length).toBeGreaterThan(layer2._layerIndex);
+                    expect(layer1._layerIndex).not.toEqual(layer2._layerIndex);
+
+                    expect(layer1._layerIndex).toEqual(oldIndex2);
+                    expect(layer2._layerIndex).toEqual(oldIndex1);
+
+                    expect(layer1Textures[index]).toEqual(tile.textures[layer1._layerIndex]);
+                    expect(layer2Textures[index]).toEqual(tile.textures[layer2._layerIndex]);
+
+                    expect(layer2._layerIndex).toBeLessThan(layer1._layerIndex);
                 });
             });
         });
@@ -397,18 +389,18 @@ defineSuite([
                     var command = commandList[j];
 
                     var uniforms = command.uniformMap;
-                    if (typeof uniforms === 'undefined' || typeof uniforms.u_dayTextureAlpha === 'undefined') {
+                    if (typeof uniforms === 'undefined' || typeof uniforms.u_layerAlpha === 'undefined') {
                         continue;
                     }
 
                     ++tileCommandCount;
 
-                    expect(uniforms.u_dayTextureAlpha()).toEqual([0.123]);
-                    expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
-                    expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
-                    expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0/0.321]);
-                    expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
-                    expect(uniforms.u_dayTextureHue()).toEqual([0.456]);
+                    expect(uniforms.u_layerAlpha()).toEqual([0.123]);
+                    expect(uniforms.u_layerBrightness()).toEqual([0.456]);
+                    expect(uniforms.u_layerContrast()).toEqual([0.654]);
+                    expect(uniforms.u_layerOneOverGamma()).toEqual([1.0/0.321]);
+                    expect(uniforms.u_layerSaturation()).toEqual([0.123]);
+                    expect(uniforms.u_layerHue()).toEqual([0.456]);
                 }
             }
 
@@ -456,18 +448,18 @@ defineSuite([
                     var command = commandList[j];
 
                     var uniforms = command.uniformMap;
-                    if (typeof uniforms === 'undefined' || typeof uniforms.u_dayTextureAlpha === 'undefined') {
+                    if (typeof uniforms === 'undefined' || typeof uniforms.u_layerAlpha === 'undefined') {
                         continue;
                     }
 
                     ++tileCommandCount;
 
-                    expect(uniforms.u_dayTextureAlpha()).toEqual([0.123]);
-                    expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
-                    expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
-                    expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0/0.321]);
-                    expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
-                    expect(uniforms.u_dayTextureHue()).toEqual([0.456]);
+                    expect(uniforms.u_layerAlpha()).toEqual([0.123]);
+                    expect(uniforms.u_layerBrightness()).toEqual([0.456]);
+                    expect(uniforms.u_layerContrast()).toEqual([0.654]);
+                    expect(uniforms.u_layerOneOverGamma()).toEqual([1.0/0.321]);
+                    expect(uniforms.u_layerSaturation()).toEqual([0.123]);
+                    expect(uniforms.u_layerHue()).toEqual([0.456]);
                 }
             }
 

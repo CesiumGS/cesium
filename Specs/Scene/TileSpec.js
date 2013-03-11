@@ -207,12 +207,13 @@ defineSuite([
             }
         });
 
-        it('transitions to the LOADING state immediately', function() {
-            rootTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
+        it('transitions to the LOADING state when prepareNewTile is called', function() {
+            rootTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
             expect(rootTile.state).toBe(TileState.LOADING);
         });
 
         it('creates loadedTerrain but not upsampledTerrain for root tiles', function() {
+            rootTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
             rootTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
             expect(rootTile.loadedTerrain).toBeDefined();
             expect(rootTile.upsampledTerrain).toBeUndefined();
@@ -221,6 +222,7 @@ defineSuite([
         it('non-root tiles get neither loadedTerrain nor upsampledTerrain when their parent is not loaded or upsampled', function() {
             var children = rootTile.getChildren();
             for (var i = 0; i < children.length; ++i) {
+                children[i].prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
                 children[i].processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
                 expect(children[i].loadedTerrain).toBeUndefined();
                 expect(children[i].upsampledTerrain).toBeUndefined();
@@ -228,6 +230,8 @@ defineSuite([
         });
 
         it('once a root tile is loaded, its children get both loadedTerrain and upsampledTerrain', function() {
+            rootTile.prepareNewTile(realTerrainProvider, imageryLayerCollection);
+
             waitsFor(function() {
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
                 return rootTile.state === TileState.READY;
@@ -236,6 +240,7 @@ defineSuite([
             runs(function() {
                 var children = rootTile.getChildren();
                 for (var i = 0; i < children.length; ++i) {
+                    children[i].prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
                     children[i].processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
                     expect(children[i].loadedTerrain).toBeDefined();
                     expect(children[i].upsampledTerrain).toBeDefined();
@@ -244,6 +249,8 @@ defineSuite([
         });
 
         it('loaded terrainData is copied to the tile once it is available', function() {
+            rootTile.prepareNewTile(realTerrainProvider, imageryLayerCollection);
+
             waitsFor(function() {
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
                 return rootTile.loadedTerrain.state.value >= TerrainState.RECEIVED;
@@ -255,13 +262,21 @@ defineSuite([
         });
 
         it('upsampled terrainData is copied to the tile once it is available', function() {
+            rootTile.prepareNewTile(realTerrainProvider, imageryLayerCollection);
+
             waitsFor(function() {
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
                 return rootTile.loadedTerrain.state.value >= TerrainState.RECEIVED;
             }, 'root tile loaded terrain to be received');
 
+            var childTile;
+
+            runs(function() {
+                childTile = rootTile.getChildren()[0];
+                childTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
+            });
+
             waitsFor(function() {
-                var childTile = rootTile.getChildren()[0];
                 childTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
                 return childTile.upsampledTerrain.state.value >= TerrainState.RECEIVED;
             }, 'child tile terrain to be upsampled');
@@ -273,11 +288,16 @@ defineSuite([
 
         it('loaded terrain data replaces upsampled terrain data', function() {
             var childTile = rootTile.getChildren()[0];
+            rootTile.prepareNewTile(realTerrainProvider, imageryLayerCollection);
 
             waitsFor(function() {
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
                 return rootTile.loadedTerrain.state.value >= TerrainState.RECEIVED;
             }, 'root tile loaded terrain to be received');
+
+            runs(function() {
+                childTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
+            });
 
             waitsFor(function() {
                 childTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
@@ -304,6 +324,10 @@ defineSuite([
         it('loaded terrain replacing upsampled terrain triggers re-upsampling and re-loading of children', function() {
             var childTile = rootTile.getChildren()[0];
             var grandchildTile = childTile.getChildren()[0];
+
+            rootTile.prepareNewTile(realTerrainProvider, imageryLayerCollection);
+            childTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
+            grandchildTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
 
             waitsFor(function() {
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
@@ -336,6 +360,11 @@ defineSuite([
             var childTile = rootTile.getChildren()[0];
             var grandchildTile = childTile.getChildren()[0];
             var greatGrandchildTile = grandchildTile.getChildren()[0];
+
+            rootTile.prepareNewTile(realTerrainProvider, imageryLayerCollection);
+            childTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
+            grandchildTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
+            greatGrandchildTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
 
             waitsFor(function() {
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
@@ -370,6 +399,9 @@ defineSuite([
         it('releases previous upsampled water mask when a real one is loaded', function() {
             var childTile = rootTile.getChildren()[0];
 
+            rootTile.prepareNewTile(realTerrainProvider, imageryLayerCollection);
+            childTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
+
             waitsFor(function() {
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
                 childTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
@@ -400,6 +432,9 @@ defineSuite([
         it('upsampled terrain is used when real terrain fails to load', function() {
             var childTile = rootTile.getChildren()[0];
 
+            rootTile.prepareNewTile(realTerrainProvider, imageryLayerCollection);
+            childTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
+
             waitsFor(function() {
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
                 childTile.processStateMachine(context, alwaysFailTerrainProvider, imageryLayerCollection);
@@ -416,6 +451,9 @@ defineSuite([
             var childTile = rootTile.getChildren()[0];
             var grandchildTile = childTile.getChildren()[0];
 
+            rootTile.prepareNewTile(realTerrainProvider, imageryLayerCollection);
+            childTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
+
             waitsFor(function() {
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
                 childTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
@@ -426,6 +464,7 @@ defineSuite([
             runs(function() {
                 // Mark the grandchild as present even though the child is upsampled.
                 childTile.terrainData._childTileMask = 15;
+                grandchildTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
             });
 
             waitsFor(function() {
@@ -455,6 +494,10 @@ defineSuite([
             var grandchildTile = childTile.getChildren()[0];
             var greatGrandchildTile = grandchildTile.getChildren()[0];
 
+            rootTile.prepareNewTile(realTerrainProvider, imageryLayerCollection);
+            childTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
+            grandchildTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
+
             waitsFor(function() {
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
                 childTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
@@ -467,6 +510,7 @@ defineSuite([
             runs(function() {
                 // Mark the great-grandchild as present even though the grandchild is upsampled.
                 grandchildTile.terrainData._childTileMask = 15;
+                greatGrandchildTile.prepareNewTile(alwaysDeferTerrainProvider, imageryLayerCollection);
             });
 
             waitsFor(function() {
@@ -514,12 +558,19 @@ defineSuite([
                     }
             };
 
+            rootTile.prepareNewTile(allWaterTerrainProvider, imageryLayerCollection);
+
             waitsFor(function() {
                 rootTile.processStateMachine(context, allWaterTerrainProvider, imageryLayerCollection);
                 return rootTile.state === TileState.READY;
             }, 'root tile to be ready');
 
-            var childTile = rootTile.getChildren()[0];
+            var childTile;
+
+            runs(function() {
+                childTile = rootTile.getChildren()[0];
+                childTile.prepareNewTile(allWaterTerrainProvider, imageryLayerCollection);
+            });
 
             waitsFor(function() {
                 childTile.processStateMachine(context, allWaterTerrainProvider, imageryLayerCollection);
@@ -553,12 +604,19 @@ defineSuite([
                     }
             };
 
+            rootTile.prepareNewTile(allLandTerrainProvider, imageryLayerCollection);
+
             waitsFor(function() {
                 rootTile.processStateMachine(context, allLandTerrainProvider, imageryLayerCollection);
                 return rootTile.state === TileState.READY;
             }, 'root tile to be ready');
 
-            var childTile = rootTile.getChildren()[0];
+            var childTile;
+
+            runs(function() {
+               childTile = rootTile.getChildren()[0];
+               childTile.prepareNewTile(allLandTerrainProvider, imageryLayerCollection);
+            });
 
             waitsFor(function() {
                 childTile.processStateMachine(context, allLandTerrainProvider, imageryLayerCollection);

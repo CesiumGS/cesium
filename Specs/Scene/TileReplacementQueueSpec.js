@@ -122,11 +122,11 @@ defineSuite([
             queue.markTileRendered(two);
             queue.markTileRendered(three);
 
-            two.imagery.push({
+            two.imagery.push([{
                 imagery : {
                     state : ImageryState.TRANSITIONING
                 }
-            });
+            }]);
 
             queue.markStartOfRenderFrame();
 

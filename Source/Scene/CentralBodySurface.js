@@ -703,7 +703,6 @@ define([
         if (tile.state === TileState.START) {
             surface._tileReplacementQueue.markTileRendered(tile);
             tile.prepareNewTile(surface._terrainProvider, surface._imageryLayerCollection);
-            tile.state = TileState.LOADING;
         }
     }
 

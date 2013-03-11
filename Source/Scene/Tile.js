@@ -521,6 +521,8 @@ define([
         this.northeastCornerCartesian.negate(cartesian3Scratch).cross(Cartesian3.UNIT_Z, cartesian3Scratch).normalize(this.eastNormal);
         ellipsoid.geodeticSurfaceNormal(southeastCornerCartesian, cartesian3Scratch).cross(this.southwestCornerCartesian.subtract(southeastCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(this.southNormal);
         ellipsoid.geodeticSurfaceNormal(northwestCornerCartesian, cartesian3Scratch).cross(this.northeastCornerCartesian.subtract(northwestCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(this.northNormal);
+
+        this.state = TileState.LOADING;
     };
 
     function processTerrainStateMachine(tile, context, terrainProvider) {
