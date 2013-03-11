@@ -79,7 +79,7 @@ define([
     var allPassPurpose = 'all';
     var colorPassPurpose = 'color';
     var pickPassPurpose = 'pick';
-    var emptArray = [];
+    var emptyArray = [];
 
     /**
      * A renderable collection of billboards.  Billboards are viewport-aligned
@@ -1068,8 +1068,8 @@ define([
         var command;
         var j;
         var commandLists = this._commandLists;
-        commandLists.colorList = emptArray;
-        commandLists.pickList = emptArray;
+        commandLists.colorList = emptyArray;
+        commandLists.pickList = emptyArray;
         if (pass.color) {
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
