@@ -396,6 +396,26 @@ define([
             }
         }
 
+        // Inherit a texture for this layer from the parent tile.
+        var parent = tile.parent;
+        if (typeof parent !== 'undefined') {
+            var parentTexture = parent.textures[this._layerIndex];
+            if (typeof parentTexture !== 'undefined') {
+                // Parent has a texture for this layer, so link to it.
+                tile.inheritedTextures[this._layerIndex] = parentTexture;
+                tile.inheritedTextureTranslationAndScale[this._layerIndex] = computeTranslationAndScaleForInheritedTexture(tile, parent);
+            } else if (typeof parent.inheritedTextures[this._layerIndex] !== 'undefined') {
+                var parentToChild = computeTranslationAndScaleForInheritedTexture(tile, parent);
+                var sourceToParent = parent.inheritedTextureTranslationAndScale[this._layerIndex];
+                tile.inheritedTextures[this._layerIndex] = parent.inheritedTextures[this._layerIndex];
+                tile.inheritedTextureTranslationAndScale[this._layerIndex] = new Cartesian4(
+                        parentToChild.x * sourceToParent.z + sourceToParent.x,
+                        parentToChild.y * sourceToParent.w + sourceToParent.y,
+                        parentToChild.z * sourceToParent.z,
+                        parentToChild.w * sourceToParent.w);
+            }
+        }
+
         var latitudeClosestToEquator = 0.0;
         if (extent.south > 0.0) {
             latitudeClosestToEquator = extent.south;
@@ -513,6 +533,68 @@ define([
 
         return true;
     };
+
+    function computeTranslationAndScaleForInheritedTexture(tile, ancestor) {
+        var ancestorExtent = ancestor.extent;
+        var tileExtent = tile.extent;
+        var tileWidth = tileExtent.east - tileExtent.west;
+        var tileHeight = tileExtent.north - tileExtent.south;
+
+        var scaleX = tileWidth / (ancestorExtent.east - ancestorExtent.west);
+        var scaleY = tileHeight / (ancestorExtent.north - ancestorExtent.south);
+
+        return new Cartesian4(
+                scaleX * (tileExtent.west - ancestorExtent.west) / tileWidth,
+                scaleY * (tileExtent.south - ancestorExtent.south) / tileHeight,
+                scaleX,
+                scaleY);
+    }
+
+    var extentScratch1 = new Extent();
+    var extentScratch2 = new Extent();
+
+    function propagateTexturesToDescendants(context, sourceTile, parentTile, imageryLayer) {
+        if (typeof parentTile.children === 'undefined') {
+            return;
+        }
+
+        var layerIndex = imageryLayer._layerIndex;
+        var layerExtent = imageryLayer.getExtent();
+        var providerExtent = imageryLayer.getImageryProvider().getExtent();
+        var imageryExtent = layerExtent.intersectWith(providerExtent, extentScratch1);
+
+        for (var i = 0, len = parentTile.children.length; i < len; ++i) {
+            var child = parentTile.children[i];
+            if (imageryExtent.intersectWith(child.extent, extentScratch2).isEmpty()) {
+                continue;
+            }
+
+            child.inheritedTextureTranslationAndScale[layerIndex] = computeTranslationAndScaleForInheritedTexture(child, sourceTile);
+            child.inheritedTextures[layerIndex] = sourceTile.textures[layerIndex];
+
+            // If this tile has any missing (failed/invalid) TileImagery instances, we need to update those portions
+            // of the child tile's texture with the new inherited texture.
+            if (typeof child.missingImagery !== 'undefined') {
+                var missingImagery = child.missingImagery[layerIndex];
+                if (typeof missingImagery !== 'undefined') {
+                    for (var missingImageryIndex = 0; missingImageryIndex < missingImagery.length; ++missingImageryIndex) {
+                        var tileImagery = missingImagery[missingImageryIndex];
+                        tileImagery.textureTranslationAndScale = child.inheritedTextureTranslationAndScale[layerIndex];
+
+                        if (typeof child.textures[layerIndex] !== 'undefined') {
+                            imageryLayer._copyImageryToTile(context, child, tileImagery, layerIndex);
+                            imageryLayer._finalizeTexture(context, child, layerIndex);
+                        }
+                    }
+                }
+            }
+
+            // Recurse on children until we reach a tile with its own texture.
+            if (typeof child.textures[layerIndex] === 'undefined') {
+                propagateTexturesToDescendants(context, sourceTile, child, imageryLayer, layerIndex);
+            }
+        }
+    }
 
     /**
      * Calculate the translation and scale for a particular {@link TileImagery} attached to a
@@ -697,6 +779,7 @@ define([
      */
     ImageryLayer.prototype._finalizeTexture = function(context, tile, layerIndex) {
         tile.textures[layerIndex].generateMipmap(MipmapHint.NICEST);
+        propagateTexturesToDescendants(context, tile, tile, this);
     };
 
     var uniformMap = {
@@ -742,10 +825,7 @@ define([
     var float32ArrayScratch = typeof Float32Array === 'undefined' ? undefined : new Float32Array(1);
 
     function copyImageryTextureToTileTexture(imageryLayer, context, tile, tileImagery, tileTexture, layerIndex) {
-        // We can't copy the imagery until we know how to translate and scale it.
-        if (typeof tileImagery.textureTranslationAndScale === 'undefined') {
-            return;
-        }
+        var imagery = tileImagery.imagery;
 
         if (typeof imageryLayer._fbCopy === 'undefined') {
             imageryLayer._fbCopy = context.createFramebuffer();
@@ -798,19 +878,30 @@ define([
             });
         }
 
-        var imagery = tileImagery.imagery;
-
         var texture;
+        var translationAndScale;
         var extent;
         var tilingScheme;
         var allowReproject;
         if (typeof imagery !== 'undefined') {
+            // We can't copy the imagery until we know how to translate and scale it.
+            if (typeof tileImagery.textureTranslationAndScale === 'undefined') {
+                return;
+            }
+
             texture = imagery.texture;
+            translationAndScale = tileImagery.textureTranslationAndScale;
             extent = imagery.extent;
             tilingScheme = imageryLayer._imageryProvider.getTilingScheme();
             allowReproject = true;
         } else {
+            // We can't copy the imagery until we know how to translate and scale it.
+            if (typeof tile.inheritedTextureTranslationAndScale[layerIndex] === 'undefined') {
+                return;
+            }
+
             texture = tile.inheritedTextures[layerIndex];
+            translationAndScale = tile.inheritedTextureTranslationAndScale[layerIndex];
             allowReproject = false;
         }
 
@@ -848,7 +939,7 @@ define([
             shaderProgram = imageryLayer._spCopyGeographic;
         }
 
-        uniformMap.textureTranslationAndScale = tileImagery.textureTranslationAndScale;
+        uniformMap.textureTranslationAndScale = translationAndScale;
         uniformMap.textureCoordinateExtent = tileImagery.textureCoordinateExtent;
 
         imageryLayer._fbCopy.setColorTexture(tileTexture);
