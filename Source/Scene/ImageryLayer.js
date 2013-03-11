@@ -781,9 +781,9 @@ define([
 
     /**
      * Finalizes a tile's texture for this layer to prepare it for rendering.  Specifically, this method
-     * generates mipmaps for the texture.  It should be called after one or more calls to
-     * {@link ImageryLayer#_copyImageryToTile} and before the tile is rendered.  It can be called
-     * multiple times if the texture is updated over multiple render frames.
+     * generates mipmaps for the texture and propagates textures to child tiles.  It should be called
+     * after one or more calls to {@link ImageryLayer#_copyImageryToTile} and before the tile is rendered.
+     * It can be called multiple times if the texture is updated over multiple render frames.
      *
      * @memberof ImageryLayer
      * @private
