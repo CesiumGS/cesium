@@ -2,6 +2,7 @@
 define([
         './DynamicObject',
         './DynamicBillboard',
+		'./DynamicEllipse',
         './DynamicEllipsoid',
         './DynamicCone',
         './DynamicLabel',
@@ -11,6 +12,7 @@ define([
         './DynamicPolyline',
         './DynamicPyramid',
         './DynamicBillboardVisualizer',
+		'./DynamicEllipseVisualizer',
         './DynamicEllipsoidVisualizer',
         './DynamicConeVisualizerUsingCustomSensor', //CZML_TODO Replace with './DynamicConeVisualizer', once ComplexConicSensor works.
         './DynamicLabelVisualizer',
@@ -22,6 +24,7 @@ define([
        ], function(
         DynamicObject,
         DynamicBillboard,
+		DynamicEllipse,
         DynamicEllipsoid,
         DynamicCone,
         DynamicLabel,
@@ -31,6 +34,7 @@ define([
         DynamicPolyline,
         DynamicPyramid,
         DynamicBillboardVisualizer,
+		DynamicEllipseVisualizer,
         DynamicEllipsoidVisualizer,
         DynamicConeVisualizer,
         DynamicLabelVisualizer,
@@ -62,6 +66,7 @@ define([
          * @see DynamicObjectCollection
          */
         updaters : [DynamicBillboard.processCzmlPacket,
+					DynamicEllipse.processCzmlPacket,
                     DynamicEllipsoid.processCzmlPacket,
                     DynamicCone.processCzmlPacket,
                     DynamicLabel.processCzmlPacket,
@@ -83,6 +88,7 @@ define([
          * @see CompositeDynamicObjectCollection
          */
         mergers : [DynamicBillboard.mergeProperties,
+                   DynamicEllipse.mergeProperties,
                    DynamicEllipsoid.mergeProperties,
                    DynamicCone.mergeProperties,
                    DynamicLabel.mergeProperties,
@@ -100,6 +106,7 @@ define([
         * @see CompositeDynamicObjectCollection
         */
         cleaners : [DynamicBillboard.undefineProperties,
+					DynamicEllipse.undefineProperties,
                     DynamicEllipsoid.undefineProperties,
                     DynamicCone.undefineProperties,
                     DynamicLabel.undefineProperties,
@@ -120,6 +127,7 @@ define([
          */
         createVisualizers : function(scene) {
             return [new DynamicBillboardVisualizer(scene),
+					new DynamicEllipseVisualizer(scene),
                     new DynamicEllipsoidVisualizer(scene),
                     new DynamicConeVisualizer(scene),
                     new DynamicLabelVisualizer(scene),
