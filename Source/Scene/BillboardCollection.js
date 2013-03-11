@@ -79,6 +79,7 @@ define([
     var allPassPurpose = 'all';
     var colorPassPurpose = 'color';
     var pickPassPurpose = 'pick';
+    var emptyArray = [];
 
     /**
      * A renderable collection of billboards.  Billboards are viewport-aligned
@@ -150,6 +151,8 @@ define([
         this._baseVolume2D = new BoundingSphere();
         this._boundingVolume = new BoundingSphere();
 
+        this._colorCommands = [];
+        this._pickCommands = [];
         this._commandLists = new CommandLists();
 
         /**
@@ -1062,11 +1065,15 @@ define([
         var pass = frameState.passes;
         var va;
         var vaLength;
-        var commands;
         var command;
         var j;
-        this._commandLists.removeAll();
+        var commandLists = this._commandLists;
+        commandLists.colorList = emptyArray;
+        commandLists.pickList = emptyArray;
         if (pass.color) {
+            var colorList = this._colorCommands;
+            commandLists.colorList = colorList;
+
             if (typeof this._sp === 'undefined') {
                 this._rs = context.createRenderState({
                     depthTest : {
@@ -1081,12 +1088,11 @@ define([
             va = this._vaf.vaByPurpose[colorPassPurpose];
             vaLength = va.length;
 
-            commands = this._commandLists.colorList;
-            commands.length = vaLength;
+            colorList.length = vaLength;
             for (j = 0; j < vaLength; ++j) {
-                command = commands[j];
+                command = colorList[j];
                 if (typeof command === 'undefined') {
-                    command = commands[j] = new DrawCommand(this);
+                    command = colorList[j] = new DrawCommand(this);
                 }
 
                 command.boundingVolume = boundingVolume;
@@ -1100,6 +1106,9 @@ define([
             }
         }
         if (pass.pick) {
+            var pickList = this._pickCommands;
+            commandLists.pickList = pickList;
+
             if (typeof this._spPick === 'undefined') {
                 this._rsPick = context.createRenderState({
                     depthTest : {
@@ -1116,12 +1125,11 @@ define([
             va = this._vaf.vaByPurpose[pickPassPurpose];
             vaLength = va.length;
 
-            commands = this._commandLists.pickList;
-            commands.length = vaLength;
+            pickList.length = vaLength;
             for (j = 0; j < vaLength; ++j) {
-                command = commands[j];
+                command = pickList[j];
                 if (typeof command === 'undefined') {
-                    command = commands[j] = new DrawCommand(this);
+                    command = pickList[j] = new DrawCommand(this);
                 }
 
                 command.boundingVolume = boundingVolume;
@@ -1135,8 +1143,8 @@ define([
             }
         }
 
-        if (!this._commandLists.empty()) {
-            commandList.push(this._commandLists);
+        if (!commandLists.empty()) {
+            commandList.push(commandLists);
         }
     };
 
