@@ -216,8 +216,8 @@ define([
             // CZML_TODO Determine official defaults
             billboard._visualizerColor = Color.WHITE.clone(billboard._visualizerColor);
             billboard._visualizerOutlineColor = Color.BLACK.clone(billboard._visualizerOutlineColor);
-            billboard._visualizerOutlineWidth = 2;
-            billboard._visualizerPixelSize = 3;
+            billboard._visualizerOutlineWidth = 0;
+            billboard._visualizerPixelSize = 1;
             needRedraw = true;
         } else {
             billboard = this._billboardCollection.get(pointVisualizerIndex);
@@ -233,8 +233,8 @@ define([
         var property = dynamicPoint.color;
         if (typeof property !== 'undefined') {
             color = property.getValue(time, color);
-            if (billboard._visualizerColor !== color) {
-                billboard._visualizerColor = color;
+            if (!Color.equals(billboard._visualizerColor, color)) {
+                Color.clone(color, billboard._visualizerColor);
                 needRedraw = true;
             }
         }
@@ -242,8 +242,8 @@ define([
         property = dynamicPoint.outlineColor;
         if (typeof property !== 'undefined') {
             outlineColor = property.getValue(time, outlineColor);
-            if (billboard._visualizerOutlineColor !== outlineColor) {
-                billboard._visualizerOutlineColor = outlineColor;
+            if (!Color.equals(billboard._visualizerOutlineColor, outlineColor)) {
+                Color.clone(outlineColor, billboard._visualizerOutlineColor);
                 needRedraw = true;
             }
         }

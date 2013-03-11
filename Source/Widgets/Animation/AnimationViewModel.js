@@ -105,9 +105,15 @@ define([
      *
      * @param {ClockViewModel} [clockViewModel] The ClockViewModel instance to use.
      *
+     * @exception {DeveloperError} clockViewModel is required.
+     *
      * @see Animation
      */
     var AnimationViewModel = function(clockViewModel) {
+        if (typeof clockViewModel === 'undefined') {
+            throw new DeveloperError('clockViewModel is required.');
+        }
+
         var that = this;
 
         /**
