@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/Event',
         '../Core/Iso8601',
         '../Core/TimeInterval',
@@ -8,6 +9,7 @@ define([
         './DynamicObjectCollection',
         './CzmlDefaults'
     ], function(
+        defaultValue,
         Event,
         Iso8601,
         TimeInterval,
@@ -44,12 +46,12 @@ define([
         /**
          * The array of functions which merge DynamicObject instances together.
          */
-        this.mergeFunctions = typeof mergeFunctions === 'undefined' ? CzmlDefaults.mergers : mergeFunctions;
+        this.mergeFunctions = defaultValue(mergeFunctions, CzmlDefaults.mergers);
 
         /**
          * The array of functions which remove data from a DynamicObject instance.
          */
-        this.cleanFunctions = typeof cleanFunctions === 'undefined' ? CzmlDefaults.cleaners : cleanFunctions;
+        this.cleanFunctions = defaultValue(cleanFunctions, CzmlDefaults.cleaners);
 
         /**
          * An {@link Event} that is fired whenever DynamicObjects in the collection have properties added.
@@ -76,12 +78,9 @@ define([
     CompositeDynamicObjectCollection.prototype.computeAvailability = function() {
         var startTime = Iso8601.MAXIMUM_VALUE;
         var stopTime = Iso8601.MINIMUM_VALUE;
-        var i;
-        var len;
-        var collection;
         var collections = this._collections;
-        for (i = 0, len = collections.length; i < len; i++) {
-            collection = collections[i];
+        for ( var i = 0, len = collections.length; i < len; ++i) {
+            var collection = collections[i];
             var availability = collection.computeAvailability();
             var start = availability.start;
             var stop = availability.stop;
@@ -93,10 +92,10 @@ define([
             }
         }
 
-        if (startTime === Iso8601.MAXIMUM_VALUE) {
+        if (Iso8601.MAXIMUM_VALUE.equals(startTime)) {
             startTime = Iso8601.MINIMUM_VALUE;
         }
-        if (stopTime === Iso8601.MINIMUM_VALUE) {
+        if (Iso8601.MINIMUM_VALUE.equals(stopTime)) {
             stopTime = Iso8601.MAXIMUM_VALUE;
         }
         return new TimeInterval(startTime, stopTime, true, true);
@@ -138,7 +137,7 @@ define([
             //Make a copy of the new collections.
             thisCollections = this._collections = collections;
 
-            //Clear all existing objects and rebuild the colleciton.
+            //Clear all existing objects and rebuild the collection.
             this._clearObjects();
             var thisMergeFunctions = this.mergeFunctions;
             for (iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
