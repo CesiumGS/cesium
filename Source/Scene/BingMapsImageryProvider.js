@@ -161,6 +161,17 @@ define([
     };
 
     /**
+     * Gets the Bing Maps server proxy hosting the imagery.
+     *
+     * @memberof BingMapsImageryProvider
+     *
+     * @returns {String} The proxy.
+     */
+    BingMapsImageryProvider.prototype.getProxy = function(){
+        return this._proxy;
+    };
+
+    /**
      * Gets the Bing Maps key.
      *
      * @memberof BingMapsImageryProvider

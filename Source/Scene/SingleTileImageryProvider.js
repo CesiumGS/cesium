@@ -123,6 +123,17 @@ define([
     };
 
     /**
+     * Gets the proxy of the single, top-level imagery tile.
+     *
+     * @memberof SingleTileImageryProvider
+     *
+     * @returns {String} The proxy.
+     */
+    SingleTileImageryProvider.prototype.getProxy = function(){
+        return this._proxy;
+    };
+
+    /**
      * Gets the width of each tile, in pixels.  This function should
      * not be called before {@link SingleTileImageryProvider#isReady} returns true.
      *

@@ -206,6 +206,17 @@ define([
     };
 
     /**
+     * Gets the proxy of the ArcGIS Mapserver.
+     *
+     * @memberof ArcGisMapServerImageryProvider
+     *
+     * @returns {String} The proxy.
+     */
+    ArcGisMapServerImageryProvider.prototype.getProxy = function(){
+        return this._proxy;
+    };
+
+    /**
      * Gets the width of each tile, in pixels. This function should
      * not be called before {@link ArcGisMapServerImageryProvider#isReady} returns true.
      *
