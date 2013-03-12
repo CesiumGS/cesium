@@ -371,7 +371,7 @@ define([
          *
          * @type Boolean
          */
-        this.clampToPixel = true;
+        this.clampToPixel = false;
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,

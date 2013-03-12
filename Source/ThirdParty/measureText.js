@@ -138,13 +138,13 @@ define(function() {
         ctx.fillStyle = "white";
         ctx.fillRect(-1, -1, w + 2, h + 2);
 
-        if (fill) {
+        if (stroke) {
             ctx.strokeStyle = "black";
             ctx.lineWidth = context2D.lineWidth;
             ctx.strokeText(textstring, (padding / 2), baseline);
         }
 
-        if (stroke) {
+        if (fill) {
             ctx.fillStyle = "black";
             ctx.fillText(textstring, padding / 2, baseline);
         }
