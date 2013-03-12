@@ -7,10 +7,13 @@ Beta Releases
 ### b15 - 2013-04-01
 
 * Breaking changes:
-   *
+   * `ImageryLayer` callback functions for brightness, saturation, gamma, etc. are now passed the X, Y, and Level coordinates of the terrain tile being rendered rather than the imagery tile coordinates.  They are also now provided the `Extent` of the terrain tile.
 * Added `BoundingSphere.fromCornerPoints`.
 * Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
-* Added `DynamicPath.resolution` property for setting the maximum step size, in seconds, to take when sampling a position for path visualization. 
+* Added `DynamicPath.resolution` property for setting the maximum step size, in seconds, to take when sampling a position for path visualization.
+* Added `TileCoordinatesImageryProvider` that renders imagery with tile X, Y, Level coordinates on the surface of the globe.  This is mostly useful for debugging.
+* Surface imagery is now rendered using one texture per tile per layer.  This should improve performance as well as increase the number of layers that can be used before hitting hardware limitations.
+
 
 ### b14 - 2013-03-01
 

@@ -1,18 +1,16 @@
 //#define SHOW_TILE_BOUNDARIES
-//#define SHOW_TEXTURE_BOUNDARIES
 
 uniform float u_morphTime;
 
 #if TEXTURE_UNITS > 0
-uniform sampler2D u_dayTextures[TEXTURE_UNITS];
-uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
-uniform float u_dayTextureAlpha[TEXTURE_UNITS];
-uniform float u_dayTextureBrightness[TEXTURE_UNITS];
-uniform float u_dayTextureContrast[TEXTURE_UNITS];
-uniform float u_dayTextureHue[TEXTURE_UNITS];
-uniform float u_dayTextureSaturation[TEXTURE_UNITS];
-uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
-uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
+uniform sampler2D u_layerTexture[TEXTURE_UNITS];
+uniform vec4 u_layerTranslationAndScale[TEXTURE_UNITS];
+uniform float u_layerAlpha[TEXTURE_UNITS];
+uniform float u_layerBrightness[TEXTURE_UNITS];
+uniform float u_layerContrast[TEXTURE_UNITS];
+uniform float u_layerHue[TEXTURE_UNITS];
+uniform float u_layerSaturation[TEXTURE_UNITS];
+uniform float u_layerOneOverGamma[TEXTURE_UNITS];
 #endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
@@ -33,65 +31,43 @@ vec3 sampleAndBlend(
     vec3 previousColor,
     sampler2D texture,
     vec2 tileTextureCoordinates,
-    vec4 textureCoordinateExtent,
     vec4 textureCoordinateTranslationAndScale,
-    float textureAlpha,
-    float textureBrightness,
-    float textureContrast,
-    float textureHue,
-    float textureSaturation,
-    float textureOneOverGamma)
+    float layerAlpha,
+    float layerBrightness,
+    float layerContrast,
+    float layerHue,
+    float layerSaturation,
+    float layerOneOverGamma)
 {
-    // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
-    //    tileTextureCoordinates.s < textureCoordinateExtent.s ||
-    //    tileTextureCoordinates.s > textureCoordinateExtent.p ||
-    //    tileTextureCoordinates.t < textureCoordinateExtent.t ||
-    //    tileTextureCoordinates.t > textureCoordinateExtent.q
-    // In other words, the alpha is zero if the fragment is outside the extent
-    // covered by this texture.  Would an actual 'if' yield better performance?
-    vec2 alphaMultiplier = step(textureCoordinateExtent.st, tileTextureCoordinates); 
-    textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
-    
-    alphaMultiplier = step(vec2(0.0), textureCoordinateExtent.pq - tileTextureCoordinates);
-    textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
-    
     vec2 translation = textureCoordinateTranslationAndScale.xy;
     vec2 scale = textureCoordinateTranslationAndScale.zw;
     vec2 textureCoordinates = tileTextureCoordinates * scale + translation;
     vec4 sample = texture2D(texture, textureCoordinates);
+
     vec3 color = sample.rgb;
     float alpha = sample.a;
     
 #ifdef APPLY_BRIGHTNESS
-    color = mix(vec3(0.0), color, textureBrightness);
+    color = mix(vec3(0.0), color, layerBrightness);
 #endif
 
 #ifdef APPLY_CONTRAST
-    color = mix(vec3(0.5), color, textureContrast);
+    color = mix(vec3(0.5), color, layerContrast);
 #endif
 
 #ifdef APPLY_HUE
-    color = czm_hue(color, textureHue);
+    color = czm_hue(color, layerHue);
 #endif
 
 #ifdef APPLY_SATURATION
-    color = czm_saturation(color, textureSaturation);
+    color = czm_saturation(color, layerSaturation);
 #endif
 
 #ifdef APPLY_GAMMA
-    color = pow(color, vec3(textureOneOverGamma));
+    color = pow(color, vec3(layerOneOverGamma));
 #endif
 
-#ifdef SHOW_TEXTURE_BOUNDARIES
-    if (textureCoordinates.x < (1.0/256.0) || textureCoordinates.x > (255.0/256.0) ||
-        textureCoordinates.y < (1.0/256.0) || textureCoordinates.y > (255.0/256.0))
-    {
-        color = vec3(1.0);
-        alpha = 1.0;
-    }
-#endif
-
-    return mix(previousColor, color, alpha * textureAlpha);
+    return mix(previousColor, color, alpha * layerAlpha);
 }
 
 vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates);

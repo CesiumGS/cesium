@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/DeveloperError',
+        '../Core/Extent',
         './ImageryState',
         './TerrainState',
         './TileState',
@@ -18,6 +19,7 @@ define([
         Cartesian3,
         Cartesian4,
         DeveloperError,
+        Extent,
         ImageryState,
         TerrainState,
         TileState,
@@ -147,6 +149,11 @@ define([
          * @type Array
          */
         this.imagery = [];
+        this.missingImagery = undefined;
+
+        this.inheritedTextures = [];
+        this.inheritedTextureTranslationAndScale = [];
+        this.textures = [];
 
         /**
          * The distance from the camera to this tile, updated when the tile is selected
@@ -293,9 +300,14 @@ define([
 
         var i, len;
 
-        var imageryList = this.imagery;
-        for (i = 0, len = imageryList.length; i < len; ++i) {
-            imageryList[i].freeResources();
+        var layerList = this.imagery;
+        for (i = 0, len = layerList.length; i < len; ++i) {
+            var layerImagery = layerList[i];
+            if (typeof layerImagery !== 'undefined') {
+                for (var j = 0, jlen = layerImagery.length; j < jlen; ++j) {
+                    layerImagery[j].freeResources();
+                }
+            }
         }
         this.imagery.length = 0;
 
@@ -305,6 +317,17 @@ define([
             }
             this.children = undefined;
         }
+
+        this.inheritedTextures.length = 0;
+        this.inheritedTextureTranslationAndScale.length = 0;
+
+        for (i = 0, len = this.textures.length; i < len; ++i) {
+            if (typeof this.textures[i] !== 'undefined') {
+                this.textures[i].destroy();
+            }
+        }
+
+        this.textures.length = 0;
 
         this.freeVertexArray();
     };
@@ -326,92 +349,135 @@ define([
     };
 
     Tile.prototype.processStateMachine = function(context, terrainProvider, imageryLayerCollection) {
-        if (this.state === TileState.START) {
-            prepareNewTile(this, terrainProvider, imageryLayerCollection);
-            this.state = TileState.LOADING;
-        }
-
         if (this.state === TileState.LOADING) {
             processTerrainStateMachine(this, context, terrainProvider);
         }
 
-        var isRenderable = typeof this.vertexArray !== 'undefined';
-        var isDoneLoading = typeof this.loadedTerrain === 'undefined' && typeof this.upsampledTerrain === 'undefined';
+        var isTileRenderable = typeof this.vertexArray !== 'undefined';
+        var isTileDoneLoading = typeof this.loadedTerrain === 'undefined' && typeof this.upsampledTerrain === 'undefined';
 
         // Transition imagery states
         var tileImageryCollection = this.imagery;
-        for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
-            var tileImagery = tileImageryCollection[i];
-            var imagery = tileImagery.imagery;
-            var imageryLayer = imagery.imageryLayer;
-
-            if (imagery.state === ImageryState.PLACEHOLDER) {
-                if (imageryLayer.getImageryProvider().isReady()) {
-                    // Remove the placeholder and add the actual skeletons (if any)
-                    // at the same position.  Then continue the loop at the same index.
-                    tileImagery.freeResources();
-                    tileImageryCollection.splice(i, 1);
-                    imageryLayer._createTileImagerySkeletons(this, terrainProvider, i);
-                    --i;
-                    len = tileImageryCollection.length;
-                }
+        for (var layerIndex = 0, layerCount = tileImageryCollection.length; layerIndex < layerCount; ++layerIndex) {
+            var layerImageryCollection = tileImageryCollection[layerIndex];
+            if (typeof layerImageryCollection === 'undefined') {
+                continue;
             }
 
-            if (imagery.state === ImageryState.UNLOADED) {
-                imagery.state = ImageryState.TRANSITIONING;
-                imageryLayer._requestImagery(imagery);
-            }
+            var imageryLayer = imageryLayerCollection.get(layerIndex);
 
-            if (imagery.state === ImageryState.RECEIVED) {
-                imagery.state = ImageryState.TRANSITIONING;
-                imageryLayer._createTexture(context, imagery);
-            }
+            isTileRenderable = isTileRenderable &&
+                               (layerImageryCollection.length === 0 ||
+                                typeof this.textures[layerIndex] !== 'undefined' ||
+                                typeof this.inheritedTextures[layerIndex] !== 'undefined');
 
-            if (imagery.state === ImageryState.TEXTURE_LOADED) {
-                imagery.state = ImageryState.TRANSITIONING;
-                imageryLayer._reprojectTexture(context, imagery);
-            }
+            var isLayerDoneLoading = true;
 
-            if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
-                // re-associate TileImagery with a parent Imagery that is not failed or invalid.
-                var parent = imagery.parent;
-                while (typeof parent !== 'undefined' && (parent.state === ImageryState.FAILED || parent.state === ImageryState.INVALID)) {
-                    parent = parent.parent;
-                }
+            // If this tile and layer has no imagery, or if all Imagery instances are failed or invalid,
+            // just use the texture inherited from the parent, if any.
+            var useParentTexture = true;
 
-                // If there's no valid parent, remove this TileImagery from the tile.
-                if (typeof parent === 'undefined') {
-                    tileImagery.freeResources();
-                    tileImageryCollection.splice(i, 1);
-                    --i;
-                    len = tileImageryCollection.length;
+            var tileImagery;
+            var imagery;
+
+            for (var i = 0, len = layerImageryCollection.length; i < len; ++i) {
+                tileImagery = layerImageryCollection[i];
+                imagery = tileImagery.imagery;
+
+                if (typeof imagery === 'undefined') {
+                    // This is a placeholder for parent imagery.
                     continue;
                 }
 
-                // use that parent imagery instead, storing the original imagery
-                // in originalImagery to keep it alive
-                tileImagery.originalImagery = imagery;
+                if (imagery.state === ImageryState.PLACEHOLDER) {
+                    if (imageryLayer.getImageryProvider().isReady()) {
+                        // Remove the placeholder and add the actual skeletons (if any)
+                        // at the same position.  Then continue the loop at the same index.
+                        tileImagery.freeResources();
+                        layerImageryCollection.splice(i, 1);
+                        imageryLayer._createTileImagerySkeletons(this, terrainProvider, i);
+                        --i;
+                        len = layerImageryCollection.length;
+                    }
+                }
 
-                parent.addReference();
-                tileImagery.imagery = parent;
-                imagery = parent;
+                if (imagery.state === ImageryState.UNLOADED) {
+                    imagery.state = ImageryState.TRANSITIONING;
+                    imageryLayer._requestImagery(imagery);
+                }
+
+                if (imagery.state === ImageryState.RECEIVED) {
+                    imagery.state = ImageryState.TRANSITIONING;
+                    imageryLayer._createTexture(context, imagery);
+                }
+
+                if (imagery.state === ImageryState.READY && typeof tileImagery.textureTranslationAndScale === 'undefined') {
+                    tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
+                }
+
+                var isImageryDoneLoading = imagery.state === ImageryState.READY ||
+                                           imagery.state === ImageryState.FAILED ||
+                                           imagery.state === ImageryState.INVALID;
+
+                useParentTexture = useParentTexture &&
+                                   (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID);
+                isLayerDoneLoading = isLayerDoneLoading && isImageryDoneLoading;
+                isTileDoneLoading = isTileDoneLoading && isImageryDoneLoading;
             }
 
-            var imageryDoneLoading = imagery.state === ImageryState.READY;
+            // Once all the imagery for this layer is done loading, create a single texture
+            // for this tile with all of the imagery.
+            if (isLayerDoneLoading) {
+                var texturesCopied = false;
+                for (i = 0; i < len; ++i) {
+                    tileImagery = layerImageryCollection[i];
+                    imagery = tileImagery.imagery;
 
-            if (imageryDoneLoading && typeof tileImagery.textureTranslationAndScale === 'undefined') {
-                tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
+                    var keepTileImagery = false;
+
+                    if (!useParentTexture) {
+                        if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
+                            // This failed/invalid Imagery instance is useless, but keep the TileImagery around to
+                            // tell us what portion of this tile should be copied from its parent.
+                            imagery.releaseReference();
+                            imagery = undefined;
+                            tileImagery.imagery = undefined;
+
+                            if (typeof this.missingImagery === 'undefined') {
+                                this.missingImagery = [];
+                            }
+                            var missingLayerImagery = this.missingImagery[layerIndex];
+                            if (typeof missingLayerImagery === 'undefined') {
+                                missingLayerImagery = this.missingImagery[layerIndex] = [];
+                            }
+
+                            missingLayerImagery.push(tileImagery);
+                            keepTileImagery = true;
+                        }
+
+                        texturesCopied = true;
+                        imageryLayer._copyImageryToTile(context, this, layerImageryCollection[i], layerIndex);
+                    }
+
+                    if (!keepTileImagery) {
+                        tileImagery.freeResources();
+                    }
+                }
+
+                layerImageryCollection.length = 0;
+
+                if (texturesCopied) {
+                    imageryLayer._finalizeTexture(context, this, layerIndex);
+                }
             }
-
-            isRenderable = isRenderable && imageryDoneLoading;
-            isDoneLoading = isDoneLoading && imageryDoneLoading;
         }
 
-        // The tile becomes renderable when the terrain and all imagery data are loaded.
-        if (i === len && isRenderable) {
+        // The tile becomes renderable when the terrain is loaded and textures for all layers, either real
+        // or inherited from parent, are available.
+        if (isTileRenderable) {
             this.isRenderable = true;
 
-            if (isDoneLoading) {
+            if (isTileDoneLoading) {
                 this.state = TileState.READY;
             }
         }
@@ -422,38 +488,42 @@ define([
     var southeastScratch = new Cartesian3();
     var northwestScratch = new Cartesian3();
 
-    function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
-        var upsampleTileDetails = getUpsampleTileDetails(tile);
+    Tile.prototype.prepareNewTile = function(terrainProvider, imageryLayerCollection) {
+        var upsampleTileDetails = getUpsampleTileDetails(this);
         if (typeof upsampleTileDetails !== 'undefined') {
-            tile.upsampledTerrain = new TileTerrain(upsampleTileDetails);
+            this.upsampledTerrain = new TileTerrain(upsampleTileDetails);
         }
 
-        if (isDataAvailable(tile)) {
-            tile.loadedTerrain = new TileTerrain();
+        if (isDataAvailable(this)) {
+            this.loadedTerrain = new TileTerrain();
         }
+
+        var i, len;
 
         // Map imagery tiles to this terrain tile
-        for (var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
+        for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
-                layer._createTileImagerySkeletons(tile, terrainProvider);
+                layer._createTileImagerySkeletons(this, terrainProvider);
             }
         }
 
-        var ellipsoid = tile.tilingScheme.getEllipsoid();
+        var ellipsoid = this.tilingScheme.getEllipsoid();
 
         // Compute tile extent boundaries for estimating the distance to the tile.
-        var extent = tile.extent;
-        ellipsoid.cartographicToCartesian(extent.getSouthwest(), tile.southwestCornerCartesian);
+        var extent = this.extent;
+        ellipsoid.cartographicToCartesian(extent.getSouthwest(), this.southwestCornerCartesian);
         var southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast(), southeastScratch);
-        ellipsoid.cartographicToCartesian(extent.getNortheast(), tile.northeastCornerCartesian);
+        ellipsoid.cartographicToCartesian(extent.getNortheast(), this.northeastCornerCartesian);
         var northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest(), northwestScratch);
 
-        Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(cartesian3Scratch), cartesian3Scratch).normalize(tile.westNormal);
-        tile.northeastCornerCartesian.negate(cartesian3Scratch).cross(Cartesian3.UNIT_Z, cartesian3Scratch).normalize(tile.eastNormal);
-        ellipsoid.geodeticSurfaceNormal(southeastCornerCartesian, cartesian3Scratch).cross(tile.southwestCornerCartesian.subtract(southeastCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(tile.southNormal);
-        ellipsoid.geodeticSurfaceNormal(northwestCornerCartesian, cartesian3Scratch).cross(tile.northeastCornerCartesian.subtract(northwestCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(tile.northNormal);
-    }
+        Cartesian3.UNIT_Z.cross(this.southwestCornerCartesian.negate(cartesian3Scratch), cartesian3Scratch).normalize(this.westNormal);
+        this.northeastCornerCartesian.negate(cartesian3Scratch).cross(Cartesian3.UNIT_Z, cartesian3Scratch).normalize(this.eastNormal);
+        ellipsoid.geodeticSurfaceNormal(southeastCornerCartesian, cartesian3Scratch).cross(this.southwestCornerCartesian.subtract(southeastCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(this.southNormal);
+        ellipsoid.geodeticSurfaceNormal(northwestCornerCartesian, cartesian3Scratch).cross(this.northeastCornerCartesian.subtract(northwestCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(this.northNormal);
+
+        this.state = TileState.LOADING;
+    };
 
     function processTerrainStateMachine(tile, context, terrainProvider) {
         var loaded = tile.loadedTerrain;

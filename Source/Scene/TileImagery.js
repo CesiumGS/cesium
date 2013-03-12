@@ -9,7 +9,7 @@ define(function() {
      * @private
      *
      * @param {Imagery} imagery The imagery tile.
-     * @param {Cartesian4} textureCoordinateExtent The texture extent extent of the tile that is covered
+     * @param {Cartesian4} textureCoordinateExtent The texture extent of the tile that is covered
      *        by the imagery, where X=west, Y=south, Z=east, W=north.
      */
     var TileImagery = function(imagery, textureCoordinateExtent) {
@@ -25,7 +25,9 @@ define(function() {
      * @memberof TileImagery
      */
     TileImagery.prototype.freeResources = function() {
-        this.imagery.releaseReference();
+        if (typeof this.imagery !== 'undefined') {
+            this.imagery.releaseReference();
+        }
 
         if (typeof this.originalImagery !== 'undefined') {
             this.originalImagery.releaseReference();

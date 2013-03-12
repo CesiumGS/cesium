@@ -12,6 +12,7 @@ define([
         '../Core/Extent',
         '../Core/Math',
         '../Core/PrimitiveType',
+        '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/MipmapHint',
         '../Renderer/TextureMagnificationFilter',
@@ -23,9 +24,11 @@ define([
         './ImageryState',
         './TileImagery',
         './TexturePool',
+        './WebMercatorTilingScheme',
         '../ThirdParty/when',
-        '../Shaders/ReprojectWebMercatorFS',
-        '../Shaders/ReprojectWebMercatorVS'
+        '../Shaders/CombineGeographicTexturesFS',
+        '../Shaders/CombineTexturesVS',
+        '../Shaders/CombineWebMercatorTexturesFS'
     ], function(
         defaultValue,
         destroyObject,
@@ -39,6 +42,7 @@ define([
         Extent,
         CesiumMath,
         PrimitiveType,
+        BlendingState,
         BufferUsage,
         MipmapHint,
         TextureMagnificationFilter,
@@ -50,9 +54,11 @@ define([
         ImageryState,
         TileImagery,
         TexturePool,
+        WebMercatorTilingScheme,
         when,
-        ReprojectWebMercatorFS,
-        ReprojectWebMercatorVS) {
+        CombineGeographicTexturesFS,
+        CombineTexturesVS,
+        CombineWebMercatorTexturesFS) {
     "use strict";
 
     /**
@@ -67,31 +73,46 @@ define([
      *        can limit the visible portion of the imagery provider.
      * @param {Number|Function} [description.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
      *                          This can either be a simple number or a function with the signature
-     *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
-     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates of the
-     *                          imagery tile for which the alpha is required, and it is expected to return
+     *                          <code>function(frameState, layer, x, y, level, extent)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates, as well as the
+     *                          extent, of the terrain tile for which the alpha is required, and it is expected to return
      *                          the alpha value to use for the tile.
      * @param {Number|Function} [description.brightness=1.0] The brightness of this layer.  1.0 uses the unmodified imagery
      *                          color.  Less than 1.0 makes the imagery darker while greater than 1.0 makes it brighter.
      *                          This can either be a simple number or a function with the signature
-     *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
-     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates of the
-     *                          imagery tile for which the brightness is required, and it is expected to return
+     *                          <code>function(frameState, layer, x, y, level, extent)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates, as well as the
+     *                          extent, of the terrain tile for which the brightness is required, and it is expected to return
      *                          the brightness value to use for the tile.  The function is executed for every
      *                          frame and for every tile, so it must be fast.
      * @param {Number|Function} [description.contrast=1.0] The contrast of this layer.  1.0 uses the unmodified imagery color.
      *                          Less than 1.0 reduces the contrast while greater than 1.0 increases it.
      *                          This can either be a simple number or a function with the signature
-     *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
-     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates of the
-     *                          imagery tile for which the contrast is required, and it is expected to return
+     *                          <code>function(frameState, layer, x, y, level, extent)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates, as well as the
+     *                          extent, of the terrain tile for which the contrast is required, and it is expected to return
+     *                          the contrast value to use for the tile.  The function is executed for every
+     *                          frame and for every tile, so it must be fast.
+     * @param {Number|Function} [description.hue=0.0] The hue of this layer.  0.0 uses the unmodified imagery color.
+     *                          This can either be a simple number or a function with the signature
+     *                          <code>function(frameState, layer, x, y, level, extent)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates, as well as the
+     *                          extent, of the terrain tile for which the hue is required, and it is expected to return
+     *                          the contrast value to use for the tile.  The function is executed for every
+     *                          frame and for every tile, so it must be fast.
+     * @param {Number|Function} [description.saturation=1.0] The saturation of this layer.  1.0 uses the unmodified imagery color.
+     *                          Less than 1.0 reduces the saturation while greater than 1.0 increases it.
+     *                          This can either be a simple number or a function with the signature
+     *                          <code>function(frameState, layer, x, y, level, extent)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates, as well as the
+     *                          extent, of the terrain tile for which the saturation is required, and it is expected to return
      *                          the contrast value to use for the tile.  The function is executed for every
      *                          frame and for every tile, so it must be fast.
      * @param {Number|Function} [description.gamma=1.0] The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
      *                          This can either be a simple number or a function with the signature
-     *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
-     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates of the
-     *                          imagery tile for which the gamma is required, and it is expected to return
+     *                          <code>function(frameState, layer, x, y, level, extent)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates, as well as the
+     *                          extent, of the terrain tile for which the gamma is required, and it is expected to return
      *                          the gamma value to use for the tile.  The function is executed for every
      *                          frame and for every tile, so it must be fast.
      * @param {Boolean} [description.show=true] True if the layer is shown; otherwise, false.
@@ -108,9 +129,9 @@ define([
         /**
          * The alpha blending value of this layer, usually from 0.0 to 1.0.
          * This can either be a simple number or a function with the signature
-         * <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
-         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
-         * imagery tile for which the alpha is required, and it is expected to return
+         * <code>function(frameState, layer, x, y, level, extent)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates, as well as the extent, of the
+         * terrain tile for which the alpha is required, and it is expected to return
          * the alpha value to use for the tile.  The function is executed for every
          * frame and for every tile, so it must be fast.
          *
@@ -122,9 +143,9 @@ define([
          * The brightness of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0
          * makes the imagery darker while greater than 1.0 makes it brighter.
          * This can either be a simple number or a function with the signature
-         * <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
-         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
-         * imagery tile for which the brightness is required, and it is expected to return
+         * <code>function(frameState, layer, x, y, level, extent)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates, as well as the extent, of the
+         * terrain tile for which the brightness is required, and it is expected to return
          * the brightness value to use for the tile.  The function is executed for every
          * frame and for every tile, so it must be fast.
          *
@@ -136,9 +157,9 @@ define([
          * The contrast of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
          * the contrast while greater than 1.0 increases it.
          * This can either be a simple number or a function with the signature
-         * <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
-         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
-         * imagery tile for which the contrast is required, and it is expected to return
+         * <code>function(frameState, layer, x, y, level, extent)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates, as well as the extent, of the
+         * terrain tile for which the contrast is required, and it is expected to return
          * the contrast value to use for the tile.  The function is executed for every
          * frame and for every tile, so it must be fast.
          *
@@ -148,9 +169,9 @@ define([
 
         /**
          * The hue of this layer in radians. 0.0 uses the unmodified imagery color. This can either be a
-         * simple number or a function with the signature <code>function(frameState, layer, x, y, level)</code>.
+         * simple number or a function with the signature <code>function(frameState, layer, x, y, level, extent)</code>.
          * The function is passed the current {@link FrameState}, this layer, and the x, y, and level
-         * coordinates of the imagery tile for which the hue is required, and it is expected to return
+         * coordinates, as well as the extent, of the terrain tile for which the hue is required, and it is expected to return
          * the hue value to use for the tile.  The function is executed for every
          * frame and for every tile, so it must be fast.
          *
@@ -161,9 +182,9 @@ define([
         /**
          * The saturation of this layer. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
          * saturation while greater than 1.0 increases it. This can either be a simple number or a function
-         * with the signature <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
-         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
-         * imagery tile for which the saturation is required, and it is expected to return
+         * with the signature <code>function(frameState, layer, x, y, level, extent)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates, as well as the extent, of the
+         * terrain tile for which the saturation is required, and it is expected to return
          * the saturation value to use for the tile.  The function is executed for every
          * frame and for every tile, so it must be fast.
          *
@@ -174,9 +195,9 @@ define([
         /**
          * The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
          * This can either be a simple number or a function with the signature
-         * <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
-         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
-         * imagery tile for which the gamma is required, and it is expected to return
+         * <code>function(frameState, layer, x, y, level, extent)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates, as well as the extent, of the
+         * terrain tile for which the gamma is required, and it is expected to return
          * the gamma value to use for the tile.  The function is executed for every
          * frame and for every tile, so it must be fast.
          *
@@ -197,14 +218,10 @@ define([
         this._imageryCache = {};
         this._texturePool = new TexturePool();
 
-        this._spReproject = undefined;
-        this._vaReproject = undefined;
-        this._fbReproject = undefined;
-
         this._skeletonPlaceholder = new TileImagery(Imagery.createPlaceholder(this));
 
         // The value of the show property on the last update.
-        this._show = false;
+        this._show = undefined;
 
         // The index of this layer in the ImageryLayerCollection.
         this._layerIndex = -1;
@@ -214,9 +231,15 @@ define([
 
         this._requestImageError = undefined;
 
+        // PERFORMANCE_IDEA: these properties can be shared between layers, but not between Contexts.
+        this._spCopyGeographic = undefined;
+        this._spCopyWebMercator = undefined;
+        this._vaCopy = undefined;
+        this._fbCopy = undefined;
+
         this._nonMipmapSampler = undefined;
         this._mipmapSampler = undefined;
-        this._reprojectSampler = undefined;
+        this._copySampler = undefined;
     };
 
     /**
@@ -338,14 +361,14 @@ define([
      *
      * @param {Tile} tile The terrain tile.
      * @param {TerrainProvider} terrainProvider The terrain provider associated with the terrain tile.
-     * @param {Number} insertionPoint The position to insert new skeletons before in the tile's imagery lsit.
      * @returns {Boolean} true if this layer overlaps any portion of the terrain tile; otherwise, false.
      */
-    ImageryLayer.prototype._createTileImagerySkeletons = function(tile, terrainProvider, insertionPoint) {
+    ImageryLayer.prototype._createTileImagerySkeletons = function(tile, terrainProvider) {
         var imageryProvider = this._imageryProvider;
 
-        if (typeof insertionPoint === 'undefined') {
-            insertionPoint = tile.imagery.length;
+        var layerImageryCollection = tile.imagery[this._layerIndex];
+        if (typeof layerImageryCollection === 'undefined') {
+            layerImageryCollection = tile.imagery[this._layerIndex] = [];
         }
 
         if (!imageryProvider.isReady()) {
@@ -353,7 +376,7 @@ define([
             // Instead, add a placeholder so that we'll know to create
             // the skeletons once the provider is ready.
             this._skeletonPlaceholder.imagery.addReference();
-            tile.imagery.splice(insertionPoint, 0, this._skeletonPlaceholder);
+            layerImageryCollection.push(this._skeletonPlaceholder);
             return true;
         }
 
@@ -385,6 +408,26 @@ define([
                 extent.west = extent.east = baseImageryExtent.east;
             } else if (baseTerrainExtent.east <= baseImageryExtent.west) {
                 extent.west = extent.east = baseImageryExtent.west;
+            }
+        }
+
+        // Inherit a texture for this layer from the parent tile.
+        var parent = tile.parent;
+        if (typeof parent !== 'undefined') {
+            var parentTexture = parent.textures[this._layerIndex];
+            if (typeof parentTexture !== 'undefined') {
+                // Parent has a texture for this layer, so link to it.
+                tile.inheritedTextures[this._layerIndex] = parentTexture;
+                tile.inheritedTextureTranslationAndScale[this._layerIndex] = computeTranslationAndScaleForInheritedTexture(tile, parent);
+            } else if (typeof parent.inheritedTextures[this._layerIndex] !== 'undefined') {
+                var parentToChild = computeTranslationAndScaleForInheritedTexture(tile, parent);
+                var sourceToParent = parent.inheritedTextureTranslationAndScale[this._layerIndex];
+                tile.inheritedTextures[this._layerIndex] = parent.inheritedTextures[this._layerIndex];
+                tile.inheritedTextureTranslationAndScale[this._layerIndex] = new Cartesian4(
+                        parentToChild.x * sourceToParent.z + sourceToParent.x,
+                        parentToChild.y * sourceToParent.w + sourceToParent.y,
+                        parentToChild.z * sourceToParent.z,
+                        parentToChild.w * sourceToParent.w);
             }
         }
 
@@ -498,13 +541,75 @@ define([
 
                 var texCoordsExtent = new Cartesian4(minU, minV, maxU, maxV);
                 var imagery = this.getImageryFromCache(i, j, imageryLevel, imageryExtent);
-                tile.imagery.splice(insertionPoint, 0, new TileImagery(imagery, texCoordsExtent));
-                ++insertionPoint;
+
+                layerImageryCollection.push(new TileImagery(imagery, texCoordsExtent));
             }
         }
 
         return true;
     };
+
+    function computeTranslationAndScaleForInheritedTexture(tile, ancestor) {
+        var ancestorExtent = ancestor.extent;
+        var tileExtent = tile.extent;
+        var tileWidth = tileExtent.east - tileExtent.west;
+        var tileHeight = tileExtent.north - tileExtent.south;
+
+        var scaleX = tileWidth / (ancestorExtent.east - ancestorExtent.west);
+        var scaleY = tileHeight / (ancestorExtent.north - ancestorExtent.south);
+
+        return new Cartesian4(
+                scaleX * (tileExtent.west - ancestorExtent.west) / tileWidth,
+                scaleY * (tileExtent.south - ancestorExtent.south) / tileHeight,
+                scaleX,
+                scaleY);
+    }
+
+    var extentScratch1 = new Extent();
+    var extentScratch2 = new Extent();
+
+    function propagateTexturesToDescendants(context, sourceTile, parentTile, imageryLayer) {
+        if (typeof parentTile.children === 'undefined') {
+            return;
+        }
+
+        var layerIndex = imageryLayer._layerIndex;
+        var layerExtent = imageryLayer.getExtent();
+        var providerExtent = imageryLayer.getImageryProvider().getExtent();
+        var imageryExtent = layerExtent.intersectWith(providerExtent, extentScratch1);
+
+        for (var i = 0, len = parentTile.children.length; i < len; ++i) {
+            var child = parentTile.children[i];
+            if (imageryExtent.intersectWith(child.extent, extentScratch2).isEmpty()) {
+                continue;
+            }
+
+            child.inheritedTextureTranslationAndScale[layerIndex] = computeTranslationAndScaleForInheritedTexture(child, sourceTile);
+            child.inheritedTextures[layerIndex] = sourceTile.textures[layerIndex];
+
+            // If this tile has any missing (failed/invalid) TileImagery instances, we need to update those portions
+            // of the child tile's texture with the new inherited texture.
+            if (typeof child.missingImagery !== 'undefined') {
+                var missingImagery = child.missingImagery[layerIndex];
+                if (typeof missingImagery !== 'undefined') {
+                    for (var missingImageryIndex = 0; missingImageryIndex < missingImagery.length; ++missingImageryIndex) {
+                        var tileImagery = missingImagery[missingImageryIndex];
+                        tileImagery.textureTranslationAndScale = child.inheritedTextureTranslationAndScale[layerIndex];
+
+                        if (typeof child.textures[layerIndex] !== 'undefined') {
+                            imageryLayer._copyImageryToTile(context, child, tileImagery, layerIndex);
+                            imageryLayer._finalizeTexture(context, child, layerIndex);
+                        }
+                    }
+                }
+            }
+
+            // Recurse on children until we reach a tile with its own texture.
+            if (typeof child.textures[layerIndex] === 'undefined') {
+                propagateTexturesToDescendants(context, sourceTile, child, imageryLayer, layerIndex);
+            }
+        }
+    }
 
     /**
      * Calculate the translation and scale for a particular {@link TileImagery} attached to a
@@ -628,36 +733,38 @@ define([
 
         imagery.texture = texture;
         imagery.image = undefined;
-        imagery.state = ImageryState.TEXTURE_LOADED;
+        imagery.state = ImageryState.READY;
     };
 
+    var tileTextureWidth = 256;
+    var tileTextureHeight = 256;
+
     /**
-     * Reproject a texture to a {@link GeographicProjection}, if necessary, and generate
-     * mipmaps for the geographic texture.
+     * Copies an imagery tile to the terrain tile's texture for the corresponding layer, reprojecting
+     * from Web Mercator to Geographic along the way, if necessary.  Mip levels are not filled until
+     * _finalizeTexture is called.
      *
      * @memberof ImageryLayer
      * @private
      *
-     * @param {Context} context The rendered context to use.
-     * @param {Imagery} imagery The imagery instance to reproject.
+     * @param {Context} context The renderer context to use.
+     * @param {Tile} tile The tile to which to copy imagery.
+     * @param {TileImagery} tileImagery Specifies how the imagery is mapped to the tile.
+     * @param {Number} layerIndex The index of this layer in the {@link ImageryLayerCollection}.
      */
-    ImageryLayer.prototype._reprojectTexture = function(context, imagery) {
-        var texture = imagery.texture;
-        var extent = imagery.extent;
+    ImageryLayer.prototype._copyImageryToTile = function(context, tile, tileImagery, layerIndex) {
+        var tileTexture = tile.textures[this._layerIndex];
 
-        // Reproject this texture if it is not already in a geographic projection and
-        // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
-        // avoids precision problems in the reprojection transformation while making
-        // no noticeable difference in the georeferencing of the image.
-        if (!(this._imageryProvider.getTilingScheme() instanceof GeographicTilingScheme) &&
-            (extent.east - extent.west) / texture.getWidth() > 1e-5) {
-                var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.extent);
-                texture.destroy();
-                imagery.texture = texture = reprojectedTexture;
-        }
+        // Create the tile's texture if it doesn't exist yet.
+        if (typeof tileTexture === 'undefined') {
+            // PERFORMANCE_IDEA: use texture pooling here?  But if we do, we need to clear
+            // the texture before using it, because imagery might not completely overlap this
+            // terrain tile.
+            tile.textures[this._layerIndex] = tileTexture = context.createTexture2D({
+                width : tileTextureWidth,
+                height : tileTextureHeight
+            });
 
-        // Use mipmaps if this texture has power-of-two dimensions.
-        if (CesiumMath.isPowerOfTwo(texture.getWidth()) && CesiumMath.isPowerOfTwo(texture.getHeight())) {
             if (typeof this._mipmapSampler === 'undefined') {
                 var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
                 this._mipmapSampler = context.createSampler({
@@ -668,22 +775,208 @@ define([
                     maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy))
                 });
             }
-            texture.generateMipmap(MipmapHint.NICEST);
-            texture.setSampler(this._mipmapSampler);
-        } else {
-            if (typeof this._nonMipmapSampler === 'undefined') {
-                this._nonMipmapSampler = context.createSampler({
-                    wrapS : TextureWrap.CLAMP,
-                    wrapT : TextureWrap.CLAMP,
-                    minificationFilter : TextureMinificationFilter.LINEAR,
-                    magnificationFilter : TextureMagnificationFilter.LINEAR
-                });
-            }
-            texture.setSampler(this._nonMipmapSampler);
+            tileTexture.generateMipmap(MipmapHint.NICEST);
+            tileTexture.setSampler(this._mipmapSampler);
         }
 
-        imagery.state = ImageryState.READY;
+        copyImageryTextureToTileTexture(this, context, tile, tileImagery, tileTexture, layerIndex);
     };
+
+    /**
+     * Finalizes a tile's texture for this layer to prepare it for rendering.  Specifically, this method
+     * generates mipmaps for the texture and propagates textures to child tiles.  It should be called
+     * after one or more calls to {@link ImageryLayer#_copyImageryToTile} and before the tile is rendered.
+     * It can be called multiple times if the texture is updated over multiple render frames.
+     *
+     * @memberof ImageryLayer
+     * @private
+     *
+     * @param {Context} context The renderer context to use.
+     * @param {Tile} tile The tile with the texture to finalize.
+     * @param {Number} layerIndex The index of this layer in the {@link ImageryLayerCollection}.
+     */
+    ImageryLayer.prototype._finalizeTexture = function(context, tile, layerIndex) {
+        tile.textures[layerIndex].generateMipmap(MipmapHint.NICEST);
+        propagateTexturesToDescendants(context, tile, tile, this);
+    };
+
+    var uniformMap = {
+            u_textureDimensions : function() {
+                return this.textureDimensions;
+            },
+            u_texture : function() {
+                return this.texture;
+            },
+            u_northLatitude : function() {
+                return this.northLatitude;
+            },
+            u_southLatitude : function() {
+                return this.southLatitude;
+            },
+            u_southMercatorYLow : function() {
+                return this.southMercatorYLow;
+            },
+            u_southMercatorYHigh : function() {
+                return this.southMercatorYHigh;
+            },
+            u_oneOverMercatorHeight : function() {
+                return this.oneOverMercatorHeight;
+            },
+            u_textureTranslationAndScale : function() {
+                return this.textureTranslationAndScale;
+            },
+            u_textureCoordinateExtent : function() {
+                return this.textureCoordinateExtent;
+            },
+
+            textureDimensions : new Cartesian2(),
+            texture : undefined,
+            northLatitude : 0,
+            southLatitude : 0,
+            southMercatorYHigh : 0,
+            southMercatorYLow : 0,
+            oneOverMercatorHeight : 0,
+            textureTranslationAndScale : new Cartesian4(),
+            textureCoordinateExtent : new Cartesian4()
+        };
+
+    var float32ArrayScratch = typeof Float32Array === 'undefined' ? undefined : new Float32Array(1);
+
+    function copyImageryTextureToTileTexture(imageryLayer, context, tile, tileImagery, tileTexture, layerIndex) {
+        var imagery = tileImagery.imagery;
+
+        if (typeof imageryLayer._fbCopy === 'undefined') {
+            imageryLayer._fbCopy = context.createFramebuffer();
+            imageryLayer._fbCopy.destroyAttachments = false;
+
+            var copyMesh = {
+                attributes : {
+                    position : {
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 2,
+                        values : [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
+                    }
+                }
+            };
+
+            var copyAttribInds = {
+                position : 0
+            };
+
+            imageryLayer._vaCopy = context.createVertexArrayFromMesh({
+                mesh : copyMesh,
+                attributeIndices : copyAttribInds,
+                bufferUsage : BufferUsage.STATIC_DRAW
+            });
+
+            // PERFORMANCE_IDEA: only create the shaderprogram we actually need.
+            imageryLayer._spCopyGeographic = context.getShaderCache().getShaderProgram(
+                    CombineTexturesVS,
+                    CombineGeographicTexturesFS,
+                    copyAttribInds);
+
+            imageryLayer._spCopyWebMercator = context.getShaderCache().getShaderProgram(
+                CombineTexturesVS,
+                CombineWebMercatorTexturesFS,
+                copyAttribInds);
+
+            imageryLayer._rsColor = context.createRenderState({
+                blending : BlendingState.ALPHA_BLEND
+            });
+        }
+
+        if (typeof imageryLayer._copySampler === 'undefined') {
+            var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
+            imageryLayer._copySampler = context.createSampler({
+                wrapS : TextureWrap.CLAMP,
+                wrapT : TextureWrap.CLAMP,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR,
+                maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
+            });
+        }
+
+        var texture;
+        var translationAndScale;
+        var extent;
+        var tilingScheme;
+        var allowReproject;
+        if (typeof imagery !== 'undefined') {
+            // We can't copy the imagery until we know how to translate and scale it.
+            if (typeof tileImagery.textureTranslationAndScale === 'undefined') {
+                return;
+            }
+
+            texture = imagery.texture;
+            translationAndScale = tileImagery.textureTranslationAndScale;
+            extent = imagery.extent;
+            tilingScheme = imageryLayer._imageryProvider.getTilingScheme();
+            allowReproject = true;
+        } else {
+            // We can't copy the imagery until we know how to translate and scale it.
+            if (typeof tile.inheritedTextureTranslationAndScale[layerIndex] === 'undefined') {
+                return;
+            }
+
+            texture = tile.inheritedTextures[layerIndex];
+            translationAndScale = tile.inheritedTextureTranslationAndScale[layerIndex];
+            allowReproject = false;
+        }
+
+        texture.setSampler(imageryLayer._copySampler);
+
+        uniformMap.textureDimensions.x = tileTextureWidth;
+        uniformMap.textureDimensions.y = tileTextureHeight;
+        uniformMap.texture = texture;
+
+        // Reproject this texture if it is not already in a geographic projection and
+        // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
+        // avoids precision problems in the reprojection transformation while making
+        // no noticeable difference in the georeferencing of the image.
+        var shaderProgram;
+        if (allowReproject && tilingScheme instanceof WebMercatorTilingScheme && (extent.east - extent.west) / texture.getWidth() > 1e-5) {
+            shaderProgram = imageryLayer._spCopyWebMercator;
+
+            uniformMap.northLatitude = extent.north;
+            uniformMap.southLatitude = extent.south;
+
+            var sinLatitude = Math.sin(extent.south);
+            var southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+
+            float32ArrayScratch[0] = southMercatorY;
+            uniformMap.southMercatorYHigh = float32ArrayScratch[0];
+            uniformMap.southMercatorYLow = southMercatorY - float32ArrayScratch[0];
+
+            sinLatitude = Math.sin(extent.north);
+            var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+            uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+        } else {
+            shaderProgram = imageryLayer._spCopyGeographic;
+        }
+
+        uniformMap.textureTranslationAndScale = translationAndScale;
+        uniformMap.textureCoordinateExtent = tileImagery.textureCoordinateExtent;
+
+        imageryLayer._fbCopy.setColorTexture(tileTexture);
+
+        var renderState = imageryLayer._rsColor;
+        var viewport = renderState.viewport;
+        if (typeof viewport === 'undefined') {
+            viewport = new BoundingRectangle();
+            renderState.viewport = viewport;
+        }
+        viewport.width = tileTextureWidth;
+        viewport.height = tileTextureHeight;
+
+        context.draw({
+            framebuffer : imageryLayer._fbCopy,
+            shaderProgram : shaderProgram,
+            renderState : renderState,
+            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            vertexArray : imageryLayer._vaCopy,
+            uniformMap : uniformMap
+        });
+    }
 
     ImageryLayer.prototype.getImageryFromCache = function(x, y, level, imageryExtent) {
         var cacheKey = getImageryCacheKey(x, y, level);
@@ -705,149 +998,6 @@ define([
 
     function getImageryCacheKey(x, y, level) {
         return JSON.stringify([x, y, level]);
-    }
-
-    var uniformMap = {
-        u_textureDimensions : function() {
-            return this.textureDimensions;
-        },
-        u_texture : function() {
-            return this.texture;
-        },
-        u_northLatitude : function() {
-            return this.northLatitude;
-        },
-        u_southLatitude : function() {
-            return this.southLatitude;
-        },
-        u_southMercatorYLow : function() {
-            return this.southMercatorYLow;
-        },
-        u_southMercatorYHigh : function() {
-            return this.southMercatorYHigh;
-        },
-        u_oneOverMercatorHeight : function() {
-            return this.oneOverMercatorHeight;
-        },
-
-        textureDimensions : new Cartesian2(),
-        texture : undefined,
-        northLatitude : 0,
-        southLatitude : 0,
-        southMercatorYHigh : 0,
-        southMercatorYLow : 0,
-        oneOverMercatorHeight : 0
-    };
-
-    var float32ArrayScratch = typeof Float32Array === 'undefined' ? undefined : new Float32Array(1);
-
-    function reprojectToGeographic(imageryLayer, context, texture, extent) {
-        if (typeof imageryLayer._fbReproject === 'undefined') {
-            imageryLayer._fbReproject = context.createFramebuffer();
-            imageryLayer._fbReproject.destroyAttachments = false;
-
-            var reprojectMesh = {
-                attributes : {
-                    position : {
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 2,
-                        values : [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
-                    }
-                }
-            };
-
-            var reprojectAttribInds = {
-                position : 0
-            };
-
-            imageryLayer._vaReproject = context.createVertexArrayFromMesh({
-                mesh : reprojectMesh,
-                attributeIndices : reprojectAttribInds,
-                bufferUsage : BufferUsage.STATIC_DRAW
-            });
-
-            imageryLayer._spReproject = context.getShaderCache().getShaderProgram(
-                ReprojectWebMercatorVS,
-                ReprojectWebMercatorFS,
-                reprojectAttribInds);
-
-            imageryLayer._rsColor = context.createRenderState();
-        }
-
-        if (typeof imageryLayer._reprojectSampler === 'undefined') {
-            var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
-            imageryLayer._reprojectSampler = context.createSampler({
-                wrapS : TextureWrap.CLAMP,
-                wrapT : TextureWrap.CLAMP,
-                minificationFilter : TextureMinificationFilter.LINEAR,
-                magnificationFilter : TextureMagnificationFilter.LINEAR,
-                maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
-            });
-        }
-
-        texture.setSampler(imageryLayer._reprojectSampler);
-
-        var width = texture.getWidth();
-        var height = texture.getHeight();
-
-        uniformMap.textureDimensions.x = width;
-        uniformMap.textureDimensions.y = height;
-        uniformMap.texture = texture;
-
-        uniformMap.northLatitude = extent.north;
-        uniformMap.southLatitude = extent.south;
-
-        var sinLatitude = Math.sin(extent.south);
-        var southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
-
-        float32ArrayScratch[0] = southMercatorY;
-        uniformMap.southMercatorYHigh = float32ArrayScratch[0];
-        uniformMap.southMercatorYLow = southMercatorY - float32ArrayScratch[0];
-
-        sinLatitude = Math.sin(extent.north);
-        var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
-        uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
-
-        var outputTexture = imageryLayer._texturePool.createTexture2D(context, {
-            width : width,
-            height : height,
-            pixelFormat : texture.getPixelFormat(),
-            pixelDatatype : texture.getPixelDatatype(),
-            preMultiplyAlpha : texture.getPreMultiplyAlpha()
-        });
-
-        // Allocate memory for the mipmaps.  Failure to do this before rendering
-        // to the texture via the FBO, and calling generateMipmap later,
-        // will result in the texture appearing blank.  I can't pretend to
-        // understand exactly why this is.
-        outputTexture.generateMipmap(MipmapHint.NICEST);
-
-        imageryLayer._fbReproject.setColorTexture(outputTexture);
-
-        context.clear(context.createClearState({
-            framebuffer : imageryLayer._fbReproject,
-            color : new Color(0.0, 0.0, 0.0, 0.0)
-        }));
-
-        var renderState = imageryLayer._rsColor;
-        var viewport = renderState.viewport;
-        if (typeof viewport === 'undefined') {
-            viewport = new BoundingRectangle();
-            renderState.viewport = viewport;
-        }
-        viewport.width = width;
-        viewport.height = height;
-
-        context.draw({
-            framebuffer : imageryLayer._fbReproject,
-            shaderProgram : imageryLayer._spReproject,
-            renderState : renderState,
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
-            vertexArray : imageryLayer._vaReproject,
-            uniformMap : uniformMap
-        });
-
-        return outputTexture;
     }
 
     /**
