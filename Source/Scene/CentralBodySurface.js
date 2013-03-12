@@ -1010,7 +1010,7 @@ define([
                 uniformMap.southMercatorYLowAndHighAndOneOverHeight.z = oneOverMercatorHeight;
                 Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
 
-                var numberOfDayTextures = 0;
+                var numberOfLayerTextures = 0;
 
                 var applyBrightness = false;
                 var applyContrast = false;
@@ -1034,53 +1034,53 @@ define([
                         textureTranslationAndScale = tile.inheritedTextureTranslationAndScale[textureIndex];
                     }
 
-                    uniformMap.layerTexture[numberOfDayTextures] = texture;
-                    uniformMap.layerTranslationAndScale[numberOfDayTextures] = textureTranslationAndScale;
+                    uniformMap.layerTexture[numberOfLayerTextures] = texture;
+                    uniformMap.layerTranslationAndScale[numberOfLayerTextures] = textureTranslationAndScale;
 
                     var imageryLayer = imageryLayerCollection.get(textureIndex);
 
                     if (typeof imageryLayer.alpha === 'function') {
-                        uniformMap.layerAlpha[numberOfDayTextures] = imageryLayer.alpha(frameState, imageryLayer, tile.x, tile.y, tile.level, tile.extent);
+                        uniformMap.layerAlpha[numberOfLayerTextures] = imageryLayer.alpha(frameState, imageryLayer, tile.x, tile.y, tile.level, tile.extent);
                     } else {
-                        uniformMap.layerAlpha[numberOfDayTextures] = imageryLayer.alpha;
+                        uniformMap.layerAlpha[numberOfLayerTextures] = imageryLayer.alpha;
                     }
 
                     if (typeof imageryLayer.brightness === 'function') {
-                        uniformMap.layerBrightness[numberOfDayTextures] = imageryLayer.brightness(frameState, imageryLayer, tile.x, tile.y, tile.level, tile.extent);
+                        uniformMap.layerBrightness[numberOfLayerTextures] = imageryLayer.brightness(frameState, imageryLayer, tile.x, tile.y, tile.level, tile.extent);
                     } else {
-                        uniformMap.layerBrightness[numberOfDayTextures] = imageryLayer.brightness;
+                        uniformMap.layerBrightness[numberOfLayerTextures] = imageryLayer.brightness;
                     }
-                    applyBrightness = applyBrightness || uniformMap.layerBrightness[numberOfDayTextures] !== ImageryLayer.DEFAULT_BRIGHTNESS;
+                    applyBrightness = applyBrightness || uniformMap.layerBrightness[numberOfLayerTextures] !== ImageryLayer.DEFAULT_BRIGHTNESS;
 
                     if (typeof imageryLayer.contrast === 'function') {
-                        uniformMap.layerContrast[numberOfDayTextures] = imageryLayer.contrast(frameState, imageryLayer, tile.x, tile.y, tile.level, tile.extent);
+                        uniformMap.layerContrast[numberOfLayerTextures] = imageryLayer.contrast(frameState, imageryLayer, tile.x, tile.y, tile.level, tile.extent);
                     } else {
-                        uniformMap.layerContrast[numberOfDayTextures] = imageryLayer.contrast;
+                        uniformMap.layerContrast[numberOfLayerTextures] = imageryLayer.contrast;
                     }
-                    applyContrast = applyContrast || uniformMap.layerContrast[numberOfDayTextures] !== ImageryLayer.DEFAULT_CONTRAST;
+                    applyContrast = applyContrast || uniformMap.layerContrast[numberOfLayerTextures] !== ImageryLayer.DEFAULT_CONTRAST;
 
                     if (typeof imageryLayer.hue === 'function') {
-                        uniformMap.layerHue[numberOfDayTextures] = imageryLayer.hue(frameState, imageryLayer, tile.x, tile.y, tile.level, tile.extent);
+                        uniformMap.layerHue[numberOfLayerTextures] = imageryLayer.hue(frameState, imageryLayer, tile.x, tile.y, tile.level, tile.extent);
                     } else {
-                        uniformMap.layerHue[numberOfDayTextures] = imageryLayer.hue;
+                        uniformMap.layerHue[numberOfLayerTextures] = imageryLayer.hue;
                     }
-                    applyHue = applyHue || uniformMap.layerHue[numberOfDayTextures] !== ImageryLayer.DEFAULT_HUE;
+                    applyHue = applyHue || uniformMap.layerHue[numberOfLayerTextures] !== ImageryLayer.DEFAULT_HUE;
 
                     if (typeof imageryLayer.saturation === 'function') {
-                        uniformMap.layerSaturation[numberOfDayTextures] = imageryLayer.saturation(frameState, imageryLayer, tile.x, tile.y, tile.level, tile.extent);
+                        uniformMap.layerSaturation[numberOfLayerTextures] = imageryLayer.saturation(frameState, imageryLayer, tile.x, tile.y, tile.level, tile.extent);
                     } else {
-                        uniformMap.layerSaturation[numberOfDayTextures] = imageryLayer.saturation;
+                        uniformMap.layerSaturation[numberOfLayerTextures] = imageryLayer.saturation;
                     }
-                    applySaturation = applySaturation || uniformMap.layerSaturation[numberOfDayTextures] !== ImageryLayer.DEFAULT_SATURATION;
+                    applySaturation = applySaturation || uniformMap.layerSaturation[numberOfLayerTextures] !== ImageryLayer.DEFAULT_SATURATION;
 
                     if (typeof imageryLayer.gamma === 'function') {
-                        uniformMap.layerOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma(frameState, imageryLayer, tile.x, tile.y, tile.level, tile.extent);
+                        uniformMap.layerOneOverGamma[numberOfLayerTextures] = 1.0 / imageryLayer.gamma(frameState, imageryLayer, tile.x, tile.y, tile.level, tile.extent);
                     } else {
-                        uniformMap.layerOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma;
+                        uniformMap.layerOneOverGamma[numberOfLayerTextures] = 1.0 / imageryLayer.gamma;
                     }
-                    applyGamma = applyGamma || uniformMap.layerOneOverGamma[numberOfDayTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
+                    applyGamma = applyGamma || uniformMap.layerOneOverGamma[numberOfLayerTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
 
-                    ++numberOfDayTextures;
+                    ++numberOfLayerTextures;
                 }
 
                 // trim texture array to the used length so we don't end up using old textures
@@ -1090,7 +1090,7 @@ define([
 
                 colorCommandList.push(command);
 
-                command.shaderProgram = shaderSet.getShaderProgram(context, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma);
+                command.shaderProgram = shaderSet.getShaderProgram(context, numberOfLayerTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma);
                 command.renderState = renderState;
                 command.primitiveType = TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
                 command.vertexArray = tile.vertexArray;
