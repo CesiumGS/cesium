@@ -9,7 +9,7 @@
         ]
       },
       "horizontalOrigin":"CENTER",
-      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAC/SURBVDhPrZPRDYQgEEQpjVKuFEvhw0IoxU6QgQwMK+vdx5FsooT3GHdjCM4qZnnnHvvkYoxFi/uvIhwiRCClXFC6v5UQ1uQAsbrkHCLsbaPjFgIzQQc1yUOwu33ePGE3BQUaee2BpjhbP5YUmkAlbNzsAURfBDqJnMIyyv4JjsCCgCnIR32uZUfcJuGBOwEk6bOKhoAADh31EIq3MgFg1mgkE1BA2AoUZoo2iZ3gyqGgmMDC/xWwkfb3/eUd7A1v3kxjNW9taQAAAABJRU5ErkJggg==",
+      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACvSURBVDhPrZDRDcMgDAU9GqN0lIzijw6SUbJJygUeNQgSqepJTyHG91LVVpwDdfxM3T9TSl1EXZvDwii471fivK73cBFFQNTT/d2KoGpfGOpSIkhUpgUMxq9DFEsWv4IXhlyCnhBFnZcFEEuYqbiUlNwWgMTdrZ3JbQFoEVG53rd8ztG9aPJMnBUQf/VFraBJeWnLS0RfjbKyLJA8FkT5seDYS1Qwyv8t0B/5C2ZmH2/eTGNNBgMmAAAAAElFTkSuQmCC",
       "pixelOffset":{
         "cartesian2":[
           0.0,0.0
@@ -30,26 +30,27 @@
           0,255,255,255
         ]
       },
-      "font":"10pt Lucida Console",
+      "font":"21pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
           0,0,0,255
         ]
       },
+      "outlineWidth":2.0,
       "pixelOffset":{
         "cartesian2":[
           12.0,0.0
         ]
       },
-      "scale":1.0,
+      "scale":0.5,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "boolean":true
         }
       ],
-      "style":"FILL",
+      "style":"FILL_AND_OUTLINE",
       "text":"AGI",
       "verticalOrigin":"CENTER"
     },
@@ -69,7 +70,7 @@
         ]
       },
       "horizontalOrigin":"CENTER",
-      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADGSURBVDhPnVPbDcMgDGQ0RmGUjsIojNIR+p8Piq+5xvGDSo2EEgH3yNku5Y9nrucnLLt07ssrJsHJ59Bdko1aB1Z0DkRrDxy2Wm6XNLj1MWU5F1R+jjJ7cyRQJli+bwRf28drCgFJxI2yCwIHZqKWRICRk20VSALV5WZ0T8KgQyJdBVHXJAh3hcygwxBNifALQsIctLoLkTW2JASLcmpbg1kqC8waDA1EAt0ktKuVVUbXOJA56rBU1U7Trv9D1Wgctw2SzO8bB7GiztrZSh0AAAAASUVORK5CYII=",
+      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADJSURBVDhPnZHRDcMgEEMZjVEYpaNklIzSEfLfD4qNnXAJSFWfhO7w2Zc0Tf9QG2rXrEzSUeZLOGm47WoH95x3Hl3jEgilvDgsOQUTqsNl68ezEwn1vae6lceSEEYvvWNT/Rxc4CXQNGadho1NXoJ+9iaqc2xi2xbt23PJCDIB6TQjOC6Bho/sDy3fBQT8PrVhibU7yBFcEPaRxOoeTwbwByCOYf9VGp1BYI1BA+EeHhmfzKbBoJEQwn1yzUZtyspIQUha85MpkNIXB7GizqDEECsAAAAASUVORK5CYII=",
       "pixelOffset":{
         "cartesian2":[
           0.0,0.0
@@ -93,26 +94,27 @@
           ]
         }
       ],
-      "font":"10pt Lucida Console",
+      "font":"21pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
           0,0,0,255
         ]
       },
+      "outlineWidth":2.0,
       "pixelOffset":{
         "cartesian2":[
           12.0,0.0
         ]
       },
-      "scale":1.0,
+      "scale":0.5,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "boolean":true
         }
       ],
-      "style":"FILL",
+      "style":"FILL_AND_OUTLINE",
       "text":"Geoeye 1",
       "verticalOrigin":"CENTER"
     },
@@ -125,13 +127,7 @@
           ]
         }
       ],
-      "outlineWidth":0.0,
-      "width":[
-        {
-          "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
-          "number":1.0
-        }
-      ],
+      "resolution":60.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
@@ -777,7 +773,7 @@
         ]
       },
       "horizontalOrigin":"CENTER",
-      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADCSURBVDhPnVPbDQMhDMtojMIoHYVRGKUj9L8f6RnVp0AelXoS0imJnWAHkT8+vb6fsKyI8ZQEiawI8dbmOpjAkSDQ+2Mle5OtyIL7mIoTEgD8nKKji54k6Eww/jeCe+z3S0FAEorFPAgc+CzSLwni0SSlCzYJojn8dSh0SGRdQHdLssS9RKbQoYinRSShbba7E5EeRz7T4nRsC6ZV7IqRqwVbG0UCuyQEkcBeY3sL1uNzw7K1do+p2n87fvkKywVJkB99VYHvubc6fQAAAABJRU5ErkJggg==",
+      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADESURBVDhPnZHRDcMgDEQZLaMwSkfJKIzSEfLfD8pdecihIFV9EsK+8zlNmv6hNnq5ZzeEvvNtCGqLHfXHUXzobYCEnB8W85FuQ7oJ5/Nz8AYIz5LqmVOdl8SwanRDU19X1QKW2GzgL8OAyBLVq1/CvSSaWlTO79eJeDDSdRsKxiXS9JH50MwNJOj9qHWzBG1GulGjMAfNZkO1nhy1gcQY5q/CIyjQdA8kzOFIfLKLhoOAEMM2GtRRW7IbVA9d2vPT0I2U3n1Vge+EDDWxAAAAAElFTkSuQmCC",
       "pixelOffset":{
         "cartesian2":[
           0.0,0.0
@@ -801,26 +797,27 @@
           ]
         }
       ],
-      "font":"10pt Lucida Console",
+      "font":"21pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
           0,0,0,255
         ]
       },
+      "outlineWidth":2.0,
       "pixelOffset":{
         "cartesian2":[
           12.0,0.0
         ]
       },
-      "scale":1.0,
+      "scale":0.5,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "boolean":true
         }
       ],
-      "style":"FILL",
+      "style":"FILL_AND_OUTLINE",
       "text":"ISS",
       "verticalOrigin":"CENTER"
     },
@@ -833,13 +830,7 @@
           ]
         }
       ],
-      "outlineWidth":0.0,
-      "width":[
-        {
-          "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
-          "number":1.0
-        }
-      ],
+      "resolution":60.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
@@ -1511,7 +1502,7 @@
         ]
       },
       "horizontalOrigin":"CENTER",
-      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADCSURBVDhPnVPbDQMhDMtojMIoHYVRGKUj9L8f6RnVp0AelXoS0imJnWAHkT8+vb6fsKyI8ZQEiawI8dbmOpjAkSDQ+2Mle5OtyIL7mIoTEgD8nKKji54k6Eww/jeCe+z3S0FAEorFPAgc+CzSLwni0SSlCzYJojn8dSh0SGRdQHdLssS9RKbQoYinRSShbba7E5EeRz7T4nRsC6ZV7IqRqwVbG0UCuyQEkcBeY3sL1uNzw7K1do+p2n87fvkKywVJkB99VYHvubc6fQAAAABJRU5ErkJggg==",
+      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADESURBVDhPnZHRDcMgDEQZLaMwSkfJKIzSEfLfD8pdecihIFV9EsK+8zlNmv6hNnq5ZzeEvvNtCGqLHfXHUXzobYCEnB8W85FuQ7oJ5/Nz8AYIz5LqmVOdl8SwanRDU19X1QKW2GzgL8OAyBLVq1/CvSSaWlTO79eJeDDSdRsKxiXS9JH50MwNJOj9qHWzBG1GulGjMAfNZkO1nhy1gcQY5q/CIyjQdA8kzOFIfLKLhoOAEMM2GtRRW7IbVA9d2vPT0I2U3n1Vge+EDDWxAAAAAElFTkSuQmCC",
       "pixelOffset":{
         "cartesian2":[
           0.0,0.0
@@ -1535,26 +1526,27 @@
           ]
         }
       ],
-      "font":"10pt Lucida Console",
+      "font":"21pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
           0,0,0,255
         ]
       },
+      "outlineWidth":2.0,
       "pixelOffset":{
         "cartesian2":[
           23.0,0.0
         ]
       },
-      "scale":1.0,
+      "scale":0.5,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "boolean":true
         }
       ],
-      "style":"FILL",
+      "style":"FILL_AND_OUTLINE",
       "text":"Landsat 7",
       "verticalOrigin":"CENTER"
     },
@@ -1567,13 +1559,7 @@
           ]
         }
       ],
-      "outlineWidth":0.0,
-      "width":[
-        {
-          "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
-          "number":1.0
-        }
-      ],
+      "resolution":60.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
@@ -2199,7 +2185,7 @@
         ]
       },
       "horizontalOrigin":"CENTER",
-      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADCSURBVDhPnVPbDQMhDMtojMIoHYVRGKUj9L8f6RnVp0AelXoS0imJnWAHkT8+vb6fsKyI8ZQEiawI8dbmOpjAkSDQ+2Mle5OtyIL7mIoTEgD8nKKji54k6Eww/jeCe+z3S0FAEorFPAgc+CzSLwni0SSlCzYJojn8dSh0SGRdQHdLssS9RKbQoYinRSShbba7E5EeRz7T4nRsC6ZV7IqRqwVbG0UCuyQEkcBeY3sL1uNzw7K1do+p2n87fvkKywVJkB99VYHvubc6fQAAAABJRU5ErkJggg==",
+      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADESURBVDhPnZHRDcMgDEQZLaMwSkfJKIzSEfLfD8pdecihIFV9EsK+8zlNmv6hNnq5ZzeEvvNtCGqLHfXHUXzobYCEnB8W85FuQ7oJ5/Nz8AYIz5LqmVOdl8SwanRDU19X1QKW2GzgL8OAyBLVq1/CvSSaWlTO79eJeDDSdRsKxiXS9JH50MwNJOj9qHWzBG1GulGjMAfNZkO1nhy1gcQY5q/CIyjQdA8kzOFIfLKLhoOAEMM2GtRRW7IbVA9d2vPT0I2U3n1Vge+EDDWxAAAAAElFTkSuQmCC",
       "pixelOffset":{
         "cartesian2":[
           0.0,0.0
@@ -2223,26 +2209,27 @@
           ]
         }
       ],
-      "font":"10pt Lucida Console",
+      "font":"21pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
           0,0,0,255
         ]
       },
+      "outlineWidth":2.0,
       "pixelOffset":{
         "cartesian2":[
           6.0,-4.0
         ]
       },
-      "scale":1.0,
+      "scale":0.5,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "boolean":true
         }
       ],
-      "style":"FILL",
+      "style":"FILL_AND_OUTLINE",
       "text":"Molniya 1-92",
       "verticalOrigin":"CENTER"
     },
@@ -2255,13 +2242,7 @@
           ]
         }
       ],
-      "outlineWidth":0.0,
-      "width":[
-        {
-          "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
-          "number":1.0
-        }
-      ],
+      "resolution":60.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
@@ -2643,21 +2624,22 @@
           255,0,0,255
         ]
       },
-      "font":"10pt Lucida Console",
+      "font":"21pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
           0,0,0,255
         ]
       },
-      "scale":1.0,
+      "outlineWidth":2.0,
+      "scale":0.5,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "boolean":true
         }
       ],
-      "style":"FILL",
+      "style":"FILL_AND_OUTLINE",
       "text":"Pennsylvania",
       "verticalOrigin":"CENTER"
     },
@@ -2682,8 +2664,6 @@
           255,0,0,255
         ]
       },
-      "outlineWidth":0.0,
-      "width":1.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
@@ -2710,7 +2690,7 @@
     },
     "position":{
       "cartesian":[
-        1152255.8015002306,-4694317.95133893,4147335.9067616328
+        1152255.80150063,-4694317.951340558,4147335.9067563135
       ]
     }
   },
@@ -2722,8 +2702,6 @@
           0,255,255,255
         ]
       },
-      "outlineWidth":0.0,
-      "width":1.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-15T10:52:19.3940000000002Z",
@@ -2801,8 +2779,6 @@
           ]
         }
       ],
-      "outlineWidth":0.0,
-      "width":1.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-15T10:16:06.97400000000198Z",
@@ -2908,8 +2884,6 @@
           ]
         }
       ],
-      "outlineWidth":0.0,
-      "width":1.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-15T22:32:58.8280000000086Z",

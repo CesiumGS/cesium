@@ -11,6 +11,7 @@ Beta Releases
 * Added `BoundingSphere.fromCornerPoints`.
 * Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `DynamicPath.resolution` property for setting the maximum step size, in seconds, to take when sampling a position for path visualization. 
+* Added `Label.setOutlineWidth` for setting the outline width of label text.  Also added matching `DynamicLabel.outlineWidth` property.
 
 ### b14 - 2013-03-01
 
