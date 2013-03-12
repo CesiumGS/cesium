@@ -1,30 +1,14 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/jsonp',
-        '../Core/Cartesian2',
-        '../Core/DeveloperError',
+        '../Core/Color',
         '../Core/Event',
-        './BingMapsStyle',
-        './DiscardMissingTileImagePolicy',
-        './GeographicTilingScheme',
-        './ImageryProvider',
-        './TileProviderError',
-        './WebMercatorTilingScheme',
-        '../ThirdParty/when'
+        './GeographicTilingScheme'
     ], function(
         defaultValue,
-        jsonp,
-        Cartesian2,
-        DeveloperError,
+        Color,
         Event,
-        BingMapsStyle,
-        DiscardMissingTileImagePolicy,
-        GeographicTilingScheme,
-        ImageryProvider,
-        TileProviderError,
-        WebMercatorTilingScheme,
-        when) {
+        GeographicTilingScheme) {
     "use strict";
 
     /**
@@ -35,14 +19,16 @@ define([
      * @alias TileCoordinatesImageryProvider
      * @constructor
      *
-     * @param {TilingScheme} [description.tilingScheme] The tiling scheme for which to draw tiles.
-     * @param {String} [description.color] The color to draw the tile box and label, specified as a CSS color string.
+     * @param {TilingScheme} [description.tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
+     * @param {Color} [description.color=Color.YELLOW] The color to draw the tile box and label.
+     * @param {Number} [description.tileWidth=256] The width of the tile for level-of-detail selection purposes.
+     * @param {Number} [description.tileHeight=256] The height of the tile for level-of-detail selection purposes.
      */
     var TileCoordinatesImageryProvider = function TileCoordinatesImageryProvider(description) {
         description = defaultValue(description, {});
 
         this._tilingScheme = defaultValue(description.tilingScheme, new GeographicTilingScheme());
-        this._color = defaultValue(description.color, 'yellow');
+        this._color = defaultValue(description.color, Color.YELLOW);
         this._errorEvent = new Event();
         this._tileWidth = defaultValue(description.tileWidth, 256);
         this._tileHeight = defaultValue(description.tileHeight, 256);
@@ -69,8 +55,6 @@ define([
      * @memberof TileCoordinatesImageryProvider
      *
      * @returns {Number} The height.
-     *
-     * @exception {DeveloperError} <code>getTileHeight</code> must not be called before the imagery provider is ready.
      */
     TileCoordinatesImageryProvider.prototype.getTileHeight = function() {
         return this._tileHeight;
@@ -83,8 +67,6 @@ define([
      * @memberof TileCoordinatesImageryProvider
      *
      * @returns {Number} The maximum level.
-     *
-     * @exception {DeveloperError} <code>getMaximumLevel</code> must not be called before the imagery provider is ready.
      */
     TileCoordinatesImageryProvider.prototype.getMaximumLevel = function() {
         return undefined;
@@ -99,8 +81,6 @@ define([
      * @returns {TilingScheme} The tiling scheme.
      * @see WebMercatorTilingScheme
      * @see GeographicTilingScheme
-     *
-     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
      */
     TileCoordinatesImageryProvider.prototype.getTilingScheme = function() {
         return this._tilingScheme;
@@ -113,8 +93,6 @@ define([
      * @memberof TileCoordinatesImageryProvider
      *
      * @returns {Extent} The extent.
-     *
-     * @exception {DeveloperError} <code>getExtent</code> must not be called before the imagery provider is ready.
      */
     TileCoordinatesImageryProvider.prototype.getExtent = function() {
         return this._tilingScheme.getExtent();
@@ -132,8 +110,6 @@ define([
      *
      * @see DiscardMissingTileImagePolicy
      * @see NeverTileDiscardPolicy
-     *
-     * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
      */
     TileCoordinatesImageryProvider.prototype.getTileDiscardPolicy = function() {
         return undefined;
@@ -177,8 +153,6 @@ define([
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
-     *
-     * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
      */
     TileCoordinatesImageryProvider.prototype.requestImage = function(x, y, level) {
         var canvas = document.createElement('canvas');
@@ -186,7 +160,9 @@ define([
         canvas.height = 256;
         var context = canvas.getContext('2d');
 
-        context.strokeStyle = this._color;
+        var cssColor = this._color.toCssColorString();
+
+        context.strokeStyle = cssColor;
         context.lineWidth = 2;
         context.strokeRect(1, 1, 255, 255);
 
@@ -195,7 +171,7 @@ define([
         context.textAlign = 'center';
         context.fillStyle = 'black';
         context.fillText(label, 127, 127);
-        context.fillStyle = this._color;
+        context.fillStyle = cssColor;
         context.fillText(label, 124, 124);
 
         return canvas;
@@ -208,8 +184,6 @@ define([
      * @memberof TileCoordinatesImageryProvider
      *
      * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
-     *
-     * @exception {DeveloperError} <code>getLogo</code> must not be called before the imagery provider is ready.
      */
     TileCoordinatesImageryProvider.prototype.getLogo = function() {
         return undefined;
