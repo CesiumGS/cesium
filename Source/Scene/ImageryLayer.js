@@ -736,6 +736,9 @@ define([
         imagery.state = ImageryState.READY;
     };
 
+    var tileTextureWidth = 256;
+    var tileTextureHeight = 256;
+
     /**
      * Copies an imagery tile to the terrain tile's texture for the corresponding layer, reprojecting
      * from Web Mercator to Geographic along the way, if necessary.  Mip levels are not filled until
@@ -758,8 +761,8 @@ define([
             // the texture before using it, because imagery might not completely overlap this
             // terrain tile.
             tile.textures[this._layerIndex] = tileTexture = context.createTexture2D({
-                width : 256,
-                height : 256
+                width : tileTextureWidth,
+                height : tileTextureHeight
             });
 
             if (typeof this._mipmapSampler === 'undefined') {
@@ -922,11 +925,8 @@ define([
 
         texture.setSampler(imageryLayer._copySampler);
 
-        var width = 256;
-        var height = 256;
-
-        uniformMap.textureDimensions.x = width;
-        uniformMap.textureDimensions.y = height;
+        uniformMap.textureDimensions.x = tileTextureWidth;
+        uniformMap.textureDimensions.y = tileTextureHeight;
         uniformMap.texture = texture;
 
         // Reproject this texture if it is not already in a geographic projection and
@@ -965,8 +965,8 @@ define([
             viewport = new BoundingRectangle();
             renderState.viewport = viewport;
         }
-        viewport.width = width;
-        viewport.height = height;
+        viewport.width = tileTextureWidth;
+        viewport.height = tileTextureHeight;
 
         context.draw({
             framebuffer : imageryLayer._fbCopy,

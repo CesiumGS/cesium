@@ -44,6 +44,8 @@ define([
         this._tilingScheme = defaultValue(description.tilingScheme, new GeographicTilingScheme());
         this._color = defaultValue(description.color, 'yellow');
         this._errorEvent = new Event();
+        this._tileWidth = defaultValue(description.tileWidth, 256);
+        this._tileHeight = defaultValue(description.tileHeight, 256);
     };
 
     /**
@@ -57,7 +59,7 @@ define([
      * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
      */
     TileCoordinatesImageryProvider.prototype.getTileWidth = function() {
-        return 256;
+        return this._tileWidth;
     };
 
     /**
@@ -71,7 +73,7 @@ define([
      * @exception {DeveloperError} <code>getTileHeight</code> must not be called before the imagery provider is ready.
      */
     TileCoordinatesImageryProvider.prototype.getTileHeight = function() {
-        return 256;
+        return this._tileHeight;
     };
 
     /**
