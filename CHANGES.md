@@ -7,11 +7,10 @@ Beta Releases
 ### b15 - 2013-04-01
 
 * Breaking changes:
-   *
+   * `Billboard.computeScreenSpacePosition` now takes a `FrameState` argument in addition to a `UniformState` argument.
 * Added `BoundingSphere.fromCornerPoints`.
 * Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `DynamicPath.resolution` property for setting the maximum step size, in seconds, to take when sampling a position for path visualization. 
-* `Billboard.computeScreenSpacePosition` now takes a `FrameState` argument in addition to a `UniformState` argument.
 
 ### b14 - 2013-03-01
 
