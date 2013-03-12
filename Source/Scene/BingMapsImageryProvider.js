@@ -180,7 +180,7 @@ define([
      *
      * @memberof BingMapsImageryProvider
      *
-     * @returns {Proxy} The key.
+     * @returns {String} The key.
      */
     BingMapsImageryProvider.prototype.getKey = function() {
         return this._key;
