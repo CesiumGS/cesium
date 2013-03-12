@@ -24,6 +24,7 @@ define([
      * @param {Boolean} [description.stroke=false] Whether to stroke the text.
      * @param {Color} [description.fillColor=Color.WHITE] The fill color.
      * @param {Color} [description.strokeColor=Color.BLACK] The stroke color.
+     * @param {Color} [description.strokeWidth=1] The stroke width.
      *
      * @returns {Canvas} A new canvas with the given text drawn into it.  The dimensions object
      *                   from measureText will also be added to the returned canvas. If text is
@@ -57,6 +58,8 @@ define([
         canvas.style.visibility = 'hidden';
         document.body.appendChild(canvas);
 
+        var strokeWidth = defaultValue(description.strokeWidth, 1) * 2;
+        context2D.lineWidth = strokeWidth;
         var dimensions = measureText(context2D, text);
         canvas.dimensions = dimensions;
 
@@ -71,19 +74,22 @@ define([
         // font must be explicitly set again after changing width and height
         context2D.font = font;
 
-        var fill = defaultValue(description.fill, true);
-        if (fill) {
-            var fillColor = defaultValue(description.fillColor, Color.WHITE);
-            context2D.fillStyle = fillColor.toCssColorString();
-            context2D.fillText(text, 0, y);
-        }
-
         var stroke = defaultValue(description.stroke, false);
         if (stroke) {
             var strokeColor = defaultValue(description.strokeColor, Color.BLACK);
             context2D.strokeStyle = strokeColor.toCssColorString();
+            context2D.lineWidth = strokeWidth;
             context2D.strokeText(text, 0, y);
         }
+
+        var fill = defaultValue(description.fill, true);
+        if (fill) {
+            var fillColor = defaultValue(description.fillColor, Color.WHITE);
+            context2D.fillStyle = fillColor.toCssColorString();
+            context2D.fillText(text, strokeWidth * 0.5, y);
+        }
+
+
 
         return canvas;
     };

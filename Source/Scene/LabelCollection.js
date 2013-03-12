@@ -67,10 +67,11 @@ define([
 
     // reusable object for calling writeTextToCanvas
     var writeTextToCanvasParameters = {};
-    function createGlyphCanvas(character, font, fillColor, outlineColor, style, verticalOrigin) {
+    function createGlyphCanvas(character, font, fillColor, outlineColor, outlineWidth, style, verticalOrigin) {
         writeTextToCanvasParameters.font = font;
         writeTextToCanvasParameters.fillColor = fillColor;
         writeTextToCanvasParameters.strokeColor = outlineColor;
+        writeTextToCanvasParameters.strokeWidth = outlineWidth;
 
         if (verticalOrigin === VerticalOrigin.BOTTOM) {
             writeTextToCanvasParameters.textBaseline = 'bottom';
@@ -132,6 +133,7 @@ define([
             var font = label._font;
             var fillColor = label._fillColor;
             var outlineColor = label._outlineColor;
+            var outlineWidth = label._outlineWidth;
             var style = label._style;
             var verticalOrigin = label._verticalOrigin;
 
@@ -142,13 +144,14 @@ define([
                                      font,
                                      fillColor.toString(),
                                      outlineColor.toString(),
+                                     outlineWidth,
                                      style.toString(),
                                      verticalOrigin.toString()
                                     ]);
 
             var glyphTextureInfo = glyphTextureCache[id];
             if (typeof glyphTextureInfo === 'undefined') {
-                var canvas = createGlyphCanvas(character, font, fillColor, outlineColor, style, verticalOrigin);
+                var canvas = createGlyphCanvas(character, font, fillColor, outlineColor, outlineWidth, style, verticalOrigin);
                 var index = -1;
                 if (canvas.width > 0 && canvas.height > 0) {
                     index = textureAtlas.addImage(canvas);
