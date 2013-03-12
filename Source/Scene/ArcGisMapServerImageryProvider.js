@@ -206,13 +206,17 @@ define([
     };
 
     /**
-     * Gets the proxy of the ArcGIS Mapserver.
+     * Gets the proxy used by this provider.
      *
      * @memberof ArcGisMapServerImageryProvider
      *
-     * @returns {String} The proxy.
+     * @returns {Proxy} The proxy.
+     *
+     * @see DefaultProxy
+     *
+     * @exception {DeveloperError} <code>getProxy</code> must not be called before the imagery provider is ready.
      */
-    ArcGisMapServerImageryProvider.prototype.getProxy = function(){
+    ArcGisMapServerImageryProvider.prototype.getProxy = function() {
         return this._proxy;
     };
 

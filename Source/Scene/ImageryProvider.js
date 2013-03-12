@@ -144,17 +144,18 @@ define([
     };
 
     /**
-     * Gets the proxy to display when this imagery provider is active.  Typically this is used to credit
-     * the source of the imagery.  This function should not be called before {@link ImageryProvider#isReady} returns true.
+     * Gets the proxy used by this provider.
      *
      * @memberof ImageryProvider
      *
-     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no proxy.
+     * @returns {Proxy} The proxy.
+     *
+     * @see DefaultProxy
      *
      * @exception {DeveloperError} <code>getProxy</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getProxy = function() {
-        throw new DeveloperError('This type should not be instantiated directly.')
+        throw new DeveloperError('This type should not be instantiated directly.');
     };
 
     /**

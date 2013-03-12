@@ -167,13 +167,17 @@ define([
     };
 
     /**
-     * Gets the proxy of the WMS server.
+     * Gets the proxy used by this provider.
      *
      * @memberof WebMapServiceImageryProvider
      *
-     * @returns {String} The proxy.
+     * @returns {Proxy} The proxy.
+     *
+     * @see DefaultProxy
+     *
+     * @exception {DeveloperError} <code>getProxy</code> must not be called before the imagery provider is ready.
      */
-    WebMapServiceImageryProvider.prototype.getProxy = function(){
+    WebMapServiceImageryProvider.prototype.getProxy = function() {
         return this._proxy;
     };
 
