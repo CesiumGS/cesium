@@ -96,7 +96,7 @@ define([
 
         var that = this;
 
-        // Try to load remaing parameters from XML
+        // Try to load remaining parameters from XML
         loadXML(url + 'tilemapresource.xml').then(function(xml) {
             // Allowing description properties to override XML values
             var format = xml.getElementsByTagName('TileFormat')[0];
