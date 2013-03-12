@@ -203,6 +203,7 @@ require([
 
     var scene = widget.scene;
     var centralBody = scene.getPrimitives().getCentralBody();
+    centralBody.depthTestAgainstTerrain = true;
 
     var cesiumTerrainProvider = new Cesium.CesiumTerrainProvider({
         url : 'http://cesium.agi.com/smallterrain',
