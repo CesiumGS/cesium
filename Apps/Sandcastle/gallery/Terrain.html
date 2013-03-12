@@ -137,12 +137,11 @@ require([
         
         var terrainSamplePoints;
         function elevationSuccess() {
-            Cesium.when.all([Cesium.loadImage('../images/facility.gif')])
-            .then(function(images) {
+            Cesium.when(Cesium.loadImage('../images/facility.gif'), function(image) {
                 var ellipsoid = Cesium.Ellipsoid.WGS84;
                 var billboards = new Cesium.BillboardCollection();
                 var labels = new Cesium.LabelCollection();
-                var textureAtlas = scene.getContext().createTextureAtlas({images : images});
+                var textureAtlas = scene.getContext().createTextureAtlas({images : [image]});
                 billboards.setTextureAtlas(textureAtlas);
                 
                 for( var i = 0; i < terrainSamplePoints.length; ++i ){
@@ -178,7 +177,7 @@ require([
                 var lon = Cesium.Math.toRadians(86.925);
                 var sz = 0.005;
                 var e = new Cesium.Extent(lon-sz,lat-sz,lon+sz,lat+sz);
-                terrainSamplePoints = new Array();
+                terrainSamplePoints = [];
                 for( var y = 0; y < ny; ++y ) {
                     for( var x = 0; x < nx; ++x ) {
                         var a = x / (nx-1);

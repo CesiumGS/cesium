@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         './TerrainState',
         './Tile',
@@ -7,6 +8,7 @@ define([
         './TileTerrain',
         '../ThirdParty/when'
     ], function(
+        defaultValue,
         DeveloperError,
         TerrainState,
         Tile,
@@ -41,10 +43,9 @@ define([
     }
 
     TerrainSampler.prototype.requestTile = function(tileRequest) {
-        var tile = tileRequest.tile;
         var tileTerrain = new TileTerrain();
         this.stateMachine(tileRequest, tileTerrain, this);
-    }
+    };
 
     TerrainSampler.prototype.stateMachine = function(tileRequest, tileTerrain, that) {
         var tile = tileRequest.tile;
@@ -69,13 +70,13 @@ define([
             }
         }
         setTimeout(that.stateMachine, 250 * (0.5 + 0.5 * Math.random()), tileRequest, tileTerrain, that);
-    }
+    };
 
     TerrainSampler.prototype.interpolate = function(tileRequest, tileTerrain, that) {
         var tile = tileRequest.tile;
 
         var vertData = tileTerrain.mesh.vertices;
-        var vertCount = vertData['length'] / 6;
+        var vertCount = vertData.length / 6;
 
         // now interpolate verts
         // remembering 1 pixel skirt
@@ -123,7 +124,7 @@ define([
         if (that.tilesRemaining === 0) {
             that.deferred.resolve();
         }
-    }
+    };
 
     /**
      * Provides an elevation query for an array of Cartographic points by
@@ -131,16 +132,17 @@ define([
      * Each point height is modified in place.
      */
     var terrainSample = function(terrainProvider, level, context, pts) {
-        if (typeof level === 'undefined')
-            level = 2;
+        level = defaultValue(level, 2);
 
         var tilingScheme = terrainProvider.getTilingScheme();
+
+        var i;
 
         // Sort points into a set of tiles
         var tileRequests = []; // Result will be an Array as it's easier to work with
         {
             var tileRequestSet = {}; // A unique set
-            for ( var i = 0; i < pts.length; ++i) {
+            for (i = 0; i < pts.length; ++i) {
                 var xy = tilingScheme.positionToTileXY(pts[i], level);
                 var key = xy.toString();
 
@@ -169,7 +171,7 @@ define([
         var terrainSampler = new TerrainSampler(terrainProvider, context, tileRequests.length);
 
         // Send request for each required tile
-        for ( var i = 0; i < tileRequests.length; ++i) {
+        for (i = 0; i < tileRequests.length; ++i) {
             var tileRequest = tileRequests[i];
             var tile = new Tile(tileRequest);
 
@@ -180,7 +182,7 @@ define([
         }
 
         return terrainSampler.deferred.promise;
-    }
+    };
 
     return terrainSample;
 });
