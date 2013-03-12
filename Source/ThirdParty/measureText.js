@@ -37,7 +37,7 @@
   THE SOFTWARE.
 **/
 /*global define*/
-define(['../Scene/LabelStyle'], function(LabelStyle) {
+define(function() {
     /*jshint strict:false*/
 /*
   var NAME = "FontMetrics Library"
@@ -92,7 +92,7 @@ define(['../Scene/LabelStyle'], function(LabelStyle) {
   /**
    * The new text metrics function
    */
-  var measureText = function(context2D, textstring, labelStyle) {
+  var measureText = function(context2D, textstring, stroke, fill) {
     var metrics = context2D.measureText(textstring),
         fontFamily = getCSSValue(context2D.canvas,"font-family"),
         fontSize = getCSSValue(context2D.canvas,"font-size").replace("px",""),
@@ -138,15 +138,15 @@ define(['../Scene/LabelStyle'], function(LabelStyle) {
         ctx.fillStyle = "white";
         ctx.fillRect(-1, -1, w + 2, h + 2);
 
-        if (LabelStyle === LabelStyle.OUTLINE || LabelStyle === LabelStyle.FILL_AND_OUTLINE) {
+        if (fill) {
             ctx.strokeStyle = "black";
             ctx.lineWidth = context2D.lineWidth;
             ctx.strokeText(textstring, (padding / 2), baseline);
         }
 
-        if (LabelStyle === LabelStyle.FILL || LabelStyle === LabelStyle.FILL_AND_OUTLINE) {
+        if (stroke) {
             ctx.fillStyle = "black";
-            ctx.fillText(textstring, padding / 2 + (context2D.lineWidth * 0.5), baseline);
+            ctx.fillText(textstring, padding / 2, baseline);
         }
 
         var pixelData = ctx.getImageData(0, 0, w, h).data;

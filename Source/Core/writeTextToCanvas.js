@@ -58,9 +58,12 @@ define([
         canvas.style.visibility = 'hidden';
         document.body.appendChild(canvas);
 
+        var stroke = defaultValue(description.stroke, false);
+        var fill = defaultValue(description.fill, true);
         var strokeWidth = defaultValue(description.strokeWidth, 1) * 2;
+
         context2D.lineWidth = strokeWidth;
-        var dimensions = measureText(context2D, text);
+        var dimensions = measureText(context2D, text, stroke, fill);
         canvas.dimensions = dimensions;
 
         document.body.removeChild(canvas);
@@ -74,7 +77,6 @@ define([
         // font must be explicitly set again after changing width and height
         context2D.font = font;
 
-        var stroke = defaultValue(description.stroke, false);
         if (stroke) {
             var strokeColor = defaultValue(description.strokeColor, Color.BLACK);
             context2D.strokeStyle = strokeColor.toCssColorString();
@@ -82,13 +84,11 @@ define([
             context2D.strokeText(text, 0, y);
         }
 
-        var fill = defaultValue(description.fill, true);
         if (fill) {
             var fillColor = defaultValue(description.fillColor, Color.WHITE);
             context2D.fillStyle = fillColor.toCssColorString();
-            context2D.fillText(text, strokeWidth * 0.5, y);
+            context2D.fillText(text, 0, y);
         }
-
 
 
         return canvas;
