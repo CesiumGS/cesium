@@ -2735,6 +2735,9 @@ define([
         return new PickFramebuffer(this);
     };
 
+    var pickObjects = {};
+    var nextPickColor = new Color(0, 0, 0, 0);
+
     /**
      * DOC_TBA
      *
@@ -2742,8 +2745,8 @@ define([
      *
      * @see Context#createPickId
      */
-    Context.prototype.getObjectByPickId = function(pickId) {
-        return undefined;
+    Context.prototype.getObjectByPickId = function(unnormalizedRgb) {
+        return pickObjects[JSON.stringify(unnormalizedRgb)];
     };
 
     /**
@@ -2754,51 +2757,31 @@ define([
      * @see Context#getObjectByPickId
      */
     Context.prototype.createPickId = function(object) {
-        var objects = {};
-        var nextRgb = new Color(0, 0, 0, 0);
+        // TODO:  Use alpha?
+        if (++nextPickColor.blue === 256) {
+            nextPickColor.blue = 0;
 
-        function rgbToObjectIndex(unnormalizedRgb) {
-            // TODO:  Use alpha?
-            var index = 'r' + unnormalizedRgb.red + 'g' + unnormalizedRgb.green + 'b' + unnormalizedRgb.blue;
-            return index;
-        }
+            if (++nextPickColor.green === 256) {
+                nextPickColor.green = 0;
 
-        function _createPickId(object) {
-            // TODO:  Use alpha?
-            if (++nextRgb.blue === 256) {
-                nextRgb.blue = 0;
-
-                if (++nextRgb.green === 256) {
-                    nextRgb.green = 0;
-
-                    if (++nextRgb.red === 256) {
-                        throw new RuntimeError('Out of unique Rgb colors.');
-                    }
+                if (++nextPickColor.red === 256) {
+                    throw new RuntimeError('Out of unique Rgb colors.');
                 }
             }
-
-            var pickId = {
-                unnormalizedRgb : new Color(nextRgb.red, nextRgb.green, nextRgb.blue, 1.0),
-                normalizedRgba : Color.fromBytes(nextRgb.red, nextRgb.green, nextRgb.blue, 255.0),
-                destroy : function() {
-                    delete objects[rgbToObjectIndex(pickId.unnormalizedRgb)];
-                    return undefined;
-                }
-            };
-
-            objects[rgbToObjectIndex(pickId.unnormalizedRgb)] = object;
-
-            return pickId;
         }
 
-        function _getObjectByPickId(unnormalizedRgb) {
-            return objects[rgbToObjectIndex(unnormalizedRgb)];
-        }
+        var pickId = {
+            unnormalizedRgb : new Color(nextPickColor.red, nextPickColor.green, nextPickColor.blue, 255),
+            normalizedRgba : Color.fromBytes(nextPickColor.red, nextPickColor.green, nextPickColor.blue, 255),
+            destroy : function() {
+                delete pickObjects[JSON.stringify(pickId.unnormalizedRgb)];
+                return undefined;
+            }
+        };
 
-        this.createPickId = _createPickId;
-        this.getObjectByPickId = _getObjectByPickId;
+        pickObjects[JSON.stringify(pickId.unnormalizedRgb)] = object;
 
-        return _createPickId(object);
+        return pickId;
     };
 
     Context.prototype.isDestroyed = function() {
