@@ -195,6 +195,27 @@ define([
         });
     };
 
+    HeightmapTerrainData.prototype.interpolateHeight = function(extent, longitude, latitude) {
+        var width = this._width;
+        var height = this._height;
+
+        var heightSample;
+
+        var structure = this._structure;
+        var stride = structure.stride;
+        if (stride > 1) {
+            var elementsPerHeight = structure.elementsPerHeight;
+            var elementMultiplier = structure.elementMultiplier;
+            var isBigEndian = structure.isBigEndian;
+
+            heightSample = interpolateHeightWithStride(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, extent, width, height, longitude, latitude);
+        } else {
+            heightSample = interpolateHeight(this._buffer, extent, width, height, longitude, latitude);
+        }
+
+        return heightSample * structure.heightScale + structure.heightOffset;
+    };
+
     /**
      * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
      * height samples in this instance, interpolated if necessary.
