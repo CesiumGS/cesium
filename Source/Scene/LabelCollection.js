@@ -365,15 +365,6 @@ define([
         this.modelMatrix = Matrix4.IDENTITY.clone();
 
         /**
-         * If true, aligns all text to a pixel in screen space,
-         * providing crisper text at the cost of jumpier motion.
-         * Defaults to true.
-         *
-         * @type Boolean
-         */
-        this.clampToPixel = false;
-
-        /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
@@ -596,7 +587,6 @@ define([
 
         billboardCollection.modelMatrix = this.modelMatrix;
         billboardCollection.morphTime = this.morphTime;
-        billboardCollection.clampToPixel = this.clampToPixel;
 
         var rebindAllGlyphsInAllLabels = false;
         if (++this._frameCount % 100 === 0) {

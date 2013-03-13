@@ -696,7 +696,7 @@ define([
         var modelMatrix = labelCollection.modelMatrix;
         var actualPosition = Billboard._computeActualPosition(this._position, frameState, labelCollection.morphTime, modelMatrix);
 
-        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, labelCollection.clampToPixel, uniformState);
+        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, uniformState);
     };
 
     /**
