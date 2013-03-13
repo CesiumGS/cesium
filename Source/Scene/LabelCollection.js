@@ -466,17 +466,14 @@ define([
      * labels.remove(l);  // Returns true
      */
     LabelCollection.prototype.remove = function(label) {
-        if (typeof label === 'undefined') {
-            return false;
+        if (typeof label !== 'undefined' && label._labelCollection === this) {
+            var index = this._labels.indexOf(label);
+            if (index !== -1) {
+                this._labels.splice(index, 1);
+                destroyLabel(this, label);
+                return true;
+            }
         }
-
-        if (label._labelCollection === this) {
-            this._labels.splice(this._labels.indexOf(label), 1);
-            destroyLabel(this, label);
-
-            return true;
-        }
-
         return false;
     };
 
