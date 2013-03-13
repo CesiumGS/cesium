@@ -57,6 +57,7 @@ define([
         this._font = defaultValue(description.font, '30px sans-serif');
         this._fillColor = Color.clone(defaultValue(description.fillColor, Color.WHITE));
         this._outlineColor = Color.clone(defaultValue(description.outlineColor, Color.BLACK));
+        this._outlineWidth = defaultValue(description.outlineWidth, 1.0);
         this._style = defaultValue(description.style, LabelStyle.FILL);
         this._verticalOrigin = defaultValue(description.verticalOrigin, VerticalOrigin.BOTTOM);
         this._horizontalOrigin = defaultValue(description.horizontalOrigin, HorizontalOrigin.LEFT);
@@ -319,6 +320,43 @@ define([
         var outlineColor = this._outlineColor;
         if (!Color.equals(outlineColor, value)) {
             Color.clone(value, outlineColor);
+            rebindAllGlyphs(this);
+        }
+    };
+
+    /**
+     * Gets the outline width of this label.
+     *
+     * @memberof Label
+     *
+     * @see Label#setOutlineWidth
+     * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
+     */
+    Label.prototype.getOutlineWidth = function() {
+        return this._outlineWidth;
+    };
+
+    /**
+     * Sets the outline width of this label.
+     *
+     * @memberof Label
+     *
+     * @param {Number} value The outline width.
+     *
+     * @exception {DeveloperError} value is required.
+     *
+     * @see Label#getOutlineWidth
+     * @see Label#setFillColor
+     * @see Label#setFont
+     * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
+     */
+    Label.prototype.setOutlineWidth = function(value) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
+        if (this._outlineWidth !== value) {
+            this._outlineWidth = value;
             rebindAllGlyphs(this);
         }
     };
@@ -658,7 +696,7 @@ define([
         var modelMatrix = labelCollection.modelMatrix;
         var actualPosition = Billboard._computeActualPosition(this._position, frameState, labelCollection.morphTime, modelMatrix);
 
-        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, labelCollection.clampToPixel, uniformState);
+        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, uniformState);
     };
 
     /**

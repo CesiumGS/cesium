@@ -212,6 +212,7 @@ defineSuite([
         });
 
         expect(provider.getUrl()).toEqual(url);
+        expect(provider.getProxy()).toEqual(proxy);
 
         waitsFor(function() {
             return provider.isReady();
