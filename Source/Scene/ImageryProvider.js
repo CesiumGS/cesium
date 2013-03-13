@@ -151,8 +151,6 @@ define([
      * @returns {Proxy} The proxy.
      *
      * @see DefaultProxy
-     *
-     * @exception {DeveloperError} <code>getProxy</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getProxy = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
