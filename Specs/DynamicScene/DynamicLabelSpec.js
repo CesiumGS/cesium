@@ -10,7 +10,8 @@ defineSuite([
              'Core/TimeInterval',
              'Scene/HorizontalOrigin',
              'Scene/VerticalOrigin',
-             'Scene/LabelStyle'
+             'Scene/LabelStyle',
+             'Specs/MockProperty'
             ], function(
               DynamicLabel,
               DynamicObject,
@@ -22,7 +23,8 @@ defineSuite([
               TimeInterval,
               HorizontalOrigin,
               VerticalOrigin,
-              LabelStyle) {
+              LabelStyle,
+              MockProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -38,6 +40,7 @@ defineSuite([
                 outlineColor : {
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
+                outlineWidth : 3.14,
                 horizontalOrigin : 'LEFT',
                 verticalOrigin : 'CENTER',
                 eyeOffset : {
@@ -59,6 +62,7 @@ defineSuite([
         expect(dynamicObject.label.style.getValue(Iso8601.MINIMUM_VALUE)).toEqual(LabelStyle.FILL);
         expect(dynamicObject.label.fillColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.label.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(dynamicObject.label.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.outlineWidth);
         expect(dynamicObject.label.horizontalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HorizontalOrigin.LEFT);
         expect(dynamicObject.label.verticalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(VerticalOrigin.CENTER);
         expect(dynamicObject.label.eyeOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -80,6 +84,7 @@ defineSuite([
                 outlineColor : {
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
+                outlineWidth : 2.78,
                 horizontalOrigin : 'LEFT',
                 verticalOrigin : 'CENTER',
                 eyeOffset : {
@@ -104,6 +109,7 @@ defineSuite([
         expect(dynamicObject.label.style.getValue(validTime)).toEqual(LabelStyle.FILL);
         expect(dynamicObject.label.fillColor.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.label.outlineColor.getValue(validTime)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(dynamicObject.label.outlineWidth.getValue(validTime)).toEqual(labelPacket.label.outlineWidth);
         expect(dynamicObject.label.horizontalOrigin.getValue(validTime)).toEqual(HorizontalOrigin.LEFT);
         expect(dynamicObject.label.verticalOrigin.getValue(validTime)).toEqual(VerticalOrigin.CENTER);
         expect(dynamicObject.label.eyeOffset.getValue(validTime)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -116,6 +122,7 @@ defineSuite([
         expect(dynamicObject.label.style.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.label.fillColor.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.label.outlineColor.getValue(invalidTime)).toBeUndefined();
+        expect(dynamicObject.label.outlineWidth.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.label.horizontalOrigin.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.label.verticalOrigin.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.label.eyeOffset.getValue(invalidTime)).toBeUndefined();
@@ -132,31 +139,33 @@ defineSuite([
     });
 
     it('mergeProperties does not change a fully configured label', function() {
-        var expectedText = 12;
-        var expectedFont = 13;
-        var expectedStyle = 14;
-        var expectedFillColor = 15;
-        var expectedOutlineColor = 16;
-        var expectedHorizontalOrigin = 17;
-        var expectedVerticalOrigin = 18;
-        var expectedEyeOffset = 19;
-        var expectedPixelOffset = 20;
-        var expectedScale = 21;
-        var expectedShow = 22;
+        var expectedText = new MockProperty();
+        var expectedFont = new MockProperty();
+        var expectedStyle = new MockProperty();
+        var expectedFillColor = new MockProperty();
+        var expectedOutlineColor = new MockProperty();
+        var expectedOutlineWidth = new MockProperty();
+        var expectedHorizontalOrigin = new MockProperty();
+        var expectedVerticalOrigin = new MockProperty();
+        var expectedEyeOffset = new MockProperty();
+        var expectedPixelOffset = new MockProperty();
+        var expectedScale = new MockProperty();
+        var expectedShow = new MockProperty();
 
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.label = new DynamicLabel();
-        objectToMerge.label.text = 1;
-        objectToMerge.label.font = 2;
-        objectToMerge.label.style = 3;
-        objectToMerge.label.fillColor = 4;
-        objectToMerge.label.outlineColor = 5;
-        objectToMerge.label.horizontalOrigin = 6;
-        objectToMerge.label.verticalOrigin = 7;
-        objectToMerge.label.eyeOffset = 8;
-        objectToMerge.label.pixelOffset = 9;
-        objectToMerge.label.scale = 10;
-        objectToMerge.label.show = 11;
+        objectToMerge.label.text = new MockProperty();
+        objectToMerge.label.font = new MockProperty();
+        objectToMerge.label.style = new MockProperty();
+        objectToMerge.label.fillColor = new MockProperty();
+        objectToMerge.label.outlineColor = new MockProperty();
+        objectToMerge.label.outlineWidth = new MockProperty();
+        objectToMerge.label.horizontalOrigin = new MockProperty();
+        objectToMerge.label.verticalOrigin = new MockProperty();
+        objectToMerge.label.eyeOffset = new MockProperty();
+        objectToMerge.label.pixelOffset = new MockProperty();
+        objectToMerge.label.scale = new MockProperty();
+        objectToMerge.label.show = new MockProperty();
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.label = new DynamicLabel();
@@ -165,6 +174,7 @@ defineSuite([
         targetObject.label.style = expectedStyle;
         targetObject.label.fillColor = expectedFillColor;
         targetObject.label.outlineColor = expectedOutlineColor;
+        targetObject.label.outlineWidth = expectedOutlineWidth;
         targetObject.label.horizontalOrigin = expectedHorizontalOrigin;
         targetObject.label.verticalOrigin = expectedVerticalOrigin;
         targetObject.label.eyeOffset = expectedEyeOffset;
@@ -179,6 +189,7 @@ defineSuite([
         expect(targetObject.label.style).toEqual(expectedStyle);
         expect(targetObject.label.fillColor).toEqual(expectedFillColor);
         expect(targetObject.label.outlineColor).toEqual(expectedOutlineColor);
+        expect(targetObject.label.outlineWidth).toEqual(expectedOutlineWidth);
         expect(targetObject.label.horizontalOrigin).toEqual(expectedHorizontalOrigin);
         expect(targetObject.label.verticalOrigin).toEqual(expectedVerticalOrigin);
         expect(targetObject.label.eyeOffset).toEqual(expectedEyeOffset);
@@ -190,17 +201,18 @@ defineSuite([
     it('mergeProperties creates and configures an undefined label', function() {
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.label = new DynamicLabel();
-        objectToMerge.text = 1;
-        objectToMerge.font = 2;
-        objectToMerge.style = 3;
-        objectToMerge.fillColor = 4;
-        objectToMerge.outlineColor = 5;
-        objectToMerge.horizontalOrigin = 6;
-        objectToMerge.verticalOrigin = 7;
-        objectToMerge.eyeOffset = 8;
-        objectToMerge.pixelOffset = 9;
-        objectToMerge.scale = 10;
-        objectToMerge.show = 11;
+        objectToMerge.label.text = new MockProperty();
+        objectToMerge.label.font = new MockProperty();
+        objectToMerge.label.style = new MockProperty();
+        objectToMerge.label.fillColor = new MockProperty();
+        objectToMerge.label.outlineColor = new MockProperty();
+        objectToMerge.label.outlineWidth = new MockProperty();
+        objectToMerge.label.horizontalOrigin = new MockProperty();
+        objectToMerge.label.verticalOrigin = new MockProperty();
+        objectToMerge.label.eyeOffset = new MockProperty();
+        objectToMerge.label.pixelOffset = new MockProperty();
+        objectToMerge.label.scale = new MockProperty();
+        objectToMerge.label.show = new MockProperty();
 
         var targetObject = new DynamicObject('targetObject');
 
@@ -211,6 +223,7 @@ defineSuite([
         expect(targetObject.label.style).toEqual(objectToMerge.label.style);
         expect(targetObject.label.fillColor).toEqual(objectToMerge.label.fillColor);
         expect(targetObject.label.outlineColor).toEqual(objectToMerge.label.outlineColor);
+        expect(targetObject.label.outlineWidth).toEqual(objectToMerge.label.outlineWidth);
         expect(targetObject.label.horizontalOrigin).toEqual(objectToMerge.label.horizontalOrigin);
         expect(targetObject.label.verticalOrigin).toEqual(objectToMerge.label.verticalOrigin);
         expect(targetObject.label.eyeOffset).toEqual(objectToMerge.label.eyeOffset);
@@ -220,17 +233,18 @@ defineSuite([
     });
 
     it('mergeProperties does not change when used with an undefined label', function() {
-        var expectedText = 12;
-        var expectedFont = 13;
-        var expectedStyle = 14;
-        var expectedFillColor = 15;
-        var expectedOutlineColor = 16;
-        var expectedHorizontalOrigin = 17;
-        var expectedVerticalOrigin = 18;
-        var expectedEyeOffset = 19;
-        var expectedPixelOffset = 20;
-        var expectedScale = 21;
-        var expectedShow = 22;
+        var expectedText = new MockProperty();
+        var expectedFont = new MockProperty();
+        var expectedStyle = new MockProperty();
+        var expectedFillColor = new MockProperty();
+        var expectedOutlineColor = new MockProperty();
+        var expectedOutlineWidth = new MockProperty();
+        var expectedHorizontalOrigin = new MockProperty();
+        var expectedVerticalOrigin = new MockProperty();
+        var expectedEyeOffset = new MockProperty();
+        var expectedPixelOffset = new MockProperty();
+        var expectedScale = new MockProperty();
+        var expectedShow = new MockProperty();
 
         var objectToMerge = new DynamicObject('objectToMerge');
 
@@ -241,6 +255,7 @@ defineSuite([
         targetObject.label.style = expectedStyle;
         targetObject.label.fillColor = expectedFillColor;
         targetObject.label.outlineColor = expectedOutlineColor;
+        targetObject.label.outlineWidth = expectedOutlineWidth;
         targetObject.label.horizontalOrigin = expectedHorizontalOrigin;
         targetObject.label.verticalOrigin = expectedVerticalOrigin;
         targetObject.label.eyeOffset = expectedEyeOffset;
@@ -255,6 +270,7 @@ defineSuite([
         expect(targetObject.label.style).toEqual(expectedStyle);
         expect(targetObject.label.fillColor).toEqual(expectedFillColor);
         expect(targetObject.label.outlineColor).toEqual(expectedOutlineColor);
+        expect(targetObject.label.outlineWidth).toEqual(expectedOutlineWidth);
         expect(targetObject.label.horizontalOrigin).toEqual(expectedHorizontalOrigin);
         expect(targetObject.label.verticalOrigin).toEqual(expectedVerticalOrigin);
         expect(targetObject.label.eyeOffset).toEqual(expectedEyeOffset);
