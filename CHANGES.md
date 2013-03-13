@@ -7,10 +7,11 @@ Beta Releases
 ### b15 - 2013-04-01
 
 * Breaking changes:
-   *
+   * Removed `clampToPixel` property from `BillboardCollection` and `LabelCollection`.  This options is no longer be needed due to overall LabelCollection visualization improvements.
 * Added `BoundingSphere.fromCornerPoints`.
 * Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
-* Added `DynamicPath.resolution` property for setting the maximum step size, in seconds, to take when sampling a position for path visualization. 
+* Added `DynamicPath.resolution` property for setting the maximum step size, in seconds, to take when sampling a position for path visualization.
+* Added `TileCoordinatesImageryProvider` that renders imagery with tile X, Y, Level coordinates on the surface of the globe.  This is mostly useful for debugging. 
 
 ### b14 - 2013-03-01
 

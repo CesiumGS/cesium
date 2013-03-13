@@ -167,6 +167,19 @@ define([
     };
 
     /**
+     * Gets the proxy used by this provider.
+     *
+     * @memberof WebMapServiceImageryProvider
+     *
+     * @returns {Proxy} The proxy.
+     *
+     * @see DefaultProxy
+     */
+    WebMapServiceImageryProvider.prototype.getProxy = function() {
+        return this._proxy;
+    };
+
+    /**
      * Gets the names of the WMS layers, separated by commas.
      *
      * @memberof WebMapServiceImageryProvider

@@ -145,6 +145,7 @@ defineSuite([
         label.style = new MockProperty(LabelStyle.FILL);
         label.fillColor = new MockProperty(new Color(0.5, 0.8, 0.6, 0.7));
         label.outlineColor = new MockProperty(new Color(0.4, 0.3, 0.2, 0.1));
+        label.outlineWidth = new MockProperty(4.5);
         label.horizontalOrigin = new MockProperty(HorizontalOrigin.RIGHT);
         label.verticalOrigin = new MockProperty(VerticalOrigin.TOP);
         label.eyeOffset = new MockProperty(new Cartesian3(1.0, 2.0, 3.0));
@@ -165,6 +166,7 @@ defineSuite([
         expect(l.getStyle()).toEqual(testObject.label.style.getValue(time));
         expect(l.getFillColor()).toEqual(testObject.label.fillColor.getValue(time));
         expect(l.getOutlineColor()).toEqual(testObject.label.outlineColor.getValue(time));
+        expect(l.getOutlineWidth()).toEqual(testObject.label.outlineWidth.getValue(time));
         expect(l.getHorizontalOrigin()).toEqual(testObject.label.horizontalOrigin.getValue(time));
         expect(l.getVerticalOrigin()).toEqual(testObject.label.verticalOrigin.getValue(time));
         expect(l.getEyeOffset()).toEqual(testObject.label.eyeOffset.getValue(time));
@@ -178,6 +180,7 @@ defineSuite([
         label.style = new MockProperty(LabelStyle.FILL_AND_OUTLINE);
         label.fillColor = new MockProperty(new Color(0.1, 0.2, 0.3, 0.4));
         label.outlineColor = new MockProperty(new Color(0.8, 0.7, 0.6, 0.5));
+        label.outlineWidth = new MockProperty(0.5);
         label.horizontalOrigin = new MockProperty(HorizontalOrigin.CENTER);
         label.verticalOrigin = new MockProperty(VerticalOrigin.BOTTOM);
         label.eyeOffset = new MockProperty(new Cartesian3(3.0, 1.0, 2.0));
@@ -192,6 +195,7 @@ defineSuite([
         expect(l.getStyle()).toEqual(testObject.label.style.getValue(time));
         expect(l.getFillColor()).toEqual(testObject.label.fillColor.getValue(time));
         expect(l.getOutlineColor()).toEqual(testObject.label.outlineColor.getValue(time));
+        expect(l.getOutlineWidth()).toEqual(testObject.label.outlineWidth.getValue(time));
         expect(l.getHorizontalOrigin()).toEqual(testObject.label.horizontalOrigin.getValue(time));
         expect(l.getVerticalOrigin()).toEqual(testObject.label.verticalOrigin.getValue(time));
         expect(l.getEyeOffset()).toEqual(testObject.label.eyeOffset.getValue(time));

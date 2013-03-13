@@ -228,6 +228,7 @@ define([
             label.setFont('30px sans-serif');
             label.setFillColor(Color.WHITE);
             label.setOutlineColor(Color.BLACK);
+            label.setOutlineWidth(1);
             label.setStyle(LabelStyle.FILL);
             label.setPixelOffset(Cartesian2.ZERO);
             label.setEyeOffset(Cartesian3.ZERO);
@@ -278,6 +279,14 @@ define([
             outlineColor = property.getValue(time, outlineColor);
             if (typeof outlineColor !== 'undefined') {
                 label.setOutlineColor(outlineColor);
+            }
+        }
+
+        property = dynamicLabel.outlineWidth;
+        if (typeof property !== 'undefined') {
+            var outlineWidth = property.getValue(time);
+            if (typeof outlineWidth !== 'undefined') {
+                label.setOutlineWidth(outlineWidth);
             }
         }
 
