@@ -148,6 +148,7 @@ require([
                     var pt = terrainSamplePoints[i];
                     billboards.add({
                         position : ellipsoid.cartographicToCartesian(pt),
+                        verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
                         scale : 0.7,
                         imageIndex : 0
                     });
@@ -157,7 +158,7 @@ require([
                         text : pt.height.toFixed(1),
                         horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
                         scale : 0.3,
-                        pixelOffset : new Cesium.Cartesian2(0,8),
+                        pixelOffset : new Cesium.Cartesian2(0,14),
                         fillColor : new Cesium.Color(1,0,0),
                         outlineColor : Cesium.Color.WHITE
                     });
@@ -190,7 +191,7 @@ require([
                     }
                 }
                 
-                Cesium.when(Cesium.terrainSample(centralBody.terrainProvider, 9, scene.getContext(), terrainSamplePoints), elevationSuccess);
+                Cesium.when(Cesium.terrainSample(centralBody.terrainProvider, 11, terrainSamplePoints), elevationSuccess);
                 }
             }).placeAt('sampleButtons');
         }

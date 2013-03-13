@@ -22,7 +22,7 @@ define([
      * requesting tiles from a terrain provider, sampling and interpolating.
      * Each point height is modified in place.
      */
-    var terrainSample = function(terrainProvider, level, context, pts) {
+    var terrainSample = function(terrainProvider, level, pts) {
         level = defaultValue(level, 2);
 
         var tilingScheme = terrainProvider.getTilingScheme();
