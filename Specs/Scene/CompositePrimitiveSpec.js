@@ -75,7 +75,6 @@ defineSuite([
     function createLabels(position) {
         position = position || { x : -1.0, y : 0.0, z : 0.0 };
         var labels = new LabelCollection();
-        labels.clampToPixel = false;
         labels.add({
             position : position,
             text : 'x',
