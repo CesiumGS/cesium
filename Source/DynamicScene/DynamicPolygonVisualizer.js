@@ -1,12 +1,18 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/Ellipsoid',
+        '../Core/Shapes',
         '../Scene/Polygon',
         '../Scene/Material'
        ], function(
          DeveloperError,
+         defaultValue,
          destroyObject,
+         Ellipsoid,
+         Shapes,
          Polygon,
          Material) {
     "use strict";
@@ -46,6 +52,8 @@ define([
         this._primitives = scene.getPrimitives();
         this._polygonCollection = [];
         this._dynamicObjectCollection = undefined;
+        var cb = scene._primitives.getCentralBody();
+        this._ellipsoid = (typeof cb !== 'undefined') ? cb.getEllipsoid() : Ellipsoid.WGS84;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
 
@@ -173,12 +181,18 @@ define([
             return;
         }
 
+        var ellipseProperty = dynamicObject.ellipse;
+        var positionProperty = dynamicObject.position;
+
         var vertexPositionsProperty = dynamicObject.vertexPositions;
-        if (typeof vertexPositionsProperty === 'undefined') {
+        if (typeof vertexPositionsProperty === 'undefined' && (typeof ellipseProperty === 'undefined' && typeof positionProperty === 'undefined')) {
             return;
         }
 
-        var vertexPositions = vertexPositionsProperty.getValueCartesian(time);
+        var vertexPositions;
+        if(typeof vertexPositionsProperty !== 'undefined'){
+            vertexPositions = vertexPositionsProperty.getValueCartesian(time);
+        }
 
         var polygon;
         var showProperty = dynamicPolygon.show;
@@ -186,7 +200,7 @@ define([
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
 
-        if (!show || typeof vertexPositions === 'undefined' || vertexPositions.length < 3) {
+        if (!show || ((typeof vertexPositions === 'undefined' || vertexPositions.length < 3) && typeof ellipseProperty ==='undefined')) {
             //don't bother creating or updating anything else
             if (typeof polygonVisualizerIndex !== 'undefined') {
                 polygon = this._polygonCollection[polygonVisualizerIndex];
@@ -220,10 +234,35 @@ define([
         }
 
         polygon.show = true;
+        if(typeof ellipseProperty !== 'undefined'){
+            var position = defaultValue(positionProperty.getValueCartesian(time, position), polygon._visualizerPosition);
+            var semiMajorAxis = defaultValue(ellipseProperty.semiMajorAxis.getValue(time, semiMajorAxis), polygon._visualizerSemiMajorAxis);
+            var semiMinorAxis = defaultValue(ellipseProperty.semiMinorAxis.getValue(time, semiMinorAxis), polygon._visualizerSemiMinorAxis);
+            var bearing = defaultValue(ellipseProperty.bearing.getValue(time, bearing), polygon._visualizerBearing);
 
-        if (polygon._visualizerPositions !== vertexPositions) {
-            polygon.setPositions(vertexPositions);
-            polygon._visualizerPositions = vertexPositions;
+            if (typeof position !== 'undefined' &&
+                    typeof bearing !== 'undefined' &&
+                    typeof semiMajorAxis !== 'undefined' &&
+                    typeof semiMinorAxis !== 'undefined' &&
+                    semiMajorAxis !== 0.0 &&
+                    semiMinorAxis !== 0.0 &&
+                    (!position.equals(polygon._visualizerPosition) ||
+                            !bearing.equals(polygon._visualizerBearing) ||
+                            !semiMajorAxis.equals(polygon._visualizerSemiMajorAxis) ||
+                            !semiMinorAxis.equals(polygon._visualizerSemiMinorAxis))) {
+                polygon._visualizerPosition = position;
+                polygon._visualizerBearing = bearing;
+                polygon._visualizerSemiMajorAxis = semiMajorAxis;
+                polygon._visualizerSemiMinorAxis = semiMinorAxis;
+                var positions = Shapes.computeEllipseBoundary(this._ellipsoid, position, semiMajorAxis, semiMinorAxis, bearing);
+                polygon.setPositions(positions);
+
+            }
+        } else{
+            if (polygon._visualizerPositions !== vertexPositions) {
+                polygon.setPositions(vertexPositions);
+                polygon._visualizerPositions = vertexPositions;
+            }
         }
 
         var material = dynamicPolygon.material;

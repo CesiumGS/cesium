@@ -35,11 +35,6 @@ define([
      */
     var DynamicEllipse = function () {
         /**
-         * A DynamicProperty of type CzmlBoolean which determines the ellipse's visibility.
-         * @type DynamicProperty
-         */
-        this.show = undefined;
-        /**
          * A DynamicProperty of type CzmlNumber which determines the ellipse's semiMajorAxis.
          * @type DynamicProperty
          */
@@ -55,18 +50,6 @@ define([
          * @type DynamicProperty
          */
         this.bearing = undefined;
-
-        /**
-         * A DynamicProperty of type CzmlColor which determines the ellipse's line color.
-         * @type DynamicProperty
-         */
-        this.color = undefined;
-
-        /**
-         * A DynamicMaterialProperty which determines the inner material of the ellipse.
-         * @type DynamicMaterialProperty
-         */
-        this.material = undefined;
     };
 
     /**
@@ -104,15 +87,6 @@ define([
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof ellipseData.show !== 'undefined') {
-            var show = ellipse.show;
-            if (typeof show === 'undefined') {
-                ellipse.show = show = new DynamicProperty(CzmlBoolean);
-                ellipseUpdated = true;
-            }
-            show.processCzmlIntervals(ellipseData.show, interval);
-        }
-
         if (typeof ellipseData.bearing !== 'undefined') {
             var bearing = ellipse.bearing;
             if (typeof bearing === 'undefined') {
@@ -140,24 +114,6 @@ define([
             semiMinorAxis.processCzmlIntervals(ellipseData.semiMinorAxis, interval);
         }
 
-        if (typeof ellipseData.color !== 'undefined') {
-            var color = ellipse.color;
-            if (typeof color === 'undefined') {
-                ellipse.color = color = new DynamicProperty(CzmlColor);
-                ellipseUpdated = true;
-            }
-            color.processCzmlIntervals(ellipseData.color, interval);
-        }
-
-        if (typeof ellipseData.material !== 'undefined') {
-            var material = ellipse.material;
-            if (typeof material === 'undefined') {
-                ellipse.material = material = new DynamicMaterialProperty();
-                ellipseUpdated = true;
-            }
-            material.processCzmlIntervals(ellipseData.material, interval);
-        }
-
         return ellipseUpdated;
     };
 
@@ -181,12 +137,9 @@ define([
                 targetObject.ellipse = targetEllipse = new DynamicEllipse();
             }
 
-            targetEllipse.show = defaultValue(targetEllipse.show, ellipseToMerge.show);
             targetEllipse.bearing = defaultValue(targetEllipse.bearing, ellipseToMerge.bearing);
             targetEllipse.semiMajorAxis = defaultValue(targetEllipse.semiMajorAxis, ellipseToMerge.semiMajorAxis);
             targetEllipse.semiMinorAxis = defaultValue(targetEllipse.semiMinorAxis, ellipseToMerge.semiMinorAxis);
-            targetEllipse.color = defaultValue(targetEllipse.color, ellipseToMerge.color);
-            targetEllipse.material = defaultValue(targetEllipse.material, ellipseToMerge.material);
         }
     };
 

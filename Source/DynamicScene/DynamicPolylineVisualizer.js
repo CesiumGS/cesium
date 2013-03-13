@@ -1,13 +1,19 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
+        '../Core/Ellipsoid',
+        '../Core/Shapes',
         '../Scene/PolylineCollection'
        ], function(
+         defaultValue,
          DeveloperError,
          destroyObject,
          Color,
+         Ellipsoid,
+         Shapes,
          PolylineCollection) {
     "use strict";
 
@@ -46,6 +52,8 @@ define([
         this._primitives = scene.getPrimitives();
         var polylineCollection = this._polylineCollection = new PolylineCollection();
         scene.getPrimitives().add(polylineCollection);
+        var cb = scene._primitives.getCentralBody();
+        this._ellipsoid = (typeof cb !== 'undefined') ? cb.getEllipsoid() : Ellipsoid.WGS84;
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -171,10 +179,16 @@ define([
             return;
         }
 
+        var ellipseProperty = dynamicObject.ellipse;
+        var positionProperty = dynamicObject.position;
+
         var vertexPositionsProperty = dynamicObject.vertexPositions;
-        if (typeof vertexPositionsProperty === 'undefined') {
+        if (typeof vertexPositionsProperty === 'undefined' && (typeof ellipseProperty === 'undefined' && typeof positionProperty === 'undefined')) {
             return;
         }
+
+
+
 
         var polyline;
         var showProperty = dynamicPolyline.show;
@@ -215,11 +229,36 @@ define([
         }
 
         polyline.setShow(true);
+        if(typeof ellipseProperty !== 'undefined'){
+            var position = defaultValue(positionProperty.getValueCartesian(time, position), polyline._visualizerPosition);
+            var semiMajorAxis = defaultValue(ellipseProperty.semiMajorAxis.getValue(time, semiMajorAxis), polyline._visualizerSemiMajorAxis);
+            var semiMinorAxis = defaultValue(ellipseProperty.semiMinorAxis.getValue(time, semiMinorAxis), polyline._visualizerSemiMinorAxis);
+            var bearing = defaultValue(ellipseProperty.bearing.getValue(time, bearing), polyline._visualizerBearing);
 
-        var vertexPositions = vertexPositionsProperty.getValueCartesian(time);
-        if (typeof vertexPositions !== 'undefined' && polyline._visualizerPositions !== vertexPositions) {
-            polyline.setPositions(vertexPositions);
-            polyline._visualizerPositions = vertexPositions;
+            if (typeof position !== 'undefined' &&
+                    typeof bearing !== 'undefined' &&
+                    typeof semiMajorAxis !== 'undefined' &&
+                    typeof semiMinorAxis !== 'undefined' &&
+                    semiMajorAxis !== 0.0 &&
+                    semiMinorAxis !== 0.0 &&
+                    (!position.equals(polyline._visualizerPosition) ||
+                            !bearing.equals(polyline._visualizerBearing) ||
+                            !semiMajorAxis.equals(polyline._visualizerSemiMajorAxis) ||
+                            !semiMinorAxis.equals(polyline._visualizerSemiMinorAxis))) {
+                polyline._visualizerPosition = position;
+                polyline._visualizerBearing = bearing;
+                polyline._visualizerSemiMajorAxis = semiMajorAxis;
+                polyline._visualizerSemiMinorAxis = semiMinorAxis;
+                var positions = Shapes.computeEllipseBoundary(this._ellipsoid, position, semiMajorAxis, semiMinorAxis, bearing);
+                polyline.setPositions(positions);
+
+            }
+        } else{
+            var vertexPositions = vertexPositionsProperty.getValueCartesian(time);
+            if (typeof vertexPositions !== 'undefined' && polyline._visualizerPositions !== vertexPositions) {
+                polyline.setPositions(vertexPositions);
+                polyline._visualizerPositions = vertexPositions;
+            }
         }
 
         var property = dynamicPolyline.color;

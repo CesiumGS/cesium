@@ -12,7 +12,6 @@ define([
         './DynamicPolyline',
         './DynamicPyramid',
         './DynamicBillboardVisualizer',
-        './DynamicEllipseVisualizer',
         './DynamicEllipsoidVisualizer',
         './DynamicConeVisualizerUsingCustomSensor', //CZML_TODO Replace with './DynamicConeVisualizer', once ComplexConicSensor works.
         './DynamicLabelVisualizer',
@@ -34,7 +33,6 @@ define([
                 DynamicPolyline,
                 DynamicPyramid,
                 DynamicBillboardVisualizer,
-                DynamicEllipseVisualizer,
                 DynamicEllipsoidVisualizer,
                 DynamicConeVisualizer,
                 DynamicLabelVisualizer,
@@ -127,7 +125,6 @@ define([
         */
        createVisualizers : function(scene) {
            return [new DynamicBillboardVisualizer(scene),
-                   new DynamicEllipseVisualizer(scene),
                    new DynamicEllipsoidVisualizer(scene),
                    new DynamicConeVisualizer(scene),
                    new DynamicLabelVisualizer(scene),
