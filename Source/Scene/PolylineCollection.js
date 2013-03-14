@@ -758,94 +758,35 @@ define([
                         offsetInBytes : vertexMiscBufferOffset
                     }];
 
-                    var attributesPickColor = [{
-                        index : attributeIndices.position3DHigh,
-                        componentsPerAttribute : 3,
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        offsetInBytes : positionHighOffset,
-                        strideInBytes : 2 * positionSizeInBytes
-                    }, {
-                        index : attributeIndices.position3DLow,
-                        componentsPerAttribute : 3,
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        offsetInBytes : positionLowOffset,
-                        strideInBytes : 2 * positionSizeInBytes
-                    }, {
-                        index : attributeIndices.position2DHigh,
-                        componentsPerAttribute : 3,
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        offsetInBytes : positionHighOffset,
-                        strideInBytes : 2 * positionSizeInBytes
-                    }, {
-                        index : attributeIndices.position2DLow,
-                        componentsPerAttribute : 3,
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        offsetInBytes : positionLowOffset,
-                        strideInBytes : 2 * positionSizeInBytes
-                    }, {
-                        index : attributeIndices.prev,
-                        componentsPerAttribute : 4,
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        vertexBuffer : this._adjacencyBuffer,
-                        offsetInBytes : prevOffset,
-                        strideInBytes : 2 * adjacencySizeInBytes
-                    }, {
-                        index : attributeIndices.next,
-                        componentsPerAttribute : 4,
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        vertexBuffer : this._adjacencyBuffer,
-                        offsetInBytes : nextOffset,
-                        strideInBytes : 2 * adjacencySizeInBytes
-                    }, {
-                        index : attributeIndices.color,
-                        componentsPerAttribute : 4,
-                        normalize : true,
-                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                        vertexBuffer : this._pickColorBuffer,
-                        offsetInBytes : vertexPickColorBufferOffset
-                    }, {
-                        index : attributeIndices.misc,
-                        componentsPerAttribute : 4,
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        vertexBuffer : this._miscBuffer,
-                        offsetInBytes : vertexMiscBufferOffset
-                    }];
-
                     if (this._mode === SceneMode.SCENE3D) {
                         attributes[0].vertexBuffer = this._positionBuffer;
                         attributes[1].vertexBuffer = this._positionBuffer;
                         attributes[2].value = [0.0, 0.0, 0.0];
                         attributes[3].value = [0.0, 0.0, 0.0];
-                        attributesPickColor[0].vertexBuffer = this._positionBuffer;
-                        attributesPickColor[1].vertexBuffer = this._positionBuffer;
-                        attributesPickColor[2].value = [0.0, 0.0, 0.0];
-                        attributesPickColor[3].value = [0.0, 0.0, 0.0];
                     } else if (this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW) {
                         attributes[0].value = [0.0, 0.0, 0.0];
                         attributes[1].value = [0.0, 0.0, 0.0];
                         attributes[2].vertexBuffer = this._positionBuffer;
                         attributes[3].vertexBuffer = this._positionBuffer;
-                        attributesPickColor[0].value = [0.0, 0.0, 0.0];
-                        attributesPickColor[1].value = [0.0, 0.0, 0.0];
-                        attributesPickColor[2].vertexBuffer = this._positionBuffer;
-                        attributesPickColor[3].vertexBuffer = this._positionBuffer;
                     } else {
                         attributes[0].vertexBuffer = position3DBuffer;
                         attributes[1].vertexBuffer = position3DBuffer;
                         attributes[2].vertexBuffer = this._positionBuffer;
                         attributes[3].vertexBuffer = this._positionBuffer;
-                        attributesPickColor[0].vertexBuffer = position3DBuffer;
-                        attributesPickColor[1].vertexBuffer = position3DBuffer;
-                        attributesPickColor[2].vertexBuffer = this._positionBuffer;
-                        attributesPickColor[3].vertexBuffer = this._positionBuffer;
                     }
 
                     var va = context.createVertexArray(attributes, indexBuffer);
-                    var vaPickColor = context.createVertexArray(attributesPickColor, indexBuffer);
                     this._colorVertexArrays.push({
                         va : va,
                         buckets : vertexArrayBuckets[k]
                     });
+
+                    attributes[6].componentDatatype = ComponentDatatype.UNSIGNED_BYTE;
+                    attributes[6].vertexBuffer = this._pickColorBuffer;
+                    attributes[6].offsetInBytes = vertexPickColorBufferOffset;
+                    attributes[6].normalize = true;
+
+                    var vaPickColor = context.createVertexArray(attributes, indexBuffer);
                     this._pickColorVertexArrays.push({
                         va : vaPickColor,
                         buckets : vertexArrayBuckets[k]
