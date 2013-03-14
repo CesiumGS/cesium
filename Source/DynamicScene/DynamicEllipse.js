@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/Shapes',
         './CzmlBoolean',
         './CzmlCartesian3',
         './CzmlColor',
@@ -11,6 +12,7 @@ define([
         ], function (
                 TimeInterval,
                 defaultValue,
+                Shapes,
                 CzmlBoolean,
                 CzmlCartesian3,
                 CzmlColor,
@@ -50,6 +52,12 @@ define([
          * @type DynamicProperty
          */
         this.bearing = undefined;
+
+        this._cachedPosition = undefined;
+        this._cachedSemiMajorAxis = 0;
+        this._cachedSemiMinorAxis = 0;
+        this._cachedBearing = 0;
+        this._cachedVertexPositions = undefined;
     };
 
     /**
@@ -154,6 +162,47 @@ define([
      */
     DynamicEllipse.undefineProperties = function (dynamicObject) {
         dynamicObject.ellipse = undefined;
+    };
+
+    /**
+     * Gets an array of vertex positions for the ellipse at the provided time.
+     *
+     * @param {JulianDate} time The desired time.
+     * @param {Ellipsoid} ellipsoid The ellipsoid on which the ellipse will be on.
+     * @param {DynamicObject} positionProperty The DynamicObject which contains the position data.
+     * @returns An array of vertex positions.
+     */
+    DynamicEllipse.prototype.getValue = function(time, ellipsoid, positionProperty){
+        var position = defaultValue(positionProperty.getValueCartesian(time, position), this._cachedPosition);
+        var semiMajorAxisProperty = this.semiMajorAxis;
+        var semiMinorAxisProperty = this.semiMinorAxis;
+        var bearingProperty = this.bearing;
+        if(typeof semiMajorAxisProperty === 'undefined' && typeof semiMinorAxisProperty === 'undefined' ){
+            return;
+        }
+        var semiMajorAxis = defaultValue(semiMajorAxisProperty.getValue(time, semiMajorAxis), this._cachedSemiMajorAxis);
+        var semiMinorAxis = defaultValue(semiMinorAxisProperty.getValue(time, semiMinorAxis), this._cachedSemiMinorAxis);
+        var bearing = 0.00;
+        if(bearingProperty !== 'undefined'){
+            bearing = defaultValue(bearingProperty.getValue(time, bearing), this._cachedBearing);
+        }
+        if (typeof position !== 'undefined' &&
+                typeof bearing !== 'undefined' &&
+                typeof semiMajorAxis !== 'undefined' &&
+                typeof semiMinorAxis !== 'undefined' &&
+                semiMajorAxis !== 0.0 &&
+                semiMinorAxis !== 0.0 &&
+                (!position.equals(this._cachedPosition) ||
+                        bearing !== this._cachedBearing ||
+                        semiMajorAxis !== this._cachedSemiMajorAxis ||
+                        semiMinorAxis !== this._cachedSemiMinorAxis)) {
+            this._cachedPosition = position;
+            this._cachedBearing = bearing;
+            this._cachedSemiMajorAxis = semiMajorAxis;
+            this._cachedSemiMinorAxis = semiMinorAxis;
+            this._cachedVertexPositions = Shapes.computeEllipseBoundary(ellipsoid, position, semiMajorAxis, semiMinorAxis, bearing);
+        }
+        return this._cachedVertexPositions;
     };
 
     return DynamicEllipse;

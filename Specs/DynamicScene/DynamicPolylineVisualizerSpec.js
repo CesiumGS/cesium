@@ -165,7 +165,7 @@ defineSuite([
 
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
-        var polylineCollection = scene.getPrimitives().get(0);
+        polylineCollection = scene.getPrimitives().get(0);
         primitive = polylineCollection.get(0);
         expect(primitive.getShow()).toEqual(testObject.polyline.show.getValue(time));
         expect(primitive.getPositions().length > 0);

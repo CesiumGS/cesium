@@ -235,42 +235,12 @@ define([
 
         polygon.show = true;
         if(typeof ellipseProperty !== 'undefined'){
-            var position = defaultValue(positionProperty.getValueCartesian(time, position), polygon._visualizerPosition);
-            var semiMajorAxisProperty = ellipseProperty.semiMajorAxis;
-            var semiMinorAxisProperty = ellipseProperty.semiMinorAxis;
-            var bearingProperty = ellipseProperty.bearing;
-            if(typeof semiMajorAxisProperty === 'undefined' && typeof semiMinorAxisProperty === 'undefined' ){
-                return
-            }
-            var semiMajorAxis = defaultValue(semiMajorAxisProperty.getValue(time, semiMajorAxis), polygon._visualizerSemiMajorAxis);
-            var semiMinorAxis = defaultValue(semiMinorAxisProperty.getValue(time, semiMinorAxis), polygon._visualizerSemiMinorAxis);
-            var bearing = 0.00;
-            if(bearingProperty !== 'undefined'){
-                bearing = defaultValue(bearingProperty.getValue(time, bearing), polygon._visualizerBearing);
-            }
-            if (typeof position !== 'undefined' &&
-                    typeof bearing !== 'undefined' &&
-                    typeof semiMajorAxis !== 'undefined' &&
-                    typeof semiMinorAxis !== 'undefined' &&
-                    semiMajorAxis !== 0.0 &&
-                    semiMinorAxis !== 0.0 &&
-                    (!position.equals(polygon._visualizerPosition) ||
-                            bearing !== polygon._visualizerBearing ||
-                            semiMajorAxis !== polygon._visualizerSemiMajorAxis ||
-                            semiMinorAxis !== polygon._visualizerSemiMinorAxis)) {
-                polygon._visualizerPosition = position;
-                polygon._visualizerBearing = bearing;
-                polygon._visualizerSemiMajorAxis = semiMajorAxis;
-                polygon._visualizerSemiMinorAxis = semiMinorAxis;
-                var positions = Shapes.computeEllipseBoundary(this._ellipsoid, position, semiMajorAxis, semiMinorAxis, bearing);
-                polygon.setPositions(positions);
+            vertexPositions = ellipseProperty.getValue(time, this._ellipsoid, positionProperty);
+        }
 
-            }
-        } else{
-            if (polygon._visualizerPositions !== vertexPositions) {
-                polygon.setPositions(vertexPositions);
-                polygon._visualizerPositions = vertexPositions;
-            }
+        if (polygon._visualizerPositions !== vertexPositions) {
+            polygon.setPositions(vertexPositions);
+            polygon._visualizerPositions = vertexPositions;
         }
 
         var material = dynamicPolygon.material;
