@@ -70,6 +70,11 @@ define([
          */
         this.outlineColor = undefined;
         /**
+         * A DynamicProperty of type CzmlNumber which determines the label's outline width.
+         * @type DynamicProperty
+         */
+        this.outlineWidth = undefined;
+        /**
          * A DynamicProperty of type CzmlHorizontalOrigin which determines the label's horizontal origin.
          * @type DynamicProperty
          */
@@ -150,6 +155,15 @@ define([
                 labelUpdated = true;
             }
             outlineColor.processCzmlIntervals(labelData.outlineColor, interval);
+        }
+
+        if (typeof labelData.outlineWidth !== 'undefined') {
+            var outlineWidth = label.outlineWidth;
+            if (typeof outlineWidth === 'undefined') {
+                label.outlineWidth = outlineWidth = new DynamicProperty(CzmlNumber);
+                labelUpdated = true;
+            }
+            outlineWidth.processCzmlIntervals(labelData.outlineWidth, interval);
         }
 
         if (typeof labelData.eyeOffset !== 'undefined') {
@@ -261,6 +275,7 @@ define([
             targetLabel.style = defaultValue(targetLabel.style, labelToMerge.style);
             targetLabel.fillColor = defaultValue(targetLabel.fillColor, labelToMerge.fillColor);
             targetLabel.outlineColor = defaultValue(targetLabel.outlineColor, labelToMerge.outlineColor);
+            targetLabel.outlineWidth = defaultValue(targetLabel.outlineWidth, labelToMerge.outlineWidth);
             targetLabel.scale = defaultValue(targetLabel.scale, labelToMerge.scale);
             targetLabel.horizontalOrigin = defaultValue(targetLabel.horizontalOrigin, labelToMerge.horizontalOrigin);
             targetLabel.verticalOrigin = defaultValue(targetLabel.verticalOrigin, labelToMerge.verticalOrigin);
