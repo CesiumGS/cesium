@@ -92,7 +92,7 @@ define(function() {
   /**
    * The new text metrics function
    */
-  var measureText = function(context2D, textstring) {
+  var measureText = function(context2D, textstring, stroke, fill) {
     var metrics = context2D.measureText(textstring),
         fontFamily = getCSSValue(context2D.canvas,"font-family"),
         fontSize = getCSSValue(context2D.canvas,"font-size").replace("px",""),
@@ -136,9 +136,19 @@ define(function() {
         // Set all canvas pixeldata values to 255, with all the content
         // data being 0. This lets us scan for data[i] != 255.
         ctx.fillStyle = "white";
-        ctx.fillRect(-1, -1, w+2, h+2);
-        ctx.fillStyle = "black";
-        ctx.fillText(textstring, padding/2, baseline);
+        ctx.fillRect(-1, -1, w + 2, h + 2);
+
+        if (stroke) {
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = context2D.lineWidth;
+            ctx.strokeText(textstring, (padding / 2), baseline);
+        }
+
+        if (fill) {
+            ctx.fillStyle = "black";
+            ctx.fillText(textstring, padding / 2, baseline);
+        }
+
         var pixelData = ctx.getImageData(0, 0, w, h).data;
 
         // canvas pixel data is w*4 by h*4, because R, G, B and A are separate,

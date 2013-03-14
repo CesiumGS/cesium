@@ -123,6 +123,19 @@ define([
     };
 
     /**
+     * Gets the proxy used by this provider.
+     *
+     * @memberof SingleTileImageryProvider
+     *
+     * @returns {Proxy} The proxy.
+     *
+     * @see DefaultProxy
+     */
+    SingleTileImageryProvider.prototype.getProxy = function() {
+        return this._proxy;
+    };
+
+    /**
      * Gets the width of each tile, in pixels.  This function should
      * not be called before {@link SingleTileImageryProvider#isReady} returns true.
      *
