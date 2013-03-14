@@ -185,7 +185,7 @@ define([
         var positionProperty = dynamicObject.position;
 
         var vertexPositionsProperty = dynamicObject.vertexPositions;
-        if (typeof vertexPositionsProperty === 'undefined' && (typeof ellipseProperty === 'undefined' && typeof positionProperty === 'undefined')) {
+        if (typeof vertexPositionsProperty === 'undefined' && (typeof ellipseProperty === 'undefined' || typeof positionProperty === 'undefined')) {
             return;
         }
 
@@ -236,10 +236,18 @@ define([
         polygon.show = true;
         if(typeof ellipseProperty !== 'undefined'){
             var position = defaultValue(positionProperty.getValueCartesian(time, position), polygon._visualizerPosition);
-            var semiMajorAxis = defaultValue(ellipseProperty.semiMajorAxis.getValue(time, semiMajorAxis), polygon._visualizerSemiMajorAxis);
-            var semiMinorAxis = defaultValue(ellipseProperty.semiMinorAxis.getValue(time, semiMinorAxis), polygon._visualizerSemiMinorAxis);
-            var bearing = defaultValue(ellipseProperty.bearing.getValue(time, bearing), polygon._visualizerBearing);
-
+            var semiMajorAxisProperty = ellipseProperty.semiMajorAxis;
+            var semiMinorAxisProperty = ellipseProperty.semiMinorAxis;
+            var bearingProperty = ellipseProperty.bearing;
+            if(typeof semiMajorAxisProperty === 'undefined' && typeof semiMinorAxisProperty === 'undefined' ){
+                return
+            }
+            var semiMajorAxis = defaultValue(semiMajorAxisProperty.getValue(time, semiMajorAxis), polygon._visualizerSemiMajorAxis);
+            var semiMinorAxis = defaultValue(semiMinorAxisProperty.getValue(time, semiMinorAxis), polygon._visualizerSemiMinorAxis);
+            var bearing = 0.00;
+            if(bearingProperty !== 'undefined'){
+                bearing = defaultValue(bearingProperty.getValue(time, bearing), polygon._visualizerBearing);
+            }
             if (typeof position !== 'undefined' &&
                     typeof bearing !== 'undefined' &&
                     typeof semiMajorAxis !== 'undefined' &&
@@ -247,9 +255,9 @@ define([
                     semiMajorAxis !== 0.0 &&
                     semiMinorAxis !== 0.0 &&
                     (!position.equals(polygon._visualizerPosition) ||
-                            !bearing.equals(polygon._visualizerBearing) ||
-                            !semiMajorAxis.equals(polygon._visualizerSemiMajorAxis) ||
-                            !semiMinorAxis.equals(polygon._visualizerSemiMinorAxis))) {
+                            bearing !== polygon._visualizerBearing ||
+                            semiMajorAxis !== polygon._visualizerSemiMajorAxis ||
+                            semiMinorAxis !== polygon._visualizerSemiMinorAxis)) {
                 polygon._visualizerPosition = position;
                 polygon._visualizerBearing = bearing;
                 polygon._visualizerSemiMajorAxis = semiMajorAxis;

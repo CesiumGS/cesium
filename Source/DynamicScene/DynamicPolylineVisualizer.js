@@ -183,7 +183,7 @@ define([
         var positionProperty = dynamicObject.position;
 
         var vertexPositionsProperty = dynamicObject.vertexPositions;
-        if (typeof vertexPositionsProperty === 'undefined' && (typeof ellipseProperty === 'undefined' && typeof positionProperty === 'undefined')) {
+        if (typeof vertexPositionsProperty === 'undefined' && (typeof ellipseProperty === 'undefined' || typeof positionProperty === 'undefined')) {
             return;
         }
 
@@ -231,10 +231,18 @@ define([
         polyline.setShow(true);
         if(typeof ellipseProperty !== 'undefined'){
             var position = defaultValue(positionProperty.getValueCartesian(time, position), polyline._visualizerPosition);
-            var semiMajorAxis = defaultValue(ellipseProperty.semiMajorAxis.getValue(time, semiMajorAxis), polyline._visualizerSemiMajorAxis);
-            var semiMinorAxis = defaultValue(ellipseProperty.semiMinorAxis.getValue(time, semiMinorAxis), polyline._visualizerSemiMinorAxis);
-            var bearing = defaultValue(ellipseProperty.bearing.getValue(time, bearing), polyline._visualizerBearing);
-
+            var semiMajorAxisProperty = ellipseProperty.semiMajorAxis;
+            var semiMinorAxisProperty = ellipseProperty.semiMinorAxis;
+            var bearingProperty = ellipseProperty.bearing;
+            if(typeof semiMajorAxisProperty === 'undefined' && typeof semiMinorAxisProperty === 'undefined' ){
+                return
+            }
+            var semiMajorAxis = defaultValue(semiMajorAxisProperty.getValue(time, semiMajorAxis), polyline._visualizerSemiMajorAxis);
+            var semiMinorAxis = defaultValue(semiMinorAxisProperty.getValue(time, semiMinorAxis), polyline._visualizerSemiMinorAxis);
+            var bearing = 0.00;
+            if(bearingProperty !== 'undefined'){
+                bearing = defaultValue(bearingProperty.getValue(time, bearing), polyline._visualizerBearing);
+            }
             if (typeof position !== 'undefined' &&
                     typeof bearing !== 'undefined' &&
                     typeof semiMajorAxis !== 'undefined' &&
@@ -242,9 +250,9 @@ define([
                     semiMajorAxis !== 0.0 &&
                     semiMinorAxis !== 0.0 &&
                     (!position.equals(polyline._visualizerPosition) ||
-                            !bearing.equals(polyline._visualizerBearing) ||
-                            !semiMajorAxis.equals(polyline._visualizerSemiMajorAxis) ||
-                            !semiMinorAxis.equals(polyline._visualizerSemiMinorAxis))) {
+                            bearing !== polyline._visualizerBearing ||
+                            semiMajorAxis !== polyline._visualizerSemiMajorAxis ||
+                            semiMinorAxis !== polyline._visualizerSemiMinorAxis)) {
                 polyline._visualizerPosition = position;
                 polyline._visualizerBearing = bearing;
                 polyline._visualizerSemiMajorAxis = semiMajorAxis;
