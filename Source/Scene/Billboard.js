@@ -585,7 +585,7 @@ define([
     };
 
     var scratchViewportTransform = new Matrix4();
-    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, clampToPixel, uniformState, frameState, viewport) {
+    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, uniformState, frameState, viewport) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
 
         var camera = frameState.camera;
@@ -656,7 +656,7 @@ define([
 
         var modelMatrix = billboardCollection.modelMatrix;
         var viewport = billboardCollection._viewport;
-        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, this.clampToPixel, uniformState, frameState, viewport);
+        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, uniformState, frameState, viewport);
     };
 
     /**
