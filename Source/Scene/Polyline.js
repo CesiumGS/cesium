@@ -7,6 +7,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/PolylinePipeline',
+        '../Core/Matrix4',
         './Material'
     ], function(
         defaultValue,
@@ -16,6 +17,7 @@ define([
         Cartesian3,
         Color,
         PolylinePipeline,
+        Matrix4,
         Material) {
     "use strict";
 
@@ -49,15 +51,22 @@ define([
         }
 
         this._positions = positions;
-        this._positionsLength = positions.length;
-        this._actualLength = positions.length;
+
+        var modelMatrix;
+        if (typeof this._polylineCollection !== 'undefined') {
+            modelMatrix = Matrix4.clone(this._polylineCollection.modelMatrix);
+        }
+
+        this._modelMatrix = modelMatrix;
+        this._segments = PolylinePipeline.wrapLongitude(positions, modelMatrix);
+
+        this._actualLength = undefined;
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
         this._polylineCollection = polylineCollection;
         this._dirty = false;
         this._pickId = undefined;
         this._pickIdThis = description._pickIdThis;
-        this._segments = undefined;
         this._boundingVolume = BoundingSphere.fromPoints(this._positions);
         this._boundingVolume2D = new BoundingSphere(); // modified in PolylineCollection
     };
@@ -153,14 +162,35 @@ define([
             throw new DeveloperError('value is required.');
         }
 
-        if (this._positionsLength !== value.length) {
-            this._positionsLength = value.length;
+        if (this._positions.length !== value.length) {
             makeDirty(this, POSITION_SIZE_INDEX);
         }
 
         this._positions = value;
         this._boundingVolume = BoundingSphere.fromPoints(this._positions, this._boundingVolume);
         makeDirty(this, POSITION_INDEX);
+    };
+
+    /**
+     * @private
+     */
+    Polyline.prototype.update = function() {
+        var modelMatrix = Matrix4.IDENTITY;
+        if (typeof this._polylineCollection !== 'undefined') {
+            modelMatrix = this._polylineCollection.modelMatrix;
+        }
+
+        var length = this._segments.lengths.length;
+        this._modelMatrix = modelMatrix;
+
+        var positionsChanged = this._propertiesChanged[POSITION_INDEX] > 0 || this._propertiesChanged[POSITION_SIZE_INDEX] > 0;
+        if (!modelMatrix.equals(this._modelMatrix) || positionsChanged) {
+            this._segments = PolylinePipeline.wrapLongitude(this._positions, modelMatrix);
+        }
+
+        if (this._segments.lengths.length !== length) {
+            makeDirty(this, POSITION_SIZE_INDEX);
+        }
     };
 
     /**
@@ -263,22 +293,16 @@ define([
 
     /**
      * Gets the width of the polyline.
-     * The actual width used is clamped to the minimum and maximum width supported by
-     * the WebGL implementation.  These can be queried with
-     * {@link Context#getMinimumAliasedLineWidth} and {@link Context#getMaximumAliasedLineWidth}.
      *
      * @memberof Polyline
      *
      * @return {Number} The width of the polyline.
      *
      * @see Polyline#setWidth
-     * @see Context#getMinimumAliasedLineWidth
-     * @see Context#getMaximumAliasedLineWidth
      *
      * @example
-     * // 3 pixel total width, 1 pixel interior width
-     * polyline.width = 1.0;
-     * polyline.outlineWidth = 3.0;
+     * polyline.setWidth(5.0);
+     * var width = polyline.getWidth(); // 5.0
      */
     Polyline.prototype.getWidth = function() {
         return this._width;
@@ -286,22 +310,16 @@ define([
 
     /**
      * Sets the width of the polyline.
-     * The actual width used is clamped to the minimum and maximum width supported by
-     * the WebGL implementation.  These can be queried with
-     * {@link Context#getMinimumAliasedLineWidth} and {@link Context#getMaximumAliasedLineWidth}.
      *
      * @param {Number} value The width of the polyline.
      *
      * @exception {DeveloperError} value is required.
      *
      * @see Polyline#getWidth
-     * @see Context#getMinimumAliasedLineWidth
-     * @see Context#getMaximumAliasedLineWidth
      *
      * @example
-     * // 3 pixel total width, 1 pixel interior width
-     * polyline.width = 1.0;
-     * polyline.outlineWidth = 3.0;
+     * polyline.setWidth(5.0);
+     * var width = polyline.getWidth(); // 5.0
      */
     Polyline.prototype.setWidth = function(value) {
         if (typeof value === 'undefined') {
@@ -405,57 +423,6 @@ define([
         }
     };
 
-    Polyline.prototype._getPositions2D = function() {
-        var segments = this._segments;
-        var positions = [];
-        var numberOfSegments = segments.length;
-
-        for ( var i = 0; i < numberOfSegments; ++i) {
-            var segment = segments[i];
-            var segmentLength = segment.length;
-            for ( var n = 0; n < segmentLength; ++n) {
-                positions.push(segment[n].cartesian);
-            }
-        }
-        return positions;
-    };
-
-    Polyline.prototype._createSegments = function(modelMatrix) {
-        return PolylinePipeline.wrapLongitude(this.getPositions(), modelMatrix);
-    };
-
-    Polyline.prototype._setSegments = function(segments) {
-        this._segments = segments;
-        var numberOfSegments = segments.length;
-        var length = 0;
-        for ( var i = 0; i < numberOfSegments; ++i) {
-            var segment = segments[i];
-            var segmentLength = segment.length;
-            length += segmentLength;
-        }
-        return length;
-    };
-
-    Polyline.prototype._getSegments = function() {
-        return this._segments;
-    };
-
-    Polyline.prototype._segmentsLengthChanged = function(newSegments) {
-        var origSegments = this._segments;
-        if (typeof origSegments !== 'undefined') {
-            var numberOfSegments = newSegments.length;
-            if (numberOfSegments !== origSegments.length) {
-                return true;
-            }
-            for ( var i = 0; i < numberOfSegments; ++i) {
-                if (newSegments[i].length !== origSegments[i].length) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        return true;
-    };
 
     /**
      * Determines if this polyline equals another polyline.  Polylines are equal if all their properties
