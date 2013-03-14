@@ -36,7 +36,6 @@ define([
         '../Shaders/Materials/ErosionMaterial',
         '../Shaders/Materials/FadeMaterial',
         '../Shaders/Materials/PolylineArrowMaterial',
-        '../Shaders/Materials/PolylineGlowMaterial',
         '../Shaders/Materials/PolylineOutlineMaterial'
     ], function(
         when,
@@ -75,7 +74,6 @@ define([
         ErosionMaterial,
         FadeMaterial,
         PolylineArrowMaterial,
-        PolylineGlowMaterial,
         PolylineOutlineMaterial) {
     "use strict";
 
@@ -1202,12 +1200,6 @@ define([
     Material._materialCache.addMaterial(Material.PolylineArrowType, {
         type : Material.PolylineArrowType,
         source : PolylineArrowMaterial
-    });
-
-    Material.PolylineGlowType = 'PolylineGlow';
-    Material._materialCache.addMaterial(Material.PolylineGlowType, {
-        type : Material.PolylineGlowType,
-        source : PolylineGlowMaterial
     });
 
     Material.PolylineOutlineType = 'PolylineOutline';
