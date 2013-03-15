@@ -7,7 +7,7 @@ Beta Releases
 ### b15 - 2013-04-01
 
 * Breaking changes:
-   * `Billboard.computeScreenSpacePosition` now takes a `FrameState` argument in addition to a `UniformState` argument.
+   * `Billboard.computeScreenSpacePosition` now takes `Context` and `FrameState` arguments instead of a `UniformState` argument.
    * Removed `clampToPixel` property from `BillboardCollection` and `LabelCollection`.  This options is no longer be needed due to overall LabelCollection visualization improvements.
 * Added `BoundingSphere.fromCornerPoints`.
 * Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
