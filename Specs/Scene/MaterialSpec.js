@@ -709,7 +709,40 @@ defineSuite([
         material.uniforms.image = './Data/Images/Green.png';
         var pixel = renderMaterial(material);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
-        material = material && material.destroy();
-        expect(material).toEqual(undefined);
+        material.destroy();
+        expect(material.isDestroyed()).toEqual(true);
+    });
+
+    it('destroys sub-materials', function() {
+        var material = new Material({
+            context : context,
+            strict : true,
+            fabric : {
+                materials : {
+                    diffuseMap : {
+                        type : 'DiffuseMap'
+                    }
+                },
+                uniforms : {
+                    value : {
+                        x : 0.0,
+                        y : 0.0,
+                        z : 0.0
+                    }
+                },
+                components : {
+                    diffuse : 'value + diffuseMap.diffuse'
+                }
+            }
+        });
+        material.materials.diffuseMap.uniforms.image = './Data/Images/Green.png';
+
+        var pixel = renderMaterial(material);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
+
+        var diffuseMap = material.materials.diffuseMap;
+        material.destroy();
+        expect(material.isDestroyed()).toEqual(true);
+        expect(diffuseMap.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
