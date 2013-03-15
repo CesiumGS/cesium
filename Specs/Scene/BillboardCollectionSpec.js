@@ -52,7 +52,6 @@ defineSuite([
 
     var context;
     var billboards;
-    var us;
 
     var greenImage;
     var blueImage;
@@ -60,6 +59,9 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
+
+        var us = context.getUniformState();
+        us.update(createFrameState(createCamera(context)));
     });
 
     afterAll(function() {
@@ -68,9 +70,6 @@ defineSuite([
 
     beforeEach(function() {
         billboards = new BillboardCollection();
-
-        us = context.getUniformState();
-        us.update(createFrameState(createCamera(context)));
     });
 
     afterEach(function() {
@@ -932,7 +931,7 @@ defineSuite([
         });
         billboards.update(context, frameState, []);
 
-        expect(b.computeScreenSpacePosition(us, frameState)).toEqual(new Cartesian2(0.5, 0.5));
+        expect(b.computeScreenSpacePosition(context, frameState)).toEqual(new Cartesian2(0.5, 0.5));
     });
 
     it('computes screen space position (2)', function() {
@@ -950,7 +949,7 @@ defineSuite([
         });
         billboards.update(context, frameState, []);
 
-        expect(b.computeScreenSpacePosition(us, frameState)).toEqual(new Cartesian2(1.5, 2.5));
+        expect(b.computeScreenSpacePosition(context, frameState)).toEqual(new Cartesian2(1.5, 2.5));
     });
 
     it('computes screen space position (3)', function() {
@@ -969,7 +968,7 @@ defineSuite([
         });
         billboards.update(context, frameState, []);
 
-        var p = b.computeScreenSpacePosition(us, frameState);
+        var p = b.computeScreenSpacePosition(context, frameState);
         expect(p.x).toBeGreaterThan(0.5);
         expect(p.y).toBeGreaterThan(0.5);
     });
@@ -985,11 +984,11 @@ defineSuite([
         billboards.remove(b);
 
         expect(function() {
-            b.computeScreenSpacePosition(us, frameState);
+            b.computeScreenSpacePosition(context, frameState);
         }).toThrow();
     });
 
-    it('throws when computing screen space position without uniform state', function() {
+    it('throws when computing screen space position without context', function() {
         var b = billboards.add();
 
         expect(function() {
@@ -1001,7 +1000,7 @@ defineSuite([
         var b = billboards.add();
 
         expect(function() {
-            b.computeScreenSpacePosition(us);
+            b.computeScreenSpacePosition(context);
         }).toThrow();
     });
 

@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/DeveloperError',
+        '../Core/BoundingRectangle',
         '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -15,6 +16,7 @@ define([
     ], function(
         defaultValue,
         DeveloperError,
+        BoundingRectangle,
         Color,
         Cartesian2,
         Cartesian3,
@@ -584,14 +586,19 @@ define([
         return undefined;
     };
 
+    var scratchViewport = new BoundingRectangle();
     var scratchViewportTransform = new Matrix4();
-    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, uniformState, frameState, viewport) {
+    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, context, frameState) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
 
         var camera = frameState.camera;
         var view = camera.getViewMatrix();
         var projection = camera.frustum.getProjectionMatrix();
-        var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, scratchViewportTransform);
+
+        var canvas = context.getCanvas();
+        scratchViewport.width = canvas.clientWidth;
+        scratchViewport.height = canvas.clientHeight;
+        var viewportTransformation = Matrix4.computeViewportTransformation(scratchViewport, 0.0, 1.0, scratchViewportTransform);
 
         // Model to eye coordinates
         var mv = view.multiply(modelMatrix);
@@ -611,6 +618,7 @@ define([
         var positionWC = viewportTransformation.multiplyByPoint(q); // window coordinates
 
         // Apply pixel offset
+        var uniformState = context.getUniformState();
         var po = pixelOffset.multiplyByScalar(uniformState.getHighResolutionSnapScale());
         positionWC.x += po.x;
         positionWC.y += po.y;
@@ -625,29 +633,29 @@ define([
      *
      * @memberof Billboard
      *
-     * @param {UniformState} uniformState The uniform state.
+     * @param {Context} context The context.
      * @param {FrameState} frameState The same state object passed to {@link BillboardCollection#update}.
      *
      * @return {Cartesian2} The screen-space position of the billboard.
      *
      * @exception {DeveloperError} Billboard must be in a collection.
-     * @exception {DeveloperError} uniformState is required.
+     * @exception {DeveloperError} context is required.
      * @exception {DeveloperError} frameState is required.
      *
      * @see Billboard#setEyeOffset
      * @see Billboard#setPixelOffset
      *
      * @example
-     * console.log(b.computeScreenSpacePosition(scene.getUniformState(), scene.getFrameState()).toString());
+     * console.log(b.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()).toString());
      */
-    Billboard.prototype.computeScreenSpacePosition = function(uniformState, frameState) {
+    Billboard.prototype.computeScreenSpacePosition = function(context, frameState) {
         var billboardCollection = this._billboardCollection;
         if (typeof billboardCollection === 'undefined') {
             throw new DeveloperError('Billboard must be in a collection.  Was it removed?');
         }
 
-        if (typeof uniformState === 'undefined') {
-            throw new DeveloperError('uniformState is required.');
+        if (typeof context === 'undefined') {
+            throw new DeveloperError('context is required.');
         }
 
         if (typeof frameState === 'undefined') {
@@ -655,8 +663,7 @@ define([
         }
 
         var modelMatrix = billboardCollection.modelMatrix;
-        var viewport = billboardCollection._viewport;
-        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, uniformState, frameState, viewport);
+        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, context, frameState);
     };
 
     /**

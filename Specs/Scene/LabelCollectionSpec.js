@@ -50,10 +50,12 @@ defineSuite([
 
     var context;
     var labels;
-    var us;
 
     beforeAll(function() {
         context = createContext();
+
+        var us = context.getUniformState();
+        us.update(createFrameState(createCamera(context)));
     });
 
     afterAll(function() {
@@ -62,14 +64,10 @@ defineSuite([
 
     beforeEach(function() {
         labels = new LabelCollection();
-
-        us = context.getUniformState();
-        us.update(createFrameState(createCamera(context)));
     });
 
     afterEach(function() {
         labels = labels && labels.destroy();
-        us = undefined;
     });
 
     it('has default values when adding a label', function() {
@@ -894,7 +892,7 @@ defineSuite([
             });
             labels.update(context, frameState, []);
 
-            expect(label.computeScreenSpacePosition(us, frameState)).toEqual(new Cartesian2(0.5, 0.5));
+            expect(label.computeScreenSpacePosition(context, frameState)).toEqual(new Cartesian2(0.5, 0.5));
         });
 
         it('can compute screen space position (2)', function() {
@@ -913,7 +911,7 @@ defineSuite([
             });
             labels.update(context, frameState, []);
 
-            expect(label.computeScreenSpacePosition(us, frameState)).toEqual(new Cartesian2(1.5, 2.5));
+            expect(label.computeScreenSpacePosition(context, frameState)).toEqual(new Cartesian2(1.5, 2.5));
         });
 
         it('can compute screen space position (3)', function() {
@@ -933,7 +931,7 @@ defineSuite([
             });
             labels.update(context, frameState, []);
 
-            var p = label.computeScreenSpacePosition(us, frameState);
+            var p = label.computeScreenSpacePosition(context, frameState);
             expect(p.x).toBeGreaterThan(0.5);
             expect(p.y).toBeGreaterThan(0.5);
         });
@@ -1530,7 +1528,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('Label.computeScreenSpacePosition throws with undefined uniformState', function() {
+    it('Label.computeScreenSpacePosition throws with undefined context', function() {
         var label = labels.add();
         expect(function() {
             label.computeScreenSpacePosition(undefined, frameState);
@@ -1540,7 +1538,7 @@ defineSuite([
     it('Label.computeScreenSpacePosition throws with undefined frameState', function() {
         var label = labels.add();
         expect(function() {
-            label.computeScreenSpacePosition(us, undefined);
+            label.computeScreenSpacePosition(context, undefined);
         }).toThrow();
     });
 }, 'WebGL');
