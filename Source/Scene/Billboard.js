@@ -595,6 +595,7 @@ define([
         var view = camera.getViewMatrix();
         var projection = camera.frustum.getProjectionMatrix();
 
+        // Assuming viewport takes up the entire canvas...
         var canvas = context.getCanvas();
         scratchViewport.width = canvas.clientWidth;
         scratchViewport.height = canvas.clientHeight;
