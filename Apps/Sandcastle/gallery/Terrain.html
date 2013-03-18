@@ -186,7 +186,7 @@ require([
                         
                         var lon = e.west * (1.0-a) + e.east * a;
                         var lat = e.south * (1.0-b) + e.north * b;
-                        var pt = new Cesium.Cartographic(lon,lat,1000);
+                        var pt = new Cesium.Cartographic(lon,lat);
                         terrainSamplePoints.push(pt);
                     }
                 }
