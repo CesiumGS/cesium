@@ -17,6 +17,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
+        './Material',
         './SceneMode',
         './Polyline',
         '../Shaders/Noise',
@@ -41,6 +42,7 @@ define([
         BufferUsage,
         CommandLists,
         DrawCommand,
+        Material,
         SceneMode,
         Polyline,
         Noise,
@@ -796,16 +798,21 @@ define([
         }
     };
 
+    var scratchUniformArray = [];
     PolylineCollection.prototype._createMaterialHash = function(material) {
-        var hash = material.type;
-        var uniforms = material._uniforms;
-        for (var uniform in uniforms) {
-            if (uniforms.hasOwnProperty(uniform)) {
-                hash += '_' + uniform + '_' + uniforms[uniform]();
-            }
+        var uniforms = Material._uniformList[material.type];
+        var length = uniforms.length;
+        scratchUniformArray.length = 2.0 * length;
+
+        var index = 0;
+        for (var i = 0; i < length; ++i) {
+            var uniform = uniforms[i];
+            scratchUniformArray[index] = uniform;
+            scratchUniformArray[index + 1] = material._uniforms[uniform]();
+            index += 2;
         }
 
-        return hash;
+        return JSON.stringify(scratchUniformArray);
     };
 
     PolylineCollection.prototype._sortPolylinesIntoBuckets = function() {

@@ -357,7 +357,15 @@ define([
             value : this.type,
             writable : false
         });
+
+        if (typeof Material._uniformList[this.type] === 'undefined') {
+            Material._uniformList[this.type] = Object.keys(this._uniforms);
+        }
     };
+
+    // Cached list of combined uniform names indexed by type.
+    // Used to get the list of uniforms in the same order.
+    Material._uniformList = {};
 
     /**
      * Creates a new material using an existing material type.
