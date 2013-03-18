@@ -27,11 +27,25 @@ define([
     var TileCoordinatesImageryProvider = function TileCoordinatesImageryProvider(description) {
         description = defaultValue(description, {});
 
+        this._proxy = description.proxy;
         this._tilingScheme = defaultValue(description.tilingScheme, new GeographicTilingScheme());
         this._color = defaultValue(description.color, Color.YELLOW);
         this._errorEvent = new Event();
         this._tileWidth = defaultValue(description.tileWidth, 256);
         this._tileHeight = defaultValue(description.tileHeight, 256);
+    };
+
+    /**
+     * Gets the proxy used by this provider.
+     *
+     * @memberof TileCoordinatesImageryProvider
+     *
+     * @returns {Proxy} The proxy.
+     *
+     * @see DefaultProxy
+     */
+    TileCoordinatesImageryProvider.prototype.getProxy = function() {
+        return this._proxy;
     };
 
     /**
