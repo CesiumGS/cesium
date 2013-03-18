@@ -1123,10 +1123,11 @@ define([
         }
     };
 
+    var scratchSegmentLengths = new Array(1);
     /**
      * @private
      */
-    PolylineBucket.prototype._updateIndices3D = function(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset) {
+    PolylineBucket.prototype.updateIndices = function(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset) {
         var vaCount = vertexArrayBuckets.length - 1;
         var bucketLocator = new VertexArrayBucketLocator(0, offset, this);
         vertexArrayBuckets[vaCount].push(bucketLocator);
@@ -1139,70 +1140,16 @@ define([
         var polylines = this.polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
+
             var polyline = polylines[i];
-            var positions = polyline.getPositions();
-            var positionsLength = positions.length;
-            if (positions.length > 0) {
-                for ( var j = 0; j < positionsLength; ++j) {
-                    if (j !== positionsLength - 1) {
-                        if (indicesCount + 3 >= SIXTYFOURK - 1) {
-                            vertexBufferOffset.push(4);
-                            indices = [];
-                            totalIndices.push(indices);
-                            indicesCount = 0;
-                            bucketLocator.count = count;
-                            count = 0;
-                            offset = 0;
-                            bucketLocator = new VertexArrayBucketLocator(0, 0, this);
-                            vertexArrayBuckets[++vaCount] = [bucketLocator];
-                        }
-
-                        indices.push(indicesCount, indicesCount + 2, indicesCount + 1);
-                        indices.push(indicesCount + 1, indicesCount + 2, indicesCount + 3);
-
-                        count += 6;
-                        offset += 6;
-                        indicesCount += 2;
-                    }
-                }
-                if (indicesCount + 3 < SIXTYFOURK - 1) {
-                    indicesCount += 2;
-                } else {
-                    vertexBufferOffset.push(0);
-                    indices = [];
-                    totalIndices.push(indices);
-                    indicesCount = 0;
-                    bucketLocator.count = count;
-                    offset = 0;
-                    count = 0;
-                    bucketLocator = new VertexArrayBucketLocator(0, 0, this);
-                    vertexArrayBuckets[++vaCount] = [bucketLocator];
-                }
+            var segments;
+            if (this.mode === SceneMode.SCENE3D) {
+                segments = scratchSegmentLengths;
+                segments[0] = polyline.getPositions().length;
+            } else {
+                segments = polyline._segments.lengths;
             }
-            polyline._clean();
-        }
-        bucketLocator.count = count;
-        return offset;
-    };
 
-    /**
-     * @private
-     */
-    PolylineBucket.prototype._updateIndices2D = function(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset) {
-        var vaCount = vertexArrayBuckets.length - 1;
-        var bucketLocator = new VertexArrayBucketLocator(0, offset, this);
-        vertexArrayBuckets[vaCount].push(bucketLocator);
-        var count = 0;
-        var indices = totalIndices[totalIndices.length - 1];
-        var indicesCount = 0;
-        if (indices.length > 0) {
-            indicesCount = indices[indices.length - 1] + 1;
-        }
-        var polylines = this.polylines;
-        var length = polylines.length;
-        for ( var i = 0; i < length; ++i) {
-            var polyline = polylines[i];
-            var segments = polyline._segments.lengths;
             var numberOfSegments = segments.length;
             if (numberOfSegments > 0) {
                 for ( var j = 0; j < numberOfSegments; ++j) {
@@ -1252,16 +1199,6 @@ define([
         }
         bucketLocator.count = count;
         return offset;
-    };
-
-    /**
-     * @private
-     */
-    PolylineBucket.prototype.updateIndices = function(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset) {
-        if (this.mode === SceneMode.SCENE3D) {
-            return this._updateIndices3D(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset);
-        }
-        return this._updateIndices2D(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset);
     };
 
     /**
