@@ -88,6 +88,28 @@ define([
         }
         return this._hash[id];
     };
+    
+    /**
+     * Removes an object with the specified id.
+     * @param {Object} id The id of the object to remove.
+     *
+     * @exception {DeveloperError} id is required.
+     *
+     * @returns True if the DynamicObject with the provided id was found and deleted.
+     */
+    DynamicObjectCollection.prototype.removeObject = function(id) {
+        if (typeof id === 'undefined') {
+            throw new DeveloperError('id is required.');
+        }
+        var dynamicObject = this._hash[id];
+        var result = typeof dynamicObject !== 'undefined';
+        if (result) {
+            this._hash[id] = undefined;
+            this._array.splice(this._array.indexof(dynamicObject), 1);
+            this.objectsRemoved.raiseEvent(this, [dynamicObject]);
+        }
+        return result;
+    };
 
     /**
      * Gets the array of DynamicObject instances in this composite collection.
