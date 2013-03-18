@@ -103,10 +103,7 @@ void main()
 	    
 	    float angle = acos(dot(direction, nextWC));
 	    float sinAngle = sin(angle);
-	    if (abs(sinAngle) > czm_epsilon1 * 2.5)
-	    {
-	        expandWidth = expandWidth / sinAngle;
-	    }
+	    expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
     }
 
     vec4 positionWC = vec4(endPointWC.xy + direction * expandWidth * expandDir, endPointWC.zw);
