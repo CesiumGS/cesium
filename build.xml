@@ -1,5 +1,6 @@
 <project name="Cesium" default="combine">
 	<target name="build" description="A developer build that runs in-place.">
+		<mkdir dir="${buildDirectory}" />
 		<glslToJavascript minify="${build.minification}" minifystatefile="${buildDirectory}/minifyShaders.state">
 			<glslfiles dir="${shadersDirectory}" includes="**/*.glsl" />
 			<existingjsfiles dir="${shadersDirectory}" includes="**/*.js" excludes="*.profile.js" />
