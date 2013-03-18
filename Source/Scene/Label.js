@@ -670,24 +670,25 @@ define([
      *
      * @memberof Label
      *
-     * @param {UniformState} uniformState The same state object passed to {@link LabelCollection#update}.
+     * @param {Context} context The context.
      * @param {FrameState} frameState The same state object passed to {@link LabelCollection#update}.
      *
      * @return {Cartesian2} The screen-space position of the label.
      *
-     * @exception {DeveloperError} uniformState is required.
+     * @exception {DeveloperError} context is required.
      * @exception {DeveloperError} frameState is required.
      *
      * @see Label#setEyeOffset
      * @see Label#setPixelOffset
      *
      * @example
-     * console.log(l.computeScreenSpacePosition(scene.getUniformState(), scene.getFrameState()).toString());
+     * console.log(l.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()).toString());
      */
-    Label.prototype.computeScreenSpacePosition = function(uniformState, frameState) {
-        if (typeof uniformState === 'undefined') {
-            throw new DeveloperError('uniformState is required.');
+    Label.prototype.computeScreenSpacePosition = function(context, frameState) {
+        if (typeof context === 'undefined') {
+            throw new DeveloperError('context is required.');
         }
+
         if (typeof frameState === 'undefined') {
             throw new DeveloperError('frameState is required.');
         }
@@ -696,7 +697,7 @@ define([
         var modelMatrix = labelCollection.modelMatrix;
         var actualPosition = Billboard._computeActualPosition(this._position, frameState, labelCollection.morphTime, modelMatrix);
 
-        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, uniformState);
+        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, context, frameState);
     };
 
     /**
