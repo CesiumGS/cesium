@@ -3,27 +3,40 @@ define([
         '../Core/defaultValue',
         '../Core/DeveloperError',
         './TerrainState',
-        './Tile',
-        './TileState',
-        './TileTerrain',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         DeveloperError,
         TerrainState,
-        Tile,
-        TileState,
-        TileTerrain,
         when) {
     "use strict";
 
     /**
-     * Provides an elevation query for an array of Cartographic points by
-     * requesting tiles from a terrain provider, sampling and interpolating.
-     * Each point height is modified in place.
+     * Initiates a terrain height query for an array of {@link Cartographic} positions by
+     * requesting tiles from a terrain provider, sampling, and interpolating.  The query
+     * happens asynchronously, so this function returns a promise that is resolved when
+     * the query completes.  Each point height is modified in place.  If a height can not be
+     * determined because no terrain data is available for the specified level at that location,
+     * or another error occurs, the height is set to undefined.
+     *
+     * @exports terrainSample
+     *
+     * @param {TerrainProvider} terrainProvider The terrain provider from which to query heights.
+     * @param {Number} level The terrain level-of-detail from which to query terrain heights.
+     * @param {Cartographic[]} positions The positions to update with terrain heights.
+     *
+     * @returns {Promise} A promise that, when resolved, indicates that the query has completed.
      */
-    var terrainSample = function(terrainProvider, level, pts) {
-        level = defaultValue(level, 2);
+    var terrainSample = function(terrainProvider, level, positions) {
+        if (typeof terrainProvider === 'undefined') {
+            throw new DeveloperError('terrainProvider is required.');
+        }
+        if (typeof level === 'undefined') {
+            throw new DeveloperError('level is required.');
+        }
+        if (typeof positions === 'undefined') {
+            throw new DeveloperError('positions is required.');
+        }
 
         var tilingScheme = terrainProvider.getTilingScheme();
 
@@ -33,8 +46,8 @@ define([
         var tileRequests = []; // Result will be an Array as it's easier to work with
         {
             var tileRequestSet = {}; // A unique set
-            for (i = 0; i < pts.length; ++i) {
-                var xy = tilingScheme.positionToTileXY(pts[i], level);
+            for (i = 0; i < positions.length; ++i) {
+                var xy = tilingScheme.positionToTileXY(positions[i], level);
                 var key = xy.toString();
 
                 if (!tileRequestSet.hasOwnProperty(key)) {
@@ -45,14 +58,14 @@ define([
                         level : level,
                         tilingScheme : tilingScheme,
                         terrainProvider : terrainProvider,
-                        pts : []
+                        positions : []
                     };
                     tileRequestSet[key] = value;
                     tileRequests.push(value);
                 }
 
                 // Now append to array of points for the tile
-                tileRequestSet[key].pts.push(pts[i]);
+                tileRequestSet[key].positions.push(positions[i]);
             }
         }
 
@@ -69,24 +82,22 @@ define([
     };
 
     function createInterpolateFunction(tileRequest) {
-        var tilePts = tileRequest.pts;
+        var tilePositions = tileRequest.positions;
         var extent = tileRequest.tilingScheme.tileXYToExtent(tileRequest.x, tileRequest.y, tileRequest.level);
         return function(terrainData) {
-            // for each point that falls in this tile
-            for (var j = 0; j < tilePts.length; ++j) {
-                var pt = tilePts[j];
-                pt.height = terrainData.interpolateHeight(extent, pt.longitude, pt.latitude);
+            for (var i = 0; i < tilePositions.length; ++i) {
+                var position = tilePositions[i];
+                position.height = terrainData.interpolateHeight(extent, position.longitude, position.latitude);
             }
         };
     }
 
     function createMarkFailedFunction(tileRequest) {
-        var tilePts = tileRequest.pts;
+        var tilePositions = tileRequest.positions;
         return function() {
-            // for each point that falls in this tile
-            for (var j = 0; j < tilePts.length; ++j) {
-                var pt = tilePts[j];
-                pt.height = undefined;
+            for (var i = 0; i < tilePositions.length; ++i) {
+                var position = tilePositions[i];
+                position.height = undefined;
             }
         };
     }
