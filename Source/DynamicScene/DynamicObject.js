@@ -1,9 +1,10 @@
 /*global define*/
 define([
         '../Core/createGuid',
-        '../Core/DeveloperError',
-        '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/DeveloperError',
+        '../Core/JulianDate',
+        '../Core/TimeInterval',
         './DynamicProperty',
         './DynamicPositionProperty',
         './DynamicVertexPositionsProperty',
@@ -11,9 +12,10 @@ define([
         './CzmlCartesian3'
     ], function(
         createGuid,
-        DeveloperError,
-        TimeInterval,
         defaultValue,
+        DeveloperError,
+        JulianDate,
+        TimeInterval,
         DynamicProperty,
         DynamicPositionProperty,
         DynamicVertexPositionsProperty,
@@ -167,14 +169,22 @@ define([
         if (typeof time === 'undefined') {
             throw new DeveloperError('time is required.');
         }
-        if (typeof this.availability === 'undefined') {
+
+        var availability = this.availability;
+        if (typeof availability === 'undefined') {
             return true;
         }
-        if (this._cachedAvailabilityDate === time) {
+
+        if (JulianDate.equals(this._cachedAvailabilityDate, time)) {
             return this._cachedAvailabilityValue;
         }
-        this._cachedAvailabilityDate = time;
-        return this._cachedAvailabilityValue = this.availability.contains(time);
+
+        var availabilityValue = availability.contains(time);
+
+        this._cachedAvailabilityDate = JulianDate.clone(time, this._cachedAvailabilityDate);
+        this._cachedAvailabilityValue = availability.contains(time);
+
+        return availabilityValue;
     };
 
     /**
@@ -360,6 +370,7 @@ define([
         var changed = !TimeInterval.equals(this.availability, availability);
 
         this.availability = availability;
+
         this._cachedAvailabilityDate = undefined;
         this._cachedAvailabilityValue = undefined;
 

@@ -296,6 +296,9 @@ define([
      */
     ImageryLayerCollection.prototype.raiseToTop = function(layer) {
         var index = getLayerIndex(this._layers, layer);
+        if (index === this._layers.length - 1) {
+            return;
+        }
         this._layers.splice(index, 1);
         this._layers.push(layer);
 
@@ -316,6 +319,9 @@ define([
      */
     ImageryLayerCollection.prototype.lowerToBottom = function(layer) {
         var index = getLayerIndex(this._layers, layer);
+        if (index === 0) {
+            return;
+        }
         this._layers.splice(index, 1);
         this._layers.splice(0, 0, layer);
 
@@ -383,11 +389,13 @@ define([
             }
 
             if (layer.show !== layer._show) {
-                layer._show = layer.show;
-                if (typeof layersShownOrHidden === 'undefined') {
-                    layersShownOrHidden = [];
+                if (typeof layer._show !== 'undefined') {
+                    if (typeof layersShownOrHidden === 'undefined') {
+                        layersShownOrHidden = [];
+                    }
+                    layersShownOrHidden.push(layer);
                 }
-                layersShownOrHidden.push(layer);
+                layer._show = layer.show;
             }
         }
 

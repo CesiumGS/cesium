@@ -139,17 +139,7 @@ define([
      * LeapSecond.compareLeapSecondDate(leapSecond1, leapSecond2);    // returns 0
      */
     LeapSecond.compareLeapSecondDate = function(leapSecond1, leapSecond2) {
-        var julianDayNum1 = leapSecond1.julianDate.getJulianDayNumber();
-        var julianDayNum2 = leapSecond2.julianDate.getJulianDayNumber();
-        if (julianDayNum1 !== julianDayNum2) {
-            return julianDayNum1 < julianDayNum2 ? -1 : 1;
-        }
-        var secondsOfDay1 = leapSecond1.julianDate.getSecondsOfDay();
-        var secondsOfDay2 = leapSecond2.julianDate.getSecondsOfDay();
-        if (secondsOfDay1 !== secondsOfDay2) {
-            return secondsOfDay1 < secondsOfDay2 ? -1 : 1;
-        }
-        return 0;
+        return leapSecond1.julianDate.compareTo(leapSecond2.julianDate);
     };
 
     LeapSecond._leapSeconds = [];

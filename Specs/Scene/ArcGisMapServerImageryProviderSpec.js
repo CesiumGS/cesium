@@ -308,6 +308,7 @@ defineSuite([
             expect(provider.getLogo()).toBeDefined();
             expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
             expect(provider.getExtent()).toEqual(new GeographicTilingScheme().getExtent());
+            expect(provider.getProxy()).toEqual(proxy);
             expect(provider.isUsingPrecachedTiles()).toEqual(true);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {

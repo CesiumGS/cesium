@@ -183,15 +183,6 @@ define([
         this._projection = undefined;
 
         /**
-         * If true, aligns all billboards to a pixel in screen space,
-         * providing a crisper image at the cost of jumpier motion.
-         * Defaults to false.
-         *
-         * @type Boolean
-         */
-        this.clampToPixel = false;
-
-        /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
@@ -219,9 +210,6 @@ define([
             },
             u_atlasSize : function() {
                 return that._textureAtlas.getTexture().getDimensions();
-            },
-            u_clampToPixel : function() {
-                return that.clampToPixel ? 1.0 : 0.0;
             },
             u_morphTime : function() {
                 return that.morphTime;
