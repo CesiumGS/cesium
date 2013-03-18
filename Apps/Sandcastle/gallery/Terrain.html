@@ -191,7 +191,7 @@ require([
                     }
                 }
                 
-                Cesium.when(Cesium.terrainSample(centralBody.terrainProvider, 11, terrainSamplePoints), elevationSuccess);
+                Cesium.when(Cesium.sampleTerrain(centralBody.terrainProvider, 11, terrainSamplePoints), elevationSuccess);
                 }
             }).placeAt('sampleButtons');
         }

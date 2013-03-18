@@ -19,7 +19,7 @@ define([
      * determined because no terrain data is available for the specified level at that location,
      * or another error occurs, the height is set to undefined.
      *
-     * @exports terrainSample
+     * @exports sampleTerrain
      *
      * @param {TerrainProvider} terrainProvider The terrain provider from which to query heights.
      * @param {Number} level The terrain level-of-detail from which to query terrain heights.
@@ -27,7 +27,7 @@ define([
      *
      * @returns {Promise} A promise that, when resolved, indicates that the query has completed.
      */
-    var terrainSample = function(terrainProvider, level, positions) {
+    var sampleTerrain = function(terrainProvider, level, positions) {
         if (typeof terrainProvider === 'undefined') {
             throw new DeveloperError('terrainProvider is required.');
         }
@@ -102,5 +102,5 @@ define([
         };
     }
 
-    return terrainSample;
+    return sampleTerrain;
 });
