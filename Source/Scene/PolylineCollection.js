@@ -1146,7 +1146,7 @@ define([
                 for ( var j = 0; j < positionsLength; ++j) {
                     if (j !== positionsLength - 1) {
                         if (indicesCount + 3 >= SIXTYFOURK - 1) {
-                            vertexBufferOffset.push(2);
+                            vertexBufferOffset.push(4);
                             indices = [];
                             totalIndices.push(indices);
                             indicesCount = 0;
@@ -1210,7 +1210,7 @@ define([
                     for ( var k = 0; k < segmentLength; ++k) {
                         if (k !== segmentLength - 1) {
                             if (indicesCount + 3 >= SIXTYFOURK - 1) {
-                                vertexBufferOffset.push(2);
+                                vertexBufferOffset.push(4);
                                 indices = [];
                                 totalIndices.push(indices);
                                 indicesCount = 0;
