@@ -105,7 +105,7 @@ define([
         var result = typeof dynamicObject !== 'undefined';
         if (result) {
             this._hash[id] = undefined;
-            this._array.splice(this._array.indexof(dynamicObject), 1);
+            this._array.splice(this._array.indexOf(dynamicObject), 1);
             this.objectsRemoved.raiseEvent(this, [dynamicObject]);
         }
         return result;
