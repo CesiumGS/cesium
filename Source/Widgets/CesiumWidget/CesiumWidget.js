@@ -5,6 +5,7 @@ define(['../../Core/buildModuleUrl',
         '../../Core/Clock',
         '../../Core/DefaultProxy',
         '../../Core/defaultValue',
+        '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
         '../../Core/FeatureDetection',
@@ -22,6 +23,7 @@ define(['../../Core/buildModuleUrl',
         Clock,
         DefaultProxy,
         defaultValue,
+        destroyObject,
         DeveloperError,
         Ellipsoid,
         FeatureDetection,
@@ -47,7 +49,7 @@ define(['../../Core/buildModuleUrl',
      * @param {Element|String} container The DOM element, or ID of a page element, that will contain the widget.
      * @param {Object} [options] Configuration options for the widget.
      * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
-     * @param {ImageryProvider} [options.baseMap=new BingMapsImageryProvider()] The basemap imagery provider.
+     * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
      *
      * @exception {DeveloperError} container is required.
@@ -60,9 +62,9 @@ define(['../../Core/buildModuleUrl',
      * //Widget with no terrain and default Bing Maps imagery provider.
      * var widget = new Cesium.CesiumWidget('cesiumContainer');
      *
-     * //Widget with OpenStreetMaps baseMap and Cesium terrain provider hosted by AGI.
+     * //Widget with OpenStreetMaps imagery provider and Cesium terrain provider hosted by AGI.
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
-     *     baseMap : new Cesium.OpenStreetMapImageryProvider(),
+     *     imageryProvider : new Cesium.OpenStreetMapImageryProvider(),
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
      *         url : 'http://cesium.agi.com/smallterrain',
      *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
@@ -125,18 +127,18 @@ define(['../../Core/buildModuleUrl',
         scene.skyAtmosphere = new SkyAtmosphere(_ellipsoid);
 
         //Set the base imagery layer
-        var baseMap = options.baseMap;
-        if (typeof baseMap === 'undefined') {
-            baseMap = new BingMapsImageryProvider({
+        var imageryProvider = options.imageryProvider;
+        if (typeof imageryProvider === 'undefined') {
+            imageryProvider = new BingMapsImageryProvider({
                 url : 'http://dev.virtualearth.net',
                 // Some versions of Safari support WebGL, but don't correctly implement
                 // cross-origin image loading, so we need to load Bing imagery using a proxy.
                 proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('http://cesium.agi.com/proxy/')
             });
         }
-        centralBody.getImageryLayers().addImageryProvider(baseMap);
+        centralBody.getImageryLayers().addImageryProvider(imageryProvider);
 
-        //And the terrain provider if one is provided.
+        //Set the terrain provider if one is provided.
         if (typeof options.terrainProvider !== 'undefined') {
             centralBody.terrainProvider = options.terrainProvider;
         }
@@ -201,16 +203,41 @@ define(['../../Core/buildModuleUrl',
         //Subscribe for resize events and set the initial size.
         this._needResize = false;
         this.resize();
-        window.addEventListener('resize', function() {
+        this._resizeCallback = function() {
             widget._needResize = true;
-        }, false);
+        };
+        window.addEventListener('resize', this._resizeCallback, false);
 
         //Create and start the render loop
+        this._isDestroyed = false;
         function render() {
-            widget.render();
-            requestAnimationFrame(render);
+            if (!widget._isDestroyed) {
+                widget.render();
+                requestAnimationFrame(render);
+            }
         }
         requestAnimationFrame(render);
+    };
+
+    /**
+     * @memberof CesiumWidget
+     *
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    CesiumWidget.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the widget.  Should be called if permanently
+     * removing the widget from layout.
+     * @memberof CesiumWidget
+     */
+    CesiumWidget.prototype.destroy = function() {
+        window.removeEventListener('resize', this._resizeCallback, false);
+        this.container.removeChild(this.widgetNode);
+        this._isDestroyed = true;
+        destroyObject(this);
     };
 
     /**

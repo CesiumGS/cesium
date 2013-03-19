@@ -275,6 +275,7 @@ define([
         for ( var i = 0, len = glyphs.length; i < len; ++i) {
             unbindGlyph(labelCollection, glyphs[i]);
         }
+        label._labelCollection = undefined;
         destroyObject(label);
     }
 
