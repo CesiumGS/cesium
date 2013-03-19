@@ -214,8 +214,9 @@ define(['../../Core/buildModuleUrl',
     };
 
     /**
-     * Call this function when the widget changes size, to update the canvas size,
-     * camera aspect ratio, and viewport size.
+     * Call this function when the widget changes size, to update the canvas
+     * size, camera aspect ratio, and viewport size. This function is called
+     * automatically on window resize.
      */
     CesiumWidget.prototype.resize = function() {
         var width = this.canvas.clientWidth;
@@ -238,7 +239,8 @@ define(['../../Core/buildModuleUrl',
     };
 
     /**
-     * Update and re-render the scene.  This function is called automatically.
+     * Forces an update and render of the scene. This function is called
+     * automatically.
      */
     CesiumWidget.prototype.render = function() {
         if (this._needResize) {
