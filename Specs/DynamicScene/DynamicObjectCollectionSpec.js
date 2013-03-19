@@ -35,9 +35,8 @@ defineSuite([
         dynamicObjectCollection.getOrCreateObject('2');
         dynamicObjectCollection.getOrCreateObject('3');
         expect(dynamicObjectCollection.removeObject('2')).toEqual(true);
-        expect(typeof(dynamicObjectCollection.getObject('2'))).toEqual('undefined');
-        var objects = dynamicObjectCollection.getObjects();
-        expect(objects.length).toEqual(2);
+        expect(dynamicObjectCollection.getObject('2')).toBeUndefined();
+        expect(dynamicObjectCollection.getObjects().length).toEqual(2);
     });
 
     it('getOrCreateObject throws if no id specified', function() {
