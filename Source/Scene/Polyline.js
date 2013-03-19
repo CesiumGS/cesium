@@ -478,6 +478,7 @@ define([
 
     Polyline.prototype._destroy = function() {
         this._pickId = this._pickId && this._pickId.destroy();
+        this._material = this._material && this._material.destroy();
         this._polylineCollection = undefined;
     };
 

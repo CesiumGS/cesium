@@ -254,6 +254,10 @@ define([
             this._polylines[polyline._index] = null; // Removed later
             this._polylinesRemoved = true;
             this._createVertexArray = true;
+            if (typeof polyline._bucket !== 'undefined') {
+                var bucket = polyline._bucket;
+                bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
+            }
             polyline._destroy();
             return true;
         }
@@ -281,6 +285,7 @@ define([
      * polylines.removeAll();
      */
     PolylineCollection.prototype.removeAll = function() {
+        this._releaseShaders();
         this._destroyPolylines();
         this._polylineBuckets = {};
         this._polylinesRemoved = false;
@@ -586,6 +591,7 @@ define([
     PolylineCollection.prototype.destroy = function() {
         this._spPick = this._spPick && this._spPick.release();
         this._destroyVertexArrays();
+        this._releaseShaders();
         this._destroyPolylines();
         return destroyObject(this);
     };
@@ -622,6 +628,7 @@ define([
 
     PolylineCollection.prototype._createVertexArrays = function(context) {
         this._createVertexArray = false;
+        this._releaseShaders();
         this._destroyVertexArrays();
         this._sortPolylinesIntoBuckets();
         //stores all of the individual indices arrays.
@@ -860,6 +867,17 @@ define([
             }
 
             this._polylines = polylines;
+        }
+    };
+
+    PolylineCollection.prototype._releaseShaders = function() {
+        var polylines = this._polylines;
+        var length = polylines.length;
+        for (var i = 0; i < length; ++i) {
+            var bucket = polylines[i]._bucket;
+            if (typeof bucket !== 'undefined') {
+                bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
+            }
         }
     };
 
