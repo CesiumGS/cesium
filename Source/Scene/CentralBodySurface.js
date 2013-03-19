@@ -4,6 +4,7 @@ define([
         '../Core/destroyObject',
         '../Core/BoundingSphere',
         '../Core/BoundingRectangle',
+        '../Core/Math',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -40,6 +41,7 @@ define([
         destroyObject,
         BoundingSphere,
         BoundingRectangle,
+        CesiumMath,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -511,12 +513,20 @@ define([
         return maxGeometricError / pixelSize;
     }
 
+    function hasSignificantAlpha(imageryLayer) {
+        if (typeof imageryLayer.alpha === 'function') {
+            return true;
+        }
+        return imageryLayer.alpha >= CesiumMath.EPSILON3;
+    }
+
     function addTileToRenderList(surface, tile) {
         var readyTextureCount = 0;
         var tileImageryCollection = tile.imagery;
         for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
-            if (tileImagery.imagery.state === ImageryState.READY) {
+            var imageryLayer = tileImagery.imagery.imageryLayer;
+            if (tileImagery.imagery.state === ImageryState.READY && hasSignificantAlpha(imageryLayer)) {
                 ++readyTextureCount;
             }
         }
@@ -983,7 +993,7 @@ define([
                         var imageryLayer = imagery.imageryLayer;
                         ++imageryIndex;
 
-                        if (imagery.state !== ImageryState.READY) {
+                        if (imagery.state !== ImageryState.READY || !hasSignificantAlpha(imageryLayer)) {
                             continue;
                         }
 
