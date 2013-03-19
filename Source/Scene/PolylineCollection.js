@@ -210,8 +210,7 @@ define([
      *     new Cartographic2(-75.10, 39.57),
      *     new Cartographic2(-77.02, 38.53)]),
      *     color : { red : 1.0, green : 1.0, blue : 1.0, alpha : 1.0 },
-     *     width : 1,
-     *     outlineWidth : 2
+     *     width : 1
      * });
      *
      */
@@ -379,9 +378,7 @@ define([
     };
 
     /**
-     * Commits changes to properties before rendering by updating the object's WebGL resources.
-     *
-     * @memberof PolylineCollection
+     * @private
      */
     PolylineCollection.prototype.update = function(context, frameState, commandList) {
         this._removePolylines();
@@ -907,9 +904,6 @@ define([
         }
     };
 
-    /**
-     * @private
-     */
     function VertexArrayBucketLocator(count, offset, bucket) {
         this.count = count;
         this.offset = offset;
@@ -917,9 +911,6 @@ define([
         this.material = bucket.material;
     }
 
-    /**
-     * @private
-     */
     var PolylineBucket = function(material, mode, projection, modelMatrix) {
         this.polylines = [];
         this.lengthOfPositions = 0;
@@ -931,9 +922,6 @@ define([
         this.modelMatrix = modelMatrix;
     };
 
-    /**
-     * @private
-     */
     PolylineBucket.prototype.addPolyline = function(p) {
         var polylines = this.polylines;
         polylines.push(p);
@@ -942,9 +930,6 @@ define([
         p._bucket = this;
     };
 
-    /**
-     * @private
-     */
     PolylineBucket.prototype.updateShader = function(context) {
         if (typeof this.shaderProgram !== 'undefined') {
             return;
@@ -966,9 +951,6 @@ define([
             polyline._boundingVolume.intersect(Cartesian4.UNIT_Y) === Intersect.INTERSECTING;
     }
 
-    /**
-     * @private
-     */
     PolylineBucket.prototype.getPolylinePositionsLength = function(polyline) {
         if (this.mode === SceneMode.SCENE3D || !intersectsIDL(polyline)) {
             return polyline.getPositions().length;
@@ -1017,9 +999,6 @@ define([
     var scratchWriteColorArray = new Array(1);
     var scratchWriteOutlineColorArray = new Array(1);
 
-    /**
-     * @private
-     */
     PolylineBucket.prototype.write = function(positionArray, adjacencyArray, colorArray, pickColorArray, miscArray, positionIndex, adjacencyIndex, colorIndex, miscIndex, context) {
         var polylines = this.polylines;
         var length = polylines.length;
@@ -1108,9 +1087,6 @@ define([
 
     var morphPositionScratch = new Cartesian3();
 
-    /**
-     * @private
-     */
     PolylineBucket.prototype.writeForMorph = function(positionArray, adjacencyArray, positionIndex, adjacencyIndex) {
         var modelMatrix = this.modelMatrix;
         var polylines = this.polylines;
@@ -1140,9 +1116,7 @@ define([
     };
 
     var scratchSegmentLengths = new Array(1);
-    /**
-     * @private
-     */
+
     PolylineBucket.prototype.updateIndices = function(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset) {
         var vaCount = vertexArrayBuckets.length - 1;
         var bucketLocator = new VertexArrayBucketLocator(0, offset, this);
@@ -1217,9 +1191,6 @@ define([
         return offset;
     };
 
-    /**
-     * @private
-     */
     PolylineBucket.prototype._getPolylineStartIndex = function(polyline) {
         var polylines = this.polylines;
         var positionIndex = 0;
@@ -1234,9 +1205,6 @@ define([
         return positionIndex;
     };
 
-    /**
-     * @private
-     */
     PolylineBucket.prototype._getPositions = function(polyline) {
         var positions = polyline.getPositions();
 
@@ -1286,9 +1254,6 @@ define([
 
     var scratchAdjacency = new Cartesian4();
 
-    /**
-     * @private
-     */
     PolylineBucket.prototype.writePositionsUpdate = function(positionIndex, polyline, positionBuffer, adjacencyBuffer) {
         var positionsLength = polyline._actualLength;
         if (positionsLength) {
@@ -1335,9 +1300,6 @@ define([
     var scratchColorArray = new Array(1);
     var scratchOutlineColorArray = new Array(1);
 
-    /**
-     * @private
-     */
     PolylineBucket.prototype.writeColorUpdate = function(positionIndex, polyline, buffer) {
         var positionsLength = polyline._actualLength;
         if (positionsLength) {
@@ -1388,9 +1350,6 @@ define([
         }
     };
 
-    /**
-     * @private
-     */
     PolylineBucket.prototype.writeMiscUpdate = function(positionIndex, polyline, buffer) {
         var positionsLength = polyline._actualLength;
         if (positionsLength) {

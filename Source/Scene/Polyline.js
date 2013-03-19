@@ -194,16 +194,28 @@ define([
     };
 
     /**
-     * TODO
-     * @returns
+     * Gets the surface appearance of the polyline.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
+     * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+     *
+     * @memberof Polyline
+     *
+     * @returns {Material} The material.
      */
     Polyline.prototype.getMaterial = function() {
         return this._material;
     };
 
     /**
-     * TODO
-     * @param material
+     * Sets the surface appearance of the polyline.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
+     * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+     *
+     * @memberof Polyline
+     *
+     * @param {Material} material The material
+     *
+     * @exception {DeveloperError} material is required.
+     *
+     * @see Polyline#getMaterial
      */
     Polyline.prototype.setMaterial = function(material) {
         if (typeof material === 'undefined') {
@@ -259,6 +271,8 @@ define([
     /**
      * Returns the polyline's color at each position.
      *
+     * @memberof Polyline
+     *
      * @return {Array} The polyline's color at each position.
      *
      * @see Polyline#setColors
@@ -310,6 +324,8 @@ define([
 
     /**
      * Sets the width of the polyline.
+     *
+     * @memberof Polyline
      *
      * @param {Number} value The width of the polyline.
      *
@@ -377,6 +393,8 @@ define([
 
     /**
      * Returns the polyline's outline color at each position.
+     *
+     * @memberof Polyline
      *
      * @return {Array} The polyline's outline color at each position.
      *
