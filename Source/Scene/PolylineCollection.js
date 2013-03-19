@@ -983,11 +983,15 @@ define([
             result = new Cartesian4();
         }
 
+        if (typeof modelMatrix === 'undefined') {
+            modelMatrix = Matrix4.IDENTITY;
+        }
+
         var prev = computeAdjacencyAnglesPosition;
         if (index === 0) {
             Cartesian3.ZERO.clone(prev);
         } else {
-            prev = (typeof modelMatrix === 'undefined') ? Cartesian3.clone(positions[index - 1], prev) : Matrix4.multiplyByPoint(modelMatrix, positions[index - 1], prev);
+            prev = Matrix4.multiplyByPoint(modelMatrix, positions[index - 1], prev);
             Cartesian3.subtract(prev, position, prev);
         }
         Cartesian3.normalize(prev, prev);
@@ -998,7 +1002,7 @@ define([
         if (index === positions.length - 1) {
             Cartesian3.ZERO.clone(next);
         } else {
-            next = (typeof modelMatrix === 'undefined') ? Cartesian3.clone(positions[index + 1], next) : Matrix4.multiplyByPoint(modelMatrix, positions[index + 1], next);
+            next = Matrix4.multiplyByPoint(modelMatrix, positions[index + 1], next);
             Cartesian3.subtract(next, position, next);
         }
         Cartesian3.normalize(next, next);
@@ -1150,7 +1154,12 @@ define([
             var segments;
             if (this.mode === SceneMode.SCENE3D) {
                 segments = scratchSegmentLengths;
-                segments[0] = polyline.getPositions().length;
+                var positionsLength = polyline.getPositions().length;
+                if (positionsLength > 0) {
+                    segments[0] = positionsLength;
+                } else {
+                    continue;
+                }
             } else {
                 segments = polyline._segments.lengths;
             }
