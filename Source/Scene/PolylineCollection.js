@@ -462,83 +462,83 @@ define([
         polylineBuckets = this._polylineBuckets;
         var useDepthTest = (this.morphTime !== 0.0);
         this._commandLists.removeAll();
-        if (typeof polylineBuckets !== 'undefined') {
-            if (pass.color) {
-                if (typeof this._rs === 'undefined') {
-                    this._rs = context.createRenderState({
-                        blending : BlendingState.ALPHA_BLEND
-                    });
-                }
 
-                this._rs.depthMask = !useDepthTest;
-                this._rs.depthTest.enabled = useDepthTest;
-
-                length = this._colorVertexArrays.length;
-                commands = this._commandLists.colorList;
-                for ( var m = 0; m < length; ++m) {
-                    var vaColor = this._colorVertexArrays[m];
-                    buckets = vaColor.buckets;
-                    bucketLength = buckets.length;
-                    var p = commands.length;
-                    commands.length += bucketLength;
-                    for ( var n = 0; n < bucketLength; ++n, ++p) {
-                        bucketLocator = buckets[n];
-
-                        command = commands[p];
-                        if (typeof command === 'undefined') {
-                            command = commands[p] = new DrawCommand();
-                        }
-
-                        command.boundingVolume = boundingVolume;
-                        command.modelMatrix = modelMatrix;
-                        command.primitiveType = PrimitiveType.TRIANGLES;
-                        command.count = bucketLocator.count;
-                        command.offset = bucketLocator.offset;
-                        command.shaderProgram = bucketLocator.shaderProgram;
-                        command.uniformMap = combine([this._uniforms, bucketLocator.material._uniforms], false, false);
-                        command.vertexArray = vaColor.va;
-                        command.renderState = this._rs;
-                    }
-                }
+        if (pass.color) {
+            if (typeof this._rs === 'undefined') {
+                this._rs = context.createRenderState({
+                    blending : BlendingState.ALPHA_BLEND
+                });
             }
 
-            if (pass.pick) {
-                if (typeof this._spPick === 'undefined') {
-                    this._spPick = context.getShaderCache().getShaderProgram(
-                            '#define RENDER_FOR_PICK\n\n' + PolylineVS, PolylineFSPick, attributeIndices);
-                }
-                if (typeof this._rsPick === 'undefined') {
-                    this._rsPick = context.createRenderState();
-                }
+            this._rs.depthMask = !useDepthTest;
+            this._rs.depthTest.enabled = useDepthTest;
 
-                this._rsPick.depthMask = !useDepthTest;
-                this._rsPick.depthTest.enabled = useDepthTest;
+            length = this._colorVertexArrays.length;
+            commands = this._commandLists.colorList;
+            for ( var m = 0; m < length; ++m) {
+                var vaColor = this._colorVertexArrays[m];
+                buckets = vaColor.buckets;
+                bucketLength = buckets.length;
+                var p = commands.length;
+                commands.length += bucketLength;
+                for ( var n = 0; n < bucketLength; ++n, ++p) {
+                    bucketLocator = buckets[n];
 
-                length = this._colorVertexArrays.length;
-                commands = this._commandLists.pickList;
-                for ( var a = 0; a < length; ++a) {
-                    var vaPickColor = this._pickColorVertexArrays[a];
-                    buckets = vaPickColor.buckets;
-                    bucketLength = buckets.length;
-                    commands.length += bucketLength;
-                    for ( var b = 0; b < bucketLength; ++b) {
-                        bucketLocator = buckets[b];
-
-                        command = commands[b];
-                        if (typeof command === 'undefined') {
-                            command = commands[b] = new DrawCommand();
-                        }
-
-                        command.boundingVolume = boundingVolume;
-                        command.modelMatrix = modelMatrix;
-                        command.primitiveType = PrimitiveType.TRIANGLES;
-                        command.count = bucketLocator.count;
-                        command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._spPick;
-                        command.uniformMap = this._uniforms;
-                        command.vertexArray = vaPickColor.va;
-                        command.renderState = this._rsPick;
+                    command = commands[p];
+                    if (typeof command === 'undefined') {
+                        command = commands[p] = new DrawCommand();
                     }
+
+                    command.boundingVolume = boundingVolume;
+                    command.modelMatrix = modelMatrix;
+                    command.primitiveType = PrimitiveType.TRIANGLES;
+                    command.count = bucketLocator.count;
+                    command.offset = bucketLocator.offset;
+                    command.shaderProgram = bucketLocator.shaderProgram;
+                    command.uniformMap = combine([this._uniforms, bucketLocator.material._uniforms], false, false);
+                    command.vertexArray = vaColor.va;
+                    command.renderState = this._rs;
+                }
+            }
+        }
+
+        if (pass.pick) {
+            if (typeof this._spPick === 'undefined') {
+                this._spPick = context.getShaderCache().getShaderProgram(
+                        '#define RENDER_FOR_PICK\n\n' + PolylineVS, PolylineFSPick, attributeIndices);
+            }
+
+            if (typeof this._rsPick === 'undefined') {
+                this._rsPick = context.createRenderState();
+            }
+
+            this._rsPick.depthMask = !useDepthTest;
+            this._rsPick.depthTest.enabled = useDepthTest;
+
+            length = this._colorVertexArrays.length;
+            commands = this._commandLists.pickList;
+            for ( var a = 0; a < length; ++a) {
+                var vaPickColor = this._pickColorVertexArrays[a];
+                buckets = vaPickColor.buckets;
+                bucketLength = buckets.length;
+                commands.length += bucketLength;
+                for ( var b = 0; b < bucketLength; ++b) {
+                    bucketLocator = buckets[b];
+
+                    command = commands[b];
+                    if (typeof command === 'undefined') {
+                        command = commands[b] = new DrawCommand();
+                    }
+
+                    command.boundingVolume = boundingVolume;
+                    command.modelMatrix = modelMatrix;
+                    command.primitiveType = PrimitiveType.TRIANGLES;
+                    command.count = bucketLocator.count;
+                    command.offset = bucketLocator.offset;
+                    command.shaderProgram = this._spPick;
+                    command.uniformMap = this._uniforms;
+                    command.vertexArray = vaPickColor.va;
+                    command.renderState = this._rsPick;
                 }
             }
         }
@@ -584,7 +584,6 @@ define([
      * polylines = polylines && polylines.destroy();
      */
     PolylineCollection.prototype.destroy = function() {
-        this._sp = this._sp && this._sp.release();
         this._spPick = this._spPick && this._spPick.release();
         this._destroyVertexArrays();
         this._destroyPolylines();
@@ -699,7 +698,6 @@ define([
                 if (indices.length > 0) {
                     var indicesArray = new Uint16Array(indices);
                     var indexBuffer = context.createIndexBuffer(indicesArray, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-                    indexBuffer.setVertexArrayDestroyable(false);
                     vbo += vertexBufferOffset[k];
                     var positionHighOffset = 2 * (k * (positionSizeInBytes * SIXTYFOURK) - vbo * positionSizeInBytes);//componentsPerAttribute(3) * componentDatatype(4)
                     var positionLowOffset = positionSizeInBytes + positionHighOffset;
