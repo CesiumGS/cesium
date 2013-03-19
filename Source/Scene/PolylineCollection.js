@@ -977,8 +977,7 @@ define([
 
     var computeAdjacencyAnglesPosition = new Cartesian3();
 
-    function computeAdjacencyAngles(position, index, positions, result, modelMatrix) {
-        // TODO handle cross idl
+    function computeAdjacencyAngles(position, index, positions, startSegment, endSegment, result, modelMatrix) {
         if (typeof result === 'undefined') {
             result = new Cartesian4();
         }
@@ -988,7 +987,7 @@ define([
         }
 
         var prev = computeAdjacencyAnglesPosition;
-        if (index === 0) {
+        if (startSegment) {
             Cartesian3.ZERO.clone(prev);
         } else {
             prev = Matrix4.multiplyByPoint(modelMatrix, positions[index - 1], prev);
@@ -999,7 +998,7 @@ define([
         result.y = Math.atan2(prev.y, prev.x);
 
         var next = computeAdjacencyAnglesPosition;
-        if (index === positions.length - 1) {
+        if (endSegment) {
             Cartesian3.ZERO.clone(next);
         } else {
             next = Matrix4.multiplyByPoint(modelMatrix, positions[index + 1], next);
@@ -1019,13 +1018,16 @@ define([
     var scratchWriteOutlineColorArray = new Array(1);
 
     PolylineBucket.prototype.write = function(positionArray, adjacencyArray, colorArray, pickColorArray, miscArray, positionIndex, adjacencyIndex, colorIndex, miscIndex, context) {
+        var mode = this.mode;
         var polylines = this.polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
             var polyline = polylines[i];
             var width = polyline.getWidth();
             var show = polyline.getShow();
-            var positions = this.getPositions(polyline);
+            var segments = this.getSegments(polyline);
+            var positions = segments.positions;
+            var lengths = segments.lengths;
             var positionsLength = positions.length;
 
             var colors = polyline.getColors();
@@ -1049,18 +1051,29 @@ define([
             var vertexColorIndex = 0;
             var vertexOutlineColorIndex = 0;
 
+            var segmentIndex = 0;
+            var count = 0;
+
             for ( var j = 0; j < positionsLength; ++j) {
                 var position = positions[j];
                 scratchWritePosition.x = position.x;
                 scratchWritePosition.y = position.y;
                 scratchWritePosition.z = (this.mode !== SceneMode.SCENE2D) ? position.z : 0.0;
 
-                var adjacencyAngles = computeAdjacencyAngles(position, j, positions, scratchWriteAdjacency);
+                var segmentLength = lengths[segmentIndex];
+                if (j === count + segmentLength) {
+                    count += segmentLength;
+                    ++segmentIndex;
+                }
+
+                var segmentStart = j - count === 0;
+                var segmentEnd = j === count + lengths[segmentIndex] - 1;
+                var adjacencyAngles = computeAdjacencyAngles(position, j, positions, segmentStart, segmentEnd, scratchWriteAdjacency);
 
                 for (var k = 0; k < 2; ++k) {
                     EncodedCartesian3.writeElements(scratchWritePosition, positionArray, positionIndex);
 
-                    if (this.mode === SceneMode.SCENE3D) {
+                    if (mode === SceneMode.SCENE3D) {
                         adjacencyArray[adjacencyIndex] = adjacencyAngles.x;
                         adjacencyArray[adjacencyIndex + 1] = adjacencyAngles.y;
                         adjacencyArray[adjacencyIndex + 4] = adjacencyAngles.z;
@@ -1113,11 +1126,24 @@ define([
         for ( var i = 0; i < length; ++i) {
             var polyline = polylines[i];
             var positions = polyline._segments.positions;
+            var lengths = polyline._segments.lengths;
             var positionsLength = positions.length;
+
+            var segmentIndex = 0;
+            var count = 0;
 
             for ( var j = 0; j < positionsLength; ++j) {
                 var position = Matrix4.multiplyByPoint(modelMatrix, positions[j], morphPositionScratch);
-                var adjacencyAngles = computeAdjacencyAngles(position, j, positions, scratchAdjacency, modelMatrix);
+
+                var segmentLength = lengths[segmentIndex];
+                if (j === count + segmentLength) {
+                    count += segmentLength;
+                    ++segmentIndex;
+                }
+
+                var segmentStart = j - count === 0;
+                var segmentEnd = j === count + lengths[segmentIndex] - 1;
+                var adjacencyAngles = computeAdjacencyAngles(position, j, positions, segmentStart, segmentEnd, scratchWriteAdjacency);
 
                 for (var k = 0; k < 2; ++k) {
                     EncodedCartesian3.writeElements(position, positionArray, positionIndex);
@@ -1229,7 +1255,13 @@ define([
         return positionIndex;
     };
 
-    PolylineBucket.prototype.getPositions = function(polyline) {
+    var scratchSegments = {
+        positions : undefined,
+        lengths : undefined
+    };
+    var scratchLengths = new Array(1);
+
+    PolylineBucket.prototype.getSegments = function(polyline) {
         var positions = polyline.getPositions();
 
         if (positions.length > 0) {
@@ -1241,8 +1273,12 @@ define([
         }
 
         if (this.mode === SceneMode.SCENE3D) {
-            return positions;
+            scratchLengths[0] = positions.length;
+            scratchSegments.positions = positions;
+            scratchSegments.lengths = scratchLengths;
+            return scratchSegments;
         }
+
         if (intersectsIDL(polyline)) {
             positions = polyline._segments.positions;
         }
@@ -1272,33 +1308,52 @@ define([
             }
         }
 
-        return newPositions;
+        scratchSegments.positions = newPositions;
+        scratchSegments.lengths = polyline._segments.lengths;
+        return scratchSegments;
     };
 
 
     var scratchAdjacency = new Cartesian4();
 
     PolylineBucket.prototype.writePositionsUpdate = function(positionIndex, polyline, positionBuffer, adjacencyBuffer) {
+        var mode = this.mode;
         var positionsLength = polyline._actualLength;
         if (positionsLength) {
             positionIndex += this.getPolylineStartIndex(polyline);
             var positionArray = new Float32Array(2 * positionsLength * 3 * 2);
             var adjacencyArray = new Float32Array(2 * positionsLength * 4 * 2);
+
             var index = 0;
             var adjacencyIndex = 0;
-            var positions = this.getPositions(polyline);
+
+            var segments = this.getSegments(polyline);
+            var positions = segments.positions;
+            var lengths = segments.lengths;
+
+            var segmentIndex = 0;
+            var count = 0;
+
             for ( var i = 0; i < positionsLength; ++i) {
                 var position = positions[i];
                 scratchWritePosition.x = position.x;
                 scratchWritePosition.y = position.y;
                 scratchWritePosition.z = (this.mode !== SceneMode.SCENE2D) ? position.z : 0.0;
 
-                var adjacencyAngles = computeAdjacencyAngles(position, i, positions, scratchAdjacency);
+                var segmentLength = lengths[segmentIndex];
+                if (i === count + segmentLength) {
+                    count += segmentLength;
+                    ++segmentIndex;
+                }
+
+                var segmentStart = i - count === 0;
+                var segmentEnd = i === count + lengths[segmentIndex] - 1;
+                var adjacencyAngles = computeAdjacencyAngles(position, i, positions, segmentStart, segmentEnd, scratchAdjacency);
 
                 for (var j = 0; j < 2; ++j) {
                     EncodedCartesian3.writeElements(scratchWritePosition, positionArray, index);
 
-                    if (this.mode === SceneMode.SCENE3D) {
+                    if (mode === SceneMode.SCENE3D) {
                         adjacencyArray[adjacencyIndex] = adjacencyAngles.x;
                         adjacencyArray[adjacencyIndex + 1] = adjacencyAngles.y;
                         adjacencyArray[adjacencyIndex + 4] = adjacencyAngles.z;
