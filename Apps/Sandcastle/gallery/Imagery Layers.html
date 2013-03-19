@@ -24,7 +24,7 @@
 require(['Cesium'], function(Cesium) {
     "use strict";
 
-    var widget = new CesiumViewer('cesiumContainer');
+    var widget = new Cesium.CesiumWidget('cesiumContainer');
 
     var layers = widget.centralBody.getImageryLayers();
     layers.removeAll();

@@ -1,29 +1,15 @@
 .cesium-widget,.cesium-widget canvas {
-    width: 100%;
-    height: 100%;
-}
-
-.cesium-loadingIndicator {
-    background-image: url(../Images/ajax-loader.gif);
-    background-position: center;
-    background-repeat: no-repeat;
-    display: none;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    margin-top: -33px;
-    margin-left: -33px;
-    width: 66px;
-    height: 66px;
+	width: 100%;
+	height: 100%;
 }
 
 .cesium-logo {
-    background-image: url(../Images/Cesium_Logo_overlay.png);
-    display: block;
-    position: absolute;
-    bottom: 4px;
-    left: 0;
-    text-decoration: none;
-    width: 118px;
-    height: 26px;
+	background-image: url(../Images/Cesium_Logo_overlay.png);
+	display: block;
+	position: absolute;
+	bottom: 4px;
+	left: 0;
+	text-decoration: none;
+	width: 118px;
+	height: 26px;
 }

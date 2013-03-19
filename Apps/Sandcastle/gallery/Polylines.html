@@ -37,7 +37,7 @@ require([
     "use strict";
 
     function createPrimitives(widget) {
-        var ellipsoid = widget.ellipsoid;
+        var ellipsoid = widget.centralBody.getEllipsoid();
         var primitives = widget.scene.getPrimitives();
         var polylines = new Cesium.PolylineCollection();
 

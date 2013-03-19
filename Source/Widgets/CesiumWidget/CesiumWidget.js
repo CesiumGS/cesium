@@ -1,8 +1,8 @@
 /*global define*/
-define([
-        '../ClockViewModel',
-        '../../Core/buildModuleUrl',
+define(['../../Core/buildModuleUrl',
         '../../Core/Cartesian2',
+        '../../Core/Cartesian3',
+        '../../Core/Clock',
         '../../Core/DefaultProxy',
         '../../Core/defaultValue',
         '../../Core/DeveloperError',
@@ -16,9 +16,10 @@ define([
         '../../Scene/SkyBox',
         '../../Scene/SkyAtmosphere'
     ], function(
-        ClockViewModel,
         buildModuleUrl,
         Cartesian2,
+        Cartesian3,
+        Clock,
         DefaultProxy,
         defaultValue,
         DeveloperError,
@@ -43,13 +44,30 @@ define([
      * @alias CesiumWidget
      * @constructor
      *
-     * @param {DOMElement|String} container The DOM element, or ID of a page element, that will contain the widget.
-     * @param {Object} [options={}] Configuration options for the widget.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for the central body in the scene.
-     * @param {Clock} [options.clockViewModel=new ClockViewModel()] The clock to use to control current time.
-     * @param {Boolean} [options.showStars=true] Whether stars are drawn around the globe.
-     * @param {Boolean} [options.showSkyAtmosphere=true] Whether a sky atmosphere is drawn around the globe.
-     * @param {Boolean} [options.autoResize=true] Whether to automatically resize the widget when the browser window resizes. This is needed when the widget fills the browser window, or is part of a fluid layout where the size of the widget changes as the window changes size.
+     * @param {Element|String} container The DOM element, or ID of a page element, that will contain the widget.
+     * @param {Object} [options] Configuration options for the widget.
+     * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
+     * @param {ImageryProvider} [options.baseMap=new BingMapsImageryProvider()] The basemap imagery provider.
+     * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
+     *
+     * @exception {DeveloperError} container is required.
+     * @exception {DeveloperError} Element with id "container" does not exist in the document.
+     *
+     * @example
+     * // For each example, include a link to CesiumWidget.css stylesheet in HTML head,
+     * // and in the body, include: &lt;div id="cesiumContainer"&gt;&lt;/div&gt;
+     *
+     * //Widget with no terrain and default Bing Maps imagery provider.
+     * var widget = new Cesium.CesiumWidget('cesiumContainer');
+     *
+     * //Widget with OpenStreetMaps baseMap and Cesium terrain provider hosted by AGI.
+     * var widget = new Cesium.CesiumWidget('cesiumContainer', {
+     *     baseMap : new Cesium.OpenStreetMapImageryProvider(),
+     *     terrainProvider : new Cesium.CesiumTerrainProvider({
+     *         url : 'http://cesium.agi.com/smallterrain',
+     *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+     *     })
+     * });
      */
     var CesiumWidget = function(container, options) {
         if (typeof container === 'undefined') {
@@ -57,102 +75,141 @@ define([
         }
 
         if (typeof container === 'string') {
-            this.container = document.getElementById(container);
-        } else {
-            this.container = container;
+            var tmp = document.getElementById(container);
+            if (tmp === null) {
+                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
+            }
+            container = tmp;
         }
-
-        var widget = this;
 
         options = defaultValue(options, {});
 
-        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        this.clockViewModel = options.clockViewModel;
-        if (typeof this.clockViewModel === 'undefined') {
-            this.clockViewModel = new ClockViewModel();
-            this.clockViewModel.clock.multiplier = 10000;
-        }
+        //Configure the widget DOM elements
+        var widgetNode = document.createElement('div');
+        widgetNode.className = 'cesium-widget';
+        container.appendChild(widgetNode);
 
-        /**
-         * Whether stars are drawn around the globe.
-         *
-         * @type {Boolean}
-         * @default true
-         *
-         * @see SkyBox
-         */
-        this.showStars = defaultValue(options.showStars, true);
-        this._showStars = undefined;
-
-        /**
-         * Whether a sky atmosphere is drawn around the globe.
-         *
-         * @type {Boolean}
-         * @default true
-         *
-         * @see SkyAtmosphere
-         */
-        this.showSkyAtmosphere = defaultValue(options.showSkyAtmosphere, true);
-        this._showSkyAtmosphere = undefined;
-
-        this.widgetNode = document.createElement('div');
-        this.widgetNode.className = 'cesium-widget';
-        this.container.appendChild(this.widgetNode);
-
-        this.canvas = document.createElement('canvas');
-        this.canvas.oncontextmenu = function() {
+        var canvas = document.createElement('canvas');
+        canvas.oncontextmenu = function() {
             return false;
         };
-        this.canvas.onselectstart = function() {
+        canvas.onselectstart = function() {
             return false;
         };
-        this.widgetNode.appendChild(this.canvas);
+        widgetNode.appendChild(canvas);
 
-        this.cesiumLogo = document.createElement('a');
-        this.cesiumLogo.href = 'http://cesium.agi.com/';
-        this.cesiumLogo.target = '_blank';
-        this.cesiumLogo.className = 'cesium-logo';
-        this.widgetNode.appendChild(this.cesiumLogo);
+        var cesiumLogo = document.createElement('a');
+        cesiumLogo.href = 'http://cesium.agi.com/';
+        cesiumLogo.target = '_blank';
+        cesiumLogo.className = 'cesium-logo';
+        widgetNode.appendChild(cesiumLogo);
 
-        this.scene = new Scene(this.canvas);
+        var scene = new Scene(canvas);
+        scene.getCamera().controller.constrainedAxis = Cartesian3.UNIT_Z;
 
-        var centralBody = new CentralBody(this._ellipsoid);
+        var _ellipsoid = Ellipsoid.WGS84;
+
+        var centralBody = new CentralBody(_ellipsoid);
         centralBody.logoOffset = new Cartesian2(125, 0);
-        this.scene.getPrimitives().setCentralBody(centralBody);
-        this.centralBody = centralBody;
+        scene.getPrimitives().setCentralBody(centralBody);
 
-        var imageryProvider = options.imageryProvider;
-        if (typeof imageryProvider === 'undefined') {
-            imageryProvider = new BingMapsImageryProvider({
+        scene.skyBox = new SkyBox({
+            positiveX : getDefaultSkyBoxUrl('px'),
+            negativeX : getDefaultSkyBoxUrl('mx'),
+            positiveY : getDefaultSkyBoxUrl('py'),
+            negativeY : getDefaultSkyBoxUrl('my'),
+            positiveZ : getDefaultSkyBoxUrl('pz'),
+            negativeZ : getDefaultSkyBoxUrl('mz')
+        });
+
+        scene.skyAtmosphere = new SkyAtmosphere(_ellipsoid);
+
+        //Set the base imagery layer
+        var baseMap = options.baseMap;
+        if (typeof baseMap === 'undefined') {
+            baseMap = new BingMapsImageryProvider({
                 url : 'http://dev.virtualearth.net',
                 // Some versions of Safari support WebGL, but don't correctly implement
                 // cross-origin image loading, so we need to load Bing imagery using a proxy.
                 proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('http://cesium.agi.com/proxy/')
             });
         }
-        centralBody.getImageryLayers().addImageryProvider(imageryProvider);
+        centralBody.getImageryLayers().addImageryProvider(baseMap);
 
+        //And the terrain provider if one is provided.
         if (typeof options.terrainProvider !== 'undefined') {
             centralBody.terrainProvider = options.terrainProvider;
         }
 
-        this.transitioner = new SceneTransitioner(this.scene, this._ellipsoid);
+        /**
+         * Gets the parent container.
+         * @memberof CesiumWidget
+         * @type {Element}
+         */
+        this.container = container;
 
-        this.resize();
+        /**
+         * Gets the widget DOM element, which contains the canvas and Cesium logo.
+         * @memberof CesiumWidget
+         * @type {Element}
+         */
+        this.widgetNode = widgetNode;
 
+        /**
+         * Gets the canvas.
+         * @memberof CesiumWidget
+         * @type {Canvas}
+         */
+        this.canvas = canvas;
+
+        /**
+         * Gets the Cesium logo.
+         * @memberof CesiumWidget
+         * @type {Element}
+         */
+        this.cesiumLogo = cesiumLogo;
+
+        /**
+         * Gets the scene.
+         * @memberof CesiumWidget
+         * @type {Scene}
+         */
+        this.scene = scene;
+
+        /**
+         * Gets the central body.
+         * @memberof CesiumWidget
+         * @type {CentralBody}
+         */
+        this.centralBody = centralBody;
+
+        /**
+         * Gets the clock view model.
+         * @memberof CesiumWidget
+         * @type {Clock}
+         */
+        this.clock = defaultValue(options.clock, new Clock());
+
+        /**
+         * Gets the scene transitioner.
+         * @memberof CesiumWidget
+         * @type {SceneTransitioner}
+         */
+        this.transitioner = new SceneTransitioner(scene, _ellipsoid);
+
+        var widget = this;
+        //Subscribe for resize events and set the initial size.
         this._needResize = false;
-        var autoResize = defaultValue(options.autoResize, true);
-        if (autoResize) {
-            window.addEventListener('resize', function() {
-                widget._needResize = true;
-            }, false);
-        }
+        this.resize();
+        window.addEventListener('resize', function() {
+            widget._needResize = true;
+        }, false);
 
+        //Create and start the render loop
         function render() {
             widget.render();
             requestAnimationFrame(render);
         }
-
         requestAnimationFrame(render);
     };
 
@@ -189,35 +246,7 @@ define([
             this._needResize = false;
         }
 
-        if (this._showSkyAtmosphere !== this.showSkyAtmosphere) {
-            if (this.showSkyAtmosphere) {
-                this.scene.skyAtmosphere = new SkyAtmosphere(this._ellipsoid);
-            } else {
-                if (typeof this.scene.skyAtmosphere !== 'undefined') {
-                    this.scene.skyAtmosphere.destroy();
-                }
-                this.scene.skyAtmosphere = undefined;
-            }
-            this._showSkyAtmosphere = this.showSkyAtmosphere;
-        }
-
-        if (this._showStars !== this.showStars) {
-            if (this.showStars) {
-                this.scene.skyBox = new SkyBox({
-                    positiveX : getDefaultSkyBoxUrl('px'),
-                    negativeX : getDefaultSkyBoxUrl('mx'),
-                    positiveY : getDefaultSkyBoxUrl('py'),
-                    negativeY : getDefaultSkyBoxUrl('my'),
-                    positiveZ : getDefaultSkyBoxUrl('pz'),
-                    negativeZ : getDefaultSkyBoxUrl('mz')
-                });
-            } else if (typeof this.scene.skyBox !== 'undefined') {
-                this.scene.skyBox = this.scene.skyBox.destroy();
-            }
-            this._showStars = this.showStars;
-        }
-
-        var currentTime = this.clockViewModel.clock.tick();
+        var currentTime = this.clock.tick();
         this.scene.initializeFrame();
         this.scene.render(currentTime);
     };

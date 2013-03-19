@@ -99,7 +99,7 @@ require([
     }
 
     function createButtons(widget) {
-        var ellipsoid = widget.ellipsoid;
+        var ellipsoid = widget.centralBody.getEllipsoid();
         var scene = widget.scene;
         var primitives = scene.getPrimitives();
 
@@ -143,7 +143,7 @@ require([
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
     createButtons(widget);
-    addLabel(widget.scene, widget.ellipsoid);
+    addLabel(widget.scene, widget.centralBody.getEllipsoid());
 
     Sandcastle.finishedLoading();
 });

@@ -77,7 +77,7 @@ require([
     }
 
     function createButtons(widget, sensors) {
-        var ellipsoid = widget.ellipsoid;
+        var ellipsoid = widget.centralBody.getEllipsoid();
         var scene = widget.scene;
         var primitives = scene.getPrimitives();
         primitives.add(sensors);
@@ -117,7 +117,7 @@ require([
 
     var sensors = new Cesium.SensorVolumeCollection();
     createButtons(widget, sensors);
-    addRectangularSensor(sensors, widget.ellipsoid, widget.scene);
+    addRectangularSensor(sensors, widget.centralBody.getEllipsoid(), widget.scene);
 
     Sandcastle.finishedLoading();
 });
