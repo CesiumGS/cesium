@@ -4,6 +4,7 @@ defineSuite([
              'Specs/createScene',
              'Specs/destroyScene',
              'Specs/MockProperty',
+             'DynamicScene/DynamicEllipse',
              'DynamicScene/DynamicPolyline',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',
@@ -17,6 +18,7 @@ defineSuite([
               createScene,
               destroyScene,
               MockProperty,
+              DynamicEllipse,
               DynamicPolyline,
               DynamicObjectCollection,
               DynamicObject,
@@ -102,6 +104,72 @@ defineSuite([
         expect(scene.getPrimitives().getLength()).toEqual(1);
         var polylineCollection = scene.getPrimitives().get(0);
         expect(polylineCollection.getLength()).toEqual(0);
+    });
+
+    it('object with ellipse and no position does not create a polyline.', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicPolylineVisualizer(scene, dynamicObjectCollection);
+
+        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        testObject.ellipse = new DynamicEllipse();
+        var polyline = testObject.polyline = new DynamicPolyline();
+        polyline.show = new MockProperty(true);
+
+        visualizer.update(new JulianDate());
+        expect(scene.getPrimitives().getLength()).toEqual(1);
+        var polylineCollection = scene.getPrimitives().get(0);
+        expect(polylineCollection.getLength()).toEqual(0);
+    });
+
+    it('object with ellipse and position properties and no ellipse properties does not create positions.', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicPolylineVisualizer(scene, dynamicObjectCollection);
+
+        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.ellipse = new DynamicEllipse();
+        var polyline = testObject.polyline = new DynamicPolyline();
+        polyline.show = new MockProperty(true);
+
+        visualizer.update(new JulianDate());
+        expect(scene.getPrimitives().getLength()).toEqual(1);
+        var polylineCollection = scene.getPrimitives().get(0);
+        var primitive = polylineCollection.get(0);
+        expect(primitive.getPositions().length).toEqual(0);
+    });
+
+    it('DynamicPolyline with ellipse and position creates a primitive and updates it.', function() {
+        var time = new JulianDate();
+
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicPolylineVisualizer(scene, dynamicObjectCollection);
+        expect(scene.getPrimitives().getLength()).toEqual(1);
+
+        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
+        var polyline = testObject.polyline = new DynamicPolyline();
+        polyline.show = new MockProperty(true);
+
+        var ellipse = testObject.ellipse = new DynamicEllipse();
+        ellipse.bearing = new MockProperty(0);
+        ellipse.semiMajorAxis = new MockProperty(1000);
+        ellipse.semiMinorAxis = new MockProperty(1000);
+        visualizer.update(new JulianDate());
+
+        expect(scene.getPrimitives().getLength()).toEqual(1);
+        var polylineCollection = scene.getPrimitives().get(0);
+        expect(polylineCollection.getLength()).toEqual(1);
+        var primitive = polylineCollection.get(0);
+        expect(primitive.getPositions().length).toBeGreaterThan(0);
+
+
+        visualizer.update(time);
+        expect(scene.getPrimitives().getLength()).toEqual(1);
+        polylineCollection = scene.getPrimitives().get(0);
+        primitive = polylineCollection.get(0);
+        expect(primitive.getShow()).toEqual(testObject.polyline.show.getValue(time));
+        expect(primitive.getPositions().length > 0);
+
     });
 
     it('A DynamicPolyline causes a primtive to be created and updated.', function() {
