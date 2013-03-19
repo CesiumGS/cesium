@@ -1,19 +1,15 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/Cartesian3',
         '../Core/Color',
-        '../Core/Ellipsoid',
-        '../Core/Shapes',
         '../Scene/PolylineCollection'
        ], function(
-         defaultValue,
          DeveloperError,
          destroyObject,
+         Cartesian3,
          Color,
-         Ellipsoid,
-         Shapes,
          PolylineCollection) {
     "use strict";
 
@@ -52,8 +48,6 @@ define([
         this._primitives = scene.getPrimitives();
         var polylineCollection = this._polylineCollection = new PolylineCollection();
         scene.getPrimitives().add(polylineCollection);
-        var cb = scene._primitives.getCentralBody();
-        this._ellipsoid = (typeof cb !== 'undefined') ? cb.getEllipsoid() : Ellipsoid.WGS84;
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -173,30 +167,25 @@ define([
         return destroyObject(this);
     };
 
+    var cachedPosition = new Cartesian3();
     DynamicPolylineVisualizer.prototype._updateObject = function(time, dynamicObject) {
         var dynamicPolyline = dynamicObject.polyline;
         if (typeof dynamicPolyline === 'undefined') {
             return;
         }
 
-        var ellipseProperty = dynamicObject.ellipse;
-        var positionProperty = dynamicObject.position;
-
-        var vertexPositionsProperty = dynamicObject.vertexPositions;
-        if (typeof vertexPositionsProperty === 'undefined' && (typeof ellipseProperty === 'undefined' || typeof positionProperty === 'undefined')) {
-            return;
-        }
-
-
-
-
         var polyline;
         var showProperty = dynamicPolyline.show;
+        var ellipseProperty = dynamicObject.ellipse;
+        var positionProperty = dynamicObject.position;
+        var vertexPositionsProperty = dynamicObject.vertexPositions;
         var polylineVisualizerIndex = dynamicObject._polylineVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
-        if (!show) {
-            //don't bother creating or updating anything else
+        if (!show || //
+           (typeof vertexPositionsProperty === 'undefined' && //
+           (typeof ellipseProperty === 'undefined' || typeof positionProperty === 'undefined'))) {
+            //Remove the existing primitive if we have one
             if (typeof polylineVisualizerIndex !== 'undefined') {
                 polyline = this._polylineCollection.get(polylineVisualizerIndex);
                 polyline.setShow(false);
@@ -229,12 +218,14 @@ define([
         }
 
         polyline.setShow(true);
+
         var vertexPositions;
-        if(typeof ellipseProperty !== 'undefined'){
-            vertexPositions = ellipseProperty.getValue(time, this._ellipsoid, positionProperty);
-        } else{
-           vertexPositions = vertexPositionsProperty.getValueCartesian(time);
+        if (typeof ellipseProperty !== 'undefined') {
+            vertexPositions = ellipseProperty.getValue(time, positionProperty.getValueCartesian(time, cachedPosition));
+        } else {
+            vertexPositions = vertexPositionsProperty.getValueCartesian(time);
         }
+
         if (typeof vertexPositions !== 'undefined' && polyline._visualizerPositions !== vertexPositions) {
             polyline.setPositions(vertexPositions);
             polyline._visualizerPositions = vertexPositions;

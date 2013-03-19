@@ -1,18 +1,13 @@
 /*global define*/
-define([
+define(['../Core/Cartesian3',
         '../Core/DeveloperError',
-        '../Core/defaultValue',
         '../Core/destroyObject',
-        '../Core/Ellipsoid',
-        '../Core/Shapes',
         '../Scene/Polygon',
         '../Scene/Material'
        ], function(
+         Cartesian3,
          DeveloperError,
-         defaultValue,
          destroyObject,
-         Ellipsoid,
-         Shapes,
          Polygon,
          Material) {
     "use strict";
@@ -52,8 +47,6 @@ define([
         this._primitives = scene.getPrimitives();
         this._polygonCollection = [];
         this._dynamicObjectCollection = undefined;
-        var cb = scene._primitives.getCentralBody();
-        this._ellipsoid = (typeof cb !== 'undefined') ? cb.getEllipsoid() : Ellipsoid.WGS84;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
 
@@ -174,34 +167,25 @@ define([
         return destroyObject(this);
     };
 
+    var cachedPosition = new Cartesian3();
     DynamicPolygonVisualizer.prototype._updateObject = function(time, dynamicObject) {
-        var context = this._scene.getContext();
         var dynamicPolygon = dynamicObject.polygon;
         if (typeof dynamicPolygon === 'undefined') {
             return;
         }
 
-        var ellipseProperty = dynamicObject.ellipse;
-        var positionProperty = dynamicObject.position;
-
-        var vertexPositionsProperty = dynamicObject.vertexPositions;
-        if (typeof vertexPositionsProperty === 'undefined' && (typeof ellipseProperty === 'undefined' || typeof positionProperty === 'undefined')) {
-            return;
-        }
-
-        var vertexPositions;
-        if(typeof vertexPositionsProperty !== 'undefined'){
-            vertexPositions = vertexPositionsProperty.getValueCartesian(time);
-        }
-
         var polygon;
         var showProperty = dynamicPolygon.show;
+        var ellipseProperty = dynamicObject.ellipse;
+        var positionProperty = dynamicObject.position;
+        var vertexPositionsProperty = dynamicObject.vertexPositions;
         var polygonVisualizerIndex = dynamicObject._polygonVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
-
-
-        if (!show || ((typeof vertexPositions === 'undefined' || vertexPositions.length < 3) && typeof ellipseProperty ==='undefined')) {
-            //don't bother creating or updating anything else
+        var hasVertexPostions = typeof vertexPositionsProperty !== 'undefined';
+        if (!show || //
+           (!hasVertexPostions && //
+           (typeof ellipseProperty === 'undefined' || typeof positionProperty === 'undefined'))) {
+            //Remove the existing primitive if we have one
             if (typeof polygonVisualizerIndex !== 'undefined') {
                 polygon = this._polygonCollection[polygonVisualizerIndex];
                 polygon.show = false;
@@ -211,6 +195,7 @@ define([
             return;
         }
 
+        var context = this._scene.getContext();
         if (typeof polygonVisualizerIndex === 'undefined') {
             var unusedIndexes = this._unusedIndexes;
             var length = unusedIndexes.length;
@@ -228,17 +213,22 @@ define([
 
             // CZML_TODO Determine official defaults
             polygon.material = Material.fromType(context, Material.ColorType);
-
         } else {
             polygon = this._polygonCollection[polygonVisualizerIndex];
         }
 
         polygon.show = true;
-        if(typeof ellipseProperty !== 'undefined'){
-            vertexPositions = ellipseProperty.getValue(time, this._ellipsoid, positionProperty);
+
+        var vertexPositions;
+        if (hasVertexPostions) {
+            vertexPositions = vertexPositionsProperty.getValueCartesian(time);
+        } else {
+            vertexPositions = ellipseProperty.getValue(time, positionProperty.getValueCartesian(time, cachedPosition));
         }
 
-        if (polygon._visualizerPositions !== vertexPositions) {
+        if (polygon._visualizerPositions !== vertexPositions && //
+            typeof vertexPositions !== 'undefined' && //
+            vertexPositions.length > 3) {
             polygon.setPositions(vertexPositions);
             polygon._visualizerPositions = vertexPositions;
         }

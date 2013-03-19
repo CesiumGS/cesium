@@ -1,24 +1,19 @@
 /*global define*/
-define([
-        '../Core/TimeInterval',
+define(['../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/Cartesian3',
+        '../Core/Ellipsoid',
         '../Core/Shapes',
-        './CzmlBoolean',
-        './CzmlCartesian3',
-        './CzmlColor',
         './CzmlNumber',
-        './DynamicProperty',
-        './DynamicMaterialProperty'
+        './DynamicProperty'
         ], function (
-                TimeInterval,
-                defaultValue,
-                Shapes,
-                CzmlBoolean,
-                CzmlCartesian3,
-                CzmlColor,
-                CzmlNumber,
-                DynamicProperty,
-                DynamicMaterialProperty) {
+            TimeInterval,
+            defaultValue,
+            Cartesian3,
+            Ellipsoid,
+            Shapes,
+            CzmlNumber,
+            DynamicProperty) {
     "use strict";
 
     /**
@@ -35,7 +30,7 @@ define([
      * @see VisualizerCollection
      * @see CzmlDefaults
      */
-    var DynamicEllipse = function () {
+    var DynamicEllipse = function() {
         /**
          * A DynamicProperty of type CzmlNumber which determines the ellipse's semiMajorAxis.
          * @type DynamicProperty
@@ -53,10 +48,10 @@ define([
          */
         this.bearing = undefined;
 
-        this._cachedPosition = undefined;
-        this._cachedSemiMajorAxis = 0;
-        this._cachedSemiMinorAxis = 0;
-        this._cachedBearing = 0;
+        this._lastPosition = undefined;
+        this._lastSemiMajorAxis = undefined;
+        this._lastSemiMinorAxis = undefined;
+        this._lastBearing = undefined;
         this._cachedVertexPositions = undefined;
     };
 
@@ -77,7 +72,7 @@ define([
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicEllipse.processCzmlPacket = function (dynamicObject, packet, dynamicObjectCollection) {
+    DynamicEllipse.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
         var ellipseData = packet.ellipse;
         if (typeof ellipseData === 'undefined') {
             return false;
@@ -136,7 +131,7 @@ define([
      *
      * @see CzmlDefaults
      */
-    DynamicEllipse.mergeProperties = function (targetObject, objectToMerge) {
+    DynamicEllipse.mergeProperties = function(targetObject, objectToMerge) {
         var ellipseToMerge = objectToMerge.ellipse;
         if (typeof ellipseToMerge !== 'undefined') {
 
@@ -160,7 +155,7 @@ define([
      *
      * @see CzmlDefaults
      */
-    DynamicEllipse.undefineProperties = function (dynamicObject) {
+    DynamicEllipse.undefineProperties = function(dynamicObject) {
         dynamicObject.ellipse = undefined;
     };
 
@@ -169,39 +164,52 @@ define([
      *
      * @param {JulianDate} time The desired time.
      * @param {Ellipsoid} ellipsoid The ellipsoid on which the ellipse will be on.
-     * @param {DynamicObject} positionProperty The DynamicObject which contains the position data.
+     * @param {Cartesian3} position The position of the ellipsoid.
      * @returns An array of vertex positions.
      */
-    DynamicEllipse.prototype.getValue = function(time, ellipsoid, positionProperty){
-        var position = defaultValue(positionProperty.getValueCartesian(time, position), this._cachedPosition);
+    DynamicEllipse.prototype.getValue = function(time, position) {
         var semiMajorAxisProperty = this.semiMajorAxis;
         var semiMinorAxisProperty = this.semiMinorAxis;
+
+        if (typeof position === 'undefined' || //
+            typeof semiMajorAxisProperty === 'undefined' || //
+            typeof semiMinorAxisProperty === 'undefined') {
+            return undefined;
+        }
+
+        var semiMajorAxis = semiMajorAxisProperty.getValue(time);
+        var semiMinorAxis = semiMinorAxisProperty.getValue(time);
+
+        var bearing = 0.0;
         var bearingProperty = this.bearing;
-        if(typeof semiMajorAxisProperty === 'undefined' && typeof semiMinorAxisProperty === 'undefined' ){
-            return;
+        if (typeof bearingProperty !== 'undefined') {
+            bearing = bearingProperty.getValue(time);
         }
-        var semiMajorAxis = defaultValue(semiMajorAxisProperty.getValue(time, semiMajorAxis), this._cachedSemiMajorAxis);
-        var semiMinorAxis = defaultValue(semiMinorAxisProperty.getValue(time, semiMinorAxis), this._cachedSemiMinorAxis);
-        var bearing = 0.00;
-        if(bearingProperty !== 'undefined'){
-            bearing = defaultValue(bearingProperty.getValue(time, bearing), this._cachedBearing);
+
+        if (typeof semiMajorAxis === 'undefined' || //
+            typeof semiMinorAxis === 'undefined' || //
+            semiMajorAxis === 0.0 || //
+            semiMinorAxis === 0.0) {
+            return undefined;
         }
-        if (typeof position !== 'undefined' &&
-                typeof bearing !== 'undefined' &&
-                typeof semiMajorAxis !== 'undefined' &&
-                typeof semiMinorAxis !== 'undefined' &&
-                semiMajorAxis !== 0.0 &&
-                semiMinorAxis !== 0.0 &&
-                (!position.equals(this._cachedPosition) ||
-                        bearing !== this._cachedBearing ||
-                        semiMajorAxis !== this._cachedSemiMajorAxis ||
-                        semiMinorAxis !== this._cachedSemiMinorAxis)) {
-            this._cachedPosition = position;
-            this._cachedBearing = bearing;
-            this._cachedSemiMajorAxis = semiMajorAxis;
-            this._cachedSemiMinorAxis = semiMinorAxis;
-            this._cachedVertexPositions = Shapes.computeEllipseBoundary(ellipsoid, position, semiMajorAxis, semiMinorAxis, bearing);
+
+        var lastPosition = this._lastPosition;
+        var lastSemiMajorAxis = this._lastSemiMajorAxis;
+        var lastSemiMinorAxis = this._lastSemiMinorAxis;
+        var lastBearing = this._lastBearing;
+        if (bearing !== lastBearing || //
+            lastSemiMajorAxis !== semiMajorAxis || //
+            lastSemiMinorAxis !== semiMinorAxis || //
+            !Cartesian3.equals(lastPosition, position)) {
+
+            //CZML_TODO The surface reference should come from CZML and not be hard-coded to Ellipsoid.WGS84.
+            this._cachedVertexPositions = Shapes.computeEllipseBoundary(Ellipsoid.WGS84, position, semiMajorAxis, semiMinorAxis, bearing);
+            this._lastPosition = Cartesian3.clone(position, this._lastPosition);
+            this._lastBearing = bearing;
+            this._lastSemiMajorAxis = semiMajorAxis;
+            this._lastSemiMinorAxis = semiMinorAxis;
         }
+
         return this._cachedVertexPositions;
     };
 
