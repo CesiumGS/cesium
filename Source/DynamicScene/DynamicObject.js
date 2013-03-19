@@ -104,6 +104,12 @@ define([
         this.ellipsoid = undefined;
 
         /**
+        * Gets or sets the ellipse.
+        * @type DynamicEllipse
+        */
+        this.ellipse = undefined;
+
+        /**
          * Gets or sets the label.
          * @type DynamicLabel
          */
