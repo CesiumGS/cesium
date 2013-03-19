@@ -4,6 +4,7 @@ defineSuite([
              'Specs/createScene',
              'Specs/destroyScene',
              'Specs/MockProperty',
+             'DynamicScene/DynamicEllipse',
              'DynamicScene/DynamicPolygon',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',
@@ -17,6 +18,7 @@ defineSuite([
               createScene,
               destroyScene,
               MockProperty,
+              DynamicEllipse,
               DynamicPolygon,
               DynamicObjectCollection,
               DynamicObject,
@@ -98,6 +100,67 @@ defineSuite([
 
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(0);
+    });
+
+    it('object with ellipse and no position does not create a polygon.', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicPolygonVisualizer(scene, dynamicObjectCollection);
+
+        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        testObject.ellipse = new DynamicEllipse();
+        var polygon = testObject.polygon = new DynamicPolygon();
+        polygon.show = new MockProperty(true);
+
+        visualizer.update(new JulianDate());
+        expect(scene.getPrimitives().getLength()).toEqual(0);
+    });
+
+    it('object with ellipse and position properties and no ellipse properties does not create positions.', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicPolygonVisualizer(scene, dynamicObjectCollection);
+
+        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.ellipse = new DynamicEllipse();
+        var polygon = testObject.polygon = new DynamicPolygon();
+        polygon.show = new MockProperty(true);
+
+        visualizer.update(new JulianDate());
+        expect(scene.getPrimitives().getLength()).toEqual(1);
+        var primitive = scene.getPrimitives().get(0);
+        expect(typeof primitive.getPositions()).toEqual('undefined');
+    });
+
+    it('DynamicPolygon with ellipse and position creates a primitive and updates it.', function() {
+        var time = new JulianDate();
+
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicPolygonVisualizer(scene, dynamicObjectCollection);
+        expect(scene.getPrimitives().getLength()).toEqual(0);
+
+        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
+        var polygon = testObject.polygon = new DynamicPolygon();
+        polygon.show = new MockProperty(true);
+        var colorMaterial = Material.fromType(scene.getContext(), Material.ColorType);
+        colorMaterial.uniforms.color = new Color(0.7, 0.6, 0.5, 0.4);
+        polygon.material = new MockProperty(colorMaterial);
+
+        var ellipse = testObject.ellipse = new DynamicEllipse();
+        ellipse.bearing = new MockProperty(0);
+        ellipse.semiMajorAxis = new MockProperty(1000);
+        ellipse.semiMinorAxis = new MockProperty(1000);
+        visualizer.update(new JulianDate());
+
+        expect(scene.getPrimitives().getLength()).toEqual(1);
+
+        var primitive = scene.getPrimitives().get(0);
+
+        visualizer.update(time);
+        expect(primitive.show).toEqual(testObject.polygon.show.getValue(time));
+        expect(primitive.material).toEqual(testObject.polygon.material.getValue(time));
+        expect(primitive.getPositions().length > 0);
+
     });
 
     it('A DynamicPolygon causes a primtive to be created and updated.', function() {

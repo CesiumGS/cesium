@@ -9,7 +9,7 @@ define(function() {
      * @private
      *
      * @param {Imagery} imagery The imagery tile.
-     * @param {Cartesian4} textureCoordinateExtent The texture extent extent of the tile that is covered
+     * @param {Cartesian4} textureCoordinateExtent The texture extent of the tile that is covered
      *        by the imagery, where X=west, Y=south, Z=east, W=north.
      */
     var TileImagery = function(imagery, textureCoordinateExtent) {

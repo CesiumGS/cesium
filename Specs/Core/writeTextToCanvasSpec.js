@@ -45,9 +45,6 @@ defineSuite([
         });
         var context2 = canvas2.getContext('2d');
 
-        expect(canvas1.width).toEqual(canvas2.width);
-        expect(canvas1.height).toEqual(canvas2.height);
-
         var row = 5;
 
         // exact pixel checks are problematic due to browser differences in how text is drawn

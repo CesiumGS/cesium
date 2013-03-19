@@ -287,6 +287,30 @@ defineSuite([
         expect(BoundingSphere.fromExtent3D(extent, ellipsoid)).toEqual(expected);
     });
 
+    it('fromCornerPoints', function() {
+        var sphere = BoundingSphere.fromCornerPoints(new Cartesian3(-1.0, -0.0, 0.0), new Cartesian3(1.0, 0.0, 0.0));
+        expect(sphere).toEqual(new BoundingSphere(Cartesian3.ZERO, 1.0));
+    });
+
+    it('fromCornerPoints with a result parameter', function() {
+        var sphere = new BoundingSphere();
+        var result = BoundingSphere.fromCornerPoints(new Cartesian3(0.0, -1.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), sphere);
+        expect(result).toBe(sphere);
+        expect(result).toEqual(new BoundingSphere(Cartesian3.ZERO, 1.0));
+    });
+
+    it('fromCornerPoints throws without corner', function() {
+        expect(function() {
+            BoundingSphere.fromCornerPoints();
+        }).toThrow();
+    });
+
+    it('fromCornerPoints throws without oppositeCorner', function() {
+        expect(function() {
+            BoundingSphere.fromCornerPoints(Cartesian3.UNIT_X);
+        }).toThrow();
+    });
+
     it('sphere on the positive side of a plane', function() {
         var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
         var normal = Cartesian3.UNIT_X.negate();
