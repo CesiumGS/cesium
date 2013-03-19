@@ -476,29 +476,79 @@ define([
 
             length = this._colorVertexArrays.length;
             commands = this._commandLists.colorList;
+
             for ( var m = 0; m < length; ++m) {
                 var vaColor = this._colorVertexArrays[m];
                 buckets = vaColor.buckets;
                 bucketLength = buckets.length;
-                var p = commands.length;
-                commands.length += bucketLength;
-                for ( var n = 0; n < bucketLength; ++n, ++p) {
+
+                for ( var n = 0; n < bucketLength; ++n) {
                     bucketLocator = buckets[n];
 
-                    command = commands[p];
-                    if (typeof command === 'undefined') {
-                        command = commands[p] = new DrawCommand();
+                    var offset = bucketLocator.offset;
+                    var sp = bucketLocator.bucket.shaderProgram;
+
+                    var polylines = bucketLocator.bucket.polylines;
+                    var polylineLength = polylines.length;
+                    var currentId;
+                    var currentMaterial;
+                    var count = 0;
+
+                    for (var s = 0; s < polylineLength; ++s) {
+                        polyline = polylines[s];
+                        var mId = createMaterialId(polyline._material);
+                        if (mId !== currentId) {
+                            if (typeof currentId !== 'undefined') {
+                                command = new DrawCommand();
+                                command.boundingVolume = boundingVolume;
+                                command.modelMatrix = modelMatrix;
+                                command.primitiveType = PrimitiveType.TRIANGLES;
+                                command.shaderProgram = sp;
+                                command.vertexArray = vaColor.va;
+                                command.renderState = this._rs;
+
+                                command.uniformMap = combine([this._uniforms, currentMaterial._uniforms], false, false);
+                                command.count = count;
+                                command.offset = offset;
+
+                                commands.push(command);
+
+                                offset += count;
+                                count = 0;
+                            }
+
+                            currentMaterial = polyline._material;
+                            currentId = mId;
+                        }
+
+                        var lengths;
+                        if (this._mode === SceneMode.SCENE3D) {
+                            lengths = [polyline.getPositions().length];
+                        } else {
+                            lengths = polyline._segments.lengths;
+                        }
+
+                        var segmentsLength = lengths.length;
+                        for (var t = 0; t < segmentsLength; ++t) {
+                            count += (lengths[t] - 1) * 6;
+                        }
                     }
 
-                    command.boundingVolume = boundingVolume;
-                    command.modelMatrix = modelMatrix;
-                    command.primitiveType = PrimitiveType.TRIANGLES;
-                    command.count = bucketLocator.count;
-                    command.offset = bucketLocator.offset;
-                    command.shaderProgram = bucketLocator.shaderProgram;
-                    command.uniformMap = combine([this._uniforms, bucketLocator.material._uniforms], false, false);
-                    command.vertexArray = vaColor.va;
-                    command.renderState = this._rs;
+                    if (typeof currentId !== 'undefined' && count > 0) {
+                        command = new DrawCommand();
+                        command.boundingVolume = boundingVolume;
+                        command.modelMatrix = modelMatrix;
+                        command.primitiveType = PrimitiveType.TRIANGLES;
+                        command.shaderProgram = sp;
+                        command.vertexArray = vaColor.va;
+                        command.renderState = this._rs;
+
+                        command.uniformMap = combine([this._uniforms, currentMaterial._uniforms], false, false);
+                        command.count = count;
+                        command.offset = offset;
+
+                        commands.push(command);
+                    }
                 }
             }
         }
@@ -812,7 +862,7 @@ define([
     }
 
     var scratchUniformArray = [];
-    function createMaterialHash(material) {
+    function createMaterialId(material) {
         var uniforms = Material._uniformList[material.type];
         var length = uniforms.length;
         scratchUniformArray.length = 2.0 * length;
@@ -825,7 +875,7 @@ define([
             index += 2;
         }
 
-        return JSON.stringify(scratchUniformArray);
+        return material.type + ':' + JSON.stringify(scratchUniformArray);
     }
 
     function sortPolylinesIntoBuckets(collection) {
@@ -840,10 +890,9 @@ define([
             var p = polylines[i];
             p.update();
             var material = p.getMaterial();
-            var hash = createMaterialHash(material);
-            var value = polylineBuckets[hash];
+            var value = polylineBuckets[material.type];
             if (typeof value === 'undefined') {
-                value = polylineBuckets[hash] = new PolylineBucket(material, mode, projection, modelMatrix);
+                value = polylineBuckets[material.type] = new PolylineBucket(material, mode, projection, modelMatrix);
             }
             value.addPolyline(p);
         }
@@ -922,8 +971,7 @@ define([
     function VertexArrayBucketLocator(count, offset, bucket) {
         this.count = count;
         this.offset = offset;
-        this.shaderProgram = bucket.shaderProgram;
-        this.material = bucket.material;
+        this.bucket = bucket;
     }
 
     var PolylineBucket = function(material, mode, projection, modelMatrix) {
