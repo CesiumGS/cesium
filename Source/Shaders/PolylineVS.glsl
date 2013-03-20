@@ -104,8 +104,8 @@ void main()
 	    expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
     }
 
-    vec4 positionWC = vec4(endPointWC.xy + direction * expandWidth * expandDir, endPointWC.zw);
-    gl_Position = czm_projection * czm_windowToEyeCoordinates(positionWC) * show;
+    vec4 positionWC = vec4(endPointWC.xy + direction * expandWidth * expandDir, -endPointWC.z, 1.0);
+    gl_Position = czm_viewportOrthographic * positionWC * show;
     
 #ifndef RENDER_FOR_PICK
     v_textureCoordinates = vec2(texCoord, clamp(expandDir, 0.0, 1.0));

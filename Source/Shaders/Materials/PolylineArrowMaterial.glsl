@@ -1,4 +1,5 @@
-#extension GL_OES_standard_derivatives : enable // TODO Is there an alternative if standard derivatives aren't supported?
+// TODO Is there an alternative if standard derivatives aren't supported?
+#extension GL_OES_standard_derivatives : enable
 
 uniform vec4 color;
 
