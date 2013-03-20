@@ -36,61 +36,8 @@
 (function () {
     "use strict";
 
-    // Create canvas element using jQuery:
-    $('<canvas/>', {
-        'id': 'glCanvas',
-        'class': 'fullSize'
-    }).appendTo('#cesiumContainer');
-
-    var canvas = $('#glCanvas')[0];
-    var scene = new Cesium.Scene(canvas);
-
-    scene.skyAtmosphere = new Cesium.SkyAtmosphere();
-
-    var skyBoxBaseUrl = '../../../Source/Assets/Textures/SkyBox/tycho2t3_80';
-    scene.skyBox = new Cesium.SkyBox({
-        positiveX : skyBoxBaseUrl + '_px.jpg',
-        negativeX : skyBoxBaseUrl + '_mx.jpg',
-        positiveY : skyBoxBaseUrl + '_py.jpg',
-        negativeY : skyBoxBaseUrl + '_my.jpg',
-        positiveZ : skyBoxBaseUrl + '_pz.jpg',
-        negativeZ : skyBoxBaseUrl + '_mz.jpg'
-    });
-
-    var primitives = scene.getPrimitives();
-
-    // Bing Maps
-    var bing = new Cesium.BingMapsImageryProvider({
-        url : 'http://dev.virtualearth.net',
-        mapStyle : Cesium.BingMapsStyle.AERIAL,
-        // Some versions of Safari support WebGL, but don't correctly implement
-        // cross-origin image loading, so we need to load Bing imagery using a proxy.
-        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
-    });
-
-    var ellipsoid = Cesium.Ellipsoid.WGS84;
-    var centralBody = new Cesium.CentralBody(ellipsoid);
-    centralBody.getImageryLayers().addImageryProvider(bing);
-
-    primitives.setCentralBody(centralBody);
-
-    var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
-
-    ///////////////////////////////////////////////////////////////////////////
-    // INSERT CODE HERE to create graphics primitives in the scene.
-    ///////////////////////////////////////////////////////////////////////////
-
-    function animate() {
-        // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
-    }
-
-    function tick() {
-        scene.initializeFrame();
-        animate();
-        scene.render();
-        Cesium.requestAnimationFrame(tick);
-    }
-    tick();
+    var widget = new Cesium.CesiumWidget('cesiumContainer');
+    var transitioner = widget.transitioner;
 
     // Create toolbar template
     $('#toolbar').html(
@@ -122,29 +69,6 @@
     $('#mode2D').click(function () {
         transitioner.morphTo2D();
     });
-
-    // Prevent right-click from opening a context menu.
-    canvas.oncontextmenu = function() {
-        return false;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Example resize handler
-
-    var onResize = function() {
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
-
-        if (canvas.width === width && canvas.height === height) {
-            return;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        scene.getCamera().frustum.aspectRatio = width / height;
-    };
-    window.addEventListener('resize', onResize, false);
-    onResize();
 
     // Just for fun
     $('#dialog').text('Try moving and closing this dialog, ' +
