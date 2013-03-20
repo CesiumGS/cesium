@@ -575,34 +575,6 @@ vec3 czm_multiplyWithColorBalance(vec3 left, vec3 right)
     return ((leftLuminance + rightLuminance) / (2.0 * targetLuminance)) * target;
 }
 
-/**
- * Unpacks an encoded color from a floating point number to an RGB vector.
- *
- * @name czm_decodeColor
- * @glslFunction
- *
- * @param {float} The encoded color.
- * 
- * @returns {vec3} The decoded color.
- *
- * @example
- * attribute float encodedColor;
- * //...
- * varying vec4 v_color;
- * //...
- * v_color = vec4(czm_decodeColor(encodedColor), 1.0);
- */
-vec3 czm_decodeColor(float encoded)
-{
-    const vec3 scale = vec3(1.0, 256.0, 65536.0);
-    vec3 decoded = scale * encoded;
-    float r = floor(decoded.r) / 256.0;
-    float g = fract(decoded.r);
-    float b = fract(decoded.g);
-    
-    return vec3(r, g, b);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 /**

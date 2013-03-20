@@ -1011,13 +1011,12 @@ define([
                         (typeof this.highlightedObject.isDestroyed !== 'function' || !this.highlightedObject.isDestroyed())) {
                     if (typeof this.highlightedObject.material !== 'undefined') {
                         this.highlightedObject.material = this._originalMaterial;
+                    } else if (typeof this.highlightedObject.setMaterial !== 'undefined') {
+                        this.highlightedObject.setMaterial(this._originalMaterial);
                     } else if (typeof this.highlightedObject.outerMaterial !== 'undefined') {
                         this.highlightedObject.outerMaterial = this._originalMaterial;
                     } else if (typeof this.highlightedObject.setColor !== 'undefined') {
                         this.highlightedObject.setColor(this._originalColor);
-                    } else if (typeof this.highlightedObject.setDefaultColor !== 'undefined') {
-                        this.highlightedObject.setDefaultColor(this._originalColor);
-                        this.highlightedObject.setColors(this._colors);
                     }
                 }
                 this.highlightedObject = selectedObject;
@@ -1025,17 +1024,15 @@ define([
                     if (typeof selectedObject.material !== 'undefined') {
                         this._originalMaterial = selectedObject.material;
                         selectedObject.material = this.highlightMaterial;
+                    } else if (typeof selectedObject.getMaterial !== 'undefined') {
+                        this._originalMaterial = selectedObject.getMaterial();
+                        selectedObject.setMaterial(this.highlightMaterial);
                     } else if (typeof selectedObject.outerMaterial !== 'undefined') {
                         this._originalMaterial = selectedObject.outerMaterial;
                         selectedObject.outerMaterial = this.highlightMaterial;
                     } else if (typeof selectedObject.setColor !== 'undefined') {
                         this._originalColor = Color.clone(selectedObject.getColor(), this._originalColor);
                         selectedObject.setColor(this.highlightColor);
-                    } else if (typeof selectedObject.setDefaultColor !== 'undefined') {
-                        this._originalColor = Color.clone(selectedObject.getDefaultColor(), this._originalColor);
-                        this._colors = (typeof selectedObject.setColors !== 'undefined') ? selectedObject.getColors() : undefined;
-                        selectedObject.setDefaultColor(this.highlightColor);
-                        selectedObject.setColors(undefined);
                     }
                 }
             }

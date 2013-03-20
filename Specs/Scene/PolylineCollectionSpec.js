@@ -1067,7 +1067,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
         p.setShow(false);
 
         context.clear();
@@ -1100,7 +1100,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
         polylines.remove(p);
 
@@ -1817,12 +1817,12 @@ defineSuite([
         });
 
         var pickedObject = pick(context, frameState, polylines, 0, 0);
-        expect(pickedObject).not.toBeDefined();
+        expect(pickedObject).toNotBeDefined();
     });
 
     it('does not equal undefined', function() {
         var polyline = polylines.add();
-        expect(polyline).not.toEqual(undefined);
+        expect(polyline).toNotEqual(undefined);
     });
 
     it('throws when accessing without an index', function() {
