@@ -1,6 +1,7 @@
 <project name="Cesium" default="combine">
 	<target name="build" description="A developer build that runs in-place.">
-		<glslToJavascript stripcomments="${build.minification}">
+		<mkdir dir="${buildDirectory}" />
+		<glslToJavascript minify="${build.minification}" minifystatefile="${buildDirectory}/minifyShaders.state">
 			<glslfiles dir="${shadersDirectory}" includes="**/*.glsl" />
 			<existingjsfiles dir="${shadersDirectory}" includes="**/*.js" excludes="*.profile.js" />
 		</glslToJavascript>
@@ -9,7 +10,7 @@
 			<sourcefiles dir="${sourceDirectory}">
 				<include name="**/*.js" />
 				<exclude name="*.js" />
-				<exclude name="Widgets/**" />
+				<exclude name="Widgets/Dojo/**" />
 				<exclude name="Workers/**" />
 				<exclude name="**/*.profile.js" />
 			</sourcefiles>
@@ -118,12 +119,14 @@
 	</path>
 
 	<scriptdef name="glslToJavascript" language="javascript" src="${tasksDirectory}/glslToJavaScript.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
-		<attribute name="stripcomments" />
+		<attribute name="minify" />
+		<attribute name="minifystatefile" />
 		<element name="glslfiles" type="fileset" />
 		<element name="existingjsfiles" type="fileset" />
 	</scriptdef>
 
 	<scriptdef name="extractShaderComments" language="javascript" src="${tasksDirectory}/extractShaderComments.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
+		<attribute name="output" />
 		<element name="glslfiles" type="fileset" />
 	</scriptdef>
 
@@ -274,7 +277,7 @@
 	<target name="combineJavaScript" depends="combineJavaScript.createUnminified,combineJavaScript.createMinified" />
 
 	<target name="generateDocumentation">
-		<extractShaderComments>
+		<extractShaderComments output="${shadersDirectory}/glslComments.js">
 			<glslfiles dir="${shadersDirectory}" includes="**/*.glsl" />
 		</extractShaderComments>
 

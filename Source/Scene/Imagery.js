@@ -65,10 +65,6 @@ define([
                 this.image.destroy();
             }
 
-            if (typeof this.transformedImage !== 'undefined' && typeof this.transformedImage.destroy !== 'undefined') {
-                this.transformedImage.destroy();
-            }
-
             if (typeof this.texture !== 'undefined' && typeof this.texture.destroy !== 'undefined') {
                 this.texture.destroy();
             }

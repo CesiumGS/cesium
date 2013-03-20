@@ -19,11 +19,11 @@
     </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
     <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
     @import url(../templates/bucket.css);
+    @import url(../../../Source/Widgets/Dojo/CesiumViewerWidget.css);
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
@@ -38,7 +38,7 @@ require([
 
     function createPrimitives(widget) {
         var scene = widget.scene;
-        var ellipsoid = widget.ellipsoid;
+        var ellipsoid = widget.centralBody.getEllipsoid();
         var primitives = scene.getPrimitives();
 
         var e = new Cesium.EllipsoidPrimitive();
