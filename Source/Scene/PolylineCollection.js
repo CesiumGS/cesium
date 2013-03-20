@@ -563,6 +563,8 @@ define([
 
                     commands.push(command);
                 }
+
+                currentId = undefined;
             }
         }
     }
