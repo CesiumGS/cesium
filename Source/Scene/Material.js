@@ -1205,6 +1205,9 @@ define([
     Material.PolylineArrowType = 'PolylineArrow';
     Material._materialCache.addMaterial(Material.PolylineArrowType, {
         type : Material.PolylineArrowType,
+        uniforms : {
+            color : new Color(1.0, 0.0, 0.0, 1.0)
+        },
         source : PolylineArrowMaterial
     });
 
@@ -1212,6 +1215,8 @@ define([
     Material._materialCache.addMaterial(Material.PolylineOutlineType, {
         type : Material.PolylineOutlineType,
         uniforms : {
+            color : new Color(1.0, 0.0, 0.0, 1.0),
+            outlineColor : new Color(1.0, 1.0, 1.0, 1.0),
             outlineWidth : 0.0
         },
         source : PolylineOutlineMaterial

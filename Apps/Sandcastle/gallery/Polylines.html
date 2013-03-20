@@ -56,34 +56,7 @@ require([
             Cesium.Cartographic.fromDegrees(-95.0, 30.0),
             Cesium.Cartographic.fromDegrees(-85.0, 40.0)
         ]));
-        coloredPolyline.setDefaultColor({
-            red   : 1.0,
-            green : 1.0,
-            blue  : 0.0,
-            alpha : 1.0
-        });
-        
-        
-        // set a polyline's color per position
-        var perPositionColoredPolyline = polylines.add();
-        Sandcastle.declare(perPositionColoredPolyline); // For highlighting on mouseover in Sandcastle.
-        perPositionColoredPolyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-            Cesium.Cartographic.fromDegrees(-115.0, 45.0),
-            Cesium.Cartographic.fromDegrees(-95.0, 45.0)
-        ]));
-        perPositionColoredPolyline.setColors([
-            {
-                red : 0.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 0.5
-            }, {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
-        ]);
+        coloredPolyline.getMaterial().uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
 
         // Set a polyline's width
         var widePolyline = polylines.add();
@@ -98,14 +71,10 @@ require([
         
         // Set the polyline's material to have an outline
         var outlineMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineOutlineType);
+        outlineMaterial.uniforms.color = new Cesium.Color(1.0, 1.0, 1.0, 1.0);
+        outlineMaterial.uniforms.outlineColor = new Cesium.Color(1.0, 0.0, 0.0, 1.0);
         outlineMaterial.uniforms.outlineWidth = 5.0;
         widePolyline.setMaterial(outlineMaterial);
-        widePolyline.setDefaultOutlineColor({
-            red : 1.0,
-            green : 0.0,
-            blue : 0.0,
-            alpha : 1.0
-        });
 
         primitives.add(polylines);
 
@@ -122,6 +91,7 @@ require([
         ]);
         localPolyline.setWidth(10.0);
         var arrowMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineArrowType);
+        arrowMaterial.uniforms.color = new Cesium.Color(1.0, 1.0, 1.0, 1.0);
         localPolyline.setMaterial(arrowMaterial);
         primitives.add(localPolylines);
     }

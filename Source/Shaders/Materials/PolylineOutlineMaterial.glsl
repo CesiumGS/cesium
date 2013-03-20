@@ -1,7 +1,7 @@
+uniform vec4 color;
+uniform vec4 outlineColor;
 uniform float outlineWidth;
 
-varying vec4 v_color;
-varying vec4 v_outlineColor;
 varying float v_width;
 
 czm_material czm_getMaterial(czm_materialInput materialInput)
@@ -26,12 +26,12 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     val1 = val1 * val1 * (3.0 - (2.0 * val1));
     val1 = pow(val1, 0.5); //makes the transition nicer
     
-    vec4 midColor = (v_outlineColor + v_color) * 0.5;
-    vec4 currentColor = mix(v_outlineColor, v_color, b);
-    vec4 color = mix(midColor, currentColor, val1);
+    vec4 midColor = (outlineColor + color) * 0.5;
+    vec4 currentColor = mix(outlineColor, color, b);
+    vec4 outColor = mix(midColor, currentColor, val1);
     
-    material.diffuse = color.rgb;
-    material.alpha = color.a;
+    material.diffuse = outColor.rgb;
+    material.alpha = outColor.a;
     
     return material;
 }

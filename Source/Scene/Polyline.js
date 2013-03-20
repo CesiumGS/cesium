@@ -5,7 +5,6 @@ define([
         '../Core/destroyObject',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
-        '../Core/Color',
         '../Core/PolylinePipeline',
         '../Core/Matrix4',
         './Material'
@@ -15,14 +14,12 @@ define([
         destroyObject,
         BoundingSphere,
         Cartesian3,
-        Color,
         PolylinePipeline,
         Matrix4,
         Material) {
     "use strict";
 
     var EMPTY_OBJECT = {};
-    var defaultOutlineColor = new Color(1.0, 1.0, 1.0, 0.0);
 
     /**
      * DOC_TBA
@@ -35,14 +32,10 @@ define([
 
         this._show = defaultValue(description.show, true);
         this._width = defaultValue(description.width, 1.0);
-        this._color = Color.clone(defaultValue(description.color, Color.WHITE));
-        this._outlineColor = Color.clone(defaultValue(description.outlineColor, defaultOutlineColor));
-        this._perVertexColors = undefined;
-        this._perVertexOutlineColors = undefined;
 
         this._material = description.material;
         if (typeof this._material === 'undefined') {
-            this._material = Material.fromType(undefined, Material.PolylineOutlineType);
+            this._material = Material.fromType(undefined, Material.ColorType);
         }
 
         var positions = description.positions;
@@ -73,10 +66,9 @@ define([
 
     var MISC_INDEX = Polyline.MISC_INDEX = 0;
     var POSITION_INDEX = Polyline.POSITION_INDEX = 1;
-    var COLOR_INDEX = Polyline.COLOR_INDEX = 2;
-    var MATERIAL_INDEX = Polyline.MATERIAL_INDEX = 3;
-    var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX = 4;
-    var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES = 5;
+    var MATERIAL_INDEX = Polyline.MATERIAL_INDEX = 2;
+    var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX = 3;
+    var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES = 4;
 
     function makeDirty(polyline, propertyChanged) {
         ++polyline._propertiesChanged[propertyChanged];
@@ -227,85 +219,6 @@ define([
     };
 
     /**
-     * Returns the default color of the polyline. This color is used if per-vertex
-     * colors are not defined.
-     *
-     * @memberof Polyline
-     *
-     * @return {Color} The default color of the polyline.
-     *
-     * @see Polyline#setDefaultColor
-     * @see Polyline#getColors
-     * @see Polyline#setColors
-     */
-    Polyline.prototype.getDefaultColor = function() {
-        return this._color;
-    };
-
-    /**
-     * Sets the default color of the polyline. This color is used if per-vertex
-     * colors are not defined.
-     *
-     * @memberof Polyline
-     *
-     * @param {Color} value The default color of the polyline.
-     *
-     * @exception {DeveloperError} value is required.
-     *
-     * @see Polyline#getDefaultColor
-     * @see Polyline#getColors
-     * @see Polyline#setColors
-     */
-    Polyline.prototype.setDefaultColor = function(value) {
-        if (typeof value === 'undefined') {
-            throw new DeveloperError('value is required.');
-        }
-
-        var color = this._color;
-        if (!Color.equals(color, value)) {
-            Color.clone(value, color);
-            makeDirty(this, COLOR_INDEX);
-        }
-    };
-
-    /**
-     * Returns the polyline's color at each position.
-     *
-     * @memberof Polyline
-     *
-     * @return {Array} The polyline's color at each position.
-     *
-     * @see Polyline#setColors
-     * @see Polyline#getDefaultColor
-     * @see Polyline#SetDefaultColor
-     */
-    Polyline.prototype.getColors = function() {
-        return this._perVertexColors;
-    };
-
-    /**
-     * Defines the color of the polyline at each position.
-     *
-     * @memberof Polyline
-     *
-     * @param {Array} colors The colors of the polyline at each position.
-     *
-     * @exception {DeveloperError} colors must have the same number of elements as the positions.
-     *
-     * @see Polyline#getColors
-     * @see Polyline#getDefaultColor
-     * @see Polyline#SetDefaultColor
-     */
-    Polyline.prototype.setColors = function(colors) {
-        if (typeof colors !== 'undefined' && colors.length !== this._positions.length) {
-            throw new DeveloperError('colors must have the same number of elements as the positions.');
-        }
-
-        this._perVertexColors = colors;
-        makeDirty(this, COLOR_INDEX);
-    };
-
-    /**
      * Gets the width of the polyline.
      *
      * @memberof Polyline
@@ -349,85 +262,6 @@ define([
         }
     };
 
-    /**
-     * Gets the default outline color of the polyline. This color is used if per-vertex
-     * outline colors are not defined.
-     *
-     * @memberof Polyline
-     *
-     * @return {Color} The default outline color of the polyline.
-     *
-     * @see Polyline#setDefaultOutlineColor
-     * @see Polyline#getOutlineColors
-     * @see Polyline#setOutlineColors
-     */
-    Polyline.prototype.getDefaultOutlineColor = function() {
-        return this._outlineColor;
-    };
-
-    /**
-     * Sets the default outline color of the polyline. This color is used if per-vertex
-     * outline colors are not defined.
-     *
-     * @memberof Polyline
-     *
-     * @param {Color} value The default outline color of the polyline.
-     *
-     * @exception {DeveloperError} value is required.
-     *
-     * @see Polyline#getDefaultOutlineColor
-     * @see Polyline#getOutlineColors
-     * @see Polyline#setOutlineColors
-     */
-    Polyline.prototype.setDefaultOutlineColor = function(value) {
-        if (typeof value === 'undefined') {
-            throw new DeveloperError('value is required.');
-        }
-
-        var outlineColor = this._outlineColor;
-        if (!Color.equals(outlineColor, value)) {
-            Color.clone(value, outlineColor);
-            makeDirty(this, COLOR_INDEX);
-        }
-    };
-
-    /**
-     * Returns the polyline's outline color at each position.
-     *
-     * @memberof Polyline
-     *
-     * @return {Array} The polyline's outline color at each position.
-     *
-     * @see Polyline#setOutlineColors
-     * @see Polyline#getDefaultOutlineColor
-     * @see Polyline#SetDefaultOutlineColor
-     */
-    Polyline.prototype.getOutlineColors = function() {
-        return this._perVertexOutlineColors;
-    };
-
-    /**
-     * Defines the outline color of the polyline at each position.
-     *
-     * @memberof Polyline
-     *
-     * @param {Array} colors The outline colors of the polyline at each position.
-     *
-     * @exception {DeveloperError} colors must have the same number of elements as the positions.
-     *
-     * @see Polyline#getOutlineColors
-     * @see Polyline#getDefaultOutlineColor
-     * @see Polyline#SetDefaultOutlineColor
-     */
-    Polyline.prototype.setOutlineColors = function(colors) {
-        if (typeof colors !== 'undefined' && colors.length !== this._positions.length) {
-            throw new DeveloperError('colors must have the same number of elements as the positions.');
-        }
-
-        this._perVertexOutlineColors = colors;
-        makeDirty(this, COLOR_INDEX);
-    };
-
     Polyline.prototype.getPickId = function(context) {
         this._pickId = this._pickId || context.createPickId(this._pickIdThis || this);
         return this._pickId;
@@ -457,11 +291,7 @@ define([
                typeof other !== 'undefined' &&
                this._show === other._show &&
                this._width === other._width &&
-               cartesian3ArrayEquals(this._positions, other._positions) &&
-               Color.equals(this._color, other._color) &&
-               Color.equals(this._outlineColor, other._outlineColor) &&
-               colorArrayEquals(this._perVertexColors, this._positions.length, other._perVertexColors, other._positions.length) &&
-               colorArrayEquals(this._perVertexOutlineColors, this._positions.length, other._perVertexOutlineColors, other._positions.length);
+               cartesian3ArrayEquals(this._positions, other._positions);
     };
 
     function cartesian3ArrayEquals(a, b) {
@@ -470,24 +300,6 @@ define([
         }
         for ( var i = 0, len = a.length; i < len; ++i) {
             if (!Cartesian3.equals(a[i], b[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    function colorArrayEquals(a, aPositionsLength, b, bPositionsLength) {
-        if (typeof a === 'undefined' && typeof b === 'undefined') {
-            return true;
-        }
-        if (a.length !== aPositionsLength && b.length !== bPositionsLength) {
-            return true;
-        }
-        if (a.length !== b.length) {
-            return false;
-        }
-        for ( var i = 0, len = a.length; i < len; ++i) {
-            if (!Color.equals(a[i], b[i])) {
                 return false;
             }
         }

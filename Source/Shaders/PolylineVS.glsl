@@ -4,17 +4,15 @@ attribute vec3 position2DHigh;
 attribute vec3 position2DLow;
 attribute vec4 prev;
 attribute vec4 next;
-attribute vec4 color;
 attribute vec4 misc;
+attribute vec4 pickColor;
 
 #ifndef RENDER_FOR_PICK
-varying vec4 v_color;
-varying vec4 v_outlineColor;
-varying vec2 v_textureCoordinates;
+varying vec2  v_textureCoordinates;
 varying float v_width;
-varying vec3 v_positionEC;
+varying vec3  v_positionEC;
 #else
-varying vec4 v_pickColor;
+varying vec4  v_pickColor;
 #endif
 
 uniform float u_morphTime;
@@ -110,13 +108,10 @@ void main()
     gl_Position = czm_projection * czm_windowToEyeCoordinates(positionWC) * show;
     
 #ifndef RENDER_FOR_PICK
-    vec3 alphas = czm_decodeColor(color.b);
-    v_color = vec4(czm_decodeColor(color.r), alphas.r);
-    v_outlineColor = vec4(czm_decodeColor(color.g), alphas.g);
     v_textureCoordinates = vec2(texCoord, clamp(expandDir, 0.0, 1.0));
     v_width = width;
     v_positionEC = positionEC.xyz;
 #else
-    v_pickColor = color;
+    v_pickColor = pickColor;
 #endif
 }

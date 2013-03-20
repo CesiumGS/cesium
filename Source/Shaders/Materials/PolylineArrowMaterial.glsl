@@ -1,6 +1,7 @@
 #extension GL_OES_standard_derivatives : enable // TODO check for support
 
-varying vec4 v_color;
+uniform vec4 color;
+
 varying float v_width;
 
 float getPointOnLine(vec2 p0, vec2 p1, float x)
@@ -58,11 +59,11 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     val1 = pow(val1, 0.5); //makes the transition nicer
     
     vec4 outsideColor = vec4(0.0);
-    vec4 midColor = (outsideColor + v_color) * 0.5;
-    vec4 currentColor = mix(outsideColor, v_color, clamp(s + t, 0.0, 1.0));
-    vec4 color = mix(midColor, currentColor, val1);
+    vec4 midColor = (outsideColor + color) * 0.5;
+    vec4 currentColor = mix(outsideColor, color, clamp(s + t, 0.0, 1.0));
+    vec4 outColor = mix(midColor, currentColor, val1);
     
-    material.diffuse = color.rgb;
-    material.alpha = color.a;
+    material.diffuse = outColor.rgb;
+    material.alpha = outColor.a;
     return material;
 }
