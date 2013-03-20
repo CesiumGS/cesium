@@ -10,7 +10,6 @@ define([
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
         '../Core/PrimitiveType',
-        '../Core/Color',
         '../Core/BoundingSphere',
         '../Core/Intersect',
         '../Renderer/BlendingState',
@@ -35,7 +34,6 @@ define([
         ComponentDatatype,
         IndexDatatype,
         PrimitiveType,
-        Color,
         BoundingSphere,
         Intersect,
         BlendingState,
@@ -205,7 +203,6 @@ define([
      *   positions : ellipsoid.cartographicDegreesToCartesians([
      *     new Cartographic2(-75.10, 39.57),
      *     new Cartographic2(-77.02, 38.53)]),
-     *     color : { red : 1.0, green : 1.0, blue : 1.0, alpha : 1.0 },
      *     width : 1
      * });
      *

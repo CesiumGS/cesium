@@ -71,8 +71,6 @@ require([
         
         // Set the polyline's material to have an outline
         var outlineMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineOutlineType);
-        outlineMaterial.uniforms.color = new Cesium.Color(1.0, 1.0, 1.0, 1.0);
-        outlineMaterial.uniforms.outlineColor = new Cesium.Color(1.0, 0.0, 0.0, 1.0);
         outlineMaterial.uniforms.outlineWidth = 5.0;
         widePolyline.setMaterial(outlineMaterial);
 
@@ -91,7 +89,6 @@ require([
         ]);
         localPolyline.setWidth(10.0);
         var arrowMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineArrowType);
-        arrowMaterial.uniforms.color = new Cesium.Color(1.0, 1.0, 1.0, 1.0);
         localPolyline.setMaterial(arrowMaterial);
         primitives.add(localPolylines);
     }

@@ -13,11 +13,13 @@ defineSuite([
          'Core/BoundingSphere',
          'Core/Cartesian3',
          'Core/Cartographic',
+         'Core/Color',
          'Core/Matrix4',
          'Core/Math',
          'Core/JulianDate',
          'Renderer/BufferUsage',
-         'Scene/SceneMode'
+         'Scene/SceneMode',
+         'Scene/Material'
      ], function(
          PolylineCollection,
          Polyline,
@@ -32,11 +34,13 @@ defineSuite([
          BoundingSphere,
          Cartesian3,
          Cartographic,
+         Color,
          Matrix4,
          CesiumMath,
          JulianDate,
          BufferUsage,
-         SceneMode) {
+         SceneMode,
+         Material) {
     "use strict";
     /*global it,expect,beforeEach,afterEach,beforeAll,afterAll*/
 
@@ -67,80 +71,43 @@ defineSuite([
         var p = polylines.add();
         expect(p.getShow()).toEqual(true);
         expect(p.getPositions().length).toEqual(0);
-        expect(p.getDefaultColor().red).toEqual(1.0);
-        expect(p.getDefaultColor().green).toEqual(1.0);
-        expect(p.getDefaultColor().blue).toEqual(1.0);
-        expect(p.getDefaultColor().alpha).toEqual(1.0);
-        expect(p.getDefaultOutlineColor().red).toEqual(1.0);
-        expect(p.getDefaultOutlineColor().green).toEqual(1.0);
-        expect(p.getDefaultOutlineColor().blue).toEqual(1.0);
-        expect(p.getDefaultOutlineColor().alpha).toEqual(0.0);
         expect(p.getWidth()).toEqual(1.0);
+        expect(p.getMaterial().uniforms.color).toEqual(new Color(1.0, 1.0, 1.0, 1.0));
     });
 
     it('explicitly constructs a polyline', function() {
+        var material = Material.fromType(context, Material.PolylineOutlineType);
         var p = polylines.add({
             show : false,
             positions : [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0)],
             width : 2,
-            color : {
-                red : 1.0,
-                green : 2.0,
-                blue : 3.0,
-                alpha : 4.0
-            },
-            outlineColor: {
-                red : 6.0,
-                green : 7.0,
-                blue : 8.0,
-                alpha : 9.0
-            }
+            material : material
         });
 
         expect(p.getShow()).toEqual(false);
         expect(p.getPositions()[0]).toEqual(new Cartesian3(1.0, 2.0, 3.0));
         expect(p.getPositions()[1]).toEqual(new Cartesian3(4.0, 5.0, 6.0));
-        expect(p.getDefaultColor().red).toEqual(1.0);
-        expect(p.getDefaultColor().green).toEqual(2.0);
-        expect(p.getDefaultColor().blue).toEqual(3.0);
-        expect(p.getDefaultColor().alpha).toEqual(4.0);
         expect(p.getWidth()).toEqual(2);
-        expect(p.getDefaultOutlineColor().red).toEqual(6.0);
-        expect(p.getDefaultOutlineColor().green).toEqual(7.0);
-        expect(p.getDefaultOutlineColor().blue).toEqual(8.0);
-        expect(p.getDefaultOutlineColor().alpha).toEqual(9.0);
+        expect(p.getMaterial().uniforms.color).toEqual(material.uniforms.color);
+        expect(p.getMaterial().uniforms.outlineColor).toEqual(material.uniforms.outlineColor);
+        expect(p.getMaterial().uniforms.outlineWidth).toEqual(material.uniforms.outlineWidth);
     });
 
     it('sets polyline properties', function() {
+        var material = Material.fromType(context, Material.PolylineOutlineType);
         var p = polylines.add();
         p.setShow(false);
         p.setPositions([new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0)]);
-        p.setDefaultColor({
-            red : 1.0,
-            green : 2.0,
-            blue : 3.0,
-            alpha : 4.0
-        });
-        p.setDefaultOutlineColor({
-            red : 5.0,
-            green : 6.0,
-            blue : 7.0,
-            alpha : 8.0
-        });
         p.setWidth(2);
+        p.setMaterial(material);
 
         expect(p.getShow()).toEqual(false);
         expect(p.getPositions()[0]).toEqual(new Cartesian3(1.0, 2.0, 3.0));
         expect(p.getPositions()[1]).toEqual(new Cartesian3(4.0, 5.0, 6.0));
-        expect(p.getDefaultColor().red).toEqual(1.0);
-        expect(p.getDefaultColor().green).toEqual(2.0);
-        expect(p.getDefaultColor().blue).toEqual(3.0);
-        expect(p.getDefaultColor().alpha).toEqual(4.0);
         expect(p.getWidth()).toEqual(2);
-        expect(p.getDefaultOutlineColor().red).toEqual(5.0);
-        expect(p.getDefaultOutlineColor().green).toEqual(6.0);
-        expect(p.getDefaultOutlineColor().blue).toEqual(7.0);
-        expect(p.getDefaultOutlineColor().alpha).toEqual(8.0);
+        expect(p.getMaterial().uniforms.color).toEqual(material.uniforms.color);
+        expect(p.getMaterial().uniforms.outlineColor).toEqual(material.uniforms.outlineColor);
+        expect(p.getMaterial().uniforms.outlineWidth).toEqual(material.uniforms.outlineWidth);
     });
 
     it('sets removed polyline properties', function() {
@@ -713,7 +680,7 @@ defineSuite([
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
-        //should call PolylineCollection.writeShowUpdate
+        //should call PolylineCollection.writeMiscUpdate
         p2.setShow(true);
 
         context.clear();
@@ -724,7 +691,7 @@ defineSuite([
 
     });
 
-    it('renders an updated polyline with no positions using setDefaultColor', function() {
+    it('renders an updated polyline with no positions using setMaterial', function() {
         var positions = [];
         for ( var i = 0; i < 100; ++i) {
             positions.push({
@@ -740,13 +707,7 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -755,13 +716,7 @@ defineSuite([
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
         var p2 = polylines.add({
-            positions : [],
-            color : {
-                red : 0,
-                green : 1,
-                blue : 0,
-                alpha : 1
-            }
+            positions : []
         });
 
         context.clear();
@@ -771,26 +726,7 @@ defineSuite([
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
         //recreates vertex array because buffer usage changed
-        p2.setDefaultColor({
-            red : 1.0,
-            blue : 1.0,
-            green : 0.1,
-            alpha : 1.0
-        });
-
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
-
-        //should call PolylineCollection.writeColorUpdate
-        p2.setDefaultColor({
-            red : 1.0,
-            blue : 0.5,
-            green : 0.1,
-            alpha : 1.0
-        });
+        p2.setMaterial(Material.fromType(context, Material.PolylineOutlineType));
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -841,81 +777,6 @@ defineSuite([
         }
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
-    });
-
-    it('renders an updated polyline with no positions using setDefaultOutlineColor', function() {
-        var positions = [];
-        for ( var i = 0; i < 100; ++i) {
-            positions.push({
-                x : 0,
-                y : -1,
-                z : 0
-            });
-            positions.push({
-                x : 0,
-                y : 1,
-                z : 0
-            });
-        }
-
-        polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
-        });
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
-
-        var p2 = polylines.add({
-            positions : [],
-            color : {
-                red : 0,
-                green : 1,
-                blue : 0,
-                alpha : 1
-            }
-        });
-
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
-
-        //recreates vertex array because buffer usage changed
-        p2.setDefaultOutlineColor({
-            red : 1.0,
-            blue : 1.0,
-            green : 0.1,
-            alpha : 1.0
-        });
-
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
-
-        //should call PolylineCollection.writeColorUpdate
-        p2.setDefaultOutlineColor({
-            red : 1.0,
-            blue : 0.5,
-            green : 0.1,
-            alpha : 1.0
-        });
-
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
 
     it('renders more than 64K vertices of different polylines', function() {
@@ -1365,96 +1226,6 @@ defineSuite([
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
 
-    it('renders using polyline color property', function() {
-        var p = polylines.add({
-            positions : [{
-                x : 0.0,
-                y : -1.0,
-                z : 0.0
-            }, {
-                x : 0.0,
-                y : 1.0,
-                z : 0.0
-            }]
-        });
-
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
-
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        p.setDefaultColor({
-            red : 1.0,
-            green : 0.0,
-            blue : 1.0,
-            alpha : 1.0
-        });
-        render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
-
-        // Update a second time since it goes through a different vertex array update path
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        p.setDefaultColor({
-            red : 0.0,
-            green : 1.0,
-            blue : 0.0,
-            alpha : 1.0
-        });
-        render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
-    });
-
-    it('renders using polyline outlineColor property', function() {
-        var p = polylines.add({
-            positions : [{
-                x : 0.0,
-                y : -1.0,
-                z : 0.0
-            }, {
-                x : 0.0,
-                y : 1.0,
-                z : 0.0
-            }]
-        });
-
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
-
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        p.setDefaultOutlineColor({
-            red : 1.0,
-            green : 0.0,
-            blue : 1.0,
-            alpha : 1.0
-        });
-        render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
-
-        // Update a second time since it goes through a different vertex array update path
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        p.setDefaultOutlineColor({
-            red : 0.0,
-            green : 1.0,
-            blue : 0.0,
-            alpha : 1.0
-        });
-        render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
-    });
-
     it('renders and updates one polyline from many polylines using show property', function() {
         var positions = [];
         for(var i = 0; i < 200; i++){
@@ -1643,22 +1414,10 @@ defineSuite([
         }
         polylines.add({
             positions : positions,
-            color:{
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            },
             width : 3
         });
         polylines.add({
             positions : positions,
-            color:{
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            },
             width : 4
         });
         var p2 = polylines.add({
@@ -1671,12 +1430,6 @@ defineSuite([
                 y : 1.0,
                 z : 0.0
             }],
-            color:{
-                red : 0.0,
-                green : 0.0,
-                blue : 1.0,
-                alpha : 1.0
-            },
             width : 7
         });
         context.clear();
@@ -1685,21 +1438,11 @@ defineSuite([
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
-        p2.setDefaultColor({
-            red : 1.0,
-            green : 1.0,
-            blue : 0.0,
-            alpha : 1.0
-        });
+        p2.setMaterial(Material.fromType(context, Material.PolylineOutlineType));
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
-        p2.setDefaultColor({
-            red : 1.0,
-            green : 0.0,
-            blue : 0.0,
-            alpha : 1.0
-        });
+        p2.setMaterial(Material.fromType(context, Material.ColorType));
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
@@ -1817,7 +1560,7 @@ defineSuite([
         });
 
         var pickedObject = pick(context, frameState, polylines, 0, 0);
-        expect(pickedObject).toNotBeDefined();
+        expect(pickedObject).toBeUndefined();
     });
 
     it('does not equal undefined', function() {

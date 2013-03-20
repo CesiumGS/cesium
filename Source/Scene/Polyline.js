@@ -5,6 +5,7 @@ define([
         '../Core/destroyObject',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
+        '../Core/Color',
         '../Core/PolylinePipeline',
         '../Core/Matrix4',
         './Material'
@@ -14,6 +15,7 @@ define([
         destroyObject,
         BoundingSphere,
         Cartesian3,
+        Color,
         PolylinePipeline,
         Matrix4,
         Material) {
@@ -36,6 +38,7 @@ define([
         this._material = description.material;
         if (typeof this._material === 'undefined') {
             this._material = Material.fromType(undefined, Material.ColorType);
+            this._material.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
         }
 
         var positions = description.positions;
