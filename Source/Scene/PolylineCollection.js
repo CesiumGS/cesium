@@ -385,13 +385,8 @@ define([
         updateMode(this, frameState);
 
         var polyline;
-        var length;
-        var buckets;
-        var polylineBuckets;
-        var bucketLength;
-        var bucketLocator;
-
         var properties = this._propertiesChanged;
+
         if (this._createVertexArray || computeNewBuffersUsage(this)) {
             createVertexArrays(this, context);
         } else if (this._polylinesUpdated) {
@@ -410,8 +405,8 @@ define([
             if (properties[POSITION_SIZE_INDEX] || properties[MATERIAL_INDEX]) {
                 createVertexArrays(this, context);
             } else {
-                length = polylinesToUpdate.length;
-                polylineBuckets = this._polylineBuckets;
+                var length = polylinesToUpdate.length;
+                var polylineBuckets = this._polylineBuckets;
                 for ( var ii = 0; ii < length; ++ii) {
                     polyline = polylinesToUpdate[ii];
                     properties = polyline._propertiesChanged;
@@ -458,9 +453,6 @@ define([
         }
 
         var pass = frameState.passes;
-        var commands;
-        var command;
-        polylineBuckets = this._polylineBuckets;
         var useDepthTest = (this.morphTime !== 0.0);
         this._commandLists.removeAll();
 
@@ -474,83 +466,7 @@ define([
             this._rs.depthMask = !useDepthTest;
             this._rs.depthTest.enabled = useDepthTest;
 
-            length = this._colorVertexArrays.length;
-            commands = this._commandLists.colorList;
-
-            for ( var m = 0; m < length; ++m) {
-                var vaColor = this._colorVertexArrays[m];
-                buckets = vaColor.buckets;
-                bucketLength = buckets.length;
-
-                for ( var n = 0; n < bucketLength; ++n) {
-                    bucketLocator = buckets[n];
-
-                    var offset = bucketLocator.offset;
-                    var sp = bucketLocator.bucket.shaderProgram;
-
-                    var polylines = bucketLocator.bucket.polylines;
-                    var polylineLength = polylines.length;
-                    var currentId;
-                    var currentMaterial;
-                    var count = 0;
-
-                    for (var s = 0; s < polylineLength; ++s) {
-                        polyline = polylines[s];
-                        var mId = createMaterialId(polyline._material);
-                        if (mId !== currentId) {
-                            if (typeof currentId !== 'undefined') {
-                                command = new DrawCommand();
-                                command.boundingVolume = boundingVolume;
-                                command.modelMatrix = modelMatrix;
-                                command.primitiveType = PrimitiveType.TRIANGLES;
-                                command.shaderProgram = sp;
-                                command.vertexArray = vaColor.va;
-                                command.renderState = this._rs;
-
-                                command.uniformMap = combine([this._uniforms, currentMaterial._uniforms], false, false);
-                                command.count = count;
-                                command.offset = offset;
-
-                                commands.push(command);
-
-                                offset += count;
-                                count = 0;
-                            }
-
-                            currentMaterial = polyline._material;
-                            currentId = mId;
-                        }
-
-                        var lengths;
-                        if (this._mode === SceneMode.SCENE3D) {
-                            lengths = [polyline.getPositions().length];
-                        } else {
-                            lengths = polyline._segments.lengths;
-                        }
-
-                        var segmentsLength = lengths.length;
-                        for (var t = 0; t < segmentsLength; ++t) {
-                            count += (lengths[t] - 1) * 6;
-                        }
-                    }
-
-                    if (typeof currentId !== 'undefined' && count > 0) {
-                        command = new DrawCommand();
-                        command.boundingVolume = boundingVolume;
-                        command.modelMatrix = modelMatrix;
-                        command.primitiveType = PrimitiveType.TRIANGLES;
-                        command.shaderProgram = sp;
-                        command.vertexArray = vaColor.va;
-                        command.renderState = this._rs;
-
-                        command.uniformMap = combine([this._uniforms, currentMaterial._uniforms], false, false);
-                        command.count = count;
-                        command.offset = offset;
-
-                        commands.push(command);
-                    }
-                }
-            }
+            createCommandLists(boundingVolume, modelMatrix, this._colorVertexArrays, this._commandLists.colorList, this._rs, this._uniforms, true);
         }
 
         if (pass.pick) {
@@ -566,38 +482,90 @@ define([
             this._rsPick.depthMask = !useDepthTest;
             this._rsPick.depthTest.enabled = useDepthTest;
 
-            length = this._colorVertexArrays.length;
-            commands = this._commandLists.pickList;
-            for ( var a = 0; a < length; ++a) {
-                var vaPickColor = this._pickColorVertexArrays[a];
-                buckets = vaPickColor.buckets;
-                bucketLength = buckets.length;
-                commands.length += bucketLength;
-                for ( var b = 0; b < bucketLength; ++b) {
-                    bucketLocator = buckets[b];
-
-                    command = commands[b];
-                    if (typeof command === 'undefined') {
-                        command = commands[b] = new DrawCommand();
-                    }
-
-                    command.boundingVolume = boundingVolume;
-                    command.modelMatrix = modelMatrix;
-                    command.primitiveType = PrimitiveType.TRIANGLES;
-                    command.count = bucketLocator.count;
-                    command.offset = bucketLocator.offset;
-                    command.shaderProgram = this._spPick;
-                    command.uniformMap = this._uniforms;
-                    command.vertexArray = vaPickColor.va;
-                    command.renderState = this._rsPick;
-                }
-            }
+            createCommandLists(boundingVolume, modelMatrix, this._pickColorVertexArrays, this._commandLists.pickList, this._rsPick, this._uniforms, false, this._spPick);
         }
 
         if (!this._commandLists.empty()) {
             commandList.push(this._commandLists);
         }
     };
+
+    function createCommandLists(boundingVolume, modelMatrix, vertexArrays, commands, renderState, uniforms, combineUniforms, shaderProgram) {
+        var length = vertexArrays.length;
+
+        for ( var m = 0; m < length; ++m) {
+            var va = vertexArrays[m];
+            var buckets = va.buckets;
+            var bucketLength = buckets.length;
+
+            for ( var n = 0; n < bucketLength; ++n) {
+                var bucketLocator = buckets[n];
+
+                var offset = bucketLocator.offset;
+                var sp = (typeof shaderProgram !== 'undefined') ? shaderProgram : bucketLocator.bucket.shaderProgram;
+
+                var polylines = bucketLocator.bucket.polylines;
+                var polylineLength = polylines.length;
+                var currentId;
+                var currentMaterial;
+                var count = 0;
+                var command;
+
+                for (var s = 0; s < polylineLength; ++s) {
+                    var polyline = polylines[s];
+                    var mId = createMaterialId(polyline._material);
+                    if (mId !== currentId) {
+                        if (typeof currentId !== 'undefined') {
+                            command = new DrawCommand();
+                            command.boundingVolume = boundingVolume;
+                            command.modelMatrix = modelMatrix;
+                            command.primitiveType = PrimitiveType.TRIANGLES;
+                            command.shaderProgram = sp;
+                            command.vertexArray = va.va;
+                            command.renderState = renderState;
+
+                            command.uniformMap = combineUniforms ? combine([uniforms, currentMaterial._uniforms], false, false) : uniforms;
+                            command.count = count;
+                            command.offset = offset;
+
+                            commands.push(command);
+
+                            offset += count;
+                            count = 0;
+                        }
+
+                        currentMaterial = polyline._material;
+                        currentId = mId;
+                    }
+
+                    var locators = polyline._locatorBuckets;
+                    var locatorLength = locators.length;
+                    for (var t = 0; t < locatorLength; ++t) {
+                        var locator = locators[t];
+                        if (locator.locator === bucketLocator) {
+                            count += locator.count;
+                        }
+                    }
+                }
+
+                if (typeof currentId !== 'undefined' && count > 0) {
+                    command = new DrawCommand();
+                    command.boundingVolume = boundingVolume;
+                    command.modelMatrix = modelMatrix;
+                    command.primitiveType = PrimitiveType.TRIANGLES;
+                    command.shaderProgram = sp;
+                    command.vertexArray = va.va;
+                    command.renderState = renderState;
+
+                    command.uniformMap = combineUniforms ? combine([uniforms, currentMaterial._uniforms], false, false) : uniforms;
+                    command.count = count;
+                    command.offset = offset;
+
+                    commands.push(command);
+                }
+            }
+        }
+    }
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
@@ -1225,6 +1193,8 @@ define([
         for ( var i = 0; i < length; ++i) {
 
             var polyline = polylines[i];
+            polyline._locatorBuckets = [];
+
             var segments;
             if (this.mode === SceneMode.SCENE3D) {
                 segments = scratchSegmentLengths;
@@ -1240,11 +1210,17 @@ define([
 
             var numberOfSegments = segments.length;
             if (numberOfSegments > 0) {
+                var segmentIndexCount = 0;
                 for ( var j = 0; j < numberOfSegments; ++j) {
                     var segmentLength = segments[j];
                     for ( var k = 0; k < segmentLength; ++k) {
                         if (k !== segmentLength - 1) {
                             if (indicesCount + 3 >= SIXTYFOURK - 1) {
+                                polyline._locatorBuckets.push({
+                                    locator : bucketLocator,
+                                    count : segmentIndexCount
+                                });
+                                segmentIndexCount = 0;
                                 vertexBufferOffset.push(4);
                                 indices = [];
                                 totalIndices.push(indices);
@@ -1259,6 +1235,7 @@ define([
                             indices.push(indicesCount, indicesCount + 2, indicesCount + 1);
                             indices.push(indicesCount + 1, indicesCount + 2, indicesCount + 3);
 
+                            segmentIndexCount += 6;
                             count += 6;
                             offset += 6;
                             indicesCount += 2;
@@ -1268,6 +1245,11 @@ define([
                         indicesCount += 2;
                     }
                 }
+
+                polyline._locatorBuckets.push({
+                    locator : bucketLocator,
+                    count : segmentIndexCount
+                });
 
                 if (indicesCount + 3 < SIXTYFOURK - 1) {
                     indicesCount += 2;
