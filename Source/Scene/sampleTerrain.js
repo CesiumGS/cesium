@@ -17,7 +17,10 @@ define([
      * happens asynchronously, so this function returns a promise that is resolved when
      * the query completes.  Each point height is modified in place.  If a height can not be
      * determined because no terrain data is available for the specified level at that location,
-     * or another error occurs, the height is set to undefined.
+     * or another error occurs, the height is set to undefined.  As is typical of the
+     * {@link Cartographic} type, the supplied height is a height above the reference ellipsoid
+     * (such as {@link Ellipsoid.WGS84}) rather than an altitude above mean sea level.  In other
+     * words, it will not necessarily be 0.0 if sampled in the ocean.
      *
      * @exports sampleTerrain
      *
@@ -26,6 +29,20 @@ define([
      * @param {Cartographic[]} positions The positions to update with terrain heights.
      *
      * @returns {Promise} A promise that, when resolved, indicates that the query has completed.
+     *
+     * @example
+     * // Query the terrain height of two Cartographic positions
+     * var terrainProvider = new CesiumTerrainProvider({
+     *     url : 'http://cesium.agi.com/smallterrain'
+     * });
+     * var positions = [
+     *     Cartographic.fromDegrees(86.925145, 27.988257),
+     *     Cartographic.fromDegrees(87.0, 28.0)
+     * ];
+     * var promise = sampleTerrain(terrainProvider, 11, positions);
+     * when(promise, function() {
+     *     // positions[0].height and positions[1].height have been updated
+     * });
      */
     var sampleTerrain = function(terrainProvider, level, positions) {
         if (typeof terrainProvider === 'undefined') {
