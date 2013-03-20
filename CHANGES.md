@@ -12,7 +12,8 @@ Beta Releases
 * Added `BoundingSphere.fromCornerPoints`.
 * Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `DynamicPath.resolution` property for setting the maximum step size, in seconds, to take when sampling a position for path visualization.
-* Added `TileCoordinatesImageryProvider` that renders imagery with tile X, Y, Level coordinates on the surface of the globe.  This is mostly useful for debugging.
+* Added `TileCoordinatesImageryProvider` that renders imagery with tile X, Y, Level coordinates on the surface of the globe.  This is mostly useful for debugging. 
+* Added `DynamicEllipse` and `DynamicObject.ellipse` property to render CZML ellipses on the globe.
 * Added `sampleTerrain` function to sample the terrain height of a list of `Cartographic` positions. 
 
 ### b14 - 2013-03-01
