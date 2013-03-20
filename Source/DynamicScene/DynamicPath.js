@@ -4,15 +4,15 @@ define([
         '../Core/defaultValue',
         './CzmlBoolean',
         './CzmlNumber',
-        './CzmlColor',
-        './DynamicProperty'],
-function(
+        './DynamicProperty',
+        './DynamicMaterialProperty'
+    ], function(
         TimeInterval,
         defaultValue,
         CzmlBoolean,
         CzmlNumber,
-        CzmlColor,
-        DynamicProperty) {
+        DynamicProperty,
+        DynamicMaterialProperty) {
     "use strict";
 
     /**
@@ -32,21 +32,6 @@ function(
      */
     var DynamicPath = function() {
         /**
-         * A DynamicProperty of type CzmlColor which determines the line's color.
-         * @type DynamicProperty
-         */
-        this.color = undefined;
-        /**
-         * A DynamicProperty of type CzmlColor which determines the line's outline color.
-         * @type DynamicProperty
-         */
-        this.outlineColor = undefined;
-        /**
-         * A DynamicProperty of type CzmlNumber which determines the line's outline width.
-         * @type DynamicProperty
-         */
-        this.outlineWidth = undefined;
-        /**
          * A DynamicProperty of type CzmlBoolean which determines the lines's visibility.
          * @type DynamicProperty
          */
@@ -56,6 +41,11 @@ function(
          * @type DynamicProperty
          */
         this.width = undefined;
+        /**
+         * A DynamicMaterialProperty which determines the line's material.
+         * @type DynamicMaterialProperty
+         */
+        this.material = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the maximum step size, in seconds, to take when sampling the position.
          * @type DynamicProperty
@@ -106,15 +96,6 @@ function(
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof pathData.color !== 'undefined') {
-            var color = path.color;
-            if (typeof color === 'undefined') {
-                path.color = color = new DynamicProperty(CzmlColor);
-                pathUpdated = true;
-            }
-            color.processCzmlIntervals(pathData.color, interval);
-        }
-
         if (typeof pathData.width !== 'undefined') {
             var width = path.width;
             if (typeof width === 'undefined') {
@@ -133,24 +114,6 @@ function(
             resolution.processCzmlIntervals(pathData.resolution, interval);
         }
 
-        if (typeof pathData.outlineColor !== 'undefined') {
-            var outlineColor = path.outlineColor;
-            if (typeof outlineColor === 'undefined') {
-                path.outlineColor = outlineColor = new DynamicProperty(CzmlColor);
-                pathUpdated = true;
-            }
-            outlineColor.processCzmlIntervals(pathData.outlineColor, interval);
-        }
-
-        if (typeof pathData.outlineWidth !== 'undefined') {
-            var outlineWidth = path.outlineWidth;
-            if (typeof outlineWidth === 'undefined') {
-                path.outlineWidth = outlineWidth = new DynamicProperty(CzmlNumber);
-                pathUpdated = true;
-            }
-            outlineWidth.processCzmlIntervals(pathData.outlineWidth, interval);
-        }
-
         if (typeof pathData.show !== 'undefined') {
             var show = path.show;
             if (typeof show === 'undefined') {
@@ -158,6 +121,15 @@ function(
                 pathUpdated = true;
             }
             show.processCzmlIntervals(pathData.show, interval);
+        }
+
+        if (typeof pathData.material !== 'undefined') {
+            var material = path.material;
+            if (typeof material === 'undefined') {
+                path.material = material = new DynamicMaterialProperty();
+                pathUpdated = true;
+            }
+            material.processCzmlIntervals(pathData.material, interval);
         }
 
         if (typeof pathData.leadTime !== 'undefined') {
@@ -201,12 +173,10 @@ function(
                 targetObject.path = targetpath = new DynamicPath();
             }
 
-            targetpath.color = defaultValue(targetpath.color, pathToMerge.color);
             targetpath.width = defaultValue(targetpath.width, pathToMerge.width);
             targetpath.resolution = defaultValue(targetpath.resolution, pathToMerge.resolution);
-            targetpath.outlineColor = defaultValue(targetpath.outlineColor, pathToMerge.outlineColor);
-            targetpath.outlineWidth = defaultValue(targetpath.outlineWidth, pathToMerge.outlineWidth);
             targetpath.show = defaultValue(targetpath.show, pathToMerge.show);
+            targetpath.material = defaultValue(targetpath.material, pathToMerge.material);
             targetpath.leadTime = defaultValue(targetpath.leadTime, pathToMerge.leadTime);
             targetpath.trailTime = defaultValue(targetpath.trailTime, pathToMerge.trailTime);
         }

@@ -8,7 +8,8 @@ define([
         '../Core/Transforms',
         '../Core/ReferenceFrame',
         '../Scene/SceneMode',
-        '../Scene/PolylineCollection'
+        '../Scene/PolylineCollection',
+        '../Scene/Material'
        ], function(
          DeveloperError,
          destroyObject,
@@ -18,7 +19,8 @@ define([
          Transforms,
          ReferenceFrame,
          SceneMode,
-         PolylineCollection) {
+         PolylineCollection,
+         Material) {
     "use strict";
 
     var PolylineUpdater = function(scene, referenceFrame) {
@@ -121,6 +123,7 @@ define([
             return;
         }
 
+        var context = this._scene.getContext();
         if (typeof pathVisualizerIndex === 'undefined') {
             var unusedIndexes = this._unusedIndexes;
             var length = unusedIndexes.length;
@@ -135,8 +138,7 @@ define([
             polyline.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            polyline.setDefaultColor(Color.WHITE);
-            polyline.setDefaultOutlineColor(Color.BLACK);
+            polyline.setMaterial(Material.fromType(context, Material.ColorType));
             polyline.setWidth(1);
         } else {
             polyline = this._polylineCollection.get(pathVisualizerIndex);
@@ -152,22 +154,17 @@ define([
 
         polyline.setPositions(positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.getPositions()));
 
-        property = dynamicPath.color;
-        if (typeof property !== 'undefined') {
-            polyline.setDefaultColor(property.getValue(time, polyline.getDefaultColor()));
-        }
-
-        property = dynamicPath.outlineColor;
-        if (typeof property !== 'undefined') {
-            polyline.setDefaultOutlineColor(property.getValue(time, polyline.getDefaultOutlineColor()));
-        }
-
         property = dynamicPath.width;
         if (typeof property !== 'undefined') {
             var width = property.getValue(time);
             if (typeof width !== 'undefined') {
                 polyline.setWidth(width);
             }
+        }
+
+        var material = dynamicPath.material;
+        if (typeof material !== 'undefined') {
+            polyline.setMaterial(material.getValue(time, context, polyline.getMaterial()));
         }
     };
 

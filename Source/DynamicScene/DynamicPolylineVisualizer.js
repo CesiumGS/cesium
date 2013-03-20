@@ -3,14 +3,14 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Cartesian3',
-        '../Core/Color',
-        '../Scene/PolylineCollection'
+        '../Scene/PolylineCollection',
+        '../Scene/Material'
        ], function(
          DeveloperError,
          destroyObject,
          Cartesian3,
-         Color,
-         PolylineCollection) {
+         PolylineCollection,
+         Material) {
     "use strict";
 
     /**
@@ -195,6 +195,7 @@ define([
             return;
         }
 
+        var context = this._scene.getContext();
         if (typeof polylineVisualizerIndex === 'undefined') {
             var unusedIndexes = this._unusedIndexes;
             var length = unusedIndexes.length;
@@ -209,8 +210,7 @@ define([
             polyline.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            polyline.setDefaultColor(Color.WHITE);
-            polyline.setDefaultOutlineColor(Color.BLACK);
+            polyline.setMaterial(Material.fromType(context, Material.ColorType));
             polyline.setWidth(1);
         } else {
             polyline = this._polylineCollection.get(polylineVisualizerIndex);
@@ -230,22 +230,17 @@ define([
             polyline._visualizerPositions = vertexPositions;
         }
 
-        var property = dynamicPolyline.color;
-        if (typeof property !== 'undefined') {
-            polyline.setDefaultColor(property.getValue(time, polyline.getDefaultColor()));
-        }
-
-        property = dynamicPolyline.outlineColor;
-        if (typeof property !== 'undefined') {
-            polyline.setDefaultOutlineColor(property.getValue(time, polyline.getDefaultOutlineColor()));
-        }
-
-        property = dynamicPolyline.width;
+        var property = dynamicPolyline.width;
         if (typeof property !== 'undefined') {
             var width = property.getValue(time);
             if (typeof width !== 'undefined') {
                 polyline.setWidth(width);
             }
+        }
+
+        var material = dynamicPolyline.material;
+        if (typeof material !== 'undefined') {
+            polyline.setMaterial(material.getValue(time, context, polyline.getMaterial()));
         }
     };
 
