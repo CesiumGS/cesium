@@ -7,47 +7,30 @@
     <meta name="description" content="NASA Black Marble imagery.">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.2/require.js"></script>
     <script type="text/javascript">
-    var dojoConfig = {
-        baseUrl : '../../../Source',
-        packages: [
-            { name: 'dojo', location: '../ThirdParty/dojo-release-1.8.3-src/dojo' },
-            { name: 'dijit', location: '../ThirdParty/dojo-release-1.8.3-src/dijit' },
-            { name: 'dojox', location: '../ThirdParty/dojo-release-1.8.3-src/dojox' }
-        ]
-    };
+    require.config({
+        baseUrl : '../../../Source'
+    });
     </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
-    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
-<body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
 <style>
     @import url(../templates/bucket.css);
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium', 'Widgets/Dojo/CesiumWidget'
-], function(
-    Cesium, CesiumWidget)
-{
+require(['Cesium'], function(Cesium) {
     "use strict";
 
-    var widget = new CesiumWidget();
-    widget.placeAt('cesiumContainer');
-    widget.startup();
-
-    var centralBody = widget.centralBody;
-    var imageryLayerCollection = centralBody.getImageryLayers();
-    imageryLayerCollection.removeAll();
-    imageryLayerCollection.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
-        url : 'http://cesium.agi.com/blackmarble',
-        maximumLevel : 8,
-		credit : 'Black Marble imagery courtesy NASA Earth Observatory'
-    }));
+    var widget = new Cesium.CesiumWidget('cesiumContainer', {
+        imageryProvider : new Cesium.TileMapServiceImageryProvider({
+            url : 'http://cesium.agi.com/blackmarble',
+            maximumLevel : 8,
+            credit : 'Black Marble imagery courtesy NASA Earth Observatory'
+        })
+    });
 
     Sandcastle.finishedLoading();
 });
