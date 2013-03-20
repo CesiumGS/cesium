@@ -10,7 +10,7 @@
 			<sourcefiles dir="${sourceDirectory}">
 				<include name="**/*.js" />
 				<exclude name="*.js" />
-				<exclude name="Widgets/**" />
+				<exclude name="Widgets/Dojo/**" />
 				<exclude name="Workers/**" />
 				<exclude name="**/*.profile.js" />
 			</sourcefiles>

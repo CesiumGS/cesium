@@ -19,7 +19,6 @@
     </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
     <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
@@ -48,7 +47,6 @@
 <script id="cesium_sandcastle_script">
 require([
     'Cesium',
-    'Widgets/Dojo/CesiumWidget',
     'dojo/dom-construct',
     'dijit/DropDownMenu',
     'dijit/MenuItem',
@@ -58,7 +56,6 @@ require([
     'dijit/form/HorizontalSlider'
 ], function(
     Cesium,
-    CesiumWidget,
     domConstruct,
     DropDownMenu,
     MenuItem,
@@ -283,13 +280,9 @@ require([
         });
     }
 
-    var widget = new CesiumWidget();
-    widget.placeAt('cesiumContainer');
-    widget.startup();
+    var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    var centralBody = widget.centralBody;
-
-    imageryLayerCollection = centralBody.getImageryLayers();
+    imageryLayerCollection = widget.centralBody.getImageryLayers();
 
     setupLayers();
 
