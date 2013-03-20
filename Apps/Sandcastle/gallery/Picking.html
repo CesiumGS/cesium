@@ -19,7 +19,6 @@
     </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
     <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
@@ -30,9 +29,9 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 require([
-    'Cesium', 'Widgets/Dojo/CesiumWidget', 'dijit/form/Button'
+    'Cesium', 'dijit/form/Button'
 ], function(
-    Cesium, CesiumWidget, Button)
+    Cesium, Button)
 {
     "use strict";
 
@@ -388,7 +387,7 @@ require([
                 Cesium.Math.toDegrees(e.east).toFixed(2) + ', ' +
                 Cesium.Math.toDegrees(e.north).toFixed(2) + ')');
             label.setScale(0.7);
-            label.setPosition(widget.ellipsoid.cartographicToCartesian(e.getCenter()));
+            label.setPosition(widget.centralBody.getEllipsoid().cartographicToCartesian(e.getCenter()));
             label.setHorizontalOrigin( Cesium.HorizontalOrigin.CENTER );
         };
         var drawExtentHelper = new DrawExtentHelper(scene, myHandler);
@@ -396,7 +395,7 @@ require([
     }
 
     function createButtons(widget) {
-        var ellipsoid = widget.ellipsoid;
+        var ellipsoid = widget.centralBody.getEllipsoid();
         var scene = widget.scene;
 
         new Button({
@@ -412,7 +411,6 @@ require([
             label: 'Pick Billboard',
             onClick: function() {
                 cleanup();
-                widget.viewHome();
                 pickBillboard(scene, ellipsoid);
                 Sandcastle.highlight(pickBillboard);
             }
@@ -422,7 +420,6 @@ require([
             label: 'Animate Billboard on Pick',
             onClick: function() {
                 cleanup();
-                widget.viewHome();
                 animateBillboardOnPick(scene, ellipsoid);
                 Sandcastle.highlight(animateBillboardOnPick);
             }
@@ -432,7 +429,6 @@ require([
             label: 'Erode Sensor on Click',
             onClick: function() {
                 cleanup();
-                widget.viewHome();
                 erodeSensorOnClick(scene, ellipsoid);
                 Sandcastle.highlight(erodeSensorOnClick);
             }
@@ -442,7 +438,6 @@ require([
             label: 'Layer Primitives',
             onClick: function() {
                 cleanup();
-                widget.viewHome();
                 layerCompositePrimitive(scene, ellipsoid);
                 Sandcastle.highlight(layerCompositePrimitive);
             }
@@ -452,19 +447,16 @@ require([
             label: 'Drag to Draw Extent',
             onClick: function() {
                 cleanup();
-                widget.viewHome();
                 drawExtent(scene, ellipsoid);
                 Sandcastle.highlight(drawExtent);
             }
         }).placeAt('toolbar');
     }
 
-    var widget = new CesiumWidget();
-    widget.placeAt('cesiumContainer');
-    widget.startup();
+    var widget = new Cesium.CesiumWidget('cesiumContainer');
 
     createButtons(widget);
-    pickCartographicPosition(widget.scene, widget.ellipsoid);
+    pickCartographicPosition(widget.scene, widget.centralBody.getEllipsoid());
 
     Sandcastle.finishedLoading();
 });
