@@ -278,37 +278,6 @@ define([
         }
     };
 
-
-    /**
-     * Determines if this polyline equals another polyline.  Polylines are equal if all their properties
-     * are equal.  Polylines in different collections can be equal.
-     *
-     * @memberof Polyline
-     *
-     * @param {Polyline} other The polyline to compare for equality.
-     *
-     * @return {Boolean} <code>true</code> if the polylines are equal; otherwise, <code>false</code>.
-     */
-    Polyline.prototype.equals = function(other) {
-        return this === other ||
-               typeof other !== 'undefined' &&
-               this._show === other._show &&
-               this._width === other._width &&
-               cartesian3ArrayEquals(this._positions, other._positions);
-    };
-
-    function cartesian3ArrayEquals(a, b) {
-        if (a.length !== b.length) {
-            return false;
-        }
-        for ( var i = 0, len = a.length; i < len; ++i) {
-            if (!Cartesian3.equals(a[i], b[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     Polyline.prototype._destroy = function() {
         this._pickId = this._pickId && this._pickId.destroy();
         this._material = this._material && this._material.destroy();

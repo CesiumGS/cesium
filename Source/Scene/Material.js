@@ -1236,7 +1236,7 @@ define([
         uniforms : {
             color : new Color(1.0, 1.0, 1.0, 1.0),
             outlineColor : new Color(1.0, 0.0, 0.0, 1.0),
-            outlineWidth : 0.0
+            outlineWidth : 1.0
         },
         source : PolylineOutlineMaterial
     });
