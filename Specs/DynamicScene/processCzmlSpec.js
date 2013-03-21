@@ -71,7 +71,7 @@ defineSuite([
         expect(testObject.label.show).toBeDefined();
         expect(testObject.label.show.getValue(new JulianDate())).toEqual(false);
     });
-    
+
     it('processCzml deletes an existing object.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         processCzml(czml, dynamicObjectCollection);
@@ -81,7 +81,7 @@ defineSuite([
 
         processCzml(czmlDelete, dynamicObjectCollection);
         expect(dynamicObjectCollection.getObjects().length).toEqual(0);
-        expect(dynamicObjectCollection.getObject('test')).toBeUndefined()
+        expect(dynamicObjectCollection.getObject('test')).toBeUndefined();
     });
 
     it('processCzml populates dynamicObjectCollection with expected data for a single packet', function() {
