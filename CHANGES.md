@@ -11,7 +11,29 @@ Beta Releases
    * Removed `clampToPixel` property from `BillboardCollection` and `LabelCollection`.  This options is no longer be needed due to overall LabelCollection visualization improvements.
    * Removed `Widgets/Dojo/CesiumWidget` and replaced it with `Widgets/CesiumWidget`, which has no Dojo dependancies.
    * `destroyObject` no longer deletes properties from the object being destroyed.
-   * Removed the color, outline color, and outline width properties of polylines. Instead, use materials for polyline color and outline properties.
+   * Removed the color, outline color, and outline width properties of polylines. Instead, use materials for polyline color and outline properties. Code that looked like:
+         
+         var polyline = polylineCollection.add({
+             positions : positions,
+             color : new Color(1.0, 1.0, 1.0, 1.0),
+             outlineColor : new Color(1.0, 0.0, 0.0, 1.0),
+             width : 1.0,
+             outlineWidth : 3.0
+         });
+         
+     should now look like:
+         
+         var outlineMaterial = Material.fromType(context, Material.PolylineOutlineType);
+         outlineMaterial.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
+         outlineMaterial.uniforms.outlineColor = new Color(1.0, 0.0, 0.0, 1.0);
+         outlineMaterial.uniforms.outlinewidth = 2.0;
+         
+         var polyline = polylineCollection.add({
+             positions : positions,
+             width : 3.0,
+             material : outlineMaterial
+         });
+             
 * Added `BoundingSphere.fromCornerPoints`.
 * Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `DynamicPath.resolution` property for setting the maximum step size, in seconds, to take when sampling a position for path visualization.
@@ -20,6 +42,7 @@ Beta Releases
 * Added wide polylines that work with and without ANGLE.
 * Polylines now use materials to describe their surface appearance. See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page for more details on how to create materials.
 * Added new `PolylineOutline`, `PolylineArrow`, and `Fade` materials.
+* Added `czm_pixelSizeInMeters` automatic GLSL uniform.
 * Added `sampleTerrain` function to sample the terrain height of a list of `Cartographic` positions. 
 * Imagery layers with an `alpha` of exactly 0.0 are no longer rendered.  Previously these invisible layers were rendered normally, which was a waste of resources.  Unlike the `show` property, imagery tiles in a layer with an `alpha` of 0.0 are still downloaded, so the layer will become visible more quickly when its `alpha` is increased. 
 

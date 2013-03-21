@@ -686,11 +686,11 @@ defineSuite([
         verifyDraw(fs);
     });
 
-    it('has czm_pixelSize', function() {
+    it('has czm_pixelSizeInMeters', function() {
         var us = context.getUniformState();
         us.update(createFrameState(createMockCamera()));
 
-        var fs = 'void main() { gl_FragColor = vec4(czm_pixelSize == 1.0); }';
+        var fs = 'void main() { gl_FragColor = vec4(czm_pixelSizeInMeters == 1.0); }';
         verifyDraw(fs);
     });
 

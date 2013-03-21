@@ -62,7 +62,7 @@ void main()
     vec4 positionEC = czm_modelViewRelativeToEye * p;
     vec4 endPointWC = czm_eyeToWindowCoordinates(positionEC);
     
-    float pixelSize = czm_pixelSize * abs(positionEC.z);
+    float pixelSize = czm_pixelSizeInMeters * abs(positionEC.z);
     float expandWidth = width * 0.5;
     vec4 prevEC, nextEC, p0, p1;
     vec2 direction, nextWC, prevWC;

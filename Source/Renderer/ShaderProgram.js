@@ -1227,21 +1227,21 @@ define([
          * An automatic GLSL uniform representing the size of a pixel in meters at a distance of one meter
          * from the camera. The pixel size is linearly proportional to the distance from the camera.
          * <br /><br />
-         * Like all automatic uniforms, <code>czm_pixelSize</code> does not need to be explicitly declared.
+         * Like all automatic uniforms, <code>czm_pixelSizeInMeters</code> does not need to be explicitly declared.
          * However, it can be explicitly declared when a shader is also used by other applications such
          * as a third-party authoring tool.
          *
-         * @alias czm_pixelSize
+         * @alias czm_pixelSizeInMeters
          * @glslUniform
          *
          * @example
          * // GLSL declaration
-         * uniform float czm_pixelSize;
+         * uniform float czm_pixelSizeInMeters;
          *
          * // Example: the pixel size at a position in eye coordinates
-         * float pixelSize = czm_pixelSize * positionEC.z;
+         * float pixelSize = czm_pixelSizeInMeters * positionEC.z;
          */
-        czm_pixelSize : {
+        czm_pixelSizeInMeters : {
             getSize : function() {
                 return 1;
             },
