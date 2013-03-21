@@ -174,20 +174,20 @@ define(['dojo',
     // React to theme changes
     //
     function setThemeLight() {
-        document.body.className = 'claro';
+        document.body.className = 'claro cesium-lighter';
         dijit.byId('themeSelector').set('label', 'Theme: Light');
         animation.applyThemeChanges();
     }
     function setThemeDark() {
-        document.body.className = 'claro cesium-darker';
+        document.body.className = 'claro';
         dijit.byId('themeSelector').set('label', 'Theme: Dark');
         animation.applyThemeChanges();
     }
     function cycleTheme() {
         if (document.body.className === 'claro') {
-            setThemeDark();
-        } else {
             setThemeLight();
+        } else {
+            setThemeDark();
         }
     }
 

@@ -1,9 +1,7 @@
 @import url('../Timeline/Timeline.css');
-@import url('../Timeline/darker.css');
 @import url('../Animation/Animation.css');
-@import url('../Animation/darker.css');
 @import url('../Fullscreen/FullscreenWidget.css');
-@import url('../Fullscreen/darker.css');
+@import url('../lighter.css');
 
 .cw-node {
     font-family: sans-serif;

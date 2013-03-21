@@ -673,8 +673,13 @@ define([
             on(canvas, 'contextmenu', event.stop);
             on(canvas, 'selectstart', event.stop);
 
-            if (typeof widget.endUserOptions.theme === 'undefined' || widget.endUserOptions.theme !== 'light') {
-                widget.cesiumNode.className += ' cesium-darker';
+            var theme = widget.endUserOptions.theme;
+            if (typeof theme !== 'undefined') {
+                if (widget.endUserOptions.theme === 'lighter') {
+                    widget.cesiumNode.className += ' cesium-lighter';
+                } else {
+                    window.alert('Unknown theme: ' + theme);
+                }
             }
 
             if (typeof widget.endUserOptions.debug !== 'undefined' && widget.endUserOptions.debug) {
