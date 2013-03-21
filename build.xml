@@ -54,6 +54,28 @@
 	</target>
 
 	<target name="makeZipFile" description="Builds a zip file containing all release files." depends="release">
+		<copy todir="Build">
+			<fileset dir="Apps/">
+				<include name="skeleton.html" />
+			</fileset>
+		</copy>
+
+		<replace dir="Build" summary="true">
+			<replacefilter token="../Build/" value="" />
+			<fileset dir="Build/">
+				<include name="skeleton.html" />
+			</fileset>
+		</replace>
+
+		<zip destfile="Cesium-${version}.zip" basedir="${basedir}">
+			<zipfileset dir="Build/Cesium" prefix="Cesium" />
+			<zipfileset dir="Build/Documentation" prefix="Documentation" />
+			<zipfileset dir="Build" includes="skeleton.html" fullpath="skeleton.html" />
+			<include name="LICENSE.md" />
+			<include name="CHANGES.md" />
+			<include name="README.md" />
+		</zip>
+
 		<zip destfile="Cesium-${version}.zip" basedir="${basedir}">
 			<include name="Build/**" />
 			<include name="Apps/**" />
