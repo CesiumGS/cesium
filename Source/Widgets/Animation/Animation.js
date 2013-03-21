@@ -290,8 +290,8 @@ define(['../../Core/destroyObject',
         var baseWidth = 200;
         var baseHeight = 132;
 
-        var parentWidth = defaultValue(that.parentNode.clientWidth, 0);
-        var parentHeight = defaultValue(that.parentNode.clientHeight, 0);
+        var parentWidth = defaultValue(that.container.clientWidth, 0);
+        var parentHeight = defaultValue(that.container.clientHeight, 0);
 
         var width = parentWidth;
         var height = parentHeight;
@@ -346,10 +346,10 @@ define(['../../Core/destroyObject',
      * @alias Animation
      * @constructor
      *
-     * @param {DOM Node} parentNode The parent HTML DOM node for this widget.
+     * @param {Element|String} container The DOM element, or DOM element ID, that will contain the widget.
      * @param {AnimationViewModel} viewModel The ViewModel used by this widget.
      *
-     * @exception {DeveloperError} parentNode is required.
+     * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} viewModel is required.
      *
      * @see AnimationViewModel
@@ -357,13 +357,12 @@ define(['../../Core/destroyObject',
      *
      * @example
      * // In HTML head, include a link to Animation.css stylesheet,
-     * // and in the body, include: &lt;div id="animationWidget"&gt;&lt;/div&gt;
+     * // and in the body, include: &lt;div id="animationContainer"&gt;&lt;/div&gt;
      *
      * var clock = new Clock();
      * var clockViewModel = new ClockViewModel(clock);
      * var viewModel = new AnimationViewModel(clockViewModel);
-     * var parentNode = document.getElementById("animationWidget");
-     * var widget = new Animation(parentNode, viewModel);
+     * var widget = new Animation('animationContainer', viewModel);
      *
      * function tick() {
      *     clock.tick();
@@ -371,9 +370,17 @@ define(['../../Core/destroyObject',
      * }
      * Cesium.requestAnimationFrame(tick);
      */
-    var Animation = function(parentNode, viewModel) {
-        if (typeof parentNode === 'undefined') {
-            throw new DeveloperError('parentNode is required.');
+    var Animation = function(container, viewModel) {
+        if (typeof container === 'undefined') {
+            throw new DeveloperError('container is required.');
+        }
+
+        if (typeof container === 'string') {
+            var tmp = document.getElementById(container);
+            if (tmp === null) {
+                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
+            }
+            container = tmp;
         }
 
         if (typeof viewModel === 'undefined') {
@@ -382,13 +389,17 @@ define(['../../Core/destroyObject',
 
         /**
          * The viewModel
+         * @memberof Animation
+         * @type {AnimationViewModel}
          */
         this.viewModel = viewModel;
 
         /**
-         * The parent HTML DOM node for this widget.
+         * Gets the parent container.
+         * @memberof Animation
+         * @type {Element}
          */
-        this.parentNode = parentNode;
+        this.container = container;
 
         this._centerX = 0;
         this._centerY = 0;
@@ -530,7 +541,7 @@ define(['../../Core/destroyObject',
         var shuttleRingBackG = document.createElementNS(svgNS, 'g');
         shuttleRingBackG.setAttribute('class', 'animation-shuttleRingG');
 
-        parentNode.appendChild(themeEle);
+        container.appendChild(themeEle);
         topG.appendChild(shuttleRingBackG);
         topG.appendChild(knobG);
         topG.appendChild(buttonsG);
@@ -547,7 +558,7 @@ define(['../../Core/destroyObject',
         knobG.appendChild(knobShield);
 
         svg.appendChild(topG);
-        parentNode.appendChild(svg);
+        container.appendChild(svg);
 
         var that = this;
         this._resizeCallback = function() {
@@ -628,8 +639,8 @@ define(['../../Core/destroyObject',
         this._knobOuter.removeEventListener('mousedown', mouseCallback, true);
         this._knobOuter.removeEventListener('touchstart', mouseCallback, true);
 
-        this.parentNode.removeChild(this._svgNode);
-        this.parentNode.removeChild(this._theme);
+        this.container.removeChild(this._svgNode);
+        this.container.removeChild(this._theme);
         this._realtimeSVG.destroy();
         this._playReverseSVG.destroy();
         this._playForwardSVG.destroy();
@@ -657,8 +668,8 @@ define(['../../Core/destroyObject',
      * @memberof Animation
      *
      * @example
-     * //Switch to the cesium-darker theme.
-     * document.body.className = 'cesium-darker';
+     * //Switch to the cesium-lighter theme.
+     * document.body.className = 'cesium-lighter';
      * animation.applyThemeChanges();
      */
     Animation.prototype.applyThemeChanges = function() {

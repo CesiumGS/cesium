@@ -11,6 +11,7 @@ Beta Releases
    * Removed `clampToPixel` property from `BillboardCollection` and `LabelCollection`.  This options is no longer be needed due to overall LabelCollection visualization improvements.
    * Removed `Widgets/Dojo/CesiumWidget` and replaced it with `Widgets/CesiumWidget`, which has no Dojo dependancies.
    * `destroyObject` no longer deletes properties from the object being destroyed.  
+   * `darker.css` files have been deleted and the `darker` theme is now the default style for widgets.  The original theme is now known as `lighter` and is in corresponding `lighter.css` files.
 * Added `BoundingSphere.fromCornerPoints`.
 * Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `DynamicPath.resolution` property for setting the maximum step size, in seconds, to take when sampling a position for path visualization.
