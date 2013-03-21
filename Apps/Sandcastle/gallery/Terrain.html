@@ -136,66 +136,77 @@ require([
             }
         }).placeAt('zoomButtons');
         
-        var terrainSamplePoints;
-        function elevationSuccess() {
-            Cesium.when(Cesium.loadImage('../images/facility.gif'), function(image) {
-                var ellipsoid = Cesium.Ellipsoid.WGS84;
-                var billboards = new Cesium.BillboardCollection();
-                var labels = new Cesium.LabelCollection();
-                var textureAtlas = scene.getContext().createTextureAtlas({images : [image]});
-                billboards.setTextureAtlas(textureAtlas);
+        var terrainSamplePositions;
+        var billboards;
+        var labels;
+
+        function sampleTerrainSuccess() {
+            var ellipsoid = Cesium.Ellipsoid.WGS84;
+
+            if (typeof billboards === 'undefined') {
+                billboards = new Cesium.BillboardCollection();
                 
-                for( var i = 0; i < terrainSamplePoints.length; ++i ){
-                    var pt = terrainSamplePoints[i];
-                    billboards.add({
-                        position : ellipsoid.cartographicToCartesian(pt),
-                        verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-                        scale : 0.7,
-                        imageIndex : 0
-                    });
+                Cesium.when(Cesium.loadImage('../images/facility.gif'), function(image) {
+                    var textureAtlas = scene.getContext().createTextureAtlas({images : [image]});
+                    billboards.setTextureAtlas(textureAtlas);
+                });
+            } else {
+                billboards.removeAll();
+            }
 
-                    labels.add({
-                        position : ellipsoid.cartographicToCartesian(pt),
-                        text : pt.height.toFixed(1),
-                        horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
-                        scale : 0.3,
-                        pixelOffset : new Cesium.Cartesian2(0,14),
-                        fillColor : new Cesium.Color(1,0,0),
-                        outlineColor : Cesium.Color.WHITE
-                    });
+            if (typeof labels === 'undefined') {
+                labels = new Cesium.LabelCollection();
+            } else {
+                labels.removeAll();
+            }
 
-                }
-                scene.getPrimitives().add(billboards);
-                scene.getPrimitives().add(labels);
-            });
+            for( var i = 0; i < terrainSamplePositions.length; ++i ){
+                var position = terrainSamplePositions[i];
+                billboards.add({
+                    position : ellipsoid.cartographicToCartesian(position),
+                    verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+                    scale : 0.7,
+                    imageIndex : 0
+                });
+
+                labels.add({
+                    position : ellipsoid.cartographicToCartesian(position),
+                    text : position.height.toFixed(1),
+                    horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                    scale : 0.3,
+                    pixelOffset : new Cesium.Cartesian2(0,14),
+                    fillColor : new Cesium.Color(1,0,0),
+                    outlineColor : Cesium.Color.WHITE
+                });
+
+            }
+            scene.getPrimitives().add(billboards);
+            scene.getPrimitives().add(labels);
         }
         
         new Button({
             label: 'Sample Everest Terrain',
             onClick: function() {
-                var nx = 41;
-                var ny = 41;
-                var lat = Cesium.Math.toRadians(27.988257);
-                var lon = Cesium.Math.toRadians(86.925145);
-                var sz = 0.005;
-                var e = new Cesium.Extent(lon-sz,lat-sz,lon+sz,lat+sz);
-                terrainSamplePoints = [];
-                for( var y = 0; y < ny; ++y ) {
-                    for( var x = 0; x < nx; ++x ) {
-                        var a = x / (nx-1);
-                        var b = y / (ny-1);
-                        
-                        var lon = e.west * (1.0-a) + e.east * a;
-                        var lat = e.south * (1.0-b) + e.north * b;
-                        var pt = new Cesium.Cartographic(lon,lat,1000);
-                        terrainSamplePoints.push(pt);
+                var gridWidth = 41;
+                var gridHeight = 41;
+                var everestLatitude = Cesium.Math.toRadians(27.988257);
+                var everestLongitude = Cesium.Math.toRadians(86.925145);
+                var extentHalfSize = 0.005;
+                var e = new Cesium.Extent(everestLongitude - extentHalfSize,everestLatitude - extentHalfSize,everestLongitude + extentHalfSize,everestLatitude + extentHalfSize);
+                terrainSamplePositions = [];
+                for (var y = 0; y < gridHeight; ++y) {
+                    for (var x = 0; x < gridWidth; ++x) {
+                        var longitude = Cesium.Math.lerp(e.west, e.east, x / (gridWidth - 1));
+                        var latitude = Cesium.Math.lerp(e.south, e.north, y / (gridHeight - 1));
+                        var position = new Cesium.Cartographic(longitude, latitude);
+                        terrainSamplePositions.push(position);
                     }
                 }
                 
-                Cesium.when(Cesium.terrainSample(centralBody.terrainProvider, 11, terrainSamplePoints), elevationSuccess);
-                }
-            }).placeAt('sampleButtons');
-        }
+                Cesium.when(Cesium.sampleTerrain(centralBody.terrainProvider, 11, terrainSamplePositions), sampleTerrainSuccess);
+            }
+        }).placeAt('sampleButtons');
+    }
 
     var widget = new CesiumViewerWidget();
     widget.placeAt('cesiumContainer');
