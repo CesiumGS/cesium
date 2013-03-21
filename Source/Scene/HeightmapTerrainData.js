@@ -196,6 +196,39 @@ define([
     };
 
     /**
+     * Computes the terrain height at a specified longitude and latitude.
+     *
+     * @memberof HeightmapTerrainData
+     *
+     * @param {Extent} extent The extent covered by this terrain data.
+     * @param {Number} longitude The longitude in radians.
+     * @param {Number} latitude The latitude in radians.
+     * @returns {Number} The terrain height at the specified position.  If the position
+     *          is outside the extent, this method will extrapolate the height, which is likely to be wildly
+     *          incorrect for positions far outside the extent.
+     */
+    HeightmapTerrainData.prototype.interpolateHeight = function(extent, longitude, latitude) {
+        var width = this._width;
+        var height = this._height;
+
+        var heightSample;
+
+        var structure = this._structure;
+        var stride = structure.stride;
+        if (stride > 1) {
+            var elementsPerHeight = structure.elementsPerHeight;
+            var elementMultiplier = structure.elementMultiplier;
+            var isBigEndian = structure.isBigEndian;
+
+            heightSample = interpolateHeightWithStride(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, extent, width, height, longitude, latitude);
+        } else {
+            heightSample = interpolateHeight(this._buffer, extent, width, height, longitude, latitude);
+        }
+
+        return heightSample * structure.heightScale + structure.heightOffset;
+    };
+
+    /**
      * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
      * height samples in this instance, interpolated if necessary.
      *
