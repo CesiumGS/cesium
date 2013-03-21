@@ -1,0 +1,9 @@
+.cesium-lighter .sceneModeCommon {
+    border: solid 1px #9BBFDF;
+    background-color: #DFEFFF;
+    color: black;
+}
+
+.cesium-lighter .sceneModeCommon:hover {
+    background-color: #A9D5FF;
+}

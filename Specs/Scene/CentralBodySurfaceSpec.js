@@ -475,6 +475,44 @@ defineSuite([
         });
     });
 
+    it('skips layer with uniform alpha value of zero', function() {
+        var layerCollection = cb.getImageryLayers();
+        layerCollection.removeAll();
+        var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+
+        layer.alpha = 0.0;
+
+        frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+
+        updateUntilDone(cb);
+
+        runs(function() {
+            var commandLists = [];
+            expect(render(context, frameState, cb, commandLists)).toBeGreaterThan(0);
+
+            var tileCommandCount = 0;
+
+            for (var i = 0; i < commandLists.length; ++i) {
+                var commandList = commandLists[i].colorList;
+                var commandListLength = commandList.length;
+                for (var j = 0; j < commandListLength; ++j) {
+                    var command = commandList[j];
+
+                    var uniforms = command.uniformMap;
+                    if (typeof uniforms === 'undefined' || typeof uniforms.u_dayTextureAlpha === 'undefined') {
+                        continue;
+                    }
+
+                    ++tileCommandCount;
+
+                    expect(uniforms.u_dayTextureAlpha()).toEqual([]);
+                }
+            }
+
+            expect(tileCommandCount).toBeGreaterThan(0);
+        });
+    });
+
     describe('switching terrain providers', function() {
         it('clears the replacement queue', function() {
             updateUntilDone(cb);

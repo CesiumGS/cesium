@@ -9,7 +9,8 @@ Beta Releases
    * `Billboard.computeScreenSpacePosition` now takes `Context` and `FrameState` arguments instead of a `UniformState` argument.
    * Removed `clampToPixel` property from `BillboardCollection` and `LabelCollection`.  This options is no longer be needed due to overall LabelCollection visualization improvements.
    * Removed `Widgets/Dojo/CesiumWidget` and replaced it with `Widgets/CesiumWidget`, which has no Dojo dependancies.
-   * `destroyObject` no longer deletes properties from the object being destroyed.
+   * `destroyObject` no longer deletes properties from the object being destroyed.  
+   * `darker.css` files have been deleted and the `darker` theme is now the default style for widgets.  The original theme is now known as `lighter` and is in corresponding `lighter.css` files.
    * Removed `view2D`, `view3D`, and `viewColumbus` properties from `CesiumViewerWidget`.  Use the `sceneModeWidget` property instead.
 * Added `BoundingSphere.fromCornerPoints`.
 * Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
@@ -17,6 +18,9 @@ Beta Releases
 * Added `TileCoordinatesImageryProvider` that renders imagery with tile X, Y, Level coordinates on the surface of the globe.  This is mostly useful for debugging. 
 * Added 'onTransitionStart` and `onTransitionComplete` events to `SceneModeTransitioner`.
 * Added `DynamicEllipse` and `DynamicObject.ellipse` property to render CZML ellipses on the globe.
+* Added `sampleTerrain` function to sample the terrain height of a list of `Cartographic` positions.
+* Added `DynamicObjectCollection.removeObject` and handling of the new CZML `delete` property. 
+* Imagery layers with an `alpha` of exactly 0.0 are no longer rendered.  Previously these invisible layers were rendered normally, which was a waste of resources.  Unlike the `show` property, imagery tiles in a layer with an `alpha` of 0.0 are still downloaded, so the layer will become visible more quickly when its `alpha` is increased. 
 
 ### b14 - 2013-03-01
 
