@@ -27,7 +27,15 @@
 		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptions="${jsHintEclipseSettings.options}" />
 	</target>
 
-	<target name="combine" description="Combines all source files into a single stand-alone script." depends="build, combineJavaScript" />
+	<target name="combine" description="Combines all source files into a single stand-alone script." depends="build, combineJavaScript">
+		<copy todir="Build">
+			<fileset dir="Apps/">
+				<include name="HelloWorld.html" />
+			</fileset>
+		</copy>
+
+		<replace file="Build/HelloWorld.html" token="../Build/" value="" />
+	</target>
 
 	<target name="minify" description="Combines all source files into a single stand-alone, minified script.">
 		<delete includeEmptyDirs="true" failonerror="false">
@@ -201,19 +209,6 @@
 		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/linux/node">
 			<os family="unix" />
 		</condition>
-
-		<copy todir="Build">
-			<fileset dir="Apps/">
-				<include name="HelloWorld.html" />
-			</fileset>
-		</copy>
-
-		<replace dir="Build" summary="true">
-			<replacefilter token="../Build/" value="" />
-			<fileset dir="Build/">
-				<include name="HelloWorld.html" />
-			</fileset>
-		</replace>
 	</target>
 
 	<target name="combineJavaScript.setNodePathLocation" if="nodePathValue">
