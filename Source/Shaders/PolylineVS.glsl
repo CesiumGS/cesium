@@ -4,7 +4,7 @@ attribute vec3 position2DHigh;
 attribute vec3 position2DLow;
 attribute vec4 prev;
 attribute vec4 next;
-attribute vec4 misc;
+attribute vec4 texCoordExpandWidthAndShow;
 attribute vec4 pickColor;
 
 #ifndef RENDER_FOR_PICK
@@ -19,10 +19,10 @@ uniform float u_morphTime;
 
 void main() 
 {
-    float texCoord = misc.x;
-    float expandDir = misc.y;
-    float width = misc.z;
-    float show = misc.w;
+    float texCoord = texCoordExpandWidthAndShow.x;
+    float expandDir = texCoordExpandWidthAndShow.y;
+    float width = texCoordExpandWidthAndShow.z;
+    float show = texCoordExpandWidthAndShow.w;
     
     vec4 p;
     vec4 prevDir;

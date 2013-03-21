@@ -49,7 +49,8 @@ define([
         PolylineFSPick) {
     "use strict";
 
-    var MISC_INDEX = Polyline.MISC_INDEX;
+    var SHOW_INDEX = Polyline.SHOW_INDEX;
+    var WIDTH_INDEX = Polyline.WIDTH_INDEX;
     var POSITION_INDEX = Polyline.POSITION_INDEX;
     var MATERIAL_INDEX = Polyline.MATERIAL_INDEX;
     //POSITION_SIZE_INDEX is needed for when the polyline's position array changes size.
@@ -65,7 +66,7 @@ define([
         position2DLow : 3,
         prev : 4,
         next : 5,
-        misc : 6,
+        texCoordExpandWidthAndShow : 6,
         pickColor : 7
     };
 
@@ -154,9 +155,9 @@ define([
 
         // The buffer usage for each attribute is determined based on the usage of the attribute over time.
         this._buffersUsage = [
-                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}, // MISC_INDEX
-                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}, // POSITION_INDEX
-                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}  // MATERIAL_INDEX
+                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}, // SHOW_INDEX
+                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}, // WIDTH_INDEX
+                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}  // POSITION_INDEX
         ];
 
         this._mode = undefined;
@@ -173,7 +174,7 @@ define([
         this._positionBuffer = undefined;
         this._adjacencyBuffer = undefined;
         this._pickColorBuffer = undefined;
-        this._miscBuffer = undefined;
+        this._texCoordExpandWidthAndShowBuffer = undefined;
     };
 
     /**
@@ -411,8 +412,8 @@ define([
                                 if (properties[POSITION_INDEX]) {
                                     bucket.writePositionsUpdate(index, polyline, this._positionBuffer, this._adjacencyBuffer);
                                 }
-                                if (properties[MISC_INDEX]) {
-                                    bucket.writeMiscUpdate(index, polyline, this._miscBuffer);
+                                if (properties[SHOW_INDEX] || properties[WIDTH_INDEX]) {
+                                    bucket.writeTexCoordExpandWidthAndShowUpdate(index, polyline, this._texCoordExpandWidthAndShowBuffer);
                                 }
                                 break;
                             }
@@ -607,8 +608,8 @@ define([
         var usageChanged = false;
 
         var properties = collection._propertiesChanged;
-        //subtract 1 from NUMBER_OF_PROPERTIES because we don't care about POSITION_SIZE_INDEX property change.
-        for ( var k = 0; k < NUMBER_OF_PROPERTIES - 1; ++k) {
+        //subtract 2 from NUMBER_OF_PROPERTIES because we don't care about POSITION_SIZE_INDEX or MATERIAL_INDEX property change.
+        for ( var k = 0; k < NUMBER_OF_PROPERTIES - 2; ++k) {
             var bufferUsage = buffersUsage[k];
             if (properties[k]) {
                 if (bufferUsage.bufferUsage !== BufferUsage.STREAM_DRAW) {
@@ -667,17 +668,17 @@ define([
             var positionArray = new Float32Array(2 * totalLength * 3 * 2);
             var adjacencyArray = new Float32Array(2 * totalLength * 4 * 2);
             var pickColorArray = new Uint8Array(totalLength * 4 * 2);
-            var miscArray = new Float32Array(totalLength * 4 * 2);
+            var texCoordExpandWidthAndShowArray = new Float32Array(totalLength * 4 * 2);
             var position3DArray;
 
             var positionIndex = 0;
             var adjacencyIndex = 0;
             var colorIndex = 0;
-            var miscIndex = 0;
+            var texCoordExpandWidthAndShowIndex = 0;
             for (x in polylineBuckets) {
                 if (polylineBuckets.hasOwnProperty(x)) {
                     bucket = polylineBuckets[x];
-                    bucket.write(positionArray, adjacencyArray, pickColorArray, miscArray, positionIndex, adjacencyIndex, colorIndex, miscIndex, context);
+                    bucket.write(positionArray, adjacencyArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, adjacencyIndex, colorIndex, texCoordExpandWidthAndShowIndex, context);
 
                     if (mode === SceneMode.MORPHING) {
                         if (typeof position3DArray === 'undefined') {
@@ -690,24 +691,29 @@ define([
                     positionIndex += 2 * bucketLength * 3 * 2;
                     adjacencyIndex += 2 * bucketLength * 4 * 2;
                     colorIndex += bucketLength * 4 * 2;
-                    miscIndex += bucketLength * 4 * 2;
+                    texCoordExpandWidthAndShowIndex += bucketLength * 4 * 2;
                     offset = bucket.updateIndices(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset);
                 }
             }
 
-            collection._positionBuffer = context.createVertexBuffer(positionArray, collection._buffersUsage[POSITION_INDEX].bufferUsage);
+            var positionBufferUsage = collection._buffersUsage[POSITION_INDEX].bufferUsage;
+            var showBufferUsage = collection._buffersUsage[SHOW_INDEX].bufferUsage;
+            var widthBufferUsage = collection._buffersUsage[WIDTH_INDEX].bufferUsage;
+            var texCoordExpandWidthAndShowBufferUsage = (showBufferUsage === BufferUsage.STREAM_DRAW || widthBufferUsage === BufferUsage.STREAM_DRAW) ? BufferUsage.STREAM_DRAW : BufferUsage.STATIC_DRAW;
+
+            collection._positionBuffer = context.createVertexBuffer(positionArray, positionBufferUsage);
             var position3DBuffer;
             if (typeof position3DArray !== 'undefined') {
-                position3DBuffer = context.createVertexBuffer(position3DArray, collection._buffersUsage[POSITION_INDEX].bufferUsage);
+                position3DBuffer = context.createVertexBuffer(position3DArray, positionBufferUsage);
             }
-            collection._adjacencyBuffer = context.createVertexBuffer(adjacencyArray, collection._buffersUsage[POSITION_INDEX].bufferUsage);
+            collection._adjacencyBuffer = context.createVertexBuffer(adjacencyArray, positionBufferUsage);
             collection._pickColorBuffer = context.createVertexBuffer(pickColorArray, BufferUsage.STATIC_DRAW);
-            collection._miscBuffer = context.createVertexBuffer(miscArray, collection._buffersUsage[MISC_INDEX].bufferUsage);
+            collection._texCoordExpandWidthAndShowBuffer = context.createVertexBuffer(texCoordExpandWidthAndShowArray, texCoordExpandWidthAndShowBufferUsage);
 
             var pickColorSizeInBytes = 4 * Uint8Array.BYTES_PER_ELEMENT;
             var positionSizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
             var adjacencySizeInBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
-            var miscSizeInBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
+            var texCoordExpandWidthAndShowSizeInBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
 
             var vbo = 0;
             var numberOfIndicesArrays = totalIndices.length;
@@ -725,7 +731,7 @@ define([
                     var prevOffset = 2 * (k * (adjacencySizeInBytes * SIXTYFOURK) - vbo * adjacencySizeInBytes);
                     var nextOffset = adjacencySizeInBytes + prevOffset;
                     var vertexPickColorBufferOffset = k * (pickColorSizeInBytes * SIXTYFOURK) - vbo * pickColorSizeInBytes;
-                    var vertexMiscBufferOffset = k * (miscSizeInBytes * SIXTYFOURK) - vbo * miscSizeInBytes;
+                    var vertexTexCoordExpandWidthAndShowBufferOffset = k * (texCoordExpandWidthAndShowSizeInBytes * SIXTYFOURK) - vbo * texCoordExpandWidthAndShowSizeInBytes;
 
                     var attributes = [{
                         index : attributeIndices.position3DHigh,
@@ -766,11 +772,11 @@ define([
                         offsetInBytes : nextOffset,
                         strideInBytes : 2 * adjacencySizeInBytes
                     }, {
-                        index : attributeIndices.misc,
+                        index : attributeIndices.texCoordExpandWidthAndShow,
                         componentsPerAttribute : 4,
                         componentDatatype : ComponentDatatype.FLOAT,
-                        vertexBuffer : collection._miscBuffer,
-                        offsetInBytes : vertexMiscBufferOffset
+                        vertexBuffer : collection._texCoordExpandWidthAndShowBuffer,
+                        offsetInBytes : vertexTexCoordExpandWidthAndShowBufferOffset
                     }, {
                         index : attributeIndices.pickColor,
                         componentsPerAttribute : 4,
@@ -1006,7 +1012,7 @@ define([
     var scratchWritePosition = new Cartesian3();
     var scratchWriteAdjacency = new Cartesian4();
 
-    PolylineBucket.prototype.write = function(positionArray, adjacencyArray, pickColorArray, miscArray, positionIndex, adjacencyIndex, colorIndex, miscIndex, context) {
+    PolylineBucket.prototype.write = function(positionArray, adjacencyArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, adjacencyIndex, colorIndex, texCoordExpandWidthAndShowIndex, context) {
         var mode = this.mode;
         var polylines = this.polylines;
         var length = polylines.length;
@@ -1060,15 +1066,15 @@ define([
                     pickColorArray[colorIndex + 2] = pickColor.blue;
                     pickColorArray[colorIndex + 3] = 255;
 
-                    miscArray[miscIndex] = j / (positionsLength - 1);     // s tex coord
-                    miscArray[miscIndex + 1] = 2 * k - 1;           // expand direction
-                    miscArray[miscIndex + 2] = width;
-                    miscArray[miscIndex + 3] = show;
+                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex] = j / (positionsLength - 1); // s tex coord
+                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 1] = 2 * k - 1;             // expand direction
+                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 2] = width;
+                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 3] = show;
 
                     positionIndex += 6;
                     adjacencyIndex += 8;
                     colorIndex += 4;
-                    miscIndex += 4;
+                    texCoordExpandWidthAndShowIndex += 4;
                 }
             }
         }
@@ -1346,25 +1352,25 @@ define([
         }
     };
 
-    PolylineBucket.prototype.writeMiscUpdate = function(positionIndex, polyline, buffer) {
+    PolylineBucket.prototype.writeTexCoordExpandWidthAndShowUpdate = function(positionIndex, polyline, buffer) {
         var positionsLength = polyline._actualLength;
         if (positionsLength) {
             positionIndex += this.getPolylineStartIndex(polyline);
             var show = polyline.getShow();
             var width = polyline.getWidth();
-            var miscArray = new Float32Array(4 * positionsLength * 2);
-            var miscIndex = 0;
+            var texCoordExpandWidthAndShowArray = new Float32Array(4 * positionsLength * 2);
+            var texCoordExpandWidthAndShowIndex = 0;
             for ( var j = 0; j < positionsLength; ++j) {
                 for (var k = 0; k < 2; ++k) {
-                    miscArray[miscIndex] = j / positionsLength;     // s tex coord
-                    miscArray[miscIndex + 1] = 2 * k - 1;           // expand direction
-                    miscArray[miscIndex + 2] = width;
-                    miscArray[miscIndex + 3] = show;
+                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex] = j / (positionsLength - 1);  // s tex coord
+                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 1] = 2 * k - 1;              // expand direction
+                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 2] = width;
+                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 3] = show;
 
-                    miscIndex += 4;
+                    texCoordExpandWidthAndShowIndex += 4;
                 }
             }
-            buffer.copyFromArrayView(miscArray, 4 * Float32Array.BYTES_PER_ELEMENT * positionIndex * 2);
+            buffer.copyFromArrayView(texCoordExpandWidthAndShowArray, 4 * Float32Array.BYTES_PER_ELEMENT * positionIndex * 2);
         }
     };
 
