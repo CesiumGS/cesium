@@ -1,6 +1,6 @@
 .sceneModeCommon {
-    border: solid 1px #9BBFDF;
-    background-color: #DFEFFF;
+    border: solid 1px #888;
+    background-color: #222;
     background-position: center;
     background-repeat: no-repeat;
     background-size: 100% 100%;
@@ -8,11 +8,12 @@
     height: 100%;
     position: relative;
     text-align: center;
-    color: black;
+    color: white;
 }
 
 .sceneModeCommon:hover {
-    background-color: #A9D5FF;
+    border: solid 1px #95CEE6;
+    background-color: #4C8EB8;
 }
 
 .sceneModeWidget {
