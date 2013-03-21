@@ -28,7 +28,7 @@ defineSuite([
         dynamicObjectCollection.getOrCreateObject('3');
         expect(dynamicObjectCollection.getObject('2')).toEqual(object2);
     });
-    
+
     it('removeObject removes the object', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         dynamicObjectCollection.getOrCreateObject('1');

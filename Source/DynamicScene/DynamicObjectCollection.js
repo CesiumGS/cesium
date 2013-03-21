@@ -88,7 +88,7 @@ define([
         }
         return this._hash[id];
     };
-    
+
     /**
      * Removes an object with the specified id.
      * @param {Object} id The id of the object to remove.
