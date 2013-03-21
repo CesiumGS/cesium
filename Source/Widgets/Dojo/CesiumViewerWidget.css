@@ -91,9 +91,10 @@
 }
 
 .cw-sceneModeContainer {
-    display: block;
-    width: 96px;
+    display: inline-block;
+    width: 64px;
     height: 32px;
+    vertical-align: middle;
 }
 
 .cw-imagerySelector {
