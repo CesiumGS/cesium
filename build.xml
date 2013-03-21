@@ -76,7 +76,7 @@
 			<include name="README.md" />
 		</zip>
 
-		<zip destfile="Cesium-${version}.zip" basedir="${basedir}">
+		<zip destfile="Cesium-amd-${version}.zip" basedir="${basedir}">
 			<include name="Build/**" />
 			<include name="Apps/**" />
 			<include name="Examples/**" />
