@@ -54,19 +54,6 @@
 	</target>
 
 	<target name="makeZipFile" description="Builds a zip file containing all release files." depends="release">
-		<copy todir="Build">
-			<fileset dir="Apps/">
-				<include name="skeleton.html" />
-			</fileset>
-		</copy>
-
-		<replace dir="Build" summary="true">
-			<replacefilter token="../Build/" value="" />
-			<fileset dir="Build/">
-				<include name="skeleton.html" />
-			</fileset>
-		</replace>
-
 		<zip destfile="Cesium-${version}.zip" basedir="${basedir}">
 			<zipfileset dir="Build/Cesium" prefix="Cesium" />
 			<zipfileset dir="Build/Documentation" prefix="Documentation" />
@@ -214,6 +201,19 @@
 		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/linux/node">
 			<os family="unix" />
 		</condition>
+
+		<copy todir="Build">
+			<fileset dir="Apps/">
+				<include name="skeleton.html" />
+			</fileset>
+		</copy>
+
+		<replace dir="Build" summary="true">
+			<replacefilter token="../Build/" value="" />
+			<fileset dir="Build/">
+				<include name="skeleton.html" />
+			</fileset>
+		</replace>
 	</target>
 
 	<target name="combineJavaScript.setNodePathLocation" if="nodePathValue">
