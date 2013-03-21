@@ -35,6 +35,17 @@ define([
     };
 
     /**
+     * Gets the proxy used by this provider.
+     *
+     * @memberof TileCoordinatesImageryProvider
+     *
+     * @returns {Proxy} This provider does not use a proxy so undefined is always returned.
+     */
+    TileCoordinatesImageryProvider.prototype.getProxy = function() {
+        return undefined;
+    };
+
+    /**
      * Gets the width of each tile, in pixels.  This function should
      * not be called before {@link BingMapsImageryProvider#isReady} returns true.
      *

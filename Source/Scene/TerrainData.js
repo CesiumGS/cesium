@@ -17,6 +17,22 @@ define([
     };
 
     /**
+     * Computes the terrain height at a specified longitude and latitude.
+     *
+     * @memberof TerrainData
+     *
+     * @param {Extent} extent The extent covered by this terrain data.
+     * @param {Number} longitude The longitude in radians.
+     * @param {Number} latitude The latitude in radians.
+     * @returns {Number} The terrain height at the specified position.  If the position
+     *          is outside the extent, this method will extrapolate the height, which is likely to be wildly
+     *          incorrect for positions far outside the extent.
+     */
+    TerrainData.prototype.interpolateHeight = function(extent, longitude, latitude) {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
      * Determines if a given child tile is available, based on the
      * {@link TerrainData#childTileMask}.  The given child tile coordinates are assumed
      * to be one of the four children of this tile.  If non-child tile coordinates are
