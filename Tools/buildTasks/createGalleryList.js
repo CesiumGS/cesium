@@ -25,8 +25,6 @@ forEachFile('demos', function(relativePath, file) {
 
 var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
-var gallery_demos = [\n\
-' + demos.join(',\n') + '\n\
-];';
+var gallery_demos = [' + demos.join(', ') + '];';
 
 writeFileContents(attributes.get('output'), contents);

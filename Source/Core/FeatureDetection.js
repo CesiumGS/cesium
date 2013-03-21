@@ -19,73 +19,73 @@ define([
         });
     }
 
-    var _isChrome;
-    var _chromeVersion;
+    var isChromeResult;
+    var chromeVersionResult;
     function isChrome() {
-        if (typeof _isChrome === 'undefined') {
+        if (typeof isChromeResult === 'undefined') {
             var fields = (/ Chrome\/([\.0-9]+)/).exec(navigator.userAgent);
-            if (!fields) {
-                return (_isChrome = false);
+            if (fields === null) {
+                isChromeResult = false;
+            } else {
+                isChromeResult = true;
+                chromeVersionResult = extractVersion(fields[1]);
             }
-
-            _isChrome = true;
-            _chromeVersion = extractVersion(fields[1]);
         }
 
-        return _isChrome;
+        return isChromeResult;
     }
 
     function chromeVersion() {
-        return isChrome() && _chromeVersion;
+        return isChrome() && chromeVersionResult;
     }
 
-    var _isSafari;
-    var _safariVersion;
+    var isSafariResult;
+    var safariVersionResult;
     function isSafari() {
-        if (typeof _isSafari === 'undefined') {
+        if (typeof isSafariResult === 'undefined') {
             // Chrome contains Safari in the user agent too
             if (isChrome() || !(/ Safari\/[\.0-9]+/).test(navigator.userAgent)) {
-                return (_isSafari = false);
+                isSafariResult = false;
+            } else {
+                var fields = (/ Version\/([\.0-9]+)/).exec(navigator.userAgent);
+                if (fields === null) {
+                    isSafariResult = false;
+                } else {
+                    isSafariResult = true;
+                    safariVersionResult = extractVersion(fields[1]);
+                }
             }
-
-            var fields = (/ Version\/([\.0-9]+)/).exec(navigator.userAgent);
-            if (!fields) {
-                return (_isSafari = false);
-            }
-
-            _isSafari = true;
-            _safariVersion = extractVersion(fields[1]);
         }
 
-        return _isSafari;
+        return isSafariResult;
     }
 
     function safariVersion() {
-        return isSafari() && _safariVersion;
+        return isSafari() && safariVersionResult;
     }
 
-    var _isWebkit;
-    var _webkitVersion;
+    var isWebkitResult;
+    var webkitVersionResult;
     function isWebkit() {
-        if (typeof _isWebkit === 'undefined') {
+        if (typeof isWebkitResult === 'undefined') {
             var fields = (/ AppleWebKit\/([\.0-9]+)(\+?)/).exec(navigator.userAgent);
-            if (!fields) {
-                return (_isWebkit = false);
+            if (fields === null) {
+                isWebkitResult = false;
+            } else {
+                isWebkitResult = true;
+                webkitVersionResult = extractVersion(fields[1]);
+                webkitVersionResult.isNightly = !!fields[2];
             }
-
-            _isWebkit = true;
-            _webkitVersion = extractVersion(fields[1]);
-            _webkitVersion.isNightly = !!fields[2];
         }
 
-        return _isWebkit;
+        return isWebkitResult;
     }
 
     function webkitVersion() {
-        return isWebkit() && _webkitVersion;
+        return isWebkit() && webkitVersionResult;
     }
 
-    var _supportsCrossOriginImagery;
+    var supportsCrossOriginImagery;
 
     /**
      * Detects whether the current browser supports the use of cross-origin
@@ -96,18 +96,18 @@ define([
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      */
     FeatureDetection.supportsCrossOriginImagery = function() {
-        if (typeof _supportsCrossOriginImagery === 'undefined') {
+        if (typeof supportsCrossOriginImagery === 'undefined') {
             if (isSafari() && webkitVersion()[0] < 536) {
                 // versions of Safari below this incorrectly throw a DOM error when calling
                 // readPixels on a canvas containing a cross-origin image.
-                _supportsCrossOriginImagery = false;
+                supportsCrossOriginImagery = false;
             } else {
                 // any other versions of browsers that incorrectly block
                 // readPixels on canvas containing crossOrigin images?
-                _supportsCrossOriginImagery = 'withCredentials' in new XMLHttpRequest();
+                supportsCrossOriginImagery = 'withCredentials' in new XMLHttpRequest();
             }
         }
-        return _supportsCrossOriginImagery;
+        return supportsCrossOriginImagery;
     };
 
     /**
