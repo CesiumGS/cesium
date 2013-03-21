@@ -14,7 +14,7 @@ define(['./FullscreenViewModel',
      * @alias FullscreenWidget
      * @constructor
      *
-     * @param {Element|String} container The element, or ID of an page element, that will contain the widget.
+     * @param {Element|String} container The DOM element or DOM element ID, that will contain the widget.
      * @param {Element} [fullscreenElement=document.body] The element to be placed into fullscreen mode.
      *
      * @exception {DeveloperError} container is required.
