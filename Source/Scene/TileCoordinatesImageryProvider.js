@@ -39,7 +39,7 @@ define([
      *
      * @memberof TileCoordinatesImageryProvider
      *
-     * @returns {Proxy} This class does not use a proxy so undefined is always returned.
+     * @returns {Proxy} This provider does not use a proxy so undefined is always returned.
      */
     TileCoordinatesImageryProvider.prototype.getProxy = function() {
         return undefined;
