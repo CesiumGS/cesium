@@ -19,14 +19,14 @@ defineSuite([
     it('processCzmlPacket adds data for infinite polyline.', function() {
         var polylinePacket = {
             polyline : {
-                width : 1.0,
-                material : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.1, 0.1, 0.1, 0.1]
-                        }
-                    }
+                color : {
+                    rgbaf : [0.1, 0.1, 0.1, 0.1]
                 },
+                width : 1.0,
+                outlineColor : {
+                    rgbaf : [0.2, 0.2, 0.2, 0.2]
+                },
+                outlineWidth : 1.0,
                 show : true
             }
         };
@@ -35,8 +35,10 @@ defineSuite([
         expect(DynamicPolyline.processCzmlPacket(dynamicObject, polylinePacket)).toEqual(true);
 
         expect(dynamicObject.polyline).toBeDefined();
+        expect(dynamicObject.polyline.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.polyline.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(polylinePacket.polyline.width);
-        expect(dynamicObject.polyline.material.getValue(Iso8601.MINIMUM_VALUE).uniforms.color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.polyline.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(dynamicObject.polyline.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(polylinePacket.polyline.outlineWidth);
         expect(dynamicObject.polyline.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
@@ -44,14 +46,14 @@ defineSuite([
         var polylinePacket = {
             polyline : {
                 interval : '2000-01-01/2001-01-01',
-                width : 1.0,
-                material : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.1, 0.1, 0.1, 0.1]
-                        }
-                    }
+                color : {
+                    rgbaf : [0.1, 0.1, 0.1, 0.1]
                 },
+                width : 1.0,
+                outlineColor : {
+                    rgbaf : [0.2, 0.2, 0.2, 0.2]
+                },
+                outlineWidth : 1.0,
                 show : true
             }
         };
@@ -63,12 +65,16 @@ defineSuite([
         expect(DynamicPolyline.processCzmlPacket(dynamicObject, polylinePacket)).toEqual(true);
 
         expect(dynamicObject.polyline).toBeDefined();
+        expect(dynamicObject.polyline.color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.polyline.width.getValue(validTime)).toEqual(polylinePacket.polyline.width);
-        expect(dynamicObject.polyline.material.getValue(validTime).uniforms.color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.polyline.outlineColor.getValue(validTime)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(dynamicObject.polyline.outlineWidth.getValue(validTime)).toEqual(polylinePacket.polyline.outlineWidth);
         expect(dynamicObject.polyline.show.getValue(validTime)).toEqual(true);
 
+        expect(dynamicObject.polyline.color.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.polyline.width.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.polyline.material.getValue(invalidTime)).toBeUndefined();
+        expect(dynamicObject.polyline.outlineColor.getValue(invalidTime)).toBeUndefined();
+        expect(dynamicObject.polyline.outlineWidth.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.polyline.show.getValue(invalidTime)).toBeUndefined();
     });
 
@@ -82,29 +88,37 @@ defineSuite([
     it('mergeProperties does not change a fully configured polyline', function() {
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.polyline = new DynamicPolyline();
-        objectToMerge.polyline.width = 1;
-        objectToMerge.polyline.material = 2;
-        objectToMerge.polyline.show = 3;
+        objectToMerge.polyline.color = 1;
+        objectToMerge.polyline.width = 2;
+        objectToMerge.polyline.outlineColor = 3;
+        objectToMerge.polyline.outlineWidth = 4;
+        objectToMerge.polyline.show = 5;
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.polyline = new DynamicPolyline();
-        targetObject.polyline.width = 4;
-        targetObject.polyline.material = 5;
-        targetObject.polyline.show = 6;
+        targetObject.polyline.color = 6;
+        targetObject.polyline.width = 7;
+        targetObject.polyline.outlineColor = 8;
+        targetObject.polyline.outlineWidth = 9;
+        targetObject.polyline.show = 10;
 
         DynamicPolyline.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.polyline.width).toEqual(4);
-        expect(targetObject.polyline.material).toEqual(5);
-        expect(targetObject.polyline.show).toEqual(6);
+        expect(targetObject.polyline.color).toEqual(6);
+        expect(targetObject.polyline.width).toEqual(7);
+        expect(targetObject.polyline.outlineColor).toEqual(8);
+        expect(targetObject.polyline.outlineWidth).toEqual(9);
+        expect(targetObject.polyline.show).toEqual(10);
     });
 
     it('mergeProperties creates and configures an undefined polyline', function() {
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.polyline = new DynamicPolyline();
-        objectToMerge.polyline.width = 1;
-        objectToMerge.polyline.material = 2;
-        objectToMerge.polyline.show = 3;
+        objectToMerge.polyline.color = 1;
+        objectToMerge.polyline.width = 2;
+        objectToMerge.polyline.outlineColor = 3;
+        objectToMerge.polyline.outlineWidth = 4;
+        objectToMerge.polyline.show = 5;
 
         var targetObject = new DynamicObject('targetObject');
 
@@ -122,15 +136,19 @@ defineSuite([
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.polyline = new DynamicPolyline();
-        targetObject.polyline.width = 4;
-        targetObject.polyline.material = 5;
-        targetObject.polyline.show = 6;
+        targetObject.polyline.color = 6;
+        targetObject.polyline.width = 7;
+        targetObject.polyline.outlineColor = 8;
+        targetObject.polyline.outlineWidth = 9;
+        targetObject.polyline.show = 10;
 
         DynamicPolyline.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.polyline.width).toEqual(4);
-        expect(targetObject.polyline.material).toEqual(5);
-        expect(targetObject.polyline.show).toEqual(6);
+        expect(targetObject.polyline.color).toEqual(6);
+        expect(targetObject.polyline.width).toEqual(7);
+        expect(targetObject.polyline.outlineColor).toEqual(8);
+        expect(targetObject.polyline.outlineWidth).toEqual(9);
+        expect(targetObject.polyline.show).toEqual(10);
     });
 
     it('undefineProperties works', function() {

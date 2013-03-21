@@ -11,8 +11,7 @@ defineSuite([
              'Core/Cartesian2',
              'Core/Cartesian3',
              'Core/Color',
-             'Scene/Scene',
-             'Scene/Material'
+             'Scene/Scene'
             ], function(
               DynamicPathVisualizer,
               createScene,
@@ -25,8 +24,7 @@ defineSuite([
               Cartesian2,
               Cartesian3,
               Color,
-              Scene,
-              Material) {
+              Scene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -115,12 +113,12 @@ defineSuite([
 
         var path = testObject.path = new DynamicPath();
         path.show = new MockProperty(true);
+        path.color = new MockProperty(new Color(0.8, 0.7, 0.6, 0.5));
         path.width = new MockProperty(12.5);
+        path.outlineColor = new MockProperty(new Color(0.1, 0.2, 0.3, 0.4));
+        path.outlineWidth = new MockProperty(2.5);
         path.leadTime = new MockProperty(25);
         path.trailTime = new MockProperty(10);
-        var colorMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        colorMaterial.uniforms.color = new Color(0.7, 0.6, 0.5, 0.4);
-        path.material = new MockProperty(colorMaterial);
 
         visualizer.update(time);
 
@@ -133,19 +131,26 @@ defineSuite([
         expect(primitive.getShow()).toEqual(testObject.path.show.getValue(time));
         expect(primitive.getPositions()).toEqual(testObject.position.getValueRangeCartesian(time));
         expect(primitive.getWidth()).toEqual(testObject.path.width.getValue(time));
-        expect(primitive.getMaterial()).toEqual(testObject.path.material.getValue(time));
+
+        var material = primitive.getMaterial();
+        expect(material.uniforms.color).toEqual(testObject.path.color.getValue(time));
+        expect(material.uniforms.outlineColor).toEqual(testObject.path.outlineColor.getValue(time));
+        expect(material.uniforms.outlineWidth).toEqual(testObject.path.outlineWidth.getValue(time));
 
         testObject.position = new MockProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112)]);
+        path.color = new MockProperty(new Color(0.1, 0.2, 0.3, 0.4));
         path.width = new MockProperty(2.5);
-        colorMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        colorMaterial.uniforms.color = new Color(0.1, 0.2, 0.4, 0.3);
-        path.material = new MockProperty(colorMaterial);
+        path.outlineColor = new MockProperty(new Color(0.5, 0.6, 0.7, 0.8));
+        path.outlineWidth = new MockProperty(12.5);
 
         visualizer.update(time);
         expect(primitive.getShow()).toEqual(testObject.path.show.getValue(time));
         expect(primitive.getPositions()).toEqual(testObject.position.getValueRangeCartesian(time));
         expect(primitive.getWidth()).toEqual(testObject.path.width.getValue(time));
-        expect(primitive.getMaterial()).toEqual(testObject.path.material.getValue(time));
+
+        expect(material.uniforms.color).toEqual(testObject.path.color.getValue(time));
+        expect(material.uniforms.outlineColor).toEqual(testObject.path.outlineColor.getValue(time));
+        expect(material.uniforms.outlineWidth).toEqual(testObject.path.outlineWidth.getValue(time));
 
         path.show = new MockProperty(false);
         visualizer.update(time);

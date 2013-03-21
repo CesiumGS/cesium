@@ -7,9 +7,9 @@ define([
         '../Core/Color',
         '../Core/Transforms',
         '../Core/ReferenceFrame',
+        '../Scene/Material',
         '../Scene/SceneMode',
-        '../Scene/PolylineCollection',
-        '../Scene/Material'
+        '../Scene/PolylineCollection'
        ], function(
          DeveloperError,
          destroyObject,
@@ -18,9 +18,9 @@ define([
          Color,
          Transforms,
          ReferenceFrame,
+         Material,
          SceneMode,
-         PolylineCollection,
-         Material) {
+         PolylineCollection) {
     "use strict";
 
     var PolylineUpdater = function(scene, referenceFrame) {
@@ -123,7 +123,6 @@ define([
             return;
         }
 
-        var context = this._scene.getContext();
         if (typeof pathVisualizerIndex === 'undefined') {
             var unusedIndexes = this._unusedIndexes;
             var length = unusedIndexes.length;
@@ -138,8 +137,12 @@ define([
             polyline.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            polyline.setMaterial(Material.fromType(context, Material.ColorType));
             polyline.setWidth(1);
+            var material = polyline.getMaterial();
+            if (typeof material === 'undefined' || (material.type !== Material.PolylineOutlineType)) {
+                material = Material.fromType(this._scene.getContext(), Material.PolylineOutlineType);
+                polyline.setMaterial(material);
+            }
         } else {
             polyline = this._polylineCollection.get(pathVisualizerIndex);
         }
@@ -154,17 +157,29 @@ define([
 
         polyline.setPositions(positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.getPositions()));
 
+        var uniforms = polyline.getMaterial().uniforms;
+
+        property = dynamicPath.color;
+        if (typeof property !== 'undefined') {
+            uniforms.color = property.getValue(time, uniforms.color);
+        }
+
+        property = dynamicPath.outlineColor;
+        if (typeof property !== 'undefined') {
+            uniforms.outlineColor = property.getValue(time, uniforms.outlineColor);
+        }
+
+        property = dynamicPath.outlineWidth;
+        if (typeof property !== 'undefined') {
+            uniforms.outlineWidth = property.getValue(time, uniforms.outlineWidth);
+        }
+
         property = dynamicPath.width;
         if (typeof property !== 'undefined') {
             var width = property.getValue(time);
             if (typeof width !== 'undefined') {
                 polyline.setWidth(width);
             }
-        }
-
-        var material = dynamicPath.material;
-        if (typeof material !== 'undefined') {
-            polyline.setMaterial(material.getValue(time, context, polyline.getMaterial()));
         }
     };
 

@@ -4,15 +4,15 @@ define([
         '../Core/defaultValue',
         './CzmlBoolean',
         './CzmlNumber',
-        './DynamicProperty',
-        './DynamicMaterialProperty'
-    ], function(
+        './CzmlColor',
+        './DynamicProperty'],
+function(
         TimeInterval,
         defaultValue,
         CzmlBoolean,
         CzmlNumber,
-        DynamicProperty,
-        DynamicMaterialProperty) {
+        CzmlColor,
+        DynamicProperty) {
     "use strict";
 
     /**
@@ -32,6 +32,21 @@ define([
      */
     var DynamicPolyline = function() {
         /**
+         * A DynamicProperty of type CzmlColor which determines the line's color.
+         * @type DynamicProperty
+         */
+        this.color = undefined;
+        /**
+         * A DynamicProperty of type CzmlColor which determines the line's outline color.
+         * @type DynamicProperty
+         */
+        this.outlineColor = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the line's outline width.
+         * @type DynamicProperty
+         */
+        this.outlineWidth = undefined;
+        /**
          * A DynamicProperty of type CzmlBoolean which determines the lines's visibility.
          * @type DynamicProperty
          */
@@ -41,11 +56,6 @@ define([
          * @type DynamicProperty
          */
         this.width = undefined;
-        /**
-         * A DynamicMaterialProperty which determines the line's material.
-         * @type DynamicMaterialProperty
-         */
-        this.material = undefined;
     };
 
     /**
@@ -81,6 +91,15 @@ define([
             interval = TimeInterval.fromIso8601(interval);
         }
 
+        if (typeof polylineData.color !== 'undefined') {
+            var color = polyline.color;
+            if (typeof color === 'undefined') {
+                polyline.color = color = new DynamicProperty(CzmlColor);
+                polylineUpdated = true;
+            }
+            color.processCzmlIntervals(polylineData.color, interval);
+        }
+
         if (typeof polylineData.width !== 'undefined') {
             var width = polyline.width;
             if (typeof width === 'undefined') {
@@ -90,6 +109,24 @@ define([
             width.processCzmlIntervals(polylineData.width, interval);
         }
 
+        if (typeof polylineData.outlineColor !== 'undefined') {
+            var outlineColor = polyline.outlineColor;
+            if (typeof outlineColor === 'undefined') {
+                polyline.outlineColor = outlineColor = new DynamicProperty(CzmlColor);
+                polylineUpdated = true;
+            }
+            outlineColor.processCzmlIntervals(polylineData.outlineColor, interval);
+        }
+
+        if (typeof polylineData.outlineWidth !== 'undefined') {
+            var outlineWidth = polyline.outlineWidth;
+            if (typeof outlineWidth === 'undefined') {
+                polyline.outlineWidth = outlineWidth = new DynamicProperty(CzmlNumber);
+                polylineUpdated = true;
+            }
+            outlineWidth.processCzmlIntervals(polylineData.outlineWidth, interval);
+        }
+
         if (typeof polylineData.show !== 'undefined') {
             var show = polyline.show;
             if (typeof show === 'undefined') {
@@ -97,15 +134,6 @@ define([
                 polylineUpdated = true;
             }
             show.processCzmlIntervals(polylineData.show, interval);
-        }
-
-        if (typeof polylineData.material !== 'undefined') {
-            var material = polyline.material;
-            if (typeof material === 'undefined') {
-                polyline.material = material = new DynamicMaterialProperty();
-                polylineUpdated = true;
-            }
-            material.processCzmlIntervals(polylineData.material, interval);
         }
         return polylineUpdated;
     };
@@ -130,9 +158,11 @@ define([
                 targetObject.polyline = targetPolyline = new DynamicPolyline();
             }
 
+            targetPolyline.color = defaultValue(targetPolyline.color, polylineToMerge.color);
             targetPolyline.width = defaultValue(targetPolyline.width, polylineToMerge.width);
+            targetPolyline.outlineColor = defaultValue(targetPolyline.outlineColor, polylineToMerge.outlineColor);
+            targetPolyline.outlineWidth = defaultValue(targetPolyline.outlineWidth, polylineToMerge.outlineWidth);
             targetPolyline.show = defaultValue(targetPolyline.show, polylineToMerge.show);
-            targetPolyline.material = defaultValue(targetPolyline.material, polylineToMerge.material);
         }
     };
 
