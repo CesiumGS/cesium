@@ -15,7 +15,7 @@ define([
             objectId = createGuid();
         }
 
-        if(typeof packet.delete !== 'undefined' && packet.delete) {
+        if (packet['delete'] === true) {
             dynamicObjectCollection.removeObject(packet.id);
         } else {
             var object = dynamicObjectCollection.getOrCreateObject(objectId);

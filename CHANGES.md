@@ -43,7 +43,8 @@ Beta Releases
 * Polylines now use materials to describe their surface appearance. See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page for more details on how to create materials.
 * Added new `PolylineOutline`, `PolylineArrow`, and `Fade` materials.
 * Added `czm_pixelSizeInMeters` automatic GLSL uniform.
-* Added `sampleTerrain` function to sample the terrain height of a list of `Cartographic` positions. 
+* Added `sampleTerrain` function to sample the terrain height of a list of `Cartographic` positions.
+* Added `DynamicObjectCollection.removeObject` and handling of the new CZML `delete` property. 
 * Imagery layers with an `alpha` of exactly 0.0 are no longer rendered.  Previously these invisible layers were rendered normally, which was a waste of resources.  Unlike the `show` property, imagery tiles in a layer with an `alpha` of 0.0 are still downloaded, so the layer will become visible more quickly when its `alpha` is increased. 
 
 ### b14 - 2013-03-01
