@@ -13,7 +13,8 @@ define([
 
     /**
      * Initiates a terrain height query for an array of {@link Cartographic} positions by
-     * requesting tiles from a terrain provider, sampling, and interpolating.  The query
+     * requesting tiles from a terrain provider, sampling, and interpolating.  The interpolation
+     * matches the triangles used to render the terrain at the specified level.  The query
      * happens asynchronously, so this function returns a promise that is resolved when
      * the query completes.  Each point height is modified in place.  If a height can not be
      * determined because no terrain data is available for the specified level at that location,
