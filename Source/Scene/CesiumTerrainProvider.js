@@ -82,11 +82,14 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
+     * @param {Boolean} [throttleRequests=true] True if the number of simultaneous requests should be limited,
+     *                  or false if the request should be initiated regardless of the number of requests
+     *                  already in progress.
      * @returns {Promise|TerrainData} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
      */
-    CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level) {
+    CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
         var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
         var url = this._url + '/' + level + '/' + x + '/' + (yTiles - y - 1) + '.terrain';
 
@@ -95,9 +98,16 @@ define([
             url = proxy.getURL(url);
         }
 
-        var promise = throttleRequestByServer(url, loadArrayBuffer);
-        if (typeof promise === 'undefined') {
-            return undefined;
+        var promise;
+
+        throttleRequests = defaultValue(throttleRequests, true);
+        if (throttleRequests) {
+            promise = throttleRequestByServer(url, loadArrayBuffer);
+            if (typeof promise === 'undefined') {
+                return undefined;
+            }
+        } else {
+            promise = loadArrayBuffer(url);
         }
 
         var that = this;

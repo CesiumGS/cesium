@@ -403,7 +403,7 @@ define([
                 tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
             }
 
-            isRenderable = isRenderable && imageryDoneLoading;
+            isRenderable = isRenderable && (imageryDoneLoading || imageryLayer.alpha === 0.0);
             isDoneLoading = isDoneLoading && imageryDoneLoading;
         }
 
