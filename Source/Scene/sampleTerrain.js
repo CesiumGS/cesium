@@ -28,7 +28,7 @@ define([
      * @param {Number} level The terrain level-of-detail from which to query terrain heights.
      * @param {Cartographic[]} positions The positions to update with terrain heights.
      *
-     * @returns {Promise} A promise that, when resolved, indicates that the query has completed.
+     * @returns {Promise} A promise that resolves to the provided list of positions when terrain the query has completed.
      *
      * @example
      * // Query the terrain height of two Cartographic positions
@@ -40,8 +40,9 @@ define([
      *     Cartographic.fromDegrees(87.0, 28.0)
      * ];
      * var promise = sampleTerrain(terrainProvider, 11, positions);
-     * when(promise, function() {
-     *     // positions[0].height and positions[1].height have been updated
+     * when(promise, function(updatedPositions) {
+     *     // positions[0].height and positions[1].height have been updated.
+     *     // updatedPositions is just a reference to positions.
      * });
      */
     var sampleTerrain = function(terrainProvider, level, positions) {
@@ -93,7 +94,9 @@ define([
             tilePromises.push(tilePromise);
         }
 
-        return when.all(tilePromises);
+        return when.all(tilePromises, function() {
+            return positions;
+        });
     };
 
     function createInterpolateFunction(tileRequest) {

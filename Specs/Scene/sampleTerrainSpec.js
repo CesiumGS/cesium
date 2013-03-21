@@ -24,7 +24,8 @@ defineSuite([
         var promise = sampleTerrain(terrainProvider, 11, positions);
 
         var done = false;
-        when(promise, function() {
+        when(promise, function(passedPositions) {
+            expect(passedPositions).toBe(positions);
             done = true;
         });
 
