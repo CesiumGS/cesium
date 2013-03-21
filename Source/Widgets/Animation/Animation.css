@@ -46,8 +46,7 @@
 
 .animation-blank {
     fill: #000;
-    fill-opacity: 0.01;
-    /* This must be clickable, so it can't be 'fill: none'. */
+    fill-opacity: 0.01; /* This must be clickable, so it can't be 'fill: none'. */
     stroke: none;
 }
 

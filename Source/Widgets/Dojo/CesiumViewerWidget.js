@@ -193,7 +193,7 @@ define([
          * var endUserOptions = {
          *     'source' : 'file.czml', // The relative URL of the CZML file to load at startup.
          *     'lookAt' : '123abc',    // The CZML ID of the object to track at startup.
-         *     'theme'  : 'light',     // Use the dark-text-on-light-background theme.
+         *     'theme'  : 'lighter',   // Use the dark-text-on-light-background theme.
          *     'loop'   : 0,           // Disable looping at end time, pause there instead.
          *     'stats'  : 1,           // Enable the FPS performance display.
          *     'debug'  : 1,           // Full WebGL error reporting at substantial performance cost.
