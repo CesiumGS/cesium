@@ -34,7 +34,7 @@ define(['../../Core/DeveloperError',
         var dropDownVisible = knockout.observable(false);
         var tooltip2D = knockout.observable('2D');
         var tooltip3D = knockout.observable('3D');
-        var tooltipColumbusView = knockout.observable('Columbus View');
+        var tooltipColumbusView = knockout.observable('2&frac12;D');
         var tooltipMorphing = knockout.observable('Morphing');
 
         /**
