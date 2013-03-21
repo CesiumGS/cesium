@@ -27,7 +27,6 @@ define([
     var TileCoordinatesImageryProvider = function TileCoordinatesImageryProvider(description) {
         description = defaultValue(description, {});
 
-        this._proxy = description.proxy;
         this._tilingScheme = defaultValue(description.tilingScheme, new GeographicTilingScheme());
         this._color = defaultValue(description.color, Color.YELLOW);
         this._errorEvent = new Event();
@@ -40,12 +39,10 @@ define([
      *
      * @memberof TileCoordinatesImageryProvider
      *
-     * @returns {Proxy} The proxy.
-     *
-     * @see DefaultProxy
+     * @returns {Proxy} This class does not use a proxy so undefined is always returned.
      */
     TileCoordinatesImageryProvider.prototype.getProxy = function() {
-        return this._proxy;
+        return undefined;
     };
 
     /**
