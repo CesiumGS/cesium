@@ -1,13 +1,13 @@
 uniform vec4 fadeInColor;
 uniform vec4 fadeOutColor;
-uniform float maxDistance;
+uniform float maximumDistance;
 uniform bool repeat;
 uniform vec2 fadeDirection;
 uniform vec2 time;
 
 float getTime(float t, float coord)
 {
-    float scalar = 1.0 / maxDistance;
+    float scalar = 1.0 / maximumDistance;
     float q  = distance(t, coord) * scalar;
     if (repeat)
     {

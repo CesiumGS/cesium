@@ -272,8 +272,8 @@ define([
      *  <li>Fade</li>
      *  <ul>
      *      <li><code>fadeInColor</code>: diffuse color and alpha at <code>time</code></li>
-     *      <li><code>fadeOutColor</code>: diffuse color and alpha at <code>maxDistance<code> from <code>time</code></li>
-     *      <li><code>maxDistance</code>: Number between 0.0 and 1.0 where the <code>fadeInColor</code> becomes the <code>fadeOutColor</code>. A value of 0.0 gives the entire material a color of <code>fadeOutColor</code> and a value of 1.0 gives the the entire material a color of <code>fadeInColor</code></li>
+     *      <li><code>fadeOutColor</code>: diffuse color and alpha at <code>maximumDistance<code> from <code>time</code></li>
+     *      <li><code>maximumDistance</code>: Number between 0.0 and 1.0 where the <code>fadeInColor</code> becomes the <code>fadeOutColor</code>. A value of 0.0 gives the entire material a color of <code>fadeOutColor</code> and a value of 1.0 gives the the entire material a color of <code>fadeInColor</code></li>
      *      <li><code>repeat</code>: true if the fade should wrap around the texture coodinates.</li>
      *      <li><code>fadeDirection</code>: Object with x and y values specifying if the fade should be in the x and y directions.</li>
      *      <li><code>time</code>: Object with x and y values between 0.0 and 1.0 of the <code>fadeInColor</code> position</li>
@@ -1210,7 +1210,7 @@ define([
         uniforms : {
             fadeInColor : new Color(1.0, 0.0, 0.0, 1.0),
             fadeOutColor : new Color(0.0, 0.0, 0.0, 0.0),
-            maxDistance : 0.5,
+            maximumDistance : 0.5,
             repeat : true,
             fadeDirection : {
                 x : true,
