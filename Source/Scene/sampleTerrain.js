@@ -61,29 +61,27 @@ define([
 
         // Sort points into a set of tiles
         var tileRequests = []; // Result will be an Array as it's easier to work with
-        {
-            var tileRequestSet = {}; // A unique set
-            for (i = 0; i < positions.length; ++i) {
-                var xy = tilingScheme.positionToTileXY(positions[i], level);
-                var key = xy.toString();
+        var tileRequestSet = {}; // A unique set
+        for (i = 0; i < positions.length; ++i) {
+            var xy = tilingScheme.positionToTileXY(positions[i], level);
+            var key = xy.toString();
 
-                if (!tileRequestSet.hasOwnProperty(key)) {
-                    // When tile is requested for the first time
-                    var value = {
-                        x : xy.x,
-                        y : xy.y,
-                        level : level,
-                        tilingScheme : tilingScheme,
-                        terrainProvider : terrainProvider,
-                        positions : []
-                    };
-                    tileRequestSet[key] = value;
-                    tileRequests.push(value);
-                }
-
-                // Now append to array of points for the tile
-                tileRequestSet[key].positions.push(positions[i]);
+            if (!tileRequestSet.hasOwnProperty(key)) {
+                // When tile is requested for the first time
+                var value = {
+                    x : xy.x,
+                    y : xy.y,
+                    level : level,
+                    tilingScheme : tilingScheme,
+                    terrainProvider : terrainProvider,
+                    positions : []
+                };
+                tileRequestSet[key] = value;
+                tileRequests.push(value);
             }
+
+            // Now append to array of points for the tile
+            tileRequestSet[key].positions.push(positions[i]);
         }
 
         // Send request for each required tile
