@@ -1,13 +1,49 @@
 /*global define*/
 define([
         '../Core/createGuid',
+        '../Core/defaultValue',
+        '../Core/Clock',
+        '../Core/ClockRange',
+        '../Core/ClockStep',
+        '../Core/Iso8601',
+        '../Core/JulianDate',
+        '../Core/TimeInterval',
         '../Core/DeveloperError',
         './CzmlDefaults'
        ], function(
         createGuid,
+        defaultValue,
+        Clock,
+        ClockRange,
+        ClockStep,
+        Iso8601,
+        JulianDate,
+        TimeInterval,
         DeveloperError,
         CzmlDefaults) {
     "use strict";
+
+    var processClock = function(clock, clockPacket) {
+        if (typeof clockPacket.interval !== 'undefined') {
+            var interval = TimeInterval.fromIso8601(clockPacket.interval);
+            if (typeof interval !== 'undefined') {
+                clock.startTime = interval.start;
+                clock.stopTime = interval.stop;
+            }
+        }
+        if (typeof clockPacket.currentTime !== 'undefined') {
+            clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
+        }
+        if (typeof typeof clockPacket.range !== 'undefined') {
+            clock.clockRange = ClockRange[clockPacket.range];
+        }
+        if (typeof clockPacket.step !== 'undefined') {
+            clock.clockStep = ClockStep[clockPacket.step];
+        }
+        if (typeof clockPacket.multiplier !== 'undefined') {
+            clock.multiplier = clockPacket.multiplier;
+        }
+    };
 
     function processCzmlPacket(packet, dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions, sourceUri) {
         var objectId = packet.id;
@@ -15,8 +51,27 @@ define([
             objectId = createGuid();
         }
 
-        if (packet['delete'] === true) {
-            dynamicObjectCollection.removeObject(packet.id);
+        if (objectId === 'document') {
+            var document = dynamicObjectCollection.getOrCreateObject(objectId);
+            var clockPacket = packet.clock;
+            if (typeof clockPacket !== 'undefined') {
+                var clock = document.clock;
+                if (typeof clock === 'undefined') {
+                    clock = new Clock({
+                        startTime : Iso8601.MAXIMUM_INTERVAL.start,
+                        stopTime : Iso8601.MAXIMUM_INTERVAL.stop,
+                        currentTime : new JulianDate(),
+                        clockRange : ClockRange.LOOP_STOP,
+                        clockStep : ClockStep.SYSTEM_CLOCK_MULTIPLIER,
+                        multiplier : 1.0,
+                        shoutAnimage : false
+                    });
+                    document.clock = clock;
+                }
+                processClock(clock, clockPacket);
+            }
+        } else if (packet['delete'] === true) {
+            dynamicObjectCollection.removeObject(objectId);
         } else {
             var object = dynamicObjectCollection.getOrCreateObject(objectId);
             for ( var i = updaterFunctions.length - 1; i > -1; i--) {

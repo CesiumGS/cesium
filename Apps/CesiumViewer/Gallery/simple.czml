@@ -1,6 +1,16 @@
 
 [
   {
+    "id":"document",
+    "clock":{
+      "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
+      "currentTime":"2012-03-15T10:00:00Z",
+      "multiplier":60.0,
+      "range":"CLAMPED",
+      "step":"SYSTEM_CLOCK_MULTIPLIER"
+    }
+  },
+  {
     "id":"/Application/STK/Scenario/simple/Facility/AGI",
     "billboard":{
       "eyeOffset":{
@@ -127,7 +137,13 @@
           ]
         }
       ],
-      "resolution":60.0,
+      "width":[
+        {
+          "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
+          "number":1.0
+        }
+      ],
+      "resolution":10.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
@@ -830,7 +846,13 @@
           ]
         }
       ],
-      "resolution":60.0,
+      "width":[
+        {
+          "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
+          "number":1.0
+        }
+      ],
+      "resolution":10.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
@@ -1559,7 +1581,13 @@
           ]
         }
       ],
-      "resolution":60.0,
+      "width":[
+        {
+          "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
+          "number":1.0
+        }
+      ],
+      "resolution":10.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
@@ -2242,7 +2270,13 @@
           ]
         }
       ],
-      "resolution":60.0,
+      "width":[
+        {
+          "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
+          "number":1.0
+        }
+      ],
+      "resolution":10.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
@@ -2664,6 +2698,7 @@
           255,0,0,255
         ]
       },
+      "width":1.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
