@@ -34,7 +34,7 @@ define(['../../Core/DeveloperError',
         var dropDownVisible = knockout.observable(false);
         var tooltip2D = knockout.observable('2D');
         var tooltip3D = knockout.observable('3D');
-        var tooltipColumbusView = knockout.observable('2&frac12;D');
+        var tooltipColumbusView = knockout.observable('Columbus View');
         var tooltipMorphing = knockout.observable('Morphing');
 
         /**
@@ -120,16 +120,14 @@ define(['../../Core/DeveloperError',
         */
         this.selectedTooltip = knockout.computed(function() {
             var mode = sceneMode();
-            if (dropDownVisible()) {
-                if (mode === SceneMode.SCENE2D) {
-                    return tooltip2D();
-                }
-                if (mode === SceneMode.SCENE3D) {
-                    return tooltip3D();
-                }
-                if (mode === SceneMode.COLUMBUS_VIEW) {
-                    return tooltipColumbusView();
-                }
+            if (mode === SceneMode.SCENE2D) {
+                return tooltip2D();
+            }
+            if (mode === SceneMode.SCENE3D) {
+                return tooltip3D();
+            }
+            if (mode === SceneMode.COLUMBUS_VIEW) {
+                return tooltipColumbusView();
             }
             if (mode === SceneMode.MORPHING) {
                 return tooltipMorphing();

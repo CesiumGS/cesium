@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" class="testSVG" height="31" width="169" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 169 31" xmlns:dc="http://purl.org/dc/elements/1.1/">
+ <metadata>
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title/>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <style type="text/css">
+.cesium-sceneMode-rectButton {
+    cursor: pointer;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.cesium-sceneMode-rectButton .cesium-sceneMode-buttonGlow {
+    fill: #fff;
+    stroke: none;
+    filter: url(#sceneMode_blurred);
+    display: none;
+}
+.cesium-sceneMode-rectButton:hover .cesium-sceneMode-buttonGlow {
+    display: block;
+}
+.cesium-sceneMode-rectButton .cesium-sceneMode-buttonPath {
+    fill: #edffff;
+}
+.cesium-sceneMode-rectButton .cesium-sceneMode-buttonMain {
+    fill: url(#sceneMode_buttonNormal);
+    stroke: #444;
+    stroke-width: 1.2;
+}
+.cesium-sceneMode-rectButton:hover .cesium-sceneMode-buttonMain {
+    fill: url(#sceneMode_buttonHovered);
+    stroke: #AEF;
+}
+.cesium-sceneMode-rectButton:active .cesium-sceneMode-buttonMain {
+    fill: #ABD6FF;
+}
+.cesium-sceneMode-buttonDisabled {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.cesium-sceneMode-buttonDisabled .cesium-sceneMode-buttonMain {
+    fill: url(#sceneMode_buttonDisabled);
+    stroke: #555;
+}
+.cesium-sceneMode-buttonDisabled .cesium-sceneMode-buttonPath {
+    fill: #818181;
+}
+.cesium-sceneMode-buttonDisabled .cesium-sceneMode-buttonGlow {
+    display: none;
+}
+.cesium-sceneMode-buttonToggled .cesium-sceneMode-buttonGlow {
+    display: block;
+    fill: #2E2;
+}
+.cesium-sceneMode-buttonToggled .cesium-sceneMode-buttonMain {
+    stroke: #2E2;
+}
+.cesium-sceneMode-buttonToggled:hover .cesium-sceneMode-buttonGlow {
+    fill: #fff;
+}
+.cesium-sceneMode-buttonToggled:hover .cesium-sceneMode-buttonMain {
+    stroke: #2E2;
+}
+</style>
+ <rect transform="matrix(0.845,0,0,0.84848485,37.18,3)" display="none" rx="2" ry="2" height="32" filter="url(#sceneMode_blurred)" width="32" y="0" x="0" class="cesium-sceneMode-buttonGlow" fill="#FFF"/>
+ <rect rx="3.38" ry="3.3939" height="27.152" width="27.04" stroke="#444" y="3" x="1.8752" stroke-width="1.0161" class="cesium-sceneMode-buttonMain" fill="url(#linearGradient4392)"/>
+ <rect transform="matrix(0.845,0,0,0.84848485,104.78,3)" display="none" rx="2" ry="2" height="32" filter="url(#sceneMode_blurred)" width="32" y="0" x="0" class="cesium-sceneMode-buttonGlow" fill="#FFF"/>
+ <rect rx="3.38" ry="3.3939" height="27.152" width="27.04" stroke="#444" y="3" x="69.475" stroke-width="1.0161" class="cesium-sceneMode-buttonMain" fill="url(#linearGradient4387)"/>
+ <rect transform="matrix(0.845,0,0,0.84848485,70.98,3)" display="none" rx="2" ry="2" height="32" filter="url(#sceneMode_blurred)" width="32" y="0" x="0" class="cesium-sceneMode-buttonGlow" fill="#FFF"/>
+ <rect rx="3.38" ry="3.3939" height="27.152" width="27.04" stroke="#444" y="3" x="35.675" stroke-width="1.0161" class="cesium-sceneMode-buttonMain" fill="url(#linearGradient4382)"/>
+ <defs>
+  <linearGradient id="sceneMode_buttonNormal" x2="0.5" x1="0.5" y2="1">
+   <stop stop-color="#747577" offset="0"/>
+   <stop stop-color="#394452" offset="0.12"/>
+   <stop stop-color="#2D3237" offset="0.46"/>
+   <stop stop-color="#353535" offset="0.81"/>
+  </linearGradient>
+  <linearGradient id="sceneMode_buttonHovered" x2="0.5" x1="0.5" y2="1">
+   <stop stop-color="#89B4CF" offset="0"/>
+   <stop stop-color="#5494C1" offset="0.12"/>
+   <stop stop-color="#4C8EB8" offset="0.46"/>
+   <stop stop-color="#5492B7" offset="0.81"/>
+  </linearGradient>
+  <linearGradient id="sceneMode_buttonDisabled" x2="0.5" x1="0.5" y2="1">
+   <stop stop-color="#696969" offset="0"/>
+   <stop stop-color="#333" offset="0.75"/>
+  </linearGradient>
+  <filter id="sceneMode_blurred" height="2" width="2" y="-0.5" x="-0.5" color-interpolation-filters="sRGB">
+   <feGaussianBlur stdDeviation="4" in="SourceGraphic"/>
+  </filter>
+  <linearGradient id="linearGradient4382" x1="16" xlink:href="#sceneMode_buttonNormal" gradientUnits="userSpaceOnUse" y1="-0.6" gradientTransform="matrix(0.845,0,0,0.84848485,35.675205,3)" x2="16" y2="32.6"/>
+  <linearGradient id="linearGradient4387" x1="16" xlink:href="#sceneMode_buttonNormal" gradientUnits="userSpaceOnUse" y1="-0.6" gradientTransform="matrix(0.845,0,0,0.84848485,69.475205,3)" x2="16" y2="32.6"/>
+  <linearGradient id="linearGradient4392" x1="16" xlink:href="#sceneMode_buttonNormal" gradientUnits="userSpaceOnUse" y1="-0.6" gradientTransform="matrix(0.845,0,0,0.84848485,1.8752055,3)" x2="16" y2="32.6"/>
+ </defs>
+ <path fill="#edffff" d="m15.185,8.109c-4.6585,0-8.4429,3.7844-8.4429,8.4429,0,1.6113,0.47259,3.1169,1.2564,4.3974,2.0956-0.16934,5.0943-1.0791,8.5183-2.4876,2.9457-1.2118,5.3301-2.4077,6.9353-3.543-0.76761-3.868-4.1736-6.8096-8.267-6.8096zm8.3927,1.3318c-0.74704,0.0023-1.5934,0.0922-2.4876,0.22615,0.24343,0.1707,0.47831,0.361,0.70358,0.55281,2.4723-0.28167,4.2324,0.04349,4.6486,1.0554,0.78226,1.9016-3.6381,5.0951-9.6993,7.5886s-11.455,3.3339-12.237,1.4323c-0.33526-0.81495,0.26784-1.932,1.5328-3.141-0.000096-0.01665,0-0.03359,0-0.05026,0-0.31676,0.01783-0.62116,0.05025-0.92973-2.1091,1.7333-2.9496,3.4646-2.4625,4.6486,0.91671,2.2284,6.7246,1.8454,13.795-0.92973,6.6692-2.6176,10.867-6.7673,9.9506-8.9957-0.40106-0.97492-1.7915-1.4637-3.7943-1.4574zm0.02513,7.6891c-1.6478,1.1526-3.744,2.2595-6.1312,3.2415-2.8587,1.176-5.7077,1.9521-8.0911,2.2866,1.5139,1.4448,3.5465,2.3369,5.8045,2.3369,4.4673,0,8.1252-3.4718,8.4178-7.865z"/>
+ <path fill-rule="nonzero" fill="#edffff" d="m72.665,11.514,0,3.7811c0.3966,0.42897,0.789,0.87734,1.1883,1.3396,1.4597,1.6896,2.9966,3.3146,4.8614,3.3274,1.8736,0.0128,3.3689-1.497,4.9046-3.1113,0.76783-0.80715,1.5354-1.6415,2.3767-2.2686,0.84125-0.62711,1.7775-1.0555,2.8304-1.0371,1.5071,0.02629,3.0882,0.94604,4.6237,2.0958v-4.1268h-20.785zm16.14,2.7224c-0.85528-0.01492-1.628,0.33325-2.3983,0.90746-0.77028,0.57421-1.5207,1.3733-2.2903,2.1822-1.539,1.6178-3.1838,3.3427-5.4232,3.3274-2.2481-0.0153-3.9086-1.862-5.3799-3.565-0.21997-0.25461-0.43603-0.4902-0.64819-0.73461v5.596h20.785v-5.4231c-1.6487-1.2573-3.314-2.267-4.6453-2.2903z"/>
+ <path fill-rule="nonzero" fill="#edffff" d="m58.776,9.712c-0.69405,0.01983-1.2665,0.26907-1.7056,0.64861-0.43915,0.37954-0.73141,0.88886-0.9609,1.4654-0.45899,1.153-0.67276,2.5811-0.98492,3.9877s-0.73412,2.7644-1.5615,3.7475c-0.82734,0.98309-2.0442,1.6332-4.1319,1.6335-2.0875,0.00028-3.3319-0.64681-4.2039-1.6335-0.872-0.98672-1.3669-2.3486-1.7536-3.7475-0.387-1.397-0.663-2.81-1.225-3.938s-1.501-1.987-2.979-1.97v0.76872c1.2078-0.01417,1.7926,0.55406,2.2821,1.5374,0.48953,0.98338,0.80518,2.3873,1.2011,3.8196,0.39594,1.4323,0.89,2.8954,1.8978,4.0358s2.5254,1.8981,4.7805,1.8978c2.2549-0.00029,3.7666-0.75014,4.7324-1.8978,0.96582-1.1476,1.4087-2.638,1.7296-4.0838,0.32087-1.4459,0.50967-2.8548,0.91286-3.8676,0.20159-0.50642,0.45901-0.90943,0.76872-1.1771s0.67891-0.44082,1.2251-0.45643l-0.02398-0.76872zm-18.353,7.8794-2.5464,6.1978,23.542,0-2.8827-6.1498-2.7145,0c-0.30553,0.95062-0.72071,1.8913-1.3933,2.6905-1.0489,1.2464-2.7135,2.0896-5.0687,2.09-2.3555,0.00032-4.0276-0.8334-5.1168-2.0659-0.7255-0.82092-1.1817-1.7847-1.5374-2.7626h-2.2821zm4.0838,0c0.26602,0.62361,0.57936,1.1746,0.98492,1.6335,0.79054,0.89453,1.8806,1.4897,3.8676,1.4894,1.9873-0.00026,3.0513-0.581,3.7956-1.4654,0.37634-0.44718,0.65248-0.99584,0.88883-1.6095l-9.5369-0.048z"/>
+</svg>

@@ -1,9 +1,9 @@
 .sceneModeCommon {
-    border: solid 1px #888;
-    background-color: #222;
-    background-position: center;
+    display: inline-block;
+    background-image: url(../Images/sceneModes.svg);
     background-repeat: no-repeat;
-    background-size: 100% 100%;
+    background-size: 602% 602%;
+    border-radius: 14%;
     width: 100%;
     height: 100%;
     position: relative;
@@ -14,24 +14,19 @@
 }
 
 .sceneModeCommon:hover {
-    border: solid 1px #95CEE6;
-    background-color: #4C8EB8;
-}
-
-.sceneModeWidget {
-    background-image: url(../Images/sceneMode3D.svg);
+    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
 
 .sceneMode3D {
-    background-image: url(../Images/sceneMode3D.svg);
+    background-position: 1% 50.7%;
 }
 
 .sceneMode2D {
-    background-image: url(../Images/sceneMode2D.svg);
+    background-position: 49% 50.7%;
 }
 
 .sceneModeColumbusView {
-    background-image: url(../Images/sceneModeColumbusView.svg);
+    background-position: 25% 50.7%;
 }
 
 .sceneModeMorphing {

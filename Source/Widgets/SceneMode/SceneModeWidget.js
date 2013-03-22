@@ -54,28 +54,28 @@ define(['./SceneModeViewModel',
          * @memberof FullscreenWidget
          * @type {Element}
          */
-        this.button = document.createElement('button');
+        this.button = document.createElement('span');
 
         var widgetNode = this.button;
         widgetNode.className = 'sceneModeCommon';
-        widgetNode.setAttribute('data-bind', 'html: selectedTooltip, css: { sceneMode2D: sceneMode() === _sceneMode.SCENE2D, sceneMode3D: sceneMode() === _sceneMode.SCENE3D, sceneModeColumbusView: sceneMode() === _sceneMode.COLUMBUS_VIEW, sceneModeMorphing: sceneMode() === _sceneMode.MORPHING}, attr: { title: selectedTooltip }, click: toggleDropdown');
+        widgetNode.setAttribute('data-bind', 'css: { sceneMode2D: sceneMode() === _sceneMode.SCENE2D, sceneMode3D: sceneMode() === _sceneMode.SCENE3D, sceneModeColumbusView: sceneMode() === _sceneMode.COLUMBUS_VIEW, sceneModeMorphing: sceneMode() === _sceneMode.MORPHING}, attr: { title: selectedTooltip }, click: toggleDropdown');
         container.appendChild(widgetNode);
 
-        var node3D = document.createElement('button');
+        var node3D = document.createElement('span');
         node3D.className = 'sceneModeCommon sceneMode3D';
-        node3D.setAttribute('data-bind', 'html: tooltip3D, attr: { title: tooltip3D }, visible: dropDownVisible() && (sceneMode() !== _sceneMode.SCENE3D), click: morphTo3D');
+        node3D.setAttribute('data-bind', 'attr: { title: tooltip3D }, visible: dropDownVisible() && (sceneMode() !== _sceneMode.SCENE3D), click: morphTo3D');
         container.appendChild(node3D);
         this._node3D = node3D;
 
-        var node2D = document.createElement('button');
+        var node2D = document.createElement('span');
         node2D.className = 'sceneModeCommon sceneMode2D';
-        node2D.setAttribute('data-bind', 'html: tooltip2D, attr: { title: tooltip2D }, visible: dropDownVisible() && (sceneMode() !== _sceneMode.SCENE2D), click: morphTo2D');
+        node2D.setAttribute('data-bind', 'attr: { title: tooltip2D }, visible: dropDownVisible() && (sceneMode() !== _sceneMode.SCENE2D), click: morphTo2D');
         container.appendChild(node2D);
         this._node2D = node2D;
 
-        var nodeColumbus = document.createElement('button');
+        var nodeColumbus = document.createElement('span');
         nodeColumbus.className = 'sceneModeCommon sceneModeColumbusView';
-        nodeColumbus.setAttribute('data-bind', 'html: tooltipColumbusView, attr: { title: tooltipColumbusView }, visible: dropDownVisible() && (sceneMode() !== _sceneMode.COLUMBUS_VIEW), click: morphToColumbusView');
+        nodeColumbus.setAttribute('data-bind', 'attr: { title: tooltipColumbusView }, visible: dropDownVisible() && (sceneMode() !== _sceneMode.COLUMBUS_VIEW), click: morphToColumbusView');
         container.appendChild(nodeColumbus);
         this._nodeColumbus = nodeColumbus;
 
