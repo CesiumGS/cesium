@@ -23,8 +23,12 @@ define(['../../Core/DeveloperError',
 
         var sceneMode = knockout.observable(transitioner.getScene().mode);
 
-        transitioner.onTransitionStart.addEventListener(function(transitioner, oldMode, newMode) {
-            sceneMode(newMode);
+        transitioner.onTransitionStart.addEventListener(function(transitioner, oldMode, newMode, futureMode) {
+            if (typeof futureMode !== 'undefined') {
+                sceneMode(futureMode);
+            } else {
+                sceneMode(newMode);
+            }
         });
 
         transitioner.onTransitionComplete.addEventListener(function(transitioner, oldMode, newMode) {
@@ -120,16 +124,14 @@ define(['../../Core/DeveloperError',
         */
         this.selectedTooltip = knockout.computed(function() {
             var mode = sceneMode();
-            if (dropDownVisible()) {
-                if (mode === SceneMode.SCENE2D) {
-                    return tooltip2D();
-                }
-                if (mode === SceneMode.SCENE3D) {
-                    return tooltip3D();
-                }
-                if (mode === SceneMode.COLUMBUS_VIEW) {
-                    return tooltipColumbusView();
-                }
+            if (mode === SceneMode.SCENE2D) {
+                return tooltip2D();
+            }
+            if (mode === SceneMode.SCENE3D) {
+                return tooltip3D();
+            }
+            if (mode === SceneMode.COLUMBUS_VIEW) {
+                return tooltipColumbusView();
             }
             if (mode === SceneMode.MORPHING) {
                 return tooltipMorphing();
