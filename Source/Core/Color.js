@@ -312,6 +312,20 @@ define([
     };
 
     /**
+     * Creates a string containing only the RGB portion of the CSS color value for this color.
+     * @memberof Color
+     *
+     * @return {String} The CSS equivalent of this color, minus its Alpha.
+     * @see <a href="http://www.w3.org/TR/css3-color/#rgb-color">CSS RGB color values</a>
+     */
+    Color.prototype.toCssColorStringNoAlpha = function() {
+        var red = Color.floatToByte(this.red);
+        var green = Color.floatToByte(this.green);
+        var blue = Color.floatToByte(this.blue);
+        return 'rgb(' + red + ',' + green + ',' + blue + ')';
+    };
+
+    /**
      * Converts this color to an array of red, green, blue, and alpha values
      * that are in the range of 0 to 255.
      * @memberof Color

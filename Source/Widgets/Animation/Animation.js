@@ -86,7 +86,7 @@ define(['../../Core/destroyObject',
         makeColorStringScratch.red = (background.red * backgroundAlpha) + (gradient.red * gradientAlpha);
         makeColorStringScratch.green = (background.green * backgroundAlpha) + (gradient.green * gradientAlpha);
         makeColorStringScratch.blue = (background.blue * backgroundAlpha) + (gradient.blue * gradientAlpha);
-        return makeColorStringScratch.toCssColorString();
+        return makeColorStringScratch.toCssColorStringNoAlpha();
     }
 
     function rectButton(x, y, path) {
@@ -797,17 +797,17 @@ define(['../../Core/destroyObject',
                     tagName : 'stop',
                     offset : '0%',
                     'stop-opacity' : 0.2,
-                    'stop-color' : swooshColor.toCssColorString()
+                    'stop-color' : swooshColor.toCssColorStringNoAlpha()
                 }, {
                     tagName : 'stop',
                     offset : '85%',
                     'stop-opacity' : 0.85,
-                    'stop-color' : swooshColor.toCssColorString()
+                    'stop-color' : swooshColor.toCssColorStringNoAlpha()
                 }, {
                     tagName : 'stop',
                     offset : '95%',
                     'stop-opacity' : 0.05,
-                    'stop-color' : swooshColor.toCssColorString()
+                    'stop-color' : swooshColor.toCssColorStringNoAlpha()
                 }]
             }, {
                 id : 'animation_shuttleRingSwooshHovered',
@@ -820,17 +820,17 @@ define(['../../Core/destroyObject',
                     tagName : 'stop',
                     offset : '0%',
                     'stop-opacity' : 0.2,
-                    'stop-color' : swooshHoverColor.toCssColorString()
+                    'stop-color' : swooshHoverColor.toCssColorStringNoAlpha()
                 }, {
                     tagName : 'stop',
                     offset : '85%',
                     'stop-opacity' : 0.85,
-                    'stop-color' : swooshHoverColor.toCssColorString()
+                    'stop-color' : swooshHoverColor.toCssColorStringNoAlpha()
                 }, {
                     tagName : 'stop',
                     offset : '95%',
                     'stop-opacity' : 0.05,
-                    'stop-color' : swooshHoverColor.toCssColorString()
+                    'stop-color' : swooshHoverColor.toCssColorStringNoAlpha()
                 }]
             }, {
                 id : 'animation_shuttleRingPointerGradient',
@@ -842,11 +842,11 @@ define(['../../Core/destroyObject',
                 children : [{
                     tagName : 'stop',
                     offset : '0%',
-                    'stop-color' : pointerColor.toCssColorString()
+                    'stop-color' : pointerColor.toCssColorStringNoAlpha()
                 }, {
                     tagName : 'stop',
                     offset : '40%',
-                    'stop-color' : pointerColor.toCssColorString()
+                    'stop-color' : pointerColor.toCssColorStringNoAlpha()
                 }, {
                     tagName : 'stop',
                     offset : '60%',
