@@ -88,9 +88,10 @@
 }
 
 .cesium-viewerWidget-sceneModeContainer {
-    display: block;
-    width: 96px;
+    display: inline-block;
+    width: 32px;
     height: 32px;
+    vertical-align: middle;
 }
 
 .cesium-viewerWidget-imagerySelector {

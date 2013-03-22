@@ -239,7 +239,7 @@ define([
         if (this._previousMode === SceneMode.SCENE2D || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.MORPHING);
+        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.MORPHING, SceneMode.SCENE2D);
         this._previousMode = SceneMode.MORPHING;
 
         updateFrustums(this);
@@ -267,7 +267,7 @@ define([
         if (this._previousMode === SceneMode.COLUMBUS_VIEW || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.MORPHING);
+        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.MORPHING, SceneMode.COLUMBUS_VIEW);
         this._previousMode = SceneMode.MORPHING;
 
         updateFrustums(this);
@@ -296,7 +296,7 @@ define([
         if (this._previousMode === SceneMode.SCENE3D || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.MORPHING);
+        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.MORPHING, SceneMode.SCENE3D);
         this._previousMode = SceneMode.MORPHING;
 
         updateFrustums(this);

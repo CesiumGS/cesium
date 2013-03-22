@@ -1,6 +1,7 @@
 <div data-dojo-attach-point="cesiumNode" class="cesium-viewerWidget-node">
     <canvas data-dojo-attach-point="canvas" class="cesium-viewerWidget-canvas"></canvas>
     <div class="cesium-viewerWidget-viewButtons">
+        <div data-dojo-attach-point="sceneModeContainer" class="cesium-viewerWidget-sceneModeContainer"></div>
         <div data-dojo-attach-point="viewHomeButton" data-dojo-type="dijit.form.Button"
             data-dojo-props="iconClass: 'cesium-viewerWidget-viewIcon', showLabel: false, label:'Home View'"></div>
         <div data-dojo-attach-point="imagery" data-dojo-type="dijit.form.DropDownButton"
@@ -17,7 +18,6 @@
                     data-dojo-props="'class':'cesium-viewerWidget-imagerySelector', showLabel: true, label:'Single Tile'"></span>
             </div>
         </div>
-        <div data-dojo-attach-point="sceneModeContainer" class="cesium-viewerWidget-sceneModeContainer"></div>
     </div>
     <div data-dojo-attach-point="timelineContainer" class="cesium-viewerWidget-timelineContainer"></div>
     <div data-dojo-attach-point="animationContainer" class="cesium-viewerWidget-animationContainer"></div>
