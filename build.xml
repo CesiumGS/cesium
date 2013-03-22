@@ -27,7 +27,15 @@
 		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptions="${jsHintEclipseSettings.options}" />
 	</target>
 
-	<target name="combine" description="Combines all source files into a single stand-alone script." depends="build, combineJavaScript" />
+	<target name="combine" description="Combines all source files into a single stand-alone script." depends="build, combineJavaScript">
+		<copy todir="Build">
+			<fileset dir="Apps/">
+				<include name="HelloWorld.html" />
+			</fileset>
+		</copy>
+
+		<replace file="Build/HelloWorld.html" token="../Build/" value="" />
+	</target>
 
 	<target name="minify" description="Combines all source files into a single stand-alone, minified script.">
 		<delete includeEmptyDirs="true" failonerror="false">
@@ -55,6 +63,17 @@
 
 	<target name="makeZipFile" description="Builds a zip file containing all release files." depends="release">
 		<zip destfile="Cesium-${version}.zip" basedir="${basedir}">
+			<fileset dir="Build">
+				<include name="Cesium/**" />
+				<include name="Documentation/**" />
+				<include name="HelloWorld.html" />
+			</fileset>
+			<include name="LICENSE.md" />
+			<include name="CHANGES.md" />
+			<include name="README.md" />
+		</zip>
+
+		<zip destfile="Cesium-full-${version}.zip" basedir="${basedir}">
 			<include name="Build/**" />
 			<include name="Apps/**" />
 			<include name="Examples/**" />

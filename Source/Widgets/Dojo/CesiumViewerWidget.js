@@ -193,7 +193,7 @@ define([
          * var endUserOptions = {
          *     'source' : 'file.czml', // The relative URL of the CZML file to load at startup.
          *     'lookAt' : '123abc',    // The CZML ID of the object to track at startup.
-         *     'theme'  : 'light',     // Use the dark-text-on-light-background theme.
+         *     'theme'  : 'lighter',   // Use the dark-text-on-light-background theme.
          *     'loop'   : 0,           // Disable looping at end time, pause there instead.
          *     'stats'  : 1,           // Enable the FPS performance display.
          *     'debug'  : 1,           // Full WebGL error reporting at substantial performance cost.
@@ -673,8 +673,13 @@ define([
             on(canvas, 'contextmenu', event.stop);
             on(canvas, 'selectstart', event.stop);
 
-            if (typeof widget.endUserOptions.theme === 'undefined' || widget.endUserOptions.theme !== 'light') {
-                widget.cesiumNode.className += ' cesium-darker';
+            var theme = widget.endUserOptions.theme;
+            if (typeof theme !== 'undefined') {
+                if (widget.endUserOptions.theme === 'lighter') {
+                    widget.cesiumNode.className += ' cesium-lighter';
+                } else {
+                    window.alert('Unknown theme: ' + theme);
+                }
             }
 
             if (typeof widget.endUserOptions.debug !== 'undefined' && widget.endUserOptions.debug) {

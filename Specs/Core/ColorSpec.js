@@ -111,11 +111,11 @@ defineSuite(['Core/Color',
     });
 
     it('toCssColorString produces expected output', function() {
-        expect(Color.WHITE.toCssColorString()).toEqual('rgba(255,255,255,1)');
-        expect(Color.RED.toCssColorString()).toEqual('rgba(255,0,0,1)');
-        expect(Color.BLUE.toCssColorString()).toEqual('rgba(0,0,255,1)');
-        expect(Color.LIME.toCssColorString()).toEqual('rgba(0,255,0,1)');
-        expect(new Color(0.0, 0.0, 0.0, 1.0).toCssColorString()).toEqual('rgba(0,0,0,1)');
+        expect(Color.WHITE.toCssColorString()).toEqual('rgb(255,255,255)');
+        expect(Color.RED.toCssColorString()).toEqual('rgb(255,0,0)');
+        expect(Color.BLUE.toCssColorString()).toEqual('rgb(0,0,255)');
+        expect(Color.LIME.toCssColorString()).toEqual('rgb(0,255,0)');
+        expect(new Color(0.0, 0.0, 0.0, 1.0).toCssColorString()).toEqual('rgb(0,0,0)');
         expect(new Color(0.1, 0.2, 0.3, 0.4).toCssColorString()).toEqual('rgba(25,51,76,0.4)');
     });
 

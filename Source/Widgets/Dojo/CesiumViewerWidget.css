@@ -1,11 +1,9 @@
 @import url('../Timeline/Timeline.css');
-@import url('../Timeline/darker.css');
 @import url('../Animation/Animation.css');
-@import url('../Animation/darker.css');
 @import url('../Fullscreen/FullscreenWidget.css');
-@import url('../Fullscreen/darker.css');
+@import url('../lighter.css');
 
-.cw-node {
+.cesium-viewerWidget-node {
     font-family: sans-serif;
     font-size: 16px;
     overflow: hidden;
@@ -19,7 +17,7 @@
     -webkit-user-select: none;
 }
 
-.cw-canvas {
+.cesium-viewerWidget-canvas {
     display: block;
     position: absolute;
     top: 0;
@@ -28,7 +26,7 @@
     height: 100%;
 }
 
-.cw-timelineContainer {
+.cesium-viewerWidget-timelineContainer {
     position: absolute;
     bottom: 0;
     left: 169px;
@@ -40,7 +38,7 @@
     font-size: 14px;
 }
 
-.cw-animationContainer {
+.cesium-viewerWidget-animationContainer {
     position: absolute;
     bottom: 0;
     left: 0;
@@ -49,7 +47,7 @@
     height: 112px;
 }
 
-.cw-fullscreenContainer {
+.cesium-viewerWidget-fullscreenContainer {
     position: absolute;
     bottom: 0;
     right: 0;
@@ -59,7 +57,7 @@
     overflow: hidden;
 }
 
-.cw-cesiumLogo {
+.cesium-viewerWidget-cesiumLogo {
     display: block;
     position: absolute;
     bottom: 32px;
@@ -70,37 +68,37 @@
     height: 26px;
 }
 
-.cw-cesiumLogo img {
+.cesium-viewerWidget-cesiumLogo img {
     border: none;
 }
 
-.cw-viewIcon {
+.cesium-viewerWidget-viewIcon {
     background-image: url('../Images/viewControlBar.png');
     background-repeat: no-repeat;
     width: 24px;
     height: 24px;
 }
 
-.cw-view2D {
+.cesium-viewerWidget-view2D {
     background-position: -24px 0;
 }
 
-.cw-view3D {
+.cesium-viewerWidget-view3D {
     background-position: -48px 0;
 }
 
-.cw-viewColumbus {
+.cesium-viewerWidget-viewColumbus {
     background-position: -72px 0;
 }
 
-.cw-viewButtons {
+.cesium-viewerWidget-viewButtons {
     display: block;
     position: absolute;
     top: 5px;
     right: 5px;
 }
 
-.cw-imagerySelector {
+.cesium-viewerWidget-imagerySelector {
     display: block;
     font-family: sans-serif;
     font-size: 9pt;
@@ -111,7 +109,7 @@
     box-shadow: 0 0 5px rgba(255, 170, 42, 1);
 }
 
-.cw-loading {
+.cesium-viewerWidget-loading {
     display: none;
     position: absolute;
     top: 50%;
@@ -126,27 +124,27 @@
 }
 
 @media only screen and (min-width: 600px) and (max-width: 900px) {
-    .cw-animationContainer {
+    .cesium-viewerWidget-animationContainer {
         width: 136px;
         height: 90px;
     }
-    .cw-timelineContainer {
+    .cesium-viewerWidget-timelineContainer {
         left: 137px;
     }
-    .cw-cesiumLogo {
+    .cesium-viewerWidget-cesiumLogo {
         left: 146px;
     }
 }
 
 @media only screen and (max-width: 599px) {
-    .cw-animationContainer {
+    .cesium-viewerWidget-animationContainer {
         width: 106px;
         height: 70px;
     }
-    .cw-timelineContainer {
+    .cesium-viewerWidget-timelineContainer {
         left: 107px;
     }
-    .cw-cesiumLogo {
+    .cesium-viewerWidget-cesiumLogo {
         left: 116px;
     }
 }

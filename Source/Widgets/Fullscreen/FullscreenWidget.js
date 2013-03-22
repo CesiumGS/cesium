@@ -14,7 +14,7 @@ define(['./FullscreenViewModel',
      * @alias FullscreenWidget
      * @constructor
      *
-     * @param {Element} container The parent HTML container node for this widget.
+     * @param {Element|String} container The DOM element, or DOM element ID, that will contain the widget.
      * @param {Element} [fullscreenElement=document.body] The element to be placed into fullscreen mode.
      *
      * @exception {DeveloperError} container is required.
@@ -23,8 +23,23 @@ define(['./FullscreenViewModel',
      */
     var FullscreenWidget = function(container, fullscreenElement) {
         if (typeof container === 'undefined') {
-            throw new DeveloperError('container is required');
+            throw new DeveloperError('container is required.');
         }
+
+        if (typeof container === 'string') {
+            var tmp = document.getElementById(container);
+            if (tmp === null) {
+                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
+            }
+            container = tmp;
+        }
+
+        /**
+         * Gets the parent container.
+         * @memberof FullscreenWidget
+         * @type {Element}
+         */
+        this.container = container;
 
         /**
          * Gets the viewModel being used by the widget.
@@ -39,7 +54,7 @@ define(['./FullscreenViewModel',
          * @type {Element}
          */
         this.button = document.createElement('button');
-        this.button.className = 'fullscreen';
+        this.button.className = 'cesium-fullscreen';
         this.button.setAttribute('data-bind', 'attr: { title: tooltip }, css: { "fullscreen-exit": toggled }, click: command, enable: isFullscreenEnabled');
         container.appendChild(this.button);
 
