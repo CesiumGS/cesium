@@ -130,6 +130,40 @@ define([
         }
     };
 
+    DynamicProperty.prototype.getNonInterpolatedValue = function (time, result) {
+        var interval = this._cachedInterval;
+        if (!JulianDate.equals(this._cachedTime, time)) {
+            this._cachedTime = JulianDate.clone(time, this._cachedTime);
+            if (typeof interval === 'undefined' || !interval.contains(time)) {
+                interval = this._intervals.findIntervalContainingDate(time);
+                this._cachedInterval = interval;
+            }
+        }
+
+        if (typeof interval === 'undefined') {
+            return undefined;
+        }
+
+        var valueType = this.valueType;
+
+        var intervalData = interval.data;
+        var times = intervalData.times;
+        var values = intervalData.values;
+        if (times.length >= 0 && values.length > 0) {
+            var doublesPerValue = valueType.doublesPerValue;
+            var index = binarySearch(times, time, JulianDate.compare);
+            if (index < 0) {
+                index = ~index;
+
+                if (index >= times.length) {
+                    index = times.length - 1;
+                }
+            }
+            return valueType.getValueFromArray(intervalData.values, index * doublesPerValue, result);
+        }
+        return valueType.getValue(intervalData.values, result);
+    };
+
     /**
      * Returns the value of the property at the specified time.
      * @memberof DynamicProperty
