@@ -1,4 +1,4 @@
-.timelineMain {
+.cesium-timeline-main {
 	position: relative;
 	left: 0;
 	bottom: 0;
@@ -6,7 +6,7 @@
 	border: solid 1px #888;
 }
 
-.timelineTrackContainer {
+.cesium-timeline-trackContainer {
 	width: 100%;
 	overflow: auto;
 	border-top: solid 1px #888;
@@ -15,14 +15,14 @@
 	left: 0;
 }
 
-.timelineTracks {
+.cesium-timeline-tracks {
 	position: absolute;
 	top: 0;
 	left: 0;
 	width: 100%;
 }
 
-.timelineNeedle {
+.cesium-timeline-needle {
 	position: absolute;
 	left: 0;
 	top: 1.7em;
@@ -31,7 +31,7 @@
 	background: #F00;
 }
 
-.timelineBar {
+.cesium-timeline-bar {
     position: relative;
     left: 0;
     top: 0;
@@ -48,7 +48,7 @@
     background: linear-gradient(to bottom, rgba(116,117,119,0.8) 0%,rgba(58,68,82,0.8) 11%,rgba(46,50,56,0.8) 46%,rgba(53,53,53,0.8) 81%,rgba(53,53,53,0.8) 100%); /* W3C */
 }
 
-.timelineRuler {
+.cesium-timeline-ruler {
 	/* NOTE: The label and the ruler must use the same font/size */
 	visibility: hidden;
 	white-space: nowrap;
@@ -56,14 +56,14 @@
 	z-index: -200;
 }
 
-.timelineHighlight {
+.cesium-timeline-highlight {
 	position: absolute;
 	bottom: 0;
 	left: 0;
 	background: #08F;
 }
 
-.timelineTicLabel {
+.cesium-timeline-ticLabel {
     position: absolute;
     top: 0;
     left: 0;
@@ -73,7 +73,7 @@
     cursor: default;
 }
 
-.timelineTicMain {
+.cesium-timeline-ticMain {
     position: absolute;
     bottom: 0;
     left: 0;
@@ -82,7 +82,7 @@
     background: #eee;
 }
 
-.timelineTicSub {
+.cesium-timeline-ticSub {
     position: absolute;
     bottom: 0;
     left: 0;
@@ -91,7 +91,7 @@
     background: #aaa;
 }
 
-.timelineTicTiny {
+.cesium-timeline-ticTiny {
 	position: absolute;
 	bottom: 0;
 	left: 0;
@@ -100,7 +100,7 @@
 	background: #888;
 }
 
-.timelineIcon16 {
+.cesium-timeline-icon16 {
 	display: block;
 	position: absolute;
 	width: 16px;

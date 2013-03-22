@@ -103,7 +103,7 @@ define(['../../Core/buildModuleUrl',
         var cesiumLogo = document.createElement('a');
         cesiumLogo.href = 'http://cesium.agi.com/';
         cesiumLogo.target = '_blank';
-        cesiumLogo.className = 'cesium-logo';
+        cesiumLogo.className = 'cesium-widget-logo';
         widgetNode.appendChild(cesiumLogo);
 
         var scene = new Scene(canvas);

@@ -39,7 +39,7 @@ define(function() {
                 highlightWidth = renderState.timeBarWidth - highlightLeft;
             }
             if (highlightWidth > 0) {
-                range = '<span class="timelineHighlight" style="left: ' + highlightLeft.toString() + 'px; width: ' + highlightWidth.toString() + 'px; bottom: ' + renderState.y.toString() +
+                range = '<span class="cesium-timeline-highlight" style="left: ' + highlightLeft.toString() + 'px; width: ' + highlightWidth.toString() + 'px; bottom: ' + renderState.y.toString() +
                         'px; height: ' + this._height + 'px; background-color: ' + this._color + ';"></span>';
             }
         }
