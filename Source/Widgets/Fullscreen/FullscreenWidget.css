@@ -1,4 +1,4 @@
-.fullscreen {
+.cesium-fullscreen {
     border: solid 1px #888;
     background-color: #222;
     background-image: url(../Images/enterFullscreen-darker.svg);
@@ -7,11 +7,11 @@
     height: 100%;
 }
 
-.fullscreen:hover {
+.cesium-fullscreen:hover {
     border: solid 1px #95CEE6;
     background-color: #4C8EB8;
 }
 
-.fullscreen-exit {
+.cesium-fullscreen-exit {
     background-image: url(../Images/exitFullscreen-darker.svg);
 }
