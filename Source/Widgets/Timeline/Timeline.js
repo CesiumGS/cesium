@@ -105,10 +105,10 @@ define([
         this._mouseX = 0;
         var widget = this;
 
-        this.container.className += ' timelineMain';
-        this.container.innerHTML = '<div class="timelineBar"></div><div class="timelineTrackContainer">' +
-                                     '<canvas class="timelineTracks" width="10" height="1">' +
-                                     '</canvas></div><div class="timelineNeedle"></div><span class="timelineRuler"></span>';
+        this.container.className += ' cesium-timeline-main';
+        this.container.innerHTML = '<div class="cesium-timeline-bar"></div><div class="cesium-timeline-trackContainer">' +
+                                     '<canvas class="cesium-timeline-tracks" width="10" height="1">' +
+                                     '</canvas></div><div class="cesium-timeline-needle"></div><span class="cesium-timeline-ruler"></span>';
         this._timeBarEle = this.container.childNodes[0];
         this._trackContainer = this.container.childNodes[1];
         this._trackListEle = this.container.childNodes[1].childNodes[0];
@@ -270,7 +270,7 @@ define([
 
         this._needleEle.style.left = xPos.toString() + 'px';
 
-        var tics = '<span class="timelineIcon16" style="left:' + scrubX + 'px;bottom:0;background-position: 0px 0px;"></span>';
+        var tics = '<span class="cesium-timeline-icon16" style="left:' + scrubX + 'px;bottom:0;background-position: 0px 0px;"></span>';
 
         var minimumDuration = 0.01;
         var maximumDuration = 31536000000.0; // ~1000 years
@@ -413,12 +413,12 @@ define([
         var lastTextLeft = -999999, textWidth;
         if ((timeBarWidth * (tinyTic / this._timeBarSecondsSpan)) >= 3.0) {
             for (tic = getStartTic(tinyTic); tic <= endTime; tic = getNextTic(tic, tinyTic)) {
-                tics += '<span class="timelineTicTiny" style="left: ' + Math.round(timeBarWidth * getAlpha(tic)).toString() + 'px;"></span>';
+                tics += '<span class="cesium-timeline-ticTiny" style="left: ' + Math.round(timeBarWidth * getAlpha(tic)).toString() + 'px;"></span>';
             }
         }
         if ((timeBarWidth * (subTic / this._timeBarSecondsSpan)) >= 3.0) {
             for (tic = getStartTic(subTic); tic <= endTime; tic = getNextTic(tic, subTic)) {
-                tics += '<span class="timelineTicSub" style="left: ' + Math.round(timeBarWidth * getAlpha(tic)).toString() + 'px;"></span>';
+                tics += '<span class="cesium-timeline-ticSub" style="left: ' + Math.round(timeBarWidth * getAlpha(tic)).toString() + 'px;"></span>';
             }
         }
         if ((timeBarWidth * (mainTic / this._timeBarSecondsSpan)) >= 2.0) {
@@ -442,10 +442,10 @@ define([
                 var labelLeft = ticLeft - ((textWidth / 2) - 1);
                 if (labelLeft > lastTextLeft) {
                     lastTextLeft = labelLeft + textWidth + 5;
-                    tics += '<span class="timelineTicMain" style="left: ' + ticLeft.toString() + 'px;"></span>' + '<span class="timelineTicLabel" style="left: ' + labelLeft.toString() +
+                    tics += '<span class="cesium-timeline-ticMain" style="left: ' + ticLeft.toString() + 'px;"></span>' + '<span class="cesium-timeline-ticLabel" style="left: ' + labelLeft.toString() +
                             'px;">' + ticLabel + '</span>';
                 } else {
-                    tics += '<span class="timelineTicSub" style="left: ' + ticLeft.toString() + 'px;"></span>';
+                    tics += '<span class="cesium-timeline-ticSub" style="left: ' + ticLeft.toString() + 'px;"></span>';
                 }
                 tic = getNextTic(tic, mainTic);
             }

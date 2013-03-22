@@ -1,4 +1,4 @@
-.cesium-lighter .timelineBar {
+.cesium-lighter .cesium-timeline-bar {
     background: -moz-linear-gradient(top, #eeeeee 0%, #ffffff 50%, #fafafa 100%); /* FF3.6+ */
     background: -webkit-linear-gradient(top, #eeeeee 0%,#ffffff 50%,#fafafa 100%); /* Chrome10+,Safari5.1+ */
     background: -o-linear-gradient(top, #eeeeee 0%,#ffffff 50%,#fafafa 100%); /* Opera 11.10+ */
@@ -6,11 +6,11 @@
     background: linear-gradient(to bottom, #eeeeee 0%,#ffffff 50%,#fafafa 100%); /* W3C */
 }
 
-.cesium-lighter .timelineTicLabel {
+.cesium-lighter .cesium-timeline-ticLabel {
     color: #000;
 }
 
-.cesium-lighter .timelineTicMain {
+.cesium-lighter .cesium-timeline-ticMain {
     position: absolute;
     bottom: 0;
     left: 0;
@@ -19,6 +19,6 @@
     background: #000;
 }
 
-.cesium-lighter .timelineTicSub {
+.cesium-lighter .cesium-timeline-ticSub {
     background: #444;
 }
