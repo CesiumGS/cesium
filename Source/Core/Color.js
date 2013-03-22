@@ -302,12 +302,15 @@ define([
      * @memberof Color
      *
      * @return {String} The CSS equivalent of this color.
-     * @see <a href="http://www.w3.org/TR/css3-color/#rgba-color">CSS RGBA color values</a>
+     * @see <a href="http://www.w3.org/TR/css3-color/#rgba-color">CSS RGB or RGBA color values</a>
      */
     Color.prototype.toCssColorString = function() {
         var red = Color.floatToByte(this.red);
         var green = Color.floatToByte(this.green);
         var blue = Color.floatToByte(this.blue);
+        if (this.alpha === 1) {
+            return 'rgb(' + red + ',' + green + ',' + blue + ')';
+        }
         return 'rgba(' + red + ',' + green + ',' + blue + ',' + this.alpha + ')';
     };
 

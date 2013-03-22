@@ -3,7 +3,7 @@
 	height: 100%;
 }
 
-.cesium-logo {
+.cesium-widget-logo {
 	background-image: url(../Images/Cesium_Logo_overlay.png);
 	display: block;
 	position: absolute;
