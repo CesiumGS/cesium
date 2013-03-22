@@ -11,6 +11,12 @@
     color: white;
     margin: 0;
     padding: 0;
+    -webkit-transition-property: background-position;
+    -webkit-transition-duration: 2s;
+    -moz-transition-property: background-position;
+    -moz-transition-duration: 2s;
+    transition-property: background-position;
+    transition-duration: 2s;
 }
 
 .sceneModeCommon:hover {
