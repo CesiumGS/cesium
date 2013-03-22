@@ -10,7 +10,6 @@ attribute vec4 pickColor;
 #ifndef RENDER_FOR_PICK
 varying vec2  v_textureCoordinates;
 varying float v_width;
-varying vec3  v_positionEC;
 #else
 varying vec4  v_pickColor;
 #endif
@@ -104,13 +103,20 @@ void main()
 	    expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
     }
 
-    vec4 positionWC = vec4(endPointWC.xy + direction * expandWidth * expandDir, -endPointWC.z, 1.0);
-    gl_Position = czm_viewportOrthographic * positionWC * show;
+    vec4 positionWC = vec4(endPointWC.xy + direction * expandWidth * expandDir, endPointWC.zw);
+    
+    vec4 position;
+    position.x = 2.0 * (positionWC.x - czm_viewport.x) / czm_viewport.z - 1.0;
+    position.y = 2.0 * (positionWC.y - czm_viewport.y) / czm_viewport.w - 1.0;
+    position.z = (positionWC.z - czm_viewportTransformation[3][2]) / czm_viewportTransformation[2][2];
+    position.w = 1.0;
+    position /= positionWC.w;
+    
+    gl_Position = position * show;
     
 #ifndef RENDER_FOR_PICK
     v_textureCoordinates = vec2(texCoord, clamp(expandDir, 0.0, 1.0));
     v_width = width;
-    v_positionEC = positionEC.xyz;
 #else
     v_pickColor = pickColor;
 #endif
