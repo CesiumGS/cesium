@@ -197,6 +197,7 @@ define([
             return;
         }
 
+        var uniforms;
         if (typeof polylineVisualizerIndex === 'undefined') {
             var unusedIndexes = this._unusedIndexes;
             var length = unusedIndexes.length;
@@ -217,8 +218,13 @@ define([
                 material = Material.fromType(this._scene.getContext(), Material.PolylineOutlineType);
                 polyline.setMaterial(material);
             }
+            uniforms = material.uniforms;
+            Color.clone(Color.WHITE, uniforms.color);
+            Color.clone(Color.BLACK, uniforms.outlineColor);
+            uniforms.outlineWidth = 0;
         } else {
             polyline = this._polylineCollection.get(polylineVisualizerIndex);
+            uniforms = polyline.getMaterial().uniforms;
         }
 
         polyline.setShow(true);
@@ -234,8 +240,6 @@ define([
             polyline.setPositions(vertexPositions);
             polyline._visualizerPositions = vertexPositions;
         }
-
-        var uniforms = polyline.getMaterial().uniforms;
 
         var property = dynamicPolyline.color;
         if (typeof property !== 'undefined') {
