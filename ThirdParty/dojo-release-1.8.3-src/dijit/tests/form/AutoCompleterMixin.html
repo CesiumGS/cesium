@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>_AutoCompleterMixin tests</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../../themes/dijit.css";
+		@import "../../themes/claro/claro.css";
+		@import "../../../dojox/mobile/themes/iphone/TextBox.css";
+		@import "../../../dojox/mobile/themes/iphone/ComboBox.css";
+
+		#table {
+			margin: 0;
+			padding: 2px;
+		}
+		#table .layout {
+			padding: 2px;
+			font-size: 100%;
+			margin: 0;
+		}
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.form.DataList");
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dojox.mobile.ComboBox");
+
+		dojo.ready(function(){
+
+			doh.register("attributes", [
+				{
+					name: "dijit",
+					runTest: function(){
+						var dijit_attributes = dijit.byId('dijit_attributes');
+						doh.is("", dijit_attributes.textbox.value, "dijit original value");
+						doh.is("", dijit_attributes.get('value'), "dijit original get('value')");
+						doh.is(Infinity, dijit_attributes.get('pageSize'), "dijit original get('pageSize')");
+						dijit_attributes.set('pageSize', 9);
+						dijit_attributes.set('value', "test");
+						doh.is("test", dijit_attributes.textbox.value, "dijit value");
+						doh.is("test", dijit_attributes.get('value'), "dijit get('value')");
+						doh.is(9, dijit_attributes.get('pageSize'), "dijit get('pageSize')");
+					}
+	 			},
+				{
+					name: "mobile",
+					runTest: function(){
+						var mobile_attributes = dijit.byId('mobile_attributes');
+						doh.is("", mobile_attributes.textbox.value, "mobile original value");
+						doh.is("", mobile_attributes.get('value'), "mobile original get('value')");
+						doh.is(Infinity, mobile_attributes.get('pageSize'), "mobile original get('pageSize')");
+						mobile_attributes.set('pageSize', 9);
+						mobile_attributes.set('value', "test");
+						doh.is("test", mobile_attributes.textbox.value, "mobile value");
+						doh.is("test", mobile_attributes.get('value'), "mobile get('value')");
+						doh.is(9, mobile_attributes.get('pageSize'), "mobile get('pageSize')");
+					}
+	 			}
+			]);
+
+			doh.register("events", [
+				{
+					name: "dijit",
+					timeout: 2000,
+					runTest: function(){
+						var
+							d = new doh.Deferred(),
+							dijit_events = dijit.byId('dijit_events'),
+							nop = function(){ return false; };
+
+						function onFocus(){
+							dijit_events.set('onFocus', nop);
+							dijit_events.set('displayedValue', "Focus");
+							dijit_events.set('onChange', onChange);
+							dijit_events.set('onBlur', onBlur);
+							dijit.byId('mobile_events').focus();
+						}
+						function onBlur(){
+							dijit_events.set('onBlur', nop);
+							dijit_events.set('displayedValue', dijit_events.get('displayedValue')+"Blur");
+						}
+						function onChange(){
+							dijit_events.set('onChange', nop);
+							dijit_events.set('displayedValue', dijit_events.get('displayedValue')+"Change");
+							dijit_events.focus();
+							d.getTestCallback(function(){
+								doh.is("FocusBlurChange", dijit_events.textbox.value);
+							})();
+						}
+						doh.is(nop.toString(), dijit_events.get('onFocus').toString(), "get('onFocus')");
+						doh.is(nop.toString(), dijit_events.get('onBlur').toString(), "get('onBlur')");
+						doh.is(nop.toString(), dijit_events.get('onChange').toString(), "get('onChange')");
+						dijit_events.set('onFocus', onFocus);
+						setTimeout(dojo.hitch(dijit_events, "focus"), 0);
+
+						return d;
+					}
+	 			},
+				{
+					name: "mobile",
+					timeout: 2000,
+					runTest: function(){
+						var
+							d = new doh.Deferred(),
+							mobile_events = dijit.byId('mobile_events'),
+							focusHandle, blurhandle,
+							nop = function(){ return false; };
+
+						function onFocus(){
+							mobile_events.disconnect(focusHandle);
+							mobile_events.set('displayedValue', "Focus");
+							mobile_events.set('onChange', onChange);
+							blurhandle = mobile_events.connect(mobile_events.textbox, 'onblur', onBlur);
+							dijit.byId('dijit_events').focus();
+						}
+						function onBlur(){
+							mobile_events.disconnect(blurhandle);
+							mobile_events.set('displayedValue', mobile_events.get('displayedValue')+"Blur");
+						}
+						function onChange(){
+							mobile_events.set('onChange', nop);
+							mobile_events.set('displayedValue', mobile_events.get('displayedValue')+"Change");
+							mobile_events.focus();
+							d.getTestCallback(function(){
+								doh.is("FocusBlurChange", mobile_events.textbox.value);
+							})();
+						}
+						doh.is(nop.toString(), mobile_events.get('onChange').toString(), "get('onChange')");
+						focusHandle = mobile_events.connect(mobile_events.textbox, 'onfocus', onFocus);
+						setTimeout(dojo.hitch(mobile_events, "focus"), 0);
+
+						return d;
+					}
+	 			}
+			]);
+
+			doh.register("programmatic", [
+				{
+					name: "dijit",
+					timeout: 2000,
+					runTest: function(){
+						new dijit.form.ComboBox({id:"dijit_programmatic", list:"states", "aria-label":"dijit_programmatic",value:"Alabama"}).placeAt("dijit_programmatic_container", "first");
+						var dijit_programmatic = dijit.byId('dijit_programmatic');
+						var focushandle = dijit_programmatic.connect(dijit_programmatic, '_onFocus',
+							function(){
+								d.getTestCallback(function(){
+									dijit_programmatic.disconnect(focushandle);
+									var pos = dojo.position(dijit_programmatic.domNode, true);
+									doh.t(pos.w > 0 && pos.h > 0 && pos.x > 0 && pos.y > 0, 'dijit position');
+									doh.is("Alabama", dijit_programmatic.textbox.value, 'dijit textbox value');
+									doh.is("Alabama", dijit_programmatic.get('value'), 'dijit widget value');
+								})();
+							}
+						);
+						var d = new doh.Deferred();
+						setTimeout(dojo.hitch(dijit_programmatic, "focus"), 0);
+						return d;
+					}
+	 			},
+				{
+					name: "mobile",
+					timeout: 2000,
+					runTest: function(){
+						new dojox.mobile.ComboBox({id:"mobile_programmatic", list:"states", "aria-label":"mobile_programmatic", value:"Alabama"}).placeAt("mobile_programmatic_container", "first");
+						var mobile_programmatic = dijit.byId('mobile_programmatic');
+						var focushandle = mobile_programmatic.connect(mobile_programmatic.textbox, 'onfocus',
+							function(){
+								d.getTestCallback(function(){
+									mobile_programmatic.disconnect(focushandle);
+									var pos = dojo.position(mobile_programmatic.domNode, true);
+									doh.t(pos.w > 0 && pos.h > 0 && pos.x > 0 && pos.y > 0, 'mobile position');
+									doh.is("Alabama", mobile_programmatic.textbox.value, 'mobile textbox value');
+									doh.is("Alabama", mobile_programmatic.get('value'), 'mobile widget value');
+								})();
+							}
+						);
+						var d = new doh.Deferred();
+						setTimeout(dojo.hitch(mobile_programmatic, "focus"), 0);
+						return d;
+					}
+	 			}
+			]);
+
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro" role="main">
+	<h1 class="testTitle">_AutoCompleterMixin (dijit and mobile) non-robot tests</h1>
+	<datalist id="states">
+	<select data-dojo-type="dijit/form/DataList" data-dojo-props='id:"states"' >
+		<option value="AL">Alabama</option>
+		<option value="AK">Alaska</option>
+		<option value="AS">American Samoa</option>
+		<option value="AZ">Arizona</option>
+		<option value="AR">Arkansas</option>
+		<option value="AE">Armed Forces Europe</option>
+		<option value="AP">Armed Forces Pacific</option>
+		<option value="AA">Armed Forces the Americas</option>
+		<option value="CA">California</option>
+		<option value="CO">Colorado</option>
+		<option value="CT">Connecticut</option>
+		<option value="DE">Delaware</option>
+		<option value="DC">District of Columbia</option>
+		<option value="FM">Federated States of Micronesia</option>
+		<option value="FL">Florida</option>
+		<option value="GA">Georgia</option>
+		<option value="GU">Guam</option>
+		<option value="HI">Hawaii</option>
+		<option value="ID">Idaho</option>
+		<option value="IL">Illinois</option>
+		<option value="IN">Indiana</option>
+		<option value="IA">Iowa</option>
+		<option value="KS">Kansas</option>
+		<option value="KY">Kentucky</option>
+		<option value="LA">Louisiana</option>
+		<option value="ME">Maine</option>
+		<option value="MH">Marshall Islands</option>
+		<option value="MD">Maryland</option>
+		<option value="MA">Massachusetts</option>
+		<option value="MI">Michigan</option>
+		<option value="MN">Minnesota</option>
+		<option value="MS">Mississippi</option>
+		<option value="MO">Missouri</option>
+		<option value="MT">Montana</option>
+		<option value="NE">Nebraska</option>
+		<option value="NV">Nevada</option>
+		<option value="NH">New Hampshire</option>
+		<option value="NJ">New Jersey</option>
+		<option value="NM">New Mexico</option>
+		<option value="NY">New York</option>
+		<option value="NC">North Carolina</option>
+		<option value="ND">North Dakota</option>
+		<option value="MP">Northern Mariana Islands</option>
+		<option value="OH">Ohio</option>
+		<option value="OK">Oklahoma</option>
+		<option value="OR">Oregon</option>
+		<option value="PA">Pennsylvania</option>
+		<option value="PR">Puerto Rico</option>
+		<option value="RI">Rhode Island</option>
+		<option value="SC">South Carolina</option>
+		<option value="SD">South Dakota</option>
+		<option value="TN">Tennessee</option>
+		<option value="TX">Texas</option>
+		<option value="UT">Utah</option>
+		<option value="VT">Vermont</option>
+		<option value="VI">Virgin Islands, U.S.</option>
+		<option value="VA">Virginia</option>
+		<option value="WA">Washington</option>
+		<option value="WV">West Virginia</option>
+		<option value="WI">Wisconsin</option>
+		<option value="WY">Wyoming</option>
+	</select>
+	</datalist>
+	<table id="table">
+		<tr>
+			<th class="layout">&nbsp;</th>
+			<th class="layout">dijit</th>
+			<th class="layout">mobile</th>
+		</tr>
+		<tr>
+			<td class="layout">attributes</td>
+			<td class="layout"><input id="dijit_attributes" aria-label="dijit_attributes" data-dojo-type="dijit/form/ComboBox" data-dojo-props='value:"", list:"states"'/></td>
+			<td class="layout"><input id="mobile_attributes" aria-label="mobile_attributes" data-dojo-type="dojox.mobile.ComboBox" data-dojo-props='value:"", list:"states"'></td>
+		</tr>
+		<tr>
+			<td class="layout">Events</td>
+			<td class="layout"><input id="dijit_events" aria-label="dijit_events" data-dojo-type="dijit/form/ComboBox" data-dojo-props='value:"", list:"states", onFocus:function(){ return false; }, onBlur:function(){ return false; }, onChange:function(){ return false; }'/></td>
+			<td class="layout"><input id="mobile_events" aria-label="mobile_events" data-dojo-type="dojox.mobile.ComboBox" data-dojo-props='value:"", list:"states", onChange:function(){ return false; }'></td>
+		</tr>
+		<tr>
+			<td class="layout">Programmatic</td>
+			<td class="layout" id="dijit_programmatic_container"></td>
+			<td class="layout" id="mobile_programmatic_container"></td>
+		</tr>
+	</table>
+</body>
+</html>

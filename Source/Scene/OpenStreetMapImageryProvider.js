@@ -104,6 +104,19 @@ define([
     };
 
     /**
+     * Gets the proxy used by this provider.
+     *
+     * @memberof OpenStreetMapImageryProvider
+     *
+     * @returns {Proxy} The proxy.
+     *
+     * @see DefaultProxy
+     */
+    OpenStreetMapImageryProvider.prototype.getProxy = function() {
+        return this._proxy;
+    };
+
+    /**
      * Gets the width of each tile, in pixels.  This function should
      * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
      *
@@ -215,7 +228,7 @@ define([
     /**
      * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
      * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
-     * are passed an instance of {@link ImageryProviderError}.
+     * are passed an instance of {@link TileProviderError}.
      *
      * @memberof OpenStreetMapImageryProvider
      *

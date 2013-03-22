@@ -14,6 +14,26 @@ defineSuite([
         expect(encoded.low).toEqual(Cartesian3.ZERO);
     });
 
+    it('endcode encodes a positive value', function() {
+        var encoded = EncodedCartesian3.encode(-10000000.0);
+        expect(encoded.high + encoded.low).toEqual(-10000000.0);
+    });
+
+    it('endcode encodes a negative value', function() {
+        var encoded = EncodedCartesian3.encode(10000000.0);
+        expect(encoded.high + encoded.low).toEqual(10000000.0);
+    });
+
+    it('endcode encodes with a result parameter', function() {
+        var result = {
+            high : 0.0,
+            low : 0.0
+        };
+        var returnedResult = EncodedCartesian3.encode(0.0, result);
+        expect(result).toBe(returnedResult);
+        expect(returnedResult.high + returnedResult.low).toEqual(0.0);
+    });
+
     it('fromCartesian encodes a cartesian', function() {
         var c = new Cartesian3(-10000000.0, 0.0, 10000000.0);
         var encoded = EncodedCartesian3.fromCartesian(c);
@@ -48,6 +68,12 @@ defineSuite([
         expect(encoded.high.x + encoded.low.x).toEqual(-10000000.0);
         expect(encoded.high.y + encoded.low.y).toEqual(0.0);
         expect(encoded.high.z + encoded.low.z).toEqual(10000000.0);
+    });
+
+    it('encode throws without a value', function() {
+        expect(function() {
+            EncodedCartesian3.encode();
+        }).toThrow();
     });
 
     it('fromCartesian throws without a cartesian', function() {

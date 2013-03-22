@@ -70,12 +70,16 @@ define([
     var daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     var daysInLeapFeburary = 29;
 
+    // we don't really need a leap second instance, anything with a julianDate property will do
+    var binarySearchScratchLeapSecond = {
+        julianDate : undefined
+    };
     function convertUtcToTai(julianDate) {
         //Even though julianDate is in UTC, we'll treat it as TAI and
         //search the leap second table for it.
-        var toFind = new LeapSecond(julianDate, 0.0);
+        binarySearchScratchLeapSecond.julianDate = julianDate;
         var leapSeconds = LeapSecond.getLeapSeconds();
-        var index = binarySearch(leapSeconds, toFind, LeapSecond.compareLeapSecondDate);
+        var index = binarySearch(leapSeconds, binarySearchScratchLeapSecond, LeapSecond.compareLeapSecondDate);
 
         if (index < 0) {
             index = ~index;
@@ -102,9 +106,9 @@ define([
     }
 
     function convertTaiToUtc(julianDate, result) {
-        var toFind = new LeapSecond(julianDate, 0.0);
+        binarySearchScratchLeapSecond.julianDate = julianDate;
         var leapSeconds = LeapSecond.getLeapSeconds();
-        var index = binarySearch(leapSeconds, toFind, LeapSecond.compareLeapSecondDate);
+        var index = binarySearch(leapSeconds, binarySearchScratchLeapSecond, LeapSecond.compareLeapSecondDate);
         if (index < 0) {
             index = ~index;
         }
@@ -180,8 +184,7 @@ define([
     }
 
     function computeJulianDateComponentsFromDate(date) {
-        return computeJulianDateComponents(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), date
-                .getUTCMilliseconds());
+        return computeJulianDateComponents(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), date.getUTCMilliseconds());
     }
 
     //Regular expressions used for ISO8601 date parsing.
@@ -211,7 +214,7 @@ define([
      * into that day, and the time standard which the parameters are in.  Passing no parameters will
      * construct a JulianDate that represents the current system time.
      *
-     * An astronomical Julian Date is the number of days since noon on January 1, -4712 (4713 BC).
+     * An astronomical Julian date is the number of days since noon on January 1, -4712 (4713 BC).
      * For increased precision, this class stores the whole number part of the date and the seconds
      * part of the date in separate components.  In order to be safe for arithmetic and represent
      * leap seconds, the date is always stored in the International Atomic Time standard
@@ -236,10 +239,10 @@ define([
      * @see LeapSecond
      *
      * @example
-     * // Example 1. Construct a Julian date representing the current system time.
+     * // Example 1. Construct a JulianDate representing the current system time.
      * var julianDate = new JulianDate();
      *
-     * // Example 2. Construct a Julian date from a Julian day number and seconds of the day.
+     * // Example 2. Construct a JulianDate from a Julian day number and seconds of the day.
      * var julianDayNumber = 2448257;   // January 1, 1991
      * var secondsOfDay = 21600;        // 06:00:00
      * var julianDate = new JulianDate(julianDayNumber, secondsOfDay, TimeStandard.UTC);
@@ -254,7 +257,7 @@ define([
         if (typeof julianDayNumber !== 'undefined' || typeof julianSecondsOfDay !== 'undefined' || typeof timeStandard !== 'undefined') {
             if (typeof timeStandard === 'undefined') {
                 timeStandard = TimeStandard.UTC;
-            } else if ((timeStandard !== TimeStandard.UTC) && (timeStandard !== TimeStandard.TAI)) {
+            } else if (timeStandard !== TimeStandard.UTC && timeStandard !== TimeStandard.TAI) {
                 throw new DeveloperError('timeStandard is not a known TimeStandard.');
             }
 
@@ -311,12 +314,12 @@ define([
     /**
      * Creates a JulianDate instance from a JavaScript Date object.
      * While the JavaScript Date object defaults to the system's local time zone,
-     * the Julian date is computed using the UTC values.
+     * the JulianDate is computed using the UTC values.
      *
      * @memberof JulianDate
      *
-     * @param {Date} date The JavaScript Date object representing the time to be converted to a Julian date.
-     * @param {TimeStandard} [timeStandard = TimeStandard.UTC] Indicates the time standard in which this Julian date is represented.
+     * @param {Date} date The JavaScript Date object representing the time to be converted to a JulianDate.
+     * @param {TimeStandard} [timeStandard = TimeStandard.UTC] Indicates the time standard in which this JulianDate is represented.
      *
      * @return {JulianDate} The new {@Link JulianDate} instance.
      *
@@ -331,7 +334,7 @@ define([
      * @see <a href='http://www.w3schools.com/jsref/jsref_obj_date.asp'>JavaScript Date Object Reference on w3schools</a>.
      *
      * @example
-     * // Construct a Julian date specifying the UTC time standard
+     * // Construct a JulianDate specifying the UTC time standard
      * var date = new Date('January 1, 2011 12:00:00 EST');
      * var julianDate = JulianDate.fromDate(date, TimeStandard.UTC);
      */
@@ -351,7 +354,7 @@ define([
      *
      * @memberof JulianDate
      *
-     * @param {String} iso8601String The ISO 8601 date string representing the time to be converted to a Julian date.
+     * @param {String} iso8601String The ISO 8601 date string representing the time to be converted to a JulianDate.
      *
      * @return {JulianDate} The new {@Link JulianDate} instance.
      *
@@ -364,11 +367,11 @@ define([
      * @see <a href='http://en.wikipedia.org/wiki/ISO_8601'>ISO 8601 on Wikipedia</a>.
      *
      * @example
-     * // Example 1. Construct a Julian date in UTC at April 24th, 2012 6:08PM UTC
+     * // Example 1. Construct a JulianDate in UTC at April 24th, 2012 6:08PM UTC
      * var julianDate = JulianDate.fromIso8601('2012-04-24T18:08Z');
-     * // Example 2. Construct a Julian date in local time April 24th, 2012 12:00 AM
+     * // Example 2. Construct a JulianDate in local time April 24th, 2012 12:00 AM
      * var localDay = JulianDate.fromIso8601('2012-04-24');
-     * // Example 3. Construct a Julian date 5 hours behind UTC April 24th, 2012 5:00 pm UTC
+     * // Example 3. Construct a JulianDate 5 hours behind UTC April 24th, 2012 5:00 pm UTC
      * var localDay = JulianDate.fromIso8601('2012-04-24T12:00-05:00');
      */
     JulianDate.fromIso8601 = function(iso8601String) {
@@ -640,21 +643,39 @@ define([
     };
 
     /**
-     * Compares two {JulianDate} instances.
+     * Compares two JulianDate instances.
      *
      * @memberof JulianDate
      *
      * @param {JulianDate} a The first instance.
      * @param {JulianDate} b The second instance.
-     * @return {Number} A negative value if a is less than b, a positive value if
-     *                   a is greater than b, and zero if a and b are equal.
+     *
+     * @return {Number} A negative value if a is less than b,
+     *                  a positive value if a is greater than b,
+     *                  or zero if a and b are equal.
      */
     JulianDate.compare = function(a, b) {
-        var dayDifference = (a._julianDayNumber - b._julianDayNumber);
-        if (dayDifference !== 0) {
-            return dayDifference;
+        var julianDayNumberDifference = a._julianDayNumber - b._julianDayNumber;
+        if (julianDayNumberDifference !== 0) {
+            return julianDayNumberDifference;
         }
         return a._secondsOfDay - b._secondsOfDay;
+    };
+
+    /**
+     * Returns true if the first JulianDate equals the second JulianDate.
+     * @memberof JulianDate
+     *
+     * @param {JulianDate} left The first JulianDate to compare for equality.
+     * @param {JulianDate} right The second JulianDate to compare for equality.
+     * @return {Boolean} <code>true</code> if the JulianDates are equal; otherwise, <code>false</code>.
+     */
+    JulianDate.equals = function(left, right) {
+        return (left === right) ||
+               (typeof left !== 'undefined' &&
+                typeof right !== 'undefined' &&
+                left._julianDayNumber === right._julianDayNumber &&
+                left._secondsOfDay === right._secondsOfDay);
     };
 
     /**
@@ -789,7 +810,7 @@ define([
      * Javascript dates are only accurate to the nearest millisecond.
      * @memberof JulianDate
      *
-     * @return {Date} A new JavaScript Date equivalent to this Julian date.
+     * @return {Date} A new JavaScript Date equivalent to this JulianDate.
      */
     JulianDate.prototype.toDate = function() {
         var gDate = this.toGregorianDate();
@@ -801,11 +822,11 @@ define([
     };
 
     /**
-     * Creates an ISO8601 string represenation of this Julian date in UTC.
+     * Creates an ISO8601 string represenation of this JulianDate in UTC.
      * @memberof JulianDate
      *
      * @param {Number} [precision] The number of fractional digits used to represent the seconds component.  By default, the most precise representation is used.
-     * @return {String} An ISO8601 string represenation of this Julian date.
+     * @return {String} An ISO8601 string represenation of this JulianDate.
      */
     JulianDate.prototype.toIso8601 = function(precision) {
         var gDate = this.toGregorianDate();
@@ -828,16 +849,17 @@ define([
     };
 
     /**
-     * Computes the number of seconds that have elapsed from this Julian date to the <code>other</code>
-     * Julian date.
+     * Computes the number of seconds that have elapsed from this JulianDate to the <code>other</code>
+     * JulianDate.
      *
      * @memberof JulianDate
      *
-     * @param {JulianDate} other The other Julian date, which is the end of the interval.
+     * @param {JulianDate} other The other JulianDate, which is the end of the interval.
      *
-     * @return {Number} The number of seconds that have elpased from this Julian date to the other Julian date.
+     * @return {Number} The number of seconds that have elpased from this JulianDate to the other JulianDate.
      *
      * @see JulianDate#getMinutesDifference
+     * @see JulianDate#getDaysDifference
      *
      * @example
      * var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00'));
@@ -847,21 +869,22 @@ define([
     JulianDate.prototype.getSecondsDifference = function(other) {
         var julianDate1 = this;
         var julianDate2 = other;
-        var dayDifference = (julianDate2.getJulianDayNumber() - julianDate1.getJulianDayNumber()) * TimeConstants.SECONDS_PER_DAY;
-        return (dayDifference + (julianDate2.getSecondsOfDay() - julianDate1.getSecondsOfDay()));
+        var dayDifference = (julianDate2._julianDayNumber - julianDate1._julianDayNumber) * TimeConstants.SECONDS_PER_DAY;
+        return (dayDifference + (julianDate2._secondsOfDay - julianDate1._secondsOfDay));
     };
 
     /**
-     * Computes the number of minutes that have elapsed from this Julian date to the <code>other</code>
-     * Julian date.
+     * Computes the number of minutes that have elapsed from this JulianDate to the <code>other</code>
+     * JulianDate.
      *
      * @memberof JulianDate
      *
-     * @param {JulianDate} other The other Julian date, which is the end of the interval.
+     * @param {JulianDate} other The other JulianDate, which is the end of the interval.
      *
-     * @return {Number} The number of seconds that have elpased from this Julian date to the other Julian date.
+     * @return {Number} The number of seconds that have elpased from this JulianDate to the other JulianDate.
      *
      * @see JulianDate#getSecondsDifference
+     * @see JulianDate#getDaysDifference
      *
      * @example
      * var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00'));
@@ -870,6 +893,32 @@ define([
      */
     JulianDate.prototype.getMinutesDifference = function(other) {
         return this.getSecondsDifference(other) / TimeConstants.SECONDS_PER_MINUTE;
+    };
+
+    /**
+     * Computes the number of days that have elapsed from this JulianDate to the <code>other</code>
+     * JulianDate.  A day is always exactly 86400.0 seconds.
+     *
+     * @memberof JulianDate
+     *
+     * @param {JulianDate} other The other JulianDate, which is the end of the interval.
+     *
+     * @return {Number} The number of days that have elpased from this JulianDate to the other JulianDate.
+     *
+     * @see JulianDate#getSecondsDifference
+     * @see JulianDate#getMinutesDifference
+     *
+     * @example
+     * var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00'));
+     * var end = JulianDate.fromDate(new Date('July 5, 2011 14:24:00'));
+     * var difference = start.getDaysDifference(end);    // 1.1 days
+     */
+    JulianDate.prototype.getDaysDifference = function(other) {
+        var julianDate1 = this;
+        var julianDate2 = other;
+        var dayDifference = (julianDate2._julianDayNumber - julianDate1._julianDayNumber);
+        var secondDifference = (julianDate2._secondsOfDay - julianDate1._secondsOfDay) / TimeConstants.SECONDS_PER_DAY;
+        return dayDifference + secondDifference;
     };
 
     /**
@@ -888,9 +937,9 @@ define([
      * var difference = julianDate.getTaiMinusUtc(); //35
      */
     JulianDate.prototype.getTaiMinusUtc = function() {
-        var toFind = new LeapSecond(this, 0.0);
+        binarySearchScratchLeapSecond.julianDate = this;
         var leapSeconds = LeapSecond.getLeapSeconds();
-        var index = binarySearch(leapSeconds, toFind, LeapSecond.compareLeapSecondDate);
+        var index = binarySearch(leapSeconds, binarySearchScratchLeapSecond, LeapSecond.compareLeapSecondDate);
         if (index < 0) {
             index = ~index;
             --index;
@@ -902,7 +951,7 @@ define([
     };
 
     /**
-     * Returns a new Julian date representing a time <code>duration</code> seconds later
+     * Returns a new JulianDate representing a time <code>duration</code> seconds later
      * (or earlier in the case of a negative amount).
      *
      * @memberof JulianDate
@@ -933,14 +982,14 @@ define([
     };
 
     /**
-     * Returns a new Julian date representing a time <code>duration</code> minutes later
+     * Returns a new JulianDate representing a time <code>duration</code> minutes later
      * (or earlier in the case of a negative amount).
      *
      * @memberof JulianDate
      *
      * @param {Number} duration An integer number of minutes to add or subtract.
      *
-     * @return {JulianDate} A new Julian date object
+     * @return {JulianDate} A new JulianDate object
      *
      * @exception {DeveloperError} duration is required and must be a number.
      *
@@ -964,14 +1013,14 @@ define([
     };
 
     /**
-     * Returns a new Julian date representing a time <code>duration</code> hours later
+     * Returns a new JulianDate representing a time <code>duration</code> hours later
      * (or earlier in the case of a negative amount).
      *
      * @memberof JulianDate
      *
      * @param {Number} duration An integer number of hours to add or subtract.
      *
-     * @return {JulianDate} A new Julian date object
+     * @return {JulianDate} A new JulianDate object
      *
      * @exception {DeveloperError} duration is required and must be a number.
      *
@@ -995,14 +1044,14 @@ define([
     };
 
     /**
-     * Returns a new Julian date representing a time <code>duration</code> days later
+     * Returns a new JulianDate representing a time <code>duration</code> days later
      * (or earlier in the case of a negative amount).
      *
      * @memberof JulianDate
      *
      * @param {Number} duration An integer number of days to add or subtract.
      *
-     * @return {JulianDate} A new Julian date object
+     * @return {JulianDate} A new JulianDate object
      *
      * @exception {DeveloperError} duration is required and must be a number.
      *
@@ -1026,11 +1075,11 @@ define([
     };
 
     /**
-     * Returns true if <code>other</code> occurs after this Julian date.
+     * Returns true if <code>other</code> occurs after this JulianDate.
      *
      * @memberof JulianDate
      *
-     * @param {JulianDate} other The Julian date to be compared.
+     * @param {JulianDate} other The JulianDate to be compared.
      *
      * @return {Boolean} <code>true</code> if this JulianDate is chronologically earlier than <code>other</code>; otherwise, <code>false</code>.
      *
@@ -1048,11 +1097,11 @@ define([
     };
 
     /**
-     * Returns true if <code>other</code> occurs at or after this Julian date.
+     * Returns true if <code>other</code> occurs at or after this JulianDate.
      *
      * @memberof JulianDate
      *
-     * @param {JulianDate} other The Julian date to be compared.
+     * @param {JulianDate} other The JulianDate to be compared.
      *
      * @return {Boolean} <code>true</code> if this JulianDate is chronologically less than or equal to<code>other</code>; otherwise, <code>false</code>.
      *
@@ -1070,11 +1119,11 @@ define([
     };
 
     /**
-     * Returns true if <code>other</code> occurs before this Julian date.
+     * Returns true if <code>other</code> occurs before this JulianDate.
      *
      * @memberof JulianDate
      *
-     * @param {JulianDate} other The Julian date to be compared.
+     * @param {JulianDate} other The JulianDate to be compared.
      *
      * @return {Boolean} <code>true</code> if this JulianDate is chronologically later than <code>other</code>; otherwise, <code>false</code>.
      *
@@ -1092,11 +1141,11 @@ define([
     };
 
     /**
-     * Returns true if <code>other</code> occurs at or before this Julian date.
+     * Returns true if <code>other</code> occurs at or before this JulianDate.
      *
      * @memberof JulianDate
      *
-     * @param {JulianDate} other The Julian date to be compared.
+     * @param {JulianDate} other The JulianDate to be compared.
      *
      * @return {Boolean} <code>true</code> if this JulianDate is chronologically later than or equal to <code>other</code>; otherwise, <code>false</code>.
      *
@@ -1114,12 +1163,26 @@ define([
     };
 
     /**
+     * Compares this date to another date.
+     *
+     * @memberof JulianDate
+     *
+     * @param {JulianDate} other The other JulianDate to compare to.
+     *
+     * @return {Number} A negative value if this instance is less than the other,
+     *                  a positive value if this instance is greater than the other,
+     *                  or zero if this instance and the other are equal.
+     */
+    JulianDate.prototype.compareTo = function(other) {
+        return JulianDate.compare(this, other);
+    };
+
+    /**
      * Returns <code>true</code> if this date is equivalent to the specified date.
      *
      * @memberof JulianDate
      *
      * @param {JulianDate} other The JulianDate to be compared.
-     * @param {Number} epsilon The number of seconds that should separate the two JulianDates
      *
      * @return {Boolean} <code>true</code> if the two JulianDates are equal; otherwise <code>false</code>.
      *
@@ -1131,7 +1194,7 @@ define([
      * original.equals(clone);      // true
      */
     JulianDate.prototype.equals = function(other) {
-        return JulianDate.compare(this, other) === 0;
+        return JulianDate.equals(this, other);
     };
 
     /**

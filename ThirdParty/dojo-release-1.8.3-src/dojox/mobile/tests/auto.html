@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<title>dojox.mobile auto run</title>
+	<script src="index.js"></script>
+	<script>
+	var tests, win, c, data, map = {}, theme = "";
+	function sort(keys){
+		var data = [];
+		for(var i = 0; i < keys.length; i++){
+			var key = keys[i];
+			var items = [];
+			items.label = key.label;
+			for(var j = 0; j < tests.length; j++){
+				var item = tests[j];
+				var url = item.url;
+				var label = item.label || item.url;
+				var tags = item.tags ? item.tags.split(/,/) : [];
+				for(var k = 0; k < tags.length; k++){
+					if(tags[k] === key.tag){
+						items.push(item);
+					}
+				}
+			}
+			data.push(items);
+			map[key.label] = items;
+		}
+		return data;
+	}
+	function init(){
+		c = document.getElementById("container");
+		var data = sort(categories);
+		for(var i = 0; i < data.length; i++){
+			var cat = data[i];
+			var inp = document.createElement("input");
+			inp.type = "checkbox";
+			inp.name = cat.label;
+			c.appendChild(inp);
+			c.appendChild(document.createTextNode(cat.label));
+			c.appendChild(document.createElement("br"));
+		}
+	}
+	function checkAll(v){
+		for(var i = 0; i < c.childNodes.length; i++){
+			var inp = c.childNodes[i];
+			if(inp.tagName !== "INPUT"){ continue; }
+			inp.checked = v;
+		}
+	}
+	function run(idx){
+		win.location.href = tests[idx++] + (theme ? "?theme=" + theme : "");
+		setTimeout(function(){
+			if(idx < tests.length){
+				run(idx);
+			}else{
+				win.close();
+			}
+		}, document.forms[0].interval.value - 0);
+	}
+	function start1(){
+		tests = [];
+		for(var i = 0; i < c.childNodes.length; i++){
+			var inp = c.childNodes[i];
+			if(inp.tagName !== "INPUT" || !inp.checked){ continue; }
+			var label = inp.name;
+			console.log(label);
+			var items = map[label];
+			for(var j = 0; j < items.length; j++){
+				tests.push(items[j].url);
+			}
+		}
+		win = window.open("about:blank", "_blank");
+		run(0);
+	}
+	function onThemeChange(){
+		theme = document.getElementById("sel1").value;
+	}
+	</script>
+	</head>
+	<body onload="init()">
+		<form>
+			<select id="sel1" onchange="onThemeChange()">
+				<option value=""></option>
+				<option value="iPhone">iPhone</option>
+				<option value="Android">Android</option>
+				<option value="BlackBerry">BlackBerry</option>
+				<option value="Custom">Custom</option>
+			</select>
+			<input id="btn" type="button" onclick="start1()" value=" START "><br>
+			<hr>
+			Interval: <input name="interval" value="5000"> [ms]<br>
+			<div id="container"></div>
+			<hr>
+			<input id="btn" type="button" onclick="checkAll(true)" value=" Check All ">
+			<input id="btn" type="button" onclick="checkAll(false)" value=" Uncheck All "><br>
+		</form>
+	</body>
+</html>

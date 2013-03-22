@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Test template with Repeat using different exprchars.</title>
+		<script src="../../../../dojo/dojo.js" type="text/javascript" data-dojo-config="parseOnLoad: 0, isDebug: 1, mvc: {debugBindings: 1}">
+		</script>
+		<style type="text/css">
+			@import "../css/app-format.css";
+			@import "../../../../dijit/themes/claro/claro.css";
+		</style>
+		<script type="text/javascript">
+			require([
+				"dojo/parser",
+				"dojox/mvc/getStateful",
+				"dojox/mvc/ListController",
+				"dojox/mvc/tests/test_templatedWidgetList/myMvcTemplated2",
+				"dojox/mvc/WidgetList",
+				"dojo/dom",
+				"dojox/mvc/Group",
+				"dojox/mvc/Output",
+				"dijit/form/TextBox",
+				"dojo/domReady!"
+			], function(parser, getStateful, ListController, myMvcTemplated2, WidgetList, dom){
+				array = getStateful([
+					{
+						Serial: "A111",
+						First: "Anne",
+						Last: "Ackerman",
+						Location: "NY",
+						Office: "1S76",
+						Email: "a.a@test.com",
+						Tel: "123-764-8237",
+						Fax: "123-764-8228"
+					},
+					{
+						Serial: "B111",
+						First: "Ben",
+						Last: "Beckham",
+						Location: "NY",
+						Office: "5N47",
+						Email: "b.b@test.com",
+						Tel: "123-764-8599",
+						Fax: "123-764-8600"
+					},
+					{
+						Serial: "C111",
+						First: "Chad",
+						Last: "Chapman",
+						Location: "CA",
+						Office: "1278",
+						Email: "c.c@test.com",
+						Tel: "408-764-8237",
+						Fax: "408-764-8228"
+					}
+				]);
+
+				ctrl = new ListController({model: array});
+
+
+				parser.parse();
+
+		//		(new WidgetList({children: array, childClz: myMvcTemplated2, childParams: {
+				//	startup: function(){
+					//	this.labelNode.set("value", at("rel:", "Serial"));
+					//	this.inputNode.set("value", at("rel:", "First"));
+					//	this.nameInputNode.set("value", at("rel:", "First"));
+					//	this.inherited("startup", arguments);
+				//	}
+		//		}}, dom.byId("programmaticRepeat"))).startup();
+			
+				(new WidgetList({children: array, childClz: myMvcTemplated2, childParams: {
+						ctrl : ctrl
+					}}, 
+					dom.byId("programmaticRepeat"))).startup();
+			
+				(new WidgetList({children: ctrl.model, childClz: myMvcTemplated2, childParams: {
+						ctrl : ctrl
+					}}, 
+					dom.byId("programmaticRepeat2"))).startup();
+				
+			});
+		</script>
+	</head>
+	<body class="claro" style="background-image: url(../images/master_detail.png)">
+	<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<div id="wrapper">
+			<div id="main">
+				<div id="leftNav"></div>
+				<div id="mainContent">
+					<div>
+						Test exprchar. Widget template test uses exprchar of # and others for template:#{this.index} etc.
+					</div>
+					<br/>
+			<!--
+					<div id="container2" data-dojo-type="dojox.mvc.tests.test_templatedWidgetList.myMvcTemplated2" data-dojo-props="ctrl: ctrl"></div>
+			-->		
+					<h1>First Repeating programmatically created template widget</h1>
+					<div id="programmaticRepeat"></div>
+
+					<h1>Second Repeating programmatically created template widget</h1>
+					<div id="programmaticRepeat2"></div>
+				<div data-dojo-type="dojox/mvc/Group"
+					data-dojo-props="target: at(ctrl, 'cursor')">
+					<div class="row">
+						<div style="display: inline-block;" id="detailsBanner">Details for result index:</div>
+						<span class="cell" id="indexOutput"
+							data-dojo-type="dojox/mvc/Output"
+							data-dojo-props="value: at(ctrl, 'cursorIndex')"></span>
+					</div>
+					<div class="row">
+						<label class="cell" for="firstInputx">First Name:</label> 
+						<input class="cell" id="firstInputx" data-dojo-type="dijit/form/TextBox"
+							data-dojo-props="value: at('rel:', 'First')">
+					</div>
+					<div class="row">
+						<label class="cell" for="lastInput">Last Name:</label> 
+						<input class="cell" id="lastInput" data-dojo-type="dijit.form.TextBox"
+							data-dojo-props="value: at('rel:', 'Last')">
+					</div>
+				</div>
+
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

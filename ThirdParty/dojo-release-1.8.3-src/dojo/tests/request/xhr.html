@@ -1,0 +1,279 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>dojo/request/xhr</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<style type="text/css">
+			@import "../../resources/dojo.css";
+		</style>
+		<script>
+			var dojoConfig = {
+				async: true
+			};
+		</script>
+		<script type="text/javascript" src="../../dojo.js"></script>
+		<script type="text/javascript">
+			require([
+				"dojo/request/xhr",
+				"dojo/_base/lang",
+				"dojo/errors/RequestTimeoutError",
+				"dojo/errors/CancelError",
+				"dojo/has",
+				"doh",
+				"dojo/domReady!"
+			], function(xhr, lang, RequestTimeoutError, CancelError, has, doh){
+				var tests = [
+					function xhrGet(t){
+						var d = new doh.Deferred();
+						var td = xhr.get("xhr.html", {
+							preventCache: true
+						});
+						t.t(!!(td.then && td.cancel));
+						td.response.then(function(response){
+							t.is(4, response.xhr.readyState);
+							return response;
+						});
+						td.then(lang.hitch(d, "callback"));
+						return d;
+					},
+					function xhrGet404(t){
+						var d = new doh.Deferred();
+						var td = xhr.get("xhr_blarg.html").response.then(
+							function(response){
+								d.errback(false);
+							},
+							d.getTestCallback(function(error){
+								t.is(404, error.response.status);
+								return error;
+							})
+						);
+						return d;
+					},
+					function xhrGetQuery(t){
+						var d = new doh.Deferred();
+						var td = xhr.get("xhrDummyMethod.php?color=blue", {
+							query: {
+								foo: [ "bar", "baz" ],
+								thud: "thonk",
+								xyzzy: 3
+							},
+							handleAs: "json"
+						});
+						td.then(d.getTestErrback(function(data){
+							var query = data.query;
+
+							t.t(!!(query.color && query.foo && query.foo.length && query.thud && query.xyzzy));
+							t.is("blue", query.color);
+							t.is(2, query.foo.length);
+							t.is("thonk", query.thud);
+							t.is(3, query.xyzzy);
+
+							td.response.then(d.getTestCallback(function(response){
+								t.is("xhrDummyMethod.php?color=blue&foo=bar&foo=baz&thud=thonk&xyzzy=3",
+									response.url);
+							}));
+						}));
+						return d;
+					},
+					function xhrPost(t){
+						var d = new doh.Deferred();
+
+						var callback = d.getTestCallback(function(response){
+							if(response.response){
+								response = response.response;
+							}
+
+							t.t(xhr.isDocumentOk(response.xhr) || response.status == 405);
+						});
+						var td = xhr.post("xhrDummyMethod.php", {
+							data: { color: "blue"},
+							handleAs: "json"
+						}).then(d.getTestCallback(function(data){
+							var post = data.post;
+
+							t.t(!!(post && post.color));
+							t.is("blue", post.color);
+						}), function(error){
+							d.errback(error);
+						});
+						return d;
+					},
+					function xhrPostWithQuery(t){
+						var d = new doh.Deferred();
+
+						var td = xhr.post("xhrDummyMethod.php", {
+							query: {
+								foo: [ "bar", "baz" ],
+								thud: "thonk",
+								xyzzy: 3
+							},
+							data: { color: "blue" },
+							handleAs: "json"
+						}).then(d.getTestCallback(function(data){
+							t.t(!!data);
+
+							var query = data.query,
+								post = data.post;
+
+							t.t(!!(query && query.foo && query.foo.length && query.thud && query.xyzzy));
+							t.t(!!(post && post.color));
+							t.is(["bar", "baz"], query.foo);
+							t.is("thonk", query.thud);
+							t.is(3, query.xyzzy);
+							t.is("blue", post.color);
+						}), function(error){
+							d.errback(error);
+						});
+						return d;
+					},
+					function rawXhrPost(t){
+						var d = new doh.Deferred();
+
+						var td = xhr.post("xhrDummyMethod.php", {
+							data: "foo=bar&color=blue&height=average",
+							handleAs: "json"
+						}).then(d.getTestCallback(function(data){
+							t.t(!!data);
+
+							var post = data.post;
+
+							t.t(!!(post && post.foo && post.color && post.height));
+							t.is("bar", post.foo);
+							t.is("blue", post.color);
+							t.is("average", post.height);
+						}), function(error){
+							d.errback(error);
+						});
+
+						return d;
+					},
+					function xhrPut(t){
+						var d = new doh.Deferred();
+
+						var td = xhr.put("xhrDummyMethod.php", {
+							query: { foo: "bar" },
+							data: { color: "blue"},
+							handleAs: "json"
+						}).then(d.getTestCallback(function(data){
+							t.t(!!data);
+
+							var put = data.put;
+
+							t.t(!!(put && put.color));
+							t.is("blue", put.color);
+						}), function(error){
+							d.errback(error);
+						});
+						// t.t(td instanceof dojo.Deferred);
+						return d;
+					},
+					function xhrDelete(t){
+						var d = new doh.Deferred();
+						var td = xhr.del("xhrDummyMethod.php", {
+							preventCache: true,
+							handleAs: "json"
+						}).then(d.getTestCallback(function(data){
+							t.t(!!data);
+							t.is("DELETE", data.method);
+						}), function(error){
+							d.errback(error);
+						});
+						// t.t(td instanceof dojo.Deferred);
+						return d;
+					},
+					function xhrTimeout(t){
+						var d = new doh.Deferred();
+						xhr.post("xhrDummyMethod.php?delay=1", {
+							timeout: 100
+						}).then(function(data){
+								d.errback(false);
+							}, d.getTestCallback(function(error){
+								t.t(error instanceof RequestTimeoutError);
+							}));
+						// t.t(td instanceof dojo.Deferred);
+						return d;
+					},
+					function xhrCancel(t){
+						var d = new doh.Deferred();
+						xhr.post("xhrDummyMethod.php?delay=2")
+							.then(function(data){
+								d.errback(false);
+							}, d.getTestCallback(function(error){
+								t.t(error instanceof CancelError);
+							})).cancel();
+						// t.t(td instanceof dojo.Deferred);
+						return d;
+					},
+					function xhrSync(t){
+						var called = false;
+						xhr.get("xhr.html", {
+							sync: true
+						}).then(function(){
+							called = true;
+						});
+
+						t.t(called, "'called' should be set to true");
+					},
+					{
+						name: "xhrXDomainFail",
+						timeout: 10000,
+						runTest: function xhrXDomainFail(t){
+							var d = new doh.Deferred();
+							xhr.get('http://dojotoolkit.org').response.then(function(response){
+								console.log(response);
+								d.errback(true);
+							}, function(error){
+								d.callback(true);
+							});
+
+							return d;
+						}
+					},
+					function xhrHeaders(t){
+						var d = new doh.Deferred();
+						xhr.get('xhr.html').response.then(d.getTestCallback(function(response){
+							t.isNot(null, response.getHeader('Content-Type'));
+						}),function(error){
+							d.errback(error);
+						});
+						return d;
+					}
+				];
+
+				if(has('native-formdata')){
+					tests.push({
+						name: 'xhrFormData',
+						setUp: function(t){
+							t.formData = new FormData();
+							t.formData.append("foo", "bar");
+							t.formData.append("baz", "blah");
+						},
+						runTest: function(t){
+							var d = new doh.Deferred();
+							xhr.post("xhrDummyMethod.php", {
+								data: t.formData,
+								handleAs: "json",
+								headers: { "Content-Type": false }
+							}).then(d.getTestCallback(function(data){
+								t.is({ foo: "bar", baz: "blah" }, data.post);
+							}), function(error){
+								d.errback(error);
+							});
+							return d;
+						},
+						tearDown: function(t){
+							delete t.formData;
+						}
+					});
+				}
+
+				doh.register("dojo/request/xhr", tests);
+				doh.run();
+			});
+		</script>
+	</head>
+	<body>
+	</body>
+</html>
+

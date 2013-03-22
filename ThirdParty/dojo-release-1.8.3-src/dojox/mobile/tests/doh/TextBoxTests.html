@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>TextBox Tests</title>
+<script type="text/javascript" src="../../deviceTheme.js"></script>
+<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+<script language="JavaScript" type="text/javascript">
+	var WIDGET_CLASSNAME1 = "mblTextBox";
+	var WIDGET_ANCHOR_CLASSNAME1 = "mblListItemAnchor";
+	var WIDGET_ANCHOR_CLASSNAME2 = "mblListItemAnchorNoIcon";
+	var WIDGET_ICON_CLASSNAME1 = "mblListItemIcon";
+	var WIDGET_RIGHTICON_CLASSNAME1 = "mblListItemRightIcon";
+	var WIDGET_DOMBUTTON_ARROW = "mblDomButtonArrow";
+	var WIDGET_DOMBUTTON_BLUEPLUS = "mblDomButtonBluePlus";
+	var WIDGET_DOMBUTTON_CHECKBOX_ON = "mblDomButtonCheckboxOn";
+	var WIDGET_VALUE = "";
+	var WIDGET_NEW_VALUE = "123456789";
+
+	require([
+		"dojo/_base/connect",
+		"dojo/dom-construct", // dojo.place
+		"dojo/dom-class", // dojo.hasClass
+		"dojo/ready", // dojo.ready
+		"dijit/registry",  // dijit.byId
+		"dojo/string", // dojo.trim
+		"doh/runner",	//doh functions
+		"dojox/mobile/TextBox",
+		"dojox/mobile",				// This is a mobile app.
+		"dojox/mobile/View",		// This mobile app uses mobile view
+		"dojox/mobile/compat",		// This mobile app supports running on desktop browsers
+		"dojox/mobile/parser"		// This mobile app uses declarative programming with fast mobile parser
+	], function(connect, domConst, domClass, ready, registry, string, runner, TextBox){
+
+		function _createTextBoxDeclaratively(widgetId) {
+			return registry.byId(widgetId);
+		};
+
+		function _createTextBoxProgrammatically(placeHolderId, widgetId){
+			var r = new TextBox({id:widgetId, maxLength:"9", placeHolder:"max 9 chars", selectOnClick:"true"});
+			runner.assertNotEqual(null, r);
+			domConst.place(r.domNode, placeHolderId, "replace");
+			r.startup();
+			
+			return r;
+		};
+
+		function _createTextBoxProgrammaticallyWithSourceNodeReference(widgetId){
+			// Create IconContainer
+			var r = new TextBox({selectOnClick:"true"}, widgetId);
+			r.startup();
+
+			return r;
+		};
+
+		function _assertCorrectTextBox(widget, noIcon, rightIcon, rightIcon2, rightText, boxText){
+			runner.assertNotEqual(null, widget, "TextBox: Did not instantiate. id=" + widget.domNode.id);
+			runner.assertTrue(domClass.contains(widget.domNode, WIDGET_CLASSNAME1), WIDGET_CLASSNAME1 + " id=" + widget.domNode.id);
+			runner.assertEqual(WIDGET_VALUE, widget.textbox.value);
+			runner.assertEqual(WIDGET_VALUE, widget.get('value'));
+			widget.set('value', WIDGET_NEW_VALUE);
+			runner.assertEqual(WIDGET_NEW_VALUE, widget.get('value'));
+			runner.assertEqual(WIDGET_NEW_VALUE, widget.textbox.value);
+		};
+
+		function _showView2(){
+			var view1 = registry.byId("view1");
+			view1.performTransition("view2", 1, "none");
+		};
+
+		ready(function(){
+			runner.register("dojox.mobile.test.doh.TextBox", [
+				{
+					name: "TextBox Verification1",
+					timeout: 4000,
+					runTest: function(){
+						var widget1 = _createTextBoxDeclaratively("view1-TextBox1");
+						var widget2 = _createTextBoxProgrammatically("view1-TextBox2Place", "view1-TextBox2");
+						var widget3 = _createTextBoxProgrammaticallyWithSourceNodeReference("view1-TextBox3");
+
+						_assertCorrectTextBox(widget1);
+						_assertCorrectTextBox(widget2);
+						_assertCorrectTextBox(widget3);
+					}
+				},
+				{
+					name: "TextBox Verification2",
+					timeout: 4000,
+					runTest: function(){
+						var widget1 = _createTextBoxDeclaratively("view2-TextBox1");
+						var widget2 = _createTextBoxProgrammatically("view2-TextBox2Place", "view2-TextBox2");
+						var widget3 = _createTextBoxProgrammaticallyWithSourceNodeReference("view2-TextBox3");
+
+						var d = new runner.Deferred();
+						var handle2 = connect.subscribe("/dojox/mobile/afterTransitionIn", d.getTestCallback(function(view){
+							if(view.id=="view2"){
+								connect.unsubscribe(handle2);
+							}
+							_assertCorrectTextBox(widget1);
+							_assertCorrectTextBox(widget2);
+							_assertCorrectTextBox(widget3);
+						}));
+						_showView2();
+						return d;
+					}
+				}
+			]);
+			runner.run();
+		});
+	})
+</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="view1" data-dojo-type="dojox.mobile.View" data-dojo-props='selected:"true"'>
+		<h1>View1</h1>
+		<table>
+			<tr>
+				<td valign="top"><span class="bold">TextBox</span></td>
+				<td align="right"><input id="view1-TextBox1" data-dojo-type="dojox.mobile.TextBox" maxLength="9" placeHolder="max 9 chars" data-dojo-props='selectOnClick:"true"'></td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<td valign="top"><span class="bold">TextBox</span></td>
+				<td align="right"><div id="view1-TextBox2Place"></div></td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<td valign="top"><span class="bold">TextBox</span></td>
+				<td align="right"><input id="view1-TextBox3" maxLength="9" placeHolder="max 9 chars"></td>
+			</tr>
+		</table>
+	</div>
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<h1>View2</h1>
+		<table>
+			<tr>
+				<td valign="top"><span class="bold">TextBox</span></td>
+				<td align="right"><input id="view2-TextBox1" data-dojo-type="dojox.mobile.TextBox" maxLength="9" placeHolder="max 9 chars" data-dojo-props='selectOnClick:"true"'></td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<td valign="top"><span class="bold">TextBox</span></td>
+				<td align="right"><div id="view2-TextBox2Place"></div></td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<td valign="top"><span class="bold">TextBox</span></td>
+				<td align="right"><input id="view2-TextBox3" maxLength="9" placeHolder="max 9 chars"></td>
+			</tr>
+		</table>
+	</div>
+</body>
+</html>

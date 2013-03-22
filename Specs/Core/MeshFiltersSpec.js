@@ -6,6 +6,7 @@ defineSuite([
          'Core/CubeMapEllipsoidTessellator',
          'Core/Ellipsoid',
          'Core/Cartesian3',
+         'Core/EncodedCartesian3',
          'Core/Tipsify',
          'Core/GeographicProjection'
      ], function(
@@ -15,6 +16,7 @@ defineSuite([
          CubeMapEllipsoidTessellator,
          Ellipsoid,
          Cartesian3,
+         EncodedCartesian3,
          Tipsify,
          GeographicProjection) {
     "use strict";
@@ -428,4 +430,66 @@ defineSuite([
         expect(mesh.attributes.position3D.values[4]).toEqual(p2.y);
         expect(mesh.attributes.position3D.values[5]).toEqual(p2.z);
     });
+
+    it('MeshFilters.encodeAttribute encodes positions', function() {
+        var c = new Cartesian3(-10000000.0, 0.0, 10000000.0);
+        var encoded = EncodedCartesian3.fromCartesian(c);
+
+        var mesh = {
+            attributes : {
+                position : {
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [c.x, c.y, c.z]
+                }
+            }
+        };
+        mesh = MeshFilters.encodeAttribute(mesh);
+
+        expect(mesh.attributes.positionHigh).toBeDefined();
+        expect(mesh.attributes.positionHigh.values[0]).toEqual(encoded.high.x);
+        expect(mesh.attributes.positionHigh.values[1]).toEqual(encoded.high.y);
+        expect(mesh.attributes.positionHigh.values[2]).toEqual(encoded.high.z);
+        expect(mesh.attributes.positionLow).toBeDefined();
+        expect(mesh.attributes.positionLow.values[0]).toEqual(encoded.low.x);
+        expect(mesh.attributes.positionLow.values[1]).toEqual(encoded.low.y);
+        expect(mesh.attributes.positionLow.values[2]).toEqual(encoded.low.z);
+        expect(mesh.attributes.position).not.toBeDefined();
+    });
+
+    it('MeshFilters.encodeAttribute throws without a mesh', function() {
+        expect(function() {
+            MeshFilters.encodeAttribute(undefined);
+        }).toThrow();
+    });
+
+    it('MeshFilters.encodeAttribute throws with mesh without attributes property', function() {
+        expect(function() {
+            MeshFilters.encodeAttribute({});
+        }).toThrow();
+    });
+
+    it('MeshFilters.encodeAttribute throws without attribute', function() {
+        expect(function() {
+            var mesh = {
+                attributes : {
+                }
+            };
+            MeshFilters.encodeAttribute(mesh);
+        }).toThrow();
+    });
+
+    it('MeshFilters.encodeAttribute throws without ComponentDatatype.FLOAT', function() {
+        expect(function() {
+            var mesh = {
+                attributes : {
+                    componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
+                    componentsPerAttribute : 1,
+                    values : [0.0]
+                }
+            };
+            MeshFilters.encodeAttribute(mesh);
+        }).toThrow();
+    });
+
 });

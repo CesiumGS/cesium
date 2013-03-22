@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>IconMenu (programmatic)</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','IconMenu']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/ready",
+			"dojox/mobile/IconMenu",
+			"dojox/mobile/IconMenuItem",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(ready, IconMenu, IconMenuItem){
+			ready(function(){
+				var item, row;
+				var menu = new IconMenu({
+					cols: 3,
+				}, "container");
+				menu.startup();
+
+				item = new IconMenuItem({
+					label: "mute",
+					icon: "images/tab-icon-36w.png",
+					selected: true
+				});
+				menu.addChild(item);
+
+				item = new IconMenuItem({
+					label: "keypad",
+					icon: "images/tab-icon-32w.png"
+				});
+				menu.addChild(item);
+
+				item = new IconMenuItem({
+					label: "speaker",
+					icon: "images/tab-icon-30w.png"
+				});
+				menu.addChild(item);
+
+				item = new IconMenuItem({
+					label: "addcall",
+					icon: "images/tab-icon-16w.png"
+				});
+				menu.addChild(item);
+
+				item = new IconMenuItem({
+					label: "hold",
+					icon: "images/tab-icon-19w.png"
+				});
+				menu.addChild(item);
+
+				item = new IconMenuItem({
+					label: "contacts",
+					icon: "images/tab-icon-29w.png"
+				});
+				menu.addChild(item);
+			});
+		});
+	</script>
+</head>
+<body style="background-color:#B8B6B9">
+	<div id="container" style="width:274px;height:210px;margin:20px;"></div>
+</body>
+</html>

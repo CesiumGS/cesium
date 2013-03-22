@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>dojo/request/notify test</title>
+	<style>
+		@import "../../resources/dojo.css";
+	</style>
+	<script>
+		var dojoConfig = {
+			async: true
+		};
+	</script>
+	<script src="../../dojo.js"></script>
+	<script>
+		require([
+			"doh",
+			"dojo/request/xhr",
+			"dojo/request/notify",
+            "dojo/errors/CancelError",
+			"dojo/_base/lang",
+			"dojo/domReady!"
+		], function(doh, xhr, notify, CancelError, lang){
+			function resCounter(count, callback){
+				var resCount = 0;
+
+				return function(){
+					if(++resCount == count){
+						callback.apply(this, arguments);
+					}
+				};
+			}
+
+			function remover(){
+				var args = arguments;
+				return function(){
+					var i = args.length;
+					while(i--){
+						args[i].remove();
+					}
+				};
+			}
+
+			doh.register("dojo/request/notify", [{
+				name: "start/send",
+				timeout: 5000,
+				runTest: function(t){
+					var d = new doh.Deferred();
+
+					var startCount = 0,
+						sendCount = 0;
+
+					t.remove = remover(
+						notify('start', function(data){
+							startCount++;
+						}),
+						notify('send', function(data){
+							sendCount++;
+						})
+					);
+
+					var counter = resCounter(2, d.getTestCallback(function(){
+						t.is(1, startCount, "'start' should have fired once");
+						t.is(2, sendCount, "'send' should have fired twice");
+					}));
+					xhr.get("xhrDummyMethod.php?delay=1").then(counter);
+					xhr.get("xhrDummyMethod.php?delay=1").then(counter);
+
+					return d;
+				},
+				tearDown: function(t){
+					t.remove();
+				}
+			},{
+				name: "load",
+				runTest: function(t){
+					var d = new doh.Deferred();
+
+					var doneFired = 0;
+					t.remove = remover(
+						notify('done', function(response){
+							doneFired = 1;
+						}),
+						notify('load', d.getTestErrback(function(response){
+							t.is({ foo: "bar" }, response.data.query);
+							t.f(doneFired, "'load' should have fired before 'done'");
+						})),
+						notify('stop', d.getTestCallback(function(){}))
+					);
+
+					xhr.get("xhrDummyMethod.php?foo=bar", { handleAs: "json" });
+
+					return d;
+				},
+				tearDown: function(t){
+					t.remove();
+				}
+			},{
+				name: "error",
+				runTest: function(t){
+					var d = new doh.Deferred();
+
+					var doneFired = 0;
+					t.remove = remover(
+						notify('done', d.getTestErrback(function(data){
+							doneFired = 1;
+							t.t(data instanceof Error);
+						})),
+						notify('error', d.getTestErrback(function(data){
+							t.t(data instanceof Error);
+							t.f(doneFired, "'error' should have fired before 'done'");
+						})),
+						notify("stop", d.getTestCallback(function(){}))
+					);
+
+					xhr.get("doesntExist.text");
+
+					return d;
+				},
+				tearDown: function(t){
+					t.remove();
+				}
+			},{
+				name: "done/stop",
+				timeout: 5000,
+				runTest: function(t){
+					var d = new doh.Deferred();
+
+					var doneCount = 0,
+						stopCount = 0,
+						stopCalled = 0;
+
+					t.remove = remover(
+						notify("done", function(data){
+							doneCount++;
+							stopCalled = stopCount;
+						}),
+						notify("stop", function(data){
+							stopCount++;
+						})
+					);
+
+					var counter = resCounter(2, d.getTestCallback(function(){
+						t.f(stopCalled, "'done' should have fired before 'stop'");
+						t.is(2, doneCount, "'done' should have fired twice");
+						t.is(1, stopCount, "'stop' should have fired once");
+					}));
+
+					xhr.get("xhrDummyMethod.php?delay=1").then(counter);
+					xhr.get("xhrDummyMethod.php?delay=1").then(counter);
+
+					return d;
+				},
+				tearDown: function(t){
+					t.remove();
+				}
+            },{
+                name: "cancel",
+                timeout: 5000,
+                runTest: function(t){
+                    var d = new doh.Deferred();
+
+                    t.remove = remover(
+                        notify("send", function(response, cancel){
+                            cancel();
+                        })
+                    );
+
+                    xhr.get("xhrDummyMethod.php").then(
+                        function(response){
+                            d.errback(1);
+                        },
+                        d.getTestCallback(function(error){
+                            t.t(error instanceof CancelError);
+                        })
+                    );
+
+                    return d;
+                },
+                tearDown: function(t){
+                    t.remove();
+                }
+            }]);
+
+			doh.run();
+		});
+	</script>
+</head>
+<body>
+</body>
+</html>

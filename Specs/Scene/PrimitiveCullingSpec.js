@@ -328,7 +328,6 @@ defineSuite([
     function createLabels(position) {
         position = position || { x : -1.0, y : 0.0, z : 0.0 };
         var labels = new LabelCollection();
-        labels.clampToPixel = false;
         labels.add({
             position : position,
             text : 'x',
@@ -355,7 +354,6 @@ defineSuite([
 
     it('label occlusion', function() {
         var labels = new LabelCollection();
-        labels.clampToPixel = false;
         labels.add({
             position : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic.fromDegrees(-75.10, 39.57)),
             text : 'x',

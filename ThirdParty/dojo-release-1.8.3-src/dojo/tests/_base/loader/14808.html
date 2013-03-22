@@ -1,0 +1,24 @@
+<html>
+	<head>
+		<script src="../../../dojo.js"></script>
+		<script type="text/javascript">
+			dojo.registerModulePath('test', './tests/_base/loader/14808');
+			dojo.require('test.App');
+
+			(function(){
+				var success = 0;
+				setTimeout(function() {!success && (dojo.byId("result").innerHTML = "FAILED");}, 1000);
+				dojo.ready(function(){
+					success = 1;
+					dojo.byId("result").innerHTML= "it worked OK"
+				});
+			})();
+		</script>
+	</head>
+	<body>
+		<h1>Ticket 14808 verification</h1>
+		<p id="result">
+			loading..
+		</p>
+	</body>
+</html>

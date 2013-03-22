@@ -1,0 +1,80 @@
+<div id="settings-2" class="view mblView">
+	<script type="dojo/require">at: "dojox/mvc/at"</script>
+    <h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home"'>simple2</h1>
+    <form name="testForm-2" id="testForm">    
+  	<div class="field-title">simple2 - Using an mvcModel (dojox/mvc/EditModelRefController) with json data, no store.</div>
+	<div class="fieldset" data-dojo-type="dojox/mvc/Group" data-dojo-props="target: at(this.loadedModels.names, 'model')">
+	<div data-dojo-type="dojox/mvc/Group" data-dojo-props="target: at('rel:', 'items')">
+	<div data-dojo-type="dojox/mvc/Group" data-dojo-props="target: at('rel:', 0)">
+  			<table id="table-2" cellspacing="10"  style="width: 100%">
+						<tr>
+							<td style="width: 100px;" class="layout">First</td>
+							<td class="layout">							
+								<input  id="firstInput1-2" data-dojo-type="dojox.mobile.TextBox" 
+									data-dojo-props="value: at('rel:', 'First'), placeholder:'First'">
+							</td>
+						</tr>
+						<tr>
+							<td style="width: 100px;" class="layout">Last Name</td>
+							<td class="layout">
+								<input id="lastInput1-2" data-dojo-type="dojox.mobile.TextBox"
+									 
+									data-dojo-props="placeholder:'Last Name', value: at('rel:', 'Last')">
+							</td>
+						</tr>
+						<tr>
+							<td style="width: 100px;" class="layout">Email</td>
+							<td class="layout">
+								<input  id="emailInput1-2" data-dojo-type="dojox.mobile.TextBox"
+									data-dojo-props="value: at('rel:', 'Email'), placeholder:'Email'">
+							</td>
+						</tr>
+					</table>
+		
+	
+  			<div class="spacer"></div>
+			<button id="shipto-2" type="button" data-dojo-type="dojox.mobile.Button" class="mblBlueButton">Ship To</button>
+			<button id="billto-2" type="button" data-dojo-type="dojox.mobile.Button" class="mblBlueButton">Bill To</button>		
+			<br/>
+			<div class="fieldset" id="addrGroup-2" data-dojo-type="dojox/mvc/Group" 
+							data-dojo-props="target: at('rel:','ShipTo')">
+					<table id="table-2" cellspacing="10"  style="width: 100%">
+						<tr>
+							<td style="width: 100px;" class="layout">Street</td>
+							<td class="layout">							
+								<input  id="streetInput-2" data-dojo-type="dojox.mobile.TextBox" 
+									data-dojo-props="value: at('rel:', 'Street'), placeholder:'Street'">
+							</td>
+						</tr>
+						<tr>
+							<td style="width: 100px;" class="layout">City</td>
+							<td class="layout">
+								<input id="cityInput-2" data-dojo-type="dojox.mobile.TextBox"
+									 
+									data-dojo-props="placeholder:'City', value: at('rel:', 'City')">
+							</td>
+						</tr>
+						<tr>
+							<td style="width: 100px;" class="layout">State</td>
+							<td class="layout">
+								<input  id="StateInput-2" data-dojo-type="dojox.mobile.TextBox"
+									data-dojo-props="value: at('rel:', 'State'), placeholder:'State'">
+							</td>
+						</tr>
+						<tr>
+							<td style="width: 100px;" class="layout">State</td>
+							<td class="layout">
+								<input  id="ZipInput-2" data-dojo-type="dojox.mobile.TextBox"
+									data-dojo-props="value: at('rel:', 'Zip'), placeholder:'Zip Code'">
+							</td>
+						</tr>
+					</table>
+			</div>
+			</div>
+			</div>
+			</div>
+			
+			<div class="spacer"></div>
+		 	<button id="reset1-2" type="button" data-dojo-type="dojox.mobile.Button" class="mblBlueButton">Reset</button> 
+    </form>
+</div>

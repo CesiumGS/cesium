@@ -1,0 +1,288 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot Toolbar Test</title>
+
+		<style>
+			@import "../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx",
+				"dojo/_base/array", "dojo/dom", "dojo/keys", "dojo/_base/lang", "dojo/query",
+				"dojo/domReady!"
+			], function(doh, robot, array, dom, keys, lang, query){
+				robot.initRobot('../test_Toolbar.html');
+
+				doh.register(function setup(){
+					// get pointer to registry in the iframe
+					registry = robot.window.require("dijit/registry");
+					dfocus = robot.window.require("dijit/focus");
+
+					toolbar1Before = dom.byId("toolbar1Before");
+					toolbar1 = registry.byId("toolbar1");
+					toolbar1After = dom.byId("toolbar1After");
+					toolbar2 = registry.byId("toolbar2");
+					toolbar3 = registry.byId("toolbar3");
+					toolbar4 = registry.byId("toolbar4");
+				});
+
+				var toolbar1Before, toolbar1After, toolbar1, toolbar2, toolbar3, toolbar4;
+
+				doh.register("initial conditions", [
+					{
+						name: "creation",
+						runTest: function(){
+							// make sure that all the toolbars exist
+							doh.t(toolbar1, "toolbar 1");
+							doh.t(toolbar2, "toolbar 2");
+							doh.t(toolbar3, "toolbar 3");
+							doh.t(toolbar4, "toolbar 4");
+							
+							// and that labels are shown except when showLabel==false
+							var cutText = query(".dijitButtonText", dom.byId("toolbar1.cut"))[0];
+							doh.is(0, cutText.offsetWidth, "cut button - text hidden");						
+
+							var copyText = query(".dijitButtonText", dom.byId("toolbar1.copy"))[0];
+							doh.t(copyText.offsetWidth > 0, "copy button - text shown");						
+						}
+					}
+				]);
+					
+				doh.register("keyboard", [
+					{
+						name: "tab in and out",
+						timeout: 20000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								toolbar1Before.focus();
+							})), 500);
+
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is("toolbar1.cut", dfocus.curNode.id, "cut, first visit");
+							})), 1000);
+
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is("toolbar1After", dfocus.curNode.id);
+							})), 1000);
+
+							robot.keyPress(keys.TAB, 500, {shift: true});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is("toolbar1.cut", dfocus.curNode.id, "cut, second visit");
+							})), 1000);
+
+							robot.keyPress(keys.TAB, 500, {shift: true});
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								doh.is("toolbar1Before", dfocus.curNode.id, "back before toolbar1");
+							})), 1000);
+
+							return d;
+						}
+					},
+	
+					{
+						name: "left/right arrow keys",
+						timeout: 40000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Disable a bunch of buttons to make sure that left/right arrow
+							// keys skip over disabled buttons, and also that initial focus
+							// goes to the first enabled button
+							array.forEach(["toolbar1.cut", "toolbar1.copy", "toolbar1.bold", "toolbar1.backcolor",
+								"toolbar1.forecolor", "toolbar1.combo2"], function(widgetName){
+								registry.byId(widgetName).set("disabled", true);
+							});
+
+							// Initial focus (upon tabbing into toolbar) should go to first enabled button
+							toolbar1Before.focus();
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is("toolbar1.italic", dfocus.curNode.id, "italic, first visit");
+							})), 1000);
+
+							// Remaining enabled positions that left/right arrow should navigate to (not including the initial leftmost button),
+							var focusPoints = ["toolbar1.dialog", "toolbar1.combo_button", "toolbar1.combo_arrow", "toolbar1.insertorderedlist"];
+
+							// Use right arrow key to visit every enabled button (and for combobutton to hit left and right sides)
+							array.forEach(focusPoints, function(str){
+								robot.keyPress(keys.RIGHT_ARROW, 500, {});
+								robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+									doh.is(str, dfocus.curNode.id, str + ", first visit");
+								})), 1000);
+							});
+
+							// Now go backwards
+							focusPoints.reverse();
+							focusPoints.shift();
+							array.forEach(focusPoints, function(str){
+								robot.keyPress(keys.LEFT_ARROW, 500, {});
+								robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+									doh.is(str, dfocus.curNode.id, str + ", second visit");
+								})), 1000);
+							});
+
+							// Test the TAB key takes us to the <input> after the toolbar.
+							// This confirms that the currently focused toolbar button
+							// is in the correct position in the tab order (ie, the position specified
+							// for the toolbar itself), and that there are no stray tabstops on the toolbar itself
+							// or on the other buttons. 
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is("toolbar1After", dfocus.curNode.id, "first time past toolbar1");
+							})), 1000);
+
+							// Make sure that we can still shift-tab back to before the toolbar too
+							robot.keyPress(keys.TAB, 500, {shift: true});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is("toolbar1.italic", dfocus.curNode.id, "italic, after shift-tab back into toolbar");
+							})), 1000);
+
+							robot.keyPress(keys.TAB, 500, {shift: true});
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								doh.is("toolbar1Before", dfocus.curNode.id, "back before toolbar1");
+							})), 1000);
+
+							return d;
+						}
+					},
+	
+					{
+						name: "home/end keys",
+						timeout: 40000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Initial focus (upon tabbing into toolbar) should go to first enabled button,
+							// which is "italic", since "cut" and "copy" are disabled
+							toolbar1Before.focus();
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is("toolbar1.italic", dfocus.curNode.id, "first button");
+							})), 1000);
+
+							// End key should go to last button
+							robot.keyPress(keys.END, 500, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is("toolbar1.insertorderedlist", dfocus.curNode.id, "last button");
+							})), 1000);
+
+							// Home key should go to first enabled button again
+							// which is "italic", since "cut" and "copy" are disabled
+							robot.keyPress(keys.HOME, 500, {});
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								doh.is("toolbar1.italic", dfocus.curNode.id, "first button again");
+							})), 1000);
+
+							return d;
+						}
+					},
+
+					// Test drop down ability.   These tests are probably redundant with the Button tests themselves,
+					// so they aren't strictly necessary.
+					{
+						name: "drop downs",
+						timeout: 60000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Re-enable the ToolipDialog and ColorPalette drop down so that we can test it
+							registry.byId("toolbar1.dialog").set("disabled", false);
+							registry.byId("toolbar1.backcolor").set("disabled", false);
+
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								toolbar1Before.focus();
+							})), 500);
+
+							// Tab into toolbar and move to tooltip dialog button
+							robot.keyPress(keys.TAB, 500, {});
+							robot.keyPress(keys.RIGHT_ARROW, 500, {});
+
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is("toolbar1.dialog", dfocus.curNode.id, "dialog button, first visit");
+							})), 1000);
+
+							// Open the dialog, focus should go to first input
+							robot.keyPress(keys.DOWN_ARROW, 500, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is("user", dfocus.curNode.id);
+							})), 1000);
+
+							// ESC should restore focus to toolbar dialog button
+							robot.keyPress(keys.ESCAPE, 500, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is("toolbar1.dialog", dfocus.curNode.id, "dialog button, second visit");
+							})), 1000);
+
+							// Open the dialog again
+							robot.keyPress(keys.DOWN_ARROW, 500, {});
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is("user", dfocus.curNode.id, "user, again");
+							})), 1000);
+
+							// Submit should also restore focus to toolbar dialog button, assuming that it
+							// doesn't reset the focus somewhere else (like into the editor)
+							robot.keyPress(keys.TAB, 500);
+							robot.keyPress(keys.TAB, 500);
+							robot.keyPress(keys.ENTER, 500);
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is("toolbar1.dialog", dfocus.curNode.id, "dialog button, third visit");
+							})), 1000);
+
+							// Try the ColorPalette
+							robot.keyPress(keys.RIGHT_ARROW, 500);
+							robot.keyPress(keys.DOWN_ARROW, 500);
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.t(dom.isDescendant(dfocus.curNode, registry.byId("toolbar1.colorPalette").domNode),
+									"focus inside colorpalette, actual focus is: " + (dfocus.curNode ?
+										(dfocus.curNode.id||"no id") : "no focus"));
+							})), 1000);
+							robot.keyPress(keys.RIGHT_ARROW, 500);	// navigation in the ColorPalette
+							robot.keyPress(keys.DOWN_ARROW, 500);	// navigation in the ColorPalette
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.t(dom.isDescendant(dfocus.curNode, registry.byId("toolbar1.colorPalette").domNode),
+									"focus still inside colorpalette, actual focus is: " + (dfocus.curNode ?
+										(dfocus.curNode.id||"no id") : "no focus"));
+							})), 1000);
+							
+							// pressing tab in the colorpalette should move focus back to the toolbar
+							robot.keyPress(keys.TAB, 500);
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								doh.is("toolbar1.backcolor", dfocus.curNode.id, "back on colorpalette button");
+							})), 1000);
+
+							// try the ComboButton
+							robot.keyPress(keys.RIGHT_ARROW, 500);
+							robot.keyPress(keys.RIGHT_ARROW, 500);
+							robot.keyPress(keys.DOWN_ARROW, 500);
+							robot.sequence(d.getTestErrback(lang.hitch(this, function(){
+								// TODO: test that focus is on menu
+							})), 1000);
+							robot.keyPress(keys.SPACE, 500);	// select first menu option
+							robot.sequence(d.getTestCallback(lang.hitch(this, function(){
+								// TODO: test that focus is returned to button
+							})), 1000);
+
+							return d;
+						}
+					}
+
+				]);
+				// TODO: mouse
+				
+				
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

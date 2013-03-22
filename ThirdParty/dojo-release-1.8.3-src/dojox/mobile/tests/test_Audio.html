@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Audio</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/Audio"
+		]);
+	</script>
+</head>
+<body>
+	<audio data-dojo-type="dojox.mobile.Audio" controls>
+		<source src="audio/sample.mp3" type="audio/mpeg">
+		<source src="audio/sample.ogg" type="audio/ogg">
+		<source src="audio/sample.wav" type="audio/wav">
+		<p>To play the music, A browser which supported audio tag is required.</p>
+	</audio>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+	"id": "testApp",
+	"name": "Test App",
+	"description": "A testApp",
+	"splash": "splash",
+
+	"dependencies": [
+	],
+
+	"modules": [
+	],
+	
+	"controllers": [
+		"dojox/app/controllers/History"
+	],
+
+	"defaultView": "home",
+
+	"defaultTransition": "slide",
+
+	"views": {
+
+		"home": { 
+			"definition" : "dojox/app/tests/doh/errorDef1",
+			"template": "dojox/app/tests/doh/config.html"
+		}
+
+	}
+}

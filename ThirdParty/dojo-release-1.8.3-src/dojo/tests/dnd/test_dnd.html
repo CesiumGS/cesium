@@ -1,0 +1,235 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojo DnD test</title>
+	<style type="text/css">
+		@import "../../resources/dojo.css";
+		@import "../../resources/dnd.css";
+		@import "dndDefault.css";
+		@import "../../../util/doh/robot/robot.css";
+
+		body {
+			padding: 1em;
+			background: #ededed;
+		}
+
+		.container {
+			width: 100px;
+			display: block;
+		}
+
+		.clear {
+			clear: both;
+		}
+	</style>
+
+	<script type="text/javascript" src="../../dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+<!--
+	<script type="text/javascript" src="../../dnd/Container.js"></script>
+	<script type="text/javascript" src="../../dnd/Selector.js"></script>
+	<script type="text/javascript" src="../../dnd/Source.js"></script>
+	<script type="text/javascript" src="../../dnd/Avatar.js"></script>
+	<script type="text/javascript" src="../../dnd/Manager.js"></script>
+	<script type="text/javascript" src="../../../dijit/_base/wai.js"></script>
+-->
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dojo.dnd.Source");
+
+		var c1;
+
+		function init(){
+			c1 = new dojo.dnd.Source("container1");
+			c1.insertNodes(false, [1, "A", [1, 2, 3],
+				function(x){ return x + x; },
+				{toString: function(){ return "CUSTOM!"; }},
+				null]);
+
+			// example subscribe to events
+			dojo.subscribe("/dnd/start", function(source){
+				console.debug("Starting the drop", source);
+			});
+			dojo.subscribe("/dnd/drop/before", function(source, nodes, copy, target){
+				if(target == c1){
+					console.debug(copy ? "Copying from" : "Moving from", source, "to", target, "before", target.before);
+				}
+			});
+			dojo.subscribe("/dnd/drop", function(source, nodes, copy, target){
+				if(target == c1){
+					console.debug(copy ? "Copying from" : "Moving from", source, "to", target, "before", target.before);
+				}
+			});
+			dojo.connect(c4, "onDndDrop", function(source, nodes, copy, target){
+				if(target == c4){
+					console.debug(copy ? "Copying from" : "Moving from", source);
+				}
+			});
+		}
+
+		dojo.addOnLoad(init);
+
+	</script>
+</head>
+<body>
+	<h1 class="testTitle">Dojo DnD test</h1>
+
+	<p>Elements of both sources/targets were created dynamically.</p>
+	<p>Following selection modes are supported by default:</p>
+	<ul>
+		<li>Simple click &mdash; selects a single element, all other elements will be unselected.</li>
+		<li>Ctrl+click &mdash; toggles a selection state of an element (use Meta key on Mac).</li>
+		<li>Shift+click &mdash; selects a range of element from the previous anchor to the current element.</li>
+		<li>Ctrl+Shift+click &mdash; adds a range of element from the previous anchor to the current element (use Meta key on Mac).</li>
+	</ul>
+	<p>Following drop modes are supported by default:</p>
+	<ul>
+		<li>Simple drop &mdash; moves elements to the valid target removing them from the source. It can be used to reorganize elements within a single source/target.</li>
+		<li>Ctrl+drop &mdash; copies elements to the valid target (use Meta key on Mac).</li>
+	</ul>
+
+	<div id="dragLists">
+		<div style="float: left; margin: 5px;">
+			<h3>Source 1</h3>
+			<div id="container1" class="container"></div>
+		</div>
+		<div style="float: left; margin: 5px;">
+			<h3>Source 2 (copyOnly)</h3>
+			<div dojoType="dojo.dnd.Source" jsId="c2" class="container" copyOnly="true">
+				<div class="dojoDndItem">Item <strong>X</strong></div>
+				<div class="dojoDndItem">Item <strong>Y</strong></div>
+				<div class="dojoDndItem">Item <strong>Z</strong></div>
+			</div>
+		</div>
+		<div style="float: left; margin: 5px;">
+			<h3>Source 3</h3>
+			<div dojoType="dojo.dnd.Source" jsId="c3" class="container" allowNested="true">
+				<script type="dojo/method" event="creator" args="item, hint">
+					// this is custom creator, which changes the avatar representation
+					var node = dojo.doc.createElement("div"), s = String(item);
+					node.id = dojo.dnd.getUniqueId();
+					node.className = "dojoDndItem";
+					node.innerHTML = (hint != "avatar" || s.indexOf("Item") < 0) ?
+						s : "<strong style='color: darkred'>Special</strong> " + s;
+					return {node: node, data: item, type: ["text"]};
+				</script>
+				<div class="dojoDndItem">Item <strong>Alpha</strong></div>
+				<div class="nested">
+					<div class="dojoDndItem">Item <strong>Beta</strong></div>
+					<div class="dojoDndItem">Item <strong>Gamma</strong></div>
+					<div class="dojoDndItem">Item <strong>Delta</strong></div>
+				</div>
+			</div>
+		</div>
+		<div style="float: left; margin: 5px;">
+			<h3>Source 4 (copyOnly, selfAccept, delay=8)</h3>
+			<div dojoType="dojo.dnd.Source" jsId="c4" class="container" copyOnly="true" selfAccept="false" delay="8">
+				<div class="dojoDndItem">Item 1</div>
+				<div class="dojoDndItem">Item 2</div>
+				<div class="dojoDndItem">Item 3</div>
+			</div>
+		</div>
+		<div style="float: left; margin: 5px;">
+			<h3>Pure Target 5</h3>
+			<div dojoType="dojo.dnd.Target" jsId="c5" class="container">
+				<div class="dojoDndItem">One item</div>
+			</div>
+		</div>
+		<div class="clear"></div>
+	</div>
+
+	<p>HTML after</p>
+	<p>
+		Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean
+		semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin
+		porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.
+		Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis.
+		Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitae
+		risus.
+	</p>
+	<p>Aliquam vitae enim. Duis scelerisque metus auctor est venenatis
+		imperdiet. Fusce dignissim porta augue. Nulla vestibulum. Integer lorem
+		nunc, ullamcorper a, commodo ac, malesuada sed, dolor. Aenean id mi in
+		massa bibendum suscipit. Integer eros. Nullam suscipit mauris. In
+		pellentesque. Mauris ipsum est, pharetra semper, pharetra in, viverra
+		quis, tellus. Etiam purus. Quisque egestas, tortor ac cursus lacinia,
+		felis leo adipiscing nisi, et rhoncus elit dolor eget eros. Fusce ut
+		quam. Suspendisse eleifend leo vitae ligula. Nulla facilisi. Nulla
+		rutrum, erat vitae lacinia dictum, pede purus imperdiet lacus, ut
+		semper velit ante id metus. Praesent massa dolor, porttitor sed,
+		pulvinar in, consequat ut, leo. Nullam nec est. Aenean id risus blandit
+		tortor pharetra congue. Suspendisse pulvinar.
+	</p>
+	<p>Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+		ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+		nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+		lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+		est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+		dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+		nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+		pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+		sociosqu ad litora torquent per conubia nostra, per inceptos
+		hymenaeos.
+	</p>
+	<p>Mauris pharetra lorem sit amet sapien. Nulla libero metus, tristique
+		et, dignissim a, tempus et, metus. Ut libero. Vivamus tempus purus vel
+		ipsum. Quisque mauris urna, vestibulum commodo, rutrum vitae, ultrices
+		vitae, nisl. Class aptent taciti sociosqu ad litora torquent per
+		conubia nostra, per inceptos hymenaeos. Nulla id erat sit amet odio
+		luctus eleifend. Proin massa libero, ultricies non, tincidunt a,
+		vestibulum non, tellus. Nunc nunc purus, lobortis a, pulvinar at,
+		egestas a, mi. Cras adipiscing velit a mauris. Morbi felis. Etiam at
+		felis. Cras eget eros et justo mattis pulvinar. Nullam at justo id
+		risus porttitor dignissim. Vestibulum sed velit vel metus tincidunt
+		tempus. Nunc euismod nisl id dolor tristique tincidunt. Nullam placerat
+		turpis sed odio. Curabitur in est id nibh tempus ultrices. Aliquam
+		consectetuer dapibus eros. Aliquam nisl.
+	</p>
+
+	<p>
+		Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean
+		semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin
+		porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.
+		Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis.
+		Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitae
+		risus.
+	</p>
+	<p>Aliquam vitae enim. Duis scelerisque metus auctor est venenatis
+		imperdiet. Fusce dignissim porta augue. Nulla vestibulum. Integer lorem
+		nunc, ullamcorper a, commodo ac, malesuada sed, dolor. Aenean id mi in
+		massa bibendum suscipit. Integer eros. Nullam suscipit mauris. In
+		pellentesque. Mauris ipsum est, pharetra semper, pharetra in, viverra
+		quis, tellus. Etiam purus. Quisque egestas, tortor ac cursus lacinia,
+		felis leo adipiscing nisi, et rhoncus elit dolor eget eros. Fusce ut
+		quam. Suspendisse eleifend leo vitae ligula. Nulla facilisi. Nulla
+		rutrum, erat vitae lacinia dictum, pede purus imperdiet lacus, ut
+		semper velit ante id metus. Praesent massa dolor, porttitor sed,
+		pulvinar in, consequat ut, leo. Nullam nec est. Aenean id risus blandit
+		tortor pharetra congue. Suspendisse pulvinar.
+	</p>
+	<p>Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam
+		ornare elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque
+		nonummy mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus
+		lobortis, sem vitae nonummy lacinia, nisl est gravida magna, non cursus
+		est quam sed urna. Phasellus adipiscing justo in ipsum. Duis sagittis
+		dolor sit amet magna. Suspendisse suscipit, neque eu dictum auctor,
+		nisi augue tincidunt arcu, non lacinia magna purus nec magna. Praesent
+		pretium sollicitudin sapien. Suspendisse imperdiet. Class aptent taciti
+		sociosqu ad litora torquent per conubia nostra, per inceptos
+		hymenaeos.
+	</p>
+	<p>Mauris pharetra lorem sit amet sapien. Nulla libero metus, tristique
+		et, dignissim a, tempus et, metus. Ut libero. Vivamus tempus purus vel
+		ipsum. Quisque mauris urna, vestibulum commodo, rutrum vitae, ultrices
+		vitae, nisl. Class aptent taciti sociosqu ad litora torquent per
+		conubia nostra, per inceptos hymenaeos. Nulla id erat sit amet odio
+		luctus eleifend. Proin massa libero, ultricies non, tincidunt a,
+		vestibulum non, tellus. Nunc nunc purus, lobortis a, pulvinar at,
+		egestas a, mi. Cras adipiscing velit a mauris. Morbi felis. Etiam at
+		felis. Cras eget eros et justo mattis pulvinar. Nullam at justo id
+		risus porttitor dignissim. Vestibulum sed velit vel metus tincidunt
+		tempus. Nunc euismod nisl id dolor tristique tincidunt. Nullam placerat
+		turpis sed odio. Curabitur in est id nibh tempus ultrices. Aliquam
+		consectetuer dapibus eros. Aliquam nisl.
+	</p>
+</body>
+</html>

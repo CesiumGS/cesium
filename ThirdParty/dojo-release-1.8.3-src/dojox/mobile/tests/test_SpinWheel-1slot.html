@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<!--
+  A SpinWheel that has only one slot.
+  padding-right:4px is to adjust the right border width.
+  Note that this test case does not load dojox.mobile themes such as iphone.css.
+  Nor does it load the dojox.mobile base, i.e., not requiring "dojox.mobile".
+-->
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>One Slot SpinWheel</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','SpinWheel']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile/compat",
+			"dojox/mobile/SpinWheel"
+		]);
+	</script>
+</head>
+<body>
+	<div data-dojo-type="dojox.mobile.SpinWheel" style="width:200px;padding-right:4px;">
+		<div data-dojo-type="dojox.mobile.SpinWheelSlot"
+			data-dojo-props='labelFrom:3000, labelTo:3100' style="text-align:center;width:100%;"></div>
+	</div>
+</body>
+</html>

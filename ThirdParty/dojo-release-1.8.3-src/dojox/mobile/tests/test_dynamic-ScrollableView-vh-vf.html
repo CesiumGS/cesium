@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Dynamic ScrollableView (view header / view footer)</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/ready",
+			"dojox/mobile/Heading",
+			"dojox/mobile/ScrollableView",
+			"dojox/mobile/RoundRectCategory",
+			"dojox/mobile/RoundRectList",
+			"dojox/mobile/ListItem",
+			"dojox/mobile/RoundRect",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(ready, Heading, ScrollableView, RoundRectCategory, RoundRectList, ListItem, RoundRect){
+			ready(function(){
+				// ==== view1 ====
+				var view1 = new ScrollableView(null, "view1");
+
+				var heading2 = new Heading({
+					label: "Fixed View Footer",
+					fixed: "bottom"
+				});
+				view1.addFixedBar(heading2);
+
+				var categ1 = new RoundRectCategory({
+					label: "Documents"
+				});
+				categ1.placeAt(view1.containerNode);
+
+				var list1 = new RoundRectList();
+				list1.placeAt(view1.containerNode);
+
+				var counter = 4;
+				for(var i = 1; i <= 3; i++){
+					var item1 = new ListItem({
+						icon: "images/i-icon-"+i+".png",
+						label: "Document 000"+counter,
+						moveTo: "view2"
+					});
+					list1.addChild(item1);
+					counter++;
+				}
+
+				var heading1 = new Heading({
+					label: "Fixed View Header",
+					fixed: "top"
+				});
+				view1.addFixedBar(heading1);
+
+				view1.startup();
+
+				// ==== view2 ====
+				var view2 = new ScrollableView(null, "view2");
+
+				var rect1 = new RoundRect();
+				rect1.containerNode.innerHTML = "Go Back";
+				rect1.placeAt(view2.containerNode);
+				rect1.connect(rect1.domNode, "onclick", function(){
+					view2.performTransition("view1", -1, "slide");
+				});
+
+				view2.startup();
+			});
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="view1"></div>
+	<div id="view2"></div>
+</body>
+</html>

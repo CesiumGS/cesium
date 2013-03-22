@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<title>Page Turning</title>
+	<link href="../themes/common/PageTurning.css" rel="stylesheet">
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/dom",
+			"dojo/ready",
+			"dojox/mobile/pageTurningUtils",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(dom, ready, pageTurningUtils){
+			utils = new pageTurningUtils();
+			
+			ready(function(){
+				init();
+			});
+			
+			init = function(){
+				// Get property values from input fields
+				var w = dom.byId("input_w").value - 0;
+				var h = dom.byId("input_h").value - 0;
+				var page = dom.byId("input_page").value - 0;
+				var dogear = dom.byId("input_dogear").value - 0;
+				var duration = dom.byId("input_duration").value - 0;
+				
+				var s = dom.byId("input_turnfrom");
+				var turnfrom = s.options[s.selectedIndex].value;
+				
+				var alwaysDogeared = false;
+				var r = document.getElementsByName("input_alwaysDogeared");
+				for(var i=0; i<r.length; i++){
+					if(r[i].checked){
+						alwaysDogeared = (r[i].value === 'true') ? true : false;
+					}
+				}
+				
+				// Set property values to pageTurningUtils object
+				utils.init(w, h, turnfrom, page, dogear, duration, alwaysDogeared);
+				
+				// Initialize catalog node
+				utils.initCatalog(dom.byId("catalog"));
+			};
+			
+			prev = function(){
+				utils.turnToPrev();
+			};
+			
+			next = function(){
+				utils.turnToNext();
+			};
+		});
+	</script>
+	
+	<style type="text/css">
+		img{
+			width:100%;
+			height:100%;
+		}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="view1" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">Page Turning (callback)</h1>
+		<table>
+			<tr><td><input type="button" onclick="init()" value="Set" style="width:50px"></td><td></td></tr>
+			<tr><td>width: (pixel)</td><td><input id="input_w" style="width:50px;text-align:right" value="285"></td></tr>
+			<tr><td>height: (pixel)</td><td><input id="input_h" style="width:50px;text-align:right" value="388"></td></tr>
+			<tr><td>turnfrom:</td><td><select id="input_turnfrom"><option value="top" selected>top</option><option value="bottom">bottom</option><option value="left">left</option></select></td></tr>
+			<tr><td>page:</td><td><select id="input_page"><option value="1" selected>1</option><option value="2">2</option></select></td></tr>
+			<tr><td>dogear: (0-1.0)</td><td><input id="input_dogear" style="width:50px;text-align:right" value="1.0"></td></tr>
+			<tr><td>duration: (seconds)</td><td><input id="input_duration" style="width:50px;text-align:right" value="2.0"></td></tr>
+			<tr><td>alwaysDogeared:</td><td><input type="radio" name="input_alwaysDogeared" value="true">true<input type="radio" name="input_alwaysDogeared" value="false" checked>false</td></tr>
+		</table>
+		<div style="margin:5px;">
+			<button onclick="prev()" style="width:50px">Prev</button>
+			<button onclick="next()" style="width:50px">Next</button>
+		</div>
+		<div id="catalog" style="margin:10px;">
+			<div id="page1">
+				<div id="front1"><img alt="" src="images/pic1.jpg"></div>
+				<div id="back1"></div>
+			</div>
+			<div id="page2">
+				<div id="front2"><img alt="" src="images/pic2.jpg"></div>
+				<div id="back2"><img alt="" src="images/pic3.jpg"></div>
+			</div>
+			<div id="page3">
+				<div id="front3"><img alt="" src="images/pic4.jpg"></div>
+				<div id="back3"></div>
+			</div>
+			<div id="page4">
+				<div id="front4"><img alt="" src="images/pic5.jpg"></div>
+				<div id="back4"><img alt="" src="images/pic6.jpg"></div>
+			</div>
+			<div id="page5">
+				<div id="front5"><img alt="" src="images/pic7.jpg"></div>
+				<div id="back5"><img alt="" src="images/pic8.jpg"></div>
+			</div>
+			<div id="page6">
+				<div id="front6"><img alt="" src="images/pic9.jpg"></div>
+				<div id="back6"></div>
+			</div>
+			<div id="page7">
+				<div id="front7"><img alt="" src="images/pic10.jpg"></div>
+				<div id="back7"></div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

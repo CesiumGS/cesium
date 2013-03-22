@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>IconMenu (6up)</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','IconMenu','SimpleDialog']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/IconMenu",
+			"dojox/mobile/SimpleDialog",
+			"dojox/mobile/Button"
+		], function(ready, registry){
+			show = function(){
+				registry.byId("dlg1").show();
+			}
+			hide = function(){
+				registry.byId("dlg1").hide();
+			}
+			ready(function(){
+				show();
+			});
+		});
+	</script>
+
+	<style>
+	html,body{
+		height: 100%;
+		overflow: hidden;
+	}
+	#dlg1 {
+		width: 274px;
+		height: 210px;
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="dlg1" data-dojo-type="dojox.mobile.SimpleDialog" data-dojo-props='modal:false'>
+		<ul data-dojo-type="dojox.mobile.IconMenu" data-dojo-props='cols:3'>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Mute", icon:"images/tab-icon-36w.png", selected:true'></li>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Keypad", icon:"images/tab-icon-32w.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Settings", icon:"images/tab-icon-30w.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Info", icon:"images/tab-icon-16w.png"'></li>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Tour", icon:"images/tab-icon-19w.png", moveTo:"view2", transition:"slide", closeOnAction:true'></li>
+			<li data-dojo-type="dojox.mobile.IconMenuItem" data-dojo-props='label:"Contacts", icon:"images/tab-icon-29w.png"'></li>
+		</ul>
+	</div>
+
+	<div id="view1" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">6-up Icon Menu</h1>
+		<button data-dojo-type="dojox.mobile.Button" class="mblBlueButton" style="width:100px;margin:10px;" onclick="show()">Show</button>
+		<button data-dojo-type="dojox.mobile.Button" class="mblBlueButton" style="width:100px;margin:10px;" onclick="hide()">Hide</button>
+	</div>
+
+	<div id="view2" data-dojo-type="dojox.mobile.View" style="background-color:white;height:100%;">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"view1"'>View2</h1>
+	</div>
+
+	<div id="view3" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"view1"'>View3</h1>
+	</div>
+</body>
+</html>

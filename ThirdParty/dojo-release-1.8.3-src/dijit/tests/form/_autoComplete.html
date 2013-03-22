@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>dijit.form.ComboBox Unit Test</title>
+
+	<style>
+		@import "../../themes/claro/document.css";
+		@import "../../../util/doh/robot/robot.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, parseOnLoad: false"></script>
+
+	<!-- only needed for alternate theme testing: -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		var isUnitTest = false;
+		var testWidget = "dijit.form.ComboBox";
+		var qstr = window.location.search.substr(1);
+		if(qstr.length){
+		        var qparts = qstr.split("&");
+		        for(var x=0; x<qparts.length; x++){
+		                var tp = qparts[x].split("=");
+		                if(tp[0] == "testWidget"){
+		                        testWidget = tp[1];
+					document.title = testWidget + " Unit Test";
+		                }else if(tp[0] == "mode"){
+					isUnitTest = tp[1] == "test";
+				}
+		        }
+		}
+		var isComboBox = testWidget == "dijit.form.ComboBox";
+		dojo.require("dojo.store.Memory");
+		dojo.require("dojo._base.Deferred");
+		dojo.require("dojo.data.ItemFileReadStore");
+		dojo.require("dijit.tests._data.SlowStore");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require(testWidget);
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+		dojo.require("doh.runner");
+
+		function setVal2(val){
+			dojo.byId('value2').value=val;
+			var w = dijit.byId('datatest');
+			var item = w.item;
+			console.debug("Value changed to ["+val+"] in second box (#1652): datastore item label = " + (item?w.store.getLabel(item):'no item'));
+		}
+		function setVal3(val){
+			dojo.byId('value3').value=val;
+		}
+		function setVal4(val){
+			dojo.byId('value4').value=val;
+		}
+		var combo;
+		function myLabelFunc(item, store){
+			var label=store.getValue(item, 'name');
+			// DEMO: uncomment to chop off a character
+			//label=label.substr(0, label.length-1);
+			// DEMO: uncomment to set to lower case
+			label = label.toLowerCase();
+			return label;
+		}
+
+		// Test Custom Store
+		dojo.declare("StateSelect", isComboBox ? dijit.form.ComboBox : dijit.form.FilteringSelect , {
+			placeHolder: "Select a State",
+			searchAttr: "name",
+			label: "State:",
+			name: "state",
+			style: "width: 160px",
+			store: new dojo.data.ItemFileReadStore({ url: dojo.moduleUrl("dijit.tests._data", "states.json") }),
+			value: ''
+		});
+
+		function init(){
+			var combo;
+
+			var testClass = dojo.getObject(testWidget);
+			// substitute testWidget for each data-dojo-type=$testWidget
+			dojo.query('[data-dojo-type="$testWidget"]').forEach(function(node){
+				node.setAttribute('data-dojo-type', testWidget);
+			});
+			dojo.parser.parse(dojo.body());
+			store = new dojo.data.ItemFileReadStore({url: dojo.moduleUrl("dijit.tests._data", "states.json")});
+			combo = new testClass({
+				name:"prog",
+				title: "title attribute used for label",
+				autoComplete:false,
+				store: store,
+				searchAttr:"name"
+			}, dojo.byId("progCombo"));
+			store2 = new dojo.data.ItemFileReadStore({url: dojo.moduleUrl("dijit.tests._data", "countries.json")});
+			combo = new testClass({
+				name:"prog2",
+				autoComplete:false,
+				store:store2,
+				query:{type:'country'},
+				searchAttr:"name"
+			}, dojo.byId("progCombo2"));
+
+			new testClass({
+				name:"prog3",
+				autoComplete:false,
+				store:store2,
+				query:{type:'country'},
+				searchAttr:"name",
+				fetchProperties: {sort:[{attribute: 'name', descending: true}]}
+			}, dojo.byId("progCombo3"));
+
+			// change Memory store to have an asynchronous total
+			var oldMemoryQuery = dojo.store.Memory.prototype.query;
+			dojo.store.Memory.extend({
+				query: function(){
+					var results = oldMemoryQuery.apply(this, arguments);
+					var total = results.total;
+					results.total = new dojo.Deferred();
+					setTimeout(function(){
+						results.total.resolve(total);
+					}, 100);
+					return results;
+				}
+			});
+
+			if(!isUnitTest){ return; }
+
+			doh.register("label", [
+				{
+					name: "user-specified id",
+					runTest: function(){
+						combo = dijit.byId("setvaluetest");
+						var labelId = combo.domNode.getAttribute('aria-labelledby');
+						doh.is("setvaluetest_mylabel", labelId, "labelledby");
+						doh.is(labelId, dojo.byId(labelId).id, "label id");
+					}
+				},
+				{
+					name: "generated id",
+					runTest: function(){
+						combo = dijit.byId("datatest");
+						var labelId = combo.domNode.getAttribute('aria-labelledby');
+						doh.is("datatest_label", labelId, "labelledby");
+						doh.is(labelId, dojo.byId(labelId).id, "label id");
+					}
+				}
+			]);
+
+			doh.register("placeHolder", [
+				{
+					timeout: 2000,
+					name: "focus enpty",
+					combo: "placeholdertest",
+					setUp: function(){
+						dojo.byId('native').focus(); // blur combo so onfocus fires
+						combo = dijit.byId(this.combo);
+					},
+					runTest: function(){
+						var d = new doh.Deferred();
+						doh.is("", combo.get("value"), "value");
+						doh.is("", combo.get('displayedValue'), "displayedValue");
+						doh.is("Select a New England State", combo._phspan.innerHTML, "_phspan.innerHTML");
+						doh.isNot("none", combo._phspan.style.display, "_phspan.style.display 1");
+
+						var handler = dojo.connect(combo.textbox, "onfocus", function(){
+							dojo.disconnect(handler);
+							setTimeout(d.getTestCallback(function(){
+								doh.is("none", combo._phspan.style.display, "_phspan.style.display 2");
+							}), 0);
+						});
+						combo.focus();
+						return d;
+					}
+				},
+				{
+					timeout: 2000,
+					name: "blur empty",
+					runTest: function(){
+						var d = new doh.Deferred();
+						var handler = dojo.connect(dojo.byId('native'), "onfocus", function(){
+							dojo.disconnect(handler);
+							setTimeout(d.getTestCallback(function(){
+								doh.is("", combo.get("value"), "value");
+								doh.is("", combo.get('displayedValue'), "displayedValue");
+								doh.isNot("none", combo._phspan.style.display, "_phspan.style.display");
+							}), 0);
+						});
+						dojo.byId('native').focus(); // blur combo
+						return d;
+					}
+				},
+				{
+					timeout: 2000,
+					name: "focus non enpty",
+					combo: "placeholdertest",
+					setUp: function(){
+						dojo.byId('native').focus(); // blur combo so onfocus fires
+						combo = dijit.byId(this.combo);
+					},
+					runTest: function(){
+						var d = new doh.Deferred();
+						var value = isComboBox? 'Connecticut' : 'ct';
+						combo.set("value", value);
+						doh.is(value, combo.get("value"), "value");
+						doh.is("none", combo._phspan.style.display, "_phspan.style.display 1");
+
+						var handler = dojo.connect(combo.textbox, "onfocus", function(){
+							dojo.disconnect(handler);
+							setTimeout(d.getTestCallback(function(){
+								doh.is("none", combo._phspan.style.display, "_phspan.style.display 2");
+							}), 0);
+						});
+						combo.focus();
+						return d;
+					}
+				},
+				{
+					timeout: 2000,
+					name: "blur non empty",
+					runTest: function(){
+						var d = new doh.Deferred();
+						var value = isComboBox? 'Connecticut' : 'ct';
+						var handler = dojo.connect(dojo.byId('native'), "onfocus", function(){
+							dojo.disconnect(handler);
+							setTimeout(d.getTestCallback(function(){
+								doh.is(value, combo.get("value"), "value");
+								doh.is("none", combo._phspan.style.display, "_phspan.style.display");
+								doh.is('Connecticut', combo.textbox.value, "textbox.value");
+							}), 0);
+						});
+						dojo.byId('native').focus(); // blur combo
+						return d;
+					}
+				},
+				{
+					timeout: 2000,
+					name: "re-empty",
+					runTest: function(){
+						var d = new doh.Deferred();
+						var handler = dojo.connect(combo, "onChange", function(){
+							dojo.disconnect(handler);
+							setTimeout(d.getTestCallback(function(){
+								doh.is("", combo.get("value"), "value");
+								doh.is("", combo.get("displayedValue"), "displayedValue");
+								doh.isNot("none", combo._phspan.style.display, "_phspan.style.display");
+							}), 0);
+						});
+						combo.set("value", '');
+						return d;
+					}
+				}
+			]);
+
+			doh.register("asynchronous data store", [
+				{
+					timeout:5000,
+					name:"total",
+					runTest: function(){
+						var d = new doh.Deferred();
+						var combo = dijit.byId("slow");
+						var handler = dojo.connect(combo, "onSearch", function(results, query, options){
+							dojo.disconnect(handler);
+							d.getTestCallback(function(){
+								doh.is(30, options.start, "start");
+								doh.is(4, results.length, "count");
+								doh.is(61, results.total, "total");
+							})();
+						});
+						combo._set('fetchProperties', { start:30, count:4 });
+						combo._startSearch("");
+						return d;
+					},
+					tearDown:function(){
+						dijit.byId("slow").closeDropDown();
+					}
+				}
+			]);
+
+			doh.run();
+		}
+		dojo.ready(init);
+
+		function toggleDisabled(button, widget){
+			widget = dijit.byId(widget);
+			button = dojo.byId(button);
+			widget.set('disabled',!widget.disabled);
+			button.innerHTML= widget.disabled ? "Enable" : "Disable";
+		}
+
+		function getValue(){
+			var f = document.getElementById("form1");
+			var s = "";
+			for(var i = 0; i < f.elements.length; i++){
+				var elem = f.elements[i];
+				if(elem.nodeName.toLowerCase() == "button" || elem.type=="submit" || elem.type=="button")  { continue; }
+				s += elem.name + ": " + elem.value + "\n";
+			}
+			return s;
+		}
+
+		// formSubmitted flag is for benefit of DOH test harneess
+		formSubmitted = false;
+		function onFormSubmit(){
+			formSubmitted = true;
+			console.log(getValue());
+			return false;
+		}
+	</script>
+</head>
+
+<body class="claro" role="main">
+
+	<h1 class="testTitle" id="title"></h1>
+	<script>dojo.byId('title').appendChild(document.createTextNode(testWidget+" Unit Test"))</script>
+	<form id="form1" action="#" method="GET" onsubmit="return onFormSubmit();">
+		
+		<!--
+			Need a submit button like this (rather than onsubmit handler on <form>) to get
+			IE to submit when the ENTER key is pressed.
+			
+			And (at least on IE8) when ComboBox_a11y.html is run via runTests.html,
+			it only seems to work if the button is at the top of the form, not at the bottom.
+		-->
+		<button type="reset">reset</button>
+		<button type="submit">fake submit</button><br/>
+		<hr>
+
+		<p>Option tags, autoComplete=false, selectOnClick=true, default value of California, pageSize=30, custom labelFunc method</p>
+		<label id="setvaluetest_mylabel" for="setvaluetest">US State test 1 (200% Courier font):</label>
+		<script type="text/javascript">
+			function setValueTestOnChange(newValue){
+				if(this.lastlabelFuncMsg){
+					this.lastlabelFuncMsg = '';
+				}
+				dojo.byId('oc1').value = newValue;
+				var itemLabel;
+				if(this.item === null){
+					itemLabel = "null";
+					if(testWidget != "dijit.form.ComboBox" && this.isValid() && this.textbox.value != ''){
+						console.error(this.id + ' has a null item, onChange value = ' + newValue + ', widget value = ' + this.value + ', displayed Value = ' + this.textbox.value);
+						this.itemError = true;
+					}
+				}else if(typeof this.item === "undefined"){
+					itemLabel = "undefined";
+					console.error(this.id + ' has an undefined item, onChange value = ' + newValue + ', widget value = ' + this.value + ', displayed Value = ' + this.textbox.value);
+					this.itemError = true;
+				}else{
+					itemLabel = this.item[this.searchAttr].toString();
+				}
+				dojo.byId('i1').value = itemLabel;
+			}
+			function setValueTestLabelFunc(item, store){
+				var label = item[this.searchAttr];
+				var value = item.value;
+				if(!this.labelFuncCount){ this.labelFuncCount = 0; }
+				if(!this.labelFuncCounts){ this.labelFuncCounts = []; }
+				if(!this.labelFuncCounts[value]){ this.labelFuncCounts[value] = 0; }
+				this.labelFuncCount++;
+				this.labelFuncCounts[value]++;
+				this.lastlabelFuncMsg = 'my labelfunc ' + label + ' (' + value + '), count = ' + this.labelFuncCounts[value];
+				return label + ' (' + value + ')';
+			}
+		</script>
+		<select id="setvaluetest" data-dojo-type="$testWidget"
+				data-dojo-props='name:"state1",
+				style:{width:"50%", fontSize:"200%", fontFamily:"Courier"},
+				autoComplete:false,
+				selectOnClick:true,
+				onBlur:function(){ dojo.byId("b1").value=dijit.byId("setvaluetest").value },
+				onClick:function(){ console.log("onclick"); },
+				pageSize:30,
+				labelFunc:setValueTestLabelFunc,
+				onChange:setValueTestOnChange
+		'>
+			<option value="AL">Alabama</option>
+			<option value="AK">Alaska</option>
+			<option value="AS">American Samoa</option>
+			<option value="AZ">Arizona</option>
+			<option value="AR">Arkansas</option>
+			<option value="AE">Armed Forces Europe</option>
+			<option value="AP">Armed Forces Pacific</option>
+			<option value="AA">Armed Forces the Americas</option>
+			<option value="CA" selected>California</option>
+			<option value="CO">Colorado</option>
+			<option value="CT">Connecticut</option>
+			<option value="DE">Delaware</option>
+			<option value="DC">District of Columbia</option>
+			<option value="FM">Federated States of Micronesia</option>
+			<option value="FL">Florida</option>
+			<option value="GA">Georgia</option>
+			<option value="GU">Guam</option>
+			<option value="HI">Hawaii</option>
+			<option value="ID">Idaho</option>
+			<option value="IL">Illinois</option>
+			<option value="IN">Indiana</option>
+			<option value="IA">Iowa</option>
+			<option value="KS">Kansas</option>
+			<option value="KY">Kentucky</option>
+			<option value="LA">Louisiana</option>
+			<option value="ME">Maine</option>
+			<option value="MH">Marshall Islands</option>
+			<option value="MD">Maryland</option>
+			<option value="MA">Massachusetts</option>
+			<option value="MI">Michigan</option>
+			<option value="MN">Minnesota</option>
+			<option value="MS">Mississippi</option>
+			<option value="MO">Missouri</option>
+			<option value="MT">Montana</option>
+			<option value="NE">Nebraska</option>
+			<option value="NV">Nevada</option>
+			<option value="NH">New Hampshire</option>
+			<option value="NJ">New Jersey</option>
+			<option value="NM">New Mexico</option>
+			<option value="NY">New York</option>
+			<option value="NC">North Carolina</option>
+			<option value="ND">North Dakota</option>
+			<option value="MP">Northern Mariana Islands</option>
+			<option value="OH">Ohio</option>
+			<option value="OK">Oklahoma</option>
+			<option value="OR">Oregon</option>
+			<option value="PA">Pennsylvania</option>
+			<option value="PR">Puerto Rico</option>
+			<option value="RI">Rhode Island</option>
+			<option value="SC">South Carolina</option>
+			<option value="SD">South Dakota</option>
+			<option value="TN">Tennessee</option>
+			<option value="TX">Texas</option>
+			<option value="UT">Utah</option>
+			<option value="VT">Vermont</option>
+			<option value="VI">Virgin Islands, U.S.</option>
+			<option value="VA">Virginia</option>
+			<option value="WA">Washington</option>
+			<option value="WV">West Virginia</option>
+			<option value="WI">Wisconsin</option>
+			<option value="WY">Wyoming</option>
+		</select>
+		<br><label for="oc1">onChange:</label><input id="oc1" disabled value="not fired yet!" autocomplete="off"/>
+		<br><label for="v1">value:</label><input id="v1" disabled value="not fired yet!" autocomplete="off"/>
+		<br><label for="b1">blur:</label><input id="b1" disabled value="not fired yet!" autocomplete="off"/>
+		<br><label for="i1">this.item:</label><input id="i1" disabled value="no onChange yet!" autocomplete="off"/>
+		<input type="button" id="sv1_1" value="Set displayed value to Kentucky" onClick="dijit.byId('setvaluetest').set('displayedValue', 'Kentucky')"/>
+	        <input type="button" id="sv1_2" value="Set displayed value to Canada" onClick="dijit.byId('setvaluetest').set('displayedValue', 'Canada')"/>
+	        <input type="button" id="sv1_3" value="Set value to null" onClick="dijit.byId('setvaluetest').set('value', null)"/>
+	        <input type="button" id="sv1_4" value="Get value" onClick="dojo.byId('v1').value=dijit.byId('setvaluetest').get('value')"/>
+
+		<hr>
+
+		<div data-dojo-id="stateStore" data-dojo-type="dojo/data/ItemFileReadStore" data-dojo-props='url:"../_data/states.json"'></div>
+		<div data-dojo-id="slowStateStore" data-dojo-type="dijit/tests/_data/SlowStore" data-dojo-props='url:"../_data/states.json"'></div>
+
+		<div data-dojo-id="dijitStore" data-dojo-type="dojo/data/ItemFileReadStore" data-dojo-props='url:"../_data/dijits.json"'></div>
+
+		<p>Data store, autoComplete=true:</p>
+		<label for="datatest">US State test 2 (8pt font):</label>
+		<input id="datatest" data-dojo-type="$testWidget"
+				data-dojo-props='value: (testWidget == "dijit.form.ComboBox") ? "California" : "CA",
+				store:stateStore,
+				searchAttr:"name",
+				style:{width:"200px", fontSize:"8pt"},
+				name:"state2",
+				onChange:setVal2
+				'/>
+		<br><label for="value2">onChange:</label><input id="value2" disabled value="not fired yet!" autocomplete="off"/>
+		<hr>
+		<p>Artificially slowed-down data store, autoComplete=true:</p>
+		<label for="slow">US State test slow:</label>
+		<input id="slow" data-dojo-type="$testWidget"
+				data-dojo-props='value: (testWidget == "dijit.form.ComboBox") ? "California" : "CA",
+				store:slowStateStore,
+				searchAttr:"name",
+				name:"stateSlow",
+				onChange:function(val){ dojo.byId("ocSlow").value = val; }
+				'/>
+		<br><label for="ocSlow">onChange:</label><input id="ocSlow" disabled value="not fired yet!" autocomplete="off"/>
+		<button id="slowDestroy" type="button" onclick="dijit.byId('slow').destroy();return false">Destroy widget to test in-flight query cancel</button>
+		<hr>
+
+		<label for="datatestDijit">Dijit List test #1 (150% font):</label>
+		<input id="datatestDijit" data-dojo-type="$testWidget"
+				data-dojo-props='value:"dijit.Editor",
+				store:dijitStore,
+				searchAttr:"className",
+				style:{width:"200px",fontSize:"150%"},
+				name:"dijitList1"
+				'/>
+		<span>Hey look, this one is kind of useful.</span>
+		<hr>
+
+		<p>Initially disabled, url, autoComplete=false:</p>
+		<label for="combo3">US State test 3:</label>
+	 	<input id="combo3" data-dojo-type="$testWidget"
+	 			data-dojo-props='value:(testWidget == "dijit.form.ComboBox") ? "California" : "CA",
+				store:stateStore,
+				searchAttr:"name",
+				style:{width:"300px"},
+				name:"state3",
+				autoComplete:false,
+				onChange:setVal3,
+				disabled:true
+		'/>
+		<br><label for="value3">onChange:</label><input id="value3" disabled value="not fired yet!" autocomplete="off"/>
+		<div>
+			<button id="combo3_disable" type="button" onclick='toggleDisabled("combo3_disable", "combo3"); return false;' tabIndex="-1">Enable</button>
+		</div>
+		<hr>
+		<p>Data store, autoComplete=false required=true and highlightMatch="none"</p>
+		<label for="combobox4">US State test 4:</label>
+		<input id="combobox4" data-dojo-type="$testWidget"
+				data-dojo-props='value:"",
+				store:stateStore,
+				searchAttr:"name",
+				style:{width:"300px"},
+				name:"state4",
+				onChange:setVal4,
+				autoComplete:false,
+				required:true,
+				highlightMatch:"none"
+		'/>
+		<br><label for="value4">onChange:</label><input id="value4" disabled value="not fired yet!" autocomplete="off"/>
+		<hr>
+		<p>test that title used as label is preserved on input</p>
+		<select id="preservetitletest" data-dojo-type="$testWidget"
+				data-dojo-props='name:"titletest",
+				style:{width:"50%", fontFamily:"Courier"},
+				autoComplete:false,
+				selectOnClick:true,
+				pageSize:5,
+				title:"New England States"
+		'>
+			<option value="ct">Connecticut</option>
+			<option value="me">Maine</option>
+			<option value="ma">Massachusetts</option>
+			<option value="nh">New Hampshire</option>
+			<option value="vt">Vermont</option>
+		</select>
+		<hr>
+		<p>No arrow, data store which searches and highlights matches anywhere in the string</p>
+		<label for="arrowless">Arrowless:</label>
+	 	<input id="arrowless" data-dojo-type="$testWidget"
+				data-dojo-props='value: (testWidget == "dijit.form.ComboBox") ? "California" : "CA",
+				store:stateStore,
+				searchAttr:"name",
+				queryExpr:"*${0}*",
+				name:"state5",
+				autoComplete:false,
+				hasDownArrow:false,
+				highlightMatch:"all"
+		'/>
+		<hr>
+		<p>Created programmatically</p>
+		<label for="progCombo">progCombo:</label>
+		<input id="progCombo"/>
+		<hr>
+		<p>Created programmatically with an initial query.  (Limits list to items with type = country.)</p>
+		<label for="progCombo2">progCombo2</label>
+		<input id="progCombo2"/>
+		<hr>
+		<p>Created programmatically with an ItemFileReadStore and a descending sort.  (Limits list to items with type = country.)</p>
+		<label for="progCombo3">progCombo3:</label>
+		<input id="progCombo3"/>
+		<hr>
+		<p>With option tags, autoComplete=true, pageSize=30, and a descending sort.</p>
+		<label for="descending">descending:</label>
+		<select id="descending" data-dojo-type="$testWidget"
+				data-dojo-props='name:"descending",
+				style:{width:"50%",fontSize:"200%",fontFamily:"Courier"},
+				autoComplete:true,
+				pageSize:30,
+				fetchProperties:{sort:[{attribute: "name", descending: true}]}
+		'>
+			<option value="AL">Alabama</option>
+			<option value="AK">Alaska</option>
+			<option value="AS">American Samoa</option>
+			<option value="AZ">Arizona</option>
+			<option value="AR">Arkansas</option>
+			<option value="AE">Armed Forces Europe</option>
+			<option value="AP">Armed Forces Pacific</option>
+			<option value="AA">Armed Forces the Americas</option>
+			<option value="CA" selected>California</option>
+			<option value="CO">Colorado</option>
+			<option value="CT">Connecticut</option>
+			<option value="DE">Delaware</option>
+			<option value="DC">District of Columbia</option>
+			<option value="FM">Federated States of Micronesia</option>
+			<option value="FL">Florida</option>
+			<option value="GA">Georgia</option>
+			<option value="GU">Guam</option>
+			<option value="HI">Hawaii</option>
+			<option value="ID">Idaho</option>
+			<option value="IL">Illinois</option>
+			<option value="IN">Indiana</option>
+			<option value="IA">Iowa</option>
+			<option value="KS">Kansas</option>
+			<option value="KY">Kentucky</option>
+			<option value="LA">Louisiana</option>
+			<option value="ME">Maine</option>
+			<option value="MH">Marshall Islands</option>
+			<option value="MD">Maryland</option>
+			<option value="MA">Massachusetts</option>
+			<option value="MI">Michigan</option>
+			<option value="MN">Minnesota</option>
+			<option value="MS">Mississippi</option>
+			<option value="MO">Missouri</option>
+			<option value="MT">Montana</option>
+			<option value="NE">Nebraska</option>
+			<option value="NV">Nevada</option>
+			<option value="NH">New Hampshire</option>
+			<option value="NJ">New Jersey</option>
+			<option value="NM">New Mexico</option>
+			<option value="NY">New York</option>
+			<option value="NC">North Carolina</option>
+			<option value="ND">North Dakota</option>
+			<option value="MP">Northern Mariana Islands</option>
+			<option value="OH">Ohio</option>
+			<option value="OK">Oklahoma</option>
+			<option value="OR">Oregon</option>
+			<option value="PA">Pennsylvania</option>
+			<option value="PR">Puerto Rico</option>
+			<option value="RI">Rhode Island</option>
+			<option value="SC">South Carolina</option>
+			<option value="SD">South Dakota</option>
+			<option value="TN">Tennessee</option>
+			<option value="TX">Texas</option>
+			<option value="UT">Utah</option>
+			<option value="VT">Vermont</option>
+			<option value="VI">Virgin Islands, U.S.</option>
+			<option value="VA">Virginia</option>
+			<option value="WA">Washington</option>
+			<option value="WV">West Virginia</option>
+			<option value="WI">Wisconsin</option>
+			<option value="WY">Wyoming</option>
+		</select>
+		<hr>
+		<p>Special characters</p>
+		<p>The drop down list should be:</p>
+		<ul>
+		   <li>sticks &amp; stones</li>
+		   <li>rags --&gt; riches to</li>
+		   <li>more\less</li>
+		   <li>3 * 5</li>
+		</ul>
+		<label for="specialchars">Special chars:</label>
+		<select id="specialchars" data-dojo-type="$testWidget"
+			data-dojo-props='name:"specialchars"
+			'>
+			<option value="sticks" selected>sticks &amp; stones</option>
+			<option value="rags">rags --&gt; riches to</option>
+			<option value="more">more\less</option>
+			<option value="times">3 * 5</option>
+		</select>
+		<hr>
+		<p>Japanese</p>
+		<p>Try typing &#x6771;&#x533A; (East), &#x897F;&#x533A; (West), &#x5317;&#x533A; (North), &#x5357;&#x533A; (South) and a few choices will pop up.<br>
+		Using the Microsoft IME for Japanese (Hiragana), &#x6771; can be inputed by typing higashi followed by SPACE.
+		</p>
+		<label for="japanese">Japanese list:</label>
+		<select id="japanese" data-dojo-type="$testWidget" data-dojo-props='name:"japanese", style:{width:"300px"}, autoComplete:true, required:true, value:""'>
+			<option value="nanboku">&#x5357;&#x5317; (Nanboku)</option>
+			<option value="touzai">&#x6771;&#x897F; (Touzai)</option>
+			<option value="toukyou">&#x6771;&#x4EAC; (Tokyo)</option>
+			<option value="higashiku">&#x6771;&#x533A; (East)</option>
+			<option value="nishiku">&#x897F;&#x533A; (West)</option>
+			<option value="minamiku">&#x5357;&#x533A; (South)</option>
+			<option value="kitaku">&#x5317;&#x533A; (North)</option>
+		</select>
+		<hr>
+		<p>Custom labelFunc (labels in lowercase), autoComplete=true, prompt message when field is blank:</p>
+		<label for="labelFunc">custom label function</label>
+		<input id="labelFunc" data-dojo-type="$testWidget"
+				data-dojo-props='value: (testWidget == "dijit.form.ComboBox") ? "Oregon" : "OR",
+				labelFunc:myLabelFunc,
+				store:stateStore,
+				name:"labelFunc",
+				autoComplete:true,
+				labelAttr:"label",
+				labelType:"html",
+				promptMessage:"Please enter a state",
+				invalidMessage:"Invalid state name."
+		'/>
+		<input type="button" onclick="dijit.byId('labelFunc').set('readOnly',false);" value="Remove readOnly"/>
+		<input type="button" onclick="dijit.byId('labelFunc').set('readOnly',true);" value="Set readOnly"/>
+		<input type="button" onclick="dijit.byId('labelFunc').set('disabled',false);" value="Remove disabled"/>
+		<input type="button" onclick="dijit.byId('labelFunc').set('disabled',true);" value="Set disabled"/>
+		<hr>
+
+		<p>Rich text label</p>
+		<label for="richtexttest">Rich text labels in drop down:</label>
+		<select id="richtexttest" data-dojo-type="$testWidget"
+				data-dojo-props='name:"richtexttest",
+				autoComplete:false,
+				selectOnClick:true,
+				value:"h1",
+				labelType:"html",
+				labelFunc:function(item){ var txt = item.value; return "<"+txt+">"+txt+"</"+txt+">"; }
+		'>
+			<option value="h1">h1</option>
+			<option value="h2">h2</option>
+			<option value="p">p</option>
+			<option value="pre">pre</option>
+		</select>
+		<hr>
+
+		<input type="button" value="Create one in a window" onclick="var win=window.open(window.location);"/>
+
+	</form>
+	
+	<hr>
+	<p><label for="placeholdertest">test placeholder</label></p>
+	<select id="placeholdertest" data-dojo-type="$testWidget"
+			data-dojo-props='name:"placetest",
+			style:{width:"50%",fontFamily:"Courier"},
+			autoComplete:false,
+			selectOnClick:true,
+			pageSize:5,
+			placeHolder:"Select a New England State",
+			value:""
+	'>
+		<option value="ct">Connecticut</option>
+		<option value="me">Maine</option>
+		<option value="ma">Massachusetts</option>
+		<option value="nh">New Hampshire</option>
+		<option value="vt">Vermont</option>
+	</select>
+	<p id="nativeLabel">
+	This is some text below the boxes. It shouldn't get pushed out of the way when search results get returned.
+	A native select tag to test IE bleed through problem:
+	</p>
+
+	<select id="native" aria-labelledby="nativeLabel">
+	  <option>test for</option>
+	  <option>IE bleed through</option>
+	  <option>problem</option>
+	</select>
+	
+	<label for="combo_01">Destroy test:</label><div id="destroyDiv"
+		><select id="combo_01" data-dojo-type="$testWidget" 
+				data-dojo-props='name:"state", 
+				disabled:true,
+				style:{width:"300px"},
+				autoComplete:false'>
+			<option value="AL">Alabama</option>
+			<option value="AK">Alaska</option>
+			<option value="AS">American Samoa</option>
+			<option value="AZ">Arizona</option>
+			<option value="AR">Arkansas</option>
+			<option value="AE">Armed Forces Europe</option>
+			<option value="AP">Armed Forces Pacific</option>
+		</select
+	></div>
+
+	<br>
+	<fieldset style="position:relative;border:1px solid black;display:inline;">
+		<legend>Highlight test</legend>
+		<div style="border:0;margin:1.5em;">
+			<span style='white-space:nowrap;'>
+			<label for="ignoreCase">ignoreCase:</label><select id="ignoreCase" onchange="dijit.byId('highlight').set('ignoreCase', this.value=='true')">
+				<option value="true" selected>true</option>
+				<option value="false">false</option>
+			</select>
+			<label for="highlightMatch">highlightMatch:</label>
+			<select id="highlightMatch" onchange="dijit.byId('highlight').set('highlightMatch', this.value)">
+				<option value="first" selected>first</option>
+				<option value="all">all</option>
+				<option value="none">none</option>
+			</select>
+			<label for="queryExpr">queryExpr:</label>
+			<select id="queryExpr" onchange="dijit.byId('highlight').set('queryExpr', this.value)">
+				<option value="${0}*" selected>${0}*</option>
+				<option value="*${0}*">*${0}*</option>
+				<option value="*${0}">*${0}</option>
+			</select>
+			</span>
+			<br>
+			<span style='white-space:nowrap;'>
+			<label for="highlight">Highlight test:</label>
+			<select id="highlight" data-dojo-type="$testWidget"
+					data-dojo-props='ignoreCase:true,
+					highlightMatch:"first",
+					autoComplete:false,
+					required:false,
+					labelType:"text",
+					onBlur:function(){ this.set("value",null) },
+					value:""'>
+				<option value="AA">AA</option>
+				<option value="Aa">Aa</option>
+				<option value="aA">aA</option>
+				<option value="aa">aa</option>
+			</select>
+			</span>
+		</div>
+	</fieldset>
+
+	<div id="debugbox"></div>
+
+	<p><label for="subclass">User-defined subclass of ComboBox/FilteringSelect:</label></p>
+	<input id="subclass" data-dojo-type="StateSelect"/>
+
+</body>
+</html>

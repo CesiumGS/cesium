@@ -1,0 +1,33 @@
+<html>
+  <head>
+	  <script src=../../../../dojo.js></script>
+	  <script>
+		dojo.require("dojo.tests._base.loader.require.m1");
+		dojo.ready(function(){
+			dojo.byId("msg").innerHTML = "OK";
+			console.log("the value of m1 at completion is: " + dojo.tests._base.loader.require.m1);
+			console.log("the value of m2 at completion is: " + dojo.tests._base.loader.require.m2);
+		});
+	  </script>
+  </head>
+  <body>
+    <div id="msg">loading</div>
+	<p>
+		This test dojo.require's a module (m1) that is a legacy module that
+		depends on another legacy module (m2). m1 is wrapped in dojo/require!
+		to guarantee that m2 is onboard before m1 starts evaluating. The
+		loading message above should change to "OK" and you should see the
+		following console ouput:
+	</p>
+	<pre>
+m2, a plain-old-style synch module, evaluated OK
+m1, a plain-old-style synch module wrapped in dojo/require!, evaluate start
+the value of m2 in m1 is: this is the value of m2
+m1 evaluate end
+ready in m1 called
+the value of m1 at completion is: this is the value of m1
+the value of m2 at completion is: this is the value of m2
+	</pre>
+  </body>
+</html>
+  

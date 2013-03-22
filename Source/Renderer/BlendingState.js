@@ -16,6 +16,13 @@ define([
         /**
          * DOC_TBA
          */
+        DISABLED : {
+            enabled : false
+        },
+
+        /**
+         * DOC_TBA
+         */
         ALPHA_BLEND : {
             enabled : true,
             equationRgb : BlendEquation.ADD,

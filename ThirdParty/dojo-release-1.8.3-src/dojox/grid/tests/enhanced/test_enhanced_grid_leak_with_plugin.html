@@ -1,0 +1,297 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html dir="ltr">
+<head>
+	<title>EnhancedGrid Memory Leak Test - Great/Destroy</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<link rel=stylesheet href="support/common.css"/>
+	<style type="text/css">
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+			padding-right: 5em;
+		}
+		.title {
+			text-align:center;
+			margin:1em;
+		}
+		.supporter {
+			display: block;
+			border: 3px solid #ccc;
+			width: 100em;
+			padding: 1em 3em; 
+			cursor: default;
+			radius: 8pt;
+			background: #fff;
+			-moz-border-radius: 8pt 8pt;
+		}
+		.selectReport {
+			display: inline-block;
+		}
+		.tutor h2{
+			font-weight: bolder;
+		}
+		.tutor td:first-child{
+			font-weight: bolder;
+		}
+ 		#gridContainer{
+			width: 100em;
+			height: 35em;
+			border: 1px solid #D5CDB5;
+		}
+		/*Sample - overwrite default cell style
+		.claro .dojoxGridCell{
+			border-color: transparent #D5CDB5 #D5CDB5 transparent !important;
+		}
+		.dj_ie6 .claro .dojoxGridCell{
+			border: 1px solid #F1F1F1 !important;
+		}*/
+	</style>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" 
+		djConfig="isDebug:false, parseOnLoad: true"></script>
+	<script type="text/javascript" src="../../../../dijit/tests/_testCommon.js"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.form.CheckBox");
+		dojo.require("dijit.form.DateTextBox");
+		dojo.require("dijit._WidgetsInTemplateMixin");
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojox.grid.enhanced.plugins.Filter");
+		dojo.require("dojox.grid.enhanced.plugins.exporter.CSVWriter");
+		dojo.require("dojox.grid.enhanced.plugins.Printer");
+		dojo.require("dojox.grid.enhanced.plugins.Cookie");
+		dojo.require("dojox.grid.enhanced.plugins.IndirectSelection");
+		dojo.require("dojox.grid.enhanced.plugins.NestedSorting");
+		dojo.require("dojox.grid.enhanced.plugins.Selector");
+		dojo.require("dojox.grid.enhanced.plugins.Menu");
+		dojo.require("dojox.grid.enhanced.plugins.DnD");
+		dojo.require("dojox.grid.enhanced.plugins.Search");
+		dojo.require("dojox.grid.enhanced.plugins.CellMerge");
+		dojo.require("dojox.grid.enhanced.plugins.Pagination");
+		dojo.require("dojox.grid.enhanced.plugins.GridSource");
+		dojo.require("dojox.grid.EnhancedGrid");
+		dojo.require("dojo.parser");
+		var startGridIndex = 0,
+			initialShowGrid = false,
+			hideCtrlPanel = false,
+		 	repeatCount = 100000,
+			repeatInterval = 500;
+			gridAttrs = {
+				rowsPerPage: 5,
+				keepSelection: true,
+				plugins: {}
+			};
+	</script>
+	<script type="text/javascript" src="support/test_write_store_music.js"></script>
+	<script type="text/javascript" src="support/test_layout_music.js"></script>
+	<script type="text/javascript" src="support/test_repeat.js"></script>
+	<script type="text/javascript">
+		var plugins = {
+			"nestedSorting": {},
+			"indirectSelection": {
+				headerSelector: true
+			},
+			"menus": {
+				headerMenu: "headerMenu", 
+				rowMenu: "rowMenu", 
+				cellMenu: "cellMenu", 
+				selectedRegionMenu: "selectedRegionMenu"
+			},
+			"exporter": {},
+			"printer": {},
+			"filter": {
+				closeFilterbarButton: true,
+				ruleCount: 0
+			},
+			"cookie": {},
+			"selector": {
+				col: false
+			},
+			"dnd": {
+				copyOnly: false
+			},
+			"cellMerge": {
+				"mergedCells": [
+					{row: "3", start: 1, end: 10, major: 3}
+				]
+			},
+			"search": {},
+			"pagination":
+			{
+				pageSizes: ["5", "10", "20", "50", "All"],	// Array, custom the items per page button
+				// itemTitle: "entrys", 	// String, custom the item' title of description
+				description: true,	// boolean, custom weather or not the discription will be displayed
+				sizeSwitch: true,	// boolean, custom weather or not the page size switch will be displayed
+				pageStepper: true,	// boolean, custom weather or not the page step will be displayed
+				gotoButton: true,
+				maxPageStep: 10,		// Integer, custom how many page step will be displayed
+				position: "bottom"		// String, custom the position of the paginator bar
+										// there're three options: top, bottom, both
+				// ,descTemplate: "${1} ${0}" // A template of the current position description.
+			}
+		};
+		var gridFeatures = {
+			"canSort": {
+				label: "disable canSort",
+				value: function(colIndex){
+					return false;
+				}
+			},
+			"rowSelector": {
+				value: "20px"
+			},
+			"autoHeight": {
+				value: true
+			},
+			"autoWidth": {
+				value: true
+			},
+			"singleClickEdit": {
+				value: true
+			},
+			"selectionMode": {
+				label: "single selectionMode",
+				value: "single"
+			},
+			"columnReordering": {
+				value: true
+			}
+		};
+		function getTableString(){
+			var sb = ["<table><tbody>"];
+			for(var featureName in gridFeatures){
+				sb.push("<tr>");
+				sb.push("<td><input id='cbid", featureName, 
+					"' dojoType='dijit.form.CheckBox' dojoAttachPoint='cb", featureName, 
+					"'><label id='lbl", featureName, "' for='cbid", featureName, "'>",
+					gridFeatures[featureName].label || featureName, "</label></input></td>"
+				);
+				sb.push("</tr>");
+			}
+			sb.push("<tr><td><hr/></td></tr>",
+				"<tr><td><button onclick='selectAll()'>Select All</button>",
+				"<button onclick='deselectAll()'>Deselect All</button></td></tr>"
+			);
+			for(var pluginName in plugins){
+				sb.push("<tr>");
+				sb.push("<td><input id='cbid", pluginName, 
+					"' dojoType='dijit.form.CheckBox' dojoAttachPoint='cb", pluginName, 
+					"'><label id='lbl", pluginName, "' for='cbid", pluginName, "'>",
+					pluginName, "</label></input></td>"
+				);
+				sb.push("</tr>");
+			}
+			sb.push("</tbody></table>");
+			return sb.join('');
+		}
+		dojo.declare("PluginTable", [dijit._Widget, dijit._TemplatedMixin, dijit._WidgetsInTemplateMixin], {
+			templateString: getTableString(),
+			widgetsInTemplate: true,
+			_onChangePlugin:  function(pluginName, cb, e){
+				var checked = cb.get("checked");
+				gridAttrs.plugins[pluginName] = checked ? plugins[pluginName] : false;
+				var nd = dojo.byId(pluginName + "Support");
+				if(nd){
+					dojo.style(nd, "display", checked ? "" : "none");
+				}
+			},
+			_onChangeFeature: function(featureName, cb, e){
+				var checked = cb.get("checked");
+				if(checked){
+					gridAttrs[featureName] = gridFeatures[featureName].value;
+				}else{
+					delete gridAttrs[featureName];
+				}
+			},
+			postCreate: function(){
+				var cb;
+				for(var featureName in gridFeatures){
+					cb = this["cb" + featureName];
+					this.connect(cb, "onChange", dojo.hitch(this, "_onChangeFeature", featureName, cb));
+				}
+				for(var pluginName in plugins){
+					cb = this["cb" + pluginName];
+					this.connect(cb, "onChange", dojo.hitch(this, "_onChangePlugin", pluginName, cb));
+				}
+			}
+		});
+		function selectAll(){
+			for(var pluginName in plugins){
+				dijit.byId("cbid" + pluginName).set("checked", true);
+			}
+		}
+		function deselectAll(){
+			for(var pluginName in plugins){
+				dijit.byId("cbid" + pluginName).set("checked", false);
+			}
+		}
+		function setupSelectorTest(){
+			var grid = dijit.byId("grid"),
+				func = function(type, start, end, selected){
+					fill("col", selected["col"]);
+					fill("row", selected["row"]);
+					fill("cell", selected["cell"]);
+				},
+				fill = function(type, selected){
+					var getString;
+					var cells = grid.layout.cells;
+					switch(type){
+						case "col":
+							getString = function(item){
+								return "Column " + item.col + ": " + dojo.toJson(item.except);
+							}
+							break;
+						case "row":
+							getString = function(item){
+								return "Row " + item.row + ": " + dojo.toJson(item.except);
+							}
+							break;
+						case "cell":
+							getString = function(item){
+								return "Cell " + item.row + " , " + item.col;
+							}
+					}
+				};
+		}
+		dojo.addOnLoad(function(){
+			dojo.subscribe("test_repeat_grid_created", function(){
+				var g = dijit.byId("grid");
+				g && g.setCookieEnabled && g.setCookieEnabled(false);
+			});
+		});
+	</script>
+</head>
+<body class="claro">
+	<h1 class="title">EnhancedGrid Memory Leak Test - Great/Destroy</h1>
+	<h2><p>Repeat creating/destroying Grid instances:</p></h2>
+	<div id="ctrlBtns"></div><br/>
+	<div id="pluginList" dojoType="PluginTable" style="float:right;"></div>
+	<div id="gridContainer"></div><br/>
+	<div id="ctrlBtns2"></div><br/>
+	<div id="menusSupport" style="display: none;">
+		<div dojoType="dijit.Menu" id="headerMenu"  style="display: none;">
+			<div dojoType="dijit.MenuItem">Header Menu Item 1</div>
+			<div dojoType="dijit.MenuItem">Header Menu Item 2</div>
+			<div dojoType="dijit.MenuItem">Header Menu Item 3</div>
+			<div dojoType="dijit.MenuItem">Header Menu Item 4</div>
+		</div>
+		<div dojoType="dijit.Menu" id="rowMenu"  style="display: none;">
+			<div dojoType="dijit.MenuItem">Row Menu Item 1</div>
+			<div dojoType="dijit.MenuItem">Row Menu Item 2</div>
+			<div dojoType="dijit.MenuItem">Row Menu Item 3</div>
+			<div dojoType="dijit.MenuItem">Row Menu Item 4</div>
+		</div>
+		<div dojoType="dijit.Menu" id="cellMenu"  style="display: none;">
+			<div dojoType="dijit.MenuItem">Cell Menu Item 1</div>
+			<div dojoType="dijit.MenuItem">Cell Menu Item 2</div>
+			<div dojoType="dijit.MenuItem">Cell Menu Item 3</div>
+			<div dojoType="dijit.MenuItem">Cell Menu Item 4</div>
+		</div>
+		<div dojoType="dijit.Menu" id="selectedRegionMenu"  style="display: none;">
+			<div dojoType="dijit.MenuItem">Action 1 for Selected Region</div>
+			<div dojoType="dijit.MenuItem">Action 2 for Selected Region</div>
+			<div dojoType="dijit.MenuItem">Action 3 for Selected Region</div>
+			<div dojoType="dijit.MenuItem">Action 4 for Selected Region</div>
+		</div>
+	</div>
+</body>
+</html>

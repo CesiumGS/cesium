@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Editor NewPage Plugin Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.DeferredList");
+			dojo.require("dojo.window");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_NewPage.html');
+
+				function getPlugin(/*Editor*/ editor){
+					// summary:
+					//		Return new page plugin for specified editor
+					var edPlugins = editor._plugins, i;
+					for(i = 0; i < edPlugins.length; i++){
+						var p = edPlugins[i], fsPlugin;
+						if(p.declaredClass === "dijit._editor.plugins.NewPage"){
+							p.button.set("checked", false);
+							return p;				
+						}
+					}
+					throw new Error("didn't find plugin");
+				}
+
+				doh.register("NewPage_tests", [
+					{
+						name: "wait for editors to load",
+						timeout: 5000,
+						runTest: function(){
+						    return new dojo.DeferredList(
+						        dijit.registry.filter(function(w){ return w.onLoadDeferred; }).map(function(w){ return w.onLoadDeferred; })
+						    );
+						}
+					},
+					{
+						name: "Mouse: Click new page clears editor",
+						timeout: 20000,
+						setUp: function(){
+							editor = dijit.byId("editor0");
+							npPlugin = getPlugin(editor);
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							dojo.window.scrollIntoView(editor.domNode);
+							editor.focus();
+
+							value = editor.get("value");
+							doh.robot.mouseMoveAt(npPlugin.button.domNode, 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								var newVal = editor.get("value");
+								doh.isNot(value, newVal, "Verify the contents have changed.");
+								newVal = dojo.trim(newVal);
+								newVal = newVal.replace("/>", ">");
+								newVal = newVal.replace(" >", ">");
+								newVal = newVal.toLowerCase();
+								doh.is("<br>", newVal, "Validate the contents are a single br");
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							editor.set("value", value);
+
+						}
+					},
+					{
+						name: "Mouse: Click new page sets editor with default content.",
+						timeout: 20000,
+						setUp: function(){
+							editor = dijit.byId("editor1");
+							npPlugin = getPlugin(editor);
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							dojo.window.scrollIntoView(editor.domNode);
+							editor.focus();
+
+							value = editor.get("value");
+							doh.robot.mouseMoveAt(npPlugin.button.domNode, 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								//Now check the state!
+								var newVal = editor.get("value");
+								doh.isNot(value, newVal, "Verify the contents have changed.");
+								newVal = dojo.trim(newVal);
+								doh.is("<p>This page intentionally left blank</p>", newVal, "Validate the contents are the defined default content");
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							editor.set("value", value);
+
+						}
+					}
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

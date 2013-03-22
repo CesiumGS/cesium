@@ -1,0 +1,26 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>ListItem</title>
+		<link href="../../themes/iphone/iphone.css" rel="stylesheet"/>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			//dojo.require("dojo.parser"); // Use the lightweight parser.
+			dojo.require("dojox.mobile.parser");
+			dojo.require("dojox.mobile");
+			dojo.requireIf(!dojo.isWebKit, "dojox.mobile.compat");
+		</script>
+
+		<script type="text/javascript" src="CreateListItem2_Programmatic.js"></script>
+
+		<script type="text/javascript" src="TestUtil.js"></script>
+		<script type="text/javascript" src="ListItem2.js"></script>
+	</head>
+	<body>
+		<div id="foo" dojoType="dojox.mobile.View" selected="true">
+		</div>
+	</body>
+</html>

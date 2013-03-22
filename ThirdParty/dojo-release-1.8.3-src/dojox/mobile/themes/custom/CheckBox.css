@@ -1,0 +1,43 @@
+/* dojox.mobile.CheckBox */
+.mblCheckBox {
+  position: relative;
+  margin: -0.5em 3px 0.3em 4px;
+  width: 1em;
+  height: 1em;
+  border-style: outset;
+  border-width: 1px;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#e2e2e2));
+  font: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  -webkit-transform: translatey(0.45em);
+  border: 1px solid #c0c0c0;
+  border-bottom-color: #9b9b9b;
+  border-radius: 0;
+}
+.mblCheckBoxSelected {
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#bbbbbb), to(#666666));
+}
+.mblCheckBoxChecked, .mblCheckBox:checked {
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#e2e2e2));
+}
+.mblCheckBoxChecked::after, .mblCheckBox:checked::after {
+  position: absolute;
+  content: "";
+  width: 0.3em;
+  height: 0.6em;
+  top: 0;
+  left: 0.3em;
+  border-width: 0.15em;
+  border-style: none solid solid none;
+  -webkit-transform: rotate(45deg);
+  -webkit-transform-origin: 50% 50%;
+  border-color: black;
+}
+.mblCheckBoxChecked.mblCheckBoxSelected, .mblCheckBox:checked.mblCheckBoxSelected {
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#bbbbbb), to(#666666));
+}
+.mblCheckBoxChecked.mblCheckBoxSelected::after, .mblCheckBox:checked.mblCheckBoxSelected::after {
+  border-color: white;
+}

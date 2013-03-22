@@ -1,0 +1,5 @@
+/* claro/form/Common_rtl.css */
+.claro .dijitTextBoxRtlError .dijitValidationContainer {
+  border-left-width: 0 !important;
+  border-right-width: 1px !important;
+}

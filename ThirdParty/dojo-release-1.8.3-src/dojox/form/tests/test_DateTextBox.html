@@ -1,0 +1,183 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+	    <meta charset="utf-8">
+		<title>Test DateTextBox Widget</title>
+
+		<!-- required: a default theme file -->
+		<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+		<link rel="stylesheet" href="../../widget/Calendar/Calendar.css">
+
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+
+			.testExample {
+				background-color:#fbfbfb;
+				padding:1em;
+				margin-bottom:1em;
+				border:1px solid #bfbfbf;
+			}
+
+			body .medium {
+				width: 10em;
+			}
+
+			.noticeMessage {
+				color:#093669;
+				font-size:0.95em;
+				margin-left:0.5em;
+			}
+
+			.dojoTitlePaneLabel label {
+				font-weight:bold;
+			}
+		</style>
+
+		<!-- required: dojo.js -->
+    	<script type="text/javascript" src="../../../dojo/dojo.js"
+        	data-dojo-config="async:1, parseOnLoad:1, transparentColor: [ 255, 255, 255 ], extraLocale: ['de-de', 'en-us']"></script>
+
+
+		<!-- do not use, only for dynamic themes -->
+		<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+	</head>
+
+	<body class="tundra">
+		<h1 class="testTitle">Test DateTextBox Widget</h1>
+		<!--	to test form submission, you'll need to create an action handler similar to
+			http://www.utexas.edu/teamweb/cgi-bin/generic.cgi -->
+		<form id="form1" data-dojo-type='dijit/form/Form' action="" name="example" method="">
+			<div class="dojoTitlePaneLabel">
+				<label for="q1"> Date (local format) </label>
+				<span class="noticeMessage">DateTextBox class, no attributes</span>
+			</div>
+			<div class="testExample">
+				<input id="q1" name="noDOMvalue" type="text" data-dojo-type="dojox/form/DateTextBox"
+				    onChange="dojo.byId('oc1').value=arguments[0]"
+				>
+				onChange:<input id="oc1" size="34" disabled value="not fired yet!" autocomplete="off">
+			</div>
+
+			<div class="testExample">
+				Day Only
+				<input id="q1Day" name="q1Day" type="text" data-dojo-type="dojox/form/DayTextBox"
+				         onChange="dojo.byId('oc1day').value=arguments[0]"
+				>
+				onChange:<input id="oc1day" size="34" disabled value="not fired yet!" autocomplete="off">
+			</div>
+			<div class="testExample">
+				Month Only
+				<input id="q1Month" name="q1Month" type="text" data-dojo-type="dojox/form/MonthTextBox"
+				         onChange="dojo.byId('oc1month').value=arguments[0]"
+				>
+				onChange:<input id="oc1month" size="34" disabled value="not fired yet!" autocomplete="off">
+			</div>
+
+			<div class="testExample">
+				Year Only
+				<input id="q1Year" name="q1Year" type="text" data-dojo-type="dojox/form/YearTextBox"
+				         onChange="dojo.byId('oc1year').value=arguments[0]"
+				>
+				onChange:<input id="oc1year" size="34" disabled value="not fired yet!" autocomplete="off">
+			</div>
+			<div class="dojoTitlePaneLabel">
+				<label for="q2"> Date (local format - long) </label>
+				<span class="noticeMessage">DateTextBox class,
+					Attributes: required="true", trim="true", constraints={min:'2004-01-01',max:'2006-12-31',formatLength:'long'}. Works for leap years</span>
+			</div>
+			<div class="testExample">
+				<input id="q2" type="text" name="date1" class="medium" value="2005-12-30"
+					data-dojo-type="dojox/form/DateTextBox"
+					constraints="{min:'2004-01-01',max:'2006-12-31',formatLength:'long'}"
+					required="true"
+					trim="true"
+					onChange="dojo.byId('oc2').value=arguments[0]"
+					invalidMessage="Invalid date." />
+ 				onChange:<input id="oc2" size="34" disabled value="not fired yet!" autocomplete="off">
+				<input type="button" value="Destroy" onClick="dijit.byId('q2').destroy(); return false;">
+				<input type="button" value="set max to 2007-12-31" onClick="dijit.byId('q2').constraints.max = new Date(2007,11,31); return false;">
+			</div>
+			<div class="dojoTitlePaneLabel">
+				<label for="q3"> Date (American format) </label>
+				<span class="noticeMessage">DateTextBox class,
+					Attributes: lang="en-us", required="true", constraints={min:'2004-01-01',max:'2006-12-31'}. Works for leap years</span>
+			</div>
+			<div class="testExample">
+				<input id="q3" type="text" name="date2" class="medium" value="2005-12-30"
+					data-dojo-type="dojox/form/DateTextBox"
+					constraints="{min:'2004-01-01',max:'2006-12-31'}"
+					lang="en-us"
+					required="true"
+					promptMessage="mm/dd/yyyy"
+					invalidMessage="Invalid date. Use mm/dd/yyyy format." />
+			</div>
+			<div class="dojoTitlePaneLabel">
+				<label for="q4"> Date (German format) </label>
+				<span class="noticeMessage">DateTextBox class,
+					Attributes: lang="de-de", constraints={min:2004-01-01, max:2006-12-31}. Works for leap years</span>
+			</div>
+			<div class="testExample">
+				<input id="q4" class="medium"/>
+			</div>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="q5"> Date, overriding pattern</label>
+				<span class="noticeMessage">Date, overriding pattern with dd-MM-yyyy</span>
+			</div>
+			<div class="testExample">
+				<input id="q5" name="noDOMvalue" type="text" data-dojo-type="dojox/form/DateTextBox" data-dojo-props="constraints:{datePattern:'dd-MM-yyyy', strict:true}">
+			</div>
+
+			<script>
+			    // See if we can make a widget in script and attach it to the DOM ourselves.
+			    require([
+    				"dojox/form/DateTextBox",
+    				"dojo/domReady!"
+    			], function(DateTextBox){
+    				var props = {
+    					name: "date4",
+    					value: new Date(2006,10,29),
+    					constraints: {min:new Date(2004,0,1),max:new Date(2006,11,31)},
+    					lang: "de-de",
+    					promptMessage: "dd.mm.yy",
+    					rangeMessage: "Enter a date in the year range 2004-2006.",
+    					invalidMessage: "Invalid date. Use dd.mm.yy format."
+    				};
+    				var w = new DateTextBox(props, "q4");
+                });
+			</script>
+
+			<script>
+				function displayData() {
+					var f = document.getElementById("form1");
+					var s = "";
+					for (var i = 0; i < f.elements.length; i++) {
+						var elem = f.elements[i];
+						if (elem.name == "button")  { continue; }
+						s += elem.name + ": " + elem.value + "\n";
+					}
+					alert(s);
+				}
+			</script>
+
+			<div class="dojoTitlePaneLabel">
+				<label for="fromDate"> Date pairs, to/from</label>
+			</div>
+			<div class="testExample">
+				From: <input id="fromDate" type="text" name="fromDate" data-dojo-type="dojox/form/DateTextBox"
+					required="true"
+					onChange="dijit.byId('toDate').constraints.min = this.getValue();" />
+				To: <input id="toDate" type="text" name="toDate" data-dojo-type="dojox/form/DateTextBox"
+					required="true"
+					onChange="dijit.byId('fromDate').constraints.max = this.getValue();" />
+			</div>
+
+			<div>
+				<button name="button" onclick="displayData(); return false;">view data</button>
+				<input type="submit" name="submit" />
+				<input type="reset" name="reset" />
+			</div>
+		</form>
+	</body>
+</html>

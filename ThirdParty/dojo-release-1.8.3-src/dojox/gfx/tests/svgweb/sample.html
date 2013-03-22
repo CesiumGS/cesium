@@ -1,0 +1,164 @@
+<html>
+	<head>
+		<title>GFX on SVGWeb sample</title>
+
+		<!-- tell svgweb to use flash rather than native svg -->
+		<meta name="svg.render.forceflash" content="true"/>
+		<!-- include svgweb, must before dojo, notice the extra 'data-path' attribute -->
+		<script src="svgweb/src/svg.js" data-path="svgweb/src"></script>
+		<!-- include dojo, notice the config: forceGfxRenderer:'svg' -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="async: true, isDebug: true, forceGfxRenderer: 'svg'"></script>
+
+		<script type="text/javascript">
+			require(["dojo/dom", "dojox/gfx", "dojox/gfx/move"], function(dom){
+			
+			function testSurface() {
+				var node = dom.byId("surface");
+				var surface = dojox.gfx.createSurface(node, 600, 550);
+				
+				surface.whenLoaded(
+					function() {
+						surface.openBatch();
+
+						basicShapes(surface);
+						basicTransform(surface);
+						basicGroup(surface);
+						basicMove(surface);
+						basicText(surface);
+						
+						surface.closeBatch();
+					}
+				);
+				
+				window.s = surface;
+			}
+			
+			function basicText(surface) {
+				var text = surface.createText({x: 200, y: 200, text: "I'm wrong!"});
+				text.setShape({text: "The red circle is draggable"});
+			}
+			
+			function basicMove(surface) {
+				var d = surface.createCircle({
+					r : 50,
+					cx : 200,
+					cy: 200
+				}).setFill({
+					type: "radial",
+					cx : 200,
+					cy: 200,
+					r:50,
+					colors: [
+						{color:"white",offset:0},
+						{color:"red",offset:1}
+					]
+				});
+				new dojox.gfx.Moveable(d);
+			}
+			
+			function basicGroup(surface) {
+				var _defaultStroke = {
+					color : "black",
+					style : "solid",
+					width : 1
+				};
+
+				var _arrowHeight = 5;
+				var _arrowWidth = 3;
+				
+				drawArrow(300,300, 435,435);
+				drawArrow(300,300, 165,165);
+				drawArrow(300,300, 435,165);
+				drawArrow(300,300, 165,435);
+				
+				drawArrow(300,300, 300,450);
+				drawArrow(300,300, 300,150);
+				drawArrow(300,300, 150,300);
+				drawArrow(300,300, 450,300);
+				
+				function drawArrow(x1, y1, x2, y2) {
+					var len = Math.sqrt(Math.pow(x2-x1,2) + Math.pow(y2-y1,2));
+					var group = surface.createGroup();
+					
+					group.createLine({
+						x1 : 0,
+						y1 : 0,
+						x2 : 0+len,
+						y2 : 0
+					}).setStroke(_defaultStroke);
+					
+					group.createPath()
+						.moveTo(len-_arrowHeight,0)
+						.lineTo(len-_arrowHeight,-_arrowWidth)
+						.lineTo(len,0)
+						.lineTo(len-_arrowHeight,_arrowWidth)
+						.lineTo(len-_arrowHeight,0)
+						.setStroke(_defaultStroke)
+						.setFill("black");
+
+					var _rot = Math.asin((y2-y1)/len)*180/Math.PI;
+					if (x2 <= x1) {_rot = 180-_rot;}
+					
+					group.setTransform([
+						dojox.gfx.matrix.translate(x1,y1),
+						dojox.gfx.matrix.rotategAt(_rot,0,0)
+					]);
+				}
+			}
+			
+			function basicTransform(surface) {
+				var rect1 = surface.createRect({
+					width : 200,
+					height: 200
+				})
+				.setFill("red")
+				.setTransform([
+					dojox.gfx.matrix.rotategAt(45,50,350),
+					dojox.gfx.matrix.translate(50,350)
+				]);
+			}
+			
+			function basicShapes(surface) {
+				surface.createEllipse({
+					cx : 300,
+					cy : 300,
+					rx : 50,
+					ry : 100
+				}).setFill("yellow");
+
+				surface.createRect({
+					x : 90,
+					y : 90,
+					width : 50,
+					height : 170
+				}).setFill([255,0,0,0.5]);
+				
+				surface.createCircle({
+					cx : 400,
+					cy : 200,
+					r  : 50
+				}).setFill([255,0,0,0.5]);
+				
+				surface.createCircle({
+					cx : 425,
+					cy : 225,
+					r  : 50
+				}).setFill([0,255,0,0.5]);
+
+				surface.createCircle({
+					cx : 425,
+					cy : 175,
+					r  : 50
+				}).setFill([0,0,255,0.5]);
+
+			}
+					testSurface();
+				});
+		</script>
+	</head>
+
+	<body>
+		<div id="surface" style="width:600;height:550;border:solid 1px">
+		</div>
+	</body>
+</html>

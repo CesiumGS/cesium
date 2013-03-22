@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Check Box Tests</title>
+<script type="text/javascript" src="../../deviceTheme.js"></script>
+<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+<script language="JavaScript" type="text/javascript">
+	require([
+		"dojo/dom-construct", // dojo.place
+		"dojo/ready", // dojo.ready
+		"dijit/registry",  // dijit.byId
+		"doh/runner",	//doh functions
+		"dojox/mobile/CheckBox",
+		"dojox/mobile",				// This is a mobile app.
+		"dojox/mobile/View",		// This mobile app uses mobile view
+		"dojox/mobile/compat",		// This mobile app supports running on desktop browsers
+		"dojox/mobile/parser"		// This mobile app uses declarative programming with fast mobile parser
+	], function(domConst, ready, registry, runner, CheckBox){
+		function _createCheckBoxDeclaratively(checkBoxId) {
+			return registry.byId(checkBoxId);
+		}
+		function _createCheckBoxProgrammatically(placeHolderId){
+			var checkBox = new CheckBox();
+			runner.assertNotEqual(null, checkBox);
+			domConst.place(checkBox.domNode, placeHolderId, "replace");
+			checkBox.startup();
+			return checkBox;
+		}
+		function _createCheckBoxProgrammaticallyWithSourceNodeReference(checkBoxId){
+			return new CheckBox({}, checkBoxId);
+		}
+		function _assertCorrectCheckBox(checkBox){
+			runner.assertNotEqual(null, checkBox);
+			runner.assertFalse(checkBox.checked, "unchecked id=" + checkBox.domNode.id);
+			checkBox.set("checked", true);
+			runner.assertTrue(checkBox.checked, "checked id=" + checkBox.domNode.id);
+		}
+		function _showView2(){
+			var view1 = registry.byId("view1");
+			view1.performTransition("view2", 1, "none");
+		}
+		ready(function(){
+			runner.register("dojox.mobile.test.doh.CheckBoxTests", [
+				function testInView1(){
+					var checkBox1 = _createCheckBoxDeclaratively("view1-checkBox1");
+					var checkBox2 = _createCheckBoxProgrammatically("view1-checkBox2");
+					var checkBox3 = _createCheckBoxProgrammaticallyWithSourceNodeReference("view1-checkBox3");
+			
+					_assertCorrectCheckBox(checkBox1);
+					_assertCorrectCheckBox(checkBox2);
+					_assertCorrectCheckBox(checkBox3);
+				},
+				function testInView2(){
+					var checkBox1 = _createCheckBoxDeclaratively("view2-checkBox1");
+					var checkBox2 = _createCheckBoxProgrammatically("view2-checkBox2");
+					var checkBox3 = _createCheckBoxProgrammaticallyWithSourceNodeReference("view2-checkBox3");
+					
+					_showView2();
+					
+					_assertCorrectCheckBox(checkBox1);
+					_assertCorrectCheckBox(checkBox2);
+					_assertCorrectCheckBox(checkBox3);
+				}
+			]);
+			runner.run();
+		});
+	})
+</script>
+</head>
+<body>
+	<div id="view1" data-dojo-type="dojox.mobile.View" selected="true">
+		<h1>View 1</h1>
+		<input id="view1-checkBox1" type="checkbox" data-dojo-type="dojox.mobile.CheckBox"></input>
+		<div id="view1-checkBox2"></div>
+		<input id="view1-checkBox3" type="checkbox"></input>
+	</div>
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<h1>View 2</h1>
+		<input id="view2-checkBox1" type="checkbox" data-dojo-type="dojox.mobile.CheckBox"></input>
+		<div id="view2-checkBox2"></div>
+		<input id="view2-checkBox3" type="checkbox"></input>
+	</div>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<title>Button</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','Button']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/connect",
+			"dojo/ready",
+			"dojo/_base/array",
+			"dojo/dom",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/Button"
+		], function(connect, ready, array, dom, registry){
+			ready(function(){
+				array.forEach(["btn1", "btn2", "btn3", "btn4", "btn5"], function(btnId){
+					var btnWidget = registry.byId(btnId);
+					connect.connect(btnWidget.domNode, "click", onBtnClicked);
+				});
+			});
+			function onBtnClicked(){
+				var span = dom.byId("msgArea");
+				span.innerHTML = "&quot;" + dom.byId(this.id).innerHTML + "&quot; button was clicked.";
+				setTimeout(function(){
+					span.innerHTML = "";
+				}, 1000);
+			};
+		});
+	</script>
+
+	<style>
+	html,body {
+		height: 100%;
+		overflow: hidden;
+	}
+	hr {
+		border: none;
+		margin: 0;
+	}
+	button {
+		width: 120px;
+		margin: 15px 10px 0;
+	}
+	button.customButton {
+		border-color: #cc3333;
+		background-image: url(images/red-button-bg.png);
+		background-image: -webkit-gradient(linear, left top, left bottom, from(#D3656D), to(#BC1320), color-stop(0.5, #C9404B), color-stop(0.5, #BC1421));
+		color: #ffffff;
+	}
+	button.customButtonSelected {
+		background-image: url(images/red-button-sel-bg.png);
+		background-image: -webkit-gradient(linear, left top, left bottom, from(#AF333C), to(#880E17), color-stop(0.5, #952B33), color-stop(0.5, #870F18));
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div data-dojo-type="dojox.mobile.View">
+	    <h1 data-dojo-type="dojox.mobile.Heading">Button</h1>
+		<button data-dojo-type="dojox.mobile.Button" id="btn1">Default</button>
+		<hr>
+		<button data-dojo-type="dojox.mobile.Button" id="btn2" class="mblBlueButton">Blue</button>
+		class="mblBlueButton"
+		<hr>
+		<button data-dojo-type="dojox.mobile.Button" id="btn3" class="mblRedButton">Red</button>
+		class="mblRedButton"
+		<hr>
+		<button data-dojo-type="dojox.mobile.Button" id="btn4" disabled>Disabled</button>
+		disabled
+		<hr>
+		<button data-dojo-type="dojox.mobile.Button" id="btn5" class="customButton">Custom</button>
+		class="customButton"
+		<hr>
+		<div id="msgArea" style="margin:15px"></div>
+	</div>
+</body>
+</html>

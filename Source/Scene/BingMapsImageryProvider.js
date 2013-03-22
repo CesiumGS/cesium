@@ -8,7 +8,7 @@ define([
         './BingMapsStyle',
         './DiscardMissingTileImagePolicy',
         './ImageryProvider',
-        './ImageryProviderError',
+        './TileProviderError',
         './WebMercatorTilingScheme',
         '../ThirdParty/when'
     ], function(
@@ -20,7 +20,7 @@ define([
         BingMapsStyle,
         DiscardMissingTileImagePolicy,
         ImageryProvider,
-        ImageryProviderError,
+        TileProviderError,
         WebMercatorTilingScheme,
         when) {
     "use strict";
@@ -31,7 +31,7 @@ define([
      * @alias BingMapsImageryProvider
      * @constructor
      *
-     * @param {String} description.server The name of the Bing Maps server hosting the imagery.
+     * @param {String} description.url The url of the Bing Maps server hosting the imagery.
      * @param {String} [description.key] An optional Bing Maps key, which can be created at
      *        <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
      * @param {Enumeration} [description.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
@@ -49,7 +49,7 @@ define([
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
-     * @exception {DeveloperError} <code>description.server</code> is required.
+     * @exception {DeveloperError} <code>description.url</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
      * @see OpenStreetMapImageryProvider
@@ -62,19 +62,19 @@ define([
      *
      * @example
      * var bing = new BingMapsImageryProvider({
-     *     server : 'dev.virtualearth.net',
+     *     url : 'http://dev.virtualearth.net',
      *     mapStyle : BingMapsStyle.AERIAL
      * });
      */
     var BingMapsImageryProvider = function BingMapsImageryProvider(description) {
         description = defaultValue(description, {});
 
-        if (typeof description.server === 'undefined') {
-            throw new DeveloperError('description.server is required.');
+        if (typeof description.url === 'undefined') {
+            throw new DeveloperError('description.url is required.');
         }
 
-        this._server = description.server;
-        this._key = defaultValue(description.key, 'AquXz3981-1ND5jGs8qQn7R7YUP8qkWi77yZSVM7o3nIvzb-Mg0W2Ta57xuUyywX');
+        this._url = description.url;
+        this._key = defaultValue(description.key, 'Auc5O1omLRY_ub2safz0m2vJbzhYhSfTkO9eRDtLOauonIVoAiy6BV8c-L4jl1MT');
         this._mapStyle = defaultValue(description.mapStyle, BingMapsStyle.AERIAL);
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
@@ -107,7 +107,7 @@ define([
 
         this._ready = false;
 
-        var metadataUrl = 'http://' + this._server + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?key=' + this._key;
+        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?key=' + this._key;
         var that = this;
         var metadataError;
 
@@ -130,12 +130,12 @@ define([
             }
 
             that._ready = true;
-            ImageryProviderError.handleSuccess(metadataError);
+            TileProviderError.handleSuccess(metadataError);
         }
 
         function metadataFailure(e) {
             var message = 'An error occurred while accessing ' + metadataUrl + '.';
-            metadataError = ImageryProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+            metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
         }
 
         function requestMetadata() {
@@ -150,14 +150,27 @@ define([
     };
 
     /**
-     * Gets the name of the Bing Maps server hosting the imagery.
+     * Gets the name of the Bing Maps server url hosting the imagery.
      *
      * @memberof BingMapsImageryProvider
      *
-     * @returns {String} The server name.
+     * @returns {String} The url.
      */
-    BingMapsImageryProvider.prototype.getServer = function() {
-        return this._server;
+    BingMapsImageryProvider.prototype.getUrl = function() {
+        return this._url;
+    };
+
+    /**
+     * Gets the proxy used by this provider.
+     *
+     * @memberof BingMapsImageryProvider
+     *
+     * @returns {Proxy} The proxy.
+     *
+     * @see DefaultProxy
+     */
+    BingMapsImageryProvider.prototype.getProxy = function() {
+        return this._proxy;
     };
 
     /**
@@ -294,7 +307,7 @@ define([
     /**
      * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
      * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
-     * are passed an instance of {@link ImageryProviderError}.
+     * are passed an instance of {@link TileProviderError}.
      *
      * @memberof BingMapsImageryProvider
      *

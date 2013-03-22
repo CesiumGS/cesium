@@ -139,7 +139,7 @@ defineSuite([
         var provider = new OpenStreetMapImageryProvider({
             url : 'made/up/osm/server'
         });
-        expect(provider.getLogo()).not.toBeUndefined();
+        expect(provider.getLogo()).toBeDefined();
     });
 
     it('turns the supplied credit into a logo', function() {
@@ -147,7 +147,7 @@ defineSuite([
             url : 'made/up/osm/server',
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
-        expect(providerWithCredit.getLogo()).not.toBeUndefined();
+        expect(providerWithCredit.getLogo()).toBeDefined();
     });
 
     it('routes requests through a proxy if one is specified', function() {
@@ -166,6 +166,7 @@ defineSuite([
         runs(function() {
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('made/up/osm/server'))).toEqual(0);
+                expect(provider.getProxy()).toEqual(proxy);
                 expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.

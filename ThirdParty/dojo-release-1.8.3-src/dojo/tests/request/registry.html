@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Registry Test</title>
+
+	<script>
+		var dojoConfig = {
+			async: true,
+			requestProvider: 'dojo/request/registry'
+		};
+	</script>
+	<script src="../../dojo.js"></script>
+	<script>
+		require([
+			"doh",
+			"dojo/request",
+			"dojo/request/registry",
+			"dojo/request/script",
+			"dojo/domReady!"
+		], function(doh, request, registry, script){
+			doh.register("dojo/request/registry", [
+				function requestEqualsRegistry(t){
+					t.is(registry, request, "request should be the registry function");
+				},
+				{
+					name: "RegExp registration works",
+					runTest: function(t){
+						var d = new doh.Deferred();
+
+						var h = request.register(/^foo/, d.getTestCallback(function(url, options){
+							t.t(/^foo/.test(url), "URL should begin with 'foo'");
+							h.remove();
+						}));
+
+						request.get('foobar');
+
+						return d;
+					}
+				},
+				{
+					name: "Function registration works",
+					runTest: function(t){
+						var d = new doh.Deferred();
+
+						var h = request.register(function(url, options){
+							return options.method == 'POST';
+						}, d.getTestCallback(function(url, options){
+							t.is('POST', options.method, "Method should be 'POST'");
+							h.remove();
+						}));
+
+						request.post('foobar');
+
+						return d;
+					}
+				},
+				{
+					name: "String registration works",
+					runTest: function(t){
+						var d = new doh.Deferred();
+
+						var h = request.register("foobar", d.getTestCallback(function(url, options){
+							t.is('foobar', url, "URL should be 'foobar'");
+							h.remove();
+						}));
+
+						request.get('foobar');
+
+						return d;
+					}
+				},
+				{
+					name: "Fallback works",
+					runTest: function(t){
+						var d = new doh.Deferred();
+
+						var h = t.handle = request.register("foobar", function(url, options){});
+
+						request.get("registry.html").then(d.getTestCallback(function(){
+							delete t.handle;
+							h.remove();
+						}));
+
+						return d;
+					},
+					tearDown: function(t){
+						if(t.handle){
+							t.handle.remove();
+						}
+					}
+				}
+			]);
+
+			doh.run();
+		});
+	</script>
+</head>
+<body>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+
+	<title>TextBox type Tests</title>
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<!-- only needed for alternate theme testing: -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dojo.parser");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.form.TextBox");
+		dojo.require("dijit.form.CurrencyTextBox");
+		dojo.require("dijit.form.DateTextBox");
+		dojo.require("dijit.form.TimeTextBox");
+		dojo.require("dijit.form.NumberTextBox");
+		dojo.require("dijit.form.RangeBoundTextBox");
+
+		dojo.ready(function(){
+
+			doh.register("types", [
+				{
+					name: "HTML4",
+					runTest: function(){
+						doh.is(dojo.byId('hn').type, dijit.byId('dr').focusNode.type, "dr");
+						doh.is(dojo.byId('hp').type, dijit.byId('dp').focusNode.type, "dp");
+						doh.is("text", dijit.byId('dn').focusNode.type, "dn");
+						doh.is("text", dijit.byId('dc').focusNode.type, "dc");
+						doh.is("text", dijit.byId('dd').focusNode.type, "dd");
+						doh.is("text", dijit.byId('dt').focusNode.type, "dt");
+					}
+				},
+				{
+					name: "HTML5",
+					runTest: function(){
+						doh.is(dojo.byId('hn').type, dijit.byId('wr').focusNode.type, "wr");
+						doh.is(dojo.byId('hp').type, dijit.byId('wp').focusNode.type, "wp");
+						doh.is("text", dijit.byId('wn').focusNode.type, "wn");
+						doh.is("text", dijit.byId('wc').focusNode.type, "wc");
+						doh.is("text", dijit.byId('wd').focusNode.type, "wd");
+						doh.is("text", dijit.byId('wt').focusNode.type, "wt");
+					}
+				}
+			]);
+
+			doh.run();
+		});
+
+	</script>
+</head>
+<body class="claro" role="main">
+	<h1>TextBox type Tests</h1>
+	<input id="hn" aria-label="hn" type="number" value="1234" /><br>
+	<input id="hd" aria-label="hd" type="date" value="2011-05-19" /><br>
+	<input id="ht" aria-label="ht" type="time" value="10:11:00" /><br>
+	<input id="hp" aria-label="hp" type="password" value="password" /><br>
+<br>
+	<input aria-label="dr" id="dr" type="number" dojoType="dijit.form.RangeBoundTextBox" value="1234" /><br>
+	<input aria-label="dp" id="dp" type="password" dojoType="dijit.form.TextBox" value="password" /><br>
+	<input aria-label="dn" id="dn" type="number" dojoType="dijit.form.NumberTextBox" value="1234" /><br>
+	<input aria-label="dc" id="dc" type="number" dojoType="dijit.form.CurrencyTextBox" value="1234.00" /><br>
+	<input aria-label="dd" id="dd" type="date" dojoType="dijit.form.DateTextBox" value="2011-05-19" /><br>
+	<input aria-label="dt" id="dt" type="time" dojoType="dijit.form.TimeTextBox" value="T10:11:00" /><br>
+<br>
+	<input id="wr" data-dojo-type="dijit/form/RangeBoundTextBox" data-dojo-props='value:1234, type:"number", "aria-label":"wr" ' /><br>
+	<input id="wp" data-dojo-type="dijit/form/TextBox" data-dojo-props='value:"password", type:"password", "aria-label":"wp" ' /><br>
+	<input id="wn" data-dojo-type="dijit/form/NumberTextBox" data-dojo-props='value:1234, type:"number", "aria-label":"wn" ' /><br>
+	<input id="wc" data-dojo-type="dijit/form/CurrencyTextBox" data-dojo-props='value:1234, type:"number", "aria-label":"wc" ' /><br>
+	<input id="wd" data-dojo-type="dijit/form/DateTextBox" data-dojo-props='value:new Date(2011,04,19,0,0,0,0), type:"date", "aria-label":"wd" ' /><br>
+	<input id="wt" data-dojo-type="dijit/form/TimeTextBox" data-dojo-props='value:new Date(0,0,0,10,11,0,0), type:"time", "aria-label":"wt" ' /><br>
+</body>
+</html>

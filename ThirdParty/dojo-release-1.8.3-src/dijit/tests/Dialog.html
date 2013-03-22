@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Dialog Widget Automated (non-robot) Tests</title>
+
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		djConfig="isDebug: true"></script>
+
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.Dialog");
+		dojo.require("dijit.DialogUnderlay");
+		dojo.require("dijit.focus");
+		dojo.require("dijit.tests.helpers");	// functions to help test
+
+		dojo.ready(function(){
+			// Non robot tests to see if nested dialogs work correctly
+			// when obscured dialogs are destroyed/hidden, on race conditions of
+			// multiple dialogs fading in/out at once, etc.
+			doh.register("out-of-order dialog hide/destroy", [
+				{
+					name: "open first dialog",
+					timeout: 10000,
+					runTest: function(){
+						var d = new doh.Deferred(),
+							dlg1;
+
+						// Start focus on a button on the page (although we aren't going
+						// to click the button)
+						dojo.byId("button").focus();
+
+						// Create and show first dialog
+						dlg1 = new dijit.Dialog({
+							id: "dlg1",
+							title: "dialog 1",
+							content:
+								"<input id='dlg1_inputA'><br>" +
+								"<input id='dlg1_inputB'><br>" +
+								"<input id='dlg1_inputC'><br>" +
+								"<input id='dlg1_inputD'><br>" +
+								"<input id='dlg1_inputE'><br>" +
+								"<input id='dlg1_inputF'><br>" +
+								"<input id='dlg1_inputG'><br>" +
+								"<input id='dlg1_inputH'><br>"
+						});
+						dlg1.show().then(d.getTestCallback(function(){
+							doh.t(isVisible(dlg1), "dialog 1 is visible");
+
+							var dialog1Z = dojo.style(dlg1.domNode, "zIndex"),
+								underlayZ = dojo.style(dijit.DialogUnderlay._singleton.domNode, "zIndex");
+
+							doh.t(dialog1Z > underlayZ, "dialog1 (zIndex=" + dialog1Z +
+								") above underlay (zIndex=" + underlayZ + ")");
+
+							doh.is("dlg1_inputA", dojo.global.dijit.focus.curNode.id, "focus is on the first field");
+
+							// For back-compat, startup() should be called on children even if Dialog.startup()
+							// isn't called explicitly.							
+							doh.t(dlg1._started, "dlg1 started");
+						}));
+
+						return d;
+					}
+				},
+				{
+					name: "open second dialog",
+					timeout: 20000,
+					runTest: function(){
+						var d = new doh.Deferred(),
+							dlg1 = dijit.byId("dlg1"),
+							dlg2;
+
+						// Create and show second dialog
+						dlg2 = new dijit.Dialog({
+							id: "dlg2",
+							title: "dialog 2",
+							content:
+								"<input id='dlg2_inputA'><br>" +
+								"<input id='dlg2_inputB'><br>" +
+								"<input id='dlg2_inputC'><br>" +
+								"<input id='dlg2_inputD'><br>" +
+								"<input id='dlg2_inputE'><br>" +
+								"<input id='dlg2_inputF'><br>"
+						});
+						dlg2.show().then(d.getTestCallback(function(){
+							doh.t(isVisible(dlg2), "dialog 2 is visible");
+
+							var dialog1Z = dojo.style(dlg1.domNode, "zIndex"),
+								dialog2Z = dojo.style(dlg2.domNode, "zIndex"),
+								underlayZ = dojo.style(dijit.DialogUnderlay._singleton.domNode, "zIndex");
+
+							doh.t(underlayZ > dialog1Z, "underlay (zIndex=" + underlayZ +
+								") above dialog1 (zIndex=" + dialog1Z + ")");
+							doh.t(dialog2Z > underlayZ, "dialog2 (zIndex=" + dialog2Z +
+								") above underlay (zIndex=" + underlayZ + ")");
+
+							doh.is("dlg2_inputA", dojo.global.dijit.focus.curNode.id, "focus is on the first field");
+						}));
+
+						return d;
+					}
+				},
+				{
+					name: "destroy first dialog",
+					timeout: 20000,
+					runTest: function(){
+						var d = new doh.Deferred(),
+							dlg1 = dijit.byId("dlg1"),
+							dlg2 = dijit.byId("dlg2");
+
+						dlg1.destroy();
+
+						setTimeout(d.getTestCallback(function(){
+							doh.t(isVisible(dlg2), "dialog 2 is still visible");
+							doh.t(isVisible(dijit.DialogUnderlay._singleton), "underlay is still visible");
+
+							doh.is("dlg2_inputA", dojo.global.dijit.focus.curNode.id, "dialog 2 still has focus");
+
+							var dialog2Z = dojo.style(dlg2.domNode, "zIndex"),
+								underlayZ = dojo.style(dijit.DialogUnderlay._singleton.domNode, "zIndex");
+
+							doh.t(dialog2Z > underlayZ, "dialog2 (zIndex=" + dialog2Z +
+								") above underlay (zIndex=" + underlayZ + ")");
+
+						}), 2000);
+
+						return d;
+					}
+				},
+				{
+					name: "open third dialog",
+					timeout: 20000,
+					runTest: function(){
+						var d = new doh.Deferred(),
+							dlg2 = dijit.byId("dlg2"),
+							dlg3;
+
+						// Create and show third dialog
+						dlg3 = new dijit.Dialog({
+							id: "dlg3",
+							title: "dialog 3",
+							content:
+								"<input id='dlg3_inputA'><br>" +
+								"<input id='dlg3_inputB'><br>" +
+								"<input id='dlg3_inputC'><br>" +
+								"<input id='dlg3_inputD'><br>"
+
+						});
+						dlg3.show().then(d.getTestCallback(function(){
+							doh.t(isVisible(dlg3), "dialog 3 is visible");
+
+							// Even though a dialog was deleted, the zIndex of the dialog 3
+							// should be above dialog 2.    This test is to make sure we don't
+							// merely use _dialogStack.length to compute zIndex
+							var dialog2Z = dojo.style(dlg2.domNode, "zIndex"),
+								dialog3Z = dojo.style(dlg3.domNode, "zIndex"),
+								underlayZ = dojo.style(dijit.DialogUnderlay._singleton.domNode, "zIndex");
+							doh.t(underlayZ > dialog2Z, "underlay (zIndex=" + underlayZ +
+								") above dialog2 (zIndex=" + dialog2Z + ")");
+							doh.t(dialog3Z > underlayZ, "dialog3 (zIndex=" + dialog3Z +
+								") above underlay (zIndex=" + underlayZ + ")");
+
+							doh.is("dlg3_inputA", dojo.global.dijit.focus.curNode.id, "focus is on the first field");
+						}));
+
+						return d;
+					}
+				},
+				{
+					name: "open fourth dialog",
+					timeout: 30000,
+					runTest: function(){
+						var d = new doh.Deferred(),
+							dlg3 = dijit.byId("dlg3"),
+							dlg4;
+
+						// Create and show fourth dialog
+						dlg4 = new dijit.Dialog({
+							id: "dlg4",
+							title: "dialog 4",
+							content:
+								"<input id='dlg4_inputA'><br>" +
+								"<input id='dlg4_inputB'>"
+						});
+						dlg4.show().then(d.getTestCallback(function(){
+							doh.t(isVisible(dlg4), "dialog 4 is visible");
+
+							var dialog3Z = dojo.style(dlg3.domNode, "zIndex"),
+								dialog4Z = dojo.style(dlg4.domNode, "zIndex"),
+								underlayZ = dojo.style(dijit.DialogUnderlay._singleton.domNode, "zIndex");
+							doh.t(underlayZ > dialog3Z, "underlay (zIndex=" + underlayZ +
+								") above dialog3 (zIndex=" + dialog3Z + ")");
+							doh.t(dialog4Z > underlayZ, "dialog4 (zIndex=" + dialog4Z +
+								") above underlay (zIndex=" + underlayZ + ")");
+
+							doh.is("dlg4_inputA", dojo.global.dijit.focus.curNode.id, "focus is on the first field");
+						}));
+
+						return d;
+					}
+				},
+				{
+					name: "hide third dialog",
+					timeout: 40000,
+					runTest: function(){
+						var d = new doh.Deferred(),
+							dlg3 = dijit.byId("dlg3"),
+							dlg4 = dijit.byId("dlg4");
+
+						dlg3.hide().then(d.getTestCallback(function(){
+							doh.t(isVisible(dlg4), "dialog 4 is still visible");
+							doh.t(isVisible(dijit.DialogUnderlay._singleton), "underlay is still visible");
+
+							doh.is("dlg4_inputA", dojo.global.dijit.focus.curNode.id, "dialog 4 still has focus");
+
+							var dialog4Z = dojo.style(dlg4.domNode, "zIndex"),
+								underlayZ = dojo.style(dijit.DialogUnderlay._singleton.domNode, "zIndex");
+
+							doh.t(dialog4Z > underlayZ, "dialog4 (zIndex=" + dialog4Z +
+								") above underlay (zIndex=" + underlayZ + ")");
+
+						}));
+
+						return d;
+					}
+				},
+				{
+					name: "close fourth dialog",
+					timeout: 30000,
+					runTest: function(){
+						var d = new doh.Deferred(),
+							dlg2 = dijit.byId("dlg2"),
+							dlg3 = dijit.byId("dlg3"),
+							dlg4 = dijit.byId("dlg4");
+
+						// Closing fourth dialog should move focus to second dialog,
+						// since we already destroyed the third dialog
+						dlg4.hide().then(d.getTestCallback(function(){
+							doh.t(isHidden(dlg4), "dialog 4 is hidden");
+							doh.t(isHidden(dlg3), "dialog 3 is hidden");
+							doh.t(isVisible(dlg2), "dialog 2 is visible");
+
+							var dialog2Z = dojo.style(dlg2.domNode, "zIndex"),
+								underlayZ = dojo.style(dijit.DialogUnderlay._singleton.domNode, "zIndex");
+							doh.t(dialog2Z > underlayZ, "dialog2 (zIndex=" + dialog2Z +
+								") above underlay (zIndex=" + underlayZ + ")");
+
+							doh.is("dlg2_inputA", dojo.global.dijit.focus.curNode.id, "focus is on the first field");
+						}));
+
+						return d;
+					}
+				},
+				{
+					name: "close second dialog",
+					timeout: 30000,
+					runTest: function(){
+						var d = new doh.Deferred(),
+							dlg2 = dijit.byId("dlg2");
+
+						// Since we already destroyed first dialog, closing second dialog should hide underlay and
+						// revert focus to the main page
+						dlg2.hide().then(d.getTestCallback(function(){
+							doh.t(isHidden(dlg2), "dialog 4 is hidden");
+							doh.t(isHidden(dijit.DialogUnderlay._singleton), "underlay hidden");
+
+							doh.is("button", dojo.global.dijit.focus.curNode.id, "focus is on the main page");
+						}));
+
+						return d;
+					}
+				}
+			]);
+
+			var dlgA, dlgB;
+			doh.register("concurrent hide show", {
+				name: "concurrent hide show",
+				timeout: 20000,
+				setUp: function(){
+					// Create and show first dialog
+					dlgA = new dijit.Dialog({
+						id: "dlgA",
+						title: "Dialog A",
+						content:
+							"<button type='button'>OK</button>"
+					});
+					dlgB = new dijit.Dialog({
+						id: "dlgB",
+						title: "dialog B",
+						content:
+							"<button type='button'>OK</button>"
+					});
+					dlgA.show();
+					
+				},
+				runTest: function(){
+					var d = new doh.Deferred(),
+						cnt=0;
+
+					handle = setInterval(d.getTestErrback(function(){
+						var hidden = cnt%2 ? dlgA : dlgB,
+							shown = cnt%2 ? dlgB : dlgA;
+						
+						if(cnt > 10){
+							clearInterval(handle);
+							handle = null;
+							d.callback(true);
+							return;
+						}
+						
+						doh.t(isVisible(shown), shown.title + " visible");
+						doh.t(isHidden(hidden), hidden.title + " hidden");
+						doh.t(isVisible(dijit.DialogUnderlay._singleton), "underlay visible");
+
+						var shownZ = dojo.style(shown.domNode, "zIndex"),
+							underlayZ = dojo.style(dijit.DialogUnderlay._singleton.domNode, "zIndex");
+						doh.t(shownZ > underlayZ, "visible dialog (zIndex=" + shownZ +
+							") above underlay (zIndex=" + underlayZ + ")");
+
+						hidden.show();
+						shown.hide();
+
+						cnt++;
+					}), 1000);
+					
+					return d;
+				},
+				tearDown: function(){
+					dlgA.hide();
+					dlgB.hide();
+					if(handle){
+						clearInterval(handle);
+					}
+				}
+			});
+
+			var slow, fast;
+			doh.register("fast double show", [
+				function create(){
+					console.log("creating slow, fast");
+					var d = new doh.Deferred();
+					slow = new dijit.Dialog({
+						id: "slow",
+						title: "Dialog C",
+						content:
+							"Hello world " +
+							"<button type='button' id='slowOK' onfocus='dojo.global.slowFocused=true;'>OK</button>" +
+							"<button type='button' id='slowCancel'>Cancel</button>",
+						duration: 500
+					});
+					fast = new dijit.Dialog({
+						id: "fast",
+						title: "dialog D",
+						content:
+							"<button type='button'>OK</button>",
+						duration: 100
+					});
+					
+				},
+				{
+					name: "show Dialog C then show Dialog D before Dialog C fade-in completes",
+					timeout: 20000,
+					runTest: function(){
+						var d = new doh.Deferred();
+
+						slow.show();
+						
+						setTimeout(d.getTestErrback(function(){
+							fast.show();
+						}), slow.duration / 2);
+						
+						setTimeout(d.getTestCallback(function(){
+							doh.t(isVisible(slow), "dialog C visible");
+							doh.t(isVisible(fast), "dialog D visible");
+							doh.f(dojo.global.slowFocused, "dialog C never got focus")
+						}), slow.duration * 2);
+						return d;
+					}
+				},
+
+				{
+					name: "close dialogD",
+					timeout: 20000,
+					runTest: function(){
+						var d = new doh.Deferred();
+
+						fast.hide();
+						
+						setTimeout(d.getTestCallback(function(){
+							doh.is("slowOK", dojo.global.dijit.focus.curNode.id, "focused to dialog C");
+							doh.t(dojo.global.slowFocused, "onfocus handler working");
+						}), fast.duration * 2);
+
+						return d;
+					}
+				}
+			]);
+
+			doh.register("fast double hide", [
+				function create(){
+					var d = new doh.Deferred();
+
+					// Create a test dialog
+					dlg = new dijit.Dialog({
+						id: "doubleHide",
+						title: "Double Hide",
+						content: "Hello World",
+						duration: 100
+					});
+
+					// First show it
+					var secondHideCalled;
+					dlg.show().then(d.getTestErrback(function(){
+						// Then call hide(), as though user had clicked close icon.
+						// Return from this test when this hide() call completes.
+						dlg.hide().then(d.getTestCallback(function(){
+							doh.t(secondHideCalled, "hide() was called while hide() in progress and no problems");
+							dlg.hide();	// this should also have no effect
+						}));
+
+						// While first hide() is in progress, call hide() a few more times to make sure it
+						// doesn't break anything
+						dlg.hide();	// should do nothing
+						setTimeout(d.getTestErrback(function(){
+							dlg.hide();	// should also do nothing
+							secondHideCalled = true;
+						}), 10);
+					}));
+					return d;
+				}
+			]);
+
+			doh.register("onShow", [
+				function show(){
+					var onShowCtr = 0,
+						dlg = new dijit.Dialog({
+							id: "show",
+							title: "onShow Dialog",
+							content:"Hello world ",
+							onShow: function(){ onShowCtr++; }
+						});
+
+					dlg.show();
+					doh.is(1, onShowCtr, "onShow first time");
+					dlg.hide();
+					doh.is(1, onShowCtr, "onHide first time");
+					dlg.show();
+					doh.is(2, onShowCtr, "onShow second time");
+				}
+			]);
+
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro">
+	<h1 class="testTitle">Dijit Dialog Automated (non-robot) tests</h1>
+	<button id="button">focus point</button>
+</body>
+</html>
+
+

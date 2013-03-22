@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>StackContainer Demo</title>
+
+	<style>
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+		.dijitStackController .dijitToggleButtonChecked button {
+			background-color: white;
+			background-image: none;
+		}
+		div.dijitStackContainer {
+			border: solid 1px black !important;	/* override .dijitStackContainer-child rule for no border */
+			padding: 3px;
+		}
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, parseOnLoad: false"></script>
+
+	<!-- only needed for alternate theme testing: do NOT use in your code! -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.layout.StackContainer");
+		dojo.require("dijit.layout.StackController");
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.form.Button");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+		dojo.require('doh.runner');
+		dojo.require("dijit.tests.helpers");	// functions to help test
+
+		// Hash listing which objects have gotten a resize event
+		resizes = {};
+
+		dojo.ready(function(){
+			// track resize events
+			dojo.connect(dijit.layout._LayoutWidget.prototype, "resize", function(){
+				resizes[this.id] = arguments;
+			});
+
+			function click(/*String*/ id){
+				// Click dijit widget w/specified id
+				dijit.byId(id)._onClick({
+					preventDefault: function(){},
+					stopPropagation: function(){}
+				});
+			}
+
+			doh.register("setup", [
+				function parse(){
+					dojo.parser.parse();
+				},
+				function programmaticCreation(){
+					var container = new dijit.layout.StackContainer({ id: "sc" },"myStackContainer2");
+					container.addChild(new dijit.layout.ContentPane({
+							id: "page1Prog",
+							title: "Page 1",
+							content: "IT WAS the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness, it was the epoch of belief, it was the epoch of incredulity, it was the season of Light, it was the season of Darkness, it was the spring of hope, it was the winter of despair, we had everything before us, we had nothing before us, we were all going direct to Heaven, we were all going direct the other way -- in short, the period was so far like the present period, that some of its noisiest authorities insisted on its being received, for good or for evil, in the superlative degree of comparison only"
+					}));
+					container.addChild(new dijit.layout.ContentPane({
+							id: "page2Prog",
+							title: "Page 2",
+							content: "There were a king with a large jaw and a queen with a plain face, on the throne of England; there were a king with a large jaw and a queen with a fair face, on the throne of France. In both countries it was clearer than crystal to the lords of the State preserves of loaves and fishes, that things in general were settled for ever."
+					}));
+					container.addChild(new dijit.layout.ContentPane({
+							id: "page3Prog",
+							title: "Page 3",
+							content: "It was the year of Our Lord one thousand seven hundred and seventy- five. Spiritual revelations were conceded to England at that favoured period, as at this. Mrs. Southcott had recently attained her five-and- twentieth blessed birthday, of whom a prophetic private in the Life Guards had heralded the sublime appearance by announcing that arrangements were made for the swallowing up of London and Westminster. Even the Cock-lane ghost had been laid only a round dozen of years, after rapping out its messages, as the spirits of this very year last past (supernaturally deficient in originality) rapped out theirs. Mere messages in the earthly order of events had lately come to the English Crown and People, from a congress of British subjects in America:"
+					}));
+
+					// make the controller
+					var controller = new dijit.layout.StackController({containerId: "sc"}, "holder");
+
+					// start 'em up
+					controller.startup();
+					container.startup();
+				}
+			]);
+
+			doh.register("basic operation", [
+				function forward(){
+					click("next");
+					doh.t(isHidden(dojo.byId("page1")), "page1 hidden");
+					doh.t(isVisible(dojo.byId("page2")), "page2 visible");
+					doh.t(isHidden(dojo.byId("page3")), "page3 hidden");
+				},
+				function previous(){
+					click("previous");
+					doh.t(dijit.byId("previous").disabled, "disabled");
+					doh.t(isVisible(dojo.byId("page1")), "page1 visible");
+					doh.t(isHidden(dojo.byId("page2")), "page2 hidden");
+					doh.t(isHidden(dojo.byId("page3")), "page3 hidden");
+				},
+				function clickPage2(){
+					click("dijit_layout_StackController_0_page2");
+					doh.t(isHidden(dojo.byId("page1")), "page1 hidden");
+					doh.t(isVisible(dojo.byId("page2")), "page2 visible");
+					doh.t(isHidden(dojo.byId("page3")), "page3 hidden");
+				},
+				function clickTwice(){
+					click("dijit_layout_StackController_0_page1");
+					click("dijit_layout_StackController_0_page1");
+					var button = dijit.byId("dijit_layout_StackController_0_page1");
+					doh.t(button.checked, "Page 1 button is still checked");
+				}
+			]);
+
+			doh.register("nested layout widgets", [
+				function nestedLayout(){
+					click("nextPR");
+					var bcPos = dojo.position("bc"),
+						tcPos = dojo.position("tc");
+
+					doh.t("bc" in resizes, "BorderContainer got resize");
+					doh.is(300, Math.round(bcPos.w), "BorderContainer width");
+					doh.is(200, bcPos.h, "BorderContainer height");
+
+					doh.t("tc" in resizes, "TabContainer got resize");
+					doh.is(300, Math.round(bcPos.w), "TabContainer width");
+					doh.is(200, bcPos.h, "TabContainer height");
+				}
+			]);
+
+			doh.register("nested stackcontainer w/doLayout=false", [
+				function resizeCalled(){
+					var resizes = dojo.global.resizes;
+					doh.t("stack1" in resizes, "stack1 resized");
+					doh.t("stack2" in resizes, "stack2 resized");
+					doh.t("stack3" in resizes, "stack3 resized");
+					doh.t("stack4" in resizes, "stack4 resized");
+					doh.t(isVisible(dojo.byId("stack4")), "stack4 visible");
+				}
+			]);
+
+			doh.register("removeChild", function removeChild(){
+				var container = new dijit.layout.StackContainer({ id: "sc2" });
+				container.addChild(new dijit.layout.ContentPane({
+						id: "rpage1Prog",
+						title: "Page 1",
+						content: "IT WAS the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness, it was the epoch of belief, it was the epoch of incredulity, it was the season of Light, it was the season of Darkness, it was the spring of hope, it was the winter of despair, we had everything before us, we had nothing before us, we were all going direct to Heaven, we were all going direct the other way -- in short, the period was so far like the present period, that some of its noisiest authorities insisted on its being received, for good or for evil, in the superlative degree of comparison only"
+				}));
+				container.addChild(new dijit.layout.ContentPane({
+						id: "rpage2Prog",
+						title: "Page 2",
+						content: "There were a king with a large jaw and a queen with a plain face, on the throne of England; there were a king with a large jaw and a queen with a fair face, on the throne of France. In both countries it was clearer than crystal to the lords of the State preserves of loaves and fishes, that things in general were settled for ever."
+				}));
+				var page3;
+				container.addChild(page3 = new dijit.layout.ContentPane({
+						id: "rpage3Prog",
+						title: "Page 3",
+						content: "It was the year of Our Lord one thousand seven hundred and seventy- five. Spiritual revelations were conceded to England at that favoured period, as at this. Mrs. Southcott had recently attained her five-and- twentieth blessed birthday, of whom a prophetic private in the Life Guards had heralded the sublime appearance by announcing that arrangements were made for the swallowing up of London and Westminster. Even the Cock-lane ghost had been laid only a round dozen of years, after rapping out its messages, as the spirits of this very year last past (supernaturally deficient in originality) rapped out theirs. Mere messages in the earthly order of events had lately come to the English Crown and People, from a congress of British subjects in America:"
+				}));
+
+				container.placeAt(dojo.body());
+				container.startup();
+				container.selectChild(page3);
+
+				var resizes = 0;
+				dojo.connect(page3, "resize", function(){
+					resizes++;
+				});
+				container.removeChild(page3);
+				doh.is(0, resizes, "removing selected child doesn't call resize on it");
+				doh.is(2, container.getChildren().length, "2 children");
+			});
+
+			doh.register("childless startup", function childlessStartup(){
+				// make and start the container without children
+				var container = new dijit.layout.StackContainer({ id: "nssc" },"noChildrenStackContainer");
+				container.startup();
+
+				// monitor _showChild() calls
+				var showChildCalls = {};
+				dojo.connect(container, "_showChild", function(child){
+					showChildCalls[child.id] = (showChildCalls[child.id] || 0) + 1;
+				});
+
+				// Create and add child
+				var child1 = new dijit.layout.ContentPane({
+					id: "ncsc1",
+					title: "Page 1",
+					content: "IT WAS the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness, it was the epoch of belief, it was the epoch of incredulity, it was the season of Light, it was the season of Darkness, it was the spring of hope, it was the winter of despair, we had everything before us, we had nothing before us, we were all going direct to Heaven, we were all going direct the other way -- in short, the period was so far like the present period, that some of its noisiest authorities insisted on its being received, for good or for evil, in the superlative degree of comparison only"
+				});
+				var resizes = 0;
+				dojo.connect(child1, "resize", function(){
+					resizes++;
+				});
+				container.addChild(child1);
+				doh.is(1, resizes, "child1 resized when added");
+				doh.is(1, showChildCalls["ncsc1"], "StackContainer._showChild(child1) called when child added");
+
+				// Add another child
+				container.addChild(new dijit.layout.ContentPane({
+					id: "ncsc2",
+					title: "Page 2",
+					content: "There were a king with a large jaw and a queen with a plain face, on the throne of England; there were a king with a large jaw and a queen with a fair face, on the throne of France. In both countries it was clearer than crystal to the lords of the State preserves of loaves and fishes, that things in general were settled for ever."
+				}));
+				doh.f("ncsc2" in showChildCalls, "StackContainer._showChild(child2) not called when child added");
+				doh.is(1, showChildCalls["ncsc1"], "StackContainer._showChild(child1) not called when second child added");
+
+				// addChild() unfortunately triggers child1.resize() to be called, in anticipation that the new
+				// child may have caused the tab labels to overflow to 2 lines, thus reducing content size
+				// doh.is(1, resizes, "child1 not resized when child2 added");
+				var resizesBeforeContainerResize = resizes;	// in 1.7 this is 2, in 2.0 will hopefully be 1
+
+				// Resize the StackContainer.
+				container.resize();
+				doh.is(resizesBeforeContainerResize + 1, resizes, "child1 resized once more when StackContainer resized");
+				doh.is(1, showChildCalls["ncsc1"], "StackContainer._showChild(child1) not called when StackContainer resized");
+			});
+
+			doh.register("destroy", function destroy(){
+				// destroyRecursive() on a StackController used to get an exception
+				var oldNumWidgets = require("dijit/registry").length;
+				dijit.byId("holder").destroyRecursive();
+				var newNumWidgets = require("dijit/registry").length;
+				doh.is(4, oldNumWidgets - newNumWidgets, newNumWidgets + "-" + oldNumWidgets + " destroyed");
+			});
+
+			doh.run();
+		});
+
+		function selected(page){
+			console.debug("page selected " + page.id);
+			var widget=dijit.byId("myStackContainer");
+			dijit.byId("previous").set("disabled", page.isFirstChild);
+			dijit.byId("next").set("disabled", page.isLastChild);
+			dijit.byId("previous2").set("disabled", page.isFirstChild);
+			dijit.byId("next2").set("disabled", page.isLastChild);
+		}
+		dojo.subscribe("myStackContainer-selectChild", selected);
+
+	</script>
+</head>
+
+<body class="claro">
+	<h1 class="testTitle">A Tale Of Two Cities</h1>
+
+	<button id="previous" data-dojo-type="dijit/form/Button" data-dojo-props='onClick:function(){ dijit.byId("myStackContainer").back() }'>&lt;</button>
+	<span data-dojo-type="dijit/layout/StackController" data-dojo-props='containerId:"myStackContainer"'></span>
+	<button id="next" data-dojo-type="dijit/form/Button" data-dojo-props='onClick:function(){ dijit.byId("myStackContainer").forward() }'>&gt;</button>
+
+	<div id="myStackContainer" data-dojo-type="dijit/layout/StackContainer"
+		data-dojo-props='style:"width: 90%; border: 1px solid #9b9b9b; height: 20em; margin: 0.5em 0 0.5em 0; padding: 0.5em;"'>
+		<p id="page1" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"page 1"'>IT WAS the best of times, it <input value="was the worst" /> of times, it was the age of wisdom, it was the age of foolishness, it was the epoch of belief, it was the epoch of incredulity, it was the season of Light, it was the season of Darkness, it was the spring of hope, it was the winter of despair, we had everything before us, we had nothing before us, we were all going direct to Heaven, we were all going direct the other way -- in short, the period was so far like the present period, that some of its noisiest authorities insisted on its being received, for good or for evil, in the superlative degree of comparison only</p>
+		<p id="page2" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"page 2"'>There were a king with a large jaw and a queen with a plain face, on the throne of England; there were a king with a large jaw and a queen with a fair face, on the throne of <a href="http://www.france.com">France</a>. In both countries it was clearer than crystal to the lords of the State preserves of loaves and fishes, that things in general were settled for ever.</p>
+		<p id="page3" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"page 3"'>It was the year of Our Lord one thousand seven hundred and seventy- five. Spiritual revelations were conceded to England at that favoured period, as at this. Mrs. Southcott had recently attained her five-and- twentieth blessed birthday, of whom a prophetic private in the Life Guards had heralded the sublime appearance by announcing that arrangements were made for the swallowing up of London and Westminster. Even the Cock-lane ghost had been laid only a round dozen of years, after rapping out its messages, as the spirits of this very year last past (supernaturally deficient in originality) rapped out theirs. Mere messages in the earthly order of events had lately come to the English Crown and People, from a congress of British subjects in America:</p>
+	</div>
+
+	<button id="previous2" data-dojo-type="dijit/form/Button" data-dojo-props='onClick:function(){ dijit.byId("myStackContainer").back() }'>&lt;</button>
+	<span data-dojo-type="dijit/layout/StackController" data-dojo-props='containerId:"myStackContainer"'></span>
+	<button id="next2" data-dojo-type="dijit/form/Button" data-dojo-props='onClick:function(){ dijit.byId("myStackContainer").forward() }'>&gt;</button>
+
+
+	<h1 class="testTitle" style="margin-top: 3em;">Embedded layout widgets</h1>
+	<p>This tests having layout widgets embedded in the StackContainer, making sure they render on the hidden pane.</p>
+
+	<button id="previousPR" data-dojo-type="dijit/form/Button" data-dojo-props='onClick:function(){ dijit.byId("myStackContainerPR").back() }'>&lt;</button>
+	<span data-dojo-type="dijit/layout/StackController" data-dojo-props='containerId:"myStackContainerPR"'></span>
+	<button id="nextPR" data-dojo-type="dijit/form/Button" data-dojo-props='onClick:function(){ dijit.byId("myStackContainerPR").forward() }'>&gt;</button>
+
+	<div id="myStackContainerPR" data-dojo-type="dijit/layout/StackContainer"
+		data-dojo-props='style:"width: 90%; border: 1px solid #9b9b9b; height: 20em; margin: 0.5em 0 0.5em 0; padding: 0.5em;"'>
+		<div id="page1PR" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"page 1"'>
+			<p>
+				The next pane should have some text, plus two embedded layout widgets, which should
+				appear correctly even though the pane is initially hidden
+			</p>
+		</div>
+		<div id="page2PR" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"page 2", style:"padding: 1em;"'>
+			<p>
+				Here's a BorderContainer:
+			</p>
+			<div id="bc" data-dojo-type="dijit/layout/BorderContainer" data-dojo-props='style:"height:200px; width:300px"'>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"left", style:"width:100px", splitter:true'>
+					1Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+					Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+					vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+					augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+					metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+					ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+					euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+					risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+					porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+					faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+					consequat quis, varius interdum, nulla. Donec neque tortor,
+					sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+					ut eros sit amet ante pharetra interdum.
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"center"'>
+					2Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+					Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+					vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+					augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+					metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+					ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+					euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+					risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+					porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+					faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+					consequat quis, varius interdum, nulla. Donec neque tortor,
+					sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+					ut eros sit amet ante pharetra interdum.
+				</div>
+			</div>
+			<p>
+				And a TabContainer:
+			</p>
+			<div id="tc" data-dojo-type="dijit/layout/TabContainer" data-dojo-props='style:"height:200px; width:300px"'>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Tab 1"'>
+					1Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+					Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+					vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+					augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+					metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+					ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+					euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+					risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+					porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+					faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+					consequat quis, varius interdum, nulla. Donec neque tortor,
+					sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+					ut eros sit amet ante pharetra interdum.
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Tab 2"'>
+					2Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+					Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+					vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+					augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+					metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+					ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+					euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+					risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+					porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+					faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+					consequat quis, varius interdum, nulla. Donec neque tortor,
+					sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+					ut eros sit amet ante pharetra interdum.
+				</div>
+			</div>
+			<p>
+				That's it!
+			</p>
+		</div>
+	</div>
+	<button id="previous2PR" data-dojo-type="dijit/form/Button" data-dojo-props='onClick:function(){ dijit.byId("myStackContainerPR").back() }'>&lt;</button>
+	<span data-dojo-type="dijit/layout/StackController" data-dojo-props='containerId:"myStackContainerPR"'></span>
+	<button id="next2PR" data-dojo-type="dijit/form/Button" data-dojo-props='onClick:function(){ dijit.byId("myStackContainerPR").forward() }'>&gt;</button>
+
+	<h1>Nested StackContainers w/doLayout=false</h1>
+	<p>"hello world" inner text should be visible</p>
+    <div id="stack1" dojoType="dijit.layout.StackContainer" doLayout="false">
+        <div id="stack2" dojoType="dijit.layout.StackContainer" doLayout="false">
+            <div id="stack3" dojoType="dijit.layout.StackContainer" doLayout="false">
+                <div id="stack4" dojoType="dijit.layout.StackContainer" doLayout="false">
+                    hello world
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+	<h1>Programmatic test</h1>
+
+	Links: <span id="holder"></span>
+
+	<div id="myStackContainer2" style="width: 90%; border: 1px solid #9b9b9b; height: 20em; margin: 0.5em 0 0.5em 0; padding: 0.5em;">
+	</div>
+
+	<div id="noChildrenStackContainer" style="width: 90%; border: 1px solid #9b9b9b; height: 20em;"></div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<div data-dojo-id="stateStore" data-dojo-type="dojo/data/ItemFileReadStore" data-dojo-props='url:"../_data/states.json"'></div>
+State:
+<span id="editable" data-dojo-type="dijit/InlineEditBox" data-dojo-props='editor:"dijit.form.ComboBox",
+	editorParams:{value: "California", store: stateStore, searchAttr: "name", promptMessage: "Please enter a state"}'>
+	<script type="dojo/connect" data-dojo-event="onChange">
+		// connect to editable onChange event, Note that we dont need to disconnect
+		console.log('User selected:'+this.getValue());
+	</script>
+</span>

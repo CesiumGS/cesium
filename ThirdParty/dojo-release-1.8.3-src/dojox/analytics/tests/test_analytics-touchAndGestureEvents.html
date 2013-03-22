@@ -1,0 +1,171 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<title>Dojox Analytics Touch and Gesture Test</title>
+	<link href="../../mobile/themes/iphone/base.css" rel="stylesheet">
+	<link href="../../mobile/themes/iphone/TabBar.css" rel="stylesheet">
+	<style>
+			#outerHeading {
+				height: 240px;
+			}
+			#outer {
+				width: 100%;
+				height: 240px;
+				border: 1px solid #54A201;
+				background-color: #54A201;			
+			}
+			#inner {
+				width: 250px;
+				height: 110px;
+				border: 1px solid #7FB0DB;
+				background-color: #7FB0DB
+			}
+			#log1, #log2 {
+				width: 100%;
+				height: 50px;
+			}
+		</style>
+	<!-- required: dojo.js Update analyticsUrl: to point to your test server-->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad:true, async:true, isDebug: true, usePlainJson: true, 
+				sendMethod: 'script', sendInterval: 5000, mblAlwaysHideAddressBar: true, 
+				// the line below can be used to override the touchSampleDelay for touchMove 
+				// and to override the swipeSampleDelay for gestureEvents and targetProps.
+				//touchSampleDelay : 500, swipeSampleDelay : 800, targetProps : ['id','className'], 
+				analyticsUrl: 'http://dojotoolkit.org/~dmachi/dojo-1.0/dojox/analytics/logger/dojoxAnalytics.php'">
+	</script>
+
+
+	<script language="JavaScript" type="text/javascript">
+require([
+	"dojo/_base/kernel",
+	"dojo/_base/connect",
+	"dojo/ready",
+	"dojox/mobile/parser", 	// This mobile app uses declarative programming with fast mobile parser
+	"dojox/mobile",			// This is a mobile app.
+	"dojox/mobile/ScrollableView",
+	"dojox/mobile/compat", 	// This mobile app supports running on desktop browsers
+	"dojox/analytics",
+	// this plugin returns the information dojo collects when it launches 
+	"dojox/analytics/plugins/dojo", 
+	// this plugin return the information the window has when it launches
+	// and it also ties to a few events such as window.option	
+	"dojox/analytics/plugins/window", 
+	// this plugin tracks console. message, It logs console.error, warn, and 
+	// info messages to the tracker.  It also defines console.rlog() which 
+	// can be used to log only to the server.  Note that if isDebug() is disabled
+	// you will still see the console messages on the sever, but not in the actual
+	// browser console.
+	"dojox/analytics/plugins/consoleMessages",
+	// tracks where a dojo.touch.press is on a page an what it is over, periodically sampling
+	// and storing this data
+	"dojox/analytics/plugins/touchPress", 
+	// tracks where a dojo.touch.move is on a page an what it is over, periodically sampling
+	// and storing this data
+	"dojox/analytics/plugins/touchMove", 
+	// tracks where a dojox.gesture.tap and swipe events 
+	"dojox/analytics/plugins/gestureEvents", 
+	"dojox/analytics/plugins/idle",
+	"dojox/gesture/tap",
+	"dojox/gesture/swipe",
+	"dojo/_base/html",
+	"dojo/_base/event",
+	"dojo/touch",
+	"dojo/on",
+	"dojo/_base/window",
+	"dojo/has",
+	"dojo/dom-style",
+	"dojox/mobile/Heading",
+	], 			
+	function(dojo, conn, ready, parser, mobile,scrollableView, compat, 
+				analytics, dojoplugin, windowplugin, consolemsgplugin,  
+				touchpressplugin, touchmoveplugin, gestureplugin, idleplugin, tap, swipe,  
+				html, evt, touch, on, window, has, domStyle){
+				
+				ready(function(){
+					var action = function(e){
+						html.byId("log1").innerHTML = "";
+						var info = " e.target.id=" + e.target.id + " | e.type=" + e.type + " | e.currentTarget.id="+ e.currentTarget.id;
+						html.byId("log1").innerHTML += info;
+					};
+					
+					var swipeAction = function(e){
+						html.byId("log2").innerHTML = "";
+						var info =  " e.target.id=" + e.target.id + " | e.type=" + e.type + " | e.currentTarget.id="+ e.currentTarget.id +
+							" e.dx=" + e.dx + " e.dy=" + e.dy + " e.time=" + e.time + "<br/>";
+						html.byId("log2").innerHTML += info;
+					};
+
+					var action2 = function(e){
+						html.byId("log").innerHTML = "";
+						var info = "[Touch Event]: " + e.type + "<br/> ------ Event Properties: ------<br/>";
+						if(e["target"]){
+						   info += "target.textContent: " + e["target"]["textContent"] + "<br/>";
+						}
+						for(var i in e){
+						  if(i == "touches" || i == "targetTouches" || i == "changedTouches"){
+						    info += i + ": " + e[i].length + "<br/>";
+						  }else{
+						    if(typeof e[i] != "function"){
+						      info += " " + i + ": " + e[i] + "<br/>";
+						    }
+						  }
+						}
+						html.byId("log").innerHTML += info + "<br/>";
+					};
+
+					
+					//tap and swipe gestures both work well both on PC and touch devices
+					var inner = html.byId("inner");
+					on(inner, tap, action);
+					on(inner, tap.hold, action);
+					on(inner, tap.doubletap, action);
+					on(inner, swipe, swipeAction);
+										
+					//test gesture events bubbling from inner div
+					var outer = html.byId("outer");
+					conn.connect(outer, tap, action);
+					conn.connect(outer, tap.hold, action);
+					conn.connect(outer, tap.doubletap, action);
+					conn.connect(outer, swipe, swipeAction);
+					conn.connect(outer, swipe.end, swipeAction);
+
+					// Event info, uncomment one of the lines below to see what these events return 
+					//on(outer, tap, action2);
+					on(inner, tap, action2);
+					//on(outer, tap.doubletap, action2);
+					//on(inner, swipe, action2);
+					on(outer, swipe.end, action2);
+					//on(outer, touch.move, action2);
+					//on(outer, touch.press, action2);
+					//on(inner, touch.release, action2);
+
+										
+					on(dojo.doc, "orientationchange", function(e){
+						html.byId("log1").innerHTML="";
+						html.byId("log2").innerHTML="";
+						html.byId("log").innerHTML="";
+					});
+				});
+			});
+
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="categ" dojoType="dojox.mobile.ScrollableView"  selected="true">
+ 		<div id="outerHeading" dojoType="dojox.mobile.Heading" fixed="top">
+			<div id="outer">
+				outer content <div id="inner">inner content</div>
+			</div>            
+		</div>
+			<div id="log1"></div>
+			<hr/>
+			<div id="log2"></div>
+			<hr/>
+			<div id="log"></div>
+		
+	</div>
+</body>
+</html>

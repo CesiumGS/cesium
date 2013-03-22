@@ -77,7 +77,7 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 #HTMLReporter a { text-decoration: none; }
 #HTMLReporter a:hover { text-decoration: underline; }
 #HTMLReporter p, #HTMLReporter h1, #HTMLReporter h2, #HTMLReporter h3, #HTMLReporter h4, #HTMLReporter h5, #HTMLReporter h6 { margin: 0; line-height: 14px; }
-#HTMLReporter .banner, #HTMLReporter .symbolSummary, #HTMLReporter .summary, #HTMLReporter .resultMessage, #HTMLReporter .specDetail .description, #HTMLReporter .alert .bar, #HTMLReporter .stackTrace { padding-left: 9px; padding-right: 9px; }
+#HTMLReporter .banner, #HTMLReporter .symbolSummary, #HTMLReporter .summary, #HTMLReporter .resultMessage, #HTMLReporter .specDetail .description, #HTMLReporter .alert .bar, #HTMLReporter .resultsMenu, #HTMLReporter .stackTrace { padding-left: 9px; padding-right: 9px; }
 #HTMLReporter #jasmine_content { position: fixed; right: 100%; }
 #HTMLReporter .version { color: #aaaaaa; }
 #HTMLReporter .banner { margin-top: 14px; }
@@ -92,7 +92,7 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 #HTMLReporter .symbolSummary li.skipped:before { color: #bababa; content: "\02022"; }
 #HTMLReporter .symbolSummary li.pending { line-height: 11px; }
 #HTMLReporter .symbolSummary li.pending:before { color: #aaaaaa; content: "-"; }
-#HTMLReporter .exceptions { color: #fff; float: right; margin-top: 5px; margin-right: 5px; }
+#HTMLReporter .exceptions { color: #fff; float: right; margin-top: 2px; margin-right: 5px; }
 #HTMLReporter .bar { line-height: 28px; font-size: 14px; display: block; color: #eee; }
 #HTMLReporter .runningAlert { background-color: #666666; }
 #HTMLReporter .skippedAlert { background-color: #aaaaaa; }
@@ -104,12 +104,18 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 #HTMLReporter .failingAlert:first-child { background-color: #b03911; }
 #HTMLReporter .results { margin-top: 14px; }
 #HTMLReporter #details { display: none; }
+#HTMLReporter #skipped { display: none; }
 #HTMLReporter .resultsMenu, #HTMLReporter .resultsMenu a { background-color: #fff; color: #333333; }
 #HTMLReporter.showDetails .summaryMenuItem { font-weight: normal; text-decoration: inherit; }
 #HTMLReporter.showDetails .summaryMenuItem:hover { text-decoration: underline; }
 #HTMLReporter.showDetails .detailsMenuItem { font-weight: bold; text-decoration: underline; }
 #HTMLReporter.showDetails .summary { display: none; }
 #HTMLReporter.showDetails #details { display: block; }
+#HTMLReporter.showSkipped .summaryMenuItem { font-weight: normal; text-decoration: inherit; }
+#HTMLReporter.showSkipped .summaryMenuItem:hover { text-decoration: underline; }
+#HTMLReporter.showSkipped .skippedMenuItem { font-weight: bold; text-decoration: underline; }
+#HTMLReporter.showSkipped .summary { display: none; }
+#HTMLReporter.showSkipped #skipped { display: block; }
 #HTMLReporter .summaryMenuItem { font-weight: bold; text-decoration: underline; }
 #HTMLReporter .summary { margin-top: 14px; }
 #HTMLReporter .summary .suite .suite, #HTMLReporter .summary .specSummary { margin-left: 14px; }
@@ -118,6 +124,9 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 #HTMLReporter .description + .suite { margin-top: 0; }
 #HTMLReporter .suite { margin-top: 14px; }
 #HTMLReporter .suite a { color: #333333; }
+#HTMLReporter .specSkipped { color: #999; }
+#HTMLReporter .suite .specSkipped a { color: #999; }
+#HTMLReporter #skipped .suite a { color: #777; }
 #HTMLReporter #details .specDetail { margin-bottom: 28px; }
 #HTMLReporter #details .specDetail .description { display: block; color: white; background-color: #b03911; }
 #HTMLReporter .resultMessage { padding-top: 14px; color: #333333; }

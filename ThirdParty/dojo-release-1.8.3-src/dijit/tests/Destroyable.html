@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>widget attribute unit test (in constructor and get()/set())</title>
+<style type="text/css">
+	@import "../themes/claro/document.css";
+	@import "css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../dojo/dojo.js"
+		djConfig="isDebug: true, async: true"></script>
+
+<script type="text/javascript">
+require([
+	"doh/runner", "dojo/aspect", "dojo/_base/declare", "dojo/dom", "dojo/dom-construct", "dojo/on", "dojo/Stateful",
+	"dijit/Destroyable", "dojo/domReady!"
+], function(doh, aspect, declare, dom, domConstruct, on, Stateful, Destroyable){
+	doh.register("Deferred", [
+		function general(){
+			var SupportingWidget = declare([], {
+				destroyCalls: 0,
+				constructor: function(name){
+					this.name = name;
+				},
+				destroy: function(){
+					this.destroyCalls++;
+				}
+			});
+			var watchMe = new Stateful({
+				name: "watchMe",
+				x: 0
+			});
+			var DestroyableSubClass = declare(Destroyable, {
+				// number of times my button was clicked
+				clicks: 0,
+
+				// number of times watchMe changed value of x
+				watches: 0,
+
+				constructor: function(){
+					var self = this;
+					this.domNode = domConstruct.create("button");
+					this.own(
+						// setup an event handler (to be destroyed when I'm destroyed)
+						on(this.domNode, "click", function(){ self.clicks++; }),
+
+						// watch external watchMe class (to be unwatch()'d when I'm destroyed)
+						watchMe.watch("x", function(name, oVal, nVal){ self.watches++; })
+					);
+
+					// Setup two supporting widgets, to be destroyed when I'm destroyed
+					this.own(this.sw1 = new SupportingWidget("sw1"));
+					this.own(this.sw2 = new SupportingWidget("sw2"));
+				}
+			});
+
+			var destroyable1 = new DestroyableSubClass();
+			dom.byId("container").appendChild(destroyable1.domNode);
+
+			// make sure event handler was setup
+			destroyable1.domNode.click();
+			doh.is(1, destroyable1.clicks, "one click");
+
+			// make sure watch handler was setup
+			watchMe.set("x", 1);
+			doh.is(1, destroyable1.watches, "one watch notification");
+
+			// manually destroy one of the supporting widgets
+			destroyable1.sw1.destroy();
+			doh.is(1, destroyable1.sw1.destroyCalls);
+
+			// Destroy the Destroyable instance itself.   destroyable1 should:
+			// 		- destroy the sw2 supporting widget, but not try to re-destroy sw1
+			//		- disconnect the watch() listener on watchMe
+			//		- disconnect the click event handler on destroyable1.domNode
+			destroyable1.destroy();
+			doh.is(1, destroyable1.sw1.destroyCalls, "sw1 wasn't redestroyed");
+			doh.is(1, destroyable1.sw2.destroyCalls, "sw2 was destroyed");
+			destroyable1.domNode.click();
+			doh.is(1, destroyable1.clicks, "no new click notification");
+			watchMe.set("x", 2);
+			doh.is(1, destroyable1.watches, "no new watch notification");
+		}
+	]);	// doh.register()
+
+	doh.run();
+});	// require()
+
+</script>
+</head>
+<body>
+<h1>dijit/Destroyable Unit Test</h1>
+<div id="container"></div>
+</body>
+</html>

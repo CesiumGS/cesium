@@ -1,0 +1,14 @@
+{
+  "items" : [
+    { "text" : "Wi-Fi",                        "profile_image_url" : "images/i-icon-1.png",   "moveTo": "wifi"                              },
+    { "text" : "Brightness & Wallpaper",       "profile_image_url" : "images/i-icon-2.png",   "moveTo": "bright"                            },
+    { "text" : "Picture Frame",                "profile_image_url" : "images/i-icon-3.png",   "moveTo": "picture"                           },
+    { "text" : "General",                      "profile_image_url" : "images/i-icon-4.png",   "moveTo": "general",  "selected": "true"      },
+    { "text" : "Mail, Contacts, Calendars",    "profile_image_url" : "images/i-icon-5.png",   "moveTo": "wifi"                              },
+    { "text" : "Safari",                       "profile_image_url" : "images/i-icon-6.png",   "moveTo": "bright"                            },
+    { "text" : "iPod",                         "profile_image_url" : "images/i-icon-7.png",   "moveTo": "picture"                           },
+    { "text" : "Video",                        "profile_image_url" : "images/i-icon-8.png",   "moveTo": "general"                           },
+    { "text" : "Photos",                       "profile_image_url" : "images/i-icon-9.png",   "moveTo": "wifi"                              },
+    { "text" : "Store",                        "profile_image_url" : "images/i-icon-10.png",  "moveTo": "bright"                            }
+  ]
+}

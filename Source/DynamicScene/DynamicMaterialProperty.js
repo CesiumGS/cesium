@@ -106,10 +106,10 @@ define([
         //If the new data was a different type, look for a handler for this type.
         if (foundMaterial === false) {
             for ( var i = 0, len = potentialMaterials.length; i < len; i++) {
-                var Material = potentialMaterials[i];
-                foundMaterial = Material.isMaterial(czmlInterval);
+                var PotentialMaterial = potentialMaterials[i];
+                foundMaterial = PotentialMaterial.isMaterial(czmlInterval);
                 if (foundMaterial) {
-                    existingInterval.data = existingMaterial = new Material();
+                    existingInterval.data = existingMaterial = new PotentialMaterial();
                     break;
                 }
             }

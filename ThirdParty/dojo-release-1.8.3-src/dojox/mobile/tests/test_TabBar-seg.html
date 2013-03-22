@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>TabBar - Segmented Control</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','TabBar']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/TabBar"
+		]);
+	</script>
+
+	<style>
+		#list1 li{
+			border-style: solid;
+			border-width: 1px 0px 1px 0px;
+			border-top-color: #BABABC;
+			border-bottom-color: #89898C;
+			background-color: #ACACAF;
+			line-height: 0px;
+		}
+		#list1 li table{
+			line-height: normal;
+		}
+		#list1 li:nth-child(even){
+			background-color: #97979B;
+		}
+		.lnk {
+			font-size: 17px;
+			color: #0B5199;
+			text-decoration: none;
+		}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"segmentedControl"'>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='moveTo:"view1", selected:true'>New</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='moveTo:"view2"'>What's Hot</li>
+		<li data-dojo-type="dojox.mobile.TabBarButton" data-dojo-props='moveTo:"view3"'>Genius</li>
+	</ul>
+
+	<div id="view1" data-dojo-type="dojox.mobile.View">
+		<ul data-dojo-type="dojox.mobile.EdgeToEdgeList" id="list1">
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size: 10px;" data-dojo-props='variableHeight:true'>
+				<table>
+					<tbody>
+						<tr>
+							<td>
+								<img alt="" src="images/icon-1.png">
+							</td>
+							<td>
+								<a class="lnk" href="#">Dojo: Traditional Karate-do Spirit</a><br>
+								Sarah Connor Hardcover<br>
+								Eligible for FREE Super Saver Shipping
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size: 10px;" data-dojo-props='variableHeight:true'>
+				<table>
+					<tbody>
+						<tr>
+							<td>
+								<img alt="" src="images/icon-1.png">
+							</td>
+							<td>
+								<a class="lnk" href="#">Japanese Martial Arts Dojo</a><br>
+								Martin Parker Hardcover<br>
+								Eligible for FREE Super Saver Shipping<br>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size: 10px;" data-dojo-props='variableHeight:true'>
+				<table>
+					<tbody>
+						<tr>
+							<td>
+								<img alt="" src="images/icon-1.png">
+							</td>
+							<td>
+								<a class="lnk" href="#">Total Solar Eclipse</a><br>
+								Steven Young Hardcover<br>
+								Eligible for FREE Super Saver Shipping<br>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size: 10px;" data-dojo-props='variableHeight:true'>
+				<table>
+					<tbody>
+						<tr>
+							<td>
+								<img alt="" src="images/icon-1.png">
+							</td>
+							<td>
+								<a class="lnk" href="#">The History of Java Coffee</a><br>
+								Marco Rodriguez Hardcover<br>
+								Eligible for FREE Super Saver Shipping<br>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size: 10px;" data-dojo-props='variableHeight:true'>
+				<table>
+					<tbody>
+						<tr>
+							<td>
+								<img alt="" src="images/icon-1.png">
+							</td>
+							<td>
+								<a class="lnk" href="#">The Principles of Spider's Web</a><br>
+								Melissa Morgan Hardcover<br>
+								Eligible for FREE Super Saver Shipping<br>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</li>
+		</ul>
+	</div>
+
+	<div id="view2" data-dojo-type="dojox.mobile.View">
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png"'>
+				Sounds
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png"'>
+				Brightness
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png"'>
+				Wallpaper
+			</li>
+		</ul>
+	</div>
+
+	<div id="view3" data-dojo-type="dojox.mobile.View">
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-4.png"'>
+				General
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-5.png"'>
+				Mail, Contacts, Calendars
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-6.png"'>
+				Phone
+			</li>
+		</ul>
+	</div>
+</body>
+</html>

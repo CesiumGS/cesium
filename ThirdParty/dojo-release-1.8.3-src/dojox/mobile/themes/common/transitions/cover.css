@@ -1,0 +1,26 @@
+.mblCover {
+	-webkit-transition-property: none;
+	-webkit-transition-duration: 0s;
+}
+.mblCover.mblTransition {
+	-webkit-transition-property: -webkit-transform;
+	-webkit-transition-duration: .4s;
+}
+.mblCover.mblOut {
+	z-index: -100;
+	-webkit-transform: translate3d(0%,0px,-1px) !important;
+}
+.mblCover.mblIn {
+	-webkit-transform: translate3d(100%,0px,0px) !important;
+}
+.mblCover.mblIn.mblReverse {
+	-webkit-transform: translate3d(-100%,0px,0px) !important;
+}
+.mblCover.mblOut.mblTransition,
+.mblCover.mblIn.mblTransition {
+	-webkit-transform: translate3d(0%,0px,0px) !important;
+}
+.dj_android.dj_tablet .mblCover.mblTransition {
+	-webkit-transition-duration: .6s;
+	-webkit-transition-timing-function: linear;
+}

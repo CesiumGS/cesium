@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>domButtons16</title>
+
+	<link href="../themes/common/domButtons/DomButtonBlackRightArrow16.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonBlackDownArrow16.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonBlackLeftArrow16.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonBlackUpArrow16.css" rel="stylesheet"/>
+
+	<link href="../themes/common/domButtons/DomButtonWhiteRightArrow16.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonWhiteDownArrow16.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonWhiteLeftArrow16.css" rel="stylesheet"/>
+	<link href="../themes/common/domButtons/DomButtonWhiteUpArrow16.css" rel="stylesheet"/>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/window",
+			"dojo/ready",
+			"dojox/mobile/iconUtils",
+			"dojox/mobile/parser",
+			"dojox/mobile/compat"
+		], function(win, ready, iconUtils){
+			ready(function(){
+				var nodes = win.doc.getElementsByTagName("div");
+				for(var i = 0; i < nodes.length; i++){
+					var div = nodes[i];
+					if(div.nodeType != 1 || div.className.indexOf("mblDomButton") == -1){ continue; }
+					div.style.border = "1px solid red";
+					iconUtils.createDomButton(div);
+				}
+			});
+		});
+	</script>
+</head>
+<body style="background-color:#C5CCD3;font-family:Helvetica;font-size:12px;">
+	<table style="border:none">
+		<tr><td><div class="mblDomButtonBlackRightArrow16"></div></td><td>mblDomButtonBlackRightArrow16</td></tr>
+		<tr><td><div class="mblDomButtonBlackDownArrow16"></div></td><td>mblDomButtonBlackDownArrow16</td></tr>
+		<tr><td><div class="mblDomButtonBlackLeftArrow16"></div></td><td>mblDomButtonBlackLeftArrow16</td></tr>
+		<tr><td><div class="mblDomButtonBlackUpArrow16"></div></td><td>mblDomButtonBlackUpArrow16</td></tr>
+
+		<tr><td><div class="mblDomButtonWhiteRightArrow16"></div></td><td>mblDomButtonWhiteRightArrow16</td></tr>
+		<tr><td><div class="mblDomButtonWhiteDownArrow16"></div></td><td>mblDomButtonWhiteDownArrow16</td></tr>
+		<tr><td><div class="mblDomButtonWhiteLeftArrow16"></div></td><td>mblDomButtonWhiteLeftArrow16</td></tr>
+		<tr><td><div class="mblDomButtonWhiteUpArrow16"></div></td><td>mblDomButtonWhiteUpArrow16</td></tr>
+	</table>
+</body>
+</html>

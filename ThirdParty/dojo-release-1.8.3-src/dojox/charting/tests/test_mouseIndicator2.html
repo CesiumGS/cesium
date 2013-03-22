@@ -1,0 +1,70 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+		<title>Mouse Indicator</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/tundra/tundra.css";
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+
+			dojo.require("dojox.charting.Chart");
+            dojo.require("dojox.charting.axis2d.Default");
+            dojo.require("dojox.charting.plot2d.Lines");
+			dojo.require("dojox.charting.action2d.MouseZoomAndPan");
+			dojo.require("dojox.charting.action2d.MouseIndicator");
+			
+			var chart;
+			makeObjects = function(){
+				chart = new dojox.charting.Chart("chart", { margins : {l :20, t:10, b:10, r: 50}});
+				chart.addAxis("x", {type : "Default", fixLower: "minor", natural: true, stroke: "gray",
+					majorTick: {color: "red", length: 4}, minorTick: {color: "blue", length: 2}});
+				chart.addAxis("y", {vertical: true, min: 0, max: 100, majorTickStep: 10, minorTickStep: 5, stroke: "gray",
+					majorTick: {stroke: "black", length: 4}, minorTick: {stroke: "gray", length: 2}});
+				chart.addPlot("default", {type: "Default",markers: false});
+				chart.addSeries("Series A", [
+					 { x: 1, y: 8},{ x: 2, y: 7},{ x: 3, y: 3},{ x: 4, y: 2},{ x: 5, y: 5},{ x: 6, y: 7},{ x: 7, y: 9},{ x: 8, y: 10},{ x: 9, y: 2},{ x: 10, y: 10},
+					{ x: 15, y: 14},{ x: 16, y: 16},{ x: 17, y: 18},{ x: 18, y: 13},{ x: 19, y: 16},{ x: 20, y: 15},{ x: 21, y: 20},{ x: 22, y: 19},{ x: 23, y: 15},{ x: 24, y: 12},
+					{ x: 25, y: 24},{ x: 26, y: 20},{ x: 27, y: 20},{ x: 28, y: 26},{ x: 29, y: 28},{ x: 30, y: 26},{ x: 31, y: 28},{ x: 32, y: 29},{ x: 33, y: 24},{ x: 34, y: 29},
+					{ x: 35, y: 31},{ x: 36, y: 35},{ x: 37, y: 37},{ x: 38, y: 31},{ x: 39, y: 35},{ x: 40, y: 37},{ x: 41, y: 37},{ x: 42, y: 36},{ x: 43, y: 31},{ x: 44, y: 30},
+					{ x: 45, y: 50},{ x: 46, y: 49},{ x: 47, y: 42},{ x: 48, y: 46},{ x: 49, y: 44},{ x: 50, y: 40},{ x: 51, y: 47},{ x: 52, y: 43},{ x: 53, y: 48},{ x: 54, y: 47},
+					{ x: 55, y: 51},{ x: 56, y: 52},{ x: 57, y: 52},{ x: 58, y: 51},{ x: 59, y: 54},{ x: 60, y: 57},{ x: 61, y: 58},{ x: 62, y: 50},{ x: 63, y: 54},{ x: 64, y: 51},
+					{ x: 65, y: 62},{ x: 66, y: 68},{ x: 67, y: 67},{ x: 68, y: 62},{ x: 69, y: 62},{ x: 70, y: 65},{ x: 71, y: 61},{ x: 72, y: 66},{ x: 73, y: 65},{ x: 74, y: 62},
+					{ x: 75, y: 74},{ x: 76, y: 78},{ x: 77, y: 78},{ x: 78, y: 77},{ x: 79, y: 74},{ x: 80, y: 74},{ x: 81, y: 72},{ x: 82, y: 74},{ x: 83, y: 70},{ x: 84, y: 78},
+					{ x: 85, y: 84},{ x: 86, y: 83},{ x: 87, y: 85},{ x: 88, y: 86},{ x: 89, y: 86},{ x: 90, y: 89},{ x: 91, y: 89},{ x: 92, y: 85},{ x: 93, y: 86},{ x: 94, y: 86},
+					{ x: 95, y: 98},{ x: 96, y: 97},{ x: 97, y: 93},{ x: 98, y: 91},{ x: 99, y: 92},{ x: 100, y: 92}
+				]);
+				new dojox.charting.action2d.MouseZoomAndPan(chart, "default", { axis: "x", enableScroll: false });
+				new dojox.charting.action2d.MouseIndicator(chart, "default", { series: "Series A", 
+					font: "normal normal bold 12pt Tahoma",	fillFunc: function(v){
+							return v.y>55?"green":"red";
+						}, 	labelFunc: function(v){
+							return "x: "+v.x+", y:"+v.y;
+						}});
+				chart.render();
+			};
+		
+			dojo.addOnLoad(makeObjects);
+			
+		</script>
+	</head>
+	<body class="tundra" style="height:100%;width:100%">
+    	<div id="chart" style="width:640px;height:480px"></div>
+	</body>
+</html>

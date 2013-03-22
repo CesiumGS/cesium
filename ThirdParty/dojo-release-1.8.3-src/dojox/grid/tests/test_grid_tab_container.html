@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>TabContainer Demo</title>
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+
+		body {
+			font-family : sans-serif;
+			margin:20px;
+		}
+
+		/* add padding to each contentpane inside the tab container, and scrollbar if necessary */
+		.dojoTabPane {
+			padding : 10px 10px 10px 10px;
+			overflow: auto;
+		}
+	</style>
+	
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/tundra/tundra.css">
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="isDebug: true, parseOnLoad: true"></script>
+
+	<!-- only needed for alternate theme testing: do NOT use in your code! -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.layout.SplitContainer");
+		dojo.require("dijit.Tooltip");
+		dojo.require("dijit.layout.LinkPane");
+		dojo.require("dijit.form.Button");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+	
+	
+	</script>
+	
+	<style type="text/css">
+		@import "../resources/Grid.css";
+		@import "../resources/tundraGrid.css";
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+		}
+		.heading {
+			font-weight: bold;
+			padding-bottom: 0.25em;
+		}
+				
+		#grid {
+			border: 1px solid #333;
+			width: 35em;
+			height: 30em;
+		}
+	</style>
+	<script type="text/javascript">
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojo.parser");
+	</script>
+	<script type="text/javascript" src="support/test_data.js"></script>
+	<script type="text/javascript">
+		var layout = [[
+			new dojox.grid.cells.RowIndex({ width: 5 }),
+			{name: 'Column 1', field: 'col1'},
+			{name: 'Column 2', field: 'col2'},
+			{name: 'Column 3', field: 'col3'},
+			{name: 'Column 4', field: 'col4', width: "150px"},
+			{name: 'Column 5', field: 'col5'}
+		],[
+			{name: 'Column 6', field: 'col6', colSpan: 2},
+			{name: 'Column 7', field: 'col7'},
+			{name: 'Column 8'},
+			{name: 'Column 9', field: 'col3', colSpan: 2}
+		]];
+		function updateGrid() { var grid = dijit.byId('grid'); grid.update()}
+	</script>
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">Dijit layout.TabContainer tests</h1>
+
+	<p>These tabs are made up of local and external content. Tab 1 and Tab 2 are loading
+	files tab1.html and tab2.html. Tab 3 and Another Tab are using content that is already
+	part of this page.   Tab2 is initially selected. Attribute tabStrip is set to true
+	</p>
+
+	<div id="mainTabContainer" dojoType="dijit.layout.TabContainer" tabStrip="true" style="width: 100%; height: 20em;">
+
+		<div id="tab1" dojoType="dijit.layout.ContentPane"  title="Tab 1">
+			<h1>Test refreshing grid</h1>
+			<br/>
+			
+			
+			<div jsid="grid" id="grid" dojoType="dojox.grid.DataGrid" store="test_store" query="{ id: '*' }" structure="layout" rowSelector="20px"></div>
+		</div>
+
+		
+
+		<div dojoType="dijit.layout.ContentPane" title="Tab 2">
+			<h1>I am tab 2</h1>
+		
+			<br/>
+			<button dojoType="dijit.form.Button" onclick="updateGrid">Click here for refreshing grid on Tab 1</button>
+			<br>
+			
+			<p>
+			Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean
+			semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin
+			porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.
+			Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis.
+			Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitae
+			risus.
+			</p>
+			<p>Aliquam vitae enim. Duis scelerisque metus auctor est venenatis
+			imperdiet. Fusce dignissim porta augue. Nulla vestibulum. Integer lorem
+			nunc, ullamcorper a, commodo ac, malesuada sed, dolor. Aenean id mi in
+			massa bibendum suscipit. Integer eros. Nullam suscipit mauris. In
+			pellentesque. Mauris ipsum est, pharetra semper, pharetra in, viverra
+			quis, tellus. Etiam purus. Quisque egestas, tortor ac cursus lacinia,
+			felis leo adipiscing nisi, et rhoncus elit dolor eget eros. Fusce ut
+			quam. Suspendisse eleifend leo vitae ligula. Nulla facilisi. Nulla
+			rutrum, erat vitae lacinia dictum, pede purus imperdiet lacus, ut
+			semper velit ante id metus. Praesent massa dolor, porttitor sed,
+			pulvinar in, consequat ut, leo. Nullam nec est. Aenean id risus blandit
+			tortor pharetra congue. Suspendisse pulvinar.
+			</p>
+		</div>
+
+		
+</body>
+</html>

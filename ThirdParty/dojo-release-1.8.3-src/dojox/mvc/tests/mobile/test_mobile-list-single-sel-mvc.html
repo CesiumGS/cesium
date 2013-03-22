@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>MVC Repeat with Selectable RoundRectList - Single Select</title>
+
+	<script type="text/javascript" src="../../../../dojox/mobile/deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, async: true, parseOnLoad: false, mvc: {debugBindings: true}"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/lang",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojo/store/Memory",
+			"dojo/ready",
+			"dojo/when",
+			"dojox/mvc/getStateful",
+			"dojox/mvc/at",
+			"dojox/mvc/Group",
+			"dojox/mvc/Repeat",
+			"dojox/mvc/Output",
+			"dojox/mobile",
+			"dojox/mobile/Button",
+			"dojox/mobile/TextBox",
+			"dojox/mobile/CheckBox",
+			"dojox/mobile/deviceTheme"
+		], function(lang, registry, parser, MemoryStore, ready, when, getStateful, at){
+			window.at = at;
+
+			var search_results_init1 =
+			[{
+				"Query" : "Engineers1",
+				"Results" : [
+					{
+						"First"	  : "Anne1",
+						"Last"	  : "Ackerman1",
+						"Checked" : true
+					},
+					{
+						"First"	  : "Ben1",
+						"Last"	  : "Beckham1",
+						"Checked" : false
+					},
+					{
+						"First"	  : "Chad1",
+						"Last"	  : "Chapman1",
+						"Checked" : false
+					}
+				]
+			}];
+
+			var search_results_init2 =
+				[{
+					"Query" : "Engineers1",
+					"Results" : [
+						{
+							"First"	  : "Anne2",
+							"Last"	  : "Ackerman2",
+							"Checked" : false
+						},
+						{
+							"First"	  : "Ben2",
+							"Last"	  : "Beckham2",
+							"Checked" : true
+						},
+						{
+							"First"	  : "Chad2",
+							"Last"	  : "Chapman2",
+							"Checked" : false
+						}
+					]
+				}];
+			var memStore1 = new MemoryStore({data : search_results_init1});
+			//model1 = mvc.newStatefulModel({ store : memStore1 })[0];
+
+				when(memStore1.query(), function(data){
+					model1 = getStateful(data)[0];
+					model1Orig = lang.clone(model1);
+					//if(model1 && model2 && model3){ runTests(); }
+				});
+
+
+		var memStore2 = new MemoryStore({data : search_results_init2});
+		//model2 = mvc.newStatefulModel({ store : memStore2 })[0];
+				when(memStore2.query(), function(data){
+					model2 = getStateful(data)[0];
+					model2Orig = lang.clone(model2);
+					//if(model1 && model2 && model3){ runTests(); }
+				});
+			
+			// when "dojo/ready" is ready call parser.parse (if not doing parseOnLoad)
+			ready(function(){
+				parser.parse();
+			});
+
+
+			// called to reset the model for each of the repeats
+			swapToModel1 = function() {
+				registry.byId('repeatId1').set('children',model1.Results); 
+				registry.byId('repeatId2').set('children',model1.Results); 
+				registry.byId('repeatid2arem').set('children',model1.Results);
+			};
+
+			swapToModel2 = function() {
+				registry.byId('repeatId1').set('children',model2.Results); 
+				registry.byId('repeatId2').set('children',model2.Results); 
+				registry.byId('repeatid2arem').set('children',model2.Results);
+			};
+
+			resetAll = function() {
+				model1 = lang.clone(model1Orig);
+				model2 = lang.clone(model2Orig);
+				registry.byId('repeatId1').set('children',model1.Results); 
+				registry.byId('repeatId2').set('children',model1.Results); 
+				registry.byId('repeatid2arem').set('children',model1.Results);
+			};
+			
+
+		});
+		
+	</script>
+</head>
+<body style="visibility:hidden;">
+		<div id="wrapper">
+			<div id="header">
+				<div id="navigation"></div>
+				<div id="headerInsert">
+					<h2>MVC Repeat with Selectable RoundRectDataList - Single Select</h2>
+				</div>
+			</div>
+			<div id="main">
+				<div id="leftNav"></div>
+				<div id="mainContent">
+				<h4>Here is one using dojox.mvc.Repeat as a mixin with no Group and dojo.parser instead of dojox.mobile.parser it is all good using mixin.</h4>
+				<ul data-dojo-type="dojox.mobile.RoundRectList"  id="repeatId1" select="single" 
+					data-dojo-mixins="dojox.mvc.Repeat" data-dojo-props="exprchar:'#', children: model1.Results">
+							<li id="configure_itemmix1#{this.index}" class="mblVariableHeight" data-dojo-type="dojox.mobile.ListItem"  
+								data-dojo-props="label: at('rel:#{this.index}', 'First'),
+												checked: at('rel:#{this.index}', 'Checked')">
+							</li>
+				</ul>
+
+				<h4>Here is one using MVC using Repeat no Group, with removeRepeatNode set true it is all good if Repeat sets select and onCheckStateChanged.</h4>
+				<ul data-dojo-type="dojox.mobile.RoundRectList"  id="repeatparentidrem" select="single">
+					<div data-dojo-type="dojox.mvc.Repeat" id="repeatid2arem" 
+						data-dojo-props="exprchar:'#', children:model1.Results, removeRepeatNode:true">
+							<li id="configure_itemrem#{this.index}" class="mblVariableHeight" data-dojo-type="dojox.mobile.ListItem"  
+								data-dojo-props="label: at('rel:#{this.index}','First'),
+												checked: at('rel:#{this.index}','Checked')">
+							</li>
+					</div>
+				</ul>
+				<h4>You can update the label or checked from here to update the model.</h4>
+				   <div id="repeatparentid2">
+						<div id="repeatId2" data-dojo-type="dojox.mvc.Repeat" data-dojo-props="children:model1.Results">
+								<input class="cell" data-dojo-type="dojox.mobile.TextBox" id="nameInput2${this.index}" 
+										data-dojo-props="value: at('rel:${this.index}', 'First')"/>
+		  						<label data-dojo-type="dojox.mvc.Output" for="CBInput${this.index}" 
+										data-dojo-props="value: at('rel:${this.index}','First')"/></label>
+								<input class="cell" type="checkbox" data-dojo-type="dojox.mobile.CheckBox" id="CBInput${this.index}" 
+										data-dojo-props="checked: at('rel:${this.index}','Checked')"/>
+						</div>
+					</div>
+
+					<br/>Model:
+					<button type="button" data-dojo-type="dojox.mobile.Button" data-dojo-props="onClick: function(){swapToModel2();}">Swap Model2</button> 
+					<button type="button" data-dojo-type="dojox.mobile.Button" data-dojo-props="onClick: function(){swapToModel1();}">Swap Model1</button> 					
+				 	<button id="reset" type="button" data-dojo-type="dojox.mobile.Button" data-dojo-props="onClick: function(){resetAll();}">Reset all</button> 	
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

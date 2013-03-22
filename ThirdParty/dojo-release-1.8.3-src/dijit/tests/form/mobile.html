@@ -1,0 +1,234 @@
+<!DOCTYPE>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Form widgets mobile test page</title>
+		<link href="../../themes/claro/claro.css" rel="stylesheet"/>
+		<link href="../../icons/commonIcons.css" rel="stylesheet"/>
+		<link href="../css/dijitTests.css" rel="stylesheet"/>
+		<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			require([
+				"dojo/_base/kernel",
+				"dijit",
+				"dojo/on",
+				"dojo/_base/window",
+				"dojo/parser",
+
+				"dijit/form/Button",
+				"dijit/form/DropDownButton",
+				"dijit/form/ComboButton",
+				"dijit/form/ToggleButton",
+				"dijit/DropDownMenu",
+				"dijit/MenuItem",
+
+				"dijit/form/CheckBox",
+				"dijit/form/RadioButton",
+
+				"dijit/form/NumberTextBox",
+				"dijit/form/DateTextBox",
+				"dijit/form/TimeTextBox",
+				"dijit/form/NumberSpinner",
+
+				"dijit/form/FilteringSelect",
+				"dijit/form/Select",
+
+				"dijit/form/HorizontalSlider",
+				"dijit/form/HorizontalRule",
+				"dijit/form/HorizontalRuleLabels",
+				"dojo/domReady!"
+			], function(dojo, dijit, on, win){
+				dojo.parser.parse();
+
+				// Experimental code to get responsive clicks (without the 300ms delay).
+				// However, it breaks page scrolling and page zoom, so it's commented out.
+				on(win.body(), "touchstart", function(evt){
+					start = new Date();
+					console.log("0 touchstart");
+
+					// This is needed to prevent native click when the user presses for >100ms, but it has the side
+					// effect of disabling scroll and zoom
+					//evt.preventDefault();
+				});
+				on(win.body(), "touchend", function(evt){
+					console.log(((new Date()) - start) + ": touchend, fire synthetic click");
+/*
+					// try to prevent native click, but it won't stop native click if you press for >100ms
+					evt.preventDefault();
+
+					// fire synthetic click
+					on.emit(evt.target, "click", {
+						cancelable: true,
+						bubbles: true
+					});
+*/
+				});
+				on(win.body(), "click", function(evt){
+					console.log(((new Date()) - start) + ": click");
+				});
+
+			});
+		</script>
+	</head>
+	<body class="claro" role="main">
+		<h1>Buttons</h1>
+		<button data-dojo-type="dijit/form/Button" id="T1465" data-dojo-props='onClick:function(){ console.log("clicked simple"); }, iconClass:"plusIcon", value:"Create"'>
+			Button
+		</button>
+		<button id="SubmitDropDown" data-dojo-type="dijit/form/DropDownButton" name="DropDown" type="submit" value="DropDown Submit"
+				data-dojo-props="label: 'DropDown Submit'">
+			DropDownButton
+			<span data-dojo-type="dijit/DropDownMenu">
+				<span id="SubmitDropDownMenuItem" data-dojo-type="dijit/MenuItem">DropDown MenuItem</span>
+			</span>
+		</button>
+		<button id="comboCreate" title="creative title" data-dojo-type="dijit/form/ComboButton" data-dojo-props='optionsTitle:"save options", onClick:function(){ console.log("clicked combo save") },
+				iconClass:"plusIcon"'>
+			<span>ComboButton</span>
+			<span id="createMenu" data-dojo-type="dijit/DropDownMenu">
+				<span data-dojo-type="dijit/MenuItem"  data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconSave",
+					onClick:function(){ console.log("not actually saving anything, just a test!"); }'>Create blank</span>
+				<span data-dojo-type="dijit/MenuItem"
+					data-dojo-props='onClick:function(){ console.log("not actually saving anything, just a test!"); }'>Create from template</span>
+			</span>
+		</button>
+		<button id="toggle2" data-dojo-type="dijit/form/ToggleButton"
+			data-dojo-props='onChange:function(val){ console.log("toggled button checked="+val); }, iconClass:"dijitRadioIcon"'>
+			Toggle me
+		</button>
+
+		<h1>CheckBox, RadioButton</h1>
+		<fieldset>
+			<legend>check boxes</legend>
+			<label for="nativeCb">native</label>
+			<input id="nativeCb" type=checkbox onclick="console.log('clicked native cb');"/>
+			<label for="cb1">cb1:</label>
+			<input id="cb1" data-dojo-id="cb1" data-dojo-type="dijit/form/CheckBox" data-dojo-props='name:"cb1", value:"foo", onClick:function(){ console.log("clicked cb1") }'/>
+			<label for="cb2">cb2</label>
+			<input id="cb2" data-dojo-id="cb2" data-dojo-type="dijit/form/CheckBox" data-dojo-props='name:"cb2", value:"foo", onClick:function(){ console.log("clicked cb2") }'/>
+		</fieldset>
+		<fieldset>
+			<legend>radio buttons</legend>
+			<label for="rb1">rb1</label>
+			<input id="rb1" data-dojo-id="rb1" data-dojo-type="dijit/form/RadioButton" data-dojo-props='name:"rb1", value:"foo", onClick:function(){ console.log("clicked rb1") }'/>
+			<label for="rb2">rb2</label>
+			<input id="rb2" data-dojo-id="rb2" data-dojo-type="dijit/form/RadioButton" data-dojo-props='name:"rb2", value:"foo", onClick:function(){ console.log("clicked rb2") }'/>
+		</fieldset>
+
+		<h1>TextBoxes</h1>
+		<label for="q03">NumberSpinner:</label>
+		<input id="q03" data-dojo-type="dijit/form/NumberSpinner"
+			name="age" tabIndex="1" class="small"
+			data-dojo-props='
+			promptMessage:"(optional) Enter an age between 0 and 120",
+			maxLength:"3",
+			constraints:{places:0,min:0,max:120},
+			onChange:function(val){ console.log(val); },
+			tooltipPosition:["above", "below"]
+		'/>
+		<label for="locald">Date:</label>
+		<input id="locald" data-dojo-type="dijit/form/DateTextBox"
+			name="date" value="2008-12-31" onChange="console.log(arguments[0]);"
+		/>
+		<label for="localt">Time:</label>
+		<input id="localt" data-dojo-type="dijit/form/TimeTextBox"
+			   name="time" value="T17:45:00" onChange="console.log(arguments[0]);"
+		/>
+
+		<h1>Selects</h1>
+		<select id="s" data-dojo-type="dijit/form/Select">
+			<option value="TN">Tennessee</option>
+			<option value="VA" selected="selected">Virginia</option>
+			<option value="WA">Washington</option>
+			<option value="FL">Florida</option>
+			<option value="CA">California</option>
+		</select>
+		<select id="fs" aria-label="fs" data-dojo-type="dijit/form/FilteringSelect">
+			<option value="AL">Alabama</option>
+			<option value="AK">Alaska</option>
+			<option value="AS">American Samoa</option>
+			<option value="AZ">Arizona</option>
+			<option value="AR">Arkansas</option>
+			<option value="AE">Armed Forces Europe</option>
+			<option value="AP">Armed Forces Pacific</option>
+			<option value="AA">Armed Forces the Americas</option>
+			<option value="CA" selected>California</option>
+			<option value="CO">Colorado</option>
+			<option value="CT">Connecticut</option>
+			<option value="DE">Delaware</option>
+			<option value="DC">District of Columbia</option>
+			<option value="FM">Federated States of Micronesia</option>
+			<option value="FL">Florida</option>
+			<option value="GA">Georgia</option>
+			<option value="GU">Guam</option>
+			<option value="HI">Hawaii</option>
+			<option value="ID">Idaho</option>
+			<option value="IL">Illinois</option>
+			<option value="IN">Indiana</option>
+			<option value="IA">Iowa</option>
+			<option value="KS">Kansas</option>
+			<option value="KY">Kentucky</option>
+			<option value="LA">Louisiana</option>
+			<option value="ME">Maine</option>
+			<option value="MH">Marshall Islands</option>
+			<option value="MD">Maryland</option>
+			<option value="MA">Massachusetts</option>
+			<option value="MI">Michigan</option>
+			<option value="MN">Minnesota</option>
+			<option value="MS">Mississippi</option>
+			<option value="MO">Missouri</option>
+			<option value="MT">Montana</option>
+			<option value="NE">Nebraska</option>
+			<option value="NV">Nevada</option>
+			<option value="NH">New Hampshire</option>
+			<option value="NJ">New Jersey</option>
+			<option value="NM">New Mexico</option>
+			<option value="NY">New York</option>
+			<option value="NC">North Carolina</option>
+			<option value="ND">North Dakota</option>
+			<option value="MP">Northern Mariana Islands</option>
+			<option value="OH">Ohio</option>
+			<option value="OK">Oklahoma</option>
+			<option value="OR">Oregon</option>
+			<option value="PA">Pennsylvania</option>
+			<option value="PR">Puerto Rico</option>
+			<option value="RI">Rhode Island</option>
+			<option value="SC">South Carolina</option>
+			<option value="SD">South Dakota</option>
+			<option value="TN">Tennessee</option>
+			<option value="TX">Texas</option>
+			<option value="UT">Utah</option>
+			<option value="VT">Vermont</option>
+			<option value="VI">Virgin Islands, U.S.</option>
+			<option value="VA">Virginia</option>
+			<option value="WA">Washington</option>
+			<option value="WV">West Virginia</option>
+			<option value="WI">Wisconsin</option>
+			<option value="WY">Wyoming</option>
+		</select>
+
+		<h1>HorizontalSlider</h1>
+		<div id="slider1" data-dojo-type="dijit/form/HorizontalSlider" data-dojo-props='name:"horizontal1",
+			value:10,
+			maximum:100,
+			minimum:0,
+			pageIncrement:100,
+			showButtons:true,
+			intermediateChanges:true,
+			slideDuration:500,
+			style:{width:"100%", height:"20px"}
+			'>
+				<ol data-dojo-type="dijit/form/HorizontalRuleLabels" data-dojo-props='container:"topDecoration", style:{height:"1.2em",fontSize:"75%"}, count:6, numericMargin:1'></ol>
+				<div data-dojo-type="dijit/form/HorizontalRule" data-dojo-props='container:"topDecoration", count:6, style:{height:"5px"}'></div>
+				<div data-dojo-type="dijit/form/HorizontalRule" data-dojo-props='container:"bottomDecoration", count:5, style:{height:"5px"}'></div>
+				<ol data-dojo-type="dijit/form/HorizontalRuleLabels" data-dojo-props='container:"bottomDecoration", style:{height:"1em",fontSize:"75%"}'>
+					<li>lowest</li>
+					<li>normal</li>
+					<li>highest</li>
+				</ol>
+		</div>
+	</body>
+</html>

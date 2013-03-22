@@ -1,0 +1,8 @@
+DOH tests for Dojox Mobile.
+
+Notes: 
+1. Before running the tests, you need to ensure the browser zoom is at 1:1. This 
+   impacts some of the tests which perform dimensional checks.
+2. When running in IE, the following tests: ButtonsTests.html, ExpandingTextAreaTests.html, and 
+   TextAreaTests.html, the dimensional checks are calibrated for execution in IE9, 
+   and the checks are skipped in older IE versions.   

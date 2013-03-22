@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Focus Issue</title>
+	<style type="text/css">
+		@import "../themes/claro/claro.css";
+	</style>
+</head>
+<body class="claro">
+	<iframe style="width:100%;height:2em;" src="./test_UIWindowIssue_child.html"></iframe>
+
+	<div id="menu" data-dojo-type="dijit/Menu" data-dojo-props="contextMenuForWindow:true" style="display:none;">
+		<div data-dojo-type="dijit/MenuItem" data-dojo-props='onClick:function(){ console.log("Hello world"); }'>Context Menu</div>
+		<div data-dojo-type="dijit/MenuSeparator"></div>
+		<div data-dojo-type="dijit/MenuItem" data-dojo-props='disabled:true, onClick:function(){ alert("this should NOT appear"); }'>Disabled Item</div>
+		<div data-dojo-type="dijit/MenuItem" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconCut",
+			onClick:function(){ console.log("not actually cutting anything, just a test!") }, accelKey:"Ctrl+X"'>Cut</div>
+		<div data-dojo-type="dijit/MenuItem" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconCopy",
+			onClick:function(){ console.log("not actually copying anything, just a test!") }, accelKey:"Ctrl+C"'>Copy</div>
+		<div data-dojo-type="dijit/MenuItem" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconPaste",
+			onClick:function(){ console.log("not actually pasting anything, just a test!") }, accelKey:"Ctrl+V"'>Paste</div>
+		<div data-dojo-type="dijit/MenuSeparator"></div>
+		<div id="enabledSubmenu" data-dojo-type="dijit/PopupMenuItem" >
+			<span>Enabled Submenu</span>
+			<div id="submenu2" data-dojo-type="dijit/Menu" >
+				<div id="submenu2_item1" data-dojo-type="dijit/MenuItem" data-dojo-props='onClick:function(){ console.log("Submenu 1!") }'>Submenu Item One</div>
+				<div id="submenu2_item2" data-dojo-type="dijit/MenuItem" data-dojo-props='onClick:function(){ console.log("Submenu 2!") }'>Submenu Item Two</div>
+				<div id="deeperSubmenu" data-dojo-type="dijit/PopupMenuItem" >
+					<span>Deeper Submenu</span>
+					<div id="submenu4" data-dojo-type="dijit/Menu" >
+						<div data-dojo-type="dijit/MenuItem" data-dojo-props='onClick:function(){ console.log("Sub-submenu 1!") }'>Sub-sub-menu Item One</div>
+						<div data-dojo-type="dijit/MenuItem" data-dojo-props='onClick:function(){ console.log("Sub-submenu 2!") }'>Sub-sub-menu Item Two</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div data-dojo-type="dijit/PopupMenuItem" data-dojo-props='disabled:true'>
+			<span>Disabled Submenu</span>
+			<div id="submenu3" data-dojo-type="dijit/Menu" data-dojo-props='style:"display: none;"'>
+				<div data-dojo-type="dijit/MenuItem" data-dojo-props='onClick:function(){ console.log("Submenu 1!") }'>Submenu Item One</div>
+				<div data-dojo-type="dijit/MenuItem" data-dojo-props='onClick:function(){ console.log("Submenu 2!") }'>Submenu Item Two</div>
+			</div>
+		</div>
+		<div data-dojo-type="dijit/MenuSeparator"></div>
+		<div data-dojo-type="dijit/CheckedMenuItem" data-dojo-props='checked:true, onChange:function(val){ console.log("Now set to " + val); }'>Checked</div>
+		<div data-dojo-type="dijit/CheckedMenuItem">Not Checked</div>
+		<div data-dojo-type="dijit/CheckedMenuItem" data-dojo-props='checked:true, disabled:true'>Checked Disabled</div>
+		<div data-dojo-type="dijit/MenuSeparator"></div>
+		<div data-dojo-type="dijit/PopupMenuItem">
+			<span>Bigger Submenu</span>
+			<div id="bigsubmenu" data-dojo-type="dijit/Menu" data-dojo-props='style:"display: none;"'>
+				<div data-dojo-type="dijit/MenuItem">Item One</div>
+				<div data-dojo-type="dijit/MenuItem">Item Two</div>
+				<div data-dojo-type="dijit/MenuItem">Item Three</div>
+				<div data-dojo-type="dijit/MenuItem">Item Four</div>
+				<div data-dojo-type="dijit/MenuItem">Item Five</div>
+				<div data-dojo-type="dijit/MenuItem">Item Six</div>
+				<div data-dojo-type="dijit/MenuItem">Item Seven</div>
+				<div data-dojo-type="dijit/MenuItem">Item Eight</div>
+				<div data-dojo-type="dijit/MenuItem">Item Nine</div>
+				<div data-dojo-type="dijit/MenuItem">Item Ten</div>
+			</div>
+		</div>
+	</div>
+
+	<p>To test:
+	<ul>
+	<li>Right mouse click anywhere on the page to see the context menu</li>
+	<li>Mouse-over "Enabled Submenu"</li>
+	<li>Make sure the submenu is positioned properly</li>
+	</ul>
+	</p>
+</body>
+</html>

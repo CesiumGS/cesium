@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+	<title>Dojox RangeSlider Test</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/claro/document.css";
+		@import "../../../dijit/themes/claro/claro.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../resources/RangeSlider.css";
+	</style>
+	
+	<style>
+		/* showing a big yellow bar */
+		#hrCustomSlider .dijitSliderProgressBar {
+			background:yellow !important;
+			height:12px;
+			overflow:visible;
+			margin-top: -5px;
+		}
+
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dojox.form.RangeSlider");
+		dojo.require("dijit.form.HorizontalRule");
+		dojo.require("dijit.form.HorizontalRuleLabels");
+		dojo.require("dijit.form.VerticalRule");
+		dojo.require("dijit.form.VerticalRuleLabels");
+		
+		var horizOnChange = function(){
+		
+			dojo.byId('minValue').value = dojo.number.format(arguments[0][0]/100, { places:1, pattern:'#%' });
+			dojo.byId('maxValue').value = dojo.number.format(arguments[0][1]/100, { places:1, pattern:'#%' });
+	
+		}
+		
+		var vertOnChange = function(){
+			
+			console.log(arguments);
+			dojo.byId('vMinValue').value = dojo.number.format(arguments[0][1],{places:1,pattern:'#'});
+			dojo.byId('vMaxValue').value = dojo.number.format(arguments[0][0],{places:1,pattern:'#'});
+			
+		}
+		
+	</script>
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+</head>
+<body class="claro" role="main">
+	<h1 class="testTitle">Dojox RangeSlider test</h1>
+	Just try to drag the slider endpoints and the bar in the middle. You can also use the bumper and the arrows on the left and right to manipulate the range. It's also possible to tab through the slider parts and move the handlers or bar with left/right/up/down-button. 
+	<h2>Horizontal slider</h2>
+	<center>
+	<div 
+		id="hrSlider" 
+		discreteValues="11"
+		onChange="horizOnChange"
+		style="width:500px;" 
+		value="80,20" 
+		intermediateChanges="true"
+		dojoType="dojox.form.HorizontalRangeSlider">
+		<ol dojoType="dijit.form.HorizontalRuleLabels" container="topDecoration" style="height:1.2em;font-size:75%;color:gray;" count="7" constraints="{pattern:'#.00%'}"></ol>
+		<div dojoType="dijit.form.HorizontalRule" container="topDecoration" count=7 style="height:10px;margin-bottom:-5px;"></div>
+	</div>
+	</center>
+	<label for="minValue">Horizontal Slider Min Value:</label><input readonly id="minValue" size="10" value="20.0%"/><br/>
+	<label for="maxValue">Horizontal Slider Max Value:</label><input readonly id="maxValue" size="10" value="80.0%"/><br/>
+	<button id="disableButton" dojoType="dijit.form.Button" onClick="dijit.byId('hrSlider').set('disabled', true);dijit.byId('disableButton').set('disabled',true);dijit.byId('enableButton').set('disabled',false);">Disable previous slider</button>
+	<button id="enableButton"  dojoType="dijit.form.Button" onClick="dijit.byId('hrSlider').set('disabled', false);dijit.byId('disableButton').set('disabled',false);dijit.byId('enableButton').set('disabled', true);" disabled>Enable previous slider</button>
+	
+	<h2>A customized horizontal slider</h2>
+	<div 
+		id="hrCustomSlider"
+		discreteValues="22"
+		dojoType="dojox.form.HorizontalRangeSlider"
+		showButtons="false"
+	></div>
+	<button id="getValues" dojoType="dijit.form.Button" onClick="console.dir(dijit.byId('hrCustomSlider').get('value'));">Get Value</button>
+
+	<h2>Vertical slider</h2>
+	<div id="vrSlider"
+		onChange="vertOnChange"
+		style="height:300px;" 
+		value="10,90"
+		dojoType="dojox.form.VerticalRangeSlider">
+		<ol dojoType="dijit.form.VerticalRuleLabels" container="leftDecoration" style="width:2em;color:gray;" labelStyle="right:0px;">
+			<li>0</li>
+			<li>100</li>
+		</ol>
+		<div dojoType="dijit.form.VerticalRule" container="leftDecoration" count=11 style="width:5px;" ruleStyle="border-color:gray;"></div>
+		<div dojoType="dijit.form.VerticalRule" container="rightDecoration" count=11 style="width:5px;" ruleStyle="border-color:gray;"></div>
+		<ol dojoType="dijit.form.VerticalRuleLabels" data-dojo-props='container:"rightDecoration", style:{width:"2em"}, count:6, numericMargin:1, minimum:0, maximum:100, constraints:{pattern:"#"}'></ol>
+	</div>
+	<p>
+	<label for="vMaxValue">Vertical Slider Max Value:</label><input readonly id="vMaxValue" size="10" value="90.0"/><br/>
+	<label for="vMinValue">Vertical Slider Min Value:</label><input readonly id="vMinValue" size="10" value="10.0"/><br/>
+	</p>
+</body>
+</html>

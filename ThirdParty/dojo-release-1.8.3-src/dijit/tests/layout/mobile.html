@@ -1,0 +1,142 @@
+<!DOCTYPE>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Layout widgets mobile test page</title>
+		<link href="../../themes/claro/claro.css" rel="stylesheet"/>
+		<link href="../../icons/commonIcons.css" rel="stylesheet"/>
+		<link href="../css/dijitTests.css" rel="stylesheet"/>
+		<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			require([
+				"dojo/_base/kernel",
+				"dijit",
+				"dojo/parser",
+
+				"dijit/layout/ContentPane",
+				"dijit/layout/AccordionContainer",
+				"dijit/layout/BorderContainer",
+				"dijit/layout/TabContainer",
+				"dojo/domReady!"
+			], function(dojo, dijit){
+				dojo.parser.parse();
+			});
+		</script>
+	</head>
+	<body class="claro">
+		<h1>Accordion</h1>
+		<div id="ac" data-dojo-type="dijit/layout/AccordionContainer" style="height: 300px">
+			<div id="acp1" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='selected:true,
+				title:"Pane 1", iconClass:"dijitEditorIcon dijitEditorIconSave", tooltip:"tooltip for simple pane" '>
+				<p>
+					Nunc consequat nisi vitae quam. Suspendisse sed nunc. Proin
+					suscipit porta magna. Duis accumsan nunc in velit. Nam et nibh.
+					Nulla facilisi. Cras venenatis urna et magna. Aenean magna mauris,
+					bibendum sit amet, semper quis, aliquet nec, sapien.  Aliquam
+					aliquam odio quis erat. Etiam est nisi, condimentum non, lacinia
+					ac, vehicula laoreet, elit. Sed interdum augue sit amet quam
+					dapibus semper. Nulla facilisi. Pellentesque lobortis erat nec
+					quam.
+				</p>
+			</div>
+			<div id="acp2" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='
+					title:"Pane 2", iconClass:"dijitEditorIcon dijitEditorIconSave", tooltip:"tooltip for simple pane" '>
+				<p>
+					Sed arcu magna, molestie at, <input value="fringilla in, sodales"/> fringilla in, sodales eu, elit.
+					Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+					vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+					augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+					metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+					ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+					euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+					risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+					porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+					faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+					consequat quis, varius interdum, nulla. Donec neque tortor,
+					sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+					ut eros sit amet ante pharetra interdum.
+				</p>
+			</div>
+		</div>
+
+
+		<h1>BorderContainer</h1>
+		<div id="bc" data-dojo-type="dijit/layout/BorderContainer" style="height: 200px; width: 100%">
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"left", style:"width:50%", splitter:true'>
+				1Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+				Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+				vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+				augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+				metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+				ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+				euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+				risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+				porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+				faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+				consequat quis, varius interdum, nulla. Donec neque tortor,
+				sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+				ut eros sit amet ante pharetra interdum.
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"center"'>
+				2Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+				Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+				vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+				augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+				metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+				ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+				euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+				risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+				porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+				faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+				consequat quis, varius interdum, nulla. Donec neque tortor,
+				sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+				ut eros sit amet ante pharetra interdum.
+			</div>
+		</div>
+
+		<h1>TabContainer</h1>
+		<div data-dojo-type="dijit/layout/TabContainer" data-dojo-props='style:"height:200px"'>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Tab 1"'>
+				1Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+				Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+				vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+				augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+				metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+				ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+				euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+				risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+				porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+				faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+				consequat quis, varius interdum, nulla. Donec neque tortor,
+				sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+				ut eros sit amet ante pharetra interdum.
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Tab 2"'>
+				2Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+				Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+				vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+				augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+				metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+				ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+				euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+				risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+				porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+				faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+				consequat quis, varius interdum, nulla. Donec neque tortor,
+				sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+				ut eros sit amet ante pharetra interdum.
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Tab 3"' closable=true>
+				Tab 3 contents
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Tab 4"' closable=true>
+				Tab 4 contents
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='title:"Tab 5"' closable=true>
+				Tab 5 contents
+			</div>
+		</div>
+	</body>
+</html>

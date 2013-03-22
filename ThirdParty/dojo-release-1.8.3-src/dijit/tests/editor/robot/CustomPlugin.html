@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot CustomPlugin Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.DeferredList");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_CustomPlugin.html');
+				
+				var myPlugin;
+
+				doh.register("isVisible", [
+					{
+						name: "wait for editors to load",
+						timeout: 5000,
+						runTest: function(){
+						    return new dojo.DeferredList(
+						        dijit.registry.filter(function(w){ return w.onLoadDeferred; }).map(function(w){ return w.onLoadDeferred; })
+						    );
+						}
+					},
+					function initialConditions(){
+						var pluginIcon = dojo.query(".customIcon")[0];
+						doh.t(isVisible(pluginIcon), "isVisible(pluginIcon)");
+					}
+				]);
+
+					
+				doh.register("testCustomPlugin", [
+					{
+						name: "toggleOn",
+						setUp: function(){
+							var editor = dijit.byId("editor1");
+							dojo.forEach(editor._plugins, function(plugin){
+								if(plugin.name === "MyPlugin"){
+									myPlugin = plugin;
+								}
+							});
+						},
+						timeout: 15000,
+						runTest: function(){
+							var d = new doh.Deferred();	
+							myPlugin.button.focus();
+							doh.robot.mouseMoveAt(myPlugin.button.domNode, 500);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								var foundClass = false;
+								doh.t(myPlugin.button.get("checked"), "Verifying button was checked.");
+								var sourceArea = myPlugin.sourceArea;
+								doh.t(isVisible(sourceArea), "isVisible(sourceArea)");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "toggleOff",
+						setUp: function(){
+							var editor = dijit.byId("editor1");
+							dojo.forEach(editor._plugins, function(plugin){
+								if(plugin.name === "MyPlugin"){
+									myPlugin = plugin;
+								}
+							});
+						},
+						timeout: 15000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							myPlugin.button.focus();
+							doh.robot.mouseMoveAt(myPlugin.button.domNode, 500);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(myPlugin.button.get("checked"), "Verifying button was unchecked.");
+								var sourceArea = myPlugin.sourceArea;
+								doh.f(isVisible(sourceArea), "isVisible(sourceArea)");
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

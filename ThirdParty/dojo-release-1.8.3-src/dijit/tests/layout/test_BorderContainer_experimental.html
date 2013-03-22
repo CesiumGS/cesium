@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>BorderContainer Experiments | The Dojo Toolkit</title>
+
+		<!-- only needed for test files: -->
+		<style type="text/css">
+			@import "../../themes/claro/document.css";
+			@import "../css/dijitTests.css";
+			#pane1 { background-color:red;
+			}
+			#pane2{
+				background-color:green;
+			}
+			#pane3 {
+				background-color:blue;
+			}
+			#pane0 {
+				background-color:#ededed;
+			}
+			.wrapper { padding:25px; }
+			.bc { margin:10px; border:2px solid #ededed; }
+		</style>
+
+		<!-- required: the default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			data-dojo-config="isDebug: true"></script>
+
+		<!-- only needed for alternate theme testing: -->
+		<script type="text/javascript" src="../_testCommon.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit.form.Button");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("dijit.layout.BorderContainer");
+
+			var open = false;
+
+			dojo.ready(function(){
+				dojo.declare("my.BorderContainer",dijit.layout.BorderContainer,{
+	
+					opts: {
+						// single pane view
+						"a":{
+							panes: [
+								{ id: "pane0", sizeable:false, region:"center", style: { width:"100%", height:"100%" } },
+								{ id: "pane1", hidden:true },
+								{ id: "pane2", hidden:true },
+								{ id: "pane3", hidden:true }
+							]
+						},
+						// top / bottom view
+						"ah":{
+							panes: [
+								{ id: "pane0", sizeable:false, region:"center", style: { width:"100%", height:"50%" } },
+								{ id: "pane1", sizeable:true, region:"bottom", style: { width:"100%", height:"50%" } },
+								{ id: "pane2", hidden:true },
+								{ id: "pane3", hidden:true }
+							]
+						},
+						// left / right view
+						"av":{
+							panes: [
+								{ id: "pane0", sizeable:true, region:"left", style: { width:"50%", height:"100%" } },
+								{ id: "pane1", sizeable:false, region:"center", style: { width:"50%", height:"100%" } },
+								{ id: "pane2", hidden:true },
+								{ id: "pane3", hidden:true }
+							]
+						}
+	
+					},
+	
+					_clearSplitters: function(){
+						// cleanup all splitters on the page
+						dojo.query(".dijitSplitter",this.domNode).forEach(function(n){
+							dijit.byNode(n).destroy();
+						});
+						dojo.query(".dijitSplitterCover").forEach(dojo.destroy);
+						delete this._splitters;
+						this._splitters = {};
+					},
+	
+					setLayoutENUM: function(lay){
+						// set the layout to a predefined setup
+						if(this._layoutSetting != lay){
+	
+							this._layoutSetting = lay;
+							var struct = this.opts[lay] || false;
+							this._clearSplitters();
+	
+							dojo.forEach(struct.panes,function(pane,i){
+								// setup each pane
+								var d = dijit.byId(pane.id);
+								d.region = pane.region || "center";
+								d.splitter = pane.sizeable;
+								if(pane.minSize){ d.minSize = pane.minSize; }
+								if(pane.maxSize){ d.maxSize = pane.maxSize; }
+								if(pane.hidden){
+									// reset this widget to our hidden holder node
+									this.extractChild(d,dojo.byId("holder"));
+									d.splitter = null;
+									d.region = null;
+									d.maxSize = null;
+									d.minSize = null;
+								}else{
+									if(pane.style){
+										// object setter via style only in trunk:
+										dojo.style(d.domNode,pane.style);
+									}
+									this.addChild(d,i);
+								}
+							},this);
+						}
+						this.layout();
+					},
+	
+					extractChild: function(/*dijit._Widget*/ child, /*DomNode*/ node){
+						// a non-destructive cleanup for the bordercontainer.
+						// cleanup a widget, and append it's domNode to some
+						// other node in the dom
+						var region = child.region;
+						var splitter = this._splitters[region];
+						if(splitter){
+							dijit.byNode(splitter).destroy();
+							delete this._splitters[region];
+						}
+						delete this["_"+region];
+						node.appendChild(child.domNode);
+						if(this._started){
+							this._layoutChildren();
+						}
+						return child.domNode;
+					}
+				});
+	
+				dojo.parser.parse();
+
+				// make buttons
+				dojo.forEach(["a","av","ah"],function(n){
+
+					var but = new dijit.form.Button({
+						label: "Set "+n,
+						onClick: function(){
+							console.log(n);
+							layout.setLayoutENUM(n);
+						}
+					});
+					dojo.byId("buttons").appendChild(but.domNode);
+					but.startup();
+				})
+
+			});
+		</script>
+
+    </head>
+    <body class="claro">
+
+		<h1>This is a test</h1>
+		<p>This is only a test. An experiment in dynamically altering a BorderContainer's layout
+		(a seemingly unsupported feature just yet). It Demonstrates how to programatically alter/animate
+		the size of non-center regions though, and several simple layout configurations
+		</p>
+
+		<div>
+			<h3>Layouts:</h3>
+			<div id="buttons"></div>
+		</div>
+
+		<div id="container" data-dojo-id="layout" data-dojo-type="my.BorderContainer" data-dojo-props='style:"width:600px; height:300px; border:3px solid #333;"'>
+			<div id="pane0" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"center" '>
+				pane0
+			</div>
+		</div>
+
+		<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props='"class":"bc", style:"height:200px"'>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"center"'>
+				Sinlge pane - l1
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<h3>two panes, vertical split:</h3>
+
+
+			<div id="animBC" data-dojo-type="dijit/layout/BorderContainer" data-dojo-props='"class":"bc", style:"height:200px"'>
+				<div id="sizing1" data-dojo-type="dijit/layout/ContentPane" data-dojo-props='style:"background-color:red", region:"left", splitter:true'>
+					Sinlge pane - left
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane"  data-dojo-props='region:"center"'>
+					Sinlge pane - center
+					<button data-dojo-type="dijit/form/Button">
+					Size Me
+					<script type="dojo/method" data-dojo-event="onClick">
+						var n = dijit.byId("sizing1").domNode;
+						dojo.animateProperty({
+							node:n,
+							duration:1000,
+							properties: { width: { end: (open ? "100" : "400"), units:"px" } },
+							onEnd: function(){
+								open = !open;
+								dijit.byId("animBC").layout();
+							}
+						}).play(1);
+					</script>
+				</button>
+				</div>
+			</div>
+
+			<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props='"class":"bc", style:"height:200px"'>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"center", splitter:true'>
+					Single pane - center (splitter) (this is unsupported, and does not work)
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"right"'>
+					Single pane - right (no splitter)
+				</div>
+			</div>
+
+			<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props='"class":"bc", style:"height:200px"'>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"center"'>
+					Single pane - center (no splitter)
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"right", splitter:true'>
+					Single pane - right (splitter)
+				</div>
+			</div>
+		</div>
+
+		<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props='"class":"bc", style:"width:200px; height:400px;"'>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"top", splitter:true'>
+				Single pane - top (splitter)
+
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"center"'>
+				Single pane - center
+			</div>
+		</div>
+
+		<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props='"class":"bc", style:"width:200px; height:400px;"'>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"center"'>
+				Single pane - center
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"bottom", splitter:true'>
+				Single Pane Bottom (splitter)
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props='region:"top", splitter:true'>
+				Single Pane Top (splitter)
+			</div>
+		</div>
+
+		<div id="holder" style="visibility:hidden">
+			<div id="pane1" data-dojo-type="dijit/layout/ContentPane" >pane 1</div>
+			<div id="pane2" data-dojo-type="dijit/layout/ContentPane" >pane 2</div>
+			<div id="pane3" data-dojo-type="dijit/layout/ContentPane" >pane 3</div>
+		</div>
+
+    </body>
+</html>

@@ -1,0 +1,356 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>dijit/focus automated test</title>
+
+		<style type="text/css">
+			@import "../themes/claro/document.css";
+			@import "css/dijitTests.css";
+		</style>
+
+		<!-- required: a default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/_base/array", "dojo/dom", "dojo/on", "dojo/parser", "dojo/query",
+				"dijit/focus", "dijit/registry", "dijit/tests/helpers",
+				"dojo/domReady!",
+				"dijit/form/DateTextBox", "dijit/form/ComboBox", "dijit/form/NumberSpinner","dijit/form/ComboButton",
+				"dijit/Menu", "dijit/MenuItem", "dijit/PopupMenuItem", "dijit/layout/ContentPane", "dijit/Editor"
+			], function(doh, array, dom, on, parser, query, focus, registry, helpers){
+
+				doh.register("setup", [
+					function parse(){
+						parser.parse();
+						return helpers.waitForLoad();
+					},
+					function listeners(){
+						array.forEach(["form", "fieldset1", "fieldset2", "select", "editor", "spinner"], function(id){
+							var w = registry.byId(id);
+
+							// old API is to connect to onFocus/onBlur (remove in 2.0)
+							w.on("focus", function(){
+								focusEvents[id] = true;
+							});
+							w.on("blur", function(){
+								blurEvents[id] = true;
+							});
+
+							// new API is to watch "focused" attribute
+							w.watch("focused", function(name, oldValue, newValue){
+								// keep track of current state
+								focusedState[name] = newValue;
+
+								// keep log of every watch notification
+								var nvs = newValue ? "focused" : "blurred";
+								focusedWatchLog[w.id] = !focusedWatchLog[w.id] ? nvs : focusedWatchLog[w.id] + ", " + nvs;
+							});
+						});
+
+						// And there's also a curNode attribute that you can watch
+						focus.watch("curNode", function(name, oldValue, newValue){
+							curNodeWatchLog.push(newValue ? newValue.id || newValue.tagName : "null")
+						});
+					}
+				]);
+
+				function resetEvents(){
+					// These are objects used to track calls to _onFocus and _onBlur in various widgets
+					focusEvents = {};
+					blurEvents = {};
+					focusedState = {};
+					focusedWatchLog = {};
+
+					// This tracks watch("curNode")
+					curNodeWatchLog = [];
+				}
+				resetEvents();
+
+				doh.register("basic", [
+					{
+						name: "focus simple input",
+						timeout: 4000,
+						setUp: function(){
+							resetEvents();
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus the simple input
+							dom.byId("first").focus();
+
+							setTimeout(d.getTestCallback(function(){
+								// Make sure that focus manager caught the focus event
+								doh.is(dom.byId("first"), focus.curNode);
+								doh.is("first", curNodeWatchLog.join(", "), "curNodeWatchLog");
+
+								// And that the dijit.form.Form widget is marked as
+								// being "in focus"
+								doh.t(focusEvents["form"], "form focused");
+								
+								// And that it got one watch event
+								doh.is("focused", focusedWatchLog["form"], "watch callback");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "focus another simple input",
+						timeout: 4000,
+						setUp: function(){
+							resetEvents();
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus the simple input
+							dom.byId("second").focus();
+
+							setTimeout(d.getTestCallback(function(){
+								// Make sure that focus manager caught the focus event
+								doh.is(dom.byId("second"), focus.curNode);
+								doh.is("second", curNodeWatchLog.join(", "), "curNodeWatchLog");
+
+								// Since the dijit.form.Form widget didn't leave the focus chain it
+								// shouldn't have any more events (since the resetEvents() call in setUp() above)
+								doh.f("form" in focusEvents, "form no new focus event");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "focus combobox",
+						timeout: 4000,
+						setUp: function(){
+							resetEvents();
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// This onFocus() function from helpers.js would be useful here, except it
+							// defeats the purpose of the test by using dijit/focus.
+							on.once(registry.byId("select").focusNode, "focus", function(){
+								setTimeout(d.getTestCallback(function(){
+									// Focus goes to an <input> node deep inside of select.domNode,
+									// but that <input> node has the id of the widget
+									doh.is(dom.byId("select"), focus.curNode);
+
+									// The focus stack should show the ComboBox plus all parent widgets
+									var stack = focus.activeStack;
+									doh.is("form, fieldset1, select", stack.join(", "), "active stack");
+
+									// _onFocus()/_onBlur was called appropriately
+									doh.f(focusEvents["form"], "form was already focused, no duplicate event");
+									doh.f(blurEvents["form"], "form wasn't blurred");
+									doh.t(focusEvents["fieldset1"], "fieldset1 focused");
+									doh.t(focusEvents["select"], "select focused");
+
+									doh.f(focusedWatchLog["form"], "form watch callback (no new notification)");
+									doh.is("focused", focusedWatchLog["fieldset1"], "fieldset watch callback");
+									doh.is("focused", focusedWatchLog["select"], "select watch callback");
+								}), 100);
+							});
+							registry.byId("select").focus();
+
+							return d;
+						}
+					},
+					{
+						name: "focus editor",
+						timeout: 4000,
+						setUp: function(){
+							resetEvents();
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							registry.byId("editor").focus();
+
+							setTimeout(d.getTestCallback(function(){
+								// The focus stack should show the Editor plus all parent widgets
+								var stack = focus.activeStack;
+								doh.is("form, editor", stack.join(", "), "active stack");
+
+								// _onFocus()/_onBlur was called appropriately
+								doh.f(focusEvents["form"], "form was already focused, no duplicate event");
+								doh.f(blurEvents["form"], "form wasn't blurred");
+								doh.t(blurEvents["fieldset1"], "fieldset no longer focused");
+								doh.t(focusEvents["editor"], "editor focused");
+
+								doh.f(focusedWatchLog["form"], "form watch callback (no new notification)");
+								doh.is("blurred", focusedWatchLog["fieldset1"], "fieldset watch callback, no longer focused");
+								doh.is("blurred", focusedWatchLog["select"], "select watch callback, no longer focused");
+								doh.is("focused", focusedWatchLog["editor"], "editor watch callback");
+							}), 500);
+
+							return d;
+						}
+					},
+
+					// clicking spinner buttons should activate the spinner, even
+					// though there's no actual DOM focus event
+					{
+						name: "spinner",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var upArrow = query(".dijitSpinner .dijitUpArrowButton")[0];
+							doh.t(upArrow, "found the up arrow");
+
+							on.emit(upArrow, "mousedown", {
+								bubbles: true,
+								cancelable: true,
+								which: 1
+							});
+							on.emit(upArrow, "mouseup", {
+								bubbles: true,
+								cancelable: true,
+								which: 1
+							});
+							on.emit(upArrow, "click", {
+								bubbles: true,
+								cancelable: true,
+								which: 1
+							});
+
+							setTimeout(d.getTestCallback(function(){
+								// The focus stack should show the Spinner plus all parent widgets
+								var stack = focus.activeStack;
+								doh.is("form, fieldset2, spinner", stack.join(", "), "active stack");
+
+								// check watch callbacks
+								doh.f(focusedWatchLog["form"], "grandparent of spinner stayed focused, so no new watch event (watch)");
+								doh.is("focused", focusedWatchLog["fieldset2"], "parent of spinner (watch)");
+								doh.is("focused", focusedWatchLog["spinner"], "spinner (watch)");
+							}), 500);
+
+							return d;
+						}
+					}/*,
+					// FIXME: this test is invalid because focus is not designed to change on mouse click to the first item in the menu
+					{
+						name: "combo button menu",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var button = registry.byId('button').focusNode;
+							doh.t(button, "found drop down button");
+
+							doh.robot.mouseMoveAt(button);
+							doh.robot.mouseClick({left: true}, 500);
+
+							setTimeout(d.getTestCallback(function(){
+								// Focus goes to an first item in the drop down menu
+								doh.is(dom.byId("mi1").id, focus.curNode.id);
+
+								// The focus stack should show the ComboBox plus all parent widgets
+								var stack = focus.activeStack;
+								console.log("menu stack is ", stack);
+								doh.is("form, fieldset2, button, menu, mil", stack.join(", "), "active stack");
+							}), 500);
+
+							return d;
+						},
+						tearDown: function(){
+							dojo.disconnect(handle);
+						}
+					}*/
+
+/*
+					// Commented out because
+					// in order to allow dijit.popup's getTopPopup() to work,a sub menu's popupParent
+					// points to the parent Menu, bypassing the parent MenuItem... thus the
+					// MenuItem is not in the chain of active widgets
+					{
+						name: "nested menu",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("popupMenuItem");
+
+							setTimeout(d.getTestCallback(function(){
+								// Focus goes to an first item in the sub menu
+								doh.is(dom.byId("smi1"), focus.curNode);
+
+								// The focus stack should show the two submenus and then upwards
+								// to the ComboButton, and the rest
+								var stack = focus.activeStack;
+								console.log("menu stack is ", stack);
+								doh.is("form, fieldset2, button, menu, mil, submenu, smil", stack.join(", "), "active stack");
+							}), 1000);
+
+							return d;
+						}
+					}
+*/
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+	<body style="background-color: #fff; color: black; padding: 0; margin: 0" class="claro">
+	
+		<h3>Dijit/focus Automated Test</h3>
+
+		<label>a form ContentPane widget:</label><br>
+		<form id="form" data-dojo-type="dijit/layout/ContentPane" >
+			<label for="first">simple input: </label><input id="first"/><br>
+			<label for="second">another simple input: </label><input id="second"/><br>
+
+			<label>a fieldset ContentPane widget:</label><br>
+			<fieldset id=fieldset1 data-dojo-type="dijit/layout/ContentPane">
+				<label for="select">a ComboBox widget:</label>
+				<select id=select data-dojo-type="dijit/form/ComboBox">
+					<option>this</option>
+					<option>is</option>
+					<option>a</option>
+					<option>list</option>
+				</select>
+				<label for="plain">a plain input:</label>
+				<input id=plain value=plain/>
+			</fieldset>
+			<div id=editor data-dojo-type="dijit/Editor" >
+				Hello world, this is an <i>editor</i>
+			</div>
+			<br>
+			<label>another fieldset ContentPane:</label><br>
+			<fieldset id=fieldset2 data-dojo-type="dijit/layout/ContentPane">
+				<label for="date">a DateTextBox widget:</label>
+				<input id=date data-dojo-type="dijit/form/DateTextBox"/><br>
+	
+				<label for="textarea">a plain textarea:</label><br>
+				<textarea id=textarea>hello there!</textarea><br>
+	
+				<label for="spinner">a Spinner widget:</label>
+				<input id=spinner data-dojo-type="dijit/form/NumberSpinner" data-dojo-props='value:100'/><br>
+	
+				<label>a Combobutton widget:</label>
+				<div id=button data-dojo-type="dijit/form/ComboButton" data-dojo-props='tabIndex:"0"'>
+					<span>push me</span>
+					<div id=menu data-dojo-type="dijit/Menu">
+						<div id=mi1 data-dojo-type="dijit/MenuItem">menu item 1</div>
+						<div id=mi2 data-dojo-type="dijit/MenuItem">menu item 2</div>
+						<div id=popupMenuItem data-dojo-type="dijit/PopupMenuItem">
+							<span>submenu</span>
+							<div id=submenu data-dojo-type="dijit/Menu">
+								<div id=smi1 data-dojo-type="dijit/MenuItem">submenu item 1</div>
+								<div id=smi2 data-dojo-type="dijit/MenuItem">submenu item 2</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</fieldset>
+		</form>
+	</body>
+</html>

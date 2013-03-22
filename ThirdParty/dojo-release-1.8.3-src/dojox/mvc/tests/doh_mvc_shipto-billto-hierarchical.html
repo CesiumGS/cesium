@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>MVC DOH Test</title>
+		<style>
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+			@import "css/app-format.css";
+		</style>
+		<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+		<script src="../../../dojo/dojo.js" type="text/javascript" data-dojo-config="parseOnLoad: 0, isDebug: 1, mvc: {debugBindings: 1}"></script>
+		<script type="text/javascript" src="./helpers.js"></script>
+		<script type="text/javascript">
+			require([
+				"doh/runner",
+				"dojo/parser",
+				"dojo/when",
+				"dojox/mvc/getStateful",
+				"dojox/mvc/ListController",
+				"dijit/registry",
+				"dijit/form/Button",
+				"dijit/form/TextBox",
+				"dojox/mvc/Group",
+				"dojo/domReady!"
+			], function(doh, parser, when, getStateful, ListController, registry){
+
+				ctrl = new ListController({model: getStateful({
+					Serial: "360324",
+					First: "John",
+					Last: "Doe",
+					Email: "jdoe@example.com",
+					ShipTo: {
+						Type: "Home",
+						Address: {
+							Street: "123 Valley Rd",
+							City: "Katonah",
+							State: "NY",
+							Zip: "10536"
+						},
+						Telephone: {
+							AreaCode: "123",
+							Landline: {
+								Number: "456-7890",
+								Extension: "42"
+							},
+							Cell: {
+								Number: "765-4321"
+							}
+						}
+					},
+					BillTo: {
+						Type: "Office",
+						Address: {
+							Street: "17 Skyline Dr",
+							City: "Hawthorne",
+							State: "NY",
+							Zip: "10532"
+						},
+						Telephone: {
+							AreaCode: "098",
+							Landline: {
+								Number: "765-4321",
+								Extension: "24"
+							},
+							Cell: {
+								Number: "123-4567"
+							}
+						}
+					}
+
+				}), cursorIndex: "ShipTo"});
+
+				when(parser.parse(), function(){
+					// should be able to verify all of the inputs
+					doh.register("Check values and bindings", [{
+						name: "Initial",
+						runTest: function(){
+							doh.is("360324", registry.byId("serialInput").get("value"), "serial1 should be set");
+							doh.is("ShipTo", registry.byId("addrLabel").get("value"), "addr1 should be set");
+							doh.is("123 Valley Rd", registry.byId("streetInput").get("value"), "street1 should be set");
+						}
+					}, {
+						name: "TestBillTo",
+						runTest: function(){
+							ctrl.set("cursorIndex", "BillTo");
+							doh.is("360324", registry.byId("serialInput").get("value"), "serial1 should be set");
+							doh.is("BillTo", registry.byId("addrLabel").get("value"), "addr1 should be set");
+							doh.is("17 Skyline Dr", registry.byId("streetInput").get("value"), "street1 should be set");
+						}
+					}, {
+						name: "TestShipTo",
+						runTest: function(){
+							ctrl.set("cursorIndex", "ShipTo");
+							doh.is("360324", registry.byId("serialInput").get("value"), "serial1 should be set");
+							doh.is("ShipTo", registry.byId("addrLabel").get("value"), "addr1 should be set");
+							doh.is("123 Valley Rd", registry.byId("streetInput").get("value"), "street1 should be set");
+						}
+					}, {
+						name: "ChangeShipTo",
+						runTest: function(){
+							ctrl.set("cursorIndex", "ShipTo");
+							registry.byId("streetInput").set("value","456 Mountain Rd");
+							ctrl.set("cursorIndex", "BillTo");
+							ctrl.set("cursorIndex", "ShipTo");
+							doh.is("360324", registry.byId("serialInput").get("value"), "serial1 should be set");
+							doh.is("ShipTo", registry.byId("addrLabel").get("value"), "addr1 should be set");
+							doh.is("456 Mountain Rd", registry.byId("streetInput").get("value"), "street1 should be set");
+							doh.is("Katonah", registry.byId("cityInput").get("value"), "city1 should be set");
+						}
+					}]);
+
+					doh.run();
+				});
+			});
+
+		</script>
+	</head>
+	<body class="claro">
+		<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<div id="wrapper">
+			<div id="header">
+				<div id="navigation"></div>
+				<div id="headerInsert">
+					<h1>Order Shipping Details</h1>
+					<h2>Data Binding Example - Hierarchical data.</h2>
+				</div>
+			</div>
+			<div id="main">
+				<div id="leftNav"></div>
+				<div id="mainContent">
+					<!--
+						The group container denotes some logical grouping of widgets and also serves
+						to establish a parent data binding context for its children.
+						The ref attribute for the outermost container obtains the binding from the
+						"page scope" itself.
+					-->
+					<div class="row" data-dojo-type="dojox.mvc.Group" data-dojo-props="target: at(ctrl, 'model')">
+						<div class="row">
+							<label class="cell" for="serialInput">Order #:</label>
+							<input class="cell" id="serialInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Serial')"/>
+						</div>
+						<div class="row">
+							<label class="cell" for="lastnameInput">Last name:</label>
+							<input class="cell" id="lastnameInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Last')"/>
+						</div>
+						<div class="row">
+							<label class="cell" for="emailInput">Email:</label>
+							<input class="cell" id="emailInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Email')"/>
+						</div>
+					</div>
+					<br/>
+					Choose:
+					<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){ ctrl.set('cursorIndex', 'ShipTo'); }">Ship To</button>
+					<button type="button" data-dojo-type="dijit.form.Button" data-dojo-props="onClick: function(){ ctrl.set('cursorIndex', 'BillTo'); }">Bill To</button>
+					<br/>
+					<div class="row">
+						<label class="cell" for="addrLabel">Selected Address:</label>
+						<input class="cell" id="addrLabel" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at(ctrl, 'cursorIndex')"/>
+					</div>
+					<br/>
+					<!--
+						For convenience, the widget hierarchy matches the data hierarchy
+						(see JSON literal above).
+						In this implementation, the child ref attributes are simple property names
+						of the parent binding context.
+						The ref attribute may support more advanced constructs, such as queries
+						over the parent widget's or other application specified binding context.
+					-->
+					<div id="addrGroup" data-dojo-type="dojox.mvc.Group" data-dojo-props="target: at(ctrl, 'cursor')">
+						<div class="row">
+							<label class="cell" for="typeInput">Type:</label>
+							<input class="cell" id="typeInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Type')"/>
+						</div>
+						<div id="postalGroup" data-dojo-type="dojox.mvc.Group" data-dojo-props="target: at('rel:', 'Address')">
+							<div class="row">
+								<label class="cell" for="streetInput">Street:</label>
+								<input class="cell" id="streetInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Street')"/>
+							</div>
+							<div class="row">
+								<label class="cell" for="cityInput">City:</label>
+								<input class="cell" id="cityInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'City')"/>
+							</div>
+							<div class="row">
+								<label class="cell" for="stateInput">State:</label>
+								<input class="cell" id="stateInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'State')"/>
+							</div>
+							<div class="row">
+								<label class="cell" for="zipInput">Zipcode:</label>
+								<input class="cell" id="zipInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Zip')"/>
+							</div>
+						</div>
+						<div id="telGroup" data-dojo-type="dojox.mvc.Group" data-dojo-props="target: at('rel:', 'Telephone')">
+							<div class="row">
+								<label class="cell" for="areacodeInput">Area code:</label>
+								<input class="cell" id="areacodeInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'AreaCode')"/>
+							</div>
+							<div id="llGroup" data-dojo-type="dojox.mvc.Group" data-dojo-props="target: at('rel:', 'Landline')">
+								<div class="row">
+									<label class="cell" for="numberInput">Landline Number:</label>
+									<input class="cell" id="numberInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Number')"/>
+								</div>
+								<div class="row">
+									<label class="cell" for="extInput">Extension:</label>
+									<input class="cell" id="extInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Extension')"/>
+								</div>
+							</div>
+							<div class="row" id="cellGroup" data-dojo-type="dojox.mvc.Group" data-dojo-props="target: at('rel:', 'Cell')">
+								<label class="cell" for="cellInput">Cell Number:</label>
+								<input class="cell" id="cellInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at('rel:', 'Number')"/>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

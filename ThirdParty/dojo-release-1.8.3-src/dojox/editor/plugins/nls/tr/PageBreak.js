@@ -1,0 +1,5 @@
+define(
+({
+	"pageBreak": "Sayfa Sonu"
+})
+);

@@ -1,0 +1,366 @@
+@import "ColumnViewCommon.less";
+
+@row-header-width: 70px;
+@secondary-sheet-height: 0px;
+@sheet-top: @column-header-height;
+
+.soria .dojoxCalendarSimpleColumnView {	
+  cursor: default;
+	-webkit-user-select: none;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarHeader {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	height: @column-header-height - 1px;
+	.border-box;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarScrollContainer {
+	left: 0;
+	right: 0;
+	bottom: 0;
+	top: @sheet-top;
+	position: absolute;
+	overflow-y: hidden;
+	overflow-x: hidden;
+	border-top: @outer-border;
+	border-bottom: @outer-border;
+	.border-box;
+}
+	
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarGrid {
+	position: absolute;
+	left: @row-header-width;
+	right: 0;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable {
+	border-collapse: collapse;
+	table-layout: fixed;
+	width: 100%;
+	position: relative;
+	margin: 0;
+	padding: 0;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable td {
+	border-top: dotted 1px #B5BCC7;	
+	border-right: @inner-border;
+	.border-box;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable .hour	{
+	border-top: @hour-stroke;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable tr:first-child td	{
+	border-top: 1px solid transparent;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable .halfhour	{
+	border-top: @half-hour-stroke;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable .quarterhour	{
+	border-top: @quarter-hour-stroke;
+}
+
+/* 
+ * The dojoxCalendarToday & dojoxCalendarWeekend classes is added by the 
+ * ColumnView.styleGridColumn method that can be subclassed to add/remove css classes
+ */
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable .dojoxCalendarToday {
+	background-color: @today-color;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable tr td.last-child	{
+	border-right: @outer-border;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable tr:first-child td.dojoxCalendarToday	{
+	border-top: 1px solid @today-color;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable .dojoxCalendarWeekend {
+	background-color: @week-end-color;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarGridTable tr:first-child td.dojoxCalendarWeekend	{
+	border-top: 1px solid @week-end-color;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarContainer {
+	position: absolute;
+	top: 0;
+	left: @row-header-width;
+	right: 0;
+	cursor: default;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarContainerTable {
+	border-collapse: collapse;
+	table-layout: fixed;
+	width: 100%;
+	position: relative;
+	margin: 0;
+	padding: 0;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarContainerTable td {
+	height: 100%;
+	padding: 0;
+	vertical-align: top;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarContainerColumn {
+	position:	relative;
+	margin-left: 2px;
+	margin-right: 9px;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEventContainer {
+	position: absolute;
+	overflow: hidden;
+	.select-none;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarYearColumnHeader{
+	position: absolute;
+	height: @column-header-height - 1px;
+	left: 0;
+	width: @row-header-width - 2px;
+	top: 0;	
+	border-left: @outer-border;
+	border-top: @outer-border;
+	border-right: @outer-border;	
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarYearColumnHeader table {
+	position:relative;
+	width:100%;
+	height:100%;	
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarYearColumnHeader table td {
+	text-align: center;
+	vertical-align: middle;
+	border-bottom: @outer-border;	
+	color: @label-color;
+	.header-background;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeader {
+	position: absolute;
+	height: @column-header-height;	 
+	left: @row-header-width;
+	right: 0;
+	top: 0;
+	cursor: default;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeaderTable {
+	border-collapse: collapse;
+	table-layout: fixed;
+	position: relative;
+	margin: 0;
+	padding: 0;			
+	width: 100%;
+	height: 100%;	
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeaderTable td {	
+	overflow:hidden;
+	white-space: nowrap;
+	vertical-align: middle;
+	text-align: center;
+	.header-background;
+	border-right: @inner-border;
+	border-top: @outer-border;
+	border-bottom: @outer-border;
+	.select-none;
+	color: @label-color;
+	.transition-duration(0.2s);
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeaderTable td.last-child {	
+	border-right: @outer-border;	
+}
+
+/* 
+ * The dojoxCalendarToday & dojoxCalendarWeekend classes is added by the 
+ * ColumnView.styleColumnHeaderCell method that can be subclassed to add/remove css classes
+ */
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeaderTable .dojoxCalendarToday {
+	font-weight: bold;
+	color: @today-label-color;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeaderTable .dojoxCalendarWeekend {
+	color: @week-end-label-color;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeaderTable td.Hover{	
+	cursor: pointer;		
+	.header-hover-background;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarColumnHeaderTable td.Active{	
+	.header-active-background;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarRowHeader {
+	position: absolute;
+	width: @row-header-width - 2px;
+	cursor: default;
+	border-left: @outer-border;
+	border-right: @outer-border;
+	height: 100%;
+	.select-none;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarRowHeaderTable {
+	border-collapse: collapse;
+	table-layout: fixed;
+	position: relative;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarRowHeaderTable td.dummy{
+	border-top: 1px solid @row-color;
+}
+
+/* 
+ * The ColumnView.styleRowHeaderCell method that can be subclassed to add/remove css classes per hour.
+ */
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarRowHeaderTable td {	
+	vertical-align: top;			
+	text-align: right;	
+	border-top: @outer-border; 	
+	background-color: @row-color;
+	color: @label-color;
+	.border-box;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarRowHeaderTable tr:first-child td	{
+	border-top: 1px solid @row-color;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarRowHeaderTable td span {
+	padding-right: 4px;
+}
+ 
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent {
+	position: absolute;	
+	text-align: left;
+	color: #FFF;
+	cursor: default;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .bg {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	z-index: -1;
+	border: 1px solid #260000;	
+	.rounded-corners;
+	background-color: #9F0000;
+	.opacity(90);
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent.Hovered .bg {
+	background-color: #CC0000;	
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent.Selected .bg {
+	background-color: #660000;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent.Edited .bg {
+	border: dashed 1px #FFFFFF;
+	.opacity(70);
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent.Focused .bg {
+	border: dashed 1px #FFFFFF;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .summary {
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .startTime {
+	font-weight: bold;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .endTime {
+	position: absolute;		
+	font-weight: bold;	
+	bottom:3px;
+	left: 6px;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .beforeIcon {
+	text-align: center;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .afterIcon {
+	position: absolute;
+	bottom: 2px;
+	width: 100%;
+	text-align: center;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .handle {
+	.glass-view;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .moveHandle {
+	position: absolute;
+	top:0;
+	width:100%;
+	bottom:0;
+	cursor:move;	
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .resizeStartHandle {
+	position: absolute;
+	top:0;
+	width:100%;
+	height:10px;
+	cursor:n-resize;	
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent .resizeEndHandle {
+	position: absolute;
+	bottom:0;
+	width:100%;
+	height:10px;
+	cursor:n-resize;	
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent dl {
+	margin: 0;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarEvent dd {
+	margin: 0;
+	padding: 0 3px;
+	text-align: left;
+}
+
+.soria .dojoxCalendarSimpleColumnView .dojoxCalendarVScrollBar {
+	position: absolute;
+	top: @sheet-top;
+	bottom: 0;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+

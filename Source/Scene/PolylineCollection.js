@@ -407,7 +407,7 @@ define([
                     var changedProperties = polyline._propertiesChanged;
                     if (changedProperties[POSITION_INDEX]) {
                         if (intersectsIDL(polyline)) {
-                            var newSegments = polyline._createSegments(this._projection._ellipsoid);
+                            var newSegments = polyline._createSegments(this.modelMatrix);
                             if (polyline._segmentsLengthChanged(newSegments)) {
                                 createVertexArrays = true;
                                 break;
@@ -1129,7 +1129,7 @@ define([
         if (this.mode === SceneMode.SCENE3D || !intersectsIDL(polyline)) {
             return polyline.getPositions().length;
         }
-        var segments = polyline._createSegments(this.ellipsoid);
+        var segments = polyline._createSegments(this.modelMatrix);
         return polyline._setSegments(segments);
     };
 

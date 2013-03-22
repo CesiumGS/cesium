@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Dojo Toolbar Widget Test</title>
+
+	<style type="text/css">
+		@import "../../../../dijit/themes/claro/document.css";
+		@import "../../../../dijit/tests/css/dijitTests.css";
+
+		.flatScreen {
+			background-image: url(../../../../dijit/tests/images/flatScreen.gif); height: 32px; width: 32px;
+		}
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, async: true, mvc: {debugBindings: true}"></script>
+
+	<script type="text/javascript">
+		negativeConverter = {
+			format: function(value){ return !value },
+			parse: function(value){ return !value }
+		};
+
+		require([
+			"dojox",
+			"dojo/parser",
+			"dijit/Declaration",
+			"dijit/Toolbar",
+			"dijit/ToolbarSeparator",
+			"dijit/form/Button",
+			"dijit/form/DropDownButton",
+			"dijit/form/ComboButton",
+			"dijit/form/ToggleButton",
+			"dijit/ColorPalette",
+			"dijit/TooltipDialog",
+			"dijit/form/TextBox",
+			"dijit/Menu",
+			"dijit/MenuItem",
+			"dijit/form/TextBox",
+			"dijit/form/Select",
+			"dijit/form/CheckBox"
+		], function(dojox, parser){
+			(cutItemModel = new dojo.Stateful).set("iconClass", "dijitEditorIcon dijitEditorIconCut");
+			(copyItemModel = new dojo.Stateful).set("iconClass", "dijitEditorIcon dijitEditorIconCopy").set("label", "Copy");
+			(boldItemModel = new dojo.Stateful).set("checked", false);
+			parser.parse();
+		});
+	</script>
+</head>
+<body class="claro">
+	<script type="dojo/require">at: "dojox/mvc/at"</script>
+	<h1 class="testTitle">Toolbar test</h1>
+
+	<span data-dojo-type="dijit.Declaration" 
+			data-dojo-props='widgetClass:"ToolbarSectionStart", defaults:{ label: "Label"}'>
+		<span data-dojo-type="dijit.ToolbarSeparator"></span><i>${label}:</i>
+	</span>
+
+	<h2>Toolbar from markup</h2>
+
+	<div id="toolbar1" data-dojo-type="dijit.Toolbar"
+			><div data-dojo-type="ToolbarSectionStart" data-dojo-props='label:"Buttons"'></div
+			><div id="toolbar1.cut" data-dojo-type="dijit.form.Button" data-dojo-props='showLabel:false, iconClass: at(cutItemModel, "iconClass")'>Cut</div
+			><div id="toolbar1.copy" data-dojo-type="dijit.form.Button" 
+					data-dojo-props='showLabel:true, "*": at(copyItemModel, "*")'>Copy</div
+
+			><div data-dojo-type="ToolbarSectionStart" data-dojo-props='label:"Toggles"'></div
+			><div id="toolbar1.bold" data-dojo-type="dijit.form.ToggleButton" 
+					data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconBold", showLabel:false, checked: at(boldItemModel, "checked")'>Bold</div
+			><div id="toolbar1.italic" data-dojo-type="dijit.form.ToggleButton" 
+					data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconItalic", showLabel: true'>Italic</div
+
+></div>
+
+	<div style="margin-top:8px;">
+		Icon for "Cut":
+		<select data-dojo-type="dijit.form.Select" 
+				data-dojo-props="value: at(cutItemModel, 'iconClass')">
+			<option value="dijitEditorIcon dijitEditorIconCut">Cut</option>
+			<option value="dijitFolderClosed">Folder</option>
+			<option value="noteIcon">Note</option>
+			<option value="flatScreen">Flat Screen</option>
+		</select>
+	</div>
+
+	<div style="margin-top:8px;">
+		Icon for "Copy":
+		<select data-dojo-type="dijit.form.Select" 
+				data-dojo-props="value: at(copyItemModel, 'iconClass')">
+			<option value="dijitEditorIcon dijitEditorIconCopy">Copy</option>
+			<option value="dijitFolderClosed">Folder</option>
+			<option value="noteIcon">Note</option>
+			<option value="flatScreen">Flat Screen</option>
+		</select>
+	</div>
+
+	<div style="margin-top:8px;">
+		Label for "Copy":
+		<select data-dojo-type="dijit.form.Select" 
+				data-dojo-props="value: at(copyItemModel, 'label')">
+			<option value="Copy">Copy</option>
+			<option value="Copy to clipboard...">Copy to clipboard...</option>
+		</select>
+	</div>
+
+	<div style="margin-top:8px;">
+		Change the state for "Bold" (but this check box is free from change in the tool bar):
+		<input data-dojo-type="dijit.form.CheckBox" checked 
+				data-dojo-props="checked: at(boldItemModel, 'checked').direction(at.to)">
+	</div>
+
+	<div style="margin-top:8px;">
+		"Italic" should be unselected (directly bound to the tool bar item widget):
+		<input data-dojo-type="dijit.form.CheckBox" checked 
+				data-dojo-props="checked: at(dijit.byId('toolbar1.italic'), 'checked').transform(negativeConverter)">
+	</div>
+  </body>
+</html>

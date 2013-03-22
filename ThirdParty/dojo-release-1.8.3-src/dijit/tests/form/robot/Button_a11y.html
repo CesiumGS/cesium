@@ -1,0 +1,550 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Button Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.on");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_Button.html');
+
+				var submitCount = 0, resetCount = 0;
+
+
+				doh.register("setup", function(){
+					doh.robot.sequence(function(){
+						dojo.connect(dijit.byId("testForm"), "onSubmit", function(){
+							submitCount++;
+						});
+						dojo.connect(dijit.byId("testForm"), "onReset", function(){
+							resetCount++;
+						})
+					});
+				});
+
+				doh.register("dijit.form.Button", [
+					{
+						name: "label",
+						timeout: 1000,
+						runTest: function(){
+							var label = dijit.byId("T1465").containerNode.innerHTML;
+							doh.is('Create', dojo.trim(label), "source.innerHTML label " + label);
+							var label2 = dijit.byId("T1466").containerNode.innerHTML;
+							doh.is('View', label2, "subclass label " + label2);
+						}
+					},
+					{
+						name: "enabled",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dojo.byId("input").focus();
+
+							var clicks = 0;
+							dijit.byId("T1465").set("onClick", function(){ clicks++; });
+
+
+							// tab into button to get focus
+							doh.robot.keyPress(dojo.keys.TAB, 1000, {});
+
+							// and activate	with space / enter
+							doh.robot.keyPress(dojo.keys.SPACE, 1000, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(2, clicks, "both space and enter click the button");
+							}), 500);
+							return d;
+						}
+					},
+					{
+						name: "disabled no focus",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.is("T1465", dijit.getEnclosingWidget(dojo.global.dijit.focus.curNode).id, "focus starting on 1465");
+
+							dijit.byId("T1466").set("disabled", true);
+
+							// tab over disabled "View" button to "Create" combo-button
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								console.log("current focus is ", dojo.global.dijit.focus.curNode);
+								doh.is("comboCreate", dijit.getEnclosingWidget(dojo.global.dijit.focus.curNode).id, "focus jumped to combo create (left part of button)");
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+
+				doh.register("dijit.form.DropDownButton", [
+					function initialState(){
+						doh.f(dojo.hasClass(dijit.byId("edit").domNode, "dijitDropDownButtonOpened"),
+								"no dijitDropDownButtonOpened class");
+					},
+					{
+						name: "down arrow opens menu",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dijit.byId("edit").focus();
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(dojo.hasClass(dijit.byId("edit").domNode, "dijitDropDownButtonOpened"),
+										"dijitDropDownButtonOpened class");
+								doh.t(isVisible("editMenu"), "edit menu is visible: " + dijit.byId("editMenu").domNode.style.cssText);
+								doh.is("cut", dojo.global.dijit.focus.curNode.id, "focus is on menu");
+							}), 500);
+							return d;
+						}
+					},
+
+					{
+						name: "esc closes menu",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.ESCAPE, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("editMenu"), "edit menu is hidden: " + dijit.byId("editMenu").domNode.style.cssText);
+								doh.is("edit", dojo.global.dijit.focus.curNode.id, "focus is back on button");
+								doh.f(dojo.hasClass(dijit.byId("edit").domNode, "dijitDropDownButtonOpened"),
+										"no dijitDropDownButtonOpened class");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "space opens menu",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dijit.byId("edit").focus();
+							doh.robot.keyPress(dojo.keys.SPACE, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("editMenu"), "edit menu is visible: " + dijit.byId("editMenu").domNode.style.cssText);
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "space executes menu",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.SPACE, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("editMenu"), "edit menu is hidden: " + dijit.byId("editMenu").domNode.style.cssText);
+								doh.is("edit", dojo.global.dijit.focus.curNode.id, "focus is back on button");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "enter opens menu",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dijit.byId("edit").focus();
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("editMenu"), "edit menu is visible: " + dijit.byId("editMenu").domNode.style.cssText);
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "tab key closes popup, goes back to button",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("editMenu"), "edit menu is hidden: " + dijit.byId("editMenu").domNode.style.cssText);
+								doh.is("edit", dojo.global.dijit.focus.curNode.id, "focus is back on button");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "enter opens menu again",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dijit.byId("edit").focus();
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("editMenu"), "edit menu is visible: " + dijit.byId("editMenu").domNode.style.cssText);
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "enter closes menu (#4772)",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("editMenu"), "edit menu is hidden: " + dijit.byId("editMenu").domNode.style.cssText);
+								doh.is("edit", dojo.global.dijit.focus.curNode.id, "focus is back on button");
+							}), 1000);
+							return d;
+						}
+					}
+
+				]);
+
+				doh.register("dijit.form.ComboButton", [
+					{
+						name: "tab to button",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dijit.byId("color").focus();
+
+							doh.robot.keyPress(dojo.keys.TAB, 1000, {});
+
+							var leftPart = dojo.query(".dijitButtonContents", dojo.byId("save"))[0];
+							doh.t(leftPart, "found left part of button");
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(leftPart, dojo.global.dijit.focus.curNode, "focused on left part");
+								doh.f(dojo.hasClass(dijit.byId("save").domNode, "dijitComboButtonOpened"),
+										"no dijitComboButtonOpened class");
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "click button",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var clicked = false;
+							dijit.byId("save").set("onClick", function(){ clicked = true; });
+
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(clicked, "button was clicked");
+								doh.f(dojo.hasClass(dijit.byId("save").domNode, "dijitComboButtonOpened"),
+										"no dijitComboButtonOpened class");
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "tab to drop down arrow",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var rightPart = dojo.query(".dijitDownArrowButton", dojo.byId("save"))[0];
+							doh.t(rightPart, "found right part of button");
+
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(rightPart, dojo.global.dijit.focus.curNode, "focused on right part of combo");
+								doh.f(dojo.hasClass(dijit.byId("save").domNode, "dijitComboButtonOpened"),
+										"no dijitComboButtonOpened class");
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "down arrow opens menu",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var rightPart = dojo.query(".dijitDownArrowButton", dojo.byId("save"))[0];
+							doh.t(rightPart, "found right part of button");
+
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("saveMenu"), "save menu is visible: " + dijit.byId("saveMenu").domNode.style.cssText);
+								doh.t(dojo.hasClass(dijit.byId("save").domNode, "dijitComboButtonOpened"),
+										"dijitComboButtonOpened class");
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "esc closes menu",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var rightPart = dojo.query(".dijitDownArrowButton", dojo.byId("save"))[0];
+							doh.t(rightPart, "found right part of button");
+
+							doh.robot.keyPress(dojo.keys.ESCAPE, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("saveMenu"), "save menu was closed: " + dijit.byId("saveMenu").domNode.style.cssText);
+								doh.is(rightPart, dojo.global.dijit.focus.curNode, "refocused on right part of combo");
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "enter key opens menu",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("saveMenu"), "save menu is visible: " + dijit.byId("saveMenu").domNode.style.cssText);
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "tab closes menu",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var rightPart = dojo.query(".dijitDownArrowButton", dojo.byId("save"))[0];
+							doh.t(rightPart, "found right part of button");
+
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("saveMenu"), "save menu was closed: " + dijit.byId("saveMenu").domNode.style.cssText);
+								doh.is(rightPart, dojo.global.dijit.focus.curNode, "refocused on right part of combo");
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "tab closes menu",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus element before "save" ComboButton
+							dijit.byId("color").focus();
+							// And disable the ComboButton
+							dijit.byId("save").set("disabled", true);
+
+							// Tab should skip over the ComboButton entirely
+							doh.robot.keyPress(dojo.keys.TAB, 1000, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var focusedWidget = dijit.getEnclosingWidget(dojo.global.dijit.focus.curNode);
+								doh.isNot("save", focusedWidget && focusedWidget.id, "didn't focus on combo");
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+
+				doh.register("dijit.form.ToggleButton", [
+					{
+						name: "uncheck",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var checked = dijit.byId("toggle1").get("checked");
+							doh.t(checked, "toggle1 initially checked");
+							doh.is("true", dojo.byId('toggle1').getAttribute("aria-pressed"), "aria-pressed 1");
+
+							var watchOld, watchNew;
+							dijit.byId("toggle1").set("onChange", function(v){ checked = v; });
+							dijit.byId("toggle1").watch("checked", function(name, o, n){
+								watchOld = o;
+								watchNew = n;
+							});
+
+							dijit.byId("toggle1").focus();
+							doh.robot.keyPress(dojo.keys.SPACE, 1000, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(checked, "toggle1 unchecked");
+								doh.is("false", dojo.byId('toggle1').getAttribute("aria-pressed"), "aria-pressed 2");
+								doh.t(watchOld, "watch: previous == checked");
+								doh.f(watchNew, "watch: new == unchecked");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "check",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var checked = dijit.byId("toggle1").get("checked");
+							doh.f(checked, "toggle1 unchecked");
+							doh.is("false", dojo.byId('toggle1').getAttribute("aria-pressed"), "aria-pressed 1");
+
+							var watchOld, watchNew;
+							dijit.byId("toggle1").set("onChange", function(v){ checked = v; });
+							dijit.byId("toggle1").watch("checked", function(name, o, n){
+								watchOld = o;
+								watchNew = n;
+							});
+
+							dijit.byId("toggle1").focus();
+							doh.robot.keyPress(dojo.keys.SPACE, 1000, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(checked, "toggle1 checked");
+								doh.is("true", dojo.byId('toggle1').getAttribute("aria-pressed"), "aria-pressed 2");
+								doh.f(watchOld, "watch: previous == unchecked");
+								doh.t(watchNew, "watch: new == checked");
+							}), 1000);
+							return d;
+						}
+					}
+
+				]);
+
+				dojo.forEach(["SPACE", "ENTER"], function(key){
+					doh.register("Invoke Submit and Reset Buttons by " + key, [
+					{
+						name: "click Submit",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							submitCount = 0;
+							dijit.byId("bSubmit").focus();
+							doh.robot.keyPress(dojo.keys[key], 1000, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(1, submitCount, (key + ": # of times submit invoked " + submitCount));
+							}), 500);
+
+							return d;
+						}
+					},
+
+					{
+						name: "click Reset",
+						timeout: 7000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							resetCount = 0;
+							dijit.byId("testName").value = "";
+
+							dijit.byId("testName").focus();
+							doh.robot.typeKeys("test", 1000, 2000);
+
+							doh.robot.sequence(function(){
+								dijit.byId("bReset").focus();
+							}, 500);
+							doh.robot.keyPress(dojo.keys[key], 1000, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(1, resetCount, (key + ": reset should be invoked 1 time. actual count = " + resetCount));
+								doh.is("",dijit.byId("testName").value, "Name field has been reset");
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+				});
+
+				doh.register("Submit via ENTER key on input", {
+					name: "enter on input",
+					timeout: 5000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						submitCount = 0;
+						dijit.byId("testName").focus();
+						doh.robot.keyPress(dojo.keys.ENTER, 1000, {});
+
+						doh.robot.sequence(d.getTestCallback(function(){
+							doh.is(1, submitCount, "submitted via enter key on input");
+						}), 500);
+
+						return d;
+					}
+				});
+
+				doh.register("bubbling", [
+					{
+						name: "bubbling",
+						timeout: 5000,
+						runTest: function(){
+
+							var d = new doh.Deferred(),
+								wrapper = dojo.byId("bubbleContainer"),
+								buttonNode = dojo.byId("bubble2");
+
+							// Listen for click events on the outer DOMNode.
+							var clicks = 0;
+							dojo.on(wrapper, "click", function(){
+								clicks++;
+							});
+
+							// Keyboard-click the widget button
+							doh.robot.sequence(function(){
+								buttonNode.focus();
+							}, 500);
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+
+							// Check that one click event bubbled
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(1, clicks, "one click event bubbled");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>doh.robot MVC loan stateful Test</title>
+
+		<style>
+			@import "../../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../../dojo/dojo.js"
+			djConfig="isDebug: true, parseOnLoad: true"></script>
+
+		<script type="text/javascript" src="../helpers.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.addOnLoad(function(){
+				doh.robot.initRobot('../test_mvc_loan-stateful.html');
+
+				doh.register("on_test_MVC_LoanStateful", [
+					 {
+						name: "initial conditions",
+						timeout: 9000,
+						runTest: function(){
+						var d = new doh.Deferred();
+						console.debug("dojo.version() is "+dojo.version);
+						
+						doh.robot.sequence(d.getTestCallback(function(){
+							doh.is("5", dijit.byId("percentHousing").get('value'),"percentHousing should be 5");
+							doh.is(true, dijit.byId("percentHousing").isValid(), "isValid()","percentHousing should be valid");
+							doh.is("1000", dijit.byId("housing").get('value'),"housing should be 1000");
+							doh.is("2700", dijit.byId("totalHousing").get('value'),"totalHousing should be 2700");
+						}), 1000);
+						return d;
+						}
+					 },
+					{
+						name: "setzipgood1",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("zipInput", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.typeKeys("10706", 800, 1000);														
+							doh.robot.keyPress(dojo.keys.TAB, 1000, {});							
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Hastings On Hudson", dijit.byId("cityInput").get('value'),"good zip 10706 should display the city");
+							}), 1500);
+							return d;
+						}
+					},
+					{
+						name: "setzipbad1",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("borrowerInput", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});		
+							doh.robot.keyPress(dojo.keys.DELETE, 500, {});														
+							doh.robot.typeKeys("11111", 500, 1000);														
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});							
+							
+							// should also check for invalid zip indicator
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("", dijit.byId("cityInput").get('value'),"cityInput should be blank");
+								doh.is(false, dijit.byId("zipInput").isValid(), "zipInput should be invalid");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "setzipgood2",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("borrowerInput", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});			
+							doh.robot.keyPress(dojo.keys.DELETE, 500, {});														
+							doh.robot.typeKeys("10024", 500, 1000);														
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});							
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("New York", dijit.byId("cityInput").get('value'),"check for cityInput set to New York");
+							}), 1500);
+							return d;
+						}
+					},
+					{
+						name: "changeMortgageAmt1",
+						timeout: 19000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("stateInput", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});							
+							doh.robot.keyPress(dojo.keys.DELETE, 500, {});							
+							
+							doh.robot.typeKeys("10000", 500, 1000);							
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});							
+
+							doh.robot.mouseMoveAt("total", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});							
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("10000", dijit.byId("housing").get('value'),"housing should be 10000");
+								doh.is("11700", dijit.byId("totalHousing").get('value'),"totalHousing should be 11700");								
+								doh.is("20", dijit.byId("percentHousing").get('value'),"percentHousing should be 20");
+								doh.is(true, dijit.byId("percentHousing").isValid(),"percentHousing should be valid");
+								
+							}), 1500);
+							return d;
+						}
+					},
+					{
+						name: "changeMortgageAmt2",
+						timeout: 19000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("stateInput", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});							
+							doh.robot.keyPress(dojo.keys.DELETE, 500, {});							
+							
+							doh.robot.typeKeys("20000", 500, 1000);							
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});							
+
+							doh.robot.mouseMoveAt("total", 500, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});							
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("20000", dijit.byId("housing").get('value'),"housing should be 20000");
+								doh.is("21700", dijit.byId("totalHousing").get('value'),"totalHousing should be 21700");								
+								doh.is("36", dijit.byId("percentHousing").get('value'),"percentHousing should be 36");
+								doh.is(false, dijit.byId("percentHousing").isValid(),"percentHousing should be invalid");
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+				doh.run();
+			});
+		</script>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Dynamic Theme Switch</title>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblThemeFiles: ['base','TabBar']"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/deviceTheme",
+			"dojox/mobile/TabBar"
+		]);
+		change = function(ua){
+			deviceTheme.loadDeviceTheme(ua);
+		}
+	</script>
+
+	<style>
+	.lnk {
+		font-size: 14px;
+		color: #0B5199;
+		text-decoration: none;
+	}
+	.mblColorPink {
+		background-image: -webkit-gradient(linear, left top, left bottom, from(#ff9DE9), to(#cc62DD), color-stop(0.5, #ff6EDF), color-stop(0.5, #ff5FDC));
+		background-image: -moz-linear-gradient(top, #ff9DE9 0%, #ff6EDF 50%, #ff5FDC 50%, #cc62DD 100%);
+		background-color: pink;
+	}
+	.mblColorPink45 {
+		background-image: -webkit-gradient(linear, left top, right bottom, from(#ff9DE9), to(#cc62DD), color-stop(0.5, #ff6EDF), color-stop(0.5, #ff5FDC));
+		background-image: -moz-linear-gradient(top left, #ff9DE9 0%, #ff6EDF 50%, #ff5FDC 50%, #cc62DD 100%);
+	}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="foo" data-dojo-type="dojox.mobile.View">
+		<div data-dojo-type="dojox.mobile.Heading">
+			<ul data-dojo-type="dojox.mobile.TabBar" data-dojo-props='barType:"segmentedControl"' style="float:left;margin-left:6px;">
+				<li data-dojo-type="dojox.mobile.TabBarButton" style="width:80px" data-dojo-props='selected:true' onclick="change('iPhone')">iPhone</li>
+				<li data-dojo-type="dojox.mobile.TabBarButton" style="width:80px" onclick="change('iPad')">iPad</li>
+				<li data-dojo-type="dojox.mobile.TabBarButton" style="width:80px" onclick="change('Android')">Android</li>
+				<li data-dojo-type="dojox.mobile.TabBarButton" style="width:80px" onclick="change('BlackBerry')">BlackBerry</li>
+				<li data-dojo-type="dojox.mobile.TabBarButton" style="width:80px" onclick="change('Custom')">Custom</li>
+			</ul>
+		</div>
+	<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='label:"Arrow"'>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" arrow="left" defaultColor="mblColorBlue" selColor="mblColorPink">MMMM</span>
+		<span data-dojo-type="dojox.mobile.ToolBarButton" arrow="right">MMMM</span>
+	</div>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Dynamic Theme Switch</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png", moveTo:"bar", transition:"slide"'>
+				Slide
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png", moveTo:"bar", transition:"flip"'>
+				Flip
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", moveTo:"bar", transition:"fade"'>
+				Fade
+			</li>
+		</ul>
+	</div>
+
+	<div id="bar" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"foo"'>Search Result</h1>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+				1. <a href="#" class="lnk">Dojo: Traditional Karate-do Spirit</a><br>
+				Sarah Connor Hardcover<br>
+				Eligible for FREE Super Saver Shipping<br>
+				<span style="color:red">$14.50 (50%)</span> In Stock<br>
+				# (531)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+				2. <a href="#" class="lnk">Japanese Martial Arts Dojo</a><br>
+				Martin Parker Hardcover<br>
+				<span style="color:red">$14.00 (60%)</span> In Stock<br>
+				# (173)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+				3. <a href="#" class="lnk">Total Solar Eclipse</a><br>
+				Steven Young Hardcover<br>
+				Get it by Mar. 2 if you order in the next <span style="color:green"><b>16 hours</b></span><br>
+				Eligible for FREE Super Saver Shipping<br>
+				<span style="color:red">$9.50 (62%)</span> In Stock<br>
+				# (1199)
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+				4. <a href="#" class="lnk">The History of Java Coffee</a><br>
+				Marco Rodriguez Hardcover<br>
+				<span style="color:blue">Not Available</span>
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" style="font-size:10px" data-dojo-props='variableHeight:true'>
+				5. <a href="#" class="lnk">The Principles of Spider's Web</a><br>
+				Melissa Morgan Hardcover<br>
+				Eligible for FREE Super Saver Shipping<br>
+				<span style="color:red">$12.00 (60%)</span> In Stock<br>
+				# (1847)
+			</li>
+		</ul>
+	</div>
+</body>
+</html>

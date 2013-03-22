@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Icon (Highlight)</title>
+
+	<link href="../themes/common/domButtons/DomButtonRedBadge.css" rel="stylesheet"/>
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','IconContainer']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/dom",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/IconContainer",
+			"dojox/mobile/ScrollableView"
+		], function(dom, registry){
+			highlight = function(i){
+				var w = registry.byId("icon"+i);
+				w.unhighlight();
+				w.highlight(dom.byId("val").value);
+			}
+		});
+	</script>
+
+	<style>
+		.box {
+			border: 1px solid #A7C0E0;
+			width: 300px;
+			height: 250px;
+			background-image: url(images/widget-bg.png);
+			background-repeat: no-repeat;
+			background-color: white;
+		}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="view1" data-dojo-type="dojox.mobile.ScrollableView">
+		<h1 data-dojo-type="dojox.mobile.Heading">Icon (Highlight)</h1>
+		<ul id="iconContainer" data-dojo-type="dojox.mobile.IconContainer">
+			<li id="icon0" data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app1", icon:"images/icon-1.png", lazy:true, badge:"55"'><div class="box"></div></li>
+			<li id="icon1" data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app2", icon:"images/icon-1.png", lazy:true'><div class="box"></div></li>
+			<li id="icon2" data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"app3", icon:"images/icon-1.png", lazy:true'><div class="box"></div></li>
+			<li id="icon3" data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"moveTo", icon:"images/icon-1.png", moveTo:"about", transition:"slide"'></li>
+			<li id="icon4" data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"href", icon:"images/icon-1.png", href:"test_RoundRectList.html", transition:"slide"'></li>
+			<li id="icon5" data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"url", icon:"images/icon-1.png", url:"data/view-sample.html", transition:"slide"'></li>
+			<li id="icon6" data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"url-async", icon:"images/icon-1.png", url:"data/view-sample.html", transition:"slide", sync:false'></li>
+		</ul>
+		<div style="margin-bottom:10px;">Duration (second): <input id="val" type="text" value="2"></div>
+		<input type="button" onclick="highlight(0)" value="app1">
+		<input type="button" onclick="highlight(1)" value="app2">
+		<input type="button" onclick="highlight(2)" value="app3">
+		<input type="button" onclick="highlight(3)" value="moveTo">
+		<input type="button" onclick="highlight(4)" value="href">
+		<input type="button" onclick="highlight(5)" value="url">
+		<input type="button" onclick="highlight(6)" value="url-async">
+	</div>
+
+	<div id="about" data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Icon Container", moveTo:"view1"'>About</h1>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">My Phone</h2>
+		<ul data-dojo-type="dojox.mobile.RoundRectList">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"AcmePhone"'>
+				Network
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"AcmePhone"'>
+				Line
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='rightText:"1024"'>
+				Songs
+			</li>
+		</ul>
+	</div>
+</body>
+</html>

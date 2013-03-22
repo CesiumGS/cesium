@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html style="overflow:hidden;">
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<title>Opener-SearchList</title>
+	<style>
+		.mblTooltip.mblOpener .mblToolBarButton {
+			display: none;
+		}
+		#search1 {
+			height: 24px;
+			width: 300px;
+		}
+		.mblOverlay #search1 {
+			margin: 0 70px;
+			width: 160px;
+		}
+		.mblOverlay#listPicker {
+			height: 200px;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, async:true"></script>
+
+	<script language="JavaScript" type="text/javascript">
+		require([
+			"dojo/_base/html", // dojo.byId
+			"dijit/_base/manager",  // dijit.byId
+			"dojox/mobile",				// This is a mobile app.
+			"dojox/mobile/compat",		// This mobile app supports running on desktop browsers
+			"dojox/mobile/parser",		// This mobile app uses declarative programming with fast mobile parser
+			"dojox/mobile/deviceTheme",	// This mobile app automatically changes it's theme to match devices
+			"dojox/mobile/Opener",
+			"dojox/mobile/ScrollableView"
+		]);
+
+		var checkedItem = 'Aaron Smith';
+
+		function getSelectedContact(node, accept){
+			if(accept === true){
+				dojo.byId('contact1').value = checkedItem || '';
+			}
+		}
+		function setSearch(node){
+		// NOOP: Set search input text
+		}
+		function onCheck(item, checked){
+			setTimeout(function(){
+				if(checked){
+					checkedItem = item.labelNode.innerText || dojo.trim(item.labelNode.textContent) || '';
+					if(dojo.hasClass(dijit.byId('listPicker').domNode, 'mblTooltip')){
+						dijit.byId('listPicker').hide(true); // Tooltip + selection = auto-hide
+					}
+				}
+			}, 500);
+		}
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<table cellspacing="20">
+	<tr>
+		<td style="text-align:right;">Contact:</td>
+		<td><input id="contact1" readOnly value="Aaron Smith" placeholder="Select a contact"
+			onclick="dijit.byId('listPicker').show(this, ['above-centered','below-centered','after','before'])" /></td>
+	</tr>
+	</table>
+
+	<div id="listPicker" data-dojo-type="dojox.mobile.Opener" data-dojo-props="onHide:getSelectedContact, onShow:setSearch">
+		<h1 dojoType="dojox.mobile.Heading" label="">
+			<span dojoType="dojox.mobile.ToolBarButton" label="Done" class="mblColorBlue" style="position:absolute;width:45px;right:0;"
+				onclick="dijit.byId('listPicker').hide(true)"></span>
+			<span dojoType="dojox.mobile.ToolBarButton" label="Cancel" class="mblColorBlue" style="position:absolute;width:45px;left:0;"
+				onclick="dijit.byId('listPicker').hide(false)"></span>
+			<input id="search1" type="search" results="5" autosave="myrecentcontactsearches" name="searchContacts" placeholder="Search" />
+		</h1>
+		<div dojoType="dojox.mobile.ScrollableView" selected="true" height="auto">
+			<ul id="list1" dojoType="dojox.mobile.EdgeToEdgeList" select="single" data-dojo-props="onCheckStateChanged:onCheck">
+			<h2 dojoType="dojox.mobile.EdgeToEdgeCategory">A</h2>
+				<li id="item1" dojoType="dojox.mobile.ListItem" checked="true">
+					Aaron Smith
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					Adam Peller
+				</li>
+			<h2 dojoType="dojox.mobile.EdgeToEdgeCategory">J</h2>
+				<li dojoType="dojox.mobile.ListItem">
+					Jack Coleman
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					James Evans
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					Jason Griffin
+				</li>
+			<h2 dojoType="dojox.mobile.EdgeToEdgeCategory">K</h2>
+				<li dojoType="dojox.mobile.ListItem">
+					Karen Hughes
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					Kelly Perry
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					Kevin Rivera
+				</li>
+			<h2 dojoType="dojox.mobile.EdgeToEdgeCategory">S</h2>
+				<li dojoType="dojox.mobile.ListItem">
+					Sam Jones
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					Sandy Smith
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					Susan Smith
+				</li>
+			<h2 dojoType="dojox.mobile.EdgeToEdgeCategory">T</h2>
+				<li dojoType="dojox.mobile.ListItem">
+					Tim Jones
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					Tina Smith
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					Tom Smith
+				</li>
+			</ul>
+		</div>
+	</div>
+</body>
+</html>

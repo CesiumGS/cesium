@@ -1,0 +1,465 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>popup and BackgroundIFrame unit test</title>
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "../themes/dijit.css";
+		@import "css/dijitTests.css";
+
+		body {
+			height: 100%;
+			padding: 0;
+			margin: 0;
+		}
+
+		div {
+			background: white;
+			border: solid 1px gray;
+		}
+
+		/* the menu type test widgets */
+		.choice div {
+			width: 200px;
+			cursor: pointer;
+		}
+		.choice div:hover {
+			background: #ccc;
+		}
+	</style>
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		djConfig="isDebug: true, parseOnLoad: false"></script>
+	<script type="text/javascript" src="_testCommon.js"></script>
+
+	<script type="text/javascript">
+		function log(str){
+			console.log(str);
+		}
+
+		require([
+			"doh/runner",
+			"dojo/_base/declare",
+			"dojo/dom", "dojo/dom-construct", "dojo/dom-geometry",
+			"dojo/query", "dojo/sniff","dojo/_base/window",
+			"dijit/popup", "dijit/registry", "dijit/_WidgetBase", "dijit/_TemplatedMixin",
+			"dijit/tests/helpers", "dojo/domReady!"
+		], function(doh, declare, dom, domConstruct, domGeometry, query, has, win,
+					popupUtil, registry, _WidgetBase, _TemplatedMixin){
+
+
+			declare("SimpleDropDownButton", [_WidgetBase, _TemplatedMixin], {
+				// summary:
+				//		A button that shows a popup.
+				//		Supply popup as parameter when instantiating this widget.
+
+				label: "show popup",
+				orient: ["below"],
+
+				templateString: "<button data-dojo-attach-event='onclick: openPopup'>${label}</button>",
+
+				openPopup: function(){
+					var self = this;
+
+					popupUtil.open({
+						popup: this.popup,
+						parent: this,
+						around: this.domNode,
+						orient: this.orient,
+						onCancel: function(){
+							log(self.id + ": cancel of child");
+						},
+						onExecute: function(){
+							log(self.id + ": execute of child");
+							popupUtil.close(self.popup);
+							self.open = false;
+						}
+					});
+
+					this.open = true;
+				},
+
+				closePopup: function(){
+					if(this.open){
+						log(this.id + ": close popup due to blur");
+						popupUtil.close(this.popup);
+						this.open = false;
+					}
+				},
+
+				_onBlur: function(){
+					// summary:
+					//		This is called from focus manager and when we get the signal we
+					//		need to close the drop down
+					this.closePopup();
+				}
+			});
+
+			declare("SimplePopup",  [_WidgetBase, _TemplatedMixin], {
+				// summary:
+				//		A trivial popup widget
+
+				templateString: "<span>i'm a popup</span>"
+			});
+
+			declare("SimpleChoiceWidget",  [_WidgetBase, _TemplatedMixin], {
+				// summary:
+				//		A list of values; select a value by pressing an entry in the list.
+
+				choice1: "1",
+				choice2: "2",
+				choice3: "3",
+
+				templateString:
+					"<div class='choice'>" +
+						"<div data-dojo-attach-event='onclick: onClick'>${choice1}</div>" +
+						"<div data-dojo-attach-event='onclick: onClick'>${choice2}</div>" +
+						"<div data-dojo-attach-event='onclick: onClick'>${choice3}</div>" +
+					"</div>",
+
+				onClick: function(e){
+					this.onChange(e.target.innerHTML);
+				},
+
+				onChange: function(val){
+					// summary:
+					//		When this widget is used as a popup, popup monitors calls
+					//		to onChange and then closes the popup
+					log(this.id + ": selected " + val);
+				}
+			});
+
+			// Create a button that displays a simple drop down
+			choiceDropDown = new SimpleChoiceWidget();
+			(choiceDropDownButton = new SimpleDropDownButton({
+				id: "choiceDropDownButton",
+				label: "show choice drop down",
+				popup: choiceDropDown
+			})).placeAt(dom.byId("widgets"));
+
+			declare("DialogWithPopupWidget",  [_WidgetBase, _TemplatedMixin], {
+				// summary:
+				//		This is a dialog that contains a button that spawns a drop down.
+				//		Supply popup as an argument to this widget.
+
+				title: "I'm a dialog",
+				label: "click me",
+
+				templateString:
+					"<div style='width: 300px'>" +
+						"<div>${title}</div>" +
+						"<input><br>" +
+						"<button data-dojo-attach-point='button'>${label}</button><br>" +
+						"<button data-dojo-attach-event='onclick: onExecute'>OK</button>" +
+					"</div>",
+
+				postCreate: function(){
+					// Convert the plain button into a SimpleDropDownButton widget.
+					// Having it be a widget is important because that's how the popup
+					// code knows where a stack of nested popups (typically menus) ends.
+					// (In this case closing a stack of menus shouldn't close the dialog.)
+
+					new SimpleDropDownButton({
+						id: this.id + "PopupButton",
+						label: this.label,
+						popup: this.popup,
+						orient: ["after"]	// so popup doesn't cover OK button
+					}, this.button);
+				},
+
+				onExecute: function(){
+					// summary:
+					//		Called when OK button is pressed.
+					//		If this is used as a popup this signals to the parent that
+					//		Dialog can be closed.
+					console.log(this.id + ": executed");
+				}
+			});
+
+			// Create a button that displays a dialog that displays a choice widget
+			dialogDropDownButton = new SimpleDropDownButton({
+				id: "showSimpleDialogButton",
+				label: "show dialog",
+				popup: new DialogWithPopupWidget({
+					id: "simpleDialog",
+					label: 'show simple choice drop down',
+					popup: new SimpleChoiceWidget({
+						id: "choiceFromDialog"
+					})
+				})
+			}).placeAt(dom.byId("widgets"));
+
+			declare("NestedPopupOpener",  [_WidgetBase, _TemplatedMixin], {
+				// summary:
+				//		Clicking a value in this list will open a nested popup.
+				//		Specify popup1 and popup2 as parameters to this widget.
+
+				templateString:
+					"<div class='choice'>" +
+						"<div data-dojo-attach-event='onclick: onClick'>popup1</div>" +
+						"<div data-dojo-attach-event='onclick: onClick'>popup2</div>" +
+					"</div>",
+
+				onClick: function(e){
+					var id = this.id,
+						popup = this[e.target.innerHTML];
+					log(id + ": opening popup " + popup.id);
+					this.openPopup(popup);
+				},
+
+				openPopup: function(popup){
+					popupUtil.open({
+						popup: popup,
+						parent: this,
+						around: this.domNode,
+						orient: ["after", "before"],
+						onCancel: function(){
+							log(id + ": cancel of child " + popup.id);
+						},
+						onExecute: function(){
+							log(id + ": execute of child " + popup.id);
+							popupUtil.close(popup);
+						}
+					})
+				},
+
+				closePopup: function(popup){
+					popupUtil.close(popup);
+				}
+			});
+
+			// Create a button that displays a nested drop down.
+			nestedOpener = new NestedPopupOpener({
+				id: 'nestedPopupOpener',
+				popup1: (nestedChoice1 = new SimpleChoiceWidget({
+					id: "nestedChoice1"
+				})),
+				popup2: (nestedChoice2 = new SimpleChoiceWidget({
+					id: "nestedChoice2",
+					choice1: "4",
+					choice2: "5",
+					choice3: "6"
+				}))
+			});
+			nestedDropDownButton = new SimpleDropDownButton({
+				id: "showNestedMenuButton",
+				label: "show nested drop down",
+				popup: nestedOpener
+			}).placeAt(dom.byId("widgets"));
+
+			// Create a button that displays a dialog that displays a nested drop down
+			dialogNestedChoice1 = new SimpleChoiceWidget({
+				id: "dialogNestedChoice1"
+			});
+			dialogNestedChoice2 = new SimpleChoiceWidget({
+				id: "dialogNestedChoice2",
+				choice1: "4",
+				choice2: "5",
+				choice3: "6"
+			});
+			dialogNestedPopupOpener = new NestedPopupOpener({
+				id: "nestedPopupOpenerFromDialog",
+				popup1: dialogNestedChoice1,
+				popup2: dialogNestedChoice2
+			});
+			dialogWithNestedPopup = new DialogWithPopupWidget({
+				id: "buttonInComplexDialog",
+				label: 'show nested menu',
+				popup: dialogNestedPopupOpener
+			});
+			dialogDropDownButton = new SimpleDropDownButton({
+				id: "showComplexDialogButton",
+				label: "show dialog w/nested menu",
+				popup: dialogWithNestedPopup
+			}).placeAt(dom.byId("widgets"));
+
+			// For testing, create an unattached widget and unattached DOMNode
+			new SimplePopup({id: "spw"}).placeAt(win.body());
+			domConstruct.place("<span id='sdn'>simple dom node</span>", win.body());
+
+			doh.register("API", [
+					function repeatMoveOffScreen(){
+						// Previously, calling moveOffScreen twice would cause an exception
+						popupUtil.moveOffScreen(registry.byId("spw"));
+						popupUtil.moveOffScreen(registry.byId("spw"));
+					}
+			]);
+
+			doh.register("simple open and close", [
+				function initialConditions(t){
+					// If the popup code has cached any iframes, make sure they are hidden
+					query("iframe").forEach(function(node){
+						console.log("found iframe", node);
+						doh.is("none", node.style.display, "background iframe is hidden");
+					});
+				},
+
+				// Create popup on the edge of another widget
+				function openAround(){
+					var d = new doh.Deferred();
+
+					var around = choiceDropDownButton,
+						popup = choiceDropDown;
+
+					around.openPopup();
+
+					setTimeout(d.getTestCallback(function(){
+						doh.t(isVisible(popup.domNode), "popup is visible");
+
+						if(has("ie") <= 6){
+							// Test the BackgroundIFrame
+							var iframes = query("iframe");
+							doh.is(1, iframes.length, "one background iframe on IE6");
+
+							var popupCoords = domGeometry.position(popup.domNode),
+								iframeCoords = domGeometry.position(iframes[0]);
+							doh.is(popupCoords.x, iframeCoords.x, "x is same: " + popupCoords.x);
+							doh.is(popupCoords.y, iframeCoords.y, "y is same: " + popupCoords.y);
+							doh.is(popupCoords.w, iframeCoords.w, "w is same: " + popupCoords.w);
+							doh.is(popupCoords.h, iframeCoords.h, "h is same: " + popupCoords.h);
+							doh.is("", iframes[0].style.display, "not display:none");
+						}
+						// TODO: test stack
+					}), 500);
+
+					return d;
+				},
+
+				function closeAround(){
+					// Close the popup
+					var around = choiceDropDownButton,
+						popup = choiceDropDown;
+
+					around.closePopup();
+
+					// Make sure the popup is hidden
+					doh.is("none", popup.domNode.parentNode.style.display, "popup is hidden");
+				}
+			]);
+
+			doh.register("nested open and close", [
+				// Open first level
+				function openAround(){
+					var d = new doh.Deferred();
+
+					var around = nestedDropDownButton,
+						popup = nestedOpener,
+						nestedPopup = nestedChoice1;
+
+					around.openPopup();
+
+					setTimeout(d.getTestCallback(function(){
+						doh.t(isVisible(popup.domNode), "popup is visible");
+
+						if(has("ie") <= 6){
+							// Test the BackgroundIFrame
+							var iframes = query("iframe", popup.domNode.parentNode);
+							doh.is(1, iframes.length, "one background iframe on IE6");
+
+							var popupCoords = domGeometry.position(popup.domNode),
+								iframeCoords = domGeometry.position(iframes[0]);
+							doh.is(popupCoords.x, iframeCoords.x, "x is same: " + popupCoords.x);
+							doh.is(popupCoords.y, iframeCoords.y, "y is same: " + popupCoords.y);
+							doh.is(popupCoords.w, iframeCoords.w, "w is same: " + popupCoords.w);
+							doh.is(popupCoords.h, iframeCoords.h, "h is same: " + popupCoords.h);
+							doh.is("", iframes[0].style.display, "not display:none");
+						}
+						// TODO: test stack
+					}), 500);
+
+					return d;
+				},
+
+				function openNested(){
+					var d = new doh.Deferred();
+
+					var around = nestedDropDownButton,
+						popup = nestedOpener,
+						nestedPopup = nestedChoice1;
+
+					popup.openPopup(nestedPopup);
+
+					setTimeout(d.getTestCallback(function(){
+						doh.t(isVisible(nestedPopup.domNode), "nested popup is visible");
+
+						if(has("ie") <= 6){
+							// Test the BackgroundIFrame
+							var iframes = query("iframe", popup.domNode.parentNode);
+							doh.is(1, iframes.length, "one background iframe for popup");
+
+							iframes = query("iframe", nestedPopup.domNode.parentNode);
+							doh.is(1, iframes.length, "another background iframe for nested popup");
+
+							var popupCoords = domGeometry.position(nestedPopup.domNode),
+								iframeCoords = domGeometry.position(iframes[0]);
+							doh.is(popupCoords.x, iframeCoords.x, "x is same: " + popupCoords.x);
+							doh.is(popupCoords.y, iframeCoords.y, "y is same: " + popupCoords.y);
+							doh.is(popupCoords.w, iframeCoords.w, "w is same: " + popupCoords.w);
+							doh.is(popupCoords.h, iframeCoords.h, "h is same: " + popupCoords.h);
+							doh.is("", iframes[0].style.display, "not display:none");
+						}
+						// TODO: test stack
+					}), 500);
+
+					return d;
+				},
+
+				function closeAround(){
+					// Close the layer of popups
+					var around = nestedDropDownButton,
+						popup = nestedOpener,
+						nestedPopup = nestedChoice1;
+
+					around.closePopup();
+
+					// Make sure the popups are both hidden
+					// (in a future release this might change to display:none etc but currently it's visibility:hidden)
+					doh.is("none", popup.domNode.parentNode.style.display, "popup is hidden");
+					doh.is("none", nestedPopup.domNode.parentNode.style.display, "nested popup is hidden");
+				}
+			]);
+
+			// Make sure there are no hidden tab stops when popups are closed.
+			// This test doesn't work on safari (due to safari bugs) although there aren't any hidden tab stops.
+			doh.register("no hidden tab stops", function hiddenTabStops(){
+				var tabbable = tabOrder();
+				doh.is("inputAtStart", tabbable[0].id, "first tabbable node");
+				doh.is("inputAtEnd", tabbable[tabbable.length - 1].id, "last tabbable node");
+			});
+
+			// TODO: test x/y placement
+
+			// Test that onCancel goes back one level.
+			// Call nestedChoice2.onCancel() and that should trigger nestedChoice2 to close
+			// but nestedOpener stays open.
+			// (TODO)
+
+			// Test that onChange/onExecute goes back to top of popup chain.
+			// Call dialogNestedChoice2.onChange() and that should trigger dialogNestedChoice2
+			// and dialogNestedPopupOpener to close, but not dialogWithNestedPopup.
+			// (TODO)
+
+			// ---------------------
+			// a11y tests
+
+			// Test that ESC key closes one level of a popup chain.
+			// Focus nestedChoice2 and type ESC, and that should trigger nestedChoice2 to close
+			// but nestedOpener stays open.
+			// (TODO)
+
+			// Test that TAB key cancels back to top of popup chain.
+			// Focus nestedChoice2 and type TAB, and that should trigger dialogNestedChoice2
+			// and dialogNestedPopupOpener to close, but not dialogWithNestedPopup.
+			// (TODO)
+
+			doh.run();
+		});
+	</script>
+</head>
+<body>
+	<h1>popup and BackgroundIFrame Unit Test</h1>
+	<input id="inputAtStart">
+	<span id="widgets"></span>
+	<input id="inputAtEnd">
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+	<title>dojox.layout.ExpandoPane</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+	<!-- test file style rollup, you need resources/ExpandoPane.css exclusively -->
+	<link rel="stylesheet" href="../resources/ExpandoPane.css">
+	<link rel="stylesheet" href="../../../dijit/tests/css/dijitTests.css">
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<style type="text/css">
+		body, html {
+			height:100%;
+		}
+	</style>
+
+	<!-- for debugging -->
+	<script type="text/javascript">
+		dojo.require("dojox.layout.ExpandoPane");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.Tree");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dojo.fx.easing");
+	</script>
+</head>
+<body class="tundra" role="main">
+
+	<h1>Basic ExpandoPane tests</h1>
+
+	<h2>Left:</h2>
+	<div dojoType="dijit.layout.BorderContainer" style="height:275px; border: solid #ccc 1px;">
+		<div dojoType="dojox.layout.ExpandoPane" title="leftTest" region="left" maxWidth="175" style="width:175px; background:red">
+			foo
+		</div>
+		<div dojoType="dijit.layout.TabContainer" region="center" tabStrip="true">
+			<div dojoType="dijit.layout.ContentPane" title="tab 1" href="_lorem.html"></div>
+			<div dojoType="dijit.layout.ContentPane" title="tab 2" href="_lorem.html"></div>
+		</div>
+	</div>
+
+	<h2>Right:</h2>
+	<div dojoType="dijit.layout.BorderContainer" style="height:275px; border: solid #ccc 1px;">
+		<div dojoType="dojox.layout.ExpandoPane" title="rightTest" region="right" maxWidth="175" style="width:175px; background:red">
+			<div dojoType="dijit.layout.TabContainer" tabPosition="bottom" attachParent="true" tabStrip="true">
+				<div dojoType="dijit.layout.ContentPane" attachParent="true" title="tab 1" href="_lorem.html"></div>
+				<div dojoType="dijit.layout.ContentPane" title="tab 2" href="_lorem.html"></div>
+			</div>
+		</div>
+		<div dojoType="dijit.layout.TabContainer" region="center" tabStrip="true">
+			<div dojoType="dijit.layout.ContentPane" title="tab 1" href="_lorem.html"></div>
+			<div dojoType="dijit.layout.ContentPane" title="tab 2" href="_lorem.html"></div>
+		</div>
+	</div>
+
+	<h2>Top (easeIn="dojo.fx.easing.bounceOut" duration="1200"):</h2>
+	<div dojoType="dijit.layout.BorderContainer" style="height:275px; border: solid #ccc 1px;">
+		<div easeIn="dojo.fx.easing.bounceOut" duration="1200" dojoType="dojox.layout.ExpandoPane" title="topTest" region="top" maxHeight="75" style="height:75px; background:red">
+			foo
+		</div>
+		<div region="center" dojoType="dijit.layout.ContentPane" href="_lorem.html"></div>
+	</div>
+
+	<h2>Bottom:</h2>
+	<div dojoType="dijit.layout.BorderContainer" style="height:375px; border:8px solid #333;">
+		<div dojoType="dojox.layout.ExpandoPane" title="bottomTest" region="bottom" maxHeight="75" style="height:75px;">
+			foo
+		</div>
+		<div region="center" dojoType="dijit.layout.ContentPane" href="_lorem.html"></div>
+	</div>
+
+	<h2>Bottom/Left:</h2>
+	<div dojoType="dijit.layout.BorderContainer" style="height:375px; border:8px solid #333;">
+		<div dojoType="dojox.layout.ExpandoPane" title="leftTest" region="left" maxWidth="175" style="width:175px; background:red;">
+			foo
+		</div>
+		<div dojoType="dojox.layout.ExpandoPane" title="bottomTest" region="bottom" maxHeight="75" style="height:75px;">
+			foo
+		</div>
+		<div region="center" dojoType="dijit.layout.ContentPane" href="_lorem.html"></div>
+	</div>
+
+	<h2>Top/Left/Right</h2>	
+	<div dojoType="dijit.layout.BorderContainer" style="height:375px; border:8px solid #333;">
+		<div dojoType="dojox.layout.ExpandoPane" title="leftTest" region="left" maxWidth="175" style="width:175px; background:red;">
+			foo
+		</div>
+		<div dojoType="dojox.layout.ExpandoPane" title="leftTest" region="right" maxWidth="175" style="width:175px; background:red;">
+			foo
+		</div>
+		<div dojoType="dojox.layout.ExpandoPane" title="bottomTest" region="bottom" maxHeight="75" style="height:75px;">
+			foo
+		</div>
+		<div region="center" dojoType="dijit.layout.ContentPane" href="_lorem.html"></div>
+	</div>	
+
+	<h2>Bottom/Left/Right + splitters</h2>	
+	<div dojoType="dijit.layout.BorderContainer" style="height:375px; border:8px solid #333;">
+		<div splitter="true" dojoType="dojox.layout.ExpandoPane" title="leftTest" region="left" maxWidth="175" style="width:175px; background:red;">
+			foo
+		</div>
+		<div splitter="true" dojoType="dojox.layout.ExpandoPane" title="leftTest" region="right" maxWidth="175" style="width:175px; background:red;">
+			foo
+		</div>
+		<div splitter="true" dojoType="dojox.layout.ExpandoPane" title="bottomTest" region="bottom" maxHeight="75" style="height:75px;">
+			foo
+		</div>
+		<div region="center" dojoType="dijit.layout.ContentPane" href="_lorem.html"></div>
+	</div>	
+
+	<h2>Same, all closed</h2>
+	<div dojoType="dijit.layout.BorderContainer" style="height:375px; border:8px solid #333;">
+		<div splitter="true" startExpanded="false" dojoType="dojox.layout.ExpandoPane" title="leftTest" region="left" maxWidth="175" style="width:175px; background:yellow;">
+			foo
+		</div>
+		<div splitter="true" startExpanded="false" dojoType="dojox.layout.ExpandoPane" title="leftTest" region="right" maxWidth="175" style="width:175px; background:yellow;">
+			foo
+		</div>
+		<div splitter="true" startExpanded="false" dojoType="dojox.layout.ExpandoPane" title="bottomTest" region="bottom" maxHeight="75" style="height:75px; background:yellow;">
+			foo
+		</div>
+		<div region="center" startExpanded="false" dojoType="dijit.layout.ContentPane" href="_lorem.html"></div>
+	</div>	
+
+	<h2>Same, Leading / Trailing</h2>
+	<div dojoType="dijit.layout.BorderContainer" style="height:375px; border:8px solid #333;" design="sidebar">
+		<div splitter="true" startExpanded="false" dojoType="dojox.layout.ExpandoPane" title="leftTest" region="leading" maxWidth="175" style="width:175px; background:yellow;">
+			foo
+		</div>
+		<div splitter="true" startExpanded="false" dojoType="dojox.layout.ExpandoPane" title="rightTest" region="trailing" maxWidth="175" style="width:175px; background:yellow;">
+			foo
+		</div>
+		<div splitter="true" startExpanded="false" dojoType="dojox.layout.ExpandoPane" title="topTest" region="top" maxHeight="75" style="height:75px; background:yellow;">
+			foo
+		</div>
+		<div region="center" startExpanded="false" dojoType="dijit.layout.ContentPane" href="_lorem.html"></div>
+	</div>	
+
+
+</body>
+</html>

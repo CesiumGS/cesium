@@ -1,0 +1,377 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Editor A11Y Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.DeferredList");
+			dojo.require("dojo.window");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			function normalize(str){
+				// try to do some normalization to make all browsers look
+				// the same.   Would be nice if we didn't need this, the normalization should
+				// probably happen as pre and post filters on the editor
+				return str.
+					replace(' />', '/>').
+					replace('<br/>', '').		// FF.  Because of EnterKeyHandling plugin?
+					replace(/^<p>/, '').replace(/<\/p>$/, '').		// Safari.  Because of EnterKeyHandling plugin?
+					replace(new RegExp(String.fromCharCode(160), "g"), " ");	// Safari: nbsp (char code 160) to normal space (char code 32)
+			}
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_Editor.html');
+
+				// For some reason the meta key (meta-a for selection, meta-b for bold, etc) doesn't work
+				// on mac/safari... use ctrl- instead, just like on windows. (#9553)
+				var metaKey = {ctrl: true};
+
+				var editor0,
+					editor1, editor1oldValue, editor1newValue, editor1onChange = "no onchange event yet";
+
+				doh.register("setup", [
+					{
+						name: "wait for editors to load",
+						timeout: 5000,
+						runTest: waitForLoad
+					},
+					function setUp(){
+						editor0 = dijit.byId("editor0");
+						editor1 = dijit.byId("editor1");					
+						editor1.watch("value", function(attr, oldVal, newVal){
+							editor1oldValue = normalize(oldVal);
+							editor1newValue = normalize(newVal);
+						});
+						editor1.onChange = function(newValue){
+							editor1onChange = normalize(newValue);
+						};
+					}
+				]);
+
+				doh.register("keyboard shortcuts", [
+					{
+						name: "bold/italic",
+						timeout: 15000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dojo.window.scrollIntoView(editor1.domNode);
+
+							// Set contents of editor1
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor1.focus();
+							}), 500);
+							doh.robot.keyPress("a", 500, metaKey);	// select all
+							doh.robot.typeKeys("hello ", 500, 750);		// and erase (by typing something new)
+							doh.robot.keyPress("b", 500, metaKey);	// start bold
+							doh.robot.typeKeys("bold", 500, 600);
+							doh.robot.keyPress("b", 500, metaKey);	// stop bold
+							doh.robot.typeKeys(" and ", 500, 750);
+							doh.robot.keyPress("i", 500, metaKey);	// start italic
+							doh.robot.typeKeys("exciting", 500, 1200);
+							doh.robot.keyPress("i", 500, metaKey);	// stop italic
+							doh.robot.typeKeys(" new world.", 500, 1650);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var val = normalize(editor1.get('value'));
+								doh.is("hello <b>bold</b> and <i>exciting</i> new world.", val);
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				// Check that toolbar buttons are depressed/not depressed (etc.) based on
+				// where caret is in document
+				doh.register("toolbar state", [
+					{
+						name: "setup",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dojo.window.scrollIntoView(editor1.domNode);
+
+							// strange things happen if you alter an editor's value while it is focused,
+							// so temporarily move to the toolbar while setting content
+							doh.robot.keyPress(dojo.keys.TAB, 500, {shift: true});	// go to toolbar
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor1.set("value", "toolbar <b>state</b> <i>test</i>.");
+
+								// set() should fire watch() callbacks but not call onChange()
+								doh.is("toolbar <b>state</b> <i>test</i>.", editor1newValue, "value set successfully");
+								doh.is("no onchange event yet", editor1onChange, "onChange not called");
+							}), 500);
+							doh.robot.keyPress(dojo.keys.TAB, 500);	// goes to content
+							doh.robot.sequence(d.getTestCallback(function(){
+								// just to signal that we are done
+							}));
+
+							return d;
+						}
+					},
+					{
+						name: "no buttons depressed",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor1.placeCursorAtStart();
+							}), 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var toolbar = editor1.toolbar;
+								doh.t(toolbar, "found toolbar");
+
+								var boldButton = toolbar.getChildren()[7];
+								doh.t(boldButton, "found bold button");
+								doh.f(boldButton.get("checked"), "bold button not depressed");
+
+								var italicButton = toolbar.getChildren()[8];
+								doh.t(italicButton, "found italic button");
+								doh.f(italicButton.get("checked"), "italic button not depressed");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "bold button depressed",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor1.placeCursorAtStart();
+							}), 500);
+							for(var i = 0; i < 9; i++){
+								// Move to second letter of second word.
+								doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500);
+							}
+							doh.robot.sequence(d.getTestCallback(function(){
+								var toolbar = editor1.toolbar;
+								doh.t(toolbar, "found toolbar");
+
+								var boldButton = toolbar.getChildren()[7];
+								doh.t(boldButton, "found bold button");
+								doh.t(boldButton.get("checked"), "bold button depressed");
+
+								var italicButton = toolbar.getChildren()[8];
+								doh.t(italicButton, "found italic button");
+								doh.f(italicButton.get("checked"), "italic button not depressed");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "italic button depressed",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor1.placeCursorAtStart();
+							}), 500);
+							for(var i = 0; i < 15; i++){
+								// Move to second letter of third word.
+								doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500);
+							}
+							doh.robot.sequence(d.getTestCallback(function(){
+								var toolbar = editor1.toolbar;
+								doh.t(toolbar, "found toolbar");
+
+								var boldButton = toolbar.getChildren()[7];
+								doh.t(boldButton, "found bold button");
+								doh.f(boldButton.get("checked"), "bold button not depressed");
+
+								var italicButton = toolbar.getChildren()[8];
+								doh.t(italicButton, "found italic button");
+								doh.t(italicButton.get("checked"), "italic button depressed");
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("toolbar navigation", [
+					{
+						name: "bold",
+						timeout: 15000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dojo.window.scrollIntoView(editor1.domNode);
+
+							// Write "hello" in editor and also make sure there's something in the system
+							// clipboard, so that the paste button in the toolbar is guaranteed to be enabled.
+							// (otherwise the two RIGHT_ARROW commands below will overshoot the bold button
+							// and end up on the italic button)
+							doh.robot.sequence(d.getTestErrback(function(){
+								editor1.focus();
+							}), 500);
+							doh.robot.keyPress("a", 1000, metaKey);	// select all
+							doh.robot.keyPress("c", 500, dojo.isMac ? {meta: true} : {ctrl: true});	// copy into clipboard
+							doh.robot.typeKeys("hello ", 500, 900);		// and erase (by typing something new)
+
+							// Go to toolbar and turn on bold.
+							// We only have to right-arrow twice because it skips the vertical divider bars
+							// and also skips cut and copy (they are disabled b/c nothing is selected)
+							doh.robot.keyPress(dojo.keys.TAB, 500, {shift: true});
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 1000);
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500);
+							doh.robot.keyPress(dojo.keys.SPACE, 500);
+
+							// Focus and caret should be back after "hello ", type "world" in bold
+							doh.robot.typeKeys("world", 1000, 750);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Get the value and try to do some normalization to make all browsers look
+								// the same.   Would be nice if we didn't need this, the normalization should
+								// probably happen as pre and post filters on the editor
+								var val = normalize(editor1.get('value'));
+								doh.is("hello <b>world</b>", val);
+							}), 1500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("tabbing", [
+					{
+						name: "into editor1 toolbar",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dojo.window.scrollIntoView(editor1.domNode);
+
+							// Focus on link before editor
+							doh.robot.sequence(d.getTestErrback(function(){
+								dojo.byId("focusBefore").focus();
+							}), 500);
+
+							// Go to toolbar of editor1
+							doh.robot.keyPress(dojo.keys.TAB, 500);
+
+							// We should get focus on one of the toolbar buttons, although which one depends
+							// on whether the editor's contents have been modified (undo button enabled), and
+							// whether there is something in the browser's paste buffer, etc.)
+							doh.robot.sequence(d.getTestCallback(function(){
+								var curFocus = dijit.getEnclosingWidget(dojo.global.dijit.focus.curNode);
+								doh.isNot(-1, dojo.indexOf(editor1.toolbar.getChildren(), curFocus), "focused on button of editor1 toolbar");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "into editor1",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Go to content of editor1
+							doh.robot.keyPress(dojo.keys.TAB, 500);
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.is("editor1_iframe", dojo.global.dijit.focus.curNode.id, "focused on editor content");
+							}), 500);
+
+							doh.robot.keyPress("a", 500, metaKey);	// select all
+							doh.robot.typeKeys("tabbing test", 500, 1800);		// and replace with "tabbing test"
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// just here to make deferred fire
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "out of editor1",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Go to link after editor1
+							doh.robot.keyPress(dojo.keys.TAB, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("focusAfter", dojo.global.dijit.focus.curNode.id, "focused after editor1");
+								
+								doh.is("tabbing test", editor1newValue, "watch()");
+								doh.is("tabbing test", editor1onChange, "onChange");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "shift-tab back into editor1",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Go to content of editor1
+							doh.robot.keyPress(dojo.keys.TAB, 500, {shift: true});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("editor1_iframe", dojo.global.dijit.focus.curNode.id, "focused on editor content");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "shift-tab back to toolbar",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.TAB, 500, {shift: true});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var curFocus = dijit.getEnclosingWidget(dojo.global.dijit.focus.curNode);
+								doh.isNot(-1, dojo.indexOf(editor1.toolbar.getChildren(), curFocus), "focused on button of editor1 toolbar");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "shift-tab to before editor",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.keyPress(dojo.keys.TAB, 500, {shift: true});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("focusBefore", dojo.global.dijit.focus.curNode.id, "focused before editor1");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+
+
+		</script>
+	</head>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>MVC DOH Test</title>
+
+		<style>
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+			@import "css/app-format.css";
+		</style>
+
+		<!-- required: the default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css">
+
+		<!-- required: dojo.js -->
+		<script src="../../../dojo/dojo.js" type="text/javascript" data-dojo-config="isDebug: 1, parseOnLoad: 0, async: 1"></script>
+		<script type="text/javascript" src="./helpers.js"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner",
+				"dojo/parser",
+				"dojo/when",
+				"dojo/Stateful",
+				"dijit/registry",
+				"dijit/form/TextBox",
+				"dijit/form/NumberTextBox",
+				"dijit/form/ValidationTextBox",
+				"dijit/form/Button",
+				"dojox/mvc/Output"
+			], function(doh, parser, when, Stateful, registry){
+				model = new Stateful({
+					First: "John",
+					Last: "Doe",
+					Email: "jdoe@example.com",
+					Num: 3
+				});
+
+				function noParse(){
+					throw new Error();
+				}
+
+				readOnlyConverter = {
+					format: function(value){
+						return value === "2" || value === "3";
+					},
+					parse: noParse
+				};
+
+				relevanceConverter = {
+					format: function(value){
+						return value !== "0";
+					},
+					parse: noParse
+				};
+
+				numValidConverter = {
+					format: function(value){
+						return value !== "3" && !(value - 0 === 1);
+					},
+					parse: noParse
+				};
+
+				requiredConverter = {
+					format: function(value){
+						return value - 0 === 4;
+					},
+					parse: noParse
+				};
+
+				lastValidConverter = {
+					format: function(value){
+						return value !== "1";
+					},
+					parse: noParse
+				};
+
+				when(parser.parse(), function(){
+					doh.register("Check values and bindings", [{
+						name: "Initial",
+						runTest: function(){
+							var first1 = registry.byId("firstnameInput");
+							doh.f(first1.get("readOnly"), "readOnly should be false");
+							doh.t(first1.get("relevant"), "relevant should be true");
+							doh.t(first1.get("valid"), "valid should be true");
+							var addr1 = registry.byId("emailInput");
+							doh.f(addr1.get("readOnly"), "readOnly should be false");
+							doh.t(addr1.get("relevant"), "relevant should be true");
+							doh.f(addr1.get("required"), "required should be false");
+							doh.t(addr1.get("valid"), "valid should be true");
+						}
+					}, {
+						name: "TestFirstUpdate",
+						runTest: function(){
+							var first1 = registry.byId("firstnameInput");
+							first1.set("value", "0");
+							doh.f(first1.get("readOnly"), "readOnly should be false");
+							doh.f(first1.get("relevant"), "relevant should be false");
+							doh.f(first1.get("required"), "required should be false");
+							doh.t(first1.get("valid"), "valid should be true");
+							first1.set("value", "1");
+							doh.f(first1.get("readOnly"), "readOnly should be false for value = 1");
+							doh.t(first1.get("relevant"), "relevant should be true for value = 1");
+							doh.f(first1.get("required"), "required should be false for value = 1");
+							doh.f(first1.get("valid"), "valid should be false for value = 1");
+							first1.set("value", "2");
+							doh.t(first1.get("relevant"), "relevant should be true for value = 2");
+							doh.f(first1.get("required"), "required should be false for value = 2");
+							doh.t(first1.get("valid"), "valid should be true for value = 2");
+							doh.t(first1.get("readOnly"), "readOnly should be true for value = 2");
+							first1.set("value", "3");
+							doh.t(first1.get("readOnly"), "readOnly should be true for value = 3");
+							doh.t(first1.get("relevant"), "relevant should be true for value = 3");
+							doh.f(first1.get("required"), "required should be false for value = 3");
+							doh.f(first1.get("valid"), "valid should be false for value = 3");
+							first1.set("value", "5");
+							doh.f(first1.get("readOnly"), "readOnly should be false for value = 5");
+							doh.t(first1.get("relevant"), "relevant should be true for value = 5");
+							doh.f(first1.get("required"), "required should be false for value = 5");
+							doh.t(first1.get("valid"), "valid should be ture for value = 5");
+						}
+					}, {
+						name: "TestNumUpdate",
+						runTest: function(){
+							var num1 = registry.byId("numInput");
+							num1.set("value", 1);
+							doh.f(num1.get("readOnly"), "readOnly should be false for value = 1");
+							doh.f(num1.get("required"), "required should be false for value = 1");
+							doh.f(num1.get("valid"), "valid should be false for value = 1");
+							num1.set("value",5);
+							doh.f(num1.get("readOnly"), "readOnly should be false for value = 5");
+							doh.f(num1.get("required"), "required should be false for value = 5");
+							doh.t(num1.get("valid"), "valid should be true for value = 5");
+						}
+					}, {
+						name: "TestNumUpdate",
+						runTest: function(){
+							var last1 = registry.byId("lastnameInput");
+							var email1 = registry.byId("emailInput");
+							last1.set("value", "5");
+							doh.f(email1.get("readOnly"), "readOnly should be false for email value = 5");
+							doh.t(email1.get("relevant"), "relevant should be true for email value = 5");
+							doh.f(email1.get("required"), "required should be false for email value = 5");
+							doh.t(email1.get("valid"), "valid should be true for email value = 5");
+							last1.set("value", "0");
+							doh.f(email1.get("readOnly"), "readOnly should be false for email value = 0");
+							doh.f(email1.get("relevant"), "relevant should be false for email value = 0");
+							doh.f(email1.get("required"), "required should be false for email value = 0");
+							doh.t(email1.get("valid"), "valid should be true for email value = 0");
+							last1.set("value", "1");
+							doh.f(email1.get("readOnly"), "readOnly should be false for email value = 1");
+							doh.t(email1.get("relevant"), "relevant should be true for email value = 1");
+							doh.f(email1.get("required"), "required should be false for email value = 1");
+							doh.f(email1.get("valid"), "valid should be false for email value = 1");
+							last1.set("value", "2");
+							doh.t(email1.get("readOnly"), "readOnly should be true for email value = 2");
+							doh.t(email1.get("relevant"), "relevant should be true for email value = 2");
+							doh.f(email1.get("required"), "required should be false for email value = 2");
+							doh.t(email1.get("valid"), "valid should be true for email value = 2");
+							last1.set("value", "3");
+							doh.t(email1.get("readOnly"), "readOnly should be true for email value = 3");
+							doh.t(email1.get("relevant"), "relevant should be true for email value = 3");
+							doh.f(email1.get("required"), "required should be false for email value = 3");
+							doh.f(email1.get("valid"), "valid should be false for email value = 3");
+							last1.set("value", "4");
+							doh.f(email1.get("readOnly"), "readOnly should be false for email value = 4");
+							doh.t(email1.get("relevant"), "relevant should be true for email value = 4");
+							doh.t(email1.get("required"), "required should be true for email value = 4");
+							doh.t(email1.get("valid"), "valid should be true for email value = 4");
+							last1.set("value","5");
+							doh.f(email1.get("readOnly"), "readOnly should be false for email value = 5");
+							doh.t(email1.get("relevant"), "relevant should be true for email value = 5");
+							doh.f(email1.get("required"), "required should be false for email value = 5");
+							doh.t(email1.get("valid"), "valid should be true for email value = 5");
+						}
+					}]);
+
+					doh.run();
+				});
+			});
+		</script>
+	</head>
+	<body class="claro">
+		<script type="dojo/require">at: "dojox/mvc/at"</script>
+		<div id="wrapper">
+			<div id="header">
+				<div id="navigation"></div>
+				<div id="headerInsert">
+					<h1>Binding Tests</h1>
+				</div>
+			</div>
+			<div id="main">
+				<div id="leftNav">
+				</div>
+				<div id="mainContent">
+					<h2>Bind Self Tests</h2>
+					<div class="row">
+						<label style="display:inline-block; width:100%; text-align:left;">First: Enter 0 to test for Relevant false (use Reset to re-enable)</label>
+						<label style="display:inline-block; width:100%; text-align:left;">First: Enter 1 to test for Valid false.</label>
+						<label style="display:inline-block; width:100%; text-align:left;">First: Enter 2 to test for ReadOnly false (use Reset to re-enable)</label>
+						<label style="display:inline-block; width:100%; text-align:left;">First: Enter 3 to test for ReadOnly false and Valid false (use Reset to re-enable)</label>
+					</div>
+					<div class="row">
+						<label class="cell" for="firstnameInput">First:</label>
+						<input class="cell" id="firstnameInput" data-dojo-type="dijit.form.ValidationTextBox"
+						 data-dojo-props="value: at(model, 'First'),
+										  readOnly: at(model, 'First').transform(readOnlyConverter),
+										  relevant: at(model, 'First').transform(relevanceConverter),
+										  valid: at(model, 'First').transform(numValidConverter)">
+						<!-- Content in output below will always be in sync with value of textbox above -->
+						First name is: <span id="tout" data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at(model, 'First')"></span>
+					</div>
+					<div class="row">
+						<label class="cell" for="firstnameInput"></label>
+						ReadOnly is: <span data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at(model, 'First').transform(readOnlyConverter)"></span>
+						Relevant is: <span data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at(model, 'First').transform(relevanceConverter)"></span>
+						Valid is: <span data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at(model, 'First').transform(numValidConverter)"></span>
+					</div>
+					<div class="row">
+						<label style="display:inline-block; width:100%; text-align:left;">Num: Enter 1 for Valid false</label>
+					</div>
+					<div class="row">
+						<label class="cell" for="numInput">Num:</label>
+						<input class="cell" id="numInput" data-dojo-type="dijit.form.NumberTextBox"
+						 data-dojo-props="value: at(model, 'Num'),
+										  valid: at(model, 'Num').transform(numValidConverter)">
+						Num is: <span data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at(model, 'Num')"></span>
+					</div>
+					<h2>Bind Tests</h2>
+					<div class="row">
+						<label style="display:inline-block; width:100%; text-align:left;">Last: Enter 0 to test for Relevant false for Email.</label>
+						<label style="display:inline-block; width:100%; text-align:left;">Last: Enter 1 to test for Valid false for Email.</label>
+						<label style="display:inline-block; width:100%; text-align:left;">Last: Enter 2 to test for ReadOnly true for Email.</label>
+						<label style="display:inline-block; width:100%; text-align:left;">Last: Enter 3 to test for ReadOnly true and Valid false for Email.</label>
+						<label style="display:inline-block; width:100%; text-align:left;">Last: Enter 4 to test for Required true for Email.</label>
+					</div>
+
+					<div class="row">
+						<label class="cell" for="lastnameInput">Last:</label>
+						<input class="cell" id="lastnameInput" data-dojo-type="dijit.form.TextBox" data-dojo-props="value: at(model, 'Last')">
+						Last name is: <span data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at(model, 'Last')"></span>
+					</div>
+					<div class="row">
+						<label class="cell" for="emailInput">Email:</label>
+						<input class="cell" id="emailInput" data-dojo-type="dijit.form.ValidationTextBox"
+						 data-dojo-props="value: at(model, 'Email'),
+										  readOnly: at(model, 'Last').transform(readOnlyConverter),
+										  relevant: at(model, 'Last').transform(relevanceConverter),
+										  required: at(model, 'Last').transform(requiredConverter),
+										  valid: at(model, 'Last').transform(numValidConverter)">
+						Email is: <span data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at(model, 'Email')"></span>
+					</div>
+					<div class="row">
+						<label class="cell" for="emailInput"></label>
+						ReadOnly is: <span data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at(model, 'Last').transform(readOnlyConverter)"></span>
+						Relevant is: <span data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at(model, 'Last').transform(relevanceConverter)"></span>
+						Required is: <span data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at(model, 'Last').transform(requiredConverter)"></span>
+						Valid is: <span data-dojo-type="dojox.mvc.Output" data-dojo-props="value: at(model, 'Last').transform(numValidConverter)"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

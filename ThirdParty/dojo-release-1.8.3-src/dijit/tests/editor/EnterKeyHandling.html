@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Editor Test</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.Editor");
+		dojo.require("dijit._editor.plugins.ViewSource");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+
+		// Make editor indent work for paragraphs in addition to lists
+		var oldQCE = dijit._editor.RichText.prototype.queryCommandEnabled;
+		dijit._editor.RichText.prototype.queryCommandEnabled = function(command){
+			return command == 'indent' || command == 'outdent' || oldQCE.call(this, command);
+		};
+	</script>
+</head>
+
+<body class="claro">
+	<h1>Test file for Editor EnterKeyHandling plugin</h1>
+
+	<h2>blockNodeforEnter='BR'</h2>
+	<div id="br" data-dojo-type="dijit/Editor" data-dojo-props='plugins:[{name:"dijit/_editor/plugins/EnterKeyHandling", blockNodeForEnter:"BR"}, "viewsource"]
+		'><p>para 1<br>line 2</p>
+		<p>para 2<br>line 2</p>
+ 	</div>
+
+ 	<h2>blockNodeforEnter='DIV'</h2>
+	<div id="div" data-dojo-type="dijit/Editor" data-dojo-props='plugins:[{name:"dijit/_editor/plugins/EnterKeyHandling", blockNodeForEnter:"DIV"}, "viewsource"]
+		'><p>para 1<br>line 2</p>
+		<p>para 2<br>line 2</p>
+ 	</div>
+
+ 	<h2>blockNodeforEnter='DIV' split test</h2>
+	<div id="div2" data-dojo-type="dijit/Editor" data-dojo-props='plugins:[{name:"dijit/_editor/plugins/EnterKeyHandling", blockNodeForEnter:"DIV"}, "viewsource"]'>
+		<div>&nbsp;</div>
+		<div id="lineOne">this is a line of text.  It <b id="boldLine0">IS</b> intended to be split up by pressing enter.</div>
+		<div>&nbsp;</div>
+ 	</div>
+
+ 	<h2>blockNodeforEnter='DIV' split test style clone</h2>
+	<div id="div3" data-dojo-type="dijit/Editor" data-dojo-props='plugins:[{name:"dijit/_editor/plugins/EnterKeyHandling", blockNodeForEnter:"DIV"}, "viewsource"]'>
+		<div>&nbsp;</div>
+		<div id="lineOne">this is a line of text.  It <b id="boldLine1" style="font-size: 4em">IS</b> intended to be split up by pressing enter.</div>
+		<div>&nbsp;</div>
+ 	</div>
+
+ 	<h2>blockNodeforEnter='DIV' split test font clone</h2>
+	<div id="div4" data-dojo-type="dijit/Editor" data-dojo-props='plugins:[{name:"dijit/_editor/plugins/EnterKeyHandling", blockNodeForEnter:"DIV"}, "viewsource"]'>
+		<div>&nbsp;</div>
+		<div id="lineOne">this is a line of text.  It <font id="fontLine1" size="5">IS</font> intended to be split up by pressing enter.</div>
+		<div>&nbsp;</div>
+ 	</div>
+
+ 	<h2>blockNodeforEnter='P'</h2>
+	<div id="p" data-dojo-type="dijit/Editor" data-dojo-props='plugins:[{name:"dijit/_editor/plugins/EnterKeyHandling", blockNodeForEnter:"P"}, "viewsource"]
+		'><p>para 1<br>line 2</p>
+		<p>para 2<br>line 2</p>
+ 	</div>
+ 	
+	<h2>blockNodeforEnter='P' split test</h2>
+	<div id="p2" data-dojo-type="dijit/Editor" data-dojo-props='plugins:[{name:"dijit/_editor/plugins/EnterKeyHandling", blockNodeForEnter:"P"}, "viewsource"]'>
+		<p>&nbsp;</p>
+		<p id="lineOne">this is a line of text.  It <b id="boldLine2">IS</b> intended to be split up by pressing enter.</p>
+		<p>&nbsp;</p>
+ 	</div>
+</body>
+</html>

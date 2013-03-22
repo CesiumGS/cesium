@@ -19,7 +19,7 @@ define([
         '../Renderer/TextureWrap',
         './GeographicTilingScheme',
         './Imagery',
-        './ImageryProviderError',
+        './TileProviderError',
         './ImageryState',
         './TileImagery',
         './TexturePool',
@@ -46,7 +46,7 @@ define([
         TextureWrap,
         GeographicTilingScheme,
         Imagery,
-        ImageryProviderError,
+        TileProviderError,
         ImageryState,
         TileImagery,
         TexturePool,
@@ -85,6 +85,21 @@ define([
      *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
      *                          current {@link FrameState}, this layer, and the x, y, and level coordinates of the
      *                          imagery tile for which the contrast is required, and it is expected to return
+     *                          the contrast value to use for the tile.  The function is executed for every
+     *                          frame and for every tile, so it must be fast.
+     * @param {Number|Function} [description.hue=0.0] The hue of this layer.  0.0 uses the unmodified imagery color.
+     *                          This can either be a simple number or a function with the signature
+     *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates
+     *                          of the imagery tile for which the hue is required, and it is expected to return
+     *                          the contrast value to use for the tile.  The function is executed for every
+     *                          frame and for every tile, so it must be fast.
+     * @param {Number|Function} [description.saturation=1.0] The saturation of this layer.  1.0 uses the unmodified imagery color.
+     *                          Less than 1.0 reduces the saturation while greater than 1.0 increases it.
+     *                          This can either be a simple number or a function with the signature
+     *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates
+     *                          of the imagery tile for which the saturation is required, and it is expected to return
      *                          the contrast value to use for the tile.  The function is executed for every
      *                          frame and for every tile, so it must be fast.
      * @param {Number|Function} [description.gamma=1.0] The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
@@ -130,7 +145,7 @@ define([
          *
          * @type {Number}
          */
-        this.brightness = defaultValue(description.brightness, defaultValue(imageryProvider.defaultBrightness, 1.0));
+        this.brightness = defaultValue(description.brightness, defaultValue(imageryProvider.defaultBrightness, ImageryLayer.DEFAULT_BRIGHTNESS));
 
         /**
          * The contrast of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
@@ -144,7 +159,32 @@ define([
          *
          * @type {Number}
          */
-        this.contrast = defaultValue(description.contrast, defaultValue(imageryProvider.defaultContrast, 1.0));
+        this.contrast = defaultValue(description.contrast, defaultValue(imageryProvider.defaultContrast, ImageryLayer.DEFAULT_CONTRAST));
+
+        /**
+         * The hue of this layer in radians. 0.0 uses the unmodified imagery color. This can either be a
+         * simple number or a function with the signature <code>function(frameState, layer, x, y, level)</code>.
+         * The function is passed the current {@link FrameState}, this layer, and the x, y, and level
+         * coordinates of the imagery tile for which the hue is required, and it is expected to return
+         * the hue value to use for the tile.  The function is executed for every
+         * frame and for every tile, so it must be fast.
+         *
+         * @type {Number}
+         */
+        this.hue = defaultValue(description.hue, defaultValue(imageryProvider.defaultHue, ImageryLayer.DEFAULT_HUE));
+
+        /**
+         * The saturation of this layer. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+         * saturation while greater than 1.0 increases it. This can either be a simple number or a function
+         * with the signature <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+         * imagery tile for which the saturation is required, and it is expected to return
+         * the saturation value to use for the tile.  The function is executed for every
+         * frame and for every tile, so it must be fast.
+         *
+         * @type {Number}
+         */
+        this.saturation = defaultValue(description.saturation, defaultValue(imageryProvider.defaultSaturation, ImageryLayer.DEFAULT_SATURATION));
 
         /**
          * The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
@@ -157,7 +197,7 @@ define([
          *
          * @type {Number}
          */
-        this.gamma = defaultValue(description.gamma, defaultValue(imageryProvider.defaultGamma, 1.0));
+        this.gamma = defaultValue(description.gamma, defaultValue(imageryProvider.defaultGamma, ImageryLayer.DEFAULT_GAMMA));
 
         /**
          * Determines if this layer is shown.
@@ -172,10 +212,6 @@ define([
         this._imageryCache = {};
         this._texturePool = new TexturePool();
 
-        this._spReproject = undefined;
-        this._vaReproject = undefined;
-        this._fbReproject = undefined;
-
         this._skeletonPlaceholder = new TileImagery(Imagery.createPlaceholder(this));
 
         // The value of the show property on the last update.
@@ -188,11 +224,38 @@ define([
         this._isBaseLayer = false;
 
         this._requestImageError = undefined;
-
-        this._nonMipmapSampler = undefined;
-        this._mipmapSampler = undefined;
-        this._reprojectSampler = undefined;
     };
+
+    /**
+     * This value is used as the default brightness for the imagery layer if one is not provided during construction
+     * or by the imagery provider. This value does not modify the brightness of the imagery.
+     * @type {number}
+     */
+    ImageryLayer.DEFAULT_BRIGHTNESS = 1.0;
+    /**
+     * This value is used as the default contrast for the imagery layer if one is not provided during construction
+     * or by the imagery provider. This value does not modify the contrast of the imagery.
+     * @type {number}
+     */
+    ImageryLayer.DEFAULT_CONTRAST = 1.0;
+    /**
+     * This value is used as the default hue for the imagery layer if one is not provided during construction
+     * or by the imagery provider. This value does not modify the hue of the imagery.
+     * @type {number}
+     */
+    ImageryLayer.DEFAULT_HUE = 0.0;
+    /**
+     * This value is used as the default saturation for the imagery layer if one is not provided during construction
+     * or by the imagery provider. This value does not modify the saturation of the imagery.
+     * @type {number}
+     */
+    ImageryLayer.DEFAULT_SATURATION = 1.0;
+    /**
+     * This value is used as the default gamma for the imagery layer if one is not provided during construction
+     * or by the imagery provider. This value does not modify the gamma of the imagery.
+     * @type {number}
+     */
+    ImageryLayer.DEFAULT_GAMMA = 1.0;
 
     /**
      * Gets the imagery provider for this layer.
@@ -499,7 +562,7 @@ define([
             imagery.image = image;
             imagery.state = ImageryState.RECEIVED;
 
-            ImageryProviderError.handleSuccess(that._requestImageError);
+            TileProviderError.handleSuccess(that._requestImageError);
         }
 
         function failure(e) {
@@ -508,7 +571,7 @@ define([
             imagery.state = ImageryState.FAILED;
 
             var message = 'Failed to obtain image tile X: ' + imagery.x + ' Y: ' + imagery.y + ' Level: ' + imagery.level + '.';
-            that._requestImageError = ImageryProviderError.handleError(
+            that._requestImageError = TileProviderError.handleError(
                     that._requestImageError,
                     imageryProvider,
                     imageryProvider.getErrorEvent(),
@@ -602,9 +665,10 @@ define([
 
         // Use mipmaps if this texture has power-of-two dimensions.
         if (CesiumMath.isPowerOfTwo(texture.getWidth()) && CesiumMath.isPowerOfTwo(texture.getHeight())) {
-            if (typeof this._mipmapSampler === 'undefined') {
+            var mipmapSampler = context.cache.imageryLayer_mipmapSampler;
+            if (typeof mipmapSampler === 'undefined') {
                 var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
-                this._mipmapSampler = context.createSampler({
+                mipmapSampler = context.cache.imageryLayer_mipmapSampler = context.createSampler({
                     wrapS : TextureWrap.CLAMP,
                     wrapT : TextureWrap.CLAMP,
                     minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
@@ -613,17 +677,18 @@ define([
                 });
             }
             texture.generateMipmap(MipmapHint.NICEST);
-            texture.setSampler(this._mipmapSampler);
+            texture.setSampler(mipmapSampler);
         } else {
-            if (typeof this._nonMipmapSampler === 'undefined') {
-                this._nonMipmapSampler = context.createSampler({
+            var nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler;
+            if (typeof nonMipmapSampler === 'undefined') {
+                nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler = context.createSampler({
                     wrapS : TextureWrap.CLAMP,
                     wrapT : TextureWrap.CLAMP,
                     minificationFilter : TextureMinificationFilter.LINEAR,
                     magnificationFilter : TextureMagnificationFilter.LINEAR
                 });
             }
-            texture.setSampler(this._nonMipmapSampler);
+            texture.setSampler(nonMipmapSampler);
         }
 
         imagery.state = ImageryState.READY;
@@ -674,7 +739,7 @@ define([
             return this.oneOverMercatorHeight;
         },
 
-        textureDimensions : new Cartesian2(0.0, 0.0),
+        textureDimensions : new Cartesian2(),
         texture : undefined,
         northLatitude : 0,
         southLatitude : 0,
@@ -686,9 +751,30 @@ define([
     var float32ArrayScratch = typeof Float32Array === 'undefined' ? undefined : new Float32Array(1);
 
     function reprojectToGeographic(imageryLayer, context, texture, extent) {
-        if (typeof imageryLayer._fbReproject === 'undefined') {
-            imageryLayer._fbReproject = context.createFramebuffer();
-            imageryLayer._fbReproject.destroyAttachments = false;
+        var reproject = context.cache.imageryLayer_reproject;
+
+        if (typeof reproject === 'undefined') {
+            reproject = context.cache.imageryLayer_reproject = {
+                    framebuffer : undefined,
+                    vertexArray : undefined,
+                    shaderProgram : undefined,
+                    renderState : undefined,
+                    sampler : undefined,
+                    destroy : function() {
+                        if (typeof this.framebuffer !== 'undefined') {
+                            this.frameBuffer.destroy();
+                        }
+                        if (typeof this.vertexArray !== 'undefined') {
+                            this.vertexArray.destroy();
+                        }
+                        if (typeof this.shaderProgram !== 'undefined') {
+                            this.shaderProgram.destroy();
+                        }
+                    }
+            };
+
+            reproject.framebuffer = context.createFramebuffer();
+            reproject.framebuffer.destroyAttachments = false;
 
             var reprojectMesh = {
                 attributes : {
@@ -704,23 +790,21 @@ define([
                 position : 0
             };
 
-            imageryLayer._vaReproject = context.createVertexArrayFromMesh({
+            reproject.vertexArray = context.createVertexArrayFromMesh({
                 mesh : reprojectMesh,
                 attributeIndices : reprojectAttribInds,
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
 
-            imageryLayer._spReproject = context.getShaderCache().getShaderProgram(
+            reproject.shaderProgram = context.getShaderCache().getShaderProgram(
                 ReprojectWebMercatorVS,
                 ReprojectWebMercatorFS,
                 reprojectAttribInds);
 
-            imageryLayer._rsColor = context.createRenderState();
-        }
+            reproject.renderState = context.createRenderState();
 
-        if (typeof imageryLayer._reprojectSampler === 'undefined') {
             var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
-            imageryLayer._reprojectSampler = context.createSampler({
+            reproject.sampler = context.createSampler({
                 wrapS : TextureWrap.CLAMP,
                 wrapT : TextureWrap.CLAMP,
                 minificationFilter : TextureMinificationFilter.LINEAR,
@@ -729,7 +813,7 @@ define([
             });
         }
 
-        texture.setSampler(imageryLayer._reprojectSampler);
+        texture.setSampler(reproject.sampler);
 
         var width = texture.getWidth();
         var height = texture.getHeight();
@@ -766,14 +850,14 @@ define([
         // understand exactly why this is.
         outputTexture.generateMipmap(MipmapHint.NICEST);
 
-        imageryLayer._fbReproject.setColorTexture(outputTexture);
+        reproject.framebuffer.setColorTexture(outputTexture);
 
         context.clear(context.createClearState({
-            framebuffer : imageryLayer._fbReproject,
+            framebuffer : reproject.framebuffer,
             color : new Color(0.0, 0.0, 0.0, 0.0)
         }));
 
-        var renderState = imageryLayer._rsColor;
+        var renderState = reproject.renderState;
         var viewport = renderState.viewport;
         if (typeof viewport === 'undefined') {
             viewport = new BoundingRectangle();
@@ -783,11 +867,11 @@ define([
         viewport.height = height;
 
         context.draw({
-            framebuffer : imageryLayer._fbReproject,
-            shaderProgram : imageryLayer._spReproject,
+            framebuffer : reproject.framebuffer,
+            shaderProgram : reproject.shaderProgram,
             renderState : renderState,
             primitiveType : PrimitiveType.TRIANGLE_FAN,
-            vertexArray : imageryLayer._vaReproject,
+            vertexArray : reproject.vertexArray,
             uniformMap : uniformMap
         });
 

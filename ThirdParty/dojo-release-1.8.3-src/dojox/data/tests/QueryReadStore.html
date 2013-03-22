@@ -1,0 +1,220 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/themes/tundra/tundra_rtl.css";
+	</style>
+
+	<title>Query read store</title>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+	<script type="text/javascript" src="../../../dojo/data/util/simpleFetch.js"></script>
+	<script type="text/javascript" src="../../../dojox/data/QueryReadStore.js"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.form.FilteringSelect");
+		dojo.require("dojox.data.QueryReadStore");
+
+		dojo.provide("ComboBoxReadStore");
+		dojo.declare("ComboBoxReadStore", dojox.data.QueryReadStore, {
+			fetch:function(request) {
+				// Copy the GET/POST parameters (request.query) we need into
+				// request.serverQuery. We actually want to have
+				// the query added to the URL like so:  /url.php?q=<searchString>
+				// The data in "queryOptions" are useless for our backend,
+				// we ignore them, they are not sent to the server.
+				// The combobox puts this into the request-parameter:
+				//      {
+				//          query: {name:<searchString>},
+				//          queryOptions: {ignoreCase:true, deep:true},
+				//          ...
+				//      }
+				// We generate request.serverQuery to be this, since those values will
+				// be sent to the server.
+				//      {
+				//          q:<searchString>}
+				//      }
+				// This results in a xhr request to the following URL (in case of GET):
+				//      /url.php?q=<searchString>
+
+				request.serverQuery = {q:request.query.name};
+				// If we wanted to send the queryOptions too, we could simply do:
+				//  request.serverQuery = {
+				//          q:request.query.name,
+				//          ignoreCase:request.queryOptions.ignoreCase,
+				//          deep:request.queryOptions.deep
+				//      };
+				// This would then result in this URL, for ignoreCase and deep
+				// assumed to be true:
+				//      /url.php?q=<searchString>&ignoreCase=true&deep=true
+				return this.inherited("fetch", arguments);
+			}
+		});
+
+		dojo.provide("ServerPagingReadStore");
+		dojo.declare("ServerPagingReadStore", dojox.data.QueryReadStore, {
+			fetch:function(request) {
+				request.serverQuery = {q:request.query.name, start:request.start, count:request.count};
+				return this.inherited("fetch", arguments);
+			}
+		});
+
+		var testStore = new dojox.data.QueryReadStore({url:'stores/QueryReadStore.php'});;
+		function doSearch() {
+			var queryOptions = {};
+			if (dojo.byId("ignoreCaseEnabled").checked) {
+				queryOptions.ignoreCase = dojo.query("#fetchForm")[0].ignoreCase[0].checked;
+			}
+			if (dojo.byId("deepEnabled").checked) {
+				queryOptions.deep = dojo.query("#fetchForm")[0].deep[0].checked;
+			}
+		    
+			var query = {};
+			query.q = dojo.byId("searchText").value;
+			var request = {query:query, queryOptions:queryOptions};
+			request.start = parseInt(dojo.query("#fetchForm")[0].pagingStart.value);
+			request.count = parseInt(dojo.query("#fetchForm")[0].pagingCount.value);
+
+			var requestMethod = "get";
+			var radioButtons = dojo.query("#fetchForm")[0].requestMethod;
+			for (var i=0; i<radioButtons.length; i++){
+				if (radioButtons[i].checked) {
+					requestMethod = radioButtons[i].value;
+				}
+			}
+			
+			testStore.requestMethod = requestMethod;
+			testStore.doClientPaging = dojo.query("#fetchForm")[0].doClientPaging.checked;
+			
+			if (!testStore.doClientPaging) {
+				// We have to fill the serverQuery, since we also want to send the
+				// paging data "start" and "count" along with what is in query.
+				request.serverQuery = {q:request.query.q, start:request.start, count:request.count};
+			}
+			
+			request.onComplete = function (items) {
+				var s = "number of items: "+items.length+"<br /><br />";
+				for (var i=0; i<items.length; i++) {
+					s += i+": name: '"+testStore.getValue(items[i], "name")+"'<br />";
+				}
+				//s += "<pre>"+dojo.toJson(items)+"</pre>";
+				dojo.byId("fetchOutput").innerHTML = s;
+			};
+
+			console.log(dojo.toJson(request));
+			testStore.fetch(request);
+		}
+	</script>
+
+	<style>
+	     fieldset {
+	         border:1px solid black;
+	         display:inline;
+	         padding:10px;
+	     }
+	     div.disabled {
+	         opacity:0.1;
+	     }
+	</style>
+</head>
+<body class="tundra" style="margin:20px;">
+	<div dojoType="ComboBoxReadStore" jsId="store" url="stores/QueryReadStore.php" requestMethod="get"></div>
+	This is a ComboBox: <input id="cb" dojoType="dijit.form.ComboBox" store="store" pageSize="5" />
+	<br /><br /><hr />
+
+	This is a FilteringSelect: <input id="fs" dojoType="dijit.form.FilteringSelect" store="store" pageSize="5" />
+	<br />
+	<form id="filteringSelectForm">
+		<input id="selectById" value="0" size="3" />
+		<input type="button" value="set by id" onclick="dijit.byId('fs').setValue(dojo.byId('selectById').value)" />
+	</form>
+	
+	<br /><br /><hr />
+
+	This ComboBox uses a customized QueryReadStore, it prepares the query-string for the URL that
+	way that the paging parameters "start" and "count" are also send.<br />
+	<div dojoType="ServerPagingReadStore" jsId="serverPagingStore" url="stores/QueryReadStore.php" requestMethod="get"></div>
+	<input dojoType="dijit.form.ComboBox" store="serverPagingStore" pageSize="5" />
+	<br />
+	<a href="javascript://" onclick="var d = dojo.byId('pagingCode'); d.style.display= d.style.display=='none'?'block':'none';">Click here to  see the code!</a>
+<div id="pagingCode" style="display:none;">
+	The HTML might look like this.
+	<pre>
+&lt;div dojoType="ServerPagingReadStore" jsId="serverPagingStore" url="stores/QueryReadStore.php" requestMethod="get"&gt;&lt;/div&gt;
+&lt;input dojoType="dijit.form.ComboBox" store="serverPagingStore" pageSize="10" /&gt;
+	</pre>
+	<pre>
+		dojo.require("dojox.data.QueryReadStore");
+		dojo.provide("ServerPagingReadStore");
+		dojo.declare("ServerPagingReadStore", dojox.data.QueryReadStore, {
+			fetch:function(request) {
+				request.serverQuery = {q:request.query.name, start:request.start, count:request.count};
+				return this.inherited("fetch", arguments);
+			}
+		});
+	</pre>
+</div>
+	<br /><br />
+	
+	<hr />
+	
+	<form id="fetchForm">
+		<fieldset title="requestMethod">
+		    <legend>requestMethod</legend>
+			get <input type="radio" value="get" checked="checked" name="requestMethod" />
+			post <input type="radio" value="post" name="requestMethod" />
+		</fieldset>
+		
+		<fieldset title="queryOptions">
+			<legend>queryOptions</legend>
+
+			<fieldset id="ignoreCaseFieldset">
+				<legend><input type="checkbox" id="ignoreCaseEnabled" /> ignoreCase</legend>
+				<div class="disabled">
+					true <input type="radio" value="0" checked="checked" name="ignoreCase" />
+					false <input type="radio" value="1" name="ignoreCase" />
+				</div>
+			</fieldset>
+			<fieldset id="deepFieldset">
+				<legend><input type="checkbox" id="deepEnabled" /> deep</legend>
+				<div class="disabled">
+					true <input type="radio" value="0" name="deep" />
+					false <input type="radio" value="1" name="deep" checked="checked" />
+				</div>
+			</fieldset>
+		</fieldset>
+		<fieldset title="paging">
+			<legend>paging</legend>
+			start: <input id="pagingStart" value="0" size="3" />
+			count: <input id="pagingCount" value="10" size="3"  />
+			<br /><br />
+			do client paging: <input id="doClientPaging" type="checkbox" checked="checked" />
+		</fieldset>
+		<script>
+		    var fieldsets = ["ignoreCaseFieldset", "deepFieldset"];
+		    for (var i=0; i<fieldsets.length; i++) {
+		        dojo.connect(dojo.byId(fieldsets[i]), "onchange", toggleFieldset);
+		    }
+		    function toggleFieldset(el) {
+		        var divs = dojo.query("div", el.target.parentNode.parentNode);
+		        if (divs.length) {
+					var div = divs[0];
+					if (el.target.checked) {
+						dojo.removeClass(div, "disabled");
+					} else {
+						dojo.addClass(div, "disabled");
+					}
+				}
+		    }
+		</script>
+		
+		<br /><br />
+		<input id="searchText" type="text" value="a">
+		<input id="searchButton" type="button" value="store.fetch()" onclick="doSearch()" />
+	</form>
+	<div id="fetchOutput" style="background-color:#FFDDDD; margin-top:1em; float:left;"></div>
+</body>
+</html>

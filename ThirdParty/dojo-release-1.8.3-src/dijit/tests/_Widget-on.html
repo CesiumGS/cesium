@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>_Widget on() test</title>
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "../themes/claro/claro.css";
+		@import "css/dijitTests.css";
+	</style>
+
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		data-dojo-config="isDebug: true"></script>
+	<script>
+		require([
+			"doh/runner",
+			"dojo/_base/declare", "dojo/has", "dojo/_base/lang", "dojo/on", "dojo/parser", "dojo/touch",
+			"dijit/registry", "dijit/_Widget", "dojo/domReady!"
+		], function(doh, declare, has, lang, on, parser, touch, registry, _Widget){
+
+			var mousedOver, clicked;
+
+			doh.register("on", [
+				function setup(){
+					declare("MyWidget", [_Widget], {
+						postCreate: function(){
+							on(this.domNode, "click", lang.hitch(this, "onFooBar"));
+						},
+						onFooBar: function(){
+							// This is called whenever the widget is clicked
+						},
+						foobar: function(){
+							// A widget.on("foobar") should go to onFooBar() (above), not here
+						}
+					});
+
+					parser.parse();
+				},
+
+				function connect(){
+					// This should work despite the fact that the function onMouseOver has
+					// multiple capital letters
+					registry.byId("myWidget").on("mouseover", function(){
+						mousedOver = true;
+						console.log("mouseover event");
+					});
+
+					// Likewise, this should work despite the fact that the function onFooBar has
+					// multiple capital letters
+					registry.byId("myWidget").on("foobar", function(){
+						clicked = true;
+						console.log("click event");
+					});
+				},
+
+				function test(){
+					var myWidget = registry.byId("myWidget");
+
+					// Test that _Widget.on() catches click event
+					doh.f(clicked, "clicked");
+					on.emit(myWidget.domNode, "click", {
+						bubbles: true,
+						cancelable: true,
+						which: 1
+					});
+					doh.t(clicked, "clicked");
+
+					// Test that _Widget.on() catches mouseover event
+					doh.f(mousedOver, "mousedOver");
+					on.emit(myWidget.domNode, "mouseover", {
+						bubbles: true,
+						cancelable: true,
+						which: 1
+					});
+					doh.t(mousedOver, "mousedOver");
+				},
+
+				function synthetic(){
+					// Test that on() works for synthetic events
+
+					var myWidget = registry.byId("myWidget"),
+						touched;
+
+					myWidget.on(dojo.touch.press, function(){
+						touched = true;
+					});
+
+					on.emit(myWidget.domNode, has("touch") ? "touchstart" : "mousedown", {
+						bubbles: true,
+						cancelable: true,
+						which: 1
+					});
+
+					doh.t(touched, "touched");
+				},
+
+				function syntheticNoCallbackArgs(){
+					var evt = null;
+					var MyWidget = declare(_Widget, {
+						show: function(){
+							return this.emit('show');
+						},
+						onshow: function(e){
+							evt = e;
+						}
+					});
+					new MyWidget({}).show();
+					doh.isNot(null, evt, "onshow was called with event object");
+				}
+			]);
+
+			doh.run();
+		});
+
+	</script>
+</head>
+<body class="claro">
+	<div id="myWidget" data-dojo-type="MyWidget">
+		mouseover and click events to console
+	</div>
+</body>
+</html>

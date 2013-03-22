@@ -1,0 +1,27 @@
+<div class="view mblView">
+    <h1 dojoType="dojox.mobile.Heading">The App shows how to use different types of Stores and Models</h1>
+    <h2 dojoType="dojox.mobile.RoundRectCategory">The App Shows how to use different types of Stores and Models</h2>
+    <ul dojoType="dojox.mobile.RoundRectList">
+        <li dojoType="dojox.mobile.ListItem" clickable="true" transitionOptions="{title:'simple',target:'simple',url:'#simple'}">
+            simple - Using an mvcModel (dojox/mvc/ModelRefController) with json data, no store.
+        </li>
+        <li dojoType="dojox.mobile.ListItem" clickable="true" transitionOptions="{title:'simple2',target:'simple2',url:'#simple2'}">
+            simple2 - Using an mvcModel (dojox/mvc/EditModelRefController) with json data, no store.
+        </li>
+        <li dojoType="dojox.mobile.ListItem" clickable="true" transitionOptions="{title:'simple',target:'simple3',url:'#simple3'}">
+            simple 3 - Using simple JSON Model with data from a dojo.store.Memory
+        </li>
+        <li dojoType="dojox.mobile.ListItem" clickable="true" transitionOptions="{title:'repeat',target:'repeat',url:'#repeat'}">
+            repeat - Using an mvcModel (dojox/mvc/EditStoreRefListController) with a dojo.store.JsonRest. 
+        </li>
+        <li dojoType="dojox.mobile.ListItem" clickable="true" transitionOptions="{title:'repeat2',target:'repeat2',url:'#repeat2'}">
+            repeat2 - Using an mvcModel (dojox/mvc/EditStoreRefListController) with an ItemFileWriteStore which gets wrapped in DataStore, with a query. 
+        </li>
+        <li dojoType="dojox.mobile.ListItem" clickable="true" transitionOptions="{title:'repeat2',target:'repeat3',url:'#repeat3'}">
+            repeat3 - Using an mvcModel (dojox/mvc/EditStoreRefListController) with an ItemFileWriteStore which gets wrapped in DataStore, no query. 
+        </li>
+        <li dojoType="dojox.mobile.ListItem" clickable="true" transitionOptions="{title:'generate',target:'generate',url:'#generate'}">
+            generate - Simple Form Generate
+        </li>
+    </ul>
+</div>

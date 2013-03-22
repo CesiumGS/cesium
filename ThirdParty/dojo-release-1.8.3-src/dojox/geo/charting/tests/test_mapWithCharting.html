@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Chart: Map&Chart</title>
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+			@import "../../../../dijit/themes/tundra/tundra.css";
+			@import "../resources/Map.css";
+			.mapContainer {
+				display: none;
+				width: 810px;
+				height: 400px;
+				border: solid 1px;
+			}
+			
+			.mapVerticalContainer {
+				display: none;
+				width: 405px;
+				height: 500px;
+				border: solid 1px;
+			}
+		</style>
+		<script type="text/javascript" djConfig="parseOnLoad:true,isDebug:true,gfxRenderer:'svg,canvas,vml,silverlight'" src="../../../../dojo/dojo.js"></script>
+		<script type="text/javascript">
+				var isTouchDevice = dojo.isIos || (navigator.userAgent.toLowerCase().indexOf("android") > -1)
+				|| (navigator.userAgent.toLowerCase().indexOf("blackberry") > -1);
+		</script>
+		<script type="text/javascript">
+			dojo.require("dojox.geo.charting.Map");
+			dojo.require("dojox.charting.Chart");
+			dojo.require("dojox.charting.axis2d.Default");
+      		dojo.require("dojox.charting.plot2d.ClusteredBars");
+			dojo.require("dojox.charting.plot2d.Grid");
+			dojo.require("dojo.data.ItemFileReadStore");
+			dojo.requireIf(isTouchDevice,"dojox.geo.charting.TouchInteractionSupport");
+			dojo.requireIf(!isTouchDevice,"dojox.geo.charting.MouseInteractionSupport");
+			dojo.require("dojox.geo.charting.KeyboardInteractionSupport");
+			dojo.require("dojox.charting.themes.PlotKit.blue");
+			var chartStore = new dojo.data.ItemFileReadStore({
+				url: "datastore/dataStore.json"
+			});
+			var chart,series,productList;
+			dojo.addOnLoad(function(){
+				productSeries = [0,0,0,0,0,0];
+            	productList = ["product A", "product B","product C","product D","product E","product F"];
+			
+				chart = (new dojox.charting.Chart("chartDiv")).
+						addAxis("x", {
+							fixLower: "major",
+							fixUpper: "major",
+							minorTicks: false,
+							includeZero: true,
+							min:0,
+							max: 8,
+							labelFunc: function(value) {
+								return "$" + value + "M";
+							}
+						}).
+						addAxis("y", {vertical: true, fixLower: "minor", fixUpper: "minor", natural: true,labels: [
+								{ value: 1, text: productList[0] },
+								{ value: 2, text: productList[1] },
+								{ value: 3, text: productList[2] },
+								{ value: 4, text: productList[3] },
+								{ value: 5, text: productList[4] },
+								{ value: 6, text: productList[5] }
+							]}).
+						addPlot("default", { type: "ClusteredBars", gap: 5, animate:{duration: 1000}}).
+						addSeries("productSeries", productSeries, { stroke: { color: "gray" }, fill: "gray" }).
+						render();
+				var map = new dojox.geo.charting.Map("map", "../resources/data/USStates.json");
+				map.setMarkerData("../resources/markers/USStates.json");
+				// install mouse/touch navigation
+				if (!isTouchDevice) {
+					var mouseInteraction = new dojox.geo.charting.MouseInteractionSupport(map,{enablePan:true,enableZoom:true});
+					mouseInteraction.connect();
+				} else {
+					var touchInteraction = new dojox.geo.charting.TouchInteractionSupport(map,{});
+					touchInteraction.connect();
+				}
+				var keyboardInteraction = new dojox.geo.charting.KeyboardInteractionSupport(map, {enableZoom: true});
+				keyboardInteraction.connect();
+			
+				map.onFeatureClick = function(feature){
+					
+					if (!feature) {
+						productSeries = [0,0,0,0,0,0];
+						chart.updateSeries("productSeries",productSeries);
+						chart.render();
+					} else if (!feature.isSelected) {
+						chartStore.fetchItemByIdentity({
+			            	identity: feature.id,
+			            	onItem: function(item){
+				                for (var i = productList.length - 1; i >= 0; i--){
+									productSeries[i] = chartStore.getValue(item, productList[i]);
+								};
+								chart.updateSeries("productSeries",productSeries);
+								chart.render();
+			            	}
+			        	});
+					}
+				};
+			});
+		</script>
+	</head>
+	<body class="tundra">
+		<h1>Map connect with DataChart(Click on map)</h1>
+		<p>Keyboard Tips: Use <b>TAB</b> to focus the map, then use <b>up/down/left/right</b> to go around the map, zoom in by <b>SPACE</b> and zoom out by <b>ESC</b>.</p>
+		<div style="width:610px;height:400px;border:solid 1px;background:#f5f5f5;" id="map">
+		</div>
+		<div id="chartDiv" style="width: 400px; height: 150px;">
+		</div>
+	</body>
+</html>

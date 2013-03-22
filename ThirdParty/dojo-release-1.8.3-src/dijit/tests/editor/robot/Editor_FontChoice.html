@@ -1,0 +1,551 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Editor FontChoice Plugin Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.DeferredList");
+			dojo.require("dojo.window");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_FontChoice.html');
+
+				var editor;		// points to one of the editors (editor0, editor1, etc.)
+				var fcPlugin;	// formatBlock, fontSize, or fontName plugin
+				var value;		// HTML value of editor
+
+				function getPlugin(/*String*/ command){
+					var editor = dijit.byId("editor0");
+					var edPlugins = editor._plugins, i;
+					for(i = 0; i < edPlugins.length; i++){
+						var p = edPlugins[i];
+						if(p.declaredClass === "dijit._editor.plugins.FontChoice" && p.command == command){
+							return p;
+						}
+					}
+					throw new Error("didn't find plugin " + command);
+				}
+
+				
+				doh.register("init", {
+					name: "wait for editors to load",
+					timeout: 5000,
+					runTest: function(){
+					    return new dojo.DeferredList(
+					        dijit.registry.filter(function(w){ return w.onLoadDeferred; }).map(function(w){ return w.onLoadDeferred; })
+					    );
+					}
+				});
+
+				// Verify that the formatBlock, fontSize, and fontName
+				// plugins correctly display the format / font-size / font-name of the selected text.
+
+				doh.register("FontChoice: verify current format/font-size/font-name",
+					dojo.map(
+						[
+							{id: "para0", format: "p"},
+							{id: "pre0", format: "pre"},
+							{id: "h10", format: "h1"},
+							{id: "h20", format: "h2"},
+							{id: "h30", format: "h3"},
+							{id: "sizedText1", size: "1"},
+							{id: "sizedText4", size: "4"},
+							{id: "sizedText7", size: "7"},
+							{id: "comicText", name: "Comic Sans MS"}
+						],
+						function(params){
+							return {
+								name: [
+										"Verify",
+										params.format ? "format " + params.format.toUpperCase() : "",
+										params.size ? "font size " + params.size : "",
+										params.name ? "font name " + params.name : "",
+										"Identified"
+									].join(" ").replace(/ +/g, " "),
+								timeout: 20000,
+								setUp: function(){
+									editor = dijit.byId("editor0");
+									value = editor.get("value");
+								},
+								runTest: function(){
+									var d = new doh.Deferred();
+		
+									// Focus on the editor window
+									dojo.window.scrollIntoView(editor.domNode);
+									editor.focus();
+									doh.robot.mouseMoveAt(editor.iframe, 1000);
+									doh.robot.mouseClick({left:true}, 1000);
+	
+									doh.robot.sequence(d.getTestErrback(function(){
+										// Find node w/specified id
+										var node = dojo.byId(params.id, editor.document);
+										doh.is(params.id, node && node.id, "found " + params.id);
+
+										// Select the text, collapse to the start of it
+										// Using "dojo.global.dojo" to access the inner dojo, in test_FontChoice.html
+										// (not the one in this file), since that's the one that dijit is referencing.
+										dojo.global.dojo.withGlobal(editor.window, function(){
+											dijit._editor.selection.selectElementChildren(node);
+											dijit._editor.selection.collapse(true);
+										});
+									}),1000);
+					                doh.robot.sequence(d.getTestErrback(function(){
+										// Make sure states update.
+										editor.onDisplayChanged();
+									}), 1000);
+									doh.robot.sequence(d.getTestCallback(function(){
+										if(params.format){
+											doh.is(params.format, getPlugin("formatBlock").button.get("value"), "format " + params.format + " identified.");
+										}
+										if(params.size){
+											doh.is(params.size, getPlugin("fontSize").button.get("value"), "font size " + params.size + " identified.");
+										}
+										if(params.name){
+											doh.is(params.name, getPlugin("fontName").button.get("value"), "font name" + params.name + " identified.");
+										}
+									}), 2000);
+
+									return d;
+								},
+								tearDown: function(){
+									if(editor){editor.set("value", value);}
+								}
+							};	// end of return { ...
+						}	// end of function()
+					)	// end of dojo.map()
+				);	// end of dojo.register()
+
+				// Test changing format/font-size/font-name (ex: changing an <h1> to an <h2>)
+				doh.register("FontChoice: change format/font-size/font",
+					dojo.map(
+						[
+							{id: "text", type: "formatBlock", from: "p", to: "pre"},
+							{id: "text", type: "formatBlock", from: "pre", to: "h1"},
+							{id: "text", type: "formatBlock", from: "h1", to: "h2"},
+							{id: "text", type: "formatBlock", from: "h2", to: "h3"},
+							{id: "sizedText7", type: "fontSize", from: "7", to: "3"},
+							{id: "comicText", type: "fontName", from: "Comic Sans MS", to: "Times New Roman"}
+						],
+						function(params){
+							return {
+								name: "formatBlock: Verify can change " + params.type + " " +
+									params.from.toUpperCase() + " to " + params.to.toUpperCase(),
+								timeout: 20000,
+								setUp: function(){
+									fcPlugin = getPlugin(params.type);
+									value = editor.get("value");
+								},
+								runTest: function(){
+									var d = new doh.Deferred();
+
+									// Focus on the editor window
+									dojo.window.scrollIntoView(editor.domNode);
+									editor.focus();
+									doh.robot.mouseMoveAt(editor.iframe, 1000);
+									doh.robot.mouseClick({left:true}, 1000);
+	
+									doh.robot.sequence(d.getTestErrback(function(){
+										// Find node
+										var p = dojo.byId(params.id, editor.document);
+										doh.is(params.id, p && p.id, "found node");
+	
+										dojo.global.dojo.withGlobal(editor.window, function(){
+											// Select the text, collapse to the start of it
+											dijit._editor.selection.selectElementChildren(p);
+											// Disable collapse.  Webkit changed behavior so it now requires
+											// a selection.
+											if(!dojo.isWebKit){ dijit._editor.selection.collapse(true) }
+
+											// Set the format / font-size / font-name plugin to the new value
+											// TODO: use mouse/keyboard to set the value
+											fcPlugin.button.set("value", params.to);
+										});
+									}),1000);
+					                doh.robot.sequence(d.getTestErrback(function(){
+										// Make sure states update.
+										editor.onDisplayChanged();
+									}), 1000);
+									doh.robot.sequence(d.getTestCallback(function(){
+										doh.is(params.to, fcPlugin.button.get("value"), "verify converted");
+
+										// TODO: check that it actually changed the format / font-size / font-name (in the editor contents)
+									}), 2000);
+
+									return d;
+								},
+								tearDown: function(){
+									if(editor){editor.set("value", value);}
+								}
+							};	// end of return { ...
+						}	// end of function()
+					)	// end of dojo.map()
+				);	// end of dojo.register()
+
+				doh.register("formatBlock: multiple changes",
+					{
+						name: "formatBlock: Verify changing multiple nodes to h3",
+						timeout: 20000,
+						setUp: function(){
+							editor = dijit.byId("editor0");
+							fcPlugin = getPlugin("formatBlock");
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							dojo.window.scrollIntoView(editor.domNode);
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000);
+							doh.robot.mouseClick({left:true}, 1000);
+
+							// Verify the formatBlock plugin was found
+							doh.t(fcPlugin !== null, "formatBlock was found");
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								var p = dojo.byId("text", editor.document);
+								doh.is("text", p && p.id, "found text");
+
+								dojo.global.dojo.withGlobal(editor.window, function(){
+									// Select the text, collapse to the start of it
+									dijit._editor.selection.selectElementChildren(p);
+									dijit._editor.selection.collapse(true);
+
+									// Set the format / font-size / font-name plugin to the new value
+									// TODO: use mouse/keyboard to set the value
+									fcPlugin.button.set("value", "h3");
+								});
+							}),1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								// Make sure states update.
+								editor.onDisplayChanged();
+							}), 1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.is("h3", fcPlugin.button.get("value"), "Verify first P converted to H3.");
+								// TODO: check that it actually changed the format (in the editor contents)
+							}), 2000);
+
+							// Move to the next block and try to change it to h3 too.
+							doh.robot.sequence(d.getTestErrback(function(){
+								var p = dojo.byId("text1", editor.document);
+								doh.is("text1", p && p.id, "found text1");
+
+								dojo.global.dojo.withGlobal(editor.window, function(){
+									// Select the text, collapse to the start of it
+									dijit._editor.selection.selectElementChildren(p);
+									dijit._editor.selection.collapse(true);
+
+									// Set the format / font-size / font-name plugin to the new value
+									// TODO: use mouse/keyboard to set the value
+									fcPlugin.button.set("value", "h3");
+								});
+							}),1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								// Make sure states update.
+								editor.onDisplayChanged();
+							}), 1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								// state should have updated, so, now set value.
+								// TODO: use mouse/keyboard to set the value
+								fcPlugin.button.set("value", "h3");
+							}),1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								// Make sure states update.
+								editor.onDisplayChanged();
+							}), 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("h3", fcPlugin.button.get("value"), "Verify second P converted to H3.");
+								// TODO: check that it actually changed the format (in the editor contents)
+							}), 2000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					}
+				);
+
+				doh.register("FontChoice: Format Removal Tests", [
+					{
+						name: "formatBlock: Verify single level format is removed (inside format block).",
+						timeout: 20000,
+						setUp: function(){
+							editor = dijit.byId("editor0");
+							fcPlugin = getPlugin("formatBlock");
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							dojo.window.scrollIntoView(editor.domNode);
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000);
+							doh.robot.mouseClick({left:true}, 1000);
+
+							// Verify the formatBlock plugin was found
+							doh.t(fcPlugin !== null, "formatBlock was found");
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								var p = dojo.byId("text", editor.document);
+								doh.is("text", p && p.id, "found text");
+								dojo.global.dojo.withGlobal(editor.window, function(){
+									// Select the text, collapse to the start of it
+									dijit._editor.selection.selectElementChildren(p);
+									dijit._editor.selection.collapse(true);
+								});
+							}),1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								// Make sure states update.
+								editor.onDisplayChanged();
+							}), 1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								fcPlugin.button.set("value", "noFormat");
+							}), 1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								// Make sure states update.
+								// If change occurred, then the value should 
+								// still be noFormat.
+								editor.onDisplayChanged();
+							}), 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+                                doh.is("noFormat", fcPlugin.button.get("value"), 
+									"Validating current cursor point format is noFormat");
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "formatBlock: Verify multiple format removal via selection",
+						timeout: 20000,
+						setUp: function(){
+							editor = dijit.byId("editor0");
+							fcPlugin = getPlugin("formatBlock");
+							value = editor.get("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							dojo.window.scrollIntoView(editor.domNode);
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000);
+							doh.robot.mouseClick({left:true}, 1000);
+
+							// Verify the formatBlock plugin was found
+							doh.t(fcPlugin !== null, "formatBlock was found");
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								var p = dojo.byId("text", editor.document);
+								doh.is("text", p && p.id, "found text");
+								dojo.global.dojo.withGlobal(editor.window, function(){
+									// Select the text, collapse to the start of it
+									dijit._editor.selection.selectElementChildren(p);
+									dijit._editor.selection.collapse(true);
+								});
+							}),1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								// Make sure states update.
+								editor.onDisplayChanged();
+							}), 1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								// Select the children of the block and try to flatten the formatting.
+								var selection = dojo.byId("selectionContainer", editor.document);
+								dojo.global.dojo.withGlobal(editor.window, function(){
+									dojo.window.scrollIntoView(selection);
+									dijit._editor.selection.selectElementChildren(selection);
+								});
+								fcPlugin.button.set("value", "noFormat");
+							}), 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Now check that the elements are all gone.
+								var selection = dojo.byId("selectionContainer", editor.document);
+								doh.t(selection.childNodes.length > 0, "Checking that there are still child nodes.");
+
+								var i;
+								var nodes = selection.childNodes;
+								for(i = 0; i < nodes.length; i++){
+									var n = nodes[i];
+									if(n.nodeType == 1){
+										var tag = n.nodeName? n.nodeName.toLowerCase() : "";
+										doh.t(tag != "p");
+										doh.t(tag != "h3");
+										doh.t(tag != "pre");
+									}
+								}
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					}
+				]);
+
+				doh.register("FontChoice: miscellaneous tests", [
+					{
+						name: "FontChoice: Plain Text labels",
+						timeout: 20000,
+						setUp: function(){
+							editor = dijit.byId("editor1");
+							fcPlugin = [];
+							var edPlugins = editor._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.FontChoice"){
+									fcPlugin.push(p);
+								}
+							}
+							value = editor.get("value");
+						},
+						runTest: function(){
+							// summary:
+							//		This test goes through all the registered FontChoice plugins
+							//		and verifies that they're all using plain text labels in the dropdown.
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							dojo.window.scrollIntoView(editor.domNode);
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000);
+							doh.robot.mouseClick({left:true}, 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								for(var i = 0; i < fcPlugin.length; i++){
+									var p = fcPlugin[i];
+									var store = p.button.select.store;
+									var items = store.query();
+									for(var j = 0; j < items.length; j++){
+										var item = items[j];
+										doh.f(item.name.indexOf("<") === 0, "failed on: " + item.name);
+									}
+								}
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "FontChoice: Validate usage of generic names",
+						timeout: 20000,
+						setUp: function(){
+							editor = dijit.byId("generic");
+							fcPlugin = null;
+							var edPlugins = editor._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.FontChoice" && p.command === "fontName" && p.generic){
+									fcPlugin = p;
+								}
+							}
+							value = editor.get("value");
+						},
+						runTest: function(){
+							// summary:
+							//		This test goes through the font choice plugin registered as generic font names and validates
+							//		the font names in the values are the generic map.
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							dojo.window.scrollIntoView(editor.domNode);
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000);
+							doh.robot.mouseClick({left:true}, 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								var map = {
+									"sans-serif": false,
+									"serif": false,
+									"cursive": false,
+									"monospace": false,
+									"fantasy": false
+								};
+								var store = fcPlugin.button.select.store;
+								var items = store.query();
+								for(var j = 0; j < items.length; j++){
+									var item = items[j];
+									map[item.value] = true;
+								}
+								for(j in map){
+									doh.t(map[j], j);
+								}
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					},
+					{
+						name: "FontChoice: Validate custom font names",
+						timeout: 20000,
+						setUp: function(){
+							editor = dijit.byId("custom");
+							fcPlugin = null;
+							var edPlugins = editor._plugins, i;
+							for(i = 0; i < edPlugins.length; i++){
+								var p = edPlugins[i];
+								if(p.declaredClass === "dijit._editor.plugins.FontChoice" && p.command === "fontName" && p.custom){
+									fcPlugin = p;
+								}
+							}
+							value = editor.get("value");
+						},
+						runTest: function(){
+							// summary:
+							//		This test goes through the font choice plugin registered as custom font names and validates
+							//		the font names in the values are the provided names.
+							var d = new doh.Deferred();
+
+							// Focus on the editor window
+							dojo.window.scrollIntoView(editor.domNode);
+							editor.focus();
+							doh.robot.mouseMoveAt(editor.iframe, 1000);
+							doh.robot.mouseClick({left:true}, 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								var map = {
+									"Verdana": false,
+									"Myriad": false,
+									"Garamond": false
+								};
+								var store = fcPlugin.button.select.store;
+								var items = store.query();
+								for(var j = 0; j < items.length; j++){
+									var item = items[j];
+									map[item.value] = true;
+								}
+								for(j in map){
+									doh.t(map[j], j);
+								}
+							}), 1000);
+
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.set("value", value);}
+						}
+					}
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

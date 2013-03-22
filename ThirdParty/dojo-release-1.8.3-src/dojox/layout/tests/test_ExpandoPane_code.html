@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+	<title>dojox.layout.ExpandoPane</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+	<!-- test file style rollup, you need resources/ExpandoPane.css exclusively -->
+	<link rel="stylesheet" href="_expando.css">	
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dojox.layout.ExpandoPane");
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.layout.BorderContainer");
+		
+		var _clearPane = function(){
+			var ch = dijit.byId("bc").getChildren();
+			dojo.forEach(["pane0","pane1","pane2","pane3"],function(p){
+
+				dojo.byId("hidden").appendChild(dojo.byId(p));
+				var dij = dijit.getEnclosingWidget(p.parentNode);
+				if(dij){
+					console.log(dij);
+					dijit.byId("bc").removeChild(dij);
+					dij.destroy();
+				}
+
+			});
+		};
+
+	</script>
+	<style type="text/css">
+		#hidden {
+			position:absolute;
+			top:-999px;
+			left:-999px;
+			overflow:hidden;
+			width:500px;
+			height:500px;
+			visibility:hidden;
+		}
+		#pane0, #pane1, #pane2, #pane3 {
+			width:100%;
+			height:100%;
+		}
+		#pane1 { background:red; }
+		#pane2 { background:green; }
+		#pane3 { background:blue; }
+		#pane0 { background:yellow; }
+	</style>
+</head>
+<body class="tundra" role="main">
+		<div id="bc" style="width:100%; height:100%;" dojoType="dijit.layout.BorderContainer">
+			<div region="center" style="height:65px; border-bottom:1px solid #666">
+				<button data-dojo-type="dijit.form.Button" type="button" region="top">
+					Set 3-pane
+					<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="evt">
+						_clearPane();
+						var bc = dijit.byId("bc");
+						
+					//	var cp = new dijit.layout.ContentPane({
+						var cp = new dojox.layout.ExpandoPane({
+							region:"left",
+							duration:125,
+							style:"width:125px; height:100%",
+							splitter:true
+						});
+						cp.domNode.appendChild(dojo.byId("pane1"));
+						cp.startup();
+						bc.addChild(cp);
+						
+						var cp2 = new dijit.layout.ContentPane({
+							region:"right",
+							style:"width:125px; height:100%",
+							splitter:true
+						});
+						cp2.domNode.appendChild(dojo.byId("pane2"));
+						cp2.startup();
+						bc.addChild(cp2);
+						
+						var cp3 = new dijit.layout.ContentPane({
+							region:"center"
+							
+						});
+						cp3.domNode.appendChild(dojo.byId("pane0"));
+						cp3.startup();
+						bc.addChild(cp3);
+						
+						bc.layout();
+					</script>
+				</button>
+			</div>
+			
+		</div>
+		<div id="hidden">
+			<div id="pane0">pane 0 content</div>
+			<div id="pane1">pane 1 content</div>
+			<div id="pane2">pane 2 content</div>
+			<div id="pane3">pane 3 content</div>
+		</div>
+</body>
+</html>

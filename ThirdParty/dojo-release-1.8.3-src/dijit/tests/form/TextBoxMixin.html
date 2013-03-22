@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>_TextBoxMixin tests</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../../themes/dijit.css";
+
+		#table {
+			margin: 0;
+			padding: 2px;
+		}
+		#table, INPUT {
+			font-family: monospace;
+			font-size: 12pt;
+		}
+		#table .layout {
+			padding: 2px;
+			font-size: 100%;
+			margin: 0;
+		}
+	</style>
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.form.TextBox");
+		dojo.require("dojox.mobile.TextBox");
+
+		dojo.ready(function(){
+
+			doh.register("DOM attributes", [
+				{
+					name: "dijit",
+					runTest: function(){
+						var dijit_DOMattr = dijit.byId('dijit_DOMattr');
+						doh.is("original", dijit_DOMattr.get('placeHolder'), "dijit original get('placeHolder')");
+						dijit_DOMattr.set('placeHolder', "place holder");
+						doh.is("", dijit_DOMattr.textbox.value, "dijit original value");
+						doh.is("", dijit_DOMattr.get('value'), "dijit original get('value')");
+						doh.is("place holder", dijit_DOMattr.get('placeHolder'), "dijit get('placeHolder')");
+						doh.is("20", dijit_DOMattr.textbox.getAttribute("maxlength"), "dijit original maxLength");
+						doh.is("20", dijit_DOMattr.get('maxLength'), "dijit original get('maxLength')");
+						dijit_DOMattr.set('maxLength', "9");
+						doh.is("", dijit_DOMattr.textbox.value, "dijit value");
+						doh.is("", dijit_DOMattr.get('value'), "dijit get('value')");
+						doh.is("9", dijit_DOMattr.textbox.getAttribute("maxlength"), "dijit maxLength");
+						doh.is("9", dijit_DOMattr.get('maxLength'), "dijit get('maxLength')");
+					}
+	 			},
+				{
+					name: "mobile",
+					runTest: function(){
+						var mobile_DOMattr = dijit.byId('mobile_DOMattr');
+						doh.is("original", mobile_DOMattr.textbox.getAttribute("placeholder"), "mobile original placeholder");
+						doh.is("original", mobile_DOMattr.get('placeHolder'), "mobile original get('placeHolder')");
+						mobile_DOMattr.set('placeHolder', "place holder");
+						doh.is("", mobile_DOMattr.textbox.value, "mobile original value");
+						doh.is("", mobile_DOMattr.get('value'), "mobile original get('value')");
+						doh.is("place holder", mobile_DOMattr.textbox.getAttribute("placeholder"), "mobile placeholder");
+						doh.is("place holder", mobile_DOMattr.get('placeHolder'), "mobile get('placeHolder')");
+						doh.is("20", mobile_DOMattr.textbox.getAttribute("maxlength"), "mobile original maxLength");
+						doh.is("20", mobile_DOMattr.get('maxLength'), "mobile original get('maxLength')");
+						mobile_DOMattr.set('maxLength', "9");
+						doh.is("", mobile_DOMattr.textbox.value, "mobile value");
+						doh.is("", mobile_DOMattr.get('value'), "mobile get('value')");
+						doh.is("9", mobile_DOMattr.textbox.getAttribute("maxlength"), "mobile maxLength");
+						doh.is("9", mobile_DOMattr.get('maxLength'), "mobile get('maxLength')");
+					}
+	 			}
+			]);
+
+			doh.register("widget attributes", [
+				{
+					name: "dijit",
+					runTest: function(){
+						var dijit_WidgetAttr = dijit.byId('dijit_WidgetAttr');
+						doh.is(false, dijit_WidgetAttr.get('propercase'), "dijit original get('propercase')");
+						dijit_WidgetAttr.set('propercase', true);
+						doh.is(true, dijit_WidgetAttr.get('propercase'), "dijit get('propercase')");
+						dijit_WidgetAttr.set('displayedValue', "proper cased");
+						dijit_WidgetAttr._onBlur();
+						doh.is("Proper Cased", dijit_WidgetAttr.textbox.value, "dijit value");
+						doh.is("Proper Cased", dijit_WidgetAttr.get('value'), "dijit get('value')");
+					}
+	 			},
+				{
+					name: "mobile",
+					runTest: function(){
+						var mobile_WidgetAttr = dijit.byId('mobile_WidgetAttr');
+						doh.is(false, mobile_WidgetAttr.get('propercase'), "mobile original get('propercase')");
+						mobile_WidgetAttr.set('propercase', true);
+						doh.is(true, mobile_WidgetAttr.get('propercase'), "get('propercase')");
+						mobile_WidgetAttr.set('displayedValue', "proper cased");
+						mobile_WidgetAttr._onBlur();
+						doh.is("Proper Cased", mobile_WidgetAttr.textbox.value, "mobile value");
+						doh.is("Proper Cased", mobile_WidgetAttr.get('value'), "mobile get('value')");
+					}
+	 			}
+			]);
+
+			doh.register("events", [
+				{
+					name: "dijit",
+					timeout: 2000,
+					runTest: function(){
+						var
+							d = new doh.Deferred(),
+							dijit_events = dijit.byId('dijit_events'),
+							nop = function(){ return false; };
+
+						function onFocus(){
+							dijit_events.set('onFocus', nop);
+							dijit_events.textbox.value = "Focus";
+							dijit_events.set('onBlur', onBlur);
+							dijit.byId('mobile_events').focus();
+						}
+						function onBlur(){
+							dijit_events.set('onChange', onChange);
+							dijit_events.set('onBlur', nop);
+							dijit_events.textbox.value = "Blur";
+						}
+						function onChange(){
+							dijit_events.set('onChange', nop);
+							dijit_events.textbox.value = "Change";
+							dijit_events.focus();
+							d.callback(true);
+						}
+						doh.is(nop.toString(), dijit_events.get('onFocus').toString(), "get('onFocus')");
+						doh.is(nop.toString(), dijit_events.get('onBlur').toString(), "get('onBlur')");
+						doh.is(nop.toString(), dijit_events.get('onChange').toString(), "get('onChange')");
+						dijit_events.set('onFocus', onFocus);
+						setTimeout(dojo.hitch(dijit_events, "focus"), 0);
+
+						return d;
+					}
+	 			},
+				{
+					name: "mobile",
+					timeout: 2000,
+					runTest: function(){
+						var
+							d = new doh.Deferred(),
+							mobile_events = dijit.byId('mobile_events'),
+							focusHandle, blurhandle,
+							nop = function(){ return false; };
+
+						function onFocus(){
+							mobile_events.disconnect(focusHandle);
+							mobile_events.textbox.value = "Focus";
+							blurhandle = mobile_events.connect(mobile_events, '_onBlur', onBlur);
+							dijit.byId('dijit_events').focus();
+						}
+						function onBlur(){
+							mobile_events.set('onChange', onChange);
+							mobile_events.disconnect(blurhandle);
+							mobile_events.textbox.value = "Blur";
+						}
+						function onChange(){
+							mobile_events.set('onChange', nop);
+							mobile_events.textbox.value = "Change";
+							mobile_events.focus();
+							d.callback(true);
+						}
+						doh.is(nop.toString(), mobile_events.get('onChange').toString(), "get('onChange')");
+						mobile_events.textbox.value = "changing";
+						focusHandle = mobile_events.connect(mobile_events, '_onFocus', onFocus);
+						setTimeout(dojo.hitch(mobile_events, "focus"), 0);
+
+						return d;
+					}
+	 			}
+			]);
+
+			doh.register("programmatic", [
+				{
+					name: "dijit",
+					timeout: 2000,
+					runTest: function(){
+						new dijit.form.TextBox({id:"dijit_programmatic", selectOnClick:true, value:"No srcNodeRef", "aria-label":"dijit_programmatic"}).placeAt("dijit_programmatic_container", "first");
+						var dijit_programmatic = dijit.byId('dijit_programmatic');
+						var focushandle = dijit_programmatic.connect(dijit_programmatic, '_onFocus',
+							function(){
+								d.getTestCallback(function(){
+									dijit_programmatic.disconnect(focushandle);
+									var pos = dojo.position(dijit_programmatic.domNode, true);
+									doh.t(pos.w > 0 && pos.h > 0 && pos.x > 0 && pos.y > 0, 'dijit position');
+									doh.is("No srcNodeRef", dijit_programmatic.textbox.value, 'dijit textbox value');
+									doh.is("No srcNodeRef", dijit_programmatic.get('value'), 'dijit widget value');
+								})();
+							}
+						);
+						var d = new doh.Deferred();
+						setTimeout(dojo.hitch(dijit_programmatic, "focus"), 0);
+						return d;
+					}
+	 			},
+				{
+					name: "mobile",
+					timeout: 2000,
+					runTest: function(){
+						new dojox.mobile.TextBox({id:"mobile_programmatic", selectOnClick:true, value:"No srcNodeRef","aria-label":"mobile_programmatic"}).placeAt("mobile_programmatic_container", "first");
+						var mobile_programmatic = dijit.byId('mobile_programmatic');
+						var focushandle = mobile_programmatic.connect(mobile_programmatic, '_onFocus',
+							function(){
+								d.getTestCallback(function(){
+									mobile_programmatic.disconnect(focushandle);
+									var pos = dojo.position(mobile_programmatic.domNode, true);
+									doh.t(pos.w > 0 && pos.h > 0 && pos.x > 0 && pos.y > 0, 'mobile position');
+									doh.is("No srcNodeRef", mobile_programmatic.textbox.value, 'mobile textbox value');
+									doh.is("No srcNodeRef", mobile_programmatic.get('value'), 'mobile widget value');
+								})();
+							}
+						);
+						var d = new doh.Deferred();
+						setTimeout(dojo.hitch(mobile_programmatic, "focus"), 0);
+						return d;
+					}
+	 			}
+			]);
+
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro" role="main">
+	<h1 class="testTitle">_TextBoxMixin (dijit and mobile) non-robot tests</h1>
+
+	<table id="table">
+		<tr>
+			<th class="layout">&nbsp;</th>
+			<th class="layout">dijit</th>
+			<th class="layout">mobile</th>
+		</tr>
+		<tr>
+			<td class="layout">DOM attr</td>
+			<td class="layout"><input id="dijit_DOMattr" data-dojo-type="dijit/form/TextBox" data-dojo-props='"aria-label":"dijit_DOMattr",type:"text", value:"", placeHolder:"original", maxLength:20'/></td>
+			<td class="layout"><input id="mobile_DOMattr" data-dojo-type="dojox.mobile.TextBox" data-dojo-props='"aria-label":"mobile_DOMattr",type:"text", value:"", placeHolder:"original", maxLength:20'/></td>
+		</tr>
+		<tr>
+			<td class="layout">Widget attr</td>
+			<td class="layout"><input id="dijit_WidgetAttr" data-dojo-type="dijit/form/TextBox" data-dojo-props='"aria-label":"dijit_WidgetAttr", type:"text", value:"", propercase:false'/></td>
+			<td class="layout"><input id="mobile_WidgetAttr" data-dojo-type="dojox.mobile.TextBox" data-dojo-props='"aria-label":"mobile_WidgetAttr", type:"text", value:"", propercase:false'/></td>
+		</tr>
+		<tr>
+			<td class="layout">Events</td>
+			<td class="layout"><input id="dijit_events" data-dojo-type="dijit/form/TextBox" data-dojo-props='"aria-label":"dijit_events", type:"text", value:"", onFocus:function(){ return false; }, onBlur:function(){ return false; }, onChange:function(){ return false; }'/></td>
+			<td class="layout"><input id="mobile_events" data-dojo-type="dojox.mobile.TextBox" data-dojo-props='"aria-label":"mobile_events", type:"text", value:"", onChange:function(){ return false; }'/></td>
+		</tr>
+		<tr>
+			<td class="layout">Programmatic</td>
+			<td class="layout" id="dijit_programmatic_container"></td>
+			<td class="layout" id="mobile_programmatic_container"></td>
+		</tr>
+	</table>
+</body>
+</html>

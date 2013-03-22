@@ -1,0 +1,8 @@
+{
+	items: [
+		{type:"dojox.mobile.ContentPane", props:'href:"data/fragment4.html"'},
+		{src:"images/shell1.jpg", design:"Lion", model: "984", produced: "1990'", size: "H3.5cm W4cm", price: "3,300yen", headerText:"shell", footerText:"Free"},
+		{type:"dojox.mobile.CarouselItem", props:'src:"images/dish1.jpg",footerText:"Free",headerText:"dish"'},
+		{src:"images/shell2.jpg", design:"Lion", model: "984", produced: "1990'", size: "H3.5cm W4cm", price: "2,800yen"}
+	]
+}

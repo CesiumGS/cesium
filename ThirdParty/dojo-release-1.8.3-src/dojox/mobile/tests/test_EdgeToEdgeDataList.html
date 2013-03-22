@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>EdgeToEdgeDataList</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/lang",
+			"dojo/data/ItemFileWriteStore",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/EdgeToEdgeDataList"
+		], function(lang, ItemFileWriteStore, registry){
+			var static_data = { 
+				items: [ 
+					{label: "Apple", 	moveTo: "dummy"},
+					{label: "Banana", 	moveTo: "dummy"},
+					{label: "Cherry", 	moveTo: "dummy"},
+					{label: "Grape", 	moveTo: "dummy"},
+					{label: "Kiwi", 	moveTo: "dummy"},
+					{label: "Lemon", 	moveTo: "dummy"},
+					{label: "Melon", 	moveTo: "dummy"},
+					{label: "Orange", 	moveTo: "dummy"},
+					{label: "Peach", 	moveTo: "dummy"}
+				]
+			};
+			store1 = new ItemFileWriteStore({url: "data/settings.json", clearOnClose: true});
+			store2 = new ItemFileWriteStore({data: lang.clone(static_data), clearOnClose: true});
+			store = store1;
+			var newItems = [[],[]];
+
+			// switch to the selected store
+			switchTo = function(store){
+				window.store = store;
+				registry.byId("list").setStore(store);
+			};
+			// add a new item
+			add1 = function(){
+				var item = store.newItem({label: "New Item", moveTo: "dummy"});
+				newItems[(store == store1) ? 1 : 0].push(item);
+			};
+			// delete the added item
+			delete1 = function(){
+				var item = newItems[(store == store1) ? 1 : 0].pop();
+				if(item){
+					store.deleteItem(item);
+				}
+			};
+			reload1 = function(){
+				store.save({onComplete: function(){console.log("Saved");}, onError: function(e){console.log(e);}});
+				if(store === store2){
+					store.data = lang.clone(static_data);
+				}
+				store.close();
+			};
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">EdgeToEdgeDataList</h1>
+		<ul data-dojo-type="dojox.mobile.EdgeToEdgeDataList" id="list" data-dojo-props='store:store, query:{label: "*"}'></ul>
+		<p>show the different set:<br>
+		<input type="button" value="Set1" onclick="switchTo(store1)">
+		<input type="button" value="Set2" onclick="switchTo(store2)">
+		<p>alter the object store:<br>
+		<input type="button" value="Add" onclick="add1()">
+		<input type="button" value="Delete" onclick="delete1()">
+		<input type="button" value="Reload" onclick="reload1()">
+	</div>
+</body>
+</html>

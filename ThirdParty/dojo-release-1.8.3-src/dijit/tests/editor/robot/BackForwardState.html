@@ -1,0 +1,128 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Editor/Back Button Restore Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.DeferredList");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			// This page tests that the editor's value won't be lost if the user
+			// accidentlly navigates to a different page, and then returns to the
+			// page w/the editor by pressing the back button.
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../BackForwardState.html');
+
+				doh.register("back button restore", [
+					{
+						name: "wait for editors to load",
+						timeout: 5000,
+						runTest: function(){
+						    return new dojo.DeferredList(
+						        dijit.registry.filter(function(w){ return w.onLoadDeferred; }).map(function(w){return w.onLoadDeferred;})
+						    );
+						}
+					},
+					{
+						name: "set editor value",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var editor0 = dijit.byId("editor0"),
+								editor1 = dijit.byId("editor1");
+
+							doh.is("editor0 original contents", editor0.get('value'));
+							doh.is("editor1 original contents", editor1.get('value'));
+
+							editor0.set('value', 'hello');
+							editor1.set('value', 'goodbye');
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("hello", editor0.get('value'));
+								doh.is("goodbye", editor1.get('value'));
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "navigate away",
+						timeout: 10000,
+						runTest: function(){
+							return doh.robot.waitForPageToLoad(function(){
+								// On most browsers just focusing causes navigation.  On safari
+								// need to click...
+								var away = dojo.byId("away");
+								dojo.byId("away").focus();
+								doh.robot.keyPress(dojo.keys.ENTER, 500);
+							});
+						}
+					},
+					{
+						name: "confirm navigation to new page worked",
+						runTest: function(){
+							// Confirm that we successfully navigated away
+							doh.is("Back/forward test helper page", (dojo.query("h1")[0]||{}).innerHTML);
+						}
+					},
+					{
+						name: "go back to original page",
+						timeout: 10000,
+						runTest: function(){
+							return doh.robot.waitForPageToLoad(function(){
+								// On most browsers just focusing causes navigation.  On safari
+								// need to click...
+								var back = dojo.byId("back");
+								back.focus();
+								doh.robot.keyPress(dojo.keys.ENTER, 500);
+							});
+						}
+					},
+					{
+						name: "wait for editors to load again",
+						timeout: 5000,
+						runTest: function(){
+						    return new dojo.DeferredList(
+						        dijit.registry.filter(function(w){ return w.onLoadDeferred; }).map(function(w){return w.onLoadDeferred;})
+						    );
+						}
+					},
+
+					{
+						name: "check that editor values restored",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var editor0 = dijit.byId("editor0"),
+									editor1 = dijit.byId("editor1");
+
+								doh.t(editor0, "editor0 found");
+								doh.is("hello", editor0.get('value'));
+
+								doh.t(editor1, "editor1 found");
+								doh.is("goodbye", editor1.get('value'));
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

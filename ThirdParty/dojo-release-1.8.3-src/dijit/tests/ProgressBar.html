@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Dojo Toolkit - ProgressBar test</title>
+
+	<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"/>
+
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "css/dijitTests.css";
+		body {
+			margin: 1em;
+		}
+		.smallred .dijitProgressBarTile {
+			background:red;
+		}
+		.smallred .dijitProgressBarLabel {
+			display:none;
+		}
+		#html5ish, #html5ish2 { width:500px; }
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		data-dojo-config="isDebug: true"></script>
+
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.ProgressBar");
+		dojo.require("dojo.parser");	// scan page for widgets
+		dojo.require("dojo.string");
+		dojo.require("doh.runner");
+
+		dojo.ready(function go(){
+			doh.register("parse", function(){
+				dojo.parser.parse();
+			});
+
+			doh.register("other setup", function(){
+				// Stuff from the original test file.   Not sure if this is needed now that
+				// the test is automated.
+
+				// note that programmatic instantiation doesn't pull any parameters from the srcNodeRef, not even id
+				var theBar = new dijit.ProgressBar({id: "testBar", width: 400, maximum: 256, duration: 2000,
+					report:function(percent){
+						return dojo.string.substitute("${0} out of ${1} max chars", [this.get('value'), this.maximum]);
+					}
+				}, dojo.byId("testBar"));
+	
+				dojo.byId("test").value="";
+				dojo.byId("progressValue").value = dijit.byId("setTestBar").value;
+				dojo.byId("maximum").value = dijit.byId("setTestBar").maximum;
+				dojo.connect(dojo.byId("test"), "onkeyup", null, keyUpHandler);
+				dojo.connect(dojo.byId("set"), "onclick", null, setParameters);
+				dojo.connect(dojo.byId("startTimer"), "onclick", null,
+					function(){ remoteProgress(dijit.byId("timerBar")); } );
+					
+				// test 7
+				new dijit.ProgressBar({
+					style:"width:400px",
+					indeterminate:true
+				}, "pi");
+			});
+
+			doh.register("ProgressBar",[
+				{
+					name: "set valid value",
+					runTest: function(){
+						var progressBar = dijit.byId("setTestBar");
+						progressBar.set({maximum: 100, value: 58});
+						
+						doh.is("58", progressBar.progress);
+						doh.is("58%", dojo.byId("setTestBar_label").innerHTML);
+						var visualProgress = dojo.query("div.dijitProgressBarFull", progressBar.domNode)[0];
+
+						var width = visualProgress.style.width;
+						width = width.substring(0, width.length-1);
+						doh.t(57 < width <= 58); //IE thinks the width is 57.99
+					}
+				},
+				{
+					name: "set value too high",
+					runTest: function(){
+						var d = new doh.Deferred();
+
+						var progressBar = dijit.byId("setTestBar");
+						progressBar.set({maximum: 100, value: 101});
+
+						doh.is("100", progressBar.progress);
+						doh.is("100%", dojo.byId("setTestBar_label").innerHTML);
+						var visualProgress = dojo.query("div.dijitProgressBarFull", progressBar.domNode)[0];
+						doh.is("100%", visualProgress.style.width);
+					}
+				},
+				{
+					name: "set zero value",
+					runTest: function(){
+						var d = new doh.Deferred();
+
+						var progressBar = dijit.byId("setTestBar");
+						progressBar.set({maximum: 100, value: 0});
+
+						doh.is("0", progressBar.progress);
+						doh.is("0%", dojo.byId("setTestBar_label").innerHTML);
+						var visualProgress = dojo.query("div.dijitProgressBarFull", progressBar.domNode)[0];
+						doh.is("0%", visualProgress.style.width);
+					}
+				},
+				{
+					name: "set max value",
+					runTest: function(){
+						var d = new doh.Deferred();
+
+						var progressBar = dijit.byId("setTestBar");
+						progressBar.set({maximum: 100, value: 100});
+
+						doh.is("100", progressBar.progress);
+						doh.is("100%", dojo.byId("setTestBar_label").innerHTML);
+						var visualProgress = dojo.query("div.dijitProgressBarFull", progressBar.domNode)[0];
+						doh.is("100%", visualProgress.style.width);
+					}
+				},
+				{
+					name: "report callback",
+					runTest: function(){
+						var progressBar = dijit.byId("testBar");
+						progressBar.set({value: 79});
+						doh.is("79", progressBar.progress);
+						doh.is("79 out of 256 max chars", dojo.byId("testBar_label").innerHTML);
+						var visualProgress = dojo.query("div.dijitProgressBarFull", progressBar.domNode)[0];
+						width = visualProgress.style.width;
+						doh.is("30.8", width.substring(0,4));
+					}
+				},
+				{
+					name: "default maximum",
+					runTest: function(){
+						var progressBar = dijit.byId("implied1");
+						doh.is("50", progressBar.progress);
+						doh.is("50%", dojo.byId("implied1_label").innerHTML);
+						var visualProgress = dojo.query("div.dijitProgressBarFull", progressBar.domNode)[0];
+						doh.is("50%", visualProgress.style.width);
+							
+						progressBar = dijit.byId("implied2");
+						doh.is("50", progressBar.progress);
+						doh.is("50%", dojo.byId("implied2_label").innerHTML);
+						visualProgress = dojo.query("div.dijitProgressBarFull", progressBar.domNode)[0];
+						doh.is("50%", visualProgress.style.width);
+					}
+				},
+				{
+					name: "set indeterminate, no label",
+					runTest: function(){
+						var progressBar = dijit.byId("indeterminateBar");
+						progressBar.set({indeterminate: true, label: ''});
+
+						var visualProgress = dojo.query("div.dijitProgressBarFull", progressBar.domNode)[0];
+						doh.is("100%", visualProgress.style.width);
+						doh.t(dojo.hasClass(progressBar.domNode, "dijitProgressBarIndeterminate"), "has class dijitProgressBarIndeterminate");
+					}
+				},
+				{
+					name: "set determinate, no label",
+					runTest: function(){
+						var progressBar = dijit.byId("indeterminateBar");
+						progressBar.set({indeterminate: false, label: ''});	
+						doh.is("50%", dojo.byId("indeterminateBar_label").innerHTML);
+
+						var visualProgress = dojo.query("div.dijitProgressBarFull", progressBar.domNode)[0];
+						doh.is("50%", visualProgress.style.width);
+						doh.f(dojo.hasClass(progressBar.domNode, "dijitProgressBarIndeterminate"), "doesn't have class dijitProgressBarIndeterminate");
+					}
+				},
+				{
+					name: "set indeterminate, custom label",
+					runTest: function(){
+						var d = new doh.Deferred();
+
+						var progressBar = dijit.byId("indeterminateBar");
+						progressBar.set({indeterminate: true, label: 'Loading...'});
+
+						doh.is("Loading...", dojo.byId("indeterminateBar_label").innerHTML);
+						var visualProgress = dojo.query("div.dijitProgressBarFull", progressBar.domNode)[0];
+						doh.is("100%", visualProgress.style.width);						
+						doh.t(dojo.hasClass(progressBar.domNode, "dijitProgressBarIndeterminate"), "has class dijitProgressBarIndeterminate");
+					}
+				},
+				{
+					name: "set determinate, custom label",
+					runTest: function(){
+						var progressBar = dijit.byId("indeterminateBar");
+						progressBar.set({indeterminate: false, label: 'Loading...'});
+						
+						doh.is("Loading...", dojo.byId("indeterminateBar_label").innerHTML);
+						var visualProgress = dojo.query("div.dijitProgressBarFull", progressBar.domNode)[0];
+						doh.is("50%", visualProgress.style.width);
+						doh.f(dojo.hasClass(progressBar.domNode, "dijitProgressBarIndeterminate"), "doesn't have class dijitProgressBarIndeterminate");
+					}
+				},
+				{
+					name: "programmatic indeterminate",
+					runTest: function(){
+						var progressBar = dijit.byId("pi");
+						var visualProgress = dojo.query("div.dijitProgressBarFull", progressBar.domNode)[0];
+						doh.is("100%", visualProgress.style.width);
+							
+						doh.t(dojo.hasClass(progressBar.domNode, "dijitProgressBarIndeterminate"), "has class dijitProgressBarIndeterminate");
+						
+						progressBar = dijit.byId("timerBar");
+						doh.t(80 < progressBar.progress <= 100, "Timer progress was " + progressBar.progress);
+					}
+				},
+				{
+					name: "set zero maximum",
+					runTest: function(){
+						var d = new doh.Deferred();
+
+						var progressBar = dijit.byId("setTestBar");
+						progressBar.set({maximum: 0, value: 0});
+
+						doh.is("0", progressBar.progress);
+						doh.is("0%", dojo.byId("setTestBar_label").innerHTML);
+						var visualProgress = dojo.query("div.dijitProgressBarFull", progressBar.domNode)[0];
+						doh.is("0%", visualProgress.style.width);
+					}
+				},
+				{
+					name: "programmatic instantiation without params",
+					runTest: function(doh){
+						var pb, success;
+						try{
+							pb = new dijit.ProgressBar();
+							pb.destroyRecursive();
+							success = true;
+						}catch(e){}
+						doh.t(success, "Instantiation w/o params should not throw");
+					}
+				}
+			]);
+			
+			doh.run();
+		});
+
+		// An example of polling on a separate (heartbeat) server thread.  This is useful when the progress
+		// is entirely server bound and there is no existing interaction with the server to determine status.
+
+		// We don't have a server to run against, but a simple heartbeat implementation might look something
+		// like this:
+
+		// function getProgressReport(){
+		//	var dataSource = "http://dojotoolkit.org";
+		//	return dojo.xhrGet({url: dataSource, handleAs: "json", content: {key: "progress"}});
+		// }
+
+		// Instead, we'll just tick off intervals of 10
+
+		var fakeProgress = 0;
+		function getProgressReport(){
+			var deferred = new dojo.Deferred();
+			fakeProgress = Math.min(fakeProgress + 10, 100);
+			deferred.callback(fakeProgress+"%");
+			return deferred;
+		}
+
+		function remoteProgress(bar){
+			var _timer = setInterval(function(){
+				var report = getProgressReport();
+				report.then(function(response){
+					bar.set({value: response});
+					if(response == "100%"){
+						clearInterval(_timer);
+						_timer = null;
+					}
+				});
+			}, 3000); // on 3 second intervals
+		}
+
+		function setParameters(){
+			dijit.byId("setTestBar").set({maximum: dojo.byId("maximum").value, value: dojo.byId("progressValue").value});
+		}
+
+		function keyUpHandler(){
+			dijit.byId("testBar").set({value:dojo.byId("test").value.length});
+			dijit.byId("testBarInt").set({value:dojo.byId("test").value.length});
+			dijit.byId("smallTestBar").set({value:dojo.byId("test").value.length});
+		}
+	</script>
+</head>
+<body class="claro" role="main">
+
+	<h1 class="testTitle">Dijit ProgressBar Tests</h1>
+
+	<h3>Test 1</h3>
+	<label for="progressValue">Progress Value </label><input type="text" name="progressValue" id="progressValue" />
+	<br>
+	<label for="maximum">Max Progress Value </label><input type="text" name="maximum" id="maximum" />
+	<br>
+	<input type="button" name="set" id="set" value="set!" />
+	<br>
+	<div id="setTestBar" data-dojo-type="dijit/ProgressBar" data-dojo-props='style:"width:400px",
+		maximum:200, value:"20" '></div>
+
+	<h3>Test 2</h3>
+	<label for="test">Write here: </label><input type="text" value="" name="test" maxLength="256" id="test" style="width:300px"/>
+	<br />
+	<br />
+	<div id="testBar" style='width:300px'></div>
+	<br />
+	Small, without text and background image:
+	<br />
+	<div id="smallTestBar" data-dojo-type="dijit/ProgressBar" data-dojo-props='style:"width:400px; height:10px", "class":"smallred", maximum:256'></div>
+	<br />
+	Show decimal place:
+	<div id="testBarInt" data-dojo-type="dijit/ProgressBar" data-dojo-props='places:1, style:"width:400px",
+		maximum:256'></div>
+
+	<h3>Test 3</h3>
+	No explicit maximum (both 50%)
+	<div id="implied1" data-dojo-type="dijit/ProgressBar" data-dojo-props='style:"width:400px",
+		value:"50" '></div>
+	<br />
+	<div id="implied2" data-dojo-type="dijit/ProgressBar" data-dojo-props='style:"width:400px",
+		value:"50%" '></div>
+
+	<h3>Test 4</h3>
+	<input type="button" name="startTimer" id="startTimer" value="Start Timer" />
+	<div id="timerBar" data-dojo-type="dijit/ProgressBar" data-dojo-props='style:"width:400px", maximum:100, value:"0" '></div>
+
+	<h3>Test 5 - indeterminate progess</h3>
+	<input id="indeterminateButton1" type="button" value="Make Indeterminate (default blank label)"
+		onclick="dijit.byId('indeterminateBar').set({indeterminate: true, label: ''});" />
+	<input id="labelButton1" type="button" value="Make Determinate (default percentage label)"
+		onclick="dijit.byId('indeterminateBar').set({indeterminate: false, label: ''});" />
+	<input id="indeterminateButton2" type="button" value="Make Indeterminate With Label"
+		onclick="dijit.byId('indeterminateBar').set({indeterminate: true, label: 'Loading...'});" />
+	<input  id="labelButton2" type="button" value="Make Determinate With Label"
+		onclick="dijit.byId('indeterminateBar').set({indeterminate: false, label: 'Loading...'});" />
+	
+	<div id="indeterminateBar" data-dojo-type="dijit/ProgressBar" data-dojo-props='style:"width:400px", value:"50" '></div>
+
+	<h3>Test 6 - programatic indeterminate</h3>
+	<div id="pi"></div>
+
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<head>
+<title>Testing polyline points initialization</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="gfxRenderer:'canvas', isDebug: true"></script>
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+dojo.require("dojox.gfx.shape");
+dojo.require("dojox.gfx.path");
+dojo.require("dojox.gfx.arc");
+
+createSurface = function(){
+	surface = dojox.gfx.createSurface("test", 500, 200);
+	surface.whenLoaded(makeShapes);
+};
+
+logBBox = function(shape, msg){
+	var bbox = shape.getBoundingBox(), t = shape.getTransform();
+	if (bbox)
+		surface.createText({
+			text:msg + " bbox: [" + bbox.x+","+bbox.y+","+bbox.width+","+bbox.height+"]",
+			align:"middle",
+			x:bbox.x+bbox.width/2,
+			y:bbox.y+bbox.height+20
+		}).setFill("black").setTransform(t);
+	else
+		dojo.byId("o1").innerHTML = msg + " bbox: null";
+	return bbox;	
+};
+
+makeShapes = function(surface){
+	var poly1 = surface.createPolyline([{x: 150, y: 50}, {x: 200, y: 100}, {x: 150, y: 150}, {x: 100, y: 100}, {x: 150, y: 50}])
+		.setStroke({color:"blue"})
+		,
+		bbox1 = logBBox(poly1,"Polyline1"); 
+	
+	var poly2 = surface.createPolyline([150, 50, 200, 100, 150, 150, 100, 100, 150, 50])
+		.setStroke({color:"blue"})
+		.setTransform(dojox.gfx.matrix.translate(200,0))
+		,
+		bbox2 = logBBox(poly2,"Polyline2"); 
+	
+	var poly3 = surface.createPolyline(),
+		bbox3 = logBBox(poly3,"Polyline3"); 
+	
+	var t =  bbox1.x === bbox2.x && 
+			 bbox1.y === bbox2.y &&
+			 bbox1.width === bbox2.width &&
+			 bbox1.height === bbox2.height;
+	var s;
+	if(t){
+		s = "OK";
+	}else{
+		s = "KO";
+		dojo.style("o3","color","red");
+	}
+	dojo.byId("o3").innerHTML = "Test Result : " + (t ? "OK" : "KO");
+};
+
+dojo.addOnLoad(createSurface);
+
+</script>
+</head>
+<body>
+<h1>dojox.gfx Polyline points initialization test </h1>
+<div id="test" style="width: 500px; height: 200px;"></div>
+<p id="o1"></p>
+<p id="o3" style="font-weight:bold"></p>
+</body>
+</html>

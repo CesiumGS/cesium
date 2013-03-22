@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Heading</title>
+		<link href="../../themes/android/android.css" rel="stylesheet"/>
+		<link href="../../themes/common/domButtons.css" rel="stylesheet"/>
+
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			//dojo.require("dojo.parser"); // Use the lightweight parser.
+			dojo.require("dojox.mobile.parser");
+			dojo.require("dojox.mobile");
+			dojo.requireIf(!dojo.isWebKit, "dojox.mobile.compat");
+		</script>
+		<script language="JavaScript" type="text/javascript">
+			dojo.addOnLoad(function(){
+				var view = dijit.byId("general");
+				var demoWidget = new dojox.mobile.Heading({back:"Settings", moveTo:"foo", label:"General"});
+//				view.addChild(demoWidget);
+				demoWidget.placeAt(view.containerNode);
+				demoWidget.startup();
+
+				demoWidget = new dojox.mobile.Heading({back:"Go To", href:"http://dojotoolkit.org/", label:"Test"});
+//				view.addChild(demoWidget);
+				demoWidget.placeAt(view.containerNode);
+				demoWidget.startup();
+
+				demoWidget = new dojox.mobile.Heading({back:"Settings", moveTo:"foo", label:"Test"});
+//				view.addChild(demoWidget);
+				demoWidget.placeAt(view.containerNode);
+				demoWidget.startup();
+
+				demoWidget = new dojox.mobile.Heading();
+				demoWidget.set({back:"Long Button", moveTo:"bar", label:"Very Very Long Title May Not Be Displayed in the Narrow Space"});
+//				view.addChild(demoWidget);
+				demoWidget.placeAt(view.containerNode);
+				demoWidget.startup();
+			});
+		</script>
+		<script type="text/javascript" src="TestUtil.js"></script>
+		<script type="text/javascript" src="Heading2.js"></script>
+	</head>
+	<body>
+		<div id="general" dojoType="dojox.mobile.View" selected="true">
+		</div>
+
+		<div id="foo" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading" id="dojox_mobile_Heading_4">Mobile Mashup</h1>
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Spaces</h2>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li id="item1" dojoType="dojox.mobile.ListItem" icon="../images/a-icon-10.png" rightText="Off" moveTo="general">
+					u1space
+				</li>
+				<li id="item2" dojoType="dojox.mobile.ListItem" icon="../images/a-icon-11.png" rightText="Off" moveTo="general">
+					u2space
+				</li>
+				<li id="item3" dojoType="dojox.mobile.ListItem" icon="../images/a-icon-12.png" rightText="Off" moveTo="general">
+					Wi-Fi
+				</li>
+				<li id="item4" dojoType="dojox.mobile.ListItem" icon="../images/a-icon-13.png" rightText="VPN" moveTo="general">
+					VPN
+				</li>
+			</ul>
+		</div>
+
+		<div id="bar" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading" back="Spaces" moveTo="general" id="dojox_mobile_Heading_5">u1space</h1>
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Applications</h2>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" rightText="Off">
+					Video
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="../images/a-icon-2.png" rightText="VPN">
+					Maps
+				</li>
+				<li dojoType="dojox.mobile.ListItem" rightText="Off">
+					Phone Number
+				</li>
+			</ul>
+		</div>
+
+	</body>
+</html>

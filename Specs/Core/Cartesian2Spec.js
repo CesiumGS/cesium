@@ -26,6 +26,35 @@ defineSuite([
         expect(cartesian.y).toEqual(2.0);
     });
 
+    it('fromArray creates a Cartesian2', function() {
+        var cartesian = Cartesian2.fromArray([1.0, 2.0]);
+        expect(cartesian).toEqual(new Cartesian2(1.0, 2.0));
+    });
+
+    it('fromArray with an offset creates a Cartesian2', function() {
+        var cartesian = Cartesian2.fromArray([0.0, 1.0, 2.0, 0.0], 1);
+        expect(cartesian).toEqual(new Cartesian2(1.0, 2.0));
+    });
+
+    it('fromArray creates a Cartesian2 with a result parameter', function() {
+        var cartesian = new Cartesian2();
+        var result = Cartesian2.fromArray([1.0, 2.0], 0, cartesian);
+        expect(result).toBe(cartesian);
+        expect(result).toEqual(new Cartesian2(1.0, 2.0));
+    });
+
+    it('fromArray throws without values', function() {
+        expect(function() {
+            Cartesian2.fromArray();
+        }).toThrow();
+    });
+
+    it('fromArray throws with an invalid offset', function() {
+        expect(function() {
+            Cartesian2.fromArray([0.0, 0.0], 1);
+        }).toThrow();
+    });
+
     it('clone without a result parameter', function() {
         var cartesian = new Cartesian2(1.0, 2.0);
         var result = cartesian.clone();
@@ -76,6 +105,23 @@ defineSuite([
     it('magnitude', function() {
         var cartesian = new Cartesian2(2.0, 3.0);
         expect(cartesian.magnitude()).toEqual(Math.sqrt(13.0));
+    });
+
+    it('distance', function() {
+        var distance = Cartesian2.distance(new Cartesian2(1.0, 0.0), new Cartesian2(2.0, 0.0));
+        expect(distance).toEqual(1.0);
+    });
+
+    it('distance throws without left', function() {
+        expect(function() {
+            Cartesian2.distance();
+        }).toThrow();
+    });
+
+    it('distance throws without right', function() {
+        expect(function() {
+            Cartesian2.distance(Cartesian2.UNIT_X);
+        }).toThrow();
     });
 
     it('normalize works without a result parameter', function() {

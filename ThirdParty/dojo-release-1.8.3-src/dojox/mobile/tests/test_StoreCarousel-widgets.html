@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Carousel - widgets</title>
+
+	<link href="../../../dijit/themes/tundra/tundra.css" rel="stylesheet"/>
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','Carousel','PageIndicator','SimpleDialog']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/connect",
+			"dojo/store/JsonRest",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/ScrollableView",
+			"dojox/mobile/StoreCarousel"
+		], function(connect, JsonRest, ready, registry){
+			store1 = new JsonRest({target: "data/carousel-widget.json"});
+			ready(function(){
+				connect.subscribe("/dojox/mobile/carouselSelect", function(carousel, itemWidget, item, idx){
+					if(carousel.id == "carousel1"){
+						console.log("selected: "+itemWidget);
+					}
+				});
+			});
+		});
+	</script>
+	<style>
+	.dijitCalendar {
+		color: black;
+	}
+	</style>
+</head>
+<body class="tundra" style="visibility:hidden;background-color:#6D6D6D">
+	<div id="foo" data-dojo-type="dojox.mobile.ScrollableView">
+		<div id="carousel1" data-dojo-type="dojox.mobile.StoreCarousel"
+			data-dojo-props='height:"250px", store:store1, numVisible:"1", title:"Category", selectable:false'></div>
+	</div>
+</body>
+</html>

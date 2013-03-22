@@ -1,0 +1,4 @@
+{
+	labelNode: {value: at("rel:", "Serial")},
+	inputNode: {value: at("rel:", "First")}
+}

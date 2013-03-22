@@ -85,7 +85,7 @@ define([
         var oldCollection = this._dynamicObjectCollection;
         if (oldCollection !== dynamicObjectCollection) {
             if (typeof oldCollection !== 'undefined') {
-                oldCollection.objectsRemoved.removeEventListener(DynamicEllipsoidVisualizer.prototype._onObjectsRemoved);
+                oldCollection.objectsRemoved.removeEventListener(DynamicEllipsoidVisualizer.prototype._onObjectsRemoved, this);
                 this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
@@ -248,8 +248,8 @@ define([
             (!position.equals(ellipsoid._visualizerPosition) ||
              !orientation.equals(ellipsoid._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, ellipsoid.modelMatrix);
-            position.clone(ellipsoid._visualizerPosition);
-            orientation.clone(ellipsoid._visualizerOrientation);
+            ellipsoid._visualizerPosition = position.clone(ellipsoid._visualizerPosition);
+            ellipsoid._visualizerOrientation = orientation.clone(ellipsoid._visualizerOrientation);
         }
 
         var material = dynamicEllipsoid.material;

@@ -1,0 +1,1 @@
+{"id":"obj1","name":"Object 1","updated":1202755814406,"obj":{"foo":"bar"},"obj dup":{"$ref":"obj1.obj"},"testArray":[1,2,3,4]}

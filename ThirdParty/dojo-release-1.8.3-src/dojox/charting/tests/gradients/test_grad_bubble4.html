@@ -1,0 +1,80 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+    <title>Gradient: Bubble #4</title>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+    <script>
+		dojo.require("dojox.charting.Chart");
+        dojo.require("dojox.charting.axis2d.Default");
+        dojo.require("dojox.charting.plot2d.Bubble");
+		dojo.require("dojox.charting.Theme");
+
+        run = function(){
+            dojo.attr("start", "disabled", true);
+            
+            var theme1 = new dojox.charting.Theme({
+                    seriesThemes: [
+                        {
+                            fill: {
+                                type: "linear", space: "shapeX", x1: 0, y1: 0, x2: 100, y2: 100,
+                                colors: [{ offset: 0, color: "white" }, { offset: 1, color: "red" }]
+                            }
+                        },
+                        {
+                            fill: {
+                                type: "linear", space: "shapeX", x1: 0, y1: 0, x2: 100, y2: 0,
+                                colors: [{ offset: 0, color: "white" }, { offset: 1, color: "blue" }]
+                            }
+                        },
+                        {
+                            fill: {
+                                type: "linear", space: "shapeY", x1: 0, y1: 0, x2: 100, y2: 100,
+                                colors: [{ offset: 0, color: "white" }, { offset: 1, color: "green" }]
+                            }
+                        }
+                    ]
+                });
+
+            var chart1 = new dojox.charting.Chart("c1").
+                setTheme(theme1).
+                addAxis("x", {minorLabels: false}).
+                addAxis("y", {vertical: true, minorLabels: false, max: 10}).
+                addPlot("default", {type: "Bubble"}).
+				addSeries("Series A", [
+					{ x: 0.5, y: 5, size: 1.4 },
+					{ x: 1.5, y: 1.5, size: 4.5 },
+					{ x: 2, y: 9, size:1.5 },
+					{ x: 5, y: 0.3, size:0.8 }
+				]).
+				addSeries("Series B", [
+					{ x: 0.3, y: 8, size: 2.5 },
+					{ x: 4, y: 8, size:1.1 },
+					{ x: 5.5, y: 2, size: 3.2 },
+					{ x: 3, y: 6, size: 3.2 }
+				]).
+                render();
+        };
+        
+        dojo.addOnLoad(run);
+    </script>
+</head>
+<body>
+    <p><button id="start" onclick="run();">Start!</button></p>
+	<h1>1D shape-space gradient</h1>
+	<p>Bubble</p>
+    <div id="c1" style="position: relative; width: 600px; height: 400px;"></div>
+</body>
+</html>

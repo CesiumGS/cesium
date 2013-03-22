@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>EdgeToEdgeStoreList</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/Deferred",
+			"dojo/store/Cache",
+			"dojo/store/JsonRest",
+			"dojo/store/Memory",
+			"dojo/store/Observable",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/EdgeToEdgeStoreList"
+		], function(Deferred, Cache, JsonRest, Memory, Observable, registry){
+			var static_data1 = [
+				{ label: "Category 1", header: true },
+				{ label: "Wi-Fi", icon: "images/i-icon-1.png", moveTo: "wifi" },
+				{ label: "Brightness & Wallpaper", icon: "images/i-icon-2.png", moveTo: "bright" },
+				{ label: "Picture Frame", icon: "images/i-icon-3.png", moveTo: "picture" },
+				{ label: "General", icon: "images/i-icon-4.png", moveTo: "general", "selected": "true" },
+				{ label: "Mail, Contacts, Calendars", icon: "images/i-icon-5.png", moveTo: "wifi" },
+				{ label: "Safari", icon: "images/i-icon-6.png", moveTo: "bright" },
+				{ label: "iPod", icon: "images/i-icon-7.png", moveTo: "picture" },
+				{ label: "Category 2", header: true },
+				{ label: "Video", icon: "images/i-icon-8.png", moveTo: "general" },
+				{ label: "Photos", icon: "images/i-icon-9.png", moveTo: "wifi" },
+				{ label: "Store", icon: "images/i-icon-10.png", moveTo: "bright" }
+			];
+
+			var static_data2 = [
+				{label: "Apple", 	moveTo: "dummy"},
+				{label: "Banana", 	moveTo: "dummy"},
+				{label: "Cherry", 	moveTo: "dummy"},
+				{label: "Grape", 	moveTo: "dummy"},
+				{label: "Kiwi", 	moveTo: "dummy"},
+				{label: "Lemon", 	moveTo: "dummy"},
+				{label: "Melon", 	moveTo: "dummy"},
+				{label: "Orange", 	moveTo: "dummy"},
+				{label: "Peach", 	moveTo: "dummy"}
+			];
+			store1 = Observable(new Memory({idProperty:"label", data: static_data1}));
+			store2 = Observable(new Memory({idProperty:"label", data: static_data2}));
+			store1.__counter = store2.__counter = 1;
+			store = store1;
+
+			// switch to the selected store
+			switchTo = function(store){
+				window.store = store;
+				registry.byId("list").setStore(store);
+			};
+			// add a new item
+			add1 = function(){
+				store.add({
+					label: "New Item "+(store.__counter++),
+					icon: "images/i-icon-1.png",
+					moveTo: "dummy"
+				});
+			};
+			// delete the added item
+			delete1 = function(){
+				if(store.__counter > 1){
+					store.remove("New Item "+(--store.__counter));
+				}
+			};
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div data-dojo-type="dojox.mobile.View">
+		<h1 data-dojo-type="dojox.mobile.Heading">EdgeToEdgeStoreList</h1>
+		<ul data-dojo-type="dojox.mobile.EdgeToEdgeStoreList" id="list" data-dojo-props='store:store, query:{}'></ul>
+		<p>show the different set:<br>
+		<input type="button" value="Set1" onclick="switchTo(store1)">
+		<input type="button" value="Set2" onclick="switchTo(store2)">
+		<p>alter the object store:<br>
+		<input type="button" value="Add" onclick="add1()">
+		<input type="button" value="Delete" onclick="delete1()">
+	</div>
+</body>
+</html>

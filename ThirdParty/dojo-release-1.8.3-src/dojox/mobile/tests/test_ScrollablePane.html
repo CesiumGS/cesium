@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>ScrollablePane</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','ScrollablePane']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/connect",
+			"dojo/dom",
+			"dojo/dom-class",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/ScrollablePane",
+			"dojox/mobile/compat"
+		], function(connect, dom, domClass, ready, registry){
+		});
+	</script>
+
+<style>
+.mblScrollablePane {
+	background-color: yellow;
+	color: black;
+}
+</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="view1" data-dojo-type="dojox.mobile.View" style="height:100px">
+		<div id="pane1" data-dojo-type="dojox.mobile.ScrollablePane" data-dojo-props='height:"inherit"'>
+		  hello<br>
+		  hello<br>
+		  hello<br>
+		  hello<br>
+		  hello<br>
+		  hello<br>
+		  hello<br>
+		  hello<br>
+		  hello<br>
+		  hello<br>
+		  hello<br>
+		  hello<br>
+		</div>
+	</div>
+</body>
+</html>

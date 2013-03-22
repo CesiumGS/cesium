@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Tooltip Mouse Quirks Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js" data-dojo-config="isDebug: true, parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.registry");
+			dojo.require("dijit.ready");
+			dojo.require("doh.runner");
+			dojo.require("dojox.mobile");
+				dojo.ready(function(){
+					doh.robot.initRobot("../test_SwapView.html");
+
+					doh.register("dojox.mobile.SwapView mouse tests", [
+						{
+							name: "SwapView mouse tests",
+							timeout: 40000,
+							runTest: function(){
+								var d = new doh.Deferred();
+								var dim = dojox.mobile.getScreenSize();
+
+								doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_SwapView_0").domNode, 1000,100, (dim.w -30),100);
+								doh.robot.mousePress({left: true}, 1000);
+
+								doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_SwapView_0").domNode, 1000,100,(dim.w -30)/2,0);
+
+								doh.robot.mouseMoveAt(dijit.registry.byId("dojox_mobile_SwapView_0").domNode, 1000,100,10,100);
+								doh.robot.mouseRelease({left: true}, 50);
+								
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.assertEqual("none",  dijit.registry.byId("dojox_mobile_SwapView_0").domNode.style.display);
+									doh.assertEqual("",  dijit.registry.byId("dojox_mobile_SwapView_1").domNode.style.display);
+								}), 1000);
+								return d;
+							}
+						}
+					]);
+					doh.run();
+				});
+		</script>
+	</head>
+</html>

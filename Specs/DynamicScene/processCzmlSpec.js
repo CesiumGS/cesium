@@ -22,6 +22,11 @@ defineSuite([
         }
     };
 
+    var czmlDelete = {
+        'id' : 'test',
+        'delete': true
+    };
+
     var czmlArray = [{
         'id' : 'test',
         'billboard' : {
@@ -65,6 +70,18 @@ defineSuite([
         expect(testObject.label).toBeDefined();
         expect(testObject.label.show).toBeDefined();
         expect(testObject.label.show.getValue(new JulianDate())).toEqual(false);
+    });
+
+    it('processCzml deletes an existing object.', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        processCzml(czml, dynamicObjectCollection);
+
+        var objects = dynamicObjectCollection.getObjects();
+        expect(objects.length).toEqual(1);
+
+        processCzml(czmlDelete, dynamicObjectCollection);
+        expect(dynamicObjectCollection.getObjects().length).toEqual(0);
+        expect(dynamicObjectCollection.getObject('test')).toBeUndefined();
     });
 
     it('processCzml populates dynamicObjectCollection with expected data for a single packet', function() {

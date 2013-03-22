@@ -1,0 +1,733 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Button Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.on");
+			dojo.require("dijit.robotx");
+			dojo.require("dijit.tests.helpers");	// functions to help test
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_Button.html');
+
+				doh.register("dijit.form.Button", [
+					{
+						name: "enabled",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var clicked = false;
+							dijit.byId("T1466").set("onClick", function(){ clicked = true; });
+
+							doh.robot.mouseMoveAt("T1466", 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(clicked, "click event was fired");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "disabled",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var clicked = false;
+							dijit.byId("disabled").set("onClick", function(){ clicked = true; });
+
+							doh.robot.mouseMoveAt("disabled", 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								if(!dojo.isWebKit){		// webkit bug, see #11064
+									doh.f(dojo.isDescendant(dojo.global.dijit.focus.curNode, dijit.byId("disabled").domNode), "not focused on button")
+								}
+								doh.f(clicked, "click event wasn't fired");
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+
+				doh.register("dijit.form.DropDownButton", [
+					{
+						name: "click button",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("edit", 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("editMenu"), "edit menu is visible: " + dijit.byId("editMenu").domNode.style.cssText);
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "click menu",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("copy", 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("editMenu"), "edit menu was closed: " + dijit.byId("editMenu").domNode.style.cssText);
+							}), 1000);
+							return d;
+						}
+					}
+
+				]);
+
+				doh.register("dijit.form.ComboButton", [
+					{
+						name: "click button",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var leftPart = dojo.query(".dijitButtonContents", dojo.byId("save"))[0];
+							doh.t(leftPart, "found left part of button");
+
+							var clicked = false;
+							dijit.byId("save").set("onClick", function(){ clicked = true; });
+
+							doh.robot.mouseMoveAt(leftPart, 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(clicked, "click event was fired");
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "click drop down button",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var rightPart = dojo.query(".dijitDownArrowButton", dojo.byId("save"))[0];
+							doh.t(rightPart, "found right part of button");
+
+							doh.robot.mouseMoveAt(rightPart, 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("saveMenu"), "save menu is visible: " + dijit.byId("saveMenu").domNode.style.cssText);
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "click menu",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("saveAs", 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("saveMenu"), "save menu was closed: " + dijit.byId("saveMenu").domNode.style.cssText);
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "disabled click button",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var leftPart = dojo.query(".dijitButtonContents", dojo.byId("save"))[0];
+							doh.t(leftPart, "found left part of button");
+
+							var clicked = false;
+							dijit.byId("save").set("onClick", function(){ clicked = true; });
+
+							dijit.byId("save").set("disabled", true);
+
+							doh.robot.mouseMoveAt(leftPart, 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								if(!dojo.isWebKit){ // webkit bug, see #11064
+									doh.f(dojo.isDescendant(dojo.global.dijit.focus.curNode, dijit.byId("save").domNode), "not focused on button")
+								}
+								doh.f(clicked, "click event wasn't fired");
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "disabled click drop down button",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var rightPart = dojo.query(".dijitDownArrowButton", dojo.byId("save"))[0];
+							doh.t(rightPart, "found right part of button");
+
+							doh.robot.mouseMoveAt(rightPart, 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								if(!dojo.isWebKit){		// webkit bug, see #11064
+									doh.f(dojo.isDescendant(dojo.global.dijit.focus.curNode, dijit.byId("save").domNode), "not focused on button")
+								}
+								doh.t(isHidden("saveMenu"), "save menu is still hidden: " + dijit.byId("saveMenu").domNode.style.cssText);
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "tabIndex",
+						timeout: 1000,
+						runTest: function(){
+							var btn = dijit.byId("save"),
+								focusNode = btn.focusNode,
+								titleNode = btn.titleNode;
+
+							btn.set("disabled", true);
+							doh.t(btn.get("disabled"), "save button is disabled");
+							doh.f(dojo.hasAttr(focusNode, "tabIndex") && dojo.attr(focusNode, "tabIndex") >= 0, "disabled focusNode tabIndex");
+							doh.f(dojo.hasAttr(titleNode, "tabIndex") && dojo.attr(titleNode, "tabIndex") >= 0, "disabled titleNode tabIndex");
+
+							btn.set("disabled", false);
+							doh.f(btn.get("disabled"), "save button is enabled");
+							doh.is(0, dojo.attr(focusNode, "tabIndex"), "enabled focusNode tabIndex");
+							doh.is(0, dojo.attr(titleNode, "tabIndex"), "enabled titleNode tabIndex");
+						}
+					}
+				]);
+
+				doh.register("dijit.form.ToggleButton", [
+					{
+						name: "initially checked",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var checked = dijit.byId("toggle1").get("checked");
+							dijit.byId("toggle1").set("onChange", function(v){ checked = v; });
+							doh.t(checked, "toggle1 initially checked");
+
+							doh.robot.mouseMoveAt("toggle1", 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(checked, "toggle1 unchecked");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "initially unchecked",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var checked = dijit.byId("toggle2").get("checked");
+							dijit.byId("toggle2").set("onChange", function(v){ checked = v; });
+							doh.f(checked, "toggle2 initially unchecked");
+
+							doh.robot.mouseMoveAt("toggle2", 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(checked, "toggle2 checked");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "disabled",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dijit.byId("toggle1").set("disabled", true);
+
+							var changed = false;
+							dijit.byId("toggle1").set("onChange", function(v){ changed = true; });
+
+							doh.robot.mouseMoveAt("toggle1", 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								if(!dojo.isWebKit){		// webkit bug, see #11064
+									doh.f(dojo.isDescendant(dojo.global.dijit.focus.curNode, dijit.byId("toggle1").domNode), "not focused on button")
+								}
+								doh.f(changed, "value didn't change");
+							}), 1000);
+							return d;
+						}
+					}
+				]);
+
+				doh.register("get/set", [
+					{
+						name: "change label",
+						runTest: function(){
+							dijit.byId("edit").set("label", "hi!");
+							doh.is("hi!", dijit.byId("edit").containerNode.innerHTML);
+						}
+					},
+
+					{
+						name: "icon",
+						runTest: function(){
+							// initial condition: no icon
+							doh.f(dojo.hasClass(dijit.byId("T1466").iconNode, "plusIcon"), "doesn't have plusIcon class");
+							doh.is("none", dojo.style(dijit.byId("T1466").iconNode, "display"), "initially hidden");
+
+							// no icon --> icon
+							dijit.byId("T1466").set("iconClass", "plusIcon");
+							doh.t(dojo.hasClass(dijit.byId("T1466").iconNode, "plusIcon"), "plusIcon class added");
+							doh.isNot("none", dojo.style(dijit.byId("T1466").iconNode, "display"), "became visible");
+
+							// switching icon
+							dijit.byId("T1466").set("iconClass", "noteIcon");
+							doh.f(dojo.hasClass(dijit.byId("T1466").iconNode, "plusIcon"), "plusIcon cleared");
+							doh.t(dojo.hasClass(dijit.byId("T1466").iconNode, "noteIcon"), "noteIcon added");
+
+							// initial conditions for buttons with icon
+							doh.t(dojo.hasClass(dijit.byId("dropDownNoLabel").iconNode, "noteIcon"),
+									"dropDownNoLabel: noteIcon set");
+							doh.t(dojo.hasClass(dijit.byId("comboNoLabel").iconNode, "plusBlockIcon"),
+									"comboNoLabel: plusBlockIcon set");
+							doh.t(isVisible(dijit.byId("comboNoLabel").iconNode),
+									"comboNoLabel: initially visible");
+						}
+					},
+
+					{
+						name: "disable",
+						timeout: 6000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							dijit.byId("save").set("disabled", true);
+
+							// click left side of button
+							var leftPart = dojo.query(".dijitButtonContents", dojo.byId("save"))[0];
+							doh.t(leftPart, "found left part of button");
+							var clicked = false;
+							dijit.byId("save").set("onClick", function(){ clicked = true; });
+							doh.robot.mouseMoveAt(leftPart, 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							// click right side of button
+							var rightPart = dojo.query(".dijitDownArrowButton", dojo.byId("save"))[0];
+							doh.t(rightPart, "found right part of button");
+							doh.robot.mouseMoveAt(rightPart, 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(clicked, "click event was not fired");
+								doh.f(isVisible("saveMenu"), "save menu is hidden: " + dijit.byId("saveMenu").domNode.style.cssText);
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				var nameBox, valueBox;
+				function setUp(){
+					nameBox = dojo.byId("buttonName");
+					valueBox = dojo.byId("buttonValue");
+					dojo.window.scrollIntoView(valueBox);
+					nameBox.value = 'INIT';
+					valueBox.value = 'INIT';
+				}
+				doh.register("submit", [
+					{
+						name: "plain",
+						timeout: 5000,
+						setUp: setUp,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt('SubmitPlain', 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Plain", nameBox.value, "Plain name");
+								doh.is("Plain Submit", valueBox.value, "Plain value");
+							}), 1500);
+
+							return d;
+						}
+					},
+					{
+						name: "combo left",
+						timeout: 5000,
+						setUp: setUp,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt('SubmitCombo', 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Combo", nameBox.value, "Combo name");
+								doh.is("Combo Submit", valueBox.value, "Combo value");
+							}), 1500);
+
+							return d;
+						}
+					},
+					{
+						name: "combo right",
+						timeout: 5000,
+						setUp: setUp,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var downArrowNode = dojo.query(".dijitDownArrowButton", dojo.byId("SubmitCombo"))[0];
+
+							doh.robot.mouseMoveAt(downArrowNode, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("INIT", nameBox.value, "Combo Down Arrow name");
+								doh.is("INIT", valueBox.value, "Combo Down Arrow value");
+							}), 1500);
+
+							return d;
+						}
+					},
+					{
+						name: "combo menu",
+						timeout: 5000,
+						setUp: setUp,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("SubmitComboMenuItem", 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("", nameBox.value, "Combo Arrow name");
+								doh.is("", valueBox.value, "Combo Arrow value");
+							}), 1500);
+
+							return d;
+						}
+					},
+					{
+						name: "drop down",
+						timeout: 5000,
+						setUp: setUp,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt('SubmitDropDown', 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("DropDown", nameBox.value, "DropDown name");
+								doh.is("DropDown Submit", valueBox.value, "DropDown value");
+							}), 1500);
+
+							return d;
+						}
+					},
+					{
+						name: "drop down menu",
+						timeout: 5000,
+						setUp: setUp,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("SubmitDropDownMenuItem", 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("", nameBox.value, "DropDown Arrow name");
+								doh.is("", valueBox.value, "DropDown Arrow value");
+							}), 1500);
+
+							return d;
+						}
+					},
+					{
+						name: "disabled",
+						timeout: 5000,
+						setUp: setUp,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt('SubmitDisabled', 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("INIT", nameBox.value, "Disabled name");
+								doh.is("INIT", valueBox.value, "Disabled value");
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("onClick", [
+					{
+						name: "reset: none",
+						timeout: 3000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var valueBox = dojo.byId("onClickName");
+							valueBox.value = '1';
+							doh.robot.mouseMoveAt('reset1', 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("RESET", dojo.byId('onClickName').value);
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "reset native: none",
+						timeout: 3000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var valueBox = dojo.byId("onClickName");
+							valueBox.value = '1';
+							doh.robot.mouseMoveAt('reset1N', 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("RESET", dojo.byId('onClickName').value);
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "reset: return false",
+						timeout: 3000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var valueBox = dojo.byId("onClickName");
+							valueBox.value = '2';
+							doh.robot.mouseMoveAt('reset2', 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("2", dojo.byId('onClickName').value);
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "reset native: return false",
+						timeout: 3000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var valueBox = dojo.byId("onClickName");
+							valueBox.value = '2';
+							doh.robot.mouseMoveAt('reset2N', 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("2", dojo.byId('onClickName').value);
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "reset: return true",
+						timeout: 3000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var valueBox = dojo.byId("onClickName");
+							valueBox.value = '3';
+							doh.robot.mouseMoveAt('reset3', 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("RESET", dojo.byId('onClickName').value);
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "reset native: return true",
+						timeout: 3000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var valueBox = dojo.byId("onClickName");
+							valueBox.value = '3';
+							doh.robot.mouseMoveAt('reset3N', 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("RESET", dojo.byId('onClickName').value);
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "reset: return",
+						timeout: 3000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var valueBox = dojo.byId("onClickName");
+							valueBox.value = '4';
+							doh.robot.mouseMoveAt('reset4', 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("RESET", dojo.byId('onClickName').value);
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "reset native: return",
+						timeout: 3000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var valueBox = dojo.byId("onClickName");
+							valueBox.value = '4';
+							doh.robot.mouseMoveAt('reset4N', 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("RESET", dojo.byId('onClickName').value);
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "reset: empty",
+						timeout: 3000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var valueBox = dojo.byId("onClickName");
+							valueBox.value = '5';
+							doh.robot.mouseMoveAt('reset5', 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("RESET", dojo.byId('onClickName').value);
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "reset native: empty",
+						timeout: 3000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var valueBox = dojo.byId("onClickName");
+							valueBox.value = '5';
+							doh.robot.mouseMoveAt('reset5N', 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("RESET", dojo.byId('onClickName').value);
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("resize", [
+					{
+						name: "ComboButton",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var combo = dijit.byId('combo_default');
+							var origSize = combo.domNode.scrollWidth;
+
+							doh.robot.mouseMoveAt('changeLabels', 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.isNot(origSize, combo.domNode.scrollWidth, "ComboButton size");
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("bubbling", [
+					{
+						name: "bubbling",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								wrapper = dojo.byId("bubbleContainer");
+
+							// Listen for click events on the outer DOMNode.
+							var clicks = 0;
+							dojo.on(wrapper, "click", function(){
+								clicks++;
+							});
+
+							doh.robot.mouseMoveAt("bubble2", 500);
+							doh.robot.mouseClick({left:true}, 500);
+
+							// Check that one click event bubbled
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(1, clicks, "one click event bubbled");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

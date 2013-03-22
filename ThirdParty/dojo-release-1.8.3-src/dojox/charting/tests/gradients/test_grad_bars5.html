@@ -1,0 +1,99 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+    <title>Gradient: Bars #5</title>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+    <script>
+		dojo.require("dojox.charting.Chart");
+        dojo.require("dojox.charting.axis2d.Default");
+        dojo.require("dojox.charting.plot2d.Bars");
+        dojo.require("dojox.charting.plot2d.ClusteredBars");
+        dojo.require("dojox.charting.plot2d.StackedBars");
+		dojo.require("dojox.charting.Theme");
+
+        run = function(){
+            dojo.attr("start", "disabled", true);
+            
+            var theme1 = new dojox.charting.Theme({
+                    seriesThemes: [
+                        {
+                            fill: { // red plastic cylinder
+                                type: "linear", space: "shapeY", x1: 0, y1: 0, x2: 100, y2: 0,
+                                //colors: [{"offset":0,"color":{"r":174,"g":0,"b":0,"a":1}},{"offset":9.992007221626409e-16,"color":{"r":174,"g":0,"b":0,"a":1}},{"offset":0.013851578375197016,"color":{"r":215,"g":0,"b":0,"a":1}},{"offset":0.031369214560646785,"color":{"r":221,"g":0,"b":0,"a":1}},{"offset":0.052730424013296195,"color":{"r":227,"g":0,"b":0,"a":1}},{"offset":0.07793466262473725,"color":{"r":231,"g":0,"b":0,"a":1}},{"offset":0.10686548826723474,"color":{"r":235,"g":0,"b":0,"a":1}},{"offset":0.13932503172363186,"color":{"r":237,"g":0,"b":0,"a":1}},{"offset":0.17505409866798705,"color":{"r":237,"g":0,"b":0,"a":1}},{"offset":0.21374490245077393,"color":{"r":236,"g":0,"b":0,"a":1}},{"offset":0.2550499830985289,"color":{"r":235,"g":0,"b":0,"a":1}},{"offset":0.2985891262622242,"color":{"r":231,"g":0,"b":0,"a":1}},{"offset":0.34395522101620957,"color":{"r":227,"g":0,"b":0,"a":1}},{"offset":0.39071954725782887,"color":{"r":221,"g":0,"b":0,"a":1}},{"offset":0.43843674643815966,"color":{"r":214,"g":0,"b":0,"a":1}},{"offset":0.486649598772369,"color":{"r":206,"g":0,"b":0,"a":1}},{"offset":0.534893654133759,"color":{"r":197,"g":0,"b":0,"a":1}},{"offset":0.5827017159854847,"color":{"r":187,"g":0,"b":0,"a":1}},{"offset":0.6296081436291938,"color":{"r":177,"g":0,"b":0,"a":1}},{"offset":0.675152909596798,"color":{"r":165,"g":0,"b":0,"a":1}},{"offset":0.7188853219808664,"color":{"r":153,"g":0,"b":0,"a":1}},{"offset":0.7603672971865236,"color":{"r":141,"g":0,"b":0,"a":1}},{"offset":0.7991760633122942,"color":{"r":128,"g":0,"b":0,"a":1}},{"offset":0.8349062525618471,"color":{"r":115,"g":0,"b":0,"a":1}},{"offset":0.8671717220460553,"color":{"r":102,"g":0,"b":0,"a":1}},{"offset":0.8956088313250493,"color":{"r":102,"g":0,"b":0,"a":1}},{"offset":0.9198874247410794,"color":{"r":102,"g":0,"b":0,"a":1}},{"offset":0.9397488000447978,"color":{"r":102,"g":0,"b":0,"a":1}},{"offset":0.9551184243916481,"color":{"r":102,"g":0,"b":0,"a":1}},{"offset":0.9663589710873243,"color":{"r":102,"g":0,"b":0,"a":1}},{"offset":0.9745887231209727,"color":{"r":102,"g":0,"b":0,"a":1}},{"offset":0.981655223251274,"color":{"r":102,"g":0,"b":0,"a":1}},{"offset":0.9895694262239484,"color":{"r":131,"g":0,"b":0,"a":1}},{"offset":1,"color":{"r":174,"g":0,"b":0,"a":1}}]
+                                colors: [{"offset":0,"color":{"r":174,"g":0,"b":0,"a":1}},{"offset":0.08,"color":{"r":231,"g":0,"b":0,"a":1}},{"offset":0.18,"color":{"r":237,"g":150,"b":150,"a":1}},{"offset":0.3,"color":{"r":231,"g":0,"b":0,"a":1}},{"offset":0.39,"color":{"r":221,"g":0,"b":0,"a":1}},{"offset":0.49,"color":{"r":206,"g":0,"b":0,"a":1}},{"offset":0.58,"color":{"r":187,"g":0,"b":0,"a":1}},{"offset":0.68,"color":{"r":165,"g":0,"b":0,"a":1}},{"offset":0.8,"color":{"r":128,"g":0,"b":0,"a":1}},{"offset":0.9,"color":{"r":102,"g":0,"b":0,"a":1}},{"offset":1,"color":{"r":174,"g":0,"b":0,"a":1}}]
+                            }
+                        },
+                        {
+                            fill: { // yellow plastic cylinder
+                                type: "linear", space: "shapeY", x1: 0, y1: 0, x2: 100, y2: 0,
+                                //colors: [{"offset":0,"color":{"r":174,"g":174,"b":0,"a":1}},{"offset":9.992007221626409e-16,"color":{"r":174,"g":174,"b":0,"a":1}},{"offset":0.01385157837519746,"color":{"r":215,"g":215,"b":0,"a":1}},{"offset":0.03136921456064723,"color":{"r":221,"g":221,"b":0,"a":1}},{"offset":0.05273042401329664,"color":{"r":227,"g":227,"b":0,"a":1}},{"offset":0.07793466262473725,"color":{"r":231,"g":231,"b":0,"a":1}},{"offset":0.10686548826723508,"color":{"r":235,"g":235,"b":0,"a":1}},{"offset":0.13932503172363186,"color":{"r":237,"g":237,"b":0,"a":1}},{"offset":0.1750540986679875,"color":{"r":237,"g":237,"b":0,"a":1}},{"offset":0.21374490245077382,"color":{"r":236,"g":236,"b":0,"a":1}},{"offset":0.2550499830985288,"color":{"r":235,"g":235,"b":0,"a":1}},{"offset":0.29858912626222467,"color":{"r":231,"g":231,"b":0,"a":1}},{"offset":0.34395522101620946,"color":{"r":227,"g":227,"b":0,"a":1}},{"offset":0.39071954725782887,"color":{"r":221,"g":221,"b":0,"a":1}},{"offset":0.43843674643816,"color":{"r":214,"g":214,"b":0,"a":1}},{"offset":0.48664959877236935,"color":{"r":206,"g":206,"b":0,"a":1}},{"offset":0.5348936541337589,"color":{"r":197,"g":197,"b":0,"a":1}},{"offset":0.582701715985485,"color":{"r":187,"g":187,"b":0,"a":1}},{"offset":0.6296081436291936,"color":{"r":177,"g":177,"b":0,"a":1}},{"offset":0.6751529095967981,"color":{"r":165,"g":165,"b":0,"a":1}},{"offset":0.7188853219808665,"color":{"r":153,"g":153,"b":0,"a":1}},{"offset":0.7603672971865237,"color":{"r":141,"g":141,"b":0,"a":1}},{"offset":0.7991760633122942,"color":{"r":128,"g":128,"b":0,"a":1}},{"offset":0.8349062525618473,"color":{"r":115,"g":115,"b":0,"a":1}},{"offset":0.8671717220460553,"color":{"r":102,"g":102,"b":0,"a":1}},{"offset":0.8956088313250493,"color":{"r":102,"g":102,"b":0,"a":1}},{"offset":0.9198874247410794,"color":{"r":102,"g":102,"b":0,"a":1}},{"offset":0.9397488000447977,"color":{"r":102,"g":102,"b":0,"a":1}},{"offset":0.955118424391648,"color":{"r":102,"g":102,"b":0,"a":1}},{"offset":0.9663589710873244,"color":{"r":102,"g":102,"b":0,"a":1}},{"offset":0.9745887231209727,"color":{"r":102,"g":102,"b":0,"a":1}},{"offset":0.9816552232512739,"color":{"r":102,"g":102,"b":0,"a":1}},{"offset":0.9895694262239484,"color":{"r":131,"g":131,"b":0,"a":1}},{"offset":1,"color":{"r":174,"g":174,"b":0,"a":1}}]
+                                colors: [{"offset":0,"color":{"r":174,"g":174,"b":0,"a":1}},{"offset":0.08,"color":{"r":231,"g":231,"b":0,"a":1}},{"offset":0.18,"color":"white"},{"offset":0.3,"color":{"r":231,"g":231,"b":0,"a":1}},{"offset":0.39,"color":{"r":221,"g":221,"b":0,"a":1}},{"offset":0.49,"color":{"r":206,"g":206,"b":0,"a":1}},{"offset":0.58,"color":{"r":187,"g":187,"b":0,"a":1}},{"offset":0.68,"color":{"r":165,"g":165,"b":0,"a":1}},{"offset":0.8,"color":{"r":128,"g":128,"b":0,"a":1}},{"offset":0.9,"color":{"r":102,"g":102,"b":0,"a":1}},{"offset":1,"color":{"r":174,"g":174,"b":0,"a":1}}]
+                            }
+                        },
+                        {
+                            fill: { // blue plastic cylinder
+                                type: "linear", space: "shapeY", x1: 0, y1: 0, x2: 100, y2: 0,
+                                //colors: [{"offset":0,"color":{"r":0,"g":0,"b":174,"a":1}},{"offset":5.551115123125783e-16,"color":{"r":0,"g":0,"b":174,"a":1}},{"offset":0.013851578375196572,"color":{"r":0,"g":0,"b":215,"a":1}},{"offset":0.03136921456064645,"color":{"r":0,"g":0,"b":221,"a":1}},{"offset":0.052730424013296195,"color":{"r":0,"g":0,"b":227,"a":1}},{"offset":0.0779346626247368,"color":{"r":0,"g":0,"b":231,"a":1}},{"offset":0.10686548826723419,"color":{"r":0,"g":0,"b":235,"a":1}},{"offset":0.13932503172363142,"color":{"r":0,"g":0,"b":237,"a":1}},{"offset":0.17505409866798705,"color":{"r":0,"g":0,"b":237,"a":1}},{"offset":0.2137449024507735,"color":{"r":0,"g":0,"b":236,"a":1}},{"offset":0.25504998309852855,"color":{"r":0,"g":0,"b":235,"a":1}},{"offset":0.2985891262622238,"color":{"r":0,"g":0,"b":231,"a":1}},{"offset":0.3439552210162091,"color":{"r":0,"g":0,"b":227,"a":1}},{"offset":0.39071954725782854,"color":{"r":0,"g":0,"b":221,"a":1}},{"offset":0.4384367464381598,"color":{"r":0,"g":0,"b":214,"a":1}},{"offset":0.48664959877236913,"color":{"r":0,"g":0,"b":206,"a":1}},{"offset":0.5348936541337587,"color":{"r":0,"g":0,"b":197,"a":1}},{"offset":0.5827017159854848,"color":{"r":0,"g":0,"b":187,"a":1}},{"offset":0.6296081436291935,"color":{"r":0,"g":0,"b":177,"a":1}},{"offset":0.6751529095967976,"color":{"r":0,"g":0,"b":165,"a":1}},{"offset":0.7188853219808666,"color":{"r":0,"g":0,"b":153,"a":1}},{"offset":0.7603672971865236,"color":{"r":0,"g":0,"b":141,"a":1}},{"offset":0.7991760633122941,"color":{"r":0,"g":0,"b":128,"a":1}},{"offset":0.8349062525618474,"color":{"r":0,"g":0,"b":115,"a":1}},{"offset":0.8671717220460555,"color":{"r":0,"g":0,"b":102,"a":1}},{"offset":0.8956088313250493,"color":{"r":0,"g":0,"b":102,"a":1}},{"offset":0.9198874247410793,"color":{"r":0,"g":0,"b":102,"a":1}},{"offset":0.9397488000447977,"color":{"r":0,"g":0,"b":102,"a":1}},{"offset":0.955118424391648,"color":{"r":0,"g":0,"b":102,"a":1}},{"offset":0.9663589710873243,"color":{"r":0,"g":0,"b":102,"a":1}},{"offset":0.9745887231209727,"color":{"r":0,"g":0,"b":102,"a":1}},{"offset":0.9816552232512739,"color":{"r":0,"g":0,"b":102,"a":1}},{"offset":0.9895694262239484,"color":{"r":0,"g":0,"b":131,"a":1}},{"offset":1,"color":{"r":0,"g":0,"b":174,"a":1}}]
+                                colors: [{"offset":0,"color":{"r":0,"g":0,"b":174,"a":1}},{"offset":0.08,"color":{"r":0,"g":0,"b":231,"a":1}},{"offset":0.18,"color":{"r":150,"g":150,"b":237,"a":1}},{"offset":0.3,"color":{"r":0,"g":0,"b":231,"a":1}},{"offset":0.39,"color":{"r":0,"g":0,"b":221,"a":1}},{"offset":0.49,"color":{"r":0,"g":0,"b":206,"a":1}},{"offset":0.58,"color":{"r":0,"g":0,"b":187,"a":1}},{"offset":0.68,"color":{"r":0,"g":0,"b":165,"a":1}},{"offset":0.8,"color":{"r":0,"g":0,"b":128,"a":1}},{"offset":0.9,"color":{"r":0,"g":0,"b":102,"a":1}},{"offset":1,"color":{"r":0,"g":0,"b":174,"a":1}}]
+                            }
+                        }
+                    ]
+                });
+
+            var chart1 = new dojox.charting.Chart("c1").
+                setTheme(theme1).
+                addAxis("x", {fixLower: "major", fixUpper: "major", includeZero: true,  minorTickStep: 0.2}).
+                addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", natural: true}).
+                addPlot("default", {type: "Bars"}).
+                addSeries("Series A", [1, 2, 3, 4, 5]).
+                addSeries("Series B", [5, 4, 3, 2, 1]).
+                render();
+
+            var chart2 = new dojox.charting.Chart("c2").
+                setTheme(theme1).
+                addAxis("x", {fixLower: "major", fixUpper: "major", includeZero: true,  minorTickStep: 0.5}).
+                addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", natural: true}).
+                addPlot("default", {type: "StackedBars"}).
+                addSeries("Series A", [2, 3, 3, 3, 5]).
+                addSeries("Series B", [1, 4, 5, 2, 1]).
+                addSeries("Series C", [2, 1, 2, 1, 3]).
+                render();
+
+            var chart3 = new dojox.charting.Chart("c3").
+                setTheme(theme1).
+                addAxis("x", {fixLower: "major", fixUpper: "major", includeZero: true,  minorTickStep: 0.5}).
+                addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", natural: true}).
+                addPlot("default", {type: "ClusteredBars", gap: 5}).
+                addSeries("Series A", [2, 3, 3, 3, 5]).
+                addSeries("Series B", [1, 4, 5, 2, 1]).
+                addSeries("Series C", [2, 1, 2, 1, 3]).
+                render();
+        };
+        
+        dojo.addOnLoad(run);
+    </script>
+</head>
+<body>
+    <p><button id="start" onclick="run();">Start!</button></p>
+	<h1>1D shape-space pseudo-3D gradient</h1>
+	<p>Bars</p>
+    <div id="c1" style="position: relative; width: 600px; height: 400px;"></div>
+	<p>Stacked Bars</p>
+    <div id="c2" style="position: relative; width: 600px; height: 400px;"></div>
+	<p>Clustered Bars</p>
+    <div id="c3" style="position: relative; width: 600px; height: 400px;"></div>
+</body>
+</html>

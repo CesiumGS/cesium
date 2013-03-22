@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot BorderContainer Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx", "dojo/dom", "dojo/dom-geometry", "dojo/keys",
+				"dijit/tests/helpers", "dijit/tests/layout/robot/borderContainerTestFunctions", "dojo/domReady!"
+			], function(doh, robot, dom, geom, keys, helpers, bcTest){
+
+				robot.initRobot('../test_BorderContainer.html');
+
+				var focus;
+
+				doh.register("setup", [
+					function setup(){
+						// get pointers to singletons loaded on test page
+						focus = robot.window.require("dijit/focus");
+					}
+				]);
+
+				doh.register("mouse", [
+					{
+						name: "expand right pane",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							var oTop = geom.position(dom.byId("border2-top")),
+								oCenter = geom.position(dom.byId("border2-center")),
+								oRight = geom.position(dom.byId("border2-trailing")),
+								oBottom = geom.position(dom.byId("border2-bottom"));
+
+							// Drag slider to expand pane 
+							var size = geom.position("border2-trailing_splitter");
+							robot.mouseMoveAt("border2-trailing_splitter", 500);
+							robot.mousePress({left: true}, 500);
+							robot.mouseMoveAt("border2-trailing_splitter", 500, 100,
+								size.w/2 + (geom.isBodyLtr() ? -100 : 100), size.h/2);
+							robot.mouseRelease({left: true}, 500);
+							robot.sequence(d.getTestCallback(function(){
+								var nTop = geom.position(dom.byId("border2-top")),
+									nCenter = geom.position(dom.byId("border2-center")),
+									nRight = geom.position(dom.byId("border2-trailing")),
+									nBottom = geom.position(dom.byId("border2-bottom"));
+					
+								doh.t(bcTest.within(oRight.w + 100, nRight.w, 10), "right width went from " + oRight.w + " to " + nRight.w);
+								doh.t(bcTest.within(oTop.w - 100, nTop.w, 10), "top width went from " + oTop.w + " to " + nTop.w);
+								doh.t(bcTest.within(oCenter.w - 100, nCenter.w, 10), "center width went from " + oCenter.w + " to " + nCenter.w);
+								doh.t(bcTest.within(oBottom.w - 100, nBottom.w, 10), "bottom width went from " + nBottom.w + " to " + nBottom.w);
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "shrink bottom pane",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							var oTop = geom.position(dom.byId("border2-top")),
+								oCenter = geom.position(dom.byId("border2-center")),
+								oRight = geom.position(dom.byId("border2-trailing")),
+								oBottom = geom.position(dom.byId("border2-bottom"));
+
+							// Drag slider to shrink pane 
+							var size = geom.position("border2-bottom_splitter");
+							robot.mouseMoveAt("border2-bottom_splitter", 500);
+							robot.mousePress({left: true}, 500);
+							robot.mouseMoveAt("border2-bottom_splitter", 500, 100, size.w/2, size.h/2 + 10);
+							robot.mouseRelease({left: true}, 500);
+							robot.sequence(d.getTestCallback(function(){
+								var nTop = geom.position(dom.byId("border2-top")),
+									nCenter = geom.position(dom.byId("border2-center")),
+									nRight = geom.position(dom.byId("border2-trailing")),
+									nBottom = geom.position(dom.byId("border2-bottom"));
+					
+								doh.t(bcTest.within(oBottom.h - 10, nBottom.h, 10), "bottom height went from " + oBottom.h + " to " + nBottom.h);
+								doh.t(bcTest.within(oCenter.h + 10, nCenter.h, 10), "center height went from " + oCenter.h + " to " + nCenter.h);
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("keyboard", [
+					{
+						name: "tabIndex",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							robot.sequence(function(){
+								dom.byId("toggleLeftButton").focus();
+							}, 500, 500);
+
+							// Tab into second BorderContainer, landing on link
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestErrback(function(){
+								doh.is("a link", helpers.innerText(focus.curNode), "tabbed to link");
+							}), 500);
+
+							// Tab past ComboBox to get to splitter for bottom panel
+							robot.keyPress(keys.TAB, 500, {});
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestErrback(function(){
+								doh.is("border2-bottom_splitter", focus.curNode.id, "focus on bottom splitter");
+							}), 500);
+
+							// Tab to get to splitter for right panel
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestErrback(function(){
+								doh.is("border2-trailing_splitter", focus.curNode.id, "focus on bottom splitter");
+							}), 500);
+
+							// tab out of BorderContainer, into the next one
+							robot.keyPress(keys.TAB, 500, {});
+							robot.sequence(d.getTestCallback(function(){
+								doh.is("a link", helpers.innerText(focus.curNode), "tabbed to link in next BC");
+							}), 500);
+
+							return d;
+						}
+					},
+
+					{
+						name: "expand/contract",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							var oSize, nSize;
+
+							// contract bottom pane
+							robot.sequence(function(){
+								dom.byId("border2-bottom_splitter").focus();
+								oSize = geom.position("border2-bottom");
+							}, 500, 500);
+							robot.keyPress(keys.DOWN_ARROW, 500, {});
+							robot.sequence(d.getTestErrback(function(){
+								nSize = geom.position("border2-bottom");
+								doh.t(nSize.h < oSize.h, "contracted bottom pane");
+							}), 500);
+
+							// expand trailing pane
+							robot.sequence(function(){
+								dom.byId("border2-trailing_splitter").focus();
+								oSize = geom.position("border2-trailing");
+							}, 500, 500);
+							robot.keyPress(geom.isBodyLtr() ? keys.LEFT_ARROW : keys.RIGHT_ARROW, 500, {});
+							robot.sequence(d.getTestCallback(function(){
+								nSize = geom.position("border2-trailing");
+								doh.t(nSize.w > oSize.w, "expanded trailing pane");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+				
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

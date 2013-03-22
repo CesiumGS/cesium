@@ -1,0 +1,268 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>robot Dialog Mouse Test</title>
+
+		<style>
+			@import "../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			require([
+				"doh/runner", "dojo/robotx",
+				"dojo/aspect", "dojo/dom", "dojo/query",
+				"dijit/tests/helpers", "dojo/domReady!"
+			], function(doh, robot, aspect, dom, query, helpers){
+
+				robot.initRobot('../test_Dialog.html');
+
+				doh.register(function setup(){
+					// get pointer to registry in the iframe
+					registry = robot.window.require("dijit/registry");
+					dfocus = robot.window.require("dijit/focus");
+				});
+
+
+				doh.register("dijit.Dialog mouse tests (cancel)", [
+					{
+						name: "open dialog",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var oldOnClick = registry.byId("dialog1button").onClick;
+							registry.byId("dialog1button").onClick = function(){
+								registry.byId("dialog1").show().then(d.getTestCallback(function(){
+									doh.t(helpers.isVisible("dialog1"), "dialog 1 has been made visible");
+									doh.is("name", dfocus.curNode.id, "focus is on the first field");
+								}));
+								registry.byId("dialog1button").onClick = oldOnClick;
+							};
+
+							// Open the dialog
+							robot.mouseMoveAt("dialog1button", 1000);
+							robot.mouseClick({left: true}, 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "test that other controls on page can't be clicked",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.mouseMoveAt("plainInput", 500);
+							robot.mouseClick({left: true}, 1000);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(helpers.isVisible("dialog1"), "dialog 1 still visible");
+								doh.is("name", dfocus.curNode && dfocus.curNode.id,
+										"focus remains on / returned to dialog");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "open date drop down",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							onFocus(function(){
+								// Focus might first go to input, then to calendar, so wait for that
+								setTimeout(d.getTestCallback(function(){
+									var calDomNode = query(".dijitCalendarContainer");
+									doh.t(calDomNode.length == 1 && helpers.isVisible(calDomNode[0]), "calendar is being shown");
+									doh.t(dom.isDescendant(dfocus.curNode, calDomNode[0]), "focus is on the calendar ");
+								}), 500);
+							});
+
+							robot.mouseMoveAt(function(){ return query(".dijitArrowButton", registry.byId("date").domNode)[0]; }, 500);
+							robot.mouseClick({left: true}, 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "close date drop down",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							robot.mouseMove(10, 10, 500);
+							robot.mouseClick({left: true}, 1000);
+
+							robot.sequence(d.getTestCallback(function(){
+								var calDomNode= query(".dijitCalendarContainer");
+								doh.t(calDomNode.length == 0 || helpers.isHidden(calDomNode[0]), "calendar has disappeared");
+								doh.t(helpers.isVisible("dialog1"), "dialog 1 wasn't closed");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "cancel dialog",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							onFocus(d.getTestCallback(function(node){
+								doh.is("dialog1button", node.id, "focus returned to button");
+								doh.t(helpers.isHidden("dialog1"), "dialog 1 was closed");
+							}));
+
+							var button = query("#dialog1 .dijitDialogCloseIcon")[0];
+							robot.mouseMoveAt(button, 500);
+							robot.mouseClick({left: true}, 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("dijit.Dialog mouse tests (submit)", [
+					{
+						name: "submit some data",
+						timeout: 15000,
+						setUp: function(){
+							registry.byId("dialog1").reset();
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Setup handler to catch submitted data
+							var data;
+							aspect.after(registry.byId("dialog1"), "execute", function(vals){
+								data = vals;
+							}, true);
+
+							// Open the dialog
+							robot.mouseMoveAt("dialog1button", 500, 1);
+							robot.mouseClick({left: true}, 500);
+
+							// Enter some info
+							robot.mouseMoveAt("name", 500, 1);
+							robot.mouseClick({left: true}, 500);
+							robot.typeKeys("Ted", 500, 600);
+
+							robot.mouseMoveAt("loc", 500, 1);
+							robot.mouseClick({left: true}, 500);
+							robot.typeKeys("America", 500, 1400);
+
+							// Submit
+							robot.mouseMoveAt("ok", 500, 1);
+							robot.mouseClick({left: true}, 500);
+
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(helpers.isHidden("dialog1"), "dialog 1 was closed on submit");
+								doh.t(data, "got submit data");
+								doh.is("Ted", data.name, "Name");
+								doh.is("America", data.loc, "Location");
+							}), 1000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("dijit.Dialog mouse tests (unfocusable open button)", [
+					{
+						name: "open #1",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Open the dialog
+							robot.mouseMoveAt("SelfDestructDlgBtn2", 1000);
+							robot.mouseClick({left: true}, 1000);
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(registry.byId("SelfDestructDlg"), "dialog created");
+								doh.t(helpers.isVisible("SelfDestructDlgBtn2"), "dialog has been made visible");
+								doh.is("SelfDestructDlgInput", dfocus.curNode.id, "focus is on the first field");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "close #1",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Close the dialog
+							robot.mouseMoveAt(function(){
+								return query("#SelfDestructDlg .dijitDialogCloseIcon")[0];
+							}, 1000);
+							robot.mouseClick({left: true}, 1000);
+							robot.sequence(d.getTestCallback(function(){
+								doh.f(registry.byId("SelfDestructDlg"), "dialog destroyed");
+
+								var focus = dfocus.curNode;
+								doh.f(focus, "focus should have been cleared, but set to " +
+										focus + (focus && focus.tagName) + (focus && focus.id));
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "open #2",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Open the dialog
+							robot.mouseMoveAt("SelfDestructDlgBtn2", 1000);
+							robot.mouseClick({left: true}, 1000);
+							robot.sequence(d.getTestCallback(function(){
+								doh.t(registry.byId("SelfDestructDlg"), "dialog created");
+								doh.t(helpers.isVisible("SelfDestructDlgBtn2"), "dialog has been made visible");
+								doh.is("SelfDestructDlgInput", dfocus.curNode.id, "focus is on the first field");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "close #2",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Close the dialog
+							robot.mouseMoveAt(function(){
+								return query("#SelfDestructDlg .dijitDialogCloseIcon")[0];
+							}, 1000);
+							robot.mouseClick({left: true}, 1000);
+							robot.sequence(d.getTestCallback(function(){
+								doh.f(registry.byId("SelfDestructDlg"), "dialog destroyed");
+
+								var focus = dfocus.curNode;
+								doh.f(focus, "focus should have been cleared, but set to " +
+										focus + (focus && focus.tagName) + (focus && focus.id));
+							}), 1000);
+
+							return d;
+						}
+					}
+
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

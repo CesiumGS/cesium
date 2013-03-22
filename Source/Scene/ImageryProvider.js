@@ -119,7 +119,7 @@ define([
     /**
      * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
      * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
-     * are passed an instance of {@link ImageryProviderError}.
+     * are passed an instance of {@link TileProviderError}.
      *
      * @memberof ImageryProvider
      *
@@ -140,6 +140,19 @@ define([
      * @exception {DeveloperError} <code>getLogo</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getLogo = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Gets the proxy used by this provider.
+     *
+     * @memberof ImageryProvider
+     *
+     * @returns {Proxy} The proxy.
+     *
+     * @see DefaultProxy
+     */
+    ImageryProvider.prototype.getProxy = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 

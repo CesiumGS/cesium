@@ -1,0 +1,124 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojox Analytics Test</title>
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+	
+	<!-- required: dojo.js Update analyticsUrl: to point to your test server-->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad:true, async:true, isDebug: true, usePlainJson: true, sendMethod: 'script', sendInterval: 5000, 
+				// the line below can be used to override the sampleDelay for mouseOver and targetProps and textContentMaxChars
+				//sampleDelay : 2000, targetProps : ['id','className'], textContentMaxChars : 12, 
+				analyticsUrl: 'http://dojotoolkit.org/~dmachi/dojo-1.0/dojox/analytics/logger/dojoxAnalytics.php'">
+	</script>
+
+	<!-- do not use: only for testing alternate themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<script language="JavaScript" type="text/javascript">
+		// include the analytics system
+		//dojo.require("dojox.analytics");
+
+		// this plugin returns the information dojo collects when it launches
+		//dojo.require("dojox.analytics.plugins.dojo");
+
+		// this plugin return the information the window has when it launches
+		// and it also ties to a few events such as window.option
+		//dojo.require("dojox.analytics.plugins.window");
+
+		// this plugin tracks console. message, It logs console.error, warn, and 
+		// info messages to the tracker.  It also defines console.rlog() which 
+		// can be used to log only to the server.  Note that if isDebug() is disabled
+		// you will still see the console messages on the sever, but not in the actual
+		// browser console.
+		//dojo.require("dojox.analytics.plugins.consoleMessages");
+
+		// tracks where a mouse is on a page an what it is over, periodically sampling
+		// and storing this data
+		//dojo.require("dojox.analytics.plugins.mouseOver");
+
+		//tracks mouse clicks on the page
+		//dojo.require("dojox.analytics.plugins.mouseClick");
+
+		//tracks when the user has gone idle
+		//dojo.require("dojox.analytics.plugins.idle");
+		
+		//dojo.require("dijit.TitlePane");
+		//dojo.require("dojo.parser");
+		//dojo.require("dojo.io.script");
+
+		// widgets used inside subpage loaded via href=
+		//dojo.require("dijit.form.Button");
+		//dojo.require("dijit.form.ComboBox");
+require([
+	"dojo/ready",
+	"dojox/analytics",
+	"dojox/analytics/plugins/dojo", 
+	"dojox/analytics/plugins/window", 
+	"dojox/analytics/plugins/consoleMessages",
+	"dojox/analytics/plugins/mouseOver", 
+	"dojox/analytics/plugins/mouseClick",
+	"dojox/analytics/plugins/idle",
+	"dijit/TitlePane", 
+	"dojo/parser", 
+	"dojo/io/script", 
+	"dijit/form/Button", 
+	"dijit/form/ComboBox"],
+	function(ready, analytics, dojoplugin, windowplugin, consolemsgplugin, mouseoverplugin, mouseclickplugin, 
+				idleplugin, TitlePane, parser, scriptIO, Button, ComboBox){
+
+		ready(function(){
+			console.info("Async Page Loaded Sample Message");
+		});
+	});
+		
+	</script>
+
+</head>
+<body class="tundra">
+	<table>
+		<tr>
+			<td colspan=3>
+				<h1 class="testTitle">Async Analytics Test</h1>
+			</td>
+		</tr>
+		<tr>
+			<td width="20%"></td>
+			<td>
+				<div data-dojo-type="dijit.TitlePane" data-dojo-props='title:"digg", style:"width: 300px;"'> 
+					Lorem Ipsum Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Quisque
+					iaculis, nulla id semper faucibus, pede tellus nonummy magna, vitae adipiscing
+					orci arcu ut augue. Nunc condimentum, magna a vestibulum convallis, libero purus
+					pulvinar orci, sed vestibulum urna sem ut pede. More Ipsum...
+					Sed sollicitudin suscipit risus. Nam ullamcorper. Sed nisl lectus, pellentesque
+					nec, malesuada eget, ornare a, libero. Lorem ipsum dolor sit amet,
+					consectetuer adipiscing elit.
+
+					<a href="http://cometdaily.com">cometdaily.com</a>
+				</div>
+
+				<div data-dojo-type="dijit.TitlePane" data-dojo-props='title:"Article 1", style:"width: 300px;"'> 
+					Lorem Ipsum Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Quisque
+					iaculis, nulla id semper faucibus, pede tellus nonummy magna, vitae adipiscing
+					orci arcu ut augue. Nunc condimentum, magna a vestibulum convallis, libero purus
+					pulvinar orci, sed vestibulum urna sem ut pede. More Ipsum...
+					Sed sollicitudin suscipit risus. Nam ullamcorper. Sed nisl lectus, pellentesque
+					nec, malesuada eget, ornare a, libero. Lorem ipsum dolor sit amet,
+					consectetuer adipiscing elit.
+
+					<a href="http://dojotoolkit.org">dojotoolkit.org</a>
+				</div>
+			</td>
+			<td width="20%"></td>
+		</tr>
+	</table>
+</body>
+</html>

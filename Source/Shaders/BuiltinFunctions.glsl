@@ -312,7 +312,7 @@ vec2 czm_ellipsoidWgs84TextureCoordinates(vec3 normal)
 mat3 czm_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
 {
     vec3 tangentMC = normalize(vec3(-positionMC.y, positionMC.x, 0.0));  // normalized surface tangent in model coordinates
-    vec3 tangentEC = normalize(czm_normal * tangentMC);                  // normalized surface tangent in eye coordiantes
+    vec3 tangentEC = normalize(czm_normal3D * tangentMC);                // normalized surface tangent in eye coordiantes
     vec3 bitangentEC = normalize(cross(normalEC, tangentEC));            // normalized surface bitangent in eye coordinates
 
     return mat3(
@@ -399,17 +399,26 @@ czm_material czm_getDefaultMaterial(czm_materialInput materialInput)
     return material;
 }
 
-float getLambertDiffuse(vec3 lightDirection, czm_material material)
+float getLambertDiffuse(vec3 lightDirectionEC, vec3 normalEC)
 {
-    return max(dot(lightDirection, material.normal), 0.0);
+    return max(dot(lightDirectionEC, normalEC), 0.0);
 }
 
-float getSpecular(vec3 lightDirection, vec3 toEye, czm_material material)
+float getLambertDiffuseOfMaterial(vec3 lightDirectionEC, czm_material material)
 {
-    vec3 toReflectedLight = reflect(-lightDirection, material.normal);
-    float specular = max(dot(toReflectedLight, toEye), 0.0);
+    return getLambertDiffuse(lightDirectionEC, material.normal);
+}
 
-    return pow(specular, material.shininess);
+float getSpecular(vec3 lightDirectionEC, vec3 toEyeEC, vec3 normalEC, float shininess)
+{
+    vec3 toReflectedLight = reflect(-lightDirectionEC, normalEC);
+    float specular = max(dot(toReflectedLight, toEyeEC), 0.0);
+    return pow(specular, shininess);
+}
+
+float getSpecularOfMaterial(vec3 lightDirectionEC, vec3 toEyeEC, czm_material material)
+{
+    return getSpecular(lightDirectionEC, toEyeEC, material.normal, material.shininess);
 }
 
 /**
@@ -433,10 +442,10 @@ float getSpecular(vec3 lightDirection, vec3 toEye, czm_material material)
 vec4 czm_phong(vec3 toEye, czm_material material)
 {
     // Diffuse from directional light sources at eye (for top-down and horizon views)
-    float diffuse = getLambertDiffuse(vec3(0.0, 0.0, 1.0), material) + getLambertDiffuse(vec3(0.0, 1.0, 0.0), material);
+    float diffuse = getLambertDiffuseOfMaterial(vec3(0.0, 0.0, 1.0), material) + getLambertDiffuseOfMaterial(vec3(0.0, 1.0, 0.0), material);
 
     // Specular from sun and pseudo-moon
-    float specular = getSpecular(czm_sunDirectionEC, toEye, material) + getSpecular(czm_moonDirectionEC, toEye, material);
+    float specular = getSpecularOfMaterial(czm_sunDirectionEC, toEye, material) + getSpecularOfMaterial(czm_moonDirectionEC, toEye, material);
 
     vec3 ambient = vec3(0.0);
     vec3 color = ambient + material.emission;
@@ -457,14 +466,67 @@ vec4 czm_phong(vec3 toEye, czm_material material)
  * @returns {float} The luminance.
  *
  * @example
- * float light = luminance(vec3(0.0)); // 0.0
- * float dark = luminance(vec3(1.0));  // ~1.0 
+ * float light = czm_luminance(vec3(0.0)); // 0.0
+ * float dark = czm_luminance(vec3(1.0));  // ~1.0 
  */
 float czm_luminance(vec3 rgb)
 {
     // Algorithm from Chapter 10 of Graphics Shaders.
     const vec3 W = vec3(0.2125, 0.7154, 0.0721);
     return dot(rgb, W);
+}
+
+/**
+ * Adjusts the hue of a color.
+ * 
+ * @name czm_hue
+ * @glslFunction
+ * 
+ * @param {vec3} rgb The color.
+ * @param {float} adjustment The amount to adjust the hue of the color in radians.
+ *
+ * @returns {float} The color with the hue adjusted.
+ *
+ * @example
+ * vec3 adjustHue = czm_hue(color, czm_pi); // The same as czm_hue(color, -czm_pi)
+ */
+vec3 czm_hue(vec3 rgb, float adjustment)
+{
+    const mat3 toYIQ = mat3(0.299,     0.587,     0.114,
+                            0.595716, -0.274453, -0.321263,
+                            0.211456, -0.522591,  0.311135);
+    const mat3 toRGB = mat3(1.0,  0.9563,  0.6210,
+                            1.0, -0.2721, -0.6474,
+                            1.0, -1.107,   1.7046);
+    
+    vec3 yiq = toYIQ * rgb;
+    float hue = atan(yiq.z, yiq.y) + adjustment;
+    float chroma = sqrt(yiq.z * yiq.z + yiq.y * yiq.y);
+    
+    vec3 color = vec3(yiq.x, chroma * cos(hue), chroma * sin(hue));
+    return toRGB * color;
+}
+
+/**
+ * Adjusts the saturation of a color.
+ * 
+ * @name czm_saturation
+ * @glslFunction
+ * 
+ * @param {vec3} rgb The color.
+ * @param {float} adjustment The amount to adjust the saturation of the color.
+ *
+ * @returns {float} The color with the saturation adjusted.
+ *
+ * @example
+ * vec3 greyScale = czm_saturation(color, 0.0);
+ * vec3 doubleSaturation = czm_saturation(color, 2.0);
+ */
+vec3 czm_saturation(vec3 rgb, float adjustment)
+{
+    // Algorithm from Chapter 16 of OpenGL Shading Language
+    vec3 intensity = vec3(czm_luminance(rgb));
+    return mix(intensity, rgb, adjustment);
 }
 
 /**
@@ -763,26 +825,10 @@ czm_raySegment czm_rayEllipsoidIntersectionInterval(czm_ray ray, czm_ellipsoid e
         float difference = q2 - 1.0; // Negatively valued.
         float w2 = dot(w, w);
         float product = w2 * difference; // Negatively valued.
-        if (qw < 0.0) // Looking inward.
-        {
-            float discriminant = qw * qw - product;
-            float temp = qw - sqrt(discriminant); // Avoid cancellation.  Negatively valued.
-            czm_raySegment i = czm_raySegment(0.0, difference / temp);
-            return i;
-        }
-        else if (qw > 0.0) // Looking outward.
-        {
-            float discriminant = qw * qw - product;
-            float temp = qw + sqrt(discriminant); // Avoid cancellation. Positively valued.
-            czm_raySegment i = czm_raySegment(0.0, temp / w2);
-            return i;
-        }
-        else // qw == 0.0 // Looking tangent.
-        {
-            float temp = sqrt(-product);
-            czm_raySegment i = czm_raySegment(0.0, temp / w2);
-            return i;
-        }
+        float discriminant = qw * qw - product;
+        float temp = -qw + sqrt(discriminant); // Positively valued.
+        czm_raySegment i = czm_raySegment(0.0, temp / w2);
+        return i;
     }
     else // q2 == 1.0. On ellipsoid.
     {
@@ -887,4 +933,42 @@ vec3 czm_translateRelativeToEye(vec3 high, vec3 low)
     vec3 lowDifference = low - czm_encodedCameraPositionMCLow;
 
     return highDifference + lowDifference;
+}
+
+/**
+ * @private
+ */
+vec4 czm_getWaterNoise(sampler2D normalMap, vec2 uv, float time, float angleInRadians)
+{
+    float cosAngle = cos(angleInRadians);
+    float sinAngle = sin(angleInRadians);
+
+    // time dependent sampling directions
+    vec2 s0 = vec2(1.0/17.0, 0.0);
+    vec2 s1 = vec2(-1.0/29.0, 0.0);
+    vec2 s2 = vec2(1.0/101.0, 1.0/59.0);
+    vec2 s3 = vec2(-1.0/109.0, -1.0/57.0);
+
+    // rotate sampling direction by specified angle
+    s0 = vec2((cosAngle * s0.x) - (sinAngle * s0.y), (sinAngle * s0.x) + (cosAngle * s0.y));
+    s1 = vec2((cosAngle * s1.x) - (sinAngle * s1.y), (sinAngle * s1.x) + (cosAngle * s1.y));
+    s2 = vec2((cosAngle * s2.x) - (sinAngle * s2.y), (sinAngle * s2.x) + (cosAngle * s2.y));
+    s3 = vec2((cosAngle * s3.x) - (sinAngle * s3.y), (sinAngle * s3.x) + (cosAngle * s3.y));
+
+    vec2 uv0 = (uv/103.0) + (time * s0);
+    vec2 uv1 = uv/107.0 + (time * s1) + vec2(0.23);
+    vec2 uv2 = uv/vec2(897.0, 983.0) + (time * s2) + vec2(0.51);
+    vec2 uv3 = uv/vec2(991.0, 877.0) + (time * s3) + vec2(0.71);
+
+    uv0 = fract(uv0);
+    uv1 = fract(uv1);
+    uv2 = fract(uv2);
+    uv3 = fract(uv3);
+    vec4 noise = (texture2D(normalMap, uv0)) +
+                 (texture2D(normalMap, uv1)) +
+                 (texture2D(normalMap, uv2)) +
+                 (texture2D(normalMap, uv3));
+
+    // average and scale to between -1 and 1
+    return ((noise / 4.0) - 0.5) * 2.0;
 }

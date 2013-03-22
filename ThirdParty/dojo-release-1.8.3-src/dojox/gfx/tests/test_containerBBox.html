@@ -1,0 +1,143 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>GFX Test: Test the basic utils functions</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+		</style>
+		<script type="text/javascript">
+			dojoConfig = {
+				isDebug:true,
+				packages:[{
+					name:'doh',
+					location:'../util/doh'
+				}]
+			}
+		</script>
+		<script type="text/javascript" src="../../../dojo/dojo.js"></script>
+		<script type="text/javascript">
+			require([
+				"doh/runner",
+				"dojox/gfx",
+				"dojox/gfx/matrix",
+				"dojo/ready"
+			], function(doh, gfx, matrix, ready){
+				ready(function(){
+					var drawing, g;
+					doh.register("Container.getBoundingBox test", [
+						{
+							name: "Default state",
+							timeout: 1000,
+							setUp: function(){
+								if(!drawing){
+									drawing = gfx.createSurface("gfxObject", 300, 300);
+								}
+								drawing.clear();
+								g = drawing.createGroup();
+							},
+							runTest: function(){
+								// surface
+								var bbox = drawing.getBoundingBox();
+								doh.assertTrue(bbox === null, "Unexpected value for empty surface bbox.");
+								// empty group -> null bbox
+								bbox = g.getBoundingBox();
+								doh.assertTrue(bbox === null, "Unexpected value for empty group bbox.");
+							}
+						},						{
+							name: "Group with children",
+							timeout: 1000,
+							setUp: function(){
+								if(!drawing){
+									drawing = gfx.createSurface("gfxObject", 300, 300);
+								}
+								drawing.clear();
+								g = drawing.createGroup();
+							},
+							runTest: function(){
+								// child
+								var r = g.createRect();
+								var bbox = g.getBoundingBox();
+								doh.assertTrue(bbox.x === 0 && bbox.y === 0 && bbox.width === 100 && bbox.height === 100, "Unexpected bbox value.");
+								// children
+								g.createRect({x:200,y:300});
+								bbox = g.getBoundingBox();
+								doh.assertTrue(bbox.x === 0 && bbox.y === 0 && bbox.width === 300 && bbox.height === 400, "Unexpected composite bbox value.");
+								// child with null bbox
+								r = g.createRect();
+								r.getBoundingBox = function(){return null;};
+								var err = false;
+								bbox = null;
+								try{
+									bbox = g.getBoundingBox();
+								}catch(e){
+									err = true;
+								}
+								doh.assertFalse(err, "getBoundingBox fails with null bbox.");
+								doh.assertTrue(bbox.x === 0 && bbox.y === 0 && bbox.width === 300 && bbox.height === 400, "Unexpected composite bbox value with null bbox.");
+								// surface
+								bbox = drawing.getBoundingBox();
+								doh.assertTrue(bbox.x === 0 && bbox.y === 0 && bbox.width === 300 && bbox.height === 400, "Unexpected surface bbox value.");
+								
+							}
+						},{
+							name: "children with transform",
+							timeout: 1000,
+							setUp: function(){
+								if(!drawing){
+									drawing = gfx.createSurface("gfxObject", 300, 300);
+								}
+								drawing.clear();
+								g = drawing.createGroup();
+							},
+							runTest: function(){
+								// child
+								var r = g.createRect();
+								var bbox = g.getBoundingBox();
+								doh.assertTrue(bbox.x === 0 && bbox.y === 0 && bbox.width === 100 && bbox.height === 100, "Unexpected bbox value.");
+								// child with transform
+								r.setTransform(matrix.translate(10,0));
+								bbox = g.getBoundingBox();
+								doh.assertTrue(bbox.x === 10 && bbox.y === 0 && bbox.width === 100 && bbox.height === 100, "Unexpected bbox value with child transform.");
+								// the group has a transform -> getBoundingBox should not be modified
+								g.setTransform(matrix.translate(10,20));
+								bbox = g.getBoundingBox();
+								doh.assertTrue(bbox.x === 10 && bbox.y === 0 && bbox.width === 100 && bbox.height === 100, "Unexpected bbox value with Group transform.");
+								// surface
+								bbox = null;
+								bbox = drawing.getBoundingBox();
+								doh.assertTrue(bbox.x === 20 && bbox.y === 20 && bbox.width === 100 && bbox.height === 100, "Unexpected surface bbox value.");
+							}
+						},{
+							name: "Nested container",
+							timeout: 1000,
+							setUp: function(){
+								if(!drawing){
+									drawing = gfx.createSurface("gfxObject", 300, 300);
+								}
+								drawing.clear();
+								g = drawing.createGroup();
+							},
+							runTest: function(){
+								var r = g.createRect();
+								g.createRect({x:200,y:300});
+								var g2 = g.createGroup();
+								g2.createRect();
+								g2.createRect({x:500});
+								g2.setTransform(matrix.translate(100,200));
+								bbox = g.getBoundingBox();
+								doh.assertTrue(bbox.x === 0 && bbox.y === 0 && bbox.width === 700 && bbox.height === 400, "Unexpected composite bbox value.");
+							}
+						}
+					]);
+					doh.run();
+				});
+			});
+			
+		</script>
+	</head>
+	<body class="tundra">
+		<h1>Test of Group.getBoundingBox</h1>
+		<div id="gfxObject"></div>
+	</body>
+</html>

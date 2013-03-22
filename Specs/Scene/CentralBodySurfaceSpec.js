@@ -135,7 +135,7 @@ defineSuite([
             }
             expect(constructWithoutImageryLayerCollection).toThrow();
         });
-    });
+    }, 'WebGL');
 
     describe('layer updating', function() {
         it('removing a layer removes it from all tiles', function() {
@@ -249,7 +249,7 @@ defineSuite([
                 });
             });
         });
-    });
+    }, 'WebGL');
 
     it('renders in 2D geographic', function() {
         var layerCollection = cb.getImageryLayers();
@@ -377,6 +377,8 @@ defineSuite([
         layer.brightness = 0.456;
         layer.contrast = 0.654;
         layer.gamma = 0.321;
+        layer.saturation = 0.123;
+        layer.hue = 0.456;
 
         frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
@@ -405,6 +407,8 @@ defineSuite([
                     expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
                     expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
                     expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0/0.321]);
+                    expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
+                    expect(uniforms.u_dayTextureHue()).toEqual([0.456]);
                 }
             }
 
@@ -432,6 +436,8 @@ defineSuite([
         layer.brightness = createFunction(0.456);
         layer.contrast = createFunction(0.654);
         layer.gamma = createFunction(0.321);
+        layer.saturation = createFunction(0.123);
+        layer.hue = createFunction(0.456);
 
         frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
@@ -460,10 +466,122 @@ defineSuite([
                     expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
                     expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
                     expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0/0.321]);
+                    expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
+                    expect(uniforms.u_dayTextureHue()).toEqual([0.456]);
                 }
             }
 
             expect(tileCommandCount).toBeGreaterThan(0);
         });
     });
+
+    it('skips layer with uniform alpha value of zero', function() {
+        var layerCollection = cb.getImageryLayers();
+        layerCollection.removeAll();
+        var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+
+        layer.alpha = 0.0;
+
+        frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+
+        updateUntilDone(cb);
+
+        runs(function() {
+            var commandLists = [];
+            expect(render(context, frameState, cb, commandLists)).toBeGreaterThan(0);
+
+            var tileCommandCount = 0;
+
+            for (var i = 0; i < commandLists.length; ++i) {
+                var commandList = commandLists[i].colorList;
+                var commandListLength = commandList.length;
+                for (var j = 0; j < commandListLength; ++j) {
+                    var command = commandList[j];
+
+                    var uniforms = command.uniformMap;
+                    if (typeof uniforms === 'undefined' || typeof uniforms.u_dayTextureAlpha === 'undefined') {
+                        continue;
+                    }
+
+                    ++tileCommandCount;
+
+                    expect(uniforms.u_dayTextureAlpha()).toEqual([]);
+                }
+            }
+
+            expect(tileCommandCount).toBeGreaterThan(0);
+        });
+    });
+
+    describe('switching terrain providers', function() {
+        it('clears the replacement queue', function() {
+            updateUntilDone(cb);
+
+            runs(function() {
+                var surface = cb._surface;
+                var replacementQueue = surface._tileReplacementQueue;
+                expect(replacementQueue.count).toBeGreaterThan(0);
+
+                surface.setTerrainProvider(new EllipsoidTerrainProvider());
+                expect(replacementQueue.count).toBe(0);
+            });
+        });
+
+        it('recreates the level zero tiles', function() {
+            var surface = cb._surface;
+
+            updateUntilDone(cb);
+
+            var levelZeroTiles;
+            var levelZero0;
+            var levelZero1;
+
+            runs(function() {
+                levelZeroTiles = surface._levelZeroTiles;
+                expect(levelZeroTiles.length).toBe(2);
+
+                levelZero0 = levelZeroTiles[0];
+                levelZero1 = levelZeroTiles[1];
+
+                surface.setTerrainProvider(new EllipsoidTerrainProvider());
+            });
+
+            updateUntilDone(cb);
+
+            runs(function() {
+                levelZeroTiles = surface._levelZeroTiles;
+                expect(levelZeroTiles[0]).not.toBe(levelZero0);
+                expect(levelZeroTiles[1]).not.toBe(levelZero1);
+            });
+        });
+
+        it('does nothing if the new provider is the same as the old', function() {
+            var surface = cb._surface;
+            var provider = surface.getTerrainProvider();
+
+            updateUntilDone(cb);
+
+            var levelZeroTiles;
+            var levelZero0;
+            var levelZero1;
+
+            runs(function() {
+                levelZeroTiles = surface._levelZeroTiles;
+                expect(levelZeroTiles.length).toBe(2);
+
+                levelZero0 = levelZeroTiles[0];
+                levelZero1 = levelZeroTiles[1];
+
+                surface.setTerrainProvider(provider);
+            });
+
+            updateUntilDone(cb);
+
+            runs(function() {
+                levelZeroTiles = surface._levelZeroTiles;
+                expect(levelZeroTiles[0]).toBe(levelZero0);
+                expect(levelZeroTiles[1]).toBe(levelZero1);
+            });
+        });
+    }, 'WebGL');
 }, 'WebGL');

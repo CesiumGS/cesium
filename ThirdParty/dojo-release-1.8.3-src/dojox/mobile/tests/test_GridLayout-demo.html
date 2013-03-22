@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>GridLayout</title>
+
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','Button','EdgeToEdgeCategory','GridLayout','dojox/mobile/themes/common/domButtons.css']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/connect",
+			"dojo/dom",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/TransitionEvent",
+			"dojox/mobile/iconUtils",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat",
+			"dojox/mobile/ScrollableView",
+			"dojox/mobile/GridLayout",
+			"dojox/mobile/Pane",
+			"dojox/mobile/Button",
+			"dojox/mobile/EdgeToEdgeCategory",
+			"dojox/mobile/TextBox"
+		], function(connect, dom, ready, registry, TransitionEvent, iconUtils){
+			ready(function(){
+				iconUtils.createDomButton(dom.byId("Minus"));
+				iconUtils.createDomButton(dom.byId("Plus"));
+			});
+
+			goToSubMenu = function(id){
+				var widget = registry.byId("pane1");
+				var opts = {moveTo: "view2", transition: "slide", transitionDir: 1};
+				var ev = new TransitionEvent(widget.domNode, opts);
+				ev.dispatch()
+			};
+
+			goToOrder = function(id){
+				var widget = registry.byId("pane2-1");
+				var opts = {moveTo: "view3", transition: "slide", transitionDir: 1};
+				var ev = new TransitionEvent(widget.domNode, opts);
+				ev.dispatch()
+			};
+
+
+			plus = function(){
+				var widget = registry.byId("num");
+				valueInt = parseInt(widget.textbox.value);
+				valueInt = isNaN(valueInt) ? 0 : valueInt + 1;
+				widget.textbox.value = valueInt.toString()
+			};
+
+			minus = function(){
+				var widget = registry.byId("num");
+				valueInt = parseInt(widget.textbox.value);
+				valueInt = isNaN(valueInt) || valueInt <=0 ? 0 : valueInt - 1;
+				widget.textbox.value = valueInt.toString()
+			};
+			
+			cancel = function(){
+				var widget = registry.byId("cancel");
+				var opts = {moveTo: "view2", transition: "slide", transitionDir: -1};
+				var ev = new TransitionEvent(widget.domNode, opts);
+				ev.dispatch()
+			};
+
+			ok = function(){
+				var widget = registry.byId("ok");
+				var opts = {moveTo: "view1", transition: "fade", transitionDir: -1};
+				var ev = new TransitionEvent(widget.domNode, opts);
+				ev.dispatch()
+			}
+			
+		});
+	</script>
+	<style>
+		.myPane {
+			width: 100%;
+			height: 50px;
+		}
+		.line {
+			margin: 0;
+			position:relative;
+			border: 1px groove white;
+			width: 100%;
+			height: 100%;
+		}
+		.myIcon {
+			margin-top:28px;
+			margin-left:2px;
+			border-radius: 10px;
+			width:50px;
+			height:42px;
+			float:left;
+		}
+		.price {
+			float:right;
+			border-radius: 4px;
+			margin-top:0px;
+			margin-right:3px;
+			border: 2px groove #959da0;
+			padding: 0px 7px 0px 5px;
+			background-image: -webkit-gradient(linear, left top, left bottom, from(#959da0), to(#515761));
+			color: white;
+			font-size: 18px;
+		}
+		.OrderItem {
+			margin-top:15px;
+			margin-left:3px;
+			font-size: 18px;
+		}
+		.SubCategory {
+			margin-top:38px;
+			margin-left:55px;
+			font-size: 24px;
+		}
+		.Discription {
+			margin-top:17px;
+			margin-left:13px;
+			font-size: 18px;
+		}
+		.mybutton {
+			margin-top:30px;
+			margin-left:15%;
+			margin-right:15%;
+			width:70%;
+		}
+		.title {
+			color:white;
+			font-style:italic;
+			text-shadow:0px -1px 10px blue,1px 0px 10px blue,0px 1px 10px blue,-1px 0px 10px blue;
+			font-size:50px;
+		}
+	</style>
+</head>
+<body style="visibility:hidden;">
+	<div id="view1" data-dojo-type="dojox.mobile.ScrollableView">
+		<div data-dojo-type="dojox.mobile.GridLayout" data-dojo-props='cols:1' style="height:600px;">
+			<div data-dojo-type="dojox.mobile.Pane" style="width:100%;position:relative">
+				<img alt="" src='images/Mountain.jpg' style="width:100%;height:100%"/>
+				<div style="position:absolute;top:40%;left:10%;" class="title">Airport lounge <br>cafe</div>
+			</div>
+			<div data-dojo-type="dojox.mobile.GridLayout" data-dojo-props='cols:2' style="height: 300px;">
+				<div id="pane1" data-dojo-type="dojox.mobile.Pane" class="myPane" onclick="goToSubMenu(1)">
+					<div class="line"><img alt="" src='images/menu1.jpg' class="myIcon"/><div class="SubCategory">Caff</div></div>
+				</div>
+				<div id="pane2" data-dojo-type="dojox.mobile.Pane" class="myPane" onclick="goToSubMenu(2)">
+					<div class="line"><img alt="" src='images/menu2.jpg' class="myIcon"/><div class="SubCategory">Bakery</div></div>
+				</div>
+				<div id="pane3" data-dojo-type="dojox.mobile.Pane" class="myPane" onclick="goToSubMenu(3)">
+					<div class="line"><img alt="" src='images/menu3.jpg' class="myIcon"/><div class="SubCategory">Tea</div></div>
+				</div>
+				<div id="pane4" data-dojo-type="dojox.mobile.Pane" class="myPane" onclick="goToSubMenu(4)">
+					<div class="line"><img alt="" src='images/menu4.jpg' class="myIcon"/><div class="SubCategory">Cake</div></div>
+				</div>
+				<div id="pane5" data-dojo-type="dojox.mobile.Pane" class="myPane" onclick="goToSubMenu(5)">
+					<div class="line"><img alt="" src='images/menu5.jpg' class="myIcon"/><div class="SubCategory">Beverage</div></div>
+				</div>
+				<div id="pane6" data-dojo-type="dojox.mobile.Pane" class="myPane" onclick="goToSubMenu(6)">
+					<div class="line"><img alt="" src='images/menu6.jpg' class="myIcon"/><div class="SubCategory">Icecream</div></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="view2" data-dojo-type="dojox.mobile.ScrollableView">
+		<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Back", moveTo:"view1"'></div>
+			<div data-dojo-type="dojox.mobile.GridLayout" data-dojo-props='cols:2' style="height: 300px;">
+				<div id="pane2-1" data-dojo-type="dojox.mobile.Pane" class="myPane" onclick="goToOrder(1)">
+					<div class="line"><div class="Discription">Coffee<div class="price">4.00</div></div></div>
+				</div>
+				<div id="pane2-2" data-dojo-type="dojox.mobile.Pane" class="myPane" onclick="goToOrder(2)">
+					<div class="line"><div class="Discription">Cappuccino<div class="price">5.00</div></div></div>
+				</div>
+				<div id="pane2-3" data-dojo-type="dojox.mobile.Pane" class="myPane" onclick="goToOrder(3)">
+					<div class="line"><div class="Discription">Cafe' au lait<div class="price">5.00</div></div></div>
+				</div>
+				<div id="pane2-4" data-dojo-type="dojox.mobile.Pane" class="myPane" onclick="goToOrder(4)">
+					<div class="line"><div class="Discription">Espresso<div class="price">4.00</div></div></div>
+				</div>
+				<div id="pane2-5" data-dojo-type="dojox.mobile.Pane" class="myPane" onclick="goToOrder(5)">
+					<div class="line"><div class="Discription">Ice Coffee<div class="price">4.00</div></div></div>
+				</div>
+				<div id="pane2-6" data-dojo-type="dojox.mobile.Pane" class="myPane" onclick="goToOrder(6)">
+					<div class="line"><div class="Discription">Ice Cafe' au lait<div class="price">5.00</div></div></div>
+				</div>
+			</div>
+	</div>
+	<div id="view3" data-dojo-type="dojox.mobile.ScrollableView">
+		<div data-dojo-type="dojox.mobile.GridLayout" data-dojo-props='cols:2'>
+			<div data-dojo-type="dojox.mobile.Pane">
+				<div data-dojo-type="dojox.mobile.EdgeToEdgeCategory">Order</div>
+				<div id="pane7" style="width:100%;height:50px;position:relative"">
+					<div class="line"><div class="OrderItem"><span id="OrderItem">Espresso<span><div id="OrderPrice" class="price">5.00</div></div></div>
+				</div>
+			</div>
+			<div data-dojo-type="dojox.mobile.Pane">
+				<div data-dojo-type="dojox.mobile.EdgeToEdgeCategory">Count</div>
+
+				<table style="position:relative;width:100%">
+					<tr>
+						<td><input id="num" data-dojo-type="dojox.mobile.TextBox" data-dojo-props='value:1, placeHolder:"Count", size:3' style="width:80%;height:40px;text-align:right;font-size: 18px;"></td>
+						<td><div id ="Plus" class="mblDomButtonBluePlus" onclick="plus()" style="margin:0 auto 0 auto;"></div></td>
+						<td><div id ="Minus" class="mblDomButtonBlueMinus" onclick="minus()" style="margin:0 auto 0 auto;"></div></td>
+					</tr>
+				</table>
+			</div>
+			<div data-dojo-type="dojox.mobile.Pane">
+				<button id ="cancel"  data-dojo-type="dojox.mobile.Button" class="mblRedButton" onclick="cancel()" style="margin-top:10px;margin-left:5%;margin-right:5%;width:90%;height:40px;">Cancel</button>
+			</div>
+			<div data-dojo-type="dojox.mobile.Pane">
+				<button id="ok" data-dojo-type="dojox.mobile.Button" class="mblBlueButton" onclick="ok()" style="margin-top:10px;margin-left:5%;margin-right:5%;width:90%;height:40px;">OK</button>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

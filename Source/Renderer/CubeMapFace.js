@@ -25,7 +25,7 @@ define([
      *
      * @see CubeMap
      */
-    var CubeMapFace = function(gl, texture, textureTarget, targetFace, pixelFormat, pixelDatatype, size, preMultiplyAlpha) {
+    var CubeMapFace = function(gl, texture, textureTarget, targetFace, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY) {
         this._gl = gl;
         this._texture = texture;
         this._textureTarget = textureTarget;
@@ -34,6 +34,7 @@ define([
         this._pixelDatatype = pixelDatatype;
         this._size = size;
         this._preMultiplyAlpha = preMultiplyAlpha;
+        this._flipY = flipY;
     };
 
     /**
@@ -96,7 +97,7 @@ define([
 
         // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this._preMultiplyAlpha);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this._flipY);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
 

@@ -174,13 +174,6 @@ define([
          */
         this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : Color.clone(Color.WHITE);
 
-        /**
-         * DOC_TBA
-         *
-         * @type Number
-         */
-        this.erosion = (typeof t.erosion === 'undefined') ? 1.0 : t.erosion;
-
         var that = this;
         this._uniforms = {
             u_showThroughEllipsoid : function() {
@@ -194,9 +187,6 @@ define([
             },
             u_intersectionColor : function() {
                 return that.intersectionColor;
-            },
-            u_erosion : function() {
-                return that.erosion;
             }
         };
 

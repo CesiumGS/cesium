@@ -1,0 +1,173 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Test TextBox</title>
+
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit.form.NumberTextBox");
+			dojo.require("dijit.form.CurrencyTextBox");
+			dojo.require("dijit.form.DateTextBox");
+			dojo.require("dijit.form.ValidationTextBox");
+			dojo.require("dojo.date.locale");
+			dojo.require("dojo.date.stamp");
+			dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+			dojo.require("doh.runner");
+		</script>
+		<script src="test_i18n.js"></script>
+		<script type="text/javascript">
+			dojo.ready(function(){
+				doh.register("parse", function(){
+					dojo.parser.parse();
+				});
+				doh.register("t", getAllTestCases());
+				doh.run();
+			});
+		</script>
+
+		<style type="text/css">
+			@import "../../themes/claro/document.css";
+			@import "../../themes/claro/claro.css";
+			@import "../css/dijitTests.css";
+
+			.title {
+				background-color:#ddd;
+			}
+
+			.hint {
+				background-color:#eee;
+			}
+
+			.testExample {
+				background-color:#fbfbfb;
+				padding:1em;
+				margin-bottom:1em;
+				border:1px solid #bfbfbf;
+			}
+
+			.dojoTitlePaneLabel label {
+				font-weight:bold;
+			}
+
+			td {white-space:nowrap}
+		</style>
+	</head>
+
+	<body class="claro">
+		<h1 class="testTitle">Dijit TextBox Globalization Test</h1>
+
+<!--		<h2 class="testTitle">Press the following button to start all test after this page is loaded.</h2>
+		<button id="startButton" onclick="startTest()">Start Test</button>-->
+
+		<script>
+		(function(){
+			genFormatTestCases("Natural Language Casing Mapping", "dijit.form.TextBox", [
+
+				{ attrs: {uppercase: "true"},
+				  desc: "Upper casing: Basic Latin",
+				  value: "abcdefghijklmnopqrstuvwxyz",
+				  expValue: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+				  comment: ""
+				},
+
+				{ attrs: {uppercase: "true"},
+				  desc: "Upper casing: Latin with accents",
+				  value: "àáâãäåæçèéêëìíîïðñòóôõö",
+				  expValue: "ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ",
+				  comment: ""
+				},
+
+				{ attrs: {uppercase: "true"},
+				  desc: "Upper casing: Turkish",
+				  value: "ıi",
+				  expValue: "Iİ",
+				  comment: "<a href='#cmt_1'>See #1.</a>"
+				},
+
+				{ attrs: {uppercase: "true"},
+				  desc: "Upper casing: Russian",
+				  value: "абвгдежз",
+				  expValue: "АБВГДЕЖЗ",
+				  comment: ""
+				},
+
+				{ attrs: {uppercase: "true"},
+				  desc: "Upper casing: German",
+				  value: "ß",
+				  expValue: "SS",
+				  comment: "<a href='#cmt_1'>See #1.</a>"
+				},
+
+				{ attrs: {lowercase: "true"},
+				  desc: "Lower casing: Turkish",
+				  value: "Iİ",
+				  expValue: "ıi",
+				  comment: "<a href='#cmt_1'>See #1.</a>"
+				},
+
+				{ attrs: {propercase: "true"},
+				  desc: "Title/Proper casing: Latin",
+				  value: "\u01F1abc",
+				  expValue: "\u01F2abc",
+				  comment: "<a href='#cmt_1'>See #1.</a>"
+				}
+			]);
+
+			genFormatTestCases("White-space Detecting", "dijit.form.TextBox", [
+
+				{ attrs: {trim: "true"},
+				  desc: "Normal space & tab",
+				  value: "   abc\t\t\t",
+				  expValue: "abc",
+				  comment: ""
+				},
+
+				{ attrs: {trim: "true"},
+				  desc: "NO-BREAK SPACE",
+				  value: "\u00A0abc\u00A0",
+				  expValue: "abc",
+				  comment: "Failed in IE. <a href='#cmt_2'>See #2.</a>"
+				},
+
+				{ attrs: {trim: "true"},
+				  desc: "EN QUAD",
+				  value: "\u2000abc\u2000",
+				  expValue: "abc",
+				  comment: "Failed in IE. <a href='#cmt_2'>See #2.</a>"
+				},
+
+				{ attrs: {trim: "true"},
+				  desc: "IDEOGRAPHIC SPACE",
+				  value: "\u3000abc\u3000",
+				  expValue: "abc",
+				  comment: "Failed in IE. <a href='#cmt_2'>See #2.</a>"
+				}
+
+
+			]);
+
+		})();
+		</script>
+
+		<h2 class="testTitle">Issues &amp; Comments </h2>
+		<a name="cmt_1"><h3 class="testTitle">Issue #1 <sup style="color:red">Not fixed. Avoid using this function of TextBox.</sup></h3></a>
+		<p>
+			Strictly speaking, all casing manipulation must use ICU case mapping rules (routine). However, the default JavaScript routines used by Dojo
+			do not support ICU case mapping rules in all browsers.
+		</p>
+
+		<a name="cmt_2"><h3 class="testTitle">Issue #2 <sup style="color:red">Not fixed. Avoid using this function of TextBox.</sup></h3></a>
+		<p>
+			Trimming must get rid of all Unicode characters with the white space property. However, the default JavaScript routines used by Dojo
+			do not support get character properties in some browsers like IE. Other browsers like Firefox might support trimming more white space
+			characters.
+		</p>
+
+	</body>
+</html>
+
+

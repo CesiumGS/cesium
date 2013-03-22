@@ -254,5 +254,12 @@ Copyright Information:  http://planetpixelemporium.com/planets.html
 
 http://maps.jpl.nasa.gov/stars.html
 
+http://svs.gsfc.nasa.gov/vis/a000000/a003500/a003572/
+
 Terms of use: http://www.nasa.gov/audience/formedia/features/MP_Photo_Guidelines.html
 
+### Some vector icons from (or inspired by) Raphaël JS
+
+http://raphaeljs.com/icons/
+
+http://raphaeljs.com/license.html

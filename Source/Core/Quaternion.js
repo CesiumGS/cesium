@@ -517,7 +517,7 @@ define([
         var w = quaternion.w;
         if (Math.abs(w - 1.0) < CesiumMath.EPSILON6) {
             if (typeof result === 'undefined') {
-                return new Cartesian3(0.0, 0.0, 0.0);
+                return new Cartesian3();
             }
             result.x = result.y = result.z = 0;
             return result;

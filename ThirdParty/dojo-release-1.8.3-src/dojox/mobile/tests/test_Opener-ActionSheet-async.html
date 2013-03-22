@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html style="overflow:hidden;">
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<title>Action Sheet Sample</title>
+	<style>
+		/* Tooltip styles */
+		.mblTooltip.mblOpener {
+			padding: 2px;
+			-webkit-box-shadow: 0 0 60px #808080;
+		}
+		.mblTooltip.mblOpener #cancel {
+			display: none;
+		}
+		.mblTooltip.mblOpener button {
+			margin: 4px;
+			width: 240px;
+			height: 40px;
+			-webkit-box-shadow: 0 1px 1px #343a4b;
+			font-size: 18px;
+			line-height: 38px;
+		}
+		/* Overlay styles */
+		.mblOverlay.mblOpener {
+			padding-top: 10px;
+			background-color: #60656f;
+			background-image: -webkit-gradient(linear, left top, left bottom, from(#a6abb4), to(#5b616c), color-stop(0.1, #7b808b), color-stop(0.1, #60656f));
+		}
+		.mblOverlay.mblOpener button {
+			margin: 5px;
+			width: 90%;
+			height: 44px;
+			border: 3px inset #3a3d43;
+			-webkit-border-radius: 12px;
+			-webkit-box-shadow: 0 1px 1px #787c84;
+			font-size: 18px;
+			line-height: 38px;
+		}
+		.mblOverlay.mblOpener #cancel {
+			margin: 15px 5px;
+			background-color: #293039; /* for non-webkit browser */
+			background-image: none; /* for non-webkit browser */
+			background-image: -webkit-gradient(linear, left top, left bottom, from(#6d7278), to(#383f49), color-stop(0.5, #343c44), color-stop(0.5, #293039));
+			color: white;
+		}
+		.dj_bb button { /* BB BoxShadow Workaround */
+			-webkit-box-shadow: none !important;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, async:true"></script>
+	<script language="JavaScript" type="text/javascript">
+		require([
+			"dojo/_base/html", // dojo.byId
+			"dijit/_base/manager",  // dijit.byId
+			"dojox/mobile",				// This is a mobile app.
+			"dojox/mobile/compat",		// This mobile app supports running on desktop browsers
+			"dojox/mobile/parser",		// This mobile app uses declarative programming with fast mobile parser
+			"dojox/mobile/deviceTheme",	// This mobile app automatically changes it's theme to match devices
+			"dojox/mobile/Button",
+			"dojox/mobile/Opener"
+		]);
+
+		function clicked(id){
+			dijit.byId("actionSheet").hide();
+			var span = dojo.byId("msgArea");
+			span.innerHTML += "&quot;" + dojo.byId(id).innerHTML + "&quot; button was clicked.";
+			setTimeout(function(){
+				span.innerHTML = "";
+			}, 2000);
+		}
+
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<center>
+	<button dojoType="dojox.mobile.Button" class="mblBlueButton" style="margin-top:20px;width:200px;"
+			onclick="dijit.byId('actionSheet').show(this.domNode, ['above-centered','below-centered','after','before'])">Open Action Sheet</button>
+	<div id="msgArea" style="margin-top:5px;"></div>
+	</center>
+
+	<!-- Action Sheet -->
+	<div id="actionSheet" data-dojo-type="dojox.mobile.Opener">
+		<button id="Bookmark" dojoType="dojox.mobile.Button" onclick="clicked(this.id)">Add Bookmark</button><br>
+		<button id="HomeScreen" dojoType="dojox.mobile.Button" onclick="clicked(this.id)">Add to Home Screen</button><br>
+		<button id="MailLink" dojoType="dojox.mobile.Button" onclick="clicked(this.id)">Mail Link to this Page</button><br>
+		<button id="cancel" dojoType="dojox.mobile.Button" onclick="clicked(this.id)">Cancel</button>		
+	</div>
+	<!-- Action Sheet -->
+</body>
+</html>

@@ -1,0 +1,175 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+    <title>Drawing Test</title>
+	<style>
+		@import url("../../../dijit/themes/dijit.css");
+		@import url("../../../dojox/drawing/resources/drawing.css");
+		@import url("../../../dojox/drawing/resources/toolbar.css");
+		@import url("../../../dojox/drawing/resources/GreekPalette.css");
+		href, body{
+		}
+		.drawing{
+			margin-left:52px;
+			width:800px;
+			height:500px;
+			border:1px solid #ccc;
+			cursor:crosshair;
+		}
+		#data{
+			display:block;
+			height:100px;
+			width:855px;
+			margin-top:5px;
+		}
+		button{
+			border:2px solid #ccc;
+			border-color:#D9E1F9 #B5BCD0 #878E9D #C6CEE4;
+			background-color:#CDDCF3;
+			cursor:pointer;
+		}
+	</style>
+
+	<script src="../../../dojo/dojo.js" data-dojo-config="async:1"></script>
+	<script>
+		require(["dojo/parser", "dojox/drawing", 
+			// custom Tools and Plugins need to be required
+			"dojox/drawing/tools/TextBlock",
+			"dojox/drawing/tools/Rect",
+			"dojox/drawing/tools/Ellipse",
+			"dojox/drawing/tools/Line",
+			"dojox/drawing/tools/Path",
+			"dojox/drawing/tools/Pencil",
+			"dojox/drawing/tools/custom/Vector",
+			"dojox/drawing/tools/custom/Axes",
+			"dojox/drawing/tools/Arrow",
+			"dojox/drawing/plugins/tools/Pan",
+			"dojox/drawing/plugins/tools/Zoom",
+			"dojox/drawing/plugins/tools/Iconize",
+			"dojox/drawing/plugins/drawing/GreekPalette",
+			"dojox/drawing/plugins/drawing/Grid",
+			"dojox/drawing/ui/dom/Toolbar",
+			"dojox/drawing/ui/dom/Pan",
+			"dojox/drawing/ui/dom/Zoom",
+			"dojo/domReady!"], function(parser){
+				parser.parse();
+
+		var doExport = function(){
+			var o = myDrawing.exporter();
+			console.log("EXPORT:")
+			console.dir(o)
+			console.log(dojo.toJson(o));
+			dojo.byId("data").value = dojo.toJson(o, true);
+		}
+
+		var doImport = function(){
+			myDrawing.importer(dojo.fromJson(dojo.byId("data").value));
+		}
+
+		var doClear = function(){
+			myDrawing.removeAll();
+		}
+
+			// myDrawing referenced by jsId
+			dojo.connect(myDrawing, "onSurfaceReady", function(){
+
+				var rect = myDrawing.addStencil("rect", {data:{x:50, y:275, width:100, height:100}});
+
+
+				var json = '[{"color":"#0000FF","style":"Solid","cap":"round","fill":{"r":256,"g":0,"b":0,"a":0.5},"borderWidth":1,"x":413,"y":366,"width":100,"height":32,"type":"textBlock","text":"DojoX Drawing is Mike","pad":3,"size":"12px","family":"sans-serif","weight":"normal"},{"color":"#0000FF","style":"Solid","cap":"round","fill":{"r":256,"g":0,"b":0,"a":0.5},"borderWidth":1,"cx":732.5,"cy":197.54166412353516,"rx":54.5,"ry":187.54166412353516,"type":"ellipse"},{"color":"#000000","style":"Solid","cap":"round","fill":"#CCCCCC","borderWidth":1,"x1":430,"y1":342.0833282470703,"x2":675.4108328989848,"y2":143.3535541923843,"type":"line"},{"color":"#000000","style":"Solid","cap":"round","fill":"#CCCCCC","borderWidth":1,"x":499,"y":199.0833282470703,"width":100,"height":103,"type":"rect"},{"color":"#0000FF","style":"Solid","cap":"round","fill":{"r":256,"g":0,"b":0,"a":0.5},"borderWidth":1,"x":395,"y":354,"width":269,"height":19,"type":"textBlock","text":"DojoX Rocks with Socks","pad":3,"size":"24px","family":"sans-serif","weight":"bold"},{"color":"#0000FF","style":"Solid","cap":"round","fill":{"r":256,"g":0,"b":0,"a":0.5},"borderWidth":1,"cx":510.5,"cy":167.04166412353516,"rx":89.5,"ry":17.041664123535156,"type":"ellipse"}]';
+				dojo.byId("data").value = json;
+
+
+				var textBlock = myDrawing.addStencil("textBlock", {data:{x:20, y:30, width:200, text:"DojoX Drawing Rocks"}});
+				textBlock.attr({fill:{r:256,g:0,b:0,a:.5}, width:10, color:"#0000FF", size:"24px", weight:"bold"});
+
+
+				var ellipse = myDrawing.addStencil("ellipse", {data:{cx:200, cy:200, rx:100, ry:50}});
+				ellipse.attr({fill:{r:256,g:0,b:0,a:.5}, width:500, height:200, color:"#0000FF"});
+
+
+				var arrow = myDrawing.addStencil("arrow", {data:{x1:400, y1:200, x2:500, y2:300}, arrowStart:true});
+				arrow.attr({angle:210, radius:200, borderWidth:3, label:"My Arrow"})
+
+				var text = myDrawing.addStencil("text", {data:{x:300, y:260, width:200, text:"This is just text"}});
+
+				myDrawing.addStencil("path", {points:[{x:700, y:20},{x:650, y:150},{x:750,y:150}, {t:"Z", x:700, y:20}, {t:"M", x:700, y:40},{x:680, y:120},{x:720,y:120} ], shadow:{place:"C", size:4, mult:4, color:"#00ff00"}});//
+
+			});
+
+			dojo.connect(dojo.byId("import"), "click", doImport);
+			dojo.connect(dojo.byId("export"), "click", doExport);
+			dojo.connect(dojo.byId("clear"), "click", doClear);
+			dojo.connect(dojo.byId("selectall"), "click", function(){
+				myDrawing.selectAll();
+			});
+
+			dojo.connect(dojo.byId("red"), "click", function(){
+				myDrawing.changeDefaults({
+					norm:{
+						fill:"#ff0000",
+						width:5,
+						color:"#ff00ff"
+					}
+				});
+			});
+			dojo.connect(dojo.byId("blue"), "click", function(){
+				myDrawing.changeDefaults({
+					norm:{
+						fill:"#0000ff",
+						width:5,
+						color:"#ffff00"
+					}
+				});
+			});
+			dojo.connect(dojo.byId("yellow"), "click", function(){
+				myDrawing.toSelected("attr", {
+					fill:"#ffff00"
+				});
+			});
+		});
+
+
+	</script>
+
+</head>
+<body>
+    <h2>Drawing Test</h2>
+	<div id="conEdit" contenteditable="true"></div>
+	<div id="wrapper">
+		<div dojoType="dojox.drawing.ui.dom.Toolbar" drawingId="drawingNode" class="drawingToolbar vertical">
+			<div tool="dojox.drawing.tools.Line" selected="false">Line</div>
+			<div tool="dojox.drawing.tools.Rect" selected="false">Rect</div>
+			<div tool="dojox.drawing.tools.Ellipse" selected="false">Ellipse</div>
+			<div tool="dojox.drawing.tools.Path" selected="true">Path</div>
+			<div tool="dojox.drawing.tools.TextBlock" selected="false">Text</div>
+			<div tool="dojox.drawing.tools.Arrow" selected="false">Arrow</div>
+			<div tool="dojox.drawing.tools.custom.Vector" selected="false">Vector</div>
+			<div tool="dojox.drawing.tools.custom.Axes" selected="false">Axes</div>
+			<div plugin="dojox.drawing.ui.dom.Pan" options="{}">Pan</div>
+			<div plugin="dojox.drawing.ui.dom.Zoom" options="{zoomInc:.1,minZoom:.5,maxZoom:2}">Zoom</div>
+
+		</div>
+
+		<div dojoType="dojox.drawing.Drawing" id="drawingNode" jsId="myDrawing" drawingType="canvas" class="drawing"
+			 plugins="[{'name':'dojox.drawing.plugins.drawing.Grid', 'options':{gap:100}}]">
+
+		</div>
+	</div>
+
+	<br/>
+	<br/>
+	<button id="import">Import</button>
+	<button id="export">Export</button>
+	<button id="selectall">Select All</button>
+	<button id="clear">Clear Drawing</button>
+	&nbsp;&nbsp;&nbsp;
+	<button id="blue">Change defaults to Blue</button>
+	<button id="red">Change defaults to Red</button>
+	<button id="yellow">Change selected to Yellow</button>
+	<br/>
+	<br/>
+
+	<textarea id="data"></textarea>
+	<div dojoType="dojox.drawing.plugins.drawing.GreekPalette" id="greekPalette"></div>
+</body>
+</html>

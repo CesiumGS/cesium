@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Dynamic Icons</title>
+
+	<link href="../../../dijit/themes/tundra/tundra.css" rel="stylesheet"/>
+	<script type="text/javascript" src="../deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','Button','IconContainer']"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async: false, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/connect",
+			"dojo/dom",
+			"dojo/ready",
+			"dijit/registry",
+			"dojox/mobile/IconItem",
+			"dojox/mobile/IconContainer",
+			"dojox/mobile/Button",
+			"dojox/mobile/parser",
+			"dojox/mobile",
+			"dojox/mobile/compat"
+		], function(connect, dom, ready, registry, IconItem){
+			ready(function(){
+				var iconContainer = registry.byId("ic1");
+				addIcon = function(e){
+					var item = new IconItem({
+						icon: "images/icon-1.png",
+						label: dom.byId("label").value || "new icon",
+						lazy: true
+					});
+					var s = dom.byId("addIndex").value;
+					var index = s ? s - 0 : undefined;
+					iconContainer.addChild(item, index);
+					item.containerNode.innerHTML = "<div data-dojo-type='dijit._Calendar'></div>";
+				};
+				removeIcon = function(e){
+					var index = dom.byId("removeIndex").value - 0;
+					iconContainer.removeChild(index);
+				};
+				openIcon = function(e){
+					var index = dom.byId("openIndex").value - 0;
+					iconContainer.getChildren()[index].open();
+				};
+				closeIcon = function(e){
+					var index = dom.byId("closeIndex").value - 0;
+					iconContainer.getChildren()[index].close();
+				};
+				closeAll = function(e){
+					iconContainer.closeAll();
+				};
+			});
+		});
+	</script>
+
+	<style>
+		.box {
+			border: 1px solid #A7C0E0;
+			width: 300px;
+			height: 250px;
+			background-image: url(images/widget-bg.png);
+			background-repeat: no-repeat;
+			background-color: white;
+		}
+	</style>
+</head>
+<body style="visibility:hidden;" class="tundra">
+	<div id="myhome" data-dojo-type="dojox.mobile.View" data-dojo-props='selected:true'>
+		<table>
+			<tr><td><input type="button" onclick="addIcon()" value="Add" style="width:70px"></td><td> index:<input id="addIndex" style="width:20px;text-align:right"></td><td> label:<input id="label" value="new icon" style="width:80px"></td>
+			<tr><td><input type="button" onclick="removeIcon()" value="Remove" style="width:70px"></td><td> index:<input id="removeIndex" style="width:20px;text-align:right" value="0"></td><td></td>
+			<tr><td><input type="button" onclick="openIcon()" value="Open" style="width:70px"></td><td> index:<input id="openIndex" style="width:20px;text-align:right" value="0"></td><td></td>
+			<tr><td><input type="button" onclick="closeIcon()" value="Close" style="width:70px"></td><td> index:<input id="closeIndex" style="width:20px;text-align:right" value="0"></td><td></td>
+			<tr><td><input type="button" onclick="closeAll()" value="CloseAll" style="width:70px"></td><td></td><td></td>
+		</table>
+		<ul id="ic1" data-dojo-type="dojox.mobile.IconContainer">
+			<li data-dojo-type="dojox.mobile.IconItem" data-dojo-props='label:"test1", icon:"images/icon-1.png", lazy:true'><div class="box"></div></li>
+		</ul>
+	</div>
+</body>
+</html>

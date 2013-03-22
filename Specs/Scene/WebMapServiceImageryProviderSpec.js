@@ -260,7 +260,7 @@ defineSuite([
             layers : 'someLayer',
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
-        expect(providerWithCredit.getLogo()).not.toBeUndefined();
+        expect(providerWithCredit.getLogo()).toBeDefined();
     });
 
     it('routes requests through a proxy if one is specified', function() {
@@ -280,6 +280,7 @@ defineSuite([
         runs(function() {
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('made/up/wms/server'))).toEqual(0);
+                expect(provider.getProxy()).toEqual(proxy);
                 expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.

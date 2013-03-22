@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>ContentPane Auto Require Tests</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, async: true"></script>
+
+	<!-- only needed for alternate theme testing: do NOT use in your code! -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		require([
+			"doh",
+			"dojo/parser",
+			"dojo/ready",
+			"dijit/registry"
+		], function(doh, parser, ready, registry){
+			ready(function(){
+				doh.register("auto require", {
+					name: "auto-load parse",
+					timeout: 5000,
+					runTest: function(t){
+						var d = new doh.Deferred();
+
+						parser.parse().then(d.getTestErrback(function(){
+							t.is(typeof registry.byId("tb1"), "object", "objected created");
+							registry.byId("parsedPane1").set("href", "doc3.html").then(d.getTestCallback(function(){
+								t.is(typeof registry.byId("button1"), "object", "object created");
+							}));
+						}));
+
+						return d;
+					}
+				});
+				
+			 	doh.run();
+			});
+		});
+	</script>
+</head>
+<body class="claro">
+	<h1 class="testTitle">Dijit layout.ContentPane Auto-Require Tests</h1>
+
+	<h2>ContentPane Loading Content that Requires Auto-Require</h2>
+	<div data-dojo-type="dijit/layout/ContentPane" id="parsedPane1"></div>
+	<div data-dojo-type="dijit/layout/ContentPane" id="parsedPane2">
+		<input type="text" id="tb1" data-dojo-type="dijit/form/TextBox" data-dojo-props="value: 'testValue'" />
+	</div>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Mobile MVC</title>
+		<link rel="stylesheet" type="text/css" href="demo.css"/>
+		<style>
+		html, body{
+			height: 100%;
+			overflow: hidden;
+		}
+		.mblEdgeToEdgeList {
+			background-color: #DBDDE2;
+		}
+		</style>
+
+	<!--<script type="text/javascript" src="../../../../../../dojo/dojo.js" djConfig="parseOnLoad: false"></script> -->
+		<script type="text/javascript" djConfig="parseOnLoad:0,isDebug:1,async:1" src="../../../../../../dojo/dojo.js"></script>
+		<script type="text/javascript" src="src-async.js" charset="utf-8"></script>
+
+	</head>
+	<body>
+	<div id="wholepage" style="display:none">
+		<div id="foo" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">Mobile MVC Demo</h1>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li id="sdb" dojoType="dojox.mobile.ListItem" transition="slide" moveTo="settings">
+					Simple Data Binding
+				</li>
+				<li id="rdb" dojoType="dojox.mobile.ListItem" transition="slide" moveTo="repeat">
+					Repeat Data Binding
+				</li>
+				<li id="sfg" dojoType="dojox.mobile.ListItem" transition="slide" moveTo="generate">
+					Generate Simple Form
+				</li>
+			</ul>
+		</div>
+
+	<div id="settings" dojoType="dojox.mobile.ScrollableView">
+		<h1 id="home" dojoType="dojox.mobile.Heading" back="Back" moveTo="foo">Data Binding Example</h1>
+		<form name="testForm" id="testForm">	
+		<div class="field-title">Ship to - Bill to Address</div>
+			<div class="fieldset" dojoType="dojox.mvc.Group" ref="model">
+				<div class="field-row">
+					<span>Order #</span>
+					<input id="lastnameInput" dojoType="dojox.mobile.TextBox"
+						placeholder="Order #" ref="'rel:Serial'"/>
+				</div>
+				<div class="field-row">
+					<span>Last</span>
+					<input  id="serialInput" dojoType="dojox.mobile.TextBox"
+						placeholder="Last" ref="'rel:Last'"/>
+				</div>
+				<div class="field-row">
+					<span>Email</span>
+					<input  id="emailInput1" dojoType="dojox.mobile.TextBox"
+						placeholder="Last" ref="'rel:Email'"/>
+				</div>
+			</div>
+			<div class="spacer"></div>
+			<button id="shipto" type="button" dojoType="dojox.mobile.Button" class="mblBlueButton" onclick="setRef('addrGroup', model.ShipTo)">Ship To</button>
+			<button id="billto" type="button" dojoType="dojox.mobile.Button" class="mblBlueButton" onclick="setRef('addrGroup', model.BillTo)">Bill To</button>		
+			<br/>
+			<div class="fieldset" id="addrGroup" dojoType="dojox.mvc.Group" ref="model.ShipTo">
+				<div class="field-row">
+					<span>Street</span>
+					<input  id="streetInput" dojoType="dojox.mobile.TextBox"
+						placeholder="Street" ref="'rel:Street'"/>
+				</div>
+				<div class="field-row">
+					<span>City</span>
+					<input  id="cityInput" dojoType="dojox.mobile.TextBox"
+						placeholder="City" ref="'rel:City'"/>
+				</div>
+				<div class="field-row">
+					<span>State</span>
+					<input  id="stateInput" dojoType="dojox.mobile.TextBox"
+						placeholder="State" ref="'rel:State'"/>
+				</div>
+				<div class="field-row">
+					<span>ZIP Code</span>
+					<input  id="zipInput" dojoType="dojox.mobile.TextBox"
+						placeholder="ZIP Code" ref="'rel:Zip'"/>
+				</div>
+			</div>
+			<div class="spacer"></div>
+			<button id="reset1" type="button" dojoType="dojox.mobile.Button" class="mblBlueButton" onclick="model.reset()">Reset</button>
+		</form>
+	</div>
+
+	<div id="repeat" dojoType="dojox.mobile.ScrollableView">
+		<h1 dojoType="dojox.mobile.Heading" back="Back" moveTo="foo">Repeat Data Binding Example</h1>
+		<form name="repeatTestForm" id="repeatTestForm">	
+		<div class="field-title">Search Results</div>
+			<div class="fieldset" dojoType="dojox.mvc.Repeat" class="row" ref="repeatmodel">
+				<div dojoType="dojox.mvc.Group" ref="'rel:${this.index}'">
+					<div class="row">			 
+						<input dojoType="dojox.mobile.TextBox"
+							id="nameInput${this.index}" ref="'rel:First'" placeHolder="First Name"/>
+						<button id="details${this.index}" type="button" dojoType="dojox.mobile.Button" class="mblBlueButton" onclick="setDetailsContext('${this.index}')">Details</button>
+					</div>
+				</div>
+			</div>
+			<div class="spacer"></div>
+			<div  dojoType="dojox.mvc.Group" ref="repeatmodel">
+				<div id="detailsBanner">Details for selected index:</div>
+					<div class="fieldset" id="detailsGroup" dojoType="dojox.mvc.Group" ref="'rel:0'">
+						<div class="field-row">
+							<span>First Name</span>
+							<input  id="firstInput" dojoType="dojox.mobile.TextBox"
+								placeholder="First Name" ref="'rel:First'"/>
+						</div>
+						<div class="field-row">
+							<span>Last Name</span>
+							<input id="lastInput" dojoType="dojox.mobile.TextBox"
+								placeholder="Last Name" ref="'rel:Last'"/>
+						</div>
+						<div class="field-row">
+							<span>Email</span>
+							<input  id="emailInput2" dojoType="dojox.mobile.TextBox"
+								placeholder="Email" ref="'rel:Email'"/>
+						</div>
+						<div class="field-row">
+							<span>Telephone</span>
+							<input  id="telInput" dojoType="dojox.mobile.TextBox"
+								placeholder="Telephone" ref="'rel:Tel'"/>
+						</div>
+					</div>
+				</div>
+			<div class="spacer"></div>
+			<button id="add" type="button" dojoType="dojox.mobile.Button" class="mblBlueButton" onclick="insertResult(nextIndexToAdd)">Add</button>
+			<button id="save" type="button" dojoType="dojox.mobile.Button" class="mblBlueButton" onclick="console.log(repeatmodel[selectedIndex].toPlainObject());repeatmodel[selectedIndex].commit()">Save</button>
+			<button id="reset2" type="button" dojoType="dojox.mobile.Button" class="mblBlueButton" onclick="repeatmodel.reset()">Reset</button>
+		</form>
+
+	</div>
+
+	<div id="generate" data-dojo-type="dojox.mobile.ScrollableView">
+		<h1 data-dojo-type="dojox.mobile.Heading" back="Back" moveTo="foo">Simple Form Generate Example</h1>
+		<div class="field-title"></div>
+			<div id="main">
+				<div id="leftNav"></div>
+				<div id="mainContent" class="generate-maincontent">
+					<div id="outerModelArea">
+						<div id="generateModel">Model</div>
+						<div class="generate-textarea-row">
+							<textarea class="generate-textarea-cell" data-dojo-type="dojox.mobile.TextArea" id="modelArea">
+{
+	"Serial": "11111",
+	"First": "John",
+	"Last": "Doe",
+	"Email": "jdoe@example.com",
+	"Phones": [
+		{
+			"Office": "111-111-1111"
+		},
+		{
+			"Mobile": "222-222-2222"
+		}
+	]
+}
+							</textarea>
+						</div>
+						<div class="fieldset">
+							<div class="spacer"></div>
+							<button id="generate1" type="button" data-dojo-type="dojox.mobile.Button" class="mblBlueButton" onclick="updateView()">Generate Form</button>
+						</div>
+					</div>
+					<div id="viewArea" style="display:none">
+						<div id="generateView">Generated View</div>
+							<div class="fieldset">
+							<div id="view" data-dojo-type="dojox.mvc.Generate" data-dojo-props="widgetMapping:{'String' : 'dojox.mobile.TextBox'}, idNameMapping:{'String' : 'TB'}"></div>
+						</div>
+						<div class="fieldset">
+							<div class="spacer"></div>
+							<button id="updateModel" type="button" data-dojo-type="dojox.mobile.Button" class="mblBlueButton" onclick="updateModel()">Update Model</button>
+						</div>
+					</div>
+				</div>
+			</div>
+					<textarea style="display:none" data-dojo-type="dojox.mobile.TextArea" id="modelArea2">
+{
+	"Serial": "11111",
+	"First": "John",
+	"Middle": "J",
+	"Last": "Doe",
+	"Email": "jdoe@example.com",
+	"Phones": [
+		{
+			"Office": "111-111-1111"
+		},
+		{
+			"Mobile": "222-222-2222"
+		}
+	]
+}
+					</textarea>
+			
+		</div>
+	</div>
+	</body>
+</html>

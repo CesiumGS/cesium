@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+	<title>dojox.layout.ExpandoPane</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css" />
+	<!-- required: supplemental styles for this widget -->
+	<link rel="stylesheet" href="../resources/ExpandoPane.css" />
+	
+	<!-- used for test design only: -->
+	<link rel="stylesheet" href="../../../dijit/tests/css/dijitTests.css" />
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<style type="text/css">
+		body, html {
+			height:100%;
+		}
+	</style>
+
+	<!-- for debugging -->
+	<script type="text/javascript">
+		dojo.require("dojox.layout.ExpandoPane");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.Tree");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dojo.fx.easing");
+
+		var constructTabContainerTest = function(){
+			
+			var parent = dojo.byId("container0");
+			console.log("Parent id is: ", parent.id);
+			
+			var tabContainer = new dijit.layout.TabContainer({
+				id: "0",
+				tabPosition: "top",
+				style:"height:400px; width: 100%;"
+			}).placeAt(parent);
+			
+			var cp2 = new dijit.layout.ContentPane({
+				id: "0.2",
+				title: "Tab 1"
+			}).placeAt(tabContainer);
+			
+			tabContainer.startup();
+			constructBorderContainerExpandoPaneTest(tabContainer, "0.1");
+			// FIXME: if cp2 isn't visible, Expando's collapse to 0px? TitleHeight calc'd at 0?!
+			//constructBorderContainerExpandoPaneTest(cp2, "0.2");
+			
+		}
+		
+		var constructBorderContainerExpandoPaneTest = function(parent, cid){
+			console.log ("Parent id is: " + parent.id);
+			
+			var borderContainer = new dijit.layout.BorderContainer({
+				id: cid + "." + 0,
+				title:"Tab 2",
+				design: "horizontal",
+				style: "height:350px;",
+				selected:true
+			}).placeAt(parent);
+			parent.selectChild(borderContainer);
+			
+			// add a center region:
+			var cr = new dijit.layout.ContentPane({
+				id: cid + "center",
+				region: "center"
+			}).placeAt(borderContainer);
+			
+			var ep = new dojox.layout.ExpandoPane({
+				id: cid + "." + 1,
+				title: "Left Section Test",
+				region: "left",
+				style: "width: 33%; height: 98%; background-color:#FFDEAD"
+			}).placeAt(borderContainer);
+
+			var ep1 = new dojox.layout.ExpandoPane({
+				id: cid + "." + 2,
+				title: "Right Section Test",
+				region: "right",
+				style: "width: 33%; height: 98%; background-color:#FFDEAD"
+			}).placeAt(borderContainer);
+			
+			borderContainer.startup();
+			
+		}
+		
+		// build the UI immediately onload:
+		dojo.addOnLoad(constructTabContainerTest);
+
+	</script>
+</head>
+<body class="tundra" role="main">
+	<h1 class="testTitle">Programatic ExpandoPane Test</h1>
+	<div id="container0"></div>
+</body>
+</html>

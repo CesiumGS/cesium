@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Dojo Toolbar Widget Test</title>
+
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+
+		dojo.require("dijit.Declaration");
+		dojo.require("dijit.Toolbar");
+		dojo.require("dijit.ToolbarSeparator");
+
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.form.DropDownButton");
+		dojo.require("dijit.form.ComboButton");
+		dojo.require("dijit.form.ToggleButton");
+
+		dojo.require("dijit.ColorPalette");
+		dojo.require("dijit.TooltipDialog");
+		dojo.require("dijit.form.TextBox");
+
+		dojo.require("dijit.Menu");
+		dojo.require("dijit.MenuItem");
+
+		dojo.require("dojo.parser");
+
+		dojo.ready(function(){
+			// programatic creation
+			dojo.forEach(["toolbar2", "toolbar3", "toolbar4"], function(toolbarId){
+				var toolbar = new dijit.Toolbar({}, dojo.byId(toolbarId));
+				dojo.forEach(["Cut", "Copy", "Paste"], function(label){
+					var button = new dijit.form.Button({
+                        id: toolbarId+"."+label,
+                        // note: should always specify a label, for accessibility reasons.
+                        // Just set showLabel=false if you don't want it to be displayed normally
+                        label: label,
+                        showLabel: (toolbarId != "toolbar2"),
+                        iconClass: toolbarId == "toolbar4" ? "" : "dijitEditorIcon dijitEditorIcon"+label
+                    });
+                    toolbar.addChild(button);
+				});
+			});
+			
+		});
+	</script>
+</head>
+<body class="claro">
+	<h1 class="testTitle">Toolbar test</h1>
+
+	<span data-dojo-type="dijit/Declaration" data-dojo-props='widgetClass:"ToolbarSectionStart", defaults:{ label: "Label"}'>
+		<span data-dojo-type="dijit/ToolbarSeparator"></span><i>${label}:</i>
+	</span>
+
+	<h2>Toolbar from markup</h2>
+
+	<input id="toolbar1Before" value="input before toolbar1"/>
+	<div id="toolbar1" data-dojo-type="dijit/Toolbar"
+			><div data-dojo-type="ToolbarSectionStart" data-dojo-props='label:"Buttons"'></div
+			><div id="toolbar1.cut" data-dojo-type="dijit/form/Button" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconCut", showLabel:false'>Cut</div
+			><div id="toolbar1.copy" data-dojo-type="dijit/form/Button" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconCopy", showLabel:true'>Copy</div
+
+			><div data-dojo-type="ToolbarSectionStart" data-dojo-props='label:"Toggles"'></div
+			><div id="toolbar1.bold" data-dojo-type="dijit/form/ToggleButton" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconBold", showLabel:false'>Bold</div
+			><div id="toolbar1.italic" data-dojo-type="dijit/form/ToggleButton" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconItalic", showLabel:true'>Italic</div
+
+><!--
+			<span data-dojo-type="dijit/ToolbarSeparator">&nbsp;</span>
+
+			<span dojo:type="ToolbarButtonGroup" name="justify" defaultButton="justifyleft" preventDeselect="true" showLabel="false">
+				<div data-dojo-type="dijit/form/ToggleButton" iconClass="dijitEditorIcon dijitEditorIconJustifyLeft" name="justify" showLabel="false">Left</div>
+				<div data-dojo-type="dijit/form/ToggleButton" iconClass="dijitEditorIcon dijitEditorIconJustifyRight" name="justify" showLabel="false">Right</div>
+				<div data-dojo-type="dijit/form/ToggleButton" iconClass="dijitEditorIcon dijitEditorIconJustifyCenter" name="justify" showLabel="false">Center</div>
+			 </span>
+-->
+
+			<div data-dojo-type="ToolbarSectionStart" data-dojo-props='label:"Dropdowns"'></div
+			><div id="toolbar1.dialog" data-dojo-type="dijit/form/DropDownButton" data-dojo-props='iconClass:"plusIcon", showLabel:true'>
+				<span>TooltipDialog</span>
+				<div id="tooltipDlg" data-dojo-type="dijit/TooltipDialog" data-dojo-props='title:"Enter Login information",
+					execute:function(args){ console.log("submitted w/args:\n" + dojo.toJson(args, true)); }'>
+					<table>
+						<tr>
+							<td><label for="user">User:</label></td>
+							<td><input id="user" data-dojo-type=dijit.form.TextBox data-dojo-props='type:"text", name:"user" '/></td>
+						</tr>
+						<tr>
+							<td><label for="password">Password:</label></td>
+							<td><input id="password" data-dojo-type=dijit.form.TextBox data-dojo-props='type:"password", name:"pwd"'/></td>
+						</tr>
+						<tr>
+							<td colspan="2" style="text-align:center;">
+								<button data-dojo-type=dijit.form.Button data-dojo-props='type:"submit", name:"submit"'>Login</button></td>
+						</tr>
+					</table>
+				</div
+			></div
+			><div id="toolbar1.backcolor" data-dojo-type="dijit/form/DropDownButton" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconBackColor", showLabel:true'>
+				<span>ColorPalette</span>
+				<div id="toolbar1.colorPalette" data-dojo-type="dijit/ColorPalette" data-dojo-props='style:"display: none", palette:"7x10", onChange:function(){ console.log(this.value); }'></div>
+			</div
+			><div id="toolbar1.forecolor" data-dojo-type="dijit/form/DropDownButton" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconForeColor", showLabel:false'>
+				<span>Foreground</span>
+				<div id="toolbar1.colorPalette2" data-dojo-type="dijit/ColorPalette" data-dojo-props='style:"display: none", palette:"3x4", onChange:function(){ console.log(this.value); }'></div>
+			</div
+
+			><div data-dojo-type="ToolbarSectionStart" data-dojo-props='label:"Combos"'></div
+			><div id="toolbar1.combo" data-dojo-type="dijit/form/ComboButton" data-dojo-props='optionsTitle:"save options", iconClass:"plusIcon", showLabel:true,
+				onClick:function(){ console.log("clicked combo save") }'>
+				<span>Menu</span>
+				<div id="saveMenu" data-dojo-type="dijit/Menu" data-dojo-props='style:"display: none;"'>
+					<div data-dojo-type="dijit/MenuItem"  data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconSave",
+						onClick:function(){ console.log("not actually saving anything, just a test!") }'>Save</div>
+					<div data-dojo-type="dijit/MenuItem"
+						data-dojo-props='onClick:function(){ console.log("not actually saving anything, just a test!") }'>Save As</div>
+				</div>
+			</div
+			><div id="toolbar1.combo2" data-dojo-type="dijit/form/ComboButton" data-dojo-props='optionsTitle:"save options2", iconClass:"plusIcon", showLabel:false,
+				onClick:function(){ console.log("clicked combo save") }'>
+				<span>Menu2</span>
+				<div id="saveMenu2" data-dojo-type="dijit/Menu" data-dojo-props='style:"display: none;"'>
+					<div data-dojo-type="dijit/MenuItem"  data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconSave",
+						onClick:function(){ console.log("not actually saving anything, just a test!") }'>Save</div>
+					<div data-dojo-type="dijit/MenuItem"
+						data-dojo-props='onClick:function(){ console.log("not actually saving anything, just a test!") }'>Save As</div>
+				</div>
+			</div
+
+			><span data-dojo-type="dijit/ToolbarSeparator"></span
+			><div id="toolbar1.insertorderedlist" data-dojo-type="dijit/form/Button" data-dojo-props='iconClass:"dijitEditorIcon dijitEditorIconInsertOrderedList", showLabel:false'>Ordered list</div
+	></div>
+	<input id="toolbar1After" value="input after toolbar1"/>
+
+	<h2>Toolbar from script with icons only</h2>
+	<div id="toolbar2"></div>
+
+	<h2>Toolbar from script with text and icons</h2>
+	<div id="toolbar3"></div>
+
+	<h2>Toolbar from script with text only</h2>
+	<div id="toolbar4"></div>
+
+    <!-- leave some space before the console window -->
+    <br><br>
+  </body>
+</html>

@@ -1,0 +1,138 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Test Clip</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="async:true, isDebug:true"></script>
+		<script type="text/javascript">
+			require([
+				"dojo/ready",
+				"dojo/_base/array", 
+				"dojo/dom", 
+				"dojo/on", 
+				"dojox/gfx", 
+				"dojox/gfx/matrix",
+				"dojox/gfx/Moveable"], 
+				function(ready, array, dom, on, gfx, matrix, Moveable) {
+
+				var surface, clipped = [];
+				
+				var drawGrid = function(){
+					var sz = surface.getDimensions();
+					for (var r=0;r<sz.height; r+=50){
+						surface.createLine({y1: r, x1:0, x2:sz.width, y2:r}).setStroke({width:1, color:"#cfcfcf"});
+					}
+					for (var c=0; c<sz.width; c+=50){
+						surface.createLine({y1: 0, x1:c, x2:c, y2:sz.height}).setStroke({width:1, color:"#cfcfcf"});
+					}
+				};
+				var img = "../../../demos/resources/images/mobileOpenLayers.png";
+				
+				var buildScene = function(){
+					clipped = [];
+					var container = dom.byId("gfx_holder");
+					surface = gfx.createSurface(container, 600, 550);
+					surface.whenLoaded(function(){
+						drawGrid();
+						clipped.push(surface.createImage({src:img, width:200,height:200}).setClip({x:10,y:80,width:50,height:50}).setTransform(matrix.translate(200,200)));
+						surface.createRect({width:200,height:200}).setStroke("red").setTransform(matrix.translate(200,200));
+						// clip = ellipse
+						clipped.push(surface.createImage({src:img, x:100,y:50,width:200,height:200}).setClip({cx:200,cy:100,rx:20,ry:30}));
+						surface.createRect({x:100,y:50,width:200,height:200}).setStroke("green");
+						// clip = circle
+						clipped.push(surface.createImage({src:img, x:0,y:350,width:200,height:200}).setClip({cx:100,cy:425,rx:60,ry:60}));
+						surface.createRect({x:0,y:350,width:200,height:200}).setStroke("blue");
+						// clip = path
+						clipped.push(surface.createImage({src:img, x:300,y:350,width:200,height:200}).setClip({d:"M 350,350 C314,414 317,557 373,450.0000 z"}));
+						surface.createRect({x:300,y:350,width:200,height:200}).setStroke("#00FFFF");
+						// clip = polyline
+						clipped.push(surface.createImage({src:img, x:300,y:0,width:200,height:200}).setClip({points:[350,0,450,50,380,130,300,110]}));
+						surface.createRect({x:300,y:0,width:200,height:200}).setStroke("#FF00FF");
+						
+						var g1 = surface.createGroup().setTransform(matrix.translate(50,200)).setClip({x:20, y:20, width:90, height:150});
+						var g = g1.createGroup();
+						g.createRect({width:70, height:100}).setFill("#8B8878");
+						g.createEllipse({cx:50,cy:90,rx:40,ry:20}).setFill("#CDB79E");
+						g.setClip({x:0,y:60,width:80,height:30});
+						g.createRect(g.getBoundingBox()).setStroke("#CDB79E");
+						clipped.push(g);
+						
+						g = g1.createGroup();
+						g.createRect({width:70, height:100}).setFill("#8B8878");
+						g.createEllipse({cx:50,cy:90,rx:40,ry:20}).setFill("#CDB79E");
+						g.setClip({x:0,y:60,width:70,height:50}).setTransform(matrix.translate(50,50));
+						g.createRect(g.getBoundingBox()).setStroke("#CDB79E");
+						clipped.push(g);
+						surface.createRect(g1.getBoundingBox()).setStroke("#8B8878").setTransform(matrix.translate(50,200));
+						
+						clipped.push(surface.createRect({x:50,y:50,width:100, height:100}).setClip({x:50, y:50, width:50, height:50}).setFill("yellow").setTransform(matrix.scaleAt(2,2,50,50)));
+						g = surface.createGroup();
+						var gg = g.createGroup().setTransform(matrix.scaleAt(2,2,50,250)).setClip({x:100, y:300, width:50, height:50});
+						gg.createRect({x:50,y:250,width:100, height:100}).setFill("red");
+						clipped.push(gg);
+						clipped.push(surface.createRect({x:50,y:350,width:50, height:50}).setClip({x:75, y:375, width:25, height:25}).setFill("green"));
+
+
+						array.forEach(clipped, function(s){
+							new Moveable(s);
+						});
+						
+					});
+				};
+				
+				var switchRenderer = function(){
+					var select = dom.byId("selectGfx");
+					var r = select.options[select.selectedIndex].value;
+					require(["dojox/gfx/"+r], function(r){
+						if(surface){
+							surface.destroy();
+						}
+						gfx.switchTo(r);
+						buildScene();
+						dom.byId("noClip").value = clipped[0]._oldClip ? "Set clip" : "Remove clip";
+					});
+				};
+				
+				ready(function() {
+					on(dom.byId("noClip"), "click", function(){
+						array.forEach(clipped,function(s){
+							var c = s.getClip();
+							s.setClip(s._oldClip);
+							s._oldClip = c;
+						});
+						dom.byId("noClip").value = clipped[0]._oldClip ? "Set clip" : "Remove clip";
+					});
+					var select = dom.byId("selectGfx");
+					on(select,"change",function(e){
+						switchRenderer();
+					});
+					array.forEach(select.options, function(opt,i){
+						if (gfx.renderer.indexOf(opt.value) !== -1){
+							select.selectedIndex = i;
+							switchRenderer();
+						}
+					});
+				});
+			});
+
+		</script>
+	</head>
+	<body style="font-family:sans-serif;font-size:10pt">
+		<h1>Test Clip</h1>
+		<p>This page illustrates the gfx clipping api. This api allows to define a clipping area on any gfx Shape types 
+		(including group). The supported clipping geometry are rectangle, ellipse, polyline and path, with the following exceptions:</p>
+			<ul>
+				<li>VML only supports rectangular clipping shape.</li>
+				<li>The gfx Silverlight implementation does not support Path clipping geometry.</li>
+			</ul>
+		<p>You can drag the shapes using the mouse, remove the clip using the button at the bottom, and change the gfx renderer in the combobox.</p>			
+		GFX Renderer: <select id="selectGfx">
+		  <option value="svg">SVG</option>
+		  <option value="canvasWithEvents">Canvas</option>
+		  <option value="silverlight">Silverlight (IE)</option>
+		  <option value="vml">VML (IE <9)</option>
+		</select>
+		<div id="gfx_holder" style="width: 600px; height: 550px; border: solid;background-color: #eeeeee"></div>			
+		<input type="button" value="Remove clip" id="noClip"/>
+	</body>
+</html>
