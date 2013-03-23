@@ -58,17 +58,16 @@ define(['./SceneModeViewModel',
         this.button = document.createElement('span');
 
         var widgetNode = this.button;
-        widgetNode.className = 'sceneModeCommon';
+        widgetNode.className = 'cesium-sceneMode-button';
         widgetNode.setAttribute('data-bind', '\
-                                 css: { sceneMode2D: sceneMode() === _sceneMode.SCENE2D,\
-                                        sceneMode3D: sceneMode() === _sceneMode.SCENE3D,\
-                                        sceneModeColumbusView: sceneMode() === _sceneMode.COLUMBUS_VIEW,\
-                                        sceneModeMorphing: sceneMode() === _sceneMode.MORPHING},\
+                                 css: { "cesium-sceneMode-button2D": sceneMode() === _sceneMode.SCENE2D,\
+                                        "cesium-sceneMode-button3D": sceneMode() === _sceneMode.SCENE3D,\
+                                        "cesium-sceneMode-buttonColumbusView": sceneMode() === _sceneMode.COLUMBUS_VIEW},\
                                  attr: { title: selectedTooltip }, click: toggleDropdown');
         container.appendChild(widgetNode);
 
         var node3D = document.createElement('span');
-        node3D.className = 'sceneModeCommon sceneMode3D';
+        node3D.className = 'cesium-sceneMode-button cesium-sceneMode-button3D';
         node3D.setAttribute('data-bind', '\
                              attr: { title: tooltip3D },\
                              visible: dropDownVisible() && (sceneMode() !== _sceneMode.SCENE3D),\
@@ -77,7 +76,7 @@ define(['./SceneModeViewModel',
         this._node3D = node3D;
 
         var node2D = document.createElement('span');
-        node2D.className = 'sceneModeCommon sceneMode2D';
+        node2D.className = 'cesium-sceneMode-button cesium-sceneMode-button2D';
         node2D.setAttribute('data-bind', '\
                              attr: { title: tooltip2D },\
                              visible: dropDownVisible() && (sceneMode() !== _sceneMode.SCENE2D),\
@@ -86,7 +85,7 @@ define(['./SceneModeViewModel',
         this._node2D = node2D;
 
         var nodeColumbus = document.createElement('span');
-        nodeColumbus.className = 'sceneModeCommon sceneModeColumbusView';
+        nodeColumbus.className = 'cesium-sceneMode-button cesium-sceneMode-buttonColumbusView';
         nodeColumbus.setAttribute('data-bind', '\
                                    attr: { title: tooltipColumbusView },\
                                    visible: dropDownVisible() && (sceneMode() !== _sceneMode.COLUMBUS_VIEW),\

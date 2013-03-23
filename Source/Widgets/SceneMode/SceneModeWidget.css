@@ -1,4 +1,4 @@
-.sceneModeCommon {
+.cesium-sceneMode-button {
 	display: inline-block;
 	background-image: url(../Images/sceneModes.svg);
 	background-repeat: no-repeat;
@@ -19,22 +19,18 @@
 	transition-duration: 2s;
 }
 
-.sceneModeCommon:hover {
+.cesium-sceneMode-button:hover {
 	box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
 
-.sceneMode3D {
+.cesium-sceneMode-button3D {
 	background-position: 0 0;
 }
 
-.sceneModeColumbusView {
+.cesium-sceneMode-buttonColumbusView {
 	background-position: 33.33% 0;
 }
 
-.sceneMode2D {
+.cesium-sceneMode-button2D {
 	background-position: 66.66% 0;
-}
-
-.sceneModeMorphing {
-	background-position: 100% 0;
 }
