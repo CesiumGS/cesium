@@ -171,7 +171,7 @@ define([
 
         this._previousMode = this._scene.mode;
         if (this._previousMode !== SceneMode.SCENE2D) {
-            this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D);
+            this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, false);
             complete2DCallback(this);
         }
     };
@@ -189,7 +189,7 @@ define([
         this._previousMode = scene.mode;
 
         if (this._previousMode !== SceneMode.COLUMBUS_VIEW) {
-            this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW);
+            this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, false);
             completeColumbusViewCallback(this);
         }
     };
@@ -207,7 +207,7 @@ define([
         this._previousMode = scene.mode;
 
         if (scene.mode !== SceneMode.SCENE3D) {
-            this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D);
+            this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, false);
             complete3DCallback(this);
         }
     };
@@ -239,7 +239,7 @@ define([
         if (this._previousMode === SceneMode.SCENE2D || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.MORPHING, SceneMode.SCENE2D);
+        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, true);
         this._previousMode = SceneMode.MORPHING;
 
         updateFrustums(this);
@@ -267,7 +267,7 @@ define([
         if (this._previousMode === SceneMode.COLUMBUS_VIEW || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.MORPHING, SceneMode.COLUMBUS_VIEW);
+        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, true);
         this._previousMode = SceneMode.MORPHING;
 
         updateFrustums(this);
@@ -296,7 +296,7 @@ define([
         if (this._previousMode === SceneMode.SCENE3D || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.MORPHING, SceneMode.SCENE3D);
+        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, true);
         this._previousMode = SceneMode.MORPHING;
 
         updateFrustums(this);
@@ -806,8 +806,10 @@ define([
             camera.direction = transitioner._camera3D.direction.clone();
             camera.up = transitioner._camera3D.up.clone();
         }
+
+        var wasMorphing = typeof transitioner._completeMorph !== 'undefined';
         transitioner._completeMorph = undefined;
-        transitioner.onTransitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE3D);
+        transitioner.onTransitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE3D, wasMorphing);
     }
 
     function complete2DCallback(transitioner) {
@@ -827,8 +829,9 @@ define([
         camera.direction = transitioner._camera2D.direction.clone();
         camera.up = transitioner._camera2D.up.clone();
 
+        var wasMorphing = typeof transitioner._completeMorph !== 'undefined';
         transitioner._completeMorph = undefined;
-        transitioner.onTransitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE2D);
+        transitioner.onTransitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE2D, wasMorphing);
     }
 
     function completeColumbusViewCallback(transitioner) {
@@ -851,8 +854,10 @@ define([
             camera.up = transitioner._cameraCV.up.clone();
             camera.right = camera.direction.cross(camera.up);
         }
+
+        var wasMorphing = typeof transitioner._completeMorph !== 'undefined';
         transitioner._completeMorph = undefined;
-        transitioner.onTransitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.COLUMBUS_VIEW);
+        transitioner.onTransitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.COLUMBUS_VIEW, wasMorphing);
     }
 
     return SceneTransitioner;

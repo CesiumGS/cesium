@@ -23,15 +23,7 @@ define(['../../Core/DeveloperError',
 
         var sceneMode = knockout.observable(transitioner.getScene().mode);
 
-        transitioner.onTransitionStart.addEventListener(function(transitioner, oldMode, newMode, futureMode) {
-            if (typeof futureMode !== 'undefined') {
-                sceneMode(futureMode);
-            } else {
-                sceneMode(newMode);
-            }
-        });
-
-        transitioner.onTransitionComplete.addEventListener(function(transitioner, oldMode, newMode) {
+        transitioner.onTransitionStart.addEventListener(function(transitioner, oldMode, newMode, isMorphing) {
             sceneMode(newMode);
         });
 
