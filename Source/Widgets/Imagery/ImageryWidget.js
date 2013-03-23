@@ -63,7 +63,9 @@ define(['./ImageryViewModel',
         this.choices = document.createElement('div');
         var choices = this.choices;
         choices.className = 'cesium-imagery-dropDown';
-        choices.setAttribute('data-bind', 'visible: dropDownVisible(), foreach: imageryProviderViewModels');
+        choices.setAttribute('data-bind', '\
+                style: {opacity: dropDownVisible() ? 1 : 0},\
+                foreach: imageryProviderViewModels');
         container.appendChild(choices);
 
         var provider = document.createElement('div');

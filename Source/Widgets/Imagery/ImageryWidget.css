@@ -15,6 +15,10 @@
 	float: right;
 	background-color: rgba(0, 0, 0, 0.75);
 	padding: 6px;
+	opacity: 0;
+	transition: opacity 0.5s;
+	-webkit-transition: opacity 0.5s;
+	-moz-transition: opacity 0.5s;
 }
 
 .cesium-imagery-item {
