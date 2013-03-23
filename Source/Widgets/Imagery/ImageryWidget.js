@@ -82,7 +82,6 @@ define(['./ImageryViewModel',
         provider.appendChild(providerLabel);
 
         provider.setAttribute('data-bind', '\
-                               visible: $parent.dropDownVisible() && name() !== $parent.selected().name(),\
                                click: $parent.changeProvider');
         choices.appendChild(provider);
 
