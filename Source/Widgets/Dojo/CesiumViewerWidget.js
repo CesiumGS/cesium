@@ -848,6 +848,10 @@ define([
             controller.setEllipsoid(Ellipsoid.WGS84);
             controller.columbusViewMode = CameraColumbusViewMode.FREE;
 
+            if (mode === SceneMode.MORPHING) {
+                this.sceneTransitioner.completeMorph();
+            }
+
             if (mode === SceneMode.SCENE2D) {
                 camera.controller.viewExtent(Extent.MAX_VALUE);
             } else if (mode === SceneMode.SCENE3D) {

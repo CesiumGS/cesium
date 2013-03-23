@@ -1,15 +1,56 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" class="cesium-lighter" height="31" width="169" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 169 31" xmlns:dc="http://purl.org/dc/elements/1.1/">
- <metadata>
-  <rdf:RDF>
-   <cc:Work rdf:about="">
-    <dc:format>image/svg+xml</dc:format>
-    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:title/>
-   </cc:Work>
-  </rdf:RDF>
- </metadata>
- <style type="text/css">
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   class="cesium-lighter"
+   height="64"
+   width="256"
+   version="1.1"
+   viewBox="0 0 256 64"
+   id="svg2"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="sceneModes-lighter.svg">
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1600"
+     inkscape:window-height="847"
+     id="namedview119"
+     showgrid="false"
+     inkscape:zoom="2.828427"
+     inkscape:cx="63.861464"
+     inkscape:cy="13.64583"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2" />
+  <metadata
+     id="metadata4">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <style
+     type="text/css"
+     id="style6">
 .cesium-sceneMode-rectButton {
     cursor: pointer;
     -moz-user-select: none;
@@ -69,78 +110,387 @@
     stroke: #2E2;
 }
 </style>
- <g class="cesium-animation-rectButton" transform="matrix(0.845,0,0,0.84848485,103.21352,2.9986114)">
-  <rect display="none" rx="2" ry="2" class="cesium-animation-buttonGlow" filter="url(#animation_blurred-7)" width="32" y="0" x="0" height="32" fill="#FFF"/>
-  <rect stroke-width="1.2" rx="4" ry="4" class="cesium-animation-buttonMain" width="32" stroke="#759dc0" y="0" x="0" height="32" fill="url(#linearGradient3211-0)"/>
-  <use xlink:href="#animation_pathPlay" width="169" y="0" x="0" height="112" class="cesium-animation-buttonPath" fill="#111111"/>
-  <title>Play Forward</title>
- </g>
- <g class="cesium-animation-rectButton" transform="matrix(0.845,0,0,0.84848485,69.478947,3.005672)">
-  <rect display="none" rx="2" ry="2" class="cesium-animation-buttonGlow" filter="url(#animation_blurred)" width="32" y="0" x="0" height="32" fill="#FFF"/>
-  <rect stroke-width="1.2" rx="4" ry="4" class="cesium-animation-buttonMain" width="32" stroke="#759dc0" y="0" x="0" height="32" fill="url(#linearGradient3211)"/>
-  <use xlink:href="#animation_pathPlay" width="169" y="0" x="0" height="112" class="cesium-animation-buttonPath" fill="#111111"/>
-  <title>Play Forward</title>
- </g>
- <g class="cesium-animation-rectButton" transform="matrix(0.845,0,0,0.84848485,35.678947,3.005672)">
-  <rect display="none" rx="2" ry="2" class="cesium-animation-buttonGlow" filter="url(#animation_blurred)" width="32" y="0" x="0" height="32" fill="#FFF"/>
-  <rect stroke-width="1.2" rx="4" ry="4" class="cesium-animation-buttonMain" width="32" stroke="#759dc0" y="0" x="0" height="32" fill="url(#linearGradient3211)"/>
-  <use xlink:href="#animation_pathPause" width="169" y="0" x="0" height="112" class="cesium-animation-buttonPath" fill="#111111"/>
-  <title>Pause</title>
- </g>
- <g class="cesium-animation-rectButton" transform="matrix(0.845,0,0,0.84848485,1.8789472,3.005672)">
-  <rect display="none" rx="2" ry="2" class="cesium-animation-buttonGlow" filter="url(#animation_blurred)" width="32" y="0" x="0" height="32" fill="#FFF"/>
-  <rect stroke-width="1.2" rx="4" ry="4" class="cesium-animation-buttonMain" width="32" stroke="#759dc0" y="0" x="0" height="32" fill="url(#linearGradient3211)"/>
-  <use xlink:href="#animation_pathPlayReverse" width="169" y="0" x="0" height="112" class="cesium-animation-buttonPath" fill="#111111"/>
-  <title>Play Reverse</title>
- </g>
- <rect transform="matrix(0.845,0,0,0.84848485,37.18,3)" display="none" rx="2" ry="2" height="32" filter="url(#sceneMode_blurred)" width="32" y="0" x="0" class="cesium-sceneMode-buttonGlow" fill="#FFF"/>
- <rect transform="matrix(0.845,0,0,0.84848485,104.78,3)" display="none" rx="2" ry="2" height="32" filter="url(#sceneMode_blurred)" width="32" y="0" x="0" class="cesium-sceneMode-buttonGlow" fill="#FFF"/>
- <rect transform="matrix(0.845,0,0,0.84848485,70.98,3)" display="none" rx="2" ry="2" height="32" filter="url(#sceneMode_blurred)" width="32" y="0" x="0" class="cesium-sceneMode-buttonGlow" fill="#FFF"/>
- <defs>
-  <linearGradient id="sceneMode_buttonNormal" x2="0.5" x1="0.5" y2="1">
-   <stop stop-color="#747577" offset="0"/>
-   <stop stop-color="#394452" offset="0.12"/>
-   <stop stop-color="#2D3237" offset="0.46"/>
-   <stop stop-color="#353535" offset="0.81"/>
-  </linearGradient>
-  <linearGradient id="sceneMode_buttonHovered" x2="0.5" x1="0.5" y2="1">
-   <stop stop-color="#89B4CF" offset="0"/>
-   <stop stop-color="#5494C1" offset="0.12"/>
-   <stop stop-color="#4C8EB8" offset="0.46"/>
-   <stop stop-color="#5492B7" offset="0.81"/>
-  </linearGradient>
-  <linearGradient id="sceneMode_buttonDisabled" x2="0.5" x1="0.5" y2="1">
-   <stop stop-color="#696969" offset="0"/>
-   <stop stop-color="#333" offset="0.75"/>
-  </linearGradient>
-  <filter id="sceneMode_blurred" height="2" width="2" y="-0.5" x="-0.5" color-interpolation-filters="sRGB">
-   <feGaussianBlur stdDeviation="4" in="SourceGraphic"/>
-  </filter>
-  <filter id="animation_blurred" height="2" width="2" y="-0.5" x="-0.5" color-interpolation-filters="sRGB">
-   <feGaussianBlur stdDeviation="4" in="SourceGraphic"/>
-  </filter>
-  <linearGradient id="linearGradient3211" y2="32.6" xlink:href="#animation_buttonNormal" gradientUnits="userSpaceOnUse" x2="16" y1="-0.6" x1="16"/>
-  <linearGradient id="animation_buttonNormal" x2="0.5" x1="0.5" y2="1">
-   <stop stop-color="#ECF6FF" offset="0"/>
-   <stop stop-color="#D3E7FF" offset="0.12"/>
-   <stop stop-color="#DEEEFF" offset="0.46"/>
-   <stop stop-color="#E8F4FF" offset="0.81"/>
-  </linearGradient>
-  <filter id="animation_blurred-7" height="2" width="2" y="-0.5" x="-0.5" color-interpolation-filters="sRGB">
-   <feGaussianBlur stdDeviation="4" in="SourceGraphic"/>
-  </filter>
-  <linearGradient id="linearGradient3211-0" y2="32.6" gradientUnits="userSpaceOnUse" x2="16" y1="-0.6" x1="16">
-   <stop stop-color="#ECF6FF" offset="0"/>
-   <stop stop-color="#D3E7FF" offset="0.12"/>
-   <stop stop-color="#DEEEFF" offset="0.46"/>
-   <stop stop-color="#E8F4FF" offset="0.81"/>
-  </linearGradient>
- </defs>
- <path d="m15.185,8.109c-4.6585,0-8.4429,3.7844-8.4429,8.4429,0,1.6113,0.47259,3.1169,1.2564,4.3974,2.0956-0.16934,5.0943-1.0791,8.5183-2.4876,2.9457-1.2118,5.3301-2.4077,6.9353-3.543-0.76761-3.868-4.1736-6.8096-8.267-6.8096zm8.3927,1.3318c-0.74704,0.0023-1.5934,0.0922-2.4876,0.22615,0.24343,0.1707,0.47831,0.361,0.70358,0.55281,2.4723-0.28167,4.2324,0.04349,4.6486,1.0554,0.78226,1.9016-3.6381,5.0951-9.6993,7.5886s-11.455,3.3339-12.237,1.4323c-0.33526-0.81495,0.26784-1.932,1.5328-3.141-0.000096-0.01665,0-0.03359,0-0.05026,0-0.31676,0.01783-0.62116,0.05025-0.92973-2.1091,1.7333-2.9496,3.4646-2.4625,4.6486,0.91671,2.2284,6.7246,1.8454,13.795-0.92973,6.6692-2.6176,10.867-6.7673,9.9506-8.9957-0.40106-0.97492-1.7915-1.4637-3.7943-1.4574zm0.02513,7.6891c-1.6478,1.1526-3.744,2.2595-6.1312,3.2415-2.8587,1.176-5.7077,1.9521-8.0911,2.2866,1.5139,1.4448,3.5465,2.3369,5.8045,2.3369,4.4673,0,8.1252-3.4718,8.4178-7.865z" fill="#111"/>
- <path fill-rule="nonzero" d="m72.665,11.514,0,3.7811c0.3966,0.42897,0.789,0.87734,1.1883,1.3396,1.4597,1.6896,2.9966,3.3146,4.8614,3.3274,1.8736,0.0128,3.3689-1.497,4.9046-3.1113,0.76783-0.80715,1.5354-1.6415,2.3767-2.2686,0.84125-0.62711,1.7775-1.0555,2.8304-1.0371,1.5071,0.02629,3.0882,0.94604,4.6237,2.0958v-4.1268h-20.785zm16.14,2.7224c-0.85528-0.01492-1.628,0.33325-2.3983,0.90746-0.77028,0.57421-1.5207,1.3733-2.2903,2.1822-1.539,1.6178-3.1838,3.3427-5.4232,3.3274-2.2481-0.0153-3.9086-1.862-5.3799-3.565-0.21997-0.25461-0.43603-0.4902-0.64819-0.73461v5.596h20.785v-5.4231c-1.6487-1.2573-3.314-2.267-4.6453-2.2903z" fill="#111"/>
- <path fill-rule="nonzero" d="m58.776,9.712c-0.69405,0.01983-1.2665,0.26907-1.7056,0.64861-0.43915,0.37954-0.73141,0.88886-0.9609,1.4654-0.45899,1.153-0.67276,2.5811-0.98492,3.9877s-0.73412,2.7644-1.5615,3.7475c-0.82734,0.98309-2.0442,1.6332-4.1319,1.6335-2.0875,0.00028-3.3319-0.64681-4.2039-1.6335-0.872-0.98672-1.3669-2.3486-1.7536-3.7475-0.387-1.397-0.663-2.81-1.225-3.938s-1.501-1.987-2.979-1.97v0.76872c1.2078-0.01417,1.7926,0.55406,2.2821,1.5374,0.48953,0.98338,0.80518,2.3873,1.2011,3.8196,0.39594,1.4323,0.89,2.8954,1.8978,4.0358s2.5254,1.8981,4.7805,1.8978c2.2549-0.00029,3.7666-0.75014,4.7324-1.8978,0.96582-1.1476,1.4087-2.638,1.7296-4.0838,0.32087-1.4459,0.50967-2.8548,0.91286-3.8676,0.20159-0.50642,0.45901-0.90943,0.76872-1.1771s0.67891-0.44082,1.2251-0.45643l-0.02398-0.76872zm-18.353,7.8794-2.5464,6.1978,23.542,0-2.8827-6.1498-2.7145,0c-0.30553,0.95062-0.72071,1.8913-1.3933,2.6905-1.0489,1.2464-2.7135,2.0896-5.0687,2.09-2.3555,0.00032-4.0276-0.8334-5.1168-2.0659-0.7255-0.82092-1.1817-1.7847-1.5374-2.7626h-2.2821zm4.0838,0c0.26602,0.62361,0.57936,1.1746,0.98492,1.6335,0.79054,0.89453,1.8806,1.4897,3.8676,1.4894,1.9873-0.00026,3.0513-0.581,3.7956-1.4654,0.37634-0.44718,0.65248-0.99584,0.88883-1.6095l-9.5369-0.048z" fill="#111"/>
- <path d="m111.15,24.684a1.3945,1.3945,0,1,1,-2.7889,0,1.3945,1.3945,0,1,1,2.7889,0z" fill-rule="nonzero" transform="translate(0.32810615,0)" fill="#111"/>
- <path d="m111.15,24.684a1.3945,1.3945,0,1,1,-2.7889,0,1.3945,1.3945,0,1,1,2.7889,0z" fill-rule="nonzero" transform="translate(6.9722531,4.3003619e-7)" fill="#111"/>
- <path d="m111.15,24.684a1.3945,1.3945,0,1,1,-2.7889,0,1.3945,1.3945,0,1,1,2.7889,0z" fill-rule="nonzero" transform="translate(13.20627,4.2401689e-7)" fill="#111"/>
+  <g
+     class="cesium-animation-rectButton"
+     transform="matrix(1.9277143,0,0,1.927709,193.15658,1.1566281)"
+     id="g8">
+    <rect
+       display="none"
+       rx="2"
+       ry="2"
+       class="cesium-animation-buttonGlow"
+       width="32"
+       y="0"
+       x="0"
+       height="32"
+       id="rect10"
+       style="fill:#ffffff;display:none;filter:url(#animation_blurred-7)" />
+    <rect
+       rx="4"
+       ry="4"
+       class="cesium-animation-buttonMain"
+       width="32"
+       y="0"
+       x="0"
+       height="32"
+       id="rect12"
+       style="fill:url(#linearGradient3211-0);stroke:#759dc0;stroke-width:1.20000005" />
+    <use
+       xlink:href="#animation_pathPlay"
+       width="169"
+       y="0"
+       x="0"
+       height="112"
+       class="cesium-animation-buttonPath"
+       id="use14"
+       style="fill:#111111" />
+    <title
+       id="title16">Play Forward</title>
+  </g>
+  <g
+     class="cesium-animation-rectButton"
+     transform="matrix(1.9277284,0,0,1.9276973,129.15635,1.156776)"
+     id="g18">
+    <rect
+       display="none"
+       rx="2"
+       ry="2"
+       class="cesium-animation-buttonGlow"
+       width="32"
+       y="0"
+       x="0"
+       height="32"
+       id="rect20"
+       style="fill:#ffffff;display:none;filter:url(#animation_blurred)" />
+    <rect
+       rx="4"
+       ry="4"
+       class="cesium-animation-buttonMain"
+       width="32"
+       y="0"
+       x="0"
+       height="32"
+       id="rect22"
+       style="fill:url(#linearGradient3211);stroke:#759dc0;stroke-width:1.20000005" />
+    <use
+       xlink:href="#animation_pathPlay"
+       width="169"
+       y="0"
+       x="0"
+       height="112"
+       class="cesium-animation-buttonPath"
+       id="use24"
+       style="fill:#111111" />
+    <title
+       id="title26">Play Forward</title>
+  </g>
+  <g
+     class="cesium-animation-rectButton"
+     transform="matrix(1.9277255,0,0,1.9276989,65.156392,1.1567735)"
+     id="g28">
+    <rect
+       display="none"
+       rx="2"
+       ry="2"
+       class="cesium-animation-buttonGlow"
+       width="32"
+       y="0"
+       x="0"
+       height="32"
+       id="rect30"
+       style="fill:#ffffff;display:none;filter:url(#animation_blurred)" />
+    <rect
+       rx="4"
+       ry="4"
+       class="cesium-animation-buttonMain"
+       width="32"
+       y="0"
+       x="0"
+       height="32"
+       id="rect32"
+       style="fill:url(#linearGradient3098);stroke:#759dc0;stroke-width:1.20000005" />
+    <use
+       xlink:href="#animation_pathPause"
+       width="169"
+       y="0"
+       x="0"
+       height="112"
+       class="cesium-animation-buttonPath"
+       id="use34"
+       style="fill:#111111" />
+    <title
+       id="title36">Pause</title>
+  </g>
+  <g
+     class="cesium-animation-rectButton"
+     transform="matrix(1.9277255,0,0,1.9276989,1.1566095,1.1567735)"
+     id="g38">
+    <rect
+       display="none"
+       rx="2"
+       ry="2"
+       class="cesium-animation-buttonGlow"
+       width="32"
+       y="0"
+       x="0"
+       height="32"
+       id="rect40"
+       style="fill:#ffffff;display:none;filter:url(#animation_blurred)" />
+    <rect
+       rx="4"
+       ry="4"
+       class="cesium-animation-buttonMain"
+       width="32"
+       y="0"
+       x="0"
+       height="32"
+       id="rect42"
+       style="fill:url(#linearGradient3096);stroke:#759dc0;stroke-width:1.20000005" />
+    <use
+       xlink:href="#animation_pathPlayReverse"
+       width="169"
+       y="0"
+       x="0"
+       height="112"
+       class="cesium-animation-buttonPath"
+       id="use44"
+       style="fill:#111111" />
+    <title
+       id="title46">Play Reverse</title>
+  </g>
+  <rect
+     transform="matrix(0.845,0,0,0.84848485,37.18,36)"
+     display="none"
+     rx="2"
+     ry="2"
+     height="32"
+     width="32"
+     y="0"
+     x="0"
+     class="cesium-sceneMode-buttonGlow"
+     id="rect48"
+     style="fill:#ffffff;display:none;filter:url(#sceneMode_blurred)" />
+  <rect
+     transform="matrix(0.845,0,0,0.84848485,104.78,36)"
+     display="none"
+     rx="2"
+     ry="2"
+     height="32"
+     width="32"
+     y="0"
+     x="0"
+     class="cesium-sceneMode-buttonGlow"
+     id="rect50"
+     style="fill:#ffffff;display:none;filter:url(#sceneMode_blurred)" />
+  <rect
+     transform="matrix(0.845,0,0,0.84848485,70.98,36)"
+     display="none"
+     rx="2"
+     ry="2"
+     height="32"
+     width="32"
+     y="0"
+     x="0"
+     class="cesium-sceneMode-buttonGlow"
+     id="rect52"
+     style="fill:#ffffff;display:none;filter:url(#sceneMode_blurred)" />
+  <defs
+     id="defs54">
+    <linearGradient
+       id="sceneMode_buttonNormal"
+       x2="0.5"
+       x1="0.5"
+       y2="1">
+      <stop
+         stop-color="#747577"
+         offset="0"
+         id="stop57" />
+      <stop
+         stop-color="#394452"
+         offset="0.12"
+         id="stop59" />
+      <stop
+         stop-color="#2D3237"
+         offset="0.46"
+         id="stop61" />
+      <stop
+         stop-color="#353535"
+         offset="0.81"
+         id="stop63" />
+    </linearGradient>
+    <linearGradient
+       id="sceneMode_buttonHovered"
+       x2="0.5"
+       x1="0.5"
+       y2="1">
+      <stop
+         stop-color="#89B4CF"
+         offset="0"
+         id="stop66" />
+      <stop
+         stop-color="#5494C1"
+         offset="0.12"
+         id="stop68" />
+      <stop
+         stop-color="#4C8EB8"
+         offset="0.46"
+         id="stop70" />
+      <stop
+         stop-color="#5492B7"
+         offset="0.81"
+         id="stop72" />
+    </linearGradient>
+    <linearGradient
+       id="sceneMode_buttonDisabled"
+       x2="0.5"
+       x1="0.5"
+       y2="1">
+      <stop
+         stop-color="#696969"
+         offset="0"
+         id="stop75" />
+      <stop
+         stop-color="#333"
+         offset="0.75"
+         id="stop77" />
+    </linearGradient>
+    <filter
+       id="sceneMode_blurred"
+       height="2"
+       width="2"
+       y="-0.5"
+       x="-0.5"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4"
+         in="SourceGraphic"
+         id="feGaussianBlur80" />
+    </filter>
+    <filter
+       id="animation_blurred"
+       height="2"
+       width="2"
+       y="-0.5"
+       x="-0.5"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4"
+         in="SourceGraphic"
+         id="feGaussianBlur83" />
+    </filter>
+    <linearGradient
+       id="linearGradient3211"
+       y2="32.599998"
+       xlink:href="#animation_buttonNormal"
+       gradientUnits="userSpaceOnUse"
+       x2="16"
+       y1="-0.60000002"
+       x1="16" />
+    <linearGradient
+       id="animation_buttonNormal"
+       x2="0.5"
+       x1="0.5"
+       y2="1">
+      <stop
+         stop-color="#ECF6FF"
+         offset="0"
+         id="stop87" />
+      <stop
+         stop-color="#D3E7FF"
+         offset="0.12"
+         id="stop89" />
+      <stop
+         stop-color="#DEEEFF"
+         offset="0.46"
+         id="stop91" />
+      <stop
+         stop-color="#E8F4FF"
+         offset="0.81"
+         id="stop93" />
+    </linearGradient>
+    <filter
+       id="animation_blurred-7"
+       height="2"
+       width="2"
+       y="-0.5"
+       x="-0.5"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4"
+         in="SourceGraphic"
+         id="feGaussianBlur96" />
+    </filter>
+    <linearGradient
+       id="linearGradient3211-0"
+       y2="32.599998"
+       gradientUnits="userSpaceOnUse"
+       x2="16"
+       y1="-0.60000002"
+       x1="16">
+      <stop
+         stop-color="#ECF6FF"
+         offset="0"
+         id="stop99" />
+      <stop
+         stop-color="#D3E7FF"
+         offset="0.12"
+         id="stop101" />
+      <stop
+         stop-color="#DEEEFF"
+         offset="0.46"
+         id="stop103" />
+      <stop
+         stop-color="#E8F4FF"
+         offset="0.81"
+         id="stop105" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#animation_buttonNormal"
+       id="linearGradient3096"
+       gradientUnits="userSpaceOnUse"
+       x1="16"
+       y1="-0.60000002"
+       x2="16"
+       y2="32.599998" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#animation_buttonNormal"
+       id="linearGradient3098"
+       gradientUnits="userSpaceOnUse"
+       x1="16"
+       y1="-0.60000002"
+       x2="16"
+       y2="32.599998" />
+  </defs>
+  <path
+     d="m 31.512136,12.751181 c -10.627589,0 -19.26106,8.597896 -19.26106,19.181687 0,3.660763 1.078134,7.08138 2.866265,9.990588 4.780759,-0.384727 11.62179,-2.451643 19.433071,-5.651655 6.720119,-2.753125 12.159728,-5.47013 15.82172,-8.049452 -1.751171,-8.787828 -9.521366,-15.47094 -18.859768,-15.47094 z m 19.146532,3.025757 c -1.704246,0.0052 -3.635076,0.209473 -5.675042,0.513799 0.555345,0.387817 1.091184,0.820167 1.6051,1.255944 5.640136,-0.639934 9.655511,0.0988 10.605,2.397798 1.784596,4.320302 -8.299712,11.575715 -22.127324,17.240773 C 21.238794,42.850314 8.9337453,44.759643 7.1497437,40.439341 6.3849044,38.587829 7.7607755,36.04997 10.64657,33.303205 c -2.19e-4,-0.03782 0,-0.07632 0,-0.114179 0,-0.719659 0.04067,-1.411235 0.114638,-2.112283 C 5.9496499,35.014677 4.0321903,38.94807 5.1434269,41.638036 7.2347469,46.700807 20.484471,45.830658 36.614403,39.525751 51.82906,33.578747 61.405636,24.150917 59.315021,19.088144 58.400072,16.873195 55.228016,15.762722 50.658967,15.777035 z m 0.05732,17.469107 c -3.759177,2.618626 -8.541307,5.133426 -13.987302,7.364463 -6.521643,2.671789 -13.021157,4.435036 -18.458484,5.194997 3.453707,3.282485 8.090743,5.309275 13.241993,5.309275 10.191394,0 18.536276,-7.887691 19.203793,-17.868735 z"
+     id="path107"
+     inkscape:connector-curvature="0"
+     style="fill:#111111" />
+  <path
+     d="m 136.4248,20.487091 0,8.590392 c 0.90478,0.97459 1.79999,1.993252 2.71092,3.043476 3.33006,3.838653 6.83625,7.530538 11.09048,7.559617 4.27431,0.02908 7.68559,-3.401078 11.18904,-7.068654 1.75167,-1.833785 3.50276,-3.72937 5.42204,-5.154099 1.91918,-1.424748 4.05507,-2.398018 6.4571,-2.356216 3.4382,0.05973 7.04522,2.149337 10.5482,4.761508 v -9.375796 h -47.41755 z m 36.82075,6.185102 c -1.95117,-0.0339 -3.71401,0.75712 -5.47133,2.061683 -1.75725,1.304566 -3.46921,3.120041 -5.22493,4.957804 -3.51097,3.675527 -7.26332,7.594377 -12.37214,7.559618 -5.12866,-0.03476 -8.91683,-4.230334 -12.27336,-8.099428 -0.50183,-0.578455 -0.99472,-1.113699 -1.47873,-1.668982 V 44.196604 H 183.8426 V 31.875703 c -3.76123,-2.856494 -7.56033,-5.150461 -10.59748,-5.203396 z"
+     id="path109"
+     inkscape:connector-curvature="0"
+     style="fill:#111111;fill-rule:nonzero" />
+  <path
+     d="m 117.84844,16.393088 c -1.58337,0.04505 -2.88931,0.611308 -3.89104,1.473597 -1.00185,0.862288 -1.6686,2.019428 -2.19214,3.329286 -1.0471,2.619539 -1.53478,5.864081 -2.24693,9.059782 -0.71213,3.195695 -1.67476,6.280523 -3.56229,8.514059 -1.88744,2.233512 -4.6635,3.710518 -9.42624,3.711198 -4.762283,6.38e-4 -7.60117,-1.469507 -9.590493,-3.711198 -1.989319,-2.24176 -3.11835,-5.335857 -4.000543,-8.514059 -0.882875,-3.173889 -1.512522,-6.384127 -2.794631,-8.946866 -1.282108,-2.562737 -3.424277,-4.514327 -6.796088,-4.475703 v 1.746479 c 2.755392,-0.0322 4.089515,1.258784 5.206228,3.492865 1.116781,2.234171 1.836883,5.423782 2.740108,8.677867 0.90327,3.254089 2.030384,6.578148 4.329511,9.169058 2.299125,2.590912 5.761275,4.312353 10.905908,4.311672 5.14418,-6.6e-4 8.59286,-1.704265 10.79617,-4.311672 2.20336,-2.607267 3.21373,-5.993353 3.9458,-9.27811 0.73201,-3.284984 1.16272,-6.485906 2.08254,-8.786919 0.45989,-1.150552 1.04716,-2.066162 1.7537,-2.674291 0.70655,-0.608127 1.54882,-1.001512 2.79486,-1.036978 l -0.0547,-1.746479 z m -41.869289,17.901449 -5.809183,14.080977 53.707122,0 -6.5764,-13.971921 -6.19267,0 c -0.69701,2.159743 -1.64419,4.296901 -3.17858,6.11263 -2.3929,2.831735 -6.19039,4.747427 -11.563393,4.748334 -5.373676,7.27e-4 -9.188294,-1.893427 -11.673121,-4.69358 -1.655106,-1.865072 -2.695849,-4.054716 -3.507319,-6.27644 h -5.206228 z m 9.316503,0 c 0.60688,1.416803 1.321714,2.668613 2.24693,3.711203 1.803484,2.032309 4.290271,3.384494 8.823281,3.383812 4.533695,-5.9e-4 6.961025,-1.319991 8.659025,-3.329286 0.85855,-1.015965 1.48853,-2.262482 2.02771,-3.656673 L 85.295768,34.294534 z"
+     id="path111"
+     inkscape:connector-curvature="0"
+     style="fill:#111111;fill-rule:nonzero" />
+  <path
+     d="m 212.01075,50.42459 a 3.1812992,3.1682241 0 1 1 -6.36238,0 3.1812992,3.1682241 0 1 1 6.36238,0 z"
+     id="path113"
+     inkscape:connector-curvature="0"
+     style="fill:#111111;fill-rule:nonzero" />
+  <path
+     d="m 227.16814,50.42459 a 3.1812992,3.1682241 0 1 1 -6.36236,0 3.1812992,3.1682241 0 1 1 6.36236,0 z"
+     id="path115"
+     inkscape:connector-curvature="0"
+     style="fill:#111111;fill-rule:nonzero" />
+  <path
+     d="m 241.38992,50.42459 a 3.1812992,3.1682241 0 1 1 -6.36238,0 3.1812992,3.1682241 0 1 1 6.36238,0 z"
+     id="path117"
+     inkscape:connector-curvature="0"
+     style="fill:#111111;fill-rule:nonzero" />
 </svg>
-

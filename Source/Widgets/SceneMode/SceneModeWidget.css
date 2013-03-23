@@ -1,40 +1,40 @@
 .sceneModeCommon {
-    display: inline-block;
-    background-image: url(../Images/sceneModes.svg);
-    background-repeat: no-repeat;
-    background-size: 602% 602%;
-    border-radius: 14%;
-    width: 100%;
-    height: 100%;
-    position: relative;
-    text-align: center;
-    color: white;
-    margin: 0;
-    padding: 0;
-    -webkit-transition-property: background-position;
-    -webkit-transition-duration: 2s;
-    -moz-transition-property: background-position;
-    -moz-transition-duration: 2s;
-    transition-property: background-position;
-    transition-duration: 2s;
+	display: inline-block;
+	background-image: url(../Images/sceneModes.svg);
+	background-repeat: no-repeat;
+	background-size: 400% 100%;
+	border-radius: 14%;
+	width: 100%;
+	height: 100%;
+	position: relative;
+	text-align: center;
+	color: white;
+	margin: 0;
+	padding: 0;
+	-webkit-transition-property: background-position;
+	-webkit-transition-duration: 2s;
+	-moz-transition-property: background-position;
+	-moz-transition-duration: 2s;
+	transition-property: background-position;
+	transition-duration: 2s;
 }
 
 .sceneModeCommon:hover {
-    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+	box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
 
 .sceneMode3D {
-    background-position: 1% 50.7%;
-}
-
-.sceneMode2D {
-    background-position: 49% 50.7%;
+	background-position: 0 0;
 }
 
 .sceneModeColumbusView {
-    background-position: 25% 50.7%;
+	background-position: 33.33% 0;
+}
+
+.sceneMode2D {
+	background-position: 66.66% 0;
 }
 
 .sceneModeMorphing {
-    background-position: 72.9% 50.7%;
+	background-position: 100% 0;
 }
