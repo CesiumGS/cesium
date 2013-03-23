@@ -7,8 +7,9 @@ define(['../../Core/DeveloperError',
             destroyObject,
             knockout) {
     "use strict";
-    var ImageryProviderViewModel = function(name, createFunction) {
+    var ImageryProviderViewModel = function(name, imageUrl, createFunction) {
         this.name = knockout.observable(name);
+        this.image = knockout.observable('url(' + imageUrl + ')');
         this.create = createFunction;
     };
     return ImageryProviderViewModel;

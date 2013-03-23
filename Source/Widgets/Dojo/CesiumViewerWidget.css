@@ -103,19 +103,25 @@
     position: absolute;
     top: 5px;
     right: 5px;
-}
+    padding:2px;
+ }
 
 .cesium-viewerWidget-sceneModeContainer {
-    display: inline-block;
+    display: relative;
     width: 32px;
     height: 32px;
     vertical-align: middle;
 }
 
+.cesium-viewerWidget-left {
+	float: left;
+	padding:2px;
+}
+
 .cesium-viewerWidget-imageryContainer {
     display: inline-block;
-    width: 128px;
-    height: 32px;
+    width: 64px;
+    height: 64px;
     vertical-align: middle;
 }
 

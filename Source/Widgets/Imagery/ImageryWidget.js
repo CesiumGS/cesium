@@ -55,12 +55,15 @@ define(['./ImageryViewModel',
 
         var widgetNode = this.button;
         widgetNode.className = 'imageryCommon';
-        widgetNode.setAttribute('data-bind', 'text: selected, click: toggleDropdown');
+        widgetNode.setAttribute('data-bind', '\
+                style: {"background-image": selected() ? selected().image : "Unknown Imagery"},\
+                text: selected() ? selected().name : "Unknown Imagery",\
+                click: toggleDropdown');
         container.appendChild(widgetNode);
 
         this.choices = document.createElement('div');
         var choices = this.choices;
-        choices.className = '';
+        choices.className = 'imageryDiv';
         choices.setAttribute('data-bind', 'foreach: imageryProviderViewModels');
         container.appendChild(choices);
 
@@ -68,7 +71,8 @@ define(['./ImageryViewModel',
         provider.className = 'imageryChoice';
         provider.setAttribute('data-bind', '\
                                text: name,\
-                               visible: $parent.dropDownVisible() && name() !== $parent.selected(),\
+                               style: {"background-image": image},\
+                               visible: $parent.dropDownVisible() && name() !== $parent.selected().name(),\
                                click: $parent.changeProvider');
         choices.appendChild(provider);
 

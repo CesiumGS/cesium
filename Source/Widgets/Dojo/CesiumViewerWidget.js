@@ -759,35 +759,38 @@ define([
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
             this.sceneModeWidget = new SceneModeWidget(this.sceneModeContainer, transitioner);
+
             var imageLayers = centralBody.getImageryLayers();
             this.imageryWidget = new ImageryWidget(this.imageryContainer, imageLayers);
 
-            this.imageryWidget.viewModel.imageryProviderViewModels.push(new ImageryProviderViewModel('Bing Maps Aerial', function() {
+            var providerViewModels = this.imageryWidget.viewModel.imageryProviderViewModels;
+            var defaultProvider = new ImageryProviderViewModel('Bing Maps Aerial', require.toUrl('../Images/bingAerial.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.AERIAL
                 });
-            }));
+            });
+            providerViewModels.push(defaultProvider);
 
-            this.imageryWidget.viewModel.imageryProviderViewModels.push(new ImageryProviderViewModel('Bing Maps Roads', function() {
+            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Roads', require.toUrl('../Images/bingRoads.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.ROAD
                 });
             }));
 
-            this.imageryWidget.viewModel.imageryProviderViewModels.push(new ImageryProviderViewModel('Bing Maps Aerial with Labels', function() {
+            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Aerial with Labels', require.toUrl('../Images/bingAerialLabels.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.AERIAL_WITH_LABELS
                 });
             }));
 
-            this.imageryWidget.viewModel.imageryProviderViewModels.push(new ImageryProviderViewModel('Single Tile', function() {
+            providerViewModels.push(new ImageryProviderViewModel('No Streaming Imagery', require.toUrl('../Images/button.svg'), function() {
                 return new SingleTileImageryProvider({url : widget.dayImageUrl});
             }));
 
-            this.imageryWidget.viewModel.changeProvider(this.imageryWidget.viewModel.imageryProviderViewModels()[0]);
+            this.imageryWidget.viewModel.changeProvider(defaultProvider);
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);

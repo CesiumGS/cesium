@@ -59,10 +59,7 @@ define(['../../Core/DeveloperError',
          * @type Observable
         */
         this.selected = knockout.computed(function() {
-            if (typeof selectedViewModel() !== 'undefined') {
-                return selectedViewModel().name();
-            }
-            return 'Imagery';
+            return selectedViewModel();
         });
     };
 
