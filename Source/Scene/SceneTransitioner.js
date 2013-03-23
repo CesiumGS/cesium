@@ -234,19 +234,18 @@ define([
             this._completeMorph();
         }
 
-        this._previousMode = this._scene.mode;
-
-        if (this._previousMode === SceneMode.SCENE2D || this._previousMode === SceneMode.MORPHING) {
+        var currentMode = this._scene.mode;
+        if (currentMode === SceneMode.SCENE2D || currentMode === SceneMode.MORPHING) {
             return;
         }
-        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, true);
+        this.onTransitionStart.raiseEvent(this, currentMode, SceneMode.SCENE2D, true);
         this._previousMode = SceneMode.MORPHING;
 
         updateFrustums(this);
         this._scene.mode = SceneMode.MORPHING;
         createMorphHandler(this, complete2DCallback);
 
-        if (this._previousMode === SceneMode.COLUMBUS_VIEW) {
+        if (currentMode === SceneMode.COLUMBUS_VIEW) {
             morphFromClumbusViewTo2D(this, this.morphDuration, complete2DCallback);
         } else {
             morphFrom3DTo2D(this, this.morphDuration, complete2DCallback);
@@ -262,19 +261,18 @@ define([
             this._completeMorph();
         }
 
-        this._previousMode = this._scene.mode;
-
-        if (this._previousMode === SceneMode.COLUMBUS_VIEW || this._previousMode === SceneMode.MORPHING) {
+        var currentMode = this._scene.mode;
+        if (currentMode === SceneMode.COLUMBUS_VIEW || currentMode === SceneMode.MORPHING) {
             return;
         }
-        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, true);
+        this.onTransitionStart.raiseEvent(this, currentMode, SceneMode.COLUMBUS_VIEW, true);
         this._previousMode = SceneMode.MORPHING;
 
         updateFrustums(this);
         this._scene.mode = SceneMode.MORPHING;
         createMorphHandler(this, completeColumbusViewCallback);
 
-        if (this._previousMode === SceneMode.SCENE2D) {
+        if (currentMode === SceneMode.SCENE2D) {
             morphFrom2DToColumbusView(this, this.morphDuration, completeColumbusViewCallback);
         } else {
             morphFrom3DToColumbusView(this, this.morphDuration, this._cameraCV, completeColumbusViewCallback);
