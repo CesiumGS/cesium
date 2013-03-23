@@ -19,6 +19,8 @@ define([
         '../Animation/AnimationViewModel',
         '../Fullscreen/FullscreenWidget',
         '../SceneMode/SceneModeWidget',
+        '../Imagery/ImageryWidget',
+        '../Imagery/ImageryProviderViewModel',
         '../ClockViewModel',
         '../../Core/defaultValue',
         '../../Core/loadJson',
@@ -81,6 +83,8 @@ define([
         AnimationViewModel,
         FullscreenWidget,
         SceneModeWidget,
+        ImageryWidget,
+        ImageryProviderViewModel,
         ClockViewModel,
         defaultValue,
         loadJson,
@@ -137,31 +141,6 @@ define([
         // for Dojo use only
         templateString : template,
 
-        /**
-         * Enable streaming Imagery.  This is read-only after construction.
-         *
-         * @type {Boolean}
-         * @memberof CesiumViewerWidget.prototype
-         * @default true
-         * @see CesiumViewerWidget#enableStreamingImagery
-         */
-        useStreamingImagery : true,
-        /**
-         * The map style for streaming imagery.  This is read-only after construction.
-         *
-         * @type {BingMapsStyle}
-         * @memberof CesiumViewerWidget.prototype
-         * @default {@link BingMapsStyle.AERIAL}
-         * @see CesiumViewerWidget#setStreamingImageryMapStyle
-         */
-        mapStyle : BingMapsStyle.AERIAL,
-        /**
-         * The URL for a daytime image on the globe.
-         *
-         * @type {String}
-         * @memberof CesiumViewerWidget.prototype
-         */
-        dayImageUrl : undefined,
         /**
          * The base URL for the sky box.
          *
@@ -702,8 +681,6 @@ define([
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
 
-            this._configureCentralBodyImagery();
-
             scene.getPrimitives().setCentralBody(centralBody);
 
             if (this.showSkyBox) {
@@ -782,6 +759,35 @@ define([
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
             this.sceneModeWidget = new SceneModeWidget(this.sceneModeContainer, transitioner);
+            var imageLayers = centralBody.getImageryLayers();
+            this.imageryWidget = new ImageryWidget(this.imageryContainer, imageLayers);
+
+            this.imageryWidget.viewModel.imageryProviderViewModels.push(new ImageryProviderViewModel('Bing Maps Aerial', function() {
+                return new BingMapsImageryProvider({
+                    url : 'http://dev.virtualearth.net',
+                    mapStyle : BingMapsStyle.AERIAL
+                });
+            }));
+
+            this.imageryWidget.viewModel.imageryProviderViewModels.push(new ImageryProviderViewModel('Bing Maps Roads', function() {
+                return new BingMapsImageryProvider({
+                    url : 'http://dev.virtualearth.net',
+                    mapStyle : BingMapsStyle.ROAD
+                });
+            }));
+
+            this.imageryWidget.viewModel.imageryProviderViewModels.push(new ImageryProviderViewModel('Bing Maps Aerial with Labels', function() {
+                return new BingMapsImageryProvider({
+                    url : 'http://dev.virtualearth.net',
+                    mapStyle : BingMapsStyle.AERIAL_WITH_LABELS
+                });
+            }));
+
+            this.imageryWidget.viewModel.imageryProviderViewModels.push(new ImageryProviderViewModel('Single Tile', function() {
+                return new SingleTileImageryProvider({url : widget.dayImageUrl});
+            }));
+
+            this.imageryWidget.viewModel.changeProvider(this.imageryWidget.viewModel.imageryProviderViewModels()[0]);
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);
@@ -806,36 +812,6 @@ define([
             viewHomeButton.addEventListener('click', function() {
                 widget.viewHome();
             }, false);
-
-            var imagery = widget.imagery;
-            var imageryAerial = widget.imageryAerial;
-            var imageryAerialWithLabels = widget.imageryAerialWithLabels;
-            var imageryRoad = widget.imageryRoad;
-            var imagerySingleTile = widget.imagerySingleTile;
-            var imageryOptions = [imageryAerial, imageryAerialWithLabels, imageryRoad, imagerySingleTile];
-
-            imagery.startup();
-
-            function createImageryClickFunction(control, style) {
-                return function() {
-                    if (style) {
-                        widget.setStreamingImageryMapStyle(style);
-                    } else {
-                        widget.enableStreamingImagery(false);
-                    }
-
-                    imageryOptions.forEach(function(o) {
-                        o.set('checked', o === control);
-                    });
-                };
-            }
-
-            on(imageryAerial, 'Click', createImageryClickFunction(imageryAerial, BingMapsStyle.AERIAL));
-            on(imageryAerialWithLabels, 'Click', createImageryClickFunction(imageryAerialWithLabels, BingMapsStyle.AERIAL_WITH_LABELS));
-            on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
-            on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
-
-            //////////////////////////////////////////////////////////////////////////////////////////////////
 
             if (widget.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {
@@ -939,35 +915,6 @@ define([
         },
 
         /**
-         * Enable or disable streaming imagery, and update the globe.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @param {Boolean} value - <code>true</code> to enable streaming imagery.
-         * @see CesiumViewerWidget#useStreamingImagery
-         */
-        enableStreamingImagery : function(value) {
-            this.useStreamingImagery = value;
-            this._configureCentralBodyImagery();
-        },
-
-        /**
-         * Change the streaming imagery type, and update the globe.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @param {BingMapsStyle} value - the new map style to use.
-         * @see CesiumViewerWidget#mapStyle
-         */
-        setStreamingImageryMapStyle : function(value) {
-            if (!this.useStreamingImagery || this.mapStyle !== value) {
-                this.useStreamingImagery = true;
-                this.mapStyle = value;
-                this._configureCentralBodyImagery();
-            }
-        },
-
-        /**
          * Set the positional offset of the logo of the streaming imagery provider.
          *
          * @function
@@ -1063,47 +1010,6 @@ define([
 
         _setLoading : function(isLoading) {
             this.loading.style.display = isLoading ? 'block' : 'none';
-        },
-
-        _configureCentralBodyImagery : function() {
-            var centralBody = this.centralBody;
-
-            var imageLayers = centralBody.getImageryLayers();
-
-            var existingImagery;
-            if (imageLayers.getLength() !== 0) {
-                existingImagery = imageLayers.get(0).imageryProvider;
-            }
-
-            var newLayer;
-
-            if (this.useStreamingImagery) {
-                if (!(existingImagery instanceof BingMapsImageryProvider) ||
-                    existingImagery.getMapStyle() !== this.mapStyle) {
-
-                    newLayer = imageLayers.addImageryProvider(new BingMapsImageryProvider({
-                        url : 'http://dev.virtualearth.net',
-                        mapStyle : this.mapStyle,
-                        // Some versions of Safari support WebGL, but don't correctly implement
-                        // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                        proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
-                    }));
-                    if (imageLayers.getLength() > 1) {
-                        imageLayers.remove(imageLayers.get(0));
-                    }
-                    imageLayers.lowerToBottom(newLayer);
-                }
-            } else {
-                if (!(existingImagery instanceof SingleTileImageryProvider) ||
-                    existingImagery.getUrl() !== this.dayImageUrl) {
-
-                    newLayer = imageLayers.addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
-                    if (imageLayers.getLength() > 1) {
-                        imageLayers.remove(imageLayers.get(0));
-                    }
-                    imageLayers.lowerToBottom(newLayer);
-                }
-            }
         },
 
         /**

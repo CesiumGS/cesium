@@ -2,6 +2,7 @@
 @import url('../Animation/Animation.css');
 @import url('../Fullscreen/FullscreenWidget.css');
 @import url('../SceneMode/SceneModeWidget.css');
+@import url('../Imagery/ImageryWidget.css');
 @import url('../lighter.css');
 
 .cesium-viewerWidget-node {
@@ -111,15 +112,11 @@
     vertical-align: middle;
 }
 
-.cesium-viewerWidget-imagerySelector {
-    display: block;
-    font-family: sans-serif;
-    font-size: 9pt;
-}
-
-.claro .dijitToggleButtonChecked .dijitButtonNode {
-    border: 1px solid #EA0;
-    box-shadow: 0 0 5px rgba(255, 170, 42, 1);
+.cesium-viewerWidget-imageryContainer {
+    display: inline-block;
+    width: 128px;
+    height: 32px;
+    vertical-align: middle;
 }
 
 .cesium-viewerWidget-loading {

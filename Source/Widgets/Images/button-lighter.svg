@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   height="28"
+   viewBox="0 0 112 28"
+   width="112"
+   version="1.1"
+   class="testSVG"
+   id="svg2"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="button-lighter.svg">
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1600"
+     inkscape:window-height="847"
+     id="namedview74"
+     showgrid="false"
+     inkscape:zoom="16"
+     inkscape:cx="1.7648933"
+     inkscape:cy="14.424"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2" />
+  <metadata
+     id="metadata4">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <style
+     type="text/css"
+     id="style6">
+.cesium-sceneMode-rectButton {
+    cursor: pointer;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.cesium-sceneMode-rectButton .cesium-sceneMode-buttonGlow {
+    fill: #fff;
+    stroke: none;
+    filter: url(#sceneMode_blurred);
+    display: none;
+}
+.cesium-sceneMode-rectButton:hover .cesium-sceneMode-buttonGlow {
+    display: block;
+}
+.cesium-sceneMode-rectButton .cesium-sceneMode-buttonPath {
+    fill: #edffff;
+}
+.cesium-sceneMode-rectButton .cesium-sceneMode-buttonMain {
+    fill: url(#sceneMode_buttonNormal);
+    stroke: #444;
+    stroke-width: 1.2;
+}
+.cesium-sceneMode-rectButton:hover .cesium-sceneMode-buttonMain {
+    fill: url(#sceneMode_buttonHovered);
+    stroke: #AEF;
+}
+.cesium-sceneMode-rectButton:active .cesium-sceneMode-buttonMain {
+    fill: #ABD6FF;
+}
+.cesium-sceneMode-buttonDisabled {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.cesium-sceneMode-buttonDisabled .cesium-sceneMode-buttonMain {
+    fill: url(#sceneMode_buttonDisabled);
+    stroke: #555;
+}
+.cesium-sceneMode-buttonDisabled .cesium-sceneMode-buttonPath {
+    fill: #818181;
+}
+.cesium-sceneMode-buttonDisabled .cesium-sceneMode-buttonGlow {
+    display: none;
+}
+.cesium-sceneMode-buttonToggled .cesium-sceneMode-buttonGlow {
+    display: block;
+    fill: #2E2;
+}
+.cesium-sceneMode-buttonToggled .cesium-sceneMode-buttonMain {
+    stroke: #2E2;
+}
+.cesium-sceneMode-buttonToggled:hover .cesium-sceneMode-buttonGlow {
+    fill: #fff;
+}
+.cesium-sceneMode-buttonToggled:hover .cesium-sceneMode-buttonMain {
+    stroke: #2E2;
+}
+</style>
+  <rect
+     transform="matrix(0.845,0,0,0.84848485,37.18,0)"
+     class="cesium-sceneMode-buttonGlow"
+     rx="2"
+     ry="2"
+     height="32"
+     width="32"
+     y="0"
+     x="0"
+     display="none"
+     id="rect8"
+     style="fill:#ffffff;display:none;filter:url(#sceneMode_blurred)" />
+  <rect
+     transform="matrix(0.845,0,0,0.84848485,104.78,0)"
+     class="cesium-sceneMode-buttonGlow"
+     rx="2"
+     ry="2"
+     height="32"
+     width="32"
+     y="0"
+     x="0"
+     display="none"
+     id="rect12"
+     style="fill:#ffffff;display:none;filter:url(#sceneMode_blurred)" />
+  <rect
+     transform="matrix(0.845,0,0,0.84848485,70.98,0)"
+     class="cesium-sceneMode-buttonGlow"
+     rx="2"
+     ry="2"
+     height="32"
+     width="32"
+     y="0"
+     x="0"
+     display="none"
+     id="rect16"
+     style="fill:#ffffff;display:none;filter:url(#sceneMode_blurred)" />
+  <defs
+     id="defs20">
+    <linearGradient
+       id="sceneMode_buttonNormal"
+       x2="0.5"
+       x1="0.5"
+       y2="1">
+      <stop
+         stop-color="#747577"
+         offset="0"
+         id="stop23" />
+      <stop
+         stop-color="#394452"
+         offset="0.12"
+         id="stop25" />
+      <stop
+         stop-color="#2D3237"
+         offset="0.46"
+         id="stop27" />
+      <stop
+         stop-color="#353535"
+         offset="0.81"
+         id="stop29" />
+    </linearGradient>
+    <linearGradient
+       id="sceneMode_buttonHovered"
+       x2="0.5"
+       x1="0.5"
+       y2="1">
+      <stop
+         stop-color="#89B4CF"
+         offset="0"
+         id="stop32" />
+      <stop
+         stop-color="#5494C1"
+         offset="0.12"
+         id="stop34" />
+      <stop
+         stop-color="#4C8EB8"
+         offset="0.46"
+         id="stop36" />
+      <stop
+         stop-color="#5492B7"
+         offset="0.81"
+         id="stop38" />
+    </linearGradient>
+    <linearGradient
+       id="sceneMode_buttonDisabled"
+       x2="0.5"
+       x1="0.5"
+       y2="1">
+      <stop
+         stop-color="#696969"
+         offset="0"
+         id="stop41" />
+      <stop
+         stop-color="#333"
+         offset="0.75"
+         id="stop43" />
+    </linearGradient>
+    <filter
+       id="sceneMode_blurred"
+       width="2"
+       y="-0.5"
+       x="-0.5"
+       height="2"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4"
+         in="SourceGraphic"
+         id="feGaussianBlur46" />
+    </filter>
+    <linearGradient
+       id="linearGradient4382"
+       y2="32.599998"
+       xlink:href="#sceneMode_buttonNormal"
+       gradientUnits="userSpaceOnUse"
+       x2="16"
+       gradientTransform="matrix(0.845,0,0,0.84848485,35.675205,3)"
+       y1="-0.60000002"
+       x1="16" />
+    <linearGradient
+       id="linearGradient4387"
+       y2="32.599998"
+       xlink:href="#sceneMode_buttonNormal"
+       gradientUnits="userSpaceOnUse"
+       x2="16"
+       gradientTransform="matrix(0.845,0,0,0.84848485,69.475205,3)"
+       y1="-0.60000002"
+       x1="16" />
+    <linearGradient
+       id="linearGradient4392"
+       y2="32.599998"
+       xlink:href="#sceneMode_buttonNormal"
+       gradientUnits="userSpaceOnUse"
+       x2="16"
+       gradientTransform="matrix(0.84337339,0,0,0.84335832,0.5060306,0.5060251)"
+       y1="-0.60000002"
+       x1="16" />
+    <linearGradient
+       id="linearGradient3051"
+       y2="32.599998"
+       gradientUnits="userSpaceOnUse"
+       y1="-0.60000002"
+       gradientTransform="matrix(0.845,0,0,0.84848485,103.22123,2.9946832)"
+       x2="16"
+       x1="16">
+      <stop
+         stop-color="#747577"
+         offset="0"
+         id="stop52" />
+      <stop
+         stop-color="#394452"
+         offset="0.12"
+         id="stop54" />
+      <stop
+         stop-color="#2D3237"
+         offset="0.46"
+         id="stop56" />
+      <stop
+         stop-color="#353535"
+         offset="0.81"
+         id="stop58" />
+    </linearGradient>
+    <filter
+       id="animation_blurred"
+       height="2"
+       width="2"
+       y="-0.5"
+       x="-0.5"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4"
+         in="SourceGraphic"
+         id="feGaussianBlur83" />
+    </filter>
+    <linearGradient
+       id="linearGradient3211"
+       y2="32.599998"
+       xlink:href="#animation_buttonNormal"
+       gradientUnits="userSpaceOnUse"
+       x2="16"
+       y1="-0.60000002"
+       x1="16" />
+    <linearGradient
+       id="animation_buttonNormal"
+       x2="0.5"
+       x1="0.5"
+       y2="1">
+      <stop
+         stop-color="#ECF6FF"
+         offset="0"
+         id="stop87" />
+      <stop
+         stop-color="#D3E7FF"
+         offset="0.12"
+         id="stop89" />
+      <stop
+         stop-color="#DEEEFF"
+         offset="0.46"
+         id="stop91" />
+      <stop
+         stop-color="#E8F4FF"
+         offset="0.81"
+         id="stop93" />
+    </linearGradient>
+  </defs>
+  <g
+     class="cesium-animation-rectButton"
+     transform="matrix(3.4373351,0,0,0.81233853,1.0026378,1.0025908)"
+     id="g38">
+    <rect
+       style="fill:#ffffff;display:none;filter:url(#animation_blurred)"
+       display="none"
+       rx="2"
+       ry="2"
+       class="cesium-animation-buttonGlow"
+       width="32"
+       y="0"
+       x="0"
+       height="32"
+       id="rect40" />
+    <rect
+       style="fill:url(#linearGradient3211);stroke:#759dc0;stroke-width:1.20000005"
+       rx="4"
+       ry="4"
+       class="cesium-animation-buttonMain"
+       width="32"
+       y="0"
+       x="0"
+       height="32"
+       id="rect42" />
+    <use
+       style="fill:#111111"
+       xlink:href="#animation_pathPlayReverse"
+       width="169"
+       y="0"
+       x="0"
+       height="112"
+       class="cesium-animation-buttonPath"
+       id="use44" />
+    <title
+       id="title46">Play Reverse</title>
+  </g>
+</svg>
