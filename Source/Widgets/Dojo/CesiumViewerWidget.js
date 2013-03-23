@@ -52,6 +52,7 @@ define([
         '../../Scene/CentralBody',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
+        '../../Scene/ArcGisMapServerImageryProvider',
         '../../Scene/SceneTransitioner',
         '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
@@ -116,6 +117,7 @@ define([
         CentralBody,
         BingMapsImageryProvider,
         BingMapsStyle,
+        ArcGisMapServerImageryProvider,
         SceneTransitioner,
         SingleTileImageryProvider,
         PerformanceDisplay,
@@ -767,7 +769,8 @@ define([
             var defaultProvider = new ImageryProviderViewModel('Bing Maps Aerial', require.toUrl('../Images/bingAerial.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
-                    mapStyle : BingMapsStyle.AERIAL
+                    mapStyle : BingMapsStyle.AERIAL,
+                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
                 });
             });
             providerViewModels.push(defaultProvider);
@@ -775,19 +778,28 @@ define([
             providerViewModels.push(new ImageryProviderViewModel('Bing Maps Roads', require.toUrl('../Images/bingRoads.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
-                    mapStyle : BingMapsStyle.ROAD
+                    mapStyle : BingMapsStyle.ROAD,
+                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
                 });
             }));
 
             providerViewModels.push(new ImageryProviderViewModel('Bing Maps Aerial with Labels', require.toUrl('../Images/bingAerialLabels.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
-                    mapStyle : BingMapsStyle.AERIAL_WITH_LABELS
+                    mapStyle : BingMapsStyle.AERIAL_WITH_LABELS,
+                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
                 });
             }));
 
-            providerViewModels.push(new ImageryProviderViewModel('No Streaming Imagery', require.toUrl('../Images/button.svg'), function() {
+            providerViewModels.push(new ImageryProviderViewModel('No Streaming Imagery', require.toUrl('../Images/singleTile.png'), function() {
                 return new SingleTileImageryProvider({url : widget.dayImageUrl});
+            }));
+
+            providerViewModels.push(new ImageryProviderViewModel('ESRI World Imagery', require.toUrl('../Images/esriWorldImagery.png'), function() {
+                return new ArcGisMapServerImageryProvider({
+                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+                    proxy : new DefaultProxy('/proxy/')
+                });
             }));
 
             this.imageryWidget.viewModel.changeProvider(defaultProvider);

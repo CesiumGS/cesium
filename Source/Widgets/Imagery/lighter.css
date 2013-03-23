@@ -1,9 +1,7 @@
-.cesium-lighter .imageryCommon {
-    color: black;
-    background-image: url(../Images/button-lighter.svg);
+.cesium-lighter .cesium-imagery-dropDown {
+	background-color: rgba(237, 255, 255, 0.75);
 }
 
-.cesium-lighter .imageryChoice {
-    color: black;
-    background-image: url(../Images/button-lighter.svg);
+.cesium-lighter .cesium-imagery-itemLabel {
+	color: black;
 }

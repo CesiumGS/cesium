@@ -51,27 +51,35 @@ define(['./ImageryViewModel',
          * @memberof FullscreenWidget
          * @type {Element}
          */
-        this.button = document.createElement('button');
+        this.button = document.createElement('img');
 
         var widgetNode = this.button;
-        widgetNode.className = 'imageryCommon';
+        widgetNode.className = 'cesium-imagery-selected';
         widgetNode.setAttribute('data-bind', '\
-                style: {"background-image": selected() ? selected().image : "Unknown Imagery"},\
-                text: selected() ? selected().name : "Unknown Imagery",\
+                attr: {title: selected() ? selected().name : "", src: selected() ? selected().image : ""},\
                 click: toggleDropdown');
         container.appendChild(widgetNode);
 
         this.choices = document.createElement('div');
         var choices = this.choices;
-        choices.className = 'imageryDiv';
-        choices.setAttribute('data-bind', 'foreach: imageryProviderViewModels');
+        choices.className = 'cesium-imagery-dropDown';
+        choices.setAttribute('data-bind', 'visible: dropDownVisible(), foreach: imageryProviderViewModels');
         container.appendChild(choices);
 
-        var provider = document.createElement('button');
-        provider.className = 'imageryChoice';
+        var provider = document.createElement('div');
+        provider.className = 'cesium-imagery-item';
+
+        var providerIcon = document.createElement('img');
+        providerIcon.className = 'cesium-imagery-itemIcon';
+        providerIcon.setAttribute('data-bind', 'attr: { src: image }');
+        provider.appendChild(providerIcon);
+
+        var providerLabel = document.createElement('div');
+        providerLabel.className = 'cesium-imagery-itemLabel';
+        providerLabel.setAttribute('data-bind', 'text: name');
+        provider.appendChild(providerLabel);
+
         provider.setAttribute('data-bind', '\
-                               text: name,\
-                               style: {"background-image": image},\
                                visible: $parent.dropDownVisible() && name() !== $parent.selected().name(),\
                                click: $parent.changeProvider');
         choices.appendChild(provider);
