@@ -803,9 +803,9 @@ define([
 
             var viewHomeButton = widget.viewHomeButton;
 
-            on(viewHomeButton, 'Click', function() {
+            viewHomeButton.addEventListener('click', function() {
                 widget.viewHome();
-            });
+            }, false);
 
             var imagery = widget.imagery;
             var imageryAerial = widget.imageryAerial;

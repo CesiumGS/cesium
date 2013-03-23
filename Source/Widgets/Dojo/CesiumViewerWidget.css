@@ -73,11 +73,24 @@
     border: none;
 }
 
-.cesium-viewerWidget-viewIcon {
-    background-image: url('../Images/viewControlBar.png');
+.cesium-viewerWidget-home {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    vertical-align: middle;
+    background-image: url(../Images/home.svg);
     background-repeat: no-repeat;
-    width: 24px;
-    height: 24px;
+    background-size: 100% 100%;
+    border-radius: 14%;
+    position: relative;
+    text-align: center;
+    color: white;
+    margin: 0;
+    padding: 0;
+}
+
+.cesium-viewerWidget-home:hover {
+    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
 
 .cesium-viewerWidget-viewButtons {
