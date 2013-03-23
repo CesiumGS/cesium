@@ -93,6 +93,10 @@
     box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
 
+.cesium-lighter .cesium-viewerWidget-home {
+    background-image: url(../Images/home-lighter.svg);
+}
+
 .cesium-viewerWidget-viewButtons {
     display: block;
     position: absolute;
