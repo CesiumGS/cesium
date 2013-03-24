@@ -11,15 +11,15 @@ define(['../../Core/DeveloperError',
     "use strict";
 
     /**
-     * The ViewModel for {@link SceneModeWidget}.
-     * @alias SceneModeViewModel
+     * The ViewModel for {@link SceneModePicker}.
+     * @alias SceneModePickerViewModel
      * @constructor
      *
      * @param {SceneTransitioner} transitioner The SceneTransitioner instance to use.
      *
-     * @see SceneModeWidget
+     * @see SceneModePicker
      */
-    var SceneModeViewModel = function(transitioner) {
+    var SceneModePickerViewModel = function(transitioner) {
 
         var sceneMode = knockout.observable(transitioner.getScene().mode);
 
@@ -135,5 +135,5 @@ define(['../../Core/DeveloperError',
         this._sceneMode = SceneMode;
     };
 
-    return SceneModeViewModel;
+    return SceneModePickerViewModel;
 });

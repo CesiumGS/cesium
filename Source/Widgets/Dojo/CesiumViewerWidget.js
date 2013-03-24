@@ -18,7 +18,7 @@ define([
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
         '../Fullscreen/FullscreenWidget',
-        '../SceneMode/SceneModeWidget',
+        '../SceneModePicker/SceneModePicker',
         '../ClockViewModel',
         '../../Core/defaultValue',
         '../../Core/loadJson',
@@ -80,7 +80,7 @@ define([
         Animation,
         AnimationViewModel,
         FullscreenWidget,
-        SceneModeWidget,
+        SceneModePicker,
         ClockViewModel,
         defaultValue,
         loadJson,
@@ -781,7 +781,7 @@ define([
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
-            this.sceneModeWidget = new SceneModeWidget(this.sceneModeContainer, transitioner);
+            this.sceneModePicker = new SceneModePicker(this.sceneModeContainer, transitioner);
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);

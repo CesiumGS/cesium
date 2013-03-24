@@ -1,5 +1,5 @@
 /*global defineSuite*/
-defineSuite(['Widgets/SceneMode/SceneModeWidget',
+defineSuite(['Widgets/SceneModePicker/SceneModePicker',
              'Widgets/ClockViewModel',
              'Core/JulianDate',
              'Core/ClockStep',
@@ -9,7 +9,7 @@ defineSuite(['Widgets/SceneMode/SceneModeWidget',
              'Specs/createScene',
              'Specs/destroyScene'
             ], function(
-              SceneModeWidget,
+              SceneModePicker,
               ClockViewModel,
               JulianDate,
               ClockStep,
@@ -23,7 +23,7 @@ defineSuite(['Widgets/SceneMode/SceneModeWidget',
 
     it('sanity check', function() {
         var scene = createScene();
-        var widget = new SceneModeWidget(document.body, new SceneTransitioner(scene));
+        var widget = new SceneModePicker(document.body, new SceneTransitioner(scene));
         widget.destroy();
         destroyScene(scene);
     });
