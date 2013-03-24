@@ -12,22 +12,28 @@ define(['./ImageryViewModel',
     /*jshint multistr:true */
 
     /**
-     * A single button widget for switching scene modes.
+     * A single button widget for switching amoung base imagery layers.
      *
      * @alias ImageryWidget
      * @constructor
      *
      * @param {Element} container The parent HTML container node for this widget.
-     * @param {SceneTransitioner} transitioner The SceneTransitioner instance to use.
+     * @param {ImageryLayerCollection} imageLayers The imagery layer collection to use.
      *
      * @exception {DeveloperError} container is required.
-     * @exception {DeveloperError} transitioner is required.
+     * @exception {DeveloperError} imageLayers is required.
      *
-     * @see SceneTransitioner
+     * @see ImageryProvider
+     * @see ImageryProviderViewModel
+     * @see ImageryLayerCollection
      */
     var ImageryWidget = function(container, imageLayers) {
         if (container === 'undefined') {
             throw new DeveloperError('container is required.');
+        }
+
+        if (imageLayers === 'undefined') {
+            throw new DeveloperError('imageLayers is required.');
         }
 
         var viewModel = new ImageryViewModel(imageLayers);
@@ -56,34 +62,34 @@ define(['./ImageryViewModel',
         var widgetNode = this.button;
         widgetNode.className = 'cesium-imagery-selected';
         widgetNode.setAttribute('data-bind', '\
-                attr: {title: selected() ? selected().name : "", src: selected() ? selected().image : ""},\
+                attr: {title: selectedName, src: selectedImageUrl},\
                 click: toggleDropdown');
         container.appendChild(widgetNode);
 
-        this.choices = document.createElement('div');
-        var choices = this.choices;
+        var choices = document.createElement('div');
         choices.className = 'cesium-imagery-dropDown';
         choices.setAttribute('data-bind', '\
-                style: {opacity: dropDownVisible() ? 1 : 0},\
+                css: { "cesium-imagery-visible" : dropDownVisible(),\
+                       "cesium-imagery-hidden" : !dropDownVisible() },\
                 foreach: imageryProviderViewModels');
         container.appendChild(choices);
 
         var provider = document.createElement('div');
         provider.className = 'cesium-imagery-item';
+        provider.setAttribute('data-bind', '\
+                attr: {title: tooltip},\
+                click: $parent.selectedItem');
+        choices.appendChild(provider);
 
         var providerIcon = document.createElement('img');
         providerIcon.className = 'cesium-imagery-itemIcon';
-        providerIcon.setAttribute('data-bind', 'attr: { src: image }');
+        providerIcon.setAttribute('data-bind', 'attr: { src: iconUrl }');
         provider.appendChild(providerIcon);
 
         var providerLabel = document.createElement('div');
         providerLabel.className = 'cesium-imagery-itemLabel';
         providerLabel.setAttribute('data-bind', 'text: name');
         provider.appendChild(providerLabel);
-
-        provider.setAttribute('data-bind', '\
-                               click: $parent.changeProvider');
-        choices.appendChild(provider);
 
         knockout.applyBindings(viewModel, container);
 

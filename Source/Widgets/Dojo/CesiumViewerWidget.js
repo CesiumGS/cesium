@@ -766,7 +766,7 @@ define([
             this.imageryWidget = new ImageryWidget(this.imageryContainer, imageLayers);
 
             var providerViewModels = this.imageryWidget.viewModel.imageryProviderViewModels;
-            var defaultProvider = new ImageryProviderViewModel('Bing Maps Aerial', require.toUrl('../Images/bingAerial.png'), function() {
+            var defaultProvider = new ImageryProviderViewModel('Bing Maps Aerial', 'Bing Maps Aerial', require.toUrl('../Images/bingAerial.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.AERIAL,
@@ -775,7 +775,7 @@ define([
             });
             providerViewModels.push(defaultProvider);
 
-            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Roads', require.toUrl('../Images/bingRoads.png'), function() {
+            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Roads', 'Bing Maps Roads', require.toUrl('../Images/bingRoads.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.ROAD,
@@ -783,7 +783,7 @@ define([
                 });
             }));
 
-            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Aerial with Labels', require.toUrl('../Images/bingAerialLabels.png'), function() {
+            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Aerial with Labels', 'Bing Maps Aerial with Labels', require.toUrl('../Images/bingAerialLabels.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.AERIAL_WITH_LABELS,
@@ -791,18 +791,20 @@ define([
                 });
             }));
 
-            providerViewModels.push(new ImageryProviderViewModel('No Streaming Imagery', require.toUrl('../Images/singleTile.png'), function() {
-                return new SingleTileImageryProvider({url : widget.dayImageUrl});
-            }));
-
-            providerViewModels.push(new ImageryProviderViewModel('ESRI World Imagery', require.toUrl('../Images/esriWorldImagery.png'), function() {
+            providerViewModels.push(new ImageryProviderViewModel('ESRI World Imagery', 'ESRI World Imagery', require.toUrl('../Images/esriWorldImagery.png'), function() {
                 return new ArcGisMapServerImageryProvider({
                     url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
                     proxy : new DefaultProxy('/proxy/')
                 });
             }));
 
-            this.imageryWidget.viewModel.changeProvider(defaultProvider);
+            providerViewModels.push(new ImageryProviderViewModel('No Streaming Imagery', 'Uses a single image.', require.toUrl('../Images/singleTile.png'), function() {
+                return new SingleTileImageryProvider({
+                    url : widget.dayImageUrl
+                });
+            }));
+
+            this.imageryWidget.viewModel.selectedItem(defaultProvider);
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);
