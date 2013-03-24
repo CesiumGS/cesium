@@ -69,8 +69,10 @@ define(['./SceneModeViewModel',
         var node3D = document.createElement('span');
         node3D.className = 'cesium-sceneMode-button cesium-sceneMode-button3D';
         node3D.setAttribute('data-bind', '\
+                             css: { "cesium-sceneMode-visible" : (dropDownVisible() && (sceneMode() !== _sceneMode.SCENE3D)) || (!dropDownVisible() && (sceneMode() === _sceneMode.SCENE3D)),\
+                                    "cesium-sceneMode-none" : sceneMode() === _sceneMode.SCENE3D,\
+                                    "cesium-sceneMode-hidden" : !dropDownVisible()},\
                              attr: { title: tooltip3D },\
-                             visible: dropDownVisible() && (sceneMode() !== _sceneMode.SCENE3D),\
                              click: morphTo3D');
         container.appendChild(node3D);
         this._node3D = node3D;
@@ -78,8 +80,10 @@ define(['./SceneModeViewModel',
         var node2D = document.createElement('span');
         node2D.className = 'cesium-sceneMode-button cesium-sceneMode-button2D';
         node2D.setAttribute('data-bind', '\
+                             css: { "cesium-sceneMode-visible" : (dropDownVisible() && (sceneMode() !== _sceneMode.SCENE2D)),\
+                                    "cesium-sceneMode-none" : sceneMode() === _sceneMode.SCENE2D,\
+                                    "cesium-sceneMode-hidden" : !dropDownVisible()},\
                              attr: { title: tooltip2D },\
-                             visible: dropDownVisible() && (sceneMode() !== _sceneMode.SCENE2D),\
                              click: morphTo2D');
         container.appendChild(node2D);
         this._node2D = node2D;
@@ -87,8 +91,10 @@ define(['./SceneModeViewModel',
         var nodeColumbus = document.createElement('span');
         nodeColumbus.className = 'cesium-sceneMode-button cesium-sceneMode-buttonColumbusView';
         nodeColumbus.setAttribute('data-bind', '\
+                                   css: { "cesium-sceneMode-visible" : (dropDownVisible() && (sceneMode() !== _sceneMode.COLUMBUS_VIEW)) || (!dropDownVisible() && (sceneMode() === _sceneMode.COLUMBUS_VIEW)),\
+                                          "cesium-sceneMode-none" : sceneMode() === _sceneMode.COLUMBUS_VIEW,\
+                                          "cesium-sceneMode-hidden" : !dropDownVisible()},\
                                    attr: { title: tooltipColumbusView },\
-                                   visible: dropDownVisible() && (sceneMode() !== _sceneMode.COLUMBUS_VIEW),\
                                    click: morphToColumbusView');
 
         container.appendChild(nodeColumbus);

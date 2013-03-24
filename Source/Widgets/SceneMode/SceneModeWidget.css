@@ -19,6 +19,26 @@
 	transition-duration: 2s;
 }
 
+.cesium-sceneMode-visible {
+	visibility: visible;
+    opacity: 1;
+    transition: opacity 0.25s linear;
+    -webkit-transition: opacity 0.25s linear;
+    -moz-transition: opacity 0.25s linear;
+}
+
+.cesium-sceneMode-hidden {
+	visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s 0.25s, opacity 0.25s linear;
+    -webkit-transition: visibility 0s 0.25s, opacity 0.25s linear;
+    -moz-transition: visibility 0s 0.25s, opacity 0.25s linear;
+}
+
+.cesium-sceneMode-none {
+	display: none;
+}
+
 .cesium-sceneMode-button:hover {
 	box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
