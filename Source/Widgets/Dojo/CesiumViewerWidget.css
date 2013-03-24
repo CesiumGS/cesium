@@ -2,7 +2,7 @@
 @import url('../Animation/Animation.css');
 @import url('../Fullscreen/FullscreenWidget.css');
 @import url('../SceneMode/SceneModeWidget.css');
-@import url('../Imagery/ImageryWidget.css');
+@import url('../BaseLayerPicker/BaseLayerPicker.css');
 @import url('../lighter.css');
 
 .cesium-viewerWidget-node {
@@ -166,7 +166,7 @@
 }
 
 @media only screen and (max-height: 350px) {
-	.cesium-imagery-dropDown {
+	.cesium-baseLayerPicker-dropDown {
 		max-height: 125px;
 	}
 }

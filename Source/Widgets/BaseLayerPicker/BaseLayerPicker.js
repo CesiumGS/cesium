@@ -1,10 +1,10 @@
 /*global define*/
-define(['./ImageryViewModel',
+define(['./BaseLayerPickerViewModel',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
         '../../ThirdParty/knockout'
         ], function(
-            ImageryViewModel,
+            BaseLayerPickerViewModel,
             DeveloperError,
             destroyObject,
             knockout) {
@@ -14,7 +14,7 @@ define(['./ImageryViewModel',
     /**
      * A single button widget for switching amoung base imagery layers.
      *
-     * @alias ImageryWidget
+     * @alias BaseLayerPicker
      * @constructor
      *
      * @param {Element} container The parent HTML container node for this widget.
@@ -27,7 +27,7 @@ define(['./ImageryViewModel',
      * @see ImageryProviderViewModel
      * @see ImageryLayerCollection
      */
-    var ImageryWidget = function(container, imageLayers) {
+    var BaseLayerPicker = function(container, imageLayers) {
         if (container === 'undefined') {
             throw new DeveloperError('container is required.');
         }
@@ -36,18 +36,18 @@ define(['./ImageryViewModel',
             throw new DeveloperError('imageLayers is required.');
         }
 
-        var viewModel = new ImageryViewModel(imageLayers);
+        var viewModel = new BaseLayerPickerViewModel(imageLayers);
 
         /**
          * Gets the viewModel being used by the widget.
-         * @memberof ImageryWidget
+         * @memberof BaseLayerPicker
          * @type {SeneModeViewModel}
          */
         this.viewModel = viewModel;
 
         /**
          * Gets the container element for the widget.
-         * @memberof ImageryWidget
+         * @memberof BaseLayerPicker
          * @type {Element}
          */
         this.container = container;
@@ -61,35 +61,35 @@ define(['./ImageryViewModel',
         this.button.setAttribute('draggable', 'false');
 
         var widgetNode = this.button;
-        widgetNode.className = 'cesium-imagery-selected';
+        widgetNode.className = 'cesium-baseLayerPicker-selected';
         widgetNode.setAttribute('data-bind', '\
                 attr: {title: selectedName, src: selectedImageUrl},\
                 click: toggleDropdown');
         container.appendChild(widgetNode);
 
         var choices = document.createElement('div');
-        choices.className = 'cesium-imagery-dropDown';
+        choices.className = 'cesium-baseLayerPicker-dropDown';
         choices.setAttribute('data-bind', '\
-                css: { "cesium-imagery-visible" : dropDownVisible(),\
-                       "cesium-imagery-hidden" : !dropDownVisible() },\
+                css: { "cesium-baseLayerPicker-visible" : dropDownVisible(),\
+                       "cesium-baseLayerPicker-hidden" : !dropDownVisible() },\
                 foreach: imageryProviderViewModels');
         container.appendChild(choices);
 
         var provider = document.createElement('div');
-        provider.className = 'cesium-imagery-item';
+        provider.className = 'cesium-baseLayerPicker-item';
         provider.setAttribute('data-bind', '\
                 attr: {title: tooltip},\
                 click: $parent.selectedItem');
         choices.appendChild(provider);
 
         var providerIcon = document.createElement('img');
-        providerIcon.className = 'cesium-imagery-itemIcon';
+        providerIcon.className = 'cesium-baseLayerPicker-itemIcon';
         providerIcon.setAttribute('data-bind', 'attr: { src: iconUrl }');
         providerIcon.setAttribute('draggable', 'false');
         provider.appendChild(providerIcon);
 
         var providerLabel = document.createElement('div');
-        providerLabel.className = 'cesium-imagery-itemLabel';
+        providerLabel.className = 'cesium-baseLayerPicker-itemLabel';
         providerLabel.setAttribute('data-bind', 'text: name');
         provider.appendChild(providerLabel);
 
@@ -108,9 +108,9 @@ define(['./ImageryViewModel',
     /**
      * Destroys the  widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof ImageryWidget
+     * @memberof BaseLayerPicker
      */
-    ImageryWidget.prototype.destroy = function() {
+    BaseLayerPicker.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._closeDropdown);
         document.removeEventListener('touchstart', this._closeDropdown);
         var container = this.container;
@@ -120,5 +120,5 @@ define(['./ImageryViewModel',
         return destroyObject(this);
     };
 
-    return ImageryWidget;
+    return BaseLayerPicker;
 });

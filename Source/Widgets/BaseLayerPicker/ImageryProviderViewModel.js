@@ -7,7 +7,7 @@ define(['../../Core/DeveloperError',
     "use strict";
 
     /**
-     * ViewModel that represents each item in the ImageryWidget.
+     * ViewModel that represents each item in the BaseLayerPicker.
      *
      * @alias ImageryProviderViewModel
      * @constructor
@@ -17,7 +17,7 @@ define(['../../Core/DeveloperError',
      * @param {string} iconUrl An icon representing the layer.
      * @param {function} createFunction A function which creates the ImageryProvider for adding to the layers collection.
      *
-     * @see ImageryWidget
+     * @see BaseLayerPicker
      * @see ImageryProvider
      */
     var ImageryProviderViewModel = function(name, tooltip, iconUrl, createFunction) {

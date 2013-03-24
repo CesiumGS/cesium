@@ -11,8 +11,8 @@ define(['../../Core/DeveloperError',
     "use strict";
 
     /**
-     * The ViewModel for {@link ImageryWidget}.
-     * @alias ImageryViewModel
+     * The ViewModel for {@link BaseLayerPicker}.
+     * @alias BaseLayerPickerViewModel
      * @constructor
      *
      * @param {ImageryLayerCollection} imageLayers The imagery layer collection to use.
@@ -21,7 +21,7 @@ define(['../../Core/DeveloperError',
      *
      * @see ImageryProviderViewModel
      */
-    var ImageryViewModel = function(imageLayers) {
+    var BaseLayerPickerViewModel = function(imageLayers) {
         var dropDownVisible = knockout.observable(false);
         var selectedViewModel = knockout.observable();
 
@@ -85,5 +85,5 @@ define(['../../Core/DeveloperError',
         });
     };
 
-    return ImageryViewModel;
+    return BaseLayerPickerViewModel;
 });

@@ -19,8 +19,8 @@ define([
         '../Animation/AnimationViewModel',
         '../Fullscreen/FullscreenWidget',
         '../SceneMode/SceneModeWidget',
-        '../Imagery/ImageryWidget',
-        '../Imagery/ImageryProviderViewModel',
+        '../BaseLayerPicker/BaseLayerPicker',
+        '../BaseLayerPicker/ImageryProviderViewModel',
         '../ClockViewModel',
         '../../Core/defaultValue',
         '../../Core/loadJson',
@@ -84,7 +84,7 @@ define([
         AnimationViewModel,
         FullscreenWidget,
         SceneModeWidget,
-        ImageryWidget,
+        BaseLayerPicker,
         ImageryProviderViewModel,
         ClockViewModel,
         defaultValue,
@@ -763,9 +763,9 @@ define([
             this.sceneModeWidget = new SceneModeWidget(this.sceneModeContainer, transitioner);
 
             var imageLayers = centralBody.getImageryLayers();
-            this.imageryWidget = new ImageryWidget(this.imageryContainer, imageLayers);
+            this.baseLayerPicker = new BaseLayerPicker(this.imageryContainer, imageLayers);
 
-            var providerViewModels = this.imageryWidget.viewModel.imageryProviderViewModels;
+            var providerViewModels = this.baseLayerPicker.viewModel.imageryProviderViewModels;
             var defaultProvider = new ImageryProviderViewModel('Bing Maps Aerial', 'Bing Maps Aerial', require.toUrl('../Images/bingAerial.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
@@ -804,7 +804,7 @@ define([
                 });
             }));
 
-            this.imageryWidget.viewModel.selectedItem(defaultProvider);
+            this.baseLayerPicker.viewModel.selectedItem(defaultProvider);
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);

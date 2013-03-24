@@ -1,4 +1,4 @@
-.cesium-imagery-selected {
+.cesium-baseLayerPicker-selected {
 	display: box;
 	position: relative;
 	width: 100%;
@@ -6,11 +6,11 @@
 	border-radius: 14%;
 }
 
-.cesium-imagery-selected:hover {
+.cesium-baseLayerPicker-selected:hover {
 	box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
 
-.cesium-imagery-visible {
+.cesium-baseLayerPicker-visible {
 	visibility: visible;
 	opacity: 1;
 	transition: opacity 0.25s linear;
@@ -18,7 +18,7 @@
 	-moz-transition: opacity 0.25s linear;
 }
 
-.cesium-imagery-hidden {
+.cesium-baseLayerPicker-hidden {
 	visibility: hidden;
 	opacity: 0;
 	transition: visibility 0s 0.25s, opacity 0.25s linear;
@@ -26,7 +26,7 @@
 	-moz-transition: visibility 0s 0.25s, opacity 0.25s linear;
 }
 
-.cesium-imagery-dropDown {
+.cesium-baseLayerPicker-dropDown {
 	position: relative;
 	width: 225px;
 	max-height : 225px;
@@ -37,7 +37,7 @@
 	overflow-y: auto;
 }
 
-.cesium-imagery-item {
+.cesium-baseLayerPicker-item {
 	display: inline-block;
 	position: relative;
 	background-repeat: no-repeat;
@@ -49,12 +49,12 @@
 	text-align: center;
 }
 
-.cesium-imagery-item:hover {
+.cesium-baseLayerPicker-item:hover {
 	overflow: visible;
 	box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
 
-.cesium-imagery-itemLabel {
+.cesium-baseLayerPicker-itemLabel {
 	float: bottom;
 	display: box;
 	background-color: rgba(0, 0, 0, 0);
@@ -68,7 +68,7 @@
 	color: #edffff;
 }
 
-.cesium-imagery-itemIcon {
+.cesium-baseLayerPicker-itemIcon {
 	display: box;
 	position: relative;
 	width: inherit;
