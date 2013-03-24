@@ -165,7 +165,7 @@
 	}
 }
 
-@media only screen and (max-height: 600px) {
+@media only screen and (max-height: 350px) {
 	.cesium-imagery-dropDown {
 		max-height: 125px;
 	}

@@ -783,7 +783,7 @@ define([
                 });
             }));
 
-            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Aerial with Labels', 'Bing Maps Aerial with Labels', require.toUrl('../Images/bingAerialLabels.png'), function() {
+            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Labeled Aerial', 'Bing Maps Labeled Aerial', require.toUrl('../Images/bingAerialLabels.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.AERIAL_WITH_LABELS,
