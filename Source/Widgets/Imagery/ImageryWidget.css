@@ -27,10 +27,14 @@
 }
 
 .cesium-imagery-dropDown {
-	width: 300%;
+	position: relative;
+	width: 210px;
+	max-height: 225px;
 	float: right;
 	background-color: rgba(0, 0, 0, 0.75);
 	padding: 6px;
+	overflow-x: hidden;
+	overflow-y: auto;
 }
 
 .cesium-imagery-item {

@@ -164,3 +164,9 @@
 		left: 116px;
 	}
 }
+
+@media only screen and (max-height: 600px) {
+	.cesium-imagery-dropDown {
+		max-height: 125px;
+	}
+}

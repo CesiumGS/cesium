@@ -58,6 +58,7 @@ define(['./ImageryViewModel',
          * @type {Element}
          */
         this.button = document.createElement('img');
+        this.button.setAttribute('draggable', 'false');
 
         var widgetNode = this.button;
         widgetNode.className = 'cesium-imagery-selected';
@@ -84,6 +85,7 @@ define(['./ImageryViewModel',
         var providerIcon = document.createElement('img');
         providerIcon.className = 'cesium-imagery-itemIcon';
         providerIcon.setAttribute('data-bind', 'attr: { src: iconUrl }');
+        providerIcon.setAttribute('draggable', 'false');
         provider.appendChild(providerIcon);
 
         var providerLabel = document.createElement('div');
