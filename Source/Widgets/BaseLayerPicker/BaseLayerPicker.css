@@ -36,8 +36,8 @@
     position: absolute;
     top: auto;
     right: 0;
-    width: 225px;
-    max-height: 225px;
+    width: 240px;
+    max-height: 250px;
     background-color: rgba(38, 38, 38, 0.75);
     padding: 6px;
     overflow: auto;

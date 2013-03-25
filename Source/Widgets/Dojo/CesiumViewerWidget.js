@@ -53,6 +53,7 @@ define([
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
         '../../Scene/ArcGisMapServerImageryProvider',
+        '../../Scene/OpenStreetMapImageryProvider',
         '../../Scene/SceneTransitioner',
         '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
@@ -118,6 +119,7 @@ define([
         BingMapsImageryProvider,
         BingMapsStyle,
         ArcGisMapServerImageryProvider,
+        OpenStreetMapImageryProvider,
         SceneTransitioner,
         SingleTileImageryProvider,
         PerformanceDisplay,
@@ -766,7 +768,7 @@ define([
             this.baseLayerPicker = new BaseLayerPicker(this.imageryContainer, imageryLayers);
 
             var providerViewModels = this.baseLayerPicker.viewModel.imageryProviderViewModels;
-            var defaultProvider = new ImageryProviderViewModel('Bing Maps Aerial', 'Bing Maps Aerial', require.toUrl('../Images/ImageryProviders/bingAerial.png'), function() {
+            var defaultProvider = new ImageryProviderViewModel('Bing Maps Aerial', 'Bing Maps aerial imagery \nhttp://www.bing.com/maps/', require.toUrl('../Images/ImageryProviders/bingAerial.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.AERIAL,
@@ -775,7 +777,7 @@ define([
             });
             providerViewModels.push(defaultProvider);
 
-            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Roads', 'Bing Maps Roads', require.toUrl('../Images/ImageryProviders/bingRoads.png'), function() {
+            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Roads', 'Bing Maps standard road maps\nhttp://www.bing.com/maps/', require.toUrl('../Images/ImageryProviders/bingRoads.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.ROAD,
@@ -783,7 +785,7 @@ define([
                 });
             }));
 
-            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Labeled Aerial', 'Bing Maps Labeled Aerial', require.toUrl('../Images/ImageryProviders/bingAerialLabels.png'), function() {
+            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Labeled Aerial', 'Bing Maps aerial imagery with label overlays \nhttp://www.bing.com/maps/', require.toUrl('../Images/ImageryProviders/bingAerialLabels.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.AERIAL_WITH_LABELS,
@@ -791,14 +793,31 @@ define([
                 });
             }));
 
-            providerViewModels.push(new ImageryProviderViewModel('ESRI World Imagery', 'ESRI World Imagery', require.toUrl('../Images/ImageryProviders/esriWorldImagery.png'), function() {
+            providerViewModels.push(new ImageryProviderViewModel('ESRI World Imagery', '\
+World Imagery provides one meter or better satellite and aerial imagery in many parts of the world and lower resolution \
+satellite imagery worldwide.  The map includes NASA Blue Marble: Next Generation 500m resolution imagery at small scales \
+(above 1:1,000,000), i-cubed 15m eSAT imagery at medium-to-large scales (down to 1:70,000) for the world, and USGS 15m Landsat \
+imagery for Antarctica. The map features 0.3m resolution imagery in the continental United States and 0.6m resolution imagery in \
+parts of Western Europe from DigitalGlobe. In other parts of the world, 1 meter resolution imagery is available from GeoEye IKONOS, \
+i-cubed Nationwide Prime, Getmapping, AeroGRID, IGN Spain, and IGP Portugal.  Additionally, imagery at different resolutions has been \
+contributed by the GIS User Community.\nhttp://www.esri.com/', require.toUrl('../Images/ImageryProviders/esriWorldImagery.png'), function() {
                 return new ArcGisMapServerImageryProvider({
                     url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
                     proxy : new DefaultProxy('/proxy/')
                 });
             }));
 
-            providerViewModels.push(new ImageryProviderViewModel('No Streaming Imagery', 'Uses a single image.', require.toUrl('../Images/ImageryProviders/singleTile.png'), function() {
+            providerViewModels.push(new ImageryProviderViewModel('Open StreetMap', '\
+OpenStreetMap (OSM) is a collaborative project to create a free editable map of the world. \
+http://www.openstreetmap.org/', require.toUrl('../Images/ImageryProviders/openStreetMap.png'), function() {
+                return new OpenStreetMapImageryProvider({
+                    url : 'http://tile.openstreetmap.org/',
+                    proxy : new DefaultProxy('/proxy/')
+                });
+            }));
+
+            providerViewModels.push(new ImageryProviderViewModel('Disable Streaming Imagery', '\
+Uses a single image for the entire world.', require.toUrl('../Images/ImageryProviders/singleTile.png'), function() {
                 return new SingleTileImageryProvider({
                     url : widget.dayImageUrl
                 });
