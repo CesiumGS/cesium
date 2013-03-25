@@ -21,7 +21,7 @@
 }
 
 .cesium-sceneModePicker-visible {
-	visibility: visible;
+    visibility: visible;
     opacity: 1;
     transition: opacity 0.25s linear;
     -webkit-transition: opacity 0.25s linear;
@@ -29,7 +29,7 @@
 }
 
 .cesium-sceneModePicker-hidden {
-	visibility: hidden;
+    visibility: hidden;
     opacity: 0;
     transition: visibility 0s 0.25s, opacity 0.25s linear;
     -webkit-transition: visibility 0s 0.25s, opacity 0.25s linear;
@@ -37,21 +37,21 @@
 }
 
 .cesium-sceneModePicker-none {
-	display: none;
+    display: none;
 }
 
 .cesium-sceneModePicker-button:hover {
-	box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
 
 .cesium-sceneModePicker-button3D {
-	background-position: 0 0;
+    background-position: 0 0;
 }
 
 .cesium-sceneModePicker-buttonColumbusView {
-	background-position: 33.33% 0;
+    background-position: 33.33% 0;
 }
 
 .cesium-sceneModePicker-button2D {
-	background-position: 66.66% 0;
+    background-position: 66.66% 0;
 }
