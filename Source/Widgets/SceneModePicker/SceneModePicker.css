@@ -1,4 +1,4 @@
-.cesium-sceneMode-button {
+.cesium-sceneModePicker-button {
 	display: inline-block;
 	background-image: url(../Images/sceneModes.svg);
 	background-repeat: no-repeat;
@@ -19,7 +19,7 @@
 	transition-duration: 2s;
 }
 
-.cesium-sceneMode-visible {
+.cesium-sceneModePicker-visible {
 	visibility: visible;
     opacity: 1;
     transition: opacity 0.25s linear;
@@ -27,7 +27,7 @@
     -moz-transition: opacity 0.25s linear;
 }
 
-.cesium-sceneMode-hidden {
+.cesium-sceneModePicker-hidden {
 	visibility: hidden;
     opacity: 0;
     transition: visibility 0s 0.25s, opacity 0.25s linear;
@@ -35,22 +35,22 @@
     -moz-transition: visibility 0s 0.25s, opacity 0.25s linear;
 }
 
-.cesium-sceneMode-none {
+.cesium-sceneModePicker-none {
 	display: none;
 }
 
-.cesium-sceneMode-button:hover {
+.cesium-sceneModePicker-button:hover {
 	box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
 
-.cesium-sceneMode-button3D {
+.cesium-sceneModePicker-button3D {
 	background-position: 0 0;
 }
 
-.cesium-sceneMode-buttonColumbusView {
+.cesium-sceneModePicker-buttonColumbusView {
 	background-position: 33.33% 0;
 }
 
-.cesium-sceneMode-button2D {
+.cesium-sceneModePicker-button2D {
 	background-position: 66.66% 0;
 }

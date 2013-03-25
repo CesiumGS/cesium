@@ -51,68 +51,68 @@
   <style
      type="text/css"
      id="style6">
-.cesium-sceneMode-rectButton {
+.cesium-sceneModePicker-rectButton {
     cursor: pointer;
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
 }
-.cesium-sceneMode-rectButton .cesium-sceneMode-buttonGlow {
+.cesium-sceneModePicker-rectButton .cesium-sceneModePicker-buttonGlow {
     fill: #fff;
     stroke: none;
     filter: url(#sceneMode_blurred);
     display: none;
 }
-.cesium-sceneMode-rectButton:hover .cesium-sceneMode-buttonGlow {
+.cesium-sceneModePicker-rectButton:hover .cesium-sceneModePicker-buttonGlow {
     display: block;
 }
-.cesium-sceneMode-rectButton .cesium-sceneMode-buttonPath {
+.cesium-sceneModePicker-rectButton .cesium-sceneModePicker-buttonPath {
     fill: #edffff;
 }
-.cesium-sceneMode-rectButton .cesium-sceneMode-buttonMain {
+.cesium-sceneModePicker-rectButton .cesium-sceneModePicker-buttonMain {
     fill: url(#sceneMode_buttonNormal);
     stroke: #444;
     stroke-width: 1.2;
 }
-.cesium-sceneMode-rectButton:hover .cesium-sceneMode-buttonMain {
+.cesium-sceneModePicker-rectButton:hover .cesium-sceneModePicker-buttonMain {
     fill: url(#sceneMode_buttonHovered);
     stroke: #AEF;
 }
-.cesium-sceneMode-rectButton:active .cesium-sceneMode-buttonMain {
+.cesium-sceneModePicker-rectButton:active .cesium-sceneModePicker-buttonMain {
     fill: #ABD6FF;
 }
-.cesium-sceneMode-buttonDisabled {
+.cesium-sceneModePicker-buttonDisabled {
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
 }
-.cesium-sceneMode-buttonDisabled .cesium-sceneMode-buttonMain {
+.cesium-sceneModePicker-buttonDisabled .cesium-sceneModePicker-buttonMain {
     fill: url(#sceneMode_buttonDisabled);
     stroke: #555;
 }
-.cesium-sceneMode-buttonDisabled .cesium-sceneMode-buttonPath {
+.cesium-sceneModePicker-buttonDisabled .cesium-sceneModePicker-buttonPath {
     fill: #818181;
 }
-.cesium-sceneMode-buttonDisabled .cesium-sceneMode-buttonGlow {
+.cesium-sceneModePicker-buttonDisabled .cesium-sceneModePicker-buttonGlow {
     display: none;
 }
-.cesium-sceneMode-buttonToggled .cesium-sceneMode-buttonGlow {
+.cesium-sceneModePicker-buttonToggled .cesium-sceneModePicker-buttonGlow {
     display: block;
     fill: #2E2;
 }
-.cesium-sceneMode-buttonToggled .cesium-sceneMode-buttonMain {
+.cesium-sceneModePicker-buttonToggled .cesium-sceneModePicker-buttonMain {
     stroke: #2E2;
 }
-.cesium-sceneMode-buttonToggled:hover .cesium-sceneMode-buttonGlow {
+.cesium-sceneModePicker-buttonToggled:hover .cesium-sceneModePicker-buttonGlow {
     fill: #fff;
 }
-.cesium-sceneMode-buttonToggled:hover .cesium-sceneMode-buttonMain {
+.cesium-sceneModePicker-buttonToggled:hover .cesium-sceneModePicker-buttonMain {
     stroke: #2E2;
 }
 </style>
   <rect
      transform="matrix(0.845,0,0,0.84848485,37.18,0)"
-     class="cesium-sceneMode-buttonGlow"
+     class="cesium-sceneModePicker-buttonGlow"
      rx="2"
      ry="2"
      height="32"
@@ -129,12 +129,12 @@
      width="26.987949"
      y="0.50602531"
      x="0.50602514"
-     class="cesium-sceneMode-buttonMain"
+     class="cesium-sceneModePicker-buttonMain"
      id="rect10"
      style="fill:url(#linearGradient4392);stroke:#444444;stroke-width:1.01205027" />
   <rect
      transform="matrix(0.845,0,0,0.84848485,104.78,0)"
-     class="cesium-sceneMode-buttonGlow"
+     class="cesium-sceneModePicker-buttonGlow"
      rx="2"
      ry="2"
      height="32"
@@ -146,7 +146,7 @@
      style="fill:#ffffff;display:none;filter:url(#sceneMode_blurred)" />
   <rect
      transform="matrix(0.845,0,0,0.84848485,70.98,0)"
-     class="cesium-sceneMode-buttonGlow"
+     class="cesium-sceneModePicker-buttonGlow"
      rx="2"
      ry="2"
      height="32"

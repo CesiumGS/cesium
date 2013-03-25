@@ -18,7 +18,7 @@ define([
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
         '../Fullscreen/FullscreenWidget',
-        '../SceneMode/SceneModeWidget',
+        '../SceneModePicker/SceneModePicker',
         '../BaseLayerPicker/BaseLayerPicker',
         '../BaseLayerPicker/ImageryProviderViewModel',
         '../ClockViewModel',
@@ -83,7 +83,7 @@ define([
         Animation,
         AnimationViewModel,
         FullscreenWidget,
-        SceneModeWidget,
+        SceneModePicker,
         BaseLayerPicker,
         ImageryProviderViewModel,
         ClockViewModel,
@@ -760,7 +760,7 @@ define([
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
-            this.sceneModeWidget = new SceneModeWidget(this.sceneModeContainer, transitioner);
+            this.sceneModePicker = new SceneModePicker(this.sceneModeContainer, transitioner);
 
             var imageLayers = centralBody.getImageryLayers();
             this.baseLayerPicker = new BaseLayerPicker(this.imageryContainer, imageLayers);

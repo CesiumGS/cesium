@@ -51,68 +51,68 @@
   <style
      type="text/css"
      id="style6">
-.cesium-sceneMode-rectButton {
+.cesium-sceneModePicker-rectButton {
     cursor: pointer;
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
 }
-.cesium-sceneMode-rectButton .cesium-sceneMode-buttonGlow {
+.cesium-sceneModePicker-rectButton .cesium-sceneModePicker-buttonGlow {
     fill: #fff;
     stroke: none;
     filter: url(#sceneMode_blurred);
     display: none;
 }
-.cesium-sceneMode-rectButton:hover .cesium-sceneMode-buttonGlow {
+.cesium-sceneModePicker-rectButton:hover .cesium-sceneModePicker-buttonGlow {
     display: block;
 }
-.cesium-sceneMode-rectButton .cesium-sceneMode-buttonPath {
+.cesium-sceneModePicker-rectButton .cesium-sceneModePicker-buttonPath {
     fill: #edffff;
 }
-.cesium-sceneMode-rectButton .cesium-sceneMode-buttonMain {
+.cesium-sceneModePicker-rectButton .cesium-sceneModePicker-buttonMain {
     fill: url(#sceneMode_buttonNormal);
     stroke: #444;
     stroke-width: 1.2;
 }
-.cesium-sceneMode-rectButton:hover .cesium-sceneMode-buttonMain {
+.cesium-sceneModePicker-rectButton:hover .cesium-sceneModePicker-buttonMain {
     fill: url(#sceneMode_buttonHovered);
     stroke: #AEF;
 }
-.cesium-sceneMode-rectButton:active .cesium-sceneMode-buttonMain {
+.cesium-sceneModePicker-rectButton:active .cesium-sceneModePicker-buttonMain {
     fill: #ABD6FF;
 }
-.cesium-sceneMode-buttonDisabled {
+.cesium-sceneModePicker-buttonDisabled {
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
 }
-.cesium-sceneMode-buttonDisabled .cesium-sceneMode-buttonMain {
+.cesium-sceneModePicker-buttonDisabled .cesium-sceneModePicker-buttonMain {
     fill: url(#sceneMode_buttonDisabled);
     stroke: #555;
 }
-.cesium-sceneMode-buttonDisabled .cesium-sceneMode-buttonPath {
+.cesium-sceneModePicker-buttonDisabled .cesium-sceneModePicker-buttonPath {
     fill: #818181;
 }
-.cesium-sceneMode-buttonDisabled .cesium-sceneMode-buttonGlow {
+.cesium-sceneModePicker-buttonDisabled .cesium-sceneModePicker-buttonGlow {
     display: none;
 }
-.cesium-sceneMode-buttonToggled .cesium-sceneMode-buttonGlow {
+.cesium-sceneModePicker-buttonToggled .cesium-sceneModePicker-buttonGlow {
     display: block;
     fill: #2E2;
 }
-.cesium-sceneMode-buttonToggled .cesium-sceneMode-buttonMain {
+.cesium-sceneModePicker-buttonToggled .cesium-sceneModePicker-buttonMain {
     stroke: #2E2;
 }
-.cesium-sceneMode-buttonToggled:hover .cesium-sceneMode-buttonGlow {
+.cesium-sceneModePicker-buttonToggled:hover .cesium-sceneModePicker-buttonGlow {
     fill: #fff;
 }
-.cesium-sceneMode-buttonToggled:hover .cesium-sceneMode-buttonMain {
+.cesium-sceneModePicker-buttonToggled:hover .cesium-sceneModePicker-buttonMain {
     stroke: #2E2;
 }
 </style>
   <rect
      transform="matrix(0.845,0,0,0.84848485,37.18,36)"
-     class="cesium-sceneMode-buttonGlow"
+     class="cesium-sceneModePicker-buttonGlow"
      rx="2"
      ry="2"
      height="32"
@@ -129,12 +129,12 @@
      width="61.686741"
      y="1.1566296"
      x="1.156629"
-     class="cesium-sceneMode-buttonMain"
+     class="cesium-sceneModePicker-buttonMain"
      id="rect10"
      style="fill:url(#linearGradient4392);stroke:#444444;stroke-width:2.31325793" />
   <rect
      transform="matrix(0.845,0,0,0.84848485,104.78,36)"
-     class="cesium-sceneMode-buttonGlow"
+     class="cesium-sceneModePicker-buttonGlow"
      rx="2"
      ry="2"
      height="32"
@@ -151,12 +151,12 @@
      width="61.686741"
      y="1.1566296"
      x="129.15662"
-     class="cesium-sceneMode-buttonMain"
+     class="cesium-sceneModePicker-buttonMain"
      id="rect14"
      style="fill:url(#linearGradient4387);stroke:#444444;stroke-width:2.31325793" />
   <rect
      transform="matrix(0.845,0,0,0.84848485,70.98,36)"
-     class="cesium-sceneMode-buttonGlow"
+     class="cesium-sceneModePicker-buttonGlow"
      rx="2"
      ry="2"
      height="32"
@@ -173,7 +173,7 @@
      width="61.686741"
      y="1.1566296"
      x="65.156624"
-     class="cesium-sceneMode-buttonMain"
+     class="cesium-sceneModePicker-buttonMain"
      id="rect18"
      style="fill:url(#linearGradient4382);stroke:#444444;stroke-width:2.31325793" />
   <defs
@@ -323,7 +323,7 @@
      width="61.686741"
      y="1.1566296"
      x="193.15663"
-     class="cesium-sceneMode-buttonMain"
+     class="cesium-sceneModePicker-buttonMain"
      id="rect66"
      style="fill:url(#linearGradient3051);stroke:#444444;stroke-width:2.31325793" />
   <path
