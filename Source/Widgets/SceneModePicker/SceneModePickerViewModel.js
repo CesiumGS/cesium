@@ -52,7 +52,7 @@ define(['../../Core/DeveloperError',
         this.sceneMode = sceneMode;
 
         /**
-         * Gets or sets whether the button dropdown is currently visible.
+         * Gets or sets whether the button dropDown is currently visible.
          * @type Observable
         */
         this.dropDownVisible = dropDownVisible;

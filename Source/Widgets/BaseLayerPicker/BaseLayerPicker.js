@@ -28,11 +28,19 @@ define(['./BaseLayerPickerViewModel',
      * @see ImageryLayerCollection
      */
     var BaseLayerPicker = function(container, imageLayers) {
-        if (container === 'undefined') {
+        if (typeof container === 'undefined') {
             throw new DeveloperError('container is required.');
         }
 
-        if (imageLayers === 'undefined') {
+        if (typeof container === 'string') {
+            var tmp = document.getElementById(container);
+            if (tmp === null) {
+                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
+            }
+            container = tmp;
+        }
+
+        if (typeof imageLayers === 'undefined') {
             throw new DeveloperError('imageLayers is required.');
         }
 
@@ -58,14 +66,14 @@ define(['./BaseLayerPickerViewModel',
          * @type {Element}
          */
         this.button = document.createElement('img');
-        this.button.setAttribute('draggable', 'false');
 
-        var widgetNode = this.button;
-        widgetNode.className = 'cesium-baseLayerPicker-selected';
-        widgetNode.setAttribute('data-bind', '\
+        var button = this.button;
+        button.setAttribute('draggable', 'false');
+        button.className = 'cesium-baseLayerPicker-selected';
+        button.setAttribute('data-bind', '\
                 attr: {title: selectedName, src: selectedImageUrl},\
-                click: toggleDropdown');
-        container.appendChild(widgetNode);
+                click: toggleDropDown');
+        container.appendChild(button);
 
         var choices = document.createElement('div');
         choices.className = 'cesium-baseLayerPicker-dropDown';
@@ -95,14 +103,14 @@ define(['./BaseLayerPickerViewModel',
 
         knockout.applyBindings(viewModel, container);
 
-        this._closeDropdown = function(e) {
+        this._closeDropDown = function(e) {
             if (!container.contains(e.target)) {
                 viewModel.dropDownVisible(false);
             }
         };
 
-        document.addEventListener('mousedown', this._closeDropdown);
-        document.addEventListener('touchstart', this._closeDropdown);
+        document.addEventListener('mousedown', this._closeDropDown);
+        document.addEventListener('touchstart', this._closeDropDown);
     };
 
     /**
@@ -111,12 +119,11 @@ define(['./BaseLayerPickerViewModel',
      * @memberof BaseLayerPicker
      */
     BaseLayerPicker.prototype.destroy = function() {
-        document.removeEventListener('mousedown', this._closeDropdown);
-        document.removeEventListener('touchstart', this._closeDropdown);
+        document.removeEventListener('mousedown', this._closeDropDown);
+        document.removeEventListener('touchstart', this._closeDropDown);
         var container = this.container;
         knockout.cleanNode(container);
         container.removeChild(this.button);
-        container.removeChild(this._nodes);
         return destroyObject(this);
     };
 

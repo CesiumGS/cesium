@@ -22,6 +22,10 @@ define(['../../Core/DeveloperError',
      * @see ImageryProviderViewModel
      */
     var BaseLayerPickerViewModel = function(imageLayers) {
+        if (typeof imageLayers === 'undefined') {
+            throw new DeveloperError('imageLayers is required');
+        }
+
         var dropDownVisible = knockout.observable(false);
         var selectedViewModel = knockout.observable();
 
@@ -32,7 +36,7 @@ define(['../../Core/DeveloperError',
         this.imageryProviderViewModels = knockout.observableArray();
 
         /**
-         * Gets or sets whether the imagery selection dropdown is currently visible.
+         * Gets or sets whether the imagery selection dropDown is currently visible.
          * @type Observable
         */
         this.dropDownVisible = dropDownVisible;
@@ -41,7 +45,7 @@ define(['../../Core/DeveloperError',
          * Command to toggle dropDown visibility.
          * @type Command
         */
-        this.toggleDropdown = createCommand(function() {
+        this.toggleDropDown = createCommand(function() {
             dropDownVisible(!dropDownVisible());
         });
 
