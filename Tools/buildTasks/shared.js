@@ -1,12 +1,12 @@
 /*global importClass,project,attributes,elements,java,Packages*/
-/*jshint strict:false*/
-
 importClass(java.io.File); /*global File*/
 importClass(java.io.FileReader); /*global FileReader*/
 importClass(java.io.FileWriter); /*global FileWriter*/
 importClass(Packages.org.apache.tools.ant.util.FileUtils); /*global FileUtils*/
 
 function forEachFile(filesetName, func) {
+    "use strict";
+
     var filesets = elements.get(filesetName);
     for ( var i = 0, filesetsLen = filesets.size(); i < filesetsLen; ++i) {
         var fileset = filesets.get(i);
@@ -23,6 +23,8 @@ function forEachFile(filesetName, func) {
 }
 
 function readFileContents(file) {
+    "use strict";
+
     var reader = new FileReader(file);
     var contents = String(FileUtils.readFully(reader));
     reader.close();
@@ -31,6 +33,8 @@ function readFileContents(file) {
 }
 
 function writeFileContents(filename, contents, writeIfUnchanged) {
+    "use strict";
+
     var previousContents;
     var file = new File(filename);
     if (!writeIfUnchanged) {

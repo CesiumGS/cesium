@@ -1,6 +1,4 @@
 /*global importClass,project,attributes,elements,java,Packages*/
-/*jshint strict:false,multistr:true*/
-
 importClass(Packages.org.mozilla.javascript.tools.shell.Main); /*global Main*/
 Main.exec(['-e', '{}']);
 var load = Main.global.load;
@@ -14,6 +12,8 @@ var assignments = [];
 var nonIdentifierRegexp = /[^0-9a-zA-Z_$]/g;
 
 forEachFile('sourcefiles', function(relativePath, file) {
+    "use strict";
+
     var moduleId = relativePath.replace('\\', '/');
     moduleId = moduleId.substring(0, moduleId.lastIndexOf('.'));
 
