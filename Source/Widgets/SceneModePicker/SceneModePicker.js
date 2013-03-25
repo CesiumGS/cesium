@@ -30,6 +30,14 @@ define(['./SceneModePickerViewModel',
             throw new DeveloperError('container is required.');
         }
 
+        if (typeof container === 'string') {
+            var tmp = document.getElementById(container);
+            if (tmp === null) {
+                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
+            }
+            container = tmp;
+        }
+
         if (typeof transitioner === 'undefined') {
             throw new DeveloperError('transitioner is required.');
         }
