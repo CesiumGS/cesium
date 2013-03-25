@@ -9,7 +9,6 @@ define(['./SceneModePickerViewModel',
             destroyObject,
             knockout) {
     "use strict";
-    /*jshint multistr:true */
 
     /**
      * A single button widget for switching scene modes.
