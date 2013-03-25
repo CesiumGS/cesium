@@ -26,11 +26,11 @@ define(['./SceneModePickerViewModel',
      * @see SceneTransitioner
      */
     var SceneModePicker = function(container, transitioner) {
-        if (container === 'undefined') {
+        if (typeof container === 'undefined') {
             throw new DeveloperError('container is required.');
         }
 
-        if (transitioner === 'undefined') {
+        if (typeof transitioner === 'undefined') {
             throw new DeveloperError('transitioner is required.');
         }
 
@@ -63,7 +63,7 @@ define(['./SceneModePickerViewModel',
                                  css: { "cesium-sceneModePicker-button2D": sceneMode() === _sceneMode.SCENE2D,\
                                         "cesium-sceneModePicker-button3D": sceneMode() === _sceneMode.SCENE3D,\
                                         "cesium-sceneModePicker-buttonColumbusView": sceneMode() === _sceneMode.COLUMBUS_VIEW},\
-                                 attr: { title: selectedTooltip }, click: toggleDropdown');
+                                 attr: { title: selectedTooltip }, click: toggleDropDown');
         container.appendChild(widgetNode);
 
         var node3D = document.createElement('span');
@@ -102,14 +102,14 @@ define(['./SceneModePickerViewModel',
 
         knockout.applyBindings(viewModel, container);
 
-        this._closeDropdown = function(e) {
+        this._closeDropDown = function(e) {
             if (!container.contains(e.target)) {
                 viewModel.dropDownVisible(false);
             }
         };
 
-        document.addEventListener('mousedown', this._closeDropdown);
-        document.addEventListener('touchstart', this._closeDropdown);
+        document.addEventListener('mousedown', this._closeDropDown);
+        document.addEventListener('touchstart', this._closeDropDown);
     };
 
     /**
@@ -118,8 +118,9 @@ define(['./SceneModePickerViewModel',
      * @memberof SceneModePicker
      */
     SceneModePicker.prototype.destroy = function() {
-        document.removeEventListener('mousedown', this._closeDropdown);
-        document.removeEventListener('touchstart', this._closeDropdown);
+        this.viewModel.destroy();
+        document.removeEventListener('mousedown', this._closeDropDown);
+        document.removeEventListener('touchstart', this._closeDropDown);
         var container = this.container;
         knockout.cleanNode(container);
         container.removeChild(this.button);

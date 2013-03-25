@@ -1,20 +1,10 @@
 /*global defineSuite*/
 defineSuite(['Widgets/SceneModePicker/SceneModePicker',
-             'Widgets/ClockViewModel',
-             'Core/JulianDate',
-             'Core/ClockStep',
-             'Core/ClockRange',
-             'Core/Math',
              'Scene/SceneTransitioner',
              'Specs/createScene',
              'Specs/destroyScene'
             ], function(
               SceneModePicker,
-              ClockViewModel,
-              JulianDate,
-              ClockStep,
-              ClockRange,
-              CesiumMath,
               SceneTransitioner,
               createScene,
               destroyScene) {
@@ -25,6 +15,20 @@ defineSuite(['Widgets/SceneModePicker/SceneModePicker',
         var scene = createScene();
         var widget = new SceneModePicker(document.body, new SceneTransitioner(scene));
         widget.destroy();
+        destroyScene(scene);
+    });
+
+    it('constructor throws with no transitioner', function() {
+        expect(function() {
+            return new SceneModePicker(document.body, undefined);
+        }).toThrow();
+    });
+
+    it('constructor throws with no element', function() {
+        var scene = createScene();
+        expect(function() {
+            return new SceneModePicker(undefined, new SceneTransitioner(scene));
+        }).toThrow();
         destroyScene(scene);
     });
 });

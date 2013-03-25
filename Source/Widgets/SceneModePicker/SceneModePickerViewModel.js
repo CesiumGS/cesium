@@ -17,21 +17,27 @@ define(['../../Core/DeveloperError',
      *
      * @param {SceneTransitioner} transitioner The SceneTransitioner instance to use.
      *
+     * @exception {DeveloperError} transitioner is required.
+     *
      * @see SceneModePicker
      */
     var SceneModePickerViewModel = function(transitioner) {
+        if (typeof transitioner === 'undefined') {
+            throw new DeveloperError('transitioner is required.');
+        }
 
         var sceneMode = knockout.observable(transitioner.getScene().mode);
 
-        transitioner.onTransitionStart.addEventListener(function(transitioner, oldMode, newMode, isMorphing) {
+        this._transitionStart = function(transitioner, oldMode, newMode, isMorphing) {
             sceneMode(newMode);
-        });
+        };
+
+        transitioner.onTransitionStart.addEventListener(this._transitionStart);
 
         var dropDownVisible = knockout.observable(false);
         var tooltip2D = knockout.observable('2D');
         var tooltip3D = knockout.observable('3D');
         var tooltipColumbusView = knockout.observable('Columbus View');
-        var tooltipMorphing = knockout.observable('Morphing');
 
         /**
          * Gets the SceneTransitioner being used.
@@ -55,7 +61,7 @@ define(['../../Core/DeveloperError',
          * Command to toggle dropDown visibility.
          * @type Command
         */
-        this.toggleDropdown = createCommand(function() {
+        this.toggleDropDown = createCommand(function() {
             dropDownVisible(!dropDownVisible());
         });
 
@@ -105,12 +111,6 @@ define(['../../Core/DeveloperError',
         this.tooltipColumbusView = tooltipColumbusView;
 
         /**
-         * Gets or sets the tooltip during morphing.
-         * @type Observable
-        */
-        this.tooltipMorphing = tooltipMorphing;
-
-        /**
          * Gets the current selected mode's tooltip.
          * @type Observable
         */
@@ -122,17 +122,15 @@ define(['../../Core/DeveloperError',
             if (mode === SceneMode.SCENE3D) {
                 return tooltip3D();
             }
-            if (mode === SceneMode.COLUMBUS_VIEW) {
-                return tooltipColumbusView();
-            }
-            if (mode === SceneMode.MORPHING) {
-                return tooltipMorphing();
-            }
-            return '';
+            return tooltipColumbusView();
         });
 
         //Used by knockout
         this._sceneMode = SceneMode;
+    };
+
+    SceneModePickerViewModel.prototype.destroy = function() {
+        this.transitioner.onTransitionStart.removeEventListener(this._transitionStart);
     };
 
     return SceneModePickerViewModel;
