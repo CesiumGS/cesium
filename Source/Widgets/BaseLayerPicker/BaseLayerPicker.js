@@ -9,7 +9,6 @@ define(['./BaseLayerPickerViewModel',
             destroyObject,
             knockout) {
     "use strict";
-    /*jshint multistr:true */
 
     /**
      * A single button widget for switching amoung base imagery layers.
