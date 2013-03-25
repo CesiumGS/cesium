@@ -76,7 +76,7 @@
 }
 
 .cesium-viewerWidget-home {
-	display: inline-block;
+    display: inline-block;
 	width: 32px;
 	height: 32px;
 	vertical-align: middle;
@@ -106,22 +106,17 @@
 }
 
 .cesium-viewerWidget-sceneModeContainer {
-	display: relative;
+    display: inline-block;
 	width: 32px;
 	height: 32px;
 	vertical-align: middle;
 	margin: 1px;
 }
 
-.cesium-viewerWidget-left {
-	float: left;
-	margin: 1px;
-}
-
 .cesium-viewerWidget-imageryContainer {
 	display: inline-block;
-	width: 64px;
-	height: 64px;
+	width: 32px;
+	height: 32px;
 	vertical-align: middle;
 	margin: 1px;
 }
