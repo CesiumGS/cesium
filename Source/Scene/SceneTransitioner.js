@@ -59,7 +59,7 @@ define([
          * transition animations to complete.
          * @type {Number}
          */
-        this.morphDuration = 3000;
+        this.morphDuration = 2000;
 
         /**
          * Gets or sets whether or not to instantly complete the
