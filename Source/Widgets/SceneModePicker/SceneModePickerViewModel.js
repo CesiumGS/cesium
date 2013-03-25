@@ -18,8 +18,6 @@ define(['../../Core/DeveloperError',
      * @param {SceneTransitioner} transitioner The SceneTransitioner instance to use.
      *
      * @exception {DeveloperError} transitioner is required.
-     *
-     * @see SceneModePicker
      */
     var SceneModePickerViewModel = function(transitioner) {
         if (typeof transitioner === 'undefined') {
@@ -58,7 +56,7 @@ define(['../../Core/DeveloperError',
         this.dropDownVisible = dropDownVisible;
 
         /**
-         * Command to toggle dropDown visibility.
+         * Gets the command to toggle dropDown visibility.
          * @type Command
         */
         this.toggleDropDown = createCommand(function() {
@@ -66,7 +64,7 @@ define(['../../Core/DeveloperError',
         });
 
         /**
-         * Command to morph to 2D.
+         * Gets the command to morph to 2D.
          * @type Command
         */
         this.morphTo2D = createCommand(function() {
@@ -75,7 +73,7 @@ define(['../../Core/DeveloperError',
         });
 
         /**
-         * Command to morph to 3D.
+         * Gets the command to morph to 3D.
          * @type Command
         */
         this.morphTo3D = createCommand(function() {
@@ -84,7 +82,7 @@ define(['../../Core/DeveloperError',
         });
 
         /**
-         * Command to morph to Columbus View.
+         * Gets the command to morph to Columbus View.
          * @type Command
         */
         this.morphToColumbusView = createCommand(function() {
@@ -93,25 +91,25 @@ define(['../../Core/DeveloperError',
         });
 
         /**
-         * Gets or sets the tooltip for 2D.
+         * Gets a writable observable for the 2D tooltip.
          * @type Observable
         */
         this.tooltip2D = tooltip2D;
 
         /**
-         * Gets or sets the tooltip for 3D.
+         * Gets a writable observable for the 3D tooltip.
          * @type Observable
         */
         this.tooltip3D = tooltip3D;
 
         /**
-         * Gets or sets the tooltip for Columbus View.
+         * Gets a writable observable for the Columbus View tooltip.
          * @type Observable
         */
         this.tooltipColumbusView = tooltipColumbusView;
 
         /**
-         * Gets the current selected mode's tooltip.
+         * Gets a readonly observable for the currently selected mode's tooltip.
          * @type Observable
         */
         this.selectedTooltip = knockout.computed(function() {
