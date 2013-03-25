@@ -17,6 +17,7 @@
 	-moz-transition-duration: 2s;
 	transition-property: background-position;
 	transition-duration: 2s;
+	cursor: pointer;
 }
 
 .cesium-sceneModePicker-visible {
