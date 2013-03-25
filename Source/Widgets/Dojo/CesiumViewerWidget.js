@@ -54,6 +54,8 @@ define([
         '../../Scene/BingMapsStyle',
         '../../Scene/ArcGisMapServerImageryProvider',
         '../../Scene/OpenStreetMapImageryProvider',
+        '../../Scene/TileMapServiceImageryProvider',
+        '../../Scene/WebMapServiceImageryProvider',
         '../../Scene/SceneTransitioner',
         '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
@@ -120,6 +122,8 @@ define([
         BingMapsStyle,
         ArcGisMapServerImageryProvider,
         OpenStreetMapImageryProvider,
+        TileMapServiceImageryProvider,
+        WebMapServiceImageryProvider,
         SceneTransitioner,
         SingleTileImageryProvider,
         PerformanceDisplay,
@@ -768,7 +772,8 @@ define([
             this.baseLayerPicker = new BaseLayerPicker(this.imageryContainer, imageryLayers);
 
             var providerViewModels = this.baseLayerPicker.viewModel.imageryProviderViewModels;
-            var defaultProvider = new ImageryProviderViewModel('Bing Maps Aerial', 'Bing Maps aerial imagery \nhttp://www.bing.com/maps/', require.toUrl('../Images/ImageryProviders/bingAerial.png'), function() {
+            var defaultProvider = new ImageryProviderViewModel('Bing Maps Aerial', '\
+Bing Maps aerial imagery \nhttp://www.bing.com/maps/', require.toUrl('../Images/ImageryProviders/bingAerial.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.AERIAL,
@@ -777,7 +782,8 @@ define([
             });
             providerViewModels.push(defaultProvider);
 
-            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Roads', 'Bing Maps standard road maps\nhttp://www.bing.com/maps/', require.toUrl('../Images/ImageryProviders/bingRoads.png'), function() {
+            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Roads', '\
+Bing Maps standard road maps\nhttp://www.bing.com/maps/', require.toUrl('../Images/ImageryProviders/bingRoads.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.ROAD,
@@ -785,7 +791,8 @@ define([
                 });
             }));
 
-            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Labeled Aerial', 'Bing Maps aerial imagery with label overlays \nhttp://www.bing.com/maps/', require.toUrl('../Images/ImageryProviders/bingAerialLabels.png'), function() {
+            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Labeled Aerial', '\
+Bing Maps aerial imagery with label overlays \nhttp://www.bing.com/maps/', require.toUrl('../Images/ImageryProviders/bingAerialLabels.png'), function() {
                 return new BingMapsImageryProvider({
                     url : 'http://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.AERIAL_WITH_LABELS,
@@ -807,12 +814,69 @@ contributed by the GIS User Community.\nhttp://www.esri.com/', require.toUrl('..
                 });
             }));
 
-            providerViewModels.push(new ImageryProviderViewModel('Open StreetMap', '\
+            providerViewModels.push(new ImageryProviderViewModel('ESRI World Street Map', '\
+This worldwide street map presents highway-level data for the world. Street-level data includes the United States; much of \
+Canada; Japan; most countries in Europe; Australia and New Zealand; India; parts of South America including Argentina, Brazil, \
+Chile, Colombia, and Venezuela; Ghana; and parts of southern Africa including Botswana, Lesotho, Namibia, South Africa, and Swaziland.\n\
+http://www.esri.com/', require.toUrl('../Images/ImageryProviders/esriWorldStreetMap.png'), function() {
+                return new ArcGisMapServerImageryProvider({
+                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+                    proxy : new DefaultProxy('/proxy/')
+                });
+            }));
+
+            providerViewModels.push(new ImageryProviderViewModel('ESRI National Geographic', '\
+This web map contains the National Geographic World Map service. This map service is designed to be used as a general reference map \
+for informational and educational purposes as well as a basemap by GIS professionals and other users for creating web maps and web \
+mapping applications.\nhttp://www.esri.com/', require.toUrl('../Images/ImageryProviders/esriNationalGeographic.png'), function() {
+                return new ArcGisMapServerImageryProvider({
+                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/',
+                    proxy : new DefaultProxy('/proxy/')
+                });
+            }));
+
+            providerViewModels.push(new ImageryProviderViewModel('Open-StreetMap', '\
 OpenStreetMap (OSM) is a collaborative project to create a free editable map of the world. \
 http://www.openstreetmap.org/', require.toUrl('../Images/ImageryProviders/openStreetMap.png'), function() {
                 return new OpenStreetMapImageryProvider({
                     url : 'http://tile.openstreetmap.org/',
                     proxy : new DefaultProxy('/proxy/')
+                });
+            }));
+
+            providerViewModels.push(new ImageryProviderViewModel('Stamen Watercolor', '\
+OpenStreetMap (OSM) is a collaborative project to create a free editable map of the world. \
+http://www.openstreetmap.org/', require.toUrl('../Images/ImageryProviders/stamenWatercolor.png'), function() {
+                return new OpenStreetMapImageryProvider({
+                    url : 'http://tile.stamen.com/watercolor/',
+                    credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
+                });
+            }));
+
+            providerViewModels.push(new ImageryProviderViewModel('Stamen Toner', '\
+A high contrast black and white map.', require.toUrl('../Images/ImageryProviders/stamenToner.png'), function() {
+                return new OpenStreetMapImageryProvider({
+                    url : 'http://tile.stamen.com/toner/',
+                    credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
+                });
+            }));
+
+            providerViewModels.push(new ImageryProviderViewModel('MapQuest OpenStreet-Map', '\
+OpenStreetMap (OSM) is a collaborative project to create a free editable map of the world. \
+http://www.openstreetmap.org/', require.toUrl('../Images/ImageryProviders/mapQuestOpenStreetMap.png'), function() {
+                return new OpenStreetMapImageryProvider({
+                    url : 'http://otile1.mqcdn.com/tiles/1.0.0/osm/',
+                    proxy : new DefaultProxy('/proxy/')
+                });
+            }));
+
+            providerViewModels.push(new ImageryProviderViewModel('Black Marble', '\
+The lights of cities and villages trace the outlines of civilization in this global view of the \
+Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.', require.toUrl('../Images/ImageryProviders/blackMarble.png'), function() {
+                return new TileMapServiceImageryProvider({
+                    url : 'http://cesium.agi.com/blackmarble',
+                    maximumLevel : 8,
+                    credit : 'Black Marble imagery courtesy NASA Earth Observatory'
                 });
             }));
 
