@@ -159,7 +159,7 @@ define([
             if(typeof updatedObject.external !== 'undefined'){
                 var external = updatedObject.external;
                 var doc = new DynamicObjectCollection();
-                if(typeof external.sourceType === 'undefined' || external.sourceType.getValue(Iso8601.MAXIMUM_INTERVAL) === 'json'){
+                if (typeof external.sourceType === 'undefined' || external.sourceType.getValue(Iso8601.MINIMUM_VALUE) === 'json') {
                     if(typeof external.pollingUpdate === 'undefined'){
                         this._updaters.push(new Updater(compositeDynamicObjectCollection, new IterationDrivenUpdater(this, doc, external.url, 1)));
                     }
@@ -167,7 +167,7 @@ define([
                         this._updaters.push(new Updater(compositeDynamicObjectCollection, new SystemClockUpdater(this, doc, external)));
                     }
                 }
-                else if(external.sourceType.getValue(Iso8601.MAXIMUM_INTERVAL) === 'eventstream'){
+                else if (external.sourceType.getValue(Iso8601.MINIMUM_VALUE) === 'eventstream') {
                     if(typeof external.simulationDrivenUpdate === 'undefined'){
                         this._updaters.push(new Updater(compositeDynamicObjectCollection, new EventSourceUpdater(this, doc, external)));
                     }
@@ -175,7 +175,7 @@ define([
                         this._updaters.push(new Updater(compositeDynamicObjectCollection, new TimeIntervalUpdater(this, doc, external)));
                     }
                 }
-                var scope = external.scope.getValue(Iso8601.MAXIMUM_INTERVAL);
+                var scope = external.scope.getValue(Iso8601.MINIMUM_VALUE);
                 if(scope && scope === "SHARED"){
                     var collections = compositeDynamicObjectCollection.getCollections();
                     collections.splice(collections.length, 0, doc);

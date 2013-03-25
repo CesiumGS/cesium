@@ -118,7 +118,7 @@ define([
                    DynamicPolyline.undefineProperties,
                    DynamicPyramid.undefineProperties,
                    DynamicObject.undefineProperties,
-                   DynamicExternalDocument.undefineProperties],],
+                   DynamicExternalDocument.undefineProperties],
 
        /**
         * Creates an array containing the standard CZML visualizers,
