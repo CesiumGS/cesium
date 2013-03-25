@@ -1,83 +1,84 @@
 .cesium-baseLayerPicker-selected {
-	display: box;
-	position: relative;
-	width: 100%;
-	height: 100%;
-	border-radius: 14%;
+    display: box;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 14%;
 }
 
 .cesium-baseLayerPicker-selected:hover {
-	box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
 
 .cesium-baseLayerPicker-visible {
-	visibility: visible;
-	opacity: 1;
-	transition: opacity 0.25s linear;
-	-webkit-transition: opacity 0.25s linear;
-	-moz-transition: opacity 0.25s linear;
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.25s linear;
+    -webkit-transition: opacity 0.25s linear;
+    -moz-transition: opacity 0.25s linear;
 }
 
 .cesium-baseLayerPicker-hidden {
-	visibility: hidden;
-	opacity: 0;
-	transition: visibility 0s 0.25s, opacity 0.25s linear;
-	-webkit-transition: visibility 0s 0.25s, opacity 0.25s linear;
-	-moz-transition: visibility 0s 0.25s, opacity 0.25s linear;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s 0.25s, opacity 0.25s linear;
+    -webkit-transition: visibility 0s 0.25s, opacity 0.25s linear;
+    -moz-transition: visibility 0s 0.25s, opacity 0.25s linear;
 }
 
 .cesium-baseLayerPicker-dropDown {
-	position: relative;
-	width: 225px;
-	max-height : 225px;
-	float: right;
-	background-color: rgba(0, 0, 0, 0.75);
-	padding: 6px;
-	overflow-x: hidden;
-	overflow-y: auto;
+    display: block;
+    position: relative;
+    width: 225px;
+    max-height: 225px;
+    padding: 6px;
+    border-radius: 7%;
+    float: right;
+    background-color: rgba(0, 0, 0, 0.75);
+    overflow: auto;
 }
 
 .cesium-baseLayerPicker-item {
-	display: inline-block;
-	position: relative;
-	background-repeat: no-repeat;
-	border-radius: 14%;
-	vertical-align: top;
-	margin: 2px;
-	width: 64px;
-	overflow: hidden;
-	text-align: center;
+    display: inline-block;
+    position: relative;
+    width: 64px;
+    margin: 2px;
+    border-radius: 14%;
+    background-repeat: no-repeat;
+    vertical-align: top;
+    text-align: center;
+    overflow: hidden;
 }
 
 .cesium-baseLayerPicker-item:hover {
-	overflow: visible;
-	box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+    overflow: visible;
+    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
 
 .cesium-baseLayerPicker-itemLabel {
-	float: bottom;
-	display: box;
-	background-color: rgba(0, 0, 0, 0);
-	width: auto;
-	height: auto;
-	position: relative;
-	font-family: sans-serif;
-	font-size: 8pt;
-	text-align: center;
-	vertical-align: middle;
-	color: #edffff;
+    display: box;
+    position: relative;
+    width: auto;
+    height: auto;
+    float: bottom;
+    color: #edffff;
+    background-color: rgba(0, 0, 0, 0);
+    font-family: sans-serif;
+    font-size: 8pt;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .cesium-baseLayerPicker-itemIcon {
-	display: box;
-	position: relative;
-	width: inherit;
-	height: auto;
-	background-size: 100% 100%;
-	background-color: rgba(0, 0, 0, 0);
-	border-radius: 14%;
-	color: #edffff;
-	margin: 0;
-	padding: 0;
-	border: 0;
+    display: box;
+    position: relative;
+    width: inherit;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 14%;
+    background-size: 100% 100%;
+    color: #edffff;
+    background-color: rgba(0, 0, 0, 0);
 }
