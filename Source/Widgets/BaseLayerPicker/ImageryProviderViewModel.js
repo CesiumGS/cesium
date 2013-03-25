@@ -15,12 +15,12 @@ define(['../../Core/DeveloperError',
      * @param {string} name The name of the layer.
      * @param {string} tooltip The tooltip to show when the item is moused over.
      * @param {string} iconUrl An icon representing the layer.
-     * @param {function} createFunction A function which creates the ImageryProvider for adding to the layers collection.
+     * @param {function} createProvider A function which creates the ImageryProvider for adding to the layers collection.
      *
      * @see BaseLayerPicker
      * @see ImageryProvider
      */
-    var ImageryProviderViewModel = function(name, tooltip, iconUrl, createFunction) {
+    var ImageryProviderViewModel = function(name, tooltip, iconUrl, createProvider) {
 
         if (typeof name === 'undefined') {
             throw new DeveloperError('name is required.');
@@ -34,8 +34,8 @@ define(['../../Core/DeveloperError',
             throw new DeveloperError('iconUrl is required.');
         }
 
-        if (typeof createFunction === 'undefined') {
-            throw new DeveloperError('createFunction is required.');
+        if (typeof createProvider === 'undefined') {
+            throw new DeveloperError('createProvider is required.');
         }
 
         /**
@@ -60,7 +60,7 @@ define(['../../Core/DeveloperError',
          * Gets or sets the function called by the widget to create the imagery provider represented by this view model.
          * @type function
          */
-        this.createProvider = createFunction;
+        this.createProvider = createProvider;
     };
 
     return ImageryProviderViewModel;
