@@ -16,14 +16,22 @@ define(['../../Core/DeveloperError',
      * @constructor
      *
      * @param {ImageryLayerCollection} imageryLayers The imagery layer collection to use.
+     * @param {Array} [imageryProviderViewModels] The array of ImageryProviderViewModel instances to use.
      *
      * @exception {DeveloperError} imageryLayers is required.
+     * @exception {DeveloperError} imageryProviderViewModels must be an array.
      *
      * @see ImageryProviderViewModel
      */
-    var BaseLayerPickerViewModel = function(imageryLayers) {
+    var BaseLayerPickerViewModel = function(imageryLayers, imageryProviderViewModels) {
         if (typeof imageryLayers === 'undefined') {
             throw new DeveloperError('imageryLayers is required');
+        }
+
+        if (typeof imageryProviderViewModels === 'undefined') {
+            imageryProviderViewModels = [];
+        } else if (!Array.isArray(imageryProviderViewModels)) {
+            throw new DeveloperError('imageryProviderViewModels must be an array');
         }
 
         var dropDownVisible = knockout.observable(false);
@@ -39,7 +47,7 @@ define(['../../Core/DeveloperError',
          * Gets the observable array of ImageryProviderViewModel instances available for selection.
          * @type Observable
          */
-        this.imageryProviderViewModels = knockout.observableArray();
+        this.imageryProviderViewModels = knockout.observableArray(imageryProviderViewModels);
 
         /**
          * Gets or sets whether the imagery selection dropDown is currently visible.
@@ -61,16 +69,16 @@ define(['../../Core/DeveloperError',
         */
         this.selectedName = knockout.computed(function() {
             var selected = selectedViewModel();
-            return typeof selected !== 'undefined' ? selected.name() : "";
+            return typeof selected !== 'undefined' ? selected.name() : undefined;
         });
 
         /**
          * Gets the image url of the currently selected item.
          * @type Observable
         */
-        this.selectedImageUrl = knockout.computed(function() {
+        this.selectedIconUrl = knockout.computed(function() {
             var viewModel = selectedViewModel();
-            return typeof viewModel !== 'undefined' ? viewModel.iconUrl() : "";
+            return typeof viewModel !== 'undefined' ? viewModel.iconUrl() : undefined;
         });
 
         /**

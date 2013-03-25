@@ -71,7 +71,7 @@ define(['./BaseLayerPickerViewModel',
         button.setAttribute('draggable', 'false');
         button.className = 'cesium-baseLayerPicker-selected';
         button.setAttribute('data-bind', '\
-                attr: {title: selectedName, src: selectedImageUrl},\
+                attr: {title: selectedName, src: selectedIconUrl},\
                 click: toggleDropDown');
         container.appendChild(button);
 
