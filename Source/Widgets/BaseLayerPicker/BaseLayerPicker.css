@@ -31,54 +31,60 @@
     position: relative;
     width: 225px;
     max-height: 225px;
-    padding: 6px;
-    border-radius: 7%;
     float: right;
-    background-color: rgba(0, 0, 0, 0.75);
+    background-color: rgba(38, 38, 38, 0.75);
+    padding: 6px;
     overflow: auto;
+    border-radius: 10px;
 }
 
 .cesium-baseLayerPicker-item {
     display: inline-block;
     position: relative;
-    width: 64px;
-    margin: 2px;
-    border-radius: 14%;
     background-repeat: no-repeat;
+    border-radius: 14%;
     vertical-align: top;
-    text-align: center;
+    margin: 2px 5px;
+    width: 64px;
     overflow: hidden;
+    text-align: center;
+    cursor: pointer;
 }
 
 .cesium-baseLayerPicker-item:hover {
     overflow: visible;
-    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
 
 .cesium-baseLayerPicker-itemLabel {
-    display: box;
-    position: relative;
-    width: auto;
-    height: auto;
-    float: bottom;
-    color: #edffff;
-    background-color: rgba(0, 0, 0, 0);
+    display: block;
     font-family: sans-serif;
     font-size: 8pt;
     text-align: center;
     vertical-align: middle;
+    color: #edffff;
+    cursor: pointer;
+}
+
+.cesium-baseLayerPicker-item:hover .cesium-baseLayerPicker-itemLabel, .cesium-baseLayerPicker-item:focus .cesium-baseLayerPicker-itemLabel {
+    text-decoration: underline;
 }
 
 .cesium-baseLayerPicker-itemIcon {
-    display: box;
+    display: inline-block;
     position: relative;
     width: inherit;
     height: auto;
-    padding: 0;
-    margin: 0;
-    border: 0;
-    border-radius: 14%;
     background-size: 100% 100%;
-    color: #edffff;
     background-color: rgba(0, 0, 0, 0);
+    border: solid 1px transparent;
+    border-radius: 14%;
+    color: #edffff;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+.cesium-baseLayerPicker-item:hover .cesium-baseLayerPicker-itemIcon {
+    border-color: #fff;
+    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
