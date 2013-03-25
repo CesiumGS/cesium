@@ -15,17 +15,17 @@ define([
         './CzmlCartographic',
         './DynamicProperty'
         ], function (
-        Cartesian3,
-        Cartographic,
+                Cartesian3,
+                Cartographic,
                 DeveloperError,
                 Ellipsoid,
-        Iso8601,
+                Iso8601,
                 JulianDate,
-        Matrix3,
-        ReferenceFrame,
+                Matrix3,
+                ReferenceFrame,
                 TimeInterval,
                 TimeIntervalCollection,
-        Transforms,
+                Transforms,
                 CzmlCartesian3,
                 CzmlCartographic,
                 DynamicProperty) {
@@ -157,7 +157,7 @@ define([
                     return undefined;
                 }
                 return icrfToFixed.multiplyByVector(result, result);
-        }
+            }
             return result;
         }
         result = interval.cachedValue = property.getNonInterpolatedValue(time, interval.cachedValue);
