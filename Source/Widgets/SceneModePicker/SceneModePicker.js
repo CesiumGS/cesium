@@ -16,10 +16,11 @@ define(['./SceneModePickerViewModel',
      * @alias SceneModePicker
      * @constructor
      *
-     * @param {Element} container The parent HTML container node for this widget.
+     * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {SceneTransitioner} transitioner The SceneTransitioner instance to use.
      *
      * @exception {DeveloperError} container is required.
+     * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} transitioner is required.
      *
      * @see SceneTransitioner
@@ -58,7 +59,7 @@ define(['./SceneModePickerViewModel',
         this.container = container;
 
         /**
-         * Gets the actual button created by this widget.
+         * Gets the element created by this widget.
          * @memberof FullscreenWidget
          * @type {Element}
          */

@@ -1,21 +1,23 @@
 .cesium-sceneModePicker-button {
-    display: inline-block;
-    position: relative;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    margin: 0;
-    color: white;
-    border-radius: 14%;
-    background-image: url(../Images/sceneModes.svg);
-    background-repeat: no-repeat;
-    background-size: 400% 100%;
-    -webkit-transition-property: background-position;
-    -webkit-transition-duration: 2s;
-    -moz-transition-property: background-position;
-    -moz-transition-duration: 2s;
-    transition-property: background-position;
-    transition-duration: 2s;
+	display: inline-block;
+	background-image: url(../Images/sceneModes.svg);
+	background-repeat: no-repeat;
+	background-size: 400% 100%;
+	border-radius: 14%;
+	width: 100%;
+	height: 100%;
+	position: relative;
+	text-align: center;
+	color: white;
+	margin: 0;
+	padding: 0;
+	-webkit-transition-property: background-position;
+	-webkit-transition-duration: 2s;
+	-moz-transition-property: background-position;
+	-moz-transition-duration: 2s;
+	transition-property: background-position;
+	transition-duration: 2s;
+	cursor: pointer;
 }
 
 .cesium-sceneModePicker-visible {

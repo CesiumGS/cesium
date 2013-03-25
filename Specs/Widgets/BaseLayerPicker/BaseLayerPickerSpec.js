@@ -1,40 +1,31 @@
 /*global defineSuite*/
-defineSuite(['Widgets/SceneModePicker/SceneModePicker',
-             'Scene/SceneTransitioner',
-             'Specs/createScene',
-             'Specs/destroyScene',
+defineSuite(['Widgets/BaseLayerPicker/BaseLayerPicker',
+             'Scene/ImageryLayerCollection',
              'Specs/EventHelper'
             ], function(
-              SceneModePicker,
-              SceneTransitioner,
-              createScene,
-              destroyScene,
+              BaseLayerPicker,
+              ImageryLayerCollection,
               EventHelper) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('can create and destroy', function() {
-        var scene = createScene();
-
-        var container = document.createElement('span');
+        var container = document.createElement('div');
         container.id = 'testContainer';
         document.body.appendChild(container);
 
-        var widget = new SceneModePicker('testContainer', new SceneTransitioner(scene));
+        var widget = new BaseLayerPicker('testContainer', new ImageryLayerCollection());
         widget.destroy();
 
         document.body.removeChild(container);
-        destroyScene(scene);
     });
 
     it('mousedown event closes dropdown if target is not container', function() {
-        var scene = createScene();
-
-        var container = document.createElement('span');
+        var container = document.createElement('div');
         container.id = 'testContainer';
         document.body.appendChild(container);
 
-        var widget = new SceneModePicker('testContainer', new SceneTransitioner(scene));
+        var widget = new BaseLayerPicker('testContainer', new ImageryLayerCollection());
 
         widget.viewModel.dropDownVisible(true);
         EventHelper.fireMouseDown(document.body);
@@ -46,17 +37,14 @@ defineSuite(['Widgets/SceneModePicker/SceneModePicker',
 
         widget.destroy();
         document.body.removeChild(container);
-        destroyScene(scene);
     });
 
     it('touchstart event closes dropdown if target is not container', function() {
-        var scene = createScene();
-
-        var container = document.createElement('span');
+        var container = document.createElement('div');
         container.id = 'testContainer';
         document.body.appendChild(container);
 
-        var widget = new SceneModePicker('testContainer', new SceneTransitioner(scene));
+        var widget = new BaseLayerPicker('testContainer', new ImageryLayerCollection());
 
         widget.viewModel.dropDownVisible(true);
 
@@ -70,28 +58,23 @@ defineSuite(['Widgets/SceneModePicker/SceneModePicker',
 
         widget.destroy();
         document.body.removeChild(container);
-        destroyScene(scene);
     });
 
-    it('constructor throws with no transitioner', function() {
+    it('constructor throws with no layer collection', function() {
         expect(function() {
-            return new SceneModePicker(document.body, undefined);
+            return new BaseLayerPicker(document.body, undefined);
         }).toThrow();
     });
 
     it('constructor throws with no element', function() {
-        var scene = createScene();
         expect(function() {
-            return new SceneModePicker(undefined, new SceneTransitioner(scene));
+            return new BaseLayerPicker(undefined, new ImageryLayerCollection());
         }).toThrow();
-        destroyScene(scene);
     });
 
     it('constructor throws with string element that does not exist', function() {
-        var scene = createScene();
         expect(function() {
-            return new SceneModePicker('does not exist', new SceneTransitioner(scene));
+            return new BaseLayerPicker('does not exist', new ImageryLayerCollection());
         }).toThrow();
-        destroyScene(scene);
     });
 });
