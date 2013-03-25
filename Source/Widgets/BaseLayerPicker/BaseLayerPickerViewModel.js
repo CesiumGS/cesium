@@ -15,19 +15,25 @@ define(['../../Core/DeveloperError',
      * @alias BaseLayerPickerViewModel
      * @constructor
      *
-     * @param {ImageryLayerCollection} imageLayers The imagery layer collection to use.
+     * @param {ImageryLayerCollection} imageryLayers The imagery layer collection to use.
      *
-     * @exception {DeveloperError} imageLayers is required.
+     * @exception {DeveloperError} imageryLayers is required.
      *
      * @see ImageryProviderViewModel
      */
-    var BaseLayerPickerViewModel = function(imageLayers) {
-        if (typeof imageLayers === 'undefined') {
-            throw new DeveloperError('imageLayers is required');
+    var BaseLayerPickerViewModel = function(imageryLayers) {
+        if (typeof imageryLayers === 'undefined') {
+            throw new DeveloperError('imageryLayers is required');
         }
 
         var dropDownVisible = knockout.observable(false);
         var selectedViewModel = knockout.observable();
+
+        /**
+         * Gets the ImageryLayerCollection.
+         * @type ImageryLayerCollection
+         */
+        this.imageryLayers = imageryLayers;
 
         /**
          * Gets the observable array of ImageryProviderViewModel instances available for selection.
@@ -76,12 +82,12 @@ define(['../../Core/DeveloperError',
                 return selectedViewModel();
             },
             write : function(value) {
-                if (imageLayers.getLength() > 0) {
-                    imageLayers.remove(imageLayers.get(0));
+                if (imageryLayers.getLength() > 0) {
+                    imageryLayers.remove(imageryLayers.get(0));
                 }
                 var newLayer = value.createProvider();
                 if (typeof newLayer !== 'undefined') {
-                    imageLayers.addImageryProvider(newLayer, 0);
+                    imageryLayers.addImageryProvider(newLayer, 0);
                 }
                 selectedViewModel(value);
                 dropDownVisible(false);

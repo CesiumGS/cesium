@@ -762,8 +762,8 @@ define([
 
             this.sceneModePicker = new SceneModePicker(this.sceneModeContainer, transitioner);
 
-            var imageLayers = centralBody.getImageryLayers();
-            this.baseLayerPicker = new BaseLayerPicker(this.imageryContainer, imageLayers);
+            var imageryLayers = centralBody.getImageryLayers();
+            this.baseLayerPicker = new BaseLayerPicker(this.imageryContainer, imageryLayers);
 
             var providerViewModels = this.baseLayerPicker.viewModel.imageryProviderViewModels;
             var defaultProvider = new ImageryProviderViewModel('Bing Maps Aerial', 'Bing Maps Aerial', require.toUrl('../Images/ImageryProviders/bingAerial.png'), function() {
