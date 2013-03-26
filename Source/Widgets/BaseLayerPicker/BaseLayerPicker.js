@@ -27,7 +27,7 @@ define(['./BaseLayerPickerViewModel',
      * @see ImageryProviderViewModel
      * @see ImageryLayerCollection
      */
-    var BaseLayerPicker = function(container, imageryLayers) {
+    var BaseLayerPicker = function(container, imageryLayers, imageryProviderViewModels) {
         if (typeof container === 'undefined') {
             throw new DeveloperError('container is required.');
         }
@@ -44,7 +44,7 @@ define(['./BaseLayerPickerViewModel',
             throw new DeveloperError('imageryLayers is required.');
         }
 
-        var viewModel = new BaseLayerPickerViewModel(imageryLayers);
+        var viewModel = new BaseLayerPickerViewModel(imageryLayers, imageryProviderViewModels);
 
         /**
          * Gets the viewModel being used by the widget.

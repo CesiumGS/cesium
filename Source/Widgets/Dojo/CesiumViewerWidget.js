@@ -25,14 +25,12 @@ define([
         '../../Core/defaultValue',
         '../../Core/loadJson',
         '../../Core/binarySearch',
-        '../../Core/BoundingRectangle',
         '../../Core/Clock',
         '../../Core/ClockStep',
         '../../Core/ClockRange',
         '../../Core/Extent',
         '../../Core/Ellipsoid',
         '../../Core/Iso8601',
-        '../../Core/computeSunPosition',
         '../../Core/ScreenSpaceEventHandler',
         '../../Core/FeatureDetection',
         '../../Core/ScreenSpaceEventType',
@@ -40,7 +38,6 @@ define([
         '../../Core/Cartesian3',
         '../../Core/JulianDate',
         '../../Core/DefaultProxy',
-        '../../Core/Transforms',
         '../../Core/requestAnimationFrame',
         '../../Core/Color',
         '../../Core/Matrix4',
@@ -55,7 +52,6 @@ define([
         '../../Scene/ArcGisMapServerImageryProvider',
         '../../Scene/OpenStreetMapImageryProvider',
         '../../Scene/TileMapServiceImageryProvider',
-        '../../Scene/WebMapServiceImageryProvider',
         '../../Scene/SceneTransitioner',
         '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
@@ -93,14 +89,12 @@ define([
         defaultValue,
         loadJson,
         binarySearch,
-        BoundingRectangle,
         Clock,
         ClockStep,
         ClockRange,
         Extent,
         Ellipsoid,
         Iso8601,
-        computeSunPosition,
         ScreenSpaceEventHandler,
         FeatureDetection,
         ScreenSpaceEventType,
@@ -108,7 +102,6 @@ define([
         Cartesian3,
         JulianDate,
         DefaultProxy,
-        Transforms,
         requestAnimationFrame,
         Color,
         Matrix4,
@@ -123,7 +116,6 @@ define([
         ArcGisMapServerImageryProvider,
         OpenStreetMapImageryProvider,
         TileMapServiceImageryProvider,
-        WebMapServiceImageryProvider,
         SceneTransitioner,
         SingleTileImageryProvider,
         PerformanceDisplay,
@@ -136,6 +128,135 @@ define([
         VisualizerCollection,
         template) {
     "use strict";
+
+    function createImageryProviders(dayImageUrl) {
+        var proxy = new DefaultProxy('/proxy/');
+        //While some sites have CORS on, not all browsers implement it properly, so a proxy is needed anyway;
+        var proxyIfNeeded = FeatureDetection.supportsCrossOriginImagery() ? undefined : proxy;
+
+        var providerViewModels = [];
+        providerViewModels.push(new ImageryProviderViewModel('Bing Maps Aerial', '\
+Bing Maps aerial imagery \nhttp://www.bing.com/maps', require.toUrl('../Images/ImageryProviders/bingAerial.png'), function() {
+            return new BingMapsImageryProvider({
+                url : 'http://dev.virtualearth.net',
+                mapStyle : BingMapsStyle.AERIAL,
+                proxy : proxyIfNeeded
+            });
+        }));
+
+        providerViewModels.push(new ImageryProviderViewModel('Bing Maps Aerial with Labels', '\
+Bing Maps aerial imagery with label overlays \nhttp://www.bing.com/maps', require.toUrl('../Images/ImageryProviders/bingAerialLabels.png'), function() {
+            return new BingMapsImageryProvider({
+                url : 'http://dev.virtualearth.net',
+                mapStyle : BingMapsStyle.AERIAL_WITH_LABELS,
+                proxy : proxyIfNeeded
+            });
+        }));
+
+        providerViewModels.push(new ImageryProviderViewModel('Bing Maps Roads', '\
+Bing Maps standard road maps\nhttp://www.bing.com/maps', require.toUrl('../Images/ImageryProviders/bingRoads.png'), function() {
+            return new BingMapsImageryProvider({
+                url : 'http://dev.virtualearth.net',
+                mapStyle : BingMapsStyle.ROAD,
+                proxy : proxyIfNeeded
+            });
+        }));
+
+        providerViewModels.push(new ImageryProviderViewModel('ESRI World Imagery', '\
+World Imagery provides one meter or better satellite and aerial imagery in many parts of the world and lower resolution \
+satellite imagery worldwide.  The map includes NASA Blue Marble: Next Generation 500m resolution imagery at small scales \
+(above 1:1,000,000), i-cubed 15m eSAT imagery at medium-to-large scales (down to 1:70,000) for the world, and USGS 15m Landsat \
+imagery for Antarctica. The map features 0.3m resolution imagery in the continental United States and 0.6m resolution imagery in \
+parts of Western Europe from DigitalGlobe. In other parts of the world, 1 meter resolution imagery is available from GeoEye IKONOS, \
+i-cubed Nationwide Prime, Getmapping, AeroGRID, IGN Spain, and IGP Portugal.  Additionally, imagery at different resolutions has been \
+contributed by the GIS User Community.\nhttp://www.esri.com', require.toUrl('../Images/ImageryProviders/esriWorldImagery.png'), function() {
+            return new ArcGisMapServerImageryProvider({
+                url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+                proxy : proxy
+            });
+        }));
+
+        providerViewModels.push(new ImageryProviderViewModel('ESRI World Street Map', '\
+This worldwide street map presents highway-level data for the world. Street-level data includes the United States; much of \
+Canada; Japan; most countries in Europe; Australia and New Zealand; India; parts of South America including Argentina, Brazil, \
+Chile, Colombia, and Venezuela; Ghana; and parts of southern Africa including Botswana, Lesotho, Namibia, South Africa, and Swaziland.\n\
+http://www.esri.com', require.toUrl('../Images/ImageryProviders/esriWorldStreetMap.png'), function() {
+            return new ArcGisMapServerImageryProvider({
+                url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
+                proxy : proxy
+            });
+        }));
+
+        providerViewModels.push(new ImageryProviderViewModel('ESRI National Geographic', '\
+This web map contains the National Geographic World Map service. This map service is designed to be used as a general reference map \
+for informational and educational purposes as well as a basemap by GIS professionals and other users for creating web maps and web \
+mapping applications.\nhttp://www.esri.com', require.toUrl('../Images/ImageryProviders/esriNationalGeographic.png'), function() {
+            return new ArcGisMapServerImageryProvider({
+                url : 'http://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/',
+                proxy : proxy
+            });
+        }));
+
+        providerViewModels.push(new ImageryProviderViewModel('OpenStreet-Map', '\
+OpenStreetMap (OSM) is a collaborative project to create a free editable map of the world.\n\
+http://www.openstreetmap.org', require.toUrl('../Images/ImageryProviders/openStreetMap.png'), function() {
+            return new OpenStreetMapImageryProvider({
+                url : 'http://tile.openstreetmap.org/',
+                proxy : proxyIfNeeded
+            });
+        }));
+
+        providerViewModels.push(new ImageryProviderViewModel('Stamen Watercolor', '\
+Reminiscent of hand drawn maps, Stamen watercolor maps apply raster effect area washes and organic edges over a paper texture to add warm pop to any map.\n\
+http://maps.stamen.com', require.toUrl('../Images/ImageryProviders/stamenWatercolor.png'), function() {
+            return new OpenStreetMapImageryProvider({
+                url : 'http://tile.stamen.com/watercolor/',
+                credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.',
+                proxy : proxyIfNeeded
+            });
+        }));
+
+        providerViewModels.push(new ImageryProviderViewModel('Stamen Toner', '\
+A high contrast black and white map.\nhttp://maps.stamen.com',//
+        require.toUrl('../Images/ImageryProviders/stamenToner.png'), function() {
+            return new OpenStreetMapImageryProvider({
+                url : 'http://tile.stamen.com/toner/',
+                credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.',
+                proxy : proxyIfNeeded
+            });
+        }));
+
+        providerViewModels.push(new ImageryProviderViewModel('MapQuest OpenStreet-Map', '\
+OpenStreetMap (OSM) is a collaborative project to create a free editable map of the world. \
+http://www.openstreetmap.org', require.toUrl('../Images/ImageryProviders/mapQuestOpenStreetMap.png'), function() {
+            return new OpenStreetMapImageryProvider({
+                url : 'http://otile1.mqcdn.com/tiles/1.0.0/osm/',
+                proxy : proxyIfNeeded
+            });
+        }));
+
+        providerViewModels.push(new ImageryProviderViewModel('Black Marble', '\
+The lights of cities and villages trace the outlines of civilization in this global view of the \
+Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.', require.toUrl('../Images/ImageryProviders/blackMarble.png'), function() {
+            return new TileMapServiceImageryProvider({
+                url : 'http://cesium.agi.com/blackmarble',
+                maximumLevel : 8,
+                credit : 'Black Marble imagery courtesy NASA Earth Observatory',
+                proxy : proxyIfNeeded
+            });
+        }));
+
+        providerViewModels.push(new ImageryProviderViewModel('Disable Streaming Imagery', 'Uses a single image for the entire world.',//
+        require.toUrl('../Images/ImageryProviders/singleTile.png'), //
+        function() {
+            return new SingleTileImageryProvider({
+                url : dayImageUrl,
+                proxy : proxyIfNeeded
+            });
+        }));
+
+        return providerViewModels;
+    }
 
     /**
      * This Dojo widget wraps the full functionality of Cesium Viewer.
@@ -254,6 +375,22 @@ define([
          * @memberof CesiumViewerWidget.prototype
          */
         timeline: undefined,
+
+        /**
+         * The BaseLayerPicker widget.
+         *
+         * @type {BaseLayerPicker}
+         * @memberof CesiumViewerWidget.prototype
+         */
+        baseLayerPicker: undefined,
+
+        /**
+         * The SceneModePicker widget.
+         *
+         * @type {SceneModePicker}
+         * @memberof CesiumViewerWidget.prototype
+         */
+        sceneModePicker: undefined,
 
         // for Dojo use only
         constructor : function() {
@@ -647,7 +784,11 @@ define([
                 return;
             }
 
-            var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
+            var canvas = this.canvas;
+            var ellipsoid = this.ellipsoid;
+            var scene;
+            var that = this;
+            var endUserOptions = this.endUserOptions;
 
             try {
                 scene = this.scene = new Scene(canvas);
@@ -662,18 +803,16 @@ define([
             on(canvas, 'contextmenu', event.stop);
             on(canvas, 'selectstart', event.stop);
 
-            var theme = widget.endUserOptions.theme;
+            var theme = endUserOptions.theme;
             if (typeof theme !== 'undefined') {
-                if (widget.endUserOptions.theme === 'lighter') {
-                    widget.cesiumNode.className += ' cesium-lighter';
+                if (endUserOptions.theme === 'lighter') {
+                    this.cesiumNode.className += ' cesium-lighter';
                 } else {
                     window.alert('Unknown theme: ' + theme);
                 }
             }
 
-            if (typeof widget.endUserOptions.debug !== 'undefined' && widget.endUserOptions.debug) {
-                this.enableWebGLDebugging = true;
-            }
+            this.enableWebGLDebugging = endUserOptions.debug === true;
 
             var context = scene.getContext();
             if (this.enableWebGLDebugging) {
@@ -693,12 +832,12 @@ define([
 
             if (this.showSkyBox) {
                 scene.skyBox = new SkyBox({
-                    positiveX: this.skyBoxBaseUrl + '_px.jpg',
-                    negativeX: this.skyBoxBaseUrl + '_mx.jpg',
-                    positiveY: this.skyBoxBaseUrl + '_py.jpg',
-                    negativeY: this.skyBoxBaseUrl + '_my.jpg',
-                    positiveZ: this.skyBoxBaseUrl + '_pz.jpg',
-                    negativeZ: this.skyBoxBaseUrl + '_mz.jpg'
+                    positiveX : this.skyBoxBaseUrl + '_px.jpg',
+                    negativeX : this.skyBoxBaseUrl + '_mx.jpg',
+                    positiveY : this.skyBoxBaseUrl + '_py.jpg',
+                    negativeY : this.skyBoxBaseUrl + '_my.jpg',
+                    positiveZ : this.skyBoxBaseUrl + '_pz.jpg',
+                    negativeZ : this.skyBoxBaseUrl + '_mz.jpg'
                 });
             }
 
@@ -739,7 +878,7 @@ define([
 
             if (this.enableDragDrop) {
                 var dropBox = this.cesiumNode;
-                on(dropBox, 'drop', lang.hitch(widget, 'handleDrop'));
+                on(dropBox, 'drop', lang.hitch(this, 'handleDrop'));
                 on(dropBox, 'dragenter', event.stop);
                 on(dropBox, 'dragover', event.stop);
                 on(dropBox, 'dragexit', event.stop);
@@ -769,153 +908,37 @@ define([
             this.sceneModePicker = new SceneModePicker(this.sceneModeContainer, transitioner);
 
             var imageryLayers = centralBody.getImageryLayers();
-            this.baseLayerPicker = new BaseLayerPicker(this.imageryContainer, imageryLayers);
+            var providerViewModels = createImageryProviders(this.dayImageUrl);
+            this.baseLayerPicker = new BaseLayerPicker(this.imageryContainer, imageryLayers, providerViewModels);
+            this.baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
 
-            var providerViewModels = this.baseLayerPicker.viewModel.imageryProviderViewModels;
-            var defaultProvider = new ImageryProviderViewModel('Bing Maps Aerial', '\
-Bing Maps aerial imagery \nhttp://www.bing.com/maps/', require.toUrl('../Images/ImageryProviders/bingAerial.png'), function() {
-                return new BingMapsImageryProvider({
-                    url : 'http://dev.virtualearth.net',
-                    mapStyle : BingMapsStyle.AERIAL,
-                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
-                });
-            });
-            providerViewModels.push(defaultProvider);
-
-            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Roads', '\
-Bing Maps standard road maps\nhttp://www.bing.com/maps/', require.toUrl('../Images/ImageryProviders/bingRoads.png'), function() {
-                return new BingMapsImageryProvider({
-                    url : 'http://dev.virtualearth.net',
-                    mapStyle : BingMapsStyle.ROAD,
-                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
-                });
-            }));
-
-            providerViewModels.push(new ImageryProviderViewModel('Bing Maps Labeled Aerial', '\
-Bing Maps aerial imagery with label overlays \nhttp://www.bing.com/maps/', require.toUrl('../Images/ImageryProviders/bingAerialLabels.png'), function() {
-                return new BingMapsImageryProvider({
-                    url : 'http://dev.virtualearth.net',
-                    mapStyle : BingMapsStyle.AERIAL_WITH_LABELS,
-                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
-                });
-            }));
-
-            providerViewModels.push(new ImageryProviderViewModel('ESRI World Imagery', '\
-World Imagery provides one meter or better satellite and aerial imagery in many parts of the world and lower resolution \
-satellite imagery worldwide.  The map includes NASA Blue Marble: Next Generation 500m resolution imagery at small scales \
-(above 1:1,000,000), i-cubed 15m eSAT imagery at medium-to-large scales (down to 1:70,000) for the world, and USGS 15m Landsat \
-imagery for Antarctica. The map features 0.3m resolution imagery in the continental United States and 0.6m resolution imagery in \
-parts of Western Europe from DigitalGlobe. In other parts of the world, 1 meter resolution imagery is available from GeoEye IKONOS, \
-i-cubed Nationwide Prime, Getmapping, AeroGRID, IGN Spain, and IGP Portugal.  Additionally, imagery at different resolutions has been \
-contributed by the GIS User Community.\nhttp://www.esri.com/', require.toUrl('../Images/ImageryProviders/esriWorldImagery.png'), function() {
-                return new ArcGisMapServerImageryProvider({
-                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
-                    proxy : new DefaultProxy('/proxy/')
-                });
-            }));
-
-            providerViewModels.push(new ImageryProviderViewModel('ESRI World Street Map', '\
-This worldwide street map presents highway-level data for the world. Street-level data includes the United States; much of \
-Canada; Japan; most countries in Europe; Australia and New Zealand; India; parts of South America including Argentina, Brazil, \
-Chile, Colombia, and Venezuela; Ghana; and parts of southern Africa including Botswana, Lesotho, Namibia, South Africa, and Swaziland.\n\
-http://www.esri.com/', require.toUrl('../Images/ImageryProviders/esriWorldStreetMap.png'), function() {
-                return new ArcGisMapServerImageryProvider({
-                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
-                    proxy : new DefaultProxy('/proxy/')
-                });
-            }));
-
-            providerViewModels.push(new ImageryProviderViewModel('ESRI National Geographic', '\
-This web map contains the National Geographic World Map service. This map service is designed to be used as a general reference map \
-for informational and educational purposes as well as a basemap by GIS professionals and other users for creating web maps and web \
-mapping applications.\nhttp://www.esri.com/', require.toUrl('../Images/ImageryProviders/esriNationalGeographic.png'), function() {
-                return new ArcGisMapServerImageryProvider({
-                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/',
-                    proxy : new DefaultProxy('/proxy/')
-                });
-            }));
-
-            providerViewModels.push(new ImageryProviderViewModel('Open-StreetMap', '\
-OpenStreetMap (OSM) is a collaborative project to create a free editable map of the world. \
-http://www.openstreetmap.org/', require.toUrl('../Images/ImageryProviders/openStreetMap.png'), function() {
-                return new OpenStreetMapImageryProvider({
-                    url : 'http://tile.openstreetmap.org/',
-                    proxy : new DefaultProxy('/proxy/')
-                });
-            }));
-
-            providerViewModels.push(new ImageryProviderViewModel('Stamen Watercolor', '\
-OpenStreetMap (OSM) is a collaborative project to create a free editable map of the world. \
-http://www.openstreetmap.org/', require.toUrl('../Images/ImageryProviders/stamenWatercolor.png'), function() {
-                return new OpenStreetMapImageryProvider({
-                    url : 'http://tile.stamen.com/watercolor/',
-                    credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
-                });
-            }));
-
-            providerViewModels.push(new ImageryProviderViewModel('Stamen Toner', '\
-A high contrast black and white map.', require.toUrl('../Images/ImageryProviders/stamenToner.png'), function() {
-                return new OpenStreetMapImageryProvider({
-                    url : 'http://tile.stamen.com/toner/',
-                    credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
-                });
-            }));
-
-            providerViewModels.push(new ImageryProviderViewModel('MapQuest OpenStreet-Map', '\
-OpenStreetMap (OSM) is a collaborative project to create a free editable map of the world. \
-http://www.openstreetmap.org/', require.toUrl('../Images/ImageryProviders/mapQuestOpenStreetMap.png'), function() {
-                return new OpenStreetMapImageryProvider({
-                    url : 'http://otile1.mqcdn.com/tiles/1.0.0/osm/',
-                    proxy : new DefaultProxy('/proxy/')
-                });
-            }));
-
-            providerViewModels.push(new ImageryProviderViewModel('Black Marble', '\
-The lights of cities and villages trace the outlines of civilization in this global view of the \
-Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.', require.toUrl('../Images/ImageryProviders/blackMarble.png'), function() {
-                return new TileMapServiceImageryProvider({
-                    url : 'http://cesium.agi.com/blackmarble',
-                    maximumLevel : 8,
-                    credit : 'Black Marble imagery courtesy NASA Earth Observatory'
-                });
-            }));
-
-            providerViewModels.push(new ImageryProviderViewModel('Disable Streaming Imagery', '\
-Uses a single image for the entire world.', require.toUrl('../Images/ImageryProviders/singleTile.png'), function() {
-                return new SingleTileImageryProvider({
-                    url : widget.dayImageUrl
-                });
-            }));
-
-            this.baseLayerPicker.viewModel.selectedItem(defaultProvider);
-
-            if (typeof widget.endUserOptions.source !== 'undefined') {
-                widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);
+            if (typeof endUserOptions.source !== 'undefined') {
+                this.loadCzml(endUserOptions.source, endUserOptions.lookAt);
             }
 
-            if (typeof widget.endUserOptions.stats !== 'undefined' && widget.endUserOptions.stats) {
-                widget.enableStatistics(true);
+            if (typeof endUserOptions.stats !== 'undefined' && endUserOptions.stats) {
+                this.enableStatistics(true);
             }
 
             function onTimelineScrub(e) {
-                widget.clock.currentTime = e.timeJulian;
-                widget.clock.shouldAnimate = false;
+                that.clock.currentTime = e.timeJulian;
+                that.clock.shouldAnimate = false;
             }
 
-            var timeline = new Timeline(this.timelineContainer, widget.clock);
-            widget.timeline = timeline;
+            var timeline = new Timeline(this.timelineContainer, this.clock);
+            this.timeline = timeline;
             timeline.addEventListener('settime', onTimelineScrub, false);
             timeline.zoomTo(clock.startTime, clock.stopTime);
 
-            var viewHomeButton = widget.viewHomeButton;
+            var viewHomeButton = this.viewHomeButton;
 
             viewHomeButton.addEventListener('click', function() {
-                widget.viewHome();
+                that.viewHome();
             }, false);
 
-            if (widget.resizeWidgetOnWindowResize) {
+            if (this.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {
-                    widget.resize();
+                    that.resize();
                 });
             }
 
