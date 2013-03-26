@@ -406,14 +406,12 @@ define([
                     polyline = polylinesToUpdate[i];
                     var changedProperties = polyline._propertiesChanged;
                     if (changedProperties[POSITION_INDEX]) {
-                        if (intersectsIDL(polyline)) {
-                            var newSegments = polyline._createSegments(this.modelMatrix);
-                            if (polyline._segmentsLengthChanged(newSegments)) {
-                                createVertexArrays = true;
-                                break;
-                            }
-                            polyline._setSegments(newSegments);
+                        var newSegments = polyline._createSegments(this.modelMatrix);
+                        if (polyline._segmentsLengthChanged(newSegments)) {
+                            createVertexArrays = true;
+                            break;
                         }
+                        polyline._setSegments(newSegments);
                     }
                 }
             }

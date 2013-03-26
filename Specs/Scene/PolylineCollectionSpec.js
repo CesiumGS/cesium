@@ -424,6 +424,60 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
+    it('A polyline that used to cross the IDL but now does not, triggers vertex creation (This code used to crash)', function() {
+
+        //Need to be in 2D or CV
+        frameState.mode = SceneMode.SCENE2D;
+
+        //These positions cross the IDL
+        var positions = [];
+        positions.push({
+            x : 12163600,
+            y : -47362500,
+            z : 40812700
+        });
+        positions.push({
+            x : -50442500,
+            y : 83936900,
+            z : 37992500
+        });
+
+        //Create a line
+        var line = polylines.add({
+            positions : positions,
+            color : {
+                red : 1,
+                green : 0,
+                blue : 0,
+                alpha : 1
+            }
+        });
+
+        //Render it
+        context.clear();
+        render(context, frameState, polylines);
+
+        //We need to setPositions and render it again
+        //in order for BufferUsage.STREAM_DRAW to be
+        //triggered, which ends up rebuilding vertex arrays.
+        line.setPositions(positions);
+        render(context, frameState, polylines);
+
+        //Now set the second position which results in a line that does not cross the IDL
+        positions[1] = {
+            x : 19616100,
+            y : -46499100,
+            z : 38870500
+        };
+        line.setPositions(positions);
+
+        //Render the new line.  The fact that the new position no longer crosses the IDL
+        //is what triggers the vertex array creation.  If the vertex array were not
+        //recreaated, an exception would be thrown do to positions having less data then expected.
+        render(context, frameState, polylines);
+        frameState.mode = SceneMode.SCENE3D;
+    });
+
     it('renders 64K vertexes of same polyline', function() {
         var positions = [];
         for ( var i = 0; i < (64 * 1024) / 2; ++i) {
