@@ -10,7 +10,7 @@ define(function() {
         element.dispatchEvent(event);
     }
 
-    var EvenHelper = {
+    var EventHelper = {
         fireMouseDown : function(element) {
             fireNamedEvent('mousedown', element);
         },
@@ -21,5 +21,5 @@ define(function() {
         fireNamedEvent : fireNamedEvent
     };
 
-    return EvenHelper;
+    return EventHelper;
 });
