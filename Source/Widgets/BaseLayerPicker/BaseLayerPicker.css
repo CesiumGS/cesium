@@ -95,10 +95,9 @@
 }
 
 .cesium-baseLayerPicker-selectedItem .cesium-baseLayerPicker-itemLabel {
-	text-decoration: underline;
+    color: rgb(189, 236, 248);
 }
 
 .cesium-baseLayerPicker-selectedItem .cesium-baseLayerPicker-itemIcon {
-	border-color: #fff;
-	box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+    border: double 4px rgb(189, 236, 248);
 }

@@ -13,3 +13,11 @@
 .cesium-lighter .cesium-baseLayerPicker-item:hover .cesium-baseLayerPicker-itemIcon {
     border-color: #000;
 }
+
+.cesium-lighter .cesium-baseLayerPicker-selectedItem .cesium-baseLayerPicker-itemLabel {
+    color: rgb(0, 61, 168);
+}
+
+.cesium-lighter .cesium-baseLayerPicker-selectedItem .cesium-baseLayerPicker-itemIcon {
+    border: double 4px rgb(0, 61, 168);
+}
