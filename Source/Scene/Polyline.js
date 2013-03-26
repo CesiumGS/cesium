@@ -165,6 +165,8 @@ define([
         this._positions = value;
         this._boundingVolume = BoundingSphere.fromPoints(this._positions, this._boundingVolume);
         makeDirty(this, POSITION_INDEX);
+
+        this.update();
     };
 
     /**
@@ -176,7 +178,7 @@ define([
             modelMatrix = this._polylineCollection.modelMatrix;
         }
 
-        var length = this._segments.lengths.length;
+        var length = this._segments.positions.length;
         this._modelMatrix = modelMatrix;
 
         var positionsChanged = this._propertiesChanged[POSITION_INDEX] > 0 || this._propertiesChanged[POSITION_SIZE_INDEX] > 0;
@@ -184,7 +186,7 @@ define([
             this._segments = PolylinePipeline.wrapLongitude(this._positions, modelMatrix);
         }
 
-        if (this._segments.lengths.length !== length) {
+        if (this._segments.positions.length !== length) {
             makeDirty(this, POSITION_SIZE_INDEX);
         }
     };
