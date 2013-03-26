@@ -954,7 +954,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
-            this.sceneModePicker = new SceneModePicker(this.sceneModeContainer, transitioner);
+            this.sceneModePicker = new SceneModePicker(this.sceneModePickerContainer, transitioner);
 
             var imageryLayers = centralBody.getImageryLayers();
             var providerViewModels = createImageryProviders(this.dayImageUrl);

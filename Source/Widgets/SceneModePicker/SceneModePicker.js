@@ -11,7 +11,11 @@ define(['./SceneModePickerViewModel',
     "use strict";
 
     /**
-     * A single button widget for switching scene modes.
+     * <img src="images/SceneModePicker.png" style="float: left; margin: 3px; border: none; border-radius: 5px;" />
+     * <p>The SceneModePicker is a single button widget for switching between scene modes;
+     * shown to the left in its expanded state. Programatic switching of scene modes will
+     * be automatically reflected in the widget as long as the specified SceneTransitioner
+     * is used to perform the change.</p><p style="clear: both;"></p><br/>
      *
      * @alias SceneModePicker
      * @constructor
@@ -24,6 +28,14 @@ define(['./SceneModePickerViewModel',
      * @exception {DeveloperError} transitioner is required.
      *
      * @see SceneTransitioner
+     *
+     * @example
+     * // In HTML head, include a link to the SceneModePicker.css stylesheet,
+     * // and in the body, include: &lt;div id="sceneModePickerContainer"&gt;&lt;/div&gt;
+     * // Note: This code assumed you already have a Scene instance.
+     *
+     * var transitioner = new SceneTransitioner(scene);
+     * var sceneModePicker = new SceneModePicker('sceneModePickerContainer', transitioner);
      */
     var SceneModePicker = function(container, transitioner) {
         if (typeof container === 'undefined') {
@@ -70,7 +82,8 @@ define(['./SceneModePickerViewModel',
         widgetNode.setAttribute('data-bind', '\
                                  css: { "cesium-sceneModePicker-button2D": sceneMode() === _sceneMode.SCENE2D,\
                                         "cesium-sceneModePicker-button3D": sceneMode() === _sceneMode.SCENE3D,\
-                                        "cesium-sceneModePicker-buttonColumbusView": sceneMode() === _sceneMode.COLUMBUS_VIEW},\
+                                        "cesium-sceneModePicker-buttonColumbusView": sceneMode() === _sceneMode.COLUMBUS_VIEW,\
+                                        "cesium-sceneModePicker-selected": dropDownVisible},\
                                  attr: { title: selectedTooltip }, click: toggleDropDown');
         container.appendChild(widgetNode);
 

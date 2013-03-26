@@ -55,3 +55,7 @@
 .cesium-sceneModePicker-button2D {
     background-position: 66.66% 0;
 }
+
+.cesium-sceneModePicker-selected {
+    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+}
