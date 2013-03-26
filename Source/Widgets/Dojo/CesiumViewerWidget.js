@@ -278,7 +278,7 @@ map of the world.\nhttp://www.openstreetmap.org',
         }));
 
         providerViewModels.push(ImageryProviderViewModel.fromConstants({
-            name : 'Black Marble',
+            name : 'The Black Marble',
             iconUrl : require.toUrl('../Images/ImageryProviders/blackMarble.png'),
             tooltip : 'The lights of cities and villages trace the outlines of civilization in this global view of the \
 Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
@@ -958,7 +958,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
 
             var imageryLayers = centralBody.getImageryLayers();
             var providerViewModels = createImageryProviders(this.dayImageUrl);
-            this.baseLayerPicker = new BaseLayerPicker(this.imageryContainer, imageryLayers, providerViewModels);
+            this.baseLayerPicker = new BaseLayerPicker(this.baseLayerPickerContainer, imageryLayers, providerViewModels);
             this.baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
 
             if (typeof endUserOptions.source !== 'undefined') {

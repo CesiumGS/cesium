@@ -113,7 +113,7 @@
 	margin: 1px;
 }
 
-.cesium-viewerWidget-imageryContainer {
+.cesium-viewerWidget-baseLayerPickerContainer {
 	display: inline-block;
 	width: 32px;
 	height: 32px;
