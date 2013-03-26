@@ -54,10 +54,6 @@
     cursor: pointer;
 }
 
-.cesium-baseLayerPicker-item:hover {
-    overflow: visible;
-}
-
 .cesium-baseLayerPicker-itemLabel {
     display: block;
     font-family: sans-serif;
@@ -66,6 +62,7 @@
     vertical-align: middle;
     color: #edffff;
     cursor: pointer;
+    word-wrap: break-word;
 }
 
 .cesium-baseLayerPicker-item:hover .cesium-baseLayerPicker-itemLabel, .cesium-baseLayerPicker-item:focus .cesium-baseLayerPicker-itemLabel {

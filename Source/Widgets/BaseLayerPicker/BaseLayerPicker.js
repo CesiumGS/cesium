@@ -161,7 +161,7 @@ define(['./BaseLayerPickerViewModel',
 
         var providerLabel = document.createElement('div');
         providerLabel.className = 'cesium-baseLayerPicker-itemLabel';
-        providerLabel.setAttribute('data-bind', 'text: name');
+        providerLabel.setAttribute('data-bind', 'html: name');
         provider.appendChild(providerLabel);
 
         knockout.applyBindings(viewModel, container);
