@@ -20,10 +20,10 @@ define(['../createCommand',
      * @param {Observable} description.iconUrl An icon representing the layer.
      * @param {Command} description.creationCommand A function which creates the ImageryProvider for adding to the layers collection.
      *
-     * @exception {DeveloperError} name is required.
-     * @exception {DeveloperError} tooltip is required.
-     * @exception {DeveloperError} iconUrl is required.
-     * @exception {DeveloperError} creationCommand is required.
+     * @exception {DeveloperError} description.name is required.
+     * @exception {DeveloperError} description.tooltip is required.
+     * @exception {DeveloperError} description.iconUrl is required.
+     * @exception {DeveloperError} description.creationCommand is required.
      *
      * @see BaseLayerPicker
      * @see ImageryProvider
@@ -31,19 +31,19 @@ define(['../createCommand',
     var ImageryProviderViewModel = function(description) {
 
         if (typeof description.name === 'undefined') {
-            throw new DeveloperError('name is required.');
+            throw new DeveloperError('description.name is required.');
         }
 
         if (typeof description.tooltip === 'undefined') {
-            throw new DeveloperError('tooltip is required.');
+            throw new DeveloperError('description.tooltip is required.');
         }
 
         if (typeof description.iconUrl === 'undefined') {
-            throw new DeveloperError('iconUrl is required.');
+            throw new DeveloperError('description.iconUrl is required.');
         }
 
         if (typeof description.creationCommand === 'undefined') {
-            throw new DeveloperError('creationCommand is required.');
+            throw new DeveloperError('description.creationCommand is required.');
         }
 
         /**
@@ -81,26 +81,26 @@ define(['../createCommand',
      * @param {string} description.iconUrl An icon representing the layer.
      * @param {function} description.createFunction A function which creates the ImageryProvider for adding to the layers collection.
      *
-     * @exception {DeveloperError} name is required.
-     * @exception {DeveloperError} tooltip is required.
-     * @exception {DeveloperError} iconUrl is required.
-     * @exception {DeveloperError} creationFunction is required.
+     * @exception {DeveloperError} description.name is required.
+     * @exception {DeveloperError} description.tooltip is required.
+     * @exception {DeveloperError} description.iconUrl is required.
+     * @exception {DeveloperError} description.creationFunction is required.
      */
     ImageryProviderViewModel.fromConstants = function(description) {
         if (typeof description.name === 'undefined') {
-            throw new DeveloperError('name is required.');
+            throw new DeveloperError('description.name is required.');
         }
 
         if (typeof description.tooltip === 'undefined') {
-            throw new DeveloperError('tooltip is required.');
+            throw new DeveloperError('description.tooltip is required.');
         }
 
         if (typeof description.iconUrl === 'undefined') {
-            throw new DeveloperError('iconUrl is required.');
+            throw new DeveloperError('description.iconUrl is required.');
         }
 
         if (typeof description.creationFunction === 'undefined') {
-            throw new DeveloperError('creationFunction is required.');
+            throw new DeveloperError('description.creationFunction is required.');
         }
 
         return new ImageryProviderViewModel({
