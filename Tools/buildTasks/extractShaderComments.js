@@ -1,36 +1,21 @@
 /*global importClass,project,attributes,elements,java,Packages*/
-/*jshint multistr:true*/
-importClass(java.io.File); /*global File*/
-importClass(java.io.FileReader); /*global FileReader*/
-importClass(java.io.FileWriter); /*global FileWriter*/
-importClass(Packages.org.apache.tools.ant.util.FileUtils); /*global FileUtils*/
+importClass(Packages.org.mozilla.javascript.tools.shell.Main); /*global Main*/
+Main.exec(['-e', '{}']);
+var load = Main.global.load;
 
-var glslFilesets = elements.get('glslfiles');
-for ( var i = 0, len = glslFilesets.size(); i < len; ++i) {
-    var glslFileset = glslFilesets.get(i);
-    var basedir = glslFileset.getDir(project);
-    var glslFilenames = glslFileset.getDirectoryScanner(project).getIncludedFiles();
+load(project.getProperty('tasksDirectory') + '/shared.js'); /*global forEachFile,readFileContents,writeFileContents,File,FileReader,FileWriter,FileUtils*/
 
-    var glslDocComments = '';
+var glslDocComments = [];
+forEachFile('glslfiles', function(relativePath, file) {
+    "use strict";
 
-    for ( var j = 0; j < glslFilenames.length; j++) {
-        var glslFilename = glslFilenames[j];
+    var contents = readFileContents(file);
+    contents = contents.replace(/\r\n/gm, '\n');
 
-        var glslFile = new File(basedir, glslFilename);
-        var reader = new FileReader(glslFile);
-        var contents = String(FileUtils.readFully(reader));
-        reader.close();
-
-        contents = contents.replace(/\r\n/gm, '\n');
-
-        var docComments = contents.match(/\/\*\*[\s\S]*?\*\//gm);
-        if (docComments) {
-            glslDocComments += docComments.join('\n') + '\n';
-        }
+    var docComments = contents.match(/\/\*\*[\s\S]*?\*\//gm);
+    if (docComments) {
+        glslDocComments.push(docComments.join('\n'));
     }
+});
 
-    var glslDocFile = new File(basedir, 'glslComments.js');
-    var glslDocWriter = new FileWriter(glslDocFile);
-    glslDocWriter.write(glslDocComments);
-    glslDocWriter.close();
-}
+writeFileContents(attributes.get('output'), glslDocComments.join('\n'));

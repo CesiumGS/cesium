@@ -1,36 +1,19 @@
 /*global importClass,project,attributes,elements,java,Packages*/
-/*jshint multistr:true*/
-importClass(java.io.File); /*global File*/
-importClass(java.io.FileReader); /*global FileReader*/
-importClass(java.io.FileWriter); /*global FileWriter*/
-importClass(Packages.org.apache.tools.ant.util.FileUtils); /*global FileUtils*/
+importClass(Packages.org.mozilla.javascript.tools.shell.Main); /*global Main*/
+Main.exec(['-e', '{}']);
+var load = Main.global.load;
+
+load(project.getProperty('tasksDirectory') + '/shared.js'); /*global forEachFile,readFileContents,writeFileContents,File,FileReader,FileWriter,FileUtils*/
 
 var specs = [];
 
-var specFilesets = elements.get('specs');
-for ( var i = 0, len = specFilesets.size(); i < len; ++i) {
-    var specFileset = specFilesets.get(i);
-    var basedir = specFileset.getDir(project);
-    var specFilenames = specFileset.getDirectoryScanner(project).getIncludedFiles();
+forEachFile('specs', function(relativePath, file) {
+    "use strict";
 
-    for ( var j = 0, len2 = specFilenames.length; j < len2; ++j) {
-        var relativePath = specFilenames[j];
-        var spec = relativePath.substring(0, relativePath.lastIndexOf('.')).replace('\\', '/');
-        specs.push("'Specs/" + spec + "'");
-    }
-}
-
-var output = attributes.get('output');
-if (new File(output).exists()) {
-    var reader = new FileReader(output);
-    var oldContents = String(FileUtils.readFully(reader));
-    reader.close();
-}
+    var spec = relativePath.substring(0, relativePath.lastIndexOf('.')).replace('\\', '/');
+    specs.push("'Specs/" + spec + "'");
+});
 
 var contents = 'var specs = [' + specs.join(',') + '];';
 
-if (oldContents !== contents) {
-    var writer = new FileWriter(output);
-    writer.write(contents);
-    writer.close();
-}
+writeFileContents(attributes.get('output'), contents);

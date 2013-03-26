@@ -280,6 +280,7 @@ defineSuite([
         runs(function() {
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('made/up/wms/server'))).toEqual(0);
+                expect(provider.getProxy()).toEqual(proxy);
                 expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.

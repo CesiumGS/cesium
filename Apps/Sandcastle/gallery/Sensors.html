@@ -19,11 +19,11 @@
     </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
     <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
     @import url(../templates/bucket.css);
+    @import url(../../../Source/Widgets/Dojo/CesiumViewerWidget.css);
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
@@ -77,7 +77,7 @@ require([
     }
 
     function createButtons(widget, sensors) {
-        var ellipsoid = widget.ellipsoid;
+        var ellipsoid = widget.centralBody.getEllipsoid();
         var scene = widget.scene;
         var primitives = scene.getPrimitives();
         primitives.add(sensors);
@@ -117,7 +117,7 @@ require([
 
     var sensors = new Cesium.SensorVolumeCollection();
     createButtons(widget, sensors);
-    addRectangularSensor(sensors, widget.ellipsoid, widget.scene);
+    addRectangularSensor(sensors, widget.centralBody.getEllipsoid(), widget.scene);
 
     Sandcastle.finishedLoading();
 });

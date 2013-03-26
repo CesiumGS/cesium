@@ -7,11 +7,13 @@
 <style type="text/css">
 @import url('../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css');
 @import url('../../Source/Widgets/Animation/Animation.css');
-@import url('../../Source/Widgets/Animation/darker.css');
+@import url('../../Source/Widgets/Animation/lighter.css');
 @import url('../../Source/Widgets/Timeline/Timeline.css');
-@import url('../../Source/Widgets/Timeline/darker.css');
+@import url('../../Source/Widgets/Timeline/lighter.css');
 
 body {
+    background: #000;
+    color: #C0CCCC;
     font-family: "Open Sans", "Trebuchet MS", Sans-Serif;
     font-size: 15px;
     -webkit-transition: background-color, color;
@@ -21,9 +23,10 @@ body {
     transition: background-color, color;
     transition-duration: 1s;
 }
-body.cesium-darker {
-    background: #000;
-    color: #C0CCCC;
+
+body.cesium-lighter {
+    background: #FFF;
+    color: #000;
 }
 
 .startStopBlock {
@@ -37,9 +40,10 @@ body.cesium-darker {
     border: solid 1px #888;
     border-radius: 25px;
     color: #000;
-}
-.cesium-darker .dateTimeBlock {
     background: #444;
+}
+.cesium-lighter .dateTimeBlock {
+    background: #FFF;
 }
 
 .info {
@@ -51,9 +55,10 @@ body.cesium-darker {
 
 .timeSel {
     padding: 10px 20px;
-}
-.cesium-darker .timeSel {
     color: #C0CCCC;
+}
+.cesium-lighter .timeSel {
+    color: #000;
 }
 
 .dateTimeBlock .dijitCalendarContainer {
@@ -144,7 +149,7 @@ tr {
     src="../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
 <script type="text/javascript" src="boot.js"></script>
 </head>
-<body class="claro">
+<body class="claro cesium-lighter">
     <div class="usage">
         <h2>Usage</h2>
         <p>The following mouse actions are available on the time bar itself, inside the area
@@ -159,10 +164,10 @@ tr {
     </div>
     <div data-dojo-type="dijit.form.ComboButton" data-dojo-props='iconClass:"dijitIconSample", optionsTitle:"select theme"'
             id="themeSelector" class="themeSelector">
-        <span>Theme: Light</span>
+        <span>Theme: Lighter</span>
         <div data-dojo-type="dijit.Menu" id="themeMenu" style="display: none;">
-            <div id="themeLight" data-dojo-type="dijit.MenuItem">Light</div>
-            <div id="themeDark" data-dojo-type="dijit.MenuItem">Dark</div>
+            <div id="themeLighter" data-dojo-type="dijit.MenuItem">Lighter</div>
+            <div id="themeDarker" data-dojo-type="dijit.MenuItem">Darker</div>
         </div>
     </div>
     <h1>Timeline Demo</h1>

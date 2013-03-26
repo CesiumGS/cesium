@@ -79,6 +79,7 @@ define([
     var allPassPurpose = 'all';
     var colorPassPurpose = 'color';
     var pickPassPurpose = 'pick';
+    var emptyArray = [];
 
     /**
      * A renderable collection of billboards.  Billboards are viewport-aligned
@@ -150,6 +151,8 @@ define([
         this._baseVolume2D = new BoundingSphere();
         this._boundingVolume = new BoundingSphere();
 
+        this._colorCommands = [];
+        this._pickCommands = [];
         this._commandLists = new CommandLists();
 
         /**
@@ -180,15 +183,6 @@ define([
         this._projection = undefined;
 
         /**
-         * If true, aligns all billboards to a pixel in screen space,
-         * providing a crisper image at the cost of jumpier motion.
-         * Defaults to false.
-         *
-         * @type Boolean
-         */
-        this.clampToPixel = false;
-
-        /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
@@ -216,9 +210,6 @@ define([
             },
             u_atlasSize : function() {
                 return that._textureAtlas.getTexture().getDimensions();
-            },
-            u_clampToPixel : function() {
-                return that.clampToPixel ? 1.0 : 0.0;
             },
             u_morphTime : function() {
                 return that.morphTime;
@@ -1062,11 +1053,15 @@ define([
         var pass = frameState.passes;
         var va;
         var vaLength;
-        var commands;
         var command;
         var j;
-        this._commandLists.removeAll();
+        var commandLists = this._commandLists;
+        commandLists.colorList = emptyArray;
+        commandLists.pickList = emptyArray;
         if (pass.color) {
+            var colorList = this._colorCommands;
+            commandLists.colorList = colorList;
+
             if (typeof this._sp === 'undefined') {
                 this._rs = context.createRenderState({
                     depthTest : {
@@ -1081,12 +1076,11 @@ define([
             va = this._vaf.vaByPurpose[colorPassPurpose];
             vaLength = va.length;
 
-            commands = this._commandLists.colorList;
-            commands.length = vaLength;
+            colorList.length = vaLength;
             for (j = 0; j < vaLength; ++j) {
-                command = commands[j];
+                command = colorList[j];
                 if (typeof command === 'undefined') {
-                    command = commands[j] = new DrawCommand();
+                    command = colorList[j] = new DrawCommand();
                 }
 
                 command.boundingVolume = boundingVolume;
@@ -1100,6 +1094,9 @@ define([
             }
         }
         if (pass.pick) {
+            var pickList = this._pickCommands;
+            commandLists.pickList = pickList;
+
             if (typeof this._spPick === 'undefined') {
                 this._rsPick = context.createRenderState({
                     depthTest : {
@@ -1116,12 +1113,11 @@ define([
             va = this._vaf.vaByPurpose[pickPassPurpose];
             vaLength = va.length;
 
-            commands = this._commandLists.pickList;
-            commands.length = vaLength;
+            pickList.length = vaLength;
             for (j = 0; j < vaLength; ++j) {
-                command = commands[j];
+                command = pickList[j];
                 if (typeof command === 'undefined') {
-                    command = commands[j] = new DrawCommand();
+                    command = pickList[j] = new DrawCommand();
                 }
 
                 command.boundingVolume = boundingVolume;
@@ -1135,8 +1131,8 @@ define([
             }
         }
 
-        if (!this._commandLists.empty()) {
-            commandList.push(this._commandLists);
+        if (!commandLists.empty()) {
+            commandList.push(commandLists);
         }
     };
 
