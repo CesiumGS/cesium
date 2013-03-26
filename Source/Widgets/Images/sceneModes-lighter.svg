@@ -10,9 +10,9 @@
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    class="cesium-lighter"
    height="64"
-   width="256"
+   width="192"
    version="1.1"
-   viewBox="0 0 256 64"
+   viewBox="0 0 192 64"
    id="svg2"
    inkscape:version="0.48.4 r9939"
    sodipodi:docname="sceneModes-lighter.svg">
@@ -25,13 +25,13 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1600"
-     inkscape:window-height="847"
+     inkscape:window-width="1920"
+     inkscape:window-height="1028"
      id="namedview119"
      showgrid="false"
-     inkscape:zoom="2.828427"
-     inkscape:cx="63.861464"
-     inkscape:cy="13.64583"
+     inkscape:zoom="6.8749978"
+     inkscape:cx="144.61743"
+     inkscape:cy="32.000028"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -110,43 +110,6 @@
     stroke: #2E2;
 }
 </style>
-  <g
-     class="cesium-animation-rectButton"
-     transform="matrix(1.9277143,0,0,1.927709,193.15658,1.1566281)"
-     id="g8">
-    <rect
-       display="none"
-       rx="2"
-       ry="2"
-       class="cesium-animation-buttonGlow"
-       width="32"
-       y="0"
-       x="0"
-       height="32"
-       id="rect10"
-       style="fill:#ffffff;display:none;filter:url(#animation_blurred-7)" />
-    <rect
-       rx="4"
-       ry="4"
-       class="cesium-animation-buttonMain"
-       width="32"
-       y="0"
-       x="0"
-       height="32"
-       id="rect12"
-       style="fill:url(#linearGradient3211-0);stroke:#759dc0;stroke-width:1.20000005" />
-    <use
-       xlink:href="#animation_pathPlay"
-       width="169"
-       y="0"
-       x="0"
-       height="112"
-       class="cesium-animation-buttonPath"
-       id="use14"
-       style="fill:#111111" />
-    <title
-       id="title16">Play Forward</title>
-  </g>
   <g
      class="cesium-animation-rectButton"
      transform="matrix(1.9277284,0,0,1.9276973,129.15635,1.156776)"
@@ -476,21 +439,6 @@
   <path
      d="m 117.84844,16.393088 c -1.58337,0.04505 -2.88931,0.611308 -3.89104,1.473597 -1.00185,0.862288 -1.6686,2.019428 -2.19214,3.329286 -1.0471,2.619539 -1.53478,5.864081 -2.24693,9.059782 -0.71213,3.195695 -1.67476,6.280523 -3.56229,8.514059 -1.88744,2.233512 -4.6635,3.710518 -9.42624,3.711198 -4.762283,6.38e-4 -7.60117,-1.469507 -9.590493,-3.711198 -1.989319,-2.24176 -3.11835,-5.335857 -4.000543,-8.514059 -0.882875,-3.173889 -1.512522,-6.384127 -2.794631,-8.946866 -1.282108,-2.562737 -3.424277,-4.514327 -6.796088,-4.475703 v 1.746479 c 2.755392,-0.0322 4.089515,1.258784 5.206228,3.492865 1.116781,2.234171 1.836883,5.423782 2.740108,8.677867 0.90327,3.254089 2.030384,6.578148 4.329511,9.169058 2.299125,2.590912 5.761275,4.312353 10.905908,4.311672 5.14418,-6.6e-4 8.59286,-1.704265 10.79617,-4.311672 2.20336,-2.607267 3.21373,-5.993353 3.9458,-9.27811 0.73201,-3.284984 1.16272,-6.485906 2.08254,-8.786919 0.45989,-1.150552 1.04716,-2.066162 1.7537,-2.674291 0.70655,-0.608127 1.54882,-1.001512 2.79486,-1.036978 l -0.0547,-1.746479 z m -41.869289,17.901449 -5.809183,14.080977 53.707122,0 -6.5764,-13.971921 -6.19267,0 c -0.69701,2.159743 -1.64419,4.296901 -3.17858,6.11263 -2.3929,2.831735 -6.19039,4.747427 -11.563393,4.748334 -5.373676,7.27e-4 -9.188294,-1.893427 -11.673121,-4.69358 -1.655106,-1.865072 -2.695849,-4.054716 -3.507319,-6.27644 h -5.206228 z m 9.316503,0 c 0.60688,1.416803 1.321714,2.668613 2.24693,3.711203 1.803484,2.032309 4.290271,3.384494 8.823281,3.383812 4.533695,-5.9e-4 6.961025,-1.319991 8.659025,-3.329286 0.85855,-1.015965 1.48853,-2.262482 2.02771,-3.656673 L 85.295768,34.294534 z"
      id="path111"
-     inkscape:connector-curvature="0"
-     style="fill:#111111;fill-rule:nonzero" />
-  <path
-     d="m 212.01075,50.42459 a 3.1812992,3.1682241 0 1 1 -6.36238,0 3.1812992,3.1682241 0 1 1 6.36238,0 z"
-     id="path113"
-     inkscape:connector-curvature="0"
-     style="fill:#111111;fill-rule:nonzero" />
-  <path
-     d="m 227.16814,50.42459 a 3.1812992,3.1682241 0 1 1 -6.36236,0 3.1812992,3.1682241 0 1 1 6.36236,0 z"
-     id="path115"
-     inkscape:connector-curvature="0"
-     style="fill:#111111;fill-rule:nonzero" />
-  <path
-     d="m 241.38992,50.42459 a 3.1812992,3.1682241 0 1 1 -6.36238,0 3.1812992,3.1682241 0 1 1 6.36238,0 z"
-     id="path117"
      inkscape:connector-curvature="0"
      style="fill:#111111;fill-rule:nonzero" />
 </svg>
