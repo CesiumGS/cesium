@@ -73,7 +73,7 @@ void main()
         nextWC = normalize(p1.xy - endPointWC.xy);
         direction = normalize(vec2(-nextWC.y, nextWC.x));
     }
-    else if (czm_equalsEpsilon(nextDir, vec4(0.0), czm_epsilon7))
+    else if (czm_equalsEpsilon(nextDir, vec4(0.0), czm_epsilon7) || czm_equalsEpsilon(nextDir, -prevDir, czm_epsilon1))
     {
         prevEC = czm_modelView * prevDir;
         p0 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + prevEC.xyz * pixelSize, 1.0));
