@@ -1,4 +1,3 @@
-// TODO Is there an alternative if standard derivatives aren't supported?
 #extension GL_OES_standard_derivatives : enable
 
 uniform vec4 color;
@@ -32,12 +31,12 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     t *= step(ptOnLowerLine, st.t);
     
     // Find the distance from the closest separator (region between two colors)
-    float value;
+    float dist;
     if (st.s < base)
     {
         float d1 = abs(st.t - (0.5 - halfWidth));
         float d2 = abs(st.t - (0.5 + halfWidth));
-        value = min(d1, d2);
+        dist = min(d1, d2);
     }
     else
     {
@@ -48,21 +47,12 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
         }
         float d2 = abs(st.t - ptOnUpperLine);
         float d3 = abs(st.t - ptOnLowerLine);
-        value = min(min(d1, d2), d3);
+        dist = min(min(d1, d2), d3);
     }
     
-    //anti-aliasing
-    const float fuzz = 0.1;
-    float val1 = clamp(value / fuzz, 0.0, 1.0);
-    float val2 = clamp((value - 0.5) / fuzz, 0.0, 1.0);
-    val1 = val1 * (1.0 - val2);
-    val1 = val1 * val1 * (3.0 - (2.0 * val1));
-    val1 = pow(val1, 0.5); //makes the transition nicer
-    
     vec4 outsideColor = vec4(0.0);
-    vec4 midColor = (outsideColor + color) * 0.5;
     vec4 currentColor = mix(outsideColor, color, clamp(s + t, 0.0, 1.0));
-    vec4 outColor = mix(midColor, currentColor, val1);
+    vec4 outColor = czm_antialias(outsideColor, color, currentColor, dist);
     
     material.diffuse = outColor.rgb;
     material.alpha = outColor.a;
