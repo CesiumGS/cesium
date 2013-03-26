@@ -554,6 +554,10 @@ define([
                 }
             }
 
+            //BEGIN Temporary cesium.agi.com workaround
+            clock.multiplier = 60;
+            //END Temporary cesium.agi.com workaround
+
             this.animationViewModel.setShuttleRingTicks(shuttleRingTicks);
 
             clock.currentTime = clock.startTime;
