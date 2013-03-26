@@ -86,6 +86,7 @@ define(['./BaseLayerPickerViewModel',
         var provider = document.createElement('div');
         provider.className = 'cesium-baseLayerPicker-item';
         provider.setAttribute('data-bind', '\
+                css: {"cesium-baseLayerPicker-selectedItem" : $data === $parent.selectedItem()},\
                 attr: {title: tooltip},\
                 visible: creationCommand.canExecute(),\
                 click: $parent.selectedItem');

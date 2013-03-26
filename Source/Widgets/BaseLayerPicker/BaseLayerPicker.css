@@ -93,3 +93,12 @@
     border-color: #fff;
     box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
+
+.cesium-baseLayerPicker-selectedItem .cesium-baseLayerPicker-itemLabel {
+	text-decoration: underline;
+}
+
+.cesium-baseLayerPicker-selectedItem .cesium-baseLayerPicker-itemIcon {
+	border-color: #fff;
+	box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+}
