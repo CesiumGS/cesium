@@ -14,7 +14,7 @@
    version="1.1"
    class="testSVG"
    id="svg2"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.48.2 r9819"
    sodipodi:docname="home.svg">
   <sodipodi:namedview
      pagecolor="#ffffff"
@@ -25,8 +25,8 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1600"
-     inkscape:window-height="847"
+     inkscape:window-width="1920"
+     inkscape:window-height="1138"
      id="namedview74"
      showgrid="false"
      inkscape:zoom="16"
@@ -281,23 +281,8 @@
          id="stop58" />
     </linearGradient>
   </defs>
-  <g
-     id="g3859"
-     transform="matrix(1.0348674,0,0,1.0352712,-0.33751424,-1.3095784)">
-    <path
-       inkscape:connector-curvature="0"
-       id="path11341"
-       d="m 13.854446,5.1286839 -9.663074,8.4399381 19.326147,0 -4.094287,-3.5744212 0,-4.4889468 -2.740344,0 0,2.0920524 -2.828442,-2.4686225 z"
-       style="fill:#edffff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
-    <path
-       inkscape:connector-curvature="0"
-       id="rect11344"
-       d="m 7.010542,14.69833 0,9.748963 13.595072,0 0,-9.748963 -13.595072,0 z m 2.09583,2.22953 3.194749,0 0,4.118355 -3.194749,0 0,-4.118355 z m 5.661522,1.231322 3.287485,0 0,6.24029 -3.287485,0 0,-6.24029 z"
-       style="fill:#edffff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
-    <path
-       inkscape:connector-curvature="0"
-       id="path11352"
-       d="m 10.386126,16.981656 0,1.619847 -1.372491,0 0,0.765092 1.372491,0 0,1.739393 0.593509,0 0,-1.739393 1.275118,0 0,-0.765092 -1.275118,0 0,-1.619847 -0.593509,0 z"
-       style="fill:#edffff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
-  </g>
+  <path
+     style="fill:#edffff;fill-opacity:1;fill-rule:evenodd;stroke:none"
+     d="M 14 4 L 4 12.75 L 24 12.75 L 19.75 9.03125 L 19.75 4.375 L 16.9375 4.375 L 16.9375 6.5625 L 14 4 z M 6.90625 13.90625 L 6.90625 24 L 21 24 L 21 13.90625 L 6.90625 13.90625 z M 9.09375 16.21875 L 12.40625 16.21875 L 12.40625 20.46875 L 9.09375 20.46875 L 9.09375 16.21875 z M 14.9375 17.5 L 18.34375 17.5 L 18.34375 23.9375 L 14.9375 23.9375 L 14.9375 17.5 z "
+     id="path11341" />
 </svg>
