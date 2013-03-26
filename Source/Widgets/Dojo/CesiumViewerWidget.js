@@ -1012,16 +1012,22 @@ define([
          */
         highlightObject : function(selectedObject) {
             if (this.highlightedObject !== selectedObject) {
+                var material;
                 if (typeof this.highlightedObject !== 'undefined' &&
                         (typeof this.highlightedObject.isDestroyed !== 'function' || !this.highlightedObject.isDestroyed())) {
                     if (typeof this.highlightedObject.material !== 'undefined') {
                         this.highlightedObject.material = this._originalMaterial;
-                    } else if (typeof this.highlightedObject.setMaterial !== 'undefined') {
-                        this.highlightedObject.setMaterial(this._originalMaterial);
                     } else if (typeof this.highlightedObject.outerMaterial !== 'undefined') {
                         this.highlightedObject.outerMaterial = this._originalMaterial;
                     } else if (typeof this.highlightedObject.setColor !== 'undefined') {
                         this.highlightedObject.setColor(this._originalColor);
+                    } else if (typeof this.highlightedObject.setMaterial !== 'undefined') {
+                        material = this.highlightedObject.getMaterial();
+                        if (typeof material.uniforms.color !== 'undefined') {
+                            material.uniforms.color = Color.clone(this._originalColor, material.uniforms.color);
+                        } else {
+                            this.highlightedObject.setMaterial(this._originalMaterial);
+                        }
                     }
                 }
                 this.highlightedObject = selectedObject;
@@ -1029,15 +1035,21 @@ define([
                     if (typeof selectedObject.material !== 'undefined') {
                         this._originalMaterial = selectedObject.material;
                         selectedObject.material = this.highlightMaterial;
-                    } else if (typeof selectedObject.getMaterial !== 'undefined') {
-                        this._originalMaterial = selectedObject.getMaterial();
-                        selectedObject.setMaterial(this.highlightMaterial);
                     } else if (typeof selectedObject.outerMaterial !== 'undefined') {
                         this._originalMaterial = selectedObject.outerMaterial;
                         selectedObject.outerMaterial = this.highlightMaterial;
                     } else if (typeof selectedObject.setColor !== 'undefined') {
                         this._originalColor = Color.clone(selectedObject.getColor(), this._originalColor);
                         selectedObject.setColor(this.highlightColor);
+                    } else if (typeof selectedObject.getMaterial !== 'undefined') {
+                        material = selectedObject.getMaterial();
+                        if (typeof material.uniforms.color !== 'undefined') {
+                            this._originalColor = Color.clone(material.uniforms.color, this._originalColor);
+                            material.uniforms.color = Color.clone(this.highlightColor, material.uniforms.color);
+                        } else {
+                            this._originalMaterial = material;
+                            selectedObject.setMaterial(this.highlightMaterial);
+                        }
                     }
                 }
             }
