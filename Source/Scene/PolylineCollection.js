@@ -145,6 +145,10 @@ define([
         this._boundingVolume2D = undefined;
 
         this._commandLists = new CommandLists();
+        this._cachedColorCommands = [];
+        this._cachedPickCommands = [];
+        this._colorCommands = [];
+        this._pickCommands = [];
 
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
@@ -371,6 +375,8 @@ define([
         return this._polylines.length;
     };
 
+    var emptyArray = [];
+
     /**
      * @private
      */
@@ -445,7 +451,9 @@ define([
 
         var pass = frameState.passes;
         var useDepthTest = (this.morphTime !== 0.0);
-        this._commandLists.removeAll();
+        var commandLists = this._commandLists;
+        commandLists.colorList = emptyArray;
+        commandLists.pickList = emptyArray;
 
         if (pass.color) {
             if (typeof this._rs === 'undefined') {
@@ -457,7 +465,11 @@ define([
             this._rs.depthMask = !useDepthTest;
             this._rs.depthTest.enabled = useDepthTest;
 
-            createCommandLists(boundingVolume, modelMatrix, this._vertexArrays, this._commandLists.colorList, this._rs, this._uniforms, true);
+            var cachedColorList = this._cachedColorCommands;
+            var colorList = this._colorCommands;
+            commandLists.colorList = colorList;
+
+            createCommandLists(colorList, cachedColorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, this._uniforms, true);
         }
 
         if (pass.pick) {
@@ -473,7 +485,11 @@ define([
             this._rsPick.depthMask = !useDepthTest;
             this._rsPick.depthTest.enabled = useDepthTest;
 
-            createCommandLists(boundingVolume, modelMatrix, this._vertexArrays, this._commandLists.pickList, this._rsPick, this._uniforms, false, this._spPick);
+            var cachedPickList = this._cachedPickCommands;
+            var pickList = this._pickCommands;
+            commandLists.pickList = pickList;
+
+            createCommandLists(pickList, cachedPickList, boundingVolume, modelMatrix, this._vertexArrays, this._rsPick, this._uniforms, false, this._spPick);
         }
 
         if (!this._commandLists.empty()) {
@@ -481,8 +497,12 @@ define([
         }
     };
 
-    function createCommandLists(boundingVolume, modelMatrix, vertexArrays, commands, renderState, uniforms, combineUniforms, shaderProgram) {
+    function createCommandLists(commands, cachedCommands, boundingVolume, modelMatrix, vertexArrays, renderState, uniforms, combineUniforms, shaderProgram) {
         var length = vertexArrays.length;
+
+        var cachedCommandsLength = cachedCommands.length;
+        commands.length = 0;
+        var cacheIndex = 0;
 
         for ( var m = 0; m < length; ++m) {
             var va = vertexArrays[m];
@@ -507,7 +527,13 @@ define([
                     var mId = createMaterialId(polyline._material);
                     if (mId !== currentId) {
                         if (typeof currentId !== 'undefined') {
-                            command = new DrawCommand();
+                            if (cacheIndex >= cachedCommandsLength) {
+                                command = new DrawCommand();
+                                cachedCommands.push(command);
+                            } else {
+                                command = cachedCommands[cacheIndex++];
+                            }
+
                             command.boundingVolume = boundingVolume;
                             command.modelMatrix = modelMatrix;
                             command.primitiveType = PrimitiveType.TRIANGLES;
@@ -540,7 +566,13 @@ define([
                 }
 
                 if (typeof currentId !== 'undefined' && count > 0) {
-                    command = new DrawCommand();
+                    if (cacheIndex >= cachedCommandsLength) {
+                        command = new DrawCommand();
+                        cachedCommands.push(command);
+                    } else {
+                        command = cachedCommands[cacheIndex++];
+                    }
+
                     command.boundingVolume = boundingVolume;
                     command.modelMatrix = modelMatrix;
                     command.primitiveType = PrimitiveType.TRIANGLES;
@@ -557,6 +589,10 @@ define([
 
                 currentId = undefined;
             }
+        }
+
+        if (commands.length < cachedCommands.length / 2.0) {
+            cachedCommands.length = commands.length;
         }
     }
 
