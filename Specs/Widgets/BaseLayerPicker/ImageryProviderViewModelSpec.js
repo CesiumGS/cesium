@@ -105,7 +105,7 @@ defineSuite(['Widgets/BaseLayerPicker/ImageryProviderViewModel',
         };
 
         expect(function() {
-            return new ImageryProviderViewModel(description);
+            return ImageryProviderViewModel.fromConstants(description);
         }).toThrow();
     });
 
@@ -118,7 +118,7 @@ defineSuite(['Widgets/BaseLayerPicker/ImageryProviderViewModel',
         };
 
         expect(function() {
-            return new ImageryProviderViewModel(description);
+            return ImageryProviderViewModel.fromConstants(description);
         }).toThrow();
     });
 
@@ -131,7 +131,7 @@ defineSuite(['Widgets/BaseLayerPicker/ImageryProviderViewModel',
         };
 
         expect(function() {
-            return new ImageryProviderViewModel(description);
+            return ImageryProviderViewModel.fromConstants(description);
         }).toThrow();
     });
 
@@ -143,7 +143,7 @@ defineSuite(['Widgets/BaseLayerPicker/ImageryProviderViewModel',
         };
 
         expect(function() {
-            return new ImageryProviderViewModel(description);
+            return ImageryProviderViewModel.fromConstants(description);
         }).toThrow();
     });
 });
