@@ -87,6 +87,7 @@ define(['./BaseLayerPickerViewModel',
         provider.className = 'cesium-baseLayerPicker-item';
         provider.setAttribute('data-bind', '\
                 attr: {title: tooltip},\
+                visible: creationCommand.canExecute(),\
                 click: $parent.selectedItem');
         choices.appendChild(provider);
 

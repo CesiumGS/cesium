@@ -93,7 +93,7 @@ define(['../../Core/DeveloperError',
                 if (imageryLayers.getLength() > 0) {
                     imageryLayers.remove(imageryLayers.get(0));
                 }
-                var newLayer = value.createProvider();
+                var newLayer = value.creationCommand();
                 if (typeof newLayer !== 'undefined') {
                     imageryLayers.addImageryProvider(newLayer, 0);
                 }

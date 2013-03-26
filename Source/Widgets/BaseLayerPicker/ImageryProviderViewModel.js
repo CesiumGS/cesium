@@ -1,7 +1,9 @@
 /*global define*/
-define(['../../Core/DeveloperError',
+define(['../createCommand',
+        '../../Core/DeveloperError',
         '../../ThirdParty/knockout'
         ], function(
+            createCommand,
             DeveloperError,
             knockout) {
     "use strict";
@@ -12,55 +14,101 @@ define(['../../Core/DeveloperError',
      * @alias ImageryProviderViewModel
      * @constructor
      *
-     * @param {string} name The name of the layer.
-     * @param {string} tooltip The tooltip to show when the item is moused over.
-     * @param {string} iconUrl An icon representing the layer.
-     * @param {function} createProvider A function which creates the ImageryProvider for adding to the layers collection.
+     * @param {Object} description The object containing all parameters.
+     * @param {Observable} description.name The name of the layer.
+     * @param {Observable} description.tooltip The tooltip to show when the item is moused over.
+     * @param {Observable} description.iconUrl An icon representing the layer.
+     * @param {Command} description.creationCommand A function which creates the ImageryProvider for adding to the layers collection.
+     *
+     * @exception {DeveloperError} name is required.
+     * @exception {DeveloperError} tooltip is required.
+     * @exception {DeveloperError} iconUrl is required.
+     * @exception {DeveloperError} creationCommand is required.
      *
      * @see BaseLayerPicker
      * @see ImageryProvider
      */
-    var ImageryProviderViewModel = function(name, tooltip, iconUrl, createProvider) {
+    var ImageryProviderViewModel = function(description) {
 
-        if (typeof name === 'undefined') {
+        if (typeof description.name === 'undefined') {
             throw new DeveloperError('name is required.');
         }
 
-        if (typeof tooltip === 'undefined') {
+        if (typeof description.tooltip === 'undefined') {
             throw new DeveloperError('tooltip is required.');
         }
 
-        if (typeof iconUrl === 'undefined') {
+        if (typeof description.iconUrl === 'undefined') {
             throw new DeveloperError('iconUrl is required.');
         }
 
-        if (typeof createProvider === 'undefined') {
-            throw new DeveloperError('createProvider is required.');
+        if (typeof description.creationCommand === 'undefined') {
+            throw new DeveloperError('creationCommand is required.');
         }
 
         /**
          * Gets a writable observable representing the name of this provider.
          * @type Observable
          */
-        this.name = knockout.observable(name);
+        this.name = description.name;
 
         /**
          * Gets a writable observable representing the tooltip to show when the item is moused over.
          * @type Observable
          */
-        this.tooltip = knockout.observable(tooltip);
+        this.tooltip = description.tooltip;
 
         /**
          * Gets a writable observable representing the icon associated with this layer.
          * @type Observable
          */
-        this.iconUrl = knockout.observable(iconUrl);
+        this.iconUrl = description.iconUrl;
 
         /**
          * Gets or sets the function called by the widget to create the imagery provider represented by this view model.
-         * @type function
+         * @type Command
          */
-        this.createProvider = createProvider;
+        this.creationCommand = description.creationCommand;
+    };
+
+    /**
+     * Creates an instance from constant, non-observable values.
+     * @memberof ImageryProviderViewModel
+     *
+     * @param {Object} description The object containing all parameters.
+     * @param {string} description.name The name of the layer.
+     * @param {string} description.tooltip The tooltip to show when the item is moused over.
+     * @param {string} description.iconUrl An icon representing the layer.
+     * @param {function} description.createFunction A function which creates the ImageryProvider for adding to the layers collection.
+     *
+     * @exception {DeveloperError} name is required.
+     * @exception {DeveloperError} tooltip is required.
+     * @exception {DeveloperError} iconUrl is required.
+     * @exception {DeveloperError} creationFunction is required.
+     */
+    ImageryProviderViewModel.fromConstants = function(description) {
+        if (typeof description.name === 'undefined') {
+            throw new DeveloperError('name is required.');
+        }
+
+        if (typeof description.tooltip === 'undefined') {
+            throw new DeveloperError('tooltip is required.');
+        }
+
+        if (typeof description.iconUrl === 'undefined') {
+            throw new DeveloperError('iconUrl is required.');
+        }
+
+        if (typeof description.creationFunction === 'undefined') {
+            throw new DeveloperError('creationFunction is required.');
+        }
+
+        return new ImageryProviderViewModel({
+            name : knockout.observable(description.name),
+            tooltip : knockout.observable(description.tooltip),
+            iconUrl : knockout.observable(description.iconUrl),
+            creationCommand : createCommand(description.creationFunction)
+        });
     };
 
     return ImageryProviderViewModel;

@@ -15,8 +15,13 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
         }
     };
 
-    var testProviderViewModel = new ImageryProviderViewModel('name', 'tooltip', ('url'), function() {
-        return testProvider;
+    var testProviderViewModel = ImageryProviderViewModel.fromConstants({
+        name : 'name',
+        tooltip : 'tooltip',
+        iconUrl : 'url',
+        creationFunction : function() {
+            return testProvider;
+        }
     });
 
     var testProvider2 = {
@@ -25,8 +30,13 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
         }
     };
 
-    var testProviderViewModel2 = new ImageryProviderViewModel('name', 'tooltip', ('url'), function() {
-        return testProvider2;
+    var testProviderViewModel2 = ImageryProviderViewModel.fromConstants({
+        name : 'name',
+        tooltip : 'tooltip',
+        iconUrl : 'url',
+        creationFunction : function() {
+            return testProvider2;
+        }
     });
 
     it('constructor sets expected values', function() {
