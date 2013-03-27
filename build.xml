@@ -101,6 +101,9 @@
 	<!-- properties controlling which steps get run -->
 	<property name="build.minification" value="false" />
 
+	<!-- properties controlling if the server listens on all addresses or not-->
+	<property name="runServer.public" value="false" />
+
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
 	<property name="version" value="b14" />
@@ -335,7 +338,13 @@
 		 noUpstreamProxyHostList: A comma-separated list of hosts that will not use the upstreamProxy
 		 listenOnAllAddresses: Set to true if you want the server to listen to all addresses, not just localhost.
 		-->
-		<server proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" allowedHostList="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net,mesonet.agron.iastate.edu" port="8080" baseDir="${basedir}" />
+		<server proxyContextPath="/proxy" listenOnAllAddresses="${runServer.public}" terrainTranscodingContextPath="/terrain" allowedHostList="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net,mesonet.agron.iastate.edu" port="8080" baseDir="${basedir}" />
+	</target>
+
+	<target name="runPublicServer" description="Runs a public web server">
+		<antcall target="runServer">
+			<param name="runServer.public" value="true" />
+		</antcall>
 	</target>
 
 	<target name="buildApps" description="Create built versions of all example applications.">
