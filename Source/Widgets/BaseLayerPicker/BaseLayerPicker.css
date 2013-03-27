@@ -49,13 +49,8 @@
     vertical-align: top;
     margin: 2px 5px;
     width: 64px;
-    overflow: hidden;
     text-align: center;
     cursor: pointer;
-}
-
-.cesium-baseLayerPicker-item:hover {
-    overflow: visible;
 }
 
 .cesium-baseLayerPicker-itemLabel {
