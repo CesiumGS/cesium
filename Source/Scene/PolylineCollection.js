@@ -1005,7 +1005,6 @@ define([
             return polyline.getPositions().length;
         }
 
-        polyline.update();
         return polyline._segments.positions.length;
     };
 
