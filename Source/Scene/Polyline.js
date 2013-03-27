@@ -165,8 +165,6 @@ define([
         this._positions = value;
         this._boundingVolume = BoundingSphere.fromPoints(this._positions, this._boundingVolume);
         makeDirty(this, POSITION_INDEX);
-
-        this.update();
     };
 
     /**
@@ -179,6 +177,7 @@ define([
         }
 
         var length = this._segments.positions.length;
+        var segmentLengths = this._segments.lengths;
         this._modelMatrix = modelMatrix;
 
         var positionsChanged = this._propertiesChanged[POSITION_INDEX] > 0 || this._propertiesChanged[POSITION_SIZE_INDEX] > 0;
@@ -187,7 +186,17 @@ define([
         }
 
         if (this._segments.positions.length !== length) {
+            // number of positions changed
             makeDirty(this, POSITION_SIZE_INDEX);
+        } else {
+            length = segmentLengths.length;
+            for (var i = 0; i < length; ++i) {
+                if (segmentLengths[i] !== this._segments.lengths[i]) {
+                    // indices changed
+                    makeDirty(this, POSITION_SIZE_INDEX);
+                    break;
+                }
+            }
         }
     };
 
