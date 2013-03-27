@@ -9,16 +9,16 @@ define([
         '../Core/HermitePolynomialApproximation',
         '../Core/LinearApproximation',
         '../Core/LagrangePolynomialApproximation'
-    ], function(
-        DeveloperError,
-        Iso8601,
-        JulianDate,
-        TimeInterval,
-        TimeIntervalCollection,
-        binarySearch,
-        HermitePolynomialApproximation,
-        LinearApproximation,
-        LagrangePolynomialApproximation) {
+        ], function (
+                DeveloperError,
+                Iso8601,
+                JulianDate,
+                TimeInterval,
+                TimeIntervalCollection,
+                binarySearch,
+                HermitePolynomialApproximation,
+                LinearApproximation,
+                LagrangePolynomialApproximation) {
     "use strict";
 
 
@@ -34,9 +34,9 @@ define([
 
     //Map CZML interval types to their implementation.
     var interpolators = {
-        HERMITE : HermitePolynomialApproximation,
-        LAGRANGE : LagrangePolynomialApproximation,
-        LINEAR : LinearApproximation
+            HERMITE: HermitePolynomialApproximation,
+            LAGRANGE: LagrangePolynomialApproximation,
+            LINEAR: LinearApproximation
     };
 
     //The data associated with each DynamicProperty interval.
@@ -101,7 +101,7 @@ define([
      * @see DynamicDirectionsProperty
      * @see DynamicVertexPositionsProperty
      */
-    var DynamicProperty = function(valueType) {
+    var DynamicProperty = function (valueType) {
         if (typeof valueType === 'undefined') {
             throw new DeveloperError('valueType is required.');
         }
@@ -120,14 +120,48 @@ define([
      * @param {TimeInterval} [constrainedInterval] Constrains the processing so that any times outside of this interval are ignored.
      * @param {String} [sourceUri] The originating url of the CZML being processed.
      */
-    DynamicProperty.prototype.processCzmlIntervals = function(czmlIntervals, constrainedInterval, sourceUri) {
+    DynamicProperty.prototype.processCzmlIntervals = function (czmlIntervals, constrainedInterval, sourceUri) {
         if (Array.isArray(czmlIntervals)) {
-            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
+            for (var i = 0, len = czmlIntervals.length; i < len; i++) {
                 this._addCzmlInterval(czmlIntervals[i], constrainedInterval, sourceUri);
             }
         } else {
             this._addCzmlInterval(czmlIntervals, constrainedInterval, sourceUri);
         }
+    };
+
+    DynamicProperty.prototype.getNonInterpolatedValue = function (time, result) {
+        var interval = this._cachedInterval;
+        if (!JulianDate.equals(this._cachedTime, time)) {
+            this._cachedTime = JulianDate.clone(time, this._cachedTime);
+            if (typeof interval === 'undefined' || !interval.contains(time)) {
+                interval = this._intervals.findIntervalContainingDate(time);
+                this._cachedInterval = interval;
+            }
+        }
+
+        if (typeof interval === 'undefined') {
+            return result;
+        }
+
+        var valueType = this.valueType;
+
+        var intervalData = interval.data;
+        var times = intervalData.times;
+        var values = intervalData.values;
+        if (intervalData.isSampled && times.length >= 0 && values.length > 0) {
+            var doublesPerValue = valueType.doublesPerValue;
+            var index = binarySearch(times, time, JulianDate.compare);
+            if (index < 0) {
+                index = ~index;
+
+                if (index >= times.length) {
+                    index = times.length - 1;
+                }
+            }
+            return valueType.getValueFromArray(intervalData.values, index * doublesPerValue, result);
+        }
+        return valueType.getValue(intervalData.values, result);
     };
 
     /**
@@ -138,7 +172,7 @@ define([
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    DynamicProperty.prototype.getValue = function(time, result) {
+    DynamicProperty.prototype.getValue = function (time, result) {
         var interval = this._cachedInterval;
         if (!JulianDate.equals(this._cachedTime, time)) {
             this._cachedTime = JulianDate.clone(time, this._cachedTime);
@@ -208,7 +242,7 @@ define([
                 }
 
                 // Build the tables
-                for ( var i = 0; i < length; ++i) {
+                for (var i = 0; i < length; ++i) {
                     xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
                 }
                 var specializedPackFunction = valueType.packValuesForInterpolation;
@@ -241,7 +275,7 @@ define([
         return valueType.getValue(intervalData.values, result);
     };
 
-    DynamicProperty._mergeNewSamples = function(epoch, times, values, newData, doublesPerValue) {
+    DynamicProperty._mergeNewSamples = function (epoch, times, values, newData, doublesPerValue) {
         var newDataIndex = 0, i, prevItem, timesInsertionPoint, valuesInsertionPoint, timesSpliceArgs, valuesSpliceArgs, currentTime, nextTime;
         while (newDataIndex < newData.length) {
             currentTime = czmlDateToJulianDate(newData[newDataIndex], epoch);
@@ -259,7 +293,7 @@ define([
                 while (newDataIndex < newData.length) {
                     currentTime = czmlDateToJulianDate(newData[newDataIndex], epoch);
                     if ((typeof prevItem !== 'undefined' && JulianDate.compare(prevItem, currentTime) >= 0) ||
-                        (typeof nextTime !== 'undefined' && JulianDate.compare(currentTime, nextTime) >= 0)) {
+                            (typeof nextTime !== 'undefined' && JulianDate.compare(currentTime, nextTime) >= 0)) {
                         break;
                     }
                     timesSpliceArgs.push(currentTime);
@@ -284,7 +318,7 @@ define([
         }
     };
 
-    DynamicProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval, sourceUri) {
+    DynamicProperty.prototype._addCzmlInterval = function (czmlInterval, constrainedInterval, sourceUri) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL;
@@ -302,7 +336,7 @@ define([
         }
     };
 
-    DynamicProperty.prototype._addCzmlIntervalUnwrapped = function(start, stop, unwrappedInterval, epoch, interpolationAlgorithmType, interpolationDegree) {
+    DynamicProperty.prototype._addCzmlIntervalUnwrapped = function (start, stop, unwrappedInterval, epoch, interpolationAlgorithmType, interpolationDegree) {
         var thisIntervals = this._intervals;
         var existingInterval = thisIntervals.findInterval(start, stop);
         this._cachedTime = undefined;
