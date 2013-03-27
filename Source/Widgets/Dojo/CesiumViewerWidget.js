@@ -225,7 +225,7 @@ mapping applications.\nhttp://www.esri.com',
         }));
 
         providerViewModels.push(ImageryProviderViewModel.fromConstants({
-            name : 'Open&shy;Street&shy;Map',
+            name : 'Open\u00adStreet\u00adMap',
             iconUrl : require.toUrl('../Images/ImageryProviders/openStreetMap.png'),
             tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable map \
 of the world.\nhttp://www.openstreetmap.org',
@@ -265,7 +265,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
         }));
 
         providerViewModels.push(ImageryProviderViewModel.fromConstants({
-            name : 'MapQuest Open&shy;Street&shy;Map',
+            name : 'MapQuest Open\u00adStreet\u00adMap',
             iconUrl : require.toUrl('../Images/ImageryProviders/mapQuestOpenStreetMap.png'),
             tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
 map of the world.\nhttp://www.openstreetmap.org',

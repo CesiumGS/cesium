@@ -45,7 +45,7 @@ define(['./BaseLayerPickerViewModel',
      * //This example uses 3, OpenStreetMap, The Black Marble, and a single, non-streaming world image.
      * var providerViewModels = [];
      * providerViewModels.push(ImageryProviderViewModel.fromConstants({
-     *      name : 'Open&shy;Street&shy;Map',
+     *      name : 'Open\u00adStreet\u00adMap',
      *      iconUrl : require.toUrl('../Images/ImageryProviders/openStreetMap.png'),
      *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
      *map of the world.\nhttp://www.openstreetmap.org',
@@ -161,7 +161,7 @@ define(['./BaseLayerPickerViewModel',
 
         var providerLabel = document.createElement('div');
         providerLabel.className = 'cesium-baseLayerPicker-itemLabel';
-        providerLabel.setAttribute('data-bind', 'html: name');
+        providerLabel.setAttribute('data-bind', 'text: name');
         provider.appendChild(providerLabel);
 
         knockout.applyBindings(viewModel, container);
