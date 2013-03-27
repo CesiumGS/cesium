@@ -18,18 +18,19 @@ define([
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
         '../Fullscreen/FullscreenWidget',
+        '../SceneModePicker/SceneModePicker',
+        '../BaseLayerPicker/BaseLayerPicker',
+        '../BaseLayerPicker/ImageryProviderViewModel',
         '../ClockViewModel',
         '../../Core/defaultValue',
         '../../Core/loadJson',
         '../../Core/binarySearch',
-        '../../Core/BoundingRectangle',
         '../../Core/Clock',
         '../../Core/ClockStep',
         '../../Core/ClockRange',
         '../../Core/Extent',
         '../../Core/Ellipsoid',
         '../../Core/Iso8601',
-        '../../Core/computeSunPosition',
         '../../Core/ScreenSpaceEventHandler',
         '../../Core/FeatureDetection',
         '../../Core/ScreenSpaceEventType',
@@ -37,7 +38,6 @@ define([
         '../../Core/Cartesian3',
         '../../Core/JulianDate',
         '../../Core/DefaultProxy',
-        '../../Core/Transforms',
         '../../Core/requestAnimationFrame',
         '../../Core/Color',
         '../../Core/Matrix4',
@@ -49,6 +49,9 @@ define([
         '../../Scene/CentralBody',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
+        '../../Scene/ArcGisMapServerImageryProvider',
+        '../../Scene/OpenStreetMapImageryProvider',
+        '../../Scene/TileMapServiceImageryProvider',
         '../../Scene/SceneTransitioner',
         '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
@@ -79,18 +82,19 @@ define([
         Animation,
         AnimationViewModel,
         FullscreenWidget,
+        SceneModePicker,
+        BaseLayerPicker,
+        ImageryProviderViewModel,
         ClockViewModel,
         defaultValue,
         loadJson,
         binarySearch,
-        BoundingRectangle,
         Clock,
         ClockStep,
         ClockRange,
         Extent,
         Ellipsoid,
         Iso8601,
-        computeSunPosition,
         ScreenSpaceEventHandler,
         FeatureDetection,
         ScreenSpaceEventType,
@@ -98,7 +102,6 @@ define([
         Cartesian3,
         JulianDate,
         DefaultProxy,
-        Transforms,
         requestAnimationFrame,
         Color,
         Matrix4,
@@ -110,6 +113,9 @@ define([
         CentralBody,
         BingMapsImageryProvider,
         BingMapsStyle,
+        ArcGisMapServerImageryProvider,
+        OpenStreetMapImageryProvider,
+        TileMapServiceImageryProvider,
         SceneTransitioner,
         SingleTileImageryProvider,
         PerformanceDisplay,
@@ -123,6 +129,184 @@ define([
         template) {
     "use strict";
 
+    function createImageryProviders(dayImageUrl) {
+        var proxy = new DefaultProxy('/proxy/');
+        //While some sites have CORS on, not all browsers implement it properly, so a proxy is needed anyway;
+        var proxyIfNeeded = FeatureDetection.supportsCrossOriginImagery() ? undefined : proxy;
+
+        var providerViewModels = [];
+        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+            name : 'Bing Maps Aerial',
+            iconUrl : require.toUrl('../Images/ImageryProviders/bingAerial.png'),
+            tooltip : 'Bing Maps aerial imagery \nhttp://www.bing.com/maps',
+            creationFunction : function() {
+                return new BingMapsImageryProvider({
+                    url : 'http://dev.virtualearth.net',
+                    mapStyle : BingMapsStyle.AERIAL,
+                    proxy : proxyIfNeeded
+                });
+            }
+        }));
+
+        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+            name : 'Bing Maps Aerial with Labels',
+            iconUrl : require.toUrl('../Images/ImageryProviders/bingAerialLabels.png'),
+            tooltip : 'Bing Maps aerial imagery with label overlays \nhttp://www.bing.com/maps',
+            creationFunction : function() {
+                return new BingMapsImageryProvider({
+                    url : 'http://dev.virtualearth.net',
+                    mapStyle : BingMapsStyle.AERIAL_WITH_LABELS,
+                    proxy : proxyIfNeeded
+                });
+            }
+        }));
+
+        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+            name : 'Bing Maps Roads',
+            iconUrl : require.toUrl('../Images/ImageryProviders/bingRoads.png'),
+            tooltip : 'Bing Maps standard road maps\nhttp://www.bing.com/maps',
+            creationFunction : function() {
+                return new BingMapsImageryProvider({
+                    url : 'http://dev.virtualearth.net',
+                    mapStyle : BingMapsStyle.ROAD,
+                    proxy : proxyIfNeeded
+                });
+            }
+        }));
+
+        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+            name : 'ESRI World Imagery',
+            iconUrl : require.toUrl('../Images/ImageryProviders/esriWorldImagery.png'),
+            tooltip : '\
+World Imagery provides one meter or better satellite and aerial imagery in many parts of the world and lower resolution \
+satellite imagery worldwide.  The map includes NASA Blue Marble: Next Generation 500m resolution imagery at small scales \
+(above 1:1,000,000), i-cubed 15m eSAT imagery at medium-to-large scales (down to 1:70,000) for the world, and USGS 15m Landsat \
+imagery for Antarctica. The map features 0.3m resolution imagery in the continental United States and 0.6m resolution imagery in \
+parts of Western Europe from DigitalGlobe. In other parts of the world, 1 meter resolution imagery is available from GeoEye IKONOS, \
+i-cubed Nationwide Prime, Getmapping, AeroGRID, IGN Spain, and IGP Portugal.  Additionally, imagery at different resolutions has been \
+contributed by the GIS User Community.\nhttp://www.esri.com',
+            creationFunction : function() {
+                return new ArcGisMapServerImageryProvider({
+                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+                    proxy : proxy
+                });
+            }
+        }));
+
+        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+            name : 'ESRI World Street Map',
+            iconUrl : require.toUrl('../Images/ImageryProviders/esriWorldStreetMap.png'),
+            tooltip : '\
+This worldwide street map presents highway-level data for the world. Street-level data includes the United States; much of \
+Canada; Japan; most countries in Europe; Australia and New Zealand; India; parts of South America including Argentina, Brazil, \
+Chile, Colombia, and Venezuela; Ghana; and parts of southern Africa including Botswana, Lesotho, Namibia, South Africa, and Swaziland.\n\
+http://www.esri.com',
+            creationFunction : function() {
+                return new ArcGisMapServerImageryProvider({
+                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
+                    proxy : proxy
+                });
+            }
+        }));
+
+        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+            name : 'ESRI National Geographic',
+            iconUrl : require.toUrl('../Images/ImageryProviders/esriNationalGeographic.png'),
+            tooltip : '\
+This web map contains the National Geographic World Map service. This map service is designed to be used as a general reference map \
+for informational and educational purposes as well as a basemap by GIS professionals and other users for creating web maps and web \
+mapping applications.\nhttp://www.esri.com',
+            creationFunction : function() {
+                return new ArcGisMapServerImageryProvider({
+                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/',
+                    proxy : proxy
+                });
+            }
+        }));
+
+        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+            name : 'Open\u00adStreet\u00adMap',
+            iconUrl : require.toUrl('../Images/ImageryProviders/openStreetMap.png'),
+            tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable map \
+of the world.\nhttp://www.openstreetmap.org',
+            creationFunction : function() {
+                return new OpenStreetMapImageryProvider({
+                    url : 'http://tile.openstreetmap.org/',
+                    proxy : proxyIfNeeded
+                });
+            }
+        }));
+
+        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+            name : 'Stamen Watercolor',
+            iconUrl : require.toUrl('../Images/ImageryProviders/stamenWatercolor.png'),
+            tooltip : 'Reminiscent of hand drawn maps, Stamen watercolor maps apply raster effect \
+area washes and organic edges over a paper texture to add warm pop to any map.\nhttp://maps.stamen.com',
+            creationFunction : function() {
+                return new OpenStreetMapImageryProvider({
+                    url : 'http://tile.stamen.com/watercolor/',
+                    credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.',
+                    proxy : proxyIfNeeded
+                });
+            }
+        }));
+
+        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+            name : 'Stamen Toner',
+            iconUrl : require.toUrl('../Images/ImageryProviders/stamenToner.png'),
+            tooltip : 'A high contrast black and white map.\nhttp://maps.stamen.com',
+            creationFunction : function() {
+                return new OpenStreetMapImageryProvider({
+                    url : 'http://tile.stamen.com/toner/',
+                    credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.',
+                    proxy : proxyIfNeeded
+                });
+            }
+        }));
+
+        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+            name : 'MapQuest Open\u00adStreet\u00adMap',
+            iconUrl : require.toUrl('../Images/ImageryProviders/mapQuestOpenStreetMap.png'),
+            tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
+map of the world.\nhttp://www.openstreetmap.org',
+            creationFunction : function() {
+                return new OpenStreetMapImageryProvider({
+                    url : 'http://otile1.mqcdn.com/tiles/1.0.0/osm/',
+                    proxy : proxyIfNeeded
+                });
+            }
+        }));
+
+        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+            name : 'The Black Marble',
+            iconUrl : require.toUrl('../Images/ImageryProviders/blackMarble.png'),
+            tooltip : 'The lights of cities and villages trace the outlines of civilization in this global view of the \
+Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
+            creationFunction : function() {
+                return new TileMapServiceImageryProvider({
+                    url : 'http://cesium.agi.com/blackmarble',
+                    maximumLevel : 8,
+                    credit : 'Black Marble imagery courtesy NASA Earth Observatory',
+                    proxy : proxyIfNeeded
+                });
+            }
+        }));
+
+        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+            name : 'Disable Streaming Imagery',
+            iconUrl : require.toUrl('../Images/ImageryProviders/singleTile.png'),
+            tooltip : 'Uses a single image for the entire world.',
+            creationFunction : function() {
+                return new SingleTileImageryProvider({
+                    url : dayImageUrl,
+                    proxy : proxyIfNeeded
+                });
+            }
+        }));
+
+        return providerViewModels;
+    }
+
     /**
      * This Dojo widget wraps the full functionality of Cesium Viewer.
      *
@@ -135,31 +319,6 @@ define([
         // for Dojo use only
         templateString : template,
 
-        /**
-         * Enable streaming Imagery.  This is read-only after construction.
-         *
-         * @type {Boolean}
-         * @memberof CesiumViewerWidget.prototype
-         * @default true
-         * @see CesiumViewerWidget#enableStreamingImagery
-         */
-        useStreamingImagery : true,
-        /**
-         * The map style for streaming imagery.  This is read-only after construction.
-         *
-         * @type {BingMapsStyle}
-         * @memberof CesiumViewerWidget.prototype
-         * @default {@link BingMapsStyle.AERIAL}
-         * @see CesiumViewerWidget#setStreamingImageryMapStyle
-         */
-        mapStyle : BingMapsStyle.AERIAL,
-        /**
-         * The URL for a daytime image on the globe.
-         *
-         * @type {String}
-         * @memberof CesiumViewerWidget.prototype
-         */
-        dayImageUrl : undefined,
         /**
          * The base URL for the sky box.
          *
@@ -265,6 +424,22 @@ define([
          * @memberof CesiumViewerWidget.prototype
          */
         timeline: undefined,
+
+        /**
+         * The BaseLayerPicker widget.
+         *
+         * @type {BaseLayerPicker}
+         * @memberof CesiumViewerWidget.prototype
+         */
+        baseLayerPicker: undefined,
+
+        /**
+         * The SceneModePicker widget.
+         *
+         * @type {SceneModePicker}
+         * @memberof CesiumViewerWidget.prototype
+         */
+        sceneModePicker: undefined,
 
         // for Dojo use only
         constructor : function() {
@@ -662,7 +837,11 @@ define([
                 return;
             }
 
-            var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
+            var canvas = this.canvas;
+            var ellipsoid = this.ellipsoid;
+            var scene;
+            var that = this;
+            var endUserOptions = this.endUserOptions;
 
             try {
                 scene = this.scene = new Scene(canvas);
@@ -677,18 +856,16 @@ define([
             on(canvas, 'contextmenu', event.stop);
             on(canvas, 'selectstart', event.stop);
 
-            var theme = widget.endUserOptions.theme;
+            var theme = endUserOptions.theme;
             if (typeof theme !== 'undefined') {
-                if (widget.endUserOptions.theme === 'lighter') {
-                    widget.cesiumNode.className += ' cesium-lighter';
+                if (endUserOptions.theme === 'lighter') {
+                    this.cesiumNode.className += ' cesium-lighter';
                 } else {
                     window.alert('Unknown theme: ' + theme);
                 }
             }
 
-            if (typeof widget.endUserOptions.debug !== 'undefined' && widget.endUserOptions.debug) {
-                this.enableWebGLDebugging = true;
-            }
+            this.enableWebGLDebugging = endUserOptions.debug === true;
 
             var context = scene.getContext();
             if (this.enableWebGLDebugging) {
@@ -704,18 +881,16 @@ define([
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
 
-            this._configureCentralBodyImagery();
-
             scene.getPrimitives().setCentralBody(centralBody);
 
             if (this.showSkyBox) {
                 scene.skyBox = new SkyBox({
-                    positiveX: this.skyBoxBaseUrl + '_px.jpg',
-                    negativeX: this.skyBoxBaseUrl + '_mx.jpg',
-                    positiveY: this.skyBoxBaseUrl + '_py.jpg',
-                    negativeY: this.skyBoxBaseUrl + '_my.jpg',
-                    positiveZ: this.skyBoxBaseUrl + '_pz.jpg',
-                    negativeZ: this.skyBoxBaseUrl + '_mz.jpg'
+                    positiveX : this.skyBoxBaseUrl + '_px.jpg',
+                    negativeX : this.skyBoxBaseUrl + '_mx.jpg',
+                    positiveY : this.skyBoxBaseUrl + '_py.jpg',
+                    negativeY : this.skyBoxBaseUrl + '_my.jpg',
+                    positiveZ : this.skyBoxBaseUrl + '_pz.jpg',
+                    negativeZ : this.skyBoxBaseUrl + '_mz.jpg'
                 });
             }
 
@@ -756,7 +931,7 @@ define([
 
             if (this.enableDragDrop) {
                 var dropBox = this.cesiumNode;
-                on(dropBox, 'drop', lang.hitch(widget, 'handleDrop'));
+                on(dropBox, 'drop', lang.hitch(this, 'handleDrop'));
                 on(dropBox, 'dragenter', event.stop);
                 on(dropBox, 'dragover', event.stop);
                 on(dropBox, 'dragexit', event.stop);
@@ -783,88 +958,40 @@ define([
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
-            if (typeof widget.endUserOptions.source !== 'undefined') {
-                widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);
+            this.sceneModePicker = new SceneModePicker(this.sceneModePickerContainer, transitioner);
+
+            var imageryLayers = centralBody.getImageryLayers();
+            var providerViewModels = createImageryProviders(this.dayImageUrl);
+            this.baseLayerPicker = new BaseLayerPicker(this.baseLayerPickerContainer, imageryLayers, providerViewModels);
+            this.baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
+
+            if (typeof endUserOptions.source !== 'undefined') {
+                this.loadCzml(endUserOptions.source, endUserOptions.lookAt);
             }
 
-            if (typeof widget.endUserOptions.stats !== 'undefined' && widget.endUserOptions.stats) {
-                widget.enableStatistics(true);
+            if (typeof endUserOptions.stats !== 'undefined' && endUserOptions.stats) {
+                this.enableStatistics(true);
             }
 
             function onTimelineScrub(e) {
-                widget.clock.currentTime = e.timeJulian;
-                widget.clock.shouldAnimate = false;
+                that.clock.currentTime = e.timeJulian;
+                that.clock.shouldAnimate = false;
             }
 
-            var timeline = new Timeline(this.timelineContainer, widget.clock);
-            widget.timeline = timeline;
+            var timeline = new Timeline(this.timelineContainer, this.clock);
+            this.timeline = timeline;
             timeline.addEventListener('settime', onTimelineScrub, false);
             timeline.zoomTo(clock.startTime, clock.stopTime);
 
-            var viewHomeButton = widget.viewHomeButton;
-            var view2D = widget.view2D;
-            var view3D = widget.view3D;
-            var viewColumbus = widget.viewColumbus;
+            var viewHomeButton = this.viewHomeButton;
 
-            view2D.set('checked', false);
-            view3D.set('checked', true);
-            viewColumbus.set('checked', false);
+            viewHomeButton.addEventListener('click', function() {
+                that.viewHome();
+            }, false);
 
-            on(viewHomeButton, 'Click', function() {
-                widget.viewHome();
-            });
-            on(view2D, 'Click', function() {
-                view2D.set('checked', true);
-                view3D.set('checked', false);
-                viewColumbus.set('checked', false);
-                transitioner.morphTo2D();
-            });
-            on(view3D, 'Click', function() {
-                view2D.set('checked', false);
-                view3D.set('checked', true);
-                viewColumbus.set('checked', false);
-                transitioner.morphTo3D();
-            });
-            on(viewColumbus, 'Click', function() {
-                view2D.set('checked', false);
-                view3D.set('checked', false);
-                viewColumbus.set('checked', true);
-                transitioner.morphToColumbusView();
-            });
-
-            var imagery = widget.imagery;
-            var imageryAerial = widget.imageryAerial;
-            var imageryAerialWithLabels = widget.imageryAerialWithLabels;
-            var imageryRoad = widget.imageryRoad;
-            var imagerySingleTile = widget.imagerySingleTile;
-            var imageryOptions = [imageryAerial, imageryAerialWithLabels, imageryRoad, imagerySingleTile];
-
-            imagery.startup();
-
-            function createImageryClickFunction(control, style) {
-                return function() {
-                    if (style) {
-                        widget.setStreamingImageryMapStyle(style);
-                    } else {
-                        widget.enableStreamingImagery(false);
-                    }
-
-                    imageryOptions.forEach(function(o) {
-                        o.set('checked', o === control);
-                    });
-                };
-            }
-
-            on(imageryAerial, 'Click', createImageryClickFunction(imageryAerial, BingMapsStyle.AERIAL));
-            on(imageryAerialWithLabels, 'Click', createImageryClickFunction(imageryAerialWithLabels, BingMapsStyle.AERIAL_WITH_LABELS));
-            on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
-            on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
-
-            //////////////////////////////////////////////////////////////////////////////////////////////////
-
-            if (widget.resizeWidgetOnWindowResize) {
+            if (this.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {
-                    widget.resize();
+                    that.resize();
                 });
             }
 
@@ -896,6 +1023,10 @@ define([
             controller.enableTilt = true;
             controller.setEllipsoid(Ellipsoid.WGS84);
             controller.columbusViewMode = CameraColumbusViewMode.FREE;
+
+            if (mode === SceneMode.MORPHING) {
+                this.sceneTransitioner.completeMorph();
+            }
 
             if (mode === SceneMode.SCENE2D) {
                 camera.controller.viewExtent(Extent.MAX_VALUE);
@@ -961,35 +1092,6 @@ define([
          */
         showSkyAtmosphere : function(show) {
             this.scene.skyAtmosphere.show = show;
-        },
-
-        /**
-         * Enable or disable streaming imagery, and update the globe.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @param {Boolean} value - <code>true</code> to enable streaming imagery.
-         * @see CesiumViewerWidget#useStreamingImagery
-         */
-        enableStreamingImagery : function(value) {
-            this.useStreamingImagery = value;
-            this._configureCentralBodyImagery();
-        },
-
-        /**
-         * Change the streaming imagery type, and update the globe.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @param {BingMapsStyle} value - the new map style to use.
-         * @see CesiumViewerWidget#mapStyle
-         */
-        setStreamingImageryMapStyle : function(value) {
-            if (!this.useStreamingImagery || this.mapStyle !== value) {
-                this.useStreamingImagery = true;
-                this.mapStyle = value;
-                this._configureCentralBodyImagery();
-            }
         },
 
         /**
@@ -1088,47 +1190,6 @@ define([
 
         _setLoading : function(isLoading) {
             this.loading.style.display = isLoading ? 'block' : 'none';
-        },
-
-        _configureCentralBodyImagery : function() {
-            var centralBody = this.centralBody;
-
-            var imageLayers = centralBody.getImageryLayers();
-
-            var existingImagery;
-            if (imageLayers.getLength() !== 0) {
-                existingImagery = imageLayers.get(0).imageryProvider;
-            }
-
-            var newLayer;
-
-            if (this.useStreamingImagery) {
-                if (!(existingImagery instanceof BingMapsImageryProvider) ||
-                    existingImagery.getMapStyle() !== this.mapStyle) {
-
-                    newLayer = imageLayers.addImageryProvider(new BingMapsImageryProvider({
-                        url : 'http://dev.virtualearth.net',
-                        mapStyle : this.mapStyle,
-                        // Some versions of Safari support WebGL, but don't correctly implement
-                        // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                        proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
-                    }));
-                    if (imageLayers.getLength() > 1) {
-                        imageLayers.remove(imageLayers.get(0));
-                    }
-                    imageLayers.lowerToBottom(newLayer);
-                }
-            } else {
-                if (!(existingImagery instanceof SingleTileImageryProvider) ||
-                    existingImagery.getUrl() !== this.dayImageUrl) {
-
-                    newLayer = imageLayers.addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
-                    if (imageLayers.getLength() > 1) {
-                        imageLayers.remove(imageLayers.get(0));
-                    }
-                    imageLayers.lowerToBottom(newLayer);
-                }
-            }
         },
 
         /**

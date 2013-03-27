@@ -1,0 +1,109 @@
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" class="testSVG" height="28" width="28" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 28 28" xmlns:dc="http://purl.org/dc/elements/1.1/">
+ <metadata>
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title/>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <style type="text/css">.cesium-sceneModePicker-rectButton {
+    cursor: pointer;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.cesium-sceneModePicker-rectButton .cesium-sceneModePicker-buttonGlow {
+    fill: #fff;
+    stroke: none;
+    filter: url(#sceneMode_blurred);
+    display: none;
+}
+.cesium-sceneModePicker-rectButton:hover .cesium-sceneModePicker-buttonGlow {
+    display: block;
+}
+.cesium-sceneModePicker-rectButton .cesium-sceneModePicker-buttonPath {
+    fill: #edffff;
+}
+.cesium-sceneModePicker-rectButton .cesium-sceneModePicker-buttonMain {
+    fill: url(#sceneMode_buttonNormal);
+    stroke: #444;
+    stroke-width: 1.2;
+}
+.cesium-sceneModePicker-rectButton:hover .cesium-sceneModePicker-buttonMain {
+    fill: url(#sceneMode_buttonHovered);
+    stroke: #AEF;
+}
+.cesium-sceneModePicker-rectButton:active .cesium-sceneModePicker-buttonMain {
+    fill: #ABD6FF;
+}
+.cesium-sceneModePicker-buttonDisabled {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.cesium-sceneModePicker-buttonDisabled .cesium-sceneModePicker-buttonMain {
+    fill: url(#sceneMode_buttonDisabled);
+    stroke: #555;
+}
+.cesium-sceneModePicker-buttonDisabled .cesium-sceneModePicker-buttonPath {
+    fill: #818181;
+}
+.cesium-sceneModePicker-buttonDisabled .cesium-sceneModePicker-buttonGlow {
+    display: none;
+}
+.cesium-sceneModePicker-buttonToggled .cesium-sceneModePicker-buttonGlow {
+    display: block;
+    fill: #2E2;
+}
+.cesium-sceneModePicker-buttonToggled .cesium-sceneModePicker-buttonMain {
+    stroke: #2E2;
+}
+.cesium-sceneModePicker-buttonToggled:hover .cesium-sceneModePicker-buttonGlow {
+    fill: #fff;
+}
+.cesium-sceneModePicker-buttonToggled:hover .cesium-sceneModePicker-buttonMain {
+    stroke: #2E2;
+}</style>
+ <rect transform="matrix(0.845,0,0,0.84848485,37.18,0)" display="none" rx="2" ry="2" height="32" filter="url(#sceneMode_blurred)" width="32" y="0" x="0" class="cesium-sceneModePicker-buttonGlow" fill="#FFF"/>
+ <rect transform="matrix(0.845,0,0,0.84848485,104.78,0)" display="none" rx="2" ry="2" height="32" filter="url(#sceneMode_blurred)" width="32" y="0" x="0" class="cesium-sceneModePicker-buttonGlow" fill="#FFF"/>
+ <rect transform="matrix(0.845,0,0,0.84848485,70.98,0)" display="none" rx="2" ry="2" height="32" filter="url(#sceneMode_blurred)" width="32" y="0" x="0" class="cesium-sceneModePicker-buttonGlow" fill="#FFF"/>
+ <defs>
+  <linearGradient id="sceneMode_buttonNormal" x2="0.5" x1="0.5" y2="1">
+   <stop stop-color="#747577" offset="0"/>
+   <stop stop-color="#394452" offset="0.12"/>
+   <stop stop-color="#2D3237" offset="0.46"/>
+   <stop stop-color="#353535" offset="0.81"/>
+  </linearGradient>
+  <linearGradient id="sceneMode_buttonHovered" x2="0.5" x1="0.5" y2="1">
+   <stop stop-color="#89B4CF" offset="0"/>
+   <stop stop-color="#5494C1" offset="0.12"/>
+   <stop stop-color="#4C8EB8" offset="0.46"/>
+   <stop stop-color="#5492B7" offset="0.81"/>
+  </linearGradient>
+  <linearGradient id="sceneMode_buttonDisabled" x2="0.5" x1="0.5" y2="1">
+   <stop stop-color="#696969" offset="0"/>
+   <stop stop-color="#333" offset="0.75"/>
+  </linearGradient>
+  <filter id="sceneMode_blurred" height="2" width="2" y="-0.5" x="-0.5" color-interpolation-filters="sRGB">
+   <feGaussianBlur stdDeviation="4" in="SourceGraphic"/>
+  </filter>
+  <filter id="animation_blurred" width="2" y="-0.5" x="-0.5" height="2" color-interpolation-filters="sRGB">
+   <feGaussianBlur stdDeviation="4" in="SourceGraphic"/>
+  </filter>
+  <linearGradient id="linearGradient3211" x1="16" gradientUnits="userSpaceOnUse" x2="16" y1="-0.6" y2="32.6">
+   <stop stop-color="#ECF6FF" offset="0"/>
+   <stop stop-color="#D3E7FF" offset="0.12"/>
+   <stop stop-color="#DEEEFF" offset="0.46"/>
+   <stop stop-color="#E8F4FF" offset="0.81"/>
+  </linearGradient>
+ </defs>
+ <g class="cesium-animation-rectButton" transform="matrix(0.84337068,0,0,0.84337523,0.50602379,0.50596885)">
+  <rect rx="2" ry="2" display="none" filter="url(#animation_blurred)" width="32" y="0" x="0" height="32" class="cesium-animation-buttonGlow" fill="#FFF"/>
+  <rect rx="4" ry="4" height="32" width="32" stroke="#759dc0" y="0" x="0" stroke-width="1.2" class="cesium-animation-buttonMain" fill="url(#linearGradient3211)"/>
+  <use xlink:href="#animation_pathPlayReverse" height="112" width="169" y="0" x="0" class="cesium-animation-buttonPath" fill="#111111"/>
+  <title>Play Reverse</title>
+ </g>
+ <path fill-rule="evenodd" fill="#111" d="M14,4l-10,8.75h20l-4.25-3.7188v-4.6562h-2.812v2.1875l-2.938-2.5625zm-7.0938,9.906v10.094h14.094v-10.094h-14.094zm2.1876,2.313h3.3122v4.25h-3.3122v-4.25zm5.8442,1.281h3.406v6.438h-3.406v-6.438z"/>
+</svg>
