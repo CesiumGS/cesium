@@ -24,7 +24,7 @@
         <?js= self.partial('method.tmpl', doc.module) ?>
     <?js } ?>
     
-    <?js if (doc.kind === 'class' || doc.kind === 'module' || doc.kind === 'enumeration') { ?>
+    <?js if (doc.kind === 'class' || doc.kind === 'module' || doc.kind === 'enumeration' || doc.kind === 'glsl') { ?>
         <?js= self.partial('method.tmpl', doc) ?>
     <?js } else { ?>
         <?js if (doc.description) { ?>
