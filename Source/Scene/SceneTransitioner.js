@@ -246,7 +246,7 @@ define([
         createMorphHandler(this, complete2DCallback);
 
         if (currentMode === SceneMode.COLUMBUS_VIEW) {
-            morphFromClumbusViewTo2D(this, this.morphDuration, complete2DCallback);
+            morphFromColumbusViewTo2D(this, this.morphDuration, complete2DCallback);
         } else {
             morphFrom3DTo2D(this, this.morphDuration, complete2DCallback);
         }
@@ -469,7 +469,7 @@ define([
         transitioner._currentAnimations.push(animation);
     }
 
-    function morphFromClumbusViewTo2D(transitioner, duration, onComplete) {
+    function morphFromColumbusViewTo2D(transitioner, duration, onComplete) {
         var scene = transitioner._scene;
         var camera = scene.getCamera();
         var maxRadii = transitioner._ellipsoid.getMaximumRadius();
