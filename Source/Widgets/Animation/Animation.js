@@ -198,7 +198,6 @@ define(['../../Core/destroyObject',
                 viewModel.faster();
             }
             e.preventDefault();
-            e.stopPropagation();
         } else {
             widgetForDrag = undefined;
             viewModel.shuttleRingDragging(false);
@@ -346,10 +345,11 @@ define(['../../Core/destroyObject',
      * @alias Animation
      * @constructor
      *
-     * @param {Element|String} container The DOM element, or DOM element ID, that will contain the widget.
+     * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {AnimationViewModel} viewModel The ViewModel used by this widget.
      *
      * @exception {DeveloperError} container is required.
+     * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} viewModel is required.
      *
      * @see AnimationViewModel
