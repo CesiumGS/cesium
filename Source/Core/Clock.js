@@ -123,7 +123,7 @@ define([
 
         /**
          * Determines if tick should actually advance time.
-         * @type ClockRange
+         * @type Boolean
          */
         this.shouldAnimate = defaultValue(description.shouldAnimate, true);
 

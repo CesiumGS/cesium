@@ -24,11 +24,43 @@ define([
      * @constructor
      */
     var DynamicClock = function() {
+        /**
+         * The start time of the clock to use when looping or clamped.
+         * @type JulianDate
+         */
         this.startTime = Iso8601.MAXIMUM_INTERVAL.start;
+
+        /**
+         * The stop time of the clock to use when looping or clamped.
+         * @type JulianDate
+         */
         this.stopTime = Iso8601.MAXIMUM_INTERVAL.stop;
+
+        /**
+         * The initial time to use when switching to this clock.
+         * @type JulianDate
+         */
         this.currentTime = Iso8601.MAXIMUM_INTERVAL.start;
+
+        /**
+         * Determines how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
+         * @type ClockRange
+         */
         this.clockRange = ClockRange.LOOP_STOP;
+
+        /**
+         * Determines if clock advancement is frame dependent or system clock dependent.
+         * @type ClockStep
+         */
         this.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+
+        /**
+         * Determines how much time advances with each tick, negative values allow for advancing backwards.
+         * If <code>clockStep</code> is set to ClockStep.TICK_DEPENDENT this is the number of seconds to advance.
+         * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_MULTIPLIER this value is multiplied by the
+         * elapsed system time since the last call to tick.
+         * @type Number
+         */
         this.multiplier = 1.0;
     };
 
@@ -36,7 +68,7 @@ define([
      * Processes a single CZML packet and merges its data into the provided DynamicObject's clock.
      * @memberof DynamicClock
      *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the billboard data.
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the clock data.
      * @param {Object} packet The CZML packet to process.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The collection into which objects are being loaded.
      * @param {String} [sourceUri] The originating url of the CZML being processed.
