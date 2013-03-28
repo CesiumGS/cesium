@@ -16,6 +16,10 @@ varying vec4  v_pickColor;
 
 uniform float u_morphTime;
 
+// Unpacks a normal from a vec2 using a spheremap transform
+// see 
+//    http://aras-p.info/texts/CompactNormalStorage.html#method04spheremap
+// for details.
 vec3 decode(vec2 enc)
 {
     vec2 fenc = enc * 4.0 - 2.0;

@@ -1010,6 +1010,10 @@ define([
 
     var computeAdjacencyAnglesPosition = new Cartesian3();
 
+    // Two normals are packed into a Cartesian4 using a spheremap transform
+    // see
+    //    http://aras-p.info/texts/CompactNormalStorage.html#method04spheremap
+    // for details.
     function computeAdjacencyAngles(position, index, positions, startSegment, endSegment, result, modelMatrix) {
         if (typeof result === 'undefined') {
             result = new Cartesian4();
