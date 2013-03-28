@@ -104,8 +104,14 @@ void main()
 	        direction = -direction;
 	    }
 	    
-	    float angle = acos(dot(direction, nextWC));
-	    float sinAngle = sin(angle);
+	    // The sine of the angle between the two vectors is given by the formula
+	    //         |a x b| = |a||b|sin(theta)
+	    // which is
+	    //     float sinAngle = length(cross(vec3(direction, 0.0), vec3(nextWC, 0.0)));
+	    // Because the z components of both vectors are zero, the x and y coordinate will be zero.
+	    // Therefore, the sine of the angle is just the z component of the cross product.
+	    float sinAngle = direction.y * nextWC.x - direction.x * nextWC.y;
+	    
 	    expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
     }
 
