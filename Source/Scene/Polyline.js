@@ -165,6 +165,8 @@ define([
         this._positions = value;
         this._boundingVolume = BoundingSphere.fromPoints(this._positions, this._boundingVolume);
         makeDirty(this, POSITION_INDEX);
+
+        this.update();
     };
 
     /**
