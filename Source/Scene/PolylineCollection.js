@@ -1272,7 +1272,6 @@ define([
         positions : undefined,
         lengths : undefined
     };
-    var scratchLengths = new Array(1);
 
     PolylineBucket.prototype.getSegments = function(polyline) {
         var positions = polyline.getPositions();
@@ -1286,9 +1285,8 @@ define([
         }
 
         if (this.mode === SceneMode.SCENE3D) {
-            scratchLengths[0] = positions.length;
-            scratchSegments.positions = positions;
-            scratchSegments.lengths = scratchLengths;
+            scratchSegments.positions = polyline._segments.positions;
+            scratchSegments.lengths = polyline._segments.lengths;
             return scratchSegments;
         }
 
