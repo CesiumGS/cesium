@@ -62,7 +62,7 @@ define([
         var sampleStop;
         var showProperty = dynamicPath.show;
         var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
-        var show = (typeof showProperty === 'undefined' || showProperty.getNonInterpolatedValue(time));
+        var show = (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         //While we want to show the path, there may not actually be anything to show
         //depending on lead/trail settings.  Compute the interval of the path to
@@ -71,13 +71,13 @@ define([
             property = dynamicPath.leadTime;
             var leadTime;
             if (typeof property !== 'undefined') {
-                leadTime = property.getNonInterpolatedValue(time);
+                leadTime = property.getValue(time);
             }
 
             property = dynamicPath.trailTime;
             var trailTime;
             if (typeof property !== 'undefined') {
-                trailTime = property.getNonInterpolatedValue(time);
+                trailTime = property.getValue(time);
             }
 
             var availability = dynamicObject.availability;
@@ -148,24 +148,24 @@ define([
         var resolution = 60.0;
         property = dynamicPath.resolution;
         if (typeof property !== 'undefined') {
-            resolution = property.getNonInterpolatedValue(time);
+            resolution = property.getValue(time);
         }
 
         polyline.setPositions(positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.getPositions()));
 
         property = dynamicPath.color;
         if (typeof property !== 'undefined') {
-            polyline.setColor(property.getNonInterpolatedValue(time, polyline.getColor()));
+            polyline.setColor(property.getValue(time, polyline.getColor()));
         }
 
         property = dynamicPath.outlineColor;
         if (typeof property !== 'undefined') {
-            polyline.setOutlineColor(property.getNonInterpolatedValue(time, polyline.getOutlineColor()));
+            polyline.setOutlineColor(property.getValue(time, polyline.getOutlineColor()));
         }
 
         property = dynamicPath.outlineWidth;
         if (typeof property !== 'undefined') {
-            var outlineWidth = property.getNonInterpolatedValue(time);
+            var outlineWidth = property.getValue(time);
             if (typeof outlineWidth !== 'undefined') {
                 polyline.setOutlineWidth(outlineWidth);
             }
@@ -173,7 +173,7 @@ define([
 
         property = dynamicPath.width;
         if (typeof property !== 'undefined') {
-            var width = property.getNonInterpolatedValue(time);
+            var width = property.getValue(time);
             if (typeof width !== 'undefined') {
                 polyline.setWidth(width);
             }
