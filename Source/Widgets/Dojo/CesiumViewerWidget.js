@@ -688,15 +688,20 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
          */
         setTimeFromBuffer : function() {
             var clock = this.clock;
-            var shuttleRingTicks = AnimationViewModel.defaultTicks.slice(0);
 
+            var document = this.dynamicObjectCollection.getObject('document');
             var availability = this.dynamicObjectCollection.computeAvailability();
-            if (availability.start.equals(Iso8601.MINIMUM_VALUE)) {
-                clock.startTime = new JulianDate();
-                clock.stopTime = clock.startTime.addDays(1);
-                clock.clockRange = ClockRange.UNBOUNDED;
-                clock.multiplier = 60.0;
-            } else {
+            var adjustShuttleRing = false;
+
+            if (typeof document !== 'undefined' && typeof document.clock !== 'undefined') {
+                clock.startTime = document.clock.startTime;
+                clock.stopTime = document.clock.stopTime;
+                clock.clockRange = document.clock.clockRange;
+                clock.clockStep = document.clock.clockStep;
+                clock.multiplier = document.clock.multiplier;
+                clock.currentTime = document.clock.currentTime;
+                adjustShuttleRing = true;
+            } else if (!availability.start.equals(Iso8601.MINIMUM_VALUE)) {
                 clock.startTime = availability.start;
                 clock.stopTime = availability.stop;
                 if (typeof this.endUserOptions.loop === 'undefined' || this.endUserOptions.loop === '1') {
@@ -709,34 +714,36 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
                 if (multiplier < 1) {
                     multiplier = 1;
                 }
+                clock.multiplier = multiplier;
+                clock.currentTime = clock.startTime;
+                clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+                adjustShuttleRing = true;
+            } else {
+                clock.startTime = new JulianDate();
+                clock.stopTime = clock.startTime.addDays(1);
+                clock.clockRange = ClockRange.UNBOUNDED;
+                clock.multiplier = 60.0;
+                clock.currentTime = clock.startTime;
+                clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+            }
 
-                var index = binarySearch(shuttleRingTicks, multiplier, function(left, right) {
+            var shuttleRingTicks = AnimationViewModel.defaultTicks.slice(0);
+            if (adjustShuttleRing) {
+                var index = binarySearch(shuttleRingTicks, clock.multiplier, function(left, right) {
                     return left - right;
                 });
+
                 if (index < 0) {
                     index = ~index;
-                }
-                if (index !== shuttleRingTicks.length) {
-                    clock.multiplier = shuttleRingTicks[index];
-                } else {
-                    shuttleRingTicks.push(multiplier);
-                    clock.multiplier = multiplier;
+                    shuttleRingTicks.push(clock.multiplier);
                 }
 
-                var fastestSpeed = Math.round(totalSeconds / 10.0);
+                var fastestSpeed = Math.round(clock.startTime.getSecondsDifference(clock.stopTime) / 10.0);
                 if (fastestSpeed > shuttleRingTicks[shuttleRingTicks.length - 1]) {
                     shuttleRingTicks.push(fastestSpeed);
                 }
             }
-
-            //BEGIN Temporary cesium.agi.com workaround
-            clock.multiplier = 60;
-            //END Temporary cesium.agi.com workaround
-
             this.animationViewModel.setShuttleRingTicks(shuttleRingTicks);
-
-            clock.currentTime = clock.startTime;
-            clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
             this.timeline.zoomTo(clock.startTime, clock.stopTime);
         },
 
