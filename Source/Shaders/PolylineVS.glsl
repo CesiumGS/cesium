@@ -16,6 +16,18 @@ varying vec4  v_pickColor;
 
 uniform float u_morphTime;
 
+vec3 decode(vec2 enc)
+{
+    vec2 fenc = enc * 4.0 - 2.0;
+    float f = dot(fenc, fenc);
+    float g = sqrt(1.0 - f / 4.0);
+    
+    vec3 n;
+    n.xy = fenc * g;
+    n.z = 1.0 - f / 2.0;
+    return n;
+}
+
 void main() 
 {
     float texCoord = texCoordExpandWidthAndShow.x;
@@ -30,14 +42,14 @@ void main()
     if (u_morphTime == 1.0)
     {
         p = vec4(czm_translateRelativeToEye(position3DHigh, position3DLow), 1.0);
-        prevDir = vec4(czm_sphericalToCartesianCoordinates(prev.xy), 0.0);
-        nextDir = vec4(czm_sphericalToCartesianCoordinates(next.xy), 0.0);
+        prevDir = vec4(decode(prev.xy), 0.0);
+        nextDir = vec4(decode(next.xy), 0.0);
     }
     else if (u_morphTime == 0.0)
     {
         p = vec4(czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy), 1.0);
-        prevDir = vec4(czm_sphericalToCartesianCoordinates(prev.zw).zxy, 0.0);
-        nextDir = vec4(czm_sphericalToCartesianCoordinates(next.zw).zxy, 0.0);
+        prevDir = vec4(decode(prev.zw).zxy, 0.0);
+        nextDir = vec4(decode(next.zw).zxy, 0.0);
     }
     else
     {
@@ -45,15 +57,9 @@ void main()
                 czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),
                 czm_translateRelativeToEye(position3DHigh, position3DLow), 
                 u_morphTime);
-        prevDir = czm_columbusViewMorph(
-                    czm_sphericalToCartesianCoordinates(prev.xy), 
-                    czm_sphericalToCartesianCoordinates(prev.zw), 
-                    u_morphTime);
-        nextDir = czm_columbusViewMorph(
-                    czm_sphericalToCartesianCoordinates(next.xy), 
-                    czm_sphericalToCartesianCoordinates(next.zw), 
-                    u_morphTime);
         
+        prevDir = czm_columbusViewMorph(decode(prev.xy), decode(prev.zw), u_morphTime);
+        nextDir = czm_columbusViewMorph(decode(next.xy), decode(next.zw), u_morphTime);
         prevDir.w = 0.0;
         nextDir.w = 0.0;
     }

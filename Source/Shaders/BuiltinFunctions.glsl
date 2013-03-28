@@ -1003,33 +1003,6 @@ vec3 czm_translateRelativeToEye(vec3 high, vec3 low)
 }
 
 /**
- * Converts from spherical coordinates to cartesian coordinates.
- * 
- * @name czm_sphericalToCartesianCoordinates
- * @glslFunction
- *
- * @param {vec2} spherical The spherical coordinates. The x property is the angle in 
- * the xy-plane from the positive x-axis. The y property is the angle from the positive z-axis.
- * @returns {vec3} The cartesian coordinates
- * 
- * @example
- * // normal in spherical coordinates to cartesian coordinates
- * vec3 normal = normalize(czm_sphericalToCartesianCoordinates(normalSpherical));
- *
- * // position in spherical coordinates to cartesian coordinates
- * vec3 position = normalize(czm_sphericalToCartesianCoordinates(positionSpherical));
- * position *= radius;
- */
-vec3 czm_sphericalToCartesianCoordinates(vec2 spherical)
-{
-    float sinTheta = sin(spherical.x);
-    float x = sinTheta * cos(spherical.y);
-    float y = sinTheta * sin(spherical.y);
-    float z = cos(spherical.x);
-    return vec3(x, y, z);
-}
-
-/**
  * @private
  */
 vec4 czm_getWaterNoise(sampler2D normalMap, vec2 uv, float time, float angleInRadians)

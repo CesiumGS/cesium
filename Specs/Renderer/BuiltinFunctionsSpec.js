@@ -177,29 +177,4 @@ defineSuite([
 
         verifyDraw(fs, uniformMap);
     });
-
-    it('has czm_sphericalToCartesianCoordinates', function() {
-        var normal = new Cartesian3(1.0, 1.0, 1.0).normalize();
-        var latLon = new Cartesian2(Math.acos(normal.z), Math.atan2(normal.y, normal.x));
-
-        var uniformMap = {
-            u_latLon : function() {
-                return latLon;
-            },
-            u_normal : function() {
-                return normal;
-            }
-        };
-
-        var fs =
-            'uniform vec2 u_latLon;' +
-            'uniform vec3 u_normal;' +
-            'void main() {' +
-            '    vec3 cartesian = czm_sphericalToCartesianCoordinates(u_latLon);' +
-            '    vec3 diff = abs(u_normal - cartesian);' +
-            '    gl_FragColor = vec4(all(lessThan(diff, vec3(czm_epsilon6))));' +
-            '}';
-
-        verifyDraw(fs, uniformMap);
-    });
 }, 'WebGL');

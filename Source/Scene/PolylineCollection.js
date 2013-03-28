@@ -1027,8 +1027,10 @@ define([
             Cartesian3.subtract(prev, position, prev);
         }
         Cartesian3.normalize(prev, prev);
-        result.x = Math.acos(prev.z);
-        result.y = Math.atan2(prev.y, prev.x);
+
+        var p = Math.sqrt(prev.z * 8.0 + 8.0);
+        result.x = prev.x / p + 0.5;
+        result.y = prev.y / p + 0.5;
 
         var next = computeAdjacencyAnglesPosition;
         if (endSegment) {
@@ -1038,8 +1040,10 @@ define([
             Cartesian3.subtract(next, position, next);
         }
         Cartesian3.normalize(next, next);
-        result.z = Math.acos(next.z);
-        result.w = Math.atan2(next.y, next.x);
+
+        p = Math.sqrt(next.z * 8.0 + 8.0);
+        result.z = next.x / p + 0.5;
+        result.w = next.y / p + 0.5;
 
         return result;
     }
