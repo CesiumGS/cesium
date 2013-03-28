@@ -145,8 +145,6 @@ define([
         this._boundingVolume2D = undefined;
 
         this._commandLists = new CommandLists();
-        this._cachedColorCommands = [];
-        this._cachedPickCommands = [];
         this._colorCommands = [];
         this._pickCommands = [];
 
@@ -465,11 +463,10 @@ define([
             this._rs.depthMask = !useDepthTest;
             this._rs.depthTest.enabled = useDepthTest;
 
-            var cachedColorList = this._cachedColorCommands;
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
-            createCommandLists(colorList, cachedColorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, this._uniforms, true);
+            createCommandLists(colorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, this._uniforms, true);
         }
 
         if (pass.pick) {
@@ -485,11 +482,10 @@ define([
             this._rsPick.depthMask = !useDepthTest;
             this._rsPick.depthTest.enabled = useDepthTest;
 
-            var cachedPickList = this._cachedPickCommands;
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            createCommandLists(pickList, cachedPickList, boundingVolume, modelMatrix, this._vertexArrays, this._rsPick, this._uniforms, false, this._spPick);
+            createCommandLists(pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rsPick, this._uniforms, false, this._spPick);
         }
 
         if (!this._commandLists.empty()) {
@@ -497,12 +493,11 @@ define([
         }
     };
 
-    function createCommandLists(commands, cachedCommands, boundingVolume, modelMatrix, vertexArrays, renderState, uniforms, combineUniforms, shaderProgram) {
+    function createCommandLists(commands, boundingVolume, modelMatrix, vertexArrays, renderState, uniforms, combineUniforms, shaderProgram) {
         var length = vertexArrays.length;
 
-        var cachedCommandsLength = cachedCommands.length;
-        commands.length = 0;
-        var cacheIndex = 0;
+        var commandsLength = commands.length;
+        var commandIndex = 0;
 
         for ( var m = 0; m < length; ++m) {
             var va = vertexArrays[m];
@@ -527,12 +522,14 @@ define([
                     var mId = createMaterialId(polyline._material);
                     if (mId !== currentId) {
                         if (typeof currentId !== 'undefined') {
-                            if (cacheIndex >= cachedCommandsLength) {
+                            if (commandIndex >= commandsLength) {
                                 command = new DrawCommand();
-                                cachedCommands.push(command);
+                                commands.push(command);
                             } else {
-                                command = cachedCommands[cacheIndex++];
+                                command = commands[commandIndex];
                             }
+
+                            ++commandIndex;
 
                             command.boundingVolume = boundingVolume;
                             command.modelMatrix = modelMatrix;
@@ -544,8 +541,6 @@ define([
                             command.uniformMap = combineUniforms ? combine([uniforms, currentMaterial._uniforms], false, false) : uniforms;
                             command.count = count;
                             command.offset = offset;
-
-                            commands.push(command);
 
                             offset += count;
                             count = 0;
@@ -566,12 +561,14 @@ define([
                 }
 
                 if (typeof currentId !== 'undefined' && count > 0) {
-                    if (cacheIndex >= cachedCommandsLength) {
+                    if (commandIndex >= commandsLength) {
                         command = new DrawCommand();
-                        cachedCommands.push(command);
+                        commands.push(command);
                     } else {
-                        command = cachedCommands[cacheIndex++];
+                        command = commands[commandIndex];
                     }
+
+                    ++commandIndex;
 
                     command.boundingVolume = boundingVolume;
                     command.modelMatrix = modelMatrix;
@@ -583,17 +580,13 @@ define([
                     command.uniformMap = combineUniforms ? combine([uniforms, currentMaterial._uniforms], false, false) : uniforms;
                     command.count = count;
                     command.offset = offset;
-
-                    commands.push(command);
                 }
 
                 currentId = undefined;
             }
         }
 
-        if (commands.length < cachedCommands.length / 2.0) {
-            cachedCommands.length = commands.length;
-        }
+        commands.length = commandIndex;
     }
 
     /**
