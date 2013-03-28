@@ -153,14 +153,23 @@ define(['../Core/DeveloperError',
      */
      ClockViewModel.prototype.synchronize = function() {
         var clock = this.clock;
+
+        var startTime = clock.startTime;
+        var stopTime = clock.stopTime;
+        var currentTime = clock.currentTime;
+        var multiplier = clock.multiplier;
+        var clockStep = clock.clockStep;
+        var clockRange = clock.clockRange;
+        var shouldAnimate = clock.shouldAnimate;
+
         this.systemTime(new JulianDate());
-        this.startTime(clock.startTime);
-        this.stopTime(clock.stopTime);
-        this.currentTime(clock.currentTime);
-        this.multiplier(clock.multiplier);
-        this.clockStep(clock.clockStep);
-        this.clockRange(clock.clockRange);
-        this.shouldAnimate(clock.shouldAnimate);
+        this.startTime(startTime);
+        this.stopTime(stopTime);
+        this.currentTime(currentTime);
+        this.multiplier(multiplier);
+        this.clockStep(clockStep);
+        this.clockRange(clockRange);
+        this.shouldAnimate(shouldAnimate);
     };
 
     return ClockViewModel;
