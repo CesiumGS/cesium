@@ -14,7 +14,7 @@ vec4 computeEllipsoidColor(czm_ray ray, float intersection, float side)
 
     vec2 st = czm_ellipsoidWgs84TextureCoordinates(geodeticNormal);
     vec3 positionToEyeEC = -positionEC;
-    //st.s *= u_radii.z / v_eyeEllipsoidDistance;
+    st *= 5.0 / v_eyeEllipsoidDistance;
 
     czm_materialInput materialInput;
     materialInput.s = st.s;

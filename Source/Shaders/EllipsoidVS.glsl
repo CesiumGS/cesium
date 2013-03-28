@@ -17,7 +17,8 @@ void main()
     v_positionEC = (czm_modelView * p).xyz;     // position in eye coordinates
     gl_Position = czm_modelViewProjection * p;  // position in clip coordinates
 
-    v_eyeEllipsoidDistance = length((czm_modelView * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
+    float minRadius = min(min(u_radii.x, u_radii.y), u_radii.z);
+    v_eyeEllipsoidDistance = floor(max(1.0, length((czm_modelView * vec4(0.0, 0.0, 0.0, 1.0)).xyz) / minRadius));
 
     // With multi-frustum, when the ellipsoid primitive is positioned on the intersection of two frustums 
     // and close to terrain, the terrain (writes depth) in the closest frustum can overwrite part of the 
