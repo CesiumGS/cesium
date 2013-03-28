@@ -4,6 +4,8 @@ uniform vec3 u_radii;
 
 varying vec3 v_positionEC;
 
+varying float v_eyeEllipsoidDistance;
+
 void main() 
 {
     // In the vertex data, the cube goes from (-1.0, -1.0, -1.0) to (1.0, 1.0, 1.0) in model coordinates.
@@ -11,10 +13,12 @@ void main()
     // but doing it here allows us to change the radii without rewriting the vertex data, and
     // allows all ellipsoids to reuse the same vertex data.
     vec4 p = vec4(u_radii * position, 1.0);
-    
+
     v_positionEC = (czm_modelView * p).xyz;     // position in eye coordinates
     gl_Position = czm_modelViewProjection * p;  // position in clip coordinates
-    
+
+    v_eyeEllipsoidDistance = length((czm_modelView * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
+
     // With multi-frustum, when the ellipsoid primitive is positioned on the intersection of two frustums 
     // and close to terrain, the terrain (writes depth) in the closest frustum can overwrite part of the 
     // ellipsoid (does not write depth) that was rendered in the farther frustum.
