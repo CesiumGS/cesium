@@ -1071,7 +1071,7 @@ define([
             gridColor : new Color(0.0, 1.0, 0.0, 1.0),
             holeAlpha : 0.4,
             lineCount : new Cartesian2(8.0, 8.0),
-            lineThickness : new Cartesian2(0.2, 0.2)
+            lineThickness : new Cartesian2(0.1, 0.1)
         },
         source : GridMaterial
     });

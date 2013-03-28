@@ -84,8 +84,8 @@ require([
         Sandcastle.declare(e2); // For Sandcastle highlighting.
         e2.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
             ellipsoid.cartographicToCartesian(
-              Cesium.Cartographic.fromDegrees(-95.0, 40.0, 800000.0)));
-        e2.radii = new Cesium.Cartesian3(300000.0, 500000.0, 800000.0);
+              Cesium.Cartographic.fromDegrees(-95.0, 40.0, 500000.0)));
+        e2.radii = new Cesium.Cartesian3(200000.0, 300000.0, 500000.0);
         e2.material = Cesium.Material.fromType(scene.getContext(), Cesium.Material.GridType);
         e2.material.uniforms.gridColor = Cesium.Color.DARKVIOLET.clone();
         primitives.add(e2);
