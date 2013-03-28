@@ -227,7 +227,10 @@ define([
             throw new DeveloperError('scene is required.');
         }
         this._scene = scene;
-        this._updaters = {};
+        this._updaters = {
+            FIXED : new PolylineUpdater(scene, ReferenceFrame.FIXED),
+            INERTIAL : new PolylineUpdater(scene, ReferenceFrame.INERTIAL)
+        };
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -323,6 +326,7 @@ define([
 
                 if (typeof currentUpdater === 'undefined') {
                     currentUpdater = new PolylineUpdater(this._scene, frameToVisualize);
+                    currentUpdater.update(time);
                     this._updaters[frameToVisualize] = currentUpdater;
                 }
 
