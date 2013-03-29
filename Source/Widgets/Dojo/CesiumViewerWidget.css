@@ -141,26 +141,27 @@
     background-size: 60px 30px;
 	width: 60px;
 	height: 30px;
-@media only screen and (min-width: 600px) and (max-width: 900px) {
-	.cesium-viewerWidget-animationContainer {
-		width: 136px;
-		height: 90px;
-	}
-	.cesium-viewerWidget-timelineContainer {
-		left: 137px;
-	}
-	.cesium-viewerWidget-cesiumLogo {
-		left: 146px;
-	}
 }
 
 .cw-agiLogo img {
     border: none;
 }
 
-	.cw-agiLogo {
-		left: 272px;
-	}
+.cw-agiLogo {
+    left: 272px;
+}
+
+@media only screen and (min-width: 600px) and (max-width: 900px) {
+    .cesium-viewerWidget-animationContainer {
+        width: 136px;
+        height: 90px;
+    }
+    .cesium-viewerWidget-timelineContainer {
+        left: 137px;
+    }
+    .cesium-viewerWidget-cesiumLogo {
+        left: 146px;
+    }
 }
 
 @media only screen and (max-width: 599px) {
