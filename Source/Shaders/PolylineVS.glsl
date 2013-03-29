@@ -114,7 +114,7 @@ void main()
 	    //     float sinAngle = length(cross(vec3(direction, 0.0), vec3(nextWC, 0.0)));
 	    // Because the z components of both vectors are zero, the x and y coordinate will be zero.
 	    // Therefore, the sine of the angle is just the z component of the cross product.
-	    float sinAngle = direction.y * nextWC.x - direction.x * nextWC.y;
+	    float sinAngle = abs(direction.x * nextWC.y - direction.y * nextWC.x);
 	    
 	    expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
     }
