@@ -35,7 +35,6 @@ define([
         this.url = undefined;
         this.eventname = undefined;
         this.sourceType = undefined;
-
     };
 
     /**
