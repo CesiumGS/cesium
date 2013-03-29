@@ -6,7 +6,7 @@
       "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
       "currentTime":"2012-03-15T10:00:00Z",
       "multiplier":60.0,
-      "range":"UNBOUNDED",
+      "range":"LOOP_STOP",
       "step":"SYSTEM_CLOCK_MULTIPLIER"
     }
   },
@@ -2285,25 +2285,65 @@
       ],
       "leadTime":[
         {
-          "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
+          "interval":"2012-03-15T10:00:00Z/2012-03-15T13:11:42.0607217289944Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
           "epoch":"2012-03-15T10:00:00Z",
           "number":[
-            0.0,8.64e4,
-            8.64e4,0.0
+            0.0,43058.246637085,
+            43058.246637085,0.0
+          ]
+        },
+        {
+          "interval":"2012-03-15T13:11:42.0607217289944Z/2012-03-15T22:02:21.7533629149984Z",
+          "interpolationAlgorithm":"LINEAR",
+          "interpolationDegree":1,
+          "epoch":"2012-03-15T13:11:42.0607217289944Z",
+          "number":[
+            0.0,43058.246637085,
+            43058.246637085,0.0
+          ]
+        },
+        {
+          "interval":"2012-03-15T22:02:21.7533629149984Z/2012-03-16T10:00:00Z",
+          "interpolationAlgorithm":"LINEAR",
+          "interpolationDegree":1,
+          "epoch":"2012-03-15T22:02:21.7533629149984Z",
+          "number":[
+            0.0,43058.246637085,
+            43058.246637085,0.0
           ]
         }
       ],
       "trailTime":[
         {
-          "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
+          "interval":"2012-03-15T10:00:00Z/2012-03-15T13:11:42.0607217289944Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
           "epoch":"2012-03-15T10:00:00Z",
           "number":[
             0.0,0.0,
-            8.64e4,8.64e4
+            43058.246637085,43058.246637085
+          ]
+        },
+        {
+          "interval":"2012-03-15T13:11:42.0607217289944Z/2012-03-15T22:02:21.7533629149984Z",
+          "interpolationAlgorithm":"LINEAR",
+          "interpolationDegree":1,
+          "epoch":"2012-03-15T13:11:42.0607217289944Z",
+          "number":[
+            0.0,0.0,
+            43058.246637085,43058.246637085
+          ]
+        },
+        {
+          "interval":"2012-03-15T22:02:21.7533629149984Z/2012-03-16T10:00:00Z",
+          "interpolationAlgorithm":"LINEAR",
+          "interpolationDegree":1,
+          "epoch":"2012-03-15T22:02:21.7533629149984Z",
+          "number":[
+            0.0,0.0,
+            43058.246637085,43058.246637085
           ]
         }
       ]
