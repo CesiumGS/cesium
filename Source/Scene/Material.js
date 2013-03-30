@@ -209,7 +209,7 @@ define([
      *      <li><code>gridColor</code>:  rgba color object for the grid's lines.</li>
      *      <li><code>holeAlpha</code>: Alpha value for the holes between grid lines.</li>
      *      <li><code>lineCount</code>:  Object with x and y values specifying the number of columns and rows respectively.</li>
-     *      <li><code>lineThickness</code>:  Object with x and y values specifying the thickness of grid lines in the range 0.0 to 1.0.</li>
+     *      <li><code>lineThickness</code>:  Object with x and y values specifying the thickness of grid lines (in pixels where available).</li>
      *  </ul>
      *  <li>Stripe</li>
      *  <ul>
@@ -1070,8 +1070,8 @@ define([
         uniforms : {
             gridColor : new Color(0.0, 1.0, 0.0, 1.0),
             holeAlpha : 0.4,
-            lineCount : new Cartesian2(8.0, 8.0),
-            lineThickness : new Cartesian2(0.1, 0.1)
+            lineCount : new Cartesian2(5.0, 5.0),
+            lineThickness : new Cartesian2(1.0, 1.0)
         },
         source : GridMaterial
     });

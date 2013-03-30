@@ -21,20 +21,21 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     float value;
 #ifdef GL_OES_standard_derivatives
     // Fuzz Factor - Controls blurriness between lines and holes
-    const float fuzz = 0.1;
+    const float fuzz = 1.0;
+    vec2 thickness = lineThickness - 1.0;
 
     // From "3D Engine Design for Virtual Globes" by Cozzi and Ring, Listing 4.13.
     vec2 dx = abs(dFdx(st));
     vec2 dy = abs(dFdy(st));
-    vec2 dF = vec2(max(dx.s, dy.s), max(dx.t, dy.t)) * lineCount * 10.0;
+    vec2 dF = vec2(max(dx.s, dy.s), max(dx.t, dy.t)) * lineCount;
     value = min(
-        smoothstep(dF.s * lineThickness.s, dF.s * (fuzz + lineThickness.s), scaledWidth),
-        smoothstep(dF.t * lineThickness.t, dF.t * (fuzz + lineThickness.t), scaledHeight));
+        smoothstep(dF.s * thickness.s, dF.s * (fuzz + thickness.s), scaledWidth),
+        smoothstep(dF.t * thickness.t, dF.t * (fuzz + thickness.t), scaledHeight));
 #else
     // Fuzz Factor - Controls blurriness between lines and holes
     const float fuzz = 0.05;
 
-    vec2 range = 0.5 - (lineThickness * 0.5);
+    vec2 range = 0.5 - (lineThickness * 0.05);
     value = min(
         1.0 - smoothstep(range.s, range.s + fuzz, scaledWidth),
         1.0 - smoothstep(range.t, range.t + fuzz, scaledHeight));

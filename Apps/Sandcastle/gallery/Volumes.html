@@ -157,8 +157,8 @@ require([
 
         var lineThicknessXSlider = new HorizontalSlider({
             value : adjustableGridMaterials[0].uniforms.lineThickness.x,
-            minimum : 0.0,
-            maximum : 1.1,
+            minimum : 0.5,
+            maximum : 10.0,
             intermediateChanges : true,
             style : "width:150px;",
             onChange : function(value) {
@@ -172,8 +172,8 @@ require([
 
         var lineThicknessYSlider = new HorizontalSlider({
             value : adjustableGridMaterials[0].uniforms.lineThickness.y,
-            minimum : 0.0,
-            maximum : 1.1,
+            minimum : 0.5,
+            maximum : 10.0,
             intermediateChanges : true,
             style : "width:150px;",
             onChange : function(value) {
