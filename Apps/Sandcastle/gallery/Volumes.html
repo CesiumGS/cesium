@@ -125,9 +125,9 @@ require([
 
         var lineCountXSlider = new HorizontalSlider({
             value : adjustableGridMaterials[0].uniforms.lineCount.x,
-            minimum : 0,
+            minimum : 1,
             maximum : 20,
-            discreteValues: 21,
+            discreteValues: 20,
             intermediateChanges : true,
             style : "width:150px;",
             onChange : function(value) {
@@ -141,9 +141,9 @@ require([
 
         var lineCountYSlider = new HorizontalSlider({
             value : adjustableGridMaterials[0].uniforms.lineCount.y,
-            minimum : 0,
+            minimum : 1,
             maximum : 20,
-            discreteValues: 21,
+            discreteValues: 20,
             intermediateChanges : true,
             style : "width:150px;",
             onChange : function(value) {

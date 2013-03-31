@@ -1069,7 +1069,7 @@ define([
         type : Material.GridType,
         uniforms : {
             gridColor : new Color(0.0, 1.0, 0.0, 1.0),
-            holeAlpha : 0.4,
+            holeAlpha : 0.2,
             lineCount : new Cartesian2(5.0, 5.0),
             lineThickness : new Cartesian2(1.0, 1.0)
         },
