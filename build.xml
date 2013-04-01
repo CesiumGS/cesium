@@ -101,9 +101,10 @@
 	<!-- properties controlling which steps get run -->
 	<property name="build.minification" value="false" />
 
-	<!-- properties running the server-->
+	<!-- properties controlling how to run the server-->
 	<property name="runServer.public" value="false" />
 	<property name="runServer.port" value="8080" />
+	<property name="runServer.allowedHosts" value="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net,mesonet.agron.iastate.edu" />
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
@@ -338,7 +339,7 @@
 		 upstreamProxyPort: the port number of the upstream proxy, default 80
 		 noUpstreamProxyHostList: A comma-separated list of hosts that will not use the upstreamProxy
 		-->
-		<server proxyContextPath="/proxy" listenOnAllAddresses="${runServer.public}" terrainTranscodingContextPath="/terrain" allowedHostList="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net,mesonet.agron.iastate.edu" port="${runServer.port}" baseDir="${basedir}" />
+		<server listenOnAllAddresses="${runServer.public}" allowedHostList="${runServer.allowedHosts}" port="${runServer.port}" baseDir="${basedir}" proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" />
 	</target>
 
 	<target name="runPublicServer" description="Runs a public web server">
