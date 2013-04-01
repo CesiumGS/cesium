@@ -60,6 +60,11 @@
         <?js });
     } } ?>
     
+    <?js if (data.demo && demo.length) { ?>
+        <h5>Demo:</h5>
+        <p class="description"><?js= data.demo ?></p>
+    <?js } ?>    
+    
     <?js if (data.examples && examples.length) { ?>
         <h5>Example<?js= examples.length > 1? 's':'' ?></h5>
         <?js= this.partial('examples.tmpl', examples) ?>
