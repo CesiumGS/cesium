@@ -128,12 +128,20 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
-    it('intersect works', function() {
+    it('static intersect works', function() {
         var rectangle1 = new BoundingRectangle(0, 0, 4, 4);
         var rectangle2 = new BoundingRectangle(2, 2, 4, 4);
         var rectangle3 = new BoundingRectangle(5, 5, 4, 4);
         expect(BoundingRectangle.intersect(rectangle1, rectangle2)).toEqual(Intersect.INTERSECTING);
         expect(BoundingRectangle.intersect(rectangle1, rectangle3)).toEqual(Intersect.OUTSIDE);
+    });
+
+    it('intersect works', function() {
+        var rectangle1 = new BoundingRectangle(0, 0, 4, 4);
+        var rectangle2 = new BoundingRectangle(2, 2, 4, 4);
+        var rectangle3 = new BoundingRectangle(5, 5, 4, 4);
+        expect(rectangle1.intersect(rectangle2)).toEqual(Intersect.INTERSECTING);
+        expect(rectangle1.intersect(rectangle3)).toEqual(Intersect.OUTSIDE);
     });
 
     it('union works without a result parameter', function() {
