@@ -75,9 +75,9 @@ define(['./SceneModePickerViewModel',
          * @memberof FullscreenWidget
          * @type {Element}
          */
-        this.button = document.createElement('span');
+        this.element = document.createElement('span');
 
-        var widgetNode = this.button;
+        var widgetNode = this.element;
         widgetNode.className = 'cesium-sceneModePicker-button';
         widgetNode.setAttribute('data-bind', '\
                                  css: { "cesium-sceneModePicker-button2D": sceneMode() === _sceneMode.SCENE2D,\
@@ -144,7 +144,7 @@ define(['./SceneModePickerViewModel',
         document.removeEventListener('touchstart', this._closeDropDown);
         var container = this.container;
         knockout.cleanNode(container);
-        container.removeChild(this.button);
+        container.removeChild(this.element);
         container.removeChild(this._node3D);
         container.removeChild(this._node2D);
         container.removeChild(this._nodeColumbus);
