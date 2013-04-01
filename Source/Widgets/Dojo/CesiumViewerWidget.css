@@ -147,10 +147,6 @@
     border: none;
 }
 
-.cw-agiLogo {
-    left: 272px;
-}
-
 @media only screen and (min-width: 600px) and (max-width: 900px) {
     .cesium-viewerWidget-animationContainer {
         width: 136px;
@@ -162,6 +158,9 @@
     .cesium-viewerWidget-cesiumLogo {
         left: 146px;
     }
+    .cw-agiLogo {
+        left: 272px;
+    }   
 }
 
 @media only screen and (max-width: 599px) {
@@ -175,6 +174,9 @@
 	.cesium-viewerWidget-cesiumLogo {
 		left: 116px;
 	}
+    .cw-agiLogo {
+        left: 242px;
+    }	
 }
 
 @media only screen and (max-height: 300px) {
@@ -193,7 +195,4 @@
     .cesium-baseLayerPicker-dropDown {
         max-height: 325px;
     }
-	.cw-agiLogo {
-		left: 242px;
-	}
 }
