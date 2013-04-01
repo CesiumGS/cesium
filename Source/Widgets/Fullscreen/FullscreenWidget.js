@@ -59,16 +59,16 @@ define(['./FullscreenViewModel',
         this.container = container;
 
         /**
-         * Gets the actual button created by this widget.
+         * Gets the element created by this widget.
          * @memberof FullscreenWidget
          * @type {Element}
          */
-        this.button = document.createElement('button');
-        this.button.className = 'cesium-fullscreen';
-        this.button.setAttribute('data-bind', 'attr: { title: tooltip }, css: { "fullscreen-exit": toggled }, click: command, enable: isFullscreenEnabled');
-        container.appendChild(this.button);
+        this.element = document.createElement('button');
+        this.element.className = 'cesium-fullscreen';
+        this.element.setAttribute('data-bind', 'attr: { title: tooltip }, css: { "cesium-fullscreen-exit": toggled }, click: command, enable: isFullscreenEnabled');
+        container.appendChild(this.element);
 
-        knockout.applyBindings(this.viewModel, this.button);
+        knockout.applyBindings(this.viewModel, this.element);
     };
 
     /**
@@ -79,7 +79,7 @@ define(['./FullscreenViewModel',
     FullscreenWidget.prototype.destroy = function() {
         var container = this.container;
         knockout.cleanNode(container);
-        container.removeChild(this.button);
+        container.removeChild(this.element);
         return destroyObject(this);
     };
 
