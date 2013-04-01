@@ -1,7 +1,7 @@
 .cesium-lighter .cesium-fullscreen {
     border: solid 1px #9BBFDF;
     background-color: #DFEFFF;
-    background-image: url(../Images/enterFullscreen.svg);
+    background-image: url(../Images/enterFullscreen-lighter.svg);
 }
 
 .cesium-lighter .cesium-fullscreen:hover {
@@ -9,5 +9,5 @@
 }
 
 .cesium-lighter .cesium-fullscreen-exit {
-    background-image: url(../Images/exitFullscreen.svg);
+    background-image: url(../Images/exitFullscreen-lighter.svg);
 }

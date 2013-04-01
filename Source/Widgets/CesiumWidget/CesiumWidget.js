@@ -155,7 +155,7 @@ define(['../../Core/buildModuleUrl',
          * @memberof CesiumWidget
          * @type {Element}
          */
-        this.widgetNode = widgetNode;
+        this.element = widgetNode;
 
         /**
          * Gets the canvas.
@@ -235,7 +235,7 @@ define(['../../Core/buildModuleUrl',
      */
     CesiumWidget.prototype.destroy = function() {
         window.removeEventListener('resize', this._resizeCallback, false);
-        this.container.removeChild(this.widgetNode);
+        this.container.removeChild(this.element);
         this._isDestroyed = true;
         destroyObject(this);
     };
