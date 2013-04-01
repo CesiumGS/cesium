@@ -102,8 +102,8 @@
 	<property name="build.minification" value="false" />
 
 	<!-- properties running the server-->
-    <property name="runServer.public" value="false" />
-    <property name="runServer.port" value="8080" />
+	<property name="runServer.public" value="false" />
+	<property name="runServer.port" value="8080" />
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
