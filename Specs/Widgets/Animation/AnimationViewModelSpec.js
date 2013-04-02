@@ -537,6 +537,9 @@ defineSuite([
 
         viewModel.shuttleRingAngle(-90.0);
         expect(clockViewModel.multiplier()).toEqual(-66000.0);
+
+        viewModel.shuttleRingAngle(0.0);
+        expect(clockViewModel.multiplier()).toEqual(0.0);
     });
 
     it('Shuttle ring angles set expected multipliers when snapping to ticks', function() {
@@ -565,6 +568,9 @@ defineSuite([
 
         viewModel.shuttleRingAngle(-90.0);
         expect(clockViewModel.multiplier()).toEqual(-43200.0);
+
+        viewModel.shuttleRingAngle(0.0);
+        expect(clockViewModel.multiplier()).toEqual(AnimationViewModel.defaultTicks[0]);
     });
 
     it('throws when constructed without arguments', function() {

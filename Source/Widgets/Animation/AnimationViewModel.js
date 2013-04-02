@@ -334,10 +334,10 @@ define([
                 }
 
                 var multiplier = angleToMultiplier(angle, ticks);
-                if (multiplier !== 0) {
-                    if (that.snapToTicks()) {
-                        multiplier = ticks[getTypicalMultiplierIndex(multiplier, ticks)];
-                    } else {
+                if (that.snapToTicks()) {
+                    multiplier = ticks[getTypicalMultiplierIndex(multiplier, ticks)];
+                } else {
+                    if (multiplier !== 0) {
                         var positiveMultiplier = Math.abs(multiplier);
 
                         if (positiveMultiplier > 100) {
@@ -352,8 +352,8 @@ define([
                             multiplier = +multiplier.toFixed(2);
                         }
                     }
-                    clockViewModel.multiplier(multiplier);
                 }
+                clockViewModel.multiplier(multiplier);
             }
         });
 
@@ -435,11 +435,13 @@ define([
             throw new DeveloperError('positiveTicks is required.');
         }
         var len = positiveTicks.length;
-        var ticks = new Array(len * 2);
-        var iTicks = 0;
+        var ticks = [];
         for ( var iPos = 0; iPos < len; iPos++) {
-            ticks[iTicks++] = positiveTicks[iPos];
-            ticks[iTicks++] = -positiveTicks[iPos];
+            var tick = positiveTicks[iPos];
+            ticks.push(tick);
+            if (tick !== 0) {
+                ticks.push(-tick);
+            }
         }
         ticks.sort(numberComparator);
         this._shuttleRingTicks(ticks);
