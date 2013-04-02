@@ -21,7 +21,7 @@ defineSuite(['Core/binarySearch'], function(binarySearch) {
         expect(index).toEqual(7);
     });
 
-    it('can perform a binary search for item in between to items in the list', function() {
+    it('can perform a binary search for item in between two items in the list', function() {
         var array = [0, 1, 2, 3, 4, 5, 6, 7];
         var toFind = 3.5;
         var index = binarySearch(array, toFind, function(a, b) {
