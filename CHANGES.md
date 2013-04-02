@@ -3,6 +3,11 @@ Change Log
 
 Beta Releases
 -------------
+### b16 - 2013-05-01
+* Breaking changes:
+   * 
+* Added `AnimationViewModel.snapToTicks`, which when set to true, causes the shuttle ring on the Animation widget to snap to the defined tick values, rather than interpolate between them.
+
 ### b15 - 2013-04-01
 
 * Breaking changes:
@@ -48,9 +53,9 @@ Beta Releases
 * Added `sampleTerrain` function to sample the terrain height of a list of `Cartographic` positions.
 * Added `DynamicObjectCollection.removeObject` and handling of the new CZML `delete` property. 
 * Imagery layers with an `alpha` of exactly 0.0 are no longer rendered.  Previously these invisible layers were rendered normally, which was a waste of resources.  Unlike the `show` property, imagery tiles in a layer with an `alpha` of 0.0 are still downloaded, so the layer will become visible more quickly when its `alpha` is increased. 
-* Added 'onTransitionStart` and `onTransitionComplete` events to `SceneModeTransitioner`.
-* Added 'SceneModePicker`; a new widget for morphing between scene modes.
-* Added 'BaseLayerPicker`; a new widget for switching among pre-configured base layer imagery providers.
+* Added `onTransitionStart` and `onTransitionComplete` events to `SceneModeTransitioner`.
+* Added `SceneModePicker`; a new widget for morphing between scene modes.
+* Added `BaseLayerPicker`; a new widget for switching among pre-configured base layer imagery providers.
 
 ### b14 - 2013-03-01
 

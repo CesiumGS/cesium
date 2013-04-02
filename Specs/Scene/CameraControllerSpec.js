@@ -12,6 +12,7 @@ defineSuite([
          'Core/Math',
          'Core/Matrix4',
          'Core/Transforms',
+         'Core/WebMercatorProjection',
          'Scene/AnimationCollection',
          'Scene/Camera',
          'Scene/OrthographicFrustum',
@@ -29,6 +30,7 @@ defineSuite([
          CesiumMath,
          Matrix4,
          Transforms,
+         WebMercatorProjection,
          AnimationCollection,
          Camera,
          OrthographicFrustum,
@@ -975,7 +977,7 @@ defineSuite([
         var projection = new GeographicProjection();
         controller.update(SceneMode.COLUMBUS_VIEW, { projection : projection });
 
-        var max = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+        var max = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         var factor = 1000.0;
         var dx = max.x * factor;
         var dy = max.y * factor;
@@ -992,8 +994,7 @@ defineSuite([
         }
 
         expect(camera.position.x).toEqualEpsilon(max.x, CesiumMath.EPSILON6);
-        expect(camera.position.y).toBeGreaterThan(max.y);
-        expect(camera.position.y).toBeLessThan(max.x);
+        expect(camera.position.y).toEqualEpsilon(max.y, CesiumMath.EPSILON6);
 
         controller.moveDown(dy);
         controller.moveLeft(dx);
@@ -1006,7 +1007,56 @@ defineSuite([
         }
 
         expect(camera.position.x).toEqualEpsilon(-max.x, CesiumMath.EPSILON6);
-        expect(camera.position.y).toBeLessThan(-max.y);
-        expect(camera.position.y).toBeGreaterThan(-max.x);
+        expect(camera.position.y).toEqualEpsilon(-max.y, CesiumMath.EPSILON6);
+    });
+
+    it('animates position to visible map in Columbus view with web mercator projection', function() {
+        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
+        var frustum = new PerspectiveFrustum();
+        frustum.fovy = CesiumMath.toRadians(60.0);
+        frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
+        frustum.near = 100;
+        frustum.far = 60.0 * maxRadii;
+        camera.frustum = frustum;
+        camera.position = Cartesian3.UNIT_Z.multiplyByScalar(maxRadii * 5.0);
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                1.0, 0.0, 0.0, 0.0,
+                0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 1.0);
+
+        var projection = new WebMercatorProjection();
+        controller.update(SceneMode.COLUMBUS_VIEW, { projection : projection });
+
+        var max = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
+        var factor = 1000.0;
+        var dx = max.x * factor;
+        var dy = max.y * factor;
+        var animationCollection = new AnimationCollection();
+
+        controller.moveUp(dy);
+        controller.moveRight(dx);
+
+        var correctAnimation = controller.createCorrectPositionAnimation(50.0);
+        expect(correctAnimation).toBeDefined();
+        var animation = animationCollection.add(correctAnimation);
+        while(animationCollection.contains(animation)) {
+            animationCollection.update();
+        }
+
+        expect(camera.position.x).toEqualEpsilon(max.x, CesiumMath.EPSILON6);
+        expect(camera.position.y).toEqualEpsilon(max.y, CesiumMath.EPSILON6);
+
+        controller.moveDown(dy);
+        controller.moveLeft(dx);
+
+        correctAnimation = controller.createCorrectPositionAnimation(50.0);
+        expect(correctAnimation).toBeDefined();
+        animation = animationCollection.add(correctAnimation);
+        while(animationCollection.contains(animation)) {
+            animationCollection.update();
+        }
+
+        expect(camera.position.x).toEqualEpsilon(-max.x, CesiumMath.EPSILON6);
+        expect(camera.position.y).toEqualEpsilon(-max.y, CesiumMath.EPSILON6);
     });
 });
