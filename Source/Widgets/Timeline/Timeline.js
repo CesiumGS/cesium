@@ -93,6 +93,12 @@ define([
          */
         this.container = container;
 
+        this._endJulian = undefined;
+        this._epochJulian = undefined;
+        this._lastXPos = undefined;
+        this._scrubElement = undefined;
+        this._startJulian = undefined;
+        this._timeBarSecondsSpan = undefined;
         this._clock = clock;
         this._scrubJulian = clock.currentTime;
         this._mainTicSpan = -1;
@@ -465,14 +471,17 @@ define([
 
     Timeline.prototype.updateFromClock = function() {
         this._scrubJulian = this._clock.currentTime;
+        var scrubElement = this._scrubElement;
+        if (typeof this._scrubElement !== 'undefined') {
+            var seconds = this._startJulian.getSecondsDifference(this._scrubJulian);
+            var xPos = Math.round(seconds * this.container.clientWidth / this._timeBarSecondsSpan);
 
-        var seconds = this._startJulian.getSecondsDifference(this._scrubJulian);
-        var xPos = Math.round(seconds * this.container.clientWidth / this._timeBarSecondsSpan);
+            if (this._lastXPos !== xPos) {
+                this._lastXPos = xPos;
 
-        if (this._scrubElement) {
-            var scrubX = xPos - 8;
-            this._scrubElement.style.left = scrubX.toString() + 'px';
-            this._needleEle.style.left = xPos.toString() + 'px';
+                scrubElement.style.left = (xPos - 8) + 'px';
+                this._needleEle.style.left = xPos + 'px';
+            }
         }
     };
 
