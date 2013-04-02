@@ -589,9 +589,9 @@ define(['../../Core/destroyObject',
         //bind to SVG, so we we figure that out we can modify our SVG
         //to include the binding information directly.
 
-        var timeNode = that._knobTime.childNodes[0];
-        var dateNode = that._knobDate.childNodes[0];
-        var statusNode = that._knobStatus.childNodes[0];
+        var timeNode = this._knobTime.childNodes[0];
+        var dateNode = this._knobDate.childNodes[0];
+        var statusNode = this._knobStatus.childNodes[0];
 
         this._subscriptions = [//
         subscribeAndEvaluate(viewModel.pauseViewModel.toggled, function(value) {
