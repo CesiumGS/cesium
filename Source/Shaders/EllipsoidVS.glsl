@@ -1,7 +1,6 @@
 attribute vec3 position;
 
 uniform vec3 u_radii;
-uniform float u_maxRepeatTexture;
 
 varying vec3 v_positionEC;
 
