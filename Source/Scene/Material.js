@@ -206,8 +206,8 @@ define([
      *  </ul>
      *  <li>Grid</li>
      *  <ul>
-     *      <li><code>gridColor</code>:  rgba color object for the material.</li>
-     *      <li><code>cellAlpha</code>: Alpha value for the cells between grid lines.</li>
+     *      <li><code>color</code>:  rgba color object for the whole material.</li>
+     *      <li><code>cellAlpha</code>: Alpha value for the cells between grid lines.  This will be combined with color.alpha.</li>
      *      <li><code>lineCount</code>:  Object with x and y values specifying the number of columns and rows respectively.</li>
      *      <li><code>lineThickness</code>:  Object with x and y values specifying the thickness of grid lines (in pixels where available).</li>
      *  </ul>
@@ -1068,7 +1068,7 @@ define([
     Material._materialCache.addMaterial(Material.GridType, {
         type : Material.GridType,
         uniforms : {
-            gridColor : new Color(0.0, 1.0, 0.0, 1.0),
+            color : new Color(0.0, 1.0, 0.0, 1.0),
             cellAlpha : 0.1,
             lineCount : new Cartesian2(8.0, 8.0),
             lineThickness : new Cartesian2(1.0, 1.0)

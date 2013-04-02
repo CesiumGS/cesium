@@ -47,7 +47,7 @@ require([
             Cesium.Cartographic.fromDegrees(-75.0, 40.0, 500000.0));
         e.radii = new Cesium.Cartesian3(500000.0, 500000.0, 500000.0);
         e.material = Cesium.Material.fromType(undefined, Cesium.Material.GridType);
-        e.material.uniforms.gridColor = Cesium.Color.YELLOW.clone();
+        e.material.uniforms.color = Cesium.Color.YELLOW.clone();
         primitives.add(e);
 
         var e2 = new Cesium.EllipsoidPrimitive();
@@ -57,7 +57,7 @@ require([
               Cesium.Cartographic.fromDegrees(-95.0, 40.0, 500000.0)));
         e2.radii = new Cesium.Cartesian3(200000.0, 300000.0, 500000.0);
         e2.material = Cesium.Material.fromType(scene.getContext(), Cesium.Material.GridType);
-        e2.material.uniforms.gridColor = Cesium.Color.DARKVIOLET.clone();
+        e2.material.uniforms.color = Cesium.Color.DARKVIOLET.clone();
         primitives.add(e2);
     }
 

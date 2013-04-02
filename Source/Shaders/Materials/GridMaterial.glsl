@@ -2,7 +2,7 @@
     #extension GL_OES_standard_derivatives : enable
 #endif
 
-uniform vec4 gridColor;
+uniform vec4 color;
 uniform float cellAlpha;
 uniform vec2 lineCount;
 uniform vec2 lineThickness;
@@ -41,8 +41,8 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
         1.0 - smoothstep(range.t, range.t + fuzz, scaledHeight));
 #endif
 
-    material.diffuse = gridColor.rgb;
-    material.alpha = gridColor.a * (1.0 - ((1.0 - cellAlpha) * value));
+    material.diffuse = color.rgb;
+    material.alpha = color.a * (1.0 - ((1.0 - cellAlpha) * value));
 
     return material;
 }
