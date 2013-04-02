@@ -114,17 +114,6 @@ define([
         this._boundingSphere = new BoundingSphere();
 
         /**
-         * Repeat the 2D texture coordinates automatically as the camera gets closer to the Ellipsoid.
-         * This is used to increase the detail on the surface as the viewer approaches.
-         * <p>
-         * The default is 25.  Set to 1 for no change at any distance.
-         * </p>
-         *
-         * @type Float
-         */
-        this.maxRepeatTexture = 25;
-
-        /**
          * The 4x4 transformation matrix that transforms the ellipsoid from model to world coordinates.
          * When this is the identity matrix, the ellipsoid is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
@@ -197,9 +186,6 @@ define([
             },
             u_oneOverEllipsoidRadiiSquared : function() {
                 return that._oneOverEllipsoidRadiiSquared;
-            },
-            u_maxRepeatTexture : function() {
-                return that.maxRepeatTexture;
             }
         };
     };
