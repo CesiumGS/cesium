@@ -305,6 +305,14 @@ define([
         });
 
         /**
+         * A boolean observable indicating if dragging the shuttle ring should cause the multiplier
+         * to snap to the defined tick values rather than interpolating between them.
+         * @type Observable
+         * @default false
+         */
+        this.snapToTicks = knockout.observable(false);
+
+        /**
          * The current shuttle ring Angle.
          * @type Observable
          */
@@ -327,20 +335,23 @@ define([
 
                 var multiplier = angleToMultiplier(angle, ticks);
                 if (multiplier !== 0) {
-                    var positiveMultiplier = Math.abs(multiplier);
+                    if (that.snapToTicks()) {
+                        multiplier = ticks[getTypicalMultiplierIndex(multiplier, ticks)];
+                    } else {
+                        var positiveMultiplier = Math.abs(multiplier);
 
-                    if (positiveMultiplier > 100) {
-                        var numDigits = positiveMultiplier.toFixed(0).length - 2;
-                        var divisor = Math.pow(10, numDigits);
-                        multiplier = (Math.round(multiplier / divisor) * divisor) | 0;
-                    } else if (positiveMultiplier > realtimeShuttleRingAngle) {
-                        multiplier = Math.round(multiplier);
-                    } else if (positiveMultiplier > 1) {
-                        multiplier = +multiplier.toFixed(1);
-                    } else if (positiveMultiplier > 0) {
-                        multiplier = +multiplier.toFixed(2);
+                        if (positiveMultiplier > 100) {
+                            var numDigits = positiveMultiplier.toFixed(0).length - 2;
+                            var divisor = Math.pow(10, numDigits);
+                            multiplier = (Math.round(multiplier / divisor) * divisor) | 0;
+                        } else if (positiveMultiplier > realtimeShuttleRingAngle) {
+                            multiplier = Math.round(multiplier);
+                        } else if (positiveMultiplier > 1) {
+                            multiplier = +multiplier.toFixed(1);
+                        } else if (positiveMultiplier > 0) {
+                            multiplier = +multiplier.toFixed(2);
+                        }
                     }
-
                     clockViewModel.multiplier(multiplier);
                 }
             }
