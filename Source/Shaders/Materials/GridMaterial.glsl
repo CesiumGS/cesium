@@ -21,7 +21,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     float value;
 #ifdef GL_OES_standard_derivatives
     // Fuzz Factor - Controls blurriness between lines and holes
-    const float fuzz = 1.0;
+    const float fuzz = 1.2;
     vec2 thickness = lineThickness - 1.0;
 
     // From "3D Engine Design for Virtual Globes" by Cozzi and Ring, Listing 4.13.
