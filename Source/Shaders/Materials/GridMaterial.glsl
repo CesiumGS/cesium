@@ -3,7 +3,7 @@
 #endif
 
 uniform vec4 gridColor;
-uniform float holeAlpha;
+uniform float cellAlpha;
 uniform vec2 lineCount;
 uniform vec2 lineThickness;
 
@@ -20,7 +20,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 
     float value;
 #ifdef GL_OES_standard_derivatives
-    // Fuzz Factor - Controls blurriness between lines and holes
+    // Fuzz Factor - Controls blurriness of lines
     const float fuzz = 1.2;
     vec2 thickness = lineThickness - 1.0;
 
@@ -32,7 +32,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
         smoothstep(dF.s * thickness.s, dF.s * (fuzz + thickness.s), scaledWidth),
         smoothstep(dF.t * thickness.t, dF.t * (fuzz + thickness.t), scaledHeight));
 #else
-    // Fuzz Factor - Controls blurriness between lines and holes
+    // Fuzz Factor - Controls blurriness of lines
     const float fuzz = 0.05;
 
     vec2 range = 0.5 - (lineThickness * 0.05);
@@ -42,7 +42,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 #endif
 
     material.diffuse = gridColor.rgb;
-    material.alpha = gridColor.a * (1.0 - ((1.0 - holeAlpha) * value));
+    material.alpha = gridColor.a * (1.0 - ((1.0 - cellAlpha) * value));
 
     return material;
 }

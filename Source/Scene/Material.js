@@ -206,8 +206,8 @@ define([
      *  </ul>
      *  <li>Grid</li>
      *  <ul>
-     *      <li><code>gridColor</code>:  rgba color object for the grid's lines.</li>
-     *      <li><code>holeAlpha</code>: Alpha value for the holes between grid lines.</li>
+     *      <li><code>gridColor</code>:  rgba color object for the material.</li>
+     *      <li><code>cellAlpha</code>: Alpha value for the cells between grid lines.</li>
      *      <li><code>lineCount</code>:  Object with x and y values specifying the number of columns and rows respectively.</li>
      *      <li><code>lineThickness</code>:  Object with x and y values specifying the thickness of grid lines (in pixels where available).</li>
      *  </ul>
@@ -1069,7 +1069,7 @@ define([
         type : Material.GridType,
         uniforms : {
             gridColor : new Color(0.0, 1.0, 0.0, 1.0),
-            holeAlpha : 0.1,
+            cellAlpha : 0.1,
             lineCount : new Cartesian2(8.0, 8.0),
             lineThickness : new Cartesian2(1.0, 1.0)
         },
