@@ -11,10 +11,10 @@ void main()
     // but doing it here allows us to change the radii without rewriting the vertex data, and
     // allows all ellipsoids to reuse the same vertex data.
     vec4 p = vec4(u_radii * position, 1.0);
-    
+
     v_positionEC = (czm_modelView * p).xyz;     // position in eye coordinates
     gl_Position = czm_modelViewProjection * p;  // position in clip coordinates
-    
+
     // With multi-frustum, when the ellipsoid primitive is positioned on the intersection of two frustums 
     // and close to terrain, the terrain (writes depth) in the closest frustum can overwrite part of the 
     // ellipsoid (does not write depth) that was rendered in the farther frustum.
