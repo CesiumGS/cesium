@@ -694,7 +694,7 @@ define([
         if (totalLength > 0) {
             var mode = collection._mode;
 
-            var positionArray = new Float32Array(2 * totalLength * 3 * 2);
+            var positionArray = new Float32Array(2 * totalLength * 4 * 2);
             var adjacencyArray = new Float32Array(2 * totalLength * 4 * 2);
             var pickColorArray = new Uint8Array(totalLength * 4 * 2);
             var texCoordExpandWidthAndShowArray = new Float32Array(totalLength * 4 * 2);
@@ -711,13 +711,13 @@ define([
 
                     if (mode === SceneMode.MORPHING) {
                         if (typeof position3DArray === 'undefined') {
-                            position3DArray = new Float32Array(2 * totalLength * 3 * 2);
+                            position3DArray = new Float32Array(2 * totalLength * 4 * 2);
                         }
                         bucket.writeForMorph(position3DArray, adjacencyArray, positionIndex, adjacencyIndex);
                     }
 
                     var bucketLength = bucket.lengthOfPositions;
-                    positionIndex += 2 * bucketLength * 3 * 2;
+                    positionIndex += 2 * bucketLength * 4 * 2;
                     adjacencyIndex += 2 * bucketLength * 4 * 2;
                     colorIndex += bucketLength * 4 * 2;
                     texCoordExpandWidthAndShowIndex += bucketLength * 4 * 2;
@@ -740,7 +740,7 @@ define([
             collection._texCoordExpandWidthAndShowBuffer = context.createVertexBuffer(texCoordExpandWidthAndShowArray, texCoordExpandWidthAndShowBufferUsage);
 
             var pickColorSizeInBytes = 4 * Uint8Array.BYTES_PER_ELEMENT;
-            var positionSizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
+            var positionSizeInBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
             var adjacencySizeInBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
             var texCoordExpandWidthAndShowSizeInBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
 
@@ -764,25 +764,25 @@ define([
 
                     var attributes = [{
                         index : attributeIndices.position3DHigh,
-                        componentsPerAttribute : 3,
+                        componentsPerAttribute : 4,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : positionHighOffset,
                         strideInBytes : 2 * positionSizeInBytes
                     }, {
                         index : attributeIndices.position3DLow,
-                        componentsPerAttribute : 3,
+                        componentsPerAttribute : 4,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : positionLowOffset,
                         strideInBytes : 2 * positionSizeInBytes
                     }, {
                         index : attributeIndices.position2DHigh,
-                        componentsPerAttribute : 3,
+                        componentsPerAttribute : 4,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : positionHighOffset,
                         strideInBytes : 2 * positionSizeInBytes
                     }, {
                         index : attributeIndices.position2DLow,
-                        componentsPerAttribute : 3,
+                        componentsPerAttribute : 4,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : positionLowOffset,
                         strideInBytes : 2 * positionSizeInBytes
@@ -818,11 +818,11 @@ define([
                     if (mode === SceneMode.SCENE3D) {
                         attributes[0].vertexBuffer = collection._positionBuffer;
                         attributes[1].vertexBuffer = collection._positionBuffer;
-                        attributes[2].value = [0.0, 0.0, 0.0];
-                        attributes[3].value = [0.0, 0.0, 0.0];
+                        attributes[2].value = [0.0, 0.0, 0.0, 0.0];
+                        attributes[3].value = [0.0, 0.0, 0.0, 0.0];
                     } else if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
-                        attributes[0].value = [0.0, 0.0, 0.0];
-                        attributes[1].value = [0.0, 0.0, 0.0];
+                        attributes[0].value = [0.0, 0.0, 0.0, 0.0];
+                        attributes[1].value = [0.0, 0.0, 0.0, 0.0];
                         attributes[2].vertexBuffer = collection._positionBuffer;
                         attributes[3].vertexBuffer = collection._positionBuffer;
                     } else {
@@ -994,11 +994,14 @@ define([
     }
 
     PolylineBucket.prototype.getPolylinePositionsLength = function(polyline) {
+        var length;
         if (this.mode === SceneMode.SCENE3D || !intersectsIDL(polyline)) {
-            return polyline.getPositions().length;
+            length = polyline.getPositions().length;
+        } else {
+            length = polyline._segments.positions.length;
         }
 
-        return polyline._segments.positions.length;
+        return  (length > 1.0) ? length * 2.0 - 2.0 : 0.0;
     };
 
     var computeAdjacencyAnglesPosition = new Cartesian3();
@@ -1007,10 +1010,16 @@ define([
     // see
     //    http://aras-p.info/texts/CompactNormalStorage.html#method04spheremap
     // for details.
-    function computeAdjacencyAngles(position, index, positions, startSegment, endSegment, result, modelMatrix) {
+    function computeAdjacencyInfo(position, index, positions, startSegment, endSegment, result, modelMatrix) {
         if (typeof result === 'undefined') {
-            result = new Cartesian4();
+            result = {
+                normals : new Cartesian4(),
+                prevLength : 0.0,
+                nextLength : 0.0
+            };
         }
+
+        var normals = result.normals;
 
         if (typeof modelMatrix === 'undefined') {
             modelMatrix = Matrix4.IDENTITY;
@@ -1023,11 +1032,12 @@ define([
             prev = Matrix4.multiplyByPoint(modelMatrix, positions[index - 1], prev);
             Cartesian3.subtract(prev, position, prev);
         }
+        result.prevLength = prev.magnitude();
         Cartesian3.normalize(prev, prev);
 
         var p = Math.sqrt(prev.z * 8.0 + 8.0);
-        result.x = prev.x / p + 0.5;
-        result.y = prev.y / p + 0.5;
+        normals.x = prev.x / p + 0.5;
+        normals.y = prev.y / p + 0.5;
 
         var next = computeAdjacencyAnglesPosition;
         if (endSegment) {
@@ -1036,17 +1046,23 @@ define([
             next = Matrix4.multiplyByPoint(modelMatrix, positions[index + 1], next);
             Cartesian3.subtract(next, position, next);
         }
+        result.nextLength = next.magnitude();
         Cartesian3.normalize(next, next);
 
         p = Math.sqrt(next.z * 8.0 + 8.0);
-        result.z = next.x / p + 0.5;
-        result.w = next.y / p + 0.5;
+        normals.z = next.x / p + 0.5;
+        normals.w = next.y / p + 0.5;
 
         return result;
     }
 
     var scratchWritePosition = new Cartesian3();
-    var scratchWriteAdjacency = new Cartesian4();
+    var scratchWriteAdjacencyInfo = {
+        normals : new Cartesian4(),
+        prevLength : 0.0,
+        nextLength : 0.0
+    };
+    var encodedP = new EncodedCartesian3();
 
     PolylineBucket.prototype.write = function(positionArray, adjacencyArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, adjacencyIndex, colorIndex, texCoordExpandWidthAndShowIndex, context) {
         var mode = this.mode;
@@ -1080,21 +1096,41 @@ define([
 
                 var segmentStart = j - count === 0;
                 var segmentEnd = j === count + lengths[segmentIndex] - 1;
-                var adjacencyAngles = computeAdjacencyAngles(position, j, positions, segmentStart, segmentEnd, scratchWriteAdjacency);
 
-                for (var k = 0; k < 2; ++k) {
-                    EncodedCartesian3.writeElements(scratchWritePosition, positionArray, positionIndex);
+                var adjacencyInfo = computeAdjacencyInfo(position, j, positions, segmentStart, segmentEnd, scratchWriteAdjacencyInfo);
+                var adjacencyNormals = adjacencyInfo.normals;
+                var prevLength = adjacencyInfo.prevLength;
+                var nextLength = adjacencyInfo.nextLength;
+
+                var startK = (segmentStart) ? 2 : 0;
+                var endK = (segmentEnd) ? 2 : 4;
+
+                for (var k = startK; k < endK; ++k) {
+                    var lineLength = (k - 2 < 0) ? -prevLength : nextLength;
+                    EncodedCartesian3.fromCartesian(scratchWritePosition, encodedP);
+                    var high = encodedP.high;
+                    var low = encodedP.low;
+
+                    positionArray[positionIndex] = high.x;
+                    positionArray[positionIndex + 1] = high.y;
+                    positionArray[positionIndex + 2] = high.z;
+                    positionArray[positionIndex + 3] = 0.0;
+
+                    positionArray[positionIndex + 4] = low.x;
+                    positionArray[positionIndex + 5] = low.y;
+                    positionArray[positionIndex + 6] = low.z;
+                    positionArray[positionIndex + 7] = lineLength;
 
                     if (mode === SceneMode.SCENE3D) {
-                        adjacencyArray[adjacencyIndex] = adjacencyAngles.x;
-                        adjacencyArray[adjacencyIndex + 1] = adjacencyAngles.y;
-                        adjacencyArray[adjacencyIndex + 4] = adjacencyAngles.z;
-                        adjacencyArray[adjacencyIndex + 5] = adjacencyAngles.w;
+                        adjacencyArray[adjacencyIndex] = adjacencyNormals.x;
+                        adjacencyArray[adjacencyIndex + 1] = adjacencyNormals.y;
+                        adjacencyArray[adjacencyIndex + 4] = adjacencyNormals.z;
+                        adjacencyArray[adjacencyIndex + 5] = adjacencyNormals.w;
                     } else {
-                        adjacencyArray[adjacencyIndex + 2] = adjacencyAngles.x;
-                        adjacencyArray[adjacencyIndex + 3] = adjacencyAngles.y;
-                        adjacencyArray[adjacencyIndex + 6] = adjacencyAngles.z;
-                        adjacencyArray[adjacencyIndex + 7] = adjacencyAngles.w;
+                        adjacencyArray[adjacencyIndex + 2] = adjacencyNormals.x;
+                        adjacencyArray[adjacencyIndex + 3] = adjacencyNormals.y;
+                        adjacencyArray[adjacencyIndex + 6] = adjacencyNormals.z;
+                        adjacencyArray[adjacencyIndex + 7] = adjacencyNormals.w;
                     }
 
                     pickColorArray[colorIndex] = pickColor.red;
@@ -1103,11 +1139,11 @@ define([
                     pickColorArray[colorIndex + 3] = 255;
 
                     texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex] = j / (positionsLength - 1); // s tex coord
-                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 1] = 2 * k - 1;             // expand direction
+                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 1] = 2 * (k % 2) - 1;             // expand direction
                     texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 2] = width;
                     texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 3] = show;
 
-                    positionIndex += 6;
+                    positionIndex += 8;
                     adjacencyIndex += 8;
                     colorIndex += 4;
                     texCoordExpandWidthAndShowIndex += 4;
@@ -1142,17 +1178,37 @@ define([
 
                 var segmentStart = j - count === 0;
                 var segmentEnd = j === count + lengths[segmentIndex] - 1;
-                var adjacencyAngles = computeAdjacencyAngles(position, j, positions, segmentStart, segmentEnd, scratchWriteAdjacency);
 
-                for (var k = 0; k < 2; ++k) {
-                    EncodedCartesian3.writeElements(position, positionArray, positionIndex);
+                var adjacencyInfo = computeAdjacencyInfo(position, j, positions, segmentStart, segmentEnd, scratchWriteAdjacencyInfo);
+                var adjacencyNormals = adjacencyInfo.normals;
+                var prevLength = adjacencyInfo.prevLength;
+                var nextLength = adjacencyInfo.nextLength;
 
-                    adjacencyArray[adjacencyIndex] = adjacencyAngles.x;
-                    adjacencyArray[adjacencyIndex + 1] = adjacencyAngles.y;
-                    adjacencyArray[adjacencyIndex + 4] = adjacencyAngles.z;
-                    adjacencyArray[adjacencyIndex + 5] = adjacencyAngles.w;
+                var startK = (segmentStart) ? 2 : 0;
+                var endK = (segmentEnd) ? 2 : 4;
 
-                    positionIndex += 6;
+                for (var k = startK; k < endK; ++k) {
+                    var lineLength = (k - 2 < 0) ? -prevLength : nextLength;
+                    EncodedCartesian3.fromCartesian(scratchWritePosition, encodedP);
+                    var high = encodedP.high;
+                    var low = encodedP.low;
+
+                    positionArray[positionIndex] = high.x;
+                    positionArray[positionIndex + 1] = high.y;
+                    positionArray[positionIndex + 2] = high.z;
+                    positionArray[positionIndex + 3] = 0.0;
+
+                    positionArray[positionIndex + 4] = low.x;
+                    positionArray[positionIndex + 5] = low.y;
+                    positionArray[positionIndex + 6] = low.z;
+                    positionArray[positionIndex + 7] = lineLength;
+
+                    adjacencyArray[adjacencyIndex] = adjacencyNormals.x;
+                    adjacencyArray[adjacencyIndex + 1] = adjacencyNormals.y;
+                    adjacencyArray[adjacencyIndex + 4] = adjacencyNormals.z;
+                    adjacencyArray[adjacencyIndex + 5] = adjacencyNormals.w;
+
+                    positionIndex += 8;
                     adjacencyIndex += 8;
                 }
             }
@@ -1195,37 +1251,32 @@ define([
             if (numberOfSegments > 0) {
                 var segmentIndexCount = 0;
                 for ( var j = 0; j < numberOfSegments; ++j) {
-                    var segmentLength = segments[j];
+                    var segmentLength = segments[j] - 1.0;
                     for ( var k = 0; k < segmentLength; ++k) {
-                        if (k !== segmentLength - 1) {
-                            if (indicesCount + 3 >= SIXTYFOURK - 1) {
-                                polyline._locatorBuckets.push({
-                                    locator : bucketLocator,
-                                    count : segmentIndexCount
-                                });
-                                segmentIndexCount = 0;
-                                vertexBufferOffset.push(4);
-                                indices = [];
-                                totalIndices.push(indices);
-                                indicesCount = 0;
-                                bucketLocator.count = count;
-                                count = 0;
-                                offset = 0;
-                                bucketLocator = new VertexArrayBucketLocator(0, 0, this);
-                                vertexArrayBuckets[++vaCount] = [bucketLocator];
-                            }
-
-                            indices.push(indicesCount, indicesCount + 2, indicesCount + 1);
-                            indices.push(indicesCount + 1, indicesCount + 2, indicesCount + 3);
-
-                            segmentIndexCount += 6;
-                            count += 6;
-                            offset += 6;
-                            indicesCount += 2;
+                        if (indicesCount + 4 >= SIXTYFOURK - 1) {
+                            polyline._locatorBuckets.push({
+                                locator : bucketLocator,
+                                count : segmentIndexCount
+                            });
+                            segmentIndexCount = 0;
+                            vertexBufferOffset.push(4);
+                            indices = [];
+                            totalIndices.push(indices);
+                            indicesCount = 0;
+                            bucketLocator.count = count;
+                            count = 0;
+                            offset = 0;
+                            bucketLocator = new VertexArrayBucketLocator(0, 0, this);
+                            vertexArrayBuckets[++vaCount] = [bucketLocator];
                         }
-                    }
-                    if (j !== numberOfSegments - 1) {
-                        indicesCount += 2;
+
+                        indices.push(indicesCount, indicesCount + 2, indicesCount + 1);
+                        indices.push(indicesCount + 1, indicesCount + 2, indicesCount + 3);
+
+                        segmentIndexCount += 6;
+                        count += 6;
+                        offset += 6;
+                        indicesCount += 4;
                     }
                 }
 
@@ -1234,9 +1285,7 @@ define([
                     count : segmentIndexCount
                 });
 
-                if (indicesCount + 3 < SIXTYFOURK - 1) {
-                    indicesCount += 2;
-                } else {
+                if (indicesCount + 4 >= SIXTYFOURK - 1) {
                     vertexBufferOffset.push(0);
                     indices = [];
                     totalIndices.push(indices);
@@ -1326,15 +1375,12 @@ define([
         return scratchSegments;
     };
 
-
-    var scratchAdjacency = new Cartesian4();
-
     PolylineBucket.prototype.writePositionsUpdate = function(positionIndex, polyline, positionBuffer, adjacencyBuffer) {
         var mode = this.mode;
         var positionsLength = polyline._actualLength;
         if (positionsLength) {
             positionIndex += this.getPolylineStartIndex(polyline);
-            var positionArray = new Float32Array(2 * positionsLength * 3 * 2);
+            var positionArray = new Float32Array(2 * positionsLength * 4 * 2);
             var adjacencyArray = new Float32Array(2 * positionsLength * 4 * 2);
 
             var index = 0;
@@ -1361,29 +1407,49 @@ define([
 
                 var segmentStart = i - count === 0;
                 var segmentEnd = i === count + lengths[segmentIndex] - 1;
-                var adjacencyAngles = computeAdjacencyAngles(position, i, positions, segmentStart, segmentEnd, scratchAdjacency);
 
-                for (var j = 0; j < 2; ++j) {
-                    EncodedCartesian3.writeElements(scratchWritePosition, positionArray, index);
+                var adjacencyInfo = computeAdjacencyInfo(position, i, positions, segmentStart, segmentEnd, scratchWriteAdjacencyInfo);
+                var adjacencyNormals = adjacencyInfo.normals;
+                var prevLength = adjacencyInfo.prevLength;
+                var nextLength = adjacencyInfo.nextLength;
+
+                var startJ = (segmentStart) ? 2 : 0;
+                var endJ = (segmentEnd) ? 2 : 4;
+
+                for (var j = startJ; j < endJ; ++j) {
+                    var lineLength = (j - 2 < 0) ? -prevLength : nextLength;
+                    EncodedCartesian3.fromCartesian(scratchWritePosition, encodedP);
+                    var high = encodedP.high;
+                    var low = encodedP.low;
+
+                    positionArray[index] = high.x;
+                    positionArray[index + 1] = high.y;
+                    positionArray[index + 2] = high.z;
+                    positionArray[index + 3] = 0.0;
+
+                    positionArray[index + 4] = low.x;
+                    positionArray[index + 5] = low.y;
+                    positionArray[index + 6] = low.z;
+                    positionArray[index + 7] = lineLength;
 
                     if (mode === SceneMode.SCENE3D) {
-                        adjacencyArray[adjacencyIndex] = adjacencyAngles.x;
-                        adjacencyArray[adjacencyIndex + 1] = adjacencyAngles.y;
-                        adjacencyArray[adjacencyIndex + 4] = adjacencyAngles.z;
-                        adjacencyArray[adjacencyIndex + 5] = adjacencyAngles.w;
+                        adjacencyArray[adjacencyIndex] = adjacencyNormals.x;
+                        adjacencyArray[adjacencyIndex + 1] = adjacencyNormals.y;
+                        adjacencyArray[adjacencyIndex + 4] = adjacencyNormals.z;
+                        adjacencyArray[adjacencyIndex + 5] = adjacencyNormals.w;
                     } else {
-                        adjacencyArray[adjacencyIndex + 2] = adjacencyAngles.x;
-                        adjacencyArray[adjacencyIndex + 3] = adjacencyAngles.y;
-                        adjacencyArray[adjacencyIndex + 6] = adjacencyAngles.z;
-                        adjacencyArray[adjacencyIndex + 7] = adjacencyAngles.w;
+                        adjacencyArray[adjacencyIndex + 2] = adjacencyNormals.x;
+                        adjacencyArray[adjacencyIndex + 3] = adjacencyNormals.y;
+                        adjacencyArray[adjacencyIndex + 6] = adjacencyNormals.z;
+                        adjacencyArray[adjacencyIndex + 7] = adjacencyNormals.w;
                     }
 
-                    index += 6;
+                    index += 8;
                     adjacencyIndex += 8;
                 }
             }
 
-            positionBuffer.copyFromArrayView(positionArray, 2 * 3 * Float32Array.BYTES_PER_ELEMENT * positionIndex * 2);
+            positionBuffer.copyFromArrayView(positionArray, 2 * 4 * Float32Array.BYTES_PER_ELEMENT * positionIndex * 2);
             adjacencyBuffer.copyFromArrayView(adjacencyArray, 2 * 4 * Float32Array.BYTES_PER_ELEMENT * positionIndex * 2);
         }
     };

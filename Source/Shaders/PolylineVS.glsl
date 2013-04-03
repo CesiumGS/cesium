@@ -1,7 +1,7 @@
-attribute vec3 position3DHigh;
-attribute vec3 position3DLow;
-attribute vec3 position2DHigh;
-attribute vec3 position2DLow;
+attribute vec4 position3DHigh;
+attribute vec4 position3DLow;
+attribute vec4 position2DHigh;
+attribute vec4 position2DLow;
 attribute vec4 prev;
 attribute vec4 next;
 attribute vec4 texCoordExpandWidthAndShow;
@@ -45,7 +45,7 @@ void main()
 
     if (u_morphTime == 1.0)
     {
-        p = vec4(czm_translateRelativeToEye(position3DHigh, position3DLow), 1.0);
+        p = vec4(czm_translateRelativeToEye(position3DHigh.xyz, position3DLow.xyz), 1.0);
         prevDir = vec4(decode(prev.xy), 0.0);
         nextDir = vec4(decode(next.xy), 0.0);
     }
@@ -59,7 +59,7 @@ void main()
     {
         p = czm_columbusViewMorph(
                 czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),
-                czm_translateRelativeToEye(position3DHigh, position3DLow), 
+                czm_translateRelativeToEye(position3DHigh.xyz, position3DLow.xyz), 
                 u_morphTime);
         
         prevDir = czm_columbusViewMorph(decode(prev.xy), decode(prev.zw), u_morphTime);
