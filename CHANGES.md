@@ -7,6 +7,7 @@ Beta Releases
 * Breaking changes:
    * 
 * Added `AnimationViewModel.snapToTicks`, which when set to true, causes the shuttle ring on the Animation widget to snap to the defined tick values, rather than interpolate between them.
+* Added CZML object `DynamicScreenOverlay` to enable simple rectangular screen overlays that work with the material system.
 
 ### b15 - 2013-04-01
 
