@@ -23,12 +23,11 @@ define([
         './DynamicPolylineVisualizer',
         './DynamicPyramidVisualizer',
         './DynamicScreenOverlayVisualizer'
-
-       ], function(
+    ], function(
         DynamicObject,
         DynamicBillboard,
-                DynamicClock,
-                DynamicEllipse,
+        DynamicClock,
+        DynamicEllipse,
         DynamicEllipsoid,
         DynamicCone,
         DynamicLabel,
@@ -108,12 +107,12 @@ define([
                    DynamicScreenOverlay.mergeProperties,
                    DynamicObject.mergeProperties],
 
-       /**
-        * The standard set of cleaners for processing CZML.  This array is the default
-        * set of updater methods used by CompositeDynamicObjectCollection.
-        *
-        * @see CompositeDynamicObjectCollection
-        */
+        /**
+         * The standard set of cleaners for processing CZML.  This array is the default
+         * set of updater methods used by CompositeDynamicObjectCollection.
+         *
+         * @see CompositeDynamicObjectCollection
+         */
         cleaners : [DynamicBillboard.undefineProperties,
                     DynamicEllipse.undefineProperties,
                     DynamicEllipsoid.undefineProperties,
@@ -125,7 +124,7 @@ define([
                     DynamicPolyline.undefineProperties,
                     DynamicPyramid.undefineProperties,
                     DynamicScreenOverlay.undefineProperties,
-                    DynamicObject.undefineProperties
+                    DynamicObject.undefineProperties,
                     DynamicClock.undefineProperties],
 
         /**
