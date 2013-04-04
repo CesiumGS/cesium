@@ -1,6 +1,4 @@
 /*global importClass,project,attributes,elements,java,Packages*/
-/*jshint strict:false,multistr:true*/
-
 importClass(Packages.org.mozilla.javascript.tools.shell.Main); /*global Main*/
 Main.exec(['-e', '{}']);
 var load = Main.global.load;
@@ -10,6 +8,8 @@ load(project.getProperty('tasksDirectory') + '/shared.js'); /*global forEachFile
 var demos = [];
 
 forEachFile('demos', function(relativePath, file) {
+    "use strict";
+
     var demo = relativePath.substring(0, relativePath.lastIndexOf('.')).replace('\\', '/');
     var demoObject = {
         name : String(demo),

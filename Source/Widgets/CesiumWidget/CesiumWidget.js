@@ -46,7 +46,7 @@ define(['../../Core/buildModuleUrl',
      * @alias CesiumWidget
      * @constructor
      *
-     * @param {Element|String} container The DOM element, or DOM element ID, that will contain the widget.
+     * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Object} [options] Configuration options for the widget.
      * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer.
@@ -155,7 +155,7 @@ define(['../../Core/buildModuleUrl',
          * @memberof CesiumWidget
          * @type {Element}
          */
-        this.widgetNode = widgetNode;
+        this.element = widgetNode;
 
         /**
          * Gets the canvas.
@@ -235,7 +235,7 @@ define(['../../Core/buildModuleUrl',
      */
     CesiumWidget.prototype.destroy = function() {
         window.removeEventListener('resize', this._resizeCallback, false);
-        this.container.removeChild(this.widgetNode);
+        this.container.removeChild(this.element);
         this._isDestroyed = true;
         destroyObject(this);
     };
