@@ -201,8 +201,7 @@ define(['../../Core/buildModuleUrl',
 
         var widget = this;
         //Subscribe for resize events and set the initial size.
-        this._needResize = false;
-        this.resize();
+        this._needResize = true;
         this._resizeCallback = function() {
             widget._needResize = true;
         };
