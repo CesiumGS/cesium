@@ -1393,6 +1393,7 @@ define([
             var segmentIndex = 0;
             var count = 0;
 
+            positionsLength = positions.length;
             for ( var i = 0; i < positionsLength; ++i) {
                 var position = positions[i];
                 scratchWritePosition.x = position.x;
