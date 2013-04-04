@@ -32,6 +32,8 @@ Beta Releases
 * Added new `PolylineOutline`, `PolylineArrow`, and `Fade` materials.
 * Added `czm_pixelSizeInMeters` automatic GLSL uniform.
 * Added `AnimationViewModel.snapToTicks`, which when set to true, causes the shuttle ring on the Animation widget to snap to the defined tick values, rather than interpolate between them.
+* Added new `Grid` material.
+* Made `EllipsoidPrimitive` double-sided.
 
 ### b15 - 2013-04-01
 

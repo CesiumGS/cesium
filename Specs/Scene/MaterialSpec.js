@@ -189,6 +189,10 @@ defineSuite([
         verifyMaterial('Grass');
     });
 
+    it('draws Grid built-in material', function() {
+        verifyMaterial('Grid');
+    });
+
     it('draws Stripe built-in material', function() {
         verifyMaterial('Stripe');
     });

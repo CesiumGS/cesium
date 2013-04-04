@@ -25,6 +25,7 @@ define([
         '../Shaders/Materials/FacetMaterial',
         '../Shaders/Materials/FresnelMaterial',
         '../Shaders/Materials/GrassMaterial',
+        '../Shaders/Materials/GridMaterial',
         '../Shaders/Materials/NormalMapMaterial',
         '../Shaders/Materials/ReflectionMaterial',
         '../Shaders/Materials/RefractionMaterial',
@@ -63,6 +64,7 @@ define([
         FacetMaterial,
         FresnelMaterial,
         GrassMaterial,
+        GridMaterial,
         NormalMapMaterial,
         ReflectionMaterial,
         RefractionMaterial,
@@ -207,6 +209,13 @@ define([
      *      <li><code>grassColor</code>:  rgba color object for the grass' color. </li>
      *      <li><code>dirtColor</code>:  rgba color object for the dirt's color. </li>
      *      <li><code>patchiness</code>:  Number that controls the size of the color patches in the grass.</li>
+     *  </ul>
+     *  <li>Grid</li>
+     *  <ul>
+     *      <li><code>color</code>:  rgba color object for the whole material.</li>
+     *      <li><code>cellAlpha</code>: Alpha value for the cells between grid lines.  This will be combined with color.alpha.</li>
+     *      <li><code>lineCount</code>:  Object with x and y values specifying the number of columns and rows respectively.</li>
+     *      <li><code>lineThickness</code>:  Object with x and y values specifying the thickness of grid lines (in pixels where available).</li>
      *  </ul>
      *  <li>Stripe</li>
      *  <ul>
@@ -1086,6 +1095,18 @@ define([
             patchiness : 1.5
         },
         source : GrassMaterial
+    });
+
+    Material.GridType = 'Grid';
+    Material._materialCache.addMaterial(Material.GridType, {
+        type : Material.GridType,
+        uniforms : {
+            color : new Color(0.0, 1.0, 0.0, 1.0),
+            cellAlpha : 0.1,
+            lineCount : new Cartesian2(8.0, 8.0),
+            lineThickness : new Cartesian2(1.0, 1.0)
+        },
+        source : GridMaterial
     });
 
     Material.StripeType = 'Stripe';

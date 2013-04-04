@@ -311,6 +311,11 @@ require([
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Grass');
     }
 
+    function applyGridMaterial(primitive, scene) {
+        Sandcastle.declare(applyGridMaterial); // For highlighting in Sandcastle.
+        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Grid');
+    }
+
     function applyImageMaterial(primitive, scene) {
         Sandcastle.declare(applyImageMaterial); // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material({
@@ -643,6 +648,15 @@ require([
                 togglePolygonVisibility();
                 applyGrassMaterial(polygon, scene);
                 Sandcastle.highlight(applyGrassMaterial);
+            }
+        }));
+
+        proceduralTextureMenu.addChild(new MenuItem({
+            label: 'Grid',
+            onClick: function() {
+                togglePolygonVisibility(polygon, worldPolygon);
+                applyGridMaterial(polygon, scene);
+                Sandcastle.highlight(applyGridMaterial);
             }
         }));
 
