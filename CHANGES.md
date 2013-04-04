@@ -3,6 +3,13 @@ Change Log
 
 Beta Releases
 -------------
+### b16 - 2013-05-01
+* Breaking changes:
+   * 
+* Added `AnimationViewModel.snapToTicks`, which when set to true, causes the shuttle ring on the Animation widget to snap to the defined tick values, rather than interpolate between them.
+* Added new `Grid` material.
+* Made `EllipsoidPrimitive` double-sided.
+
 ### b15 - 2013-04-01
 
 * Breaking changes:
