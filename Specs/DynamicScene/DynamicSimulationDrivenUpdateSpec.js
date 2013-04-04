@@ -27,14 +27,13 @@ defineSuite([
         expect(dynamicObject.duration.getValue(Iso8601.MAXIMUM_VALUE)).toEqual(400);
         expect(dynamicObject.stepsize.getValue(Iso8601.MINIMUM_VALUE)).toEqual(50);
         expect(dynamicObject.stepsize.getValue(Iso8601.MAXIMUM_VALUE)).toEqual(50);
-
     });
 
     it('processCzmlPacket adds data for constrained simulationDrivenUpdate.', function() {
         var simulationDrivenPacket = {
-                duration : 4500,
-                stepsize: 501
-            };
+            duration : 4500,
+            stepsize: 501
+        };
 
         var timeInterval = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
         var validTime = timeInterval.start;

@@ -112,7 +112,7 @@ defineSuite([
         var curDate = null;
 
         do { curDate = new Date(); }
-        while(curDate-date < 20);
+        while(curDate - date < 20);
 
         updater.update(new JulianDate());
         var event = fakeEventSource.events.message;

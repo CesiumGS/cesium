@@ -118,10 +118,11 @@ define(['../Core/incrementalGet',
         var start = TimeIntervalUpdater._serializeDate(startTime);
         var stop = TimeIntervalUpdater._serializeDate(stopTime);
 
-        var query = {};
-        query.start = start;
-        query.stop = stop;
-        query.step = step;
+        var query = {
+                "start": start,
+                "stop": stop,
+                "step": step
+        };
         baseUrl = baseUrl + '?' + uriQuery.objectToQuery(query);
 
         return baseUrl;
