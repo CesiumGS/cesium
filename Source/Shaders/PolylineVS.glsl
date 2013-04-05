@@ -43,12 +43,8 @@ void clipLineSegmentToNearPlane(
     culledByNearPlane = false;
     clipped = false;
     
-    vec3 normal = vec3(0.0, 0.0, -1.0);
-    vec3 point = normal * czm_currentFrustum.x;
-    vec4 plane = vec4(normal, -dot(normal, point));
-    
-    float endPoint0Distance = dot(plane.xyz, positionEC) + plane.w;
-    float denominator = dot(plane.xyz, directionEC);
+    float endPoint0Distance =  -(czm_currentFrustum.x + positionEC.z);
+    float denominator = -directionEC.z;
     
     if (endPoint0Distance < 0.0 && abs(denominator) < czm_epsilon7)
     {
@@ -56,7 +52,8 @@ void clipLineSegmentToNearPlane(
     }
     else if (endPoint0Distance < 0.0 && abs(denominator) > czm_epsilon7)
     {
-        float t = (-plane.w - dot(plane.xyz, positionEC)) / denominator;
+        // t = (-plane distance - dot(plane normal, ray origin)) / dot(plane normal, ray direction)
+        float t = (czm_currentFrustum.x + positionEC.z) / denominator;
         if (t < 0.0 || t > magnitude)
         {
             culledByNearPlane = true;
@@ -138,14 +135,7 @@ void main()
     
     if (clipped)
     {
-        if (usePrevDirection)
-        {
-            nextDir = -prevDir;
-        }
-        else
-        {
-            prevDir = -nextDir;
-        }
+        prevDir = -nextDir;
     }
     
     float pixelSize = czm_pixelSizeInMeters * abs(positionEC.z);
@@ -153,7 +143,7 @@ void main()
     vec4 p0, p1;
     vec2 direction, nextWC, prevWC;
     
-    if (czm_equalsEpsilon(prevDir, -nextDir, czm_epsilon7))
+    if (czm_equalsEpsilon(prevDir, -nextDir, czm_epsilon3))
     {
         if (usePrevDirection || !clipped)
         {
