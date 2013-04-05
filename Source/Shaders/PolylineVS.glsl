@@ -140,11 +140,11 @@ void main()
     {
         if (usePrevDirection)
         {
-            prevDir = vec4(0.0);
+            nextDir = -prevDir;
         }
         else
         {
-            nextDir = vec4(0.0);
+            prevDir = -nextDir;
         }
     }
     
@@ -153,17 +153,20 @@ void main()
     vec4 p0, p1;
     vec2 direction, nextWC, prevWC;
     
-    if (czm_equalsEpsilon(prevDir, vec4(0.0), czm_epsilon7))
+    if (czm_equalsEpsilon(prevDir, -nextDir, czm_epsilon7))
     {
-        p1 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + nextEC.xyz * pixelSize, 1.0));
-        nextWC = normalize(p1.xy - endPointWC.xy);
-        direction = normalize(vec2(-nextWC.y, nextWC.x));
-    }
-    else if (czm_equalsEpsilon(nextDir, vec4(0.0), czm_epsilon7) || czm_equalsEpsilon(nextDir, -prevDir, czm_epsilon1))
-    {
-        p0 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + prevEC.xyz * pixelSize, 1.0));
-        prevWC = normalize(p0.xy - endPointWC.xy);
-        direction = normalize(vec2(prevWC.y, -prevWC.x));
+        if (usePrevDirection || !clipped)
+        {
+            p1 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + nextEC.xyz * pixelSize, 1.0));
+            nextWC = normalize(p1.xy - endPointWC.xy);
+            direction = normalize(vec2(-nextWC.y, nextWC.x));
+        }
+        else
+        {
+            p0 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + prevEC.xyz * pixelSize, 1.0));
+            prevWC = normalize(p0.xy - endPointWC.xy);
+            direction = normalize(vec2(prevWC.y, -prevWC.x));
+        }
     }
     else
     {

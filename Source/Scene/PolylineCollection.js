@@ -1027,7 +1027,10 @@ define([
 
         var prev = computeAdjacencyAnglesPosition;
         if (startSegment) {
-            Cartesian3.ZERO.clone(prev);
+            prev = Matrix4.multiplyByPoint(modelMatrix, positions[index + 1], prev);
+            Cartesian3.subtract(prev, position, prev);
+            Cartesian3.normalize(prev, prev);
+            Cartesian3.negate(prev, prev);
             result.prevLength = 0.0;
         } else {
             prev = Matrix4.multiplyByPoint(modelMatrix, positions[index - 1], prev);
@@ -1043,7 +1046,7 @@ define([
 
         var next = computeAdjacencyAnglesPosition;
         if (endSegment) {
-            Cartesian3.ZERO.clone(next);
+            Cartesian3.negate(prev, next);
             result.nextLength = 0.0;
         } else {
             next = Matrix4.multiplyByPoint(modelMatrix, positions[index + 1], next);
