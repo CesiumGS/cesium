@@ -109,8 +109,19 @@ define(['./Math'
      *
      * @memberof HermitePolynomialApproximation
      */
-    HermitePolynomialApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride) {
-        var length = xTable.length, i, j, d, s, len, index, result = new Array(yStride), coefficients = new Array(yStride);
+    HermitePolynomialApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride, result) {
+        if (typeof result === 'undefined') {
+            result = new Array(yStride);
+        }
+
+        var i;
+        var j;
+        var d;
+        var s;
+        var len;
+        var index;
+        var length = xTable.length;
+        var coefficients = new Array(yStride);
 
         for (i = 0; i < yStride; i++) {
             result[i] = 0;

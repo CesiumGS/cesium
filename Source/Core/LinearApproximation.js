@@ -73,21 +73,26 @@ define([
      *
      * @memberof LinearApproximation
      */
-    LinearApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride) {
+    LinearApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride, result) {
         if (xTable.length !== 2) {
             throw new DeveloperError('The xTable provided to the linear interpolator must have exactly two elements.');
         } else if (yStride <= 0) {
             throw new DeveloperError('There must be at least 1 dependent variable for each independent variable.');
         }
 
-        var result = new Array(yStride), x0 = xTable[0], x1 = xTable[1], i, y0, y1;
+        if (typeof result === 'undefined') {
+            result = new Array(yStride);
+        }
+
+        var i;
+        var y0;
+        var y1;
+        var x0 = xTable[0];
+        var x1 = xTable[1];
 
         for (i = 0; i < yStride; i++) {
-            //calculates the interpolated values
-
             y0 = yTable[i];
             y1 = yTable[i + yStride];
-
             result[i] = (((y1 - y0) * x) + (x1 * y0) - (x0 * y1)) / (x1 - x0);
         }
 

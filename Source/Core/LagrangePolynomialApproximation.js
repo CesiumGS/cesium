@@ -64,11 +64,14 @@ define(function() {
      * @memberof LagrangePolynomialApproximation
      *
      */
-    LagrangePolynomialApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride) {
+    LagrangePolynomialApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride, result) {
+        if (typeof result === 'undefined') {
+            result = new Array(yStride);
+        }
+
         var i;
         var j;
         var length = xTable.length;
-        var result = new Array(yStride);
 
         for (i = 0; i < yStride; i++) {
             result[i] = 0;
