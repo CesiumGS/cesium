@@ -54,8 +54,7 @@ define(['../Core/incrementalGet',
         if(typeof dynamicExternalDocument.simulationDrivenUpdate === 'undefined'){
             this._duration = duration;
             this._stepSize = stepsize;
-        }
-        else{
+        } else {
             this._duration = defaultValue(dynamicExternalDocument.simulationDrivenUpdate.duration, duration);//every 15 minutes
             this._stepSize = defaultValue(dynamicExternalDocument.simulationDrivenUpdate.stepsize, stepsize);//60 second step
         }
@@ -70,24 +69,24 @@ define(['../Core/incrementalGet',
      * @param {JulianDate} currentTime The current time of the animation.
      */
     TimeIntervalUpdater.prototype.update = function(currentTime){
-       if(!this._intervalCollection.contains(currentTime)){
-           if(typeof this._handle !== 'undefined'){
+        if(!this._intervalCollection.contains(currentTime)){
+            if(typeof this._handle !== 'undefined'){
                this._handle();
                this._handle = undefined;
-           }
-           var currentInterval = new TimeInterval(currentTime, currentTime.addSeconds(this._duration.getValue(currentTime)));
-           var url = this._createUrl(currentTime, this._url, currentInterval, this._stepSize);
+            }
+            var currentInterval = new TimeInterval(currentTime, currentTime.addSeconds(this._duration.getValue(currentTime)));
+            var url = this._createUrl(currentTime, this._url, currentInterval, this._stepSize);
 
-            var self = this;
+            var that = this;
             var storeHandle = true;
             var handle = this._fillFunction(url,
                     function(item){
-                        self._czmlProcessor.process(item, self._dynamicObjectCollection, url);
+                        that._czmlProcessor.process(item, that._dynamicObjectCollection, url);
                     },
                     function(czmlData) {
-                        self._intervalCollection.addInterval(currentInterval);
+                        that._intervalCollection.addInterval(currentInterval);
                         storeHandle = false;
-                        self._handle = undefined;
+                        that._handle = undefined;
                     },
                     this._eventName.getValue(currentTime)
             );
@@ -119,9 +118,9 @@ define(['../Core/incrementalGet',
         var stop = TimeIntervalUpdater._serializeDate(stopTime);
 
         var query = {
-                "start": start,
-                "stop": stop,
-                "step": step
+                'start': start,
+                'stop': stop,
+                'step': step
         };
         baseUrl = baseUrl + '?' + uriQuery.objectToQuery(query);
 

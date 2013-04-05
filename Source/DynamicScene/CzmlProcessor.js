@@ -174,7 +174,7 @@ define([
                     }
                 }
                 var scope = external.scope.getValue(Iso8601.MINIMUM_VALUE);
-                if(scope && scope === "SHARED"){
+                if(scope && scope === 'SHARED'){
                     var collections = compositeDynamicObjectCollection.getCollections();
                     collections.splice(collections.length, 0, doc);
                     compositeDynamicObjectCollection.setCollections(collections);
