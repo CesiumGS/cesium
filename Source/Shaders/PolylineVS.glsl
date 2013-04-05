@@ -57,14 +57,14 @@ void clipLineSegmentToNearPlane(
     else if (endPoint0Distance < 0.0 && abs(denominator) > czm_epsilon7)
     {
         float t = (-plane.w - dot(plane.xyz, positionEC)) / denominator;
-        if (t >= 0.0 && t <= magnitude)
+        if (t < 0.0 || t > magnitude)
         {
-            clipped = true;
-            positionEC = positionEC + t * directionEC;
+            culledByNearPlane = true;
         }
         else
         {
-            culledByNearPlane = true;
+            clipped = true;
+            positionEC = positionEC + t * directionEC;
         }
     }
     
@@ -124,8 +124,8 @@ void main()
     bool culledByNearPlane;
     
     vec4 positionEC = czm_modelViewRelativeToEye * p;
-    vec4 nextEC = czm_modelView * nextDir;
-    vec4 prevEC = czm_modelView * prevDir;
+    vec4 nextEC = vec4(normalize((czm_modelView * nextDir).xyz), 0.0);
+    vec4 prevEC = vec4(normalize((czm_modelView * prevDir).xyz), 0.0);
     vec3 segmentDirection = (usePrevDirection) ? prevEC.xyz : nextEC.xyz;
     
     clipLineSegmentToNearPlane(positionEC.xyz, segmentDirection, segmentMagnitude, endPointWC, clipped, culledByNearPlane);
@@ -136,7 +136,7 @@ void main()
         return;
     }
     
-    if (clipped) 
+    if (clipped)
     {
         if (usePrevDirection)
         {

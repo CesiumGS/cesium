@@ -1028,12 +1028,14 @@ define([
         var prev = computeAdjacencyAnglesPosition;
         if (startSegment) {
             Cartesian3.ZERO.clone(prev);
+            result.prevLength = 0.0;
         } else {
             prev = Matrix4.multiplyByPoint(modelMatrix, positions[index - 1], prev);
             Cartesian3.subtract(prev, position, prev);
+
+            result.prevLength = prev.magnitude();
+            Cartesian3.normalize(prev, prev);
         }
-        result.prevLength = prev.magnitude();
-        Cartesian3.normalize(prev, prev);
 
         var p = Math.sqrt(prev.z * 8.0 + 8.0);
         normals.x = prev.x / p + 0.5;
@@ -1042,12 +1044,14 @@ define([
         var next = computeAdjacencyAnglesPosition;
         if (endSegment) {
             Cartesian3.ZERO.clone(next);
+            result.nextLength = 0.0;
         } else {
             next = Matrix4.multiplyByPoint(modelMatrix, positions[index + 1], next);
             Cartesian3.subtract(next, position, next);
+
+            result.nextLength = next.magnitude();
+            Cartesian3.normalize(next, next);
         }
-        result.nextLength = next.magnitude();
-        Cartesian3.normalize(next, next);
 
         p = Math.sqrt(next.z * 8.0 + 8.0);
         normals.z = next.x / p + 0.5;
