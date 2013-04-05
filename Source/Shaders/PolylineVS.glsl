@@ -140,11 +140,11 @@ void main()
     {
         if (usePrevDirection)
         {
-            nextDir = vec4(0.0);
+            prevDir = vec4(0.0);
         }
         else
         {
-            prevDir = vec4(0.0);
+            nextDir = vec4(0.0);
         }
     }
     
