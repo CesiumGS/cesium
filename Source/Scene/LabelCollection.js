@@ -315,6 +315,8 @@ define([
      *   position : { x : 4.0, y : 5.0, z : 6.0 },
      *   text : 'Another label'
      * });
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Labels.html">Cesium Sandcastle Labels Demo</a>
      */
     var LabelCollection = function() {
         this._textureAtlas = undefined;

@@ -24,6 +24,8 @@ define([
      *
      * @alias Polyline
      * @internalConstructor
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Polylines.html">Cesium Sandcastle Polyline Demo</a>
      */
     var Polyline = function(description, polylineCollection) {
         description = defaultValue(description, EMPTY_OBJECT);
