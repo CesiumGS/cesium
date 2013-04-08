@@ -66,8 +66,8 @@ define(['../Core/DeveloperError',
             if (typeof this._handle === 'undefined') {
                 var that = this;
                 var storeHandle = true;
-                var url = this._url.getValue(currentTime);
-                var handle = this._fillFunction(url,
+                var url = that._url.getValue(currentTime);
+                var handle = that._fillFunction(url,
                         function(item){
                             that._czmlProcessor.process(item, that._dynamicObjectCollection, url);
                         },
@@ -77,7 +77,7 @@ define(['../Core/DeveloperError',
                         }
                 );
                 if (storeHandle) {
-                    this._handle = handle;
+                    that._handle = handle;
                 }
             }
         }
