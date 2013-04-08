@@ -604,7 +604,6 @@ define([
         var buffersUsage = this._buffersUsage;
         var usageChanged = false;
 
-        // PERFORMANCE_IDEA: Better heuristic to avoid ping-ponging.  What about DYNAMIC_STREAM?
         var properties = this._propertiesChanged;
         for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
             var newUsage = (properties[k] === 0) ? BufferUsage.STATIC_DRAW : BufferUsage.STREAM_DRAW;
@@ -946,10 +945,16 @@ define([
         this._textureAtlasGUID = textureAtlasGUID;
 
         var vafWriters;
+        var pass = frameState.passes;
+        var picking = pass.pick;
 
         // PERFORMANCE_IDEA: Round robin multiple buffers.
-        if (createVertexArray || this.computeNewBuffersUsage()) {
+        if (createVertexArray || (!picking && this.computeNewBuffersUsage())) {
             this._createVertexArray = false;
+
+            for (var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
+                properties[k] = 0;
+            }
 
             this._vaf = this._vaf && this._vaf.destroy();
 
@@ -1039,10 +1044,6 @@ define([
             billboardsToUpdate.length = billboardsLength;
         }
 
-        for (var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
-            properties[k] = 0;
-        }
-
         if (typeof this._vaf === 'undefined' || typeof this._vaf.vaByPurpose === 'undefined') {
             return;
         }
@@ -1057,7 +1058,6 @@ define([
         }
         updateBoundingVolume(this, context, frameState, boundingVolume);
 
-        var pass = frameState.passes;
         var va;
         var vaLength;
         var command;
@@ -1100,7 +1100,7 @@ define([
                 command.renderState = this._rs;
             }
         }
-        if (pass.pick) {
+        if (picking) {
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
