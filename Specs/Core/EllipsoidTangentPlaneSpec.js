@@ -138,9 +138,8 @@ defineSuite([
     });
 
     it('constructor throws if origin is at the center of the ellipsoid', function() {
-        var origin = new Cartesian3(0.0, 0.0, 0.0);
         expect(function() {
-            return new EllipsoidTangentPlane(origin, Ellipsoid.WGS84);
+            return new EllipsoidTangentPlane(Cartesian.ZERO, Ellipsoid.WGS84);
         }).toThrow();
     });
 
