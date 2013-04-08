@@ -694,10 +694,10 @@ define([
         if (totalLength > 0) {
             var mode = collection._mode;
 
-            var positionArray = new Float32Array(2 * totalLength * 4 * 2);
-            var adjacencyArray = new Float32Array(2 * totalLength * 4 * 2);
-            var pickColorArray = new Uint8Array(totalLength * 4 * 2);
-            var texCoordExpandWidthAndShowArray = new Float32Array(totalLength * 4 * 2);
+            var positionArray = new Float32Array(2 * totalLength * 4);
+            var adjacencyArray = new Float32Array(2 * totalLength * 4);
+            var pickColorArray = new Uint8Array(totalLength * 4);
+            var texCoordExpandWidthAndShowArray = new Float32Array(totalLength * 4);
             var position3DArray;
 
             var positionIndex = 0;
@@ -711,16 +711,16 @@ define([
 
                     if (mode === SceneMode.MORPHING) {
                         if (typeof position3DArray === 'undefined') {
-                            position3DArray = new Float32Array(2 * totalLength * 4 * 2);
+                            position3DArray = new Float32Array(2 * totalLength * 4);
                         }
                         bucket.writeForMorph(position3DArray, adjacencyArray, positionIndex, adjacencyIndex);
                     }
 
                     var bucketLength = bucket.lengthOfPositions;
-                    positionIndex += 2 * bucketLength * 4 * 2;
-                    adjacencyIndex += 2 * bucketLength * 4 * 2;
-                    colorIndex += bucketLength * 4 * 2;
-                    texCoordExpandWidthAndShowIndex += bucketLength * 4 * 2;
+                    positionIndex += 2 * bucketLength * 4;
+                    adjacencyIndex += 2 * bucketLength * 4;
+                    colorIndex += bucketLength * 4;
+                    texCoordExpandWidthAndShowIndex += bucketLength * 4;
                     offset = bucket.updateIndices(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset);
                 }
             }
@@ -997,11 +997,17 @@ define([
         var length;
         if (this.mode === SceneMode.SCENE3D || !intersectsIDL(polyline)) {
             length = polyline.getPositions().length;
-        } else {
-            length = polyline._segments.positions.length;
+            return (length > 1.0) ? length * 4.0 - 4.0 : 0.0;
         }
 
-        return  (length > 1.0) ? length * 2.0 - 2.0 : 0.0;
+        var count = 0;
+        var segmentLengths = polyline._segments.lengths;
+        length = segmentLengths.length;
+        for (var i = 0; i < length; ++i) {
+            count += segmentLengths[i] * 4.0 - 4.0;
+        }
+
+        return count;
     };
 
     var computeAdjacencyAnglesPosition = new Cartesian3();
@@ -1387,8 +1393,8 @@ define([
         var positionsLength = polyline._actualLength;
         if (positionsLength) {
             positionIndex += this.getPolylineStartIndex(polyline);
-            var positionArray = new Float32Array(2 * positionsLength * 4 * 2);
-            var adjacencyArray = new Float32Array(2 * positionsLength * 4 * 2);
+            var positionArray = new Float32Array(2 * positionsLength * 4);
+            var adjacencyArray = new Float32Array(2 * positionsLength * 4);
 
             var index = 0;
             var adjacencyIndex = 0;
@@ -1457,8 +1463,8 @@ define([
                 }
             }
 
-            positionBuffer.copyFromArrayView(positionArray, 2 * 4 * Float32Array.BYTES_PER_ELEMENT * positionIndex * 2);
-            adjacencyBuffer.copyFromArrayView(adjacencyArray, 2 * 4 * Float32Array.BYTES_PER_ELEMENT * positionIndex * 2);
+            positionBuffer.copyFromArrayView(positionArray, 2 * 4 * Float32Array.BYTES_PER_ELEMENT * positionIndex);
+            adjacencyBuffer.copyFromArrayView(adjacencyArray, 2 * 4 * Float32Array.BYTES_PER_ELEMENT * positionIndex);
         }
     };
 
@@ -1468,7 +1474,7 @@ define([
             positionIndex += this.getPolylineStartIndex(polyline);
             var show = polyline.getShow();
             var width = polyline.getWidth();
-            var texCoordExpandWidthAndShowArray = new Float32Array(4 * positionsLength * 2);
+            var texCoordExpandWidthAndShowArray = new Float32Array(4 * positionsLength);
             var texCoordExpandWidthAndShowIndex = 0;
             for ( var j = 0; j < positionsLength; ++j) {
                 for (var k = 0; k < 2; ++k) {
@@ -1480,7 +1486,7 @@ define([
                     texCoordExpandWidthAndShowIndex += 4;
                 }
             }
-            buffer.copyFromArrayView(texCoordExpandWidthAndShowArray, 4 * Float32Array.BYTES_PER_ELEMENT * positionIndex * 2);
+            buffer.copyFromArrayView(texCoordExpandWidthAndShowArray, 4 * Float32Array.BYTES_PER_ELEMENT * positionIndex);
         }
     };
 

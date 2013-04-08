@@ -180,12 +180,13 @@ define([
 
         var length = this._segments.positions.length;
         var segmentLengths = this._segments.lengths;
-        this._modelMatrix = modelMatrix;
 
         var positionsChanged = this._propertiesChanged[POSITION_INDEX] > 0 || this._propertiesChanged[POSITION_SIZE_INDEX] > 0;
         if (!modelMatrix.equals(this._modelMatrix) || positionsChanged) {
             this._segments = PolylinePipeline.wrapLongitude(this._positions, modelMatrix);
         }
+
+        this._modelMatrix = modelMatrix;
 
         if (this._segments.positions.length !== length) {
             // number of positions changed
