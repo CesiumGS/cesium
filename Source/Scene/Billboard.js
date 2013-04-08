@@ -57,6 +57,8 @@ define([
      * @see Label
      *
      * @internalConstructor
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
      */
     var Billboard = function(description, billboardCollection) {
         description = defaultValue(description, EMPTY_OBJECT);
