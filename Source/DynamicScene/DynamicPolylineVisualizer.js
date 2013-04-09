@@ -168,6 +168,8 @@ define([
     };
 
     var cachedPosition = new Cartesian3();
+    var cachedColor = new Color();
+    var cachedOutlineColor = new Color();
     DynamicPolylineVisualizer.prototype._updateObject = function(time, dynamicObject) {
         var dynamicPolyline = dynamicObject.polyline;
         if (typeof dynamicPolyline === 'undefined') {
@@ -233,12 +235,12 @@ define([
 
         var property = dynamicPolyline.color;
         if (typeof property !== 'undefined') {
-            polyline.setColor(property.getValue(time, polyline.getColor()));
+            polyline.setColor(property.getValue(time, cachedColor));
         }
 
         property = dynamicPolyline.outlineColor;
         if (typeof property !== 'undefined') {
-            polyline.setOutlineColor(property.getValue(time, polyline.getOutlineColor()));
+            polyline.setOutlineColor(property.getValue(time, cachedOutlineColor));
         }
 
         property = dynamicPolyline.outlineWidth;
