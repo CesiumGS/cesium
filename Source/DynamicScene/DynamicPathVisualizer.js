@@ -47,6 +47,8 @@ define([
         }
     };
 
+    var cachedColor = new Color();
+    var cachedOutlineColor = new Color();
     PolylineUpdater.prototype.updateObject = function(time, dynamicObject) {
         var dynamicPath = dynamicObject.path;
         if (typeof dynamicPath === 'undefined') {
