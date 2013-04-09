@@ -996,7 +996,7 @@ define([
     PolylineBucket.prototype.getPolylinePositionsLength = function(polyline) {
         var length;
         if (this.mode === SceneMode.SCENE3D || !intersectsIDL(polyline)) {
-            length = polyline.getPositions().length;
+            length = polyline._computedPositions.length;
             return (length > 1.0) ? length * 4.0 - 4.0 : 0.0;
         }
 
@@ -1250,7 +1250,7 @@ define([
             var segments;
             if (this.mode === SceneMode.SCENE3D) {
                 segments = scratchSegmentLengths;
-                var positionsLength = polyline.getPositions().length;
+                var positionsLength = polyline._computedPositions.length;
                 if (positionsLength > 0) {
                     segments[0] = positionsLength;
                 } else {
@@ -1337,7 +1337,7 @@ define([
     var scratchLengths = new Array(1);
 
     PolylineBucket.prototype.getSegments = function(polyline) {
-        var positions = polyline.getPositions();
+        var positions = polyline._computedPositions;
 
         if (positions.length > 0) {
             if (typeof polyline._polylineCollection._boundingVolume === 'undefined') {
