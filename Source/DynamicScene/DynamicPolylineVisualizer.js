@@ -170,8 +170,6 @@ define([
     };
 
     var cachedPosition = new Cartesian3();
-    var cachedColor = new Color();
-    var cachedOutlineColor = new Color();
     DynamicPolylineVisualizer.prototype._updateObject = function(time, dynamicObject) {
         var dynamicPolyline = dynamicObject.polyline;
         if (typeof dynamicPolyline === 'undefined') {
