@@ -1037,9 +1037,9 @@ define([
             }
         }
 
-        //If the number of total billboards every shrinks considerably
-        //Truncate billboardsToUpdate so that we free memory that we're
-        //not going to be using.
+        // If the number of total billboards ever shrinks considerably
+        // Truncate billboardsToUpdate so that we free memory that we're
+        // not going to be using.
         if (billboardsToUpdateLength > billboardsLength * 1.5) {
             billboardsToUpdate.length = billboardsLength;
         }

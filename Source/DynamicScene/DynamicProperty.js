@@ -130,7 +130,7 @@ define([
         }
     };
 
-    var interpolationScrach;
+    var interpolationScratch;
 
     /**
      * Returns the value of the property at the specified time.
@@ -234,13 +234,13 @@ define([
 
                 // Interpolate!
                 var x = times[lastIndex].getSecondsDifference(time);
-                interpolationScrach = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue, interpolationScrach);
+                interpolationScratch = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue, interpolationScratch);
 
                 var specializedGetFunction = valueType.getValueFromInterpolationResult;
                 if (typeof specializedGetFunction === 'undefined') {
-                    return valueType.getValueFromArray(interpolationScrach, 0, result);
+                    return valueType.getValueFromArray(interpolationScratch, 0, result);
                 }
-                return specializedGetFunction(interpolationScrach, result, values, firstIndex, lastIndex);
+                return specializedGetFunction(interpolationScratch, result, values, firstIndex, lastIndex);
             }
             return valueType.getValueFromArray(intervalData.values, index * doublesPerValue, result);
         }
