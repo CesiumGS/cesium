@@ -371,6 +371,9 @@ define([
         }
     };
 
+    // Using unsigned short indices, 64K vertices can be indexed by one index buffer
+    var sixtyFourK = 64 * 1024;
+
     /**
      * DOC_TBA
      *
@@ -389,10 +392,7 @@ define([
 
         ///////////////////////////////////////////////////////////////////////
 
-        if (recreateVA || !this.va) {
-            // Using unsigned short indices, 64K vertices can be indexed by one index buffer
-            var sixtyFourK = 64 * 1024;
-
+        if (recreateVA || typeof this.vaByPurpose === 'undefined') {
             var buffersByPurposeAndUsage = this._buffersByPurposeAndUsage;
 
             this._destroyVA();
@@ -447,8 +447,9 @@ define([
 
             var vertexBuffer = buffer.vertexBuffer;
             var vertexBufferSizeInBytes = this._size * buffer.vertexSizeInBytes;
-            if (!vertexBuffer || (vertexBuffer.getSizeInBytes() < vertexBufferSizeInBytes)) {
-                if (vertexBuffer) {
+            var vertexBufferDefined = typeof vertexBuffer !== 'undefined';
+            if (!vertexBufferDefined || (vertexBuffer.getSizeInBytes() < vertexBufferSizeInBytes)) {
+                if (vertexBufferDefined) {
                     vertexBuffer.destroy();
                 }
                 buffer.vertexBuffer = this._context.createVertexBuffer(buffer.arrayBuffer, buffer.usage);

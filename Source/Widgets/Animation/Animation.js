@@ -592,13 +592,16 @@ define(['../../Core/destroyObject',
         var timeNode = this._knobTime.childNodes[0];
         var dateNode = this._knobDate.childNodes[0];
         var statusNode = this._knobStatus.childNodes[0];
-
+        var isPaused;
         this._subscriptions = [//
         subscribeAndEvaluate(viewModel.pauseViewModel.toggled, function(value) {
-            if (value) {
-                that._shuttleRingPointer.setAttribute('class', 'cesium-animation-shuttleRingPausePointer');
-            } else {
-                that._shuttleRingPointer.setAttribute('class', 'cesium-animation-shuttleRingPointer');
+            if (isPaused !== value) {
+                isPaused = value;
+                if (isPaused) {
+                    that._shuttleRingPointer.setAttribute('class', 'cesium-animation-shuttleRingPausePointer');
+                } else {
+                    that._shuttleRingPointer.setAttribute('class', 'cesium-animation-shuttleRingPointer');
+                }
             }
         }),
 

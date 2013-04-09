@@ -130,6 +130,8 @@ define([
         }
     };
 
+    var interpolationScratch;
+
     /**
      * Returns the value of the property at the specified time.
      * @memberof DynamicProperty
@@ -139,6 +141,12 @@ define([
      * @returns The modified result parameter or a new instance if the result parameter was not supplied.
      */
     DynamicProperty.prototype.getValue = function(time, result) {
+        var valueType = this.valueType;
+
+        if (typeof this._staticValue !== 'undefined') {
+            return valueType.getValue(this._staticValue, result);
+        }
+
         var interval = this._cachedInterval;
         if (!JulianDate.equals(this._cachedTime, time)) {
             this._cachedTime = JulianDate.clone(time, this._cachedTime);
@@ -151,8 +159,6 @@ define([
         if (typeof interval === 'undefined') {
             return undefined;
         }
-
-        var valueType = this.valueType;
 
         var intervalData = interval.data;
         var times = intervalData.times;
@@ -228,13 +234,13 @@ define([
 
                 // Interpolate!
                 var x = times[lastIndex].getSecondsDifference(time);
-                var interpolationResult = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue);
+                interpolationScratch = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue, interpolationScratch);
 
                 var specializedGetFunction = valueType.getValueFromInterpolationResult;
                 if (typeof specializedGetFunction === 'undefined') {
-                    return valueType.getValueFromArray(interpolationResult, 0, result);
+                    return valueType.getValueFromArray(interpolationScratch, 0, result);
                 }
-                return specializedGetFunction(interpolationResult, result, values, firstIndex, lastIndex);
+                return specializedGetFunction(interpolationScratch, result, values, firstIndex, lastIndex);
             }
             return valueType.getValueFromArray(intervalData.values, index * doublesPerValue, result);
         }
@@ -340,11 +346,18 @@ define([
             }
             DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, unwrappedInterval, valueType.doublesPerValue, valueType);
             intervalData.numberOfPoints = Math.min(intervalData.interpolationAlgorithm.getRequiredDataPoints(intervalData.interpolationDegree), intervalData.times.length);
+            this._staticValue = undefined;
         } else {
             //Packet itself is a constant value
             intervalData.times = undefined;
             intervalData.values = unwrappedInterval;
             intervalData.isSampled = false;
+
+            if (existingInterval.equals(Iso8601.MAXIMUM_INTERVAL)) {
+                this._staticValue = unwrappedInterval;
+            } else {
+                this._staticValue = undefined;
+            }
         }
     };
 
