@@ -180,9 +180,8 @@ define([
         }
 
         var availabilityValue = availability.contains(time);
-
         this._cachedAvailabilityDate = JulianDate.clone(time, this._cachedAvailabilityDate);
-        this._cachedAvailabilityValue = availability.contains(time);
+        this._cachedAvailabilityValue = availabilityValue;
 
         return availabilityValue;
     };

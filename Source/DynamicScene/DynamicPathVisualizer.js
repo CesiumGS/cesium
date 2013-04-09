@@ -45,6 +45,8 @@ define([
         }
     };
 
+    var cachedColor = new Color();
+    var cachedOutlineColor = new Color();
     PolylineUpdater.prototype.updateObject = function(time, dynamicObject) {
         var dynamicPath = dynamicObject.path;
         if (typeof dynamicPath === 'undefined') {
@@ -155,12 +157,12 @@ define([
 
         property = dynamicPath.color;
         if (typeof property !== 'undefined') {
-            polyline.setColor(property.getValue(time, polyline.getColor()));
+            polyline.setColor(property.getValue(time, cachedColor));
         }
 
         property = dynamicPath.outlineColor;
         if (typeof property !== 'undefined') {
-            polyline.setOutlineColor(property.getValue(time, polyline.getOutlineColor()));
+            polyline.setOutlineColor(property.getValue(time, cachedOutlineColor));
         }
 
         property = dynamicPath.outlineWidth;
