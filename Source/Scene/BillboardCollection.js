@@ -123,6 +123,8 @@ define([
      *   position : { x : 4.0, y : 5.0, z : 6.0 },
      *   imageIndex : 1
      * });
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
      */
     var BillboardCollection = function() {
         this._textureAtlas = undefined;
