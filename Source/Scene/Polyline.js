@@ -172,7 +172,7 @@ define([
         this.update();
     };
 
-    var granularity = (Math.PI / 360.0) * 6378137.0;
+    var granularity = 0.8 * (Math.PI / 180.0) * 6378137.0;
 
     function computePositions(positions) {
         if (typeof positions === 'undefined' || positions.length === 0) {
