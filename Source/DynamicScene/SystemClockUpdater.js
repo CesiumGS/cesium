@@ -57,11 +57,17 @@ define(['../Core/DeveloperError',
      * Called during the Cesium update loop.
      * @memberof SystemClockUpdater
      *
+     * @exception {DeveloperError} currentTime is required.
+     *
      * @param {JulianDate} currentTime The current time of the animation.
      */
     SystemClockUpdater.prototype.update = function(currentTime) {
+        if (typeof currentTime === 'undefined') {
+            throw new DeveloperError('currentTime is required.');
+        }
+
         var now = new Date();
-        if(typeof this._lastUpdateTime === 'undefined' || now.valueOf() >= this._lastUpdateTime.valueOf() + this._refreshInterval.getValue(currentTime) * 1000){
+        if(now.valueOf() >= this._lastUpdateTime.valueOf() + this._refreshInterval.getValue(currentTime) * 1000){
             this._lastUpdateTime = now;
             if (typeof this._handle === 'undefined') {
                 var that = this;
