@@ -14,6 +14,18 @@
         }
     }
     </script>
+    <script type="text/javascript">
+    if (window.location.host === "cesium.agi.com") {
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-30040272-1']);
+        _gaq.push(['_trackPageview']);
+        (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    }
+    </script>
     <script src="../../ThirdParty/jshint-r12/jshint.js"></script>
     <script src="../../ThirdParty/CodeMirror-2.24/lib/codemirror.js"></script>
     <!-- The next four lines, including Cesium itself, are only for autocomplete -->
@@ -59,7 +71,7 @@
     <div id="loading"><span>Loading...</span></div>
     <div id="appLayout" data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="design: 'headline', gutters: true, liveSplitters: true">
         <div id="toolbar" data-dojo-type="dijit.Toolbar" data-dojo-props="region: 'top'">
-            <div class="cesiumTitle">Cesium Sandcastle</div>
+            <div class="cesiumTitle"><a href="http://cesium.agi.com" target="_blank"><img src="./images/Cesium_Logo_Color.jpg" style="width: 185px;"/></a></div>
             <div id="buttonRun" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconFunction', showLabel: true">
                 Run (F8)
             </div>
