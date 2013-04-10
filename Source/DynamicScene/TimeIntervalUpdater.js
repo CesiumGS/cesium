@@ -67,8 +67,14 @@ define(['../Core/incrementalGet',
      * @memberof TimeIntervalUpdater
      *
      * @param {JulianDate} currentTime The current time of the animation.
+     *
+     * @exception {DeveloperError} currentTime is required.
      */
     TimeIntervalUpdater.prototype.update = function(currentTime){
+        if (typeof currentTime === 'undefined') {
+            throw new DeveloperError('currentTime is required.');
+        }
+
         if(!this._intervalCollection.contains(currentTime)){
             if(typeof this._handle !== 'undefined'){
                this._handle();

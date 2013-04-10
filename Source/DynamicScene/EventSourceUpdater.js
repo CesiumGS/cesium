@@ -51,8 +51,14 @@ define([
      * @memberof EventSourceUpdater
      *
      * @param {JulianDate} currentTime The current time of the animation.
+     *
+     * @exception {DeveloperError} currentTime is required.
      */
     EventSourceUpdater.prototype.update = function(currentTime) {
+        if (typeof currentTime === 'undefined') {
+            throw new DeveloperError('currentTime is required.');
+        }
+
         var eventSource = this._eventSource;
         var url = this._urlProperty.getValue(currentTime);
         if (url !== this._currentUrl) {
