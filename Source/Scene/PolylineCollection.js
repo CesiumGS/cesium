@@ -1162,12 +1162,12 @@ define([
             var count = 0;
 
             for ( var j = 0; j < positionsLength; ++j) {
-                var prevPosition = (j !== 0) ? positions[j - 1] : Cartesian3.ZERO;
+                var prevPosition = (j !== 0) ? positions[j - 1] : positions[j];
                 prevPosition = Matrix4.multiplyByPoint(modelMatrix, prevPosition, morphPrevPositionScratch);
 
                 var position = Matrix4.multiplyByPoint(modelMatrix, positions[j], morphPositionScratch);
 
-                var nextPosition = (j !== positionsLength - 1) ? positions[j + 1] : Cartesian3.ZERO;
+                var nextPosition = (j !== positionsLength - 1) ? positions[j + 1] : positions[j];
                 nextPosition = Matrix4.multiplyByPoint(modelMatrix, nextPosition, morphNextPositionScratch);
 
                 var segmentLength = lengths[segmentIndex];
@@ -1376,7 +1376,7 @@ define([
 
             positionsLength = positions.length;
             for ( var i = 0; i < positionsLength; ++i) {
-                var position = (i !== 0) ? positions[i - 1] : Cartesian3.ZERO;
+                var position = (i !== 0) ? positions[i - 1] : positions[i];
                 scratchWritePrevPosition.x = position.x;
                 scratchWritePrevPosition.y = position.y;
                 scratchWritePrevPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
@@ -1386,7 +1386,7 @@ define([
                 scratchWritePosition.y = position.y;
                 scratchWritePosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
 
-                position = (i !== positionsLength - 1) ? positions[i + 1] : Cartesian3.ZERO;
+                position = (i !== positionsLength - 1) ? positions[i + 1] : positions[i];
                 scratchWriteNextPosition.x = position.x;
                 scratchWriteNextPosition.y = position.y;
                 scratchWriteNextPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;

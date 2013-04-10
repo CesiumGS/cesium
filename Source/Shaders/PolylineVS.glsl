@@ -22,6 +22,8 @@ varying vec4  v_pickColor;
 
 uniform float u_morphTime;
 
+const vec2 czm_highResolutionSnapScale = vec2(1.0, 1.0);    // TODO
+
 void clipLineSegmentToNearPlane(
     vec3 p0,
     vec3 p1,
@@ -94,13 +96,15 @@ void main()
                 u_morphTime);
     }
     
-    vec4 endPointWC;
+    vec4 endPointWC, p0, p1;
     bool culledByNearPlane;
     
     vec4 positionEC = czm_modelViewRelativeToEye * p;
     vec4 prevEC = czm_modelViewRelativeToEye * prev;
     vec4 nextEC = czm_modelViewRelativeToEye * next;
     
+    clipLineSegmentToNearPlane(prevEC.xyz, positionEC.xyz, p0, culledByNearPlane);
+    clipLineSegmentToNearPlane(nextEC.xyz, positionEC.xyz, p1, culledByNearPlane);
     clipLineSegmentToNearPlane(positionEC.xyz, usePrev ? prevEC.xyz : nextEC.xyz, endPointWC, culledByNearPlane);
     
     if (culledByNearPlane)
@@ -109,31 +113,23 @@ void main()
         return;
     }
     
-    float expandWidth = width * 0.5;
-    vec4 p0, p1;
-    vec2 direction, nextWC, prevWC;
+    vec2 prevWC = normalize(p0.xy - endPointWC.xy);
+    vec2 nextWC = normalize(p1.xy - endPointWC.xy);
     
-    if (czm_equalsEpsilon(normalize(prev.xyz - p.xyz), vec3(0.0), czm_epsilon3))
-    {
-        p1 = czm_eyeToWindowCoordinates(vec4(nextEC.xyz, 1.0));
-        nextWC = normalize(p1.xy - endPointWC.xy);
-        direction = normalize(vec2(-nextWC.y, nextWC.x));
+    float expandWidth = width * 0.5;
+    vec2 direction;
+
+	if (czm_equalsEpsilon(normalize(prev.xyz - p.xyz), vec3(0.0), czm_epsilon1))
+	{
+	   direction = vec2(-nextWC.y, nextWC.x);
     }
-    else if (czm_equalsEpsilon(normalize(next.xyz - p.xyz), vec3(0.0), czm_epsilon3))
-    {
-        p0 = czm_eyeToWindowCoordinates(vec4(prevEC.xyz, 1.0));
-        prevWC = normalize(p0.xy - endPointWC.xy);
-        direction = normalize(vec2(prevWC.y, -prevWC.x));
+	else if (czm_equalsEpsilon(normalize(next.xyz - p.xyz), vec3(0.0), czm_epsilon1))
+	{
+        direction = vec2(prevWC.y, -prevWC.x);
     }
     else
     {
-	    p0 = czm_eyeToWindowCoordinates(vec4(prevEC.xyz, 1.0));
-	    p1 = czm_eyeToWindowCoordinates(vec4(nextEC.xyz, 1.0));
-	    
-	    prevWC = normalize(p0.xy - endPointWC.xy);
-	    nextWC = normalize(p1.xy - endPointWC.xy);
-	    vec2 normal = normalize(vec2(-nextWC.y, nextWC.x));
-	    
+	    vec2 normal = vec2(-nextWC.y, nextWC.x);
 	    direction = normalize((nextWC + prevWC) * 0.5);
 	    if (dot(direction, normal) < 0.0)
 	    {
@@ -151,7 +147,8 @@ void main()
 	    expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
     }
 
-    vec4 positionWC = vec4(endPointWC.xy + direction * expandWidth * expandDir, -endPointWC.z, 1.0);
+    vec2 offset = direction * expandDir * expandWidth * czm_highResolutionSnapScale;
+    vec4 positionWC = vec4(endPointWC.xy + offset, -endPointWC.z, 1.0);
     gl_Position = czm_viewportOrthographic * positionWC * show;
     
 #ifndef RENDER_FOR_PICK
