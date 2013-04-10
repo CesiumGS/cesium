@@ -426,7 +426,7 @@ define([
                         if (polylineBuckets.hasOwnProperty(x)) {
                             if (polylineBuckets[x] === bucket) {
                                 if (properties[POSITION_INDEX] || properties[SHOW_INDEX] || properties[WIDTH_INDEX]) {
-                                    bucket.writePositionsUpdate(index, polyline, this._positionBuffer, this._texCoordExpandWidthAndShowBuffer);
+                                    bucket.writeUpdate(index, polyline, this._positionBuffer, this._texCoordExpandWidthAndShowBuffer);
                                 }
                                 break;
                             }
