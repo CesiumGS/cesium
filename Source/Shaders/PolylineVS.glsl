@@ -1,9 +1,15 @@
-attribute vec4 position3DHigh;
-attribute vec4 position3DLow;
-attribute vec4 position2DHigh;
-attribute vec4 position2DLow;
-attribute vec4 prev;
-attribute vec4 next;
+attribute vec3 position3DHigh;
+attribute vec3 position3DLow;
+attribute vec3 position2DHigh;
+attribute vec3 position2DLow;
+attribute vec3 prevPosition3DHigh;
+attribute vec3 prevPosition3DLow;
+attribute vec3 prevPosition2DHigh;
+attribute vec3 prevPosition2DLow;
+attribute vec3 nextPosition3DHigh;
+attribute vec3 nextPosition3DLow;
+attribute vec3 nextPosition2DHigh;
+attribute vec3 nextPosition2DLow;
 attribute vec4 texCoordExpandWidthAndShow;
 attribute vec4 pickColor;
 
@@ -16,35 +22,19 @@ varying vec4  v_pickColor;
 
 uniform float u_morphTime;
 
-// Unpacks a normal from a vec2 using a spheremap transform
-// see 
-//    http://aras-p.info/texts/CompactNormalStorage.html#method04spheremap
-// for details.
-vec3 decode(vec2 enc)
-{
-    vec2 fenc = enc * 4.0 - 2.0;
-    float f = dot(fenc, fenc);
-    float g = sqrt(1.0 - f / 4.0);
-    
-    vec3 n;
-    n.xy = fenc * g;
-    n.z = 1.0 - f / 2.0;
-    return n;
-}
-
 void clipLineSegmentToNearPlane(
-    vec3 positionEC,
-    vec3 directionEC,
-    float magnitude,
+    vec3 p0,
+    vec3 p1,
     out vec4 positionWC,
-    out bool clipped,
     out bool culledByNearPlane)
 {
     culledByNearPlane = false;
-    clipped = false;
     
-    float endPoint0Distance =  -(czm_currentFrustum.x + positionEC.z);
-    float denominator = -directionEC.z;
+    vec3 p1ToP0 = p1 - p0;
+    float magnitude = length(p1ToP0);
+    vec3 direction = normalize(p1ToP0);
+    float endPoint0Distance =  -(czm_currentFrustum.x + p0.z);
+    float denominator = -direction.z;
     
     if (endPoint0Distance < 0.0 && abs(denominator) < czm_epsilon7)
     {
@@ -53,79 +43,65 @@ void clipLineSegmentToNearPlane(
     else if (endPoint0Distance < 0.0 && abs(denominator) > czm_epsilon7)
     {
         // t = (-plane distance - dot(plane normal, ray origin)) / dot(plane normal, ray direction)
-        float t = (czm_currentFrustum.x + positionEC.z) / denominator;
+        float t = (czm_currentFrustum.x + p0.z) / denominator;
         if (t < 0.0 || t > magnitude)
         {
             culledByNearPlane = true;
         }
         else
         {
-            clipped = true;
-            positionEC = positionEC + t * directionEC;
+            p0 = p0 + t * direction;
         }
     }
     
-    positionWC = czm_eyeToWindowCoordinates(vec4(positionEC, 1.0));
+    positionWC = czm_eyeToWindowCoordinates(vec4(p0, 1.0));
 }
 
 void main() 
 {
     float texCoord = texCoordExpandWidthAndShow.x;
     float expandDir = texCoordExpandWidthAndShow.y;
-    float width = texCoordExpandWidthAndShow.z + 0.5;
+    float width = abs(texCoordExpandWidthAndShow.z) + 0.5;
+    bool usePrev = texCoordExpandWidthAndShow.z < 0.0;
     float show = texCoordExpandWidthAndShow.w;
     
-    vec4 p;
-    vec4 prevDir;
-    vec4 nextDir;
-    
-    float segmentMagnitude;
-    bool usePrevDirection;
-
+    vec4 p, prev, next;
     if (u_morphTime == 1.0)
     {
         p = vec4(czm_translateRelativeToEye(position3DHigh.xyz, position3DLow.xyz), 1.0);
-        prevDir = vec4(decode(prev.xy), 0.0);
-        nextDir = vec4(decode(next.xy), 0.0);
-        
-        segmentMagnitude = abs(position3DLow.w);
-        usePrevDirection = position3DLow.w < 0.0;
+        prev = vec4(czm_translateRelativeToEye(prevPosition3DHigh.xyz, prevPosition3DLow.xyz), 1.0);
+        next = vec4(czm_translateRelativeToEye(nextPosition3DHigh.xyz, nextPosition3DLow.xyz), 1.0);
     }
     else if (u_morphTime == 0.0)
     {
         p = vec4(czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy), 1.0);
-        prevDir = vec4(decode(prev.zw).zxy, 0.0);
-        nextDir = vec4(decode(next.zw).zxy, 0.0);
-        
-        segmentMagnitude = abs(position2DLow.w);
-        usePrevDirection = position2DLow.w < 0.0;
+        prev = vec4(czm_translateRelativeToEye(prevPosition2DHigh.zxy, prevPosition2DLow.zxy), 1.0);
+        next = vec4(czm_translateRelativeToEye(nextPosition2DHigh.zxy, nextPosition2DLow.zxy), 1.0);
     }
     else
     {
         p = czm_columbusViewMorph(
                 czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),
-                czm_translateRelativeToEye(position3DHigh.xyz, position3DLow.xyz), 
+                czm_translateRelativeToEye(position3DHigh.xyz, position3DLow.xyz),
                 u_morphTime);
-        
-        prevDir = czm_columbusViewMorph(decode(prev.xy), decode(prev.zw), u_morphTime);
-        nextDir = czm_columbusViewMorph(decode(next.xy), decode(next.zw), u_morphTime);
-        prevDir.w = 0.0;
-        nextDir.w = 0.0;
-        
-        segmentMagnitude = abs(position2DLow.w);
-        usePrevDirection = position2DLow.w < 0.0;
+        prev = czm_columbusViewMorph(
+                czm_translateRelativeToEye(prevPosition2DHigh.zxy, prevPosition2DLow.zxy),
+                czm_translateRelativeToEye(prevPosition3DHigh.xyz, prevPosition3DLow.xyz),
+                u_morphTime);
+        next = czm_columbusViewMorph(
+                czm_translateRelativeToEye(nextPosition2DHigh.zxy, nextPosition2DLow.zxy),
+                czm_translateRelativeToEye(nextPosition3DHigh.xyz, nextPosition3DLow.xyz),
+                u_morphTime);
     }
     
     vec4 endPointWC;
-    bool clipped;
     bool culledByNearPlane;
     
     vec4 positionEC = czm_modelViewRelativeToEye * p;
-    vec4 nextEC = vec4(normalize((czm_modelView * nextDir).xyz), 0.0);
-    vec4 prevEC = vec4(normalize((czm_modelView * prevDir).xyz), 0.0);
-    vec3 segmentDirection = (usePrevDirection) ? prevEC.xyz : nextEC.xyz;
+    vec4 prevEC = czm_modelViewRelativeToEye * prev;
+    vec4 nextEC = czm_modelViewRelativeToEye * next;
     
-    clipLineSegmentToNearPlane(positionEC.xyz, segmentDirection, segmentMagnitude, endPointWC, clipped, culledByNearPlane);
+    clipLineSegmentToNearPlane(positionEC.xyz, usePrev ? prevEC.xyz : nextEC.xyz, endPointWC, culledByNearPlane);
     
     if (culledByNearPlane)
     {
@@ -133,35 +109,26 @@ void main()
         return;
     }
     
-    if (clipped)
-    {
-        prevDir = -nextDir;
-    }
-    
-    float pixelSize = czm_pixelSizeInMeters * abs(positionEC.z);
     float expandWidth = width * 0.5;
     vec4 p0, p1;
     vec2 direction, nextWC, prevWC;
     
-    if (czm_equalsEpsilon(prevDir, -nextDir, czm_epsilon3))
+    if (czm_equalsEpsilon(normalize(prev.xyz - p.xyz), vec3(0.0), czm_epsilon3))
     {
-        if (usePrevDirection || !clipped)
-        {
-            p1 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + nextEC.xyz * pixelSize, 1.0));
-            nextWC = normalize(p1.xy - endPointWC.xy);
-            direction = normalize(vec2(-nextWC.y, nextWC.x));
-        }
-        else
-        {
-            p0 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + prevEC.xyz * pixelSize, 1.0));
-            prevWC = normalize(p0.xy - endPointWC.xy);
-            direction = normalize(vec2(prevWC.y, -prevWC.x));
-        }
+        p1 = czm_eyeToWindowCoordinates(vec4(nextEC.xyz, 1.0));
+        nextWC = normalize(p1.xy - endPointWC.xy);
+        direction = normalize(vec2(-nextWC.y, nextWC.x));
+    }
+    else if (czm_equalsEpsilon(normalize(next.xyz - p.xyz), vec3(0.0), czm_epsilon3))
+    {
+        p0 = czm_eyeToWindowCoordinates(vec4(prevEC.xyz, 1.0));
+        prevWC = normalize(p0.xy - endPointWC.xy);
+        direction = normalize(vec2(prevWC.y, -prevWC.x));
     }
     else
     {
-	    p0 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + prevEC.xyz * pixelSize, 1.0));
-	    p1 = czm_eyeToWindowCoordinates(vec4(positionEC.xyz + nextEC.xyz * pixelSize, 1.0));
+	    p0 = czm_eyeToWindowCoordinates(vec4(prevEC.xyz, 1.0));
+	    p1 = czm_eyeToWindowCoordinates(vec4(nextEC.xyz, 1.0));
 	    
 	    prevWC = normalize(p0.xy - endPointWC.xy);
 	    nextWC = normalize(p1.xy - endPointWC.xy);

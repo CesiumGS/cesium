@@ -49,7 +49,6 @@ define([
         }
 
         this._positions = positions;
-        this._computedPositions = computePositions(positions);
 
         var modelMatrix;
         if (typeof this._polylineCollection !== 'undefined') {
@@ -172,35 +171,6 @@ define([
         this.update();
     };
 
-    var granularity = 0.8 * (Math.PI / 180.0) * 6378137.0;
-
-    function computePositions(positions) {
-        if (typeof positions === 'undefined' || positions.length === 0) {
-            return [];
-        }
-
-        var computedPositions = [Cartesian3.clone(positions[0])];
-
-        var length = positions.length;
-        for (var i = 1; i < length; ++i) {
-            var p0 = positions[i - 1];
-            var p1 = positions[i];
-
-            var segmentLength = Cartesian3.subtract(p0, p1).magnitude();
-            if (segmentLength > granularity) {
-                var numPoints = Math.floor(segmentLength / granularity);
-                for (var j = 1.0; j < numPoints; ++j) {
-                    var t = j / numPoints;
-                    computedPositions.push(Cartesian3.lerp(p0, p1, t));
-                }
-            }
-
-            computedPositions.push(Cartesian3.clone(p1));
-        }
-
-        return computedPositions;
-    }
-
     /**
      * @private
      */
@@ -211,18 +181,16 @@ define([
         }
 
         var segmentPositionsLength = this._segments.positions.length;
-        var computedPositionsLength = this._computedPositions.length;
         var segmentLengths = this._segments.lengths;
 
         var positionsChanged = this._propertiesChanged[POSITION_INDEX] > 0 || this._propertiesChanged[POSITION_SIZE_INDEX] > 0;
         if (!modelMatrix.equals(this._modelMatrix) || positionsChanged) {
-            this._computedPositions = computePositions(this._positions);
-            this._segments = PolylinePipeline.wrapLongitude(this._computedPositions, modelMatrix);
+            this._segments = PolylinePipeline.wrapLongitude(this._positions, modelMatrix);
         }
 
         this._modelMatrix = modelMatrix;
 
-        if (this._segments.positions.length !== segmentPositionsLength || this._computedPositions.length !== computedPositionsLength) {
+        if (this._segments.positions.length !== segmentPositionsLength) {
             // number of positions changed
             makeDirty(this, POSITION_SIZE_INDEX);
         } else {
