@@ -5,7 +5,32 @@ Beta Releases
 -------------
 ### b16 - 2013-05-01
 * Breaking changes:
-   * 
+   * Removed the color, outline color, and outline width properties of polylines. Instead, use materials for polyline color and outline properties. Code that looked like:
+         
+         var polyline = polylineCollection.add({
+             positions : positions,
+             color : new Color(1.0, 1.0, 1.0, 1.0),
+             outlineColor : new Color(1.0, 0.0, 0.0, 1.0),
+             width : 1.0,
+             outlineWidth : 3.0
+         });
+         
+     should now look like:
+         
+         var outlineMaterial = Material.fromType(context, Material.PolylineOutlineType);
+         outlineMaterial.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
+         outlineMaterial.uniforms.outlineColor = new Color(1.0, 0.0, 0.0, 1.0);
+         outlineMaterial.uniforms.outlinewidth = 2.0;
+         
+         var polyline = polylineCollection.add({
+             positions : positions,
+             width : 3.0,
+             material : outlineMaterial
+         });
+* Added wide polylines that work with and without ANGLE.
+* Polylines now use materials to describe their surface appearance. See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page for more details on how to create materials.
+* Added new `PolylineOutline`, `PolylineArrow`, and `Fade` materials.
+* Added `czm_pixelSizeInMeters` automatic GLSL uniform.
 * Added `AnimationViewModel.snapToTicks`, which when set to true, causes the shuttle ring on the Animation widget to snap to the defined tick values, rather than interpolate between them.
 * Added new `Grid` material.
 * Made `EllipsoidPrimitive` double-sided.
@@ -15,7 +40,7 @@ Beta Releases
 * Breaking changes:
    * `Billboard.computeScreenSpacePosition` now takes `Context` and `FrameState` arguments instead of a `UniformState` argument.
    * Removed `clampToPixel` property from `BillboardCollection` and `LabelCollection`.  This options is no longer be needed due to overall LabelCollection visualization improvements.
-   * Removed `Widgets/Dojo/CesiumWidget` and replaced it with `Widgets/CesiumWidget`, which has no Dojo dependancies.
+   * Removed `Widgets/Dojo/CesiumWidget` and replaced it with `Widgets/CesiumWidget`, which has no Dojo dependancies.    
    * `destroyObject` no longer deletes properties from the object being destroyed.  
    * `darker.css` files have been deleted and the `darker` theme is now the default style for widgets.  The original theme is now known as `lighter` and is in corresponding `lighter.css` files.
    * CSS class names have been standardized to avoid potential collisions. All widgets now follow the same pattern, `cesium-<widget>-<className>`.

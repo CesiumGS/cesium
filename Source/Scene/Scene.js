@@ -253,6 +253,8 @@ define([
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
         frameState.occluder = undefined;
+        frameState.canvasDimensions.x = scene._canvas.clientWidth;
+        frameState.canvasDimensions.y = scene._canvas.clientHeight;
 
         // TODO: The occluder is the top-level central body. When we add
         //       support for multiple central bodies, this should be the closest one.
@@ -271,7 +273,6 @@ define([
         for (var m = 0; m < numFrustums; ++m) {
             var curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
             var curFar = Math.min(far, farToNearRatio * curNear);
-            curNear *= 0.99;
 
             var frustumCommands = frustumCommandsList[m];
             if (typeof frustumCommands === 'undefined') {

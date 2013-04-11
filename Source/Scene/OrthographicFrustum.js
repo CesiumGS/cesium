@@ -289,11 +289,11 @@ define([
         var height = canvasDimensions.y;
 
         if (width <= 0) {
-            throw new DeveloperError('canvasDimensions.x must be grater than zero.');
+            throw new DeveloperError('canvasDimensions.x must be greater than zero.');
         }
 
         if (height <= 0) {
-            throw new DeveloperError('canvasDimensions.y must be grater than zero.');
+            throw new DeveloperError('canvasDimensions.y must be greater than zero.');
         }
 
         var frustumWidth = this.right - this.left;
