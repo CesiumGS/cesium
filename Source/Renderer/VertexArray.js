@@ -354,8 +354,8 @@ define([
         }
 
         var indexBuffer = this._indexBuffer;
-        if (indexBuffer && indexBuffer.getVertexArrayDestroyable()) {
-            this._indexBuffer = indexBuffer.destroy();
+        if (indexBuffer && !indexBuffer.isDestroyed() && indexBuffer.getVertexArrayDestroyable()) {
+            indexBuffer.destroy();
         }
 
         return destroyObject(this);
