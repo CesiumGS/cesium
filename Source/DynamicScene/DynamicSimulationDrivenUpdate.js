@@ -1,9 +1,11 @@
 /*global define*/
 define([
         './CzmlNumber',
+        '../Core/DeveloperError',
         './DynamicProperty'
     ], function(
         CzmlNumber,
+        DeveloperError,
         DynamicProperty
         ) {
     "use strict";
