@@ -7,11 +7,12 @@ define([
         createCanvas) {
     "use strict";
 
-    function createContext() {
+    function createContext(options) {
+        options = (typeof options !== 'undefined') ? options : {};
+        options.alpha = (typeof options.alpha !== 'undefined') ? options.alpha : true;
+
         var canvas = createCanvas();
-        var context = new Context(canvas, {
-            alpha : true
-        });
+        var context = new Context(canvas, options);
         context.setValidateShaderProgram(true);
         context.setValidateFramebuffer(true);
         context.setLogShaderCompilation(true);
