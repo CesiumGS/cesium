@@ -28,7 +28,7 @@ define([
         DynamicClock,
         DynamicEllipse,
         DynamicEllipsoid,
-        DynamicExternalDocument
+        DynamicExternalDocument,
         DynamicCone,
         DynamicLabel,
         DynamicPath,
