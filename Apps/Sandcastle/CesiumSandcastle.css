@@ -58,16 +58,16 @@ html, body {
 	height: 205px;
 }
 
-#galleryContainer {
+.galleryContainer {
     width: 100%;
     background: rgba(0, 0, 0, 0.8);
 }
 
-#demosContainer {
+.demosContainer {
 	overflow: auto;
 }
 
-#demos {
+.demos {
     padding: 0 5px 5px;
     white-space: nowrap;
 }

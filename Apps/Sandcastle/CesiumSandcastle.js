@@ -581,6 +581,7 @@ require({
     function loadFromGallery(demo) {
         document.getElementById('saveAsFile').download = demo.name + '.html';
         registry.byId('description').set('value', decodeHTML(demo.description).replace(/\\n/g, '\n'));
+        registry.byId('label').set('value', decodeHTML(demo.label).replace(/\\n/g, '\n'));
         var pos = demo.code.indexOf('<body');
         pos = demo.code.indexOf('>', pos);
         var body = demo.code.substring(pos + 2);
@@ -721,9 +722,11 @@ require({
         var currentDemoName = ioQuery.queryToObject(window.location.search.substring(1)).src;
         currentDemoName = window.decodeURIComponent(currentDemoName.replace('.html', ''));
         var description = encodeHTML(registry.byId('description').get('value').replace(/\n/g, '\\n')).replace(/\"/g, '&quot;');
+        var label = encodeHTML(registry.byId('label').get('value').replace(/\n/g, '\\n')).replace(/\"/g, '&quot;');
 
         var html = getDemoHtml();
         html = html.replace('<title>', '<meta name="description" content="' + description + '">\n    <title>');
+        html = html.replace('<title>', '<meta name="label" content="' + label + '">\n    <title>');
 
         var octetBlob = new Blob([html], {
             'type' : 'application/octet-stream',
@@ -836,6 +839,16 @@ require({
                     demo.description = value.substring(pos, pos2);
                 }
             }
+            
+            demo.label = '';
+            pos = value.indexOf('<meta name="label" content="');
+            if (pos > 0) {
+                pos += 28;
+                pos2 = value.indexOf('">', pos);
+                if (pos2 > pos) {
+                    demo.label = value.substring(pos, pos2);
+                }
+            }
 
             // Select the demo to load upon opening based on the query parameter.
             if (typeof queryObject.src !== 'undefined') {
@@ -861,11 +874,35 @@ require({
             on(dom.byId(demo.name), 'mouseout', function() {
                 closeGalleryTooltip();
             });
+            addFileToTab(index);
         });
     }
 
     function addFileToGallery(index) {
         var demo = gallery_demos[i];
+        createGalleryButton(i, demos);
+        loadDemoFromFile(i);
+    }
+    
+    function addFileToTab(index) {
+        var demo = gallery_demos[index];
+
+        if (demo.label !== '') {
+            var bottomPanel = dom.byId('bottomPanel');
+            if(!dom.byId(demo.label)) {
+                new ContentPane({
+                    content:'<div class="demosContainer"><div class="demos" id="' + demo.label + 'Demos"></div></div>',
+                    title: demo.label,
+                    id: demo.label
+                    }).placeAt("bottomPanel");
+            }
+            var tab = dom.byId(demo.label + 'Demos');
+            createGalleryButton(index, tab);
+        }
+    }
+    
+    function createGalleryButton(index, tab) {
+        var demo = gallery_demos[index];
         var imgSrc = 'templates/Gallery_tile.jpg';
         if (typeof demo.img !== 'undefined') {
             imgSrc = 'gallery/' + window.encodeURIComponent(demo.img);
@@ -875,7 +912,7 @@ require({
         demoLink.id = demo.name;
         demoLink.className = 'linkButton';
         demoLink.href = 'gallery/' + demo.name + '.html';
-        demos.appendChild(demoLink);
+        tab.appendChild(demoLink);
 
         demoLink.onclick = function(e) {
             if (mouse.isMiddle(e)) {
@@ -895,8 +932,6 @@ require({
             'label' : '<div class="demoTileTitle">' + demo.name + '</div>' +
                       '<img src="' + imgSrc + '" class="demoTileThumbnail" alt="" onDragStart="return false;" />'
         }).placeAt(demoLink);
-
-        loadDemoFromFile(i);
     }
 
     if (typeof gallery_demos === 'undefined') {
