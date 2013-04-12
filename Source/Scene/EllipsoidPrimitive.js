@@ -174,7 +174,6 @@ define([
         this._va = undefined;
 
         this._pickSP = undefined;
-        this._pickMaterial = undefined;
         this._pickId = undefined;
 
         this._colorCommand = new DrawCommand();
@@ -188,6 +187,12 @@ define([
             },
             u_oneOverEllipsoidRadiiSquared : function() {
                 return that._oneOverEllipsoidRadiiSquared;
+            }
+        };
+
+        this._pickUniforms = {
+            u_pickColor : function() {
+                return that._pickId.normalizedRgba;
             }
         };
     };
@@ -273,15 +278,14 @@ define([
         var ellipsoidCommandLists = this._commandLists;
         ellipsoidCommandLists.removeAll();
 
+        var materialChanged = (typeof this._material === 'undefined' || this._material !== this.material);
+        this._material = this.material;
+
         if (frameState.passes.color) {
             var colorCommand = this._colorCommand;
 
             // Recompile shader when material changes
-            if (typeof this._material === 'undefined' ||
-                this._material !== this.material) {
-
-                this._material = this.material;
-
+            if (materialChanged) {
                 var fsSource =
                     '#line 0\n' +
                     Noise +
@@ -311,28 +315,40 @@ define([
             var pickCommand = this._pickCommand;
 
             if (typeof this._pickId === 'undefined') {
-                var pickId = context.createPickId(this);
+                this._pickId = context.createPickId(this);
+            }
 
-                var pickMaterial = Material.fromType(context, Material.ColorType);
-                pickMaterial.uniforms.color = pickId.normalizedRgba;
-
-                var pickFS =
+            // Recompile shader when material changes
+            if (materialChanged || typeof this._pickSP === 'undefined') {
+                var fs =
                     '#line 0\n' +
                     Noise +
                     '#line 0\n' +
-                    pickMaterial.shaderSource +
+                    this.material.shaderSource +
                     '#line 0\n' +
                     EllipsoidFS;
 
-                this._pickId = pickId;
-                this._pickMaterial = pickMaterial;
+                var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
+                var pickMain =
+                    'uniform vec4 u_pickColor; \n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    czm_old_main(); \n' +
+                    '    if (gl_FragColor.a == 0.0) { \n' +
+                    '        discard; \n' +
+                    '    } \n' +
+                    '    gl_FragColor = u_pickColor; \n' +
+                    '}';
+                var pickFS = renamedFS + '\n' + pickMain;
+
+                this._pickSP = this._pickSP && this._pickSP.release();
                 this._pickSP = context.getShaderCache().getShaderProgram(EllipsoidVS, pickFS, attributeIndices);
 
                 pickCommand.primitiveType = PrimitiveType.TRIANGLES;
                 pickCommand.vertexArray = this._va;
                 pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
-                pickCommand.uniformMap = combine([this._uniforms, pickMaterial._uniforms], false, false);
+                pickCommand.uniformMap = combine([this._uniforms, this._pickUniforms, this._material._uniforms], false, false);
                 pickCommand.executeInClosestFrustum = true;
             }
 
