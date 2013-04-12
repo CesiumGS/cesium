@@ -78,12 +78,13 @@ define([
     CzmlProcessor.prototype.add = function(json, name){
         var dynamicObjectCollection  = new DynamicObjectCollection();
         var cDoc = new CompositeDynamicObjectCollection([dynamicObjectCollection]);
-        if(typeof name !== 'undefined'){
+
+        if(typeof name !== 'undefined') {
             cDoc.name = name;
-        }
-        else{
+        } else {
             cDoc.name = createGuid();
         }
+
         this.compositeCollections.push(cDoc);
         this.visualizers.push(VisualizerCollection.createCzmlStandardCollection(this._scene, cDoc));
         this.process(json, dynamicObjectCollection, name);
@@ -162,27 +163,23 @@ define([
                 if (typeof external.sourceType === 'undefined' || external.sourceType.getValue(Iso8601.MINIMUM_VALUE) === 'json') {
                     if(typeof external.pollingUpdate === 'undefined'){
                         this._updaters.push(new Updater(compositeDynamicObjectCollection, new IterationDrivenUpdater(this, doc, external.url, 1)));
-                    }
-                    else{
+                    } else {
                         this._updaters.push(new Updater(compositeDynamicObjectCollection, new SystemClockUpdater(this, doc, external)));
                     }
-                }
-                else if (external.sourceType.getValue(Iso8601.MINIMUM_VALUE) === 'eventstream') {
+                } else if (external.sourceType.getValue(Iso8601.MINIMUM_VALUE) === 'eventstream') {
                     if(typeof external.simulationDrivenUpdate === 'undefined'){
                         this._updaters.push(new Updater(compositeDynamicObjectCollection, new EventSourceUpdater(this, doc, external)));
-                    }
-                    else{
+                    }  else {
                         this._updaters.push(new Updater(compositeDynamicObjectCollection, new TimeIntervalUpdater(this, doc, external)));
                     }
                 }
                 var scope = external.scope.getValue(Iso8601.MINIMUM_VALUE);
-                if(scope && scope === "SHARED"){
+                if(scope && scope === 'SHARED'){
                     var collections = compositeDynamicObjectCollection.getCollections();
                     collections.splice(collections.length, 0, doc);
                     compositeDynamicObjectCollection.setCollections(collections);
                     this._documentAddedCallback(compositeDynamicObjectCollection);
-                }
-                else{
+                } else {
                     var cDoc = new CompositeDynamicObjectCollection([doc]);
                     cDoc.name = createGuid();
                     cDoc.parent = compositeDynamicObjectCollection;

@@ -24,13 +24,12 @@ defineSuite([
         expect(dynamicObject.refreshInterval).toBeDefined();
         expect(dynamicObject.refreshInterval.getValue(Iso8601.MINIMUM_VALUE)).toEqual(30);
         expect(dynamicObject.refreshInterval.getValue(Iso8601.MAXIMUM_VALUE)).toEqual(30);
-
     });
 
     it('processCzmlPacket adds data for constrained pollingUpdate.', function() {
         var pollingUpdatePacket = {
-                refreshInterval : 30
-            };
+            refreshInterval : 30
+        };
 
         var timeInterval = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
         var validTime = timeInterval.start;
@@ -43,7 +42,6 @@ defineSuite([
         expect(dynamicObject.refreshInterval).toBeDefined();
         expect(dynamicObject.refreshInterval.getValue(validTime)).toEqual(30);
         expect(dynamicObject.refreshInterval.getValue(invalidTime)).toBeUndefined();
-
     });
 
     it('processCzmlPacket returns false if no data.', function() {

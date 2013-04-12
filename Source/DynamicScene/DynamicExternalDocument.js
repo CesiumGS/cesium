@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/TimeInterval',
+        './CzmlBoolean',
         './CzmlNumber',
         './CzmlString',
         './DynamicProperty',
@@ -10,6 +11,7 @@ define([
     ], function(
         defaultValue,
         TimeInterval,
+        CzmlBoolean,
         CzmlNumber,
         CzmlString,
         DynamicProperty,
@@ -35,7 +37,7 @@ define([
         this.url = undefined;
         this.eventname = undefined;
         this.sourceType = undefined;
-
+        this.reconnectOnError = undefined;
     };
 
     /**
@@ -115,15 +117,24 @@ define([
                 externalUpdated = true;
             }
             pollingUpdate.processCzmlPacket(external.pollingUpdate, externalData.pollingUpdate, interval);
-
         }
+
+        if(typeof externalData.reconnectOnError !== 'undefined'){
+            var reconnectOnError = external.reconnectOnError;
+            if (typeof reconnectOnError === 'undefined') {
+                external.reconnectOnError = reconnectOnError = new DynamicProperty(CzmlBoolean);
+                externalUpdated = true;
+            }
+            reconnectOnError.processCzmlIntervals(externalData.reconnectOnError, interval);
+        }
+
         if(typeof externalData.simulationDrivenUpdate !== 'undefined'){
             var simulationDrivenUpdate = external.simulationDrivenUpdate;
             if (typeof simulationDrivenUpdate === 'undefined') {
                 external.simulationDrivenUpdate = simulationDrivenUpdate = new DynamicSimulationDrivenUpdate();
                 externalUpdated = true;
             }
-            simulationDrivenUpdate.processCzmlPacket(external.simulationDrivenUpdate, externalData.simulationDrivenUpdate, interval);
+            simulationDrivenUpdate.processCzmlIntervals(externalData.simulationDrivenUpdate, interval);
         }
 
         return externalUpdated;

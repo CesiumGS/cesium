@@ -43,9 +43,9 @@ define(['../Core/DeveloperError',
         this._czmlProcessor = czmlProcessor;
         this._dynamicObjectCollection = dynamicObjectCollection;
         var refreshInterval = {getValue:function(){return 60;}};
-        if(typeof dynamicExternalDocument.pollingUpdate === 'undefined'){
+        if(typeof dynamicExternalDocument.pollingUpdate === 'undefined') {
             this._refreshInterval = refreshInterval;
-        }else{
+        } else {
             this._refreshInterval = defaultValue(dynamicExternalDocument.pollingUpdate.refreshInterval, refreshInterval);//default to 60 seconds
         }
         this._fillFunction = fillFunction;
@@ -58,26 +58,32 @@ define(['../Core/DeveloperError',
      * @memberof SystemClockUpdater
      *
      * @param {JulianDate} currentTime The current time of the animation.
+     *
+     * @exception {DeveloperError} currentTime is required.
      */
     SystemClockUpdater.prototype.update = function(currentTime) {
+        if (typeof currentTime === 'undefined') {
+            throw new DeveloperError('currentTime is required.');
+        }
+
         var now = new Date();
-        if(typeof this._lastUpdateTime === 'undefined' || now.valueOf() >= this._lastUpdateTime.valueOf() + this._refreshInterval.getValue(currentTime) * 1000){
+        if(now.valueOf() >= this._lastUpdateTime.valueOf() + this._refreshInterval.getValue(currentTime) * 1000){
             this._lastUpdateTime = now;
             if (typeof this._handle === 'undefined') {
-                var self = this;
+                var that = this;
                 var storeHandle = true;
-                var url = this._url.getValue(currentTime);
-                var handle = this._fillFunction(url,
+                var url = that._url.getValue(currentTime);
+                var handle = that._fillFunction(url,
                         function(item){
-                            self._czmlProcessor.process(item, self._dynamicObjectCollection, url);
+                            that._czmlProcessor.process(item, that._dynamicObjectCollection, url);
                         },
                         function(czmlData) {
                             storeHandle = false;
-                            self._handle = undefined;
+                            that._handle = undefined;
                         }
                 );
                 if (storeHandle) {
-                    this._handle = handle;
+                    that._handle = handle;
                 }
             }
         }

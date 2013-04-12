@@ -1,9 +1,11 @@
 /*global define*/
 define([
         './CzmlNumber',
+        '../Core/DeveloperError',
         './DynamicProperty'
     ], function(
         CzmlNumber,
+        DeveloperError,
         DynamicProperty
         ) {
     "use strict";
@@ -31,7 +33,12 @@ define([
      *
      * @param {DynamicObject} dynamicObject The DynamicObject which will contain the external data.
      * @param {Object} packet The CZML packet to process.
+     * @param {TimeInterval} interval Constrains the processing so that any times outside of this interval are ignored.
      * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
+     *
+     * @exception {DeveloperError} dynamicObject is required.
+     * @exception {DeveloperError} packet is required.
+     * @exception {DeveloperError} interval is required.
      *
      * @see DynamicObject
      * @see DynamicProperty
@@ -39,6 +46,18 @@ define([
      * @see CzmlDefaults#updaters
      */
     DynamicSimulationDrivenUpdate.prototype.processCzmlPacket = function(dynamicObject, packet, interval) {
+        if (typeof dynamicObject === 'undefined') {
+            throw new DeveloperError('dynamicObject is required.');
+        }
+
+        if (typeof packet === 'undefined') {
+            throw new DeveloperError('packet is required.');
+        }
+
+        if (typeof interval === 'undefined') {
+            throw new DeveloperError('interval is required.');
+        }
+
         var simulationDrivenUpdated = false;
         if(typeof packet.duration !== 'undefined'){
             var duration = dynamicObject.duration;

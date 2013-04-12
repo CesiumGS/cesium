@@ -52,21 +52,27 @@ define([
      * @memberof IterationDrivenUpdater
      *
      * @param {JulianDate} currentTime The current time of the animation.
+     *
+     * @exception {DeveloperError} currentTime is required.
      */
-    IterationDrivenUpdater.prototype.update = function(time) {
+    IterationDrivenUpdater.prototype.update = function(currentTime) {
+        if (typeof currentTime === 'undefined') {
+            throw new DeveloperError('currentTime is required.');
+        }
+
         if(this._currentIteration < this._numOfIterations){
             if (typeof this._handle === 'undefined') {
-                var self = this;
+                var that = this;
                 var storeHandle = true;
-                var url = this._url.getValue(time);
+                var url = this._url.getValue(currentTime);
                 var handle = this._fillFunction(url,
                         function(item){
-                            self._czmlProcessor.process(item, self._dynamicObjectCollection, url);
+                            that._czmlProcessor.process(item, that._dynamicObjectCollection, url);
                         },
                         function() {
                             storeHandle = false;
-                            self._handle = undefined;
-                            ++self._currentIteration;
+                            that._handle = undefined;
+                            ++that._currentIteration;
                         }
                 );
                 if (storeHandle) {

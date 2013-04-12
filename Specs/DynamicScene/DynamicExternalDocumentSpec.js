@@ -35,7 +35,7 @@ defineSuite([
             external : {
                 url : 'http://localhost/test',
                 eventname : 'access',
-                sourceType:"eventstream"
+                sourceType: 'eventstream'
             }
         };
 
@@ -76,7 +76,7 @@ defineSuite([
                     interval : '2000-01-01/2001-01-01',
                     url : 'http://localhost/test',
                     eventname : '30',
-                    sourceType:"eventstream"
+                    sourceType: 'eventstream'
                 }
         };
 
@@ -103,12 +103,12 @@ defineSuite([
     it('mergeProperties does not change a fully configured external document', function() {
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.external = new DynamicExternalDocument();
-        objectToMerge.polling = "localhost";
+        objectToMerge.polling = 'localhost';
         objectToMerge.refreshInterval = 1;
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.external = new DynamicExternalDocument();
-        targetObject.polling = "remotehost";
+        targetObject.polling = 'remotehost';
         targetObject.refreshInterval = 2;
 
         DynamicExternalDocument.mergeProperties(targetObject, objectToMerge);
@@ -120,7 +120,7 @@ defineSuite([
     it('mergeProperties creates and configures an undefined external document', function() {
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.external = new DynamicExternalDocument();
-        objectToMerge.eventsource = "localhost";
+        objectToMerge.eventsource = 'localhost';
         objectToMerge.eventname = 'access';
 
         var targetObject = new DynamicObject('targetObject');

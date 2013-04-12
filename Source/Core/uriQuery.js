@@ -18,7 +18,7 @@ define(['./DeveloperError'],function(DeveloperError) {
              * @example
              * var queryString = uriQuery.objectToQuery({foo: "access", bar: { what: 123, no: [1, 2, 3] }});
              */
-            objectToQuery:function(obj, prefix){
+            objectToQuery: function(obj, prefix){
                 if (typeof obj === 'undefined') {
                     throw new DeveloperError('obj is required.');
                 }
@@ -30,8 +30,7 @@ define(['./DeveloperError'],function(DeveloperError) {
                         var t = prefix ? prefix + '[' + p + ']' : p;
                         if(typeof value === 'object'){
                             str.push(this.objectToQuery(value, t));
-                        }
-                        else{
+                        } else {
                             str.push(encodeURIComponent(t) + "=" + encodeURIComponent(value));
                         }
                     }
@@ -46,16 +45,16 @@ define(['./DeveloperError'],function(DeveloperError) {
              * @example
              * var obj = uriQuery.queryToObject('http://localhost?name=Bruce&value=kicks');
              */
-            queryToObject : function(queryParameters){
+            queryToObject: function(queryParameters){
                 if (typeof queryParameters === 'undefined') {
                     throw new DeveloperError('queryParameters is required.');
                 }
-                queryParameters.match(/\?(.+)$/);
-                var params = RegExp.$1;
-                if(params === ''){
+                var re = new RegExp(/\?(.+)$/);
+                var params = re.exec(queryParameters);
+                if(params === null){
                     return undefined;
                 }
-                params = params.split("&");
+                params = params[1].split("&");
                 var queryStringList = {};
                 for(var i = 0; i < params.length;++i){
                     var tmp = params[i].split("=");

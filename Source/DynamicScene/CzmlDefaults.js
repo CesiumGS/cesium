@@ -30,6 +30,7 @@ define([
         DynamicEllipsoid,
         DynamicExternalDocument,
         DynamicCone,
+        DynamicExternalDocument,
         DynamicLabel,
         DynamicPath,
         DynamicPoint,
@@ -123,7 +124,7 @@ define([
                     DynamicPyramid.undefineProperties,
                     DynamicObject.undefineProperties,
                     DynamicClock.undefineProperties,
-                   DynamicExternalDocument.undefineProperties],
+                    DynamicExternalDocument.undefineProperties],
 
         /**
          * Creates an array containing the standard CZML visualizers,
