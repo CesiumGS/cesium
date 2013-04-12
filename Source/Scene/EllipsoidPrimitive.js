@@ -278,7 +278,7 @@ define([
         var ellipsoidCommandLists = this._commandLists;
         ellipsoidCommandLists.removeAll();
 
-        var materialChanged = (typeof this._material === 'undefined' || this._material !== this.material);
+        var materialChanged = this._material !== this.material;
         this._material = this.material;
 
         if (frameState.passes.color) {
