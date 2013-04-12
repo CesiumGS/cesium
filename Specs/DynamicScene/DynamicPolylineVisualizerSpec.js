@@ -199,10 +199,12 @@ defineSuite([
         visualizer.update(time);
         expect(primitive.getShow()).toEqual(testObject.polyline.show.getValue(time));
         expect(primitive.getPositions()).toEqual(testObject.vertexPositions.getValueCartesian(time));
-        expect(primitive.getColor()).toEqual(testObject.polyline.color.getValue(time));
-        expect(primitive.getOutlineColor()).toEqual(testObject.polyline.outlineColor.getValue(time));
-        expect(primitive.getOutlineWidth()).toEqual(testObject.polyline.outlineWidth.getValue(time));
         expect(primitive.getWidth()).toEqual(testObject.polyline.width.getValue(time));
+
+        var material = primitive.getMaterial();
+        expect(material.uniforms.color).toEqual(testObject.polyline.color.getValue(time));
+        expect(material.uniforms.outlineColor).toEqual(testObject.polyline.outlineColor.getValue(time));
+        expect(material.uniforms.outlineWidth).toEqual(testObject.polyline.outlineWidth.getValue(time));
 
         testObject.vertexPositions = new MockProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112)]);
         polyline.color = new MockProperty(new Color(0.1, 0.2, 0.3, 0.4));
@@ -213,10 +215,12 @@ defineSuite([
         visualizer.update(time);
         expect(primitive.getShow()).toEqual(testObject.polyline.show.getValue(time));
         expect(primitive.getPositions()).toEqual(testObject.vertexPositions.getValueCartesian(time));
-        expect(primitive.getColor()).toEqual(testObject.polyline.color.getValue(time));
-        expect(primitive.getOutlineColor()).toEqual(testObject.polyline.outlineColor.getValue(time));
-        expect(primitive.getOutlineWidth()).toEqual(testObject.polyline.outlineWidth.getValue(time));
         expect(primitive.getWidth()).toEqual(testObject.polyline.width.getValue(time));
+
+        material = primitive.getMaterial();
+        expect(material.uniforms.color).toEqual(testObject.polyline.color.getValue(time));
+        expect(material.uniforms.outlineColor).toEqual(testObject.polyline.outlineColor.getValue(time));
+        expect(material.uniforms.outlineWidth).toEqual(testObject.polyline.outlineWidth.getValue(time));
 
         polyline.show = new MockProperty(false);
         visualizer.update(time);
