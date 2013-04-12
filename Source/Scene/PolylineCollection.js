@@ -457,59 +457,23 @@ define([
         }
 
         var pass = frameState.passes;
-        var commands;
-        var command;
-        polylineBuckets = this._polylineBuckets;
-        var sp = this._sp;
-        this._commandLists.removeAll();
-        if (typeof polylineBuckets !== 'undefined') {
-            if (pass.color) {
-                length = this._colorVertexArrays.length;
-                commands = this._commandLists.colorList;
-                for ( var m = 0; m < length; ++m) {
-                    var vaColor = this._colorVertexArrays[m];
-                    var vaOutlineColor = this._outlineColorVertexArrays[m];
-                    buckets = this._colorVertexArrays[m].buckets;
-                    bucketLength = buckets.length;
-                    var p = commands.length;
-                    commands.length += bucketLength * 3;
-                    for ( var n = 0; n < bucketLength; ++n, p += 3) {
-                        bucketLocator = buckets[n];
+        var useDepthTest = (this.morphTime !== 0.0);
+        var commandLists = this._commandLists;
+        commandLists.colorList = emptyArray;
+        commandLists.pickList = emptyArray;
 
-                        command = commands[p];
-                        if (typeof command === 'undefined') {
-                            command = commands[p] = new DrawCommand(this);
-                        }
+        if (pass.color) {
+            if (typeof this._rs === 'undefined') {
+                this._rs = context.createRenderState({
+                    blending : BlendingState.ALPHA_BLEND
+                });
+            }
 
-                        command.boundingVolume = boundingVolume;
-                        command.modelMatrix = modelMatrix;
-                        command.primitiveType = PrimitiveType.LINES;
-                        command.count = bucketLocator.count;
-                        command.offset = bucketLocator.offset;
-                        command.shaderProgram = sp;
-                        command.uniformMap = this._uniforms;
-                        command.vertexArray = vaOutlineColor.va;
-                        command.renderState = bucketLocator.rsOne;
+            this._rs.depthMask = !useDepthTest;
+            this._rs.depthTest.enabled = useDepthTest;
 
-                        command = commands[p + 1];
-                        if (typeof command === 'undefined') {
-                            command = commands[p + 1] = new DrawCommand(this);
-                        }
-
-                        command.boundingVolume = boundingVolume;
-                        command.modelMatrix = modelMatrix;
-                        command.primitiveType = PrimitiveType.LINES;
-                        command.count = bucketLocator.count;
-                        command.offset = bucketLocator.offset;
-                        command.shaderProgram = sp;
-                        command.uniformMap = this._uniforms;
-                        command.vertexArray = vaColor.va;
-                        command.renderState = bucketLocator.rsTwo;
-
-                        command = commands[p + 2];
-                        if (typeof command === 'undefined') {
-                            command = commands[p + 2] = new DrawCommand(this);
-                        }
+            var colorList = this._colorCommands;
+            commandLists.colorList = colorList;
 
             createCommandLists(this, colorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, this._uniforms, true);
         }
@@ -519,22 +483,6 @@ define([
                 this._spPick = context.getShaderCache().getShaderProgram(
                         '#define RENDER_FOR_PICK\n\n' + PolylineVS, PolylineFSPick, attributeIndices);
             }
-
-            if (pass.pick) {
-                length = this._pickColorVertexArrays.length;
-                commands = this._commandLists.pickList;
-                for ( var a = 0; a < length; ++a) {
-                    var vaPickColor = this._pickColorVertexArrays[a];
-                    buckets = vaPickColor.buckets;
-                    bucketLength = buckets.length;
-                    commands.length += bucketLength;
-                    for ( var b = 0; b < bucketLength; ++b) {
-                        bucketLocator = buckets[b];
-
-                        command = commands[b];
-                        if (typeof command === 'undefined') {
-                            command = commands[b] = new DrawCommand(this);
-                        }
 
             if (typeof this._rsPick === 'undefined') {
                 this._rsPick = context.createRenderState();
