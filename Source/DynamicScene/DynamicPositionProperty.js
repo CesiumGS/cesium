@@ -110,7 +110,7 @@ define([
         }
         result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== 'undefined') {
-            if (interval.referenceFrame === ReferenceFrame.INERTIAL) {
+            if (interval.data.referenceFrame === ReferenceFrame.INERTIAL) {
                 var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
                 if (typeof icrfToFixed === 'undefined') {
                     return undefined;
@@ -151,7 +151,7 @@ define([
         var valueType = property.valueType;
         if (valueType === CzmlCartesian3) {
             result = property.getValue(time, result);
-            if (interval.referenceFrame === ReferenceFrame.INERTIAL) {
+            if (interval.data.referenceFrame === ReferenceFrame.INERTIAL) {
                 var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
                 if (typeof icrfToFixed === 'undefined') {
                     return undefined;
@@ -334,7 +334,6 @@ define([
         } else {
             //If not, create it.
             existingInterval = iso8601Interval;
-            existingInterval.referenceFrame = ReferenceFrame.FIXED;
             thisIntervals.addInterval(existingInterval);
         }
 
@@ -346,6 +345,7 @@ define([
                 if (typeof unwrappedInterval !== 'undefined') {
                     property = new DynamicProperty(valueType);
                     this._dynamicProperties.push(property);
+                    property.referenceFrame = ReferenceFrame.FIXED;
                     existingInterval.data = property;
                     break;
                 }
@@ -355,7 +355,7 @@ define([
         //We could handle the data, add it to the property.
         if (typeof unwrappedInterval !== 'undefined') {
             if (typeof czmlInterval.referenceFrame !== 'undefined') {
-                existingInterval.referenceFrame = ReferenceFrame[czmlInterval.referenceFrame];
+                existingInterval.data.referenceFrame = ReferenceFrame[czmlInterval.referenceFrame];
             }
             property._addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
         }
@@ -364,7 +364,7 @@ define([
     DynamicPositionProperty.prototype._getReferenceFrame = function() {
         var propertyIntervals = this._propertyIntervals;
         if (propertyIntervals.getLength() > 0) {
-            return propertyIntervals.get(0).referenceFrame;
+            return propertyIntervals.get(0).data.referenceFrame;
         }
         return undefined;
     };
@@ -397,7 +397,7 @@ define([
             }
         }
 
-        if (interval.referenceFrame !== referenceFrame) {
+        if (interval.data.referenceFrame !== referenceFrame) {
             if (referenceFrame === ReferenceFrame.FIXED) {
                 var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
                 if (typeof icrfToFixed === 'undefined') {
