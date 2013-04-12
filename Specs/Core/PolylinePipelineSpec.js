@@ -21,8 +21,8 @@ defineSuite([
         var positions = [ellipsoid.cartographicToCartesian(p1),
                          ellipsoid.cartographicToCartesian(p2)];
         var segments = PolylinePipeline.wrapLongitude(positions);
-        expect(segments.length).toEqual(1);
-        expect(segments[0].length).toEqual(2);
+        expect(segments.lengths.length).toEqual(1);
+        expect(segments.lengths[0]).toEqual(2);
     });
 
     it('wrapLongitude breaks polyline into segments', function() {
@@ -32,9 +32,9 @@ defineSuite([
         var positions = [ellipsoid.cartographicToCartesian(p1),
                          ellipsoid.cartographicToCartesian(p2)];
         var segments = PolylinePipeline.wrapLongitude(positions);
-        expect(segments.length).toEqual(2);
-        expect(segments[0].length).toEqual(2);
-        expect(segments[1].length).toEqual(2);
+        expect(segments.lengths.length).toEqual(2);
+        expect(segments.lengths[0]).toEqual(2);
+        expect(segments.lengths[1]).toEqual(2);
     });
 
     it('wrapLongitude breaks polyline into segments with model matrix', function() {
@@ -45,8 +45,8 @@ defineSuite([
         var positions = [ new Cartesian3(0.0, 0.0, 0.0),
                           new Cartesian3(0.0, 100000000.0, 0.0)];
         var segments = PolylinePipeline.wrapLongitude(positions, matrix);
-        expect(segments.length).toEqual(2);
-        expect(segments[0].length).toEqual(2);
-        expect(segments[1].length).toEqual(2);
+        expect(segments.lengths.length).toEqual(2);
+        expect(segments.lengths[0]).toEqual(2);
+        expect(segments.lengths[1]).toEqual(2);
     });
 });

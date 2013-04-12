@@ -1,141 +1,174 @@
-.animation-theme {
+.cesium-animation-theme {
     visibility: hidden;
     display: block;
     position: absolute;
     z-index: -100;
 }
-.animation-themeNormal {
-    color: #E5F2FE;
+
+.cesium-animation-themeNormal {
+    color: #222;
 }
-.animation-themeHover {
-    color: #ABD6FF;
+
+.cesium-animation-themeHover {
+    color: #4488B0;
 }
-.animation-themeSelect {
-    color: #E5F2FE;
+
+.cesium-animation-themeSelect {
+    color: #242;
 }
-.animation-themeDisabled {
-    color: #EFEFEF;
+
+.cesium-animation-themeDisabled {
+    color: #333;
 }
-.animation-themeKnob {
-    color: #E1E2E3;
+
+.cesium-animation-themeKnob {
+    color: #222;
 }
-.animation-themePointer {
-    color: #FA5;
+
+.cesium-animation-themePointer {
+    color: #2E2;
 }
-.animation-themeSwoosh {
-    color: #ACE;
+
+.cesium-animation-themeSwoosh {
+    color: #8AC;
 }
-.animation-themeSwooshHover {
-    color: #BDF;
+
+.cesium-animation-themeSwooshHover {
+    color: #AEF;
 }
-.animation-svgText {
-    fill: #111;
+
+.cesium-animation-svgText {
+    fill: #edffff;
     font-family: Sans-Serif;
     font-size: 15px;
     text-anchor: middle;
 }
-.animation-blank {
+
+.cesium-animation-blank {
     fill: #000;
-    fill-opacity: 0.01;  /* This must be clickable, so it can't be 'fill: none'. */
+    fill-opacity: 0.01; /* This must be clickable, so it can't be 'fill: none'. */
     stroke: none;
 }
-.animation-rectButton {
+
+.cesium-animation-rectButton {
     cursor: pointer;
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
 }
-.animation-rectButton .animation-buttonPath {
-    fill: #111;
-}
-.animation-rectButton .animation-buttonGlow {
+
+.cesium-animation-rectButton .cesium-animation-buttonGlow {
     fill: #fff;
     stroke: none;
     /* Widget will add: filter: url(#animation_blurred); */
     display: none;
 }
-.animation-rectButton .animation-buttonMain {
+
+.cesium-animation-rectButton:hover .cesium-animation-buttonGlow {
+    display: block;
+}
+
+.cesium-animation-rectButton .cesium-animation-buttonPath {
+    fill: #edffff;
+}
+
+.cesium-animation-rectButton .cesium-animation-buttonMain {
     /* Widget will add: fill: url(#animation_buttonNormal); */
-    stroke: #759DC0;
+    stroke: #444;
     stroke-width: 1.2;
 }
-.animation-buttonToggled .animation-buttonGlow {
-    display: block;
-    fill: #FFAA2A;
-}
-.animation-buttonToggled .animation-buttonMain {
-    /* Widget will add: fill: url(#animation_buttonToggled); */
-    stroke: #EA0;
-}
-.animation-rectButton:hover .animation-buttonGlow {
-    display: block;
-}
-.animation-rectButton:hover .animation-buttonMain {
+
+.cesium-animation-rectButton:hover .cesium-animation-buttonMain {
     /* Widget will add: fill: url(#animation_buttonHovered); */
-    stroke: #759DC0;
+    stroke: #AEF;
 }
-.animation-buttonToggled:hover .animation-buttonGlow {
-    fill: #fff;
-}
-.animation-buttonToggled:hover .animation-buttonMain {
-    stroke: #EA0;
-}
-.animation-rectButton:active .animation-buttonMain {
+
+.cesium-animation-rectButton:active .cesium-animation-buttonMain {
     fill: #ABD6FF;
 }
-.animation-buttonDisabled {
+
+.cesium-animation-buttonDisabled {
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
 }
-.animation-buttonDisabled .animation-buttonMain {
+
+.cesium-animation-buttonDisabled .cesium-animation-buttonMain {
     /* Widget will add: fill: url(#animation_buttonDisabled); */
-    stroke: #D3D3D3;
+    stroke: #555;
 }
-.animation-buttonDisabled .animation-buttonPath {
+
+.cesium-animation-buttonDisabled .cesium-animation-buttonPath {
     fill: #818181;
 }
-.animation-buttonDisabled .animation-buttonGlow {
+
+.cesium-animation-buttonDisabled .cesium-animation-buttonGlow {
     display: none;
 }
-.animation-shuttleRingBack {
-    fill: #FAFAFA;
-    fill-opacity: 1;
-    stroke: #AEAEAE;
-    stroke-width: 1.2;
+
+.cesium-animation-buttonToggled .cesium-animation-buttonGlow {
+    display: block;
+    fill: #2E2;
 }
-.animation-shuttleRingG {
+
+.cesium-animation-buttonToggled .cesium-animation-buttonMain {
+    stroke: #2E2;
+}
+
+.cesium-animation-buttonToggled:hover .cesium-animation-buttonGlow {
+    fill: #fff;
+}
+
+.cesium-animation-buttonToggled:hover .cesium-animation-buttonMain {
+    stroke: #2E2;
+}
+
+.cesium-animation-shuttleRingG {
     cursor: pointer;
 }
-.animation-shuttleRingSwoosh line {
+
+/* Widget will add:
+.cesium-animation-shuttleRingG .cesium-animation-shuttleRingSwoosh {
+    fill: url(#animation_shuttleRingSwooshGradient);
+}
+
+.cesium-animation-shuttleRingG:hover .cesium-animation-shuttleRingSwoosh {
+    fill: url(#animation_shuttleRingSwooshHovered);
+}
+*/
+
+.cesium-animation-shuttleRingPointer {
+    /* Widget will add: fill: url(#animation_shuttleRingPointerGradient); */
+    cursor: pointer;
+}
+
+.cesium-animation-shuttleRingPausePointer {
+    /* Widget will add: fill: url(#animation_shuttleRingPointerPaused); */
+    cursor: pointer;
+}
+
+.cesium-animation-shuttleRingBack {
+    fill: #181818;
+    fill-opacity: 0.8;
+    stroke: #333;
+    stroke-width: 1.2;
+}
+
+.cesium-animation-shuttleRingSwoosh line {
     stroke: #8AC;
     stroke-width: 3;
     stroke-opacity: 0.2;
     stroke-linecap: round;
 }
-/* Widget will add:
-.animation-shuttleRingG .animation-shuttleRingSwoosh {
-    fill: url(#animation_shuttleRingSwooshGradient);
-}
-.animation-shuttleRingG:hover .animation-shuttleRingSwoosh {
-    fill: url(#animation_shuttleRingSwooshHovered);
-}
-*/
-.animation-shuttleRingPointer {
-    /* Widget will add: fill: url(#animation_shuttleRingPointerGradient); */
-    cursor: pointer;
-}
-.animation-shuttleRingPausePointer {
-    /* Widget will add: fill: url(#animation_shuttleRingPointerPaused); */
-    cursor: pointer;
-}
-.animation-knobOuter {
+
+.cesium-animation-knobOuter {
     /* Widget will add: fill: url(#animation_knobOuter); */
     cursor: pointer;
-    stroke: #A5A5A5;
+    stroke: #444;
     stroke-width: 1.2;
 }
-.animation-knobInner {
+
+.cesium-animation-knobInner {
     /* Widget will add: fill: url(#animation_knobInner); */
     cursor: pointer;
 }

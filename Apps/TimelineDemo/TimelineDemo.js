@@ -173,21 +173,21 @@ define(['dojo',
 
     // React to theme changes
     //
-    function setThemeLight() {
-        document.body.className = 'claro';
-        dijit.byId('themeSelector').set('label', 'Theme: Light');
+    function setThemeLighter() {
+        document.body.className = 'claro cesium-lighter';
+        dijit.byId('themeSelector').set('label', 'Theme: Lighter');
         animation.applyThemeChanges();
     }
-    function setThemeDark() {
-        document.body.className = 'claro cesium-darker';
-        dijit.byId('themeSelector').set('label', 'Theme: Dark');
+    function setThemeDarker() {
+        document.body.className = 'claro';
+        dijit.byId('themeSelector').set('label', 'Theme: Darker');
         animation.applyThemeChanges();
     }
     function cycleTheme() {
         if (document.body.className === 'claro') {
-            setThemeDark();
+            setThemeLighter();
         } else {
-            setThemeLight();
+            setThemeDarker();
         }
     }
 
@@ -200,8 +200,8 @@ define(['dojo',
         dojo.connect(dijit.byId('endTimeSel'), 'onChange', newEndTimeSelected);
 
         dojo.connect(dijit.byId('themeSelector'), 'onClick', cycleTheme);
-        dojo.connect(dijit.byId('themeLight'), 'onClick', setThemeLight);
-        dojo.connect(dijit.byId('themeDark'), 'onClick', setThemeDark);
+        dojo.connect(dijit.byId('themeLighter'), 'onClick', setThemeLighter);
+        dojo.connect(dijit.byId('themeDarker'), 'onClick', setThemeDarker);
 
         dijit.byId('startTimeSel').set('value', 'T00:00:00');
         dijit.byId('endTimeSel').set('value', 'T24:00:00');

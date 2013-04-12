@@ -2,6 +2,7 @@
 defineSuite([
         'Scene/Material',
         'Scene/Polygon',
+        'Scene/PolylineCollection',
         'Specs/createContext',
         'Specs/destroyContext',
         'Specs/createCamera',
@@ -18,6 +19,7 @@ defineSuite([
     ], function(
         Material,
         Polygon,
+        PolylineCollection,
         createContext,
         destroyContext,
         createCamera,
@@ -36,6 +38,8 @@ defineSuite([
 
     var context;
     var polygon;
+    var polylines;
+    var polyline;
     var us;
 
     beforeAll(function() {
@@ -60,14 +64,24 @@ defineSuite([
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
         ]);
+
+        polylines = new PolylineCollection();
+        polyline = polylines.add({
+            positions : [
+                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 0.0, 0.0)),
+                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees( 50.0, 0.0, 0.0))
+            ],
+            width : 5.0
+        });
     });
 
     afterEach(function() {
         polygon = polygon && polygon.destroy();
+        polylines = polylines && polylines.destroy();
         us = undefined;
     });
 
-    var renderMaterial = function(material) {
+    function renderMaterial(material) {
         polygon.material = material;
 
         context.clear();
@@ -75,7 +89,17 @@ defineSuite([
 
         render(context, frameState, polygon);
         return context.readPixels();
-    };
+    }
+
+    function renderPolylineMaterial(material) {
+        polyline.setMaterial(material);
+
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, polylines);
+        return context.readPixels();
+    }
 
     function verifyMaterial(type) {
         var material = new Material({
@@ -85,7 +109,19 @@ defineSuite([
                 type : type
             }
         });
-        var pixel = renderMaterial(material, context);
+        var pixel = renderMaterial(material);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
+    }
+
+    function verifyPolylineMaterial(type) {
+        var material = new Material({
+            context : context,
+            strict : true,
+            fabric : {
+                type : type
+            }
+        });
+        var pixel = renderPolylineMaterial(material);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
     }
 
@@ -153,6 +189,10 @@ defineSuite([
         verifyMaterial('Grass');
     });
 
+    it('draws Grid built-in material', function() {
+        verifyMaterial('Grid');
+    });
+
     it('draws Stripe built-in material', function() {
         verifyMaterial('Stripe');
     });
@@ -187,6 +227,18 @@ defineSuite([
 
     it('draws Erosion built-in material', function() {
         verifyMaterial('Erosion');
+    });
+
+    it('draws Fade built-in material', function() {
+        verifyMaterial('Fade');
+    });
+
+    it('draws PolylineArrow built-in material', function() {
+        verifyPolylineMaterial('PolylineArrow');
+    });
+
+    it('draws PolylineOutline built-in material', function() {
+        verifyPolylineMaterial('PolylineOutline');
     });
 
     it('gets the material type', function() {
@@ -326,6 +378,7 @@ defineSuite([
         var pixel = renderMaterial(material);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
     });
+
     it('creates a material with a boolean uniform', function () {
         var material = new Material({
             context : context,
@@ -709,7 +762,40 @@ defineSuite([
         material.uniforms.image = './Data/Images/Green.png';
         var pixel = renderMaterial(material);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
-        material = material && material.destroy();
-        expect(material).toEqual(undefined);
+        material.destroy();
+        expect(material.isDestroyed()).toEqual(true);
+    });
+
+    it('destroys sub-materials', function() {
+        var material = new Material({
+            context : context,
+            strict : true,
+            fabric : {
+                materials : {
+                    diffuseMap : {
+                        type : 'DiffuseMap'
+                    }
+                },
+                uniforms : {
+                    value : {
+                        x : 0.0,
+                        y : 0.0,
+                        z : 0.0
+                    }
+                },
+                components : {
+                    diffuse : 'value + diffuseMap.diffuse'
+                }
+            }
+        });
+        material.materials.diffuseMap.uniforms.image = './Data/Images/Green.png';
+
+        var pixel = renderMaterial(material);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
+
+        var diffuseMap = material.materials.diffuseMap;
+        material.destroy();
+        expect(material.isDestroyed()).toEqual(true);
+        expect(diffuseMap.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');

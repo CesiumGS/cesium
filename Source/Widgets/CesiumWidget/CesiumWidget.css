@@ -1,0 +1,15 @@
+.cesium-widget,.cesium-widget canvas {
+	width: 100%;
+	height: 100%;
+}
+
+.cesium-widget-logo {
+	background-image: url(../Images/Cesium_Logo_overlay.png);
+	display: block;
+	position: absolute;
+	bottom: 4px;
+	left: 0;
+	text-decoration: none;
+	width: 118px;
+	height: 26px;
+}

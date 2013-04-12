@@ -19,7 +19,6 @@
     </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
     <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
@@ -48,7 +47,6 @@
 <script id="cesium_sandcastle_script">
 require([
     'Cesium',
-    'Widgets/Dojo/CesiumWidget',
     'dojo/dom-construct',
     'dijit/DropDownMenu',
     'dijit/MenuItem',
@@ -58,7 +56,6 @@ require([
     'dijit/form/HorizontalSlider'
 ], function(
     Cesium,
-    CesiumWidget,
     domConstruct,
     DropDownMenu,
     MenuItem,
@@ -161,6 +158,9 @@ require([
                             Cesium.Math.toRadians(39.75))
                 }),
                 1.0);
+        addAdditionalLayerOption(
+                'Tile Coordinates',
+                new Cesium.TileCoordinatesImageryProvider(), 1.0, false);
     }
 
     function addBaseLayerOption(name, imageryProvider) {
@@ -175,9 +175,10 @@ require([
         baseLayers.push(layer);
     }
 
-    function addAdditionalLayerOption(name, imageryProvider, alpha) {
+    function addAdditionalLayerOption(name, imageryProvider, alpha, show) {
         var layer = imageryLayerCollection.addImageryProvider(imageryProvider);
         layer.alpha = Cesium.defaultValue(alpha, 0.5);
+        layer.show = Cesium.defaultValue(show, true);
         layer.name = name;
     }
 
@@ -279,13 +280,9 @@ require([
         });
     }
 
-    var widget = new CesiumWidget();
-    widget.placeAt('cesiumContainer');
-    widget.startup();
+    var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    var centralBody = widget.centralBody;
-
-    imageryLayerCollection = centralBody.getImageryLayers();
+    imageryLayerCollection = widget.centralBody.getImageryLayers();
 
     setupLayers();
 

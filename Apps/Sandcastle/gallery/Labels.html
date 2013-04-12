@@ -19,7 +19,6 @@
     </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
     <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
@@ -30,9 +29,9 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 require([
-    'Cesium', 'Widgets/Dojo/CesiumWidget', 'dijit/form/Button'
+    'Cesium', 'dijit/form/Button'
 ], function(
-    Cesium, CesiumWidget, Button)
+    Cesium, Button)
 {
     "use strict";
 
@@ -53,9 +52,10 @@ require([
             position  : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
             text      : 'Philadelphia',
             // CSS font-family
-            font      : '36px Helvetica',
+            font      : '24px Helvetica',
             fillColor : { red : 0.0, blue : 1.0, green : 1.0, alpha : 1.0 },
             outlineColor : { red : 0.0, blue : 0.0, green : 0.0, alpha : 1.0 },
+            outlineWidth : 2,
             style : Cesium.LabelStyle.FILL_AND_OUTLINE
         });
         scene.getPrimitives().add(labels);
@@ -99,7 +99,7 @@ require([
     }
 
     function createButtons(widget) {
-        var ellipsoid = widget.ellipsoid;
+        var ellipsoid = widget.centralBody.getEllipsoid();
         var scene = widget.scene;
         var primitives = scene.getPrimitives();
 
@@ -140,12 +140,10 @@ require([
         }).placeAt('toolbar');
     }
 
-    var widget = new CesiumWidget();
-    widget.placeAt('cesiumContainer');
-    widget.startup();
+    var widget = new Cesium.CesiumWidget('cesiumContainer');
 
     createButtons(widget);
-    addLabel(widget.scene, widget.ellipsoid);
+    addLabel(widget.scene, widget.centralBody.getEllipsoid());
 
     Sandcastle.finishedLoading();
 });

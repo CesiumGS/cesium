@@ -34,13 +34,13 @@ define(['./DeveloperError'], function(DeveloperError) {
      * var index = binarySearch(numbers, 6, comparator); // 3
      */
     var binarySearch = function(array, itemToFind, comparator) {
-        if (!array) {
+        if (typeof array === 'undefined') {
             throw new DeveloperError('array is required.');
         }
-        if (!itemToFind) {
+        if (typeof itemToFind === 'undefined') {
             throw new DeveloperError('itemToFind is required.');
         }
-        if (!comparator) {
+        if (typeof comparator === 'undefined') {
             throw new DeveloperError('comparator is required.');
         }
 

@@ -66,7 +66,7 @@ define(['../../Core/destroyObject',
         var text = document.createElementNS(svgNS, 'text');
         text.setAttribute('x', x);
         text.setAttribute('y', y);
-        text.setAttribute('class', 'animation-svgText');
+        text.setAttribute('class', 'cesium-animation-svgText');
 
         var tspan = document.createElementNS(svgNS, 'tspan');
         tspan.textContent = msg;
@@ -92,25 +92,25 @@ define(['../../Core/destroyObject',
     function rectButton(x, y, path) {
         var button = {
             tagName : 'g',
-            'class' : 'animation-rectButton',
+            'class' : 'cesium-animation-rectButton',
             transform : 'translate(' + x + ',' + y + ')',
             children : [{
                 tagName : 'rect',
-                'class' : 'animation-buttonGlow',
+                'class' : 'cesium-animation-buttonGlow',
                 width : 32,
                 height : 32,
                 rx : 2,
                 ry : 2
             }, {
                 tagName : 'rect',
-                'class' : 'animation-buttonMain',
+                'class' : 'cesium-animation-buttonMain',
                 width : 32,
                 height : 32,
                 rx : 4,
                 ry : 4
             }, {
                 tagName : 'use',
-                'class' : 'animation-buttonPath',
+                'class' : 'cesium-animation-buttonPath',
                 'xlink:href' : path
             }, {
                 tagName : 'title',
@@ -123,19 +123,19 @@ define(['../../Core/destroyObject',
     function wingButton(x, y, path) {
         var button = {
             tagName : 'g',
-            'class' : 'animation-rectButton',
+            'class' : 'cesium-animation-rectButton',
             transform : 'translate(' + x + ',' + y + ')',
             children : [{
                 tagName : 'use',
-                'class' : 'animation-buttonGlow',
+                'class' : 'cesium-animation-buttonGlow',
                 'xlink:href' : '#animation_pathWingButton'
             }, {
                 tagName : 'use',
-                'class' : 'animation-buttonMain',
+                'class' : 'cesium-animation-buttonMain',
                 'xlink:href' : '#animation_pathWingButton'
             }, {
                 tagName : 'use',
-                'class' : 'animation-buttonPath',
+                'class' : 'cesium-animation-buttonPath',
                 'xlink:href' : path
             }, {
                 tagName : 'title',
@@ -198,7 +198,6 @@ define(['../../Core/destroyObject',
                 viewModel.faster();
             }
             e.preventDefault();
-            e.stopPropagation();
         } else {
             widgetForDrag = undefined;
             viewModel.shuttleRingDragging(false);
@@ -252,16 +251,16 @@ define(['../../Core/destroyObject',
             this._enabled = enabled;
 
             if (!enabled) {
-                this.svgElement.setAttribute('class', 'animation-buttonDisabled');
+                this.svgElement.setAttribute('class', 'cesium-animation-buttonDisabled');
                 return;
             }
 
             if (this._toggled) {
-                this.svgElement.setAttribute('class', 'animation-rectButton animation-buttonToggled');
+                this.svgElement.setAttribute('class', 'cesium-animation-rectButton cesium-animation-buttonToggled');
                 return;
             }
 
-            this.svgElement.setAttribute('class', 'animation-rectButton');
+            this.svgElement.setAttribute('class', 'cesium-animation-rectButton');
         }
     };
 
@@ -271,9 +270,9 @@ define(['../../Core/destroyObject',
 
             if (this._enabled) {
                 if (toggled) {
-                    this.svgElement.setAttribute('class', 'animation-rectButton animation-buttonToggled');
+                    this.svgElement.setAttribute('class', 'cesium-animation-rectButton cesium-animation-buttonToggled');
                 } else {
-                    this.svgElement.setAttribute('class', 'animation-rectButton');
+                    this.svgElement.setAttribute('class', 'cesium-animation-rectButton');
                 }
             }
         }
@@ -290,8 +289,8 @@ define(['../../Core/destroyObject',
         var baseWidth = 200;
         var baseHeight = 132;
 
-        var parentWidth = defaultValue(that.parentNode.clientWidth, 0);
-        var parentHeight = defaultValue(that.parentNode.clientHeight, 0);
+        var parentWidth = defaultValue(that.container.clientWidth, 0);
+        var parentHeight = defaultValue(that.container.clientHeight, 0);
 
         var width = parentWidth;
         var height = parentHeight;
@@ -346,10 +345,11 @@ define(['../../Core/destroyObject',
      * @alias Animation
      * @constructor
      *
-     * @param {DOM Node} parentNode The parent HTML DOM node for this widget.
+     * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {AnimationViewModel} viewModel The ViewModel used by this widget.
      *
-     * @exception {DeveloperError} parentNode is required.
+     * @exception {DeveloperError} container is required.
+     * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} viewModel is required.
      *
      * @see AnimationViewModel
@@ -357,13 +357,12 @@ define(['../../Core/destroyObject',
      *
      * @example
      * // In HTML head, include a link to Animation.css stylesheet,
-     * // and in the body, include: &lt;div id="animationWidget"&gt;&lt;/div&gt;
+     * // and in the body, include: &lt;div id="animationContainer"&gt;&lt;/div&gt;
      *
      * var clock = new Clock();
      * var clockViewModel = new ClockViewModel(clock);
      * var viewModel = new AnimationViewModel(clockViewModel);
-     * var parentNode = document.getElementById("animationWidget");
-     * var widget = new Animation(parentNode, viewModel);
+     * var widget = new Animation('animationContainer', viewModel);
      *
      * function tick() {
      *     clock.tick();
@@ -371,9 +370,17 @@ define(['../../Core/destroyObject',
      * }
      * Cesium.requestAnimationFrame(tick);
      */
-    var Animation = function(parentNode, viewModel) {
-        if (typeof parentNode === 'undefined') {
-            throw new DeveloperError('parentNode is required.');
+    var Animation = function(container, viewModel) {
+        if (typeof container === 'undefined') {
+            throw new DeveloperError('container is required.');
+        }
+
+        if (typeof container === 'string') {
+            var tmp = document.getElementById(container);
+            if (tmp === null) {
+                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
+            }
+            container = tmp;
         }
 
         if (typeof viewModel === 'undefined') {
@@ -382,13 +389,17 @@ define(['../../Core/destroyObject',
 
         /**
          * The viewModel
+         * @memberof Animation
+         * @type {AnimationViewModel}
          */
         this.viewModel = viewModel;
 
         /**
-         * The parent HTML DOM node for this widget.
+         * Gets the parent container.
+         * @memberof Animation
+         * @type {Element}
          */
-        this.parentNode = parentNode;
+        this.container = container;
 
         this._centerX = 0;
         this._centerY = 0;
@@ -400,30 +411,30 @@ define(['../../Core/destroyObject',
         // Also, CSS minifiers get confused by this being in an external CSS file.
         var cssStyle = document.createElement('style');
         cssStyle.textContent = //
-        '.animation-rectButton .animation-buttonGlow { filter: url(#animation_blurred); }\n' + //
-        '.animation-rectButton .animation-buttonMain { fill: url(#animation_buttonNormal); }\n' + //
-        '.animation-buttonToggled .animation-buttonMain { fill: url(#animation_buttonToggled); }\n' + //
-        '.animation-rectButton:hover .animation-buttonMain { fill: url(#animation_buttonHovered); }\n' + //
-        '.animation-buttonDisabled .animation-buttonMain { fill: url(#animation_buttonDisabled); }\n' + //
-        '.animation-shuttleRingG .animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshGradient); }\n' + //
-        '.animation-shuttleRingG:hover .animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshHovered); }\n' + //
-        '.animation-shuttleRingPointer { fill: url(#animation_shuttleRingPointerGradient); }\n' + //
-        '.animation-shuttleRingPausePointer { fill: url(#animation_shuttleRingPointerPaused); }\n' + //
-        '.animation-knobOuter { fill: url(#animation_knobOuter); }\n' + //
-        '.animation-knobInner { fill: url(#animation_knobInner); }\n';
+        '.cesium-animation-rectButton .cesium-animation-buttonGlow { filter: url(#animation_blurred); }\n' + //
+        '.cesium-animation-rectButton .cesium-animation-buttonMain { fill: url(#animation_buttonNormal); }\n' + //
+        '.cesium-animation-buttonToggled .cesium-animation-buttonMain { fill: url(#animation_buttonToggled); }\n' + //
+        '.cesium-animation-rectButton:hover .cesium-animation-buttonMain { fill: url(#animation_buttonHovered); }\n' + //
+        '.cesium-animation-buttonDisabled .cesium-animation-buttonMain { fill: url(#animation_buttonDisabled); }\n' + //
+        '.cesium-animation-shuttleRingG .cesium-animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshGradient); }\n' + //
+        '.cesium-animation-shuttleRingG:hover .cesium-animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshHovered); }\n' + //
+        '.cesium-animation-shuttleRingPointer { fill: url(#animation_shuttleRingPointerGradient); }\n' + //
+        '.cesium-animation-shuttleRingPausePointer { fill: url(#animation_shuttleRingPointerPaused); }\n' + //
+        '.cesium-animation-knobOuter { fill: url(#animation_knobOuter); }\n' + //
+        '.cesium-animation-knobInner { fill: url(#animation_knobInner); }\n';
 
         document.head.insertBefore(cssStyle, document.head.childNodes[0]);
 
         var themeEle = document.createElement('div');
-        themeEle.className = 'animation-theme';
-        themeEle.innerHTML = '<div class="animation-themeNormal"></div>' + //
-        '<div class="animation-themeHover"></div>' + //
-        '<div class="animation-themeSelect"></div>' + //
-        '<div class="animation-themeDisabled"></div>' + //
-        '<div class="animation-themeKnob"></div>' + //
-        '<div class="animation-themePointer"></div>' + //
-        '<div class="animation-themeSwoosh"></div>' + //
-        '<div class="animation-themeSwooshHover"></div>';
+        themeEle.className = 'cesium-animation-theme';
+        themeEle.innerHTML = '<div class="cesium-animation-themeNormal"></div>' + //
+        '<div class="cesium-animation-themeHover"></div>' + //
+        '<div class="cesium-animation-themeSelect"></div>' + //
+        '<div class="cesium-animation-themeDisabled"></div>' + //
+        '<div class="cesium-animation-themeKnob"></div>' + //
+        '<div class="cesium-animation-themePointer"></div>' + //
+        '<div class="cesium-animation-themeSwoosh"></div>' + //
+        '<div class="cesium-animation-themeSwooshHover"></div>';
 
         this._theme = themeEle;
         this._themeNormal = themeEle.childNodes[0];
@@ -457,7 +468,7 @@ define(['../../Core/destroyObject',
 
         var shuttleRingBackPanel = svgFromObject({
             tagName : 'circle',
-            'class' : 'animation-shuttleRingBack',
+            'class' : 'cesium-animation-shuttleRingBack',
             cx : 100,
             cy : 100,
             r : 99
@@ -466,7 +477,7 @@ define(['../../Core/destroyObject',
 
         var shuttleRingSwooshG = svgFromObject({
             tagName : 'g',
-            'class' : 'animation-shuttleRingSwoosh',
+            'class' : 'cesium-animation-shuttleRingSwoosh',
             children : [{
                 tagName : 'use',
                 transform : 'translate(100,97) scale(-1,1)',
@@ -487,7 +498,7 @@ define(['../../Core/destroyObject',
 
         this._shuttleRingPointer = svgFromObject({
             tagName : 'use',
-            'class' : 'animation-shuttleRingPointer',
+            'class' : 'cesium-animation-shuttleRingPointer',
             'xlink:href' : '#animation_pathPointer'
         });
 
@@ -498,7 +509,7 @@ define(['../../Core/destroyObject',
 
         this._knobOuter = svgFromObject({
             tagName : 'circle',
-            'class' : 'animation-knobOuter',
+            'class' : 'cesium-animation-knobOuter',
             cx : 0,
             cy : 0,
             r : 71
@@ -508,7 +519,7 @@ define(['../../Core/destroyObject',
 
         var knobInner = svgFromObject({
             tagName : 'circle',
-            'class' : 'animation-knobInner',
+            'class' : 'cesium-animation-knobInner',
             cx : 0,
             cy : 0,
             r : knobInnerAndShieldSize
@@ -521,16 +532,16 @@ define(['../../Core/destroyObject',
         // widget shield catches clicks on the knob itself (even while DOM elements underneath are changing).
         var knobShield = svgFromObject({
             tagName : 'circle',
-            'class' : 'animation-blank',
+            'class' : 'cesium-animation-blank',
             cx : 0,
             cy : 0,
             r : knobInnerAndShieldSize
         });
 
         var shuttleRingBackG = document.createElementNS(svgNS, 'g');
-        shuttleRingBackG.setAttribute('class', 'animation-shuttleRingG');
+        shuttleRingBackG.setAttribute('class', 'cesium-animation-shuttleRingG');
 
-        parentNode.appendChild(themeEle);
+        container.appendChild(themeEle);
         topG.appendChild(shuttleRingBackG);
         topG.appendChild(knobG);
         topG.appendChild(buttonsG);
@@ -547,7 +558,7 @@ define(['../../Core/destroyObject',
         knobG.appendChild(knobShield);
 
         svg.appendChild(topG);
-        parentNode.appendChild(svg);
+        container.appendChild(svg);
 
         var that = this;
         this._resizeCallback = function() {
@@ -578,12 +589,19 @@ define(['../../Core/destroyObject',
         //bind to SVG, so we we figure that out we can modify our SVG
         //to include the binding information directly.
 
+        var timeNode = this._knobTime.childNodes[0];
+        var dateNode = this._knobDate.childNodes[0];
+        var statusNode = this._knobStatus.childNodes[0];
+        var isPaused;
         this._subscriptions = [//
         subscribeAndEvaluate(viewModel.pauseViewModel.toggled, function(value) {
-            if (value) {
-                that._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPausePointer');
-            } else {
-                that._shuttleRingPointer.setAttribute('class', 'animation-shuttleRingPointer');
+            if (isPaused !== value) {
+                isPaused = value;
+                if (isPaused) {
+                    that._shuttleRingPointer.setAttribute('class', 'cesium-animation-shuttleRingPausePointer');
+                } else {
+                    that._shuttleRingPointer.setAttribute('class', 'cesium-animation-shuttleRingPointer');
+                }
             }
         }),
 
@@ -592,15 +610,21 @@ define(['../../Core/destroyObject',
         }),
 
         subscribeAndEvaluate(viewModel.dateLabel, function(value) {
-            that._knobDate.childNodes[0].textContent = value;
+            if (dateNode.textContent !== value) {
+                dateNode.textContent = value;
+            }
         }),
 
         subscribeAndEvaluate(viewModel.timeLabel, function(value) {
-            that._knobTime.childNodes[0].textContent = value;
+            if (timeNode.textContent !== value) {
+                timeNode.textContent = value;
+            }
         }),
 
         subscribeAndEvaluate(viewModel.multiplierLabel, function(value) {
-            that._knobStatus.childNodes[0].textContent = value;
+            if (statusNode.textContent !== value) {
+                statusNode.textContent = value;
+            }
         })];
 
         this.applyThemeChanges();
@@ -628,8 +652,8 @@ define(['../../Core/destroyObject',
         this._knobOuter.removeEventListener('mousedown', mouseCallback, true);
         this._knobOuter.removeEventListener('touchstart', mouseCallback, true);
 
-        this.parentNode.removeChild(this._svgNode);
-        this.parentNode.removeChild(this._theme);
+        this.container.removeChild(this._svgNode);
+        this.container.removeChild(this._theme);
         this._realtimeSVG.destroy();
         this._playReverseSVG.destroy();
         this._playForwardSVG.destroy();
@@ -657,8 +681,8 @@ define(['../../Core/destroyObject',
      * @memberof Animation
      *
      * @example
-     * //Switch to the cesium-darker theme.
-     * document.body.className = 'cesium-darker';
+     * //Switch to the cesium-lighter theme.
+     * document.body.className = 'cesium-lighter';
      * animation.applyThemeChanges();
      */
     Animation.prototype.applyThemeChanges = function() {

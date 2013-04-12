@@ -5,7 +5,7 @@ define([
         '../Core/Iso8601',
         '../Core/DeveloperError',
         './DynamicObject'
-       ], function(
+    ], function(
         Event,
         TimeInterval,
         Iso8601,
@@ -49,12 +49,9 @@ define([
     DynamicObjectCollection.prototype.computeAvailability = function() {
         var startTime = Iso8601.MAXIMUM_VALUE;
         var stopTime = Iso8601.MINIMUM_VALUE;
-        var i;
-        var len;
-        var object;
         var dynamicObjects = this._array;
-        for (i = 0, len = dynamicObjects.length; i < len; i++) {
-            object = dynamicObjects[i];
+        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+            var object = dynamicObjects[i];
             var availability = object.availability;
             if (typeof availability !== 'undefined') {
                 var start = availability.start;
@@ -68,10 +65,10 @@ define([
             }
         }
 
-        if (startTime === Iso8601.MAXIMUM_VALUE) {
+        if (Iso8601.MAXIMUM_VALUE.equals(startTime)) {
             startTime = Iso8601.MINIMUM_VALUE;
         }
-        if (stopTime === Iso8601.MINIMUM_VALUE) {
+        if (Iso8601.MINIMUM_VALUE.equals(stopTime)) {
             stopTime = Iso8601.MAXIMUM_VALUE;
         }
         return new TimeInterval(startTime, stopTime, true, true);
@@ -90,6 +87,28 @@ define([
             throw new DeveloperError('id is required.');
         }
         return this._hash[id];
+    };
+
+    /**
+     * Removes an object with the specified id.
+     * @param {Object} id The id of the object to remove.
+     *
+     * @exception {DeveloperError} id is required.
+     *
+     * @returns True if the DynamicObject with the provided id was found and deleted.
+     */
+    DynamicObjectCollection.prototype.removeObject = function(id) {
+        if (typeof id === 'undefined') {
+            throw new DeveloperError('id is required.');
+        }
+        var dynamicObject = this._hash[id];
+        var result = typeof dynamicObject !== 'undefined';
+        if (result) {
+            this._hash[id] = undefined;
+            this._array.splice(this._array.indexOf(dynamicObject), 1);
+            this.objectsRemoved.raiseEvent(this, [dynamicObject]);
+        }
+        return result;
     };
 
     /**

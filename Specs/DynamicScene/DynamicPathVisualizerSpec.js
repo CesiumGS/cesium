@@ -54,7 +54,7 @@ defineSuite([
         visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
         expect(visualizer.getScene()).toEqual(scene);
         expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.getPrimitives().getLength()).toEqual(2);
     });
 
     it('update throws if no time specified.', function() {
@@ -85,7 +85,9 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new MockProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)]);
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.getPrimitives().getLength()).toEqual(2);
+        expect(visualizer._updaters.FIXED._polylineCollection.getLength()).toEqual(0);
+        expect(visualizer._updaters.INERTIAL._polylineCollection.getLength()).toEqual(0);
     });
 
     it('object with no position does not create a polyline.', function() {
@@ -97,7 +99,9 @@ defineSuite([
         path.show = new MockProperty(true);
 
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.getPrimitives().getLength()).toEqual(2);
+        expect(visualizer._updaters.FIXED._polylineCollection.getLength()).toEqual(0);
+        expect(visualizer._updaters.INERTIAL._polylineCollection.getLength()).toEqual(0);
     });
 
     it('A DynamicPath causes a primtive to be created and updated.', function() {
@@ -105,8 +109,6 @@ defineSuite([
 
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
-
-        expect(scene.getPrimitives().getLength()).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new MockProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)]);
@@ -122,7 +124,8 @@ defineSuite([
 
         visualizer.update(time);
 
-        expect(scene.getPrimitives().getLength()).toEqual(1);
+        expect(visualizer._updaters.FIXED._polylineCollection.getLength()).toEqual(1);
+        expect(visualizer._updaters.INERTIAL._polylineCollection.getLength()).toEqual(0);
 
         var polylineCollection = scene.getPrimitives().get(0);
         var primitive = polylineCollection.get(0);
@@ -130,10 +133,12 @@ defineSuite([
         expect(testObject.position.lastStop).toEqual(time.addSeconds(path.leadTime.getValue()));
         expect(primitive.getShow()).toEqual(testObject.path.show.getValue(time));
         expect(primitive.getPositions()).toEqual(testObject.position.getValueRangeCartesian(time));
-        expect(primitive.getColor()).toEqual(testObject.path.color.getValue(time));
-        expect(primitive.getOutlineColor()).toEqual(testObject.path.outlineColor.getValue(time));
-        expect(primitive.getOutlineWidth()).toEqual(testObject.path.outlineWidth.getValue(time));
         expect(primitive.getWidth()).toEqual(testObject.path.width.getValue(time));
+
+        var material = primitive.getMaterial();
+        expect(material.uniforms.color).toEqual(testObject.path.color.getValue(time));
+        expect(material.uniforms.outlineColor).toEqual(testObject.path.outlineColor.getValue(time));
+        expect(material.uniforms.outlineWidth).toEqual(testObject.path.outlineWidth.getValue(time));
 
         testObject.position = new MockProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112)]);
         path.color = new MockProperty(new Color(0.1, 0.2, 0.3, 0.4));
@@ -144,10 +149,11 @@ defineSuite([
         visualizer.update(time);
         expect(primitive.getShow()).toEqual(testObject.path.show.getValue(time));
         expect(primitive.getPositions()).toEqual(testObject.position.getValueRangeCartesian(time));
-        expect(primitive.getColor()).toEqual(testObject.path.color.getValue(time));
-        expect(primitive.getOutlineColor()).toEqual(testObject.path.outlineColor.getValue(time));
-        expect(primitive.getOutlineWidth()).toEqual(testObject.path.outlineWidth.getValue(time));
         expect(primitive.getWidth()).toEqual(testObject.path.width.getValue(time));
+
+        expect(material.uniforms.color).toEqual(testObject.path.color.getValue(time));
+        expect(material.uniforms.outlineColor).toEqual(testObject.path.outlineColor.getValue(time));
+        expect(material.uniforms.outlineWidth).toEqual(testObject.path.outlineWidth.getValue(time));
 
         path.show = new MockProperty(false);
         visualizer.update(time);
@@ -157,7 +163,6 @@ defineSuite([
     it('clear hides primitives.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
-        expect(scene.getPrimitives().getLength()).toEqual(0);
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         var time = new JulianDate();
 
@@ -168,7 +173,7 @@ defineSuite([
         path.trailTime = new MockProperty(5);
         visualizer.update(time);
 
-        var polylineCollection = scene.getPrimitives().get(0);
+        var polylineCollection = visualizer._updaters.FIXED._polylineCollection;
         expect(polylineCollection.getLength()).toEqual(1);
         var primitive = polylineCollection.get(0);
 
@@ -183,8 +188,6 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
 
-        expect(scene.getPrimitives().getLength()).toEqual(0);
-
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
         var time = new JulianDate();
@@ -196,7 +199,7 @@ defineSuite([
         path.trailTime = new MockProperty(5);
 
         visualizer.update(time);
-        var polylineCollection = scene.getPrimitives().get(0);
+        var polylineCollection = visualizer._updaters.FIXED._polylineCollection;
         expect(polylineCollection.getLength()).toEqual(1);
         var primitive = polylineCollection.get(0);
         expect(primitive.dynamicObject).toEqual(testObject);
@@ -224,8 +227,7 @@ defineSuite([
         var time = new JulianDate();
 
         visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        var polylineCollection = scene.getPrimitives().get(0);
+        var polylineCollection = visualizer._updaters.FIXED._polylineCollection;
         expect(polylineCollection.getLength()).toEqual(1);
         var primitive = polylineCollection.get(0);
         expect(primitive.dynamicObject).toEqual(testObject);

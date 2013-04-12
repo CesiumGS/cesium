@@ -123,6 +123,8 @@ define([
      *   position : { x : 4.0, y : 5.0, z : 6.0 },
      *   imageIndex : 1
      * });
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
      */
     var BillboardCollection = function() {
         this._textureAtlas = undefined;
@@ -136,6 +138,7 @@ define([
 
         this._billboards = [];
         this._billboardsToUpdate = [];
+        this._billboardsToUpdateIndex = 0;
         this._billboardsRemoved = false;
         this._createVertexArray = false;
 
@@ -183,15 +186,6 @@ define([
         this._projection = undefined;
 
         /**
-         * If true, aligns all billboards to a pixel in screen space,
-         * providing a crisper image at the cost of jumpier motion.
-         * Defaults to false.
-         *
-         * @type Boolean
-         */
-        this.clampToPixel = false;
-
-        /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
@@ -219,9 +213,6 @@ define([
             },
             u_atlasSize : function() {
                 return that._textureAtlas.getTexture().getDimensions();
-            },
-            u_clampToPixel : function() {
-                return that.clampToPixel ? 1.0 : 0.0;
             },
             u_morphTime : function() {
                 return that.morphTime;
@@ -341,6 +332,7 @@ define([
         this._destroyBillboards();
         this._billboards = [];
         this._billboardsToUpdate = [];
+        this._billboardsToUpdateIndex = 0;
         this._billboardsRemoved = false;
 
         this._createVertexArray = true;
@@ -367,7 +359,7 @@ define([
 
     BillboardCollection.prototype._updateBillboard = function(billboard, propertyChanged) {
         if (!billboard._dirty) {
-            this._billboardsToUpdate.push(billboard);
+            this._billboardsToUpdate[this._billboardsToUpdateIndex++] = billboard;
         }
 
         ++this._propertiesChanged[propertyChanged];
@@ -614,7 +606,6 @@ define([
         var buffersUsage = this._buffersUsage;
         var usageChanged = false;
 
-        // PERFORMANCE_IDEA: Better heuristic to avoid ping-ponging.  What about DYNAMIC_STREAM?
         var properties = this._propertiesChanged;
         for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
             var newUsage = (properties[k] === 0) ? BufferUsage.STATIC_DRAW : BufferUsage.STREAM_DRAW;
@@ -832,7 +823,7 @@ define([
         writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
-    function recomputeActualPositions(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
+    function recomputeActualPositions(billboardCollection, billboards, length, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
         var boundingVolume;
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolume = billboardCollection._baseVolume;
@@ -840,7 +831,6 @@ define([
             boundingVolume = billboardCollection._baseVolume2D;
         }
 
-        var length = billboards.length;
         var positions = [];
         for ( var i = 0; i < length; ++i) {
             var billboard = billboards[i];
@@ -882,12 +872,12 @@ define([
             billboardCollection._createVertexArray = true;
 
             if (mode === SceneMode.SCENE3D || mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
-                recomputeActualPositions(billboardCollection, billboards, frameState, morphTime, modelMatrix, true);
+                recomputeActualPositions(billboardCollection, billboards, billboards.length, frameState, morphTime, modelMatrix, true);
             }
         } else if (mode === SceneMode.MORPHING) {
-            recomputeActualPositions(billboardCollection, billboards, frameState, morphTime, modelMatrix, true);
+            recomputeActualPositions(billboardCollection, billboards, billboards.length, frameState, morphTime, modelMatrix, true);
         } else if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
-            recomputeActualPositions(billboardCollection, billboardsToUpdate, frameState, morphTime, modelMatrix, false);
+            recomputeActualPositions(billboardCollection, billboardsToUpdate, billboardCollection._billboardsToUpdateIndex, frameState, morphTime, modelMatrix, false);
         }
     }
 
@@ -946,7 +936,10 @@ define([
         updateMode(this, frameState);
 
         var billboards = this._billboards;
-        var length = billboards.length;
+        var billboardsLength = billboards.length;
+        var billboardsToUpdate = this._billboardsToUpdate;
+        var billboardsToUpdateLength = this._billboardsToUpdateIndex;
+
         var properties = this._propertiesChanged;
 
         var textureAtlasGUID = textureAtlas.getGUID();
@@ -954,20 +947,26 @@ define([
         this._textureAtlasGUID = textureAtlasGUID;
 
         var vafWriters;
+        var pass = frameState.passes;
+        var picking = pass.pick;
 
         // PERFORMANCE_IDEA: Round robin multiple buffers.
-        if (createVertexArray || this.computeNewBuffersUsage()) {
+        if (createVertexArray || (!picking && this.computeNewBuffersUsage())) {
             this._createVertexArray = false;
+
+            for (var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
+                properties[k] = 0;
+            }
 
             this._vaf = this._vaf && this._vaf.destroy();
 
-            if (length > 0) {
+            if (billboardsLength > 0) {
                 // PERFORMANCE_IDEA:  Instead of creating a new one, resize like std::vector.
-                this._vaf = createVAF(context, billboards.length, this._buffersUsage);
+                this._vaf = createVAF(context, billboardsLength, this._buffersUsage);
                 vafWriters = this._vaf.writers;
 
                 // Rewrite entire buffer if billboards were added or removed.
-                for (var i = 0; i < length; ++i) {
+                for (var i = 0; i < billboardsLength; ++i) {
                     var billboard = this._billboards[i];
                     billboard._dirty = false; // In case it needed an update.
                     writeBillboard(this, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -977,14 +976,10 @@ define([
                 this._vaf.commit(getIndexBuffer(context));
             }
 
-            this._billboardsToUpdate = [];
+            this._billboardsToUpdateIndex = 0;
         } else {
             // Billboards were modified, but none were added or removed.
-
-            var billboardsToUpdate = this._billboardsToUpdate;
-            var updateLength = billboardsToUpdate.length;
-
-            if (updateLength) {
+            if (billboardsToUpdateLength > 0) {
                 var writers = [];
 
                 if (properties[POSITION_INDEX]) {
@@ -1013,12 +1008,12 @@ define([
 
                 vafWriters = this._vaf.writers;
 
-                if ((updateLength / length) > 0.1) {
+                if ((billboardsToUpdateLength / billboardsLength) > 0.1) {
                     // If more than 10% of billboard change, rewrite the entire buffer.
 
                     // PERFORMANCE_IDEA:  I totally made up 10% :).
 
-                    for (var m = 0; m < updateLength; ++m) {
+                    for (var m = 0; m < billboardsToUpdateLength; ++m) {
                         var b = billboardsToUpdate[m];
                         b._dirty = false;
 
@@ -1028,7 +1023,7 @@ define([
                     }
                     this._vaf.commit(getIndexBuffer(context));
                 } else {
-                    for (var h = 0; h < updateLength; ++h) {
+                    for (var h = 0; h < billboardsToUpdateLength; ++h) {
                         var bb = billboardsToUpdate[h];
                         bb._dirty = false;
 
@@ -1040,12 +1035,15 @@ define([
                     this._vaf.endSubCommits();
                 }
 
-                this._billboardsToUpdate = [];
+                this._billboardsToUpdateIndex = 0;
             }
         }
 
-        for (var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
-            properties[k] = 0;
+        // If the number of total billboards ever shrinks considerably
+        // Truncate billboardsToUpdate so that we free memory that we're
+        // not going to be using.
+        if (billboardsToUpdateLength > billboardsLength * 1.5) {
+            billboardsToUpdate.length = billboardsLength;
         }
 
         if (typeof this._vaf === 'undefined' || typeof this._vaf.vaByPurpose === 'undefined') {
@@ -1062,7 +1060,6 @@ define([
         }
         updateBoundingVolume(this, context, frameState, boundingVolume);
 
-        var pass = frameState.passes;
         var va;
         var vaLength;
         var command;
@@ -1105,7 +1102,7 @@ define([
                 command.renderState = this._rs;
             }
         }
-        if (pass.pick) {
+        if (picking) {
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 

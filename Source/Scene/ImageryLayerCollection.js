@@ -20,6 +20,9 @@ define([
      *
      * @alias ImageryLayerCollection
      * @constructor
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Adjustment.html">Cesium Sandcastle Imagery Adjustment Demo</a>
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html">Cesium Sandcastle Imagery Manipulation Demo</a>
      */
     var ImageryLayerCollection = function ImageryLayerCollection() {
         this._layers = [];
@@ -296,6 +299,9 @@ define([
      */
     ImageryLayerCollection.prototype.raiseToTop = function(layer) {
         var index = getLayerIndex(this._layers, layer);
+        if (index === this._layers.length - 1) {
+            return;
+        }
         this._layers.splice(index, 1);
         this._layers.push(layer);
 
@@ -316,6 +322,9 @@ define([
      */
     ImageryLayerCollection.prototype.lowerToBottom = function(layer) {
         var index = getLayerIndex(this._layers, layer);
+        if (index === 0) {
+            return;
+        }
         this._layers.splice(index, 1);
         this._layers.splice(0, 0, layer);
 
@@ -383,11 +392,13 @@ define([
             }
 
             if (layer.show !== layer._show) {
-                layer._show = layer.show;
-                if (typeof layersShownOrHidden === 'undefined') {
-                    layersShownOrHidden = [];
+                if (typeof layer._show !== 'undefined') {
+                    if (typeof layersShownOrHidden === 'undefined') {
+                        layersShownOrHidden = [];
+                    }
+                    layersShownOrHidden.push(layer);
                 }
-                layersShownOrHidden.push(layer);
+                layer._show = layer.show;
             }
         }
 

@@ -2,6 +2,8 @@
 define([
         './DynamicObject',
         './DynamicBillboard',
+        './DynamicClock',
+        './DynamicEllipse',
         './DynamicEllipsoid',
         './DynamicCone',
         './DynamicLabel',
@@ -19,9 +21,11 @@ define([
         './DynamicPolygonVisualizer',
         './DynamicPolylineVisualizer',
         './DynamicPyramidVisualizer'
-       ], function(
+    ], function(
         DynamicObject,
         DynamicBillboard,
+        DynamicClock,
+        DynamicEllipse,
         DynamicEllipsoid,
         DynamicCone,
         DynamicLabel,
@@ -61,7 +65,9 @@ define([
          * set of updater methods used by DynamicObjectCollection.
          * @see DynamicObjectCollection
          */
-        updaters : [DynamicBillboard.processCzmlPacket,
+        updaters : [DynamicClock.processCzmlPacket,
+                    DynamicBillboard.processCzmlPacket,
+                    DynamicEllipse.processCzmlPacket,
                     DynamicEllipsoid.processCzmlPacket,
                     DynamicCone.processCzmlPacket,
                     DynamicLabel.processCzmlPacket,
@@ -82,7 +88,9 @@ define([
          *
          * @see CompositeDynamicObjectCollection
          */
-        mergers : [DynamicBillboard.mergeProperties,
+        mergers : [DynamicClock.mergeProperties,
+                   DynamicBillboard.mergeProperties,
+                   DynamicEllipse.mergeProperties,
                    DynamicEllipsoid.mergeProperties,
                    DynamicCone.mergeProperties,
                    DynamicLabel.mergeProperties,
@@ -93,13 +101,14 @@ define([
                    DynamicPyramid.mergeProperties,
                    DynamicObject.mergeProperties],
 
-       /**
-        * The standard set of cleaners for processing CZML.  This array is the default
-        * set of updater methods used by CompositeDynamicObjectCollection.
-        *
-        * @see CompositeDynamicObjectCollection
-        */
+        /**
+         * The standard set of cleaners for processing CZML.  This array is the default
+         * set of updater methods used by CompositeDynamicObjectCollection.
+         *
+         * @see CompositeDynamicObjectCollection
+         */
         cleaners : [DynamicBillboard.undefineProperties,
+                    DynamicEllipse.undefineProperties,
                     DynamicEllipsoid.undefineProperties,
                     DynamicCone.undefineProperties,
                     DynamicLabel.undefineProperties,
@@ -108,7 +117,8 @@ define([
                     DynamicPolygon.undefineProperties,
                     DynamicPolyline.undefineProperties,
                     DynamicPyramid.undefineProperties,
-                    DynamicObject.undefineProperties],
+                    DynamicObject.undefineProperties,
+                    DynamicClock.undefineProperties],
 
         /**
          * Creates an array containing the standard CZML visualizers,

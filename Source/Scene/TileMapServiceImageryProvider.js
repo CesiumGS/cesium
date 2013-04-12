@@ -96,7 +96,7 @@ define([
 
         var that = this;
 
-        // Try to load remaing parameters from XML
+        // Try to load remaining parameters from XML
         loadXML(url + 'tilemapresource.xml').then(function(xml) {
             // Allowing description properties to override XML values
             var format = xml.getElementsByTagName('TileFormat')[0];
@@ -175,6 +175,19 @@ define([
      */
     TileMapServiceImageryProvider.prototype.getUrl = function() {
         return this._url;
+    };
+
+    /**
+     * Gets the proxy used by this provider.
+     *
+     * @memberof TileMapServiceImageryProvider
+     *
+     * @returns {Proxy} The proxy.
+     *
+     * @see DefaultProxy
+     */
+    TileMapServiceImageryProvider.prototype.getProxy = function() {
+        return this._proxy;
     };
 
     /**

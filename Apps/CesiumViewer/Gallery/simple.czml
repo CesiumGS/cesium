@@ -1,6 +1,16 @@
 
 [
   {
+    "id":"document",
+    "clock":{
+      "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
+      "currentTime":"2012-03-15T10:00:00Z",
+      "multiplier":60.0,
+      "range":"LOOP_STOP",
+      "step":"SYSTEM_CLOCK_MULTIPLIER"
+    }
+  },
+  {
     "id":"/Application/STK/Scenario/simple/Facility/AGI",
     "billboard":{
       "eyeOffset":{
@@ -9,7 +19,7 @@
         ]
       },
       "horizontalOrigin":"CENTER",
-      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAC/SURBVDhPrZPRDYQgEEQpjVKuFEvhw0IoxU6QgQwMK+vdx5FsooT3GHdjCM4qZnnnHvvkYoxFi/uvIhwiRCClXFC6v5UQ1uQAsbrkHCLsbaPjFgIzQQc1yUOwu33ePGE3BQUaee2BpjhbP5YUmkAlbNzsAURfBDqJnMIyyv4JjsCCgCnIR32uZUfcJuGBOwEk6bOKhoAADh31EIq3MgFg1mgkE1BA2AoUZoo2iZ3gyqGgmMDC/xWwkfb3/eUd7A1v3kxjNW9taQAAAABJRU5ErkJggg==",
+      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACvSURBVDhPrZDRDcMgDAU9GqN0lIzijw6SUbJJygUeNQgSqepJTyHG91LVVpwDdfxM3T9TSl1EXZvDwii471fivK73cBFFQNTT/d2KoGpfGOpSIkhUpgUMxq9DFEsWv4IXhlyCnhBFnZcFEEuYqbiUlNwWgMTdrZ3JbQFoEVG53rd8ztG9aPJMnBUQf/VFraBJeWnLS0RfjbKyLJA8FkT5seDYS1Qwyv8t0B/5C2ZmH2/eTGNNBgMmAAAAAElFTkSuQmCC",
       "pixelOffset":{
         "cartesian2":[
           0.0,0.0
@@ -30,26 +40,27 @@
           0,255,255,255
         ]
       },
-      "font":"10pt Lucida Console",
+      "font":"21pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
           0,0,0,255
         ]
       },
+      "outlineWidth":2.0,
       "pixelOffset":{
         "cartesian2":[
           12.0,0.0
         ]
       },
-      "scale":1.0,
+      "scale":0.5,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "boolean":true
         }
       ],
-      "style":"FILL",
+      "style":"FILL_AND_OUTLINE",
       "text":"AGI",
       "verticalOrigin":"CENTER"
     },
@@ -69,7 +80,7 @@
         ]
       },
       "horizontalOrigin":"CENTER",
-      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADGSURBVDhPnVPbDcMgDGQ0RmGUjsIojNIR+p8Piq+5xvGDSo2EEgH3yNku5Y9nrucnLLt07ssrJsHJ59Bdko1aB1Z0DkRrDxy2Wm6XNLj1MWU5F1R+jjJ7cyRQJli+bwRf28drCgFJxI2yCwIHZqKWRICRk20VSALV5WZ0T8KgQyJdBVHXJAh3hcygwxBNifALQsIctLoLkTW2JASLcmpbg1kqC8waDA1EAt0ktKuVVUbXOJA56rBU1U7Trv9D1Wgctw2SzO8bB7GiztrZSh0AAAAASUVORK5CYII=",
+      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADJSURBVDhPnZHRDcMgEEMZjVEYpaNklIzSEfLfD4qNnXAJSFWfhO7w2Zc0Tf9QG2rXrEzSUeZLOGm47WoH95x3Hl3jEgilvDgsOQUTqsNl68ezEwn1vae6lceSEEYvvWNT/Rxc4CXQNGadho1NXoJ+9iaqc2xi2xbt23PJCDIB6TQjOC6Bho/sDy3fBQT8PrVhibU7yBFcEPaRxOoeTwbwByCOYf9VGp1BYI1BA+EeHhmfzKbBoJEQwn1yzUZtyspIQUha85MpkNIXB7GizqDEECsAAAAASUVORK5CYII=",
       "pixelOffset":{
         "cartesian2":[
           0.0,0.0
@@ -93,26 +104,27 @@
           ]
         }
       ],
-      "font":"10pt Lucida Console",
+      "font":"21pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
           0,0,0,255
         ]
       },
+      "outlineWidth":2.0,
       "pixelOffset":{
         "cartesian2":[
           12.0,0.0
         ]
       },
-      "scale":1.0,
+      "scale":0.5,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "boolean":true
         }
       ],
-      "style":"FILL",
+      "style":"FILL_AND_OUTLINE",
       "text":"Geoeye 1",
       "verticalOrigin":"CENTER"
     },
@@ -125,13 +137,13 @@
           ]
         }
       ],
-      "outlineWidth":0.0,
       "width":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "number":1.0
         }
       ],
+      "resolution":60.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
@@ -145,8 +157,8 @@
           "interpolationDegree":1,
           "epoch":"2012-03-15T10:00:00Z",
           "number":[
-            0.0,2370.575224321001,
-            2370.575224321001,0.0
+            0.0,5903.376977238004,
+            5903.376977238004,0.0
           ]
         },
         {
@@ -280,7 +292,7 @@
           ]
         },
         {
-          "interval":"2012-03-16T07:58:35.1683124770061Z/2012-03-16T09:36:58.6038607679948Z",
+          "interval":"2012-03-16T07:58:35.1683124770061Z/2012-03-16T08:21:36.5644517090113Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
           "epoch":"2012-03-16T07:58:35.1683124770061Z",
@@ -290,13 +302,13 @@
           ]
         },
         {
-          "interval":"2012-03-16T09:36:58.6038607679948Z/2012-03-16T10:00:00Z",
+          "interval":"2012-03-16T08:21:36.5644517090113Z/2012-03-16T10:00:00Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
-          "epoch":"2012-03-16T09:36:58.6038607679948Z",
+          "epoch":"2012-03-16T08:21:36.5644517090113Z",
           "number":[
-            0.0,1381.3961392320052,
-            1381.3961392320052,0.0
+            0.0,5903.435548290989,
+            5903.435548290989,0.0
           ]
         }
       ],
@@ -308,7 +320,7 @@
           "epoch":"2012-03-15T10:00:00Z",
           "number":[
             0.0,0.0,
-            2370.575224321001,2370.575224321001
+            5903.376977238004,5903.376977238004
           ]
         },
         {
@@ -442,7 +454,7 @@
           ]
         },
         {
-          "interval":"2012-03-16T07:58:35.1683124770061Z/2012-03-16T09:36:58.6038607679948Z",
+          "interval":"2012-03-16T07:58:35.1683124770061Z/2012-03-16T08:21:36.5644517090113Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
           "epoch":"2012-03-16T07:58:35.1683124770061Z",
@@ -452,13 +464,13 @@
           ]
         },
         {
-          "interval":"2012-03-16T09:36:58.6038607679948Z/2012-03-16T10:00:00Z",
+          "interval":"2012-03-16T08:21:36.5644517090113Z/2012-03-16T10:00:00Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
-          "epoch":"2012-03-16T09:36:58.6038607679948Z",
+          "epoch":"2012-03-16T08:21:36.5644517090113Z",
           "number":[
             0.0,0.0,
-            1381.3961392320052,1381.3961392320052
+            5903.435548290989,5903.435548290989
           ]
         }
       ]
@@ -777,7 +789,7 @@
         ]
       },
       "horizontalOrigin":"CENTER",
-      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADCSURBVDhPnVPbDQMhDMtojMIoHYVRGKUj9L8f6RnVp0AelXoS0imJnWAHkT8+vb6fsKyI8ZQEiawI8dbmOpjAkSDQ+2Mle5OtyIL7mIoTEgD8nKKji54k6Eww/jeCe+z3S0FAEorFPAgc+CzSLwni0SSlCzYJojn8dSh0SGRdQHdLssS9RKbQoYinRSShbba7E5EeRz7T4nRsC6ZV7IqRqwVbG0UCuyQEkcBeY3sL1uNzw7K1do+p2n87fvkKywVJkB99VYHvubc6fQAAAABJRU5ErkJggg==",
+      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADESURBVDhPnZHRDcMgDEQZLaMwSkfJKIzSEfLfD8pdecihIFV9EsK+8zlNmv6hNnq5ZzeEvvNtCGqLHfXHUXzobYCEnB8W85FuQ7oJ5/Nz8AYIz5LqmVOdl8SwanRDU19X1QKW2GzgL8OAyBLVq1/CvSSaWlTO79eJeDDSdRsKxiXS9JH50MwNJOj9qHWzBG1GulGjMAfNZkO1nhy1gcQY5q/CIyjQdA8kzOFIfLKLhoOAEMM2GtRRW7IbVA9d2vPT0I2U3n1Vge+EDDWxAAAAAElFTkSuQmCC",
       "pixelOffset":{
         "cartesian2":[
           0.0,0.0
@@ -801,26 +813,27 @@
           ]
         }
       ],
-      "font":"10pt Lucida Console",
+      "font":"21pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
           0,0,0,255
         ]
       },
+      "outlineWidth":2.0,
       "pixelOffset":{
         "cartesian2":[
           12.0,0.0
         ]
       },
-      "scale":1.0,
+      "scale":0.5,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "boolean":true
         }
       ],
-      "style":"FILL",
+      "style":"FILL_AND_OUTLINE",
       "text":"ISS",
       "verticalOrigin":"CENTER"
     },
@@ -833,13 +846,13 @@
           ]
         }
       ],
-      "outlineWidth":0.0,
       "width":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "number":1.0
         }
       ],
+      "resolution":60.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
@@ -853,8 +866,8 @@
           "interpolationDegree":1,
           "epoch":"2012-03-15T10:00:00Z",
           "number":[
-            0.0,2696.103115773003,
-            2696.103115773003,0.0
+            0.0,5537.546684141998,
+            5537.546684141998,0.0
           ]
         },
         {
@@ -998,7 +1011,7 @@
           ]
         },
         {
-          "interval":"2012-03-16T08:17:01.17765616998076Z/2012-03-16T09:49:18.6175852820161Z",
+          "interval":"2012-03-16T08:17:01.17765616998076Z/2012-03-16T08:27:42.5600708879647Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
           "epoch":"2012-03-16T08:17:01.17765616998076Z",
@@ -1008,13 +1021,13 @@
           ]
         },
         {
-          "interval":"2012-03-16T09:49:18.6175852820161Z/2012-03-16T10:00:00Z",
+          "interval":"2012-03-16T08:27:42.5600708879647Z/2012-03-16T10:00:00Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
-          "epoch":"2012-03-16T09:49:18.6175852820161Z",
+          "epoch":"2012-03-16T08:27:42.5600708879647Z",
           "number":[
-            0.0,641.3824147179839,
-            641.3824147179839,0.0
+            0.0,5537.439929112035,
+            5537.439929112035,0.0
           ]
         }
       ],
@@ -1026,7 +1039,7 @@
           "epoch":"2012-03-15T10:00:00Z",
           "number":[
             0.0,0.0,
-            2696.103115773003,2696.103115773003
+            5537.546684141998,5537.546684141998
           ]
         },
         {
@@ -1170,7 +1183,7 @@
           ]
         },
         {
-          "interval":"2012-03-16T08:17:01.17765616998076Z/2012-03-16T09:49:18.6175852820161Z",
+          "interval":"2012-03-16T08:17:01.17765616998076Z/2012-03-16T08:27:42.5600708879647Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
           "epoch":"2012-03-16T08:17:01.17765616998076Z",
@@ -1180,13 +1193,13 @@
           ]
         },
         {
-          "interval":"2012-03-16T09:49:18.6175852820161Z/2012-03-16T10:00:00Z",
+          "interval":"2012-03-16T08:27:42.5600708879647Z/2012-03-16T10:00:00Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
-          "epoch":"2012-03-16T09:49:18.6175852820161Z",
+          "epoch":"2012-03-16T08:27:42.5600708879647Z",
           "number":[
             0.0,0.0,
-            641.3824147179839,641.3824147179839
+            5537.439929112035,5537.439929112035
           ]
         }
       ]
@@ -1511,7 +1524,7 @@
         ]
       },
       "horizontalOrigin":"CENTER",
-      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADCSURBVDhPnVPbDQMhDMtojMIoHYVRGKUj9L8f6RnVp0AelXoS0imJnWAHkT8+vb6fsKyI8ZQEiawI8dbmOpjAkSDQ+2Mle5OtyIL7mIoTEgD8nKKji54k6Eww/jeCe+z3S0FAEorFPAgc+CzSLwni0SSlCzYJojn8dSh0SGRdQHdLssS9RKbQoYinRSShbba7E5EeRz7T4nRsC6ZV7IqRqwVbG0UCuyQEkcBeY3sL1uNzw7K1do+p2n87fvkKywVJkB99VYHvubc6fQAAAABJRU5ErkJggg==",
+      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADESURBVDhPnZHRDcMgDEQZLaMwSkfJKIzSEfLfD8pdecihIFV9EsK+8zlNmv6hNnq5ZzeEvvNtCGqLHfXHUXzobYCEnB8W85FuQ7oJ5/Nz8AYIz5LqmVOdl8SwanRDU19X1QKW2GzgL8OAyBLVq1/CvSSaWlTO79eJeDDSdRsKxiXS9JH50MwNJOj9qHWzBG1GulGjMAfNZkO1nhy1gcQY5q/CIyjQdA8kzOFIfLKLhoOAEMM2GtRRW7IbVA9d2vPT0I2U3n1Vge+EDDWxAAAAAElFTkSuQmCC",
       "pixelOffset":{
         "cartesian2":[
           0.0,0.0
@@ -1535,26 +1548,27 @@
           ]
         }
       ],
-      "font":"10pt Lucida Console",
+      "font":"21pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
           0,0,0,255
         ]
       },
+      "outlineWidth":2.0,
       "pixelOffset":{
         "cartesian2":[
           23.0,0.0
         ]
       },
-      "scale":1.0,
+      "scale":0.5,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "boolean":true
         }
       ],
-      "style":"FILL",
+      "style":"FILL_AND_OUTLINE",
       "text":"Landsat 7",
       "verticalOrigin":"CENTER"
     },
@@ -1567,13 +1581,13 @@
           ]
         }
       ],
-      "outlineWidth":0.0,
       "width":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "number":1.0
         }
       ],
+      "resolution":60.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
@@ -1587,8 +1601,8 @@
           "interpolationDegree":1,
           "epoch":"2012-03-15T10:00:00Z",
           "number":[
-            0.0,4025.3874546559964,
-            4025.3874546559964,0.0
+            0.0,5933.062741324,
+            5933.062741324,0.0
           ]
         },
         {
@@ -1712,7 +1726,7 @@
           ]
         },
         {
-          "interval":"2012-03-16T06:53:42.1819449639879Z/2012-03-16T08:32:35.2452977779903Z",
+          "interval":"2012-03-16T06:53:42.1819449639879Z/2012-03-16T08:21:06.93664718599757Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
           "epoch":"2012-03-16T06:53:42.1819449639879Z",
@@ -1722,13 +1736,13 @@
           ]
         },
         {
-          "interval":"2012-03-16T08:32:35.2452977779903Z/2012-03-16T10:00:00Z",
+          "interval":"2012-03-16T08:21:06.93664718599757Z/2012-03-16T10:00:00Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
-          "epoch":"2012-03-16T08:32:35.2452977779903Z",
+          "epoch":"2012-03-16T08:21:06.93664718599757Z",
           "number":[
-            0.0,5244.75470222201,
-            5244.75470222201,0.0
+            0.0,5933.063352814002,
+            5933.063352814002,0.0
           ]
         }
       ],
@@ -1740,7 +1754,7 @@
           "epoch":"2012-03-15T10:00:00Z",
           "number":[
             0.0,0.0,
-            4025.3874546559964,4025.3874546559964
+            5933.062741324,5933.062741324
           ]
         },
         {
@@ -1864,7 +1878,7 @@
           ]
         },
         {
-          "interval":"2012-03-16T06:53:42.1819449639879Z/2012-03-16T08:32:35.2452977779903Z",
+          "interval":"2012-03-16T06:53:42.1819449639879Z/2012-03-16T08:21:06.93664718599757Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
           "epoch":"2012-03-16T06:53:42.1819449639879Z",
@@ -1874,13 +1888,13 @@
           ]
         },
         {
-          "interval":"2012-03-16T08:32:35.2452977779903Z/2012-03-16T10:00:00Z",
+          "interval":"2012-03-16T08:21:06.93664718599757Z/2012-03-16T10:00:00Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
-          "epoch":"2012-03-16T08:32:35.2452977779903Z",
+          "epoch":"2012-03-16T08:21:06.93664718599757Z",
           "number":[
             0.0,0.0,
-            5244.75470222201,5244.75470222201
+            5933.063352814002,5933.063352814002
           ]
         }
       ]
@@ -2199,7 +2213,7 @@
         ]
       },
       "horizontalOrigin":"CENTER",
-      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADCSURBVDhPnVPbDQMhDMtojMIoHYVRGKUj9L8f6RnVp0AelXoS0imJnWAHkT8+vb6fsKyI8ZQEiawI8dbmOpjAkSDQ+2Mle5OtyIL7mIoTEgD8nKKji54k6Eww/jeCe+z3S0FAEorFPAgc+CzSLwni0SSlCzYJojn8dSh0SGRdQHdLssS9RKbQoYinRSShbba7E5EeRz7T4nRsC6ZV7IqRqwVbG0UCuyQEkcBeY3sL1uNzw7K1do+p2n87fvkKywVJkB99VYHvubc6fQAAAABJRU5ErkJggg==",
+      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADESURBVDhPnZHRDcMgDEQZLaMwSkfJKIzSEfLfD8pdecihIFV9EsK+8zlNmv6hNnq5ZzeEvvNtCGqLHfXHUXzobYCEnB8W85FuQ7oJ5/Nz8AYIz5LqmVOdl8SwanRDU19X1QKW2GzgL8OAyBLVq1/CvSSaWlTO79eJeDDSdRsKxiXS9JH50MwNJOj9qHWzBG1GulGjMAfNZkO1nhy1gcQY5q/CIyjQdA8kzOFIfLKLhoOAEMM2GtRRW7IbVA9d2vPT0I2U3n1Vge+EDDWxAAAAAElFTkSuQmCC",
       "pixelOffset":{
         "cartesian2":[
           0.0,0.0
@@ -2223,26 +2237,27 @@
           ]
         }
       ],
-      "font":"10pt Lucida Console",
+      "font":"21pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
           0,0,0,255
         ]
       },
+      "outlineWidth":2.0,
       "pixelOffset":{
         "cartesian2":[
           6.0,-4.0
         ]
       },
-      "scale":1.0,
+      "scale":0.5,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "boolean":true
         }
       ],
-      "style":"FILL",
+      "style":"FILL_AND_OUTLINE",
       "text":"Molniya 1-92",
       "verticalOrigin":"CENTER"
     },
@@ -2255,13 +2270,13 @@
           ]
         }
       ],
-      "outlineWidth":0.0,
       "width":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "number":1.0
         }
       ],
+      "resolution":60.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
@@ -2275,12 +2290,12 @@
           "interpolationDegree":1,
           "epoch":"2012-03-15T10:00:00Z",
           "number":[
-            0.0,11502.060721728994,
-            11502.060721728994,0.0
+            0.0,43058.246637085,
+            43058.246637085,0.0
           ]
         },
         {
-          "interval":"2012-03-15T13:11:42.0607217289944Z/2012-03-16T01:09:20.307358813996Z",
+          "interval":"2012-03-15T13:11:42.0607217289944Z/2012-03-15T22:02:21.7533629149984Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
           "epoch":"2012-03-15T13:11:42.0607217289944Z",
@@ -2290,13 +2305,13 @@
           ]
         },
         {
-          "interval":"2012-03-16T01:09:20.307358813996Z/2012-03-16T10:00:00Z",
+          "interval":"2012-03-15T22:02:21.7533629149984Z/2012-03-16T10:00:00Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
-          "epoch":"2012-03-16T01:09:20.307358813996Z",
+          "epoch":"2012-03-15T22:02:21.7533629149984Z",
           "number":[
-            0.0,31839.692641186004,
-            31839.692641186004,0.0
+            0.0,43058.246637085,
+            43058.246637085,0.0
           ]
         }
       ],
@@ -2308,11 +2323,11 @@
           "epoch":"2012-03-15T10:00:00Z",
           "number":[
             0.0,0.0,
-            11502.060721728994,11502.060721728994
+            43058.246637085,43058.246637085
           ]
         },
         {
-          "interval":"2012-03-15T13:11:42.0607217289944Z/2012-03-16T01:09:20.307358813996Z",
+          "interval":"2012-03-15T13:11:42.0607217289944Z/2012-03-15T22:02:21.7533629149984Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
           "epoch":"2012-03-15T13:11:42.0607217289944Z",
@@ -2322,13 +2337,13 @@
           ]
         },
         {
-          "interval":"2012-03-16T01:09:20.307358813996Z/2012-03-16T10:00:00Z",
+          "interval":"2012-03-15T22:02:21.7533629149984Z/2012-03-16T10:00:00Z",
           "interpolationAlgorithm":"LINEAR",
           "interpolationDegree":1,
-          "epoch":"2012-03-16T01:09:20.307358813996Z",
+          "epoch":"2012-03-15T22:02:21.7533629149984Z",
           "number":[
             0.0,0.0,
-            31839.692641186004,31839.692641186004
+            43058.246637085,43058.246637085
           ]
         }
       ]
@@ -2643,21 +2658,22 @@
           255,0,0,255
         ]
       },
-      "font":"10pt Lucida Console",
+      "font":"21pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
           0,0,0,255
         ]
       },
-      "scale":1.0,
+      "outlineWidth":2.0,
+      "scale":0.5,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
           "boolean":true
         }
       ],
-      "style":"FILL",
+      "style":"FILL_AND_OUTLINE",
       "text":"Pennsylvania",
       "verticalOrigin":"CENTER"
     },
@@ -2682,7 +2698,6 @@
           255,0,0,255
         ]
       },
-      "outlineWidth":0.0,
       "width":1.0,
       "show":[
         {
@@ -2710,7 +2725,7 @@
     },
     "position":{
       "cartesian":[
-        1152255.8015002306,-4694317.95133893,4147335.9067616328
+        1152255.80150063,-4694317.951340558,4147335.9067563135
       ]
     }
   },
@@ -2722,8 +2737,6 @@
           0,255,255,255
         ]
       },
-      "outlineWidth":0.0,
-      "width":1.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-15T10:52:19.3940000000002Z",
@@ -2801,8 +2814,6 @@
           ]
         }
       ],
-      "outlineWidth":0.0,
-      "width":1.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-15T10:16:06.97400000000198Z",
@@ -2908,8 +2919,6 @@
           ]
         }
       ],
-      "outlineWidth":0.0,
-      "width":1.0,
       "show":[
         {
           "interval":"2012-03-15T10:00:00Z/2012-03-15T22:32:58.8280000000086Z",

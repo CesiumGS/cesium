@@ -1,20 +1,20 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/Iso8601',
         '../Core/JulianDate',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
-        '../Core/Iso8601',
         '../Core/binarySearch',
         '../Core/HermitePolynomialApproximation',
         '../Core/LinearApproximation',
         '../Core/LagrangePolynomialApproximation'
     ], function(
         DeveloperError,
+        Iso8601,
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
-        Iso8601,
         binarySearch,
         HermitePolynomialApproximation,
         LinearApproximation,
@@ -107,7 +107,7 @@ define([
         }
         this.valueType = valueType;
         this._intervals = new TimeIntervalCollection();
-        this._cachedDate = undefined;
+        this._cachedTime = undefined;
         this._cachedInterval = undefined;
     };
 
@@ -130,6 +130,8 @@ define([
         }
     };
 
+    var interpolationScratch;
+
     /**
      * Returns the value of the property at the specified time.
      * @memberof DynamicProperty
@@ -139,12 +141,15 @@ define([
      * @returns The modified result parameter or a new instance if the result parameter was not supplied.
      */
     DynamicProperty.prototype.getValue = function(time, result) {
-        var interval = this._cachedInterval;
-        var thisValueType = this.valueType;
-        var doublesPerValue = thisValueType.doublesPerValue;
+        var valueType = this.valueType;
 
-        if (this._cachedDate !== time) {
-            this._cachedDate = time;
+        if (typeof this._staticValue !== 'undefined') {
+            return valueType.getValue(this._staticValue, result);
+        }
+
+        var interval = this._cachedInterval;
+        if (!JulianDate.equals(this._cachedTime, time)) {
+            this._cachedTime = JulianDate.clone(time, this._cachedTime);
             if (typeof interval === 'undefined' || !interval.contains(time)) {
                 interval = this._intervals.findIntervalContainingDate(time);
                 this._cachedInterval = interval;
@@ -159,6 +164,7 @@ define([
         var times = intervalData.times;
         var values = intervalData.values;
         if (intervalData.isSampled && times.length >= 0 && values.length > 0) {
+            var doublesPerValue = valueType.doublesPerValue;
             var index = binarySearch(times, time, JulianDate.compare);
             if (index < 0) {
                 if (intervalData.numberOfPoints < 2) {
@@ -198,7 +204,7 @@ define([
 
                 var length = lastIndex - firstIndex + 1;
 
-                var doublesPerInterpolationValue = thisValueType.doublesPerInterpolationValue;
+                var doublesPerInterpolationValue = valueType.doublesPerInterpolationValue;
                 var xTable = intervalData.xTable;
                 var yTable = intervalData.yTable;
 
@@ -211,7 +217,7 @@ define([
                 for ( var i = 0; i < length; ++i) {
                     xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
                 }
-                var specializedPackFunction = thisValueType.packValuesForInterpolation;
+                var specializedPackFunction = valueType.packValuesForInterpolation;
                 if (typeof specializedPackFunction === 'undefined') {
                     var destinationIndex = 0;
                     var sourceIndex = firstIndex * doublesPerValue;
@@ -228,17 +234,17 @@ define([
 
                 // Interpolate!
                 var x = times[lastIndex].getSecondsDifference(time);
-                var interpolationResult = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue);
+                interpolationScratch = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue, interpolationScratch);
 
-                var specializedGetFunction = thisValueType.getValueFromInterpolationResult;
+                var specializedGetFunction = valueType.getValueFromInterpolationResult;
                 if (typeof specializedGetFunction === 'undefined') {
-                    return thisValueType.getValueFromArray(interpolationResult, 0, result);
+                    return valueType.getValueFromArray(interpolationScratch, 0, result);
                 }
-                return specializedGetFunction(interpolationResult, result, values, firstIndex, lastIndex);
+                return specializedGetFunction(interpolationScratch, result, values, firstIndex, lastIndex);
             }
-            return thisValueType.getValueFromArray(intervalData.values, index * doublesPerValue, result);
+            return valueType.getValueFromArray(intervalData.values, index * doublesPerValue, result);
         }
-        return thisValueType.getValue(intervalData.values, result);
+        return valueType.getValue(intervalData.values, result);
     };
 
     DynamicProperty._mergeNewSamples = function(epoch, times, values, newData, doublesPerValue) {
@@ -305,7 +311,7 @@ define([
     DynamicProperty.prototype._addCzmlIntervalUnwrapped = function(start, stop, unwrappedInterval, epoch, interpolationAlgorithmType, interpolationDegree) {
         var thisIntervals = this._intervals;
         var existingInterval = thisIntervals.findInterval(start, stop);
-        this._cachedDate = undefined;
+        this._cachedTime = undefined;
         this._cachedInterval = undefined;
 
         var intervalData;
@@ -317,8 +323,8 @@ define([
             intervalData = existingInterval.data;
         }
 
-        var thisValueType = this.valueType;
-        if (thisValueType.isSampled(unwrappedInterval)) {
+        var valueType = this.valueType;
+        if (valueType.isSampled(unwrappedInterval)) {
             var interpolationAlgorithm;
             if (typeof interpolationAlgorithmType !== 'undefined') {
                 interpolationAlgorithm = interpolators[interpolationAlgorithmType];
@@ -338,13 +344,20 @@ define([
             if (typeof epoch !== 'undefined') {
                 epoch = JulianDate.fromIso8601(epoch);
             }
-            DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, unwrappedInterval, thisValueType.doublesPerValue, thisValueType);
+            DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, unwrappedInterval, valueType.doublesPerValue, valueType);
             intervalData.numberOfPoints = Math.min(intervalData.interpolationAlgorithm.getRequiredDataPoints(intervalData.interpolationDegree), intervalData.times.length);
+            this._staticValue = undefined;
         } else {
             //Packet itself is a constant value
             intervalData.times = undefined;
             intervalData.values = unwrappedInterval;
             intervalData.isSampled = false;
+
+            if (existingInterval.equals(Iso8601.MAXIMUM_INTERVAL)) {
+                this._staticValue = unwrappedInterval;
+            } else {
+                this._staticValue = undefined;
+            }
         }
     };
 

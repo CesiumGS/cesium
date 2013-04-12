@@ -35,7 +35,9 @@ defineSuite([
     var va;
 
     beforeAll(function() {
-        context = createContext();
+        context = createContext({
+            stencil : true
+        });
     });
 
     afterAll(function() {

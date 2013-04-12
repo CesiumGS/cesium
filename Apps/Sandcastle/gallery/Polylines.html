@@ -19,11 +19,11 @@
     </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
     <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
     @import url(../templates/bucket.css);
+    @import url(../../../Source/Widgets/Dojo/CesiumViewerWidget.css);
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
@@ -37,7 +37,7 @@ require([
     "use strict";
 
     function createPrimitives(widget) {
-        var ellipsoid = widget.ellipsoid;
+        var ellipsoid = widget.centralBody.getEllipsoid();
         var primitives = widget.scene.getPrimitives();
         var polylines = new Cesium.PolylineCollection();
 
@@ -56,15 +56,9 @@ require([
             Cesium.Cartographic.fromDegrees(-95.0, 30.0),
             Cesium.Cartographic.fromDegrees(-85.0, 40.0)
         ]));
-        coloredPolyline.setColor({
-            red   : 1.0,
-            green : 1.0,
-            blue  : 0.0,
-            alpha : 0.75
-        });
+        coloredPolyline.getMaterial().uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
 
-        // Set a polyline's width and outline width
-        // (Note that wide lines don't work with ANGLE enabled)
+        // Set a polyline's width
         var widePolyline = polylines.add();
         Sandcastle.declare(widePolyline);   // For highlighting on mouseover in Sandcastle.
         widePolyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
@@ -73,14 +67,12 @@ require([
             Cesium.Cartographic.fromDegrees(-105.0, 35.0),
             Cesium.Cartographic.fromDegrees(-100.0, 32.0)
         ]));
-        widePolyline.setWidth(5); // Request 5 pixels interior
-        widePolyline.setOutlineWidth(10); // Request 10 pixels total
-        widePolyline.setOutlineColor({
-            red : 1.0,
-            green : 0.0,
-            blue : 0.0,
-            alpha : 1.0
-        });
+        widePolyline.setWidth(10.0);
+        
+        // Set the polyline's material to have an outline
+        var outlineMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineOutlineType);
+        outlineMaterial.uniforms.outlineWidth = 5.0;
+        widePolyline.setMaterial(outlineMaterial);
 
         primitives.add(polylines);
 
@@ -93,11 +85,11 @@ require([
         Sandcastle.declare(localPolyline);  // For highlighting on mouseover in Sandcastle.
         localPolyline.setPositions([
             new Cesium.Cartesian3(0.0, 0.0, 0.0),
-            new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
-            new Cesium.Cartesian3(900000.0, -100000.0, 0.0),
-            new Cesium.Cartesian3(900000.0, 100000.0, 0.0),
             new Cesium.Cartesian3(1000000.0, 0.0, 0.0)
         ]);
+        localPolyline.setWidth(10.0);
+        var arrowMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineArrowType);
+        localPolyline.setMaterial(arrowMaterial);
         primitives.add(localPolylines);
     }
 

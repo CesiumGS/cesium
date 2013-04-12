@@ -32,6 +32,8 @@ define([
      *
      * @alias SensorVolumeCollection
      * @constructor
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Sensors.html">Cesium Sandcastle Sensors Demo</a>
      */
     var SensorVolumeCollection = function() {
         this._sensors = [];

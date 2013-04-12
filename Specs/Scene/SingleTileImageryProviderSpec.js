@@ -157,6 +157,7 @@ defineSuite([
         });
 
         expect(provider).toBeDefined();
+        expect(provider.getProxy()).toEqual(proxy);
         expect(calledCreateImage).toEqual(true);
     });
 

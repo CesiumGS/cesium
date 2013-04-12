@@ -305,6 +305,14 @@ define([
         });
 
         /**
+         * A boolean observable indicating if dragging the shuttle ring should cause the multiplier
+         * to snap to the defined tick values rather than interpolating between them.
+         * @type Observable
+         * @default false
+         */
+        this.snapToTicks = knockout.observable(false);
+
+        /**
          * The current shuttle ring Angle.
          * @type Observable
          */
@@ -326,23 +334,26 @@ define([
                 }
 
                 var multiplier = angleToMultiplier(angle, ticks);
-                if (multiplier !== 0) {
-                    var positiveMultiplier = Math.abs(multiplier);
+                if (that.snapToTicks()) {
+                    multiplier = ticks[getTypicalMultiplierIndex(multiplier, ticks)];
+                } else {
+                    if (multiplier !== 0) {
+                        var positiveMultiplier = Math.abs(multiplier);
 
-                    if (positiveMultiplier > 100) {
-                        var numDigits = positiveMultiplier.toFixed(0).length - 2;
-                        var divisor = Math.pow(10, numDigits);
-                        multiplier = (Math.round(multiplier / divisor) * divisor) | 0;
-                    } else if (positiveMultiplier > realtimeShuttleRingAngle) {
-                        multiplier = Math.round(multiplier);
-                    } else if (positiveMultiplier > 1) {
-                        multiplier = +multiplier.toFixed(1);
-                    } else if (positiveMultiplier > 0) {
-                        multiplier = +multiplier.toFixed(2);
+                        if (positiveMultiplier > 100) {
+                            var numDigits = positiveMultiplier.toFixed(0).length - 2;
+                            var divisor = Math.pow(10, numDigits);
+                            multiplier = (Math.round(multiplier / divisor) * divisor) | 0;
+                        } else if (positiveMultiplier > realtimeShuttleRingAngle) {
+                            multiplier = Math.round(multiplier);
+                        } else if (positiveMultiplier > 1) {
+                            multiplier = +multiplier.toFixed(1);
+                        } else if (positiveMultiplier > 0) {
+                            multiplier = +multiplier.toFixed(2);
+                        }
                     }
-
-                    clockViewModel.multiplier(multiplier);
                 }
+                clockViewModel.multiplier(multiplier);
             }
         });
 
@@ -424,11 +435,13 @@ define([
             throw new DeveloperError('positiveTicks is required.');
         }
         var len = positiveTicks.length;
-        var ticks = new Array(len * 2);
-        var iTicks = 0;
+        var ticks = [];
         for ( var iPos = 0; iPos < len; iPos++) {
-            ticks[iTicks++] = positiveTicks[iPos];
-            ticks[iTicks++] = -positiveTicks[iPos];
+            var tick = positiveTicks[iPos];
+            ticks.push(tick);
+            if (tick !== 0) {
+                ticks.push(-tick);
+            }
         }
         ticks.sort(numberComparator);
         this._shuttleRingTicks(ticks);

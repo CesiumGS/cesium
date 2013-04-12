@@ -161,6 +161,19 @@ define([
     };
 
     /**
+     * Gets the proxy used by this provider.
+     *
+     * @memberof BingMapsImageryProvider
+     *
+     * @returns {Proxy} The proxy.
+     *
+     * @see DefaultProxy
+     */
+    BingMapsImageryProvider.prototype.getProxy = function() {
+        return this._proxy;
+    };
+
+    /**
      * Gets the Bing Maps key.
      *
      * @memberof BingMapsImageryProvider

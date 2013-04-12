@@ -152,6 +152,8 @@ define([
      *   ellipsoid.cartographicToCartesian(new Cartographic(...)),
      *   ellipsoid.cartographicToCartesian(new Cartographic(...))
      * ]);
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Polygons.html">Cesium Sandcastle Polygons Demo</a>
      */
     var Polygon = function() {
         this._sp = undefined;

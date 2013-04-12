@@ -128,13 +128,33 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
+    it('static intersect works', function() {
+        var rectangle1 = new BoundingRectangle(0, 0, 4, 4);
+        var rectangle2 = new BoundingRectangle(2, 2, 4, 4);
+        var rectangle3 = new BoundingRectangle(-6, 2, 4, 4);
+        var rectangle4 = new BoundingRectangle(8, 2, 4, 4);
+        var rectangle5 = new BoundingRectangle(2, -6, 4, 4);
+        var rectangle6 = new BoundingRectangle(2, 8, 4, 4);
+        expect(BoundingRectangle.intersect(rectangle1, rectangle2)).toEqual(Intersect.INTERSECTING);
+        expect(BoundingRectangle.intersect(rectangle1, rectangle3)).toEqual(Intersect.OUTSIDE);
+        expect(BoundingRectangle.intersect(rectangle1, rectangle4)).toEqual(Intersect.OUTSIDE);
+        expect(BoundingRectangle.intersect(rectangle1, rectangle5)).toEqual(Intersect.OUTSIDE);
+        expect(BoundingRectangle.intersect(rectangle1, rectangle6)).toEqual(Intersect.OUTSIDE);
+      });
+
     it('intersect works', function() {
         var rectangle1 = new BoundingRectangle(0, 0, 4, 4);
         var rectangle2 = new BoundingRectangle(2, 2, 4, 4);
-        var rectangle3 = new BoundingRectangle(5, 5, 4, 4);
-        expect(BoundingRectangle.intersect(rectangle1, rectangle2)).toEqual(Intersect.INTERSECTING);
-        expect(BoundingRectangle.intersect(rectangle1, rectangle3)).toEqual(Intersect.OUTSIDE);
-    });
+        var rectangle3 = new BoundingRectangle(-6, 2, 4, 4);
+        var rectangle4 = new BoundingRectangle(8, 2, 4, 4);
+        var rectangle5 = new BoundingRectangle(2, -6, 4, 4);
+        var rectangle6 = new BoundingRectangle(2, 8, 4, 4);
+        expect(rectangle1.intersect(rectangle2)).toEqual(Intersect.INTERSECTING);
+        expect(rectangle1.intersect(rectangle3)).toEqual(Intersect.OUTSIDE);
+        expect(rectangle1.intersect(rectangle4)).toEqual(Intersect.OUTSIDE);
+        expect(rectangle1.intersect(rectangle5)).toEqual(Intersect.OUTSIDE);
+        expect(rectangle1.intersect(rectangle6)).toEqual(Intersect.OUTSIDE);
+      });
 
     it('union works without a result parameter', function() {
         var rectangle1 = new BoundingRectangle(2.0, 0.0, 1.0, 1.0);
