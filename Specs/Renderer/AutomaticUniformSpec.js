@@ -3,6 +3,7 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createFrameState',
+         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Matrix4',
          'Core/PrimitiveType',
@@ -12,6 +13,7 @@ defineSuite([
          createContext,
          destroyContext,
          createFrameState,
+         Cartesian2,
          Cartesian3,
          Matrix4,
          PrimitiveType,
@@ -50,6 +52,9 @@ defineSuite([
                 },
                 computeCullingVolume : function() {
                     return undefined;
+                },
+                getPixelSize : function() {
+                    return new Cartesian2(1.0, 0.1);
                 }
             },
             position : defaultValue(position, Cartesian3.ZERO.clone()),
@@ -678,6 +683,14 @@ defineSuite([
         us.update(createFrameState(createMockCamera()));
 
         var fs = 'void main() { gl_FragColor = vec4((czm_entireFrustum.x == 1.0) && (czm_entireFrustum.y == 1000.0)); }';
+        verifyDraw(fs);
+    });
+
+    it('has czm_pixelSizeInMeters', function() {
+        var us = context.getUniformState();
+        us.update(createFrameState(createMockCamera()));
+
+        var fs = 'void main() { gl_FragColor = vec4(czm_pixelSizeInMeters == 1.0); }';
         verifyDraw(fs);
     });
 

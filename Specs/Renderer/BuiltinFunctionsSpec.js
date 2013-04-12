@@ -5,9 +5,11 @@ defineSuite([
          'Specs/createCamera',
          'Specs/createFrameState',
          'Core/BoundingRectangle',
+         'Core/Color',
          'Core/Math',
          'Core/Matrix4',
          'Core/PrimitiveType',
+         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/EncodedCartesian3',
          'Renderer/BufferUsage'
@@ -17,9 +19,11 @@ defineSuite([
          createCamera,
          createFrameState,
          BoundingRectangle,
+         Color,
          CesiumMath,
          Matrix4,
          PrimitiveType,
+         Cartesian2,
          Cartesian3,
          EncodedCartesian3,
          BufferUsage) {
@@ -172,5 +176,16 @@ defineSuite([
             '}';
 
         verifyDraw(fs, uniformMap);
+    });
+
+    it('has czm_antialias', function() {
+        var fs =
+            'void main() {' +
+            '  vec4 color0 = vec4(1.0, 0.0, 0.0, 1.0);' +
+            '  vec4 color1 = vec4(0.0, 1.0, 0.0, 1.0);' +
+            '  vec4 result = czm_antialias(color0, color1, color1, 0.5);' +
+            ' gl_FragColor = vec4(result == color1);' +
+            '}';
+        verifyDraw(fs);
     });
 }, 'WebGL');

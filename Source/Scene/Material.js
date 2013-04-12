@@ -25,6 +25,7 @@ define([
         '../Shaders/Materials/FacetMaterial',
         '../Shaders/Materials/FresnelMaterial',
         '../Shaders/Materials/GrassMaterial',
+        '../Shaders/Materials/GridMaterial',
         '../Shaders/Materials/NormalMapMaterial',
         '../Shaders/Materials/ReflectionMaterial',
         '../Shaders/Materials/RefractionMaterial',
@@ -33,7 +34,10 @@ define([
         '../Shaders/Materials/Water',
         '../Shaders/Materials/WoodMaterial',
         '../Shaders/Materials/RimLightingMaterial',
-        '../Shaders/Materials/ErosionMaterial'
+        '../Shaders/Materials/ErosionMaterial',
+        '../Shaders/Materials/FadeMaterial',
+        '../Shaders/Materials/PolylineArrowMaterial',
+        '../Shaders/Materials/PolylineOutlineMaterial'
     ], function(
         when,
         loadImage,
@@ -60,6 +64,7 @@ define([
         FacetMaterial,
         FresnelMaterial,
         GrassMaterial,
+        GridMaterial,
         NormalMapMaterial,
         ReflectionMaterial,
         RefractionMaterial,
@@ -68,7 +73,10 @@ define([
         WaterMaterial,
         WoodMaterial,
         RimLightingMaterial,
-        ErosionMaterial) {
+        ErosionMaterial,
+        FadeMaterial,
+        PolylineArrowMaterial,
+        PolylineOutlineMaterial) {
     "use strict";
 
     /**
@@ -202,6 +210,13 @@ define([
      *      <li><code>dirtColor</code>:  rgba color object for the dirt's color. </li>
      *      <li><code>patchiness</code>:  Number that controls the size of the color patches in the grass.</li>
      *  </ul>
+     *  <li>Grid</li>
+     *  <ul>
+     *      <li><code>color</code>:  rgba color object for the whole material.</li>
+     *      <li><code>cellAlpha</code>: Alpha value for the cells between grid lines.  This will be combined with color.alpha.</li>
+     *      <li><code>lineCount</code>:  Object with x and y values specifying the number of columns and rows respectively.</li>
+     *      <li><code>lineThickness</code>:  Object with x and y values specifying the thickness of grid lines (in pixels where available).</li>
+     *  </ul>
      *  <li>Stripe</li>
      *  <ul>
      *      <li><code>horizontal</code>:  Boolean that determines if the stripes are horizontal or vertical.</li>
@@ -263,6 +278,25 @@ define([
      *      <li><code>color</code>:  diffuse color and alpha.</li>
      *      <li><code>time</code>:  Time of erosion.  1.0 is no erosion; 0.0 is fully eroded.</li>
      *  </ul>
+     *  <li>Fade</li>
+     *  <ul>
+     *      <li><code>fadeInColor</code>: diffuse color and alpha at <code>time</code></li>
+     *      <li><code>fadeOutColor</code>: diffuse color and alpha at <code>maximumDistance<code> from <code>time</code></li>
+     *      <li><code>maximumDistance</code>: Number between 0.0 and 1.0 where the <code>fadeInColor</code> becomes the <code>fadeOutColor</code>. A value of 0.0 gives the entire material a color of <code>fadeOutColor</code> and a value of 1.0 gives the the entire material a color of <code>fadeInColor</code></li>
+     *      <li><code>repeat</code>: true if the fade should wrap around the texture coodinates.</li>
+     *      <li><code>fadeDirection</code>: Object with x and y values specifying if the fade should be in the x and y directions.</li>
+     *      <li><code>time</code>: Object with x and y values between 0.0 and 1.0 of the <code>fadeInColor</code> position</li>
+     *  </ul>
+     *  <li>PolylineArrow</li>
+     *  <ul>
+     *      <li><code>color</code>: diffuse color and alpha.</li>
+     *  </ul>
+     *  <li>PolylineOutline</li>
+     *  <ul>
+     *      <li><code>color</code>: diffuse color and alpha for the interior of the line.</li>
+     *      <li><code>outlineColor</code>: diffuse color and alpha for the outline.</li>
+     *      <li><code>outlineWidth</code>: width of the outline in pixels.</li>
+     *  </ul>
      * </ul>
      * </div>
      *
@@ -314,6 +348,8 @@ define([
      * });
      *
      * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric wiki page</a> for a more detailed description of Fabric.
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Materials.html">Cesium Sandcastle Materials Demo</a>
      */
     var Material = function(description) {
         /**
@@ -351,7 +387,15 @@ define([
             value : this.type,
             writable : false
         });
+
+        if (typeof Material._uniformList[this.type] === 'undefined') {
+            Material._uniformList[this.type] = Object.keys(this._uniforms);
+        }
     };
+
+    // Cached list of combined uniform names indexed by type.
+    // Used to get the list of uniforms in the same order.
+    Material._uniformList = {};
 
     /**
      * Creates a new material using an existing material type.
@@ -1055,6 +1099,18 @@ define([
         source : GrassMaterial
     });
 
+    Material.GridType = 'Grid';
+    Material._materialCache.addMaterial(Material.GridType, {
+        type : Material.GridType,
+        uniforms : {
+            color : new Color(0.0, 1.0, 0.0, 1.0),
+            cellAlpha : 0.1,
+            lineCount : new Cartesian2(8.0, 8.0),
+            lineThickness : new Cartesian2(1.0, 1.0)
+        },
+        source : GridMaterial
+    });
+
     Material.StripeType = 'Stripe';
     Material._materialCache.addMaterial(Material.StripeType, {
         type : Material.StripeType,
@@ -1169,6 +1225,43 @@ define([
             time : 1.0
         },
         source : ErosionMaterial
+    });
+
+    Material.FadeType = 'Fade';
+    Material._materialCache.addMaterial(Material.FadeType, {
+        type : Material.FadeType,
+        uniforms : {
+            fadeInColor : new Color(1.0, 0.0, 0.0, 1.0),
+            fadeOutColor : new Color(0.0, 0.0, 0.0, 0.0),
+            maximumDistance : 0.5,
+            repeat : true,
+            fadeDirection : {
+                x : true,
+                y : true
+            },
+            time : new Cartesian2(0.5, 0.5)
+        },
+        source : FadeMaterial
+    });
+
+    Material.PolylineArrowType = 'PolylineArrow';
+    Material._materialCache.addMaterial(Material.PolylineArrowType, {
+        type : Material.PolylineArrowType,
+        uniforms : {
+            color : new Color(1.0, 1.0, 1.0, 1.0)
+        },
+        source : PolylineArrowMaterial
+    });
+
+    Material.PolylineOutlineType = 'PolylineOutline';
+    Material._materialCache.addMaterial(Material.PolylineOutlineType, {
+        type : Material.PolylineOutlineType,
+        uniforms : {
+            color : new Color(1.0, 1.0, 1.0, 1.0),
+            outlineColor : new Color(1.0, 0.0, 0.0, 1.0),
+            outlineWidth : 1.0
+        },
+        source : PolylineOutlineMaterial
     });
 
     return Material;
