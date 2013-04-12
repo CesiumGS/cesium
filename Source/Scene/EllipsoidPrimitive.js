@@ -18,6 +18,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
+        '../Renderer/createPickFragmentShaderSource',
         './Material',
         './SceneMode',
         '../Shaders/EllipsoidVS',
@@ -41,27 +42,12 @@ define([
         BufferUsage,
         CommandLists,
         DrawCommand,
+        createPickFragmentShaderSource,
         Material,
         SceneMode,
         EllipsoidVS,
         EllipsoidFS) {
     "use strict";
-
-
-    function createPickFragmentShaderSource(fragmentShaderSource) {
-        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
-        var pickMain =
-            'uniform vec4 u_pickColor; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    czm_old_main(); \n' +
-            '    if (gl_FragColor.a == 0.0) { \n' +
-            '        discard; \n' +
-            '    } \n' +
-            '    gl_FragColor = u_pickColor; \n' +
-            '}';
-        return renamedFS + '\n' + pickMain;
-    }
 
     var attributeIndices = {
         position : 0
@@ -205,7 +191,7 @@ define([
         };
 
         this._pickUniforms = {
-            u_pickColor : function() {
+            u_czm_pickColor : function() {
                 return that._pickId.normalizedRgba;
             }
         };

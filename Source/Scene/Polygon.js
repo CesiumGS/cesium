@@ -28,6 +28,7 @@ define([
         '../Renderer/CullFace',
         '../Renderer/DrawCommand',
         '../Renderer/VertexLayout',
+        '../Renderer/createPickFragmentShaderSource',
         './Material',
         './SceneMode',
         '../Shaders/PolygonVS',
@@ -61,32 +62,12 @@ define([
         CullFace,
         DrawCommand,
         VertexLayout,
+        createPickFragmentShaderSource,
         Material,
         SceneMode,
         PolygonVS,
         PolygonFS) {
     "use strict";
-
-
-
-
-    function createPickFragmentShaderSource(fragmentShaderSource) {
-        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
-        var pickMain =
-            'uniform vec4 u_pickColor; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    czm_old_main(); \n' +
-            '    if (gl_FragColor.a == 0.0) { \n' +
-            '        discard; \n' +
-            '    } \n' +
-            '    gl_FragColor = u_pickColor; \n' +
-            '}';
-        return renamedFS + '\n' + pickMain;
-    }
-
-
-
 
     var attributeIndices = {
         position3DHigh : 0,
@@ -296,7 +277,7 @@ define([
         };
 
         this._pickColorUniform = {
-            u_pickColor : function() {
+            u_czm_pickColor : function() {
                 return that._pickId.normalizedRgba;
             }
         };
