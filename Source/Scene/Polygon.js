@@ -766,8 +766,7 @@ define([
                     '#line 0\n' +
                     PolygonFS;
 
-                this._sp = this._sp && this._sp.release();
-                this._sp = context.getShaderCache().getShaderProgram(PolygonVS, fsSource, attributeIndices);
+                this._sp = context.getShaderCache().replaceShaderProgram(this._sp, PolygonVS, fsSource, attributeIndices);
 
                 this._drawUniforms = combine([this._uniforms, this.material._uniforms], false, false);
             }
@@ -813,8 +812,7 @@ define([
                     '#line 0\n' +
                     PolygonFS);
 
-                this._spPick = this._spPick && this._spPick.release();
-                this._spPick = context.getShaderCache().getShaderProgram(PolygonVS, pickFS, attributeIndices);
+                this._spPick = context.getShaderCache().replaceShaderProgram(this._spPick, PolygonVS, pickFS, attributeIndices);
                 this._pickUniforms = combine([this._uniforms, this._pickColorUniform, this.material._uniforms], false, false);
             }
 

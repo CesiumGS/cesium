@@ -599,7 +599,7 @@ define([
 
         var shaderCache = context.getShaderCache();
 
-        if (!this._depthCommand.shaderProgram) {
+        if (typeof this._depthCommand.shaderProgram === 'undefined') {
             this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
                     CentralBodyVSDepth,
                     '#line 0\n' +
@@ -682,8 +682,8 @@ define([
                 CentralBodyFS;
             this._surfaceShaderSet.invalidateShaders();
 
-            var poleShaderProgram = this._northPoleCommand.shaderProgram && this._northPoleCommand.shaderProgram.release();
-            poleShaderProgram = shaderCache.getShaderProgram(CentralBodyVSPole, CentralBodyFSPole, TerrainProvider.attributeIndices);
+            var poleShaderProgram = shaderCache.replaceShaderProgram(this._northPoleCommand.shaderProgram,
+                CentralBodyVSPole, CentralBodyFSPole, TerrainProvider.attributeIndices);
 
             this._northPoleCommand.shaderProgram = poleShaderProgram;
             this._southPoleCommand.shaderProgram = poleShaderProgram;

@@ -292,8 +292,7 @@ define([
                     '#line 0\n' +
                     EllipsoidFS;
 
-                this._sp = this._sp && this._sp.release();
-                this._sp = context.getShaderCache().getShaderProgram(EllipsoidVS, colorFS, attributeIndices);
+                this._sp = context.getShaderCache().replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeIndices);
 
                 colorCommand.primitiveType = PrimitiveType.TRIANGLES;
                 colorCommand.vertexArray = this._va;
@@ -324,8 +323,7 @@ define([
                     '#line 0\n' +
                     EllipsoidFS);
 
-                this._pickSP = this._pickSP && this._pickSP.release();
-                this._pickSP = context.getShaderCache().getShaderProgram(EllipsoidVS, pickFS, attributeIndices);
+                this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeIndices);
 
                 pickCommand.primitiveType = PrimitiveType.TRIANGLES;
                 pickCommand.vertexArray = this._va;

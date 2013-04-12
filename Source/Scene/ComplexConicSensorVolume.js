@@ -443,8 +443,8 @@ define([
                     '#line 0\n' +
                     ComplexConicSensorVolumeFS;
 
-                this._colorCommand.shaderProgram = this._colorCommand.shaderProgram && this._colorCommand.shaderProgram.release();
-                this._colorCommand.shaderProgram = context.getShaderCache().getShaderProgram(ComplexConicSensorVolumeVS, fsSource, attributeIndices);
+                this._colorCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
+                    this._colorCommand.shaderProgram, ComplexConicSensorVolumeVS, fsSource, attributeIndices);
             }
 
             this._commandLists.colorList.push(this._colorCommand);

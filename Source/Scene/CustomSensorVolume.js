@@ -376,8 +376,8 @@ define([
                     '#line 0\n' +
                     CustomSensorVolumeFS;
 
-                colorCommand.shaderProgram = colorCommand.shaderProgram && colorCommand.shaderProgram.release();
-                colorCommand.shaderProgram = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);
+                colorCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
+                    colorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeIndices);
                 colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
             }
 
@@ -401,8 +401,8 @@ define([
                     '#line 0\n' +
                     CustomSensorVolumeFS);
 
-                pickCommand.shaderProgram = pickCommand.shaderProgram && pickCommand.shaderProgram.release();
-                pickCommand.shaderProgram = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, pickFS, attributeIndices);
+                pickCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
+                    pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeIndices);
 
                 var that = this;
                 pickCommand.uniformMap = combine([this._uniforms, this._material._uniforms, {
