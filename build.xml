@@ -30,11 +30,11 @@
 	<target name="combine" description="Combines all source files into a single stand-alone script." depends="build, combineJavaScript">
 		<copy todir="Build">
 			<fileset dir="Apps/">
-				<include name="HelloWorld.html" />
+				<include name="index.html" />
 			</fileset>
 		</copy>
 
-		<replace file="Build/HelloWorld.html" token="../Build/" value="" />
+		<replace file="Build/index.html" token="../Build/" value="" />
 	</target>
 
 	<target name="minify" description="Combines all source files into a single stand-alone, minified script.">
@@ -66,7 +66,7 @@
 			<fileset dir="Build">
 				<include name="Cesium/**" />
 				<include name="Documentation/**" />
-				<include name="HelloWorld.html" />
+				<include name="index.html" />
 			</fileset>
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
