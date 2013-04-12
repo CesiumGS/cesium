@@ -1,22 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
-    <title>Hello World!</title>
-    <script type="text/javascript" src="../Build/Cesium/Cesium.js"></script>
+<!doctype html>
+<html>
+<head>
+    <title>Cesium</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     <style>
-      @import url(../Build/Cesium/Widgets/CesiumWidget/CesiumWidget.css);
-      body {
-        padding: 0;
-        margin: 0;
-        overflow: hidden;
-      }
+    body { font-family: sans-serif; }
+    li { margin-top: 5px; }
+    .outer > li { margin-top: 1.4em; }
     </style>
-  </head>
+</head>
+
 <body>
-  <div id="cesiumContainer"></div>
-  <script>
-    var cesiumWidget = new Cesium.CesiumWidget('cesiumContainer');
-  </script>
+<ul class="outer">
+  <li>Local Links
+    <ul>
+      <li><a href="HelloWorld.html">Hello World</a></li>
+      <li><a href="../Build/Documentation/index.html">Documentation</a></li>
+    </ul>
+  </li>
+  <li>Cesium Website
+    <ul>
+      <li><a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html">SandCastle</a></li>
+      <li><a href="http://cesium.agi.com/tutorials.html">Tutorials</a></li>
+    </ul>
+  </li>
+</ul>
 </body>
 </html>
