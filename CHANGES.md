@@ -34,7 +34,7 @@ Beta Releases
 * Added `AnimationViewModel.snapToTicks`, which when set to true, causes the shuttle ring on the Animation widget to snap to the defined tick values, rather than interpolate between them.
 * Added new `Grid` material.
 * Made `EllipsoidPrimitive` double-sided.
-* Fixed `EllipsoidPrimitive` picking.
+* Fixed `EllipsoidPrimitive` picking and picking objects with materials that have transparent parts.
 
 ### b15 - 2013-04-01
 
