@@ -3,12 +3,14 @@ define([
         'require',
         './buildModuleUrl',
         './defaultValue',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        '../ThirdParty/Uri'
     ], function(
         require,
         buildModuleUrl,
         defaultValue,
-        when) {
+        when,
+        Uri) {
     "use strict";
 
     function completeTask(processor, event) {
@@ -26,9 +28,42 @@ define([
         delete deferreds[id];
     }
 
-    var bootstrapperUrl = buildModuleUrl('Workers/cesiumWorkerBootstrapper.js');
+    var _bootstrapperUrl;
+    function getBootstrapperUrl() {
+        if (typeof _bootstrapperUrl !== 'undefined') {
+            return _bootstrapperUrl;
+        }
+
+        _bootstrapperUrl = buildModuleUrl('Workers/cesiumWorkerBootstrapper.js');
+
+        var location = window.location;
+        var a = document.createElement('a');
+        a.href = _bootstrapperUrl;
+
+        // host includes both hostname and port if the port is not standard
+        if (a.protocol !== location.protocol || a.host !== location.host) {
+            //cross-origin, create a shim worker from a blob URL
+            var script = 'importScripts("' + _bootstrapperUrl + '");';
+
+            var blob;
+            if (typeof Blob !== 'undefined') {
+                blob = new Blob([script]);
+            } else {
+                var BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder;
+                var blobBuilder = new BlobBuilder();
+                blobBuilder.append(script);
+                blob = blobBuilder.getBlob();
+            }
+
+            var URL = window.URL || window.webkitURL;
+            _bootstrapperUrl = URL.createObjectURL(blob);
+        }
+
+        return _bootstrapperUrl;
+    }
 
     function createWorker(processor) {
+        var bootstrapperUrl = getBootstrapperUrl();
         var worker = new Worker(bootstrapperUrl);
         worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
 
@@ -41,8 +76,9 @@ define([
         if (typeof require.toUrl !== 'undefined') {
             bootstrapMessage.loaderConfig.baseUrl = '..';
         } else {
+            var workersUrl = new Uri(buildModuleUrl('Workers')).resolve(new Uri(document.location.href)).toString();
             bootstrapMessage.loaderConfig.paths = {
-                'Workers' : '.'
+                'Workers' : workersUrl
             };
         }
 
