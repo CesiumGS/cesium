@@ -1198,6 +1198,7 @@ function(JulianDate,
         var datePlusOne = date.addSeconds(0.01);
         expect(date.equalsEpsilon(datePlusOne, CesiumMath.EPSILON1)).toEqual(true);
     });
+
     it('getTaiMinusUtc works before all leap seconds', function() {
         var date = new Date('July 11, 1970 12:00:00 UTC');
         var jd = JulianDate.fromDate(date, TimeStandard.TAI);
@@ -1223,5 +1224,13 @@ function(JulianDate,
     it('getTaiMinusUtc works after all leap seconds', function() {
         var date = new JulianDate(2556109, 43235.0, TimeStandard.TAI);
         expect(date.getTaiMinusUtc()).toEqual(35);
+    });
+
+    it('can compare instances with compareTo', function() {
+        var date = new JulianDate(0, 0.0, TimeStandard.TAI);
+        var date2 = new JulianDate(1, 0.0, TimeStandard.TAI);
+
+        expect(date.compareTo(date2)).toBeLessThan(0);
+        expect(date2.compareTo(date)).toBeGreaterThan(0);
     });
 });

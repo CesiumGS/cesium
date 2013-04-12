@@ -67,10 +67,11 @@ define([
 
     // reusable object for calling writeTextToCanvas
     var writeTextToCanvasParameters = {};
-    function createGlyphCanvas(character, font, fillColor, outlineColor, style, verticalOrigin) {
+    function createGlyphCanvas(character, font, fillColor, outlineColor, outlineWidth, style, verticalOrigin) {
         writeTextToCanvasParameters.font = font;
         writeTextToCanvasParameters.fillColor = fillColor;
         writeTextToCanvasParameters.strokeColor = outlineColor;
+        writeTextToCanvasParameters.strokeWidth = outlineWidth;
 
         if (verticalOrigin === VerticalOrigin.BOTTOM) {
             writeTextToCanvasParameters.textBaseline = 'bottom';
@@ -132,6 +133,7 @@ define([
             var font = label._font;
             var fillColor = label._fillColor;
             var outlineColor = label._outlineColor;
+            var outlineWidth = label._outlineWidth;
             var style = label._style;
             var verticalOrigin = label._verticalOrigin;
 
@@ -142,13 +144,14 @@ define([
                                      font,
                                      fillColor.toString(),
                                      outlineColor.toString(),
+                                     outlineWidth,
                                      style.toString(),
                                      verticalOrigin.toString()
                                     ]);
 
             var glyphTextureInfo = glyphTextureCache[id];
             if (typeof glyphTextureInfo === 'undefined') {
-                var canvas = createGlyphCanvas(character, font, fillColor, outlineColor, style, verticalOrigin);
+                var canvas = createGlyphCanvas(character, font, fillColor, outlineColor, outlineWidth, style, verticalOrigin);
                 var index = -1;
                 if (canvas.width > 0 && canvas.height > 0) {
                     index = textureAtlas.addImage(canvas);
@@ -272,6 +275,7 @@ define([
         for ( var i = 0, len = glyphs.length; i < len; ++i) {
             unbindGlyph(labelCollection, glyphs[i]);
         }
+        label._labelCollection = undefined;
         destroyObject(label);
     }
 
@@ -311,6 +315,8 @@ define([
      *   position : { x : 4.0, y : 5.0, z : 6.0 },
      *   text : 'Another label'
      * });
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Labels.html">Cesium Sandcastle Labels Demo</a>
      */
     var LabelCollection = function() {
         this._textureAtlas = undefined;
@@ -360,15 +366,6 @@ define([
          * });
          */
         this.modelMatrix = Matrix4.IDENTITY.clone();
-
-        /**
-         * If true, aligns all text to a pixel in screen space,
-         * providing crisper text at the cost of jumpier motion.
-         * Defaults to true.
-         *
-         * @type Boolean
-         */
-        this.clampToPixel = true;
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -463,17 +460,14 @@ define([
      * labels.remove(l);  // Returns true
      */
     LabelCollection.prototype.remove = function(label) {
-        if (typeof label === 'undefined') {
-            return false;
+        if (typeof label !== 'undefined' && label._labelCollection === this) {
+            var index = this._labels.indexOf(label);
+            if (index !== -1) {
+                this._labels.splice(index, 1);
+                destroyLabel(this, label);
+                return true;
+            }
         }
-
-        if (label._labelCollection === this) {
-            this._labels.splice(this._labels.indexOf(label), 1);
-            destroyLabel(this, label);
-
-            return true;
-        }
-
         return false;
     };
 
@@ -596,7 +590,6 @@ define([
 
         billboardCollection.modelMatrix = this.modelMatrix;
         billboardCollection.morphTime = this.morphTime;
-        billboardCollection.clampToPixel = this.clampToPixel;
 
         var rebindAllGlyphsInAllLabels = false;
         if (++this._frameCount % 100 === 0) {

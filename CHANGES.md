@@ -3,14 +3,59 @@ Change Log
 
 Beta Releases
 -------------
+### b16 - 2013-05-01
+* Breaking changes:
+   * Removed the color, outline color, and outline width properties of polylines. Instead, use materials for polyline color and outline properties. Code that looked like:
+         
+         var polyline = polylineCollection.add({
+             positions : positions,
+             color : new Color(1.0, 1.0, 1.0, 1.0),
+             outlineColor : new Color(1.0, 0.0, 0.0, 1.0),
+             width : 1.0,
+             outlineWidth : 3.0
+         });
+         
+     should now look like:
+         
+         var outlineMaterial = Material.fromType(context, Material.PolylineOutlineType);
+         outlineMaterial.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
+         outlineMaterial.uniforms.outlineColor = new Color(1.0, 0.0, 0.0, 1.0);
+         outlineMaterial.uniforms.outlinewidth = 2.0;
+         
+         var polyline = polylineCollection.add({
+             positions : positions,
+             width : 3.0,
+             material : outlineMaterial
+         });
+* Added wide polylines that work with and without ANGLE.
+* Polylines now use materials to describe their surface appearance. See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page for more details on how to create materials.
+* Added new `PolylineOutline`, `PolylineArrow`, and `Fade` materials.
+* Added `czm_pixelSizeInMeters` automatic GLSL uniform.
+* Added `AnimationViewModel.snapToTicks`, which when set to true, causes the shuttle ring on the Animation widget to snap to the defined tick values, rather than interpolate between them.
+* Added new `Grid` material.
+* Made `EllipsoidPrimitive` double-sided.
 
 ### b15 - 2013-04-01
 
 * Breaking changes:
-   *
+   * `Billboard.computeScreenSpacePosition` now takes `Context` and `FrameState` arguments instead of a `UniformState` argument.
+   * Removed `clampToPixel` property from `BillboardCollection` and `LabelCollection`.  This options is no longer be needed due to overall LabelCollection visualization improvements.
+   * Removed `Widgets/Dojo/CesiumWidget` and replaced it with `Widgets/CesiumWidget`, which has no Dojo dependancies.    
+   * `destroyObject` no longer deletes properties from the object being destroyed.  
+   * `darker.css` files have been deleted and the `darker` theme is now the default style for widgets.  The original theme is now known as `lighter` and is in corresponding `lighter.css` files.
+   * CSS class names have been standardized to avoid potential collisions. All widgets now follow the same pattern, `cesium-<widget>-<className>`.
+   * Removed `view2D`, `view3D`, and `viewColumbus` properties from `CesiumViewerWidget`.  Use the `sceneTransitioner` property instead.
 * Added `BoundingSphere.fromCornerPoints`.
 * Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
-* Added `DynamicPath.resolution` property for setting the maximum step size, in seconds, to take when sampling a position for path visualization. 
+* Added `DynamicPath.resolution` property for setting the maximum step size, in seconds, to take when sampling a position for path visualization.
+* Added `TileCoordinatesImageryProvider` that renders imagery with tile X, Y, Level coordinates on the surface of the globe.  This is mostly useful for debugging. 
+* Added `DynamicEllipse` and `DynamicObject.ellipse` property to render CZML ellipses on the globe.
+* Added `sampleTerrain` function to sample the terrain height of a list of `Cartographic` positions.
+* Added `DynamicObjectCollection.removeObject` and handling of the new CZML `delete` property. 
+* Imagery layers with an `alpha` of exactly 0.0 are no longer rendered.  Previously these invisible layers were rendered normally, which was a waste of resources.  Unlike the `show` property, imagery tiles in a layer with an `alpha` of 0.0 are still downloaded, so the layer will become visible more quickly when its `alpha` is increased. 
+* Added `onTransitionStart` and `onTransitionComplete` events to `SceneModeTransitioner`.
+* Added `SceneModePicker`; a new widget for morphing between scene modes.
+* Added `BaseLayerPicker`; a new widget for switching among pre-configured base layer imagery providers.
 
 ### b14 - 2013-03-01
 

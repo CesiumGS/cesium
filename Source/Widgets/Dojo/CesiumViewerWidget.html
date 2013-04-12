@@ -1,31 +1,13 @@
-<div data-dojo-attach-point="cesiumNode" class="cw-node">
-    <canvas data-dojo-attach-point="canvas" class="cw-canvas"></canvas>
-    <div class="cw-viewButtons">
-        <div data-dojo-attach-point="viewHomeButton" data-dojo-type="dijit.form.Button"
-            data-dojo-props="iconClass: 'cw-viewIcon', showLabel: false, label:'Home View'"></div>
-        <div data-dojo-attach-point="view2D" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'cw-viewIcon cw-view2D', showLabel: false, label:'2D View'"></div>
-        <div data-dojo-attach-point="view3D" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'cw-viewIcon cw-view3D', showLabel: false, checked: true, label:'3D View'"></div>
-        <div data-dojo-attach-point="viewColumbus" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'cw-viewIcon cw-viewColumbus', showLabel: false, label:'Columbus View'"></div>
-        <div data-dojo-attach-point="imagery" data-dojo-type="dijit.form.DropDownButton"
-            data-dojo-props="showLabel: true, label:'Imagery'">
-            <div data-dojo-type="dijit.TooltipDialog">
-                <span data-dojo-type="dijit.form.ToggleButton" data-dojo-attach-point="imageryAerial"
-                    data-dojo-props="'class':'cw-imagerySelector', showLabel: true, checked: true, label:'Bing Maps Aerial'">
-                </span> <span data-dojo-type="dijit.form.ToggleButton" data-dojo-attach-point="imageryAerialWithLabels"
-                    data-dojo-props="'class':'cw-imagerySelector', showLabel: true, label:'Bing Maps Aerial with Labels'"></span>
-                <span data-dojo-type="dijit.form.ToggleButton" data-dojo-attach-point="imageryRoad"
-                    data-dojo-props="'class':'cw-imagerySelector', showLabel: true, label:'Bing Maps Road'"></span> <span
-                    data-dojo-type="dijit.form.ToggleButton" data-dojo-attach-point="imagerySingleTile"
-                    data-dojo-props="'class':'cw-imagerySelector', showLabel: true, label:'Single Tile'"></span>
-            </div>
-        </div>
+<div data-dojo-attach-point="cesiumNode" class="cesium-viewerWidget-node">
+  <canvas data-dojo-attach-point="canvas" class="cesium-viewerWidget-canvas"></canvas>
+  <div class="cesium-viewerWidget-viewButtons">
+    <div data-dojo-attach-point="viewHomeButton" class="cesium-viewerWidget-home" title="Home"></div>
+      <div data-dojo-attach-point="sceneModePickerContainer" class="cesium-viewerWidget-sceneModePickerContainer"></div>
+      <div data-dojo-attach-point="baseLayerPickerContainer" class="cesium-viewerWidget-baseLayerPickerContainer"></div>
     </div>
-    <div data-dojo-attach-point="timelineContainer" class="cw-timelineContainer"></div>
-    <div data-dojo-attach-point="animationContainer" class="cw-animationContainer"></div>
-    <div data-dojo-attach-point="fullscreenContainer" class="cw-fullscreenContainer"></div>
-    <a class="cw-cesiumLogo" data-dojo-attach-point="cesiumLogo" href="http://cesium.agi.com/" target="_blank"></a>
-    <div class="cw-loading" data-dojo-attach-point="loading"></div>
+  <div data-dojo-attach-point="timelineContainer" class="cesium-viewerWidget-timelineContainer"></div>
+  <div data-dojo-attach-point="animationContainer" class="cesium-viewerWidget-animationContainer"></div>
+  <div data-dojo-attach-point="fullscreenContainer" class="cesium-viewerWidget-fullscreenContainer"></div>
+  <a class="cesium-viewerWidget-cesiumLogo" data-dojo-attach-point="cesiumLogo" href="http://cesium.agi.com/" target="_blank"></a>
+  <div class="cesium-viewerWidget-loading" data-dojo-attach-point="loading"></div>
 </div>

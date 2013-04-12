@@ -41,7 +41,8 @@ define([
      * the upper three elements in the fourth column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
      * The matrix is not verified to be in the proper form.
      *
-     * @returns An array of polyline segment objects containing the Cartesian position and indices.
+     * @returns {Object} An object with a <code>positions</code> property that is an array of positions and a
+     * <code>segments</code> property.
      *
      * @see Polyline
      * @see PolylineCollection
@@ -54,6 +55,7 @@ define([
      * var segments = PolylinePipeline.wrapLongitude(positions, modelMatrix);
      */
     PolylinePipeline.wrapLongitude = function(positions, modelMatrix) {
+        var cartesians = [];
         var segments = [];
 
         if (typeof positions !== 'undefined' && positions.length > 0) {
@@ -66,11 +68,9 @@ define([
             var yzNormal = Matrix4.multiplyByVector(inverseModelMatrix, Cartesian4.UNIT_X, wrapLongitudeYZNormal);
             var yzPlane = Plane.fromPointNormal(origin, yzNormal, wrapLongitudeYZPlane);
 
-            var currentSegment = [{
-                cartesian : Cartesian3.clone(positions[0]),
-                index : 0
-            }];
-            var prev = currentSegment[0].cartesian;
+            var count = 1;
+            cartesians.push(Cartesian3.clone(positions[0]));
+            var prev = cartesians[0];
 
             var length = positions.length;
             for ( var i = 1; i < length; ++i) {
@@ -87,36 +87,28 @@ define([
                             Cartesian3.negate(offset, offset);
                         }
 
-                        currentSegment.push({
-                            cartesian : Cartesian3.add(intersection, offset),
-                            index : i
-                        });
-                        segments.push(currentSegment);
+                        cartesians.push(Cartesian3.add(intersection, offset));
+                        segments.push(count + 1);
 
                         Cartesian3.negate(offset, offset);
-
-                        currentSegment = [];
-                        currentSegment.push({
-                            cartesian : Cartesian3.add(intersection, offset),
-                            index : i
-                        });
+                        cartesians.push(Cartesian3.add(intersection, offset));
+                        count = 1;
                     }
                 }
 
-                currentSegment.push({
-                    cartesian : Cartesian3.clone(positions[i]),
-                    index : i
-                });
+                cartesians.push(Cartesian3.clone(positions[i]));
+                count++;
 
                 prev = cur;
             }
 
-            if (currentSegment.length > 1) {
-                segments.push(currentSegment);
-            }
+            segments.push(count);
         }
 
-        return segments;
+        return {
+            positions : cartesians,
+            lengths : segments
+        };
     };
 
     return PolylinePipeline;

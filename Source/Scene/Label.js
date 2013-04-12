@@ -48,6 +48,8 @@ define([
      *
      * @see LabelCollection
      * @see LabelCollection#add
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Labels.html">Cesium Sandcastle Labels Demo</a>
      */
     var Label = function(description, labelCollection) {
         description = defaultValue(description, EMPTY_OBJECT);
@@ -57,6 +59,7 @@ define([
         this._font = defaultValue(description.font, '30px sans-serif');
         this._fillColor = Color.clone(defaultValue(description.fillColor, Color.WHITE));
         this._outlineColor = Color.clone(defaultValue(description.outlineColor, Color.BLACK));
+        this._outlineWidth = defaultValue(description.outlineWidth, 1.0);
         this._style = defaultValue(description.style, LabelStyle.FILL);
         this._verticalOrigin = defaultValue(description.verticalOrigin, VerticalOrigin.BOTTOM);
         this._horizontalOrigin = defaultValue(description.horizontalOrigin, HorizontalOrigin.LEFT);
@@ -319,6 +322,43 @@ define([
         var outlineColor = this._outlineColor;
         if (!Color.equals(outlineColor, value)) {
             Color.clone(value, outlineColor);
+            rebindAllGlyphs(this);
+        }
+    };
+
+    /**
+     * Gets the outline width of this label.
+     *
+     * @memberof Label
+     *
+     * @see Label#setOutlineWidth
+     * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
+     */
+    Label.prototype.getOutlineWidth = function() {
+        return this._outlineWidth;
+    };
+
+    /**
+     * Sets the outline width of this label.
+     *
+     * @memberof Label
+     *
+     * @param {Number} value The outline width.
+     *
+     * @exception {DeveloperError} value is required.
+     *
+     * @see Label#getOutlineWidth
+     * @see Label#setFillColor
+     * @see Label#setFont
+     * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
+     */
+    Label.prototype.setOutlineWidth = function(value) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
+        if (this._outlineWidth !== value) {
+            this._outlineWidth = value;
             rebindAllGlyphs(this);
         }
     };
@@ -632,24 +672,25 @@ define([
      *
      * @memberof Label
      *
-     * @param {UniformState} uniformState The same state object passed to {@link LabelCollection#update}.
+     * @param {Context} context The context.
      * @param {FrameState} frameState The same state object passed to {@link LabelCollection#update}.
      *
      * @return {Cartesian2} The screen-space position of the label.
      *
-     * @exception {DeveloperError} uniformState is required.
+     * @exception {DeveloperError} context is required.
      * @exception {DeveloperError} frameState is required.
      *
      * @see Label#setEyeOffset
      * @see Label#setPixelOffset
      *
      * @example
-     * console.log(l.computeScreenSpacePosition(scene.getUniformState(), scene.getFrameState()).toString());
+     * console.log(l.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()).toString());
      */
-    Label.prototype.computeScreenSpacePosition = function(uniformState, frameState) {
-        if (typeof uniformState === 'undefined') {
-            throw new DeveloperError('uniformState is required.');
+    Label.prototype.computeScreenSpacePosition = function(context, frameState) {
+        if (typeof context === 'undefined') {
+            throw new DeveloperError('context is required.');
         }
+
         if (typeof frameState === 'undefined') {
             throw new DeveloperError('frameState is required.');
         }
@@ -658,7 +699,7 @@ define([
         var modelMatrix = labelCollection.modelMatrix;
         var actualPosition = Billboard._computeActualPosition(this._position, frameState, labelCollection.morphTime, modelMatrix);
 
-        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, labelCollection.clampToPixel, uniformState);
+        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, context, frameState);
     };
 
     /**

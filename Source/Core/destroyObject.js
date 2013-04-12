@@ -47,8 +47,6 @@ define([
         for ( var key in object) {
             if (typeof object[key] === 'function') {
                 object[key] = throwOnDestroyed;
-            } else {
-                delete object[key];
             }
         }
 

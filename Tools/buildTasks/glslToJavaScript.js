@@ -1,84 +1,67 @@
 /*global importClass,project,attributes,elements,java,Packages*/
-/*jshint multistr:true*/
-importClass(java.io.File); /*global File*/
-importClass(java.io.FileReader); /*global FileReader*/
-importClass(java.io.FileWriter); /*global FileWriter*/
+importClass(Packages.org.mozilla.javascript.tools.shell.Main); /*global Main*/
+Main.exec(['-e', '{}']);
+var load = Main.global.load;
+
+load(project.getProperty('tasksDirectory') + '/shared.js'); /*global forEachFile,readFileContents,writeFileContents,File,FileReader,FileWriter,FileUtils*/
+
 importClass(java.io.StringReader); /*global StringReader*/
 importClass(java.util.HashSet); /*global HashSet*/
-importClass(Packages.org.apache.tools.ant.util.FileUtils); /*global FileUtils*/
 importClass(Packages.org.apache.tools.ant.filters.StripJavaComments); /*global StripJavaComments*/
 
-var stripComments = String('true').equals(attributes.get('stripcomments'));
+var minify = /^true$/.test(attributes.get('minify'));
+
+var minifyStateFilePath = attributes.get('minifystatefile');
+writeFileContents(minifyStateFilePath, minify);
+
+var minifyStateFileLastModified = new File(minifyStateFilePath).lastModified();
 
 // collect all currently existing JS files into a set, later we will remove the ones
 // we still are using from the set, then delete any files remaining in the set.
 var leftOverJsFiles = new HashSet();
-var existingJsFilesets = elements.get('existingjsfiles');
-for ( var i = 0, len = existingJsFilesets.size(); i < len; ++i) {
-    var existingJsFileset = existingJsFilesets.get(i);
 
-    var basedir = existingJsFileset.getDir(project);
-    var existingJsFilenames = existingJsFileset.getDirectoryScanner(project).getIncludedFiles();
+forEachFile('existingjsfiles', function(relativePath, file) {
+    "use strict";
+    leftOverJsFiles.add(file.getAbsolutePath());
+});
 
-    for ( var j = 0; j < existingJsFilenames.length; ++j) {
-        leftOverJsFiles.add(new File(basedir, existingJsFilenames[j]).getAbsolutePath());
+forEachFile('glslfiles', function(relativePath, file) {
+    "use strict";
+    var glslFile = file;
+    var jsFile = new File(file.getParent(), file.getName().replace('.glsl', '.js'));
+
+    leftOverJsFiles.remove(jsFile.getAbsolutePath());
+
+    if (jsFile.exists() && jsFile.lastModified() > glslFile.lastModified() && jsFile.lastModified() > minifyStateFileLastModified) {
+        return;
     }
-}
 
-var glslFilesets = elements.get('glslfiles');
-for ( var i = 0, len = glslFilesets.size(); i < len; ++i) {
-    var glslFileset = glslFilesets.get(i);
+    var contents = readFileContents(glslFile);
+    contents = contents.replace(/\r\n/gm, '\n');
 
-    var basedir = glslFileset.getDir(project);
-    var glslFilenames = glslFileset.getDirectoryScanner(project).getIncludedFiles();
+    var copyrightComments = '';
+    var extractedCopyrightComments = contents.match(/\/\*\*(?:[^*\/]|\*(?!\/)|\n)*?@license(?:.|\n)*?\*\//gm);
+    if (extractedCopyrightComments) {
+        copyrightComments = extractedCopyrightComments.join('\n') + '\n';
+    }
 
-    for ( var j = 0; j < glslFilenames.length; ++j) {
-        var glslFilename = glslFilenames[j];
+    if (minify) {
+        contents = String(FileUtils.readFully(new StripJavaComments(new StringReader(contents))));
+        contents = contents.replace(/\s+$/gm, '').replace(/^\s+/gm, '').replace(/\n+/gm, '\n');
+        contents += '\n';
+    }
 
-        var glslFile = new File(basedir, glslFilename);
-        var jsFile = new File(basedir, glslFilename.replace('.glsl', '.js'));
-        leftOverJsFiles.remove(jsFile.getAbsolutePath());
-
-        var reader = new FileReader(glslFile);
-        var contents = String(FileUtils.readFully(reader));
-        reader.close();
-
-        contents = contents.replace(/\r\n/gm, '\n');
-
-        var copyrightComments = '';
-        var extractedCopyrightComments = contents.match(/\/\*\*(?:[^*\/]|\*(?!\/)|\n)*?@license(?:.|\n)*?\*\//gm);
-        if (extractedCopyrightComments) {
-            copyrightComments = extractedCopyrightComments.join('\n') + '\n';
-        }
-
-        if (stripComments) {
-            contents = String(FileUtils.readFully(new StripJavaComments(new StringReader(contents))));
-            contents = contents.replace(/\s+$/gm, '').replace(/^\s+/gm, '').replace(/\n+/gm, '\n');
-            contents += '\n';
-        }
-
-        contents = contents.split('"').join('\\"').replace(/\n/gm, '\\n\\\n');
-        contents = copyrightComments + '\
-// This file is automatically rebuilt by the Cesium build process.\n\
+    contents = contents.split('"').join('\\"').replace(/\n/gm, '\\n\\\n');
+    contents = copyrightComments + '\
+//This file is automatically rebuilt by the Cesium build process.\n\
 /*global define*/\n\
 define(function() {\n\
-    "use strict";\n\
-    return "' + contents + '";\n\
+"use strict";\n\
+return "' + contents + '";\n\
 });';
 
-        if (new File(jsFile).exists()) {
-            var reader = new FileReader(jsFile);
-            var oldContents = String(FileUtils.readFully(reader));
-            reader.close();
-        }
-
-        if (oldContents !== contents) {
-            var writer = new FileWriter(jsFile);
-            writer.write(contents);
-            writer.close();
-        }
-    }
-}
+    writeFileContents(jsFile.getAbsolutePath(), contents, true);
+});
 
 // delete any left over JS files from old shaders
 for ( var it = leftOverJsFiles.iterator(); it.hasNext();) {

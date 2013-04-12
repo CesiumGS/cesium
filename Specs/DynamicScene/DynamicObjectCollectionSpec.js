@@ -29,6 +29,16 @@ defineSuite([
         expect(dynamicObjectCollection.getObject('2')).toEqual(object2);
     });
 
+    it('removeObject removes the object', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        dynamicObjectCollection.getOrCreateObject('1');
+        dynamicObjectCollection.getOrCreateObject('2');
+        dynamicObjectCollection.getOrCreateObject('3');
+        expect(dynamicObjectCollection.removeObject('2')).toEqual(true);
+        expect(dynamicObjectCollection.getObject('2')).toBeUndefined();
+        expect(dynamicObjectCollection.getObjects().length).toEqual(2);
+    });
+
     it('getOrCreateObject throws if no id specified', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {

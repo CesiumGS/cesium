@@ -183,7 +183,7 @@ define([
             options = {};
         }
         if (typeof options.stencil === 'undefined') {
-            options.stencil = true;
+            options.stencil = false;
         }
         if (typeof options.alpha === 'undefined') {
             options.alpha = false;

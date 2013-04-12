@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/createGuid',
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         './CzmlDefaults'
        ], function(
         createGuid,
+        defaultValue,
         DeveloperError,
         CzmlDefaults) {
     "use strict";
@@ -15,11 +17,15 @@ define([
             objectId = createGuid();
         }
 
-        var object = dynamicObjectCollection.getOrCreateObject(objectId);
-        for ( var i = updaterFunctions.length - 1; i > -1; i--) {
-            if (updaterFunctions[i](object, packet, dynamicObjectCollection, sourceUri) && typeof updatedObjectsHash[objectId] === 'undefined') {
-                updatedObjectsHash[objectId] = true;
-                updatedObjects.push(object);
+        if (packet['delete'] === true) {
+            dynamicObjectCollection.removeObject(objectId);
+        } else {
+            var object = dynamicObjectCollection.getOrCreateObject(objectId);
+            for ( var i = updaterFunctions.length - 1; i > -1; i--) {
+                if (updaterFunctions[i](object, packet, dynamicObjectCollection, sourceUri) && typeof updatedObjectsHash[objectId] === 'undefined') {
+                    updatedObjectsHash[objectId] = true;
+                    updatedObjects.push(object);
+                }
             }
         }
     }

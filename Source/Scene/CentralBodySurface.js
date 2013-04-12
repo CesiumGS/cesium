@@ -516,7 +516,8 @@ define([
         var tileImageryCollection = tile.imagery;
         for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
-            if (tileImagery.imagery.state === ImageryState.READY) {
+            var imageryLayer = tileImagery.imagery.imageryLayer;
+            if (tileImagery.imagery.state === ImageryState.READY && imageryLayer.alpha !== 0.0) {
                 ++readyTextureCount;
             }
         }
@@ -983,7 +984,7 @@ define([
                         var imageryLayer = imagery.imageryLayer;
                         ++imageryIndex;
 
-                        if (imagery.state !== ImageryState.READY) {
+                        if (imagery.state !== ImageryState.READY || imageryLayer.alpha === 0.0) {
                             continue;
                         }
 
