@@ -20,7 +20,6 @@ define([
         '../Renderer/DrawCommand',
         './Material',
         './SceneMode',
-        '../Shaders/Noise',
         '../Shaders/EllipsoidVS',
         '../Shaders/EllipsoidFS'
     ], function(
@@ -44,10 +43,25 @@ define([
         DrawCommand,
         Material,
         SceneMode,
-        Noise,
         EllipsoidVS,
         EllipsoidFS) {
     "use strict";
+
+
+    function createPickFragmentShaderSource(fragmentShaderSource) {
+        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
+        var pickMain =
+            'uniform vec4 u_pickColor; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_old_main(); \n' +
+            '    if (gl_FragColor.a == 0.0) { \n' +
+            '        discard; \n' +
+            '    } \n' +
+            '    gl_FragColor = u_pickColor; \n' +
+            '}';
+        return renamedFS + '\n' + pickMain;
+    }
 
     var attributeIndices = {
         position : 0
@@ -286,22 +300,20 @@ define([
 
             // Recompile shader when material changes
             if (materialChanged) {
-                var fsSource =
-                    '#line 0\n' +
-                    Noise +
+                var colorFS =
                     '#line 0\n' +
                     this.material.shaderSource +
                     '#line 0\n' +
                     EllipsoidFS;
 
                 this._sp = this._sp && this._sp.release();
-                this._sp = context.getShaderCache().getShaderProgram(EllipsoidVS, fsSource, attributeIndices);
+                this._sp = context.getShaderCache().getShaderProgram(EllipsoidVS, colorFS, attributeIndices);
 
                 colorCommand.primitiveType = PrimitiveType.TRIANGLES;
                 colorCommand.vertexArray = this._va;
                 colorCommand.renderState = this._rs;
                 colorCommand.shaderProgram = this._sp;
-                colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
+                colorCommand.uniformMap = combine([this._uniforms, this.material._uniforms], false, false);
                 colorCommand.executeInClosestFrustum = true;
             }
 
@@ -320,26 +332,11 @@ define([
 
             // Recompile shader when material changes
             if (materialChanged || typeof this._pickSP === 'undefined') {
-                var fs =
-                    '#line 0\n' +
-                    Noise +
+                var pickFS = createPickFragmentShaderSource(
                     '#line 0\n' +
                     this.material.shaderSource +
                     '#line 0\n' +
-                    EllipsoidFS;
-
-                var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
-                var pickMain =
-                    'uniform vec4 u_pickColor; \n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    czm_old_main(); \n' +
-                    '    if (gl_FragColor.a == 0.0) { \n' +
-                    '        discard; \n' +
-                    '    } \n' +
-                    '    gl_FragColor = u_pickColor; \n' +
-                    '}';
-                var pickFS = renamedFS + '\n' + pickMain;
+                    EllipsoidFS);
 
                 this._pickSP = this._pickSP && this._pickSP.release();
                 this._pickSP = context.getShaderCache().getShaderProgram(EllipsoidVS, pickFS, attributeIndices);
@@ -348,7 +345,7 @@ define([
                 pickCommand.vertexArray = this._va;
                 pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
-                pickCommand.uniformMap = combine([this._uniforms, this._pickUniforms, this._material._uniforms], false, false);
+                pickCommand.uniformMap = combine([this._uniforms, this._pickUniforms, this.material._uniforms], false, false);
                 pickCommand.executeInClosestFrustum = true;
             }
 

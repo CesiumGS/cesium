@@ -18,7 +18,6 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/BlendingState',
         './Material',
-        '../Shaders/Noise',
         '../Shaders/Ray',
         '../Shaders/ConstructiveSolidGeometry',
         '../Shaders/SensorVolume',
@@ -44,7 +43,6 @@ define([
         DrawCommand,
         BlendingState,
         Material,
-        ShadersNoise,
         ShadersRay,
         ShadersConstructiveSolidGeometry,
         ShadersSensorVolume,
@@ -434,8 +432,6 @@ define([
                 this._colorCommand.uniformMap = combine([this._uniforms, material._uniforms], false, false);
 
                 var fsSource =
-                    '#line 0\n' +
-                    ShadersNoise +
                     '#line 0\n' +
                     ShadersRay +
                     '#line 0\n' +

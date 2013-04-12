@@ -16,7 +16,6 @@ define([
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
         './Material',
-        '../Shaders/Noise',
         '../Shaders/SensorVolume',
         '../Shaders/CustomSensorVolumeVS',
         '../Shaders/CustomSensorVolumeFS',
@@ -38,7 +37,6 @@ define([
         CommandLists,
         DrawCommand,
         Material,
-        ShadersNoise,
         ShadersSensorVolume,
         CustomSensorVolumeVS,
         CustomSensorVolumeFS,
@@ -369,8 +367,6 @@ define([
                 this._material = this.material;
 
                 var fsSource =
-                    '#line 0\n' +
-                    ShadersNoise +
                     '#line 0\n' +
                     ShadersSensorVolume +
                     '#line 0\n' +

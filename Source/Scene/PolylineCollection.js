@@ -19,7 +19,6 @@ define([
         './Material',
         './SceneMode',
         './Polyline',
-        '../Shaders/Noise',
         '../Shaders/PolylineVS',
         '../Shaders/PolylineFS',
         '../Shaders/PolylineFSPick'
@@ -43,7 +42,6 @@ define([
         Material,
         SceneMode,
         Polyline,
-        Noise,
         PolylineVS,
         PolylineFS,
         PolylineFSPick) {
@@ -1038,8 +1036,6 @@ define([
         }
 
         var fsSource =
-            '#line 0\n' +
-            Noise +
             '#line 0\n' +
             this.material.shaderSource +
             '#line 0\n' +

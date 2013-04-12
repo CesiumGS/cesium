@@ -30,11 +30,8 @@ define([
         '../Renderer/VertexLayout',
         './Material',
         './SceneMode',
-        '../Shaders/Noise',
         '../Shaders/PolygonVS',
-        '../Shaders/PolygonFS',
-        '../Shaders/PolygonVSPick',
-        '../Shaders/PolygonFSPick'
+        '../Shaders/PolygonFS'
     ], function(
         DeveloperError,
         defaultValue,
@@ -66,12 +63,30 @@ define([
         VertexLayout,
         Material,
         SceneMode,
-        Noise,
         PolygonVS,
-        PolygonFS,
-        PolygonVSPick,
-        PolygonFSPick) {
+        PolygonFS) {
     "use strict";
+
+
+
+
+    function createPickFragmentShaderSource(fragmentShaderSource) {
+        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
+        var pickMain =
+            'uniform vec4 u_pickColor; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_old_main(); \n' +
+            '    if (gl_FragColor.a == 0.0) { \n' +
+            '        discard; \n' +
+            '    } \n' +
+            '    gl_FragColor = u_pickColor; \n' +
+            '}';
+        return renamedFS + '\n' + pickMain;
+    }
+
+
+
 
     var attributeIndices = {
         position3DHigh : 0,
@@ -279,6 +294,13 @@ define([
                 return (that._mode !== SceneMode.SCENE2D) ? that.height : 0.0;
             }
         };
+
+        this._pickColorUniform = {
+            u_pickColor : function() {
+                return that._pickId.normalizedRgba;
+            }
+        };
+
         this._pickUniforms = undefined;
         this._drawUniforms = undefined;
     };
@@ -738,6 +760,8 @@ define([
         var commands;
         var command;
 
+        var materialChanged = this._material !== this.material;
+
         this._commandLists.removeAll();
         if (pass.color) {
             if (typeof this._rs === 'undefined') {
@@ -751,25 +775,20 @@ define([
                 });
             }
 
-            var materialChanged = typeof this._material === 'undefined' ||
-                this._material !== this.material;
-
             // Recompile shader when material changes
             if (materialChanged) {
                 this._material = this.material;
 
                 var fsSource =
                     '#line 0\n' +
-                    Noise +
-                    '#line 0\n' +
-                    this._material.shaderSource +
+                    this.material.shaderSource +
                     '#line 0\n' +
                     PolygonFS;
 
                 this._sp = this._sp && this._sp.release();
                 this._sp = context.getShaderCache().getShaderProgram(PolygonVS, fsSource, attributeIndices);
 
-                this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
+                this._drawUniforms = combine([this._uniforms, this.material._uniforms], false, false);
             }
 
             commands = this._commandLists.colorList;
@@ -792,8 +811,10 @@ define([
 
         if (pass.pick) {
             if (typeof this._pickId === 'undefined') {
-                this._spPick = context.getShaderCache().getShaderProgram(PolygonVSPick, PolygonFSPick, attributeIndices);
+                this._pickId = context.createPickId(this);
+            }
 
+            if (typeof this._rsPick === 'undefined') {
                 this._rsPick = context.createRenderState({
                     // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
                     cull : {
@@ -801,21 +822,19 @@ define([
                         face : CullFace.BACK
                     }
                 });
+            }
 
-                this._pickId = context.createPickId(this);
+            // Recompile shader when material changes
+            if (materialChanged || typeof this._spPick === 'undefined') {
+                var pickFS = createPickFragmentShaderSource(
+                    '#line 0\n' +
+                    this.material.shaderSource +
+                    '#line 0\n' +
+                    PolygonFS);
 
-                var that = this;
-                this._pickUniforms = {
-                    u_pickColor : function() {
-                        return that._pickId.normalizedRgba;
-                    },
-                    u_morphTime : function() {
-                        return that.morphTime;
-                    },
-                    u_height : function() {
-                        return that.height;
-                    }
-                };
+                this._spPick = this._spPick && this._spPick.release();
+                this._spPick = context.getShaderCache().getShaderProgram(PolygonVS, pickFS, attributeIndices);
+                this._pickUniforms = combine([this._uniforms, this._pickColorUniform, this.material._uniforms], false, false);
             }
 
             commands = this._commandLists.pickList;

@@ -13,7 +13,6 @@ define([
         '../Renderer/BlendingState',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
-        '../Shaders/Noise',
         '../Shaders/ViewportQuadVS',
         '../Shaders/ViewportQuadFS'
     ], function(
@@ -30,7 +29,6 @@ define([
         BlendingState,
         CommandLists,
         DrawCommand,
-        Noise,
         ViewportQuadVS,
         ViewportQuadFS) {
     "use strict";
@@ -193,8 +191,6 @@ define([
                 this._material = this.material;
 
                 var fsSource =
-                    '#line 0\n' +
-                    Noise +
                     '#line 0\n' +
                     this._material.shaderSource +
                     '#line 0\n' +
