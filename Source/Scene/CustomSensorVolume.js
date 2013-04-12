@@ -15,6 +15,7 @@ define([
         '../Renderer/BlendingState',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
+        '../Renderer/createPickFragmentShaderSource',
         './Material',
         '../Shaders/SensorVolume',
         '../Shaders/CustomSensorVolumeVS',
@@ -36,6 +37,7 @@ define([
         BlendingState,
         CommandLists,
         DrawCommand,
+        createPickFragmentShaderSource,
         Material,
         ShadersSensorVolume,
         CustomSensorVolumeVS,
@@ -358,14 +360,14 @@ define([
         this._colorCommand.modelMatrix = this._pickCommand.modelMatrix = this.modelMatrix;
         this._commandLists.removeAll();
 
+        var materialChanged = this._material !== this.material;
+        this._material = this.material;
+
         if (pass.color) {
-            var materialChanged = typeof this._material === 'undefined' ||
-                this._material !== this.material;
+            var colorCommand = this._colorCommand;
 
             // Recompile shader when material changes
             if (materialChanged) {
-                this._material = this.material;
-
                 var fsSource =
                     '#line 0\n' +
                     ShadersSensorVolume +
@@ -374,37 +376,43 @@ define([
                     '#line 0\n' +
                     CustomSensorVolumeFS;
 
-                this._colorCommand.shaderProgram = this._colorCommand.shaderProgram && this._colorCommand.shaderProgram.release();
-                this._colorCommand.shaderProgram = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);
-
-                this._colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
+                colorCommand.shaderProgram = colorCommand.shaderProgram && colorCommand.shaderProgram.release();
+                colorCommand.shaderProgram = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);
+                colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
             }
 
-            this._commandLists.colorList.push(this._colorCommand);
+            this._commandLists.colorList.push(colorCommand);
         }
 
         if (pass.pick) {
+            var pickCommand = this._pickCommand;
+
             if (typeof this._pickId === 'undefined') {
-                // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
-                var fsPickSource =
-                    '#define RENDER_FOR_PICK 1\n' +
+                this._pickId = context.createPickId(this._pickIdThis);
+            }
+
+            // Recompile shader when material changes
+            if (materialChanged || typeof this._pickCommand.shaderProgram === 'undefined') {
+                var pickFS = createPickFragmentShaderSource(
                     '#line 0\n' +
                     ShadersSensorVolume +
                     '#line 0\n' +
-                    CustomSensorVolumeFS;
+                    this._material.shaderSource +
+                    '#line 0\n' +
+                    CustomSensorVolumeFS);
 
-                this._pickCommand.shaderProgram = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsPickSource, attributeIndices);
-                this._pickId = context.createPickId(this._pickIdThis);
+                pickCommand.shaderProgram = pickCommand.shaderProgram && pickCommand.shaderProgram.release();
+                pickCommand.shaderProgram = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, pickFS, attributeIndices);
 
                 var that = this;
-                this._pickCommand.uniformMap = combine([this._uniforms, {
-                    u_pickColor : function() {
+                pickCommand.uniformMap = combine([this._uniforms, this._material._uniforms, {
+                    czm_pickColor : function() {
                         return that._pickId.normalizedRgba;
                     }
                 }], false, false);
             }
 
-            this._commandLists.pickList.push(this._pickCommand);
+            this._commandLists.pickList.push(pickCommand);
         }
 
         if (!this._commandLists.empty()) {
