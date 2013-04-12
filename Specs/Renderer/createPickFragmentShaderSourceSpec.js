@@ -8,7 +8,14 @@ defineSuite([
 
     it('modifies a fragment shader', function() {
         var pickFS = createPickFragmentShaderSource('void main() { gl_FragColor = vec4(1.0); }');
-        expect(pickFS).toContain('gl_FragColor = u_czm_pickColor;');
+        expect(pickFS).toContain('uniform vec4 czm_pickColor;');
+        expect(pickFS).toContain('gl_FragColor = czm_pickColor;');
+    });
+
+    it('modifies a fragment shader with a varying', function() {
+        var pickFS = createPickFragmentShaderSource('void main() { gl_FragColor = vec4(1.0); }', false);
+        expect(pickFS).toContain('varying vec4 czm_pickColor;');
+        expect(pickFS).toContain('gl_FragColor = czm_pickColor;');
     });
 
     it('throws without fragmentShaderSource', function() {

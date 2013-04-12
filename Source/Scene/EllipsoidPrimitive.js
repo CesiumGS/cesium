@@ -191,7 +191,7 @@ define([
         };
 
         this._pickUniforms = {
-            u_czm_pickColor : function() {
+            czm_pickColor : function() {
                 return that._pickId.normalizedRgba;
             }
         };

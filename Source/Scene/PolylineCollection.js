@@ -16,12 +16,12 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
+        '../Renderer/createPickFragmentShaderSource',
         './Material',
         './SceneMode',
         './Polyline',
         '../Shaders/PolylineVS',
-        '../Shaders/PolylineFS',
-        '../Shaders/PolylineFSPick'
+        '../Shaders/PolylineFS'
     ], function(
         DeveloperError,
         combine,
@@ -39,12 +39,12 @@ define([
         BufferUsage,
         CommandLists,
         DrawCommand,
+        createPickFragmentShaderSource,
         Material,
         SceneMode,
         Polyline,
         PolylineVS,
-        PolylineFS,
-        PolylineFSPick) {
+        PolylineFS) {
     "use strict";
 
     var SHOW_INDEX = Polyline.SHOW_INDEX;
@@ -144,7 +144,6 @@ define([
         this.modelMatrix = Matrix4.IDENTITY.clone();
         this._modelMatrix = Matrix4.IDENTITY.clone();
         this._rs = undefined;
-        this._spPick = undefined;
         this._rsPick = undefined;
 
         this._boundingVolume = undefined;
@@ -257,6 +256,7 @@ define([
             if (typeof polyline._bucket !== 'undefined') {
                 var bucket = polyline._bucket;
                 bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
+                bucket.pickShaderProgram = bucket.pickShaderProgram && bucket.pickShaderProgram.release();
             }
             polyline._destroy();
             return true;
@@ -477,11 +477,6 @@ define([
         }
 
         if (pass.pick) {
-            if (typeof this._spPick === 'undefined') {
-                this._spPick = context.getShaderCache().getShaderProgram(
-                        '#define RENDER_FOR_PICK\n\n' + PolylineVS, PolylineFSPick, attributeIndices);
-            }
-
             if (typeof this._rsPick === 'undefined') {
                 this._rsPick = context.createRenderState();
             }
@@ -492,7 +487,7 @@ define([
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            createCommandLists(pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rsPick, this._uniforms, false, this._spPick);
+            createCommandLists(pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rsPick, this._uniforms, false);
         }
 
         if (!this._commandLists.empty()) {
@@ -500,7 +495,7 @@ define([
         }
     };
 
-    function createCommandLists(commands, boundingVolume, modelMatrix, vertexArrays, renderState, uniforms, combineUniforms, shaderProgram) {
+    function createCommandLists(commands, boundingVolume, modelMatrix, vertexArrays, renderState, uniforms, colorPass) {
         var length = vertexArrays.length;
 
         var commandsLength = commands.length;
@@ -515,7 +510,7 @@ define([
                 var bucketLocator = buckets[n];
 
                 var offset = bucketLocator.offset;
-                var sp = (typeof shaderProgram !== 'undefined') ? shaderProgram : bucketLocator.bucket.shaderProgram;
+                var sp = colorPass ? bucketLocator.bucket.shaderProgram : bucketLocator.bucket.pickShaderProgram;
 
                 var polylines = bucketLocator.bucket.polylines;
                 var polylineLength = polylines.length;
@@ -545,7 +540,7 @@ define([
                             command.vertexArray = va.va;
                             command.renderState = renderState;
 
-                            command.uniformMap = combineUniforms ? combine([uniforms, currentMaterial._uniforms], false, false) : uniforms;
+                            command.uniformMap = combine([uniforms, currentMaterial._uniforms], false, false);
                             command.count = count;
                             command.offset = offset;
 
@@ -584,7 +579,7 @@ define([
                     command.vertexArray = va.va;
                     command.renderState = renderState;
 
-                    command.uniformMap = combineUniforms ? combine([uniforms, currentMaterial._uniforms], false, false) : uniforms;
+                    command.uniformMap = combine([uniforms, currentMaterial._uniforms], false, false);
                     command.count = count;
                     command.offset = offset;
                 }
@@ -632,7 +627,6 @@ define([
      * polylines = polylines && polylines.destroy();
      */
     PolylineCollection.prototype.destroy = function() {
-        this._spPick = this._spPick && this._spPick.release();
         destroyVertexArrays(this);
         releaseShaders(this);
         destroyPolylines(this);
@@ -1016,6 +1010,7 @@ define([
         this.lengthOfPositions = 0;
         this.material = material;
         this.shaderProgram = undefined;
+        this.pickShaderProgram = undefined;
         this.mode = mode;
         this.projection = projection;
         this.ellipsoid = projection.getEllipsoid();
@@ -1042,6 +1037,7 @@ define([
             PolylineFS;
 
         this.shaderProgram = context.getShaderCache().getShaderProgram(PolylineVS, fsSource, attributeIndices);
+        this.pickShaderProgram = context.getShaderCache().getShaderProgram(PolylineVS, createPickFragmentShaderSource(fsSource, false), attributeIndices);
     };
 
     function intersectsIDL(polyline) {

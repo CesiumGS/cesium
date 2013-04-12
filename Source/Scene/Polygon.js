@@ -277,7 +277,7 @@ define([
         };
 
         this._pickColorUniform = {
-            u_czm_pickColor : function() {
+            czm_pickColor : function() {
                 return that._pickId.normalizedRgba;
             }
         };
