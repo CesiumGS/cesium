@@ -689,8 +689,8 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
         setTimeFromBuffer : function() {
             var clock = this.clock;
 
-            var availability = this.czmlProcessor.computeAvailability();
             var document = this.dynamicObjectCollection.getObject('document');
+            var availability = this.czmlProcessor.computeAvailability();
             var adjustShuttleRing = false;
 
             if (typeof document !== 'undefined' && typeof document.clock !== 'undefined') {
@@ -971,9 +971,9 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             this.animation = new Animation(this.animationContainer, animationViewModel);
 
             var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
-            var clock = this.clock;
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
-            this.czmlProcessor = new CzmlProcessor(scene);
+            this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
+			this.czmlProcessor = new CzmlProcessor(scene);
 
             this.sceneModePicker = new SceneModePicker(this.sceneModePickerContainer, transitioner);
 
