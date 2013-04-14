@@ -47,12 +47,14 @@ define([
 
             var blob;
             if (typeof Blob !== 'undefined') {
-                blob = new Blob([script]);
+                blob = new Blob([script], {
+                    type : 'application/javascript'
+                });
             } else {
                 var BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder;
                 var blobBuilder = new BlobBuilder();
                 blobBuilder.append(script);
-                blob = blobBuilder.getBlob();
+                blob = blobBuilder.getBlob('application/javascript');
             }
 
             var URL = window.URL || window.webkitURL;
