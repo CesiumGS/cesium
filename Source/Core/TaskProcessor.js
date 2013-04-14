@@ -46,11 +46,11 @@ define([
             var script = 'importScripts("' + _bootstrapperUrl + '");';
 
             var blob;
-            if (typeof Blob === 'function') {
+            try {
                 blob = new Blob([script], {
                     type : 'application/javascript'
                 });
-            } else {
+            } catch (e) {
                 var BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder;
                 var blobBuilder = new BlobBuilder();
                 blobBuilder.append(script);
