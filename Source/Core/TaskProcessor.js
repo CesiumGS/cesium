@@ -46,7 +46,7 @@ define([
             var script = 'importScripts("' + _bootstrapperUrl + '");';
 
             var blob;
-            if (typeof Blob !== 'undefined') {
+            if (typeof Blob === 'function') {
                 blob = new Blob([script], {
                     type : 'application/javascript'
                 });
