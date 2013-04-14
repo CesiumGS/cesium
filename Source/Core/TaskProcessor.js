@@ -76,7 +76,9 @@ define([
         };
 
         if (typeof require.toUrl !== 'undefined') {
-            bootstrapMessage.loaderConfig.baseUrl = '..';
+            var resolvedBootstrapperUrl = new Uri(buildModuleUrl('Workers/cesiumWorkerBootstrapper.js')).resolve(new Uri(document.location.href));
+            var baseUrl = new Uri('..').resolve(resolvedBootstrapperUrl).toString();
+            bootstrapMessage.loaderConfig.baseUrl = baseUrl;
         } else {
             var workersUrl = new Uri(buildModuleUrl('Workers')).resolve(new Uri(document.location.href)).toString();
             bootstrapMessage.loaderConfig.paths = {
