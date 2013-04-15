@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/createPickFragmentShaderSource',
+         'Renderer/createPickFragmentShaderSource'
      ], function(
          createPickFragmentShaderSource) {
     "use strict";

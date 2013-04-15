@@ -76,7 +76,7 @@ define([
         VertexArray,
         VertexLayout) {
     "use strict";
-    /*global Uint8Array*/
+    /*global ArrayBuffer,Uint8Array,Uint32Array*/
 
     function _errorToString(gl, error) {
         var message = 'OpenGL Error:  ';
@@ -2736,10 +2736,10 @@ define([
     };
 
     var pickObjects = {};
-    var nextPickColor = new function() {
-        this.buffer = (typeof ArrayBuffer !== 'undefined') ? new ArrayBuffer(4) : undefined;
-        this.uint32 = (typeof Uint32Array !== 'undefined') ? new Uint32Array(this.buffer) : undefined;
-        this.unit8 = (typeof Uint8Array !== 'undefined') ? new Uint8Array(this.buffer) : undefined;
+    var nextPickColorBuffer = (typeof ArrayBuffer !== 'undefined') ? new ArrayBuffer(4) : undefined;
+    var nextPickColor = {
+        uint32 : (typeof Uint32Array !== 'undefined') ? new Uint32Array(nextPickColorBuffer) : undefined,
+        uint8 : (typeof Uint8Array !== 'undefined') ? new Uint8Array(nextPickColorBuffer) : undefined
     };
 
     /**
@@ -2754,20 +2754,33 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Creates a unique ID associated with the input object for use with color-buffer picking.
+     * The ID has an RGBA value unique to this context.
      *
      * @memberof Context
      *
+     * @param {Object} object The object to assoicate with the pick ID.
+     *
+     * @returns {Object} The newly created pick ID with <code>unnormalizedRgb</code> and <code>normalizedRgba</code> properties.
+     *
+     * @exception {RuntimeError} Out of unique Pick IDs.
+     *
      * @see Context#getObjectByPickId
+     *
+     * @example
+     * this._pickId = context.createPickId(this);
      */
     Context.prototype.createPickId = function(object) {
+        if (++nextPickColor.uint32[0] === 0) {
+            // In case of overflow
+            throw new RuntimeError('Out of unique Pick IDs.');
+        }
 
-// TODO: repeat
-        ++nextPickColor.uint32[0];
+        var c = nextPickColor.uint8;
 
         var pickId = {
-            unnormalizedRgb : new Color(nextPickColor.unit8[3], nextPickColor.unit8[2], nextPickColor.unit8[1], nextPickColor.unit8[0]),
-            normalizedRgba : Color.fromBytes(nextPickColor.unit8[3], nextPickColor.unit8[2], nextPickColor.unit8[1], nextPickColor.unit8[0]),
+            unnormalizedRgb : new Color(c[0], c[1], c[2], c[3]),
+            normalizedRgba : Color.fromBytes(c[0], c[1], c[2], c[3]),
             destroy : function() {
                 delete pickObjects[JSON.stringify(pickId.unnormalizedRgb)];
                 return undefined;

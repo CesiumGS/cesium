@@ -91,7 +91,7 @@ defineSuite([
         };
 
         var cache = new ShaderCache(context);
-        var sp = undefined;
+        var sp;
 
         sp = cache.replaceShaderProgram(sp, vs, fs, attributeLocations);
         var sp2 = cache.replaceShaderProgram(sp, vs, fs2, attributeLocations);
