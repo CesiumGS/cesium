@@ -67,6 +67,8 @@ define([
      * drawn on the ellipsoid.
      *
      * @exports Shapes
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Circles%20and%20Ellipses.html">Cesium Sandcastle Circles and Ellipses Demo</a>
      */
     var Shapes = {
         /**

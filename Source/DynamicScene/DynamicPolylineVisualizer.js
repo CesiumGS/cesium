@@ -4,12 +4,14 @@ define([
         '../Core/destroyObject',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Scene/Material',
         '../Scene/PolylineCollection'
        ], function(
          DeveloperError,
          destroyObject,
          Cartesian3,
          Color,
+         Material,
          PolylineCollection) {
     "use strict";
 
@@ -195,6 +197,7 @@ define([
             return;
         }
 
+        var uniforms;
         if (typeof polylineVisualizerIndex === 'undefined') {
             var unusedIndexes = this._unusedIndexes;
             var length = unusedIndexes.length;
@@ -209,12 +212,19 @@ define([
             polyline.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            polyline.setColor(Color.WHITE);
-            polyline.setOutlineColor(Color.BLACK);
-            polyline.setOutlineWidth(1);
             polyline.setWidth(1);
+            var material = polyline.getMaterial();
+            if (typeof material === 'undefined' || (material.type !== Material.PolylineOutlineType)) {
+                material = Material.fromType(this._scene.getContext(), Material.PolylineOutlineType);
+                polyline.setMaterial(material);
+            }
+            uniforms = material.uniforms;
+            Color.clone(Color.WHITE, uniforms.color);
+            Color.clone(Color.BLACK, uniforms.outlineColor);
+            uniforms.outlineWidth = 0;
         } else {
             polyline = this._polylineCollection.get(polylineVisualizerIndex);
+            uniforms = polyline.getMaterial().uniforms;
         }
 
         polyline.setShow(true);
@@ -233,20 +243,17 @@ define([
 
         var property = dynamicPolyline.color;
         if (typeof property !== 'undefined') {
-            polyline.setColor(property.getValue(time, polyline.getColor()));
+            uniforms.color = property.getValue(time, uniforms.color);
         }
 
         property = dynamicPolyline.outlineColor;
         if (typeof property !== 'undefined') {
-            polyline.setOutlineColor(property.getValue(time, polyline.getOutlineColor()));
+            uniforms.outlineColor = property.getValue(time, uniforms.outlineColor);
         }
 
         property = dynamicPolyline.outlineWidth;
         if (typeof property !== 'undefined') {
-            var outlineWidth = property.getValue(time);
-            if (typeof outlineWidth !== 'undefined') {
-                polyline.setOutlineWidth(outlineWidth);
-            }
+            uniforms.outlineWidth = property.getValue(time, uniforms.outlineWidth);
         }
 
         property = dynamicPolyline.width;

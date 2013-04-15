@@ -7,19 +7,19 @@
 exports.defineTags = function(dictionary) {
 
 	dictionary.defineTag('enumeration', {
-        onTagged: function(doclet, tag) {
-            doclet.addTag('kind', 'enumeration');
-            doclet.filename = doclet.name;
-        }
-    });
+		onTagged: function(doclet, tag) {
+			doclet.addTag('kind', 'enumeration');
+			doclet.filename = doclet.name;
+		}
+	});
 	
 	dictionary.defineTag('performance', {
 		mustHaveValue: true,
-        onTagged: function(doclet, tag) {
-            if (!doclet.performance) { doclet.performance = []; }
-            doclet.performance.push(tag.value);
-        }
-    });
+		onTagged: function(doclet, tag) {
+			if (!doclet.performance) { doclet.performance = []; }
+			doclet.performance.push(tag.value);
+		}
+	});
 	
 	dictionary.defineTag('glsl', {
 		onTagged: function(doclet, tag) {
@@ -27,4 +27,12 @@ exports.defineTags = function(dictionary) {
 			doclet.filename = doclet.name;
 		}
 	}).synonym('glslStruct').synonym('glslUniform').synonym('glslConstant').synonym('glslFunction');
+	
+	dictionary.defineTag('demo', {
+		mustHaveValue: true,
+		onTagged: function(doclet, tag) {
+			if (!doclet.demo) { doclet.demo = []; }
+			doclet.demo.push(tag.value);
+		}
+	});
 };

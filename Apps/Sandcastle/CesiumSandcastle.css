@@ -40,14 +40,7 @@ html, body {
  }
 
 .cesiumTitle {
-    display: block;
-    position: absolute;
-    bottom: 0;
-    right: 5px;
-    color: #DDD;
-    font-style: italic;
-    font-size: 24px;
-    z-index: -1;
+    float: right;
 }
 
 #codeContainer {

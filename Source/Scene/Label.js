@@ -48,6 +48,8 @@ define([
      *
      * @see LabelCollection
      * @see LabelCollection#add
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Labels.html">Cesium Sandcastle Labels Demo</a>
      */
     var Label = function(description, labelCollection) {
         description = defaultValue(description, EMPTY_OBJECT);

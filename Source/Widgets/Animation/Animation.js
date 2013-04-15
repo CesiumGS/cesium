@@ -589,12 +589,19 @@ define(['../../Core/destroyObject',
         //bind to SVG, so we we figure that out we can modify our SVG
         //to include the binding information directly.
 
+        var timeNode = this._knobTime.childNodes[0];
+        var dateNode = this._knobDate.childNodes[0];
+        var statusNode = this._knobStatus.childNodes[0];
+        var isPaused;
         this._subscriptions = [//
         subscribeAndEvaluate(viewModel.pauseViewModel.toggled, function(value) {
-            if (value) {
-                that._shuttleRingPointer.setAttribute('class', 'cesium-animation-shuttleRingPausePointer');
-            } else {
-                that._shuttleRingPointer.setAttribute('class', 'cesium-animation-shuttleRingPointer');
+            if (isPaused !== value) {
+                isPaused = value;
+                if (isPaused) {
+                    that._shuttleRingPointer.setAttribute('class', 'cesium-animation-shuttleRingPausePointer');
+                } else {
+                    that._shuttleRingPointer.setAttribute('class', 'cesium-animation-shuttleRingPointer');
+                }
             }
         }),
 
@@ -603,15 +610,21 @@ define(['../../Core/destroyObject',
         }),
 
         subscribeAndEvaluate(viewModel.dateLabel, function(value) {
-            that._knobDate.childNodes[0].textContent = value;
+            if (dateNode.textContent !== value) {
+                dateNode.textContent = value;
+            }
         }),
 
         subscribeAndEvaluate(viewModel.timeLabel, function(value) {
-            that._knobTime.childNodes[0].textContent = value;
+            if (timeNode.textContent !== value) {
+                timeNode.textContent = value;
+            }
         }),
 
         subscribeAndEvaluate(viewModel.multiplierLabel, function(value) {
-            that._knobStatus.childNodes[0].textContent = value;
+            if (statusNode.textContent !== value) {
+                statusNode.textContent = value;
+            }
         })];
 
         this.applyThemeChanges();
