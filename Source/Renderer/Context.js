@@ -2191,13 +2191,13 @@ define([
      *
      * @param {ClearCommand} [clearCommand] The command with which to clear.  If this parameter is undefined
      *        or its clearState property is undefined, a default clear state is used.
-     * @param {Framebuffer} [framebuffer] The framebuffer to clear if one is not specified by the command.
+     * @param {PassState} [passState] DOC_TBA
      *
      * @memberof Context
      *
      * @see Context#createClearState
      */
-    Context.prototype.clear = function(clearCommand, framebuffer) {
+    Context.prototype.clear = function(clearCommand, passState) {
         var clearState;
         if (typeof clearCommand !== 'undefined' && typeof clearCommand.clearState !== 'undefined') {
             clearState = clearCommand.clearState;
@@ -2243,16 +2243,16 @@ define([
         this._applyStencilMask(clearState.stencilMask);
         this._applyDither(clearState.dither);
 
-        framebuffer = defaultValue(clearState.framebuffer, framebuffer);
+        var framebuffer = defaultValue(clearState.framebuffer, (typeof passState !== 'undefined') ? passState.framebuffer : undefined);
 
-        if (framebuffer) {
+        if (typeof framebuffer !== 'undefined') {
             framebuffer._bind();
             this._validateFramebuffer(framebuffer);
         }
 
         gl.clear(bitmask);
 
-        if (framebuffer) {
+        if (typeof framebuffer !== 'undefined') {
             framebuffer._unBind();
         }
     };
@@ -2263,7 +2263,7 @@ define([
      * @memberof Context
      *
      * @param {DrawCommand} drawCommand The command with which to draw.
-     * @param {Framebuffer} [framebuffer] The framebuffer to which to draw if one is not specified by the command.
+     * @param {PassState} [passState] DOC_TBA
      *
      * @memberof Context
      *
@@ -2301,8 +2301,8 @@ define([
      * @see Context#createFramebuffer
      * @see Context#createRenderState
      */
-    Context.prototype.draw = function(drawCommand, framebuffer) {
-        this.beginDraw(drawCommand, framebuffer);
+    Context.prototype.draw = function(drawCommand, passState) {
+        this.beginDraw(drawCommand, passState);
         this.continueDraw(drawCommand);
         this.endDraw();
     };
@@ -2312,7 +2312,7 @@ define([
      *
      * @memberof Context
      */
-    Context.prototype.beginDraw = function(command, framebuffer) {
+    Context.prototype.beginDraw = function(command, passState) {
         if (typeof command === 'undefined') {
             throw new DeveloperError('command is required.');
         }
@@ -2321,11 +2321,12 @@ define([
             throw new DeveloperError('command.shaderProgram is required.');
         }
 
-        framebuffer = defaultValue(command.framebuffer, framebuffer);
+        // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
+        var framebuffer = defaultValue(command.framebuffer, (typeof passState !== 'undefined') ? passState.framebuffer : undefined);
         var sp = command.shaderProgram;
         var rs = command.renderState || this.createRenderState();
 
-        if (framebuffer && rs.depthTest) {
+        if ((typeof framebuffer !== 'undefined') && rs.depthTest) {
             if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
                 throw new DeveloperError('The depth test can not be enabled (command.renderState.depthTest.enabled) because the framebuffer (command.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
@@ -2334,7 +2335,7 @@ define([
         ///////////////////////////////////////////////////////////////////////
 
         this._applyRenderState(rs);
-        if (framebuffer) {
+        if (typeof framebuffer !== 'undefined') {
             framebuffer._bind();
             this._validateFramebuffer(framebuffer);
         }
@@ -2408,7 +2409,7 @@ define([
      * @memberof Context
      */
     Context.prototype.endDraw = function() {
-        if (this._currentFramebuffer) {
+        if (typeof this._currentFramebuffer !== 'undefined') {
             this._currentFramebuffer._unBind();
             this._currentFramebuffer = undefined;
         }

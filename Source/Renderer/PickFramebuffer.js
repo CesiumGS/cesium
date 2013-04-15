@@ -5,6 +5,7 @@ define([
         '../Core/Color',
         '../Core/DeveloperError',
         './ClearCommand',
+        './PassState',
         './RenderbufferFormat'
     ], function(
         defaultValue,
@@ -12,6 +13,7 @@ define([
         Color,
         DeveloperError,
         ClearCommand,
+        PassState,
         RenderbufferFormat) {
     "use strict";
 
@@ -64,7 +66,8 @@ define([
             });
         }
 
-        this._clearCommand.execute(context, this._fb);
+// TODO: do not allocate here
+        this._clearCommand.execute(context, new PassState(this._fb));
 
         return this._fb;
     };

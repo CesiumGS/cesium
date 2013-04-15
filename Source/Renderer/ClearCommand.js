@@ -1,5 +1,5 @@
 /*global define*/
-define(['../Core/DeveloperError'], function(DeveloperError) {
+define(function() {
     "use strict";
 
     /**
@@ -30,10 +30,10 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
      * @memberof ClearCommand
      *
      * @param {Context} context The renderer context in which to clear.
-     * @param {Framebuffer} [framebuffer] The framebuffer to clear if one is not specified by the command.
+     * @param {PassState} [passState] DOC_TBA.
      */
-    ClearCommand.prototype.execute = function(context, framebuffer) {
-        context.clear(this, framebuffer);
+    ClearCommand.prototype.execute = function(context, passState) {
+        context.clear(this, passState);
     };
 
     return ClearCommand;

@@ -86,10 +86,10 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
      * @memberof DrawCommand
      *
      * @param {Context} context The renderer context in which to draw.
-     * @param {Framebuffer} [framebuffer] The framebuffer to which to draw if one is not specified by the command.
+     * @param {PassState} [passState] TBA.
      */
-    DrawCommand.prototype.execute = function(context, framebuffer) {
-        context.draw(this, framebuffer);
+    DrawCommand.prototype.execute = function(context, passState) {
+        context.draw(this, passState);
     };
 
     return DrawCommand;
