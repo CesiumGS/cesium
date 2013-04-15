@@ -743,7 +743,7 @@ require({
 
         var html = getDemoHtml();
         html = html.replace('<title>', '<meta name="description" content="' + description + '">\n    <title>');
-        html = html.replace('<title>', '<meta name="label" content="' + label + '">\n    <title>');
+        html = html.replace('<title>', '<meta name="cesium-sandcastle-labels" content="' + label + '">\n    <title>');
 
         var octetBlob = new Blob([html], {
             'type' : 'application/octet-stream',
@@ -858,9 +858,9 @@ require({
             }
             
             demo.label = '';
-            pos = value.indexOf('<meta name="label" content="');
+            pos = value.indexOf('<meta name="cesium-sandcastle-labels" content="');
             if (pos > 0) {
-                pos += 28;
+                pos += 47;
                 pos2 = value.indexOf('">', pos);
                 if (pos2 > pos) {
                     demo.label = value.substring(pos, pos2);
