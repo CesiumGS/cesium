@@ -669,25 +669,25 @@ require({
     registry.byId('search').on('change', function() {
         searchTerm = this.get('value');
         searchRegExp = new RegExp(searchTerm, 'i');
-        var numDemosShown = 0;
-        for ( var i = 0; i < gallery_demos.length; i++) {
-            var demo = gallery_demos[i];
-            var demoName = demo.name;
-            if (searchRegExp.test(demoName) || searchRegExp.test(demo.code)) {
-                document.getElementById(demoName).style.display = 'inline-block';
-                ++numDemosShown;
-            } else {
-                document.getElementById(demoName).style.display = 'none';
-            }
-        }
-
         var galleryTab = registry.byId('galleryContainer');
         var innerPanel = registry.byId('innerPanel');
+        var numDemosShown = 0;
         if (searchTerm !== '') {
-            galleryTab.set('title', 'Search Results');
-            innerPanel.selectChild(galleryTab);
+            showSearchContainer();
+            var innerPanel = registry.byId('innerPanel');
+            innerPanel.selectChild(registry.byId('searchContainer'));
+            for ( var i = 0; i < gallery_demos.length; i++) {
+                var demo = gallery_demos[i];
+                var demoName = demo.name;
+                if (searchRegExp.test(demoName) || searchRegExp.test(demo.code)) {
+                    document.getElementById(demoName + 'searchDemo').style.display = 'inline-block';
+                    ++numDemosShown;
+                } else {
+                    document.getElementById(demoName + 'searchDemo').style.display = 'none';
+                }
+            }
         } else {
-            galleryTab.set('title', 'All');
+            hideSearchContainer();
         }
 
         if (numDemosShown) {
@@ -699,6 +699,21 @@ require({
         showGallery();
         scheduleHintNoChange();
     });
+
+    
+    function hideSearchContainer() {
+        if (dom.byId('searchContainer')) {
+            var innerPanel = registry.byId('innerPanel');
+            innerPanel.removeChild(searchContainer);
+        }
+    }
+    
+    function showSearchContainer() {
+        if(!dom.byId('searchContainer')) {
+            var innerPanel = registry.byId('innerPanel');
+            innerPanel.addChild(searchContainer);
+        }
+    }
 
     // Clicking the 'Run' button simply reloads the iframe.
     registry.byId('buttonRun').on('click', function() {
@@ -882,7 +897,10 @@ require({
 
     function addFileToGallery(index) {
         var demo = gallery_demos[i];
-        createGalleryButton(i, demos);
+        var searchDemos = dom.byId('searchDemos');
+        var demos = dom.byId('demos');
+        createGalleryButton(i, demos, '');
+        createGalleryButton(i, searchDemos, 'searchDemo');
         loadDemoFromFile(i);
     }
     
@@ -891,23 +909,22 @@ require({
 
         if (demo.label !== '') {
             var labels = demo.label.split(",");
-            var bottomPanel = dom.byId('innerPanel');
             for (var j = 0; j < labels.length; j++) {
                 labels[j] = labels[j].trim();
                 if(!dom.byId(labels[j] + 'Demos')) {
                     new ContentPane({
                         content:'<div class="demosContainer"><div class="demos" id="' + labels[j] + 'Demos"></div></div>',
-                        title: labels[j],
-                        id: labels[j]
+                        title: labels[j]
                         }).placeAt("innerPanel");
-                }   
-                var tab = dom.byId(labels[j] + 'Demos');
-                createGalleryButton(index, tab);
+                }
+                var tabName = labels[j] + 'Demos';
+                var tab = dom.byId(tabName);
+                createGalleryButton(index, tab, tabName);
             }
         }
     }
     
-    function createGalleryButton(index, tab) {
+    function createGalleryButton(index, tab, tabName) {
         var demo = gallery_demos[index];
         var imgSrc = 'templates/Gallery_tile.jpg';
         if (typeof demo.img !== 'undefined') {
@@ -915,7 +932,7 @@ require({
         }
 
         var demoLink = document.createElement('a');
-        demoLink.id = demo.name;
+        demoLink.id = demo.name + tabName;
         demoLink.className = 'linkButton';
         demoLink.href = 'gallery/' + demo.name + '.html';
         tab.appendChild(demoLink);
@@ -946,7 +963,6 @@ require({
     } else {
         var i;
         var len = gallery_demos.length;
-        var demos = dom.byId('demos');
 
         // Sort alphabetically.  This will eventually be a user option.
         gallery_demos.sort(function(a, b) {
@@ -972,5 +988,7 @@ require({
             addFileToGallery(gallery_demos.length - 1);
         }
     }
-    dom.byId('demos').appendChild(galleryErrorMsg);
+    dom.byId('searchDemos').appendChild(galleryErrorMsg);
+    var searchContainer = registry.byId('searchContainer');
+    hideSearchContainer();
 });
