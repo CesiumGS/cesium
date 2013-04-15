@@ -888,16 +888,20 @@ require({
         var demo = gallery_demos[index];
 
         if (demo.label !== '') {
+            var labels = demo.label.split(",");
             var bottomPanel = dom.byId('bottomPanel');
-            if(!dom.byId(demo.label)) {
-                new ContentPane({
-                    content:'<div class="demosContainer"><div class="demos" id="' + demo.label + 'Demos"></div></div>',
-                    title: demo.label,
-                    id: demo.label
-                    }).placeAt("bottomPanel");
+            for (var j = 0; j < labels.length; j++) {
+                labels[j] = labels[j].trim();
+                if(!dom.byId(labels[j])) {
+                    new ContentPane({
+                        content:'<div class="demosContainer"><div class="demos" id="' + labels[j] + 'Demos"></div></div>',
+                        title: labels[j],
+                        id: labels[j]
+                        }).placeAt("bottomPanel");
+                }   
+                var tab = dom.byId(labels[j] + 'Demos');
+                createGalleryButton(index, tab);
             }
-            var tab = dom.byId(demo.label + 'Demos');
-            createGalleryButton(index, tab);
         }
     }
     
