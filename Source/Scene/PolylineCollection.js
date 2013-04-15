@@ -1128,7 +1128,7 @@ define([
                     pickColorArray[colorIndex] = pickColor.red;
                     pickColorArray[colorIndex + 1] = pickColor.green;
                     pickColorArray[colorIndex + 2] = pickColor.blue;
-                    pickColorArray[colorIndex + 3] = 255;
+                    pickColorArray[colorIndex + 3] = pickColor.alpha;
 
                     var direction = (k - 2 < 0) ? -1.0 : 1.0;
                     texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex] = j / (positionsLength - 1); // s tex coord

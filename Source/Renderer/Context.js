@@ -2736,7 +2736,11 @@ define([
     };
 
     var pickObjects = {};
-    var nextPickColor = new Color(0, 0, 0, 0);
+    var nextPickColor = new function() {
+        this.buffer = (typeof ArrayBuffer !== 'undefined') ? new ArrayBuffer(4) : undefined;
+        this.uint32 = (typeof Uint32Array !== 'undefined') ? new Uint32Array(this.buffer) : undefined;
+        this.unit8 = (typeof Uint8Array !== 'undefined') ? new Uint8Array(this.buffer) : undefined;
+    };
 
     /**
      * DOC_TBA
@@ -2757,22 +2761,13 @@ define([
      * @see Context#getObjectByPickId
      */
     Context.prototype.createPickId = function(object) {
-        // TODO:  Use alpha?
-        if (++nextPickColor.blue === 256) {
-            nextPickColor.blue = 0;
 
-            if (++nextPickColor.green === 256) {
-                nextPickColor.green = 0;
-
-                if (++nextPickColor.red === 256) {
-                    throw new RuntimeError('Out of unique Rgb colors.');
-                }
-            }
-        }
+// TODO: repeat
+        ++nextPickColor.uint32[0];
 
         var pickId = {
-            unnormalizedRgb : new Color(nextPickColor.red, nextPickColor.green, nextPickColor.blue, 255),
-            normalizedRgba : Color.fromBytes(nextPickColor.red, nextPickColor.green, nextPickColor.blue, 255),
+            unnormalizedRgb : new Color(nextPickColor.unit8[3], nextPickColor.unit8[2], nextPickColor.unit8[1], nextPickColor.unit8[0]),
+            normalizedRgba : Color.fromBytes(nextPickColor.unit8[3], nextPickColor.unit8[2], nextPickColor.unit8[1], nextPickColor.unit8[0]),
             destroy : function() {
                 delete pickObjects[JSON.stringify(pickId.unnormalizedRgb)];
                 return undefined;
