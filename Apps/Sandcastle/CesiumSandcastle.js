@@ -382,7 +382,7 @@ require({
     var tabs = registry.byId('bottomPanel');
 
     function showGallery() {
-        tabs.selectChild(registry.byId('galleryContainer'));
+        tabs.selectChild(registry.byId('innerPanel'));
     }
 
     function hideGallery() {
@@ -682,10 +682,12 @@ require({
         }
 
         var galleryTab = registry.byId('galleryContainer');
+        var innerPanel = registry.byId('innerPanel');
         if (searchTerm !== '') {
-            galleryTab.set('title', 'Gallery - Search Results');
+            galleryTab.set('title', 'Search Results');
+            innerPanel.selectChild(galleryTab);
         } else {
-            galleryTab.set('title', 'Gallery');
+            galleryTab.set('title', 'All');
         }
 
         if (numDemosShown) {
@@ -775,11 +777,11 @@ require({
         }, false);
     }
 
-    var galleryContainer = registry.byId('galleryContainer');
+    var galleryContainer = registry.byId('innerPanel');
     galleryContainer.demoTileHeightRule = demoTileHeightRule;
     galleryContainer.originalResize = galleryContainer.resize;
     galleryContainer.resize = function(changeSize, resultSize) {
-        var newSize = changeSize.h - 58;
+        var newSize = changeSize.h - 88;
         if (newSize < 20) {
             demoTileHeightRule.style.display = 'none';
         } else {
@@ -889,15 +891,15 @@ require({
 
         if (demo.label !== '') {
             var labels = demo.label.split(",");
-            var bottomPanel = dom.byId('bottomPanel');
+            var bottomPanel = dom.byId('innerPanel');
             for (var j = 0; j < labels.length; j++) {
                 labels[j] = labels[j].trim();
-                if(!dom.byId(labels[j])) {
+                if(!dom.byId(labels[j] + 'Demos')) {
                     new ContentPane({
                         content:'<div class="demosContainer"><div class="demos" id="' + labels[j] + 'Demos"></div></div>',
                         title: labels[j],
                         id: labels[j]
-                        }).placeAt("bottomPanel");
+                        }).placeAt("innerPanel");
                 }   
                 var tab = dom.byId(labels[j] + 'Demos');
                 createGalleryButton(index, tab);

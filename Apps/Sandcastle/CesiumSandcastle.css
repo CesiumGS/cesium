@@ -55,12 +55,11 @@ html, body {
 }
 
 #bottomPanel {
-	height: 205px;
+	height: 225px;
 }
 
 .galleryContainer {
     width: 100%;
-    background: rgba(0, 0, 0, 0.8);
 }
 
 .demosContainer {
@@ -70,12 +69,13 @@ html, body {
 .demos {
     padding: 0 5px 5px;
     white-space: nowrap;
+    background: rgba(0, 0, 0, 0.8);
 }
 
 .demoTileThumbnail {	
     max-height: 150px;
     max-width: 225px;
-    height: 111px;
+    height: 100px;
     width: auto;
 }
 
