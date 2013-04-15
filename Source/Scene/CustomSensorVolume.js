@@ -374,7 +374,7 @@ define([
             var colorCommand = this._colorCommand;
 
             // Recompile shader when material changes
-            if (materialChanged) {
+            if (materialChanged || typeof colorCommand.shaderProgram === 'undefined') {
                 var fsSource =
                     '#line 0\n' +
                     ShadersSensorVolume +
@@ -399,7 +399,7 @@ define([
             }
 
             // Recompile shader when material changes
-            if (materialChanged || typeof this._pickCommand.shaderProgram === 'undefined') {
+            if (materialChanged || typeof pickCommand.shaderProgram === 'undefined') {
                 var pickFS = createPickFragmentShaderSource(
                     '#line 0\n' +
                     ShadersSensorVolume +
