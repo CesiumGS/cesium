@@ -475,7 +475,7 @@ define([
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
-            createCommandLists(colorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, this._uniforms, true);
+            createCommandLists(this, colorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, this._uniforms, true);
         }
 
         if (pass.pick) {
@@ -494,7 +494,7 @@ define([
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            createCommandLists(pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rsPick, this._uniforms, false, this._spPick);
+            createCommandLists(this, pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rsPick, this._uniforms, false, this._spPick);
         }
 
         if (!this._commandLists.empty()) {
@@ -502,7 +502,7 @@ define([
         }
     };
 
-    function createCommandLists(commands, boundingVolume, modelMatrix, vertexArrays, renderState, uniforms, combineUniforms, shaderProgram) {
+    function createCommandLists(polylineCollection, commands, boundingVolume, modelMatrix, vertexArrays, renderState, uniforms, combineUniforms, shaderProgram) {
         var length = vertexArrays.length;
 
         var commandsLength = commands.length;
@@ -532,7 +532,7 @@ define([
                     if (mId !== currentId) {
                         if (typeof currentId !== 'undefined') {
                             if (commandIndex >= commandsLength) {
-                                command = new DrawCommand();
+                                command = new DrawCommand(polylineCollection);
                                 commands.push(command);
                             } else {
                                 command = commands[commandIndex];
@@ -571,7 +571,7 @@ define([
 
                 if (typeof currentId !== 'undefined' && count > 0) {
                     if (commandIndex >= commandsLength) {
-                        command = new DrawCommand();
+                        command = new DrawCommand(polylineCollection);
                         commands.push(command);
                     } else {
                         command = commands[commandIndex];

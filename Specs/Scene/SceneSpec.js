@@ -2,11 +2,19 @@
 defineSuite([
          'Scene/Scene',
          'Core/Color',
+         'Core/Cartesian3',
+         'Core/BoundingSphere',
+         'Renderer/DrawCommand',
+         'Renderer/CommandLists',
          'Specs/createScene',
          'Specs/destroyScene'
      ], function(
          Scene,
          Color,
+         Cartesian3,
+         BoundingSphere,
+         DrawCommand,
+         CommandLists,
          createScene,
          destroyScene) {
     "use strict";
@@ -55,6 +63,67 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
         expect(scene.getContext().readPixels()).toEqual([0, 0, 255, 255]);
+    });
+
+    function getMockPrimitive(command) {
+        return {
+            update : function(context, frameState, commandList) {
+                var commandLists = new CommandLists();
+                commandLists.colorList.push(command);
+                commandList.push(commandLists);
+            },
+            destroy : function() {
+            }
+        };
+    }
+
+    it('debugCommandFilter filters commands', function() {
+        var c = new DrawCommand();
+        c.execute = function() {};
+        spyOn(c, 'execute');
+
+        scene.getPrimitives().add(getMockPrimitive(c));
+
+        scene.debugCommandFilter = function(command) {
+            return command !== c;   // Do not execute command
+        };
+
+        scene.initializeFrame();
+        scene.render();
+        expect(c.execute).not.toHaveBeenCalled();
+
+        scene.getPrimitives().removeAll();
+        scene.debugCommandFilter = undefined;
+    });
+
+    it('debugCommandFilter does not filter commands', function() {
+        var c = new DrawCommand();
+        c.execute = function() {};
+        spyOn(c, 'execute');
+
+        scene.getPrimitives().add(getMockPrimitive(c));
+
+        expect(scene.debugCommandFilter).toBeUndefined();
+        scene.initializeFrame();
+        scene.render();
+        expect(c.execute).toHaveBeenCalled();
+
+        scene.getPrimitives().removeAll();
+    });
+
+    it('debugShowBoundingVolume draws a bounding sphere', function() {
+        var c = new DrawCommand();
+        c.execute = function() {};
+        c.debugShowBoundingVolume = true;
+        c.boundingVolume = new BoundingSphere(Cartesian3.ZERO, 7000000.0);
+
+        scene.getPrimitives().add(getMockPrimitive(c));
+
+        scene.initializeFrame();
+        scene.render();
+        expect(scene.getContext().readPixels()[0]).not.toEqual(0);  // Red bounding sphere
+
+        scene.getPrimitives().removeAll();
     });
 
     it('isDestroyed', function() {

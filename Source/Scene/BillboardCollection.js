@@ -1089,7 +1089,7 @@ define([
             for (j = 0; j < vaLength; ++j) {
                 command = colorList[j];
                 if (typeof command === 'undefined') {
-                    command = colorList[j] = new DrawCommand();
+                    command = colorList[j] = new DrawCommand(this);
                 }
 
                 command.boundingVolume = boundingVolume;
@@ -1126,7 +1126,7 @@ define([
             for (j = 0; j < vaLength; ++j) {
                 command = pickList[j];
                 if (typeof command === 'undefined') {
-                    command = pickList[j] = new DrawCommand();
+                    command = pickList[j] = new DrawCommand(this);
                 }
 
                 command.boundingVolume = boundingVolume;

@@ -778,7 +778,7 @@ define([
             for (var i = 0; i < length; ++i) {
                 command = commands[i];
                 if (typeof command === 'undefined') {
-                    command = commands[i] = new DrawCommand();
+                    command = commands[i] = new DrawCommand(this);
                 }
 
                 command.boundingVolume = boundingVolume;
@@ -824,7 +824,7 @@ define([
             for (var j = 0; j < length; ++j) {
                 command = commands[j];
                 if (typeof command === 'undefined') {
-                    command = commands[j] = new DrawCommand();
+                    command = commands[j] = new DrawCommand(this);
                 }
 
                 command.boundingVolume = boundingVolume;

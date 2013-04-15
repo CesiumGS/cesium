@@ -51,7 +51,7 @@ define([
     var ViewportQuad = function(rectangle, material) {
 
         this._va = undefined;
-        this._overlayCommand = new DrawCommand();
+        this._overlayCommand = new DrawCommand(this);
         this._overlayCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
         this._commandLists = new CommandLists();
         this._commandLists.overlayList.push(this._overlayCommand);

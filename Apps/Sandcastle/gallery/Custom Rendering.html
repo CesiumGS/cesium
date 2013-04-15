@@ -46,8 +46,8 @@ require([
     var Box = function(position) {
         this._pickId = undefined;
 
-        this._colorCommand = new Cesium.DrawCommand();
-        this._pickCommand = new Cesium.DrawCommand();
+        this._colorCommand = new Cesium.DrawCommand(this);
+        this._pickCommand = new Cesium.DrawCommand(this);
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
         this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new Cesium.BoundingSphere();
         this._colorCommand.modelMatrix = this._pickCommand.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
@@ -152,8 +152,8 @@ require([
         this._ellipsoid = ellipsoid;
         this._pickId = undefined;
 
-        this._colorCommand = new Cesium.DrawCommand();
-        this._pickCommand = new Cesium.DrawCommand();
+        this._colorCommand = new Cesium.DrawCommand(this);
+        this._pickCommand = new Cesium.DrawCommand(this);
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
         this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new Cesium.BoundingSphere();
 

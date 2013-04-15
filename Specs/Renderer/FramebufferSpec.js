@@ -156,7 +156,7 @@ defineSuite([
             colorTexture : colorTexture
         });
 
-        context.clear(new ClearCommand(context.createClearState({
+        context.clear(new ClearCommand(undefined, context.createClearState({
             framebuffer : framebuffer,
             color : {
                 red : 0.0,
@@ -207,7 +207,7 @@ defineSuite([
             colorTexture : cubeMap.getPositiveX()
         });
 
-        context.clear(new ClearCommand(context.createClearState({
+        context.clear(new ClearCommand(undefined, context.createClearState({
             framebuffer : framebuffer,
             color : {
                 red : 0.0,

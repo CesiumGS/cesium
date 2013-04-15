@@ -1,5 +1,5 @@
 /*global define*/
-define(['../Core/DeveloperError'], function(DeveloperError) {
+define(function() {
     "use strict";
 
     /**
@@ -8,20 +8,41 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
      * @alias ClearCommand
      * @constructor
      *
-     * @param {ClearState} [clearState] The clear state.
+     * @param {Object}[owner=undefined] The object who created this command.
+     * @param {ClearState}[clearState=undefined] The clear state.
      */
-    var ClearCommand = function(clearState) {
+    var ClearCommand = function(owner, clearState) {
         /**
          * The clear state.  If this property is undefined, a default clear state is used.
+         *
          * @type Object
+         *
+         * @default undefined
          */
         this.clearState = clearState;
 
         /**
          * The framebuffer to clear.
+         *
          * @type Framebuffer
+         *
+         * @default undefined
          */
         this.framebuffer = undefined;
+
+        /**
+         * The object who created this command.  This is useful for debugging command
+         * execution; it allows you to see who created a command when you only have a
+         * reference to the command, and can be used to selectively execute commands
+         * with {@link Scene#debugCommandFilter}.
+         *
+         * @type Object
+         *
+         * @default undefined
+         *
+         * @see Scene#debugCommandFilter
+         */
+        this.owner = owner;
     };
 
     /**

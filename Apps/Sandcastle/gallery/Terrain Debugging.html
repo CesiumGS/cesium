@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Shows options for debugging the terrain and imagery engine.">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript">
+    var dojoConfig = {
+        baseUrl : '../../../Source',
+        packages: [
+            { name: 'dojo', location: '../ThirdParty/dojo-release-1.8.3-src/dojo' },
+            { name: 'dijit', location: '../ThirdParty/dojo-release-1.8.3-src/dijit' },
+            { name: 'dojox', location: '../ThirdParty/dojo-release-1.8.3-src/dojox' }
+        ]
+    };
+    </script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
+    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
+</head>
+<body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+<div><input id="boundingVolume" type="checkbox" /> <label for="boundingVolume">Show bounding volume of next clicked tile</label></div>
+<div><input id="suspendLodUpdate" type="checkbox" /> <label for="suspendLodUpdate">Suspend level-of-detail update</label></div>
+</div>
+<script id="cesium_sandcastle_script">
+require([
+    'Cesium',
+    'Widgets/Dojo/CesiumViewerWidget',
+    'dijit/DropDownMenu',
+    'dijit/MenuItem',
+    'dijit/form/CheckBox'
+], function(
+    Cesium,
+    CesiumViewerWidget,
+    DropDownMenu,
+    MenuItem,
+    CheckBox) {
+    "use strict";
+    
+    var showBoundingVolumeOnClick = false;
+    
+    function createToolbar(scene, centralBody) {
+        var boundingVolumeCheckbox = new CheckBox({
+            value : false,
+            onChange : function(b) {
+                showBoundingVolumeOnClick = b;
+            }
+        }, 'boundingVolume');
+
+        var handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
+        handler.setInputAction(
+            function (movement) {
+                if (!showBoundingVolumeOnClick) {
+                    return;
+                }
+                showBoundingVolumeOnClick = false;
+                boundingVolumeCheckbox.set('value', false);
+                var ellipsoid = centralBody.getEllipsoid();
+                var cartesian = scene.getCamera().controller.pickEllipsoid(movement.position, ellipsoid);
+                if (cartesian) {
+                    var cartographic = ellipsoid.cartesianToCartographic(cartesian);
+                    centralBody._surface.debugShowBoundingSphereOfTileAt(cartographic);
+                }
+            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        var showLodUpdateCheckbox = new CheckBox({
+            value : false,
+            onChange : function(b) {
+                centralBody._surface._debug.suspendLodUpdate = b;
+            }
+        }, 'suspendLodUpdate');
+
+    }
+
+    var widget = new CesiumViewerWidget();
+    widget.placeAt('cesiumContainer');
+    widget.startup();
+    widget.fullscreen.viewModel.fullscreenElement(document.body);
+
+    var scene = widget.scene;
+    var centralBody = scene.getPrimitives().getCentralBody();
+
+    var cesiumTerrainProvider = new Cesium.CesiumTerrainProvider({
+        url : 'http://cesium.agi.com/smallterrain',
+        credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+    });
+    centralBody.terrainProvider = cesiumTerrainProvider;
+    
+    createToolbar(scene, centralBody);
+
+    Sandcastle.finishedLoading();
+});
+</script>
+</body>
+</html>
