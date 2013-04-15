@@ -743,10 +743,10 @@ define([
 
         var pickWriters = vafWriters[pickPassPurpose];
         var writer = pickWriters[attributeIndices.pickColor];
-        writer(i + 0, pickColor.red, pickColor.green, pickColor.blue, 255);
-        writer(i + 1, pickColor.red, pickColor.green, pickColor.blue, 255);
-        writer(i + 2, pickColor.red, pickColor.green, pickColor.blue, 255);
-        writer(i + 3, pickColor.red, pickColor.green, pickColor.blue, 255);
+        writer(i + 0, pickColor.red, pickColor.green, pickColor.blue, pickColor.alpha);
+        writer(i + 1, pickColor.red, pickColor.green, pickColor.blue, pickColor.alpha);
+        writer(i + 2, pickColor.red, pickColor.green, pickColor.blue, pickColor.alpha);
+        writer(i + 3, pickColor.red, pickColor.green, pickColor.blue, pickColor.alpha);
     }
 
     function writeColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {

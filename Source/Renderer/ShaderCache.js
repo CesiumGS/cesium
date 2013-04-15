@@ -123,7 +123,7 @@ define([
             }
         }
 
-        return null;
+        return undefined;
     };
 
     /**

@@ -327,12 +327,19 @@ define([
 
         // Initial render state creation
         if (typeof this._colorCommand.renderState === 'undefined') {
-            this._colorCommand.renderState = this._pickCommand.renderState = context.createRenderState({
+            this._colorCommand.renderState = context.createRenderState({
                 depthTest : {
                     enabled : true
                 },
                 depthMask : false,
                 blending : BlendingState.ALPHA_BLEND
+            });
+
+            this._pickCommand.renderState = context.createRenderState({
+                depthTest : {
+                    enabled : true
+                },
+                depthMask : false
             });
         }
         // This would be better served by depth testing with a depth buffer that does not

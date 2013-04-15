@@ -174,6 +174,7 @@ define([
         this._va = undefined;
 
         this._pickSP = undefined;
+        this._pickRS = undefined;
         this._pickId = undefined;
 
         this._colorCommand = new DrawCommand();
@@ -254,6 +255,17 @@ define([
                 depthMask : false,
                 blending : BlendingState.ALPHA_BLEND
             });
+
+            this._pickRS = context.createRenderState({
+                cull : {
+                    enabled : true,
+                    face : CullFace.FRONT
+                },
+                depthTest : {
+                    enabled : true
+                },
+                depthMask : false
+            });
         }
 
         if (typeof this._va === 'undefined') {
@@ -327,7 +339,7 @@ define([
 
                 pickCommand.primitiveType = PrimitiveType.TRIANGLES;
                 pickCommand.vertexArray = this._va;
-                pickCommand.renderState = this._rs;
+                pickCommand.renderState = this._pickRS;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = combine([this._uniforms, this._pickUniforms, this.material._uniforms], false, false);
                 pickCommand.executeInClosestFrustum = true;
