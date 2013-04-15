@@ -17,6 +17,19 @@ defineSuite([
         expect(results[1]).toEqual(18.5);
     });
 
+    it('should produce correct results with a result parameter', function() {
+        var xTable = [2.0, 4.0];
+        var yTable = [2.0, 3.0, 4.0, 34.0];
+
+        var result = new Array(2);
+        var results = LinearApproximation.interpolateOrderZero(3.0, xTable, yTable, 2, result);
+
+        expect(result).toBe(results);
+        expect(results.length).toEqual(2);
+        expect(results[0]).toEqual(3.0);
+        expect(results[1]).toEqual(18.5);
+    });
+
     it('should produce correct results 2', function() {
         var xTable2 = [40, 120];
         var yTable2 = [20, 40, 60, 80, 90, 100];

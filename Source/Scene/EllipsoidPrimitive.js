@@ -78,6 +78,8 @@ define([
      *     Cartographic.fromDegrees(-95.0, 40.0, 200000.0)));
      * e.radii = new Cartesian3(100000.0, 100000.0, 200000.0);
      * primitives.add(e);
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Volumes.html">Cesium Sandcastle Volumes Demo</a>
      */
     var EllipsoidPrimitive = function() {
         /**

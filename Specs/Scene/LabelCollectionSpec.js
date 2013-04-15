@@ -46,14 +46,16 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    // TODO: rendering tests for pixel offset, eye offset, horizontal origin, vertical origin, font, style, outlineColor and fillColor properties
+    // TODO: rendering tests for pixel offset, eye offset, horizontal origin, vertical origin, font, style, outlineColor, outlineWidth, and fillColor properties
 
     var context;
     var labels;
-    var us;
 
     beforeAll(function() {
         context = createContext();
+
+        var us = context.getUniformState();
+        us.update(createFrameState(createCamera(context)));
     });
 
     afterAll(function() {
@@ -62,14 +64,10 @@ defineSuite([
 
     beforeEach(function() {
         labels = new LabelCollection();
-
-        us = context.getUniformState();
-        us.update(createFrameState(createCamera(context)));
     });
 
     afterEach(function() {
         labels = labels && labels.destroy();
-        us = undefined;
     });
 
     it('has default values when adding a label', function() {
@@ -80,6 +78,7 @@ defineSuite([
         expect(label.getFont()).toEqual('30px sans-serif');
         expect(label.getFillColor()).toEqual(Color.WHITE);
         expect(label.getOutlineColor()).toEqual(Color.BLACK);
+        expect(label.getOutlineWidth()).toEqual(1);
         expect(label.getStyle()).toEqual(LabelStyle.FILL);
         expect(label.getPixelOffset()).toEqual(Cartesian2.ZERO);
         expect(label.getEyeOffset()).toEqual(Cartesian3.ZERO);
@@ -105,6 +104,8 @@ defineSuite([
             blue : 2.0,
             alpha : 1.0
         };
+        var outlineWidth = 2;
+
         var style = LabelStyle.FILL_AND_OUTLINE;
         var pixelOffset = new Cartesian2(4.0, 5.0);
         var eyeOffset = new Cartesian3(6.0, 7.0, 8.0);
@@ -118,6 +119,7 @@ defineSuite([
             font : font,
             fillColor : fillColor,
             outlineColor : outlineColor,
+            outlineWidth : outlineWidth,
             style : style,
             pixelOffset : pixelOffset,
             eyeOffset : eyeOffset,
@@ -132,6 +134,7 @@ defineSuite([
         expect(label.getFont()).toEqual(font);
         expect(label.getFillColor()).toEqual(fillColor);
         expect(label.getOutlineColor()).toEqual(outlineColor);
+        expect(label.getOutlineWidth()).toEqual(outlineWidth);
         expect(label.getStyle()).toEqual(style);
         expect(label.getPixelOffset()).toEqual(pixelOffset);
         expect(label.getEyeOffset()).toEqual(eyeOffset);
@@ -193,6 +196,18 @@ defineSuite([
         expect(labels.getLength()).toEqual(1);
         expect(labels.remove(undefined)).toEqual(false);
         expect(labels.getLength()).toEqual(1);
+    });
+
+    it('returns false when removing a previously removed label', function() {
+        var label = labels.add();
+        expect(labels.getLength()).toEqual(1);
+        expect(labels.remove(label)).toEqual(true);
+        expect(labels.remove(label)).toEqual(false);
+        expect(labels.getLength()).toEqual(0);
+    });
+
+    it('isDestroyed returns false', function() {
+        expect(labels.isDestroyed()).toEqual(false);
     });
 
     it('adding and removing multiple labels works', function() {
@@ -730,6 +745,11 @@ defineSuite([
         label.setFont('30px sans-serif');
         labels.update(context, frameState, []);
         expect(labels._textureCount).toEqual(15);
+
+        //Changing thickness requires new glyphs
+        label.setOutlineWidth(3);
+        labels.update(context, frameState, []);
+        expect(labels._textureCount).toEqual(17);
     });
 
     it('should reuse billboards that are not needed any more', function() {
@@ -805,6 +825,7 @@ defineSuite([
                 blue : 2.0,
                 alpha : 1.0
             };
+            var outlineWidth = 2;
             var style = LabelStyle.FILL_AND_OUTLINE;
             var pixelOffset = new Cartesian2(4.0, 5.0);
             var eyeOffset = new Cartesian3(6.0, 7.0, 8.0);
@@ -818,6 +839,7 @@ defineSuite([
             label.setFont(font);
             label.setFillColor(fillColor);
             label.setOutlineColor(outlineColor);
+            label.setOutlineWidth(outlineWidth);
             label.setStyle(style);
             label.setPixelOffset(pixelOffset);
             label.setEyeOffset(eyeOffset);
@@ -831,6 +853,7 @@ defineSuite([
             expect(label.getFont()).toEqual(font);
             expect(label.getFillColor()).toEqual(fillColor);
             expect(label.getOutlineColor()).toEqual(outlineColor);
+            expect(label.getOutlineWidth()).toEqual(outlineWidth);
             expect(label.getStyle()).toEqual(style);
             expect(label.getPixelOffset()).toEqual(pixelOffset);
             expect(label.getEyeOffset()).toEqual(eyeOffset);
@@ -858,19 +881,24 @@ defineSuite([
         });
 
         it('can compute screen space position (1)', function() {
+            labels.clampToPixel = false;
             var label = labels.add({
+                text : 'abc',
                 position : {
                     x : 0.0,
                     y : 0.0,
                     z : 0.0
                 }
             });
+            labels.update(context, frameState, []);
 
-            expect(label.computeScreenSpacePosition(us, frameState).equals(new Cartesian2(0.5, 0.5)));
+            expect(label.computeScreenSpacePosition(context, frameState)).toEqual(new Cartesian2(0.5, 0.5));
         });
 
         it('can compute screen space position (2)', function() {
+            labels.clampToPixel = false;
             var label = labels.add({
+                text : 'abc',
                 position : {
                     x : 0.0,
                     y : 0.0,
@@ -881,12 +909,15 @@ defineSuite([
                     y : 2.0
                 }
             });
+            labels.update(context, frameState, []);
 
-            expect(label.computeScreenSpacePosition(us, frameState).equals(new Cartesian2(1.5, 2.5)));
+            expect(label.computeScreenSpacePosition(context, frameState)).toEqual(new Cartesian2(1.5, 2.5));
         });
 
         it('can compute screen space position (3)', function() {
+            labels.clampToPixel = false;
             var label = labels.add({
+                text : 'abc',
                 position : {
                     x : 0.0,
                     y : 0.0,
@@ -898,8 +929,9 @@ defineSuite([
                     z : 0.0
                 }
             });
+            labels.update(context, frameState, []);
 
-            var p = label.computeScreenSpacePosition(us, frameState);
+            var p = label.computeScreenSpacePosition(context, frameState);
             expect(p.x).toBeGreaterThan(0.5);
             expect(p.y).toBeGreaterThan(0.5);
         });
@@ -1403,5 +1435,110 @@ defineSuite([
         bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
         expect(bs.center).toEqualEpsilon(actual.center, CesiumMath.EPSILON8);
         expect(bs.radius).toBeLessThan(actual.radius);
+    });
+
+    it('Label.setShow throws with undefined', function() {
+        var label = labels.add();
+        expect(function() {
+            label.setShow(undefined);
+        }).toThrow();
+    });
+
+    it('Label.setPosition throws with undefined', function() {
+        var label = labels.add();
+        expect(function() {
+            label.setPosition(undefined);
+        }).toThrow();
+    });
+
+    it('Label.setText throws with undefined', function() {
+        var label = labels.add();
+        expect(function() {
+            label.setText(undefined);
+        }).toThrow();
+    });
+
+    it('Label.setFont throws with undefined', function() {
+        var label = labels.add();
+        expect(function() {
+            label.setFont(undefined);
+        }).toThrow();
+    });
+
+    it('Label.setFillColor throws with undefined', function() {
+        var label = labels.add();
+        expect(function() {
+            label.setFillColor(undefined);
+        }).toThrow();
+    });
+
+    it('Label.setOutlineColor throws with undefined', function() {
+        var label = labels.add();
+        expect(function() {
+            label.setOutlineColor(undefined);
+        }).toThrow();
+    });
+
+    it('Label.setOutlineWidth throws with undefined', function() {
+        var label = labels.add();
+        expect(function() {
+            label.setOutlineWidth(undefined);
+        }).toThrow();
+    });
+
+    it('Label.setStyle throws with undefined', function() {
+        var label = labels.add();
+        expect(function() {
+            label.setStyle(undefined);
+        }).toThrow();
+    });
+
+    it('Label.setPixelOffset throws with undefined', function() {
+        var label = labels.add();
+        expect(function() {
+            label.setPixelOffset(undefined);
+        }).toThrow();
+    });
+
+    it('Label.setEyeOffset throws with undefined', function() {
+        var label = labels.add();
+        expect(function() {
+            label.setEyeOffset(undefined);
+        }).toThrow();
+    });
+
+    it('Label.setHorizontalOrigin throws with undefined', function() {
+        var label = labels.add();
+        expect(function() {
+            label.setHorizontalOrigin(undefined);
+        }).toThrow();
+    });
+
+    it('Label.setVerticalOrigin throws with undefined', function() {
+        var label = labels.add();
+        expect(function() {
+            label.setVerticalOrigin(undefined);
+        }).toThrow();
+    });
+
+    it('Label.setScale throws with undefined', function() {
+        var label = labels.add();
+        expect(function() {
+            label.setScale(undefined);
+        }).toThrow();
+    });
+
+    it('Label.computeScreenSpacePosition throws with undefined context', function() {
+        var label = labels.add();
+        expect(function() {
+            label.computeScreenSpacePosition(undefined, frameState);
+        }).toThrow();
+    });
+
+    it('Label.computeScreenSpacePosition throws with undefined frameState', function() {
+        var label = labels.add();
+        expect(function() {
+            label.computeScreenSpacePosition(context, undefined);
+        }).toThrow();
     });
 }, 'WebGL');

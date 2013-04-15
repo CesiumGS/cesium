@@ -24,12 +24,14 @@
 <body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
     @import url(../templates/bucket.css);
+    @import url(../../../Source/Widgets/Dojo/CesiumViewerWidget.css);
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
 <div id="terrainMenu"></div>
 <div id="zoomButtons"></div>
+<div id="sampleButtons"></div>
 </div>
 <script id="cesium_sandcastle_script">
 require([
@@ -133,6 +135,77 @@ require([
                 }
             }
         }).placeAt('zoomButtons');
+        
+        var terrainSamplePositions;
+        var billboards;
+        var labels;
+
+        function sampleTerrainSuccess() {
+            var ellipsoid = Cesium.Ellipsoid.WGS84;
+
+            if (typeof billboards === 'undefined') {
+                billboards = new Cesium.BillboardCollection();
+                
+                Cesium.when(Cesium.loadImage('../images/facility.gif'), function(image) {
+                    var textureAtlas = scene.getContext().createTextureAtlas({images : [image]});
+                    billboards.setTextureAtlas(textureAtlas);
+                });
+            } else {
+                billboards.removeAll();
+            }
+
+            if (typeof labels === 'undefined') {
+                labels = new Cesium.LabelCollection();
+            } else {
+                labels.removeAll();
+            }
+
+            for( var i = 0; i < terrainSamplePositions.length; ++i ){
+                var position = terrainSamplePositions[i];
+                billboards.add({
+                    position : ellipsoid.cartographicToCartesian(position),
+                    verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+                    scale : 0.7,
+                    imageIndex : 0
+                });
+
+                labels.add({
+                    position : ellipsoid.cartographicToCartesian(position),
+                    text : position.height.toFixed(1),
+                    horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                    scale : 0.3,
+                    pixelOffset : new Cesium.Cartesian2(0,14),
+                    fillColor : new Cesium.Color(1,0,0),
+                    outlineColor : Cesium.Color.WHITE
+                });
+
+            }
+            scene.getPrimitives().add(billboards);
+            scene.getPrimitives().add(labels);
+        }
+        
+        new Button({
+            label: 'Sample Everest Terrain',
+            onClick: function() {
+                var gridWidth = 41;
+                var gridHeight = 41;
+                var everestLatitude = Cesium.Math.toRadians(27.988257);
+                var everestLongitude = Cesium.Math.toRadians(86.925145);
+                var extentHalfSize = 0.005;
+                var e = new Cesium.Extent(everestLongitude - extentHalfSize,everestLatitude - extentHalfSize,everestLongitude + extentHalfSize,everestLatitude + extentHalfSize);
+                terrainSamplePositions = [];
+                for (var y = 0; y < gridHeight; ++y) {
+                    for (var x = 0; x < gridWidth; ++x) {
+                        var longitude = Cesium.Math.lerp(e.west, e.east, x / (gridWidth - 1));
+                        var latitude = Cesium.Math.lerp(e.south, e.north, y / (gridHeight - 1));
+                        var position = new Cesium.Cartographic(longitude, latitude);
+                        terrainSamplePositions.push(position);
+                    }
+                }
+                
+                Cesium.when(Cesium.sampleTerrain(centralBody.terrainProvider, 11, terrainSamplePositions), sampleTerrainSuccess);
+            }
+        }).placeAt('sampleButtons');
     }
 
     var widget = new CesiumViewerWidget();
@@ -142,6 +215,7 @@ require([
 
     var scene = widget.scene;
     var centralBody = scene.getPrimitives().getCentralBody();
+    centralBody.depthTestAgainstTerrain = true;
 
     var cesiumTerrainProvider = new Cesium.CesiumTerrainProvider({
         url : 'http://cesium.agi.com/smallterrain',

@@ -104,6 +104,19 @@ define([
     };
 
     /**
+     * Gets the proxy used by this provider.
+     *
+     * @memberof OpenStreetMapImageryProvider
+     *
+     * @returns {Proxy} The proxy.
+     *
+     * @see DefaultProxy
+     */
+    OpenStreetMapImageryProvider.prototype.getProxy = function() {
+        return this._proxy;
+    };
+
+    /**
      * Gets the width of each tile, in pixels.  This function should
      * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
      *

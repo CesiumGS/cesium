@@ -62,6 +62,7 @@ define([
     var fromPointsRitterCenter = new Cartesian3();
     var fromPointsMinBoxPt = new Cartesian3();
     var fromPointsMaxBoxPt = new Cartesian3();
+    var fromPointsNaiveCenterScratch = new Cartesian3();
 
     /**
      * Computes a tight-fitting bounding sphere enclosing a list of 3D Cartesian points.
@@ -171,7 +172,7 @@ define([
         maxBoxPt.y = yMax.y;
         maxBoxPt.z = zMax.z;
 
-        var naiveCenter = Cartesian3.multiplyByScalar(Cartesian3.add(minBoxPt, maxBoxPt, fromPointsScratch), 0.5);
+        var naiveCenter = Cartesian3.multiplyByScalar(Cartesian3.add(minBoxPt, maxBoxPt, fromPointsScratch), 0.5, fromPointsNaiveCenterScratch);
 
         // Begin 2nd pass to find naive radius and modify the ritter sphere.
         var naiveRadius = 0;
@@ -441,7 +442,7 @@ define([
         maxBoxPt.y = yMax.y;
         maxBoxPt.z = zMax.z;
 
-        var naiveCenter = Cartesian3.multiplyByScalar(Cartesian3.add(minBoxPt, maxBoxPt, fromPointsScratch), 0.5);
+        var naiveCenter = Cartesian3.multiplyByScalar(Cartesian3.add(minBoxPt, maxBoxPt, fromPointsScratch), 0.5, fromPointsNaiveCenterScratch);
 
         // Begin 2nd pass to find naive radius and modify the ritter sphere.
         var naiveRadius = 0;

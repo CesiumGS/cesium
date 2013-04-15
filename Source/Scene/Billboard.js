@@ -2,24 +2,28 @@
 define([
         '../Core/defaultValue',
         '../Core/DeveloperError',
+        '../Core/BoundingRectangle',
         '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/Math',
+        '../Core/Matrix4',
         './HorizontalOrigin',
         './VerticalOrigin',
         './SceneMode'
     ], function(
         defaultValue,
         DeveloperError,
+        BoundingRectangle,
         Color,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
         CesiumMath,
+        Matrix4,
         HorizontalOrigin,
         VerticalOrigin,
         SceneMode) {
@@ -53,6 +57,8 @@ define([
      * @see Label
      *
      * @internalConstructor
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
      */
     var Billboard = function(description, billboardCollection) {
         description = defaultValue(description, EMPTY_OBJECT);
@@ -582,11 +588,23 @@ define([
         return undefined;
     };
 
-    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, clampToPixel, uniformState) {
+    var scratchViewport = new BoundingRectangle();
+    var scratchViewportTransform = new Matrix4();
+    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, context, frameState) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
 
+        var camera = frameState.camera;
+        var view = camera.getViewMatrix();
+        var projection = camera.frustum.getProjectionMatrix();
+
+        // Assuming viewport takes up the entire canvas...
+        var canvas = context.getCanvas();
+        scratchViewport.width = canvas.clientWidth;
+        scratchViewport.height = canvas.clientHeight;
+        var viewportTransformation = Matrix4.computeViewportTransformation(scratchViewport, 0.0, 1.0, scratchViewportTransform);
+
         // Model to eye coordinates
-        var mv = uniformState.getView().multiply(modelMatrix);
+        var mv = view.multiply(modelMatrix);
         var positionEC = mv.multiplyByPoint(position);
 
         // Apply eye offset, e.g., czm_eyeOffset
@@ -596,20 +614,17 @@ define([
         positionEC.z += zEyeOffset.z;
 
         // Eye to window coordinates, e.g., czm_eyeToWindowCoordinates
-        var q = uniformState.getProjection().multiplyByVector(positionEC); // clip coordinates
+        var q = projection.multiplyByVector(positionEC); // clip coordinates
         q.x /= q.w; // normalized device coordinates
         q.y /= q.w;
         q.z /= q.w;
-        var positionWC = uniformState.getViewportTransformation().multiplyByPoint(q); // window coordinates
+        var positionWC = viewportTransformation.multiplyByPoint(q); // window coordinates
 
         // Apply pixel offset
+        var uniformState = context.getUniformState();
         var po = pixelOffset.multiplyByScalar(uniformState.getHighResolutionSnapScale());
         positionWC.x += po.x;
         positionWC.y += po.y;
-
-        if (clampToPixel) {
-            return new Cartesian2(Math.floor(positionWC.x), Math.floor(positionWC.y));
-        }
 
         return new Cartesian2(positionWC.x, positionWC.y);
     };
@@ -621,30 +636,37 @@ define([
      *
      * @memberof Billboard
      *
-     * @param {UniformState} uniformState The same state object passed to {@link BillboardCollection#update}.
+     * @param {Context} context The context.
+     * @param {FrameState} frameState The same state object passed to {@link BillboardCollection#update}.
      *
      * @return {Cartesian2} The screen-space position of the billboard.
      *
      * @exception {DeveloperError} Billboard must be in a collection.
-     * @exception {DeveloperError} uniformState is required.
+     * @exception {DeveloperError} context is required.
+     * @exception {DeveloperError} frameState is required.
      *
      * @see Billboard#setEyeOffset
      * @see Billboard#setPixelOffset
      *
      * @example
-     * console.log(b.computeScreenSpacePosition(scene.getUniformState()).toString());
+     * console.log(b.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()).toString());
      */
-    Billboard.prototype.computeScreenSpacePosition = function(uniformState) {
+    Billboard.prototype.computeScreenSpacePosition = function(context, frameState) {
         var billboardCollection = this._billboardCollection;
         if (typeof billboardCollection === 'undefined') {
             throw new DeveloperError('Billboard must be in a collection.  Was it removed?');
         }
 
-        if (!uniformState) {
-            throw new DeveloperError('uniformState is required.');
+        if (typeof context === 'undefined') {
+            throw new DeveloperError('context is required.');
         }
 
-        return Billboard._computeScreenSpacePosition(billboardCollection.modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, this.clampToPixel, uniformState);
+        if (typeof frameState === 'undefined') {
+            throw new DeveloperError('frameState is required.');
+        }
+
+        var modelMatrix = billboardCollection.modelMatrix;
+        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, context, frameState);
     };
 
     /**

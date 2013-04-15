@@ -1,152 +1,176 @@
-@import url('../Timeline/Timeline.css');
-@import url('../Timeline/darker.css');
-@import url('../Animation/Animation.css');
-@import url('../Animation/darker.css');
-@import url('../Fullscreen/FullscreenWidget.css');
-@import url('../Fullscreen/darker.css');
+@import url('../widgets.css');
+@import url('../lighter.css');
 
-.cw-node {
-    font-family: sans-serif;
-    font-size: 16px;
-    overflow: hidden;
-    display: block;
-    position: relative;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    -moz-user-select: none;
-    -webkit-user-select: none;
+.cesium-viewerWidget-node {
+	font-family: sans-serif;
+	font-size: 16px;
+	overflow: hidden;
+	display: block;
+	position: relative;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	-moz-user-select: none;
+	-webkit-user-select: none;
 }
 
-.cw-canvas {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+.cesium-viewerWidget-canvas {
+	display: block;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
 }
 
-.cw-timelineContainer {
-    position: absolute;
-    bottom: 0;
-    left: 169px;
-    right: 29px;
-    height: 27px;
-    padding: 0;
-    margin: 0;
-    overflow: hidden;
-    font-size: 14px;
+.cesium-viewerWidget-timelineContainer {
+	position: absolute;
+	bottom: 0;
+	left: 169px;
+	right: 29px;
+	height: 27px;
+	padding: 0;
+	margin: 0;
+	overflow: hidden;
+	font-size: 14px;
 }
 
-.cw-animationContainer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    padding: 0;
-    width: 169px;
-    height: 112px;
+.cesium-viewerWidget-animationContainer {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	padding: 0;
+	width: 169px;
+	height: 112px;
 }
 
-.cw-fullscreenContainer {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    padding: 0;
-    width: 29px;
-    height: 29px;
-    overflow: hidden;
+.cesium-viewerWidget-fullscreenContainer {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	padding: 0;
+	width: 29px;
+	height: 29px;
+	overflow: hidden;
 }
 
-.cw-cesiumLogo {
-    display: block;
-    position: absolute;
-    bottom: 32px;
-    left: 179px;
-    text-decoration: none;
-    background-image: url(../Images/Cesium_Logo_overlay.png);
-    width: 118px;
-    height: 26px;
+.cesium-viewerWidget-cesiumLogo {
+	display: block;
+	position: absolute;
+	bottom: 32px;
+	left: 179px;
+	text-decoration: none;
+	background-image: url(../Images/Cesium_Logo_overlay.png);
+	width: 118px;
+	height: 26px;
 }
 
-.cw-cesiumLogo img {
-    border: none;
+.cesium-viewerWidget-cesiumLogo img {
+	border: none;
 }
 
-.cw-viewIcon {
-    background-image: url('../Images/viewControlBar.png');
-    background-repeat: no-repeat;
-    width: 24px;
-    height: 24px;
+.cesium-viewerWidget-home {
+    display: inline-block;
+	width: 32px;
+	height: 32px;
+	vertical-align: middle;
+	background-image: url(../Images/home.svg);
+	background-repeat: no-repeat;
+	background-size: 100% 100%;
+	border-radius: 14%;
+	position: relative;
+	text-align: center;
+	color: white;
+	margin: 1px;
+    cursor: pointer;
 }
 
-.cw-view2D {
-    background-position: -24px 0;
+.cesium-viewerWidget-home:hover {
+	box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
 
-.cw-view3D {
-    background-position: -48px 0;
+.cesium-lighter .cesium-viewerWidget-home {
+	background-image: url(../Images/home-lighter.svg);
 }
 
-.cw-viewColumbus {
-    background-position: -72px 0;
+.cesium-viewerWidget-viewButtons {
+	display: block;
+	position: absolute;
+	top: 5px;
+	right: 5px;
 }
 
-.cw-viewButtons {
-    display: block;
-    position: absolute;
-    top: 5px;
-    right: 5px;
+.cesium-viewerWidget-sceneModePickerContainer {
+    display: inline-block;
+	width: 32px;
+	height: 32px;
+	vertical-align: middle;
+	margin: 1px;
 }
 
-.cw-imagerySelector {
-    display: block;
-    font-family: sans-serif;
-    font-size: 9pt;
+.cesium-viewerWidget-baseLayerPickerContainer {
+	display: inline-block;
+	width: 32px;
+	height: 32px;
+	vertical-align: middle;
+	margin: 1px;
 }
 
-.claro .dijitToggleButtonChecked .dijitButtonNode {
-    border: 1px solid #EA0;
-    box-shadow: 0 0 5px rgba(255, 170, 42, 1);
-}
-
-.cw-loading {
-    display: none;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    margin-top: -33px;
-    margin-left: -33px;
-    width: 66px;
-    height: 66px;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-image: url(../Images/ajax-loader.gif);
+.cesium-viewerWidget-loading {
+	display: none;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-top: -33px;
+	margin-left: -33px;
+	width: 66px;
+	height: 66px;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-image: url(../Images/ajax-loader.gif);
 }
 
 @media only screen and (min-width: 600px) and (max-width: 900px) {
-    .cw-animationContainer {
-        width: 136px;
-        height: 90px;
-    }
-    .cw-timelineContainer {
-        left: 137px;
-    }
-    .cw-cesiumLogo {
-        left: 146px;
-    }
+	.cesium-viewerWidget-animationContainer {
+		width: 136px;
+		height: 90px;
+	}
+	.cesium-viewerWidget-timelineContainer {
+		left: 137px;
+	}
+	.cesium-viewerWidget-cesiumLogo {
+		left: 146px;
+	}
 }
 
 @media only screen and (max-width: 599px) {
-    .cw-animationContainer {
-        width: 106px;
-        height: 70px;
+	.cesium-viewerWidget-animationContainer {
+		width: 106px;
+		height: 70px;
+	}
+	.cesium-viewerWidget-timelineContainer {
+		left: 107px;
+	}
+	.cesium-viewerWidget-cesiumLogo {
+		left: 116px;
+	}
+}
+
+@media only screen and (max-height: 300px) {
+    .cesium-baseLayerPicker-dropDown {
+        max-height: 125px;
     }
-    .cw-timelineContainer {
-        left: 107px;
+}
+
+@media only screen and (min-height: 300px) and (max-height: 425px) {
+    .cesium-baseLayerPicker-dropDown {
+        max-height: 225px;
     }
-    .cw-cesiumLogo {
-        left: 116px;
+}
+
+@media only screen and (min-height: 425px) and (max-height: 550px) {
+    .cesium-baseLayerPicker-dropDown {
+        max-height: 325px;
     }
 }

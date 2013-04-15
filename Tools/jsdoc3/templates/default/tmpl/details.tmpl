@@ -66,6 +66,13 @@
     </dd>
     <?js } ?>
 	
+    <?js if (data.demo && demo.length) { ?>
+    <h5>Demo:</h5>
+    <ul class="see-list"><?js demo.forEach(function(d) { ?>
+        <li><?js= d ?></li>
+    <?js }); ?></ul>
+    <?js } ?> 
+	
 	<?js if (data.see && see.length) {?>
 	<h5>See:</h5>
 	<ul class="see-list"><?js see.forEach(function(s) { ?>

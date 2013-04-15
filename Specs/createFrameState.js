@@ -36,6 +36,8 @@ define([
         }));
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
+        frameState.canvasDimensions.x = 1.0;
+        frameState.canvasDimensions.y = 1.0;
 
         frameState.passes.color = true;
         frameState.passes.overlay = true;

@@ -21,6 +21,9 @@ define([
      * @see BingMapsImageryProvider
      * @see OpenStreetMapImageryProvider
      * @see WebMapServiceImageryProvider
+     *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html">Cesium Sandcastle Imagery Layers Demo</a>
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html">Cesium Sandcastle Imagery Manipulation Demo</a>
      */
     var ImageryProvider = function ImageryProvider() {
         throw new DeveloperError('This type should not be instantiated directly.');
@@ -140,6 +143,19 @@ define([
      * @exception {DeveloperError} <code>getLogo</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getLogo = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Gets the proxy used by this provider.
+     *
+     * @memberof ImageryProvider
+     *
+     * @returns {Proxy} The proxy.
+     *
+     * @see DefaultProxy
+     */
+    ImageryProvider.prototype.getProxy = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 
