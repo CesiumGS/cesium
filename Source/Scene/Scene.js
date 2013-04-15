@@ -590,7 +590,7 @@ define([
         this._pickFramebuffer = this._pickFramebuffer || context.createPickFramebuffer();
         var fb = this._pickFramebuffer.begin();
 
-        // Update with previous frame's number aqnd time, assuming that render is called before picking.
+        // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(this, frameState.frameNumber, frameState.time);
         frameState.cullingVolume = getPickCullingVolume(this, windowPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
