@@ -399,7 +399,7 @@ define([
                     '#line 0\n' +
                     this._material.shaderSource +
                     '#line 0\n' +
-                    CustomSensorVolumeFS);
+                    CustomSensorVolumeFS, 'uniform');
 
                 pickCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
                     pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeIndices);

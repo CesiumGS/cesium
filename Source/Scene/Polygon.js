@@ -810,7 +810,7 @@ define([
                     '#line 0\n' +
                     this.material.shaderSource +
                     '#line 0\n' +
-                    PolygonFS);
+                    PolygonFS, 'uniform');
 
                 this._spPick = context.getShaderCache().replaceShaderProgram(this._spPick, PolygonVS, pickFS, attributeIndices);
                 this._pickUniforms = combine([this._uniforms, this._pickColorUniform, this.material._uniforms], false, false);

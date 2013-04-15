@@ -321,7 +321,7 @@ define([
                     '#line 0\n' +
                     this.material.shaderSource +
                     '#line 0\n' +
-                    EllipsoidFS);
+                    EllipsoidFS, 'uniform');
 
                 this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeIndices);
 
