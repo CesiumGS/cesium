@@ -45,17 +45,20 @@ define([
      */
     PickFramebuffer.prototype.begin = function() {
         var context = this._context;
+        var width = context.getCanvas().clientWidth;
+        var height = context.getCanvas().clientHeight;
 
         // Initially create or recreate renderbuffers and framebuffer used for picking
-        if (!this._fb ||
-            (this._width !== context.getCanvas().clientWidth) ||
-            (this._height !== context.getCanvas().clientHeight)) {
-            this._width = context.getCanvas().clientWidth;
-            this._height = context.getCanvas().clientHeight;
+        if ((typeof this._fb === 'undefined') || (this._width !== width) || (this._height !== height)) {
+            this._width = width;
+            this._height = height;
 
             this._fb = this._fb && this._fb.destroy();
             this._fb = context.createFramebuffer({
-                colorRenderbuffer : context.createRenderbuffer(),
+                colorTexture : context.createTexture2D({
+                    width : width,
+                    height : height
+                }),
                 depthRenderbuffer : context.createRenderbuffer({
                     format : RenderbufferFormat.DEPTH_COMPONENT16
                 })
