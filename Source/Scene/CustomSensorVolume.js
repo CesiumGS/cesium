@@ -327,7 +327,7 @@ define([
 
         // Initial render state creation
         if (typeof this._colorCommand.renderState === 'undefined') {
-            this._colorCommand.renderState = context.createRenderState({
+            var rs = context.createRenderState({
                 depthTest : {
                     enabled : true
                 },
@@ -335,12 +335,8 @@ define([
                 blending : BlendingState.ALPHA_BLEND
             });
 
-            this._pickCommand.renderState = context.createRenderState({
-                depthTest : {
-                    enabled : true
-                },
-                depthMask : false
-            });
+            this._colorCommand.renderState = rs;
+            this._pickCommand.renderState = rs;
         }
         // This would be better served by depth testing with a depth buffer that does not
         // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask

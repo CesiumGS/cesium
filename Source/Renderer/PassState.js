@@ -15,6 +15,11 @@ define(function() {
          * @type Framebuffer
          */
         this.framebuffer = undefined;
+
+        /**
+         * DOC_TBA
+         */
+        this.blendingEnabled = undefined;
     };
 
     return PassState;

@@ -144,7 +144,6 @@ define([
         this.modelMatrix = Matrix4.IDENTITY.clone();
         this._modelMatrix = Matrix4.IDENTITY.clone();
         this._rs = undefined;
-        this._rsPick = undefined;
 
         this._boundingVolume = undefined;
         this._boundingVolume2D = undefined;
@@ -477,17 +476,10 @@ define([
         }
 
         if (pass.pick) {
-            if (typeof this._rsPick === 'undefined') {
-                this._rsPick = context.createRenderState();
-            }
-
-            this._rsPick.depthMask = !useDepthTest;
-            this._rsPick.depthTest.enabled = useDepthTest;
-
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            createCommandLists(pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rsPick, this._uniforms, false);
+            createCommandLists(pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, this._uniforms, false);
         }
 
         if (!this._commandLists.empty()) {

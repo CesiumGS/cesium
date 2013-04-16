@@ -30,6 +30,7 @@ define([
         this._context = context;
         this._fb = undefined;
         this._passState = new PassState();
+        this._passState.blendingEnabled = false; // overrides per-command blending state
         this._width = 0;
         this._height = 0;
 

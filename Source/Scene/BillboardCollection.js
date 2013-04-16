@@ -133,7 +133,6 @@ define([
         this._sp = undefined;
         this._rs = undefined;
         this._vaf = undefined;
-        this._rsPick = undefined;
         this._spPick = undefined;
 
         this._billboards = [];
@@ -1107,12 +1106,6 @@ define([
             commandLists.pickList = pickList;
 
             if (typeof this._spPick === 'undefined') {
-                this._rsPick = context.createRenderState({
-                    depthTest : {
-                        enabled : true
-                    }
-                });
-
                 this._spPick = context.getShaderCache().getShaderProgram(
                         '#define RENDER_FOR_PICK 1\n' + BillboardCollectionVS,
                         '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
@@ -1136,7 +1129,7 @@ define([
                 command.shaderProgram = this._spPick;
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
-                command.renderState = this._rsPick;
+                command.renderState = this._rs;
             }
         }
 

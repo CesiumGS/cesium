@@ -36,7 +36,8 @@ define([
         './TextureWrap',
         './UniformState',
         './VertexArray',
-        './VertexLayout'
+        './VertexLayout',
+        './PassState'
     ], function(
         defaultValue,
         DeveloperError,
@@ -74,7 +75,8 @@ define([
         TextureWrap,
         UniformState,
         VertexArray,
-        VertexLayout) {
+        VertexLayout,
+        PassState) {
     "use strict";
     /*global ArrayBuffer,Uint8Array,Uint32Array*/
 
@@ -347,9 +349,9 @@ define([
         this._gl.stencilMask(stencilMask);
     };
 
-    Context.prototype._applyBlending = function(blending) {
+    Context.prototype._applyBlending = function(blending, passState) {
         var gl = this._gl;
-        var enabled = blending.enabled;
+        var enabled = (typeof passState.blendingEnabled !== 'undefined') ? passState.blendingEnabled : blending.enabled;
 
         this._enableOrDisable(gl.BLEND, enabled);
 
@@ -430,7 +432,7 @@ define([
         this._gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
     };
 
-    Context.prototype._applyRenderState = function(state) {
+    Context.prototype._applyRenderState = function(state, passState) {
         this._applyFrontFace(state.frontFace);
         this._applyCull(state.cull);
         this._applyLineWidth(state.lineWidth);
@@ -441,7 +443,7 @@ define([
         this._applyColorMask(state.colorMask);
         this._applyDepthMask(state.depthMask);
         this._applyStencilMask(state.stencilMask);
-        this._applyBlending(state.blending);
+        this._applyBlending(state.blending, passState);
         this._applyStencilTest(state.stencilTest);
         this._applySampleCoverage(state.sampleCoverage);
         this._applyDither(state.dither);
@@ -2184,6 +2186,8 @@ define([
         }
     };
 
+    var defaultPassState = new PassState();
+
     /**
      * Executes the specified clear command.
      *
@@ -2204,6 +2208,7 @@ define([
         } else {
             clearState = this.createClearState();
         }
+        passState = defaultValue(passState, defaultPassState);
 
         var gl = this._gl;
         var bitmask = 0;
@@ -2243,7 +2248,7 @@ define([
         this._applyStencilMask(clearState.stencilMask);
         this._applyDither(clearState.dither);
 
-        var framebuffer = defaultValue(clearState.framebuffer, (typeof passState !== 'undefined') ? passState.framebuffer : undefined);
+        var framebuffer = defaultValue(clearState.framebuffer, passState.framebuffer);
 
         if (typeof framebuffer !== 'undefined') {
             framebuffer._bind();
@@ -2302,6 +2307,7 @@ define([
      * @see Context#createRenderState
      */
     Context.prototype.draw = function(drawCommand, passState) {
+        passState = defaultValue(passState, defaultPassState);
         this.beginDraw(drawCommand, passState);
         this.continueDraw(drawCommand);
         this.endDraw();
@@ -2322,7 +2328,7 @@ define([
         }
 
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
-        var framebuffer = defaultValue(command.framebuffer, (typeof passState !== 'undefined') ? passState.framebuffer : undefined);
+        var framebuffer = defaultValue(command.framebuffer, passState.framebuffer);
         var sp = command.shaderProgram;
         var rs = command.renderState || this.createRenderState();
 
@@ -2334,7 +2340,7 @@ define([
 
         ///////////////////////////////////////////////////////////////////////
 
-        this._applyRenderState(rs);
+        this._applyRenderState(rs, passState);
         if (typeof framebuffer !== 'undefined') {
             framebuffer._bind();
             this._validateFramebuffer(framebuffer);
