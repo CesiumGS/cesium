@@ -669,8 +669,6 @@ require({
     registry.byId('search').on('change', function() {
         searchTerm = this.get('value');
         searchRegExp = new RegExp(searchTerm, 'i');
-        var galleryTab = registry.byId('galleryContainer');
-        var innerPanel = registry.byId('innerPanel');
         var numDemosShown = 0;
         if (searchTerm !== '') {
             showSearchContainer();
@@ -700,14 +698,13 @@ require({
         scheduleHintNoChange();
     });
 
-    
     function hideSearchContainer() {
         if (dom.byId('searchContainer')) {
             var innerPanel = registry.byId('innerPanel');
             innerPanel.removeChild(searchContainer);
         }
     }
-    
+
     function showSearchContainer() {
         if(!dom.byId('searchContainer')) {
             var innerPanel = registry.byId('innerPanel');
@@ -856,7 +853,7 @@ require({
                     demo.description = value.substring(pos, pos2);
                 }
             }
-            
+
             demo.label = '';
             pos = value.indexOf('<meta name="cesium-sandcastle-labels" content="');
             if (pos > 0) {
@@ -896,17 +893,15 @@ require({
     }
 
     function addFileToGallery(index) {
-        var demo = gallery_demos[i];
         var searchDemos = dom.byId('searchDemos');
         var demos = dom.byId('demos');
         createGalleryButton(i, demos, '');
         createGalleryButton(i, searchDemos, 'searchDemo');
         loadDemoFromFile(i);
     }
-    
+
     function addFileToTab(index) {
         var demo = gallery_demos[index];
-
         if (demo.label !== '') {
             var labels = demo.label.split(",");
             for (var j = 0; j < labels.length; j++) {
@@ -923,7 +918,7 @@ require({
             }
         }
     }
-    
+
     function createGalleryButton(index, tab, tabName) {
         var demo = gallery_demos[index];
         var imgSrc = 'templates/Gallery_tile.jpg';
