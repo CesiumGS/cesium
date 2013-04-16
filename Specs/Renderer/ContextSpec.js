@@ -208,6 +208,14 @@ defineSuite([
         expect(context.getThrowOnWebGLError()).toEqual(true);
     });
 
+    it('creates a pick ID', function() {
+        var o = {};
+        var pickId = context.createPickId(o);
+
+        expect(pickId).toBeDefined();
+        expect(context.getObjectByPickId(pickId.unnormalizedRgb)).toBe(o);
+    });
+
     it('fails to construct (null canvas)', function() {
         expect(function() {
             return new Context();

@@ -7,6 +7,9 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
      *
      * @alias DrawCommand
      * @constructor
+     *
+     * @see ClearCommand
+     * @see PassState
      */
     var DrawCommand = function() {
         /**

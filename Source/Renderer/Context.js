@@ -2195,7 +2195,7 @@ define([
      *
      * @param {ClearCommand} [clearCommand] The command with which to clear.  If this parameter is undefined
      *        or its clearState property is undefined, a default clear state is used.
-     * @param {PassState} [passState] DOC_TBA
+     * @param {PassState} [passState] The state for the current rendering pass
      *
      * @memberof Context
      *
@@ -2268,7 +2268,7 @@ define([
      * @memberof Context
      *
      * @param {DrawCommand} drawCommand The command with which to draw.
-     * @param {PassState} [passState] DOC_TBA
+     * @param {PassState} [passState] The state for the current rendering pass
      *
      * @memberof Context
      *

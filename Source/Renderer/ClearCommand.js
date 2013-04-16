@@ -9,6 +9,9 @@ define(function() {
      * @constructor
      *
      * @param {ClearState} [clearState] The clear state.
+     *
+     * @see DrawCommand
+     * @see PassState
      */
     var ClearCommand = function(clearState) {
         /**
@@ -30,7 +33,7 @@ define(function() {
      * @memberof ClearCommand
      *
      * @param {Context} context The renderer context in which to clear.
-     * @param {PassState} [passState] DOC_TBA.
+     * @param {PassState} [passState] The state for the current rendering pass.
      */
     ClearCommand.prototype.execute = function(context, passState) {
         context.clear(this, passState);
