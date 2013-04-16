@@ -596,7 +596,7 @@ define([
         if (typeof this._pickFramebuffer === 'undefined') {
             this._pickFramebuffer = context.createPickFramebuffer();
         }
-        var fb = this._pickFramebuffer.begin();
+        var passState = this._pickFramebuffer.begin();
 
         // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(this, frameState.frameNumber, frameState.time);
@@ -606,9 +606,6 @@ define([
         var commandLists = this._commandList;
         commandLists.length = 0;
         primitives.update(context, frameState, commandLists);
-
-        var passState = this._passState;
-        passState.framebuffer = fb;
 
         createPotentiallyVisibleSet(this, 'pickList');
         executeCommands(this, passState);

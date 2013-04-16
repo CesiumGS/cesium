@@ -28,7 +28,8 @@ define([
      */
     var PickFramebuffer = function(context) {
         this._context = context;
-        this._fb = null;
+        this._fb = undefined;
+        this._passState = new PassState();
         this._width = 0;
         this._height = 0;
 
@@ -64,12 +65,12 @@ define([
                     format : RenderbufferFormat.DEPTH_COMPONENT16
                 })
             });
+            this._passState.framebuffer = this._fb;
         }
 
-// TODO: do not allocate here
-        this._clearCommand.execute(context, new PassState(this._fb));
+        this._clearCommand.execute(context, this._passState);
 
-        return this._fb;
+        return this._passState;
     };
 
     var colorScratch = new Color();

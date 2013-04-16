@@ -9,7 +9,7 @@ define([
 
     function pick(context, frameState, primitives, x, y) {
         var pickFramebuffer = context.createPickFramebuffer();
-        var fb = pickFramebuffer.begin();
+        var passState = pickFramebuffer.begin();
 
         var oldPasses = frameState.passes;
         frameState.passes = (new FrameState()).passes;
@@ -24,8 +24,7 @@ define([
             var commandListLength = commandList.length;
             for (var j = 0; j < commandListLength; ++j) {
                 var command = commandList[j];
-                command.framebuffer = defaultValue(command.framebuffer, fb);
-                context.draw(command);
+                command.execute(context, passState);
             }
         }
 
