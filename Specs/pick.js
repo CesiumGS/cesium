@@ -1,15 +1,18 @@
 /*global define*/
 define([
         'Core/defaultValue',
+        'Core/BoundingRectangle',
         'Scene/FrameState'
     ], function(
         defaultValue,
+        BoundingRectangle,
         FrameState) {
     "use strict";
 
     function pick(context, frameState, primitives, x, y) {
+        var rectangle = new BoundingRectangle(x, y, 1, 1);
         var pickFramebuffer = context.createPickFramebuffer();
-        var passState = pickFramebuffer.begin();
+        var passState = pickFramebuffer.begin(rectangle);
 
         var oldPasses = frameState.passes;
         frameState.passes = (new FrameState()).passes;
@@ -30,10 +33,7 @@ define([
 
         frameState.passes = oldPasses;
 
-        var primitive = pickFramebuffer.end({
-            x : x,
-            y : y
-        });
+        var primitive = pickFramebuffer.end(rectangle);
         pickFramebuffer.destroy();
 
         return primitive;

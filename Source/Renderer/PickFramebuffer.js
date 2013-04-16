@@ -4,6 +4,7 @@ define([
         '../Core/destroyObject',
         '../Core/Color',
         '../Core/DeveloperError',
+        '../Core/BoundingRectangle',
         './ClearCommand',
         './PassState',
         './RenderbufferFormat'
@@ -12,6 +13,7 @@ define([
         destroyObject,
         Color,
         DeveloperError,
+        BoundingRectangle,
         ClearCommand,
         PassState,
         RenderbufferFormat) {
@@ -27,10 +29,17 @@ define([
      * @see Context#pick
      */
     var PickFramebuffer = function(context) {
+        // Override per-command states
+        var passState = new PassState();
+        passState.blendingEnabled = false;
+        passState.scissorTest = {
+            enabled : true,
+            rectangle : new BoundingRectangle()
+        };
+
         this._context = context;
         this._fb = undefined;
-        this._passState = new PassState();
-        this._passState.blendingEnabled = false; // overrides per-command blending state
+        this._passState = passState;
         this._width = 0;
         this._height = 0;
 
@@ -46,10 +55,16 @@ define([
      * DOC_TBA
      * @memberof PickFramebuffer
      */
-    PickFramebuffer.prototype.begin = function() {
+    PickFramebuffer.prototype.begin = function(screenSpaceRectangle) {
+        if (typeof screenSpaceRectangle === 'undefined') {
+            throw new DeveloperError('screenSpaceRectangle is required.');
+        }
+
         var context = this._context;
         var width = context.getCanvas().clientWidth;
         var height = context.getCanvas().clientHeight;
+
+        BoundingRectangle.clone(screenSpaceRectangle, this._passState.scissorTest.rectangle);
 
         // Initially create or recreate renderbuffers and framebuffer used for picking
         if ((typeof this._fb === 'undefined') || (this._width !== width) || (this._height !== height)) {

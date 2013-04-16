@@ -596,7 +596,6 @@ define([
         if (typeof this._pickFramebuffer === 'undefined') {
             this._pickFramebuffer = context.createPickFramebuffer();
         }
-        var passState = this._pickFramebuffer.begin();
 
         // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(this, frameState.frameNumber, frameState.time);
@@ -606,12 +605,12 @@ define([
         var commandLists = this._commandList;
         commandLists.length = 0;
         primitives.update(context, frameState, commandLists);
-
         createPotentiallyVisibleSet(this, 'pickList');
-        executeCommands(this, passState);
 
         scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
+
+        executeCommands(this, this._pickFramebuffer.begin(scratchRectangle));
         return this._pickFramebuffer.end(scratchRectangle);
     };
 

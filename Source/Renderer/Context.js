@@ -308,15 +308,15 @@ define([
         }
     };
 
-    Context.prototype._applyScissorTest = function(scissorTest) {
+    Context.prototype._applyScissorTest = function(scissorTest, passState) {
         var gl = this._gl;
-        var enabled = scissorTest.enabled;
+        var enabled = (typeof passState.scissorTest !== 'undefined') ? passState.scissorTest.enabled : scissorTest.enabled;
 
         this._enableOrDisable(gl.SCISSOR_TEST, enabled);
 
         if (enabled) {
-            var newRectangle = scissorTest.rectangle;
-            gl.scissor(newRectangle.x, newRectangle.y, newRectangle.width, newRectangle.height);
+            var rectangle = (typeof passState.scissorTest !== 'undefined') ? passState.scissorTest.rectangle : scissorTest.rectangle;
+            gl.scissor(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         }
     };
 
@@ -437,7 +437,7 @@ define([
         this._applyCull(state.cull);
         this._applyLineWidth(state.lineWidth);
         this._applyPolygonOffset(state.polygonOffset);
-        this._applyScissorTest(state.scissorTest);
+        this._applyScissorTest(state.scissorTest, passState);
         this._applyDepthRange(state.depthRange);
         this._applyDepthTest(state.depthTest);
         this._applyColorMask(state.colorMask);
@@ -2242,7 +2242,7 @@ define([
             bitmask |= gl.STENCIL_BUFFER_BIT;
         }
 
-        this._applyScissorTest(clearState.scissorTest);
+        this._applyScissorTest(clearState.scissorTest, passState);
         this._applyColorMask(clearState.colorMask);
         this._applyDepthMask(clearState.depthMask);
         this._applyStencilMask(clearState.stencilMask);

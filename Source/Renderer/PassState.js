@@ -20,6 +20,11 @@ define(function() {
          * DOC_TBA
          */
         this.blendingEnabled = undefined;
+
+        /**
+         * DOC_TBA
+         */
+        this.scissorTest = undefined;
     };
 
     return PassState;
