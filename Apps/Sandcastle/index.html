@@ -75,6 +75,11 @@
                         <textarea data-dojo-type="dijit.form.Textarea" id="description"
                             data-dojo-props="trim:true" style="width: 335px;"></textarea>
                     </div>
+                    <br/>
+                    <div>Labels:<br/>
+                        <textarea data-dojo-type="dijit.form.Textarea" id="label"
+                            data-dojo-props="trim:true" style="width: 335px;"></textarea>
+                    </div>
                     <p><span class="subInfo">Included libraries:</span><br/>
                         <span id="includes"></span>
                     </p>
@@ -135,9 +140,16 @@
             </div>
         </div>
         <div id="bottomPanel" class="bottomPanel" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'bottom', splitter: true">
-            <div id="galleryContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Gallery', selected: true">
-                <div id="demosContainer">
-                    <div id="demos"></div>
+            <div id="innerPanel" class="bottomPanel" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="title: 'Gallery', nested: true">
+                <div id="searchContainer" class="galleryContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Search Results'">
+                    <div id="searchResults" class="demosContainer">
+                        <div id="searchDemos" class="demos"></div>
+                    </div>
+                </div>
+                <div id="galleryContainer" class="galleryContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'All', selected: true">
+                    <div id="demosContainer" class="demosContainer">
+                        <div id="demos" class="demos"></div>
+                    </div>
                 </div>
             </div>
             <div id="logContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Console'">
