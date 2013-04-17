@@ -790,8 +790,8 @@ define(['../Core/defaultValue', '../Core/destroyObject', '../Core/BoundingRectan
         }), reproject.framebuffer));
 
         if ((typeof reproject.renderState === 'undefined') ||
-                (reproject.renderState._states.viewport.width !== width) ||
-                (reproject.renderState._states.viewport.height !== height)) {
+                (reproject.renderState.viewport.width !== width) ||
+                (reproject.renderState.viewport.height !== height)) {
 
             reproject.renderState = context.createRenderState({
                 viewport : new BoundingRectangle(0, 0, width, height)

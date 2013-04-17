@@ -459,7 +459,7 @@ define([
         commandLists.colorList = emptyArray;
         commandLists.pickList = emptyArray;
 
-        if ((typeof this._rs === 'undefined') || (this._rs._states.depthTest.enabled !== useDepthTest)) {
+        if ((typeof this._rs === 'undefined') || (this._rs.depthTest.enabled !== useDepthTest)) {
             this._rs = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND,
                 depthMask : !useDepthTest,

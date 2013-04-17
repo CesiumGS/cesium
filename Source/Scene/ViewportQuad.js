@@ -182,7 +182,7 @@ define([
         }
 
         var rs = this._overlayCommand.renderState;
-        if ((typeof rs === 'undefined') || !BoundingRectangle.equals(rs._states.viewport, this.rectangle)) {
+        if ((typeof rs === 'undefined') || !BoundingRectangle.equals(rs.viewport, this.rectangle)) {
             this._overlayCommand.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND,
                 viewport : this.rectangle

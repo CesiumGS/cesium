@@ -253,7 +253,7 @@ define([
         this._us = new UniformState();
         this._currentFramebuffer = undefined;
         this._currentSp = undefined;
-        this._currentRenderStateId = -1;
+        this._currentRenderState = undefined;
 
         this._defaultTexture = undefined;
         this._defaultCubeMap = undefined;
@@ -2220,7 +2220,6 @@ define([
     };
 
 
-    var nextRenderStateId = 0;
     var renderStateCache = {};
 
     /**
@@ -2270,10 +2269,7 @@ define([
         var fullKey = JSON.stringify(states);
         cachedState = renderStateCache[fullKey];
         if (typeof cachedState === 'undefined') {
-            cachedState = {
-                _id : nextRenderStateId++,
-                _states : states
-            };
+            cachedState = states;
 
             // Cache full render state.  Multiple partially defined render states may map to this.
             renderStateCache[fullKey] = cachedState;
@@ -2496,7 +2492,7 @@ define([
         }
 
         // Invalidate render state
-        this._currentRenderStateId = -1;
+        this._currentRenderState = undefined;
     };
 
     /**
@@ -2579,10 +2575,17 @@ define([
 
 // TODO: assumes we own context!
 
-        if (this._currentRenderStateId !== rs._id) {
-            this._currentRenderStateId = rs._id;
-            rs._states.apply(this._gl, this.getCanvas(), this.getUniformState(), passState);
+        if (this._currentRenderState === 'undefined') {
+            // Start of frame or invaldiated due to clear state
+            rs.apply(this._gl, this.getCanvas(), this.getUniformState(), passState);
         }
+        else if (this._currentRenderState !== rs) {
+            rs.apply(this._gl, this.getCanvas(), this.getUniformState(), passState);
+
+//            RenderState.partialApply(rs, this._gl, this.getCanvas(), this.getUniformState(), passState)
+        }
+        // else same id as previous state so state is already applied.
+        this._currentRenderState = rs;
 
         if (typeof framebuffer !== 'undefined') {
             framebuffer._bind();
