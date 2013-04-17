@@ -21,7 +21,7 @@ define([
     };
 
     /**
-     * Returns a shader program from the cache, or a creates and caches a new shader program,
+     * Returns a shader program from the cache, or creates and caches a new shader program,
      * given the GLSL vertex and fragment shader source and attribute locations.
      * <p>
      * The difference between this and {@link ShaderCache#getShaderProgram}, is this is used to
