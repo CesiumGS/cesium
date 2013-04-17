@@ -11,6 +11,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
         '../Core/BoundingSphere',
+        '../Core/defaultValue',
         '../Renderer/BufferUsage',
         '../Renderer/BlendingState',
         '../Renderer/CommandLists',
@@ -33,6 +34,7 @@ define([
         ComponentDatatype,
         PrimitiveType,
         BoundingSphere,
+        defaultValue,
         BufferUsage,
         BlendingState,
         CommandLists,
@@ -98,7 +100,8 @@ define([
          *
          * @type Boolean
          */
-        this.showThroughEllipsoid = (typeof t.showThroughEllipsoid === 'undefined') ? false : t.showThroughEllipsoid;
+        this.showThroughEllipsoid = defaultValue(t.showThroughEllipsoid, false);
+        this._showThroughEllipsoid = this.showThroughEllipsoid;
 
         /**
          * The 4x4 transformation matrix that transforms this sensor from model to world coordinates.  In it's model
@@ -326,10 +329,15 @@ define([
         }
 
         // Initial render state creation
-        if (typeof this._colorCommand.renderState === 'undefined') {
+        if ((this._showThroughEllipsoid !== this.showThroughEllipsoid) || (typeof this._colorCommand.renderState === 'undefined')) {
+            this._showThroughEllipsoid = this.showThroughEllipsoid;
+
             var rs = context.createRenderState({
                 depthTest : {
-                    enabled : true
+                    // This would be better served by depth testing with a depth buffer that does not
+                    // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
+                    // so we can selectively depth test.
+                    enabled : !this.showThroughEllipsoid
                 },
                 depthMask : false,
                 blending : BlendingState.ALPHA_BLEND
@@ -338,10 +346,6 @@ define([
             this._colorCommand.renderState = rs;
             this._pickCommand.renderState = rs;
         }
-        // This would be better served by depth testing with a depth buffer that does not
-        // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
-        // so we can selectively depth test.
-        this._colorCommand.renderState.depthTest.enabled = !this.showThroughEllipsoid;
 
         // Recreate vertex buffer when directions change
         if ((this._directionsDirty) || (this._bufferUsage !== this.bufferUsage)) {
