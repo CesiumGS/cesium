@@ -269,10 +269,19 @@ require({
 
     function openGalleryTooltip() {
         galleryTooltipTimer = undefined;
+
+        var selectedTabName = registry.byId('innerPanel').selectedChildWidget.title;
+        var suffix = selectedTabName + 'Demos';
+        if (selectedTabName === 'All') {
+            suffix = '';
+        } else if (selectedTabName === 'Search Results') {
+            suffix = 'searchDemo';
+        }
+
         if (typeof activeGalleryTooltipDemo !== 'undefined') {
             popup.open({
                 popup : demoTooltips[activeGalleryTooltipDemo.name],
-                around : dom.byId(activeGalleryTooltipDemo.name),
+                around : dom.byId(activeGalleryTooltipDemo.name + suffix),
                 orient : ['above', 'below']
             });
         }
@@ -881,13 +890,6 @@ require({
                 content : '<div class="demoTooltipType">' + demo.bucketTitle + '</div>' + demo.description.replace(/\\n/g, '<br/>')
             });
 
-            on(dom.byId(demo.name), 'mouseover', function() {
-                scheduleGalleryTooltip(demo);
-            });
-
-            on(dom.byId(demo.name), 'mouseout', function() {
-                closeGalleryTooltip();
-            });
             addFileToTab(index);
         });
     }
@@ -895,9 +897,9 @@ require({
     function addFileToGallery(index) {
         var searchDemos = dom.byId('searchDemos');
         var demos = dom.byId('demos');
-        createGalleryButton(i, demos, '');
-        createGalleryButton(i, searchDemos, 'searchDemo');
-        loadDemoFromFile(i);
+        createGalleryButton(index, demos, '');
+        createGalleryButton(index, searchDemos, 'searchDemo');
+        loadDemoFromFile(index);
     }
 
     function addFileToTab(index) {
@@ -950,6 +952,14 @@ require({
             'label' : '<div class="demoTileTitle">' + demo.name + '</div>' +
                       '<img src="' + imgSrc + '" class="demoTileThumbnail" alt="" onDragStart="return false;" />'
         }).placeAt(demoLink);
+
+        on(dom.byId(demoLink.id), 'mouseover', function() {
+            scheduleGalleryTooltip(demo);
+        });
+
+        on(dom.byId(demoLink.id), 'mouseout', function() {
+            closeGalleryTooltip();
+        });
     }
 
     if (typeof gallery_demos === 'undefined') {
