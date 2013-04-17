@@ -1913,8 +1913,6 @@ define([
                     zPass : (typeof stencilTestBackOperation.zPass === 'undefined') ? StencilOperation.KEEP : stencilTestBackOperation.zPass
                 }
             },
-            // TODO:  Also need point_size and point_size_enable for ColladaFX
-            // TODO:  Also need sample_alpha_to_coverage_enable for ColladaFX
             sampleCoverage : {
                 enabled : (typeof sampleCoverage.enabled === 'undefined') ? false : sampleCoverage.enabled,
                 value : (typeof sampleCoverage.value === 'undefined') ? 1.0 : sampleCoverage.value,

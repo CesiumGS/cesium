@@ -5,6 +5,7 @@ defineSuite([
          'Core/IndexDatatype',
          'Core/PrimitiveType',
          'Core/WindingOrder',
+         'Core/BoundingRectangle',
          'Renderer/BufferUsage',
          'Renderer/BlendEquation',
          'Renderer/BlendFunction',
@@ -19,6 +20,7 @@ defineSuite([
          IndexDatatype,
          PrimitiveType,
          WindingOrder,
+         BoundingRectangle,
          BufferUsage,
          BlendEquation,
          BlendFunction,
@@ -202,12 +204,7 @@ defineSuite([
             renderState : context.createRenderState({
                 scissorTest : {
                     enabled : true,
-                    rectangle : {
-                        x : 0,
-                        y : 0,
-                        width : 0,
-                        height : 0
-                    }
+                    rectangle : new BoundingRectangle(0, 0, 0, 0)
                 }
             })
         });
@@ -221,12 +218,7 @@ defineSuite([
             renderState : context.createRenderState({
                 scissorTest : {
                     enabled : true,
-                    rectangle : {
-                        x : 0,
-                        y : 0,
-                        width : 1,
-                        height : 1
-                    }
+                    rectangle : new BoundingRectangle(0, 0, 1, 1)
                 }
             })
         });
