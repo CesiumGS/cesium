@@ -119,9 +119,9 @@ void main()
     float expandWidth = width * 0.5;
     vec2 direction;
 
-	if (czm_equalsEpsilon(normalize(prev.xyz - p.xyz), vec3(0.0), czm_epsilon1))
+	if (czm_equalsEpsilon(normalize(prev.xyz - p.xyz), vec3(0.0), czm_epsilon1) || czm_equalsEpsilon(prevWC, -nextWC, czm_epsilon1))
 	{
-	   direction = vec2(-nextWC.y, nextWC.x);
+	    direction = vec2(-nextWC.y, nextWC.x);
     }
 	else if (czm_equalsEpsilon(normalize(next.xyz - p.xyz), vec3(0.0), czm_epsilon1))
 	{
@@ -143,7 +143,6 @@ void main()
 	    // Because the z components of both vectors are zero, the x and y coordinate will be zero.
 	    // Therefore, the sine of the angle is just the z component of the cross product.
 	    float sinAngle = abs(direction.x * nextWC.y - direction.y * nextWC.x);
-	    
 	    expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
     }
 
