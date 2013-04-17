@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/Color',
         '../Core/combine',
         '../Core/destroyObject',
         '../Core/Cartesian3',
@@ -24,6 +25,7 @@ define([
         '../Shaders/PolylineFS'
     ], function(
         DeveloperError,
+        Color,
         combine,
         destroyObject,
         Cartesian3,
@@ -1071,7 +1073,7 @@ define([
             var lengths = segments.lengths;
             var positionsLength = positions.length;
 
-            var pickColor = polyline.getPickId(context).unnormalizedRgb;
+            var pickColor = polyline.getPickId(context).color;
 
             var segmentIndex = 0;
             var count = 0;
@@ -1109,10 +1111,10 @@ define([
                     EncodedCartesian3.writeElements(scratchWritePrevPosition, positionArray, positionIndex + 6);
                     EncodedCartesian3.writeElements(scratchWriteNextPosition, positionArray, positionIndex + 12);
 
-                    pickColorArray[colorIndex] = pickColor.red;
-                    pickColorArray[colorIndex + 1] = pickColor.green;
-                    pickColorArray[colorIndex + 2] = pickColor.blue;
-                    pickColorArray[colorIndex + 3] = pickColor.alpha;
+                    pickColorArray[colorIndex] = Color.floatToByte(pickColor.red);
+                    pickColorArray[colorIndex + 1] = Color.floatToByte(pickColor.green);
+                    pickColorArray[colorIndex + 2] = Color.floatToByte(pickColor.blue);
+                    pickColorArray[colorIndex + 3] = Color.floatToByte(pickColor.alpha);
 
                     var direction = (k - 2 < 0) ? -1.0 : 1.0;
                     texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex] = j / (positionsLength - 1); // s tex coord

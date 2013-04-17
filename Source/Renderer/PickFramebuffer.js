@@ -81,7 +81,8 @@ define([
         var width = defaultValue(screenSpaceRectangle.width, 1.0);
         var height = defaultValue(screenSpaceRectangle.height, 1.0);
 
-        var pixels = this._context.readPixels({
+        var context = this._context;
+        var pixels = context.readPixels({
             x : screenSpaceRectangle.x,
             y : screenSpaceRectangle.y,
             width : width,
@@ -108,12 +109,12 @@ define([
             if (-halfWidth <= x && x <= halfWidth && -halfHeight <= y && y <= halfHeight) {
                 var index = 4 * ((halfHeight - y) * width + x + halfWidth);
 
-                colorScratch.red = pixels[index];
-                colorScratch.green = pixels[index + 1];
-                colorScratch.blue = pixels[index + 2];
-                colorScratch.alpha = pixels[index + 3];
+                colorScratch.red = Color.byteToFloat(pixels[index]);
+                colorScratch.green = Color.byteToFloat(pixels[index + 1]);
+                colorScratch.blue = Color.byteToFloat(pixels[index + 2]);
+                colorScratch.alpha = Color.byteToFloat(pixels[index + 3]);
 
-                var object = this._context.getObjectByPickId(colorScratch);
+                var object = context.getObjectByPickColor(colorScratch);
                 if (typeof object !== 'undefined') {
                     return object;
                 }

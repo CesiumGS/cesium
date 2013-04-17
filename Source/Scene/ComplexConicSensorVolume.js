@@ -470,7 +470,7 @@ define([
                 var that = this;
                 this._pickCommand.uniformMap = combine([this._uniforms, {
                     u_pickColor : function() {
-                        return that._pickId.normalizedRgba;
+                        return that._pickId.color;
                     }
                 }], false, false);
             }
