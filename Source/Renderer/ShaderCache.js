@@ -30,7 +30,7 @@ define([
      *
      * @memberof ShaderCache
      *
-     * @param {ShaderProgram} shaderProgram The shader program that it being reassigned.  This can be <code>undefined</code>.
+     * @param {ShaderProgram} shaderProgram The shader program that is being reassigned.  This can be <code>undefined</code>.
      * @param {String} vertexShaderSource The GLSL source for the vertex shader.
      * @param {String} fragmentShaderSource The GLSL source for the fragment shader.
      * @param {Object} attributeLocations Indices for the attribute inputs to the vertex shader.

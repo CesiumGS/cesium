@@ -2770,6 +2770,7 @@ define([
      *
      * @returns {Object} The newly created pick ID with <code>unnormalizedRgb</code> and <code>normalizedRgba</code> properties.
      *
+     * @exception {DeveloperError} object is required.
      * @exception {RuntimeError} Out of unique Pick IDs.
      *
      * @see Context#getObjectByPickId
@@ -2778,6 +2779,10 @@ define([
      * this._pickId = context.createPickId(this);
      */
     Context.prototype.createPickId = function(object) {
+        if (typeof object === 'undefined') {
+            throw new DeveloperError('object is required.');
+        }
+
         if (++nextPickColor.uint32[0] === 0) {
             // In case of overflow
             throw new RuntimeError('Out of unique Pick IDs.');

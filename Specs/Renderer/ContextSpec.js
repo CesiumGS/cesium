@@ -216,6 +216,12 @@ defineSuite([
         expect(context.getObjectByPickId(pickId.unnormalizedRgb)).toBe(o);
     });
 
+    it('throws when creating a pick ID without an object', function() {
+        expect(function() {
+            context.createPickId(undefined);
+        }).toThrow();
+    });
+
     it('fails to construct (null canvas)', function() {
         expect(function() {
             return new Context();

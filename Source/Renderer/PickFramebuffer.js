@@ -20,13 +20,7 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
-     *
-     * @alias PickFramebuffer
-     * @internalConstructor
-     *
-     * @see Context#createPickFramebuffer
-     * @see Context#pick
+     * @private
      */
     var PickFramebuffer = function(context) {
         // Override per-command states
@@ -51,15 +45,7 @@ define([
         }));
     };
 
-    /**
-     * DOC_TBA
-     * @memberof PickFramebuffer
-     */
     PickFramebuffer.prototype.begin = function(screenSpaceRectangle) {
-        if (typeof screenSpaceRectangle === 'undefined') {
-            throw new DeveloperError('screenSpaceRectangle is required.');
-        }
-
         var context = this._context;
         var width = context.getCanvas().clientWidth;
         var height = context.getCanvas().clientHeight;
@@ -91,15 +77,7 @@ define([
 
     var colorScratch = new Color();
 
-    /**
-     * DOC_TBA
-     * @memberof PickFramebuffer
-     */
     PickFramebuffer.prototype.end = function(screenSpaceRectangle) {
-        if (typeof screenSpaceRectangle === 'undefined') {
-            throw new DeveloperError('screenSpaceRectangle is required.');
-        }
-
         var width = defaultValue(screenSpaceRectangle.width, 1.0);
         var height = defaultValue(screenSpaceRectangle.height, 1.0);
 
@@ -141,7 +119,7 @@ define([
                 }
             }
 
-            // if (top right || bottom left corners) || (top left corner) || (bottom right corner + (1, 0)
+            // if (top right || bottom left corners) || (top left corner) || (bottom right corner + (1, 0))
             // change spiral direction
             if (x === y || (x < 0 && -x === y) || (x > 0 && x === 1 - y)) {
                 var temp = dx;
@@ -156,41 +134,10 @@ define([
         return undefined;
     };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof PickFramebuffer
-     *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see PickFramebuffer#destroy
-     */
     PickFramebuffer.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof PickFramebuffer
-     *
-     * @return {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see PickFramebuffer#isDestroyed
-     *
-     * @example
-     * PickFramebuffer = PickFramebuffer && PickFramebuffer.destroy();
-     */
     PickFramebuffer.prototype.destroy = function() {
         this._fb = this._fb && this._fb.destroy();
         return destroyObject(this);
