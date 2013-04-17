@@ -11,8 +11,7 @@ define([
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
         '../Core/Transforms',
-        './CzmlCartesian3',
-        './CzmlCartographic',
+        './CzmlPosition',
         './DynamicProperty'
     ], function(
         Cartesian3,
@@ -26,14 +25,12 @@ define([
         TimeInterval,
         TimeIntervalCollection,
         Transforms,
-        CzmlCartesian3,
-        CzmlCartographic,
+        CzmlPosition,
         DynamicProperty) {
     "use strict";
 
     var scratchMatrix3 = new Matrix3();
     var wgs84 = Ellipsoid.WGS84;
-    var potentialTypes = [CzmlCartesian3, CzmlCartographic];
 
     /**
      * A dynamic property which stores both Cartesian and Cartographic data
@@ -104,10 +101,6 @@ define([
             return undefined;
         }
         var property = interval.data;
-        var valueType = property.valueType;
-        if (valueType === CzmlCartographic) {
-            return property.getValue(time, result);
-        }
         result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== 'undefined') {
             if (interval.data.referenceFrame === ReferenceFrame.INERTIAL) {
@@ -148,21 +141,13 @@ define([
             return undefined;
         }
         var property = interval.data;
-        var valueType = property.valueType;
-        if (valueType === CzmlCartesian3) {
-            result = property.getValue(time, result);
-            if (interval.data.referenceFrame === ReferenceFrame.INERTIAL) {
-                var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
-                if (typeof icrfToFixed === 'undefined') {
-                    return undefined;
-                }
-                return icrfToFixed.multiplyByVector(result, result);
+        result = property.getValue(time, result);
+        if (interval.data.referenceFrame === ReferenceFrame.INERTIAL) {
+            var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
+            if (typeof icrfToFixed === 'undefined') {
+                return undefined;
             }
-            return result;
-        }
-        result = interval.cachedValue = property.getValue(time, interval.cachedValue);
-        if (typeof result !== 'undefined') {
-            result = wgs84.cartographicToCartesian(result);
+            return icrfToFixed.multiplyByVector(result, result);
         }
         return result;
     };
@@ -221,7 +206,6 @@ define([
             result[r++] = tmp;
         }
 
-        var scratchCartographic;
         var steppedOnNow = typeof currentTime === 'undefined' || currentTime.lessThan(start) || currentTime.greaterThan(stop);
         for ( var i = startIndex; i < stopIndex + 1; i++) {
             var current;
@@ -232,7 +216,6 @@ define([
                 loopStop = nextInterval.start;
             }
             var property = interval.data;
-            var valueType = property.valueType;
             var currentInterval = property._intervals.get(0);
             var times = currentInterval.data.times;
             if (typeof times !== 'undefined') {
@@ -240,34 +223,19 @@ define([
                 //time range.  Note that times can contain data outside of
                 //the intervals range.  This is by design for use with interpolation.
                 var t;
-                if (valueType === CzmlCartesian3) {
-                    for (t = 0; t < times.length; t++) {
-                        current = times[t];
-                        if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
-                            tmp = property.getValue(currentTime, result[r]);
-                            if (typeof tmp !== 'undefined') {
-                                result[r++] = tmp;
-                            }
-                            steppedOnNow = true;
+                for (t = 0; t < times.length; t++) {
+                    current = times[t];
+                    if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
+                        tmp = property.getValue(currentTime, result[r]);
+                        if (typeof tmp !== 'undefined') {
+                            result[r++] = tmp;
                         }
-                        if (current.greaterThan(start) && current.lessThan(loopStop)) {
-                            tmp = property.getValue(current, result[r]);
-                            if (typeof tmp !== 'undefined') {
-                                result[r++] = tmp;
-                            }
-                        }
+                        steppedOnNow = true;
                     }
-                } else {
-                    for (t = 0; t < times.length; t++) {
-                        current = times[t];
-                        if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
-                            scratchCartographic = property.getValue(currentTime, scratchCartographic);
-                            result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
-                            steppedOnNow = true;
-                        }
-                        if (current.greaterThan(start) && current.lessThan(loopStop)) {
-                            scratchCartographic = property.getValue(current, scratchCartographic);
-                            result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
+                    if (current.greaterThan(start) && current.lessThan(loopStop)) {
+                        tmp = property.getValue(current, result[r]);
+                        if (typeof tmp !== 'undefined') {
+                            result[r++] = tmp;
                         }
                     }
                 }
@@ -282,14 +250,9 @@ define([
 
                 //Finally, get the value at this non-sampled interval.
                 if (current.lessThan(loopStop)) {
-                    if (valueType === CzmlCartesian3) {
-                        tmp = property.getValue(current, result[r]);
-                        if (typeof tmp !== 'undefined') {
-                            result[r++] = tmp;
-                        }
-                    } else {
-                        scratchCartographic = property.getValue(current, scratchCartographic);
-                        result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
+                    tmp = property.getValue(current, result[r]);
+                    if (typeof tmp !== 'undefined') {
+                        result[r++] = tmp;
                     }
                 }
             }
@@ -309,7 +272,7 @@ define([
         this._cachedTime = undefined;
         this._cachedInterval = undefined;
 
-        var iso8601Interval = czmlInterval.interval, property, valueType, unwrappedInterval;
+        var iso8601Interval = czmlInterval.interval, property, unwrappedInterval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
         } else {
@@ -328,8 +291,7 @@ define([
             //If so, see if the new data is the same type.
             property = existingInterval.data;
             if (typeof property !== 'undefined') {
-                valueType = property.valueType;
-                unwrappedInterval = valueType.unwrapInterval(czmlInterval);
+                unwrappedInterval = CzmlPosition.unwrapInterval(czmlInterval);
             }
         } else {
             //If not, create it.
@@ -337,18 +299,13 @@ define([
             thisIntervals.addInterval(existingInterval);
         }
 
-        //If the new data was a different type, unwrapping fails, look for a valueType for this type.
         if (typeof unwrappedInterval === 'undefined') {
-            for ( var i = 0, len = potentialTypes.length; i < len; i++) {
-                valueType = potentialTypes[i];
-                unwrappedInterval = valueType.unwrapInterval(czmlInterval);
-                if (typeof unwrappedInterval !== 'undefined') {
-                    property = new DynamicProperty(valueType);
-                    this._dynamicProperties.push(property);
-                    property.referenceFrame = ReferenceFrame.FIXED;
-                    existingInterval.data = property;
-                    break;
-                }
+            unwrappedInterval = CzmlPosition.unwrapInterval(czmlInterval);
+            if (typeof unwrappedInterval !== 'undefined') {
+                property = new DynamicProperty(CzmlPosition);
+                this._dynamicProperties.push(property);
+                existingInterval.data = property;
+                property.referenceFrame = ReferenceFrame.FIXED;
             }
         }
 
@@ -387,15 +344,7 @@ define([
             return undefined;
         }
         var property = interval.data;
-        var valueType = property.valueType;
-        if (valueType === CzmlCartesian3) {
-            result = property.getValue(time, result);
-        } else {
-            result = interval.cachedValue = property.getValue(time, interval.cachedValue);
-            if (typeof result !== 'undefined') {
-                result = wgs84.cartographicToCartesian(result);
-            }
-        }
+        result = property.getValue(time, result);
 
         if (interval.data.referenceFrame !== referenceFrame) {
             if (referenceFrame === ReferenceFrame.FIXED) {
