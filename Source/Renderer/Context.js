@@ -37,6 +37,7 @@ define([
         './UniformState',
         './VertexArray',
         './VertexLayout',
+        './ClearCommand',
         './PassState'
     ], function(
         defaultValue,
@@ -76,6 +77,7 @@ define([
         UniformState,
         VertexArray,
         VertexLayout,
+        ClearCommand,
         PassState) {
     "use strict";
     /*global ArrayBuffer,Uint8Array,Uint32Array*/
@@ -2144,8 +2146,6 @@ define([
             stencilMask : (typeof cs.stencilMask === 'undefined') ? ~0 : cs.stencilMask,
             dither : (typeof cs.dither === 'undefined') ? true : cs.dither,
 
-            framebuffer : cs.framebuffer,
-
             color : (typeof color !== 'undefined') ? Color.clone(color) : undefined,
             depth : depth,
             stencil : stencil
@@ -2186,6 +2186,7 @@ define([
         }
     };
 
+    var defaultClearCommand = new ClearCommand();
     var defaultPassState = new PassState();
 
     /**
@@ -2203,7 +2204,8 @@ define([
      */
     Context.prototype.clear = function(clearCommand, passState) {
         var clearState;
-        if (typeof clearCommand !== 'undefined' && typeof clearCommand.clearState !== 'undefined') {
+        clearCommand = defaultValue(clearCommand, defaultClearCommand);
+        if (typeof clearCommand.clearState !== 'undefined') {
             clearState = clearCommand.clearState;
         } else {
             clearState = this.createClearState();
@@ -2213,7 +2215,6 @@ define([
         var gl = this._gl;
         var bitmask = 0;
 
-        clearState = clearState || this.createClearState();
         var c = clearState.color;
         var d = clearState.depth;
         var s = clearState.stencil;
@@ -2248,7 +2249,8 @@ define([
         this._applyStencilMask(clearState.stencilMask);
         this._applyDither(clearState.dither);
 
-        var framebuffer = defaultValue(clearState.framebuffer, passState.framebuffer);
+        // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
+        var framebuffer = defaultValue(clearCommand.framebuffer, passState.framebuffer);
 
         if (typeof framebuffer !== 'undefined') {
             framebuffer._bind();

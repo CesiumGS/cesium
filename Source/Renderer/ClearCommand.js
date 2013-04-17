@@ -9,11 +9,12 @@ define(function() {
      * @constructor
      *
      * @param {ClearState} [clearState] The clear state.
+     * @param {Framebuffer} [framebuffer] The framebuffer to clear when the command is executed.
      *
      * @see DrawCommand
      * @see PassState
      */
-    var ClearCommand = function(clearState) {
+    var ClearCommand = function(clearState, framebuffer) {
         /**
          * The clear state.  If this property is undefined, a default clear state is used.
          * @type Object
@@ -24,7 +25,7 @@ define(function() {
          * The framebuffer to clear.
          * @type Framebuffer
          */
-        this.framebuffer = undefined;
+        this.framebuffer = framebuffer;
     };
 
     /**
