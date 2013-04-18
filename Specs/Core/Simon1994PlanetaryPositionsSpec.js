@@ -16,12 +16,22 @@ function(PlanetaryPositions,
     it('runs moon', function() {
         var currentDate = JulianDate.fromTotalDays(2436912.5, TimeStandard.TAI);
         var moonPosition = PlanetaryPositions.ComputeMoon(currentDate);
-        expect(true).toEqual(true);
+        var X = -310555583.43170923;  //Values from Components
+        var Y = 251142594.25981933;
+        var Z = 0.0;
+        expect(X).toEqual(moonPosition.x);
+        expect(Y).toEqual(moonPosition.y);
+        expect(Z).toEqual(moonPosition.z);
     });
 
     it('runs barycenter', function() {
         var currentDate = JulianDate.fromTotalDays(2436912.5, TimeStandard.TAI);
         var barycenter = PlanetaryPositions.ComputeEarthMoonBarycenter(currentDate);
-        expect(true).toEqual(true);
+        var X = 133440054709.63293;  //Values from Components
+        var Y = -62423836255.45192;
+        var Z = 0.0;
+        expect(X).toEqual(barycenter.x);
+        expect(Y).toEqual(barycenter.y);
+        expect(Z).toEqual(barycenter.z);
     });
 });

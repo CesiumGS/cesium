@@ -1,41 +1,15 @@
 /*global define*/
 define([
-        './defaultValue',
         './DeveloperError',
-        './Iau2006XysData',
-        './Iau2006XysSample',
         './Math',
-        './Matrix3',
-        './Matrix4',
-        './Cartesian2',
         './Cartesian3',
-        './Cartesian4',
-        './TimeConstants',
-        './TimeStandard',
-        './Ellipsoid',
-        './JulianDate',
-        './EarthOrientationParameters',
-        './EarthOrientationParametersSample',
-        '../ThirdParty/when'
+        './KeplerianElements'
     ],
     function(
-        defaultValue,
         DeveloperError,
-        Iau2006XysData,
-        Iau2006XysSample,
         CesiumMath,
-        Matrix3,
-        Matrix4,
-        Cartesian2,
         Cartesian3,
-        Cartesian4,
-        TimeConstants,
-        TimeStandard,
-        Ellipsoid,
-        JulianDate,
-        EarthOrientationParameters,
-        EarthOrientationParametersSample,
-        when) {
+        KeplerianElements) {
     "use strict";
 
     var ModifiedKeplerianElements = function(radiusOfPeriapsis, inverseSemimajorAxis, inclination, argumentOfPeriapsis,

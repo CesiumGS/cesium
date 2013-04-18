@@ -2,6 +2,7 @@
 define([
         './DeveloperError',
         './ModifiedKeplerianElements',
+        './KeplerianElements',
         './Math',
         './Cartesian3',
         './TimeConstants',
@@ -11,6 +12,7 @@ define([
     function(
         DeveloperError,
         ModifiedKeplerianElements,
+        KeplerianElements,
         CesiumMath,
         Cartesian3,
         TimeConstants,
@@ -19,7 +21,7 @@ define([
     "use strict";
 
     var PlanetaryPositions = {};
-    var epoch = JulianDate.fromTotalDays(2451545.0, TimeStandard.TAI); //TODO: BarycentricDynamicalTime
+    var epoch = JulianDate.fromTotalDays(2451545.0, TimeStandard.TAI);
     var GravitationalParameterOfEarth = 3.98600435e14;
     var GravitationalParameterOfSun = GravitationalParameterOfEarth * (1.0 + 0.012300034) * 328900.56;
     var MetersPerKilometer = 1000.0;
@@ -32,14 +34,13 @@ define([
             inclination = -inclination;
             longitudeOfNode += CesiumMath.PI;
         }
-        var meanAnomaly = meanLongitude - longitudeOfPerigee;
         var elements = new ModifiedKeplerianElements(
             semimajorAxis * (1.0 - eccentricity),
             1.0 / semimajorAxis,
             inclination,
             longitudeOfPerigee - longitudeOfNode,
             longitudeOfNode,
-            meanAnomaly, //TODO: KeplerianElements.MeanAnomalyToTrueAnomaly(meanLongitude - longitudeOfPerigee, eccentricity),
+            KeplerianElements.MeanAnomalyToTrueAnomaly(meanLongitude - longitudeOfPerigee, eccentricity),
             gravitationalParameter);
         return elements.ToCartesian();
     }

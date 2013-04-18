@@ -418,6 +418,16 @@ define([
     };
 
     /**
+     * Alters the value of input x such that 0 <= x <= <code>CesiumMath.TWO_PI</code>
+     * @param {Number} angle in radians
+     * @return {Number} The angle in the range (0 , <code>CesiumMath.TWO_PI</code>).
+     */
+    CesiumMath.zeroToTwoPi = function(x) {
+        var value = x % CesiumMath.TWO_PI;
+        return (value < 0.0) ? (value + CesiumMath.TWO_PI) % CesiumMath.TWO_PI : value;
+    };
+
+    /**
      * DOC_TBA
      */
     CesiumMath.equalsEpsilon = function(left, right, epsilon) {
