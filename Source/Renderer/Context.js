@@ -2760,7 +2760,7 @@ define([
      * @example
      * var object = context.getObjectByPickColor(pickColor);
      *
-     * @see Context#createPickColor
+     * @see Context#createPickId
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
         if (typeof pickColor === 'undefined') {
