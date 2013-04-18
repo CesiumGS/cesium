@@ -4,13 +4,15 @@ defineSuite([
          'Core/JulianDate',
          'Core/Ellipsoid',
          'Core/Cartesian3',
-         'Core/Cartographic'
+         'Core/Cartographic',
+         'Core/Math'
      ], function(
           DynamicPositionProperty,
           JulianDate,
           Ellipsoid,
           Cartesian3,
-          Cartographic) {
+          Cartographic,
+          CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -79,9 +81,9 @@ defineSuite([
         property.processCzmlIntervals(cartographicInterval);
 
         var result = property.getValueCartographic(epoch);
-        expect(result.longitude).toEqual(0.1);
-        expect(result.latitude).toEqual(0.2);
-        expect(result.height).toEqual(1000);
+        expect(result.longitude).toEqualEpsilon(0.1, CesiumMath.EPSILON16);
+        expect(result.latitude).toEqualEpsilon(0.2, CesiumMath.EPSILON16);
+        expect(result.height).toEqualEpsilon(1000, CesiumMath.EPSILON8);
     });
 
     it('getValueCartesian works for cartographic data', function() {
@@ -90,26 +92,9 @@ defineSuite([
 
         var cartesian = Ellipsoid.WGS84.cartographicToCartesian(property.getValueCartographic(epoch));
         var result = property.getValueCartesian(epoch);
-        expect(result.x).toEqual(cartesian.x);
-        expect(result.y).toEqual(cartesian.y);
-        expect(result.z).toEqual(cartesian.z);
-    });
-
-    it('replacing an interval with data of a different type works', function() {
-        var property = new DynamicPositionProperty();
-        property.processCzmlIntervals(cartesianInterval);
-
-        var result = property.getValueCartesian(epoch);
-        expect(result.x).toEqual(100000);
-        expect(result.y).toEqual(100001);
-        expect(result.z).toEqual(100002);
-
-        property.processCzmlIntervals(cartographicInterval);
-
-        result = property.getValueCartographic(epoch);
-        expect(result.longitude).toEqual(0.1);
-        expect(result.latitude).toEqual(0.2);
-        expect(result.height).toEqual(1000);
+        expect(result.x).toEqualEpsilon(cartesian.x, CesiumMath.EPSILON9);
+        expect(result.y).toEqualEpsilon(cartesian.y, CesiumMath.EPSILON9);
+        expect(result.z).toEqualEpsilon(cartesian.z, CesiumMath.EPSILON9);
     });
 
     var cartesian0 = new Cartesian3(0.0, 0.0, 0.0);
@@ -117,7 +102,6 @@ defineSuite([
     var cartesian2 = new Cartesian3(2.0, 2.0, 2.0);
     var cartographic3 = new Cartographic(0.3, 0.3, 0.3);
     var cartographic4 = new Cartographic(0.4, 0.4, 0.4);
-    var cartographic45 = new Cartographic(0.45, 0.45, 0.45);
     var cartographic5 = new Cartographic(0.5, 0.5, 0.5);
     var cartesian6 = new Cartesian3(6.0, 6.0, 6.0);
     var cartographic7 = new Cartographic(0.7, 0.7, 0.7);
@@ -231,20 +215,6 @@ defineSuite([
         expect(result[0]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic3));
         expect(result[1]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic4));
         expect(result[2]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic5));
-    });
-
-    it('getValueRangeCartesian works with single cartographic interval and currentTime', function() {
-        var property = new DynamicPositionProperty();
-        property.processCzmlIntervals(cartographicForgetValueRangeCartesian);
-        var start = JulianDate.fromIso8601(cartographicForgetValueRangeCartesian.epoch).addSeconds(0);
-        var currentTime = JulianDate.fromIso8601(cartographicForgetValueRangeCartesian.epoch).addSeconds(1.5);
-        var stop = JulianDate.fromIso8601(cartographicForgetValueRangeCartesian.epoch).addSeconds(2);
-        var result = property.getValueRangeCartesian(start, stop, currentTime);
-        expect(result.length).toEqual(4);
-        expect(result[0]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic3));
-        expect(result[1]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic4));
-        expect(result[2]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic45));
-        expect(result[3]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic5));
     });
 
     it('getValueRangeCartesian works across intervals', function() {

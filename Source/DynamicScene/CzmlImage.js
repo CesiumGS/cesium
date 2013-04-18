@@ -10,7 +10,7 @@ define(['../ThirdParty/Uri'], function(Uri) {
      * @see DynamicProperty
      * @see CzmlCartesian2
      * @see CzmlCartesian3
-     * @see CzmlCartographic
+     * @see CzmlPosition
      * @see CzmlColor
      * @see CzmlHorizontalOrigin
      * @see CzmlLabelStyle
