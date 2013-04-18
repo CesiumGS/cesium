@@ -19,9 +19,9 @@ define([
      * @param {String} qualifier The GLSL qualifier, <code>uniform</code> or <code>varying</code>, for the input <code>czm_pickColor</code>.
      *
      * @returns {String} The modified fragment shader source.
-     * @returns {String} qualifier must be 'uniform' or 'varying'.
      *
      * @exception {DeveloperError} fragmentShaderSource is required.
+     * @exception {DeveloperError} qualifier must be 'uniform' or 'varying'.
      *
      * @example
      * var pickFS = createPickFragmentShaderSource('void main() { gl_FragColor = vec4(1.0); }', 'uniform');
