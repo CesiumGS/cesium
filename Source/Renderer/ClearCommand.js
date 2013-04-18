@@ -3,13 +3,10 @@ define(function() {
     "use strict";
 
     /**
-     * Represents a command to the renderer for clearing.
+     * Represents a command to the renderer for clearing a framebuffer.
      *
      * @alias ClearCommand
      * @constructor
-     *
-     * @param {ClearState} [clearState] The clear state.
-     * @param {Framebuffer} [framebuffer] The framebuffer to clear when the command is executed.
      *
      * @see DrawCommand
      * @see PassState
@@ -21,7 +18,7 @@ define(function() {
          * @type Object
          * @default undefined
          */
-        this.clearState = clearState;
+        this.clearState = undefined;
 
         /**
          * The render state to apply when executing the clear command.  The following states affect clearing:
@@ -41,7 +38,7 @@ define(function() {
          * @type Framebuffer
          * @default undefined
          */
-        this.framebuffer = framebuffer;
+        this.framebuffer = undefined;
     };
 
     /**

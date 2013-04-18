@@ -6,6 +6,7 @@ defineSuite([
          'Core/PrimitiveType',
          'Core/WindingOrder',
          'Core/BoundingRectangle',
+         'Core/Color',
          'Renderer/BufferUsage',
          'Renderer/BlendEquation',
          'Renderer/BlendFunction',
@@ -21,6 +22,7 @@ defineSuite([
          PrimitiveType,
          WindingOrder,
          BoundingRectangle,
+         Color,
          BufferUsage,
          BlendEquation,
          BlendFunction,
@@ -519,30 +521,25 @@ defineSuite([
         };
 
         // 1 of 2.  Triangle fan passes the depth test.
-        context.clear(new ClearCommand(context.createClearState({
-            color : {
-                red : 0.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 0.0
-            },
+
+        var command = new ClearCommand();
+        command.clearState = context.createClearState({
+            color : new Color (0.0, 0.0, 0.0, 0.0),
             depth : 1.0
-        })));
+        });
+        context.clear(command);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw(da);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         // 2 of 2.  Triangle fan fails the depth test.
-        context.clear(new ClearCommand(context.createClearState({
-            color : {
-                red : 0.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 0.0
-            },
+        command.clearState = context.createClearState({
+            color : new Color (0.0, 0.0, 0.0, 0.0),
             depth : 0.0
-        })));
+        });
+        context.clear(command);
+
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw(da);

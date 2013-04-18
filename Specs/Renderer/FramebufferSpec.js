@@ -4,6 +4,7 @@ defineSuite([
          'Specs/destroyContext',
          'Core/Cartesian4',
          'Core/PrimitiveType',
+         'Core/Color',
          'Renderer/PixelFormat',
          'Renderer/PixelDatatype',
          'Renderer/BufferUsage',
@@ -17,6 +18,7 @@ defineSuite([
          destroyContext,
          Cartesian4,
          PrimitiveType,
+         Color,
          PixelFormat,
          PixelDatatype,
          BufferUsage,
@@ -156,14 +158,12 @@ defineSuite([
             colorTexture : colorTexture
         });
 
-        context.clear(new ClearCommand(context.createClearState({
-            color : {
-                red : 0.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
-        }), framebuffer));
+        var command = new ClearCommand();
+        command.clearState = context.createClearState({
+            color : new Color (0.0, 1.0, 0.0, 1.0)
+        });
+        command.framebuffer = framebuffer;
+        context.clear(command);
 
         // 3 of 4.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -206,14 +206,12 @@ defineSuite([
             colorTexture : cubeMap.getPositiveX()
         });
 
-        context.clear(new ClearCommand(context.createClearState({
-            color : {
-                red : 0.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
-        }), framebuffer));
+        var command = new ClearCommand();
+        command.clearState = context.createClearState({
+            color : new Color (0.0, 1.0, 0.0, 1.0)
+        });
+        command.framebuffer = framebuffer;
+        context.clear(command);
 
         framebuffer.setColorTexture(undefined);
 
@@ -410,10 +408,10 @@ defineSuite([
         });
 
         // 1 of 3.  Clear framebuffer
-        context.clear(new ClearCommand(context.createClearState(), framebuffer));
-        expect(context.readPixels({
-            framebuffer : framebuffer
-        })).toEqual([0, 0, 0, 0]);
+        var command = new ClearCommand();
+        command.clearState = context.createClearState();
+        command.framebuffer = framebuffer;
+        context.clear(command);
 
         // 2 of 3.  Does not pass depth test
         context.draw({

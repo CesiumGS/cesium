@@ -667,9 +667,11 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         // Clear framebuffer to red and copy to +X face
-        context.clear(new ClearCommand(context.createClearState({
+        var command = new ClearCommand();
+        command.clearState = context.createClearState({
             color : new Color (1.0, 0.0, 0.0, 1.0)
-        })));
+        });
+        context.clear(command);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
         cubeMap.getPositiveX().copyFromFramebuffer();
 
