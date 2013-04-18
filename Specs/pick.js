@@ -1,15 +1,18 @@
 /*global define*/
 define([
         'Core/defaultValue',
+        'Core/BoundingRectangle',
         'Scene/FrameState'
     ], function(
         defaultValue,
+        BoundingRectangle,
         FrameState) {
     "use strict";
 
     function pick(context, frameState, primitives, x, y) {
+        var rectangle = new BoundingRectangle(x, y, 1, 1);
         var pickFramebuffer = context.createPickFramebuffer();
-        var fb = pickFramebuffer.begin();
+        var passState = pickFramebuffer.begin(rectangle);
 
         var oldPasses = frameState.passes;
         frameState.passes = (new FrameState()).passes;
@@ -24,17 +27,13 @@ define([
             var commandListLength = commandList.length;
             for (var j = 0; j < commandListLength; ++j) {
                 var command = commandList[j];
-                command.framebuffer = defaultValue(command.framebuffer, fb);
-                context.draw(command);
+                command.execute(context, passState);
             }
         }
 
         frameState.passes = oldPasses;
 
-        var primitive = pickFramebuffer.end({
-            x : x,
-            y : y
-        });
+        var primitive = pickFramebuffer.end(rectangle);
         pickFramebuffer.destroy();
 
         return primitive;

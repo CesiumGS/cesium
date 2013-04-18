@@ -18,7 +18,6 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/BlendingState',
         './Material',
-        '../Shaders/Noise',
         '../Shaders/Ray',
         '../Shaders/ConstructiveSolidGeometry',
         '../Shaders/SensorVolume',
@@ -44,7 +43,6 @@ define([
         DrawCommand,
         BlendingState,
         Material,
-        ShadersNoise,
         ShadersRay,
         ShadersConstructiveSolidGeometry,
         ShadersSensorVolume,
@@ -435,8 +433,6 @@ define([
 
                 var fsSource =
                     '#line 0\n' +
-                    ShadersNoise +
-                    '#line 0\n' +
                     ShadersRay +
                     '#line 0\n' +
                     ShadersConstructiveSolidGeometry +
@@ -447,8 +443,8 @@ define([
                     '#line 0\n' +
                     ComplexConicSensorVolumeFS;
 
-                this._colorCommand.shaderProgram = this._colorCommand.shaderProgram && this._colorCommand.shaderProgram.release();
-                this._colorCommand.shaderProgram = context.getShaderCache().getShaderProgram(ComplexConicSensorVolumeVS, fsSource, attributeIndices);
+                this._colorCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
+                    this._colorCommand.shaderProgram, ComplexConicSensorVolumeVS, fsSource, attributeIndices);
             }
 
             this._commandLists.colorList.push(this._colorCommand);
@@ -474,7 +470,7 @@ define([
                 var that = this;
                 this._pickCommand.uniformMap = combine([this._uniforms, {
                     u_pickColor : function() {
-                        return that._pickId.normalizedRgba;
+                        return that._pickId.color;
                     }
                 }], false, false);
             }

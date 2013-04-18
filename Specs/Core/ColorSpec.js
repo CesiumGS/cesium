@@ -228,4 +228,18 @@ defineSuite(['Core/Color',
     it('toString produces correct results', function() {
         expect(new Color(0.1, 0.2, 0.3, 0.4).toString()).toEqual('(0.1, 0.2, 0.3, 0.4)');
     });
+
+    it('can convert to and from RGBA', function() {
+        // exact values will depend on endianness, but it should round-trip.
+        var color = Color.fromBytes(0xFF, 0xCC, 0x00, 0xEE);
+
+        var rgba = color.toRgba();
+        expect(rgba).toBeGreaterThan(0);
+
+        var newColor = Color.fromRgba(rgba);
+        expect(color).toEqual(newColor);
+
+        var newRgba = newColor.toRgba();
+        expect(rgba).toEqual(newRgba);
+    });
 });
