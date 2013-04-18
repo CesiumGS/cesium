@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/Color',
         '../Core/combine',
         '../Core/destroyObject',
         '../Core/Math',
@@ -25,6 +26,7 @@ define([
         '../Shaders/BillboardCollectionFS'
     ], function(
         DeveloperError,
+        Color,
         combine,
         destroyObject,
         CesiumMath,
@@ -738,26 +740,38 @@ define([
 
     function writePickColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = (billboard._index * 4);
-        var pickColor = billboard.getPickId(context).unnormalizedRgb;
 
         var pickWriters = vafWriters[pickPassPurpose];
         var writer = pickWriters[attributeIndices.pickColor];
-        writer(i + 0, pickColor.red, pickColor.green, pickColor.blue, pickColor.alpha);
-        writer(i + 1, pickColor.red, pickColor.green, pickColor.blue, pickColor.alpha);
-        writer(i + 2, pickColor.red, pickColor.green, pickColor.blue, pickColor.alpha);
-        writer(i + 3, pickColor.red, pickColor.green, pickColor.blue, pickColor.alpha);
+
+        var pickColor = billboard.getPickId(context).color;
+        var red = Color.floatToByte(pickColor.red);
+        var green = Color.floatToByte(pickColor.green);
+        var blue = Color.floatToByte(pickColor.blue);
+        var alpha = Color.floatToByte(pickColor.alpha);
+
+        writer(i + 0, red, green, blue, alpha);
+        writer(i + 1, red, green, blue, alpha);
+        writer(i + 2, red, green, blue, alpha);
+        writer(i + 3, red, green, blue, alpha);
     }
 
     function writeColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = (billboard._index * 4);
-        var color = billboard.getColor();
 
         var colorWriters = vafWriters[colorPassPurpose];
         var writer = colorWriters[attributeIndices.color];
-        writer(i + 0, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
-        writer(i + 1, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
-        writer(i + 2, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
-        writer(i + 3, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
+
+        var color = billboard.getColor();
+        var red = Color.floatToByte(color.red);
+        var green = Color.floatToByte(color.green);
+        var blue = Color.floatToByte(color.blue);
+        var alpha = Color.floatToByte(color.alpha);
+
+        writer(i + 0, red, green, blue, alpha);
+        writer(i + 1, red, green, blue, alpha);
+        writer(i + 2, red, green, blue, alpha);
+        writer(i + 3, red, green, blue, alpha);
     }
 
     function writeOriginAndShow(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
