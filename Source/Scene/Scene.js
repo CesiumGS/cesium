@@ -91,14 +91,12 @@ define([
         this._frustumCommandsList = [];
 
         this._clearColorCommand = new ClearCommand();
-        this._clearColorCommand.clearState = context.createClearState({
-            color : new Color()
-        });
-        this._clearDepthStencilCommand = new ClearCommand();
-        this._clearDepthStencilCommand.clearState = context.createClearState({
-            depth : 1.0,
-            stencil : 0.0
-        });
+        this._clearColorCommand.color = new Color();
+
+        var clearDepthStencilCommand = new ClearCommand();
+        clearDepthStencilCommand.depth = 1.0;
+        clearDepthStencilCommand.stencil = 1.0;
+        this._clearDepthStencilCommand = clearDepthStencilCommand;
 
         /**
          * The {@link SkyBox} used to draw the stars.
@@ -407,7 +405,7 @@ define([
         var skyAtmosphereCommand = (typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, scene._frameState) : undefined;
 
         var clear = scene._clearColorCommand;
-        Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.clearState.color);
+        Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.color);
         clear.execute(context, passState);
 
         // Ideally, we would render the sky box and atmosphere last for

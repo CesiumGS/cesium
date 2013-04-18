@@ -246,9 +246,6 @@ define([
         this._clearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
         this._clearDepth = gl.getParameter(gl.DEPTH_CLEAR_VALUE);
         this._clearStencil = gl.getParameter(gl.STENCIL_CLEAR_VALUE);
-        this._defaultClearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
-        this._defaultClearDepth = this._clearDepth;
-        this._defaultClearStencil = this._clearStencil;
 
         this._us = new UniformState();
         this._currentFramebuffer = undefined;
@@ -2126,37 +2123,6 @@ define([
         return s;
     };
 
-    /**
-     * DOC_TBA.
-     *
-     * @memberof Context
-     *
-     * Validates and adds defaults for missing states.
-     *
-     * @see Context#clear
-     */
-    Context.prototype.createClearState = function(clearState) {
-        var cs = clearState || {};
-        var color = cs.color;
-        var depth = cs.depth;
-        var stencil = cs.stencil;
-
-        // Clear everything if nothing is specified
-        if ((typeof color === 'undefined') && (typeof depth === 'undefined') && (typeof stencil === 'undefined')) {
-            color = this._defaultClearColor;
-            depth = this._defaultClearDepth;
-            stencil = this._defaultClearStencil;
-        }
-
-        var c = {
-            color : (typeof color !== 'undefined') ? Color.clone(color) : undefined,
-            depth : depth,
-            stencil : stencil
-        };
-
-        return c;
-    };
-
     Context.prototype._validateFramebuffer = function(framebuffer) {
         if (this._validateFB) {
             var gl = this._gl;
@@ -2207,30 +2173,23 @@ define([
      *
      * @memberof Context
      *
-     * @param {ClearCommand} [clearCommand] The command with which to clear.  If this parameter is undefined
-     *        or its clearState property is undefined, a default clear state is used.
-     * @param {PassState} [passState] The state for the current rendering pass
+     * @param {ClearCommand} [clearCommand] The command with which to clear.
+     * @param {PassState} [passState] The state for the current rendering pass.
      *
      * @memberof Context
      *
-     * @see Context#createClearState
+     * @see ClearCommand
      */
     Context.prototype.clear = function(clearCommand, passState) {
-        var clearState;
         clearCommand = defaultValue(clearCommand, defaultClearCommand);
-        if (typeof clearCommand.clearState !== 'undefined') {
-            clearState = clearCommand.clearState;
-        } else {
-            clearState = this.createClearState();
-        }
         passState = defaultValue(passState, defaultPassState);
 
         var gl = this._gl;
         var bitmask = 0;
 
-        var c = clearState.color;
-        var d = clearState.depth;
-        var s = clearState.stencil;
+        var c = clearCommand.color;
+        var d = clearCommand.depth;
+        var s = clearCommand.stencil;
 
         if (typeof c !== 'undefined') {
             if (!Color.equals(this._clearColor, c)) {
@@ -2256,8 +2215,7 @@ define([
             bitmask |= gl.STENCIL_BUFFER_BIT;
         }
 
-// TODO: cleaner
-        var rs = clearCommand.renderState || this.createRenderState();
+        var rs = (typeof clearCommand.renderState !== 'undefined') ? clearCommand.renderState : this.createRenderState();
         applyRenderState(this, rs, passState);
 
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.

@@ -1,5 +1,10 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/Color',
+        '../Core/freezeObject'
+    ], function(
+        Color,
+        freezeObject) {
     "use strict";
 
     /**
@@ -11,14 +16,30 @@ define(function() {
      * @see DrawCommand
      * @see PassState
      */
-    var ClearCommand = function(clearState, framebuffer) {
+    var ClearCommand = function() {
         /**
-         * The clear state.  If this property is undefined, a default clear state is used.
+         * The value to clear the color buffer to.  When <code>undefined</code>, the color buffer is not cleared.
          *
-         * @type Object
+         * @type Color
          * @default undefined
          */
-        this.clearState = undefined;
+        this.color = undefined;
+
+        /**
+         * The value to clear the depth buffer to.  When <code>undefined</code>, the depth buffer is not cleared.
+         *
+         * @type Number
+         * @default undefined
+         */
+        this.depth = undefined;
+
+        /**
+         * The value to clear the stencil buffer to.  When <code>undefined</code>, the stencil buffer is not cleared.
+         *
+         * @type Number
+         * @default undefined
+         */
+        this.stencil = undefined;
 
         /**
          * The render state to apply when executing the clear command.  The following states affect clearing:
@@ -40,6 +61,19 @@ define(function() {
          */
         this.framebuffer = undefined;
     };
+
+    var all = new ClearCommand();
+    all.color = new Color(0.0, 0.0, 0.0, 0.0);
+    all.depth = 1.0;
+    all.stencil = 0.0;
+
+    /**
+     * Clears color to (0.0, 0.0, 0.0, 0.0); depth to 1.0; and stencil to 0.
+     *
+     * @constant
+     * @type {ClearCommand}
+     */
+    ClearCommand.ALL = freezeObject(all);
 
     /**
      * Executes the clear command.

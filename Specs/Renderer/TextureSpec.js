@@ -118,19 +118,15 @@ defineSuite([
 
     it('can create a texture from the framebuffer', function() {
         var command = new ClearCommand();
-        command.clearState = context.createClearState({
-            color : Color.RED
-        });
-        context.clear(command);
+        command.color = Color.RED;
+        command.execute(context);
 
         texture = context.createTexture2DFromFramebuffer();
         expect(texture.getWidth()).toEqual(context.getCanvas().clientWidth);
         expect(texture.getHeight()).toEqual(context.getCanvas().clientHeight);
 
-        command.clearState = context.createClearState({
-            color : Color.WHITE
-        });
-        context.clear(command);
+        command.color = Color.WHITE;
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.WHITE.toBytes());
 
         expect(renderFragment(context)).toEqual(Color.RED.toBytes());
@@ -147,19 +143,15 @@ defineSuite([
 
         // Clear to red
         var command = new ClearCommand();
-        command.clearState = context.createClearState({
-            color : Color.RED
-        });
-        context.clear(command);
+        command.color = Color.RED;
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.RED.toBytes());
 
         texture.copyFromFramebuffer();
 
         // Clear to white
-        command.clearState = context.createClearState({
-            color : Color.WHITE
-        });
-        context.clear(command);
+        command.color = Color.WHITE;
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.WHITE.toBytes());
 
         // Render red

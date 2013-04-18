@@ -16,6 +16,7 @@ defineSuite([
          'Core/Matrix4',
          'Core/Math',
          'Renderer/BufferUsage',
+         'Renderer/ClearCommand',
          'Scene/HorizontalOrigin',
          'Scene/VerticalOrigin',
          'Scene/LabelStyle',
@@ -38,6 +39,7 @@ defineSuite([
          Matrix4,
          CesiumMath,
          BufferUsage,
+         ClearCommand,
          HorizontalOrigin,
          VerticalOrigin,
          LabelStyle,
@@ -306,7 +308,7 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, labels);
@@ -315,7 +317,7 @@ defineSuite([
         label.setScale(2.0);
         labels.remove(label);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, labels);
@@ -339,7 +341,7 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, labels);
@@ -358,7 +360,7 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, labels);
@@ -397,13 +399,13 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         labels.remove(label);
@@ -423,7 +425,7 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, labels);
@@ -431,7 +433,7 @@ defineSuite([
 
         labels.remove(label);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         render(context, frameState, labels);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
@@ -446,7 +448,7 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
@@ -463,13 +465,13 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         labels.removeAll();
@@ -489,13 +491,13 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         labels.removeAll();
@@ -526,13 +528,13 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, labels);
@@ -551,13 +553,13 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         label.setShow(false);
@@ -581,13 +583,13 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         label.setPosition({
@@ -619,13 +621,13 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         label.setScale(0.0);

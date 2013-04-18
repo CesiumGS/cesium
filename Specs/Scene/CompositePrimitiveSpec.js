@@ -13,6 +13,7 @@ defineSuite([
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Math',
+         'Renderer/ClearCommand',
          'Scene/Camera',
          'Scene/CentralBody',
          'Scene/LabelCollection',
@@ -33,6 +34,7 @@ defineSuite([
          Cartographic,
          Ellipsoid,
          CesiumMath,
+         ClearCommand,
          Camera,
          CentralBody,
          LabelCollection,
@@ -247,7 +249,7 @@ defineSuite([
     });
 
     it('renders a primitive added with add()', function() {
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         primitives.add(createLabels());
@@ -256,7 +258,7 @@ defineSuite([
     });
 
     it('does not render', function() {
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         primitives.show = false;
@@ -268,7 +270,7 @@ defineSuite([
     it('renders a primitive in more than one composite', function() {
         var otherPrimitives = new CompositePrimitive(context);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var p = createLabels();
@@ -280,7 +282,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         // Render using other composite
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, otherPrimitives);
@@ -290,7 +292,7 @@ defineSuite([
     });
 
     it('renders child composites', function() {
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var children = new CompositePrimitive();
@@ -455,7 +457,7 @@ defineSuite([
         var savedCamera;
 
         runs(function() {
-            context.clear();
+            ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
             var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);

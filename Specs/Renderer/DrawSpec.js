@@ -65,7 +65,7 @@ defineSuite([
             componentsPerAttribute : 4
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
@@ -92,7 +92,7 @@ defineSuite([
         //   http://www.khronos.org/message_boards/viewtopic.php?f=44&t=3719
         va.setIndexBuffer(context.createIndexBuffer(new Uint16Array([0, 0]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT));
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
@@ -128,7 +128,7 @@ defineSuite([
             componentsPerAttribute : 1
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
@@ -171,7 +171,7 @@ defineSuite([
             strideInBytes : stride
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
@@ -195,7 +195,7 @@ defineSuite([
         });
 
         // 1 of 3:  Clear to black
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 3:  Render point - fails scissor test
@@ -240,7 +240,7 @@ defineSuite([
         });
 
         // 1 of 3:  Clear to black
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 3:  Render point - blue color mask
@@ -289,7 +289,7 @@ defineSuite([
         });
 
         // 1 of 3:  Clear to black
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var da = {
@@ -331,7 +331,7 @@ defineSuite([
         });
 
         // 1 of 3:  Clear to black
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var da = {
@@ -372,7 +372,7 @@ defineSuite([
             componentsPerAttribute : 4
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var da = {
@@ -417,7 +417,7 @@ defineSuite([
         });
 
         // 1 of 3:  Clear to black
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 3:  Cull front faces - nothing is drawn
@@ -462,7 +462,7 @@ defineSuite([
         });
 
         // 1 of 3:  Clear to black
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 3:  Cull back faces with opposite winding order - nothing is drawn
@@ -523,22 +523,18 @@ defineSuite([
         // 1 of 2.  Triangle fan passes the depth test.
 
         var command = new ClearCommand();
-        command.clearState = context.createClearState({
-            color : new Color (0.0, 0.0, 0.0, 0.0),
-            depth : 1.0
-        });
-        context.clear(command);
+        command.color = new Color (0.0, 0.0, 0.0, 0.0);
+        command.depth = 1.0;
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw(da);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         // 2 of 2.  Triangle fan fails the depth test.
-        command.clearState = context.createClearState({
-            color : new Color (0.0, 0.0, 0.0, 0.0),
-            depth : 0.0
-        });
-        context.clear(command);
+        command.color = new Color (0.0, 0.0, 0.0, 0.0);
+        command.depth = 0.0;
+        command.execute(context);
 
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
@@ -558,7 +554,7 @@ defineSuite([
             componentsPerAttribute : 4
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
@@ -587,7 +583,7 @@ defineSuite([
             componentsPerAttribute : 4
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
@@ -618,7 +614,7 @@ defineSuite([
             componentsPerAttribute : 4
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
@@ -648,7 +644,7 @@ defineSuite([
             componentsPerAttribute : 4
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
@@ -700,7 +696,7 @@ defineSuite([
         });
 
         // 1 of 4.  Clear, including stencil
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 4.  Render where stencil is set - nothing is drawn
@@ -766,7 +762,7 @@ defineSuite([
         });
 
         // 1 of 4.  Clear, including stencil
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 4.  Render where stencil is set - nothing is drawn
@@ -824,7 +820,7 @@ defineSuite([
             componentsPerAttribute : 4
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // The first point in the vertex buffer does not generate any pixels

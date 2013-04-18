@@ -12,7 +12,8 @@ defineSuite([
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/EncodedCartesian3',
-         'Renderer/BufferUsage'
+         'Renderer/BufferUsage',
+         'Renderer/ClearCommand'
      ], 'Renderer/BuiltinFunctions', function(
          createContext,
          destroyContext,
@@ -26,7 +27,8 @@ defineSuite([
          Cartesian2,
          Cartesian3,
          EncodedCartesian3,
-         BufferUsage) {
+         BufferUsage,
+         ClearCommand) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -51,7 +53,7 @@ defineSuite([
             componentsPerAttribute : 4
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({

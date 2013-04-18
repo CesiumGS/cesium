@@ -146,7 +146,7 @@ defineSuite([
 
     it('clears a color attachment', function() {
         // 1 of 4.  Clear default color buffer to black.
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 4.  Clear framebuffer color attachment to green.
@@ -159,11 +159,9 @@ defineSuite([
         });
 
         var command = new ClearCommand();
-        command.clearState = context.createClearState({
-            color : new Color (0.0, 1.0, 0.0, 1.0)
-        });
+        command.color = new Color (0.0, 1.0, 0.0, 1.0);
         command.framebuffer = framebuffer;
-        context.clear(command);
+        command.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -198,7 +196,7 @@ defineSuite([
         });
 
         // 1 of 4.  Clear default color buffer to black.
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 4.  Clear framebuffer color attachment to green.
@@ -207,11 +205,9 @@ defineSuite([
         });
 
         var command = new ClearCommand();
-        command.clearState = context.createClearState({
-            color : new Color (0.0, 1.0, 0.0, 1.0)
-        });
+        command.color = new Color (0.0, 1.0, 0.0, 1.0);
         command.framebuffer = framebuffer;
-        context.clear(command);
+        command.execute(context);
 
         framebuffer.setColorTexture(undefined);
 
@@ -253,7 +249,7 @@ defineSuite([
         });
 
         // 1 of 4.  Clear default color buffer to black.
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 4.  Render green point into color attachment.
@@ -297,7 +293,7 @@ defineSuite([
     });
 
     function renderDepthAttachment(framebuffer, texture) {
-        context.clear();
+        ClearCommand.ALL.execute(context);
 
         // 1 of 3.  Render green point into color attachment.
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -409,9 +405,10 @@ defineSuite([
 
         // 1 of 3.  Clear framebuffer
         var command = new ClearCommand();
-        command.clearState = context.createClearState();
+        command.color = new Color(0.0, 0.0, 0.0, 0.0);
+        command.depth = 1.0;
         command.framebuffer = framebuffer;
-        context.clear(command);
+        command.execute(context);
 
         // 2 of 3.  Does not pass depth test
         context.draw({

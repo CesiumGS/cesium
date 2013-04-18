@@ -6,6 +6,7 @@ defineSuite([
          'Specs/createCamera',
          'Specs/createFrameState',
          'Core/Cartesian3',
+         'Renderer/ClearCommand',
          'Scene/SceneMode',
          'ThirdParty/when'
      ], function(
@@ -15,6 +16,7 @@ defineSuite([
          createCamera,
          createFrameState,
          Cartesian3,
+         ClearCommand,
          SceneMode,
          when) {
     "use strict";
@@ -50,7 +52,7 @@ defineSuite([
             negativeZ : loadedImage
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var us = context.getUniformState();

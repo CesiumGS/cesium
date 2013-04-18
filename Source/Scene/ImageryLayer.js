@@ -785,13 +785,10 @@ define(['../Core/defaultValue', '../Core/destroyObject', '../Core/BoundingRectan
 
         reproject.framebuffer.setColorTexture(outputTexture);
 
-        var command = new ClearCommand;
-        command.clearState = context.createClearState({
-            color : Color.BLACK
-        });
+        var command = new ClearCommand();
+        command.color = Color.BLACK;
         command.framebuffer = reproject.framebuffer;
-
-        context.clear(command);
+        command.execute(context);
 
         if ((typeof reproject.renderState === 'undefined') ||
                 (reproject.renderState.viewport.width !== width) ||

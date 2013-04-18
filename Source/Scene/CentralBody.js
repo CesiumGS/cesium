@@ -131,7 +131,10 @@ define([
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
 
-        this._clearDepthCommand = new ClearCommand();
+        var clearDepthCommand = new ClearCommand();
+        clearDepthCommand.depth = 1.0;
+        clearDepthCommand.stencil = 0;
+        this._clearDepthCommand = clearDepthCommand;
 
         this._depthCommand = new DrawCommand();
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
@@ -540,10 +543,6 @@ define([
                         blue : false,
                         alpha : false
                     }
-                });
-                this._clearDepthCommand.clearState = context.createClearState({ // Clear depth only
-                    depth : 1.0,
-                    stencil : 0.0
                 });
             } else {
                 this._rsColor = context.createRenderState({
