@@ -6,13 +6,10 @@ uniform bool u_showIntersection;
 uniform bool u_showThroughEllipsoid;
 
 uniform float u_sensorRadius;
-uniform vec4 u_pickColor;
 
 varying vec3 v_positionWC;
 varying vec3 v_positionEC;
 varying vec3 v_normalEC;
-
-#ifndef RENDER_FOR_PICK
 
 vec4 getColor(float sensorRadius, vec3 pointEC)
 {
@@ -33,8 +30,6 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     czm_material material = czm_getMaterial(materialInput);
     return czm_phong(normalize(positionToEyeEC), material);
 }
-
-#endif
 
 bool ellipsoidSensorIntersection(czm_raySegment ellipsoidInterval)
 {
@@ -69,15 +64,11 @@ bool ellipsoidSensorIntersection(czm_raySegment ellipsoidInterval)
 
 vec4 shade(czm_raySegment ellipsoidInterval)
 {
-#ifdef RENDER_FOR_PICK
-    return u_pickColor;
-#else
     if (u_showIntersection && ellipsoidSensorIntersection(ellipsoidInterval))
     {
         return getIntersectionColor(u_sensorRadius, v_positionEC);
     }
     return getColor(u_sensorRadius, v_positionEC);
-#endif
 }
 
 bool czm_pointInEllipsoid(czm_ellipsoid ellipsoid, vec3 point)

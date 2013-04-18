@@ -13,12 +13,9 @@ attribute vec3 nextPosition2DLow;
 attribute vec4 texCoordExpandWidthAndShow;
 attribute vec4 pickColor;
 
-#ifndef RENDER_FOR_PICK
 varying vec2  v_textureCoordinates;
 varying float v_width;
-#else
-varying vec4  v_pickColor;
-#endif
+varying vec4  czm_pickColor;
 
 uniform float u_morphTime;
 
@@ -150,10 +147,7 @@ void main()
     vec4 positionWC = vec4(endPointWC.xy + offset, -endPointWC.z, 1.0);
     gl_Position = czm_viewportOrthographic * positionWC * show;
     
-#ifndef RENDER_FOR_PICK
     v_textureCoordinates = vec2(texCoord, clamp(expandDir, 0.0, 1.0));
     v_width = width;
-#else
-    v_pickColor = pickColor;
-#endif
+    czm_pickColor = pickColor;
 }

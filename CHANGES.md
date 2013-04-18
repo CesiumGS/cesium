@@ -36,6 +36,8 @@ Beta Releases
 * Added new `Grid` material.
 * Made `EllipsoidPrimitive` double-sided.
 * Fixed an error in Web Worker creation when loading Cesium.js from a different origin.
+* Fixed `EllipsoidPrimitive` picking and picking objects with materials that have transparent parts.
+* Added `Color.toRgba` and `Color.fromRgba` to convert to/from numeric unsigned 32-bit RGBA values.
 
 ### b15 - 2013-04-01
 

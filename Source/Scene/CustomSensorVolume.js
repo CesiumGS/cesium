@@ -15,8 +15,8 @@ define([
         '../Renderer/BlendingState',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
+        '../Renderer/createPickFragmentShaderSource',
         './Material',
-        '../Shaders/Noise',
         '../Shaders/SensorVolume',
         '../Shaders/CustomSensorVolumeVS',
         '../Shaders/CustomSensorVolumeFS',
@@ -37,8 +37,8 @@ define([
         BlendingState,
         CommandLists,
         DrawCommand,
+        createPickFragmentShaderSource,
         Material,
-        ShadersNoise,
         ShadersSensorVolume,
         CustomSensorVolumeVS,
         CustomSensorVolumeFS,
@@ -327,13 +327,16 @@ define([
 
         // Initial render state creation
         if (typeof this._colorCommand.renderState === 'undefined') {
-            this._colorCommand.renderState = this._pickCommand.renderState = context.createRenderState({
+            var rs = context.createRenderState({
                 depthTest : {
                     enabled : true
                 },
                 depthMask : false,
                 blending : BlendingState.ALPHA_BLEND
             });
+
+            this._colorCommand.renderState = rs;
+            this._pickCommand.renderState = rs;
         }
         // This would be better served by depth testing with a depth buffer that does not
         // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
@@ -360,17 +363,15 @@ define([
         this._colorCommand.modelMatrix = this._pickCommand.modelMatrix = this.modelMatrix;
         this._commandLists.removeAll();
 
+        var materialChanged = this._material !== this.material;
+        this._material = this.material;
+
         if (pass.color) {
-            var materialChanged = typeof this._material === 'undefined' ||
-                this._material !== this.material;
+            var colorCommand = this._colorCommand;
 
             // Recompile shader when material changes
-            if (materialChanged) {
-                this._material = this.material;
-
+            if (materialChanged || typeof colorCommand.shaderProgram === 'undefined') {
                 var fsSource =
-                    '#line 0\n' +
-                    ShadersNoise +
                     '#line 0\n' +
                     ShadersSensorVolume +
                     '#line 0\n' +
@@ -378,37 +379,43 @@ define([
                     '#line 0\n' +
                     CustomSensorVolumeFS;
 
-                this._colorCommand.shaderProgram = this._colorCommand.shaderProgram && this._colorCommand.shaderProgram.release();
-                this._colorCommand.shaderProgram = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);
-
-                this._colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
+                colorCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
+                    colorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeIndices);
+                colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
             }
 
-            this._commandLists.colorList.push(this._colorCommand);
+            this._commandLists.colorList.push(colorCommand);
         }
 
         if (pass.pick) {
+            var pickCommand = this._pickCommand;
+
             if (typeof this._pickId === 'undefined') {
-                // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
-                var fsPickSource =
-                    '#define RENDER_FOR_PICK 1\n' +
+                this._pickId = context.createPickId(this._pickIdThis);
+            }
+
+            // Recompile shader when material changes
+            if (materialChanged || typeof pickCommand.shaderProgram === 'undefined') {
+                var pickFS = createPickFragmentShaderSource(
                     '#line 0\n' +
                     ShadersSensorVolume +
                     '#line 0\n' +
-                    CustomSensorVolumeFS;
+                    this._material.shaderSource +
+                    '#line 0\n' +
+                    CustomSensorVolumeFS, 'uniform');
 
-                this._pickCommand.shaderProgram = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsPickSource, attributeIndices);
-                this._pickId = context.createPickId(this._pickIdThis);
+                pickCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
+                    pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeIndices);
 
                 var that = this;
-                this._pickCommand.uniformMap = combine([this._uniforms, {
-                    u_pickColor : function() {
-                        return that._pickId.normalizedRgba;
+                pickCommand.uniformMap = combine([this._uniforms, this._material._uniforms, {
+                    czm_pickColor : function() {
+                        return that._pickId.color;
                     }
                 }], false, false);
             }
 
-            this._commandLists.pickList.push(this._pickCommand);
+            this._commandLists.pickList.push(pickCommand);
         }
 
         if (!this._commandLists.empty()) {
