@@ -240,5 +240,13 @@ define([
                                    longitudeOfNode, meanLongitude, GravitationalParameterOfEarth);
     };
 
+    PlanetaryPositions.ComputeEarth = function(date) {
+        var moon = PlanetaryPositions.ComputeMoon(date);
+        var moonEarthMassRatio = 0.012300034; // From 1992 mu value in Table 2
+        var factor = moonEarthMassRatio / (moonEarthMassRatio + 1.0) * -1;
+
+        return moon.multiplyByScalar(factor);
+    };
+
     return PlanetaryPositions;
 });

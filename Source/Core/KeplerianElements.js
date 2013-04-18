@@ -2,11 +2,13 @@
 define([
         './DeveloperError',
         './Math',
-        './Cartesian3'],
+        './Cartesian3',
+        './Matrix3'],
     function(
         DeveloperError,
         CesiumMath,
-        Cartesian3) {
+        Cartesian3,
+        Matrix3) {
     "use strict";
 
     var KeplerianElements = {};
@@ -58,7 +60,7 @@ define([
 
         if (count >= maxIterationCount) {
             throw new DeveloperError('Kepler equation did not converge');
-            //TODO: Port 'DoubleFunctionExplorer'
+            //TODO: Port 'DoubleFunctionExplorer' from components
         }
 
         eccentricAnomaly = iterationValue + revs * CesiumMath.TWO_PI;
@@ -94,6 +96,34 @@ define([
         trueAnomaly += revs * CesiumMath.TWO_PI;
 
         return trueAnomaly;
+    };
+
+    KeplerianElements.PerifocalToCartesianMatrix = function(argumentOfPeriapsis, inclination, rightAscension) {
+        if (inclination < 0 || inclination > CesiumMath.PI)
+        {
+            throw new DeveloperError('inclination out of range');
+        }
+        var cosap = Math.cos(argumentOfPeriapsis);
+        var sinap = Math.sin(argumentOfPeriapsis);
+
+        var cosi = Math.cos(inclination);
+        var sini = Math.sin(inclination);
+
+        var cosraan = Math.cos(rightAscension);
+        var sinraan = Math.sin(rightAscension);
+
+        return new Matrix3(
+            cosraan * cosap - sinraan * sinap * cosi,
+            -cosraan * sinap - sinraan * cosap * cosi,
+            sinraan * sini,
+
+            sinraan * cosap + cosraan * sinap * cosi,
+            -sinraan * sinap + cosraan * cosap * cosi,
+            -cosraan * sini,
+
+            sinap * sini,
+            cosap * sini,
+            cosi);
     };
 
     return KeplerianElements;

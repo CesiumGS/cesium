@@ -3,12 +3,14 @@ define([
         './DeveloperError',
         './Math',
         './Cartesian3',
+        './Matrix3',
         './KeplerianElements'
     ],
     function(
         DeveloperError,
         CesiumMath,
         Cartesian3,
+        Matrix3,
         KeplerianElements) {
     "use strict";
 
@@ -56,6 +58,7 @@ define([
     }
 
     ModifiedKeplerianElements.ToCartesian = function(element) {
+        var perifocalToEquatorial = KeplerianElements.PerifocalToCartesianMatrix(element.argumentOfPeriapsis, element.inclination, element.rightAscensionOfAscendingNode);
         var semilatus = element.radiusOfPeriapsis * (1.0 + element.eccentricity);
         var costheta = Math.cos(element.trueAnomaly);
         var sintheta = Math.sin(element.trueAnomaly);
@@ -68,7 +71,7 @@ define([
         var radius = semilatus / denom;
         var position = new Cartesian3(radius * costheta, radius * sintheta, 0.0);
 
-        return position;
+        return perifocalToEquatorial.multiplyByVector(position);
     };
 
     ModifiedKeplerianElements.prototype.ToCartesian = function(){
