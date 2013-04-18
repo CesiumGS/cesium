@@ -2757,6 +2757,9 @@ define([
      *
      * @exception {DeveloperError} pickColor is required.
      *
+     * @example
+     * var object = context.getObjectByPickColor(pickColor);
+     *
      * @see Context#createPickColor
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
@@ -2767,14 +2770,14 @@ define([
         return this._pickObjects[pickColor.toRgba()];
     };
 
-    function PickId(context, key, color) {
-        this.context = context;
+    function PickId(pickObjects, key, color) {
+        this._pickObjects = pickObjects;
         this.key = key;
         this.color = color;
     }
 
     PickId.prototype.destroy = function() {
-        delete this.context._pickObjects[this.key];
+        delete this._pickObjects[this.key];
         return undefined;
     };
 
@@ -2809,7 +2812,7 @@ define([
         }
 
         this._pickObjects[key] = object;
-        return new PickId(this, key, Color.fromRgba(key));
+        return new PickId(this._pickObjects, key, Color.fromRgba(key));
     };
 
     Context.prototype.isDestroyed = function() {

@@ -95,6 +95,9 @@ define([
      * @param {Number} rgba A single numeric unsigned 32-bit RGBA value.
      * @return {Color} A new color instance.
      *
+     * @example
+     * var color = Color.fromRgba(0x67ADDFFF);
+     *
      * @see Color#toRgba
      */
     Color.fromRgba = function(rgba) {
@@ -362,6 +365,9 @@ define([
      * @memberof Color
      *
      * @return {Number} A single numeric unsigned 32-bit RGBA value.
+     *
+     * @example
+     * var rgba = Color.BLUE.toRgba();
      *
      * @see Color.fromRgba
      */
