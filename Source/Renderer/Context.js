@@ -2414,6 +2414,20 @@ define([
         }
     };
 
+    // TODO: assumes we own context!
+    function applyRenderState(context, renderState, passState) {
+        if (context._currentRenderState === 'undefined') {
+             // Start of frame or invaldiated due to clear state
+            renderState.apply(context._gl, context.getCanvas(), context.getUniformState(), passState);
+         }
+         else if (context._currentRenderState !== renderState) {
+             renderState.apply(context._gl, context.getCanvas(), context.getUniformState(), passState);
+//           RenderState.partialApply(rs, this._gl, this.getCanvas(), this.getUniformState(), passState)
+         }
+         // else same id as previous state so state is already applied.
+         context._currentRenderState = renderState;
+    }
+
     var defaultClearCommand = new ClearCommand();
     var defaultPassState = new PassState();
 
@@ -2471,11 +2485,17 @@ define([
             bitmask |= gl.STENCIL_BUFFER_BIT;
         }
 
+// TODO: cleaner
+        var rs = clearCommand.renderState || this.createRenderState();
+        applyRenderState(this, rs, passState);
+
+/*
         this._applyScissorTest(clearState.scissorTest, passState);
         this._applyColorMask(clearState.colorMask);
         this._applyDepthMask(clearState.depthMask);
         this._applyStencilMask(clearState.stencilMask);
         this._applyDither(clearState.dither);
+*/
 
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(clearCommand.framebuffer, passState.framebuffer);
@@ -2490,9 +2510,6 @@ define([
         if (typeof framebuffer !== 'undefined') {
             framebuffer._unBind();
         }
-
-        // Invalidate render state
-        this._currentRenderState = undefined;
     };
 
     /**
@@ -2573,19 +2590,7 @@ define([
 
         ///////////////////////////////////////////////////////////////////////
 
-// TODO: assumes we own context!
-
-        if (this._currentRenderState === 'undefined') {
-            // Start of frame or invaldiated due to clear state
-            rs.apply(this._gl, this.getCanvas(), this.getUniformState(), passState);
-        }
-        else if (this._currentRenderState !== rs) {
-            rs.apply(this._gl, this.getCanvas(), this.getUniformState(), passState);
-
-//            RenderState.partialApply(rs, this._gl, this.getCanvas(), this.getUniformState(), passState)
-        }
-        // else same id as previous state so state is already applied.
-        this._currentRenderState = rs;
+        applyRenderState(this, rs, passState);
 
         if (typeof framebuffer !== 'undefined') {
             framebuffer._bind();

@@ -17,13 +17,29 @@ define(function() {
     var ClearCommand = function(clearState, framebuffer) {
         /**
          * The clear state.  If this property is undefined, a default clear state is used.
+         *
          * @type Object
+         * @default undefined
          */
         this.clearState = clearState;
 
         /**
+         * The render state to apply when executing the clear command.  The following states affect clearing:
+         * scissor test, color mask, depth mask, stencil mask, and dither.  When the render state is
+         * <code>undefined</code>, the default render state is used.
+         *
+         * @type Object
+         * @default undefined
+         *
+         * @see Context#createRenderState
+         */
+        this.renderState = undefined;
+
+        /**
          * The framebuffer to clear.
+         *
          * @type Framebuffer
+         * @default undefined
          */
         this.framebuffer = framebuffer;
     };
