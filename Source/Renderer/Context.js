@@ -2133,16 +2133,10 @@ define([
      *
      * Validates and adds defaults for missing states.
      *
-     * @exception {DeveloperError} clearState.scissorTest.rectangle.width and clearState.scissorTest.rectangle.height must be greater than or equal to zero.
-     *
      * @see Context#clear
      */
     Context.prototype.createClearState = function(clearState) {
         var cs = clearState || {};
-        var scissorTest = cs.scissorTest || {};
-        var scissorTestRectangle = scissorTest.rectangle || {};
-        var colorMask = cs.colorMask || {};
-
         var color = cs.color;
         var depth = cs.depth;
         var stencil = cs.stencil;
@@ -2155,33 +2149,10 @@ define([
         }
 
         var c = {
-            scissorTest : {
-                enabled : (typeof scissorTest.enabled === 'undefined') ? false : scissorTest.enabled,
-                rectangle : {
-                    x : (typeof scissorTestRectangle.x === 'undefined') ? 0 : scissorTestRectangle.x,
-                    y : (typeof scissorTestRectangle.y === 'undefined') ? 0 : scissorTestRectangle.y,
-                    width : (typeof scissorTestRectangle.width === 'undefined') ? 0 : scissorTestRectangle.width,
-                    height : (typeof scissorTestRectangle.height === 'undefined') ? 0 : scissorTestRectangle.height
-                }
-            },
-            colorMask : {
-                red : (typeof colorMask.red === 'undefined') ? true : colorMask.red,
-                green : (typeof colorMask.green === 'undefined') ? true : colorMask.green,
-                blue : (typeof colorMask.blue === 'undefined') ? true : colorMask.blue,
-                alpha : (typeof colorMask.alpha === 'undefined') ? true : colorMask.alpha
-            },
-            depthMask : (typeof cs.depthMask === 'undefined') ? true : cs.depthMask,
-            stencilMask : (typeof cs.stencilMask === 'undefined') ? ~0 : cs.stencilMask,
-            dither : (typeof cs.dither === 'undefined') ? true : cs.dither,
-
             color : (typeof color !== 'undefined') ? Color.clone(color) : undefined,
             depth : depth,
             stencil : stencil
         };
-
-        if ((c.scissorTest.rectangle.width < 0) || (c.scissorTest.rectangle.height < 0)) {
-            throw new DeveloperError('clearState.scissorTest.rectangle.width and clearState.scissorTest.rectangle.height must be greater than or equal to zero.');
-        }
 
         return c;
     };
