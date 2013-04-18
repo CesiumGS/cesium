@@ -28,6 +28,7 @@ Beta Releases
              material : outlineMaterial
          });
    * `CzmlCartographic` has been removed and all cartographic values are converted to Cartesian internally during CZML processing.  This improves performance and fixes interpolation of cartographic source data.  The Cartographic representation can still be retrieved if needed.
+   * Removed `ComplexConicSensorVolume`.
 * Added wide polylines that work with and without ANGLE.
 * Polylines now use materials to describe their surface appearance. See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page for more details on how to create materials.
 * Added new `PolylineOutline`, `PolylineArrow`, and `Fade` materials.
