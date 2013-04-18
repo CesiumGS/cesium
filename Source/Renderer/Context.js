@@ -162,6 +162,8 @@ define([
         return glWrapper;
     }
 
+    var defaultPassState = new PassState();
+
     /**
      * DOC_TBA
      *
@@ -200,6 +202,7 @@ define([
         }
 
         this._id = createGuid();
+        this._hasStencil = options.stencil;
 
         // Validation and logging disabled by default for speed.
         this._validateFB = false;
@@ -247,13 +250,18 @@ define([
         this._clearDepth = gl.getParameter(gl.DEPTH_CLEAR_VALUE);
         this._clearStencil = gl.getParameter(gl.STENCIL_CLEAR_VALUE);
 
-        this._us = new UniformState();
-        this._currentFramebuffer = undefined;
-        this._currentSp = undefined;
-        this._currentRenderState = undefined;
+        var us = new UniformState();
+        var rs = this.createRenderState();
+        rs.apply(gl, canvas, this._hasStencil, us, defaultPassState);
 
+        this._defaultRenderState = rs;
         this._defaultTexture = undefined;
         this._defaultCubeMap = undefined;
+
+        this._us = us;
+        this._currentFramebuffer = undefined;
+        this._currentSp = undefined;
+        this._currentRenderState = rs;
 
         /**
          * A cache of objects tied to this context.  Just before the Context is destroyed,
@@ -1837,11 +1845,6 @@ define([
         }
     };
 
-
-
-
-
-
     RenderState._enableOrDisable = function(gl, glEnum, enable) {
         if (enable) {
             gl.enable(glEnum);
@@ -1998,7 +2001,7 @@ define([
     /**
      * DOC_TBA
      */
-    RenderState.prototype.apply = function(gl, canvas, uniformState, passState) {
+    RenderState.prototype.apply = function(gl, canvas, hasStencil, uniformState, passState) {
         RenderState._applyFrontFace(gl, this.frontFace);
         RenderState._applyCull(gl, this.cull);
         RenderState._applyLineWidth(gl, this.lineWidth);
@@ -2008,14 +2011,17 @@ define([
         RenderState._applyDepthTest(gl, this.depthTest);
         RenderState._applyColorMask(gl, this.colorMask);
         RenderState._applyDepthMask(gl, this.depthMask);
-        RenderState._applyStencilMask(gl, this.stencilMask);
+
+        if (hasStencil) {
+            RenderState._applyStencilMask(gl, this.stencilMask);
+            RenderState._applyStencilTest(gl, this.stencilTest);
+        }
+
         RenderState._applyBlending(gl, this.blending, passState);
-        RenderState._applyStencilTest(gl, this.stencilTest);
         RenderState._applySampleCoverage(gl, this.sampleCoverage);
         RenderState._applyDither(gl, this.dither);
         RenderState._applyViewport(gl, canvas, uniformState, this.viewport);
     };
-
 
     var renderStateCache = {};
 
@@ -2151,22 +2157,16 @@ define([
         }
     };
 
-    // TODO: assumes we own context!
     function applyRenderState(context, renderState, passState) {
-        if (context._currentRenderState === 'undefined') {
-             // Start of frame or invaldiated due to clear state
-            renderState.apply(context._gl, context.getCanvas(), context.getUniformState(), passState);
-         }
-         else if (context._currentRenderState !== renderState) {
-             renderState.apply(context._gl, context.getCanvas(), context.getUniformState(), passState);
+        if (context._currentRenderState !== renderState) {
+             renderState.apply(context._gl, context.getCanvas(), context._hasStencil, context.getUniformState(), passState);
 //           RenderState.partialApply(rs, this._gl, this.getCanvas(), this.getUniformState(), passState)
          }
-         // else same id as previous state so state is already applied.
+         // else same render state as before so state is already applied.
          context._currentRenderState = renderState;
     }
 
     var defaultClearCommand = new ClearCommand();
-    var defaultPassState = new PassState();
 
     /**
      * Executes the specified clear command.
@@ -2207,7 +2207,7 @@ define([
             bitmask |= gl.DEPTH_BUFFER_BIT;
         }
 
-        if (typeof s !== 'undefined') {
+        if (this._hasStencil && (typeof s !== 'undefined')) {
             if (s !== this._clearStencil) {
                 this._clearStencil = s;
                 gl.clearStencil(s);
@@ -2215,7 +2215,7 @@ define([
             bitmask |= gl.STENCIL_BUFFER_BIT;
         }
 
-        var rs = (typeof clearCommand.renderState !== 'undefined') ? clearCommand.renderState : this.createRenderState();
+        var rs = (typeof clearCommand.renderState !== 'undefined') ? clearCommand.renderState : this._defaultRenderState;
         applyRenderState(this, rs, passState);
 
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
@@ -2301,7 +2301,7 @@ define([
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(command.framebuffer, passState.framebuffer);
         var sp = command.shaderProgram;
-        var rs = command.renderState || this.createRenderState();
+        var rs = (typeof command.renderState !== 'undefined') ? command.renderState : this._defaultRenderState;
 
         if ((typeof framebuffer !== 'undefined') && rs.depthTest) {
             if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
