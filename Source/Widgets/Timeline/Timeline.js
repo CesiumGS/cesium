@@ -533,7 +533,7 @@ define([
             e.preventDefault();
             var x = e.clientX - this.container.getBoundingClientRect().left;
 
-            // Ravi's Modification starts here!
+            // Modification starts here!
             if (x < 0) {
                 // Sets the bar at left-most position
                 this._setTimeBarTime(0, 0 * this._timeBarSecondsSpan / this.container.clientWidth);
