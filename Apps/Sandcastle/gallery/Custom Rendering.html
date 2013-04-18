@@ -62,7 +62,7 @@ require([
         };
         this._pickCommand.uniformMap = {
             u_color : function() {
-                return that._pickId.normalizedRgba;
+                return that._pickId.color;
             }
         };
     };
@@ -182,7 +182,7 @@ require([
         };
         this._pickCommand.uniformMap = {
             u_color : function() {
-                return that._pickId.normalizedRgba;
+                return that._pickId.color;
             },
             u_morphTime : function() {
                 return that.morphTime;
