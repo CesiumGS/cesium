@@ -80,7 +80,6 @@ define([
         ClearCommand,
         PassState) {
     "use strict";
-    /*global ArrayBuffer,Uint8Array,Uint32Array*/
 
     function _errorToString(gl, error) {
         var message = 'OpenGL Error:  ';
@@ -262,6 +261,9 @@ define([
         this._currentFramebuffer = undefined;
         this._currentSp = undefined;
         this._currentRenderState = rs;
+
+        this._pickObjects = {};
+        this._nextPickColor = new Uint32Array(1);
 
         /**
          * A cache of objects tied to this context.  Just before the Context is destroyed,
@@ -2714,38 +2716,56 @@ define([
         return new PickFramebuffer(this);
     };
 
-    var pickObjects = {};
-    var nextPickColorBuffer = (typeof ArrayBuffer !== 'undefined') ? new ArrayBuffer(4) : undefined;
-    var nextPickColor = {
-        uint32 : (typeof Uint32Array !== 'undefined') ? new Uint32Array(nextPickColorBuffer) : undefined,
-        uint8 : (typeof Uint8Array !== 'undefined') ? new Uint8Array(nextPickColorBuffer) : undefined
-    };
-
     /**
-     * DOC_TBA
+     * Gets the object associated with a pick color.
      *
      * @memberof Context
      *
+     * @param {Color} The pick color.
+     *
+     * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
+     *
+     * @exception {DeveloperError} pickColor is required.
+     *
+     * @example
+     * var object = context.getObjectByPickColor(pickColor);
+     *
      * @see Context#createPickId
      */
-    Context.prototype.getObjectByPickId = function(unnormalizedRgb) {
-        return pickObjects[JSON.stringify(unnormalizedRgb)];
+    Context.prototype.getObjectByPickColor = function(pickColor) {
+        if (typeof pickColor === 'undefined') {
+            throw new DeveloperError('pickColor is required.');
+        }
+
+        return this._pickObjects[pickColor.toRgba()];
+    };
+
+    function PickId(pickObjects, key, color) {
+        this._pickObjects = pickObjects;
+        this.key = key;
+        this.color = color;
+    }
+
+    PickId.prototype.destroy = function() {
+        delete this._pickObjects[this.key];
+        return undefined;
     };
 
     /**
      * Creates a unique ID associated with the input object for use with color-buffer picking.
-     * The ID has an RGBA value unique to this context.
+     * The ID has an RGBA color value unique to this context.  You must call destroy()
+     * on the pick ID when destroying the input object.
      *
      * @memberof Context
      *
-     * @param {Object} object The object to assoicate with the pick ID.
+     * @param {Object} object The object to associate with the pick ID.
      *
-     * @returns {Object} The newly created pick ID with <code>unnormalizedRgb</code> and <code>normalizedRgba</code> properties.
+     * @returns {Object} A PickId object with a <code>color</code> property.
      *
      * @exception {DeveloperError} object is required.
      * @exception {RuntimeError} Out of unique Pick IDs.
      *
-     * @see Context#getObjectByPickId
+     * @see Context#getObjectByPickColor
      *
      * @example
      * this._pickId = context.createPickId(this);
@@ -2755,25 +2775,14 @@ define([
             throw new DeveloperError('object is required.');
         }
 
-        if (++nextPickColor.uint32[0] === 0) {
+        var key = ++this._nextPickColor[0];
+        if (key === 0) {
             // In case of overflow
             throw new RuntimeError('Out of unique Pick IDs.');
         }
 
-        var c = nextPickColor.uint8;
-
-        var pickId = {
-            unnormalizedRgb : new Color(c[0], c[1], c[2], c[3]),
-            normalizedRgba : Color.fromBytes(c[0], c[1], c[2], c[3]),
-            destroy : function() {
-                delete pickObjects[JSON.stringify(pickId.unnormalizedRgb)];
-                return undefined;
-            }
-        };
-
-        pickObjects[JSON.stringify(pickId.unnormalizedRgb)] = object;
-
-        return pickId;
+        this._pickObjects[key] = object;
+        return new PickId(this._pickObjects, key, Color.fromRgba(key));
     };
 
     Context.prototype.isDestroyed = function() {
