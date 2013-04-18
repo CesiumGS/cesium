@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/PassState',
+         'Renderer/PassState'
      ], function(
          PassState) {
     "use strict";
