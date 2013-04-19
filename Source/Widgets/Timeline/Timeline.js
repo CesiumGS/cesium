@@ -17,9 +17,6 @@ define([
 
     var timelineWheelDelta = 1e12;
 
-    var timelineDrag = 0;
-    var timelineBarLoc = 0;
-
     var timelineMouseMode = {
         none : 0,
         scrub : 1,
@@ -112,6 +109,8 @@ define([
             spanX : 0
         };
         this._mouseX = 0;
+        this._timelineDrag = 0;
+        this._timelineBarLoc = undefined;
         var widget = this;
 
         this.container.className += ' cesium-timeline-main';
@@ -486,8 +485,10 @@ define([
                 this._needleEle.style.left = xPos + 'px';
             }
         }
-        this._setTimeBarTime(timelineBarLoc, timelineBarLoc * this._timeBarSecondsSpan / this.container.clientWidth);
-        this.zoomTo(this._startJulian.addSeconds(timelineDrag), this._endJulian.addSeconds(timelineDrag));
+        if (this._timelineBarLoc != undefined) {
+            this._setTimeBarTime(this._timelineBarLoc, this._timelineBarLoc * this._timeBarSecondsSpan / this.container.clientWidth);
+            this.zoomTo(this._startJulian.addSeconds(this._timelineDrag), this._endJulian.addSeconds(this._timelineDrag));
+        }
     };
 
     Timeline.prototype._setTimeBarTime = function(xPos, seconds) {
@@ -531,7 +532,8 @@ define([
         if (this._scrubElement) {
             this._scrubElement.style.backgroundPosition = '0px 0px';
         }
-        timelineDrag = 0;
+        this._timelineDrag = 0;
+        this._timelineBarLoc = undefined;
     };
     Timeline.prototype._handleMouseMove = function(e) {
         var dx;
@@ -540,14 +542,14 @@ define([
             var x = e.clientX - this.container.getBoundingClientRect().left;
 
             if (x < 0) {
-                timelineBarLoc = 0;
-                timelineDrag = -0.01*this._timeBarSecondsSpan;
+                this._timelineBarLoc = 0;
+                this._timelineDrag = -0.01*this._timeBarSecondsSpan;
             } else if (x > this.container.clientWidth) {
-                timelineBarLoc = this.container.clientWidth;
-                timelineDrag = 0.01*this._timeBarSecondsSpan;
+                this._timelineBarLoc = this.container.clientWidth;
+                this._timelineDrag = 0.01*this._timeBarSecondsSpan;
             } else if ((x >= 0) && (x <= this.container.clientWidth)) {
-                timelineBarLoc = x;
-                timelineDrag = 0;
+                this._timelineBarLoc = x;
+                this._timelineDrag = 0;
             }
 
         } else if (this._mouseMode === timelineMouseMode.slide) {
