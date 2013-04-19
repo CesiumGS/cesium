@@ -17,6 +17,9 @@ define([
 
     var timelineWheelDelta = 1e12;
 
+    var timelineDrag = 0;
+    var timelineBarLoc = 0;
+
     var timelineMouseMode = {
         none : 0,
         scrub : 1,
@@ -483,6 +486,8 @@ define([
                 this._needleEle.style.left = xPos + 'px';
             }
         }
+        this._setTimeBarTime(timelineBarLoc, timelineBarLoc * this._timeBarSecondsSpan / this.container.clientWidth);
+        this.zoomTo(this._startJulian.addSeconds(timelineDrag), this._endJulian.addSeconds(timelineDrag));
     };
 
     Timeline.prototype._setTimeBarTime = function(xPos, seconds) {
@@ -526,6 +531,7 @@ define([
         if (this._scrubElement) {
             this._scrubElement.style.backgroundPosition = '0px 0px';
         }
+        timelineDrag = 0;
     };
     Timeline.prototype._handleMouseMove = function(e) {
         var dx;
@@ -534,15 +540,14 @@ define([
             var x = e.clientX - this.container.getBoundingClientRect().left;
 
             if (x < 0) {
-                this._setTimeBarTime(0, 0 * this._timeBarSecondsSpan / this.container.clientWidth);
-                dsec = -0.01*this._timeBarSecondsSpan;
-                this.zoomTo(this._startJulian.addSeconds(dsec), this._endJulian);
+                timelineBarLoc = 0;
+                timelineDrag = -0.01*this._timeBarSecondsSpan;
             } else if (x > this.container.clientWidth) {
-                this._setTimeBarTime(this.container.clientWidth, this.container.clientWidth * this._timeBarSecondsSpan / this.container.clientWidth);
-                dsec = 0.01*this._timeBarSecondsSpan;
-                this.zoomTo(this._startJulian, this._endJulian.addSeconds(dsec));
+                timelineBarLoc = this.container.clientWidth;
+                timelineDrag = 0.01*this._timeBarSecondsSpan;
             } else if ((x >= 0) && (x <= this.container.clientWidth)) {
-                this._setTimeBarTime(x, x * this._timeBarSecondsSpan / this.container.clientWidth);
+                timelineBarLoc = x;
+                timelineDrag = 0;
             }
 
         } else if (this._mouseMode === timelineMouseMode.slide) {
