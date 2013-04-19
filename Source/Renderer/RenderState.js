@@ -31,7 +31,7 @@ define([
      *
      * @see Context#createRenderState
      */
-    var RenderState = function(context, renderState, id) {
+    var RenderState = function(context, renderState) {
         var rs = (typeof renderState !== 'undefined') ? renderState : {};
         var cull = (typeof rs.cull !== 'undefined') ? rs.cull : {};
         var polygonOffset = (typeof rs.polygonOffset !== 'undefined') ? rs.polygonOffset : {};
@@ -242,7 +242,7 @@ define([
             }
         }
 
-        this._id = id;
+        this.id = 0;
         this._applyFunctions = [];
     };
 
@@ -254,11 +254,12 @@ define([
         }
     }
 
-    function applyFrontFace(gl, frontFace) {
-        gl.frontFace(frontFace);
+    function applyFrontFace(gl, renderState) {
+        gl.frontFace(renderState.frontFace);
     }
 
-    function applyCull(gl, cull) {
+    function applyCull(gl, renderState) {
+        var cull = renderState.cull;
         var enabled = cull.enabled;
 
         enableOrDisable(gl, gl.CULL_FACE, enabled);
@@ -268,11 +269,12 @@ define([
         }
     }
 
-    function applyLineWidth(gl, lineWidth) {
-        gl.lineWidth(lineWidth);
+    function applyLineWidth(gl, renderState) {
+        gl.lineWidth(renderState.lineWidth);
     }
 
-    function applyPolygonOffset(gl, polygonOffset) {
+    function applyPolygonOffset(gl, renderState) {
+        var polygonOffset = renderState.polygonOffset;
         var enabled = polygonOffset.enabled;
 
         enableOrDisable(gl, gl.POLYGON_OFFSET_FILL, enabled);
@@ -282,7 +284,8 @@ define([
         }
     }
 
-    function applyScissorTest(gl, scissorTest, passState) {
+    function applyScissorTest(gl, renderState, passState) {
+        var scissorTest = renderState.scissorTest;
         var enabled = (typeof passState.scissorTest !== 'undefined') ? passState.scissorTest.enabled : scissorTest.enabled;
 
         enableOrDisable(gl, gl.SCISSOR_TEST, enabled);
@@ -293,11 +296,13 @@ define([
         }
     }
 
-    function applyDepthRange(gl, depthRange) {
+    function applyDepthRange(gl, renderState) {
+        var depthRange = renderState.depthRange;
         gl.depthRange(depthRange.near, depthRange.far);
     }
 
-    function applyDepthTest(gl, depthTest) {
+    function applyDepthTest(gl, renderState) {
+        var depthTest = renderState.depthTest;
         var enabled = depthTest.enabled;
 
         enableOrDisable(gl, gl.DEPTH_TEST, enabled);
@@ -307,19 +312,21 @@ define([
         }
     }
 
-    function applyColorMask(gl, colorMask) {
+    function applyColorMask(gl, renderState) {
+        var colorMask = renderState.colorMask;
         gl.colorMask(colorMask.red, colorMask.green, colorMask.blue, colorMask.alpha);
     }
 
-    function applyDepthMask(gl, depthMask) {
-        gl.depthMask(depthMask);
+    function applyDepthMask(gl, renderState) {
+        gl.depthMask(renderState.depthMask);
     }
 
-    function applyStencilMask(gl, stencilMask) {
-        gl.stencilMask(stencilMask);
+    function applyStencilMask(gl, renderState) {
+        gl.stencilMask(renderState.stencilMask);
     }
 
-    function applyBlending(gl, blending, passState) {
+    function applyBlending(gl, renderState, passState) {
+        var blending = renderState.blending;
         var enabled = (typeof passState.blendingEnabled !== 'undefined') ? passState.blendingEnabled : blending.enabled;
 
         enableOrDisable(gl, gl.BLEND, enabled);
@@ -339,7 +346,8 @@ define([
         }
     }
 
-    function applyStencilTest(gl, stencilTest) {
+    function applyStencilTest(gl, renderState) {
+        var stencilTest = renderState.stencilTest;
         var enabled = stencilTest.enabled;
 
         enableOrDisable(gl, gl.STENCIL_TEST, enabled);
@@ -373,7 +381,8 @@ define([
         }
     }
 
-    function applySampleCoverage(gl, sampleCoverage) {
+    function applySampleCoverage(gl, renderState) {
+        var sampleCoverage = renderState.sampleCoverage;
         var enabled = sampleCoverage.enabled;
 
         enableOrDisable(gl, gl.SAMPLE_COVERAGE, enabled);
@@ -383,182 +392,103 @@ define([
         }
     }
 
-    function applyDither(gl, dither) {
-        enableOrDisable(gl, gl.DITHER, dither);
+    function applyDither(gl, renderState) {
+        enableOrDisable(gl, gl.DITHER, renderState.dither);
     }
 
     var scratchViewport = new BoundingRectangle();
-    function applyViewport(gl, canvas, uniformState, viewport) {
+    function applyViewport(gl, renderState, passState) {
+        var viewport = renderState.viewport;
+
         if (typeof viewport === 'undefined') {
+            var canvas = passState.context.getCanvas();
             viewport = scratchViewport;
             viewport.width = canvas.clientWidth;
             viewport.height = canvas.clientHeight;
         }
 
-        uniformState.setViewport(viewport);
-        gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
-    }
-
-
-
-///////////////////////////////////////////////////////////////////////////////
-
-    RenderState.prototype.applyFrontFace = function(gl) {
-        applyFrontFace(gl, this.frontFace);
-    };
-
-    RenderState.prototype.applyCull = function(gl) {
-        applyCull(gl, this.cull);
-    };
-
-    RenderState.prototype.applyLineWidth = function(gl) {
-        applyLineWidth(gl, this.lineWidth);
-    };
-
-    RenderState.prototype.applyPolygonOffset = function(gl) {
-        applyPolygonOffset(gl, this.polygonOffset);
-    };
-
-    RenderState.prototype.applyScissorTest = function(gl, passState) {
-        applyScissorTest(gl, this.scissorTest, passState);
-    };
-
-    RenderState.prototype.applyDepthRange = function(gl) {
-        applyDepthRange(gl, this.depthRange);
-    };
-
-    RenderState.prototype.applyDepthTest = function(gl) {
-        applyDepthTest(gl, this.depthTest);
-    };
-
-    RenderState.prototype.applyColorMask = function(gl) {
-        applyColorMask(gl, this.colorMask);
-    };
-
-    RenderState.prototype.applyDepthMask = function(gl) {
-        applyDepthMask(gl, this.depthMask);
-    };
-
-    RenderState.prototype.applyStencilMask = function(gl) {
-        applyStencilMask(gl, this.stencilMask);
-    };
-
-    RenderState.prototype.applyBlending = function(gl, passState) {
-        applyBlending(gl, this.blending, passState);
-    };
-
-    RenderState.prototype.applyStencilTest = function(gl) {
-        applyStencilTest(gl, this.stencilTest);
-    };
-
-    RenderState.prototype.applySampleCoverage = function(gl) {
-        applySampleCoverage(gl, this.sampleCoverage);
-    };
-
-    RenderState.prototype.applyDither = function(gl) {
-        applyDither(gl, this.dither);
-    };
-
-    RenderState.prototype.applyViewport = function(gl, passState) {
-        var viewport = this.viewport;
-
-        if (typeof viewport === 'undefined') {
-            viewport = scratchViewport;
-            viewport.width = passState.context.getCanvas().clientWidth;
-            viewport.height = passState.context.getCanvas().clientHeight;
-        }
-
         passState.context.getUniformState().setViewport(viewport);
         gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
-    };
-
-///////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
+    }
 
     /**
      * @private
      */
     RenderState.apply = function(renderState, gl, canvas, hasStencil, uniformState, passState) {
-        applyFrontFace(gl, renderState.frontFace);
-        applyCull(gl, renderState.cull);
-        applyLineWidth(gl, renderState.lineWidth);
-        applyPolygonOffset(gl, renderState.polygonOffset);
-        applyScissorTest(gl, renderState.scissorTest, passState);
-        applyDepthRange(gl, renderState.depthRange);
-        applyDepthTest(gl, renderState.depthTest);
-        applyColorMask(gl, renderState.colorMask);
-        applyDepthMask(gl, renderState.depthMask);
-        applyBlending(gl, renderState.blending, passState);
+        applyFrontFace(gl, renderState);
+        applyCull(gl, renderState);
+        applyLineWidth(gl, renderState);
+        applyPolygonOffset(gl, renderState);
+        applyScissorTest(gl, renderState, passState);
+        applyDepthRange(gl, renderState);
+        applyDepthTest(gl, renderState);
+        applyColorMask(gl, renderState);
+        applyDepthMask(gl, renderState);
+        applyBlending(gl, renderState, passState);
 
         if (hasStencil) {
             // If a depth-stencil or stencil texture is used with a framebuffer, the Context
             // must be created with options.stencil = true, otherwise the stencil states
             // will not be set here.  Currently, we only request stencil for some tests,
             // not the main engine.
-            applyStencilMask(gl, renderState.stencilMask);
-            applyStencilTest(gl, renderState.stencilTest);
+            applyStencilMask(gl, renderState);
+            applyStencilTest(gl, renderState);
         }
 
-        applySampleCoverage(gl, renderState.sampleCoverage);
-        applyDither(gl, renderState.dither);
-        applyViewport(gl, canvas, uniformState, renderState.viewport);
+        applySampleCoverage(gl, renderState);
+        applyDither(gl, renderState);
+        applyViewport(gl, renderState, passState);
     };
 
     function createFuncs(previousState, nextState) {
         var funcs = [];
 
         if (previousState.frontFace !== nextState.frontFace) {
-            funcs.push(nextState.applyFrontFace);
+            funcs.push(applyFrontFace);
         }
 
         if ((previousState.cull.enabled !== nextState.cull.enabled) || (previousState.cull.face !== nextState.cull.face)) {
-            funcs.push(nextState.applyCull);
+            funcs.push(applyCull);
         }
 
         if (previousState.lineWidth !== nextState.lineWidth) {
-            funcs.push(nextState.applyLineWidth);
+            funcs.push(applyLineWidth);
         }
 
         if ((previousState.polygonOffset.enabled !== nextState.polygonOffset.enabled) ||
                 (previousState.polygonOffset.factor !== nextState.polygonOffset.factor) ||
                 (previousState.polygonOffset.units !== nextState.polygonOffset.units)) {
-            funcs.push(nextState.applyPolygonOffset);
+            funcs.push(applyPolygonOffset);
         }
 
         // For now, always apply because of passState
-        funcs.push(nextState.applyScissorTest);
+        funcs.push(applyScissorTest);
 
         if ((previousState.depthRange.near !== nextState.depthRange.near) || (previousState.depthRange.far !== nextState.depthRange.far)) {
-            funcs.push(nextState.applyDepthRange);
+            funcs.push(applyDepthRange);
         }
 
         if ((previousState.depthTest.enabled !== nextState.depthTest.enabled) || (previousState.depthTest.func !== nextState.depthTest.func)) {
-            funcs.push(nextState.applyDepthTest);
+            funcs.push(applyDepthTest);
         }
 
         if ((previousState.colorMask.red !== nextState.colorMask.red) ||
                 (previousState.colorMask.green !== nextState.colorMask.green) ||
                 (previousState.colorMask.blue !== nextState.colorMask.blue) ||
                 (previousState.colorMask.alpha !== nextState.colorMask.alpha)) {
-            funcs.push(nextState.applyColorMask);
+            funcs.push(applyColorMask);
         }
 
         if (previousState.depthMask !== nextState.depthMask) {
-            funcs.push(nextState.applyDepthMask);
+            funcs.push(applyDepthMask);
         }
 
         // For now, always apply because of passState
-        funcs.push(nextState.applyBlending);
+        funcs.push(applyBlending);
 
 // TODO: remove hasStencil
         if (previousState.stencilMask !== nextState.stencilMask) {
-            funcs.push(nextState.applyStencilMask);
+            funcs.push(applyStencilMask);
         }
 
         if ((previousState.stencilTest.enabled !== nextState.stencilTest.enabled) ||
@@ -571,22 +501,22 @@ define([
                 (previousState.stencilTest.backOperation.fail !== nextState.stencilTest.backOperation.fail) ||
                 (previousState.stencilTest.backOperation.zFail !== nextState.stencilTest.backOperation.zFail) ||
                 (previousState.stencilTest.backOperation.zPass !== nextState.stencilTest.backOperation.zPass)) {
-            funcs.push(nextState.applyStencilTest);
+            funcs.push(applyStencilTest);
         }
 
         if ((previousState.sampleCoverage.enabled !== nextState.sampleCoverage.enabled) ||
                 (previousState.sampleCoverage.value !== nextState.sampleCoverage.value) ||
                 (previousState.sampleCoverage.invert !== nextState.sampleCoverage.invert)) {
-            funcs.push(nextState.applySampleCoverage);
+            funcs.push(applySampleCoverage);
         }
 
         if (previousState.dither !== nextState.dither) {
-            funcs.push(nextState.applyDither);
+            funcs.push(applyDither);
         }
 
 // TODO:
 // For now, always apply because of passState
-        funcs.push(nextState.applyViewport);
+        funcs.push(applyViewport);
 
         return funcs;
     }
@@ -601,16 +531,15 @@ define([
         // containing functions that make the minimum number of WebGL calls when transitioning from one state
         // to the other.  In practice, this works well since state-to-state transitions generally only require a
         // few WebGL calls, especially if commands are stored by state.
-        var funcs = nextState._applyFunctions[previousState._id];
+        var funcs = nextState._applyFunctions[previousState.id];
         if (typeof funcs === 'undefined') {
             funcs = createFuncs(previousState, nextState);
-            nextState._applyFunctions[previousState._id] = funcs;
+            nextState._applyFunctions[previousState.id] = funcs;
         }
 
         var len = funcs.length;
         for (var i = 0; i < len; ++i) {
-//            funcs[i](gl, passState);
-            funcs[i].apply(nextState, [gl, passState]);
+            funcs[i](gl, nextState, passState);
         }
     };
 

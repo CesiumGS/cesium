@@ -236,7 +236,6 @@ define([
         var us = new UniformState();
         var ps = new PassState(this);
         var rs = this.createRenderState();
-        RenderState.apply(rs, gl, canvas, this._hasStencil, us, ps);
 
         this._defaultPassState = ps;
         this._defaultRenderState = rs;
@@ -262,6 +261,8 @@ define([
          * @type {Object}
          */
         this.cache = {};
+
+        RenderState.apply(rs, gl, canvas, this._hasStencil, us, ps);
     };
 
     /**
@@ -1741,10 +1742,12 @@ define([
         }
 
         // Cache miss.  Fully define render state and try again.
-        var states = new RenderState(this, renderState, nextRenderStateId++);
+        var states = new RenderState(this, renderState);
         var fullKey = JSON.stringify(states);
         cachedState = renderStateCache[fullKey];
         if (typeof cachedState === 'undefined') {
+            states.id = nextRenderStateId++;
+
             cachedState = states;
 
             // Cache full render state.  Multiple partially defined render states may map to this.
