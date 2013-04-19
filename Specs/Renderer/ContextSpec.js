@@ -1,11 +1,13 @@
 /*global defineSuite*/
 defineSuite([
          'Renderer/Context',
+         'Core/Color',
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/renderFragment'
      ], function(
          Context,
+         Color,
          createContext,
          destroyContext,
          renderFragment) {
@@ -206,6 +208,30 @@ defineSuite([
 
         context.setThrowOnWebGLError(true);
         expect(context.getThrowOnWebGLError()).toEqual(true);
+    });
+
+    it('can create a pick ID and retrieve an object by pick color', function() {
+        var o = {};
+        var pickId = context.createPickId(o);
+
+        expect(pickId).toBeDefined();
+        expect(context.getObjectByPickColor(pickId.color)).toBe(o);
+    });
+
+    it('throws when creating a pick ID without an object', function() {
+        expect(function() {
+            context.createPickId(undefined);
+        }).toThrow();
+    });
+
+    it('returns undefined when retrieving an object by unknown pick color', function() {
+        expect(context.getObjectByPickColor(Color.WHITE)).toBeUndefined();
+    });
+
+    it('throws when getObjectByPickColor is called without a color', function() {
+        expect(function() {
+            context.getObjectByPickColor(undefined);
+        }).toThrow();
     });
 
     it('fails to construct (null canvas)', function() {

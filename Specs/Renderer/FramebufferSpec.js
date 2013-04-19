@@ -157,14 +157,13 @@ defineSuite([
         });
 
         context.clear(new ClearCommand(context.createClearState({
-            framebuffer : framebuffer,
             color : {
                 red : 0.0,
                 green : 1.0,
                 blue : 0.0,
                 alpha : 1.0
             }
-        })));
+        }), framebuffer));
 
         // 3 of 4.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -208,14 +207,13 @@ defineSuite([
         });
 
         context.clear(new ClearCommand(context.createClearState({
-            framebuffer : framebuffer,
             color : {
                 red : 0.0,
                 green : 1.0,
                 blue : 0.0,
                 alpha : 1.0
             }
-        })));
+        }), framebuffer));
 
         framebuffer.setColorTexture(undefined);
 
@@ -412,9 +410,7 @@ defineSuite([
         });
 
         // 1 of 3.  Clear framebuffer
-        context.clear(context.createClearState({
-            framebuffer : framebuffer
-        }));
+        context.clear(new ClearCommand(context.createClearState(), framebuffer));
         expect(context.readPixels({
             framebuffer : framebuffer
         })).toEqual([0, 0, 0, 0]);

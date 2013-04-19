@@ -15,6 +15,7 @@ define([
             if (typeof targetObject !== 'undefined') {
                 targetProperty = targetObject[referenceProperty._targetPropertyName];
                 referenceProperty._targetProperty = targetProperty;
+                referenceProperty._targetObject = targetObject;
             }
         }
         return targetProperty;
@@ -58,6 +59,7 @@ define([
         this._targetProperty = undefined;
         this._dynamicObjectCollection = dynamicObjectCollection;
         this._targetObjectId = targetObjectId;
+        this._targetObject = undefined;
         this._targetPropertyName = targetPropertyName;
     };
 
@@ -109,7 +111,7 @@ define([
      */
     ReferenceProperty.prototype.getValue = function(time, result) {
         var targetProperty = resolve(this);
-        return typeof targetProperty !== 'undefined' ? targetProperty.getValue(time, result) : undefined;
+        return typeof targetProperty !== 'undefined' && this._targetObject.isAvailable(time) ? targetProperty.getValue(time, result) : undefined;
     };
 
     /**
@@ -122,7 +124,7 @@ define([
      */
     ReferenceProperty.prototype.getValueCartographic = function(time, result) {
         var targetProperty = resolve(this);
-        return typeof targetProperty !== 'undefined' ? targetProperty.getValueCartographic(time, result) : undefined;
+        return typeof targetProperty !== 'undefined' && this._targetObject.isAvailable(time) ? targetProperty.getValueCartographic(time, result) : undefined;
     };
 
     /**
@@ -135,7 +137,7 @@ define([
      */
     ReferenceProperty.prototype.getValueCartesian = function(time, result) {
         var targetProperty = resolve(this);
-        return typeof targetProperty !== 'undefined' ? targetProperty.getValueCartesian(time, result) : undefined;
+        return typeof targetProperty !== 'undefined' && this._targetObject.isAvailable(time) ? targetProperty.getValueCartesian(time, result) : undefined;
     };
 
     /**
@@ -148,7 +150,7 @@ define([
      */
     ReferenceProperty.prototype.getValueSpherical = function(time, result) {
         var targetProperty = resolve(this);
-        return typeof targetProperty !== 'undefined' ? targetProperty.getValueSpherical(time, result) : undefined;
+        return typeof targetProperty !== 'undefined' && this._targetObject.isAvailable(time) ? targetProperty.getValueSpherical(time, result) : undefined;
     };
 
     return ReferenceProperty;

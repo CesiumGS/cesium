@@ -36,7 +36,9 @@ define([
         './TextureWrap',
         './UniformState',
         './VertexArray',
-        './VertexLayout'
+        './VertexLayout',
+        './ClearCommand',
+        './PassState'
     ], function(
         defaultValue,
         DeveloperError,
@@ -74,9 +76,10 @@ define([
         TextureWrap,
         UniformState,
         VertexArray,
-        VertexLayout) {
+        VertexLayout,
+        ClearCommand,
+        PassState) {
     "use strict";
-    /*global Uint8Array*/
 
     function _errorToString(gl, error) {
         var message = 'OpenGL Error:  ';
@@ -255,6 +258,9 @@ define([
         this._defaultTexture = undefined;
         this._defaultCubeMap = undefined;
 
+        this._pickObjects = {};
+        this._nextPickColor = new Uint32Array(1);
+
         /**
          * A cache of objects tied to this context.  Just before the Context is destroyed,
          * <code>destroy</code> will be invoked on each object in this object literal that has
@@ -306,15 +312,15 @@ define([
         }
     };
 
-    Context.prototype._applyScissorTest = function(scissorTest) {
+    Context.prototype._applyScissorTest = function(scissorTest, passState) {
         var gl = this._gl;
-        var enabled = scissorTest.enabled;
+        var enabled = (typeof passState.scissorTest !== 'undefined') ? passState.scissorTest.enabled : scissorTest.enabled;
 
         this._enableOrDisable(gl.SCISSOR_TEST, enabled);
 
         if (enabled) {
-            var newRectangle = scissorTest.rectangle;
-            gl.scissor(newRectangle.x, newRectangle.y, newRectangle.width, newRectangle.height);
+            var rectangle = (typeof passState.scissorTest !== 'undefined') ? passState.scissorTest.rectangle : scissorTest.rectangle;
+            gl.scissor(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         }
     };
 
@@ -347,9 +353,9 @@ define([
         this._gl.stencilMask(stencilMask);
     };
 
-    Context.prototype._applyBlending = function(blending) {
+    Context.prototype._applyBlending = function(blending, passState) {
         var gl = this._gl;
-        var enabled = blending.enabled;
+        var enabled = (typeof passState.blendingEnabled !== 'undefined') ? passState.blendingEnabled : blending.enabled;
 
         this._enableOrDisable(gl.BLEND, enabled);
 
@@ -430,18 +436,18 @@ define([
         this._gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
     };
 
-    Context.prototype._applyRenderState = function(state) {
+    Context.prototype._applyRenderState = function(state, passState) {
         this._applyFrontFace(state.frontFace);
         this._applyCull(state.cull);
         this._applyLineWidth(state.lineWidth);
         this._applyPolygonOffset(state.polygonOffset);
-        this._applyScissorTest(state.scissorTest);
+        this._applyScissorTest(state.scissorTest, passState);
         this._applyDepthRange(state.depthRange);
         this._applyDepthTest(state.depthTest);
         this._applyColorMask(state.colorMask);
         this._applyDepthMask(state.depthMask);
         this._applyStencilMask(state.stencilMask);
-        this._applyBlending(state.blending);
+        this._applyBlending(state.blending, passState);
         this._applyStencilTest(state.stencilTest);
         this._applySampleCoverage(state.sampleCoverage);
         this._applyDither(state.dither);
@@ -2142,8 +2148,6 @@ define([
             stencilMask : (typeof cs.stencilMask === 'undefined') ? ~0 : cs.stencilMask,
             dither : (typeof cs.dither === 'undefined') ? true : cs.dither,
 
-            framebuffer : cs.framebuffer,
-
             color : (typeof color !== 'undefined') ? Color.clone(color) : undefined,
             depth : depth,
             stencil : stencil
@@ -2184,6 +2188,9 @@ define([
         }
     };
 
+    var defaultClearCommand = new ClearCommand();
+    var defaultPassState = new PassState();
+
     /**
      * Executes the specified clear command.
      *
@@ -2191,24 +2198,25 @@ define([
      *
      * @param {ClearCommand} [clearCommand] The command with which to clear.  If this parameter is undefined
      *        or its clearState property is undefined, a default clear state is used.
-     * @param {Framebuffer} [framebuffer] The framebuffer to clear if one is not specified by the command.
+     * @param {PassState} [passState] The state for the current rendering pass
      *
      * @memberof Context
      *
      * @see Context#createClearState
      */
-    Context.prototype.clear = function(clearCommand, framebuffer) {
+    Context.prototype.clear = function(clearCommand, passState) {
         var clearState;
-        if (typeof clearCommand !== 'undefined' && typeof clearCommand.clearState !== 'undefined') {
+        clearCommand = defaultValue(clearCommand, defaultClearCommand);
+        if (typeof clearCommand.clearState !== 'undefined') {
             clearState = clearCommand.clearState;
         } else {
             clearState = this.createClearState();
         }
+        passState = defaultValue(passState, defaultPassState);
 
         var gl = this._gl;
         var bitmask = 0;
 
-        clearState = clearState || this.createClearState();
         var c = clearState.color;
         var d = clearState.depth;
         var s = clearState.stencil;
@@ -2237,22 +2245,23 @@ define([
             bitmask |= gl.STENCIL_BUFFER_BIT;
         }
 
-        this._applyScissorTest(clearState.scissorTest);
+        this._applyScissorTest(clearState.scissorTest, passState);
         this._applyColorMask(clearState.colorMask);
         this._applyDepthMask(clearState.depthMask);
         this._applyStencilMask(clearState.stencilMask);
         this._applyDither(clearState.dither);
 
-        framebuffer = defaultValue(clearState.framebuffer, framebuffer);
+        // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
+        var framebuffer = defaultValue(clearCommand.framebuffer, passState.framebuffer);
 
-        if (framebuffer) {
+        if (typeof framebuffer !== 'undefined') {
             framebuffer._bind();
             this._validateFramebuffer(framebuffer);
         }
 
         gl.clear(bitmask);
 
-        if (framebuffer) {
+        if (typeof framebuffer !== 'undefined') {
             framebuffer._unBind();
         }
     };
@@ -2263,7 +2272,7 @@ define([
      * @memberof Context
      *
      * @param {DrawCommand} drawCommand The command with which to draw.
-     * @param {Framebuffer} [framebuffer] The framebuffer to which to draw if one is not specified by the command.
+     * @param {PassState} [passState] The state for the current rendering pass
      *
      * @memberof Context
      *
@@ -2301,8 +2310,9 @@ define([
      * @see Context#createFramebuffer
      * @see Context#createRenderState
      */
-    Context.prototype.draw = function(drawCommand, framebuffer) {
-        this.beginDraw(drawCommand, framebuffer);
+    Context.prototype.draw = function(drawCommand, passState) {
+        passState = defaultValue(passState, defaultPassState);
+        this.beginDraw(drawCommand, passState);
         this.continueDraw(drawCommand);
         this.endDraw();
     };
@@ -2312,7 +2322,7 @@ define([
      *
      * @memberof Context
      */
-    Context.prototype.beginDraw = function(command, framebuffer) {
+    Context.prototype.beginDraw = function(command, passState) {
         if (typeof command === 'undefined') {
             throw new DeveloperError('command is required.');
         }
@@ -2321,11 +2331,12 @@ define([
             throw new DeveloperError('command.shaderProgram is required.');
         }
 
-        framebuffer = defaultValue(command.framebuffer, framebuffer);
+        // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
+        var framebuffer = defaultValue(command.framebuffer, passState.framebuffer);
         var sp = command.shaderProgram;
         var rs = command.renderState || this.createRenderState();
 
-        if (framebuffer && rs.depthTest) {
+        if ((typeof framebuffer !== 'undefined') && rs.depthTest) {
             if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
                 throw new DeveloperError('The depth test can not be enabled (command.renderState.depthTest.enabled) because the framebuffer (command.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
@@ -2333,8 +2344,8 @@ define([
 
         ///////////////////////////////////////////////////////////////////////
 
-        this._applyRenderState(rs);
-        if (framebuffer) {
+        this._applyRenderState(rs, passState);
+        if (typeof framebuffer !== 'undefined') {
             framebuffer._bind();
             this._validateFramebuffer(framebuffer);
         }
@@ -2408,7 +2419,7 @@ define([
      * @memberof Context
      */
     Context.prototype.endDraw = function() {
-        if (this._currentFramebuffer) {
+        if (typeof this._currentFramebuffer !== 'undefined') {
             this._currentFramebuffer._unBind();
             this._currentFramebuffer = undefined;
         }
@@ -2736,69 +2747,75 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Gets the object associated with a pick color.
      *
      * @memberof Context
      *
+     * @param {Color} The pick color.
+     *
+     * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
+     *
+     * @exception {DeveloperError} pickColor is required.
+     *
+     * @example
+     * var object = context.getObjectByPickColor(pickColor);
+     *
      * @see Context#createPickId
      */
-    Context.prototype.getObjectByPickId = function(pickId) {
+    Context.prototype.getObjectByPickColor = function(pickColor) {
+        if (typeof pickColor === 'undefined') {
+            throw new DeveloperError('pickColor is required.');
+        }
+
+        return this._pickObjects[pickColor.toRgba()];
+    };
+
+    function PickId(pickObjects, key, color) {
+        this._pickObjects = pickObjects;
+        this.key = key;
+        this.color = color;
+    }
+
+    PickId.prototype.destroy = function() {
+        delete this._pickObjects[this.key];
         return undefined;
     };
 
     /**
-     * DOC_TBA
+     * Creates a unique ID associated with the input object for use with color-buffer picking.
+     * The ID has an RGBA color value unique to this context.  You must call destroy()
+     * on the pick ID when destroying the input object.
      *
      * @memberof Context
      *
-     * @see Context#getObjectByPickId
+     * @param {Object} object The object to associate with the pick ID.
+     *
+     * @returns {Object} A PickId object with a <code>color</code> property.
+     *
+     * @exception {DeveloperError} object is required.
+     * @exception {RuntimeError} Out of unique Pick IDs.
+     *
+     * @see Context#getObjectByPickColor
+     *
+     * @example
+     * this._pickId = context.createPickId(this);
      */
     Context.prototype.createPickId = function(object) {
-        var objects = {};
-        var nextRgb = new Color(0, 0, 0, 0);
-
-        function rgbToObjectIndex(unnormalizedRgb) {
-            // TODO:  Use alpha?
-            var index = 'r' + unnormalizedRgb.red + 'g' + unnormalizedRgb.green + 'b' + unnormalizedRgb.blue;
-            return index;
+        if (typeof object === 'undefined') {
+            throw new DeveloperError('object is required.');
         }
 
-        function _createPickId(object) {
-            // TODO:  Use alpha?
-            if (++nextRgb.blue === 256) {
-                nextRgb.blue = 0;
-
-                if (++nextRgb.green === 256) {
-                    nextRgb.green = 0;
-
-                    if (++nextRgb.red === 256) {
-                        throw new RuntimeError('Out of unique Rgb colors.');
-                    }
-                }
-            }
-
-            var pickId = {
-                unnormalizedRgb : new Color(nextRgb.red, nextRgb.green, nextRgb.blue, 1.0),
-                normalizedRgba : Color.fromBytes(nextRgb.red, nextRgb.green, nextRgb.blue, 255.0),
-                destroy : function() {
-                    // TODO: Remove from objects
-                    return null;
-                }
-            };
-
-            objects[rgbToObjectIndex(pickId.unnormalizedRgb)] = object;
-
-            return pickId;
+        // the increment and assignment have to be separate statements to
+        // actually detect overflow in the Uint32 value
+        ++this._nextPickColor[0];
+        var key = this._nextPickColor[0];
+        if (key === 0) {
+            // In case of overflow
+            throw new RuntimeError('Out of unique Pick IDs.');
         }
 
-        function _getObjectByPickId(unnormalizedRgb) {
-            return objects[rgbToObjectIndex(unnormalizedRgb)];
-        }
-
-        this.createPickId = _createPickId;
-        this.getObjectByPickId = _getObjectByPickId;
-
-        return _createPickId(object);
+        this._pickObjects[key] = object;
+        return new PickId(this._pickObjects, key, Color.fromRgba(key));
     };
 
     Context.prototype.isDestroyed = function() {

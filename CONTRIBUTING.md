@@ -1,4 +1,4 @@
-This document describes how we merge pull requests.  See the [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide) for how to get the code and setup a development environment. 
+This document describes how we merge pull requests.  See the [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide) for how to get the code and setup a development environment, and see [CONTRIBUTORS.md](CONTRIBUTORS.md) for the current list of contributors.
 
 ## License
 
