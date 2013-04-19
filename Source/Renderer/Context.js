@@ -1612,8 +1612,8 @@ define([
     var renderStateCache = {};
 
     /**
-     * Validates and then finds or creates an immutable and opaque render state, which defines the pipeline
-     * state, for a {@link DrawCommand} or {@link ClearCommand}.  All inputs states are optional.  Omitted states
+     * Validates and then finds or creates an immutable render state, which defines the pipeline
+     * state for a {@link DrawCommand} or {@link ClearCommand}.  All inputs states are optional.  Omitted states
      * use the defaults shown in the example below.
      *
      * @memberof Context

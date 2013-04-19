@@ -24,7 +24,7 @@ define([
     "use strict";
 
     /**
-     * An immutable and opaque render state.  Do not create this directly.  See {@link Context#createRenderState}.
+     * An immutable render state.  Do not create this directly.  See {@link Context#createRenderState}.
      *
      * @alias RenderState
      * @internalConstructor
@@ -32,20 +32,20 @@ define([
      * @see Context#createRenderState
      */
     var RenderState = function(context, renderState) {
-        var rs = renderState || {};
-        var cull = rs.cull || {};
-        var polygonOffset = rs.polygonOffset || {};
-        var scissorTest = rs.scissorTest || {};
-        var scissorTestRectangle = scissorTest.rectangle || {};
-        var depthRange = rs.depthRange || {};
-        var depthTest = rs.depthTest || {};
-        var colorMask = rs.colorMask || {};
-        var blending = rs.blending || {};
-        var blendingColor = blending.color || {};
-        var stencilTest = rs.stencilTest || {};
-        var stencilTestFrontOperation = stencilTest.frontOperation || {};
-        var stencilTestBackOperation = stencilTest.backOperation || {};
-        var sampleCoverage = rs.sampleCoverage || {};
+        var rs = (typeof renderState !== 'undefined') ? renderState : {};
+        var cull = (typeof rs.cull !== 'undefined') ? rs.cull : {};
+        var polygonOffset = (typeof rs.polygonOffset !== 'undefined') ? rs.polygonOffset : {};
+        var scissorTest = (typeof rs.scissorTest !== 'undefined') ? rs.scissorTest : {};
+        var scissorTestRectangle = (typeof scissorTest.rectangle !== 'undefined') ? scissorTest.rectangle : {};
+        var depthRange = (typeof rs.depthRange !== 'undefined') ? rs.depthRange : {};
+        var depthTest = (typeof rs.depthTest !== 'undefined') ? rs.depthTest : {};
+        var colorMask = (typeof rs.colorMask !== 'undefined') ? rs.colorMask : {};
+        var blending = (typeof rs.blending !== 'undefined') ? rs.blending : {};
+        var blendingColor = (typeof blending.color !== 'undefined') ? blending.color : {};
+        var stencilTest = (typeof rs.stencilTest !== 'undefined') ? rs.stencilTest : {};
+        var stencilTestFrontOperation = (typeof stencilTest.frontOperation !== 'undefined') ? stencilTest.frontOperation : {};
+        var stencilTestBackOperation = (typeof stencilTest.backOperation !== 'undefined') ? stencilTest.backOperation : {};
+        var sampleCoverage = (typeof rs.sampleCoverage !== 'undefined') ? rs.sampleCoverage : {};
         var viewport = rs.viewport;
 
         this.frontFace = (typeof rs.frontFace === 'undefined') ? WindingOrder.COUNTER_CLOCKWISE : rs.frontFace;
