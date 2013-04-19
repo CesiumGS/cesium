@@ -5,6 +5,7 @@ define([
         './KeplerianElements',
         './Math',
         './Cartesian3',
+        './Quaternion',
         './TimeConstants',
         './TimeStandard',
         './JulianDate'
@@ -15,13 +16,62 @@ define([
         KeplerianElements,
         CesiumMath,
         Cartesian3,
+        Quaternion,
         TimeConstants,
         TimeStandard,
         JulianDate) {
     "use strict";
 
+    function computeTdbMinusTtSpice(daysSinceJ2000InTerrestrialTime) {
+        /* STK Comments ------------------------------------------------------
+         * This function uses constants designed to be consistent with
+         * the SPICE Toolkit from JPL version N0051 (unitim.c)
+         * M0 = 6.239996
+         * M0Dot = 1.99096871e-7 rad/s = 0.01720197 rad/d
+         * EARTH_ECC = 1.671e-2
+         * TDB_AMPL = 1.657e-3 secs
+         *--------------------------------------------------------------------*/
+
+        //* Values taken as specified in STK Comments except: 0.01720197 rad/day = 1.99096871e-7 rad/sec
+        //* Here we use the more precise value taken from the SPICE value 1.99096871e-7 rad/sec converted to rad/day
+        //* All other constants are consistent with the SPICE implementation of the TDB conversion
+        //* except where we treat the independent time parameter to be in TT instead of TDB.
+        //* This is an approximation made to facilitate performance due to the higher prevalance of
+        //* the TT2TDB conversion over TDB2TT in order to avoid having to iterate when converting to TDB for the JPL ephemeris.
+        //* Days are used instead of seconds to provide a slight improvement in numerical precision.
+
+        //* For more information see:
+        //* http://www.cv.nrao.edu/~rfisher/Ephemerides/times.html#TDB
+        //* ftp://ssd.jpl.nasa.gov/pub/eph/planets/ioms/ExplSupplChap8.pdf
+
+        var g = 6.239996 + (0.0172019696544) * daysSinceJ2000InTerrestrialTime;
+        var x = Math.sin(g);
+        var y = 1.671e-2 * x;
+        var s = Math.sin(g + y);
+        var TdbMinusTdt = 1.657e-3 * s;
+
+        return TdbMinusTdt;
+    }
+
+    function taiToTdb(date) {
+        var TdtMinusTai = 32.184;
+        var J2000 = new JulianDate(2451545, 0, TimeStandard.TAI);
+
+        var day = date.getJulianDayNumber();
+        var time = date.getSecondsOfDay() + TdtMinusTai;
+        var dateTT = new JulianDate(day, time, TimeStandard.TAI);
+
+        var days = (dateTT.getJulianDayNumber() - J2000.getJulianDayNumber()) + ((dateTT.getSecondsOfDay() - J2000.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
+        day = dateTT.getJulianDayNumber();
+        time = dateTT.getSecondsOfDay() + computeTdbMinusTtSpice(days);
+
+        return new JulianDate(day, time, TimeStandard.TAI);
+    }
+
+
+
     var PlanetaryPositions = {};
-    var epoch = JulianDate.fromTotalDays(2451545.0, TimeStandard.TAI);
+    var epoch = JulianDate.fromTotalDays(2451545.0, TimeStandard.TAI); //Actually TDB Time
     var GravitationalParameterOfEarth = 3.98600435e14;
     var GravitationalParameterOfSun = GravitationalParameterOfEarth * (1.0 + 0.012300034) * 328900.56;
     var MetersPerKilometer = 1000.0;
@@ -45,7 +95,7 @@ define([
         return elements.ToCartesian();
     }
 
-    PlanetaryPositions.ComputeEarthMoonBarycenter = function (date) {
+    function computeSimonEarthMoonBarycenter(date) {
         // From section 5.8
         var semiMajorAxis0 = 1.0000010178 * MetersPerAstronomicalUnit;
         var meanLongitude0 = 100.46645683 * RadiansPerDegree;
@@ -107,7 +157,9 @@ define([
         var Sl8 = -80 * 1e-7;
 
         // t is thousands of years from J2000 TDB
-        var t = (date.getTotalDays() - epoch.getTotalDays()) / (TimeConstants.DAYS_PER_JULIAN_CENTURY * 10.0);
+        var tdbDate = taiToTdb(date);
+        var x = (tdbDate.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((tdbDate.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
+        var t = x / (TimeConstants.DAYS_PER_JULIAN_CENTURY * 10.0);
 
         var u = 0.35953620 * t;
         var semimajorAxis = semiMajorAxis0 +
@@ -137,10 +189,12 @@ define([
 
         return elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee,
                 longitudeOfNode, meanLongitude, GravitationalParameterOfSun);
-    };
+    }
 
-    PlanetaryPositions.ComputeMoon = function(date) {
-        var t = (date.getTotalDays() - epoch.getTotalDays()) / TimeConstants.DAYS_PER_JULIAN_CENTURY;
+    function computeSimonMoon(date) {
+        var tdbDate = taiToTdb(date);
+        var x = (tdbDate.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((tdbDate.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
+        var t = x / (TimeConstants.DAYS_PER_JULIAN_CENTURY);
         var t2 = t * t;
         var t3 = t2 * t;
         var t4 = t3 * t;
@@ -238,15 +292,45 @@ define([
 
         return elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee,
                                    longitudeOfNode, meanLongitude, GravitationalParameterOfEarth);
-    };
+    }
 
-    PlanetaryPositions.ComputeEarth = function(date) {
-        var moon = PlanetaryPositions.ComputeMoon(date);
+    function computeSimonEarth(date) {
+        var moon = computeSimonMoon(date);
         var moonEarthMassRatio = 0.012300034; // From 1992 mu value in Table 2
         var factor = moonEarthMassRatio / (moonEarthMassRatio + 1.0) * -1;
 
         return moon.multiplyByScalar(factor);
+    }
+
+    PlanetaryPositions.ComputeSun = function(date){
+        var result = new Cartesian3();
+
+        //first forward transformation
+        var translation = computeSimonEarthMoonBarycenter(date);
+        var axesTransformation = Quaternion.IDENTITY;
+        var translated = result.subtract(translation);
+        result = translated.rotate(axesTransformation, result);
+
+
+        //second forward transformation
+        translation = computeSimonEarth(date);
+        axesTransformation = new Quaternion(-0.20312303898231016, -0.000000000000000057304398937699911, 0.00000000000000027508086490993513, 0.979153221428899270);
+        translated = result.subtract(translation);
+        result = translated.rotate(axesTransformation, result);
+
+        return result;
     };
+
+    PlanetaryPositions.ComputeMoon = function(date){
+        var result = computeSimonMoon(date);
+        var translation = new Cartesian3();
+        var axesTransformation = new Quaternion(-0.20312303898231016, -0.000000000000000057304398937699911, 0.00000000000000027508086490993513, 0.979153221428899270);
+        var translated = result.subtract(translation);
+        result = translated.rotate(axesTransformation, result);
+
+        return result;
+    };
+
 
     return PlanetaryPositions;
 });
