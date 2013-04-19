@@ -1,5 +1,60 @@
 /*global define*/
-define(['../Core/defaultValue', '../Core/destroyObject', '../Core/BoundingRectangle', '../Core/ComponentDatatype', '../Core/Cartesian2', '../Core/Cartesian4', '../Core/Color', '../Core/DeveloperError', '../Core/Event', '../Core/Extent', '../Core/Math', '../Core/PrimitiveType', '../Renderer/BufferUsage', '../Renderer/MipmapHint', '../Renderer/TextureMagnificationFilter', '../Renderer/TextureMinificationFilter', '../Renderer/TextureWrap', '../Renderer/ClearCommand', './GeographicTilingScheme', './Imagery', './TileProviderError', './ImageryState', './TileImagery', './TexturePool', '../ThirdParty/when', '../Shaders/ReprojectWebMercatorFS', '../Shaders/ReprojectWebMercatorVS'], function(defaultValue, destroyObject, BoundingRectangle, ComponentDatatype, Cartesian2, Cartesian4, Color, DeveloperError, Event, Extent, CesiumMath, PrimitiveType, BufferUsage, MipmapHint, TextureMagnificationFilter, TextureMinificationFilter, TextureWrap, ClearCommand, GeographicTilingScheme, Imagery, TileProviderError, ImageryState, TileImagery, TexturePool, when, ReprojectWebMercatorFS, ReprojectWebMercatorVS) {
+define([
+        '../Core/defaultValue',
+        '../Core/destroyObject',
+        '../Core/BoundingRectangle',
+        '../Core/ComponentDatatype',
+        '../Core/Cartesian2',
+        '../Core/Cartesian4',
+        '../Core/Color',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        '../Core/Extent',
+        '../Core/Math',
+        '../Core/PrimitiveType',
+        '../Renderer/BufferUsage',
+        '../Renderer/MipmapHint',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
+        '../Renderer/ClearCommand',
+        './GeographicTilingScheme',
+        './Imagery',
+        './TileProviderError',
+        './ImageryState',
+        './TileImagery',
+        './TexturePool',
+        '../ThirdParty/when',
+        '../Shaders/ReprojectWebMercatorFS',
+        '../Shaders/ReprojectWebMercatorVS'
+    ], function(
+        defaultValue,
+        destroyObject,
+        BoundingRectangle,
+        ComponentDatatype,
+        Cartesian2,
+        Cartesian4,
+        Color,
+        DeveloperError,
+        Event,
+        Extent,
+        CesiumMath,
+        PrimitiveType,
+        BufferUsage,
+        MipmapHint,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
+        ClearCommand,
+        GeographicTilingScheme,
+        Imagery,
+        TileProviderError,
+        ImageryState,
+        TileImagery,
+        TexturePool,
+        when,
+        ReprojectWebMercatorFS,
+        ReprojectWebMercatorVS) {
     "use strict";
 
     /**
@@ -480,7 +535,11 @@ define(['../Core/defaultValue', '../Core/destroyObject', '../Core/BoundingRectan
 
         var scaleX = terrainWidth / (imageryExtent.east - imageryExtent.west);
         var scaleY = terrainHeight / (imageryExtent.north - imageryExtent.south);
-        return new Cartesian4(scaleX * (terrainExtent.west - imageryExtent.west) / terrainWidth, scaleY * (terrainExtent.south - imageryExtent.south) / terrainHeight, scaleX, scaleY);
+        return new Cartesian4(
+                scaleX * (terrainExtent.west - imageryExtent.west) / terrainWidth,
+                scaleY * (terrainExtent.south - imageryExtent.south) / terrainHeight,
+                scaleX,
+                scaleY);
     };
 
     /**
@@ -514,7 +573,13 @@ define(['../Core/defaultValue', '../Core/destroyObject', '../Core/BoundingRectan
             imagery.state = ImageryState.FAILED;
 
             var message = 'Failed to obtain image tile X: ' + imagery.x + ' Y: ' + imagery.y + ' Level: ' + imagery.level + '.';
-            that._requestImageError = TileProviderError.handleError(that._requestImageError, imageryProvider, imageryProvider.getErrorEvent(), message, imagery.x, imagery.y, imagery.level, doRequest);
+            that._requestImageError = TileProviderError.handleError(
+                    that._requestImageError,
+                    imageryProvider,
+                    imageryProvider.getErrorEvent(),
+                    message,
+                    imagery.x, imagery.y, imagery.level,
+                    doRequest);
         }
 
         function doRequest() {
@@ -593,10 +658,11 @@ define(['../Core/defaultValue', '../Core/destroyObject', '../Core/BoundingRectan
         // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
-        if (!(this._imageryProvider.getTilingScheme() instanceof GeographicTilingScheme) && (extent.east - extent.west) / texture.getWidth() > 1e-5) {
-            var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.extent);
-            texture.destroy();
-            imagery.texture = texture = reprojectedTexture;
+        if (!(this._imageryProvider.getTilingScheme() instanceof GeographicTilingScheme) &&
+            (extent.east - extent.west) / texture.getWidth() > 1e-5) {
+                var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.extent);
+                texture.destroy();
+                imagery.texture = texture = reprojectedTexture;
         }
 
         // Use mipmaps if this texture has power-of-two dimensions.
@@ -691,22 +757,22 @@ define(['../Core/defaultValue', '../Core/destroyObject', '../Core/BoundingRectan
 
         if (typeof reproject === 'undefined') {
             reproject = context.cache.imageryLayer_reproject = {
-                framebuffer : undefined,
-                vertexArray : undefined,
-                shaderProgram : undefined,
-                renderState : undefined,
-                sampler : undefined,
-                destroy : function() {
-                    if (typeof this.framebuffer !== 'undefined') {
-                        this.frameBuffer.destroy();
+                    framebuffer : undefined,
+                    vertexArray : undefined,
+                    shaderProgram : undefined,
+                    renderState : undefined,
+                    sampler : undefined,
+                    destroy : function() {
+                        if (typeof this.framebuffer !== 'undefined') {
+                            this.frameBuffer.destroy();
+                        }
+                        if (typeof this.vertexArray !== 'undefined') {
+                            this.vertexArray.destroy();
+                        }
+                        if (typeof this.shaderProgram !== 'undefined') {
+                            this.shaderProgram.destroy();
+                        }
                     }
-                    if (typeof this.vertexArray !== 'undefined') {
-                        this.vertexArray.destroy();
-                    }
-                    if (typeof this.shaderProgram !== 'undefined') {
-                        this.shaderProgram.destroy();
-                    }
-                }
             };
 
             reproject.framebuffer = context.createFramebuffer();
@@ -732,7 +798,10 @@ define(['../Core/defaultValue', '../Core/destroyObject', '../Core/BoundingRectan
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
 
-            reproject.shaderProgram = context.getShaderCache().getShaderProgram(ReprojectWebMercatorVS, ReprojectWebMercatorFS, reprojectAttribInds);
+            reproject.shaderProgram = context.getShaderCache().getShaderProgram(
+                ReprojectWebMercatorVS,
+                ReprojectWebMercatorFS,
+                reprojectAttribInds);
 
             reproject.renderState = undefined;
 

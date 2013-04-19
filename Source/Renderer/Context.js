@@ -2015,6 +2015,10 @@ define([
         RenderState._applyDepthMask(gl, this.depthMask);
 
         if (hasStencil) {
+            // If a depth-stencil or stencil texture is used with a framebuffer, the Context
+            // must be created with options.stencil = true, otherwise the stencil states
+            // will not be set here.  Currently, we only request stencil for some tests,
+            // not the main engine.
             RenderState._applyStencilMask(gl, this.stencilMask);
             RenderState._applyStencilTest(gl, this.stencilTest);
         }
