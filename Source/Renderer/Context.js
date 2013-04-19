@@ -237,7 +237,7 @@ define([
 
         var us = new UniformState();
         var rs = this.createRenderState();
-        rs.apply(gl, canvas, this._hasStencil, us, defaultPassState);
+        RenderState.apply(rs, gl, canvas, this._hasStencil, us, defaultPassState);
 
         this._defaultRenderState = rs;
         this._defaultTexture = undefined;
@@ -1830,10 +1830,10 @@ define([
     };
 
     function applyRenderState(context, renderState, passState) {
-        if (context._currentRenderState !== renderState) {
+        var previousState = context._currentRenderState;
+        if (previousState !== renderState) {
             context._currentRenderState = renderState;
-            renderState.apply(context._gl, context.getCanvas(), context._hasStencil, context.getUniformState(), passState);
-//          RenderState.partialApply(rs, this._gl, this.getCanvas(), this.getUniformState(), passState)
+            RenderState.partialApply(previousState, renderState, context._gl, context.getCanvas(), context._hasStencil, context.getUniformState(), passState);
          }
          // else same render state as before so state is already applied.
     }
