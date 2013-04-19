@@ -414,7 +414,7 @@ define([
     /**
      * @private
      */
-    RenderState.apply = function(renderState, gl, canvas, uniformState, passState) {
+    RenderState.apply = function(gl, renderState, passState) {
         applyFrontFace(gl, renderState);
         applyCull(gl, renderState);
         applyLineWidth(gl, renderState);
@@ -505,8 +505,7 @@ define([
             funcs.push(applyDither);
         }
 
-// TODO:
-// For now, always apply because of passState
+        // For now, always apply because of passState
         funcs.push(applyViewport);
 
         return funcs;
@@ -515,7 +514,7 @@ define([
     /**
      * @private
      */
-    RenderState.partialApply = function(previousState, nextState, gl, canvas, uniformState, passState) {
+    RenderState.partialApply = function(gl, previousState, nextState, passState) {
         // When a new render state is applied, instead of making WebGL calls for all the states or first
         // comparing the states one-by-one with the previous state (basically a linear search), we take
         // advantage of RenderState's immutability, and store a dynamically populated sparse data structure

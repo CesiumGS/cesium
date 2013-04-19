@@ -261,7 +261,7 @@ define([
          */
         this.cache = {};
 
-        RenderState.apply(rs, gl, canvas, us, ps);
+        RenderState.apply(gl, rs, ps);
     };
 
     /**
@@ -1836,7 +1836,7 @@ define([
         var previousState = context._currentRenderState;
         if (previousState !== renderState) {
             context._currentRenderState = renderState;
-            RenderState.partialApply(previousState, renderState, context._gl, context.getCanvas(), context.getUniformState(), passState);
+            RenderState.partialApply(context._gl, previousState, renderState, passState);
          }
          // else same render state as before so state is already applied.
     }
