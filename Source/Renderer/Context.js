@@ -185,7 +185,6 @@ define([
         }
 
         this._id = createGuid();
-        this._hasStencil = options.stencil;
 
         // Validation and logging disabled by default for speed.
         this._validateFB = false;
@@ -262,7 +261,7 @@ define([
          */
         this.cache = {};
 
-        RenderState.apply(rs, gl, canvas, this._hasStencil, us, ps);
+        RenderState.apply(rs, gl, canvas, us, ps);
     };
 
     /**
@@ -1837,7 +1836,7 @@ define([
         var previousState = context._currentRenderState;
         if (previousState !== renderState) {
             context._currentRenderState = renderState;
-            RenderState.partialApply(previousState, renderState, context._gl, context.getCanvas(), context._hasStencil, context.getUniformState(), passState);
+            RenderState.partialApply(previousState, renderState, context._gl, context.getCanvas(), context.getUniformState(), passState);
          }
          // else same render state as before so state is already applied.
     }
@@ -1883,7 +1882,7 @@ define([
             bitmask |= gl.DEPTH_BUFFER_BIT;
         }
 
-        if (this._hasStencil && (typeof s !== 'undefined')) {
+        if (typeof s !== 'undefined') {
             if (s !== this._clearStencil) {
                 this._clearStencil = s;
                 gl.clearStencil(s);

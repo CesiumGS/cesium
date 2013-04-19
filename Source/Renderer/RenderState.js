@@ -414,7 +414,7 @@ define([
     /**
      * @private
      */
-    RenderState.apply = function(renderState, gl, canvas, hasStencil, uniformState, passState) {
+    RenderState.apply = function(renderState, gl, canvas, uniformState, passState) {
         applyFrontFace(gl, renderState);
         applyCull(gl, renderState);
         applyLineWidth(gl, renderState);
@@ -424,17 +424,9 @@ define([
         applyDepthTest(gl, renderState);
         applyColorMask(gl, renderState);
         applyDepthMask(gl, renderState);
+        applyStencilMask(gl, renderState);
         applyBlending(gl, renderState, passState);
-
-        if (hasStencil) {
-            // If a depth-stencil or stencil texture is used with a framebuffer, the Context
-            // must be created with options.stencil = true, otherwise the stencil states
-            // will not be set here.  Currently, we only request stencil for some tests,
-            // not the main engine.
-            applyStencilMask(gl, renderState);
-            applyStencilTest(gl, renderState);
-        }
-
+        applyStencilTest(gl, renderState);
         applySampleCoverage(gl, renderState);
         applyDither(gl, renderState);
         applyViewport(gl, renderState, passState);
@@ -486,7 +478,6 @@ define([
         // For now, always apply because of passState
         funcs.push(applyBlending);
 
-// TODO: remove hasStencil
         if (previousState.stencilMask !== nextState.stencilMask) {
             funcs.push(applyStencilMask);
         }
@@ -524,7 +515,7 @@ define([
     /**
      * @private
      */
-    RenderState.partialApply = function(previousState, nextState, gl, canvas, hasStencil, uniformState, passState) {
+    RenderState.partialApply = function(previousState, nextState, gl, canvas, uniformState, passState) {
         // When a new render state is applied, instead of making WebGL calls for all the states or first
         // comparing the states one-by-one with the previous state (basically a linear search), we take
         // advantage of RenderState's immutability, and store a dynamically populated sparse data structure
