@@ -533,22 +533,17 @@ define([
             e.preventDefault();
             var x = e.clientX - this.container.getBoundingClientRect().left;
 
-            // Modification starts here!
             if (x < 0) {
-                // Sets the bar at left-most position
                 this._setTimeBarTime(0, 0 * this._timeBarSecondsSpan / this.container.clientWidth);
                 dsec = -0.01*this._timeBarSecondsSpan;
                 this.zoomTo(this._startJulian.addSeconds(dsec), this._endJulian);
             } else if (x > this.container.clientWidth) {
-                // Sets the bar at the right-most position
                 this._setTimeBarTime(this.container.clientWidth, this.container.clientWidth * this._timeBarSecondsSpan / this.container.clientWidth);
                 dsec = 0.01*this._timeBarSecondsSpan;
                 this.zoomTo(this._startJulian, this._endJulian.addSeconds(dsec));
-
             } else if ((x >= 0) && (x <= this.container.clientWidth)) {
                 this._setTimeBarTime(x, x * this._timeBarSecondsSpan / this.container.clientWidth);
             }
-            // Modification ends here!
 
         } else if (this._mouseMode === timelineMouseMode.slide) {
             dx = this._mouseX - e.clientX;
