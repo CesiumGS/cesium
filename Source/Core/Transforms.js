@@ -275,7 +275,7 @@ define([
      * function updateAndRender() {
      *     var now = new JulianDate();
      *     scene.initializeFrame();
-     *     scene.setSunPosition(computeSunPosition(now));
+     *     scene.setSunPosition(PlanetaryPositions.ComputeSun(now));
      *     scene.getCamera().transform = Matrix4.fromRotationTranslation(Transforms.computeTemeToPseudoFixedMatrix(now), Cartesian3.ZERO);
      *     scene.render();
      *     requestAnimationFrame(updateAndRender);
@@ -413,7 +413,7 @@ define([
      * function updateAndRender() {
      *     var now = new JulianDate();
      *     scene.initializeFrame();
-     *     scene.setSunPosition(computeSunPosition(now));
+     *     scene.setSunPosition(PlanetaryPositions.ComputeSun(now));
      *     var icrfToFixed = Transforms.computeIcrfToFixedMatrix(now);
      *     if (typeof icrfToFixed !== 'undefined') {
      *         scene.getCamera().transform = Matrix4.fromRotationTranslation(icrfToFixed, Cartesian3.ZERO);

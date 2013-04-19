@@ -13,7 +13,8 @@ define([
         '../Core/EncodedCartesian3',
         '../Core/BoundingRectangle',
         '../Core/Transforms',
-        '../Core/computeSunPosition',
+//        '../Core/computeSunPosition',
+        '../Core/Simon1994PlanetaryPositions',
         '../Scene/SceneMode'
     ], function(
         DeveloperError,
@@ -29,7 +30,8 @@ define([
         EncodedCartesian3,
         BoundingRectangle,
         Transforms,
-        computeSunPosition,
+        //computeSunPosition,
+        PlanetaryPositions,
         SceneMode) {
     "use strict";
 
@@ -183,17 +185,19 @@ define([
     }
 
     var sunPositionWC = new Cartesian3();
+    var moonPosition = new Cartesian3();
     var sunPositionScratch = new Cartesian3();
 
     function setSunAndMoonDirections(uniformState, frameState) {
-        computeSunPosition(frameState.time, sunPositionWC);
+        sunPositionWC = PlanetaryPositions.ComputeSun(frameState.time);
 
         Cartesian3.normalize(sunPositionWC, uniformState._sunDirectionWC);
         Matrix3.multiplyByVector(uniformState.getViewRotation3D(), sunPositionWC, sunPositionScratch);
         Cartesian3.normalize(sunPositionScratch, uniformState._sunDirectionEC);
 
-        // Pseudo direction for now just for lighting
-        Cartesian3.negate(uniformState._sunDirectionEC, uniformState._moonDirectionEC);
+
+        moonPosition = PlanetaryPositions.ComputeMoon(frameState.time);
+        Cartesian3.normalize(moonPosition, uniformState._moonDirectionEC);
     }
 
     /**
