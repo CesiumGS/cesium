@@ -188,4 +188,28 @@ defineSuite([
             '}';
         verifyDraw(fs);
     });
+
+    it('czm_pointAlongRay: point at ray origin', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_pointAlongRay(czm_ray(vec3(0.0), vec3(1.0, 0.0, 0.0)), 0.0) == vec3(0.0)); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('czm_pointAlongRay: point in front of ray origin', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_pointAlongRay(czm_ray(vec3(0.0), vec3(1.0, 0.0, 0.0)), 2.0) == vec3(2.0, 0.0, 0.0)); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('czm_pointAlongRay: point behind ray origin', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_pointAlongRay(czm_ray(vec3(0.0), vec3(0.0, 1.0, 0.0)), -2.0) == vec3(0.0, -2.0, 0.0)); ' +
+            '}';
+        verifyDraw(fs);
+    });
 }, 'WebGL');
