@@ -22,6 +22,12 @@ define([
         JulianDate) {
     "use strict";
 
+    /**
+     * Contains functions for finding the Cartesian coordinates of the sun and the moon in the inertial frame
+     * @exports PlanetaryPositions
+     */
+    var PlanetaryPositions = {};
+
     function computeTdbMinusTtSpice(daysSinceJ2000InTerrestrialTime) {
         /* STK Comments ------------------------------------------------------
          * This function uses constants designed to be consistent with
@@ -45,22 +51,19 @@ define([
         //* ftp://ssd.jpl.nasa.gov/pub/eph/planets/ioms/ExplSupplChap8.pdf
 
         var g = 6.239996 + (0.0172019696544) * daysSinceJ2000InTerrestrialTime;
-        var x = Math.sin(g);
-        var y = 1.671e-2 * x;
-        var s = Math.sin(g + y);
-        var TdbMinusTdt = 1.657e-3 * s;
-
-        return TdbMinusTdt;
+        return 1.657e-3 * Math.sin(g + 1.671e-2 * Math.sin(g));
     }
 
     function taiToTdb(date) {
         var TdtMinusTai = 32.184;
         var J2000 = new JulianDate(2451545, 0, TimeStandard.TAI);
 
+        //Converts TAI to TT
         var day = date.getJulianDayNumber();
         var time = date.getSecondsOfDay() + TdtMinusTai;
         var dateTT = new JulianDate(day, time, TimeStandard.TAI);
 
+        //Converts TT to TDB
         var days = (dateTT.getJulianDayNumber() - J2000.getJulianDayNumber()) + ((dateTT.getSecondsOfDay() - J2000.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
         day = dateTT.getJulianDayNumber();
         time = dateTT.getSecondsOfDay() + computeTdbMinusTtSpice(days);
@@ -68,10 +71,7 @@ define([
         return new JulianDate(day, time, TimeStandard.TAI);
     }
 
-
-
-    var PlanetaryPositions = {};
-    var epoch = JulianDate.fromTotalDays(2451545.0, TimeStandard.TAI); //Actually TDB Time
+    var epoch = JulianDate.fromTotalDays(2451545.0, TimeStandard.TAI); //Actually TDB (not TAI)
     var GravitationalParameterOfEarth = 3.98600435e14;
     var GravitationalParameterOfSun = GravitationalParameterOfEarth * (1.0 + 0.012300034) * 328900.56;
     var MetersPerKilometer = 1000.0;
@@ -94,6 +94,11 @@ define([
             gravitationalParameter);
         return elements.ToCartesian();
     }
+
+    /**
+     * Gets a point describing the motion of the Earth-Moon barycenter according to the equations
+     * described in section 6.
+     */
 
     function computeSimonEarthMoonBarycenter(date) {
         // From section 5.8
@@ -191,6 +196,9 @@ define([
                 longitudeOfNode, meanLongitude, GravitationalParameterOfSun);
     }
 
+    /**
+     * Gets a point describing the position of the moon according to the equations described in section 4.
+     */
     function computeSimonMoon(date) {
         var tdbDate = taiToTdb(date);
         var x = (tdbDate.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((tdbDate.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
@@ -294,6 +302,11 @@ define([
                                    longitudeOfNode, meanLongitude, GravitationalParameterOfEarth);
     }
 
+    /**
+     * Gets a point describing the motion of the Earth.  This point uses the Moon point and
+     * the 1992 mu value (ratio between Moon and Earth masses) in Table 2 of the paper in order
+     * to determine the position of the Earth relative to the Earth-Moon barycenter.
+     */
     function computeSimonEarth(date) {
         var moon = computeSimonMoon(date);
         var moonEarthMassRatio = 0.012300034; // From 1992 mu value in Table 2
@@ -302,6 +315,15 @@ define([
         return moon.multiplyByScalar(factor);
     }
 
+    /**
+     * Uses the SimonEarthMoonBarycenter and SimonEarth points to transform the coordinates of the sun
+     * from (0,0,0) to its position relative to the inertial frame.
+     *
+     * Values for the <code>axesTransformation</code> Quaternion needed for the rotation were found using the Components
+     * GreographicTransformer on the position of the sun center of mass point and the earth J2000 frame.
+     * @param {JulianDate} date
+     * @returns {Cartesian3} sun position
+     */
     PlanetaryPositions.ComputeSun = function(date){
         var result = new Cartesian3();
 
@@ -321,6 +343,14 @@ define([
         return result;
     };
 
+    /**
+     * Transforms the SimonMoon point to its position relative to the inertial frame.
+     *
+     * Values for the <code>axesTransformation</code> Quaternion needed for the rotation were found using the Components
+     * GreographicTransformer on the Simon 1994 moon point and the earth J2000 frame.
+     * @param {JulianDate} date
+     * @returns {Cartesian3} sun position
+     */
     PlanetaryPositions.ComputeMoon = function(date){
         var result = computeSimonMoon(date);
         var translation = new Cartesian3();

@@ -14,6 +14,29 @@ define([
         KeplerianElements) {
     "use strict";
 
+    /**
+     * Modified Keplerian orbital elements.  These are the same as the Classical/Keplerian orbital elements
+     * except that Radius of Periapsis and the inverse of Semimajor Axis are used instead of
+     * Semimajor Axis and Eccentricity.  This is useful because the Radius of Periapsis is well defined
+     * for all but rectilinear orbits.
+     * @see KeplerianElements
+     */
+
+
+    /**
+     *  Initialize a set of modified Keplerian elements.
+     * @alias ModifiedKeperianElements
+     * @constructor
+     *
+     * @param {Number} radiusOfPeriapsis Radius of periapsis (distance)
+     * @param {Number} inverseSemimajorAxis The inverse of semimajor axis (distance)
+     * @param {Number} inclination Inclination (radians)
+     * @param {Number} argumentOfPeriapsis Argument of periapsis (radians)
+     * @param {Number} rightAscensionOfAscendingNode Right ascension of the ascending node (radians)
+     * @param {Number} trueAnomaly True anomaly (radians)
+     * @param {Number} gravitationalParameter The gravitational parameter associated with these elements (distance cubed per time squared)
+     *
+     */
     var ModifiedKeplerianElements = function(radiusOfPeriapsis, inverseSemimajorAxis, inclination, argumentOfPeriapsis,
             rightAscensionOfAscendingNode, trueAnomaly, gravitationalParameter) {
         if (inclination < 0 || inclination > CesiumMath.PI) {
@@ -57,6 +80,11 @@ define([
         }
     }
 
+    /**
+     * Returns a Cartesian representation of these orbital elements.
+     * @param {ModifiedKeplerianElements} element
+     * @returns {Cartesian3} Equivalent Cartesian
+     */
     ModifiedKeplerianElements.ToCartesian = function(element) {
         var perifocalToEquatorial = KeplerianElements.PerifocalToCartesianMatrix(element.argumentOfPeriapsis, element.inclination, element.rightAscensionOfAscendingNode);
         var semilatus = element.radiusOfPeriapsis * (1.0 + element.eccentricity);
@@ -74,6 +102,12 @@ define([
         return perifocalToEquatorial.multiplyByVector(position);
     };
 
+
+    /**
+     * Returns a Cartesian representation of these orbital elements.
+     *
+     * @returns {Cartesian3} Equivalent Cartesian
+     */
     ModifiedKeplerianElements.prototype.ToCartesian = function(){
         return ModifiedKeplerianElements.ToCartesian(this);
     };

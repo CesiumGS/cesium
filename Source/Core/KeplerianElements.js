@@ -11,8 +11,24 @@ define([
         Matrix3) {
     "use strict";
 
+    /**
+     * Functions related to classical Keplerian elements representing an elliptical orbit.
+     *
+     * @see ModifiedKeplerianElements
+     */
+
     var KeplerianElements = {};
 
+    /**
+     * Calculates the true anomaly given the mean anomaly and the eccentricity.
+     * @param {Number} meanAnomaly The mean anomaly (radians)
+     * @param {Number} eccentricity The eccentricity
+     *
+     * @exception {DeveloperError} This method assumes a circular or elliptical orbit, so the eccentricity must be between zero and unity.
+
+     *
+     * @returns {Number} The true anomaly (radians)
+     */
     KeplerianElements.MeanAnomalyToTrueAnomaly = function(meanAnomaly, eccentricity) {
         if (eccentricity < 0.0 || eccentricity >= 1.0)
         {
@@ -22,6 +38,15 @@ define([
         return this.EccentricAnomalyToTrueAnomaly(eccentricAnomaly, eccentricity);
     };
 
+    /**
+     * Calculates the eccentric anomaly given the mean anomaly and the eccentricity.
+     * @param {Number} meanAnomaly The mean anomaly (radians)
+     * @param {Number} eccentricity The eccentricity
+     *
+     * @exception {DeveloperError} This method assumes a circular or elliptical orbit, so the eccentricity must be between zero and unity.
+     *
+     * @returns {Number} The eccentric anomaly (radians)
+     */
     KeplerianElements.MeanAnomalyToEccentricAnomaly = function(meanAnomaly, eccentricity)
     {
         if (eccentricity < 0.0 || eccentricity >= 1.0)
@@ -67,6 +92,15 @@ define([
         return eccentricAnomaly;
     };
 
+    /**
+     * Calculates the true anomaly given the eccentric anomaly and the eccentricity.
+     * @param {Number} eccentricAnomaly The eccentric anomaly (radians)
+     * @param {Number} eccentricity The eccentricity
+     *
+     * @exception {DeveloperError} This method assumes a circular or elliptical orbit, so the eccentricity must be between zero and unity.
+     *
+     * @returns {Number} The true anomaly (radians)
+     */
     KeplerianElements.EccentricAnomalyToTrueAnomaly = function(eccentricAnomaly, eccentricity) {
         if (eccentricity < 0.0 || eccentricity >= 1.0)
         {
@@ -98,6 +132,16 @@ define([
         return trueAnomaly;
     };
 
+    /**
+     * Calculates the transformation matrix to convert from the perifocal (PQW) coordinate
+     * system to inertial cartesian coordinates.
+     *
+     * @param {Number} argumentOfPeriapsis The argument of periapsis (radians)
+     * @param {Number} inclination The inclination (radians)
+     * @param {Number} rightAscension The right ascension of the ascending node (radians)
+     *
+     * @returns {Matrix3} The transformation matrix to convert from the perifocal coordinate system to inertial cartesian coordinates.
+     */
     KeplerianElements.PerifocalToCartesianMatrix = function(argumentOfPeriapsis, inclination, rightAscension) {
         if (inclination < 0 || inclination > CesiumMath.PI)
         {
