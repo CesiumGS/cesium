@@ -31,7 +31,7 @@ define([
      *
      * @see Context#createRenderState
      */
-    var RenderState = function(context, renderState) {
+    var RenderState = function(context, renderState, id) {
         var rs = (typeof renderState !== 'undefined') ? renderState : {};
         var cull = (typeof rs.cull !== 'undefined') ? rs.cull : {};
         var polygonOffset = (typeof rs.polygonOffset !== 'undefined') ? rs.polygonOffset : {};
@@ -241,14 +241,10 @@ define([
                 throw new RuntimeError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + this.getMaximumViewportHeight().toString() + ').  Check getMaximumViewportHeight().');
             }
         }
+
+        this._id = id;
+        this._applyFunctions = [];
     };
-
-
-
-
-
-
-
 
     function enableOrDisable(gl, glEnum, enable) {
         if (enable) {
@@ -403,6 +399,88 @@ define([
         gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
     }
 
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+    RenderState.prototype.applyFrontFace = function(gl) {
+        applyFrontFace(gl, this.frontFace);
+    };
+
+    RenderState.prototype.applyCull = function(gl) {
+        applyCull(gl, this.cull);
+    };
+
+    RenderState.prototype.applyLineWidth = function(gl) {
+        applyLineWidth(gl, this.lineWidth);
+    };
+
+    RenderState.prototype.applyPolygonOffset = function(gl) {
+        applyPolygonOffset(gl, this.polygonOffset);
+    };
+
+    RenderState.prototype.applyScissorTest = function(gl, passState) {
+        applyScissorTest(gl, this.scissorTest, passState);
+    };
+
+    RenderState.prototype.applyDepthRange = function(gl) {
+        applyDepthRange(gl, this.depthRange);
+    };
+
+    RenderState.prototype.applyDepthTest = function(gl) {
+        applyDepthTest(gl, this.depthTest);
+    };
+
+    RenderState.prototype.applyColorMask = function(gl) {
+        applyColorMask(gl, this.colorMask);
+    };
+
+    RenderState.prototype.applyDepthMask = function(gl) {
+        applyDepthMask(gl, this.depthMask);
+    };
+
+    RenderState.prototype.applyStencilMask = function(gl) {
+        applyStencilMask(gl, this.stencilMask);
+    };
+
+    RenderState.prototype.applyBlending = function(gl, passState) {
+        applyBlending(gl, this.blending, passState);
+    };
+
+    RenderState.prototype.applyStencilTest = function(gl) {
+        applyStencilTest(gl, this.stencilTest);
+    };
+
+    RenderState.prototype.applySampleCoverage = function(gl) {
+        applySampleCoverage(gl, this.sampleCoverage);
+    };
+
+    RenderState.prototype.applyDither = function(gl) {
+        applyDither(gl, this.dither);
+    };
+
+    RenderState.prototype.applyViewport = function(gl, passState) {
+        var viewport = this.viewport;
+
+        if (typeof viewport === 'undefined') {
+            viewport = scratchViewport;
+            viewport.width = passState.context.getCanvas().clientWidth;
+            viewport.height = passState.context.getCanvas().clientHeight;
+        }
+
+        passState.context.getUniformState().setViewport(viewport);
+        gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+    };
+
+///////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
     /**
      * @private
      */
@@ -432,101 +510,108 @@ define([
         applyViewport(gl, canvas, uniformState, renderState.viewport);
     };
 
-    /**
-     * @private
-     */
-    RenderState.partialApply = function(previousState, nextState, gl, canvas, hasStencil, uniformState, passState) {
+    function createFuncs(previousState, nextState) {
+        var funcs = [];
+
         if (previousState.frontFace !== nextState.frontFace) {
-            applyFrontFace(gl, nextState.frontFace);
+            funcs.push(nextState.applyFrontFace);
         }
 
         if ((previousState.cull.enabled !== nextState.cull.enabled) || (previousState.cull.face !== nextState.cull.face)) {
-            applyCull(gl, nextState.cull);
+            funcs.push(nextState.applyCull);
         }
 
         if (previousState.lineWidth !== nextState.lineWidth) {
-            applyLineWidth(gl, nextState.lineWidth);
+            funcs.push(nextState.applyLineWidth);
         }
 
         if ((previousState.polygonOffset.enabled !== nextState.polygonOffset.enabled) ||
                 (previousState.polygonOffset.factor !== nextState.polygonOffset.factor) ||
                 (previousState.polygonOffset.units !== nextState.polygonOffset.units)) {
-            applyPolygonOffset(gl, nextState.polygonOffset);
+            funcs.push(nextState.applyPolygonOffset);
         }
 
         // For now, always apply because of passState
-        applyScissorTest(gl, nextState.scissorTest, passState);
+        funcs.push(nextState.applyScissorTest);
 
         if ((previousState.depthRange.near !== nextState.depthRange.near) || (previousState.depthRange.far !== nextState.depthRange.far)) {
-            applyDepthRange(gl, nextState.depthRange);
+            funcs.push(nextState.applyDepthRange);
         }
 
         if ((previousState.depthTest.enabled !== nextState.depthTest.enabled) || (previousState.depthTest.func !== nextState.depthTest.func)) {
-            applyDepthTest(gl, nextState.depthTest);
+            funcs.push(nextState.applyDepthTest);
         }
 
         if ((previousState.colorMask.red !== nextState.colorMask.red) ||
                 (previousState.colorMask.green !== nextState.colorMask.green) ||
                 (previousState.colorMask.blue !== nextState.colorMask.blue) ||
                 (previousState.colorMask.alpha !== nextState.colorMask.alpha)) {
-            applyColorMask(gl, nextState.colorMask);
+            funcs.push(nextState.applyColorMask);
         }
 
         if (previousState.depthMask !== nextState.depthMask) {
-            applyDepthMask(gl, nextState.depthMask);
+            funcs.push(nextState.applyDepthMask);
         }
-
-/*
-        if ((previousState.blending.enabled !== nextState.blending.cenabled) ||
-                (previousState.blending.equationRgb !== nextState.blending.equationRgb) ||
-                (previousState.blending.equationAlpha !== nextState.blending.equationAlpha) ||
-                (previousState.blending.functionSourceRgb !== nextState.blending.functionSourceRgb) ||
-                (previousState.blending.functionDestinationRgb !== nextState.blending.functionDestinationRgb) ||
-                (previousState.blending.functionSourceAlpha !== nextState.blending.functionSourceAlpha) ||
-                (previousState.blending.functionDestinationAlpha !== nextState.blending.functionDestinationAlpha) ||
-                (previousState.blending.color.red !== nextState.blending.color.red) ||
-                (previousState.blending.color.green !== nextState.blending.color.green) ||
-                (previousState.blending.color.blue !== nextState.blending.color.blue) ||
-                (previousState.blending.color.alpha !== nextState.blending.color.alpha)) {
-            applyBlending(gl, nextState.blending, passState);
-        }
-*/
 
         // For now, always apply because of passState
-        applyBlending(gl, nextState.blending, passState);
+        funcs.push(nextState.applyBlending);
 
-        if (hasStencil) {
-            if (previousState.stencilMask !== nextState.stencilMask) {
-                applyStencilMask(gl, nextState.stencilMask);
-            }
+// TODO: remove hasStencil
+        if (previousState.stencilMask !== nextState.stencilMask) {
+            funcs.push(nextState.applyStencilMask);
+        }
 
-            if ((previousState.stencilTest.enabled !== nextState.stencilTest.cenabled) ||
-                    (previousState.stencilTest.frontFunction !== nextState.stencilTest.frontFunction) ||
-                    (previousState.stencilTest.backFunction !== nextState.stencilTest.backFunction) ||
-                    (previousState.stencilTest.reference !== nextState.stencilTest.reference) ||
-                    (previousState.stencilTest.mask !== nextState.stencilTest.mask) ||
-                    (previousState.stencilTest.frontOperation.fail !== nextState.stencilTest.frontOperation.fail) ||
-                    (previousState.stencilTest.frontOperation.zFail !== nextState.stencilTest.frontOperation.zFail) ||
-                    (previousState.stencilTest.frontOperation !== nextState.stencilTest.frontOperation) ||
-                    (previousState.stencilTest.backOperation.fail !== nextState.stencilTest.backOperation.fail) ||
-                    (previousState.stencilTest.backOperation.zFail !== nextState.stencilTest.backOperation.zFail) ||
-                    (previousState.stencilTest.backOperation.zPass !== nextState.stencilTest.backOperation.zPass)) {
-                applyStencilTest(gl, nextState.stencilTest);
-            }
+        if ((previousState.stencilTest.enabled !== nextState.stencilTest.enabled) ||
+                (previousState.stencilTest.frontFunction !== nextState.stencilTest.frontFunction) ||
+                (previousState.stencilTest.backFunction !== nextState.stencilTest.backFunction) ||
+                (previousState.stencilTest.reference !== nextState.stencilTest.reference) ||
+                (previousState.stencilTest.mask !== nextState.stencilTest.mask) ||
+                (previousState.stencilTest.frontOperation.fail !== nextState.stencilTest.frontOperation.fail) ||
+                (previousState.stencilTest.frontOperation.zFail !== nextState.stencilTest.frontOperation.zFail) ||
+                (previousState.stencilTest.backOperation.fail !== nextState.stencilTest.backOperation.fail) ||
+                (previousState.stencilTest.backOperation.zFail !== nextState.stencilTest.backOperation.zFail) ||
+                (previousState.stencilTest.backOperation.zPass !== nextState.stencilTest.backOperation.zPass)) {
+            funcs.push(nextState.applyStencilTest);
         }
 
         if ((previousState.sampleCoverage.enabled !== nextState.sampleCoverage.enabled) ||
                 (previousState.sampleCoverage.value !== nextState.sampleCoverage.value) ||
                 (previousState.sampleCoverage.invert !== nextState.sampleCoverage.invert)) {
-            applySampleCoverage(gl, nextState.sampleCoverage);
+            funcs.push(nextState.applySampleCoverage);
         }
 
         if (previousState.dither !== nextState.dither) {
-            applyDither(gl, nextState.dither);
+            funcs.push(nextState.applyDither);
         }
 
-        // For now, always apply because of passState
-        applyViewport(gl, canvas, uniformState, nextState.viewport);
+// TODO:
+// For now, always apply because of passState
+        funcs.push(nextState.applyViewport);
+
+        return funcs;
+    }
+
+    /**
+     * @private
+     */
+    RenderState.partialApply = function(previousState, nextState, gl, canvas, hasStencil, uniformState, passState) {
+        // When a new render state is applied, instead of making WebGL calls for all the states or first
+        // comparing the states one-by-one with the previous state (basically a linear search), we take
+        // advantage of RenderState's immutability, and store a dynamically populated sparse data structure
+        // containing functions that make the minimum number of WebGL calls when transitioning from one state
+        // to the other.  In practice, this works well since state-to-state transitions generally only require a
+        // few WebGL calls, especially if commands are stored by state.
+        var funcs = nextState._applyFunctions[previousState._id];
+        if (typeof funcs === 'undefined') {
+            funcs = createFuncs(previousState, nextState);
+            nextState._applyFunctions[previousState._id] = funcs;
+        }
+
+        var len = funcs.length;
+        for (var i = 0; i < len; ++i) {
+//            funcs[i](gl, passState);
+            funcs[i].apply(nextState, [gl, passState]);
+        }
     };
 
     return RenderState;

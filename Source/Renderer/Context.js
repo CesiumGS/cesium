@@ -147,8 +147,6 @@ define([
         return glWrapper;
     }
 
-    var defaultPassState = new PassState();
-
     /**
      * DOC_TBA
      *
@@ -236,9 +234,11 @@ define([
         this._clearStencil = gl.getParameter(gl.STENCIL_CLEAR_VALUE);
 
         var us = new UniformState();
+        var ps = new PassState(this);
         var rs = this.createRenderState();
-        RenderState.apply(rs, gl, canvas, this._hasStencil, us, defaultPassState);
+        RenderState.apply(rs, gl, canvas, this._hasStencil, us, ps);
 
+        this._defaultPassState = ps;
         this._defaultRenderState = rs;
         this._defaultTexture = undefined;
         this._defaultCubeMap = undefined;
@@ -1609,6 +1609,7 @@ define([
         return new Renderbuffer(gl, format, width, height);
     };
 
+    var nextRenderStateId = 0;
     var renderStateCache = {};
 
     /**
@@ -1740,7 +1741,7 @@ define([
         }
 
         // Cache miss.  Fully define render state and try again.
-        var states = new RenderState(this, renderState);
+        var states = new RenderState(this, renderState, nextRenderStateId++);
         var fullKey = JSON.stringify(states);
         cachedState = renderStateCache[fullKey];
         if (typeof cachedState === 'undefined') {
@@ -1854,7 +1855,7 @@ define([
      */
     Context.prototype.clear = function(clearCommand, passState) {
         clearCommand = defaultValue(clearCommand, defaultClearCommand);
-        passState = defaultValue(passState, defaultPassState);
+        passState = defaultValue(passState, this._defaultPassState);
 
         var gl = this._gl;
         var bitmask = 0;
@@ -1950,7 +1951,7 @@ define([
      * @see Context#createRenderState
      */
     Context.prototype.draw = function(drawCommand, passState) {
-        passState = defaultValue(passState, defaultPassState);
+        passState = defaultValue(passState, this._defaultPassState);
         this.beginDraw(drawCommand, passState);
         this.continueDraw(drawCommand);
         this.endDraw();

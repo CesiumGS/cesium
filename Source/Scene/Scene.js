@@ -75,7 +75,7 @@ define([
         var context = new Context(canvas);
 
         this._frameState = new FrameState();
-        this._passState = new PassState();
+        this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;
         this._primitives = new CompositePrimitive();
