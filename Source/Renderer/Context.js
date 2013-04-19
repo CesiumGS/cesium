@@ -1612,11 +1612,13 @@ define([
     var renderStateCache = {};
 
     /**
-     * DOC_TBA.
-     *
-     * Validates and adds defaults for missing states.
+     * Validates and then finds or creates an immutable and opaque render state, which defines the pipeline
+     * state, for a {@link DrawCommand} or {@link ClearCommand}.  All inputs states are optional.  Omitted states
+     * use the defaults shown in the example below.
      *
      * @memberof Context
+     *
+     * @param {Object} [renderState=undefined] The states defining the render state as shown in the example below.
      *
      * @exception {RuntimeError} renderState.lineWidth is out of range.
      * @exception {DeveloperError} Invalid renderState.frontFace.
@@ -1645,6 +1647,90 @@ define([
      * @exception {DeveloperError} renderState.viewport.width must be less than or equal to the maximum viewport width.
      * @exception {DeveloperError} renderState.viewport.height must be greater than or equal to zero.
      * @exception {DeveloperError} renderState.viewport.height must be less than or equal to the maximum viewport height.
+     *
+     * @example
+     * var defaults = {
+     *     frontFace : WindingOrder.COUNTER_CLOCKWISE,
+     *     cull : {
+     *         enabled : false,
+     *         face : CullFace.BACK
+     *     },
+     *     lineWidth : 1,
+     *     polygonOffset : {
+     *         enabled : false,
+     *         factor : 0,
+     *         units : 0
+     *     },
+     *     scissorTest : {
+     *         enabled : false,
+     *         rectangle : {
+     *             x : 0,
+     *             y : 0,
+     *             width : 0,
+     *             height : 0
+     *         }
+     *     },
+     *     depthRange : {
+     *         near : 0,
+     *         far : 1
+     *     },
+     *     depthTest : {
+     *         enabled : false,
+     *         func : DepthFunction.LESS
+     *      },
+     *     colorMask : {
+     *         red : true,
+     *         green : true,
+     *         blue : true,
+     *         alpha : true
+     *     },
+     *     depthMask : true,
+     *     stencilMask : ~0,
+     *     blending : {
+     *         enabled : false,
+     *         color : {
+     *             red : 0.0,
+     *             green : 0.0,
+     *             blue : 0.0,
+     *             alpha : 0.0
+     *         },
+     *         equationRgb : BlendEquation.ADD,
+     *         equationAlpha : BlendEquation.ADD,
+     *         functionSourceRgb : BlendFunction.ONE,
+     *         functionSourceAlpha : BlendFunction.ONE,
+     *         functionDestinationRgb : BlendFunction.ZERO,
+     *         functionDestinationAlpha : BlendFunction.ZERO
+     *     },
+     *     stencilTest : {
+     *         enabled : false,
+     *         frontFunction : StencilFunction.ALWAYS,
+     *         backFunction : StencilFunction.ALWAYS,
+     *         reference : 0,
+     *         mask : ~0,
+     *         frontOperation : {
+     *             fail : StencilOperation.KEEP,
+     *             zFail : StencilOperation.KEEP,
+     *             zPass : StencilOperation.KEEP
+     *         },
+     *         backOperation : {
+     *             fail : StencilOperation.KEEP,
+     *             zFail : StencilOperation.KEEP,
+     *             zPass : StencilOperation.KEEP
+     *         }
+     *     },
+     *     sampleCoverage : {
+     *         enabled : false,
+     *         value : 1.0,
+     *         invert : false
+     *      },
+     *     dither : true
+     * };
+     *
+     * // Same as just context.createRenderState().
+     * var rs = context.createRenderState(defaults);
+     *
+     * @see DrawCommand
+     * @see ClearCommand
      */
     Context.prototype.createRenderState = function(renderState) {
         var partialKey = JSON.stringify(renderState);

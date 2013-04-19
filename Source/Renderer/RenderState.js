@@ -24,7 +24,12 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * An immutable and opaque render state.  Do not create this directly.  See {@link Context#createRenderState}.
+     *
+     * @alias RenderState
+     * @internalConstructor
+     *
+     * @see Context#createRenderState
      */
     var RenderState = function(context, renderState) {
         var rs = renderState || {};
@@ -392,7 +397,7 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * @private
      */
     RenderState.prototype.apply = function(gl, canvas, hasStencil, uniformState, passState) {
         RenderState._applyFrontFace(gl, this.frontFace);
