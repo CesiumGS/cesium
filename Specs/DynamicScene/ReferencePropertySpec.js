@@ -3,18 +3,26 @@ defineSuite([
              'DynamicScene/ReferenceProperty',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',
+             'Core/JulianDate',
+             'Core/TimeInterval',
              'Core/Iso8601'
             ], function(
               ReferenceProperty,
               DynamicObjectCollection,
               DynamicObject,
+              JulianDate,
+              TimeInterval,
               Iso8601) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    var validTime = JulianDate.fromIso8601('2012');
+    var invalidTime = JulianDate.fromIso8601('2014');
+
     var testObjectLink = 'testObject.property';
     function createTestObject(dynamicObjectCollection, methodName) {
         var testObject = dynamicObjectCollection.getOrCreateObject('testObject');
+        testObject._setAvailability(TimeInterval.fromIso8601('2012/2013'));
         testObject.property = {};
         testObject.property[methodName] = function(time, result) {
             result.expectedTime = time;
@@ -85,9 +93,10 @@ defineSuite([
         createTestObject(dynamicObjectCollection, 'getValue');
         var property = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
         var result = {};
-        expect(property.getValue(Iso8601.MINIMUM_VALUE, result)).toEqual(result);
+        expect(property.getValue(validTime, result)).toEqual(result);
         expect(result.expectedValue).toEqual(true);
-        expect(result.expectedTime).toEqual(Iso8601.MINIMUM_VALUE);
+        expect(result.expectedTime).toEqual(validTime);
+        expect(property.getValue(invalidTime, result)).toBeUndefined();
     });
 
     it('Resolves getValue property on parent collection', function() {
@@ -97,9 +106,10 @@ defineSuite([
         createTestObject(parent, 'getValue');
         var property = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
         var result = {};
-        expect(property.getValue(Iso8601.MINIMUM_VALUE, result)).toEqual(result);
+        expect(property.getValue(validTime, result)).toEqual(result);
         expect(result.expectedValue).toEqual(true);
-        expect(result.expectedTime).toEqual(Iso8601.MINIMUM_VALUE);
+        expect(result.expectedTime).toEqual(validTime);
+        expect(property.getValue(invalidTime, result)).toBeUndefined();
     });
 
     it('Resolves getValue property on direct collection', function() {
@@ -107,9 +117,10 @@ defineSuite([
         createTestObject(dynamicObjectCollection, 'getValue');
         var property = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
         var result = {};
-        expect(property.getValue(Iso8601.MINIMUM_VALUE, result)).toEqual(result);
+        expect(property.getValue(validTime, result)).toEqual(result);
         expect(result.expectedValue).toEqual(true);
-        expect(result.expectedTime).toEqual(Iso8601.MINIMUM_VALUE);
+        expect(result.expectedTime).toEqual(validTime);
+        expect(property.getValue(invalidTime, result)).toBeUndefined();
     });
 
     it('Resolves getValueCartographic property on direct collection', function() {
@@ -117,9 +128,10 @@ defineSuite([
         createTestObject(dynamicObjectCollection, 'getValueCartographic');
         var property = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
         var result = {};
-        expect(property.getValueCartographic(Iso8601.MINIMUM_VALUE, result)).toEqual(result);
+        expect(property.getValueCartographic(validTime, result)).toEqual(result);
         expect(result.expectedValue).toEqual(true);
-        expect(result.expectedTime).toEqual(Iso8601.MINIMUM_VALUE);
+        expect(result.expectedTime).toEqual(validTime);
+        expect(property.getValueCartographic(invalidTime, result)).toBeUndefined();
     });
 
     it('Resolves getValueCartesian property on direct collection', function() {
@@ -127,9 +139,10 @@ defineSuite([
         createTestObject(dynamicObjectCollection, 'getValueCartesian');
         var property = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
         var result = {};
-        expect(property.getValueCartesian(Iso8601.MINIMUM_VALUE, result)).toEqual(result);
+        expect(property.getValueCartesian(validTime, result)).toEqual(result);
         expect(result.expectedValue).toEqual(true);
-        expect(result.expectedTime).toEqual(Iso8601.MINIMUM_VALUE);
+        expect(result.expectedTime).toEqual(validTime);
+        expect(property.getValueCartesian(invalidTime, result)).toBeUndefined();
     });
 
     it('Resolves getValueSpherical property on direct collection', function() {
@@ -137,8 +150,9 @@ defineSuite([
         createTestObject(dynamicObjectCollection, 'getValueSpherical');
         var property = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
         var result = {};
-        expect(property.getValueSpherical(Iso8601.MINIMUM_VALUE, result)).toEqual(result);
+        expect(property.getValueSpherical(validTime, result)).toEqual(result);
         expect(result.expectedValue).toEqual(true);
-        expect(result.expectedTime).toEqual(Iso8601.MINIMUM_VALUE);
+        expect(result.expectedTime).toEqual(validTime);
+        expect(property.getValueSpherical(invalidTime, result)).toBeUndefined();
     });
 });
