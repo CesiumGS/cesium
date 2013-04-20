@@ -276,6 +276,7 @@ define([
         for (var m = 0; m < numFrustums; ++m) {
             var curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
             var curFar = Math.min(far, farToNearRatio * curNear);
+            curNear *= 0.99;
 
             var frustumCommands = frustumCommandsList[m];
             if (typeof frustumCommands === 'undefined') {
