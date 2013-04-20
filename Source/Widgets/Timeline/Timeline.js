@@ -548,8 +548,8 @@ define([
                 this._timelineBarLocation = this.container.clientWidth;
                 this._timelineDrag = 0.01*this._timeBarSecondsSpan;
             } else if ((x >= 0) && (x <= this.container.clientWidth)) {
-                this._timelineBarLocation = x;
-                this._timelineDrag = 0;
+                this._timelineBarLocation = undefined;
+                this._setTimeBarTime(x, x * this._timeBarSecondsSpan / this.container.clientWidth);
             }
 
         } else if (this._mouseMode === timelineMouseMode.slide) {
