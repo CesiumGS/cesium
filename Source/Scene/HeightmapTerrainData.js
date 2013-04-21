@@ -90,7 +90,7 @@ define([
      *   waterMask : waterMask
      * });
      */
-    var HeightmapTerrainData = function HeightmapTerrainData(description) {
+    var HeightmapTerrainData = function(description) {
         if (typeof description === 'undefined' || typeof description.buffer === 'undefined') {
             throw new DeveloperError('description.buffer is required.');
         }

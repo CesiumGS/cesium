@@ -8,7 +8,7 @@ define(function() {
      * @alias TileLoadQueue
      * @private
      */
-    var TileLoadQueue = function TileLoadQueue() {
+    var TileLoadQueue = function() {
         this.head = undefined;
         this.tail = undefined;
         this._insertionPoint = undefined;

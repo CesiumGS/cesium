@@ -66,7 +66,7 @@ define([
      *        Cesium.Math.toRadians(40.0))
      * });
      */
-    var TileMapServiceImageryProvider = function TileMapServiceImageryProvider(description) {
+    var TileMapServiceImageryProvider = function(description) {
         description = defaultValue(description, {});
 
         if (typeof description.url === 'undefined') {

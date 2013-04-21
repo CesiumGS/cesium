@@ -14,7 +14,7 @@ define([
      * @alias TileReplacementQueue
      * @private
      */
-    var TileReplacementQueue = function TileReplacementQueue() {
+    var TileReplacementQueue = function() {
         this.head = undefined;
         this.tail = undefined;
         this.count = 0;

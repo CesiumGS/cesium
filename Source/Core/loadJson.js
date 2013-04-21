@@ -37,7 +37,7 @@ define([
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
      */
-    var loadJson = function loadJson(url, headers) {
+    var loadJson = function(url, headers) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }

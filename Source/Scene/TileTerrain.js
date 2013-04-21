@@ -29,7 +29,7 @@ define([
      * @param {Number} [upsampleDetails.y] The Y coordinate of the tile being upsampled.
      * @param {Number} [upsampleDetails.level] The level coordinate of the tile being upsampled.
      */
-    var TileTerrain = function TileTerrain(upsampleDetails) {
+    var TileTerrain = function(upsampleDetails) {
         /**
          * The current state of the terrain in the terrain processing pipeline.
          * @type TerrainState

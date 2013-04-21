@@ -27,7 +27,7 @@ define([
      *        is not specific to a particular tile.
      * @param {Number} [timesRetried=0] The number of times this operation has been retried.
      */
-    var TileProviderError = function TileProviderError(provider, message, x, y, level, timesRetried) {
+    var TileProviderError = function(provider, message, x, y, level, timesRetried) {
         /**
          * The {@link ImageryProvider} or {@link TerrainProvider} that experienced the error.
          * @type {ImageryProvider|TerainProvider}

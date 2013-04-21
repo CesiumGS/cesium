@@ -58,7 +58,7 @@ define([
      *     proxy: new Cesium.DefaultProxy('/proxy/')
      * });
      */
-    var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(description) {
+    var WebMapServiceImageryProvider = function(description) {
         description = defaultValue(description, {});
 
         if (typeof description.url === 'undefined') {

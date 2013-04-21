@@ -70,7 +70,7 @@ define([
      *     url: 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
      */
-    var ArcGisMapServerImageryProvider = function ArcGisMapServerImageryProvider(description) {
+    var ArcGisMapServerImageryProvider = function(description) {
         description = defaultValue(description, {});
 
         if (typeof description.url === 'undefined') {

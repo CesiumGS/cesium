@@ -64,7 +64,7 @@ define([
      * var eop = new EarthOrientationParameters({ url : 'Data/EOP.json' });
      * Transforms.earthOrientationParameters = eop;
      */
-    var EarthOrientationParameters = function EarthOrientationParameters(description) {
+    var EarthOrientationParameters = function(description) {
         description = defaultValue(description, {});
 
         this._dates = undefined;

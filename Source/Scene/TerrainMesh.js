@@ -22,7 +22,7 @@ define(function() {
       *                     scaled space, and used for horizon culling.  If this point is below the horizon,
       *                     the tile is considered to be entirely below the horizon.
       */
-    var TerrainMesh = function TerrainMesh(center, vertices, indices, minimumHeight, maximumHeight, boundingSphere3D, occludeePointInScaledSpace) {
+    var TerrainMesh = function(center, vertices, indices, minimumHeight, maximumHeight, boundingSphere3D, occludeePointInScaledSpace) {
         /**
          * The center of the tile.  Vertex positions are specified relative to this center.
          * @type {Cartesian3}

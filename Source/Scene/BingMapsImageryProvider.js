@@ -66,7 +66,7 @@ define([
      *     mapStyle : BingMapsStyle.AERIAL
      * });
      */
-    var BingMapsImageryProvider = function BingMapsImageryProvider(description) {
+    var BingMapsImageryProvider = function(description) {
         description = defaultValue(description, {});
 
         if (typeof description.url === 'undefined') {

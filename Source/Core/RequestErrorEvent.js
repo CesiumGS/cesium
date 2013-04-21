@@ -13,7 +13,7 @@ define([
      * @param {Number} [statusCode] The HTTP error status code, such as 404.
      * @param {Object} [response] The response included along with the error.
      */
-    var RequestErrorEvent = function RequestErrorEvent(statusCode, response) {
+    var RequestErrorEvent = function(statusCode, response) {
         /**
          * The HTTP error status code, such as 404.  If the error does not have a particular
          * HTTP code, this property will be undefined.

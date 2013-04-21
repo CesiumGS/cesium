@@ -12,7 +12,7 @@ define(function() {
      * @param {Number} y The Y value.
      * @param {Number} s The S value.
      */
-    var Iau2006XysSample = function Iau2006XysSample(x, y, s) {
+    var Iau2006XysSample = function(x, y, s) {
         /**
          * The X value.
          * @type {Number}

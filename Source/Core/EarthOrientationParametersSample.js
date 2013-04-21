@@ -14,7 +14,7 @@ define(function() {
      * @param {Number} yPoleOffset The offset to the Celestial Intermediate Pole (CIP) about the Y axis, in radians.
      * @param {Number} ut1MinusUtc The difference in time standards, UT1 - UTC, in seconds.
      */
-    var EarthOrientationParametersSample = function EarthOrientationParametersSample(xPoleWander, yPoleWander, xPoleOffset, yPoleOffset, ut1MinusUtc) {
+    var EarthOrientationParametersSample = function(xPoleWander, yPoleWander, xPoleOffset, yPoleOffset, ut1MinusUtc) {
         /**
          * The pole wander about the X axis, in radians.
          * @type {Number}

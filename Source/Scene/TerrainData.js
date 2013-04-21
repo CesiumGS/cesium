@@ -12,7 +12,7 @@ define([
      * @alias TerrainData
      * @constructor
      */
-    var TerrainData = function TerrainData() {
+    var TerrainData = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 

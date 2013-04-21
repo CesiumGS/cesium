@@ -31,7 +31,7 @@ define([
      *
      * @see TerrainProvider
      */
-    var EllipsoidTerrainProvider = function EllipsoidTerrainProvider(description) {
+    var EllipsoidTerrainProvider = function(description) {
         description = defaultValue(description, {});
 
         this._tilingScheme = description.tilingScheme;
