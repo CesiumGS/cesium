@@ -13,7 +13,7 @@ define([
 
     /**
      * An {@link ImageryProvider} that draws a wireframe grid on every tile with controllable background and glow.
-     * Can be used for rendering effects
+     * May be useful for custom rendering effects or debugging terrain.
      *
      * @alias GridImageryProvider
      * @constructor
