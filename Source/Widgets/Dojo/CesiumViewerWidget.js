@@ -460,6 +460,15 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
         },
 
         /**
+         * Boolean value which indicates if browser supports fullscreen mode
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default undefined
+         * @see CesiumViewerWidget#startup
+         */
+        supportFullscreen : undefined,
+
+        /**
          * This function must be called when the widget changes size.  It updates the canvas
          * size, camera aspect ratio, and viewport size.
          *
@@ -476,6 +485,12 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
 
             this.canvas.width = width;
             this.canvas.height = height;
+
+            if(!this.supportFullscreen) {
+                var aW = this.animationContainer.clientWidth;
+                var wdContainer = width - aW - 2;
+                this.timelineContainer.style.width = wdContainer + 'px';
+            }
 
             var frustum = this.scene.getCamera().frustum;
             if (typeof frustum.aspectRatio !== 'undefined') {
@@ -983,6 +998,23 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             function onTimelineScrub(e) {
                 that.clock.currentTime = e.timeJulian;
                 that.clock.shouldAnimate = false;
+            }
+
+            function supportFullScreen(){
+                var doc = document.documentElement;
+                return ('requestFullscreen' in doc) ||
+                        ('mozRequestFullScreen' in doc && document.mozFullScreenEnabled) ||
+                        ('webkitRequestFullScreen' in doc);
+            }
+            this.supportFullscreen = supportFullScreen();
+            if(!this.supportFullscreen) {
+                this.fullscreenContainer.style.visibility='hidden';
+            }
+            if(!this.supportFullscreen) {
+                var width = this.canvas.clientWidth;
+                var aW = this.animationContainer.clientWidth;
+                var wdContainer = width - aW - 2;
+                this.timelineContainer.style.width = wdContainer + 'px';
             }
 
             var timeline = new Timeline(this.timelineContainer, this.clock);
