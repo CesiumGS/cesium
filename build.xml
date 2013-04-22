@@ -93,6 +93,7 @@
 
 	<target name="clean" description="Cleans the build.">
 		<delete includeEmptyDirs="true" failonerror="false">
+			<fileset dir="${sourceDirectory}" includes="Cesium.js" />
 			<fileset dir="${buildDirectory}" defaultexcludes="false" />
 			<fileset dir="${instrumentedDirectory}" defaultexcludes="false" />
 			<fileset dir="${shadersDirectory}" includes="**/*.js" excludes="*.profile.js" />
