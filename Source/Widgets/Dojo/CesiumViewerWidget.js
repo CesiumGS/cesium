@@ -460,15 +460,6 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
         },
 
         /**
-         * Boolean value which indicates if browser supports fullscreen mode
-         * @type {Boolean}
-         * @memberof CesiumViewerWidget.prototype
-         * @default undefined
-         * @see CesiumViewerWidget#startup
-         */
-        supportFullscreen : undefined,
-
-        /**
          * This function must be called when the widget changes size.  It updates the canvas
          * size, camera aspect ratio, and viewport size.
          *
@@ -486,10 +477,14 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             this.canvas.width = width;
             this.canvas.height = height;
 
-            if(!this.supportFullscreen) {
-                var aW = this.animationContainer.clientWidth;
-                var wdContainer = width - aW - 2;
-                this.timelineContainer.style.width = wdContainer + 'px';
+            if(!FeatureDetection.supportsFullscreen()) {
+                //Hides fullscreen button container if not supported fullscreen mode
+                this.fullscreenContainer.style.display = 'none';
+                var totalWidth = this.canvas.clientWidth,
+                    animationWidth = this.animationContainer.clientWidth,
+                    margin = 2;
+                var timelineWidth = totalWidth - animationWidth - margin;
+                this.timelineContainer.style.width = timelineWidth + 'px';
             }
 
             var frustum = this.scene.getCamera().frustum;
@@ -1000,21 +995,14 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
                 that.clock.shouldAnimate = false;
             }
 
-            function supportFullScreen(){
-                var doc = document.documentElement;
-                return ('requestFullscreen' in doc) ||
-                        ('mozRequestFullScreen' in doc && document.mozFullScreenEnabled) ||
-                        ('webkitRequestFullScreen' in doc);
-            }
-            this.supportFullscreen = supportFullScreen();
-            if(!this.supportFullscreen) {
-                this.fullscreenContainer.style.visibility='hidden';
-            }
-            if(!this.supportFullscreen) {
-                var width = this.canvas.clientWidth;
-                var aW = this.animationContainer.clientWidth;
-                var wdContainer = width - aW - 2;
-                this.timelineContainer.style.width = wdContainer + 'px';
+            if(!FeatureDetection.supportsFullscreen()) {
+                //Hides fullscreen button container if not supported fullscreen mode
+                this.fullscreenContainer.style.display = 'none';
+                var totalWidth = this.canvas.clientWidth,
+                    animationWidth = this.animationContainer.clientWidth,
+                    margin = 2;
+                var timelineWidth = totalWidth - animationWidth - margin;
+                this.timelineContainer.style.width = timelineWidth + 'px';
             }
 
             var timeline = new Timeline(this.timelineContainer, this.clock);
