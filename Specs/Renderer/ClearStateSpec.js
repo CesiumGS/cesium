@@ -39,8 +39,6 @@ defineSuite([
             stencilMask : ~0,
             dither : true,
 
-            framebuffer : undefined,
-
             color : {
                 red : 0.0,
                 green : 0.0,
@@ -65,7 +63,6 @@ defineSuite([
         expect(cs.depthMask).toEqual(defaultCS.depthMask);
         expect(cs.stencilMask).toEqual(defaultCS.stencilMask);
         expect(cs.dither).toEqual(defaultCS.dither);
-        expect(cs.framebuffer).toEqual(defaultCS.framebuffer);
         expect(cs.color.red).toEqual(defaultCS.color.red);
         expect(cs.color.green).toEqual(defaultCS.color.green);
         expect(cs.color.blue).toEqual(defaultCS.color.blue);
@@ -95,8 +92,6 @@ defineSuite([
             stencilMask : 0,
             dither : false,
 
-            framebuffer : null,
-
             color : {
                 red : 0.1,
                 green : 0.2,
@@ -121,7 +116,6 @@ defineSuite([
         expect(cs.depthMask).toEqual(c.depthMask);
         expect(cs.stencilMask).toEqual(c.stencilMask);
         expect(cs.dither).toEqual(c.dither);
-        expect(cs.framebuffer).toEqual(c.framebuffer);
         expect(cs.color.red).toEqual(c.color.red);
         expect(cs.color.green).toEqual(c.color.green);
         expect(cs.color.blue).toEqual(c.color.blue);
@@ -153,7 +147,6 @@ defineSuite([
         expect(cs.colorMask.alpha).toEqual(defaultCS.colorMask.alpha);
         expect(cs.depthMask).toEqual(defaultCS.depthMask);
         expect(cs.stencilMask).toEqual(defaultCS.stencilMask);
-        expect(cs.framebuffer).toEqual(defaultCS.framebuffer);
         expect(cs.color.red).toEqual(defaultCS.color.red);
         expect(cs.color.green).toEqual(defaultCS.color.green);
         expect(cs.color.blue).toEqual(defaultCS.color.blue);

@@ -4,84 +4,85 @@ define([
         '../Core/destroyObject',
         '../Core/Color',
         '../Core/DeveloperError',
+        '../Core/BoundingRectangle',
         './ClearCommand',
+        './PassState',
         './RenderbufferFormat'
     ], function(
         defaultValue,
         destroyObject,
         Color,
         DeveloperError,
+        BoundingRectangle,
         ClearCommand,
+        PassState,
         RenderbufferFormat) {
     "use strict";
 
     /**
-     * DOC_TBA
-     *
-     * @alias PickFramebuffer
-     * @internalConstructor
-     *
-     * @see Context#createPickFramebuffer
-     * @see Context#pick
+     * @private
      */
     var PickFramebuffer = function(context) {
+        // Override per-command states
+        var passState = new PassState();
+        passState.blendingEnabled = false;
+        passState.scissorTest = {
+            enabled : true,
+            rectangle : new BoundingRectangle()
+        };
+
         this._context = context;
-        this._fb = null;
+        this._fb = undefined;
+        this._passState = passState;
         this._width = 0;
         this._height = 0;
 
         // Clear to black.  Since this is the background color, no objects will be black
-        this._clearCommand = new ClearCommand();
-        this._clearCommand.clearState = context.createClearState({
-            color : new Color(0.0, 0.0, 0.0, 1.0),
+        this._clearCommand = new ClearCommand(context.createClearState({
+            color : new Color(0.0, 0.0, 0.0, 0.0),
             depth : 1.0,
             stencil : 0
-        });
+        }));
     };
 
-    /**
-     * DOC_TBA
-     * @memberof PickFramebuffer
-     */
-    PickFramebuffer.prototype.begin = function() {
+    PickFramebuffer.prototype.begin = function(screenSpaceRectangle) {
         var context = this._context;
+        var width = context.getCanvas().clientWidth;
+        var height = context.getCanvas().clientHeight;
+
+        BoundingRectangle.clone(screenSpaceRectangle, this._passState.scissorTest.rectangle);
 
         // Initially create or recreate renderbuffers and framebuffer used for picking
-        if (!this._fb ||
-            (this._width !== context.getCanvas().clientWidth) ||
-            (this._height !== context.getCanvas().clientHeight)) {
-            this._width = context.getCanvas().clientWidth;
-            this._height = context.getCanvas().clientHeight;
+        if ((typeof this._fb === 'undefined') || (this._width !== width) || (this._height !== height)) {
+            this._width = width;
+            this._height = height;
 
             this._fb = this._fb && this._fb.destroy();
             this._fb = context.createFramebuffer({
-                colorRenderbuffer : context.createRenderbuffer(),
+                colorTexture : context.createTexture2D({
+                    width : width,
+                    height : height
+                }),
                 depthRenderbuffer : context.createRenderbuffer({
                     format : RenderbufferFormat.DEPTH_COMPONENT16
                 })
             });
+            this._passState.framebuffer = this._fb;
         }
 
-        this._clearCommand.execute(context, this._fb);
+        this._clearCommand.execute(context, this._passState);
 
-        return this._fb;
+        return this._passState;
     };
 
     var colorScratch = new Color();
 
-    /**
-     * DOC_TBA
-     * @memberof PickFramebuffer
-     */
     PickFramebuffer.prototype.end = function(screenSpaceRectangle) {
-        if (typeof screenSpaceRectangle === 'undefined') {
-            throw new DeveloperError('screenSpaceRectangle is required.');
-        }
-
         var width = defaultValue(screenSpaceRectangle.width, 1.0);
         var height = defaultValue(screenSpaceRectangle.height, 1.0);
 
-        var pixels = this._context.readPixels({
+        var context = this._context;
+        var pixels = context.readPixels({
             x : screenSpaceRectangle.x,
             y : screenSpaceRectangle.y,
             width : width,
@@ -108,18 +109,18 @@ define([
             if (-halfWidth <= x && x <= halfWidth && -halfHeight <= y && y <= halfHeight) {
                 var index = 4 * ((halfHeight - y) * width + x + halfWidth);
 
-                colorScratch.red = pixels[index];
-                colorScratch.green = pixels[index + 1];
-                colorScratch.blue = pixels[index + 2];
-                colorScratch.alpha = pixels[index + 3];
+                colorScratch.red = Color.byteToFloat(pixels[index]);
+                colorScratch.green = Color.byteToFloat(pixels[index + 1]);
+                colorScratch.blue = Color.byteToFloat(pixels[index + 2]);
+                colorScratch.alpha = Color.byteToFloat(pixels[index + 3]);
 
-                var object = this._context.getObjectByPickId(colorScratch);
+                var object = context.getObjectByPickColor(colorScratch);
                 if (typeof object !== 'undefined') {
                     return object;
                 }
             }
 
-            // if (top right || bottom left corners) || (top left corner) || (bottom right corner + (1, 0)
+            // if (top right || bottom left corners) || (top left corner) || (bottom right corner + (1, 0))
             // change spiral direction
             if (x === y || (x < 0 && -x === y) || (x > 0 && x === 1 - y)) {
                 var temp = dx;
@@ -134,41 +135,10 @@ define([
         return undefined;
     };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof PickFramebuffer
-     *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see PickFramebuffer#destroy
-     */
     PickFramebuffer.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof PickFramebuffer
-     *
-     * @return {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see PickFramebuffer#isDestroyed
-     *
-     * @example
-     * PickFramebuffer = PickFramebuffer && PickFramebuffer.destroy();
-     */
     PickFramebuffer.prototype.destroy = function() {
         this._fb = this._fb && this._fb.destroy();
         return destroyObject(this);

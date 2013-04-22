@@ -1,5 +1,5 @@
 /*global define*/
-define(['../Core/DeveloperError'], function(DeveloperError) {
+define(function() {
     "use strict";
 
     /**
@@ -9,8 +9,12 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
      * @constructor
      *
      * @param {ClearState} [clearState] The clear state.
+     * @param {Framebuffer} [framebuffer] The framebuffer to clear when the command is executed.
+     *
+     * @see DrawCommand
+     * @see PassState
      */
-    var ClearCommand = function(clearState) {
+    var ClearCommand = function(clearState, framebuffer) {
         /**
          * The clear state.  If this property is undefined, a default clear state is used.
          * @type Object
@@ -21,7 +25,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * The framebuffer to clear.
          * @type Framebuffer
          */
-        this.framebuffer = undefined;
+        this.framebuffer = framebuffer;
     };
 
     /**
@@ -30,10 +34,10 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
      * @memberof ClearCommand
      *
      * @param {Context} context The renderer context in which to clear.
-     * @param {Framebuffer} [framebuffer] The framebuffer to clear if one is not specified by the command.
+     * @param {PassState} [passState] The state for the current rendering pass.
      */
-    ClearCommand.prototype.execute = function(context, framebuffer) {
-        context.clear(this, framebuffer);
+    ClearCommand.prototype.execute = function(context, passState) {
+        context.clear(this, passState);
     };
 
     return ClearCommand;

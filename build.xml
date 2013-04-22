@@ -31,10 +31,12 @@
 		<copy todir="Build">
 			<fileset dir="Apps/">
 				<include name="HelloWorld.html" />
+				<include name="index.html" />
 			</fileset>
 		</copy>
 
 		<replace file="Build/HelloWorld.html" token="../Build/" value="" />
+		<replace file="Build/index.html" token="../Build/" value="" />
 	</target>
 
 	<target name="minify" description="Combines all source files into a single stand-alone, minified script.">
@@ -67,6 +69,7 @@
 				<include name="Cesium/**" />
 				<include name="Documentation/**" />
 				<include name="HelloWorld.html" />
+				<include name="index.html" />
 			</fileset>
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
@@ -80,6 +83,7 @@
 			<include name="Source/**" />
 			<include name="Specs/**" />
 			<include name="ThirdParty/**" />
+			<include name="HelloWorld.html" />
 			<include name="index.html" />
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
@@ -89,6 +93,7 @@
 
 	<target name="clean" description="Cleans the build.">
 		<delete includeEmptyDirs="true" failonerror="false">
+			<fileset dir="${sourceDirectory}" includes="Cesium.js" />
 			<fileset dir="${buildDirectory}" defaultexcludes="false" />
 			<fileset dir="${instrumentedDirectory}" defaultexcludes="false" />
 			<fileset dir="${shadersDirectory}" includes="**/*.js" excludes="*.profile.js" />
@@ -429,6 +434,7 @@
 		<replace dir="${appOutputDirectory}" summary="true">
 			<replacefilter token="../../" value="" />
 			<replacefilter token="Source/" value="" />
+			<include name="HelloWorld.html" />
 			<include name="index.html" />
 			<include name="*.css" />
 		</replace>
@@ -437,6 +443,7 @@
 		<replace dir="${appOutputDirectory}" summary="true">
 			<replacefilter token="ThirdParty/dojo-release-1.8.3-src/" value="" />
 			<include name="${appStartupScript}" />
+			<include name="HelloWorld.html" />
 			<include name="index.html" />
 			<include name="*.css" />
 		</replace>

@@ -17,6 +17,7 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../Renderer/ClearCommand',
         './GeographicTilingScheme',
         './Imagery',
         './TileProviderError',
@@ -44,6 +45,7 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
+        ClearCommand,
         GeographicTilingScheme,
         Imagery,
         TileProviderError,
@@ -852,10 +854,9 @@ define([
 
         reproject.framebuffer.setColorTexture(outputTexture);
 
-        context.clear(context.createClearState({
-            framebuffer : reproject.framebuffer,
-            color : new Color(0.0, 0.0, 0.0, 0.0)
-        }));
+        context.clear(new ClearCommand(context.createClearState({
+            color : Color.BLACK
+        }), reproject.framebuffer));
 
         var renderState = reproject.renderState;
         var viewport = renderState.viewport;

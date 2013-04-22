@@ -13,7 +13,6 @@ define([
         '../Renderer/BlendingState',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
-        '../Shaders/Noise',
         '../Shaders/ViewportQuadVS',
         '../Shaders/ViewportQuadFS'
     ], function(
@@ -30,7 +29,6 @@ define([
         BlendingState,
         CommandLists,
         DrawCommand,
-        Noise,
         ViewportQuadVS,
         ViewportQuadFS) {
     "use strict";
@@ -194,14 +192,12 @@ define([
 
                 var fsSource =
                     '#line 0\n' +
-                    Noise +
-                    '#line 0\n' +
                     this._material.shaderSource +
                     '#line 0\n' +
                     ViewportQuadFS;
 
-                this._overlayCommand.shaderProgram = this._overlayCommand.shaderProgram && this._overlayCommand.shaderProgram.release();
-                this._overlayCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fsSource, attributeIndices);
+                this._overlayCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
+                    this._overlayCommand.shaderProgram, ViewportQuadVS, fsSource, attributeIndices);
             }
 
             this._overlayCommand.renderState.viewport = this.rectangle;

@@ -13,12 +13,9 @@ attribute vec3 nextPosition2DLow;
 attribute vec4 texCoordExpandWidthAndShow;
 attribute vec4 pickColor;
 
-#ifndef RENDER_FOR_PICK
 varying vec2  v_textureCoordinates;
 varying float v_width;
-#else
-varying vec4  v_pickColor;
-#endif
+varying vec4  czm_pickColor;
 
 uniform float u_morphTime;
 
@@ -119,9 +116,9 @@ void main()
     float expandWidth = width * 0.5;
     vec2 direction;
 
-	if (czm_equalsEpsilon(normalize(prev.xyz - p.xyz), vec3(0.0), czm_epsilon1))
+	if (czm_equalsEpsilon(normalize(prev.xyz - p.xyz), vec3(0.0), czm_epsilon1) || czm_equalsEpsilon(prevWC, -nextWC, czm_epsilon1))
 	{
-	   direction = vec2(-nextWC.y, nextWC.x);
+	    direction = vec2(-nextWC.y, nextWC.x);
     }
 	else if (czm_equalsEpsilon(normalize(next.xyz - p.xyz), vec3(0.0), czm_epsilon1))
 	{
@@ -143,7 +140,6 @@ void main()
 	    // Because the z components of both vectors are zero, the x and y coordinate will be zero.
 	    // Therefore, the sine of the angle is just the z component of the cross product.
 	    float sinAngle = abs(direction.x * nextWC.y - direction.y * nextWC.x);
-	    
 	    expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
     }
 
@@ -151,10 +147,7 @@ void main()
     vec4 positionWC = vec4(endPointWC.xy + offset, -endPointWC.z, 1.0);
     gl_Position = czm_viewportOrthographic * positionWC * show;
     
-#ifndef RENDER_FOR_PICK
     v_textureCoordinates = vec2(texCoord, clamp(expandDir, 0.0, 1.0));
     v_width = width;
-#else
-    v_pickColor = pickColor;
-#endif
+    czm_pickColor = pickColor;
 }
