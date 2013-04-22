@@ -75,13 +75,12 @@ define([
      */
     EllipsoidalOccluder.prototype.setCameraPosition = function(cameraPosition) {
         var ellipsoid = this._ellipsoid;
-        var cameraPositionInScaledSpace = ellipsoid.transformPositionToScaledSpace(cameraPosition, this._cameraPositionInScaledSpace);
-        var magnitudeCameraPositionInScaledSpace = Cartesian3.magnitude(cameraPositionInScaledSpace);
-        var distanceToLimbInScaledSpaceSquared = magnitudeCameraPositionInScaledSpace * magnitudeCameraPositionInScaledSpace - 1.0;
+        var cv = ellipsoid.transformPositionToScaledSpace(cameraPosition, this._cameraPositionInScaledSpace);
+        var vhMagnitudeSquared = Cartesian3.magnitudeSquared(cv) - 1.0;
 
         Cartesian3.clone(cameraPosition, this._cameraPosition);
-        this._cameraPositionInScaledSpace = cameraPositionInScaledSpace;
-        this._distanceToLimbInScaledSpaceSquared = distanceToLimbInScaledSpaceSquared;
+        this._cameraPositionInScaledSpace = cv;
+        this._distanceToLimbInScaledSpaceSquared = vhMagnitudeSquared;
     };
 
     /**
@@ -139,12 +138,12 @@ define([
      * occluder.isScaledSpacePointVisible(scaledSpacePoint); //returns true
      */
     EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {
-        // Based on Cozzi and Stoner's paper, "GPU Ray Casting of Virtual Globes Supplement"
-        var q = this._cameraPositionInScaledSpace;
-        var wMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
-        var b = Cartesian3.subtract(occludeeScaledSpacePosition, q, scratchCartesian);
-        var d = -b.dot(q);
-        return d < wMagnitudeSquared || d * d / b.magnitudeSquared() < wMagnitudeSquared;
+        // See http://cesium.agi.com/2013/04/22/Horizon-culling/
+        var cv = this._cameraPositionInScaledSpace;
+        var vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
+        var vt = Cartesian3.subtract(occludeeScaledSpacePosition, cv, scratchCartesian);
+        var vtDotVc = -vt.dot(cv);
+        return vtDotVc <= vhMagnitudeSquared || vtDotVc * vtDotVc / vt.magnitudeSquared() <= vhMagnitudeSquared;
     };
 
     return EllipsoidalOccluder;
