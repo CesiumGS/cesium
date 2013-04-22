@@ -5,10 +5,12 @@ define([
         './KeplerianElements',
         './Math',
         './Cartesian3',
+        './Matrix3',
         './Quaternion',
         './TimeConstants',
         './TimeStandard',
-        './JulianDate'
+        './JulianDate',
+        './Transforms'
     ],
     function(
         DeveloperError,
@@ -16,10 +18,12 @@ define([
         KeplerianElements,
         CesiumMath,
         Cartesian3,
+        Matrix3,
         Quaternion,
         TimeConstants,
         TimeStandard,
-        JulianDate) {
+        JulianDate,
+        Transforms) {
     "use strict";
 
     /**
@@ -317,7 +321,7 @@ define([
 
     /**
      * Uses the SimonEarthMoonBarycenter and SimonEarth points to transform the coordinates of the sun
-     * from (0,0,0) to its position relative to the inertial frame.
+     * from (0,0,0) to its position in the fixed frame.
      *
      * Values for the <code>axesTransformation</code> Quaternion needed for the rotation were found using the Components
      * GreographicTransformer on the position of the sun center of mass point and the earth J2000 frame.
@@ -326,25 +330,30 @@ define([
      */
     PlanetaryPositions.ComputeSun = function(date){
         var result = new Cartesian3();
-
+        var transformMatrix = new Matrix3();
         //first forward transformation
         var translation = computeSimonEarthMoonBarycenter(date);
         var axesTransformation = Quaternion.IDENTITY;
         var translated = result.subtract(translation);
-        result = translated.rotate(axesTransformation, result);
+        translated.rotate(axesTransformation, result);
 
 
         //second forward transformation
         translation = computeSimonEarth(date);
         axesTransformation = new Quaternion(-0.20312303898231016, -0.000000000000000057304398937699911, 0.00000000000000027508086490993513, 0.979153221428899270);
         translated = result.subtract(translation);
-        result = translated.rotate(axesTransformation, result);
+        translated.rotate(axesTransformation, result);
 
+        Transforms.computeIcrfToFixedMatrix(date, transformMatrix);
+        if (transformMatrix === undefined) {
+            Transforms.computeTemeToPseudoFixedMatrix(date, transformMatrix);
+        }
+        transformMatrix.multiplyByVector(result, result);
         return result;
     };
 
     /**
-     * Transforms the SimonMoon point to its position relative to the inertial frame.
+     * Transforms the SimonMoon point to its position in the fixed frame.
      *
      * Values for the <code>axesTransformation</code> Quaternion needed for the rotation were found using the Components
      * GreographicTransformer on the Simon 1994 moon point and the earth J2000 frame.
@@ -352,15 +361,20 @@ define([
      * @returns {Cartesian3} sun position
      */
     PlanetaryPositions.ComputeMoon = function(date){
+        var transformMatrix = new Matrix3();
         var result = computeSimonMoon(date);
         var translation = new Cartesian3();
         var axesTransformation = new Quaternion(-0.20312303898231016, -0.000000000000000057304398937699911, 0.00000000000000027508086490993513, 0.979153221428899270);
         var translated = result.subtract(translation);
         result = translated.rotate(axesTransformation, result);
 
+        Transforms.computeIcrfToFixedMatrix(date, transformMatrix);
+        if (transformMatrix === undefined) {
+            Transforms.computeTemeToPseudoFixedMatrix(date, transformMatrix);
+        }
+        transformMatrix.multiplyByVector(result, result);
         return result;
     };
-
 
     return PlanetaryPositions;
 });

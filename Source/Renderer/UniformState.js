@@ -13,7 +13,6 @@ define([
         '../Core/EncodedCartesian3',
         '../Core/BoundingRectangle',
         '../Core/Transforms',
-//        '../Core/computeSunPosition',
         '../Core/Simon1994PlanetaryPositions',
         '../Scene/SceneMode'
     ], function(
@@ -30,7 +29,6 @@ define([
         EncodedCartesian3,
         BoundingRectangle,
         Transforms,
-        //computeSunPosition,
         PlanetaryPositions,
         SceneMode) {
     "use strict";
@@ -184,19 +182,17 @@ define([
         uniformState._encodedCameraPositionMCDirty = true;
     }
 
-    var sunPositionWC = new Cartesian3();
-    var moonPosition = new Cartesian3();
-    var sunPositionScratch = new Cartesian3();
-
     function setSunAndMoonDirections(uniformState, frameState) {
-        sunPositionWC = PlanetaryPositions.ComputeSun(frameState.time);
+        var sunPosition = new Cartesian3();
+        var moonPosition = new Cartesian3();
+        sunPosition = PlanetaryPositions.ComputeSun(frameState.time);
 
-        Cartesian3.normalize(sunPositionWC, uniformState._sunDirectionWC);
-        Matrix3.multiplyByVector(uniformState.getViewRotation3D(), sunPositionWC, sunPositionScratch);
-        Cartesian3.normalize(sunPositionScratch, uniformState._sunDirectionEC);
-
+        Cartesian3.normalize(sunPosition, uniformState._sunDirectionWC);
+        Matrix3.multiplyByVector(uniformState.getViewRotation3D(), sunPosition, sunPosition);
+        Cartesian3.normalize(sunPosition, uniformState._sunDirectionEC);
 
         moonPosition = PlanetaryPositions.ComputeMoon(frameState.time);
+        Matrix3.multiplyByVector(uniformState.getViewRotation3D(), moonPosition, moonPosition);
         Cartesian3.normalize(moonPosition, uniformState._moonDirectionEC);
     }
 
