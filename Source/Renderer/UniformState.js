@@ -185,13 +185,20 @@ define([
     function setSunAndMoonDirections(uniformState, frameState) {
         var sunPosition = new Cartesian3();
         var moonPosition = new Cartesian3();
-        sunPosition = PlanetaryPositions.ComputeSun(frameState.time);
+        var transformMatrix = new Matrix3();
+        Transforms.computeIcrfToFixedMatrix(frameState.time, transformMatrix);
+        if (transformMatrix === undefined) {
+            Transforms.computeTemeToPseudoFixedMatrix(frameState.time, transformMatrix);
+        }
 
+        sunPosition = PlanetaryPositions.ComputeSun(frameState.time);
+        transformMatrix.multiplyByVector(sunPosition, sunPosition);
         Cartesian3.normalize(sunPosition, uniformState._sunDirectionWC);
         Matrix3.multiplyByVector(uniformState.getViewRotation3D(), sunPosition, sunPosition);
         Cartesian3.normalize(sunPosition, uniformState._sunDirectionEC);
 
         moonPosition = PlanetaryPositions.ComputeMoon(frameState.time);
+        transformMatrix.multiplyByVector(moonPosition, moonPosition);
         Matrix3.multiplyByVector(uniformState.getViewRotation3D(), moonPosition, moonPosition);
         Cartesian3.normalize(moonPosition, uniformState._moonDirectionEC);
     }

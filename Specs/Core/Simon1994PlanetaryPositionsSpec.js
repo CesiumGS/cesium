@@ -65,7 +65,6 @@ function(PlanetaryPositions,
         expect(Y).toEqual(moon.y);
         expect(Z).toEqual(moon.z);
 
-
         date = JulianDate.fromTotalDays(2455998.591667, TimeStandard.TAI);
         moon = PlanetaryPositions.ComputeMoon(date);
         X = -268426117.00202647;
