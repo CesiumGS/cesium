@@ -79,9 +79,7 @@ defineSuite([
                        .add(controlPointn2)
                        .multiplyByScalar(0.5);
 
-       /* var start = points[1].point.subtract(points[0].point);
-        var end = points[points.length - 1].point.subtract(points[points.length - 2].point);*/
-        var crs = new CatmullRomSpline(points, 'undefined', 'undefined');
+       var crs = new CatmullRomSpline(points, 'undefined', 'undefined');
 
         expect(start).toEqual(crs.getStartTangent());
         expect(end).toEqual(crs.getEndTangent());
