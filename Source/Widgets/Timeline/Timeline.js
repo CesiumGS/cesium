@@ -547,7 +547,7 @@ define([
             } else if (x > this.container.clientWidth) {
                 this._timelineDragLocation = this.container.clientWidth;
                 this._timelineDrag = 0.01*this._timeBarSecondsSpan;
-            } else if ((x >= 0) && (x <= this.container.clientWidth)) {
+            } else {
                 this._timelineDragLocation = undefined;
                 this._setTimeBarTime(x, x * this._timeBarSecondsSpan / this.container.clientWidth);
             }
