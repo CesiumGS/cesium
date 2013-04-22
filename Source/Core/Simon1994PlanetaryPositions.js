@@ -329,6 +329,9 @@ define([
      * @returns {Cartesian3} sun position
      */
     PlanetaryPositions.ComputeSun = function(date){
+        if (typeof date === 'undefined') {
+            date = new JulianDate();
+        }
         var result = new Cartesian3();
         //first forward transformation
         var translation = computeSimonEarthMoonBarycenter(date);
@@ -354,6 +357,9 @@ define([
      * @returns {Cartesian3} sun position
      */
     PlanetaryPositions.ComputeMoon = function(date){
+        if (typeof date === 'undefined') {
+            date = new JulianDate();
+        }
         var result = computeSimonMoon(date);
         var translation = new Cartesian3();
         var axesTransformation = new Quaternion(-0.20312303898231016, -0.000000000000000057304398937699911, 0.00000000000000027508086490993513, 0.979153221428899270);

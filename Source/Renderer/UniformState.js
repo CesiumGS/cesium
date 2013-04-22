@@ -186,9 +186,9 @@ define([
         var sunPosition = new Cartesian3();
         var moonPosition = new Cartesian3();
         var transformMatrix = new Matrix3();
-        Transforms.computeIcrfToFixedMatrix(frameState.time, transformMatrix);
-        if (transformMatrix === undefined) {
-            Transforms.computeTemeToPseudoFixedMatrix(frameState.time, transformMatrix);
+        transformMatrix = Transforms.computeIcrfToFixedMatrix(frameState.time, transformMatrix);
+        if (typeof transformMatrix === 'undefined') {
+            transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, transformMatrix);
         }
 
         sunPosition = PlanetaryPositions.ComputeSun(frameState.time);

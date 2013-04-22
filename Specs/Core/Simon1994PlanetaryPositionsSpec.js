@@ -3,12 +3,18 @@ defineSuite(['Core/Simon1994PlanetaryPositions',
              'Core/JulianDate',
              'Core/TimeStandard',
              'Core/TimeConstants',
-             'Core/Math'],
+             'Core/Math',
+             'Core/Matrix3',
+             'Core/Cartesian3',
+             'Core/Transforms'],
 function(PlanetaryPositions,
          JulianDate,
          TimeStandard,
          TimeConstants,
-         CesiumMath) {
+         CesiumMath,
+         Matrix3,
+         Cartesian3,
+         Transforms) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -73,6 +79,35 @@ function(PlanetaryPositions,
         expect(X).toEqual(moon.x);
         expect(Y).toEqual(moon.y);
         expect(Z).toEqual(moon.z);
+    });
+
+    it('has the sun rising in the east and setting in the west', function() {
+        //Julian dates for 24 hours, starting from July 6th 2011 @ 01:00 UTC
+        var transformMatrix = new Matrix3();
+        var timesOfDay = [];
+        for ( var i = 1; i < 25; i++) {
+            var date = new Date('July 6, 2011');
+            date.setUTCHours(i, 0, 0, 0);
+            timesOfDay.push(JulianDate.fromDate(date));
+        }
+        var angles = [];
+        for (i = 0; i < 24; i++) {
+            transformMatrix = Transforms.computeIcrfToFixedMatrix(timesOfDay[i], transformMatrix);
+            if (typeof transformMatrix === 'undefined') {
+                transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(timesOfDay[i], transformMatrix);
+            }
+            var position = PlanetaryPositions.ComputeSun(timesOfDay[i]);
+            transformMatrix.multiplyByVector(position, position);
+            angles.push(CesiumMath.convertLongitudeRange(Math.atan2(position.y, position.x)));
+        }
+        //Expect a clockwise motion.
+        for (i = 1; i < 24; i++) {
+            expect(angles[i]).toBeLessThan(angles[i - 1]);
+        }
+    });
+
+    it('works without a time', function() {
+        PlanetaryPositions.ComputeSun(undefined);
     });
 
 });
