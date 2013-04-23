@@ -77,7 +77,6 @@ defineSuite([
         var calledCreateImage = false;
         loadImage.createImage = function(url, crossOrigin, deferred) {
             expect(url).toEqual(imageUrl);
-            expect(crossOrigin).toEqual(true);
             calledCreateImage = true;
             return loadImage.defaultCreateImage(url, crossOrigin, deferred);
         };
@@ -143,7 +142,6 @@ defineSuite([
 
         loadImage.createImage = function(url, crossOrigin, deferred) {
             expect(url.indexOf(proxy.getURL('Data/Images/Red16x16.png'))).toEqual(0);
-            expect(crossOrigin).toEqual(true);
 
             calledCreateImage = true;
             deferred.resolve();

@@ -614,7 +614,7 @@ define([
             this._lastOceanNormalMapUrl = this.oceanNormalMapUrl;
 
             var that = this;
-            when(loadImage(this.oceanNormalMapUrl, true), function(image) {
+            when(loadImage(this.oceanNormalMapUrl), function(image) {
                 that._oceanNormalMap = that._oceanNormalMap && that._oceanNormalMap.destroy();
                 that._oceanNormalMap = context.createTexture2D({
                     source : image
