@@ -199,7 +199,8 @@
 
 				<include name="Apps/**/*.js" />
 				<include name="Apps/Sandcastle/gallery/*.html" />
-				<exclude name="Apps/Sandcastle/Cesium-hint.js" />
+				
+				<exclude name="Apps/Sandcastle/ThirdParty/**" />
 
 				<include name="Specs/**/*.js" />
 
