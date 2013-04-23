@@ -40,8 +40,6 @@ define([
         this._context = context;
         this._fb = undefined;
         this._passState = passState;
-        this._width = 0;
-        this._height = 0;
         this._clearCommand = command;
     };
 
@@ -53,9 +51,9 @@ define([
         BoundingRectangle.clone(screenSpaceRectangle, this._passState.scissorTest.rectangle);
 
         // Initially create or recreate renderbuffers and framebuffer used for picking
-        if ((typeof this._fb === 'undefined') || (this._width !== width) || (this._height !== height)) {
-            this._width = width;
-            this._height = height;
+        if ((typeof this._fb === 'undefined') ||
+            (this._fb.getColorTexture().getWidth() !== width) ||
+            (this._fb.getColorTexture().getHeight() !== height)) {
 
             this._fb = this._fb && this._fb.destroy();
             this._fb = context.createFramebuffer({
