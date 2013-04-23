@@ -25,7 +25,7 @@ define([
      * @private
      */
     var PostProcessEngine = function() {
-        this._frameBuffer = undefined;
+        this.framebuffer = undefined;
         this._command = undefined;
     };
 
@@ -80,7 +80,7 @@ define([
     }
 
     PostProcessEngine.prototype.update = function(context, filters) {
-        var fb = this._postProcessFrameBuffer;
+        var fb = this.framebuffer;
 
         if ((typeof filters !== 'undefined') && (filters.length > 0)) {
             var width = context.getCanvas().clientWidth;
@@ -100,7 +100,6 @@ define([
 
                 if (context.getDepthTexture()) {
 // TODO: test this in Canary
-// TODO: provide named access to depth texture
                     fb = context.createFramebuffer({
                         colorTexture : colorTexture,
                         depthTexture : context.createTexture2D({
@@ -130,6 +129,12 @@ define([
                 command.renderState = context.createRenderState({
                     blending : BlendingState.ALPHA_BLEND,
                 });
+                command.uniformMap = {
+// TODO: use semantics in Touch Up to access color/depth textures
+                    czm_colorTexture : function() {
+                        return fb.getColorTexture();
+                    }
+                };
 
                 this._command = command;
             }
@@ -142,7 +147,7 @@ define([
             fb = fb && fb.destroy();
         }
 
-        this._postProcessFrameBuffer = fb;
+        this.framebuffer = fb;
     };
 
     PostProcessEngine.prototype.executeCommands = function(context, passState, filters) {
@@ -152,7 +157,6 @@ define([
         for (var i = 0; i < length; ++i) {
             var filter = filters[i];
             command.shaderProgram = filter.shaderProgram;
-            command.uniformMap = filter.uniformMap;
             command.execute(context, passState);
         }
     };
@@ -162,7 +166,7 @@ define([
     };
 
     PostProcessEngine.prototype.destroy = function() {
-        this._frameBuffer = this._frameBuffer && this._frameBuffer.destroy();
+        this.framebuffer = this.framebuffer && this.framebuffer.destroy();
 
         return destroyObject(this);
     };

@@ -502,15 +502,17 @@ define([
 
         this._commandList.length = 0;
         this._primitives.update(this._context, frameState, this._commandList);
-
-        var passState = this._passState;
-        passState.framebuffer = undefined;
-
         createPotentiallyVisibleSet(this, 'colorList');
         this._postProcessEngine.update(this._context, this.postProcessFilters);
+
+        var passState = this._passState;
+        passState.framebuffer = this._postProcessEngine.framebuffer;
         executeCommands(this, passState);
-        executeOverlayCommands(this, passState);
+
+// TODO: ping-pong framebuffers for multiple filters
+        passState.framebuffer = undefined;
         this._postProcessEngine.executeCommands(this._context, passState, this.postProcessFilters);
+        executeOverlayCommands(this, passState);
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
