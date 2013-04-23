@@ -163,7 +163,7 @@ define(['./Cartesian3',
         var Sl8 = -80 * 1e-7;
 
         // t is thousands of years from J2000 TDB
-        var tdbDate = PlanetaryPositions.taiToTdb(date);
+        var tdbDate = PlanetaryPositions.taiToTdb(date, tdbDate);
         var x = (tdbDate.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((tdbDate.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
         var t = x / (TimeConstants.DAYS_PER_JULIAN_CENTURY * 10.0);
 
@@ -201,8 +201,8 @@ define(['./Cartesian3',
      * Gets a point describing the position of the moon according to the equations described in section 4.
      */
     function computeSimonMoon(date) {
-        date = PlanetaryPositions.taiToTdb(date);
-        var x = (date.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((date.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
+        var tdbDate = PlanetaryPositions.taiToTdb(date, tdbDate);
+        var x = (tdbDate.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((tdbDate.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
         var t = x / (TimeConstants.DAYS_PER_JULIAN_CENTURY);
         var t2 = t * t;
         var t3 = t2 * t;
@@ -325,20 +325,18 @@ define(['./Cartesian3',
      * @param {JulianDate} date
      * @returns {Cartesian3} sun position
      */
-    PlanetaryPositions.ComputeSun = function(date){
+    PlanetaryPositions.ComputeSun = function(date, result){
         if (typeof date === 'undefined') {
             date = new JulianDate();
         }
-        var result = new Cartesian3();
-
         //first forward transformation
         var translation = computeSimonEarthMoonBarycenter(date);
-        result = result.subtract(translation);
+        result = translation.negate(result);
 
         //second forward transformation
         translation = computeSimonEarth(date);
         var axesTransformation = new Quaternion(-0.20312303898231016, -0.000000000000000057304398937699911, 0.00000000000000027508086490993513, 0.979153221428899270);
-        result = result.subtract(translation);
+        result.subtract(translation, result);
         result.rotate(axesTransformation, result);
 
         return result;
@@ -352,15 +350,13 @@ define(['./Cartesian3',
      * @param {JulianDate} date
      * @returns {Cartesian3} sun position
      */
-    PlanetaryPositions.ComputeMoon = function(date){
+    PlanetaryPositions.ComputeMoon = function(date, result){
         if (typeof date === 'undefined') {
             date = new JulianDate();
         }
-        var result = computeSimonMoon(date);
-        var translation = new Cartesian3();
+        result = computeSimonMoon(date, result);
         var axesTransformation = new Quaternion(-0.20312303898231016, -0.000000000000000057304398937699911, 0.00000000000000027508086490993513, 0.979153221428899270);
-        var translated = result.subtract(translation);
-        result = translated.rotate(axesTransformation, result);
+        result.rotate(axesTransformation, result);
 
         return result;
     };
