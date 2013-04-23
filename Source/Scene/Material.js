@@ -37,6 +37,7 @@ define([
         '../Shaders/Materials/ErosionMaterial',
         '../Shaders/Materials/FadeMaterial',
         '../Shaders/Materials/PolylineArrowMaterial',
+        '../Shaders/Materials/PolylineGlowMaterial',
         '../Shaders/Materials/PolylineOutlineMaterial'
     ], function(
         when,
@@ -76,6 +77,7 @@ define([
         ErosionMaterial,
         FadeMaterial,
         PolylineArrowMaterial,
+        PolylineGlowMaterial,
         PolylineOutlineMaterial) {
     "use strict";
 
@@ -290,6 +292,12 @@ define([
      *  <li>PolylineArrow</li>
      *  <ul>
      *      <li><code>color</code>: diffuse color and alpha.</li>
+     *  </ul>
+     *  <li>PolylineGlow</li>
+     *  <ul>
+     *      <li><code>color</code>: color and maximum alpha for the glow on the line.</li>
+     *      <li><code>innerColor</code>: color and alpha of the inner solid area.</li>
+     *      <li><code>innerWidth</code>: width of the inner solid area in pixels.</li>
      *  </ul>
      *  <li>PolylineOutline</li>
      *  <ul>
@@ -1251,6 +1259,17 @@ define([
             color : new Color(1.0, 1.0, 1.0, 1.0)
         },
         source : PolylineArrowMaterial
+    });
+
+    Material.PolylineGlowType = 'PolylineGlow';
+    Material._materialCache.addMaterial(Material.PolylineGlowType, {
+        type : Material.PolylineGlowType,
+        uniforms : {
+            color : new Color(0.0, 0.5, 1.0, 0.7),
+            innerColor : new Color(1.0, 1.0, 1.0, 1.0),
+            innerWidth : 1.0
+        },
+        source : PolylineGlowMaterial
     });
 
     Material.PolylineOutlineType = 'PolylineOutline';
