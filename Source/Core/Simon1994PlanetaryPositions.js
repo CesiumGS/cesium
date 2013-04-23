@@ -1,28 +1,27 @@
 /*global define*/
-define([
+define(['./Cartesian3',
         './DeveloperError',
-        './ModifiedKeplerianElements',
+        './JulianDate',
         './KeplerianElements',
         './Math',
-        './Cartesian3',
         './Matrix3',
+        './ModifiedKeplerianElements',
         './Quaternion',
         './TimeConstants',
         './TimeStandard',
-        './JulianDate',
         './Transforms'
     ],
     function(
+        Cartesian3,
         DeveloperError,
-        ModifiedKeplerianElements,
+        JulianDate,
         KeplerianElements,
         CesiumMath,
-        Cartesian3,
         Matrix3,
+        ModifiedKeplerianElements,
         Quaternion,
         TimeConstants,
         TimeStandard,
-        JulianDate,
         Transforms) {
     "use strict";
 
@@ -58,29 +57,27 @@ define([
         return 1.657e-3 * Math.sin(g + 1.671e-2 * Math.sin(g));
     }
 
-    function taiToTdb(date) {
+    PlanetaryPositions.taiToTdb = function(date, result) {
         var TdtMinusTai = 32.184;
-        var J2000 = new JulianDate(2451545, 0, TimeStandard.TAI);
+        var J2000d = 2451545;
+        var J2000s = 0;
 
         //Converts TAI to TT
-        var day = date.getJulianDayNumber();
-        var time = date.getSecondsOfDay() + TdtMinusTai;
-        var dateTT = new JulianDate(day, time, TimeStandard.TAI);
+        result = date.addSeconds(TdtMinusTai, result);
 
         //Converts TT to TDB
-        var days = (dateTT.getJulianDayNumber() - J2000.getJulianDayNumber()) + ((dateTT.getSecondsOfDay() - J2000.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
-        day = dateTT.getJulianDayNumber();
-        time = dateTT.getSecondsOfDay() + computeTdbMinusTtSpice(days);
+        var days = (date.getJulianDayNumber() - J2000d) + ((result.getSecondsOfDay() - J2000s)/TimeConstants.SECONDS_PER_DAY);
+        result = result.addSeconds(computeTdbMinusTtSpice(days), result);
 
-        return new JulianDate(day, time, TimeStandard.TAI);
-    }
+        return result;
+    };
 
     var epoch = JulianDate.fromTotalDays(2451545.0, TimeStandard.TAI); //Actually TDB (not TAI)
     var GravitationalParameterOfEarth = 3.98600435e14;
     var GravitationalParameterOfSun = GravitationalParameterOfEarth * (1.0 + 0.012300034) * 328900.56;
     var MetersPerKilometer = 1000.0;
-    var RadiansPerDegree = CesiumMath.PI / 180.0;
-    var RadiansPerArcSecond = RadiansPerDegree / (60.0 * 60.0);
+    var RadiansPerDegree = CesiumMath.RADIANS_PER_DEGREE;
+    var RadiansPerArcSecond = CesiumMath.RADIANS_PER_ARCSECOND;
     var MetersPerAstronomicalUnit = 1.49597870e+11; // IAU 1976 value
 
     function elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee, longitudeOfNode, meanLongitude, gravitationalParameter) {
@@ -166,7 +163,7 @@ define([
         var Sl8 = -80 * 1e-7;
 
         // t is thousands of years from J2000 TDB
-        var tdbDate = taiToTdb(date);
+        var tdbDate = PlanetaryPositions.taiToTdb(date);
         var x = (tdbDate.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((tdbDate.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
         var t = x / (TimeConstants.DAYS_PER_JULIAN_CENTURY * 10.0);
 
@@ -204,8 +201,8 @@ define([
      * Gets a point describing the position of the moon according to the equations described in section 4.
      */
     function computeSimonMoon(date) {
-        var tdbDate = taiToTdb(date);
-        var x = (tdbDate.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((tdbDate.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
+        date = PlanetaryPositions.taiToTdb(date);
+        var x = (date.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((date.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
         var t = x / (TimeConstants.DAYS_PER_JULIAN_CENTURY);
         var t2 = t * t;
         var t3 = t2 * t;
@@ -333,17 +330,16 @@ define([
             date = new JulianDate();
         }
         var result = new Cartesian3();
+
         //first forward transformation
         var translation = computeSimonEarthMoonBarycenter(date);
-        var axesTransformation = Quaternion.IDENTITY;
-        var translated = result.subtract(translation);
-        translated.rotate(axesTransformation, result);
+        result = result.subtract(translation);
 
         //second forward transformation
         translation = computeSimonEarth(date);
-        axesTransformation = new Quaternion(-0.20312303898231016, -0.000000000000000057304398937699911, 0.00000000000000027508086490993513, 0.979153221428899270);
-        translated = result.subtract(translation);
-        translated.rotate(axesTransformation, result);
+        var axesTransformation = new Quaternion(-0.20312303898231016, -0.000000000000000057304398937699911, 0.00000000000000027508086490993513, 0.979153221428899270);
+        result = result.subtract(translation);
+        result.rotate(axesTransformation, result);
 
         return result;
     };
