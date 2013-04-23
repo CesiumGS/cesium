@@ -26,6 +26,7 @@ define([
         './CompositePrimitive',
         './CullingVolume',
         './AnimationCollection',
+        './PostProcessEngine',
         './SceneMode',
         './FrameState',
         './OrthographicFrustum',
@@ -58,6 +59,7 @@ define([
         CompositePrimitive,
         CullingVolume,
         AnimationCollection,
+        PostProcessEngine,
         SceneMode,
         FrameState,
         OrthographicFrustum,
@@ -128,6 +130,12 @@ define([
          * @see Scene#skyBox
          */
         this.backgroundColor = Color.BLACK.clone();
+
+        /**
+         * DOC_TBA
+         */
+        this.postProcessFilters = [];
+        this._postProcessEngine = new PostProcessEngine();
 
         /**
          * The current mode of the scene.
@@ -499,8 +507,10 @@ define([
         passState.framebuffer = undefined;
 
         createPotentiallyVisibleSet(this, 'colorList');
+        this._postProcessEngine.update(this._context, this.postProcessFilters);
         executeCommands(this, passState);
         executeOverlayCommands(this, passState);
+        this._postProcessEngine.executeCommands(this._context, passState, this.postProcessFilters);
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -630,6 +640,7 @@ define([
         this._primitives = this._primitives && this._primitives.destroy();
         this.skyBox = this.skyBox && this.skyBox.destroy();
         this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
+        this._postProcessEngine = this._postProcessEngine && this._postProcessEngine.destroy();
         this._context = this._context && this._context.destroy();
         return destroyObject(this);
     };

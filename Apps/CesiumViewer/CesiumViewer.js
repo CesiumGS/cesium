@@ -5,6 +5,7 @@ define([
         'dojo/io-query',
         'dojo/parser',
         'dojo/ready',
+        'Scene/PostProcessFilter',
         'Widgets/Dojo/checkForChromeFrame',
         'Widgets/Dojo/CesiumViewerWidget'
     ], function(
@@ -13,6 +14,7 @@ define([
         ioQuery,
         parser,
         ready,
+        PostProcessFilter,
         checkForChromeFrame,
         CesiumViewerWidget) {
     "use strict";
@@ -35,6 +37,11 @@ define([
         widget.placeAt('cesiumContainer');
         widget.startup();
         widget.fullscreen.viewModel.fullscreenElement(document.body);
+
+// TODO: remove before pull request
+        var scene = widget.scene;
+        var filter = new PostProcessFilter({ source : 'void main(void) { gl_FragColor = vec4(1.0); }'});
+        scene.postProcessFilters = [filter];
 
         domClass.remove(win.body(), 'loading');
     });
