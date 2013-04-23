@@ -150,7 +150,6 @@ defineSuite([
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url).toEqual('http://fake.t0.tiles.fake.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB');
-                expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -223,7 +222,6 @@ defineSuite([
         runs(function() {
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url).toEqual(proxy.getURL('http://ecn.t0.tiles.virtualearth.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB'));
-                expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);

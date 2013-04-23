@@ -115,8 +115,6 @@ defineSuite([
             expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(crossOrigin).toEqual(true);
-
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
@@ -167,7 +165,6 @@ defineSuite([
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('made/up/osm/server'))).toEqual(0);
                 expect(provider.getProxy()).toEqual(proxy);
-                expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
