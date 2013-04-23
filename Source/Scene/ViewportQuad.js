@@ -44,7 +44,6 @@ define([
      */
     var ViewportQuad = function(rectangle, material) {
 
-        this._va = undefined;
         this._overlayCommand = new DrawCommand();
         this._overlayCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
         this._commandLists = new CommandLists();
@@ -159,8 +158,7 @@ define([
      * @exception {DeveloperError} this.rectangle must be defined.
      */
     ViewportQuad.prototype.update = function(context, frameState, commandList) {
-        if (!this.show)
-        {
+        if (!this.show) {
             return;
         }
 
@@ -172,9 +170,8 @@ define([
             throw new DeveloperError('this.rectangle must be defined.');
         }
 
-        if (typeof this._va === 'undefined') {
-            this._va = getVertexArray(context);
-            this._overlayCommand.vertexArray = this._va;
+        if (typeof this._overlayCommandvertexArray === 'undefined') {
+            this._overlayCommand.vertexArray = getVertexArray(context);
         }
 
         var rs = this._overlayCommand.renderState;
