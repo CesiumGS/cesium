@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/destroyObject',
+        '../Core/Cartesian2',
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
         '../Renderer/RenderbufferFormat',
@@ -11,6 +12,7 @@ define([
         '../Renderer/DrawCommand'
     ], function(
         destroyObject,
+        Cartesian2,
         ComponentDatatype,
         PrimitiveType,
         RenderbufferFormat,
@@ -131,8 +133,12 @@ define([
                 });
                 command.uniformMap = {
 // TODO: use semantics in Touch Up to access color/depth textures
-                    czm_colorTexture : function() {
+                    czm_color : function() {
                         return fb.getColorTexture();
+                    },
+
+                    czm_colorStep : function() {
+                        return new Cartesian2(1.0 / fb.getColorTexture().getWidth(), 1.0 / fb.getColorTexture().getHeight());
                     }
                 };
 

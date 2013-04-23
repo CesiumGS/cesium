@@ -1,11 +1,11 @@
-uniform sampler2D czm_colorTexture;
+uniform sampler2D czm_color;
 
 varying vec2 v_textureCoordinates;
 
 void main(void)
 {
     float gradations = 5.0;
-    vec3 rgb = texture2D(czm_colorTexture, v_textureCoordinates).rgb;
+    vec3 rgb = texture2D(czm_color, v_textureCoordinates).rgb;
     float luminance = czm_luminance(rgb);
 
     float darkness = luminance * gradations;

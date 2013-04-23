@@ -1,4 +1,5 @@
-uniform sampler2D czm_colorTexture;
+uniform sampler2D czm_color;
+uniform vec2 czm_colorStep;
 
 varying vec2 v_textureCoordinates;
 
@@ -7,9 +8,6 @@ const float offset = 1.0;
 
 void main(void)
 {
-// TODO: do not assume full-screen
-    vec2 u_step = vec2(1.0 / czm_viewport.z, 1.0 / czm_viewport.w);
-
     float weightsH[9];  // Row major, bottom to top
     weightsH[0] = 1.0;
     weightsH[1] = 2.0;
@@ -43,8 +41,10 @@ void main(void)
     {
         for (int i = 0; i < KERNEL_WIDTH; ++i)
         {
-            vec2 coord = vec2(v_textureCoordinates.s + ((float(i) - offset) * u_step.s), v_textureCoordinates.t + ((float(j) - offset) * u_step.t));
-            vec3 rgb = texture2D(czm_colorTexture, coord).rgb;
+            vec2 coord = vec2(
+                v_textureCoordinates.s + ((float(i) - offset) * czm_colorStep.s), 
+                v_textureCoordinates.t + ((float(j) - offset) * czm_colorStep.t));
+            vec3 rgb = texture2D(czm_color, coord).rgb;
             float luminance = czm_luminance(rgb);
 
             accumH += weightsH[j * KERNEL_WIDTH + i] * luminance;
@@ -60,7 +60,7 @@ void main(void)
     {
         float quantize = 4.0;
         
-        vec3 rgb = texture2D(czm_colorTexture, v_textureCoordinates).rgb;
+        vec3 rgb = texture2D(czm_color, v_textureCoordinates).rgb;
         rgb *= quantize;
         rgb += vec3(0.5);
         ivec3 irgb = ivec3(rgb);

@@ -53,10 +53,10 @@ define([
 
         var scene = widget.scene;
 //        var filter = new PostProcessFilter({ source : 'void main(void) { gl_FragColor = vec4(1.0); }'});
-//        var filter = new PostProcessFilter({ source : 'varying vec2 v_textureCoordinates; uniform sampler2D czm_colorTexture; void main(void) { gl_FragColor = texture2D(czm_colorTexture, v_textureCoordinates); }'});
+//        var filter = new PostProcessFilter({ source : 'varying vec2 v_textureCoordinates; uniform sampler2D czm_color; void main(void) { gl_FragColor = texture2D(czm_color, v_textureCoordinates); }'});
 //        var filter = new PostProcessFilter({ source : BlackAndWhite });
-//        var filter = new PostProcessFilter({ source : NightVision });
-        var filter = new PostProcessFilter({ source : Toon });
+        var filter = new PostProcessFilter({ source : NightVision });
+//        var filter = new PostProcessFilter({ source : Toon });
 
         scene.postProcessFilters = [filter];
 

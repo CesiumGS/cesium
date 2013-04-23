@@ -1,4 +1,4 @@
-uniform sampler2D czm_colorTexture;
+uniform sampler2D czm_color;
 
 varying vec2 v_textureCoordinates;
 
@@ -15,7 +15,7 @@ float rand(vec2 co)
 void main(void)
 {
     float noiseValue = rand(v_textureCoordinates + sin(czm_frameNumber * frequency)) * 0.1;
-    vec3 rgb = texture2D(czm_colorTexture, v_textureCoordinates).rgb;
+    vec3 rgb = texture2D(czm_color, v_textureCoordinates).rgb;
     const vec3 green = vec3(0.0, 1.0, 0.0);
 
     gl_FragColor = vec4((noiseValue + rgb) * green, 1.0);
