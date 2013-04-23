@@ -37,6 +37,7 @@ Beta Releases
 * Added `czm_pixelSizeInMeters` automatic GLSL uniform.
 * Added `AnimationViewModel.snapToTicks`, which when set to true, causes the shuttle ring on the Animation widget to snap to the defined tick values, rather than interpolate between them.
 * Added `Color.toRgba` and `Color.fromRgba` to convert to/from numeric unsigned 32-bit RGBA values.
+* Added `GridImageryProvider` for custom rendering effects and debugging.
 * Added new `Grid` material.
 * Made `EllipsoidPrimitive` double-sided.
 * Improved rendering performance by minimizing WebGL state calls.
