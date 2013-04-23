@@ -52,7 +52,7 @@ define([
         this._points = controlPoints;
         this._lastTimeIndex = 0;
 
-        if (firstTangent) {
+        if (typeof firstTangent !== 'undefined') {
             this._ti = Cartesian3.clone(firstTangent);
         } else {
             var controlPoint0 = Cartesian3.clone(controlPoints[0].point);
@@ -66,7 +66,7 @@ define([
                            .multiplyByScalar(0.5);
         }
 
-        if (firstTangent) {
+        if (typeof lastTangent !== 'undefined') {
             this._to = Cartesian3.clone(lastTangent);
         } else {
             var n = controlPoints.length - 1;
