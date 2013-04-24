@@ -421,7 +421,7 @@ define([
      * DOC_TBA
      */
     CesiumMath.equalsEpsilon = function(left, right, epsilon) {
-        epsilon = epsilon || 0.0;
+        epsilon = defaultValue(epsilon, 0.0);
         return Math.abs(left - right) <= epsilon;
     };
 
