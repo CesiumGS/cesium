@@ -190,13 +190,13 @@ define([
             transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, transformMatrix);
         }
 
-        position = Simon1994PlanetaryPositions.ComputeSunPositionICRF(frameState.time);
+        position = Simon1994PlanetaryPositions.ComputeSunPositionICRF(frameState.time, position);
         transformMatrix.multiplyByVector(position, position);
         Cartesian3.normalize(position, uniformState._sunDirectionWC);
         Matrix3.multiplyByVector(uniformState.getViewRotation3D(), position, position);
         Cartesian3.normalize(position, uniformState._sunDirectionEC);
 
-        position = Simon1994PlanetaryPositions.ComputeMoonPositionICRF(frameState.time);
+        position = Simon1994PlanetaryPositions.ComputeMoonPositionICRF(frameState.time, position);
         transformMatrix.multiplyByVector(position, position);
         Matrix3.multiplyByVector(uniformState.getViewRotation3D(), position, position);
         Cartesian3.normalize(position, uniformState._moonDirectionEC);
