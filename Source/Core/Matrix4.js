@@ -797,6 +797,17 @@ define([
      * @return {Array} The modified Array parameter or a new Array instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
+	 *
+	 * @example
+	 * //converts a matrix of order 4 to an array
+	 * // m = [10.0, 11.0, 12.0, 13.0]
+	 * //     [14.0, 15.0, 16.0, 17.0]
+	 * //     [18.0, 19.0, 20.0, 21.0]
+	 * //     [22.0, 23.0, 24.0, 25.0]
+	 * var a = Matrix4.toArray(m);
+	 * 
+	 * //creates a = [10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0]
+	 *
      */
     Matrix4.toArray = function(matrix, result) {
         if (typeof matrix === 'undefined') {
@@ -867,6 +878,23 @@ define([
      * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
      *
      * @see Cartesian4
+	 *
+	 * @example
+	 * //returns a Cartesian4 instance with values from the specified column
+	 * // m = [10.0, 11.0, 12.0, 13.0]
+	 * //     [14.0, 15.0, 16.0, 17.0]
+	 * //     [18.0, 19.0, 20.0, 21.0]
+	 * //     [22.0, 23.0, 24.0, 25.0]
+	 * 
+	 * //Example 1: Creates a Cartesian instance 
+	 * var a = Matrix4.getColumn(m, 2);
+	 * 
+	 * //Example 1: Creates a Cartesian instance 
+	 * var a = new Cartesian4();
+	 * Matrix4.getColumn(m, 2, a);
+	 *
+	 * //creates a.x = 12.0; a.y = 16.0; a.z = 20.0; a.w = 24.0;
+	 *
      */
     Matrix4.getColumn = function(matrix, index, result) {
         if (typeof matrix === 'undefined') {
@@ -908,6 +936,22 @@ define([
      * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
      *
      * @see Cartesian4
+	 *
+	 * @example
+	 * //create a new matrix of order 4 with new column values from the Cartesian4 instance
+	 * // m = [10.0, 11.0, 12.0, 13.0]
+	 * //     [14.0, 15.0, 16.0, 17.0]
+	 * //     [18.0, 19.0, 20.0, 21.0]
+	 * //     [22.0, 23.0, 24.0, 25.0]
+	 * 
+	 * var a = Matrix4.setColumn(m, 2, new Cartesian4(99.0, 98.0, 97.0, 96.0));
+	 *
+	 * // m still remains the same
+	 * // a = [10.0, 11.0, 99.0, 13.0]
+	 * //     [14.0, 15.0, 98.0, 17.0]
+	 * //     [18.0, 19.0, 97.0, 21.0]
+	 * //     [22.0, 23.0, 96.0, 25.0]
+	 *
      */
     Matrix4.setColumn = function(matrix, index, cartesian, result) {
         if (typeof matrix === 'undefined') {
@@ -941,6 +985,22 @@ define([
      * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
      *
      * @see Cartesian4
+	 *
+	 * @example
+	 * //returns a Cartesian4 instance with values from the specified column
+	 * // m = [10.0, 11.0, 12.0, 13.0]
+	 * //     [14.0, 15.0, 16.0, 17.0]
+	 * //     [18.0, 19.0, 20.0, 21.0]
+	 * //     [22.0, 23.0, 24.0, 25.0]
+	 * 
+	 * //Example 1: Creates a Cartesian instance 
+	 * var a = Matrix4.getColumn(m, 2);
+	 * 
+	 * //Example 1: Creates a Cartesian instance 
+	 * var a = new Cartesian4();
+	 * Matrix4.getColumn(m, 2, a);
+	 *
+	 * //creates a.x = 18.0; a.y = 19.0; a.z = 20.0; a.w = 21.0;
      */
     Matrix4.getRow = function(matrix, index, result) {
         if (typeof matrix === 'undefined') {
@@ -981,6 +1041,22 @@ define([
      * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
      *
      * @see Cartesian4
+	 *
+	 * @example
+	 * //create a new matrix of order 4 with new row values from the Cartesian4 instance
+	 * // m = [10.0, 11.0, 12.0, 13.0]
+	 * //     [14.0, 15.0, 16.0, 17.0]
+	 * //     [18.0, 19.0, 20.0, 21.0]
+	 * //     [22.0, 23.0, 24.0, 25.0]
+	 * 
+	 * var a = Matrix4.setRow(m, 2, new Cartesian4(99.0, 98.0, 97.0, 96.0));
+	 *
+	 * // m still remains the same
+	 * // a = [10.0, 11.0, 12.0, 13.0]
+	 * //     [14.0, 15.0, 16.0, 17.0]
+	 * //     [99.0, 98.0, 97.0, 96.0]
+	 * //     [22.0, 23.0, 24.0, 25.0]
+	 *
      */
     Matrix4.setRow = function(matrix, index, cartesian, result) {
         if (typeof matrix === 'undefined') {
@@ -1354,6 +1430,22 @@ define([
      * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
+	 *
+	 * @example
+	 * //create a new matrix of order 4 
+	 * // m = [10.0, 11.0, 12.0, 13.0]
+	 * //     [14.0, 15.0, 16.0, 17.0]
+	 * //     [18.0, 19.0, 20.0, 21.0]
+	 * //     [22.0, 23.0, 24.0, 25.0]
+	 * 
+	 * var a = Matrix4.negate(m);
+	 *
+	 * // m still remains the same
+	 * // a = [-10.0, -11.0, -12.0, -13.0]
+	 * //     [-14.0, -15.0, -16.0, -17.0]
+	 * //     [-18.0, -19.0, -20.0, -21.0]
+	 * //     [-22.0, -23.0, -24.0, -25.0]
+	 *
      */
     Matrix4.negate = function(matrix, result) {
         if (typeof matrix === 'undefined') {
@@ -1394,6 +1486,22 @@ define([
      * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
+	 *
+	 * @example
+	 * //create a new matrix of order 4 which is a transpose of the given matrix
+	 * // m = [10.0, 11.0, 12.0, 13.0]
+	 * //     [14.0, 15.0, 16.0, 17.0]
+	 * //     [18.0, 19.0, 20.0, 21.0]
+	 * //     [22.0, 23.0, 24.0, 25.0]
+	 * 
+	 * var a = Matrix4.negate(m);
+	 *
+	 * // m still remains the same
+	 * // a = [10.0, 14.0, 18.0, 22.0]
+	 * //     [11.0, 15.0, 19.0, 23.0]
+	 * //     [12.0, 16.0, 20.0, 24.0]
+	 * //     [13.0, 17.0, 21.0, 25.0]
+	 *
      */
     Matrix4.transpose = function(matrix, result) {
         if (typeof matrix === 'undefined') {
