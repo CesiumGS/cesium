@@ -74,7 +74,7 @@ define(['./Cartesian3',
     var RadiansPerArcSecond = CesiumMath.RADIANS_PER_ARCSECOND;
     var MetersPerAstronomicalUnit = 1.49597870e+11; // IAU 1976 value
 
-    function elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee, longitudeOfNode, meanLongitude, gravitationalParameter) {
+    function elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee, longitudeOfNode, meanLongitude, gravitationalParameter, result) {
         if (inclination < 0.0) {
             inclination = -inclination;
             longitudeOfNode += CesiumMath.PI;
@@ -102,9 +102,15 @@ define(['./Cartesian3',
         }
 
         var radius = semilatus / denom;
-        var position = new Cartesian3(radius * costheta, radius * sintheta, 0.0);
+        if (typeof result === 'undefined') {
+            result = new Cartesian3(radius * costheta, radius * sintheta, 0.0);
+        } else {
+            result.x = radius * costheta;
+            result.y = radius * sintheta;
+            result.z = 0.0;
+        }
 
-        return perifocalToEquatorial.multiplyByVector(position);
+        return perifocalToEquatorial.multiplyByVector(result, result);
     }
 
     function chooseOrbit(eccentricity, tolerance) {
@@ -293,7 +299,7 @@ define(['./Cartesian3',
      * described in section 6.
      */
 
-    function computeSimonEarthMoonBarycenter(date) {
+    function computeSimonEarthMoonBarycenter(date, result) {
 
         // t is thousands of years from J2000 TDB
         var tdbDate = taiToTdb(date);
@@ -327,13 +333,13 @@ define(['./Cartesian3',
         var longitudeOfNode = 174.87317577 * RadiansPerDegree - 8679.27034 * RadiansPerArcSecond * t;
 
         return elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee,
-                longitudeOfNode, meanLongitude, GravitationalParameterOfSun);
+                longitudeOfNode, meanLongitude, GravitationalParameterOfSun, result);
     }
 
     /**
      * Gets a point describing the position of the moon according to the equations described in section 4.
      */
-    function computeSimonMoon(date) {
+    function computeSimonMoon(date, result) {
         var tdbDate = taiToTdb(date);
         var x = (tdbDate.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((tdbDate.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
         var t = x / (TimeConstants.DAYS_PER_JULIAN_CENTURY);
@@ -433,7 +439,7 @@ define(['./Cartesian3',
         var longitudeOfNode = longitudeOfNodeConstant + longitudeOfNodeSecPart * RadiansPerArcSecond;
 
         return elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee,
-                                   longitudeOfNode, meanLongitude, GravitationalParameterOfEarth);
+                                   longitudeOfNode, meanLongitude, GravitationalParameterOfEarth, result);
     }
 
     /**
@@ -443,14 +449,16 @@ define(['./Cartesian3',
      */
     var moonEarthMassRatio = 0.012300034; // From 1992 mu value in Table 2
     var factor = moonEarthMassRatio / (moonEarthMassRatio + 1.0) * -1;
-    function computeSimonEarth(date) {
+    function computeSimonEarth(date, result) {
         var moon = computeSimonMoon(date);
-        return moon.multiplyByScalar(factor);
+        result = moon.multiplyByScalar(factor, result);
+        return result;
     }
 
     var axesTransformation = new Matrix3(1.0000000000000002, 5.619723173785822e-16, 4.690511510146299e-19,
             -5.154129427414611e-16, 0.9174820620691819, -0.39777715593191376,
              -2.23970096136568e-16, 0.39777715593191376, 0.9174820620691819);
+    var translation = new Cartesian3();
     /**
      * Computes the position of the Sun in the inertial frame
      *
@@ -463,7 +471,7 @@ define(['./Cartesian3',
             date = new JulianDate();
         }
         //first forward transformation
-        var translation = computeSimonEarthMoonBarycenter(date);
+        translation = computeSimonEarthMoonBarycenter(date, translation);
         result = translation.negate(result);
 
         //second forward transformation
