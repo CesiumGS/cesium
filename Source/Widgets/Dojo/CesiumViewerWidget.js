@@ -477,6 +477,16 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             this.canvas.width = width;
             this.canvas.height = height;
 
+            if(!FeatureDetection.supportsFullscreen()) {
+                //Hides fullscreen button container if not supported fullscreen mode
+                this.fullscreenContainer.style.display = 'none';
+                var totalWidth = this.canvas.clientWidth,
+                    animationWidth = this.animationContainer.clientWidth,
+                    margin = 2;
+                var timelineWidth = totalWidth - animationWidth - margin;
+                this.timelineContainer.style.width = timelineWidth + 'px';
+            }
+
             var frustum = this.scene.getCamera().frustum;
             if (typeof frustum.aspectRatio !== 'undefined') {
                 frustum.aspectRatio = width / height;
@@ -984,6 +994,16 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             function onTimelineScrub(e) {
                 that.clock.currentTime = e.timeJulian;
                 that.clock.shouldAnimate = false;
+            }
+
+            if(!FeatureDetection.supportsFullscreen()) {
+                //Hides fullscreen button container if not supported fullscreen mode
+                this.fullscreenContainer.style.display = 'none';
+                var totalWidth = this.canvas.clientWidth,
+                    animationWidth = this.animationContainer.clientWidth,
+                    margin = 2;
+                var timelineWidth = totalWidth - animationWidth - margin;
+                this.timelineContainer.style.width = timelineWidth + 'px';
             }
 
             var timeline = new Timeline(this.timelineContainer, this.clock);
