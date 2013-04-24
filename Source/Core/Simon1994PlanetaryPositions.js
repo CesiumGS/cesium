@@ -2,10 +2,8 @@
 define(['./Cartesian3',
         './DeveloperError',
         './JulianDate',
-        './KeplerianElements',
         './Math',
         './Matrix3',
-        './ModifiedKeplerianElements',
         './Quaternion',
         './TimeConstants',
         './TimeStandard',
@@ -15,10 +13,8 @@ define(['./Cartesian3',
         Cartesian3,
         DeveloperError,
         JulianDate,
-        KeplerianElements,
         CesiumMath,
         Matrix3,
-        ModifiedKeplerianElements,
         Quaternion,
         TimeConstants,
         TimeStandard,
@@ -90,12 +86,12 @@ define(['./Cartesian3',
         var radiusOfPeriapsis = semimajorAxis * (1.0 - eccentricity);
         var argumentOfPeriapsis = longitudeOfPerigee - longitudeOfNode;
         var rightAscensionOfAscendingNode = longitudeOfNode;
-        var trueAnomaly = KeplerianElements.MeanAnomalyToTrueAnomaly(meanLongitude - longitudeOfPerigee, eccentricity);
+        var trueAnomaly = meanAnomalyToTrueAnomaly(meanLongitude - longitudeOfPerigee, eccentricity);
         var type = chooseOrbit(eccentricity, 0.0);
         if (type === 'Hyperbolic' && Math.abs(CesiumMath.NegativePiToPi(trueAnomaly)) >= Math.acos(- 1.0 / eccentricity)) {
             throw new DeveloperError('invalid trueAnomaly.');
         }
-        var perifocalToEquatorial = KeplerianElements.PerifocalToCartesianMatrix(argumentOfPeriapsis, inclination, rightAscensionOfAscendingNode);
+        var perifocalToEquatorial = perifocalToCartesianMatrix(argumentOfPeriapsis, inclination, rightAscensionOfAscendingNode);
         var semilatus = radiusOfPeriapsis * (1.0 + eccentricity);
         var costheta = Math.cos(trueAnomaly);
         var sintheta = Math.sin(trueAnomaly);
@@ -111,30 +107,127 @@ define(['./Cartesian3',
         return perifocalToEquatorial.multiplyByVector(position);
     }
 
-    function chooseOrbit(eccentricity, tolerance)
-    {
-        if (eccentricity < 0)
-        {
+    function chooseOrbit(eccentricity, tolerance) {
+        if (eccentricity < 0) {
             throw new DeveloperError('eccentricity cannot be negative.');
-        }
-        else if (eccentricity <= tolerance)
-        {
+        } else if (eccentricity <= tolerance) {
             return 'Circular';
-        }
-        else if (eccentricity < 1.0 - tolerance)
-        {
+        } else if (eccentricity < 1.0 - tolerance) {
             return 'Elliptical';
-        }
-        else if (eccentricity <= 1.0 + tolerance)
-        {
+        } else if (eccentricity <= 1.0 + tolerance) {
             return 'Parabolic';
-        }
-        else
-        {
+        } else {
             return 'Hyperbolic';
         }
     }
 
+    // Calculates the true anomaly given the mean anomaly and the eccentricity.
+    function meanAnomalyToTrueAnomaly(meanAnomaly, eccentricity) {
+        if (eccentricity < 0.0 || eccentricity >= 1.0) {
+            throw new DeveloperError('eccentricity out of range.');
+        }
+        var eccentricAnomaly = meanAnomalyToEccentricAnomaly(meanAnomaly, eccentricity);
+        return eccentricAnomalyToTrueAnomaly(eccentricAnomaly, eccentricity);
+    }
+
+    var maxIterationCount = 50;
+    var keplerEqConvergence = CesiumMath.EPSILON8;
+    // Calculates the eccentric anomaly given the mean anomaly and the eccentricity.
+    function meanAnomalyToEccentricAnomaly(meanAnomaly, eccentricity) {
+        if (eccentricity < 0.0 || eccentricity >= 1.0) {
+            throw new DeveloperError('eccentricity out of range.');
+        }
+        var revs = Math.floor(meanAnomaly / CesiumMath.TWO_PI);
+
+        // Find angle in current revolution
+        meanAnomaly -= revs * CesiumMath.TWO_PI;
+
+        // calculate starting value for iteration sequence
+        var iterationValue = meanAnomaly + (eccentricity * Math.sin(meanAnomaly)) /
+            (1.0 - Math.sin(meanAnomaly + eccentricity) + Math.sin(meanAnomaly));
+
+        // Perform Newton-Raphson iteration on Kepler's equation
+        var eccentricAnomaly = Number.MAX_VALUE;
+
+        var count;
+        for (count = 0;
+            count < maxIterationCount && Math.abs(eccentricAnomaly - iterationValue) > keplerEqConvergence;
+            ++count)
+        {
+            eccentricAnomaly = iterationValue;
+            var NRfunction = eccentricAnomaly - eccentricity * Math.sin(eccentricAnomaly) - meanAnomaly;
+            var dNRfunction = 1 - eccentricity * Math.cos(eccentricAnomaly);
+            iterationValue = eccentricAnomaly - NRfunction / dNRfunction;
+        }
+
+        if (count >= maxIterationCount) {
+            throw new DeveloperError('Kepler equation did not converge');
+            //TODO: Port 'DoubleFunctionExplorer' from STK components
+        }
+
+        eccentricAnomaly = iterationValue + revs * CesiumMath.TWO_PI;
+        return eccentricAnomaly;
+    }
+
+     // Calculates the true anomaly given the eccentric anomaly and the eccentricity.
+    function eccentricAnomalyToTrueAnomaly(eccentricAnomaly, eccentricity) {
+        if (eccentricity < 0.0 || eccentricity >= 1.0) {
+            throw new DeveloperError('eccentricity out of range.');
+        }
+
+        // Calculate the number of previous revolutions
+        var revs = Math.floor(eccentricAnomaly / CesiumMath.TWO_PI);
+
+        // Find angle in current revolution
+        eccentricAnomaly -= revs * CesiumMath.TWO_PI;
+
+        // Calculate true anomaly from eccentric anomaly
+        var trueAnomalyX = Math.cos(eccentricAnomaly) - eccentricity;
+        var trueAnomalyY = Math.sin(eccentricAnomaly) * Math.sqrt(1 - eccentricity * eccentricity);
+
+        var trueAnomaly = Math.atan2(trueAnomalyY, trueAnomalyX);
+
+        // Ensure the correct quadrant
+        trueAnomaly = CesiumMath.zeroToTwoPi(trueAnomaly);
+        if (eccentricAnomaly < 0)
+        {
+            trueAnomaly -= CesiumMath.TWO_PI;
+        }
+
+        // Add on previous revolutions
+        trueAnomaly += revs * CesiumMath.TWO_PI;
+
+        return trueAnomaly;
+    }
+
+     // Calculates the transformation matrix to convert from the perifocal (PQW) coordinate
+     // system to inertial cartesian coordinates.
+    function perifocalToCartesianMatrix(argumentOfPeriapsis, inclination, rightAscension) {
+        if (inclination < 0 || inclination > CesiumMath.PI) {
+            throw new DeveloperError('inclination out of range');
+        }
+        var cosap = Math.cos(argumentOfPeriapsis);
+        var sinap = Math.sin(argumentOfPeriapsis);
+
+        var cosi = Math.cos(inclination);
+        var sini = Math.sin(inclination);
+
+        var cosraan = Math.cos(rightAscension);
+        var sinraan = Math.sin(rightAscension);
+
+        return new Matrix3(
+            cosraan * cosap - sinraan * sinap * cosi,
+            -cosraan * sinap - sinraan * cosap * cosi,
+            sinraan * sini,
+
+            sinraan * cosap + cosraan * sinap * cosi,
+            -sinraan * sinap + cosraan * cosap * cosi,
+            -cosraan * sini,
+
+            sinap * sini,
+            cosap * sini,
+            cosi);
+    }
 
     // From section 5.8
     var semiMajorAxis0 = 1.0000010178 * MetersPerAstronomicalUnit;

@@ -413,7 +413,7 @@ define([
      * function updateAndRender() {
      *     var now = new JulianDate();
      *     scene.initializeFrame();
-     *     scene.setSunPosition(PlanetaryPositions.ComputeSun(now));
+     *     scene.setSunPosition(Simon1994PlanetaryPositions.ComputeSunPositionICRF(now));
      *     var icrfToFixed = Transforms.computeIcrfToFixedMatrix(now);
      *     if (typeof icrfToFixed !== 'undefined') {
      *         scene.getCamera().transform = Matrix4.fromRotationTranslation(icrfToFixed, Cartesian3.ZERO);
