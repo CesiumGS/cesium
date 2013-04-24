@@ -643,43 +643,6 @@ define([
     };
 
     /**
-     * Produces a Cartesian3 representing this instance which results from rotating
-     * the original axes used to represent this instance by the provided Quaternion rotation.
-     * @memberof Cartesian3
-     *
-     * @param {Cartesian3} cartesian
-     * @param {Quaternion} quaternion
-     * @return {Cartesian3} The result of the rotataion
-     *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
-     */
-    Cartesian3.rotate = function(cartesian, quaternion, result) {
-        if (typeof cartesian === 'undefined') {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (typeof quaternion === 'undefined') {
-            throw new DeveloperError('quaternion is required');
-        }
-        var w = quaternion.w;
-        var difference = w * w - quaternion.x * quaternion.x - quaternion.y * quaternion.y - quaternion.z * quaternion.z;
-        var dot = cartesian.x * quaternion.x + cartesian.y * quaternion.y + cartesian.z * quaternion.z;
-
-        var x = difference * cartesian.x + 2.0 * (w * (cartesian.y * quaternion.z - cartesian.z * quaternion.y) + dot * quaternion.x);
-        var y = difference * cartesian.y + 2.0 * (w * (cartesian.z * quaternion.x - cartesian.x * quaternion.z) + dot * quaternion.y);
-        var z = difference * cartesian.z + 2.0 * (w * (cartesian.x * quaternion.y - cartesian.y * quaternion.x) + dot * quaternion.z);
-
-        if (typeof result === 'undefined') {
-            return new Cartesian3(x, y, z);
-        }
-
-        result.x = x;
-        result.y = y;
-        result.z = z;
-        return result;
-    };
-
-    /**
      * An immutable Cartesian3 instance initialized to (0.0, 0.0, 0.0).
      * @memberof Cartesian3
      */
