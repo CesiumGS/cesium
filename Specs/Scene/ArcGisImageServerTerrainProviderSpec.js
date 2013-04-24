@@ -118,7 +118,6 @@ defineSuite([
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url.indexOf('exportImage?')).toBeGreaterThanOrEqualTo(0);
                 expect(url.indexOf('bbox=-181.40625%2C-91.40625%2C1.40625%2C91.40625')).toBeGreaterThanOrEqualTo(0);
-                expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -146,7 +145,6 @@ defineSuite([
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url.indexOf('exportImage?')).toBeGreaterThanOrEqualTo(0);
                 expect(url.indexOf('token=foofoofoo')).toBeGreaterThanOrEqualTo(0);
-                expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -175,7 +173,6 @@ defineSuite([
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url.indexOf('/proxy/?')).toBe(0);
                 expect(url.indexOf('exportImage%3F')).toBeGreaterThanOrEqualTo(0);
-                expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -203,7 +200,6 @@ defineSuite([
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url.indexOf('exportImage?')).toBeGreaterThanOrEqualTo(0);
-                expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
