@@ -9,7 +9,7 @@ const float colorTemperatureShift = 0.2;  // +ve = warmer, -ve = colder
 const float saturation = 0.7;
 const float finalMultiplier = 1.1;
 
-// TODO: add to BuildinFunctions.glsl
+// TODO: add to BuiltinFunctions.glsl
 const float square_root_two = 1.414213562;
 
 // A vignette function based on gamma (i.e. rather than smoothstep)
@@ -21,7 +21,7 @@ float gammaVignetteFn(float amount, float gamma)
     return 1.0 - amount * grad;
 }
 
-// TODO: candidate for BuildInFunctions.glsl
+// TODO: candidate for BuiltInFunctions.glsl
 vec3 gamma(vec3 rgb, float gamma)
 {
     float g = 1.0 / gamma;
