@@ -29,7 +29,7 @@ define([
         EncodedCartesian3,
         BoundingRectangle,
         Transforms,
-        PlanetaryPositions,
+        Simon1994PlanetaryPositions,
         SceneMode) {
     "use strict";
 
@@ -182,25 +182,24 @@ define([
         uniformState._encodedCameraPositionMCDirty = true;
     }
 
+    var position = new Cartesian3();
+    var transformMatrix = new Matrix3();
     function setSunAndMoonDirections(uniformState, frameState) {
-        var sunPosition = new Cartesian3();
-        var moonPosition = new Cartesian3();
-        var transformMatrix = new Matrix3();
-        transformMatrix = Transforms.computeIcrfToFixedMatrix(frameState.time, transformMatrix);
+        transformMatrix = Transforms.computeIcrfToFixedMatrix(frameState.time);
         if (typeof transformMatrix === 'undefined') {
             transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, transformMatrix);
         }
 
-        sunPosition = PlanetaryPositions.ComputeSun(frameState.time);
-        transformMatrix.multiplyByVector(sunPosition, sunPosition);
-        Cartesian3.normalize(sunPosition, uniformState._sunDirectionWC);
-        Matrix3.multiplyByVector(uniformState.getViewRotation3D(), sunPosition, sunPosition);
-        Cartesian3.normalize(sunPosition, uniformState._sunDirectionEC);
+        position = Simon1994PlanetaryPositions.ComputeSunPositionICRF(frameState.time);
+        transformMatrix.multiplyByVector(position, position);
+        Cartesian3.normalize(position, uniformState._sunDirectionWC);
+        Matrix3.multiplyByVector(uniformState.getViewRotation3D(), position, position);
+        Cartesian3.normalize(position, uniformState._sunDirectionEC);
 
-        moonPosition = PlanetaryPositions.ComputeMoon(frameState.time);
-        transformMatrix.multiplyByVector(moonPosition, moonPosition);
-        Matrix3.multiplyByVector(uniformState.getViewRotation3D(), moonPosition, moonPosition);
-        Cartesian3.normalize(moonPosition, uniformState._moonDirectionEC);
+        position = Simon1994PlanetaryPositions.ComputeMoonPositionICRF(frameState.time);
+        transformMatrix.multiplyByVector(position, position);
+        Matrix3.multiplyByVector(uniformState.getViewRotation3D(), position, position);
+        Cartesian3.normalize(position, uniformState._moonDirectionEC);
     }
 
     /**

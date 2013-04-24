@@ -57,20 +57,18 @@ define(['./Cartesian3',
         return 1.657e-3 * Math.sin(g + 1.671e-2 * Math.sin(g));
     }
 
-    PlanetaryPositions.taiToTdb = function(date, result) {
-        var TdtMinusTai = 32.184;
-        var J2000d = 2451545;
-        var J2000s = 0;
-
+    var TdtMinusTai = 32.184;
+    var J2000d = 2451545;
+    function taiToTdb(date, result) {
         //Converts TAI to TT
         result = date.addSeconds(TdtMinusTai, result);
 
         //Converts TT to TDB
-        var days = (date.getJulianDayNumber() - J2000d) + ((result.getSecondsOfDay() - J2000s)/TimeConstants.SECONDS_PER_DAY);
+        var days = (date.getJulianDayNumber() - J2000d) + ((result.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
         result = result.addSeconds(computeTdbMinusTtSpice(days), result);
 
         return result;
-    };
+    }
 
     var epoch = JulianDate.fromTotalDays(2451545.0, TimeStandard.TAI); //Actually TDB (not TAI)
     var GravitationalParameterOfEarth = 3.98600435e14;
@@ -85,85 +83,127 @@ define(['./Cartesian3',
             inclination = -inclination;
             longitudeOfNode += CesiumMath.PI;
         }
-        var elements = new ModifiedKeplerianElements(
-            semimajorAxis * (1.0 - eccentricity),
-            1.0 / semimajorAxis,
-            inclination,
-            longitudeOfPerigee - longitudeOfNode,
-            longitudeOfNode,
-            KeplerianElements.MeanAnomalyToTrueAnomaly(meanLongitude - longitudeOfPerigee, eccentricity),
-            gravitationalParameter);
-        return elements.ToCartesian();
+        if (inclination < 0 || inclination > CesiumMath.PI) {
+            throw new DeveloperError('inclination out of range.');
+        }
+
+        var radiusOfPeriapsis = semimajorAxis * (1.0 - eccentricity);
+        var argumentOfPeriapsis = longitudeOfPerigee - longitudeOfNode;
+        var rightAscensionOfAscendingNode = longitudeOfNode;
+        var trueAnomaly = KeplerianElements.MeanAnomalyToTrueAnomaly(meanLongitude - longitudeOfPerigee, eccentricity);
+        var type = chooseOrbit(eccentricity, 0.0);
+        if (type === 'Hyperbolic' && Math.abs(CesiumMath.NegativePiToPi(trueAnomaly)) >= Math.acos(- 1.0 / eccentricity)) {
+            throw new DeveloperError('invalid trueAnomaly.');
+        }
+        var perifocalToEquatorial = KeplerianElements.PerifocalToCartesianMatrix(argumentOfPeriapsis, inclination, rightAscensionOfAscendingNode);
+        var semilatus = radiusOfPeriapsis * (1.0 + eccentricity);
+        var costheta = Math.cos(trueAnomaly);
+        var sintheta = Math.sin(trueAnomaly);
+
+        var denom = (1.0 + eccentricity * costheta);
+        if (denom <= CesiumMath.Epsilon10) {
+            throw new DeveloperError('elements cannot be converted to cartesian');
+        }
+
+        var radius = semilatus / denom;
+        var position = new Cartesian3(radius * costheta, radius * sintheta, 0.0);
+
+        return perifocalToEquatorial.multiplyByVector(position);
     }
 
+    function chooseOrbit(eccentricity, tolerance)
+    {
+        if (eccentricity < 0)
+        {
+            throw new DeveloperError('eccentricity cannot be negative.');
+        }
+        else if (eccentricity <= tolerance)
+        {
+            return 'Circular';
+        }
+        else if (eccentricity < 1.0 - tolerance)
+        {
+            return 'Elliptical';
+        }
+        else if (eccentricity <= 1.0 + tolerance)
+        {
+            return 'Parabolic';
+        }
+        else
+        {
+            return 'Hyperbolic';
+        }
+    }
+
+
+    // From section 5.8
+    var semiMajorAxis0 = 1.0000010178 * MetersPerAstronomicalUnit;
+    var meanLongitude0 = 100.46645683 * RadiansPerDegree;
+    var meanLongitude1 = 1295977422.83429 * RadiansPerArcSecond;
+
+    // From table 6
+    var p1u = 16002;
+    var p2u = 21863;
+    var p3u = 32004;
+    var p4u = 10931;
+    var p5u = 14529;
+    var p6u = 16368;
+    var p7u = 15318;
+    var p8u = 32794;
+
+    var Ca1 = 64 * 1e-7 * MetersPerAstronomicalUnit;
+    var Ca2 = -152 * 1e-7 * MetersPerAstronomicalUnit;
+    var Ca3 = 62 * 1e-7 * MetersPerAstronomicalUnit;
+    var Ca4 = -8 * 1e-7 * MetersPerAstronomicalUnit;
+    var Ca5 = 32 * 1e-7 * MetersPerAstronomicalUnit;
+    var Ca6 = -41 * 1e-7 * MetersPerAstronomicalUnit;
+    var Ca7 = 19 * 1e-7 * MetersPerAstronomicalUnit;
+    var Ca8 = -11 * 1e-7 * MetersPerAstronomicalUnit;
+
+    var Sa1 = -150 * 1e-7 * MetersPerAstronomicalUnit;
+    var Sa2 = -46 * 1e-7 * MetersPerAstronomicalUnit;
+    var Sa3 = 68 * 1e-7 * MetersPerAstronomicalUnit;
+    var Sa4 = 54 * 1e-7 * MetersPerAstronomicalUnit;
+    var Sa5 = 14 * 1e-7 * MetersPerAstronomicalUnit;
+    var Sa6 = 24 * 1e-7 * MetersPerAstronomicalUnit;
+    var Sa7 = -28 * 1e-7 * MetersPerAstronomicalUnit;
+    var Sa8 = 22 * 1e-7 * MetersPerAstronomicalUnit;
+
+    var q1u = 10;
+    var q2u = 16002;
+    var q3u = 21863;
+    var q4u = 10931;
+    var q5u = 1473;
+    var q6u = 32004;
+    var q7u = 4387;
+    var q8u = 73;
+
+    var Cl1 = -325 * 1e-7;
+    var Cl2 = -322 * 1e-7;
+    var Cl3 = -79 * 1e-7;
+    var Cl4 = 232 * 1e-7;
+    var Cl5 = -52 * 1e-7;
+    var Cl6 = 97 * 1e-7;
+    var Cl7 = 55 * 1e-7;
+    var Cl8 = -41 * 1e-7;
+
+    var Sl1 = -105 * 1e-7;
+    var Sl2 = -137 * 1e-7;
+    var Sl3 = 258 * 1e-7;
+    var Sl4 = 35 * 1e-7;
+    var Sl5 = -116 * 1e-7;
+    var Sl6 = -88 * 1e-7;
+    var Sl7 = -112 * 1e-7;
+    var Sl8 = -80 * 1e-7;
     /**
      * Gets a point describing the motion of the Earth-Moon barycenter according to the equations
      * described in section 6.
      */
 
     function computeSimonEarthMoonBarycenter(date) {
-        // From section 5.8
-        var semiMajorAxis0 = 1.0000010178 * MetersPerAstronomicalUnit;
-        var meanLongitude0 = 100.46645683 * RadiansPerDegree;
-        var meanLongitude1 = 1295977422.83429 * RadiansPerArcSecond;
-
-        // From table 6
-        var p1u = 16002;
-        var p2u = 21863;
-        var p3u = 32004;
-        var p4u = 10931;
-        var p5u = 14529;
-        var p6u = 16368;
-        var p7u = 15318;
-        var p8u = 32794;
-
-        var Ca1 = 64 * 1e-7 * MetersPerAstronomicalUnit;
-        var Ca2 = -152 * 1e-7 * MetersPerAstronomicalUnit;
-        var Ca3 = 62 * 1e-7 * MetersPerAstronomicalUnit;
-        var Ca4 = -8 * 1e-7 * MetersPerAstronomicalUnit;
-        var Ca5 = 32 * 1e-7 * MetersPerAstronomicalUnit;
-        var Ca6 = -41 * 1e-7 * MetersPerAstronomicalUnit;
-        var Ca7 = 19 * 1e-7 * MetersPerAstronomicalUnit;
-        var Ca8 = -11 * 1e-7 * MetersPerAstronomicalUnit;
-
-        var Sa1 = -150 * 1e-7 * MetersPerAstronomicalUnit;
-        var Sa2 = -46 * 1e-7 * MetersPerAstronomicalUnit;
-        var Sa3 = 68 * 1e-7 * MetersPerAstronomicalUnit;
-        var Sa4 = 54 * 1e-7 * MetersPerAstronomicalUnit;
-        var Sa5 = 14 * 1e-7 * MetersPerAstronomicalUnit;
-        var Sa6 = 24 * 1e-7 * MetersPerAstronomicalUnit;
-        var Sa7 = -28 * 1e-7 * MetersPerAstronomicalUnit;
-        var Sa8 = 22 * 1e-7 * MetersPerAstronomicalUnit;
-
-        var q1u = 10;
-        var q2u = 16002;
-        var q3u = 21863;
-        var q4u = 10931;
-        var q5u = 1473;
-        var q6u = 32004;
-        var q7u = 4387;
-        var q8u = 73;
-
-        var Cl1 = -325 * 1e-7;
-        var Cl2 = -322 * 1e-7;
-        var Cl3 = -79 * 1e-7;
-        var Cl4 = 232 * 1e-7;
-        var Cl5 = -52 * 1e-7;
-        var Cl6 = 97 * 1e-7;
-        var Cl7 = 55 * 1e-7;
-        var Cl8 = -41 * 1e-7;
-
-        var Sl1 = -105 * 1e-7;
-        var Sl2 = -137 * 1e-7;
-        var Sl3 = 258 * 1e-7;
-        var Sl4 = 35 * 1e-7;
-        var Sl5 = -116 * 1e-7;
-        var Sl6 = -88 * 1e-7;
-        var Sl7 = -112 * 1e-7;
-        var Sl8 = -80 * 1e-7;
 
         // t is thousands of years from J2000 TDB
-        var tdbDate = PlanetaryPositions.taiToTdb(date, tdbDate);
+        var tdbDate = taiToTdb(date);
         var x = (tdbDate.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((tdbDate.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
         var t = x / (TimeConstants.DAYS_PER_JULIAN_CENTURY * 10.0);
 
@@ -201,7 +241,7 @@ define(['./Cartesian3',
      * Gets a point describing the position of the moon according to the equations described in section 4.
      */
     function computeSimonMoon(date) {
-        var tdbDate = PlanetaryPositions.taiToTdb(date, tdbDate);
+        var tdbDate = taiToTdb(date);
         var x = (tdbDate.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((tdbDate.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
         var t = x / (TimeConstants.DAYS_PER_JULIAN_CENTURY);
         var t2 = t * t;
@@ -308,24 +348,24 @@ define(['./Cartesian3',
      * the 1992 mu value (ratio between Moon and Earth masses) in Table 2 of the paper in order
      * to determine the position of the Earth relative to the Earth-Moon barycenter.
      */
+    var moonEarthMassRatio = 0.012300034; // From 1992 mu value in Table 2
+    var factor = moonEarthMassRatio / (moonEarthMassRatio + 1.0) * -1;
     function computeSimonEarth(date) {
         var moon = computeSimonMoon(date);
-        var moonEarthMassRatio = 0.012300034; // From 1992 mu value in Table 2
-        var factor = moonEarthMassRatio / (moonEarthMassRatio + 1.0) * -1;
-
         return moon.multiplyByScalar(factor);
     }
 
+    var axesTransformation = new Matrix3(1.0000000000000002, 5.619723173785822e-16, 4.690511510146299e-19,
+            -5.154129427414611e-16, 0.9174820620691819, -0.39777715593191376,
+             -2.23970096136568e-16, 0.39777715593191376, 0.9174820620691819);
     /**
-     * Uses the SimonEarthMoonBarycenter and SimonEarth points to transform the coordinates of the sun
-     * from (0,0,0) to its position in ICRF axes.
+     * Computes the position of the Sun in the inertial frame
      *
-     * Values for the <code>axesTransformation</code> Quaternion needed for the rotation were found using the Components
-     * GreographicTransformer on the position of the sun center of mass point and the earth J2000 frame.
-     * @param {JulianDate} date
-     * @returns {Cartesian3} sun position
+     * @param {JulianDate} [julianDate] The time at which to compute the Sun's position, if not provided the current system time is used.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3} Calculated sun position
      */
-    PlanetaryPositions.ComputeSun = function(date, result){
+    PlanetaryPositions.ComputeSunPositionICRF= function(date, result){
         if (typeof date === 'undefined') {
             date = new JulianDate();
         }
@@ -335,28 +375,30 @@ define(['./Cartesian3',
 
         //second forward transformation
         translation = computeSimonEarth(date);
-        var axesTransformation = new Quaternion(-0.20312303898231016, -0.000000000000000057304398937699911, 0.00000000000000027508086490993513, 0.979153221428899270);
+        // Values for the <code>axesTransformation</code> Quaternion needed for the rotation were found using the STK Components
+        // GreographicTransformer on the position of the sun center of mass point and the earth J2000 frame.
+
         result.subtract(translation, result);
-        result.rotate(axesTransformation, result);
+        axesTransformation.multiplyByVector(result, result);
 
         return result;
     };
 
     /**
-     * Transforms the SimonMoon point to its position in ICRF axes.
+     * Computes the position of the Moon in the inertial frame
      *
-     * Values for the <code>axesTransformation</code> Quaternion needed for the rotation were found using the Components
-     * GreographicTransformer on the Simon 1994 moon point and the earth J2000 frame.
-     * @param {JulianDate} date
-     * @returns {Cartesian3} sun position
+     * @param {JulianDate} [julianDate] The time at which to compute the Sun's position, if not provided the current system time is used.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3} Calculated moon position
      */
-    PlanetaryPositions.ComputeMoon = function(date, result){
+    PlanetaryPositions.ComputeMoonPositionICRF = function(date, result){
         if (typeof date === 'undefined') {
             date = new JulianDate();
         }
+        // Values for the <code>axesTransformation</code> Quaternion needed for the rotation were found using the STK Components
+        // GreographicTransformer on the Simon 1994 moon point and the earth J2000 frame.
         result = computeSimonMoon(date, result);
-        var axesTransformation = new Quaternion(-0.20312303898231016, -0.000000000000000057304398937699911, 0.00000000000000027508086490993513, 0.979153221428899270);
-        result.rotate(axesTransformation, result);
+        axesTransformation.multiplyByVector(result, result);
 
         return result;
     };

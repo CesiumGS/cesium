@@ -275,7 +275,7 @@ define([
      * function updateAndRender() {
      *     var now = new JulianDate();
      *     scene.initializeFrame();
-     *     scene.setSunPosition(PlanetaryPositions.ComputeSun(now));
+     *     scene.setSunPosition(Simon1994PlanetaryPositions.ComputeSunPositionICRF(now));
      *     scene.getCamera().transform = Matrix4.fromRotationTranslation(Transforms.computeTemeToPseudoFixedMatrix(now), Cartesian3.ZERO);
      *     scene.render();
      *     requestAnimationFrame(updateAndRender);
