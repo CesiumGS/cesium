@@ -2,9 +2,9 @@
 define([
         './defaultValue',
         './DeveloperError'
-        ], function(
-                defaultValue,
-                DeveloperError) {
+    ], function(
+        defaultValue,
+        DeveloperError) {
     "use strict";
 
     /**
