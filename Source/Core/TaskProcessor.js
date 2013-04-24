@@ -3,12 +3,14 @@ define([
         'require',
         './buildModuleUrl',
         './defaultValue',
+        './isCrossOriginUrl',
         '../ThirdParty/when',
         '../ThirdParty/Uri'
     ], function(
         require,
         buildModuleUrl,
         defaultValue,
+        isCrossOriginUrl,
         when,
         Uri) {
     "use strict";
@@ -36,13 +38,8 @@ define([
 
         _bootstrapperUrl = buildModuleUrl('Workers/cesiumWorkerBootstrapper.js');
 
-        var location = window.location;
-        var a = document.createElement('a');
-        a.href = _bootstrapperUrl;
-
-        // host includes both hostname and port if the port is not standard
-        if (a.protocol !== location.protocol || a.host !== location.host) {
-            //cross-origin, create a shim worker from a blob URL
+        if (isCrossOriginUrl(_bootstrapperUrl)) {
+            //to load cross-origin, create a shim worker from a blob URL
             var script = 'importScripts("' + _bootstrapperUrl + '");';
 
             var blob;

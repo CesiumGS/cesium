@@ -48,13 +48,31 @@ defineSuite([
         }).toThrow();
     });
 
-    it('sets the crossOrigin property', function() {
+    it('sets the crossOrigin property for cross-origin images', function() {
         var fakeImage = {};
         var imageConstructorSpy = spyOn(window, 'Image').andReturn(fakeImage);
 
-        loadImage('./Data/Images/Green.png');
+        loadImage('http://example.com/someImage.png');
         expect(imageConstructorSpy).toHaveBeenCalled();
         expect(fakeImage.crossOrigin).toEqual('');
+    });
+
+    it('does not set the crossOrigin property for cross-origin images when allowCrossOrigin is false', function() {
+        var fakeImage = {};
+        var imageConstructorSpy = spyOn(window, 'Image').andReturn(fakeImage);
+
+        loadImage('http://example.com/someImage.png', false);
+        expect(imageConstructorSpy).toHaveBeenCalled();
+        expect(fakeImage.crossOrigin).toBeUndefined();
+    });
+
+    it('does not set the crossOrigin property for non-cross-origin images', function() {
+        var fakeImage = {};
+        var imageConstructorSpy = spyOn(window, 'Image').andReturn(fakeImage);
+
+        loadImage('./someImage.png', false);
+        expect(imageConstructorSpy).toHaveBeenCalled();
+        expect(fakeImage.crossOrigin).toBeUndefined();
     });
 
     it('does not set the crossOrigin property for data URIs', function() {

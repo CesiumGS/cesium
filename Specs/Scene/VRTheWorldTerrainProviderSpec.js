@@ -208,7 +208,6 @@ defineSuite([
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url.indexOf('/proxy/?')).toBe(0);
                 expect(url.indexOf(encodeURIComponent('.tif?cesium=true'))).toBeGreaterThanOrEqualTo(0);
-                expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -242,7 +241,6 @@ defineSuite([
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url.indexOf('.tif?cesium=true')).toBeGreaterThanOrEqualTo(0);
-                expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
