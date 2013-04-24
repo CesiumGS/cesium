@@ -167,7 +167,8 @@ define(['./Cartesian3',
 
         if (count >= maxIterationCount) {
             throw new DeveloperError('Kepler equation did not converge');
-            //TODO: Port 'DoubleFunctionExplorer' from STK components
+            // STK Components uses a numerical method to find the eccentric anomaly in the case that Kepler's
+            // equation does not converge. We don't expect that to ever be necessary for the reasonable orbits used here.
         }
 
         eccentricAnomaly = iterationValue + revs * CesiumMath.TWO_PI;
@@ -305,6 +306,8 @@ define(['./Cartesian3',
     var Sl6 = -88 * 1e-7;
     var Sl7 = -112 * 1e-7;
     var Sl8 = -80 * 1e-7;
+
+    var scratchDate = new JulianDate();
     /**
      * Gets a point describing the motion of the Earth-Moon barycenter according to the equations
      * described in section 6.
@@ -313,8 +316,8 @@ define(['./Cartesian3',
     function computeSimonEarthMoonBarycenter(date, result) {
 
         // t is thousands of years from J2000 TDB
-        var tdbDate = taiToTdb(date);
-        var x = (tdbDate.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((tdbDate.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
+        taiToTdb(date, scratchDate);
+        var x = (scratchDate.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((scratchDate.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
         var t = x / (TimeConstants.DAYS_PER_JULIAN_CENTURY * 10.0);
 
         var u = 0.35953620 * t;
@@ -351,8 +354,8 @@ define(['./Cartesian3',
      * Gets a point describing the position of the moon according to the equations described in section 4.
      */
     function computeSimonMoon(date, result) {
-        var tdbDate = taiToTdb(date);
-        var x = (tdbDate.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((tdbDate.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
+        taiToTdb(date, scratchDate);
+        var x = (scratchDate.getJulianDayNumber() - epoch.getJulianDayNumber()) + ((scratchDate.getSecondsOfDay() - epoch.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
         var t = x / (TimeConstants.DAYS_PER_JULIAN_CENTURY);
         var t2 = t * t;
         var t3 = t2 * t;
@@ -486,7 +489,7 @@ define(['./Cartesian3',
         result = translation.negate(result);
 
         //second forward transformation
-        translation = computeSimonEarth(date);
+        computeSimonEarth(date, translation);
         // Values for the <code>axesTransformation</code> Quaternion needed for the rotation were found using the STK Components
         // GreographicTransformer on the position of the sun center of mass point and the earth J2000 frame.
 
