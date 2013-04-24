@@ -20,7 +20,7 @@ define(['./Cartesian3',
     "use strict";
 
     /**
-     * Contains functions for finding the Cartesian coordinates of the sun and the moon in the inertial frame
+     * Contains functions for finding the Cartesian coordinates of the sun and the moon in the Earth-centered inertial frame.
      * @exports PlanetaryPositions
      */
     var PlanetaryPositions = {};
@@ -72,13 +72,14 @@ define(['./Cartesian3',
     var RadiansPerArcSecond = CesiumMath.RADIANS_PER_ARCSECOND;
     var MetersPerAstronomicalUnit = 1.49597870e+11; // IAU 1976 value
 
+    var perifocalToEquatorial = new Matrix3();
     function elementsToCartesian(semimajorAxis, eccentricity, inclination, longitudeOfPerigee, longitudeOfNode, meanLongitude, gravitationalParameter, result) {
         if (inclination < 0.0) {
             inclination = -inclination;
             longitudeOfNode += CesiumMath.PI;
         }
         if (inclination < 0 || inclination > CesiumMath.PI) {
-            throw new DeveloperError('inclination out of range.');
+            throw new DeveloperError('The inclination is out of range. Inclination must be greater than or equal to zero and less than or equal to Pi radians.');
         }
 
         var radiusOfPeriapsis = semimajorAxis * (1.0 - eccentricity);
@@ -87,9 +88,9 @@ define(['./Cartesian3',
         var trueAnomaly = meanAnomalyToTrueAnomaly(meanLongitude - longitudeOfPerigee, eccentricity);
         var type = chooseOrbit(eccentricity, 0.0);
         if (type === 'Hyperbolic' && Math.abs(CesiumMath.NegativePiToPi(trueAnomaly)) >= Math.acos(- 1.0 / eccentricity)) {
-            throw new DeveloperError('invalid trueAnomaly.');
+            throw new DeveloperError('The true anomaly of the hyperbolic orbit lies outside of the bounds of the hyperbola.');
         }
-        var perifocalToEquatorial = perifocalToCartesianMatrix(argumentOfPeriapsis, inclination, rightAscensionOfAscendingNode);
+        perifocalToCartesianMatrix(argumentOfPeriapsis, inclination, rightAscensionOfAscendingNode, perifocalToEquatorial);
         var semilatus = radiusOfPeriapsis * (1.0 + eccentricity);
         var costheta = Math.cos(trueAnomaly);
         var sintheta = Math.sin(trueAnomaly);
@@ -206,7 +207,7 @@ define(['./Cartesian3',
 
      // Calculates the transformation matrix to convert from the perifocal (PQW) coordinate
      // system to inertial cartesian coordinates.
-    function perifocalToCartesianMatrix(argumentOfPeriapsis, inclination, rightAscension) {
+    function perifocalToCartesianMatrix(argumentOfPeriapsis, inclination, rightAscension, result) {
         if (inclination < 0 || inclination > CesiumMath.PI) {
             throw new DeveloperError('inclination out of range');
         }
@@ -218,19 +219,31 @@ define(['./Cartesian3',
 
         var cosraan = Math.cos(rightAscension);
         var sinraan = Math.sin(rightAscension);
+        if (typeof result === 'undefined') {
+            result = new Matrix3(
+                    cosraan * cosap - sinraan * sinap * cosi,
+                    -cosraan * sinap - sinraan * cosap * cosi,
+                    sinraan * sini,
 
-        return new Matrix3(
-            cosraan * cosap - sinraan * sinap * cosi,
-            -cosraan * sinap - sinraan * cosap * cosi,
-            sinraan * sini,
+                    sinraan * cosap + cosraan * sinap * cosi,
+                    -sinraan * sinap + cosraan * cosap * cosi,
+                    -cosraan * sini,
 
-            sinraan * cosap + cosraan * sinap * cosi,
-            -sinraan * sinap + cosraan * cosap * cosi,
-            -cosraan * sini,
-
-            sinap * sini,
-            cosap * sini,
-            cosi);
+                    sinap * sini,
+                    cosap * sini,
+                    cosi);
+        } else {
+            result[0] = cosraan * cosap - sinraan * sinap * cosi;
+            result[1] = sinraan * cosap + cosraan * sinap * cosi;
+            result[2] = sinap * sini;
+            result[3] = -cosraan * sinap - sinraan * cosap * cosi;
+            result[4] = -sinraan * sinap + cosraan * cosap * cosi;
+            result[5] = cosap * sini;
+            result[6] = sinraan * sini;
+            result[7] = -cosraan * sini;
+            result[8] = cosi;
+        }
+        return result;
     }
 
     // From section 5.8
