@@ -28,6 +28,7 @@ define([
      */
     var PostProcessEngine = function() {
         this.framebuffer = undefined;
+        this._colorStep = new Cartesian2();
         this._command = undefined;
     };
 
@@ -119,10 +120,15 @@ define([
                         })
                     });
                 }
+
+                this._colorStep.x = 1.0 / fb.getColorTexture().getWidth();
+                this._colorStep.y = 1.0 / fb.getColorTexture().getHeight();
             }
 
             var command = this._command;
             if (typeof command === 'undefined') {
+                var that = this;
+
 // TODO: allow custom scissor test.  Custom viewport?
 // TODO: render to framebuffer and ping-pong
                 command = new DrawCommand();
@@ -134,11 +140,11 @@ define([
                 command.uniformMap = {
 // TODO: use semantics in Touch Up to access color/depth textures
                     czm_color : function() {
-                        return fb.getColorTexture();
+                        return that.framebuffer.getColorTexture();
                     },
 
                     czm_colorStep : function() {
-                        return new Cartesian2(1.0 / fb.getColorTexture().getWidth(), 1.0 / fb.getColorTexture().getHeight());
+                        return that._colorStep;
                     }
                 };
 
