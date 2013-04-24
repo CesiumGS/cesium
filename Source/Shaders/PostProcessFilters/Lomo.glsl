@@ -3,6 +3,8 @@ uniform sampler2D czm_color;
 varying vec2 v_textureCoordinates;
 
 // TODO: expose as uniform
+const float vignetteAmount = 1.0;
+const float vignetteGamma = 4.0;
 const float colorTemperatureShift = 0.2;  // +ve = warmer, -ve = colder
 const float saturation = 0.7;
 const float finalMultiplier = 1.1;
@@ -28,7 +30,7 @@ vec3 gamma(vec3 rgb, float gamma)
 
 vec3 lomo(vec3 rgb)
 {
-    float v = gammaVignetteFn(1.0, 4.0); 
+    float v = gammaVignetteFn(vignetteAmount, vignetteGamma); 
     
     // Gamma the image using the vignette value
     rgb = gamma(rgb, v);
