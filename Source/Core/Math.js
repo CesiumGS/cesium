@@ -510,7 +510,7 @@ define([
             throw new DeveloperError('A number greater than or equal to 0 is required.');
         }
 
-        var m = n | 0;
+        var m = defaultValue(n, 0);
         return (m !== 0) && ((m & (m - 1)) === 0);
     };
 
