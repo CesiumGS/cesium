@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        '../Core/defautlValue',
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/Color',
         '../Core/combine',
@@ -23,7 +23,7 @@ define([
         '../Shaders/CustomSensorVolumeFS',
         './SceneMode'
     ], function(
-        defautlValue,
+        defaultValue,
         DeveloperError,
         Color,
         combine,
@@ -61,10 +61,10 @@ define([
      * @see SensorVolumeCollection#addCustom
      */
     var CustomSensorVolume = function(template) {
-        var t = defautlValue(template, {});
+        var t = defaultValue(template, {});
 
         this._pickId = undefined;
-        this._pickIdThis = defautlValue(t._pickIdThis, this);
+        this._pickIdThis = defaultValue(t._pickIdThis, this);
 
         this._colorCommand = new DrawCommand();
         this._pickCommand = new DrawCommand();
@@ -125,15 +125,15 @@ define([
          * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          */
-        this.modelMatrix = defautlValue(t.modelMatrix, Matrix4.IDENTITY.clone());
+        this.modelMatrix = defaultValue(t.modelMatrix, Matrix4.IDENTITY.clone());
 
         /**
          * DOC_TBA
          *
          * @type BufferUsage
          */
-        this.bufferUsage = defautlValue(t.bufferUsage, BufferUsage.STATIC_DRAW);
-        this._bufferUsage = defautlValue(t.bufferUsage, BufferUsage.STATIC_DRAW);
+        this.bufferUsage = defaultValue(t.bufferUsage, BufferUsage.STATIC_DRAW);
+        this._bufferUsage = defaultValue(t.bufferUsage, BufferUsage.STATIC_DRAW);
 
         /**
          * DOC_TBA
