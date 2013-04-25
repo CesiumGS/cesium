@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError',
         './Matrix4',
         './Cartesian3',
@@ -8,6 +9,7 @@ define([
         './defaultValue'
     ],
     function(
+        defaultValue,
         DeveloperError,
         Matrix4,
         Cartesian3,

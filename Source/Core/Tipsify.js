@@ -48,7 +48,7 @@ define([
         var maximumIndex = description.maximumIndex;
         var cacheSize = defaultValue(description.cacheSize, 24);
 
-        if (!indices) {
+        if (typeof indices === 'undefined') {
             throw new DeveloperError('indices is required.');
         }
 
@@ -65,7 +65,7 @@ define([
         }
 
         // Compute the maximumIndex if not given
-        if(!maximumIndex) {
+        if(typeof maximumIndex === 'undefined') {
             maximumIndex = 0;
             var currentIndex = 0;
             var intoIndices = indices[currentIndex];
@@ -171,7 +171,7 @@ define([
             return n;
         }
 
-        if (!indices) {
+        if (typeof indices === 'undefined') {
             throw new DeveloperError('indices is required.');
         }
         var numIndices = indices.length;
@@ -191,7 +191,7 @@ define([
         var currentIndex = 0;
         var intoIndices = indices[currentIndex];
         var endIndex = numIndices;
-        if (maximumIndex) {
+        if (typeof maximumIndex !== 'undefined') {
             maximumIndexPlusOne = maximumIndex + 1;
         } else {
             while (currentIndex < endIndex) {
