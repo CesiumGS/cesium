@@ -5,8 +5,7 @@ define([
         './Matrix4',
         './Cartesian3',
         './Cartesian4',
-        './HermiteSpline',
-        './defaultValue'
+        './HermiteSpline'
     ],
     function(
         defaultValue,
@@ -14,8 +13,7 @@ define([
         Matrix4,
         Cartesian3,
         Cartesian4,
-        HermiteSpline,
-        defaultValue) {
+        HermiteSpline) {
     "use strict";
 
     /**
