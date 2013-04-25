@@ -5,14 +5,16 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Quaternion',
-        './Matrix3'
+        './Matrix3',
+        './defaultValue'
     ], function(
         DeveloperError,
         CesiumMath,
         Cartesian2,
         Cartesian3,
         Quaternion,
-        Matrix3) {
+        Matrix3,
+        defaultValue) {
     "use strict";
 
     function _computeEllipseQuadrant(cb, cbRadius, aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
@@ -102,7 +104,7 @@ define([
          *     Cartographic.fromDegrees(-75.59777, 40.03883, 0.0)), 100000.0));
          */
         computeCircleBoundary : function(ellipsoid, center, radius, granularity) {
-            if (!ellipsoid || !center || !radius) {
+            if (typeof ellipsoid === 'undefined' || typeof center === 'undefined' || typeof radius === 'undefined') {
                 throw new DeveloperError('ellipsoid, center, and radius are required.');
             }
 
@@ -153,7 +155,7 @@ define([
          *      Cartographic.fromDegrees(-75.59777, 40.03883)), 500000.0, 300000.0, Math.toRadians(60)));
          */
         computeEllipseBoundary : function(ellipsoid, center, semiMajorAxis, semiMinorAxis, bearing, granularity) {
-            if (!ellipsoid || !center || !semiMajorAxis || !semiMinorAxis) {
+            if (typeof ellipsoid === 'undefined' || typeof center === 'undefined' || typeof semiMajorAxis === 'undefined' || typeof semiMinorAxis === 'undefined') {
                 throw new DeveloperError('ellipsoid, center, semiMajorAxis, and semiMinorAxis are required.');
             }
 
