@@ -1,10 +1,12 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError',
         './Cartesian3',
         './ComponentDatatype',
         './PrimitiveType'
     ], function(
+        defaultValue,
         DeveloperError,
         Cartesian3,
         ComponentDatatype,
@@ -34,7 +36,7 @@ define([
             throw new DeveloperError('numberOfPartitions must be greater than zero.');
         }
 
-        attributeName = attributeName || 'position';
+        attributeName = defaultValue(attributeName, 'position');
 
         var positions = [];
         var indices = [];

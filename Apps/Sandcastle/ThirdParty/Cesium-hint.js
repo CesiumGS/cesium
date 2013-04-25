@@ -1,5 +1,5 @@
-// This is a copy of ThirdParty/CodeMirror-2.24/lib/util/javascript-hint.js
-// that has been customized for Cesium.
+// It's a modified copy of a third-party file, ThirdParty\CodeMirror-2.24\lib\util\javascript-hint.js,
+// with some Cesium customizations.
 
 (function () {
   function forEach(arr, f) {
