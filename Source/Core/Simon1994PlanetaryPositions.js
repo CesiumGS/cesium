@@ -58,7 +58,7 @@ define(['./Cartesian3',
         result = date.addSeconds(TdtMinusTai, result);
 
         //Converts TT to TDB
-        var days = (date.getJulianDayNumber() - J2000d) + ((result.getSecondsOfDay())/TimeConstants.SECONDS_PER_DAY);
+        var days = result.getTotalDays() - J2000d;
         result = result.addSeconds(computeTdbMinusTtSpice(days), result);
 
         return result;
@@ -469,24 +469,24 @@ define(['./Cartesian3',
         return result;
     }
 
-    var axesTransformation = new Matrix3(1.0000000000000002, 5.619723173785822e-16, 4.690511510146299e-19,
-            -5.154129427414611e-16, 0.9174820620691819, -0.39777715593191376,
-             -2.23970096136568e-16, 0.39777715593191376, 0.9174820620691819);
-    var translation = new Cartesian3();
     /**
-     * Computes the position of the Sun in the inertial frame
+     * Computes the position of the Sun in the Earth-centered inertial frame
      *
      * @param {JulianDate} [julianDate] The time at which to compute the Sun's position, if not provided the current system time is used.
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} Calculated sun position
      */
-    PlanetaryPositions.ComputeSunPositionICRF= function(date, result){
+    var axesTransformation = new Matrix3(1.0000000000000002, 5.619723173785822e-16, 4.690511510146299e-19,
+            -5.154129427414611e-16, 0.9174820620691819, -0.39777715593191376,
+             -2.23970096136568e-16, 0.39777715593191376, 0.9174820620691819);
+    var translation = new Cartesian3();
+    PlanetaryPositions.ComputeSunPositionInEarthInertialFrame= function(date, result){
         if (typeof date === 'undefined') {
             date = new JulianDate();
         }
         //first forward transformation
         translation = computeSimonEarthMoonBarycenter(date, translation);
-        result = translation.negate(result);
+        result = translation.negate(result, result);
 
         //second forward transformation
         computeSimonEarth(date, translation);
@@ -500,13 +500,13 @@ define(['./Cartesian3',
     };
 
     /**
-     * Computes the position of the Moon in the inertial frame
+     * Computes the position of the Moon in the Earth-centered inertial frame
      *
      * @param {JulianDate} [julianDate] The time at which to compute the Sun's position, if not provided the current system time is used.
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} Calculated moon position
      */
-    PlanetaryPositions.ComputeMoonPositionICRF = function(date, result){
+    PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame = function(date, result){
         if (typeof date === 'undefined') {
             date = new JulianDate();
         }
