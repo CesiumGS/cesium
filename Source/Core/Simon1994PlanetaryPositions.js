@@ -469,6 +469,13 @@ define(['./Cartesian3',
         return result;
     }
 
+    // Values for the <code>axesTransformation</code> needed for the rotation were found using the STK Components
+    // GreographicTransformer on the position of the sun center of mass point and the earth J2000 frame.
+
+    var axesTransformation = new Matrix3(1.0000000000000002, 5.619723173785822e-16, 4.690511510146299e-19,
+            -5.154129427414611e-16, 0.9174820620691819, -0.39777715593191376,
+             -2.23970096136568e-16, 0.39777715593191376, 0.9174820620691819);
+    var translation = new Cartesian3();
     /**
      * Computes the position of the Sun in the Earth-centered inertial frame
      *
@@ -476,22 +483,16 @@ define(['./Cartesian3',
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} Calculated sun position
      */
-    var axesTransformation = new Matrix3(1.0000000000000002, 5.619723173785822e-16, 4.690511510146299e-19,
-            -5.154129427414611e-16, 0.9174820620691819, -0.39777715593191376,
-             -2.23970096136568e-16, 0.39777715593191376, 0.9174820620691819);
-    var translation = new Cartesian3();
     PlanetaryPositions.ComputeSunPositionInEarthInertialFrame= function(date, result){
         if (typeof date === 'undefined') {
             date = new JulianDate();
         }
         //first forward transformation
         translation = computeSimonEarthMoonBarycenter(date, translation);
-        result = translation.negate(result, result);
+        result = translation.negate(result);
 
         //second forward transformation
         computeSimonEarth(date, translation);
-        // Values for the <code>axesTransformation</code> Quaternion needed for the rotation were found using the STK Components
-        // GreographicTransformer on the position of the sun center of mass point and the earth J2000 frame.
 
         result.subtract(translation, result);
         axesTransformation.multiplyByVector(result, result);
@@ -510,8 +511,6 @@ define(['./Cartesian3',
         if (typeof date === 'undefined') {
             date = new JulianDate();
         }
-        // Values for the <code>axesTransformation</code> Quaternion needed for the rotation were found using the STK Components
-        // GreographicTransformer on the Simon 1994 moon point and the earth J2000 frame.
         result = computeSimonMoon(date, result);
         axesTransformation.multiplyByVector(result, result);
 

@@ -926,18 +926,5 @@ define([
         return Cartesian3.cross(this, right, result);
     };
 
-    /**
-     * Produces a Cartesian3 representing this instance which results from rotating
-     * the original axes used to represent this instance by the provided Quaternion rotation.
-     * @memberof Cartesian3
-     *
-     * @param {Quaternion}
-     * @return {Cartesian3} The result of the rotation
-     *
-     */
-    Cartesian3.prototype.rotate = function(quaternion, result) {
-        return Cartesian3.rotate(this, quaternion, result);
-    };
-
     return Cartesian3;
 });

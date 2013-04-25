@@ -185,8 +185,7 @@ define([
     var position = new Cartesian3();
     var transformMatrix = new Matrix3();
     function setSunAndMoonDirections(uniformState, frameState) {
-        Transforms.computeIcrfToFixedMatrix(frameState.time, transformMatrix);
-        if (typeof transformMatrix === 'undefined') {
+        if (typeof Transforms.computeIcrfToFixedMatrix(frameState.time, transformMatrix) === 'undefined') {
             transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, transformMatrix);
         }
 
