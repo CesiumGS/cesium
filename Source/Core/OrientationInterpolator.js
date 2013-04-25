@@ -25,7 +25,7 @@ define([
      * @see HermiteSpline
      */
     var OrientationInterpolator = function(controlPoints) {
-        if (!controlPoints || !(controlPoints instanceof Array) || controlPoints.length < 2) {
+        if (typeof controlPoints === 'undefined' || !(controlPoints instanceof Array) || controlPoints.length < 2) {
             throw new DeveloperError('controlPoints is required. It must be an array with at least a length of 3.');
         }
 

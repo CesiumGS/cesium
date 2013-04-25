@@ -421,7 +421,7 @@ define([
      * DOC_TBA
      */
     CesiumMath.equalsEpsilon = function(left, right, epsilon) {
-        epsilon = epsilon || 0.0;
+        epsilon = defaultValue(epsilon, 0.0);
         return Math.abs(left - right) <= epsilon;
     };
 
@@ -510,7 +510,7 @@ define([
             throw new DeveloperError('A number greater than or equal to 0 is required.');
         }
 
-        var m = n | 0;
+        var m = defaultValue(n, 0);
         return (m !== 0) && ((m & (m - 1)) === 0);
     };
 
