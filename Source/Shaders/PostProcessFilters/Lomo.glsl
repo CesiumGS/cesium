@@ -39,7 +39,7 @@ vec3 lomo(vec3 rgb)
     rgb *= vec3(v * 0.5 + 0.5);
 
     // Now apply the equivalent of a PhotoShop Curves S
-    rgb = smoothstep(vec3(0), vec3(1), rgb);
+    rgb = smoothstep(vec3(0.0), vec3(1.0), rgb);
     
     // Desaturate
     rgb = czm_saturation(rgb, saturation);
