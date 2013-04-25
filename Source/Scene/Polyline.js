@@ -283,7 +283,7 @@ define([
     };
 
     Polyline.prototype.getPickId = function(context) {
-        this._pickId = this._pickId || context.createPickId(this._pickIdThis || this);
+        this._pickId = defaultValue(this._pickId, context.createPickId(defaultValue(this._pickIdThis, this)));
         return this._pickId;
     };
 
