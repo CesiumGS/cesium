@@ -36,7 +36,7 @@ define([
         }
 
         t.delayDuration = defaultValue(t.delayDuration, 0);
-        t.easingFunction = defaultValue(t.easingFunction, Tween.Easing.Linear.None);
+        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.None : t.easingFunction;
 
         var value = clone(t.startValue);
         var tween = new Tween.Tween(value);
@@ -89,7 +89,7 @@ define([
         var t = defaultValue(template, {});
         t.duration = defaultValue(t.duration, 3000);
         t.delayDuration = defaultValue(t.delayDuration, 0);
-        t.easingFunction = defaultValue(t.easingFunction, Tween.Easing.Linear.None);
+        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.None : t.easingFunction;
 
         var value = {
             alpha : start
@@ -138,7 +138,7 @@ define([
         var t = defaultValue(template, {});
         t.duration = defaultValue(t.duration, 3000);
         t.delayDuration = defaultValue(t.delayDuration, 0);
-        t.easingFunction = defaultValue(t.easingFunction, Tween.Easing.Linear.None);
+        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.None : t.easingFunction;
 
         var value = {
             value : start
@@ -179,7 +179,7 @@ define([
         var t = defaultValue(template, {});
         t.duration = defaultValue(t.duration, 3000);
         t.delayDuration = defaultValue(t.delayDuration, 0);
-        t.easingFunction = defaultValue(t.easingFunction, Tween.Easing.Linear.None);
+        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.None : t.easingFunction;
 
         var value = {
             offset : material.uniforms.offset

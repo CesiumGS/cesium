@@ -27,7 +27,7 @@ define([
          */
         compute : function(template) {
             template = defaultValue(template, {});
-            var resolution = defaultValue(template.resolution, new Cartesian2(2, 2));
+            var resolution = (typeof template.resolution === "undefined") ?  new Cartesian2(2, 2) : template.resolution;
             var onInterpolation = template.onInterpolation; // Can be undefined
 
             if (resolution.x <= 1 || resolution.y <= 1) {

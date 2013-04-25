@@ -125,15 +125,15 @@ define([
          * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          */
-        this.modelMatrix = defaultValue(t.modelMatrix, Matrix4.IDENTITY.clone());
+        this.modelMatrix = (typeof t.modelMatrix === 'undefined' ) ? Matrix4.IDENTITY.clone() : t.modelMatrix;
 
         /**
          * DOC_TBA
          *
          * @type BufferUsage
          */
-        this.bufferUsage = defaultValue(t.bufferUsage, BufferUsage.STATIC_DRAW);
-        this._bufferUsage = defaultValue(t.bufferUsage, BufferUsage.STATIC_DRAW);
+        this.bufferUsage = (typeof t.bufferUsage === 'undefined') ? BufferUsage.STATIC_DRAW : t.bufferUsage;
+        this._bufferUsage = this.bufferUsage;
 
         /**
          * DOC_TBA

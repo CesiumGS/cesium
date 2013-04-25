@@ -28,7 +28,7 @@ define(['./defaultValue'], function(defaultValue) {
      * @returns The modified result parameter, or a new instance if one was not provided.
      */
     Spherical.fromCartesian3 = function(cartesian3, result) {
-        result = defaultValue(result, new Spherical());
+        result = (typeof result === 'undefined') ? new Spherical() : result;
         var x = cartesian3.x;
         var y = cartesian3.y;
         var z = cartesian3.z;
@@ -49,7 +49,7 @@ define(['./defaultValue'], function(defaultValue) {
      * @return The modified result parameter or a new instance if result was undefined.
      */
     Spherical.clone = function(spherical, result) {
-        result = defaultValue(result, new Spherical());
+        result = (typeof result === 'undefined') ? new Spherical() : result;
         result.clock = spherical.clock;
         result.cone = spherical.cone;
         result.magnitude = spherical.magnitude;
@@ -66,7 +66,7 @@ define(['./defaultValue'], function(defaultValue) {
      * @return The modified result parameter or a new instance if result was undefined.
      */
     Spherical.normalize = function(spherical, result) {
-        result = defaultValue(result, new Spherical());
+        result = (typeof result === 'undefined') ? new Spherical() : result;
         result.clock = spherical.clock;
         result.cone = spherical.cone;
         result.magnitude = 1.0;
