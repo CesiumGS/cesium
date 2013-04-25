@@ -28,7 +28,7 @@ define([
         this._mouseEvents = {};
         for ( var button in ScreenSpaceEventType) {
             if (ScreenSpaceEventType.hasOwnProperty(button)) {
-                this._mouseEvents[button] = 0;
+                this._mouseEvents[button] = undefined;
             }
         }
 
@@ -38,7 +38,7 @@ define([
                 this._modifiedMouseEvents[modifier] = {};
                 for (button in ScreenSpaceEventType) {
                     if (ScreenSpaceEventType.hasOwnProperty(button)) {
-                        this._modifiedMouseEvents[modifier][button] = 0;
+                        this._modifiedMouseEvents[modifier][button] = undefined;
                     }
                 }
             }

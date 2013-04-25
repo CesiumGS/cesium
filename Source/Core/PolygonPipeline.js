@@ -28,8 +28,8 @@ define([
     "use strict";
 
     function DoublyLinkedList() {
-        this.head = null;
-        this.tail = null;
+        this.head = undefined;
+        this.tail = undefined;
         this.length = 0;
     }
 
@@ -38,7 +38,7 @@ define([
             var node = {
                 item : item,
                 previous : this.tail,
-                next : null
+                next : undefined
             };
 
             if (typeof this.tail !== 'undefined') {
@@ -61,16 +61,16 @@ define([
                 item.next.previous = item.previous;
             } else if (typeof item.previous  !== 'undefined') {
                 // Remove last node.
-                item.previous.next = null;
+                item.previous.next = undefined;
                 this.tail = item.previous;
             } else if (typeof item.next !== 'undefined') {
                 // Remove first node.
-                item.next.previous = null;
+                item.next.previous = undefined;
                 this.head = item.next;
             } else {
                 // Remove last node in linked list.
-                this.head = null;
-                this.tail = null;
+                this.head = undefined;
+                this.tail = undefined;
             }
 
             --this.length;

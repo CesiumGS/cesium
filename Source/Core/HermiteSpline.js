@@ -1,15 +1,15 @@
 /*global define*/
-define([
+define(['./defaultValue',
         './DeveloperError',
         './Matrix4',
         './Cartesian4',
         './TridiagonalSystemSolver'
-    ],
-    function(
-        DeveloperError,
-        Matrix4,
-        Cartesian4,
-        TridiagonalSystemSolver) {
+        ], function(
+                defaultValue,
+                DeveloperError,
+                Matrix4,
+                Cartesian4,
+                TridiagonalSystemSolver) {
     "use strict";
 
     /**
