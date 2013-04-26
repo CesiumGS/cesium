@@ -6,8 +6,8 @@ varying vec2 v_textureCoordinates;
 const float vignetteAmount = 1.0;
 const float vignetteGamma = 4.0;
 const float lomoColorTemperature = 4500.0; 
-const float lomoSaturation = 0.8;
-const float lomoFinalMultiplier = 1.3;
+const float lomoSaturation = 0.7;
+const float lomoFinalMultiplier = 1.2;
 
 // TODO: add to BuiltinFunctions.glsl
 const float square_root_two = 1.414213562;
