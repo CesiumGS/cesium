@@ -77,7 +77,7 @@ define([
         var context = new Context(canvas);
 
         this._frameState = new FrameState();
-        this._passState = new PassState();
+        this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;
         this._primitives = new CompositePrimitive();
@@ -92,15 +92,15 @@ define([
         this._commandList = [];
         this._frustumCommandsList = [];
 
-        this._clearColorCommand = new ClearCommand(context.createClearState({
-            color : new Color()
-        }));
-        this._clearColorCommand.owner = this;
-        this._clearDepthStencilCommand = new ClearCommand(context.createClearState({
-            depth : 1.0,
-            stencil : 0.0
-        }));
-        this._clearDepthStencilCommand.owner = this;
+        this._clearColorCommand = new ClearCommand();
+        this._clearColorCommand.color = new Color();
+        this._clearColorCommand.owner = true;
+
+        var clearDepthStencilCommand = new ClearCommand();
+        clearDepthStencilCommand.depth = 1.0;
+        clearDepthStencilCommand.stencil = 1.0;
+        clearDepthStencilCommand.owner = this;
+        this._clearDepthStencilCommand = clearDepthStencilCommand;
 
         /**
          * The {@link SkyBox} used to draw the stars.
@@ -467,7 +467,7 @@ define([
         var skyAtmosphereCommand = (typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, scene._frameState) : undefined;
 
         var clear = scene._clearColorCommand;
-        Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.clearState.color);
+        Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.color);
         clear.execute(context, passState);
 
         // Ideally, we would render the sky box and atmosphere last for

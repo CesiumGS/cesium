@@ -131,17 +131,23 @@ define([
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
 
-        this._clearDepthCommand = new ClearCommand();
-        this._clearDepthCommand.owner = this;
+        var clearDepthCommand = new ClearCommand();
+        clearDepthCommand.depth = 1.0;
+        clearDepthCommand.stencil = 0;
+        clearDepthCommand.owner = this;
+        this._clearDepthCommand = clearDepthCommand;
 
-        this._depthCommand = new DrawCommand(this);
+        this._depthCommand = new DrawCommand();
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
         this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
+        this._depthCommand.owner = this;
 
-        this._northPoleCommand = new DrawCommand(this);
+        this._northPoleCommand = new DrawCommand();
         this._northPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
-        this._southPoleCommand = new DrawCommand(this);
+        this._northPoleCommand.owner = this;
+        this._southPoleCommand = new DrawCommand();
         this._southPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        this._southPoleCommand.owner = this;
 
         this._drawNorthPole = false;
         this._drawSouthPole = false;
@@ -541,10 +547,6 @@ define([
                         blue : false,
                         alpha : false
                     }
-                });
-                this._clearDepthCommand.clearState = context.createClearState({ // Clear depth only
-                    depth : 1.0,
-                    stencil : 0.0
                 });
             } else {
                 this._rsColor = context.createRenderState({

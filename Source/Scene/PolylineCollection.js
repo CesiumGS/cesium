@@ -461,16 +461,17 @@ define([
         commandLists.colorList = emptyArray;
         commandLists.pickList = emptyArray;
 
+        if ((typeof this._rs === 'undefined') || (this._rs.depthTest.enabled !== useDepthTest)) {
+            this._rs = context.createRenderState({
+                blending : BlendingState.ALPHA_BLEND,
+                depthMask : !useDepthTest,
+                depthTest : {
+                    enabled : useDepthTest
+                }
+            });
+        }
+
         if (pass.color) {
-            if (typeof this._rs === 'undefined') {
-                this._rs = context.createRenderState({
-                    blending : BlendingState.ALPHA_BLEND
-                });
-            }
-
-            this._rs.depthMask = !useDepthTest;
-            this._rs.depthTest.enabled = useDepthTest;
-
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
@@ -519,7 +520,8 @@ define([
                     if (mId !== currentId) {
                         if (typeof currentId !== 'undefined') {
                             if (commandIndex >= commandsLength) {
-                                command = new DrawCommand(polylineCollection);
+                                command = new DrawCommand();
+                                command.owner = polylineCollection;
                                 commands.push(command);
                             } else {
                                 command = commands[commandIndex];
@@ -558,7 +560,8 @@ define([
 
                 if (typeof currentId !== 'undefined' && count > 0) {
                     if (commandIndex >= commandsLength) {
-                        command = new DrawCommand(polylineCollection);
+                        command = new DrawCommand();
+                        command.owner = polylineCollection;
                         commands.push(command);
                     } else {
                         command = commands[commandIndex];

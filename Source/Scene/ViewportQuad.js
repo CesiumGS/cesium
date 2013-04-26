@@ -49,8 +49,9 @@ define([
     var ViewportQuad = function(rectangle, material) {
 
         this._va = undefined;
-        this._overlayCommand = new DrawCommand(this);
+        this._overlayCommand = new DrawCommand();
         this._overlayCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        this._overlayCommand.owner = this;
         this._commandLists = new CommandLists();
         this._commandLists.overlayList.push(this._overlayCommand);
 
@@ -179,8 +180,13 @@ define([
         if (typeof this._va === 'undefined') {
             this._va = getVertexArray(context);
             this._overlayCommand.vertexArray = this._va;
+        }
+
+        var rs = this._overlayCommand.renderState;
+        if ((typeof rs === 'undefined') || !BoundingRectangle.equals(rs.viewport, this.rectangle)) {
             this._overlayCommand.renderState = context.createRenderState({
-                blending : BlendingState.ALPHA_BLEND
+                blending : BlendingState.ALPHA_BLEND,
+                viewport : this.rectangle
             });
         }
 
@@ -200,7 +206,6 @@ define([
                     this._overlayCommand.shaderProgram, ViewportQuadVS, fsSource, attributeIndices);
             }
 
-            this._overlayCommand.renderState.viewport = this.rectangle;
             this._overlayCommand.uniformMap = this._material._uniforms;
             commandList.push(this._commandLists);
         }

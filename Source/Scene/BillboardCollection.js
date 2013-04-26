@@ -1102,7 +1102,7 @@ define([
             for (j = 0; j < vaLength; ++j) {
                 command = colorList[j];
                 if (typeof command === 'undefined') {
-                    command = colorList[j] = new DrawCommand(this);
+                    command = colorList[j] = new DrawCommand();
                 }
 
                 command.boundingVolume = boundingVolume;
@@ -1113,6 +1113,7 @@ define([
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
+                command.owner = this;
             }
         }
         if (picking) {
@@ -1133,7 +1134,7 @@ define([
             for (j = 0; j < vaLength; ++j) {
                 command = pickList[j];
                 if (typeof command === 'undefined') {
-                    command = pickList[j] = new DrawCommand(this);
+                    command = pickList[j] = new DrawCommand();
                 }
 
                 command.boundingVolume = boundingVolume;
@@ -1144,6 +1145,7 @@ define([
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
+                command.owner = this;
             }
         }
 

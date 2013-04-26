@@ -897,7 +897,8 @@ define([
                     ++tileCommandIndex;
                     var command = tileCommands[tileCommandIndex];
                     if (typeof command === 'undefined') {
-                        command = new DrawCommand(tile);
+                        command = new DrawCommand();
+                        command.owner = tile;
                         tileCommands[tileCommandIndex] = command;
                         tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap();
                     }

@@ -11,7 +11,7 @@ define(function() {
      * @see ClearCommand
      * @see PassState
      */
-    var DrawCommand = function(owner) {
+    var DrawCommand = function() {
         /**
          * The bounding volume of the geometry.  This is used for culling and frustum selection.
          * <p>
@@ -138,7 +138,7 @@ define(function() {
          *
          * @see Scene#debugCommandFilter
          */
-        this.owner = owner;
+        this.owner = undefined;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.

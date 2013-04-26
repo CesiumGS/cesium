@@ -69,7 +69,8 @@ define([
         this.morphTime = 1.0;
 
         this._ellipsoid = ellipsoid;
-        this._command = new DrawCommand(this);
+        this._command = new DrawCommand();
+        this._command.owner = this;
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
 

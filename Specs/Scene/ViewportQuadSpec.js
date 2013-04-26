@@ -11,6 +11,7 @@ defineSuite([
          'Core/BoundingRectangle',
          'Core/Cartesian3',
          'Core/Color',
+         'Renderer/ClearCommand',
          'Scene/Material'
      ], function(
          ViewportQuad,
@@ -24,6 +25,7 @@ defineSuite([
          BoundingRectangle,
          Cartesian3,
          Color,
+         ClearCommand,
          Material) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -91,7 +93,7 @@ defineSuite([
     });
 
     it('does not render when show is false', function() {
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         viewportQuad.show = false;
@@ -100,7 +102,7 @@ defineSuite([
     });
 
     it('renders material', function() {
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, viewportQuad);
@@ -121,7 +123,7 @@ defineSuite([
             viewportQuad.material = Material.fromType(context, Material.ImageType);
             viewportQuad.material.uniforms.image = texture;
 
-            context.clear();
+            ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
             render(context, frameState, viewportQuad);

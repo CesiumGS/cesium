@@ -7,6 +7,7 @@ defineSuite([
          'Core/PrimitiveType',
          'Core/IndexDatatype',
          'Renderer/BufferUsage',
+         'Renderer/ClearCommand',
          'Renderer/VertexLayout'
      ], 'Renderer/VertexArrayFactory', function(
          createContext,
@@ -16,6 +17,7 @@ defineSuite([
          PrimitiveType,
          IndexDatatype,
          BufferUsage,
+         ClearCommand,
          VertexLayout) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -293,7 +295,7 @@ defineSuite([
             '}';
         sp = context.createShaderProgram(vs, fs, attributeIndices);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
@@ -347,7 +349,7 @@ defineSuite([
             '}';
         sp = context.createShaderProgram(vs, fs, attributeIndices);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
@@ -424,7 +426,7 @@ defineSuite([
             '}';
         sp = context.createShaderProgram(vs, fs, attributeIndices);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
@@ -496,7 +498,7 @@ defineSuite([
             '}';
         sp = context.createShaderProgram(vs, fs, attributeIndices);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({

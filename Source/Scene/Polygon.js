@@ -776,7 +776,7 @@ define([
             for (var i = 0; i < length; ++i) {
                 command = commands[i];
                 if (typeof command === 'undefined') {
-                    command = commands[i] = new DrawCommand(this);
+                    command = commands[i] = new DrawCommand();
                 }
 
                 command.boundingVolume = boundingVolume;
@@ -785,6 +785,7 @@ define([
                 command.uniformMap = this._drawUniforms;
                 command.vertexArray = vas[i];
                 command.renderState = this._rs;
+                command.owner = this;
             }
         }
 
@@ -811,7 +812,7 @@ define([
             for (var j = 0; j < length; ++j) {
                 command = commands[j];
                 if (typeof command === 'undefined') {
-                    command = commands[j] = new DrawCommand(this);
+                    command = commands[j] = new DrawCommand();
                 }
 
                 command.boundingVolume = boundingVolume;
@@ -820,6 +821,7 @@ define([
                 command.uniformMap = this._pickUniforms;
                 command.vertexArray = vas[j];
                 command.renderState = this._rs;
+                command.owner = this;
             }
         }
 
