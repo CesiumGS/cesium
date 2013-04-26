@@ -208,7 +208,7 @@ var afterAll;
             }
 
             env.addReporter(reporter);
-            env.specFilter = reporter.specFilter;
+            //env.specFilter = reporter.specFilter;
             env.execute();
         };
 
