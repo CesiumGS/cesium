@@ -315,7 +315,7 @@ define([
      */
     CustomSensorVolume.prototype.update = function(context, frameState, commandList) {
         this._mode = frameState.mode;
-        if (typeof this.show === 'undefined' || this._mode !== SceneMode.SCENE3D) {
+        if (!this.show || this._mode !== SceneMode.SCENE3D) {
             return;
         }
 
