@@ -38,7 +38,7 @@ bool ellipsoidSensorIntersection(float pointInEllipsoid)
 #ifdef GL_OES_standard_derivatives
     float epsilon = max(abs(dFdx(t)), abs(dFdy(t)));
 
-    epsilon = clamp(epsilon, 0.0, 0.5);
+    epsilon = clamp(epsilon, 0.0, 0.015);
 #else
     // TODO:  Don't hardcode this.
     float epsilon = 1.0 / 500.0;
