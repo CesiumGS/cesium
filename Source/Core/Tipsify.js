@@ -1,10 +1,10 @@
 /*global define*/
 define([
-        './defaultValue',
-        './DeveloperError'
+    './DeveloperError',
+    './defaultValue'
     ], function(
-        defaultValue,
-        DeveloperError) {
+        DeveloperError,
+        defaultValue) {
     "use strict";
 
     /**
@@ -40,10 +40,10 @@ define([
      * var indices = [0, 1, 2, 3, 4, 5];
      * var maxIndex = 5;
      * var cacheSize = 3;
-     * var acmr = Tipsify.calculateACMR(indices, maxIndex, cacheSize);
+     * var acmr = Tipsify.calculateACMR({"indices":indices, "maxIndex":maxIndex, "cacheSize":cacheSize});
      */
     Tipsify.calculateACMR = function(description) {
-        description = description || {};
+        description = defaultValue(description, {});
         var indices = description.indices;
         var maximumIndex = description.maximumIndex;
         var cacheSize = defaultValue(description.cacheSize, 24);
@@ -115,10 +115,10 @@ define([
      * var indices = [0, 1, 2, 3, 4, 5];
      * var maxIndex = 5;
      * var cacheSize = 3;
-     * var reorderedIndices = Tipsify.tipsify(indices, maxIndex, cacheSize);
+     * var reorderedIndices = Tipsify.tipsify({"indices":indices, "maxIndex":maxIndex, "cacheSize":cacheSize});
      */
     Tipsify.tipsify = function(description) {
-        description = description || {};
+        description = defaultValue(description, {});
         var indices = description.indices;
         var maximumIndex = description.maximumIndex;
         var cacheSize = defaultValue(description.cacheSize, 24);

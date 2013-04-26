@@ -2,11 +2,13 @@
 define([
         './DeveloperError',
         './Cartesian2',
-        './PrimitiveType'
+        './PrimitiveType',
+        './defaultValue'
     ], function(
         DeveloperError,
         Cartesian2,
-        PrimitiveType) {
+        PrimitiveType,
+        defaultValue) {
     "use strict";
 
     /**
@@ -24,8 +26,8 @@ define([
          * @exception {DeveloperError} Resolution must be greater than one in both the x and y directions.
          */
         compute : function(template) {
-            template = template || {};
-            var resolution = template.resolution || new Cartesian2(2, 2);
+            template = defaultValue(template, {});
+            var resolution = (typeof template.resolution === "undefined") ?  new Cartesian2(2, 2) : template.resolution;
             var onInterpolation = template.onInterpolation; // Can be undefined
 
             if (resolution.x <= 1 || resolution.y <= 1) {

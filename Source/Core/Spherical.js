@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['./defaultValue'], function(defaultValue) {
     "use strict";
 
     /**
@@ -13,9 +13,9 @@ define(function() {
      * @param {Number} [magnitude=1.0] The linear coordinate measured from the origin.
      */
     var Spherical = function(clock, cone, magnitude) {
-        this.clock = typeof clock === 'undefined' ? 0.0 : clock;
-        this.cone = typeof cone === 'undefined' ? 0.0 : cone;
-        this.magnitude = typeof magnitude === 'undefined' ? 1.0 : magnitude;
+        this.clock = defaultValue(clock, 0.0);
+        this.cone = defaultValue(cone, 0.0);
+        this.magnitude = defaultValue(magnitude, 1.0);
     };
 
     /**
@@ -28,9 +28,7 @@ define(function() {
      * @returns The modified result parameter, or a new instance if one was not provided.
      */
     Spherical.fromCartesian3 = function(cartesian3, result) {
-        if (typeof result === 'undefined') {
-            result = new Spherical();
-        }
+        result = (typeof result === 'undefined') ? new Spherical() : result;
         var x = cartesian3.x;
         var y = cartesian3.y;
         var z = cartesian3.z;
@@ -51,9 +49,7 @@ define(function() {
      * @return The modified result parameter or a new instance if result was undefined.
      */
     Spherical.clone = function(spherical, result) {
-        if (typeof result === 'undefined') {
-            result = new Spherical();
-        }
+        result = (typeof result === 'undefined') ? new Spherical() : result;
         result.clock = spherical.clock;
         result.cone = spherical.cone;
         result.magnitude = spherical.magnitude;
@@ -70,9 +66,7 @@ define(function() {
      * @return The modified result parameter or a new instance if result was undefined.
      */
     Spherical.normalize = function(spherical, result) {
-        if (typeof result === 'undefined') {
-            result = new Spherical();
-        }
+        result = (typeof result === 'undefined') ? new Spherical() : result;
         result.clock = spherical.clock;
         result.cone = spherical.cone;
         result.magnitude = 1.0;
@@ -108,7 +102,7 @@ define(function() {
      * @return true if the first spherical is within the provided epsilon of the second spherical, false otherwise.
      */
     Spherical.equalsEpsilon = function(left, right, epsilon) {
-        epsilon = typeof epsilon === 'undefined' ? 0.0 : epsilon;
+        epsilon = defaultValue(epsilon, 0.0);
         return (left === right) ||
                ((typeof left !== 'undefined') &&
                 (typeof right !== 'undefined') &&
