@@ -31,14 +31,16 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     return czm_phong(normalize(positionToEyeEC), material);
 }
 
-bool ellipsoidSensorIntersection(float pointInEllipsoid)
+bool ellipsoidSensorIntersection(czm_raySegment ellipsoidInterval, float pointInEllipsoid)
 {
+    if (czm_isEmpty(ellipsoidInterval)) {
+        return false;
+    }
+
     float t = pointInEllipsoid;
 
 #ifdef GL_OES_standard_derivatives
     float epsilon = max(abs(dFdx(t)), abs(dFdy(t)));
-
-    epsilon = clamp(epsilon, 0.0, 0.015);
 #else
     // TODO:  Don't hardcode this.
     float epsilon = 1.0 / 500.0;
@@ -50,9 +52,9 @@ bool ellipsoidSensorIntersection(float pointInEllipsoid)
     return czm_equalsEpsilon(t, 1.0, epsilon);
 }
 
-vec4 shade(float pointInEllipsoid)
+vec4 shade(czm_raySegment ellipsoidInterval, float pointInEllipsoid)
 {
-    if (u_showIntersection && ellipsoidSensorIntersection(pointInEllipsoid))
+    if (u_showIntersection && ellipsoidSensorIntersection(ellipsoidInterval, pointInEllipsoid))
     {
         return getIntersectionColor(u_sensorRadius, v_positionEC);
     }
@@ -99,5 +101,8 @@ void main()
         discard;
     }
 
-    gl_FragColor = shade(pointInEllipsoid);
+    czm_ray ray = czm_ray(vec3(0.0), normalize(v_positionEC));  // Ray from eye to fragment in eye coordinates
+    czm_raySegment ellipsoidInterval = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
+
+    gl_FragColor = shade(ellipsoidInterval, pointInEllipsoid);
 }
