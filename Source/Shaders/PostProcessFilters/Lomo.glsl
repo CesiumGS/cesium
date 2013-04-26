@@ -15,7 +15,7 @@ const float square_root_two = 1.414213562;
 // A simple gamma function
 vec3 gammaCorrect(vec3 rgb, float gamma)
 {
-	return pow(rgb, vec3(1.0 / gamma));
+    return pow(rgb, vec3(1.0 / gamma));
 }
 
 // A vignette function based on gamma (i.e. rather than smoothstep)
@@ -160,7 +160,7 @@ vec3 lomoGradeFilter(vec3 rgb, float saturation, float colorTemperature, float f
 
 void main(void)
 {
-	// Assume incoming render is largely sRGB aerial imagery.
+    // Assume incoming render is largely sRGB aerial imagery.
     vec3 sRGB = texture2D(czm_color, v_textureCoordinates).rgb;
 
     // Approximate sRGB -> linear
