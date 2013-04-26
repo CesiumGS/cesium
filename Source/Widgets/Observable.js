@@ -21,7 +21,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
      * @see <a href='http://knockoutjs.com/'>Knockout homepage</a>.
      * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Architecture'>Widget Architecture</a>.
      */
-    var Observable = function Observable() {
+    var Observable = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 

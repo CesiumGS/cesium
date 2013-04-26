@@ -37,7 +37,7 @@ define([
      *
      * @see TerrainProvider
      */
-    var CesiumTerrainProvider = function CesiumTerrainProvider(description) {
+    var CesiumTerrainProvider = function(description) {
         if (typeof description === 'undefined' || typeof description.url === 'undefined') {
             throw new DeveloperError('description.url is required.');
         }

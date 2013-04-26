@@ -43,7 +43,7 @@ define([
      *        globe is covered in the longitude direction and an equal distance is covered in the latitude
      *        direction, resulting in a square projection.
      */
-    var WebMercatorTilingScheme = function WebMercatorTilingScheme(description) {
+    var WebMercatorTilingScheme = function(description) {
         description = defaultValue(description, {});
 
         this._ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);

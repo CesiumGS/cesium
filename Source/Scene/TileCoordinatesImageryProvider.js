@@ -24,7 +24,7 @@ define([
      * @param {Number} [description.tileWidth=256] The width of the tile for level-of-detail selection purposes.
      * @param {Number} [description.tileHeight=256] The height of the tile for level-of-detail selection purposes.
      */
-    var TileCoordinatesImageryProvider = function TileCoordinatesImageryProvider(description) {
+    var TileCoordinatesImageryProvider = function(description) {
         description = defaultValue(description, {});
 
         this._tilingScheme = defaultValue(description.tilingScheme, new GeographicTilingScheme());

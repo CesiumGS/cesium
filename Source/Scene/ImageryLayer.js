@@ -117,7 +117,7 @@ define([
      *        by the WebGL stack will be used.  Larger values make the imagery look better in horizon
      *        views.
      */
-    var ImageryLayer = function ImageryLayer(imageryProvider, description) {
+    var ImageryLayer = function(imageryProvider, description) {
         this._imageryProvider = imageryProvider;
 
         description = defaultValue(description, {});

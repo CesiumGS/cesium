@@ -48,7 +48,7 @@ define([
      *     url : 'http://tile.openstreetmap.org/'
      * });
      */
-    var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(description) {
+    var OpenStreetMapImageryProvider = function(description) {
         description = defaultValue(description, {});
 
         var url = defaultValue(description.url, 'http://tile.openstreetmap.org/');

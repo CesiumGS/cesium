@@ -34,7 +34,7 @@ define([
      * @param {Number} [description.samplesPerXysFile=1000] The number of samples in each XYS file.
      * @param {Number} [description.totalSamples=27426] The total number of samples in all XYS files.
      */
-    var Iau2006XysData = function Iau2006XysData(description) {
+    var Iau2006XysData = function(description) {
         description = description || {};
 
         this._xysFileUrlTemplate = defaultValue(description.xysFileUrlTemplate, buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'));

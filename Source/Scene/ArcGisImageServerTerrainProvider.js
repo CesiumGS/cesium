@@ -57,7 +57,7 @@ define([
      * });
      * centralBody.terrainProvider = terrainProvider;
      */
-    var ArcGisImageServerTerrainProvider = function ArcGisImageServerTerrainProvider(description) {
+    var ArcGisImageServerTerrainProvider = function(description) {
         if (typeof description === 'undefined' || typeof description.url === 'undefined') {
             throw new DeveloperError('description.url is required.');
         }

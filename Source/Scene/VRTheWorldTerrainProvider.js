@@ -63,7 +63,7 @@ define([
      * });
      * centralBody.terrainProvider = terrainProvider;
      */
-    var VRTheWorldTerrainProvider = function VRTheWorldTerrainProvider(description) {
+    var VRTheWorldTerrainProvider = function(description) {
         if (typeof description === 'undefined' || typeof description.url === 'undefined') {
             throw new DeveloperError('description.url is required.');
         }

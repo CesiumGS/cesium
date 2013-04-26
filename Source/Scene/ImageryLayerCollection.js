@@ -24,7 +24,7 @@ define([
      * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Adjustment.html">Cesium Sandcastle Imagery Adjustment Demo</a>
      * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html">Cesium Sandcastle Imagery Manipulation Demo</a>
      */
-    var ImageryLayerCollection = function ImageryLayerCollection() {
+    var ImageryLayerCollection = function() {
         this._layers = [];
 
         /**

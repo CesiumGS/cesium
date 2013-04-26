@@ -25,7 +25,7 @@ define([
      * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html">Cesium Sandcastle Imagery Layers Demo</a>
      * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html">Cesium Sandcastle Imagery Manipulation Demo</a>
      */
-    var ImageryProvider = function ImageryProvider() {
+    var ImageryProvider = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 
