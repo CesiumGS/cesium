@@ -16,7 +16,7 @@ Our mission is to create the leading web-based globe and map for visualizing dyn
 
 ### Get Started ###
 
-See the [Quick Start](http://cesium.agi.com/quickstart.html).  Have questions?  Ask them on the [forum](https://groups.google.com/d/forum/cesium-dev).
+See the [Getting Started](http://cesium.agi.com/2013/04/12/Cesium-up-and-running/).  Have questions?  Ask them on the [forum](https://groups.google.com/d/forum/cesium-dev).
 
 Interested in contributing?  See the [wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki).
 

@@ -1600,18 +1600,37 @@ defineSuite([
         expect(pickedObject).toEqual(p);
     });
 
-    it('is not picked', function() {
+    it('is not picked (show === false)', function() {
         polylines.add({
             positions : [{
-                x : -1.0,
+                x : 0.0,
                 y : -1.0,
                 z : 0.0
             }, {
-                x : -1.0,
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }],
+            show : false
+        });
+
+        var pickedObject = pick(context, frameState, polylines, 0, 0);
+        expect(pickedObject).toBeUndefined();
+    });
+
+    it('is not picked (alpha === 0.0)', function() {
+        var p = polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            }, {
+                x : 0.0,
                 y : 1.0,
                 z : 0.0
             }]
         });
+        p.getMaterial().uniforms.color.alpha = 0.0;
 
         var pickedObject = pick(context, frameState, polylines, 0, 0);
         expect(pickedObject).toBeUndefined();

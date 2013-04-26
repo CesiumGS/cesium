@@ -3,12 +3,16 @@ define([
         'require',
         './buildModuleUrl',
         './defaultValue',
-        '../ThirdParty/when'
+        './isCrossOriginUrl',
+        '../ThirdParty/when',
+        '../ThirdParty/Uri'
     ], function(
         require,
         buildModuleUrl,
         defaultValue,
-        when) {
+        isCrossOriginUrl,
+        when,
+        Uri) {
     "use strict";
 
     function completeTask(processor, event) {
@@ -26,9 +30,39 @@ define([
         delete deferreds[id];
     }
 
-    var bootstrapperUrl = buildModuleUrl('Workers/cesiumWorkerBootstrapper.js');
+    var _bootstrapperUrl;
+    function getBootstrapperUrl() {
+        if (typeof _bootstrapperUrl !== 'undefined') {
+            return _bootstrapperUrl;
+        }
+
+        _bootstrapperUrl = buildModuleUrl('Workers/cesiumWorkerBootstrapper.js');
+
+        if (isCrossOriginUrl(_bootstrapperUrl)) {
+            //to load cross-origin, create a shim worker from a blob URL
+            var script = 'importScripts("' + _bootstrapperUrl + '");';
+
+            var blob;
+            try {
+                blob = new Blob([script], {
+                    type : 'application/javascript'
+                });
+            } catch (e) {
+                var BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder;
+                var blobBuilder = new BlobBuilder();
+                blobBuilder.append(script);
+                blob = blobBuilder.getBlob('application/javascript');
+            }
+
+            var URL = window.URL || window.webkitURL;
+            _bootstrapperUrl = URL.createObjectURL(blob);
+        }
+
+        return _bootstrapperUrl;
+    }
 
     function createWorker(processor) {
+        var bootstrapperUrl = getBootstrapperUrl();
         var worker = new Worker(bootstrapperUrl);
         worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
 
@@ -39,10 +73,13 @@ define([
         };
 
         if (typeof require.toUrl !== 'undefined') {
-            bootstrapMessage.loaderConfig.baseUrl = '..';
+            var resolvedBootstrapperUrl = new Uri(buildModuleUrl('Workers/cesiumWorkerBootstrapper.js')).resolve(new Uri(document.location.href));
+            var baseUrl = new Uri('..').resolve(resolvedBootstrapperUrl).toString();
+            bootstrapMessage.loaderConfig.baseUrl = baseUrl;
         } else {
+            var workersUrl = new Uri(buildModuleUrl('Workers')).resolve(new Uri(document.location.href)).toString();
             bootstrapMessage.loaderConfig.paths = {
-                'Workers' : '.'
+                'Workers' : workersUrl
             };
         }
 

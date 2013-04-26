@@ -21,11 +21,44 @@ define([
     };
 
     /**
+     * Returns a shader program from the cache, or creates and caches a new shader program,
+     * given the GLSL vertex and fragment shader source and attribute locations.
+     * <p>
+     * The difference between this and {@link ShaderCache#getShaderProgram}, is this is used to
+     * replace an existing reference to a shader program, which is passed as the first argument.
+     * </p>
+     *
+     * @memberof ShaderCache
+     *
+     * @param {ShaderProgram} shaderProgram The shader program that is being reassigned.  This can be <code>undefined</code>.
+     * @param {String} vertexShaderSource The GLSL source for the vertex shader.
+     * @param {String} fragmentShaderSource The GLSL source for the fragment shader.
+     * @param {Object} attributeLocations Indices for the attribute inputs to the vertex shader.
+     *
+     * @returns {ShaderProgram} The cached or newly created shader program.
+     *
+     * @see ShaderCache#getShaderProgram
+     *
+     * @example
+     * this._shaderProgram = context.getShaderCache().replaceShaderProgram(
+     *     this._shaderProgram, vs, fs, attributeLocations);
+     */
+    ShaderCache.prototype.replaceShaderProgram = function(shaderProgram, vertexShaderSource, fragmentShaderSource, attributeLocations) {
+        if (typeof shaderProgram !== 'undefined') {
+            shaderProgram.release();
+        }
+
+        return this.getShaderProgram(vertexShaderSource, fragmentShaderSource, attributeLocations);
+    };
+
+    /**
      * DOC_TBA
      *
      * @memberof ShaderCache
      *
      * @returns {ShaderProgram} DOC_TBA.
+     *
+     * @see ShaderCache#replaceShaderProgram
      */
     ShaderCache.prototype.getShaderProgram = function(vertexShaderSource, fragmentShaderSource, attributeLocations) {
         // TODO: compare attributeLocations!
@@ -90,7 +123,7 @@ define([
             }
         }
 
-        return null;
+        return undefined;
     };
 
     /**

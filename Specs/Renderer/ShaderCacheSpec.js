@@ -82,6 +82,26 @@ defineSuite([
         cache.destroy();
     });
 
+    it('replaces a shader program', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
+        var fs2 = 'void main() { gl_FragColor = vec4(0.5); }';
+        var attributeLocations = {
+            position : 0
+        };
+
+        var cache = new ShaderCache(context);
+        var sp;
+
+        sp = cache.replaceShaderProgram(sp, vs, fs, attributeLocations);
+        var sp2 = cache.replaceShaderProgram(sp, vs, fs2, attributeLocations);
+
+        expect(sp._cachedShader.count).toEqual(0);
+        expect(sp2._cachedShader.count).toEqual(1);
+
+        cache.destroy();
+    });
+
     it('avoids thrashing', function() {
         var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';

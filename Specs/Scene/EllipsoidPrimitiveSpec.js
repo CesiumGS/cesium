@@ -135,11 +135,20 @@ defineSuite([
         expect(pickedObject).toEqual(ellipsoid);
     });
 
-    it('is not picked', function() {
+    it('is not picked (show === false)', function() {
         ellipsoid.radii = new Cartesian3(1.0, 1.0, 1.0);
         ellipsoid.show = false;
 
-        expect(render(context, frameState, ellipsoid)).toEqual(0);
+        var pickedObject = pick(context, frameState, ellipsoid, 0, 0);
+        expect(pickedObject).not.toBeDefined();
+    });
+
+    it('is not picked (alpha === 0.0)', function() {
+        ellipsoid.radii = new Cartesian3(1.0, 1.0, 1.0);
+        ellipsoid.material.uniforms.color.alpha = 0.0;
+
+        var pickedObject = pick(context, frameState, ellipsoid, 0, 0);
+        expect(pickedObject).not.toBeDefined();
     });
 
     it('isDestroyed', function() {

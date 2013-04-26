@@ -57,6 +57,34 @@ defineSuite([
         expect(end).toEqual(crs.getEndTangent());
     });
 
+    it('get start and end tangents when they are undefined', function() {
+        var controlPoint0 = Cartesian3.clone(points[0].point);
+        var controlPoint1 = Cartesian3.clone(points[1].point);
+        var controlPoint2 = Cartesian3.clone(points[2].point);
+
+        var start = controlPoint1
+                       .multiplyByScalar(2.0)
+                       .subtract(controlPoint2)
+                       .subtract(controlPoint0)
+                       .multiplyByScalar(0.5);
+
+        var n = points.length - 1;
+
+        var controlPointn0 = Cartesian3.clone(points[n].point);
+        var controlPointn1 = Cartesian3.clone(points[n - 1].point);
+        var controlPointn2 = Cartesian3.clone(points[n - 2].point);
+
+        var end = controlPointn0
+                       .subtract(controlPointn1.multiplyByScalar(2.0))
+                       .add(controlPointn2)
+                       .multiplyByScalar(0.5);
+
+        var crs = new CatmullRomSpline(points);
+
+        expect(start).toEqual(crs.getStartTangent());
+        expect(end).toEqual(crs.getEndTangent());
+    });
+
     it('evaluate fails with undefined time', function() {
         var crs = new CatmullRomSpline(points);
 

@@ -1,5 +1,10 @@
 /*global define*/
-define(['./DeveloperError'], function(DeveloperError) {
+define([
+    './DeveloperError',
+    './defaultValue'
+    ], function(
+        DeveloperError,
+        defaultValue) {
     "use strict";
 
     /**
@@ -35,15 +40,15 @@ define(['./DeveloperError'], function(DeveloperError) {
      * var indices = [0, 1, 2, 3, 4, 5];
      * var maxIndex = 5;
      * var cacheSize = 3;
-     * var acmr = Tipsify.calculateACMR(indices, maxIndex, cacheSize);
+     * var acmr = Tipsify.calculateACMR({"indices":indices, "maxIndex":maxIndex, "cacheSize":cacheSize});
      */
     Tipsify.calculateACMR = function(description) {
-        description = description || {};
+        description = defaultValue(description, {});
         var indices = description.indices;
         var maximumIndex = description.maximumIndex;
-        var cacheSize = description.cacheSize || 24;
+        var cacheSize = defaultValue(description.cacheSize, 24);
 
-        if (!indices) {
+        if (typeof indices === 'undefined') {
             throw new DeveloperError('indices is required.');
         }
 
@@ -60,7 +65,7 @@ define(['./DeveloperError'], function(DeveloperError) {
         }
 
         // Compute the maximumIndex if not given
-        if(!maximumIndex) {
+        if(typeof maximumIndex === 'undefined') {
             maximumIndex = 0;
             var currentIndex = 0;
             var intoIndices = indices[currentIndex];
@@ -110,13 +115,13 @@ define(['./DeveloperError'], function(DeveloperError) {
      * var indices = [0, 1, 2, 3, 4, 5];
      * var maxIndex = 5;
      * var cacheSize = 3;
-     * var reorderedIndices = Tipsify.tipsify(indices, maxIndex, cacheSize);
+     * var reorderedIndices = Tipsify.tipsify({"indices":indices, "maxIndex":maxIndex, "cacheSize":cacheSize});
      */
     Tipsify.tipsify = function(description) {
-        description = description || {};
+        description = defaultValue(description, {});
         var indices = description.indices;
         var maximumIndex = description.maximumIndex;
-        var cacheSize = description.cacheSize || 24;
+        var cacheSize = defaultValue(description.cacheSize, 24);
 
         var cursor;
 
@@ -166,7 +171,7 @@ define(['./DeveloperError'], function(DeveloperError) {
             return n;
         }
 
-        if (!indices) {
+        if (typeof indices === 'undefined') {
             throw new DeveloperError('indices is required.');
         }
         var numIndices = indices.length;
@@ -186,7 +191,7 @@ define(['./DeveloperError'], function(DeveloperError) {
         var currentIndex = 0;
         var intoIndices = indices[currentIndex];
         var endIndex = numIndices;
-        if (maximumIndex) {
+        if (typeof maximumIndex !== 'undefined') {
             maximumIndexPlusOne = maximumIndex + 1;
         } else {
             while (currentIndex < endIndex) {

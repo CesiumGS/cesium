@@ -8,10 +8,13 @@ define(function() {
      * @alias ClearCommand
      * @constructor
      *
-     * @param {Object}[owner=undefined] The object who created this command.
-     * @param {ClearState}[clearState=undefined] The clear state.
+     * @param {ClearState} [clearState] The clear state.
+     * @param {Framebuffer} [framebuffer] The framebuffer to clear when the command is executed.
+     *
+     * @see DrawCommand
+     * @see PassState
      */
-    var ClearCommand = function(owner, clearState) {
+    var ClearCommand = function(clearState, framebuffer) {
         /**
          * The clear state.  If this property is undefined, a default clear state is used.
          *
@@ -28,7 +31,7 @@ define(function() {
          *
          * @default undefined
          */
-        this.framebuffer = undefined;
+        this.framebuffer = framebuffer;
 
         /**
          * The object who created this command.  This is useful for debugging command
@@ -42,7 +45,7 @@ define(function() {
          *
          * @see Scene#debugCommandFilter
          */
-        this.owner = owner;
+        this.owner = undefined;
     };
 
     /**
@@ -51,10 +54,10 @@ define(function() {
      * @memberof ClearCommand
      *
      * @param {Context} context The renderer context in which to clear.
-     * @param {Framebuffer} [framebuffer] The framebuffer to clear if one is not specified by the command.
+     * @param {PassState} [passState] The state for the current rendering pass.
      */
-    ClearCommand.prototype.execute = function(context, framebuffer) {
-        context.clear(this, framebuffer);
+    ClearCommand.prototype.execute = function(context, passState) {
+        context.clear(this, passState);
     };
 
     return ClearCommand;

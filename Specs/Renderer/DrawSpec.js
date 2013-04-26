@@ -527,7 +527,7 @@ defineSuite([
         };
 
         // 1 of 2.  Triangle fan passes the depth test.
-        context.clear(new ClearCommand(undefined, context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : {
                 red : 0.0,
                 green : 0.0,
@@ -542,7 +542,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         // 2 of 2.  Triangle fan fails the depth test.
-        context.clear(new ClearCommand(undefined, context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : {
                 red : 0.0,
                 green : 0.0,

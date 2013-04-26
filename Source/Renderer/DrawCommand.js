@@ -8,7 +8,8 @@ define(function() {
      * @alias DrawCommand
      * @constructor
      *
-     * @param {Object}[owner=undefined] The object who created this command.
+     * @see ClearCommand
+     * @see PassState
      */
     var DrawCommand = function(owner) {
         /**
@@ -160,10 +161,10 @@ define(function() {
      * @memberof DrawCommand
      *
      * @param {Context} context The renderer context in which to draw.
-     * @param {Framebuffer} [framebuffer] The framebuffer to which to draw if one is not specified by the command.
+     * @param {PassState} [passState] TBA.
      */
-    DrawCommand.prototype.execute = function(context, framebuffer) {
-        context.draw(this, framebuffer);
+    DrawCommand.prototype.execute = function(context, passState) {
+        context.draw(this, passState);
     };
 
     return DrawCommand;
