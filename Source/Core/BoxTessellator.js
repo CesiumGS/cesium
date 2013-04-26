@@ -3,12 +3,14 @@ define([
         './DeveloperError',
         './Cartesian3',
         './ComponentDatatype',
-        './PrimitiveType'
+        './PrimitiveType',
+        './defaultValue'
     ], function(
         DeveloperError,
         Cartesian3,
         ComponentDatatype,
-        PrimitiveType) {
+        PrimitiveType,
+        defaultValue) {
     "use strict";
 
     /**
@@ -27,7 +29,8 @@ define([
          * @exception {DeveloperError} All dimensions' components must be greater than or equal to zero.
          */
         compute : function(template) {
-            template = (typeof template !== 'undefined') ? template : {};
+            template = defaultValue(template, {});
+
             var minimumCorner;
             var maximumCorner;
 

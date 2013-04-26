@@ -5,14 +5,16 @@ define([
         './Cartesian2',
         './JulianDate',
         './ScreenSpaceEventType',
-        './KeyboardEventModifier'
+        './KeyboardEventModifier',
+        './defaultValue'
     ], function(
         DeveloperError,
         destroyObject,
         Cartesian2,
         JulianDate,
         ScreenSpaceEventType,
-        KeyboardEventModifier) {
+        KeyboardEventModifier,
+        defaultValue) {
     "use strict";
 
     /**
@@ -61,7 +63,7 @@ define([
         // or determined based on the platform?
         this._clickPixelTolerance = 5;
 
-        this._element = typeof element !== 'undefined' ? element : document;
+        this._element = defaultValue(element, document);
 
         this._register();
     };
