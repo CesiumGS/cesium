@@ -1890,7 +1890,7 @@ define([
             bitmask |= gl.STENCIL_BUFFER_BIT;
         }
 
-        var rs = (typeof clearCommand.renderState !== 'undefined') ? clearCommand.renderState : this._defaultRenderState;
+        var rs = defaultValue(clearCommand.renderState, this._defaultRenderState);
         applyRenderState(this, rs, passState);
 
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.

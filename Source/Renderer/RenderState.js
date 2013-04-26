@@ -1,8 +1,10 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/BoundingRectangle',
+        '../Core/RuntimeError',
         '../Core/WindingOrder',
         './CullFace',
         './DepthFunction',
@@ -12,8 +14,10 @@ define([
         './StencilOperation'
     ], function(
         Color,
+        defaultValue,
         DeveloperError,
         BoundingRectangle,
+        RuntimeError,
         WindingOrder,
         CullFace,
         DepthFunction,
@@ -32,91 +36,91 @@ define([
      * @see Context#createRenderState
      */
     var RenderState = function(context, renderState) {
-        var rs = (typeof renderState !== 'undefined') ? renderState : {};
-        var cull = (typeof rs.cull !== 'undefined') ? rs.cull : {};
-        var polygonOffset = (typeof rs.polygonOffset !== 'undefined') ? rs.polygonOffset : {};
-        var scissorTest = (typeof rs.scissorTest !== 'undefined') ? rs.scissorTest : {};
-        var scissorTestRectangle = (typeof scissorTest.rectangle !== 'undefined') ? scissorTest.rectangle : {};
-        var depthRange = (typeof rs.depthRange !== 'undefined') ? rs.depthRange : {};
-        var depthTest = (typeof rs.depthTest !== 'undefined') ? rs.depthTest : {};
-        var colorMask = (typeof rs.colorMask !== 'undefined') ? rs.colorMask : {};
-        var blending = (typeof rs.blending !== 'undefined') ? rs.blending : {};
-        var blendingColor = (typeof blending.color !== 'undefined') ? blending.color : {};
-        var stencilTest = (typeof rs.stencilTest !== 'undefined') ? rs.stencilTest : {};
-        var stencilTestFrontOperation = (typeof stencilTest.frontOperation !== 'undefined') ? stencilTest.frontOperation : {};
-        var stencilTestBackOperation = (typeof stencilTest.backOperation !== 'undefined') ? stencilTest.backOperation : {};
-        var sampleCoverage = (typeof rs.sampleCoverage !== 'undefined') ? rs.sampleCoverage : {};
+        var rs = defaultValue(renderState, {});
+        var cull = defaultValue(rs.cull, {});
+        var polygonOffset = defaultValue(rs.polygonOffset, {});
+        var scissorTest = defaultValue(rs.scissorTest, {});
+        var scissorTestRectangle = defaultValue(scissorTest.rectangle, {});
+        var depthRange = defaultValue(rs.depthRange, {});
+        var depthTest = defaultValue(rs.depthTest, {});
+        var colorMask = defaultValue(rs.colorMask, {});
+        var blending = defaultValue(rs.blending, {});
+        var blendingColor = defaultValue(blending.color, {});
+        var stencilTest = defaultValue(rs.stencilTest, {});
+        var stencilTestFrontOperation = defaultValue(stencilTest.frontOperation, {});
+        var stencilTestBackOperation = defaultValue(stencilTest.backOperation, {});
+        var sampleCoverage = defaultValue(rs.sampleCoverage, {});
         var viewport = rs.viewport;
 
-        this.frontFace = (typeof rs.frontFace === 'undefined') ? WindingOrder.COUNTER_CLOCKWISE : rs.frontFace;
+        this.frontFace = defaultValue(rs.frontFace, WindingOrder.COUNTER_CLOCKWISE);
         this.cull = {
-            enabled : (typeof cull.enabled === 'undefined') ? false : cull.enabled,
-            face : (typeof cull.face === 'undefined') ? CullFace.BACK : cull.face
+            enabled : defaultValue(cull.enabled, false),
+            face : defaultValue(cull.face, CullFace.BACK)
         };
-        this.lineWidth = (typeof rs.lineWidth === 'undefined') ? 1 : rs.lineWidth;
+        this.lineWidth = defaultValue(rs.lineWidth, 1.0);
         this.polygonOffset = {
-            enabled : (typeof polygonOffset.enabled === 'undefined') ? false : polygonOffset.enabled,
-            factor : (typeof polygonOffset.factor === 'undefined') ? 0 : polygonOffset.factor,
-            units : (typeof polygonOffset.units === 'undefined') ? 0 : polygonOffset.units
+            enabled : defaultValue(polygonOffset.enabled, false),
+            factor : defaultValue(polygonOffset.factor, 0),
+            units : defaultValue(polygonOffset.units, 0)
         };
         this.scissorTest = {
-            enabled : (typeof scissorTest.enabled === 'undefined') ? false : scissorTest.enabled,
+            enabled : defaultValue(scissorTest.enabled, false),
             rectangle : BoundingRectangle.clone(scissorTestRectangle)
         };
         this.depthRange = {
-            near : (typeof depthRange.near === 'undefined') ? 0 : depthRange.near,
-            far : (typeof depthRange.far === 'undefined') ? 1 : depthRange.far
+            near : defaultValue(depthRange.near, 0),
+            far : defaultValue(depthRange.far, 1)
         };
         this.depthTest = {
-            enabled : (typeof depthTest.enabled === 'undefined') ? false : depthTest.enabled,
-            func : (typeof depthTest.func === 'undefined') ? DepthFunction.LESS : depthTest.func // func, because function is a JavaScript keyword
+            enabled : defaultValue(depthTest.enabled, false),
+            func : defaultValue(depthTest.func, DepthFunction.LESS) // func, because function is a JavaScript keyword
         };
         this.colorMask = {
-            red : (typeof colorMask.red === 'undefined') ? true : colorMask.red,
-            green : (typeof colorMask.green === 'undefined') ? true : colorMask.green,
-            blue : (typeof colorMask.blue === 'undefined') ? true : colorMask.blue,
-            alpha : (typeof colorMask.alpha === 'undefined') ? true : colorMask.alpha
+            red : defaultValue(colorMask.red, true),
+            green : defaultValue(colorMask.green, true),
+            blue : defaultValue(colorMask.blue, true),
+            alpha : defaultValue(colorMask.alpha, true)
         };
-        this.depthMask = (typeof rs.depthMask === 'undefined') ? true : rs.depthMask;
-        this.stencilMask = (typeof rs.stencilMask === 'undefined') ? ~0 : rs.stencilMask;
+        this.depthMask = defaultValue(rs.depthMask, true);
+        this.stencilMask = defaultValue(rs.stencilMask, ~0);
         this.blending = {
-            enabled : (typeof blending.enabled === 'undefined') ? false : blending.enabled,
+            enabled : defaultValue(blending.enabled, false),
             color : new Color(
-                (typeof blendingColor.red === 'undefined') ? 0.0 : blendingColor.red,
-                (typeof blendingColor.green === 'undefined') ? 0.0 : blendingColor.green,
-                (typeof blendingColor.blue === 'undefined') ? 0.0 : blendingColor.blue,
-                (typeof blendingColor.alpha === 'undefined') ? 0.0 : blendingColor.alpha
+                defaultValue(blendingColor.red, 0.0),
+                defaultValue(blendingColor.green, 0.0),
+                defaultValue(blendingColor.blue, 0.0),
+                defaultValue(blendingColor.alpha, 0.0)
             ),
-            equationRgb : (typeof blending.equationRgb === 'undefined') ? BlendEquation.ADD : blending.equationRgb,
-            equationAlpha : (typeof blending.equationAlpha === 'undefined') ? BlendEquation.ADD : blending.equationAlpha,
-            functionSourceRgb : (typeof blending.functionSourceRgb === 'undefined') ? BlendFunction.ONE : blending.functionSourceRgb,
-            functionSourceAlpha : (typeof blending.functionSourceAlpha === 'undefined') ? BlendFunction.ONE : blending.functionSourceAlpha,
-            functionDestinationRgb : (typeof blending.functionDestinationRgb === 'undefined') ? BlendFunction.ZERO : blending.functionDestinationRgb,
-            functionDestinationAlpha : (typeof blending.functionDestinationAlpha === 'undefined') ? BlendFunction.ZERO : blending.functionDestinationAlpha
+            equationRgb : defaultValue(blending.equationRgb, BlendEquation.ADD),
+            equationAlpha : defaultValue(blending.equationAlpha, BlendEquation.ADD),
+            functionSourceRgb : defaultValue(blending.functionSourceRgb, BlendFunction.ONE),
+            functionSourceAlpha : defaultValue(blending.functionSourceAlpha, BlendFunction.ONE),
+            functionDestinationRgb : defaultValue(blending.functionDestinationRgb, BlendFunction.ZERO),
+            functionDestinationAlpha : defaultValue(blending.functionDestinationAlpha, BlendFunction.ZERO)
         };
         this.stencilTest = {
-            enabled : (typeof stencilTest.enabled === 'undefined') ? false : stencilTest.enabled,
-            frontFunction : (typeof stencilTest.frontFunction === 'undefined') ? StencilFunction.ALWAYS : stencilTest.frontFunction,
-            backFunction : (typeof stencilTest.backFunction === 'undefined') ? StencilFunction.ALWAYS : stencilTest.backFunction,
-            reference : (typeof stencilTest.reference === 'undefined') ? 0 : stencilTest.reference,
-            mask : (typeof stencilTest.mask === 'undefined') ? ~0 : stencilTest.mask,
+            enabled : defaultValue(stencilTest.enabled, false),
+            frontFunction : defaultValue(stencilTest.frontFunction, StencilFunction.ALWAYS),
+            backFunction : defaultValue(stencilTest.backFunction, StencilFunction.ALWAYS),
+            reference : defaultValue(stencilTest.reference, 0),
+            mask : defaultValue(stencilTest.mask, ~0),
             frontOperation : {
-                fail : (typeof stencilTestFrontOperation.fail === 'undefined') ? StencilOperation.KEEP : stencilTestFrontOperation.fail,
-                zFail : (typeof stencilTestFrontOperation.zFail === 'undefined') ? StencilOperation.KEEP : stencilTestFrontOperation.zFail,
-                zPass : (typeof stencilTestFrontOperation.zPass === 'undefined') ? StencilOperation.KEEP : stencilTestFrontOperation.zPass
+                fail : defaultValue(stencilTestFrontOperation.fail, StencilOperation.KEEP),
+                zFail : defaultValue(stencilTestFrontOperation.zFail, StencilOperation.KEEP),
+                zPass : defaultValue(stencilTestFrontOperation.zPass, StencilOperation.KEEP)
             },
             backOperation : {
-                fail : (typeof stencilTestBackOperation.fail === 'undefined') ? StencilOperation.KEEP : stencilTestBackOperation.fail,
-                zFail : (typeof stencilTestBackOperation.zFail === 'undefined') ? StencilOperation.KEEP : stencilTestBackOperation.zFail,
-                zPass : (typeof stencilTestBackOperation.zPass === 'undefined') ? StencilOperation.KEEP : stencilTestBackOperation.zPass
+                fail : defaultValue(stencilTestBackOperation.fail, StencilOperation.KEEP),
+                zFail : defaultValue(stencilTestBackOperation.zFail, StencilOperation.KEEP),
+                zPass : defaultValue(stencilTestBackOperation.zPass, StencilOperation.KEEP)
             }
         };
         this.sampleCoverage = {
-            enabled : (typeof sampleCoverage.enabled === 'undefined') ? false : sampleCoverage.enabled,
-            value : (typeof sampleCoverage.value === 'undefined') ? 1.0 : sampleCoverage.value,
-            invert : (typeof sampleCoverage.invert === 'undefined') ? false : sampleCoverage.invert
+            enabled : defaultValue(sampleCoverage.enabled, false),
+            value : defaultValue(sampleCoverage.value, 1.0),
+            invert : defaultValue(sampleCoverage.invert, false)
         };
-        this.dither = (typeof rs.dither === 'undefined') ? true : rs.dither;
+        this.dither = defaultValue(rs.dither, true);
         this.viewport = (typeof viewport !== 'undefined') ? new BoundingRectangle(viewport.x, viewport.y,
             (typeof viewport.width === 'undefined') ? context.getCanvas().clientWidth : viewport.width,
             (typeof viewport.height === 'undefined') ? context.getCanvas().clientHeight : viewport.height) : undefined;

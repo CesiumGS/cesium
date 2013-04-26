@@ -409,6 +409,9 @@ defineSuite([
         command.depth = 1.0;
         command.framebuffer = framebuffer;
         command.execute(context);
+        expect(context.readPixels({
+            framebuffer : framebuffer
+        })).toEqual([0, 0, 0, 0]);
 
         // 2 of 3.  Does not pass depth test
         context.draw({

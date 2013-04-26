@@ -803,8 +803,6 @@ define([
                 ReprojectWebMercatorFS,
                 reprojectAttribInds);
 
-            reproject.renderState = undefined;
-
             var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
             reproject.sampler = context.createSampler({
                 wrapS : TextureWrap.CLAMP,
