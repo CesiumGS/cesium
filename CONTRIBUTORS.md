@@ -25,5 +25,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Caleb Morse](https://github.com/cmorse)
 * [Ravi Agrawal](https://github.com/macoda)
 * [André Nunes](https://github.com/andre-nunes)
+* [Vignesh Panneerselvam](https://github.com/nobelium)
 
 Also see [our contributors page](http://cesium.agi.com/contributors.html) for more information.
