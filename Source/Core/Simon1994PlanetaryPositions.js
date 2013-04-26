@@ -21,9 +21,9 @@ define(['./Cartesian3',
 
     /**
      * Contains functions for finding the Cartesian coordinates of the sun and the moon in the Earth-centered inertial frame.
-     * @exports PlanetaryPositions
+     * @exports Simon1994PlanetaryPositions
      */
-    var PlanetaryPositions = {};
+    var Simon1994PlanetaryPositions = {};
 
     function computeTdbMinusTtSpice(daysSinceJ2000InTerrestrialTime) {
         /* STK Comments ------------------------------------------------------
@@ -483,7 +483,7 @@ define(['./Cartesian3',
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} Calculated sun position
      */
-    PlanetaryPositions.ComputeSunPositionInEarthInertialFrame= function(date, result){
+    Simon1994PlanetaryPositions.ComputeSunPositionInEarthInertialFrame= function(date, result){
         if (typeof date === 'undefined') {
             date = new JulianDate();
         }
@@ -507,7 +507,7 @@ define(['./Cartesian3',
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} Calculated moon position
      */
-    PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame = function(date, result){
+    Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame = function(date, result){
         if (typeof date === 'undefined') {
             date = new JulianDate();
         }
@@ -517,5 +517,5 @@ define(['./Cartesian3',
         return result;
     };
 
-    return PlanetaryPositions;
+    return Simon1994PlanetaryPositions;
 });
