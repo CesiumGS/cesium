@@ -2,18 +2,18 @@ uniform sampler2D czm_color;
 
 varying vec2 v_textureCoordinates;
 
-// TODO: expose as uniform
+// TODO: expose as uniforms
 const float vignetteAmount = 1.0;
-const float vignetteGamma = 4.0;
-const float colorTemperatureShift = 0.2;  // +ve = warmer, -ve = colder
-const float saturation = 0.7;
-const float finalMultiplier = 1.1;
+const float vignetteGamma = 3.0;
+const float lomoColorTemperature = 4500.0; 
+const float lomoSaturation = 0.6;
+const float lomoFinalMultiplier = 1.1;
 
 // TODO: add to BuiltinFunctions.glsl
 const float square_root_two = 1.414213562;
 
 // A vignette function based on gamma (i.e. rather than smoothstep)
-float gammaVignetteFn(float amount, float gamma)
+float gammaVignette(float amount, float gamma)
 {
     vec2 normalizedTextureCoordinates = 2.0 * v_textureCoordinates - vec2(1.0);
     float grad = length(normalizedTextureCoordinates) / square_root_two;
@@ -21,32 +21,133 @@ float gammaVignetteFn(float amount, float gamma)
     return 1.0 - amount * grad;
 }
 
-// TODO: candidate for BuiltInFunctions.glsl
-vec3 gamma(vec3 rgb, float gamma)
+// Apply a gamma without increasing saturation
+vec3 luminanceGamma(vec3 rgb, float gamma)
 {
-    float g = 1.0 / gamma;
-    return pow(rgb, vec3(g));
+	float oldLuminance = czm_luminance(rgb);
+	
+	if( oldLuminance > czm_epsilon3 ){
+		float newLuminance = pow(oldLuminance, 1.0 / gamma);
+		rgb *= vec3(newLuminance / oldLuminance);
+	} else {
+		rgb = vec3(0.0);
+	}
+	
+	return rgb;
 }
 
-vec3 lomo(vec3 rgb)
+// Apply a vignette image filter
+vec3 gammaVignetteFilter(vec3 rgb, float amount, float gamma)
 {
-    float v = gammaVignetteFn(vignetteAmount, vignetteGamma); 
+    float v = gammaVignette(amount, gamma); 
     
     // Gamma the image using the vignette value
-    rgb = gamma(rgb, v);
+    return luminanceGamma(rgb, v);
+}
 
-    // Multiply using the vignette value
-    rgb *= vec3(v * 0.5 + 0.5);
+// Adapted from http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
+vec3 rgbFromTemperature(float temperatureKelvin)
+{
+	// Clamp the supported Kelvin temperature range
+	if (temperatureKelvin < 1000.0){ temperatureKelvin = 1000.0; }
+	if (temperatureKelvin > 40000.0){ temperatureKelvin = 40000.0; } 
+	
+	temperatureKelvin /= 100.0;
+	
+	float r, g, b, tmpCalc;
+	
+	// Red
+	if (temperatureKelvin <= 66.0){
+		r = 1.0;
+	} else {
+		tmpCalc = temperatureKelvin - 60.0;
+        tmpCalc = 329.698727446 * pow(tmpCalc, -0.1332047592);
+        r = tmpCalc / 255.0;
+	}
+	
+	// Green
+	if (temperatureKelvin <= 66.0){
+		tmpCalc = temperatureKelvin;
+        tmpCalc = 99.4708025861 * log(tmpCalc) - 161.1195681661;
+        g = tmpCalc / 255.0;
+    } else {
+        tmpCalc = temperatureKelvin - 60.0;
+        tmpCalc = 288.1221695283 * pow(tmpCalc, -0.0755148492);
+        g = tmpCalc / 255.0;
+    }
+    
+    // Blue
+    if (temperatureKelvin >= 66.0){
+    	b = 1.0;
+    } else if (temperatureKelvin <= 19.0){
+    	b = 0.0;
+    } else {
+    	tmpCalc = temperatureKelvin - 10.0;
+        tmpCalc = 138.5177312231 * log(tmpCalc) - 305.0447927307;
+        b = tmpCalc / 255.0;
+    }
+	
+	return clamp(vec3(r, g, b), vec3(0.0), vec3(1.0));
+}
 
-    // Now apply the equivalent of a PhotoShop Curves S
+// Apply color temperature as a blend
+vec3 applyTemperatureA(vec3 rgb, vec3 temperatureRgb)
+{
+ 	float sourceLuminance = czm_luminance(rgb);
+	
+	// Mix with flat Kelvin RGB color
+	rgb = mix(rgb, temperatureRgb, vec3(0.5));
+
+	// Mixing with a flat color will have made the image
+	// more monochromatic, so let's re-saturate
+	rgb = czm_saturation(rgb, 2.0);
+	
+	// Restore original luminance  	
+	rgb *= vec3(sourceLuminance / czm_luminance(rgb));
+	
+	return rgb;
+}
+
+// Apply color temperature as a gamma function so whites and blacks are retained
+vec3 applyTemperatureB(vec3 rgb, vec3 temperatureRgb)
+{
+	float oldLuminance = czm_luminance(rgb);
+	
+	if( oldLuminance < czm_epsilon3){
+		return vec3(0.0);
+	}
+    	
+    // Apply gamma
+  	rgb = pow(rgb, vec3(1.0) / temperatureRgb);
+  	
+  	float newLuminance = czm_luminance(rgb);
+
+	// Restore original luminance  	
+	rgb *= vec3(oldLuminance / newLuminance);
+  	
+  	return rgb;
+}
+
+vec3 colorTemperatureFilter(vec3 rgb, float colorTemperature)
+{
+    // Work out an RGB value based on color temperature
+    vec3 temperatureRgb =  rgbFromTemperature( colorTemperature );
+
+	return applyTemperatureB(rgb, temperatureRgb);
+}
+
+// Apply a lomo grade
+vec3 lomoGradeFilter(vec3 rgb, float saturation, float colorTemperature, float finalMultiplier)
+{
+    // Apply the equivalent of a PhotoShop Curves S
+    // Note that this will increase saturation
     rgb = smoothstep(vec3(0.0), vec3(1.0), rgb);
     
     // Desaturate
     rgb = czm_saturation(rgb, saturation);
     
     // Adjust color temperature
-    float temp = 1.0+colorTemperatureShift;
-    rgb = pow(rgb, vec3(1.0/temp, 1.0, temp));
+    rgb = colorTemperatureFilter(rgb, colorTemperature);
 
     // Overcrank the values slightly
     rgb *= vec3(finalMultiplier);
@@ -58,7 +159,15 @@ void main(void)
 {
     vec3 rgb = texture2D(czm_color, v_textureCoordinates).rgb;
     
-    rgb = lomo(rgb);
+    // Make sure incoming values are not below zero
+    // but allow some latitude above zero 
+    rgb = clamp(rgb, vec3(0.0), vec3(10.0));
+    
+    // Non-perfect lens
+   	rgb = gammaVignetteFilter(rgb, vignetteAmount, vignetteGamma);
+   	
+   	// Film processing / color grading
+	rgb = lomoGradeFilter(rgb, lomoSaturation, lomoColorTemperature, lomoFinalMultiplier);
     
     gl_FragColor = vec4(rgb, 1.0);
 }
