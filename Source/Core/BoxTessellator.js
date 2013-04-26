@@ -27,15 +27,15 @@ define([
          * @exception {DeveloperError} All dimensions' components must be greater than or equal to zero.
          */
         compute : function(template) {
-            template = template || {};
+            template = (typeof template !== 'undefined') ? template : {};
             var minimumCorner;
             var maximumCorner;
 
-            if (template.minimumCorner && template.maximumCorner) {
+            if (typeof template.minimumCorner !== 'undefined' && typeof template.maximumCorner !== 'undefined') {
                 minimumCorner = template.minimumCorner;
                 maximumCorner = template.maximumCorner;
             } else {
-                var dimensions = template.dimensions || new Cartesian3(1.0, 1.0, 1.0);
+                var dimensions = (typeof template.dimensions !== 'undefined') ? template.dimensions : new Cartesian3(1.0, 1.0, 1.0);
 
                 if (dimensions.x < 0 || dimensions.y < 0 || dimensions.z < 0) {
                     throw new DeveloperError('All dimensions components must be greater than or equal to zero.');

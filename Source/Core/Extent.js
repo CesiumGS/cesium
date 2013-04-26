@@ -52,6 +52,43 @@ define([
     };
 
     /**
+     * Creates the smallest possible Extent that encloses all positions in the provided array.
+     * @memberof Extent
+     *
+     * @param {Array} cartographics The list of Cartographic instances.
+     * @param {Extent} [result] The object onto which to store the result, or undefined if a new instance should be created.
+     * @return {Extent} The modified result parameter or a new Extent instance if none was provided.
+     */
+    Extent.fromCartographicArray = function(cartographics, result) {
+        if (typeof cartographics === 'undefined') {
+            throw new DeveloperError('cartographics is required.');
+        }
+
+        var minLon = Number.MAX_VALUE;
+        var maxLon = -Number.MAX_VALUE;
+        var minLat = Number.MAX_VALUE;
+        var maxLat = -Number.MAX_VALUE;
+
+        for ( var i = 0, len = cartographics.length; i < len; i++) {
+            var position = cartographics[i];
+            minLon = Math.min(minLon, position.longitude);
+            maxLon = Math.max(maxLon, position.longitude);
+            minLat = Math.min(minLat, position.latitude);
+            maxLat = Math.max(maxLat, position.latitude);
+        }
+
+        if (typeof result === 'undefined') {
+            return new Extent(minLon, minLat, maxLon, maxLat);
+        }
+
+        result.west = minLon;
+        result.south = minLat;
+        result.east = maxLon;
+        result.north = maxLat;
+        return result;
+    };
+
+    /**
      * Duplicates an Extent.
      *
      * @memberof Extent

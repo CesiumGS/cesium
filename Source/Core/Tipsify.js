@@ -1,5 +1,10 @@
 /*global define*/
-define(['./DeveloperError'], function(DeveloperError) {
+define([
+        './defaultValue',
+        './DeveloperError'
+    ], function(
+        defaultValue,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -41,9 +46,9 @@ define(['./DeveloperError'], function(DeveloperError) {
         description = description || {};
         var indices = description.indices;
         var maximumIndex = description.maximumIndex;
-        var cacheSize = description.cacheSize || 24;
+        var cacheSize = defaultValue(description.cacheSize, 24);
 
-        if (!indices) {
+        if (typeof indices === 'undefined') {
             throw new DeveloperError('indices is required.');
         }
 
@@ -60,7 +65,7 @@ define(['./DeveloperError'], function(DeveloperError) {
         }
 
         // Compute the maximumIndex if not given
-        if(!maximumIndex) {
+        if(typeof maximumIndex === 'undefined') {
             maximumIndex = 0;
             var currentIndex = 0;
             var intoIndices = indices[currentIndex];
@@ -116,7 +121,7 @@ define(['./DeveloperError'], function(DeveloperError) {
         description = description || {};
         var indices = description.indices;
         var maximumIndex = description.maximumIndex;
-        var cacheSize = description.cacheSize || 24;
+        var cacheSize = defaultValue(description.cacheSize, 24);
 
         var cursor;
 
@@ -166,7 +171,7 @@ define(['./DeveloperError'], function(DeveloperError) {
             return n;
         }
 
-        if (!indices) {
+        if (typeof indices === 'undefined') {
             throw new DeveloperError('indices is required.');
         }
         var numIndices = indices.length;
@@ -186,7 +191,7 @@ define(['./DeveloperError'], function(DeveloperError) {
         var currentIndex = 0;
         var intoIndices = indices[currentIndex];
         var endIndex = numIndices;
-        if (maximumIndex) {
+        if (typeof maximumIndex !== 'undefined') {
             maximumIndexPlusOne = maximumIndex + 1;
         } else {
             while (currentIndex < endIndex) {
