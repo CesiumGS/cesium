@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError',
         './Matrix4',
         './Cartesian3',
@@ -7,6 +8,7 @@ define([
         './HermiteSpline'
     ],
     function(
+        defaultValue,
         DeveloperError,
         Matrix4,
         Cartesian3,
@@ -45,14 +47,14 @@ define([
      * var spline = new CatmullRomSpline(controlPoints);
      */
     var CatmullRomSpline = function(controlPoints, firstTangent, lastTangent) {
-        if (!controlPoints || !(controlPoints instanceof Array) || controlPoints.length < 3) {
+        if (typeof controlPoints === 'undefined' || !(controlPoints instanceof Array) || controlPoints.length < 3) {
             throw new DeveloperError('controlPoints is required and must be an array of objects with point and time properties, with a length of at least 3.');
         }
 
         this._points = controlPoints;
         this._lastTimeIndex = 0;
 
-        if (firstTangent) {
+        if (typeof firstTangent !== 'undefined') {
             this._ti = Cartesian3.clone(firstTangent);
         } else {
             var controlPoint0 = Cartesian3.clone(controlPoints[0].point);
@@ -66,7 +68,7 @@ define([
                            .multiplyByScalar(0.5);
         }
 
-        if (firstTangent) {
+        if (typeof lastTangent !== 'undefined') {
             this._to = Cartesian3.clone(lastTangent);
         } else {
             var n = controlPoints.length - 1;
@@ -127,7 +129,7 @@ define([
     CatmullRomSpline.prototype._findIndex = function(time) {
         // Take advantage of temporal coherence by checking current, next and previous intervals
         // for containment of time.
-        var i = this._lastTimeIndex || 0;
+        var i = defaultValue(this._lastTimeIndex, 0);
         if (time >= this._points[i].time) {
             if (i + 1 < this._points.length && time < this._points[i + 1].time) {
                 return i;

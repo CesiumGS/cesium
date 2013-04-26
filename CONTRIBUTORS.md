@@ -23,5 +23,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
 * [Caleb Morse](https://github.com/cmorse)
+* [Ravi Agrawal](https://github.com/macoda)
+* [André Nunes](https://github.com/andre-nunes)
+* [Vignesh Panneerselvam](https://github.com/nobelium)
 
 Also see [our contributors page](http://cesium.agi.com/contributors.html) for more information.

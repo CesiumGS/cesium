@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/Color',
         '../Core/destroyObject',
@@ -9,6 +10,7 @@ define([
         './Material',
         './CustomSensorVolume'
     ], function(
+        defaultValue,
         DeveloperError,
         Color,
         destroyObject,
@@ -28,7 +30,7 @@ define([
      * @see SensorVolumeCollection#addRectangularPyramid
      */
     var RectangularPyramidSensorVolume = function(template) {
-        var t = template || {};
+        var t = defaultValue(template, {});
 
         /**
          * <code>true</code> if this sensor will be shown; otherwise, <code>false</code>
@@ -81,14 +83,14 @@ define([
          * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          */
-        this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY.clone();
+        this.modelMatrix = (typeof t.modelMatrix === 'undefined') ? Matrix4.IDENTITY.clone() : t.modelMatrix;
 
         /**
          * DOC_TBA
          *
          * @type BufferUsage
          */
-        this.bufferUsage = t.bufferUsage || BufferUsage.STATIC_DRAW;
+        this.bufferUsage = (typeof t.bufferUsage === 'undefined')? BufferUsage.STATIC_DRAW : t.bufferUsage;
 
         /**
          * DOC_TBA
@@ -146,7 +148,7 @@ define([
          */
         this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : Color.clone(Color.WHITE);
 
-        t._pickIdThis = t._pickIdThis || this;
+        t._pickIdThis = defaultValue(t._pickIdThis, this);
         this._customSensor = new CustomSensorVolume(t);
     };
 

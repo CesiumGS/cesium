@@ -36,6 +36,34 @@ defineSuite([
         expect(extent.north).toEqual(north);
     });
 
+    it('fromCartographicArray produces expected values.', function() {
+        var minLon = new Cartographic(-0.1, 0.3, 0.0);
+        var minLat = new Cartographic(0.0, -0.2, 0.0);
+        var maxLon = new Cartographic(0.3, -0.1, 0.0);
+        var maxLat = new Cartographic(0.2, 0.4, 0.0);
+
+        var extent = Extent.fromCartographicArray([minLat, minLon, maxLat, maxLon]);
+        expect(extent.west).toEqual(minLon.longitude);
+        expect(extent.south).toEqual(minLat.latitude);
+        expect(extent.east).toEqual(maxLon.longitude);
+        expect(extent.north).toEqual(maxLat.latitude);
+    });
+
+    it('fromCartographicArray works with a result parameter.', function() {
+        var minLon = new Cartographic(-0.1, 0.3, 0.0);
+        var minLat = new Cartographic(0.0, -0.2, 0.0);
+        var maxLon = new Cartographic(0.3, -0.1, 0.0);
+        var maxLat = new Cartographic(0.2, 0.4, 0.0);
+
+        var result = new Extent();
+        var extent = Extent.fromCartographicArray([minLat, minLon, maxLat, maxLon], result);
+        expect(result).toBe(extent);
+        expect(extent.west).toEqual(minLon.longitude);
+        expect(extent.south).toEqual(minLat.latitude);
+        expect(extent.east).toEqual(maxLon.longitude);
+        expect(extent.north).toEqual(maxLat.latitude);
+    });
+
     it('clone works without a result parameter.', function() {
         var extent = new Extent(west, south, east, north);
         var returnedResult = extent.clone();
@@ -81,6 +109,12 @@ defineSuite([
         expect(extent.equalsEpsilon(new Extent(0.1, 0.2, 0.5, 0.4), 0.2)).toEqual(true);
         expect(extent.equalsEpsilon(new Extent(0.1, 0.2, 0.3, 0.5), 0.1)).toEqual(true);
         expect(extent.equalsEpsilon(undefined, 0.0)).toEqual(false);
+    });
+
+    it('fromCartographicArray throws with no array', function() {
+        expect(function() {
+            Extent.fromCartographicArray(undefined, new Extent());
+        }).toThrow();
     });
 
     it('validate throws with no west', function() {
