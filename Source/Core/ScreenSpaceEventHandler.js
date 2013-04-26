@@ -28,7 +28,7 @@ define([
         this._mouseEvents = {};
         for ( var button in ScreenSpaceEventType) {
             if (ScreenSpaceEventType.hasOwnProperty(button)) {
-                this._mouseEvents[button] = 0;
+                this._mouseEvents[button] = undefined;
             }
         }
 
@@ -38,7 +38,7 @@ define([
                 this._modifiedMouseEvents[modifier] = {};
                 for (button in ScreenSpaceEventType) {
                     if (ScreenSpaceEventType.hasOwnProperty(button)) {
-                        this._modifiedMouseEvents[modifier][button] = 0;
+                        this._modifiedMouseEvents[modifier][button] = undefined;
                     }
                 }
             }
@@ -61,7 +61,7 @@ define([
         // or determined based on the platform?
         this._clickPixelTolerance = 5;
 
-        this._element = element || document;
+        this._element = typeof element !== 'undefined' ? element : document;
 
         this._register();
     };
@@ -98,22 +98,22 @@ define([
      * @see ScreenSpaceEventHandler#removeInputAction
      */
     ScreenSpaceEventHandler.prototype.setInputAction = function(action, type, modifier) {
-        if (!action) {
+        if (typeof action === 'undefined') {
             throw new DeveloperError('action is required.');
         }
 
-        if (!type) {
+        if (typeof type === 'undefined') {
             throw new DeveloperError('type is required.');
         }
 
         var mouseEvents;
-        if (modifier && modifier.name) {
+        if (typeof modifier !== 'undefined' && typeof modifier.name !== 'undefined') {
             mouseEvents = this._modifiedMouseEvents[modifier.name];
         } else {
             mouseEvents = this._mouseEvents;
         }
 
-        if (type && type.name && mouseEvents) {
+        if (typeof type !== 'undefined' && typeof type.name !== 'undefined' && typeof mouseEvents !== 'undefined') {
             mouseEvents[type.name] = action;
         }
     };
@@ -133,18 +133,18 @@ define([
      * @see ScreenSpaceEventHandler#removeInputAction
      */
     ScreenSpaceEventHandler.prototype.getInputAction = function(type, modifier) {
-        if (!type) {
+        if (typeof type === 'undefined') {
             throw new DeveloperError('type is required.');
         }
 
         var mouseEvents;
-        if (modifier && modifier.name) {
+        if (typeof modifier !== 'undefined' && typeof modifier.name !== 'undefined') {
             mouseEvents = this._modifiedMouseEvents[modifier.name];
         } else {
             mouseEvents = this._mouseEvents;
         }
 
-        if (type && type.name && mouseEvents) {
+        if (typeof type !== 'undefined' && typeof type.name !== 'undefined' && typeof mouseEvents !== 'undefined') {
             return mouseEvents[type.name];
         }
 
@@ -166,18 +166,18 @@ define([
      * @see ScreenSpaceEventHandler#setInputAction
      */
     ScreenSpaceEventHandler.prototype.removeInputAction = function(type, modifier) {
-        if (!type) {
+        if (typeof type === 'undefined') {
             throw new DeveloperError('type is required.');
         }
 
         var mouseEvents;
-        if (modifier && modifier.name) {
+        if (typeof modifier !== 'undefined' && typeof modifier.name !== 'undefined') {
             mouseEvents = this._modifiedMouseEvents[modifier.name];
         } else {
             mouseEvents = this._mouseEvents;
         }
 
-        if (type && type.name && mouseEvents && mouseEvents[type.name]) {
+        if (typeof type !== 'undefined' && typeof type.name !== 'undefined' && typeof mouseEvents !== 'undefined' && typeof mouseEvents[type.name] !== 'undefined') {
             delete mouseEvents[type.name];
         }
     };
@@ -221,7 +221,7 @@ define([
             action = this.getInputAction(ScreenSpaceEventType.RIGHT_DOWN, modifier);
         }
 
-        if (action) {
+        if (typeof action !== 'undefined') {
             action({
                 position : new Cartesian2(pos.x, pos.y)
             });
@@ -260,13 +260,13 @@ define([
         var yDiff = this._lastMouseY - pos.y;
         this._totalPixels += Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 
-        if (action) {
+        if (typeof action !== 'undefined') {
             action({
                 position : new Cartesian2(pos.x, pos.y)
             });
         }
 
-        if (clickAction && this._totalPixels < this._clickPixelTolerance) {
+        if (typeof clickAction !== 'undefined' && this._totalPixels < this._clickPixelTolerance) {
             clickAction({
                 position : new Cartesian2(pos.x, pos.y)
             });
@@ -291,7 +291,7 @@ define([
 
         var modifier = this._getModifier(event);
         var action = this.getInputAction(ScreenSpaceEventType.MOUSE_MOVE, modifier);
-        if (action) {
+        if (typeof action !== 'undefined') {
             action(movement);
         }
 
@@ -319,7 +319,7 @@ define([
             this._leftMouseButtonDown = true;
             action = this.getInputAction(ScreenSpaceEventType.LEFT_DOWN, modifier);
 
-            if (action) {
+            if (typeof action !== 'undefined') {
                 action({
                     position : new Cartesian2(pos.x, pos.y)
                 });
@@ -329,7 +329,7 @@ define([
             // Release "mouse" without clicking, because we are adding more touches.
             this._leftMouseButtonDown = false;
             action = this.getInputAction(ScreenSpaceEventType.LEFT_UP, modifier);
-            if (action) {
+            if (typeof action !== 'undefined') {
                 action({
                     position : new Cartesian2(pos.x, pos.y)
                 });
@@ -346,7 +346,7 @@ define([
             this._lastTouch2X = pos2.x;
             this._lastTouch2Y = pos2.y;
             action = this.getInputAction(ScreenSpaceEventType.PINCH_START, modifier);
-            if (action) {
+            if (typeof action !== 'undefined') {
                 action({
                     position1 : new Cartesian2(pos.x, pos.y),
                     position2 : new Cartesian2(pos2.x, pos2.y)
@@ -355,7 +355,7 @@ define([
         } else if (this._isPinching) {
             this._isPinching = false;
             action = this.getInputAction(ScreenSpaceEventType.PINCH_END, modifier);
-            if (action) {
+            if (typeof action !== 'undefined') {
                 action();
             }
         }
@@ -379,13 +379,13 @@ define([
                 var yDiff = this._lastMouseY - pos.y;
                 this._totalPixels += Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 
-                if (action) {
+                if (typeof action !== 'undefined') {
                     action({
                         position : new Cartesian2(pos.x, pos.y)
                     });
                 }
 
-                if (clickAction && this._totalPixels < this._clickPixelTolerance) {
+                if (typeof clickAction !== 'undefined' && this._totalPixels < this._clickPixelTolerance) {
                     clickAction({
                         position : new Cartesian2(pos.x, pos.y)
                     });
@@ -424,7 +424,7 @@ define([
             };
 
             action = this.getInputAction(ScreenSpaceEventType.MOUSE_MOVE, modifier);
-            if (action) {
+            if (typeof action !== 'undefined') {
                 action(movement);
             }
 
@@ -447,7 +447,7 @@ define([
             }
 
             action = this.getInputAction(ScreenSpaceEventType.PINCH_MOVE, modifier);
-            if (action) {
+            if (typeof action !== 'undefined') {
                 var dX = pos2.x - pos.x;
                 var dY = pos2.y - pos.y;
                 var dist = Math.sqrt(dX * dX + dY * dY) * 0.25;
@@ -490,7 +490,7 @@ define([
         var type = ScreenSpaceEventType.WHEEL;
         var action = this.getInputAction(type, modifier);
 
-        if (action) {
+        if (typeof action !== 'undefined') {
             event.preventDefault();
             action(delta);
         }
@@ -513,7 +513,7 @@ define([
             action = this.getInputAction(ScreenSpaceEventType.RIGHT_DOUBLE_CLICK, modifier);
         }
 
-        if (action) {
+        if (typeof action !== 'undefined') {
             action({
                 position : new Cartesian2(pos.x, pos.y)
             });
