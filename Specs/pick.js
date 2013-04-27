@@ -1,10 +1,8 @@
 /*global define*/
 define([
-        'Core/defaultValue',
         'Core/BoundingRectangle',
         'Scene/FrameState'
     ], function(
-        defaultValue,
         BoundingRectangle,
         FrameState) {
     "use strict";

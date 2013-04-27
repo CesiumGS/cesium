@@ -65,7 +65,7 @@ define([
      * Transforms.earthOrientationParameters = eop;
      */
     var EarthOrientationParameters = function EarthOrientationParameters(description) {
-        description = defaultValue(description, {});
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
 
         this._dates = undefined;
         this._samples = undefined;

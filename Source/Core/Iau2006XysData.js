@@ -2,18 +2,17 @@
 define([
         './buildModuleUrl',
         './defaultValue',
-        './loadJson',
         './Iau2006XysSample',
         './JulianDate',
+        './loadJson',
         './TimeStandard',
         '../ThirdParty/when'
-    ],
-    function(
+    ], function(
         buildModuleUrl,
         defaultValue,
-        loadJson,
         Iau2006XysSample,
         JulianDate,
+        loadJson,
         TimeStandard,
         when) {
     "use strict";
@@ -35,7 +34,7 @@ define([
      * @param {Number} [description.totalSamples=27426] The total number of samples in all XYS files.
      */
     var Iau2006XysData = function Iau2006XysData(description) {
-        description = description || {};
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
 
         this._xysFileUrlTemplate = defaultValue(description.xysFileUrlTemplate, buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'));
         this._interpolationOrder = defaultValue(description.interpolationOrder, 9);

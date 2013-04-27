@@ -1,15 +1,15 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/destroyObject',
-        '../Core/ComponentDatatype',
+        '../Core/DeveloperError',
         './BufferUsage'
     ], function(
-        DeveloperError,
+        ComponentDatatype,
         defaultValue,
         destroyObject,
-        ComponentDatatype,
+        DeveloperError,
         BufferUsage) {
     "use strict";
 
@@ -159,8 +159,8 @@ define([
             var attribute = attributes[i];
 
             var attr = {
-                index : (typeof attribute.index === 'undefined') ? i : attribute.index,
-                enabled : (typeof attribute.enabled === 'undefined') ? true : attribute.enabled,
+                index : defaultValue(attribute.index, i),
+                enabled : defaultValue(attribute.enabled, true),
                 componentsPerAttribute : attribute.componentsPerAttribute,
                 componentDatatype : attribute.componentDatatype || ComponentDatatype.FLOAT,
                 normalize : attribute.normalize || false,

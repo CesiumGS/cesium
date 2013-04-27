@@ -10,6 +10,7 @@ defineSuite([
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartographic',
+         'Core/defaultValue',
          'Core/Ellipsoid',
          'Core/Math',
          'Core/Occluder',
@@ -35,6 +36,7 @@ defineSuite([
          Cartesian2,
          Cartesian3,
          Cartographic,
+         defaultValue,
          Ellipsoid,
          CesiumMath,
          Occluder,
@@ -291,8 +293,8 @@ defineSuite([
     }
 
     function createPolygon(degree, ellipsoid) {
-        degree = (typeof degree !== 'undefined') ? degree : 50.0;
-        ellipsoid = ellipsoid || Ellipsoid.UNIT_SPHERE;
+        degree = defaultValue(degree, 50.0);
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.UNIT_SPHERE);
         var polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
@@ -326,7 +328,11 @@ defineSuite([
     });
 
     function createLabels(position) {
-        position = position || { x : -1.0, y : 0.0, z : 0.0 };
+        position = defaultValue(position, {
+            x : -1.0,
+            y : 0.0,
+            z : 0.0
+        });
         var labels = new LabelCollection();
         labels.add({
             position : position,

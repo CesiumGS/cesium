@@ -1,8 +1,9 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/clone',
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/HermiteSpline',
@@ -17,9 +18,10 @@ define([
         '../Scene/SceneMode',
         '../ThirdParty/Tween'
     ], function(
-        defaultValue,
         Cartesian3,
         Cartographic,
+        clone,
+        defaultValue,
         DeveloperError,
         Ellipsoid,
         HermiteSpline,
@@ -407,7 +409,7 @@ define([
      * @see CameraFlightPath#createAnimationCartographic
      */
     CameraFlightPath.createAnimation = function(frameState, description) {
-        description = defaultValue(description, {});
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var destination = description.destination;
         var direction = description.direction;
         var up = description.up;
@@ -467,7 +469,7 @@ define([
      * @see CameraFlightPath#createAnimationCartographic
      */
     CameraFlightPath.createAnimationCartographic = function(frameState, description) {
-        description = defaultValue(description, {});
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var destination = description.destination;
 
         if (typeof frameState === 'undefined') {
@@ -487,8 +489,9 @@ define([
             end = projection.project(destination);
         }
 
-        description.destination = end;
-        return this.createAnimation(frameState, description);
+        var createAnimationDescription = clone(description);
+        createAnimationDescription.destination = end;
+        return this.createAnimation(frameState, createAnimationDescription);
     };
 
     return CameraFlightPath;
