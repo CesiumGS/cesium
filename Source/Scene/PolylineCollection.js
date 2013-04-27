@@ -461,16 +461,17 @@ define([
         commandLists.colorList = emptyArray;
         commandLists.pickList = emptyArray;
 
+        if ((typeof this._rs === 'undefined') || (this._rs.depthTest.enabled !== useDepthTest)) {
+            this._rs = context.createRenderState({
+                blending : BlendingState.ALPHA_BLEND,
+                depthMask : !useDepthTest,
+                depthTest : {
+                    enabled : useDepthTest
+                }
+            });
+        }
+
         if (pass.color) {
-            if (typeof this._rs === 'undefined') {
-                this._rs = context.createRenderState({
-                    blending : BlendingState.ALPHA_BLEND
-                });
-            }
-
-            this._rs.depthMask = !useDepthTest;
-            this._rs.depthTest.enabled = useDepthTest;
-
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 

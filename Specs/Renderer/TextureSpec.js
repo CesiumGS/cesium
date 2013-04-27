@@ -117,18 +117,16 @@ defineSuite([
     });
 
     it('can create a texture from the framebuffer', function() {
-        context.clear(new ClearCommand(context.createClearState({
-            color : Color.RED
-        })));
-        expect(context.readPixels()).toEqual(Color.RED.toBytes());
+        var command = new ClearCommand();
+        command.color = Color.RED;
+        command.execute(context);
 
         texture = context.createTexture2DFromFramebuffer();
         expect(texture.getWidth()).toEqual(context.getCanvas().clientWidth);
         expect(texture.getHeight()).toEqual(context.getCanvas().clientHeight);
 
-        context.clear(new ClearCommand(context.createClearState({
-            color : Color.WHITE
-        })));
+        command.color = Color.WHITE;
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.WHITE.toBytes());
 
         expect(renderFragment(context)).toEqual(Color.RED.toBytes());
@@ -144,17 +142,16 @@ defineSuite([
         expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
 
         // Clear to red
-        context.clear(new ClearCommand(context.createClearState({
-            color : Color.RED
-        })));
+        var command = new ClearCommand();
+        command.color = Color.RED;
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.RED.toBytes());
 
         texture.copyFromFramebuffer();
 
         // Clear to white
-        context.clear(new ClearCommand(context.createClearState({
-            color : Color.WHITE
-        })));
+        command.color = Color.WHITE;
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.WHITE.toBytes());
 
         // Render red

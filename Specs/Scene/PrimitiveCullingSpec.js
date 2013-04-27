@@ -16,6 +16,7 @@ defineSuite([
          'Core/Occluder',
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter',
+         'Renderer/ClearCommand',
          'Scene/BillboardCollection',
          'Scene/Camera',
          'Scene/LabelCollection',
@@ -42,6 +43,7 @@ defineSuite([
          Occluder,
          TextureMinificationFilter,
          TextureMagnificationFilter,
+         ClearCommand,
          BillboardCollection,
          Camera,
          LabelCollection,
@@ -89,7 +91,7 @@ defineSuite([
     });
 
     function verifyNoDraw() {
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var numRendered = render(context, frameState, primitives);
@@ -99,7 +101,7 @@ defineSuite([
     }
 
     function verifyDraw() {
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var numRendered = render(context, frameState, primitives);

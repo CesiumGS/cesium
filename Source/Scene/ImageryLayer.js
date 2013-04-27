@@ -803,8 +803,6 @@ define([
                 ReprojectWebMercatorFS,
                 reprojectAttribInds);
 
-            reproject.renderState = context.createRenderState();
-
             var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
             reproject.sampler = context.createSampler({
                 wrapS : TextureWrap.CLAMP,
@@ -854,23 +852,24 @@ define([
 
         reproject.framebuffer.setColorTexture(outputTexture);
 
-        context.clear(new ClearCommand(context.createClearState({
-            color : Color.BLACK
-        }), reproject.framebuffer));
+        var command = new ClearCommand();
+        command.color = Color.BLACK;
+        command.framebuffer = reproject.framebuffer;
+        command.execute(context);
 
-        var renderState = reproject.renderState;
-        var viewport = renderState.viewport;
-        if (typeof viewport === 'undefined') {
-            viewport = new BoundingRectangle();
-            renderState.viewport = viewport;
+        if ((typeof reproject.renderState === 'undefined') ||
+                (reproject.renderState.viewport.width !== width) ||
+                (reproject.renderState.viewport.height !== height)) {
+
+            reproject.renderState = context.createRenderState({
+                viewport : new BoundingRectangle(0, 0, width, height)
+            });
         }
-        viewport.width = width;
-        viewport.height = height;
 
         context.draw({
             framebuffer : reproject.framebuffer,
             shaderProgram : reproject.shaderProgram,
-            renderState : renderState,
+            renderState : reproject.renderState,
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             vertexArray : reproject.vertexArray,
             uniformMap : uniformMap
