@@ -283,7 +283,9 @@ define([
     };
 
     Polyline.prototype.getPickId = function(context) {
-        this._pickId = (typeof this._pickId === 'undefined') ? (context.createPickId(defaultValue(this._pickIdThis, this))) : this._pickId;
+        if (typeof this._pickId === 'undefined') {
+            this._pickId = context.createPickId(defaultValue(this._pickIdThis, this));
+        }
         return this._pickId;
     };
 

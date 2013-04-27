@@ -359,7 +359,7 @@ defineSuite([
         expect(pixel).not.toEqual([0, 0, 0, 0]);
     });
 
-    it('creates a material with a cube map uniform' , function () {
+    it('creates a material with a cube map uniform', function() {
         var material = new Material({
             context : context,
             strict : true,

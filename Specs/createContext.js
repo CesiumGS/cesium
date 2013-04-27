@@ -1,15 +1,20 @@
 /*global define*/
 define([
+        'Core/clone',
+        'Core/defaultValue',
         'Renderer/Context',
         'Specs/createCanvas'
     ], function(
+        clone,
+        defaultValue,
         Context,
         createCanvas) {
     "use strict";
 
     function createContext(options) {
-        options = (typeof options !== 'undefined') ? options : {};
-        options.alpha = (typeof options.alpha !== 'undefined') ? options.alpha : true;
+        // clone options so we can change properties
+        options = clone(defaultValue(options, {}));
+        options.alpha = defaultValue(options.alpha, true);
 
         var canvas = createCanvas();
         var context = new Context(canvas, options);

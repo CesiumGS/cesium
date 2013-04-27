@@ -1,16 +1,18 @@
 /*global define*/
 define([
-        '../Core/Event',
-        '../Core/DeveloperError',
-        '../Core/destroyObject',
         '../Core/Color',
+        '../Core/defaultValue',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
+        '../Core/Event',
         '../Scene/BillboardCollection',
         '../Renderer/TextureAtlasBuilder'
        ], function(
-         Event,
-         DeveloperError,
-         destroyObject,
          Color,
+         defaultValue,
+         destroyObject,
+         DeveloperError,
+         Event,
          BillboardCollection,
          TextureAtlasBuilder) {
     "use strict";
@@ -267,10 +269,10 @@ define([
         }
 
         if (needRedraw) {
-            var cssColor = typeof billboard._visualizerColor !== 'undefined' ? billboard._visualizerColor.toCssColorString() : '#FFFFFF';
-            var cssOutlineColor = typeof billboard._visualizerOutlineColor !== 'undefined' ? billboard._visualizerOutlineColor.toCssColorString() : '#000000';
-            var cssPixelSize = typeof billboard._visualizerPixelSize !== 'undefined' ? billboard._visualizerPixelSize : 3;
-            var cssOutlineWidth = typeof billboard._visualizerOutlineWidth !== 'undefined' ? billboard._visualizerOutlineWidth : 2;
+            var cssColor = defaultValue(billboard._visualizerColor, Color.WHITE).toCssColorString();
+            var cssOutlineColor = defaultValue(billboard._visualizerOutlineColor, Color.BLACK).toCssColorString();
+            var cssPixelSize = defaultValue(billboard._visualizerPixelSize, 3);
+            var cssOutlineWidth = defaultValue(billboard._visualizerOutlineWidth, 2);
             var textureId = JSON.stringify([cssColor, cssPixelSize, cssOutlineColor, cssOutlineWidth]);
 
             this._textureAtlasBuilder.addTextureFromFunction(textureId, function(id, loadedCallback) {

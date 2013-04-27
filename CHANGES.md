@@ -29,6 +29,7 @@ Beta Releases
          });
    * `CzmlCartographic` has been removed and all cartographic values are converted to Cartesian internally during CZML processing.  This improves performance and fixes interpolation of cartographic source data.  The Cartographic representation can still be retrieved if needed.
    * Removed `ComplexConicSensorVolume`, which was not documented and did not work on most platforms.  It will be brought back in a future release.  This does not affect CZML, which uses a custom sensor to approximate a complex conic.
+   * Replaced `computeSunPosition` with `Simon1994PlanetaryPosition`, which has functions to calculate the position of the sun and the moon more accurately.
    * Removed `Context.createClearState`.  These properties are now part of `ClearCommand`.
    * `RenderState` objects returned from `Context.createRenderState` are now immutable.
 * Added wide polylines that work with and without ANGLE.
