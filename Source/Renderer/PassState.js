@@ -14,7 +14,9 @@ define(function() {
      */
     var PassState = function(context) {
         /**
-         * DOC_TBA
+         * The context used to execute commands for this pass.
+         *
+         * @type Context
          */
         this.context = context;
 
