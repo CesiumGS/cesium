@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Scene/VerticalOrigin'
-       ], function(
-         VerticalOrigin) {
+    ], function(
+        defaultValue,
+        VerticalOrigin) {
     "use strict";
 
     /**
@@ -33,8 +35,7 @@ define([
          * @param {Object} czmlInterval The CZML interval to unwrap.
          */
         unwrapInterval : function(czmlInterval) {
-            var result = czmlInterval.verticalOrigin;
-            return typeof result === 'undefined' ? czmlInterval : result;
+            return defaultValue(czmlInterval.verticalOrigin, czmlInterval);
         },
 
         /**
