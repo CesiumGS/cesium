@@ -8,6 +8,7 @@ defineSuite([
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Color',
+         'Core/defaultValue',
          'Core/Math',
          'Core/Matrix4',
          'Core/MeshFilters',
@@ -29,6 +30,7 @@ defineSuite([
          Cartesian2,
          Cartesian3,
          Color,
+         defaultValue,
          CesiumMath,
          Matrix4,
          MeshFilters,
@@ -169,8 +171,8 @@ defineSuite([
     });
 
     function createPrimitive(bounded, closestFrustum) {
-        bounded = (typeof bounded === 'undefined') ? true : bounded;
-        closestFrustum = (typeof closestFrustum === 'undefined') ? false : closestFrustum;
+        bounded = defaultValue(bounded, true);
+        closestFrustum = defaultValue(closestFrustum, false);
 
         var Primitive = function() {
             this._va = undefined;

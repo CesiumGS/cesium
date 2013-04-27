@@ -1,10 +1,13 @@
 /*global define*/
-define(function() {
+define([
+        'Core/defaultValue'
+    ], function(
+        defaultValue) {
     "use strict";
 
     function createCanvas(width, height) {
-        width = (typeof width === 'undefined') ? 1 : width;
-        height = (typeof height === 'undefined') ? 1 : height;
+        width = defaultValue(width, 1);
+        height = defaultValue(height, 1);
 
         var canvas = document.createElement('canvas');
         canvas.id = 'glCanvas';

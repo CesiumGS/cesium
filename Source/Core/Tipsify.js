@@ -40,10 +40,10 @@ define([
      * var indices = [0, 1, 2, 3, 4, 5];
      * var maxIndex = 5;
      * var cacheSize = 3;
-     * var acmr = Tipsify.calculateACMR({"indices":indices, "maxIndex":maxIndex, "cacheSize":cacheSize});
+     * var acmr = Tipsify.calculateACMR({indices : indices, maxIndex : maxIndex, cacheSize : cacheSize});
      */
     Tipsify.calculateACMR = function(description) {
-        description = defaultValue(description, {});
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var indices = description.indices;
         var maximumIndex = description.maximumIndex;
         var cacheSize = defaultValue(description.cacheSize, 24);
@@ -54,7 +54,7 @@ define([
 
         var numIndices = indices.length;
 
-        if ((numIndices < 3) || (numIndices % 3 !== 0)) {
+        if (numIndices < 3 || numIndices % 3 !== 0) {
             throw new DeveloperError('indices length must be a multiple of three.');
         }
         if (maximumIndex <= 0) {
@@ -65,7 +65,7 @@ define([
         }
 
         // Compute the maximumIndex if not given
-        if(typeof maximumIndex === 'undefined') {
+        if (typeof maximumIndex === 'undefined') {
             maximumIndex = 0;
             var currentIndex = 0;
             var intoIndices = indices[currentIndex];
@@ -115,10 +115,10 @@ define([
      * var indices = [0, 1, 2, 3, 4, 5];
      * var maxIndex = 5;
      * var cacheSize = 3;
-     * var reorderedIndices = Tipsify.tipsify({"indices":indices, "maxIndex":maxIndex, "cacheSize":cacheSize});
+     * var reorderedIndices = Tipsify.tipsify({indices : indices, maxIndex : maxIndex, cacheSize : cacheSize});
      */
     Tipsify.tipsify = function(description) {
-        description = defaultValue(description, {});
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var indices = description.indices;
         var maximumIndex = description.maximumIndex;
         var cacheSize = defaultValue(description.cacheSize, 24);
@@ -176,7 +176,7 @@ define([
         }
         var numIndices = indices.length;
 
-        if ((numIndices < 3) || (numIndices % 3 !== 0)) {
+        if (numIndices < 3 || numIndices % 3 !== 0) {
             throw new DeveloperError('indices length must be a multiple of three.');
         }
         if (maximumIndex <= 0) {
@@ -219,11 +219,11 @@ define([
         currentIndex = 0;
         var triangle = 0;
         while (currentIndex < endIndex) {
-            (vertices[indices[currentIndex]]).vertexTriangles.push(triangle);
+            vertices[indices[currentIndex]].vertexTriangles.push(triangle);
             ++(vertices[indices[currentIndex]]).numLiveTriangles;
-            (vertices[indices[currentIndex + 1]]).vertexTriangles.push(triangle);
+            vertices[indices[currentIndex + 1]].vertexTriangles.push(triangle);
             ++(vertices[indices[currentIndex + 1]]).numLiveTriangles;
-            (vertices[indices[currentIndex + 2]]).vertexTriangles.push(triangle);
+            vertices[indices[currentIndex + 2]].vertexTriangles.push(triangle);
             ++(vertices[indices[currentIndex + 2]]).numLiveTriangles;
             ++triangle;
             currentIndex += 3;

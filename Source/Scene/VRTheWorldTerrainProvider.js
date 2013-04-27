@@ -64,7 +64,8 @@ define([
      * centralBody.terrainProvider = terrainProvider;
      */
     var VRTheWorldTerrainProvider = function VRTheWorldTerrainProvider(description) {
-        if (typeof description === 'undefined' || typeof description.url === 'undefined') {
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
+        if (typeof description.url === 'undefined') {
             throw new DeveloperError('description.url is required.');
         }
 
@@ -133,7 +134,7 @@ define([
         }
 
         function metadataFailure(e) {
-            var message = typeof e === 'undefined' ? 'An error occurred while accessing ' + that._url + '.' : e;
+            var message = defaultValue(e, 'An error occurred while accessing ' + that._url + '.');
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
         }
 

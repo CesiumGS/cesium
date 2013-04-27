@@ -77,8 +77,7 @@ define([
         var x0 = xTable[0];
         var x1 = xTable[1];
 
-        
-        if(x0 === x1){
+        if (x0 === x1) {
             throw new DeveloperError('Divide by zero error: xTable[0] and xTable[1] are equal');
         }
 
