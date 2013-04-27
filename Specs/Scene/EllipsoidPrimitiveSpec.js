@@ -12,6 +12,7 @@ defineSuite([
          'Core/Matrix4',
          'Core/Math',
          'Core/JulianDate',
+         'Renderer/ClearCommand',
          'Scene/Material'
      ], function(
          EllipsoidPrimitive,
@@ -26,6 +27,7 @@ defineSuite([
          Matrix4,
          CesiumMath,
          JulianDate,
+         ClearCommand,
          Material) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -68,7 +70,7 @@ defineSuite([
     it('renders with the default material', function() {
         ellipsoid.radii = new Cartesian3(1.0, 1.0, 1.0);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, ellipsoid);
@@ -79,7 +81,7 @@ defineSuite([
         ellipsoid.radii = new Cartesian3(0.1, 0.1, 0.1);
         ellipsoid.modelMatrix = Matrix4.fromScale(new Cartesian3(10.0, 10.0, 10.0));
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, ellipsoid);
@@ -91,13 +93,13 @@ defineSuite([
         var ellipsoid2 = new EllipsoidPrimitive();
         ellipsoid2.radii = new Cartesian3(1.0, 1.0, 1.0);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, ellipsoid);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, ellipsoid2);
@@ -121,7 +123,7 @@ defineSuite([
         ellipsoid.radii = new Cartesian3(1.0, 1.0, 1.0);
         ellipsoid.center = new Cartesian3(10.0, 0.0, 0.0);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, ellipsoid);

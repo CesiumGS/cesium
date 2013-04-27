@@ -354,6 +354,28 @@ defineSuite([
         expect(rs.dither).toEqual(defaultRS.dither);
     });
 
+    it('caches render states', function() {
+        var rs = context.createRenderState();
+        var rs2 = context.createRenderState();
+        // rs3 is still the same state as rs and rs2, but with a partial definition
+        var rs3 = context.createRenderState({
+            depthTest : {
+                enabled : false,
+                func : DepthFunction.LESS
+            }
+        });
+        // rs4 is a cache miss since it has a different depthTest
+        var rs4 = context.createRenderState({
+            depthTest : {
+                enabled : true,
+                func : DepthFunction.NEVER
+            }
+        });
+        expect(rs2).toBe(rs);
+        expect(rs3).toBe(rs);
+        expect(rs4).not.toBe(rs);
+    });
+
     it('fails to create (frontFace)', function() {
         expect(function() {
             context.createRenderState({

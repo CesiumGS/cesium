@@ -10,6 +10,7 @@ defineSuite([
          'Core/Matrix4',
          'Core/PrimitiveType',
          'Renderer/BufferUsage',
+         'Renderer/ClearCommand',
          'Renderer/UniformDatatype'
      ], 'Renderer/ShaderProgram', function(
          createContext,
@@ -22,6 +23,7 @@ defineSuite([
          Matrix4,
          PrimitiveType,
          BufferUsage,
+         ClearCommand,
          UniformDatatype) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -433,7 +435,7 @@ defineSuite([
             componentsPerAttribute : 4
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
