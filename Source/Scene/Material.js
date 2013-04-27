@@ -480,15 +480,15 @@ define([
     };
 
     function initializeMaterial(description, result) {
-        description = defaultValue(description, {});
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         result._context = description.context;
         result._strict = defaultValue(description.strict, false);
         result._count = defaultValue(description.count, 0);
-        result._template = defaultValue(description.fabric, {});
-        result._template.uniforms = defaultValue(result._template.uniforms, {});
-        result._template.materials = defaultValue(result._template.materials, {});
+        result._template = clone(defaultValue(description.fabric, defaultValue.EMPTY_OBJECT));
+        result._template.uniforms = clone(defaultValue(result._template.uniforms, defaultValue.EMPTY_OBJECT));
+        result._template.materials = clone(defaultValue(result._template.materials, defaultValue.EMPTY_OBJECT));
 
-        result.type = (typeof result._template.type !== 'undefined') ? result._template.type : createGuid();
+        result.type = typeof result._template.type !== 'undefined' ? result._template.type : createGuid();
 
         result.shaderSource = '';
         result.materials = {};
@@ -498,7 +498,7 @@ define([
         // If the cache contains this material type, build the material template off of the stored template.
         var cachedTemplate = Material._materialCache.getMaterial(result.type);
         if (typeof cachedTemplate !== 'undefined') {
-            var template = clone(cachedTemplate);
+            var template = clone(cachedTemplate, true);
             result._template = combine([result._template, template]);
         }
 

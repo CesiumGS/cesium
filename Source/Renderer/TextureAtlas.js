@@ -1,28 +1,32 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
-        '../Core/destroyObject',
-        '../Core/Cartesian2',
         '../Core/BoundingRectangle',
+        '../Core/Cartesian2',
         '../Core/createGuid',
+        '../Core/defaultValue',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
         './PixelFormat'
     ], function(
-        DeveloperError,
-        destroyObject,
-        Cartesian2,
         BoundingRectangle,
+        Cartesian2,
         createGuid,
+        defaultValue,
+        destroyObject,
+        DeveloperError,
         PixelFormat) {
     "use strict";
 
     // The atlas is made up of regions of space called nodes that contain images or child nodes.
     function TextureAtlasNode(bottomLeft, topRight, childNode1, childNode2, imageIndex) {
-        this.bottomLeft = (typeof bottomLeft !== 'undefined') ? bottomLeft : new Cartesian2();
-        this.topRight = (typeof topRight !== 'undefined') ? topRight : new Cartesian2();
+        this.bottomLeft = defaultValue(bottomLeft, Cartesian2.ZERO);
+        this.topRight = defaultValue(topRight, Cartesian2.ZERO);
         this.childNode1 = childNode1;
         this.childNode2 = childNode2;
         this.imageIndex = imageIndex;
     }
+
+    var defaultInitialSize = new Cartesian2(16.0, 16.0);
 
     /**
      * A TextureAtlas stores multiple images in one square texture and keeps
@@ -48,36 +52,25 @@ define([
      * @exception {DeveloperError} initialSize must be greater than zero.
      */
     var TextureAtlas = function(description) {
-        description = (typeof description !== 'undefined') ? description : {};
-        var context = description.context;
-        var pixelFormat = description.pixelFormat;
-        var borderWidthInPixels = description.borderWidthInPixels;
-        var initialSize = description.initialSize;
-        var images = description.images;
-        var image = description.image;
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
 
-        // Context
+        var context = description.context;
         if (typeof context === 'undefined') {
             throw new DeveloperError('context is required.');
         }
 
-        // Pixel Format
-        pixelFormat = (typeof pixelFormat !== 'undefined') ? pixelFormat : PixelFormat.RGBA;
-
-        // Border
-        borderWidthInPixels = (typeof borderWidthInPixels !== 'undefined') ? borderWidthInPixels : 1.0;
+        var borderWidthInPixels = defaultValue(description.borderWidthInPixels, 1.0);
         if (borderWidthInPixels < 0) {
             throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.');
         }
 
-        // Initial size
-        initialSize = (typeof initialSize !== 'undefined') ? initialSize : new Cartesian2(16.0, 16.0);
+        var initialSize = defaultValue(description.initialSize, defaultInitialSize);
         if (initialSize.x < 1 || initialSize.y < 1) {
             throw new DeveloperError('initialSize must be greater than zero.');
         }
 
         this._context = context;
-        this._pixelFormat = pixelFormat;
+        this._pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
         this._borderWidthInPixels = borderWidthInPixels;
         this._textureCoordinates = [];
         this._guid = createGuid();
@@ -91,9 +84,12 @@ define([
         this._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialSize.x, initialSize.y));
 
         // Add initial images if there are any.
-        if (typeof images !== 'undefined' && (images.length > 0)) {
+        var images = description.images;
+        if (typeof images !== 'undefined' && images.length > 0) {
             this.addImages(images);
         }
+
+        var image = description.image;
         if (typeof image !== 'undefined') {
             this.addImage(image);
         }

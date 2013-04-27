@@ -46,7 +46,7 @@ define([
      * });
      */
     var Clock = function(description) {
-        description = defaultValue(description, {});
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
 
         var startTime = description.startTime;
         var startTimeUndefined = typeof startTime === 'undefined';
