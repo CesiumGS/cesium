@@ -26,6 +26,15 @@ var afterAll;
     "use strict";
     /*global require,describe,specs,jasmine*/
 
+    function getQueryParameter(name) {
+        var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+
+        if (match) {
+            return decodeURIComponent(match[1].replace(/\+/g, ' '));
+        }
+        return null;
+    }
+
     // patch in beforeAll/afterAll functions
     // based on existing beforeEach/afterEach
 
@@ -97,6 +106,29 @@ var afterAll;
         };
     })(jasmine.Suite.prototype.execute);
 
+    function wrapWithDebugger(originalFunction) {
+        return function() {
+            /*jshint debug:true*/
+            var stepIntoThisFunction = originalFunction.bind(this);
+            debugger;
+            stepIntoThisFunction();
+        };
+    }
+
+    var debug = getQueryParameter('debug');
+    if (debug !== null) {
+        jasmine.Spec.prototype.execute = (function(originalExecute) {
+            return function(onComplete) {
+                if (this.getFullName() === debug) {
+                    var block = this.queue.blocks[0];
+                    block.func = wrapWithDebugger(block.func);
+                }
+
+                originalExecute.call(this, onComplete);
+            };
+        })(jasmine.Spec.prototype.execute);
+    }
+
     beforeAll = function(beforeAllFunction) {
         jasmine.getEnv().beforeAll(beforeAllFunction);
     };
@@ -108,14 +140,6 @@ var afterAll;
     var tests = [];
     var readyToCreateTests = false;
     var createTests;
-
-    function getQueryParameter(name) {
-        var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
-
-        if (match) {
-            return decodeURIComponent(match[1].replace(/\+/g, ' '));
-        }
-    }
 
     require.config({
         baseUrl : getQueryParameter('baseUrl') || '../Source',
