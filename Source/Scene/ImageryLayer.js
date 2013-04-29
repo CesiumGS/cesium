@@ -23,6 +23,7 @@ define([
         './TileProviderError',
         './ImageryState',
         './TileImagery',
+        './TerrainProvider',
         './TexturePool',
         '../ThirdParty/when',
         '../Shaders/ReprojectWebMercatorFS',
@@ -51,6 +52,7 @@ define([
         TileProviderError,
         ImageryState,
         TileImagery,
+        TerrainProvider,
         TexturePool,
         when,
         ReprojectWebMercatorFS,
@@ -778,14 +780,28 @@ define([
             reproject.framebuffer = context.createFramebuffer();
             reproject.framebuffer.destroyAttachments = false;
 
+            var positions = [];
+            for (var j = 0; j < 256; ++j) {
+                var y = j / 255.0;
+                for (var i = 0; i < 256; ++i) {
+                    var x = i / 255.0;
+                    positions.push(x);
+                    positions.push(y);
+                }
+            }
+
             var reprojectMesh = {
                 attributes : {
                     position : {
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 2,
-                        values : [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
+                        values : positions
                     }
-                }
+                },
+                indexLists : [{
+                    primitiveType : PrimitiveType.TRIANGLES,
+                    values : TerrainProvider.getRegularGridIndices(256, 256)
+                }]
             };
 
             var reprojectAttribInds = {
@@ -870,7 +886,7 @@ define([
             framebuffer : reproject.framebuffer,
             shaderProgram : reproject.shaderProgram,
             renderState : reproject.renderState,
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLES,
             vertexArray : reproject.vertexArray,
             uniformMap : uniformMap
         });
