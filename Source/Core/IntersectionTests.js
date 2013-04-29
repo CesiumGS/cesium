@@ -595,6 +595,34 @@ define([
                     ]
                 };
             }
+        } else if ((numBehind === 3) && (p0.y === 0 || p1.y === 0 || p2.y === 0)) {
+            if (p0.y === 0) {
+                p0.y -= CesiumMath.EPSILON4;
+            }
+            if (p1.y === 0) {
+                p1.y -= CesiumMath.EPSILON4;
+            }
+            if (p2.y === 0) {
+                p2.y -= CesiumMath.EPSILON4;
+            }
+            return {
+                positions: [p0, p1, p2],
+                indices: [0, 1, 2]
+            };
+        } else if ((numBehind === 0) && (p0.y === 0 || p1.y === 0 || p2.y === 0)) {
+            if (p0.y === 0) {
+                p0.y += CesiumMath.EPSILON4;
+            }
+            if (p1.y === 0) {
+                p1.y += CesiumMath.EPSILON4;
+            }
+            if (p2.y === 0) {
+                p2.y += CesiumMath.EPSILON4;
+            }
+            return {
+                positions: [p0, p1, p2],
+                indices: [0, 1, 2]
+            };
         }
 
         // if numBehind is 3, the triangle is completely behind the plane;
