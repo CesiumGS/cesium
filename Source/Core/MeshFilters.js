@@ -652,6 +652,8 @@ define([
             }
         }
 
+        // PERFORMANCE_IDEA: Could combine with fitToUnsignedShortIndices, but it would start to get ugly.
+
         // Combine index lists
 
         // First, determine the size of a typed array per primitive type
