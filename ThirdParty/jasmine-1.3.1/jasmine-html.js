@@ -320,7 +320,19 @@ jasmine.HtmlReporter = function(_doc) {
       return matchedCategory;
     }
 
-    return (spec.getFullName() === focusedSpecName) || (spec.suite.getFullName() === focusedSpecName);
+    if (spec.getFullName() === focusedSpecName) {
+        return true;
+    }
+
+    var suite = spec.suite;
+    while (suite) {
+        if (suite.getFullName() === focusedSpecName) {
+            return true;
+        }
+        suite = suite.parentSuite;
+    }
+
+    return false;
   };
 
   return self;
