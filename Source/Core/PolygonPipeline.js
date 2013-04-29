@@ -580,8 +580,6 @@ define([
                     // Then it needs to intersect the plane y = 0.
                     var triangles = IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
                     if (triangles) {
-                        // TODO: remove
-                        debugger;
 
                         var positionsLen = positions.length;
                         // Append two new points, the intersection points of the
@@ -590,6 +588,8 @@ define([
                         // TODO: raise to surface in plane
                         positions.push(triangles.positions[3]);
                         positions.push(triangles.positions[4]);
+                        positions.push(triangles.positions[5]);
+                        positions.push(triangles.positions[6]);
 
                         // Replace triangle that crosses the IDL with three
                         // triangles that do not cross.
@@ -606,6 +606,10 @@ define([
                                     break;
                                 case 3:
                                 case 4:
+                                    newIndices.push(positionsLen + index - 3);
+                                    break;
+                                case 5:
+                                case 6:
                                     newIndices.push(positionsLen + index - 3);
                                     break;
                             }
