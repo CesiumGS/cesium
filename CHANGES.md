@@ -3,6 +3,12 @@ Change Log
 
 Beta Releases
 -------------
+
+### TODO
+
+* Breaking changes:
+   * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
+
 ### b16 - 2013-05-01
 * Breaking changes:
    * Removed the color, outline color, and outline width properties of polylines. Instead, use materials for polyline color and outline properties. Code that looked like:

@@ -492,4 +492,111 @@ defineSuite([
         }).toThrow();
     });
 
+    it('MeshFilters.combine combines one mesh', function() {
+        var mesh = {
+            attributes : {
+                position : {
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [0.0, 0.0, 0.0]
+                }
+            }
+        };
+
+        var combinedMesh = MeshFilters.combine([mesh]);
+        expect(combinedMesh).toBe(mesh);
+    });
+
+    it('MeshFilters.combine combines several meshes', function() {
+        var mesh = {
+            attributes : {
+                position : {
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [
+                        0.0, 0.0, 0.0,
+                        1.0, 1.0, 1.0,
+                        2.0, 2.0, 2.0
+                    ]
+                },
+                normal : {
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [
+                        0.0, 0.0, 0.0,
+                        1.0, 1.0, 1.0,
+                        2.0, 2.0, 2.0
+                    ]
+                }
+            },
+            indexLists : [{
+                primitiveType : PrimitiveType.TRIANGLES,
+                values : [0, 1, 2]
+            }, {
+                primitiveType : PrimitiveType.LINES,
+                values : [1, 2]
+            }]
+        };
+        var anotherMesh = {
+            attributes : {
+                position : {
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [
+                        3.0, 3.0, 3.0,
+                        4.0, 4.0, 4.0,
+                        5.0, 5.0, 5.0
+                    ]
+                }
+            },
+            indexLists : [{
+                primitiveType : PrimitiveType.TRIANGLES,
+                values : [0, 1, 2]
+            }, {
+                primitiveType : PrimitiveType.POINTS,
+                values : [0, 1, 2]
+            }]
+        };
+
+        var combinedMesh = MeshFilters.combine([mesh, anotherMesh]);
+        expect(combinedMesh).toEqual({
+            attributes : {
+                position : {
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : new Float32Array([
+                        0.0, 0.0, 0.0,
+                        1.0, 1.0, 1.0,
+                        2.0, 2.0, 2.0,
+                        3.0, 3.0, 3.0,
+                        4.0, 4.0, 4.0,
+                        5.0, 5.0, 5.0
+                    ])
+                }
+            },
+            indexLists : [{
+                primitiveType : PrimitiveType.TRIANGLES,
+                values : new Uint16Array([0, 1, 2, 3, 4, 5])
+            }, {
+                primitiveType : PrimitiveType.LINES,
+                values : new Uint16Array([1, 2])
+            }, {
+                primitiveType : PrimitiveType.POINTS,
+                values : new Uint16Array([3, 4, 5])
+            }]
+        });
+    });
+
+    it('MeshFilters.combine throws with meshes', function() {
+        expect(function() {
+            MeshFilters.combine();
+        }).toThrow();
+    });
+
+    it('MeshFilters.combine throws when meshes.length is zero', function() {
+        expect(function() {
+            MeshFilters.combine([]);
+        }).toThrow();
+    });
+
 });

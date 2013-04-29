@@ -2193,7 +2193,7 @@ define([
                 var sizeInBytes = attributes[name].componentDatatype.sizeInBytes;
 
                 views[name] = {
-                    pointer : attributes[name].componentDatatype.toTypedArray(buffer),
+                    pointer : attributes[name].componentDatatype.createTypedArray(buffer),
                     index : offsetsInBytes[name] / sizeInBytes, // Offset in ComponentType
                     strideInComponentType : vertexSizeInBytes / sizeInBytes
                 };
@@ -2283,7 +2283,7 @@ define([
                     attribute = attributes[name];
                     vaAttributes.push({
                         index : attributeIndices[name],
-                        vertexBuffer : attribute.values ? this.createVertexBuffer(attribute.componentDatatype.toTypedArray(attribute.values), bufferUsage) : undefined,
+                        vertexBuffer : attribute.values ? this.createVertexBuffer(attribute.componentDatatype.createTypedArray(attribute.values), bufferUsage) : undefined,
                         value : attribute.value ? attribute.value : undefined,
                         componentDatatype : attribute.componentDatatype,
                         componentsPerAttribute : attribute.componentsPerAttribute,

@@ -564,5 +564,176 @@ define([
         return mesh;
     };
 
+    function findAttributesInAllMeshes(meshes) {
+        var length = meshes.length;
+
+        var attributesInAllMeshes = {};
+
+        var attributes0 = meshes[0].attributes;
+        var name;
+
+        for (name in attributes0) {
+            if (attributes0.hasOwnProperty(name)) {
+                var attribute = attributes0[name];
+                var numberOfComponents = attribute.values.length;
+                var inAllMeshes = true;
+
+                // Does this same attribute exist in all meshes?
+                for (var i = 1; i < length; ++i) {
+                    var otherAttribute = meshes[i].attributes[name];
+
+                    if ((typeof otherAttribute === 'undefined') ||
+                        (attribute.componentDatatype !== otherAttribute.componentDatatype) ||
+                        (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
+                        (attribute.normalize !== otherAttribute.normalize)) {
+
+                        inAllMeshes = false;
+                        break;
+                    }
+
+                    numberOfComponents += otherAttribute.values.length;
+                }
+
+                if (inAllMeshes) {
+// TODO: new type to allocate this
+                    attributesInAllMeshes[name] = {
+                        componentDatatype : attribute.componentDatatype,
+                        componentsPerAttribute : attribute.componentsPerAttribute,
+                        normalize : attribute.normalize,
+                        values : attribute.componentDatatype.createTypedArray(numberOfComponents)
+                    };
+                }
+            }
+        }
+
+        return attributesInAllMeshes;
+    }
+
+    /**
+     * DOC_TBA
+     *
+     * @exception {DeveloperError} meshes is required and must have length greater than zero.
+     */
+    MeshFilters.combine = function(meshes) {
+        if ((typeof meshes === 'undefined') || (meshes.length < 1)) {
+            throw new DeveloperError('meshes is required.');
+        }
+
+        if (meshes.length === 1) {
+            return meshes[0];
+        }
+
+        var length = meshes.length;
+        var name;
+        var i;
+        var j;
+        var k;
+
+        // Find subset of attributes in all meshes
+        var attributes = findAttributesInAllMeshes(meshes);
+
+        // PERFORMANCE_IDEA: Interleave here instead of createVertexArrayFromMesh to save a copy.
+        // This will require adding offset and stride to the mesh.
+
+        // Combine attributes from each mesh into a single typed array
+        for (name in attributes) {
+            if (attributes.hasOwnProperty(name)) {
+                var values = attributes[name].values;
+
+                k = 0;
+                for (i = 0; i < length; ++i) {
+                    var sourceValues = meshes[i].attributes[name].values;
+                    var sourceValuesLength = sourceValues.length;
+
+                    for (j = 0; j < sourceValuesLength; ++j) {
+                        values[k++] = sourceValues[j];
+                    }
+                }
+            }
+        }
+
+        // Combine index lists
+
+        // First, determine the size of a typed array per primitive type
+        var numberOfIndices = {};
+        var indexLists;
+        var indexListsLength;
+        var indices;
+
+        for (i = 0; i < length; ++i) {
+            indexLists = meshes[i].indexLists;
+            indexListsLength = indexLists.length;
+
+            for (j = 0; j < indexListsLength; ++j) {
+                indices = indexLists[j];
+
+                numberOfIndices[indices.primitiveType] = (typeof numberOfIndices[indices.primitiveType] !== 'undefined') ?
+                    (numberOfIndices[indices.primitiveType] += indices.values.length) : indices.values.length;
+            }
+        }
+
+        // Next, allocate a typed array for indices per primitive type
+        var combinedIndexLists = [];
+        var indexListsByPrimitiveType = {};
+
+        for (name in numberOfIndices) {
+            if (numberOfIndices.hasOwnProperty(name)) {
+                var num = numberOfIndices[name];
+
+                if (num < 60 * 1024) {
+                    values = new Uint16Array(num);
+                } else {
+                    values = new Uint32Array(num);
+                }
+
+                combinedIndexLists.push({
+// TODO: Explicit type for this
+                    primitiveType : PrimitiveType[name],
+                    values : values
+                });
+
+                indexListsByPrimitiveType[name] = {
+                    values : values,
+                    currentOffset : 0
+                };
+            }
+        }
+
+        // Finally, combine index lists with the same primitive type
+        var offset = 0;
+
+        for (i = 0; i < length; ++i) {
+            indexLists = meshes[i].indexLists;
+            indexListsLength = indexLists.length;
+
+            for (j = 0; j < indexListsLength; ++j) {
+                var indices = indexLists[j];
+                var sourceValues = indices.values;
+                var sourceValuesLength = sourceValues.length;
+                var destValues = indexListsByPrimitiveType[indices.primitiveType].values;
+                var m = indexListsByPrimitiveType[indices.primitiveType].currentOffset;
+
+                for (k = 0; k < sourceValuesLength; ++k) {
+                    destValues[m++] = offset + sourceValues[k];
+                }
+
+                indexListsByPrimitiveType[indices.primitiveType].currentOffset = m;
+            }
+
+            var attrs = meshes[i].attributes;
+            for (name in attrs) {
+                if (attrs.hasOwnProperty(name)) {
+                    offset += attrs[name].values.length / attrs[name].componentsPerAttribute;
+                    break;
+                }
+            }
+        }
+
+        return {
+            attributes : attributes,
+            indexLists : combinedIndexLists
+        };
+    };
+
     return MeshFilters;
 });

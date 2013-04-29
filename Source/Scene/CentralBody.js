@@ -409,7 +409,7 @@ define([
                     });
                 } else {
                     datatype = ComponentDatatype.FLOAT;
-                    this._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                    this._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(positions));
                 }
             }
         }
@@ -457,7 +457,7 @@ define([
                      });
                  } else {
                      datatype = ComponentDatatype.FLOAT;
-                     this._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                     this._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(positions));
                  }
             }
         }
@@ -593,7 +593,7 @@ define([
             });
         } else {
             var datatype = ComponentDatatype.FLOAT;
-            this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(depthQuad));
+            this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(depthQuad));
         }
 
         var shaderCache = context.getShaderCache();

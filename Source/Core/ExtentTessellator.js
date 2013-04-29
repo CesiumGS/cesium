@@ -291,8 +291,8 @@ define([
      *
      * var datatype = ComponentDatatype.FLOAT;
      * var usage = BufferUsage.STATIC_DRAW;
-     * var positionBuffer = context.createVertexBuffer(datatype.toTypedArray(buffers.positions), usage);
-     * var textureCoordinateBuffer = context.createVertexBuffer(datatype.toTypedArray(buffers.textureCoordinates), usage);
+     * var positionBuffer = context.createVertexBuffer(datatype.createTypedArray(buffers.positions), usage);
+     * var textureCoordinateBuffer = context.createVertexBuffer(datatype.createTypedArray(buffers.textureCoordinates), usage);
      * attributes = [{
      *         index : attributeIndices.position,
      *         vertexBuffer : positionBuffer,
@@ -319,7 +319,7 @@ define([
      *
      * var datatype = ComponentDatatype.FLOAT;
      * var usage = BufferUsage.STATIC_DRAW;
-     * var typedArray = datatype.toTypedArray(buffers.vertices);
+     * var typedArray = datatype.createTypedArray(buffers.vertices);
      * var buffer = context.createVertexBuffer(typedArray, usage);
      * var stride = 5 * datatype.sizeInBytes;
      * var attributes = [{
