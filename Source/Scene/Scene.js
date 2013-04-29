@@ -463,8 +463,8 @@ define([
         var frustum = camera.frustum.clone();
         var context = scene._context;
         var us = context.getUniformState();
-        var skyBoxCommand = (typeof scene.skyBox !== 'undefined') ? scene.skyBox.update(context, scene._frameState) : undefined;
-        var skyAtmosphereCommand = (typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, scene._frameState) : undefined;
+        var skyBoxCommand = typeof scene.skyBox !== 'undefined' ? scene.skyBox.update(context, scene._frameState) : undefined;
+        var skyAtmosphereCommand = typeof scene.skyAtmosphere !== 'undefined' ? scene.skyAtmosphere.update(context, scene._frameState) : undefined;
 
         var clear = scene._clearColorCommand;
         Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.color);

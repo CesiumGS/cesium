@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './clone',
         './defaultValue',
         './DeveloperError',
         './Math',
@@ -9,6 +10,7 @@ define([
         './ComponentDatatype',
         './PrimitiveType'
     ], function(
+        clone,
         defaultValue,
         DeveloperError,
         CesiumMath,
@@ -51,7 +53,7 @@ define([
      * @param {Array|Float32Array} [description.indices] The array to use to store computed indices.  If undefined, indices will be not computed.
      */
     ExtentTessellator.computeVertices = function(description) {
-        description = defaultValue(description, {});
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
 
         var extent = description.extent;
         var surfaceHeight = description.surfaceHeight;
@@ -200,32 +202,35 @@ define([
      * });
      */
     ExtentTessellator.compute = function(description) {
-        description = defaultValue(description, {});
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
+
+        // make a copy of description to allow us to change values before passing to computeVertices
+        var computeVerticesDescription = clone(description);
 
         var extent = description.extent;
         extent.validate();
 
         var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
-        description.radiiSquared = ellipsoid.getRadiiSquared();
-        description.relativeToCenter = defaultValue(description.relativeToCenter, Cartesian3.ZERO);
+        computeVerticesDescription.radiiSquared = ellipsoid.getRadiiSquared();
+        computeVerticesDescription.relativeToCenter = defaultValue(description.relativeToCenter, Cartesian3.ZERO);
 
         var granularity = defaultValue(description.granularity, 0.1);
-        description.surfaceHeight = defaultValue(description.surfaceHeight, 0.0);
+        computeVerticesDescription.surfaceHeight = defaultValue(description.surfaceHeight, 0.0);
 
-        description.width = Math.ceil((extent.east - extent.west) / granularity) + 1;
-        description.height = Math.ceil((extent.north - extent.south) / granularity) + 1;
+        computeVerticesDescription.width = Math.ceil((extent.east - extent.west) / granularity) + 1;
+        computeVerticesDescription.height = Math.ceil((extent.north - extent.south) / granularity) + 1;
 
         var vertices = [];
         var indices = [];
         var textureCoordinates = [];
 
-        description.generateTextureCoordinates = defaultValue(description.generateTextureCoordinates, false);
-        description.interleaveTextureCoordinates = false;
-        description.vertices = vertices;
-        description.textureCoordinates = textureCoordinates;
-        description.indices = indices;
+        computeVerticesDescription.generateTextureCoordinates = defaultValue(computeVerticesDescription.generateTextureCoordinates, false);
+        computeVerticesDescription.interleaveTextureCoordinates = false;
+        computeVerticesDescription.vertices = vertices;
+        computeVerticesDescription.textureCoordinates = textureCoordinates;
+        computeVerticesDescription.indices = indices;
 
-        ExtentTessellator.computeVertices(description);
+        ExtentTessellator.computeVertices(computeVerticesDescription);
 
         var mesh = {
             attributes : {},
@@ -338,32 +343,35 @@ define([
      * var vacontext.createVertexArray(attributes, indexBuffer);
      */
     ExtentTessellator.computeBuffers = function(description) {
-        description = defaultValue(description, {});
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
+
+        // make a copy of description to allow us to change values before passing to computeVertices
+        var computeVerticesDescription = clone(description);
 
         var extent = description.extent;
         extent.validate();
 
         var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
-        description.radiiSquared = ellipsoid.getRadiiSquared();
-        description.relativeToCenter = defaultValue(description.relativeToCenter, Cartesian3.ZERO);
+        computeVerticesDescription.radiiSquared = ellipsoid.getRadiiSquared();
+        computeVerticesDescription.relativeToCenter = defaultValue(description.relativeToCenter, Cartesian3.ZERO);
 
         var granularity = defaultValue(description.granularity, 0.1);
-        description.surfaceHeight = defaultValue(description.surfaceHeight, 0.0);
+        computeVerticesDescription.surfaceHeight = defaultValue(description.surfaceHeight, 0.0);
 
-        description.width = Math.ceil((extent.east - extent.west) / granularity) + 1;
-        description.height = Math.ceil((extent.north - extent.south) / granularity) + 1;
+        computeVerticesDescription.width = Math.ceil((extent.east - extent.west) / granularity) + 1;
+        computeVerticesDescription.height = Math.ceil((extent.north - extent.south) / granularity) + 1;
 
         var vertices = [];
         var indices = [];
         var textureCoordinates = [];
 
-        description.generateTextureCoordinates = defaultValue(description.generateTextureCoordinates, false);
-        description.interleaveTextureCoordinates = defaultValue(description.interleaveTextureCoordinates, false);
-        description.vertices = vertices;
-        description.textureCoordinates = textureCoordinates;
-        description.indices = indices;
+        computeVerticesDescription.generateTextureCoordinates = defaultValue(description.generateTextureCoordinates, false);
+        computeVerticesDescription.interleaveTextureCoordinates = defaultValue(description.interleaveTextureCoordinates, false);
+        computeVerticesDescription.vertices = vertices;
+        computeVerticesDescription.textureCoordinates = textureCoordinates;
+        computeVerticesDescription.indices = indices;
 
-        ExtentTessellator.computeVertices(description);
+        ExtentTessellator.computeVertices(computeVerticesDescription);
 
         var result = {
             indices : indices

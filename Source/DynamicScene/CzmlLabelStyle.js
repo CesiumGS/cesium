@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Scene/LabelStyle'
-       ], function(
-         LabelStyle) {
+    ], function(
+        defaultValue,
+        LabelStyle) {
     "use strict";
 
     /**
@@ -33,8 +35,7 @@ define([
          * @param {Object} czmlInterval The CZML interval to unwrap.
          */
         unwrapInterval : function(czmlInterval) {
-            var result = czmlInterval.labelStyle;
-            return typeof result === 'undefined' ? czmlInterval : result;
+            return defaultValue(czmlInterval.labelStyle, czmlInterval);
         },
 
         /**

@@ -40,7 +40,7 @@ define([
             throw new DeveloperError('url is required.');
         }
 
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var deferred = when.defer();
 
@@ -65,7 +65,7 @@ define([
         var queryParts = [];
         pushQueryParameter(queryParts, callbackParameterName, functionName);
 
-        var parameters = defaultValue(options.parameters, {});
+        var parameters = defaultValue(options.parameters, defaultValue.EMPTY_OBJECT);
         for ( var name in parameters) {
             if (parameters.hasOwnProperty(name)) {
                 pushQueryParameter(queryParts, name, parameters[name]);

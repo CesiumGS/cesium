@@ -246,14 +246,14 @@ define([
      * // Example 1:  Add a billboard, specifying all the default values.
      * var b = billboards.add({
      *   show : true,
-     *   position : new Cartesian3(0.0, 0.0, 0.0),
-     *   pixelOffset : new Cartesian2(0.0, 0.0),
-     *   eyeOffset : new Cartesian3(0.0, 0.0, 0.0),
+     *   position : Cartesian3.ZERO,
+     *   pixelOffset : Cartesian2.ZERO,
+     *   eyeOffset : Cartesian3.ZERO,
      *   horizontalOrigin : HorizontalOrigin.CENTER,
      *   verticalOrigin : VerticalOrigin.CENTER,
      *   scale : 1.0,
      *   imageIndex : 0,
-     *   color : new Color(1.0, 1.0, 1.0, 1.0)
+     *   color : Color.WHITE
      * });
      *
      * // Example 2:  Specify only the billboard's cartographic position.

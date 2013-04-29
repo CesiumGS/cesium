@@ -1312,7 +1312,7 @@ define([
      * var t = context.createTexture2DFromFramebuffer();
      */
     Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height) {
-        pixelFormat = pixelFormat || PixelFormat.RGB;
+        pixelFormat = defaultValue(pixelFormat, PixelFormat.RGB);
         framebufferXOffset = defaultValue(framebufferXOffset, 0);
         framebufferYOffset = defaultValue(framebufferYOffset, 0);
         width = defaultValue(width, this._canvas.clientWidth);
@@ -1579,11 +1579,10 @@ define([
      * @see Context#createFramebuffer
      */
     Context.prototype.createRenderbuffer = function(description) {
-        description = description || {};
-        var format = description.format || RenderbufferFormat.RGBA4;
-        var width = (typeof description.width === 'undefined') ? this._canvas.clientWidth : description.width;
-        var height = (typeof description.height === 'undefined') ? this._canvas.clientHeight : description.height;
-
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
+        var format = defaultValue(description.format, RenderbufferFormat.RGBA4);
+        var width = typeof description.width !== 'undefined' ? description.width : this._canvas.clientWidth;
+        var height = typeof description.height !== 'undefined' ? description.height : this._canvas.clientHeight;
 
         var gl = this._gl;
         if (!RenderbufferFormat.validate(format)) {

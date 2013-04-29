@@ -750,7 +750,7 @@ define([
         oneOverMercatorHeight : 0
     };
 
-    var float32ArrayScratch = typeof Float32Array === 'undefined' ? undefined : new Float32Array(1);
+    var float32ArrayScratch = typeof Float32Array !== 'undefined' ? new Float32Array(1) : undefined;
 
     function reprojectToGeographic(imageryLayer, context, texture, extent) {
         var reproject = context.cache.imageryLayer_reproject;
