@@ -916,13 +916,15 @@ define([
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
             var p = polylines[i];
-            p.update();
-            var material = p.getMaterial();
-            var value = polylineBuckets[material.type];
-            if (typeof value === 'undefined') {
-                value = polylineBuckets[material.type] = new PolylineBucket(material, mode, projection, modelMatrix);
+            if (p.getPositions().length > 1) {
+                p.update();
+                var material = p.getMaterial();
+                var value = polylineBuckets[material.type];
+                if (typeof value === 'undefined') {
+                    value = polylineBuckets[material.type] = new PolylineBucket(material, mode, projection, modelMatrix);
+                }
+                value.addPolyline(p);
             }
-            value.addPolyline(p);
         }
     }
 
@@ -1044,7 +1046,7 @@ define([
         var length;
         if (this.mode === SceneMode.SCENE3D || !intersectsIDL(polyline)) {
             length = polyline.getPositions().length;
-            return (length > 1.0) ? length * 4.0 - 4.0 : 0.0;
+            return length * 4.0 - 4.0;
         }
 
         var count = 0;
