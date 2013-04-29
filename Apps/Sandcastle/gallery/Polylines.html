@@ -73,7 +73,7 @@ require([
         ]));
         var glowMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineGlowType);
         glowMaterial.uniforms.innerWidth = 3.0;
-        glowMaterial.uniforms.color = new Cesium.Color(1.0, 0.5, 0.0, 0.7);
+        glowMaterial.uniforms.color = new Cesium.Color(1.0, 0.5, 0.0, 1.0);
         coloredPolyline.setMaterial(glowMaterial);
         coloredPolyline.setWidth(10.0);
 

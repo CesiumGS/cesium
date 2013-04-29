@@ -296,8 +296,7 @@ define([
      *  <li>PolylineGlow</li>
      *  <ul>
      *      <li><code>color</code>: color and maximum alpha for the glow on the line.</li>
-     *      <li><code>innerColor</code>: color and alpha of the inner solid area.</li>
-     *      <li><code>innerWidth</code>: width of the inner solid area in pixels.</li>
+     *      <li><code>glowPower</code>: strength of the glow, as a percentage of the total line width (less than 1.0).</li>
      *  </ul>
      *  <li>PolylineOutline</li>
      *  <ul>
@@ -1265,9 +1264,8 @@ define([
     Material._materialCache.addMaterial(Material.PolylineGlowType, {
         type : Material.PolylineGlowType,
         uniforms : {
-            color : new Color(0.0, 0.5, 1.0, 0.7),
-            innerColor : new Color(1.0, 1.0, 1.0, 1.0),
-            innerWidth : 1.0
+            color : new Color(0.0, 0.5, 1.0, 1.0),
+            glowPower : 0.1
         },
         source : PolylineGlowMaterial
     });
