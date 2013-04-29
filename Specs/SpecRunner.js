@@ -70,35 +70,61 @@ var afterAll;
         this.afterAll_.unshift(afterAllFunction);
     };
 
+    jasmine.Suite.prototype.allSpecsFiltered = function() {
+        var i;
+        var len;
+
+        var specs = this.specs_;
+        for (i = 0, len = specs.length; i < len; i++) {
+            var spec = specs[i];
+            if (spec.env.specFilter(spec)) {
+                return false;
+            }
+        }
+
+        var suites = this.suites_;
+        for (i = 0, len = suites.length; i < len; i++) {
+            var suite = suites[i];
+            if (!suite.allSpecsFiltered()) {
+                return false;
+            }
+        }
+
+        return true;
+    };
+
     jasmine.Suite.prototype.execute = (function(originalExecute) {
         return function(onComplete) {
-            var i, len;
+            if (!this.allSpecsFiltered()) {
+                var i;
+                var len;
+                var block;
+                var results;
 
-            var block, results;
-
-            var beforeAll = this.beforeAll_;
-            if (typeof beforeAll !== 'undefined') {
-                var beforeSpec = new jasmine.Spec(this.env, this, 'beforeAll');
-                results = function() {
-                    return beforeSpec.results();
-                };
-                for (i = 0, len = beforeAll.length; i < len; i++) {
-                    block = new jasmine.Block(this.env, beforeAll[i], beforeSpec);
-                    block.results = results;
-                    this.queue.addBefore(block);
+                var beforeAll = this.beforeAll_;
+                if (typeof beforeAll !== 'undefined') {
+                    var beforeSpec = new jasmine.Spec(this.env, this, 'beforeAll');
+                    results = function() {
+                        return beforeSpec.results();
+                    };
+                    for (i = 0, len = beforeAll.length; i < len; i++) {
+                        block = new jasmine.Block(this.env, beforeAll[i], beforeSpec);
+                        block.results = results;
+                        this.queue.addBefore(block);
+                    }
                 }
-            }
 
-            var afterAll = this.afterAll_;
-            if (typeof afterAll !== 'undefined') {
-                var afterSpec = new jasmine.Spec(this.env, this, 'afterAll');
-                results = function() {
-                    return afterSpec.results();
-                };
-                for (i = 0, len = afterAll.length; i < len; i++) {
-                    block = new jasmine.Block(this.env, afterAll[i], afterSpec);
-                    block.results = results;
-                    this.queue.add(block);
+                var afterAll = this.afterAll_;
+                if (typeof afterAll !== 'undefined') {
+                    var afterSpec = new jasmine.Spec(this.env, this, 'afterAll');
+                    results = function() {
+                        return afterSpec.results();
+                    };
+                    for (i = 0, len = afterAll.length; i < len; i++) {
+                        block = new jasmine.Block(this.env, afterAll[i], afterSpec);
+                        block.results = results;
+                        this.queue.add(block);
+                    }
                 }
             }
 
