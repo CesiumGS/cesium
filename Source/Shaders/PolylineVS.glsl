@@ -58,6 +58,13 @@ void clipLineSegmentToNearPlane(
 
 void main() 
 {
+    // cull if width is less than 1.0
+    if (abs(texCoordExpandWidthAndShow.z) < 1.0)
+    {
+        gl_Position = czm_projection * vec4(0.0, 0.0, 0.0, 1.0);
+        return;
+    }
+    
     float texCoord = texCoordExpandWidthAndShow.x;
     float expandDir = texCoordExpandWidthAndShow.y;
     float width = abs(texCoordExpandWidthAndShow.z) + 0.5;
