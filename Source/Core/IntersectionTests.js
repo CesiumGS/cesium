@@ -460,19 +460,24 @@ define([
         numBehind += p1Behind ? 1 : 0;
         numBehind += p2Behind ? 1 : 0;
 
+        var u1 = new Cartesian3();
+        var u2 = new Cartesian3();
+        var v1 = new Cartesian3();
+        var v2 = new Cartesian3();
+
         if (numBehind === 1) {
             if (p0Behind) {
-                var u01_1 = IntersectionTests.lineSegmentPlane(p0, p1, plane);
-                var u02_1 = IntersectionTests.lineSegmentPlane(p0, p2, plane);
-                var v01_1 = Cartesian3.clone(u01_1);
-                var v02_1 = Cartesian3.clone(u02_1);
-                u01_1.y -= CesiumMath.EPSILON4;
-                u02_1.y -= CesiumMath.EPSILON4;
-                v01_1.y += CesiumMath.EPSILON4;
-                v02_1.y += CesiumMath.EPSILON4;
+                IntersectionTests.lineSegmentPlane(p0, p1, plane, u1);
+                IntersectionTests.lineSegmentPlane(p0, p2, plane, u2);
+                Cartesian3.clone(u1, v1);
+                Cartesian3.clone(u2, v2);
+                u1.y -= CesiumMath.EPSILON4;
+                u2.y -= CesiumMath.EPSILON4;
+                v1.y += CesiumMath.EPSILON4;
+                v2.y += CesiumMath.EPSILON4;
 
                 return {
-                    positions : [p0, p1, p2, u01_1, u02_1, v01_1, v02_1 ],
+                    positions : [p0, p1, p2, u1, u2, v1, v2 ],
                     indices : [
                         // Behind
                         0, 3, 4,
@@ -483,17 +488,17 @@ define([
                     ]
                 };
             } else if (p1Behind) {
-                var u12_1 = IntersectionTests.lineSegmentPlane(p1, p2, plane);
-                var u10_1 = IntersectionTests.lineSegmentPlane(p1, p0, plane);
-                var v12_1 = Cartesian3.clone(u12_1);
-                var v10_1 = Cartesian3.clone(u10_1);
-                u12_1.y -= CesiumMath.EPSILON4;
-                u10_1.y -= CesiumMath.EPSILON4;
-                v12_1.y += CesiumMath.EPSILON4;
-                v10_1.y += CesiumMath.EPSILON4;
+                IntersectionTests.lineSegmentPlane(p1, p2, plane, u1);
+                IntersectionTests.lineSegmentPlane(p1, p0, plane, u2);
+                Cartesian3.clone(u1, v1);
+                Cartesian3.clone(u2, v2);
+                u1.y -= CesiumMath.EPSILON4;
+                u2.y -= CesiumMath.EPSILON4;
+                v1.y += CesiumMath.EPSILON4;
+                v2.y += CesiumMath.EPSILON4;
 
                 return {
-                    positions : [p0, p1, p2, u12_1, u10_1, v12_1, v10_1 ],
+                    positions : [p0, p1, p2, u1, u2, v1, v2 ],
                     indices : [
                         // Behind
                         1, 3, 4,
@@ -504,17 +509,17 @@ define([
                     ]
                 };
             } else if (p2Behind) {
-                var u20_1 = IntersectionTests.lineSegmentPlane(p2, p0, plane);
-                var u21_1 = IntersectionTests.lineSegmentPlane(p2, p1, plane);
-                var v20_1 = Cartesian3.clone(u20_1);
-                var v21_1 = Cartesian3.clone(u21_1);
-                u20_1.y -= CesiumMath.EPSILON4;
-                u21_1.y -= CesiumMath.EPSILON4;
-                v20_1.y += CesiumMath.EPSILON4;
-                v21_1.y += CesiumMath.EPSILON4;
+                IntersectionTests.lineSegmentPlane(p2, p0, plane, u1);
+                IntersectionTests.lineSegmentPlane(p2, p1, plane, u2);
+                Cartesian3.clone(u1, v1);
+                Cartesian3.clone(u2, v2);
+                u1.y -= CesiumMath.EPSILON4;
+                u2.y -= CesiumMath.EPSILON4;
+                v1.y += CesiumMath.EPSILON4;
+                v2.y += CesiumMath.EPSILON4;
 
                 return {
-                    positions : [p0, p1, p2, u20_1, u21_1, v20_1, v21_1 ],
+                    positions : [p0, p1, p2, u1, u2, v1, v2 ],
                     indices : [
                         // Behind
                         2, 3, 4,
@@ -527,17 +532,17 @@ define([
             }
         } else if (numBehind === 2) {
             if (!p0Behind) {
-                var u10_2 = IntersectionTests.lineSegmentPlane(p1, p0, plane);
-                var u20_2 = IntersectionTests.lineSegmentPlane(p2, p0, plane);
-                var v10_2 = Cartesian3.clone(u10_2);
-                var v20_2 = Cartesian3.clone(u20_2);
-                u10_2.y -= CesiumMath.EPSILON4;
-                u20_2.y -= CesiumMath.EPSILON4;
-                v10_2.y += CesiumMath.EPSILON4;
-                v20_2.y += CesiumMath.EPSILON4;
+                IntersectionTests.lineSegmentPlane(p1, p0, plane, u1);
+                IntersectionTests.lineSegmentPlane(p2, p0, plane, u2);
+                Cartesian3.clone(u1, v1);
+                Cartesian3.clone(u2, v2);
+                u1.y -= CesiumMath.EPSILON4;
+                u2.y -= CesiumMath.EPSILON4;
+                v1.y += CesiumMath.EPSILON4;
+                v2.y += CesiumMath.EPSILON4;
 
                 return {
-                    positions : [p0, p1, p2, u10_2, u20_2, v10_2, v20_2 ],
+                    positions : [p0, p1, p2, u1, u2, v1, v2 ],
                     indices : [
                         // Behind
                         1, 2, 4,
@@ -548,17 +553,17 @@ define([
                     ]
                 };
             } else if (!p1Behind) {
-                var u21_2 = IntersectionTests.lineSegmentPlane(p2, p1, plane);
-                var u01_2 = IntersectionTests.lineSegmentPlane(p0, p1, plane);
-                var v21_2 = Cartesian3.clone(u21_2);
-                var v01_2 = Cartesian3.clone(u01_2);
-                u21_2.y -= CesiumMath.EPSILON4;
-                u01_2.y -= CesiumMath.EPSILON4;
-                v21_2.y += CesiumMath.EPSILON4;
-                v01_2.y += CesiumMath.EPSILON4;
+                IntersectionTests.lineSegmentPlane(p2, p1, plane, u1);
+                IntersectionTests.lineSegmentPlane(p0, p1, plane, u2);
+                Cartesian3.clone(u1, v1);
+                Cartesian3.clone(u2, v2);
+                u1.y -= CesiumMath.EPSILON4;
+                u2.y -= CesiumMath.EPSILON4;
+                v1.y += CesiumMath.EPSILON4;
+                v2.y += CesiumMath.EPSILON4;
 
                 return {
-                    positions : [p0, p1, p2, u21_2, u01_2, v21_2, v01_2 ],
+                    positions : [p0, p1, p2, u1, u2, v1, v2 ],
                     indices : [
                         // Behind
                         2, 0, 4,
@@ -569,17 +574,17 @@ define([
                     ]
                 };
             } else if (!p2Behind) {
-                var u02_2 = IntersectionTests.lineSegmentPlane(p0, p2, plane);
-                var u12_2 = IntersectionTests.lineSegmentPlane(p1, p2, plane);
-                var v02_2 = Cartesian3.clone(u02_2);
-                var v12_2 = Cartesian3.clone(u12_2);
-                u02_2.y -= CesiumMath.EPSILON4;
-                u12_2.y -= CesiumMath.EPSILON4;
-                v02_2.y += CesiumMath.EPSILON4;
-                v12_2.y += CesiumMath.EPSILON4;
+                IntersectionTests.lineSegmentPlane(p0, p2, plane, u1);
+                IntersectionTests.lineSegmentPlane(p1, p2, plane, u2);
+                Cartesian3.clone(u1, v1);
+                Cartesian3.clone(u2, v2);
+                u1.y -= CesiumMath.EPSILON4;
+                u2.y -= CesiumMath.EPSILON4;
+                v1.y += CesiumMath.EPSILON4;
+                v2.y += CesiumMath.EPSILON4;
 
                 return {
-                    positions : [p0, p1, p2, u02_2, u12_2, v02_2, v12_2 ],
+                    positions : [p0, p1, p2, u1, u2, v1, v2 ],
                     indices : [
                         // Behind
                         0, 1, 4,
