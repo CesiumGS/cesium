@@ -362,23 +362,11 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
         polylines.add();
         polylines.add({
-            positions: positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions: positions
         });
 
         ClearCommand.ALL.execute(context);
@@ -386,6 +374,20 @@ defineSuite([
 
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+    });
+
+    it('does not crash is polyline has one position', function() {
+        polylines.add({
+            positions : [{
+                x : 1647745.6656519484,
+                y : 4949018.87918947,
+                z : 3661524.164064342
+            }]
+        });
+
+        ClearCommand.ALL.execute(context);
+        render(context, frameState, polylines);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
     it('A polyline that used to cross the IDL but now does not, triggers vertex creation (This code used to crash)', function() {
@@ -408,13 +410,7 @@ defineSuite([
 
         //Create a line
         var line = polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
 
         //Render it
@@ -458,13 +454,7 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -489,13 +479,7 @@ defineSuite([
         }
 
         var p1 = polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -514,13 +498,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 1,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
 
         render(context, frameState, polylines);
@@ -554,13 +532,7 @@ defineSuite([
         });
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -585,13 +557,7 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -600,13 +566,7 @@ defineSuite([
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
         polylines.add({
-            positions : [],
-            color : {
-                red : 0,
-                green : 1,
-                blue : 0,
-                alpha : 1
-            }
+            positions : []
         });
 
         ClearCommand.ALL.execute(context);
@@ -632,13 +592,7 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -647,13 +601,7 @@ defineSuite([
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
         var p2 = polylines.add({
-            positions : [],
-            color : {
-                red : 0,
-                green : 1,
-                blue : 0,
-                alpha : 1
-            }
+            positions : []
         });
 
         ClearCommand.ALL.execute(context);
@@ -697,13 +645,7 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -712,13 +654,7 @@ defineSuite([
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
         var p2 = polylines.add({
-            positions : [],
-            color : {
-                red : 0,
-                green : 1,
-                blue : 0,
-                alpha : 1
-            }
+            positions : []
         });
 
         ClearCommand.ALL.execute(context);
@@ -807,13 +743,7 @@ defineSuite([
         }
 
         var p = polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -851,13 +781,7 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
         positions = [];
 
@@ -872,13 +796,7 @@ defineSuite([
             z : 0
         });
         polylines.add({
-           positions:positions,
-            color : {
-                red : 0,
-                green : 1,
-                blue : 0,
-                alpha : 1
-            }
+           positions:positions
         });
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -903,23 +821,11 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
 
         polylines.add({
             positions:positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            },
             width:2
         });
         positions = [];
@@ -946,13 +852,7 @@ defineSuite([
         });
         polylines.add({
            positions:positions,
-           width:5,
-            color : {
-                red : 0,
-                green : 1,
-                blue : 0,
-                alpha : 1
-            }
+           width:5
         });
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -971,13 +871,7 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            }]
         });
 
         ClearCommand.ALL.execute(context);
@@ -1004,13 +898,7 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            }]
         });
 
         ClearCommand.ALL.execute(context);
@@ -1038,13 +926,7 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 0.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            }]
         });
 
         ClearCommand.ALL.execute(context);
@@ -1064,13 +946,7 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 0.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            }]
         });
 
         ClearCommand.ALL.execute(context);
@@ -1088,13 +964,7 @@ defineSuite([
                 x : 0.5,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 0.0,
-                green : 0.0,
-                blue : 1.0,
-                alpha : 1.0
-            }
+            }]
         });
 
         render(context, frameState, polylines);
@@ -1111,13 +981,7 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            }]
         });
         var bluePolyline = polylines.add({
             positions : [{
@@ -1128,13 +992,7 @@ defineSuite([
                 x : 0.5,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 0.0,
-                green : 0.0,
-                blue : 1.0,
-                alpha : 1.0
-            }
+            }]
         });
 
         ClearCommand.ALL.execute(context);
@@ -1161,13 +1019,7 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            }]
         });
 
         ClearCommand.ALL.execute(context);
@@ -1194,13 +1046,7 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            }]
         });
 
         ClearCommand.ALL.execute(context);
@@ -1222,13 +1068,7 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 0.0,
-                green : 0.0,
-                blue : 1.0,
-                alpha : 1.0
-            }
+            }]
         });
 
         render(context, frameState, polylines);
@@ -1320,13 +1160,7 @@ defineSuite([
                 y : 1.0,
                 z : 0.0
             }],
-            width:2,
-            color : {
-                red : 1.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            width:2
         });
 
         ClearCommand.ALL.execute(context);
@@ -1402,32 +1236,14 @@ defineSuite([
         }
         polylines.add({
             positions : positions,
-            color:{
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            },
             width : 3
         });
         polylines.add({
             positions : positions,
-            color:{
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            },
             width : 1
         });
         polylines.add({
             positions : positions,
-            color:{
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            },
             width : 2
         });
         polylines.add({
@@ -1440,12 +1256,6 @@ defineSuite([
                 y : 1.0,
                 z : 0.0
             }],
-            color:{
-                red : 0.0,
-                green : 0.0,
-                blue : 1.0,
-                alpha : 1.0
-            },
             width : 7
         });
         ClearCommand.ALL.execute(context);
