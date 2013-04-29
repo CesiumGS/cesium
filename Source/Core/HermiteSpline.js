@@ -1,15 +1,15 @@
 /*global define*/
-define([
+define(['./defaultValue',
         './DeveloperError',
         './Matrix4',
         './Cartesian4',
         './TridiagonalSystemSolver'
-    ],
-    function(
-        DeveloperError,
-        Matrix4,
-        Cartesian4,
-        TridiagonalSystemSolver) {
+        ], function(
+                defaultValue,
+                DeveloperError,
+                Matrix4,
+                Cartesian4,
+                TridiagonalSystemSolver) {
     "use strict";
 
     /**
@@ -64,7 +64,7 @@ define([
      * var spline = new HermiteSpline(controlPoints);
      */
     var HermiteSpline = function(controlPoints) {
-        if (!controlPoints || !(controlPoints instanceof Array) || controlPoints.length < 3) {
+        if (typeof controlPoints === 'undefined' || !(controlPoints instanceof Array) || controlPoints.length < 3) {
             throw new DeveloperError('controlPoints is required. It must be an array with at least a length of 3.');
         }
 
@@ -72,9 +72,9 @@ define([
 
         this._lastTimeIndex = 0;
 
-        if (!this._points[0].tangent || !this._points[this._points.length - 1].tangent) {
+        if (typeof this._points[0].tangent === 'undefined' || typeof this._points[this._points.length - 1].tangent === 'undefined') {
             this._generateNatural();
-        } else if (this._points[0].tangent && !this._points[1].tangent && this._points[this._points.length - 1].tangent && !this._points[this._points.length - 2].tangent) {
+        } else if (typeof this._points[0].tangent !== 'undefined' && typeof this._points[1].tangent === 'undefined' && typeof this._points[this._points.length - 1].tangent !== 'undefined' && typeof this._points[this._points.length - 2].tangent === 'undefined') {
             this._generateClamped();
         }
     };
@@ -88,7 +88,7 @@ define([
     HermiteSpline.prototype._findIndex = function(time) {
         // Take advantage of temporal coherence by checking current, next and previous intervals
         // for containment of time.
-        var i = this._lastTimeIndex || 0;
+        var i = defaultValue(this._lastTimeIndex, 0);
         if (time >= this._points[i].time) {
             if (i + 1 < this._points.length && time < this._points[i + 1].time) {
                 return i;

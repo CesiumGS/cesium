@@ -15,7 +15,8 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/Matrix4',
         'Core/Math',
-        'Core/JulianDate'
+        'Core/JulianDate',
+        'Renderer/ClearCommand'
     ], function(
         Material,
         Polygon,
@@ -32,7 +33,8 @@ defineSuite([
         Ellipsoid,
         Matrix4,
         CesiumMath,
-        JulianDate) {
+        JulianDate,
+        ClearCommand) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -84,7 +86,7 @@ defineSuite([
     function renderMaterial(material) {
         polygon.material = material;
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polygon);
@@ -94,7 +96,7 @@ defineSuite([
     function renderPolylineMaterial(material) {
         polyline.setMaterial(material);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -361,7 +363,7 @@ defineSuite([
         expect(pixel).not.toEqual([0, 0, 0, 0]);
     });
 
-    it('creates a material with a cube map uniform' , function () {
+    it('creates a material with a cube map uniform', function() {
         var material = new Material({
             context : context,
             strict : true,

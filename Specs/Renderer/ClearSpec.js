@@ -25,70 +25,77 @@ defineSuite([
     });
 
     it('default clear', function() {
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
     it('clears to white', function() {
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.clear(new ClearCommand(context.createClearState({
-            color : Color.WHITE
-        })));
+        var command = new ClearCommand();
+        command.color = Color.WHITE;
+
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
     it('clears to white by executing a clear command', function() {
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        var command = new ClearCommand(context.createClearState({
-            color : Color.WHITE
-        }));
+        var command = new ClearCommand();
+        command.color = Color.WHITE;
 
         command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
     it('clears with a color mask', function() {
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.clear(new ClearCommand(context.createClearState({
-            color : Color.WHITE,
+        var command = new ClearCommand();
+        command.color = Color.WHITE;
+        command.renderState = context.createRenderState({
             colorMask : {
                 red : true,
                 green : false,
                 blue : true,
                 alpha : false
             }
-        })));
+        });
+
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 0, 255, 0]);
     });
 
     it('clears with scissor test', function() {
-        context.clear(new ClearCommand(context.createClearState({
-            color : Color.WHITE
-        })));
+        var command = new ClearCommand();
+        command.color = Color.WHITE;
+
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
-        context.clear(new ClearCommand(context.createClearState({
-            color : Color.BLACK,
+        command.color = Color.BLACK;
+        command.renderState = context.createRenderState({
             scissorTest : {
                 enabled : true,
                 rectangle : new BoundingRectangle()
             }
-        })));
+        });
+
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
-        context.clear(new ClearCommand(context.createClearState({
-            color : Color.BLACK,
+        command.renderState = context.createRenderState({
             scissorTest : {
                 enabled : true,
                 rectangle : new BoundingRectangle(0, 0, 1, 1)
             }
-        })));
+        });
+
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 255]);
     });
 
@@ -101,37 +108,17 @@ defineSuite([
             colorTexture : colorTexture
         });
 
-        context.clear(new ClearCommand(context.createClearState({
-            color : {
-                red : 0.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
-        }), framebuffer));
+        var command = new ClearCommand();
+        command.color = new Color(0.0, 1.0, 0.0, 1.0);
+        command.framebuffer = framebuffer;
+
+        command.execute(context);
 
         expect(context.readPixels({
             framebuffer : framebuffer
         })).toEqual([0, 255, 0, 255]);
 
         framebuffer = framebuffer.destroy();
-    });
-
-    it('clears with dithering', function() {
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        context.clear(new ClearCommand(context.createClearState({
-            color : Color.WHITE,
-            dither : false
-        })));
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
-
-        context.clear(new ClearCommand(context.createClearState({
-            color : Color.BLACK,
-            dither : true
-        })));
-        expect(context.readPixels()).toEqual([0, 0, 0, 255]);
     });
 
     it('fails to read pixels (width)', function() {

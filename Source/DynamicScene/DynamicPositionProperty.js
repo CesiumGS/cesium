@@ -178,8 +178,8 @@ define([
 
         var propertyIntervals = this._propertyIntervals;
 
-        var startIndex = typeof start === 'undefined' ? 0 : propertyIntervals.indexOf(start);
-        var stopIndex = typeof stop === 'undefined' ? propertyIntervals.length - 1 : propertyIntervals.indexOf(stop);
+        var startIndex = typeof start !== 'undefined' ? propertyIntervals.indexOf(start) : 0;
+        var stopIndex = typeof stop !== 'undefined' ? propertyIntervals.indexOf(stop) : propertyIntervals.length - 1;
         if (startIndex < 0) {
             startIndex = ~startIndex;
         }
@@ -380,8 +380,8 @@ define([
 
         var propertyIntervals = this._propertyIntervals;
 
-        var startIndex = typeof start === 'undefined' ? 0 : propertyIntervals.indexOf(start);
-        var stopIndex = typeof stop === 'undefined' ? propertyIntervals.length - 1 : propertyIntervals.indexOf(stop);
+        var startIndex = typeof start !== 'undefined' ? propertyIntervals.indexOf(start) : 0;
+        var stopIndex = typeof stop !== 'undefined' ? propertyIntervals.indexOf(stop) : propertyIntervals.length - 1;
         if (startIndex < 0) {
             startIndex = ~startIndex;
         }

@@ -11,8 +11,10 @@ defineSuite([
          'Specs/render',
          'Core/Cartesian3',
          'Core/Cartographic',
+         'Core/defaultValue',
          'Core/Ellipsoid',
          'Core/Math',
+         'Renderer/ClearCommand',
          'Scene/Camera',
          'Scene/CentralBody',
          'Scene/LabelCollection',
@@ -31,8 +33,10 @@ defineSuite([
          render,
          Cartesian3,
          Cartographic,
+         defaultValue,
          Ellipsoid,
          CesiumMath,
+         ClearCommand,
          Camera,
          CentralBody,
          LabelCollection,
@@ -73,7 +77,11 @@ defineSuite([
     });
 
     function createLabels(position) {
-        position = position || { x : -1.0, y : 0.0, z : 0.0 };
+        position = defaultValue(position, {
+            x : -1.0,
+            y : 0.0,
+            z : 0.0
+        });
         var labels = new LabelCollection();
         labels.add({
             position : position,
@@ -85,8 +93,8 @@ defineSuite([
     }
 
     function createPolygon(degree, ellipsoid) {
-        degree = (typeof degree !== 'undefined') ? degree : 50.0;
-        ellipsoid = ellipsoid || Ellipsoid.UNIT_SPHERE;
+        degree = defaultValue(degree, 50.0);
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.UNIT_SPHERE);
         var polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
@@ -247,7 +255,7 @@ defineSuite([
     });
 
     it('renders a primitive added with add()', function() {
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         primitives.add(createLabels());
@@ -256,7 +264,7 @@ defineSuite([
     });
 
     it('does not render', function() {
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         primitives.show = false;
@@ -268,7 +276,7 @@ defineSuite([
     it('renders a primitive in more than one composite', function() {
         var otherPrimitives = new CompositePrimitive(context);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var p = createLabels();
@@ -280,7 +288,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         // Render using other composite
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, otherPrimitives);
@@ -290,7 +298,7 @@ defineSuite([
     });
 
     it('renders child composites', function() {
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var children = new CompositePrimitive();
@@ -455,7 +463,7 @@ defineSuite([
         var savedCamera;
 
         runs(function() {
-            context.clear();
+            ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
             var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);

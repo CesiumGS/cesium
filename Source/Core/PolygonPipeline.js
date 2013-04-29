@@ -28,20 +28,20 @@ define([
     "use strict";
 
     function DoublyLinkedList() {
-        this.head = null;
-        this.tail = null;
+        this.head = undefined;
+        this.tail = undefined;
         this.length = 0;
     }
 
     DoublyLinkedList.prototype.add = function(item) {
-        if (item) {
+        if (typeof item !== 'undefined') {
             var node = {
                 item : item,
                 previous : this.tail,
-                next : null
+                next : undefined
             };
 
-            if (this.tail) {
+            if (typeof this.tail !== 'undefined') {
                 this.tail.next = node;
                 this.tail = node;
             } else {
@@ -55,22 +55,22 @@ define([
     };
 
     DoublyLinkedList.prototype.remove = function(item) {
-        if (item) {
-            if (item.previous && item.next) {
+        if (typeof item !== 'undefined') {
+            if (typeof item.previous !== 'undefined' && typeof item.next  !== 'undefined') {
                 item.previous.next = item.next;
                 item.next.previous = item.previous;
-            } else if (item.previous) {
+            } else if (typeof item.previous  !== 'undefined') {
                 // Remove last node.
-                item.previous.next = null;
+                item.previous.next = undefined;
                 this.tail = item.previous;
-            } else if (item.next) {
+            } else if (typeof item.next !== 'undefined') {
                 // Remove first node.
-                item.next.previous = null;
+                item.next.previous = undefined;
                 this.head = item.next;
             } else {
                 // Remove last node in linked list.
-                this.head = null;
-                this.tail = null;
+                this.head = undefined;
+                this.tail = undefined;
             }
 
             --this.length;
@@ -389,7 +389,7 @@ define([
          * @exception {DeveloperError} At least three positions are required.
          */
         cleanUp : function(positions) {
-            if (!positions) {
+            if (typeof positions  === 'undefined') {
                 throw new DeveloperError('positions is required.');
             }
 
@@ -419,7 +419,7 @@ define([
          * @exception {DeveloperError} At least three positions are required.
          */
         computeArea2D : function(positions) {
-            if (!positions) {
+            if (typeof positions  === 'undefined') {
                 throw new DeveloperError('positions is required.');
             }
 
@@ -465,7 +465,7 @@ define([
             //   * http://cgm.cs.mcgill.ca/~godfried/publications/triangulation.held.ps.gz
             //   * http://blogs.agi.com/insight3d/index.php/2008/03/20/triangulation-rhymes-with-strangulation/
 
-            if (!positions) {
+            if (typeof positions  === 'undefined') {
                 throw new DeveloperError('positions is required.');
             }
 
@@ -552,11 +552,11 @@ define([
          * @exception {DeveloperError} Granularity must be greater than zero.
          */
         computeSubdivision : function(positions, indices, granularity) {
-            if (!positions) {
+            if (typeof positions  === 'undefined') {
                 throw new DeveloperError('positions is required.');
             }
 
-            if (!indices) {
+            if (typeof indices === 'undefined') {
                 throw new DeveloperError('indices is required.');
             }
 
@@ -568,7 +568,7 @@ define([
                 throw new DeveloperError('The number of indices must be divisable by three.');
             }
 
-            granularity = granularity || CesiumMath.toRadians(1.0);
+            granularity = defaultValue(granularity, CesiumMath.toRadians(1.0));
             if (granularity <= 0.0) {
                 throw new DeveloperError('granularity must be greater than zero.');
             }
@@ -716,9 +716,9 @@ define([
             var n = scaleToGeodeticHeightN;
             var p = scaleToGeodeticHeightP;
 
-            height = height || 0.0;
+            height = defaultValue(height, 0.0);
 
-            if (mesh && mesh.attributes && mesh.attributes.position) {
+            if (typeof mesh !== 'undefined' && typeof mesh.attributes !== 'undefined' && typeof mesh.attributes.position !== 'undefined') {
                 var positions = mesh.attributes.position.values;
                 var length = positions.length;
 

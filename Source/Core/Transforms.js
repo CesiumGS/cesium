@@ -38,7 +38,7 @@ define([
 
     /**
      * Contains functions for transforming positions to various reference frames.
-     * @alias Transforms
+     * @exports Transforms
      */
     var Transforms = {};
 
@@ -275,7 +275,7 @@ define([
      * function updateAndRender() {
      *     var now = new JulianDate();
      *     scene.initializeFrame();
-     *     scene.setSunPosition(computeSunPosition(now));
+     *     scene.setSunPosition(Simon1994PlanetaryPositions.ComputeSunPositionInEarthInertialFrame(now));
      *     scene.getCamera().transform = Matrix4.fromRotationTranslation(Transforms.computeTemeToPseudoFixedMatrix(now), Cartesian3.ZERO);
      *     scene.render();
      *     requestAnimationFrame(updateAndRender);
@@ -335,8 +335,8 @@ define([
      *
      * @memberof Transforms
      *
-     * @see Transforms#computeIcrfToFixedMatrix
-     * @see Transforms#computeFixedToIcrfMatrix
+     * @see Transforms.computeIcrfToFixedMatrix
+     * @see Transforms.computeFixedToIcrfMatrix
      */
     Transforms.iau2006XysData = new Iau2006XysData();
 
@@ -348,8 +348,8 @@ define([
      *
      * @memberof Transforms
      *
-     * @see Transforms#computeIcrfToFixedMatrix
-     * @see Transforms#computeFixedToIcrfMatrix
+     * @see Transforms.computeIcrfToFixedMatrix
+     * @see Transforms.computeFixedToIcrfMatrix
      */
     Transforms.earthOrientationParameters = EarthOrientationParameters.NONE;
 
@@ -368,8 +368,8 @@ define([
      *          and evaluation of the transformation between the fixed and ICRF axes will
      *          no longer return undefined for a time inside the interval.
      *
-     * @see Transforms#computeIcrfToFixedMatrix
-     * @see Transforms#computeFixedToIcrfMatrix
+     * @see Transforms.computeIcrfToFixedMatrix
+     * @see Transforms.computeFixedToIcrfMatrix
      * @see when
      *
      * @example
@@ -406,14 +406,14 @@ define([
      *
      * @exception {DeveloperError} date is required.
      *
-     * @see Transforms#preloadIcrfFixed
+     * @see Transforms.preloadIcrfFixed
      *
      * @example
      * //Set the view to the inertial frame.
      * function updateAndRender() {
      *     var now = new JulianDate();
      *     scene.initializeFrame();
-     *     scene.setSunPosition(computeSunPosition(now));
+     *     scene.setSunPosition(Simon1994PlanetaryPositions.ComputeSunPositionInEarthInertialFrame(now));
      *     var icrfToFixed = Transforms.computeIcrfToFixedMatrix(now);
      *     if (typeof icrfToFixed !== 'undefined') {
      *         scene.getCamera().transform = Matrix4.fromRotationTranslation(icrfToFixed, Cartesian3.ZERO);
@@ -457,7 +457,7 @@ define([
      *
      * @exception {DeveloperError} date is required.
      *
-     * @see Transforms#preloadIcrfFixed
+     * @see Transforms.preloadIcrfFixed
      *
      * @example
      * // Transform a point from the ICRF axes to the Fixed axes.

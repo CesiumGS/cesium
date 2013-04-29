@@ -18,6 +18,7 @@ defineSuite([
          'Core/Math',
          'Core/JulianDate',
          'Renderer/BufferUsage',
+         'Renderer/ClearCommand',
          'Scene/SceneMode'
      ], function(
          Polygon,
@@ -38,6 +39,7 @@ defineSuite([
          CesiumMath,
          JulianDate,
          BufferUsage,
+         ClearCommand,
          SceneMode) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -219,7 +221,7 @@ defineSuite([
             alpha : 1.0
         };
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polygon);
@@ -245,7 +247,7 @@ defineSuite([
             alpha : 1.0
         };
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polygon);

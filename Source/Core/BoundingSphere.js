@@ -43,7 +43,8 @@ define([
          * The center point of the sphere.
          * @type {Cartesian3}
          */
-        this.center = (typeof center !== 'undefined') ? Cartesian3.clone(center) : Cartesian3.ZERO.clone();
+        this.center = Cartesian3.clone(defaultValue(center, Cartesian3.ZERO));
+
         /**
          * The radius of the sphere.
          * @type {Number}
@@ -255,7 +256,7 @@ define([
             return result;
         }
 
-        projection = (typeof projection !== 'undefined') ? projection : defaultProjection;
+        projection = defaultValue(projection, defaultProjection);
 
         extent.getSouthwest(fromExtent2DSouthwest);
         fromExtent2DSouthwest.height = minimumHeight;
@@ -291,7 +292,12 @@ define([
      */
     BoundingSphere.fromExtent3D = function(extent, ellipsoid, result) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        var positions = typeof extent !== 'undefined' ? extent.subsample(ellipsoid, fromExtent3DScratch) : undefined;
+
+        var positions;
+        if (typeof extent !== 'undefined') {
+            positions = extent.subsample(ellipsoid, fromExtent3DScratch);
+        }
+
         return BoundingSphere.fromPoints(positions, result);
     };
 

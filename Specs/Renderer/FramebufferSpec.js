@@ -4,6 +4,7 @@ defineSuite([
          'Specs/destroyContext',
          'Core/Cartesian4',
          'Core/PrimitiveType',
+         'Core/Color',
          'Renderer/PixelFormat',
          'Renderer/PixelDatatype',
          'Renderer/BufferUsage',
@@ -17,6 +18,7 @@ defineSuite([
          destroyContext,
          Cartesian4,
          PrimitiveType,
+         Color,
          PixelFormat,
          PixelDatatype,
          BufferUsage,
@@ -144,7 +146,7 @@ defineSuite([
 
     it('clears a color attachment', function() {
         // 1 of 4.  Clear default color buffer to black.
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 4.  Clear framebuffer color attachment to green.
@@ -156,14 +158,10 @@ defineSuite([
             colorTexture : colorTexture
         });
 
-        context.clear(new ClearCommand(context.createClearState({
-            color : {
-                red : 0.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
-        }), framebuffer));
+        var command = new ClearCommand();
+        command.color = new Color (0.0, 1.0, 0.0, 1.0);
+        command.framebuffer = framebuffer;
+        command.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -198,7 +196,7 @@ defineSuite([
         });
 
         // 1 of 4.  Clear default color buffer to black.
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 4.  Clear framebuffer color attachment to green.
@@ -206,14 +204,10 @@ defineSuite([
             colorTexture : cubeMap.getPositiveX()
         });
 
-        context.clear(new ClearCommand(context.createClearState({
-            color : {
-                red : 0.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
-        }), framebuffer));
+        var command = new ClearCommand();
+        command.color = new Color (0.0, 1.0, 0.0, 1.0);
+        command.framebuffer = framebuffer;
+        command.execute(context);
 
         framebuffer.setColorTexture(undefined);
 
@@ -255,7 +249,7 @@ defineSuite([
         });
 
         // 1 of 4.  Clear default color buffer to black.
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 4.  Render green point into color attachment.
@@ -299,7 +293,7 @@ defineSuite([
     });
 
     function renderDepthAttachment(framebuffer, texture) {
-        context.clear();
+        ClearCommand.ALL.execute(context);
 
         // 1 of 3.  Render green point into color attachment.
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -410,7 +404,11 @@ defineSuite([
         });
 
         // 1 of 3.  Clear framebuffer
-        context.clear(new ClearCommand(context.createClearState(), framebuffer));
+        var command = new ClearCommand();
+        command.color = new Color(0.0, 0.0, 0.0, 0.0);
+        command.depth = 1.0;
+        command.framebuffer = framebuffer;
+        command.execute(context);
         expect(context.readPixels({
             framebuffer : framebuffer
         })).toEqual([0, 0, 0, 0]);

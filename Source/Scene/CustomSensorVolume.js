@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/Color',
         '../Core/combine',
@@ -22,6 +23,7 @@ define([
         '../Shaders/CustomSensorVolumeFS',
         './SceneMode'
     ], function(
+        defaultValue,
         DeveloperError,
         Color,
         combine,
@@ -58,11 +60,11 @@ define([
      *
      * @see SensorVolumeCollection#addCustom
      */
-    var CustomSensorVolume = function(template) {
-        var t = template || {};
+    var CustomSensorVolume = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._pickId = undefined;
-        this._pickIdThis = t._pickIdThis || this;
+        this._pickIdThis = defaultValue(options._pickIdThis, this);
 
         this._colorCommand = new DrawCommand();
         this._pickCommand = new DrawCommand();
@@ -76,7 +78,7 @@ define([
          *
          * @type Boolean
          */
-        this.show = (typeof t.show === 'undefined') ? true : t.show;
+        this.show = defaultValue(options.show, true);
 
         /**
          * When <code>true</code>, a polyline is shown where the sensor outline intersections the central body.  The default is <code>true</code>.
@@ -85,7 +87,7 @@ define([
          *
          * @see CustomSensorVolume#intersectionColor
          */
-        this.showIntersection = (typeof t.showIntersection === 'undefined') ? true : t.showIntersection;
+        this.showIntersection = defaultValue(options.showIntersection, true);
 
         /**
          * <p>
@@ -98,7 +100,8 @@ define([
          *
          * @type Boolean
          */
-        this.showThroughEllipsoid = (typeof t.showThroughEllipsoid === 'undefined') ? false : t.showThroughEllipsoid;
+        this.showThroughEllipsoid = defaultValue(options.showThroughEllipsoid, false);
+        this._showThroughEllipsoid = this.showThroughEllipsoid;
 
         /**
          * The 4x4 transformation matrix that transforms this sensor from model to world coordinates.  In it's model
@@ -123,26 +126,26 @@ define([
          * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          */
-        this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY.clone();
+        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
 
         /**
          * DOC_TBA
          *
          * @type BufferUsage
          */
-        this.bufferUsage = t.bufferUsage || BufferUsage.STATIC_DRAW;
-        this._bufferUsage = t.bufferUsage || BufferUsage.STATIC_DRAW;
+        this.bufferUsage = defaultValue(options.bufferUsage, BufferUsage.STATIC_DRAW);
+        this._bufferUsage = this.bufferUsage;
 
         /**
          * DOC_TBA
          *
          * @type Number
          */
-        this.radius = (typeof t.radius === 'undefined') ? Number.POSITIVE_INFINITY : t.radius;
+        this.radius = defaultValue(options.radius, Number.POSITIVE_INFINITY);
 
         this._directions = undefined;
         this._directionsDirty = false;
-        this.setDirections(t.directions);
+        this.setDirections(options.directions);
 
         /**
          * The surface appearance of the sensor.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
@@ -162,7 +165,7 @@ define([
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = (typeof t.material !== 'undefined') ? t.material : Material.fromType(undefined, Material.ColorType);
+        this.material = typeof options.material !== 'undefined' ? options.material : Material.fromType(undefined, Material.ColorType);
         this._material = undefined;
 
         /**
@@ -172,7 +175,7 @@ define([
          *
          * @see CustomSensorVolume#showIntersection
          */
-        this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : Color.clone(Color.WHITE);
+        this.intersectionColor = Color.clone(defaultValue(options.intersectionColor, Color.WHITE));
 
         var that = this;
         this._uniforms = {
@@ -326,10 +329,15 @@ define([
         }
 
         // Initial render state creation
-        if (typeof this._colorCommand.renderState === 'undefined') {
+        if ((this._showThroughEllipsoid !== this.showThroughEllipsoid) || (typeof this._colorCommand.renderState === 'undefined')) {
+            this._showThroughEllipsoid = this.showThroughEllipsoid;
+
             var rs = context.createRenderState({
                 depthTest : {
-                    enabled : true
+                    // This would be better served by depth testing with a depth buffer that does not
+                    // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
+                    // so we can selectively depth test.
+                    enabled : !this.showThroughEllipsoid
                 },
                 depthMask : false,
                 blending : BlendingState.ALPHA_BLEND
@@ -338,10 +346,6 @@ define([
             this._colorCommand.renderState = rs;
             this._pickCommand.renderState = rs;
         }
-        // This would be better served by depth testing with a depth buffer that does not
-        // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
-        // so we can selectively depth test.
-        this._colorCommand.renderState.depthTest.enabled = !this.showThroughEllipsoid;
 
         // Recreate vertex buffer when directions change
         if ((this._directionsDirty) || (this._bufferUsage !== this.bufferUsage)) {

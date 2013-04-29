@@ -98,9 +98,9 @@ define([
             return lines;
         }
 
-        if (mesh) {
+        if (typeof mesh !== 'undefined') {
             var indexLists = mesh.indexLists;
-            if (indexLists) {
+            if (typeof indexLists !== 'undefined') {
                 var count = indexLists.length;
                 for ( var i = 0; i < count; ++i) {
                     var indices = indexLists[i];
@@ -132,7 +132,7 @@ define([
     MeshFilters.createAttributeIndices = function(mesh) {
         var indices = {};
 
-        if (mesh) {
+        if (typeof mesh !== 'undefined') {
             var attributes = mesh.attributes;
             var j = 0;
 
@@ -152,7 +152,7 @@ define([
     MeshFilters.mapAttributeIndices = function(indices, map) {
         var mappedIndices = {};
 
-        if (indices && map) {
+        if (typeof indices !== 'undefined' && typeof map !== 'undefined') {
             for ( var name in map) {
                 if (map.hasOwnProperty(name)) {
                     mappedIndices[map[name]] = indices[name];
@@ -199,7 +199,7 @@ define([
      * mesh = MeshFilters.reorderForPreVertexCache(mesh);
      */
     MeshFilters.reorderForPreVertexCache = function(mesh) {
-        if (mesh) {
+        if (typeof mesh !== 'undefined') {
             var numVertices = MeshFilters._computeNumberOfAttributes(mesh);
 
             var indexCrossReferenceOldToNew = [];
@@ -209,7 +209,7 @@ define([
 
             //Construct cross reference and reorder indices
             var indexLists = mesh.indexLists;
-            if (indexLists) {
+            if (typeof indexLists !== 'undefined') {
                 var count = indexLists.length;
                 for ( var j = 0; j < count; ++j) {
                     var indicesIn = indexLists[j].values;
@@ -242,7 +242,7 @@ define([
 
             //Reorder Vertices
             var attributes = mesh.attributes;
-            if (attributes) {
+            if (typeof attributes !== 'undefined') {
                 for ( var property in attributes) {
                     if (attributes.hasOwnProperty(property) && attributes[property].values) {
                         var elementsIn = attributes[property].values;
@@ -292,9 +292,9 @@ define([
      * mesh = MeshFilters.reorderForPostVertexCache(mesh);
      */
     MeshFilters.reorderForPostVertexCache = function(mesh, cacheCapacity) {
-        if (mesh) {
+        if (typeof mesh !== 'undefined') {
             var indexLists = mesh.indexLists;
-            if (indexLists) {
+            if (typeof indexLists !== 'undefined') {
                 var count = indexLists.length;
                 for ( var i = 0; i < count; i++) {
                     var indices = indexLists[i].values;
@@ -371,7 +371,7 @@ define([
 
         var meshes = [];
 
-        if (mesh) {
+        if (typeof mesh !== 'undefined') {
             MeshFilters._verifyTrianglesPrimitiveType(mesh.indexLists);
 
             var numberOfVertices = MeshFilters._computeNumberOfAttributes(mesh);
@@ -380,7 +380,7 @@ define([
             // some indices are outside the range of unsigned short [0, 64K - 1]
             var sixtyFourK = 64 * 1024;
             var indexLists = mesh.indexLists;
-            if (indexLists && (numberOfVertices > sixtyFourK)) {
+            if (typeof indexLists !== 'undefined' && (numberOfVertices > sixtyFourK)) {
                 // PERFORMANCE_IDEA:  If an input mesh has more than one index-list.  This creates
                 // at least one vertex-array per index-list.  A more sophisticated implementation
                 // may create less vertex-arrays.
@@ -457,8 +457,8 @@ define([
      * DOC_TBA
      */
     MeshFilters.projectTo2D = function(mesh, projection) {
-        if (mesh && mesh.attributes && mesh.attributes.position) {
-            projection = projection || new GeographicProjection();
+        if (typeof mesh !== 'undefined' && typeof mesh.attributes !== 'undefined' && typeof mesh.attributes.position !== 'undefined') {
+            projection = typeof projection !== 'undefined' ? projection : new GeographicProjection();
             var ellipsoid = projection.getEllipsoid();
 
             // Project original positions to 2D.

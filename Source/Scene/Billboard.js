@@ -103,7 +103,10 @@ define([
     }
 
     Billboard.prototype.getPickId = function(context) {
-        this._pickId = this._pickId || context.createPickId(this._pickIdThis || this);
+        if (typeof this._pickId === 'undefined') {
+            this._pickId = context.createPickId(defaultValue(this._pickIdThis, this));
+        }
+
         return this._pickId;
     };
 

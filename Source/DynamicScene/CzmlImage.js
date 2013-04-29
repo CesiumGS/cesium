@@ -1,5 +1,10 @@
 /*global define*/
-define(['../ThirdParty/Uri'], function(Uri) {
+define([
+        '../Core/defaultValue',
+        '../ThirdParty/Uri'
+    ], function(
+        defaultValue,
+        Uri) {
     "use strict";
 
     /**
@@ -29,7 +34,7 @@ define(['../ThirdParty/Uri'], function(Uri) {
          * @param {Object} czmlInterval The CZML interval to unwrap.
          */
         unwrapInterval : function(czmlInterval, sourceUri) {
-            var result = typeof czmlInterval.image === 'undefined' ? czmlInterval : czmlInterval.image;
+            var result = defaultValue(czmlInterval.image, czmlInterval);
             if (typeof sourceUri !== 'undefined') {
                 var baseUri = new Uri(document.location.href);
                 sourceUri = new Uri(sourceUri);
