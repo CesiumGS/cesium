@@ -11,6 +11,7 @@ define([
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/ComponentDatatype',
         '../Core/MeshFilters',
@@ -19,6 +20,7 @@ define([
         '../Core/PolygonPipeline',
         '../Core/WindingOrder',
         '../Core/ExtentTessellator',
+        '../Core/Intersect',
         '../Core/Queue',
         '../Core/Matrix3',
         '../Core/Quaternion',
@@ -45,6 +47,7 @@ define([
         BoundingRectangle,
         BoundingSphere,
         Cartesian3,
+        Cartesian4,
         Cartographic,
         ComponentDatatype,
         MeshFilters,
@@ -53,6 +56,7 @@ define([
         PolygonPipeline,
         WindingOrder,
         ExtentTessellator,
+        Intersect,
         Queue,
         Matrix3,
         Quaternion,
@@ -553,7 +557,9 @@ define([
         }
         var indices = PolygonPipeline.earClip2D(positions2D);
         // PERFORMANCE_IDEA:  Checking bounding sphere with plane for quick reject
-        indices = PolygonPipeline.wrapLongitude(cleanedPositions, indices);
+        if ((BoundingSphere.intersect(BoundingSphere.fromPoints(cleanedPositions), new Cartesian4(0, 1, 0, 0))) === Intersect.INTERSECTING) {
+            indices = PolygonPipeline.wrapLongitude(cleanedPositions, indices);
+        }
         var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, polygon._granularity);
         var boundary = outerPositions || cleanedPositions;
         var boundingRectangle = computeBoundingRectangle(tangentPlane, boundary, angle, createMeshFromPositionsBoundingRectangle);
