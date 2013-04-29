@@ -1060,6 +1060,7 @@ define([
     var scratchWritePosition = new Cartesian3();
     var scratchWritePrevPosition = new Cartesian3();
     var scratchWriteNextPosition = new Cartesian3();
+    var scratchWriteVector = new Cartesian3();
 
     PolylineBucket.prototype.write = function(positionArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, colorIndex, texCoordExpandWidthAndShowIndex, context) {
         var mode = this.mode;
@@ -1078,9 +1079,17 @@ define([
 
             var segmentIndex = 0;
             var count = 0;
+            var position;
 
             for ( var j = 0; j < positionsLength; ++j) {
-                var position = (j !== 0) ? positions[j - 1] : positions[j];
+                if (j === 0) {
+                    position = scratchWriteVector;
+                    Cartesian3.subtract(positions[0], positions[1], position);
+                    Cartesian3.add(positions[0], position, position);
+                } else {
+                    position = positions[j - 1];
+                }
+
                 scratchWritePrevPosition.x = position.x;
                 scratchWritePrevPosition.y = position.y;
                 scratchWritePrevPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
@@ -1090,7 +1099,14 @@ define([
                 scratchWritePosition.y = position.y;
                 scratchWritePosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
 
-                position = (j !== positionsLength - 1) ? positions[j + 1] : positions[j];
+                if (j === positionsLength - 1) {
+                    position = scratchWriteVector;
+                    Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], position);
+                    Cartesian3.add(positions[positionsLength - 1], position, position);
+                } else {
+                    position = positions[j + 1];
+                }
+
                 scratchWriteNextPosition.x = position.x;
                 scratchWriteNextPosition.y = position.y;
                 scratchWriteNextPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
@@ -1134,6 +1150,7 @@ define([
     var morphPositionScratch = new Cartesian3();
     var morphPrevPositionScratch = new Cartesian3();
     var morphNextPositionScratch = new Cartesian3();
+    var morphVectorScratch = new Cartesian3();
 
     PolylineBucket.prototype.writeForMorph = function(positionArray, positionIndex) {
         var modelMatrix = this.modelMatrix;
@@ -1149,12 +1166,28 @@ define([
             var count = 0;
 
             for ( var j = 0; j < positionsLength; ++j) {
-                var prevPosition = (j !== 0) ? positions[j - 1] : positions[j];
+                var prevPosition;
+                if (j === 0) {
+                    prevPosition = morphVectorScratch;
+                    Cartesian3.subtract(positions[0], positions[1], prevPosition);
+                    Cartesian3.add(positions[0], prevPosition, prevPosition);
+                } else {
+                    prevPosition = positions[j - 1];
+                }
+
                 prevPosition = Matrix4.multiplyByPoint(modelMatrix, prevPosition, morphPrevPositionScratch);
 
                 var position = Matrix4.multiplyByPoint(modelMatrix, positions[j], morphPositionScratch);
 
-                var nextPosition = (j !== positionsLength - 1) ? positions[j + 1] : positions[j];
+                var nextPosition;
+                if (j === positionsLength - 1) {
+                    nextPosition = morphVectorScratch;
+                    Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], nextPosition);
+                    Cartesian3.add(positions[positionsLength - 1], nextPosition, nextPosition);
+                } else {
+                    nextPosition = positions[j + 1];
+                }
+
                 nextPosition = Matrix4.multiplyByPoint(modelMatrix, nextPosition, morphNextPositionScratch);
 
                 var segmentLength = lengths[segmentIndex];
@@ -1357,13 +1390,21 @@ define([
 
             var segmentIndex = 0;
             var count = 0;
+            var position;
 
             var width = polyline.getWidth();
             var show = polyline.getShow();
 
             positionsLength = positions.length;
             for ( var i = 0; i < positionsLength; ++i) {
-                var position = (i !== 0) ? positions[i - 1] : positions[i];
+                if (i === 0) {
+                    position = scratchWriteVector;
+                    Cartesian3.subtract(positions[0], positions[1], position);
+                    Cartesian3.add(positions[0], position, position);
+                } else {
+                    position = positions[i - 1];
+                }
+
                 scratchWritePrevPosition.x = position.x;
                 scratchWritePrevPosition.y = position.y;
                 scratchWritePrevPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
@@ -1373,7 +1414,14 @@ define([
                 scratchWritePosition.y = position.y;
                 scratchWritePosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
 
-                position = (i !== positionsLength - 1) ? positions[i + 1] : positions[i];
+                if (i === positionsLength - 1) {
+                    position = scratchWriteVector;
+                    Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], position);
+                    Cartesian3.add(positions[positionsLength - 1], position, position);
+                } else {
+                    position = positions[i + 1];
+                }
+
                 scratchWriteNextPosition.x = position.x;
                 scratchWriteNextPosition.y = position.y;
                 scratchWriteNextPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
