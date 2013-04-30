@@ -18,7 +18,6 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     vec3 pointMC = (czm_inverseModelView * vec4(pointEC, 1.0)).xyz;                                
     materialInput.st = sensor2dTextureCoordinates(sensorRadius, pointMC);   
     materialInput.str = pointMC / sensorRadius;
-    materialInput.positionMC = pointMC;               
     
     vec3 positionToEyeEC = -v_positionEC;
     materialInput.positionToEyeEC = positionToEyeEC;
@@ -31,52 +30,42 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     return czm_phong(normalize(positionToEyeEC), material);
 }
 
-bool ellipsoidSensorIntersection(czm_raySegment ellipsoidInterval)
+bool ellipsoidSensorIntersection(czm_raySegment ellipsoidInterval, float pointInEllipsoid)
 {
-	if (czm_isEmpty(ellipsoidInterval))
-	{
-	    return false;
-	}
-
-    float t = ellipsoidInterval.start;
-
-#ifdef GL_OES_standard_derivatives
-    // TODO: This seems to be too aggressive in some areas, and too conservative in others
-    float epsilon = max(abs(dFdx(t)), abs(dFdy(t)));
-    
-    if (epsilon >= ellipsoidInterval.start)
-    {
-        // If the fragment is on the silhouette of the ellipsoid, the adjacent fragment
-        // will not hit the ellipsoid (its ellipsoidInterval.start will be zero),
-        // so the derivative will be large, and we would get false positives.
+    if (czm_isEmpty(ellipsoidInterval)) {
         return false;
     }
+
+    float t = pointInEllipsoid;
+
+#ifdef GL_OES_standard_derivatives
+    float epsilon = max(abs(dFdx(t)), abs(dFdy(t)));
 #else
     // TODO:  Don't hardcode this.
-    float epsilon = t / 500.0;
+    float epsilon = 1.0 / 500.0;
 #endif
 
     float width = 2.0;  // TODO: Expose as a uniform
     epsilon *= width;           
 
-    return czm_equalsEpsilon(t, length(v_positionEC), epsilon);
+    return czm_equalsEpsilon(t, 1.0, epsilon);
 }
 
-vec4 shade(czm_raySegment ellipsoidInterval)
+vec4 shade(czm_raySegment ellipsoidInterval, float pointInEllipsoid)
 {
-    if (u_showIntersection && ellipsoidSensorIntersection(ellipsoidInterval))
+    if (u_showIntersection && ellipsoidSensorIntersection(ellipsoidInterval, pointInEllipsoid))
     {
         return getIntersectionColor(u_sensorRadius, v_positionEC);
     }
     return getColor(u_sensorRadius, v_positionEC);
 }
 
-bool czm_pointInEllipsoid(czm_ellipsoid ellipsoid, vec3 point)
+float czm_pointInEllipsoid(czm_ellipsoid ellipsoid, vec3 point)
 {
     // TODO: Take into account ellipsoid's center; optimize with radii-squared; and move elsewhere
     return (((point.x * point.x) / (ellipsoid.radii.x * ellipsoid.radii.x)) +
             ((point.y * point.y) / (ellipsoid.radii.y * ellipsoid.radii.y)) +
-            ((point.z * point.z) / (ellipsoid.radii.z * ellipsoid.radii.z)) < 1.0);
+            ((point.z * point.z) / (ellipsoid.radii.z * ellipsoid.radii.z)));
 }
 
 void main()
@@ -85,13 +74,14 @@ void main()
     vec3 sensorVertexEC = czm_modelView[3].xyz;  // (0.0, 0.0, 0.0) in model coordinates
 
     czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();
+    float pointInEllipsoid = czm_pointInEllipsoid(ellipsoid, v_positionWC);
 
     // Occluded by the ellipsoid?
 	if (!u_showThroughEllipsoid)
 	{
 	    // Discard if in the ellipsoid    
 	    // PERFORMANCE_IDEA: A coarse check for ellipsoid intersection could be done on the CPU first.
-	    if (czm_pointInEllipsoid(ellipsoid, v_positionWC))
+	    if (pointInEllipsoid < 1.0)
 	    {
             discard;
 	    }
@@ -113,5 +103,5 @@ void main()
     czm_ray ray = czm_ray(vec3(0.0), normalize(v_positionEC));  // Ray from eye to fragment in eye coordinates
     czm_raySegment ellipsoidInterval = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
 
-    gl_FragColor = shade(ellipsoidInterval);
+    gl_FragColor = shade(ellipsoidInterval, pointInEllipsoid);
 }

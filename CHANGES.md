@@ -32,9 +32,10 @@ Beta Releases
    * Replaced `computeSunPosition` with `Simon1994PlanetaryPosition`, which has functions to calculate the position of the sun and the moon more accurately.
    * Removed `Context.createClearState`.  These properties are now part of `ClearCommand`.
    * `RenderState` objects returned from `Context.createRenderState` are now immutable.
+   * Removed `positionMC` from `czm_materialInput`.  It is no longer used by any materials.
 * Added wide polylines that work with and without ANGLE.
 * Polylines now use materials to describe their surface appearance. See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page for more details on how to create materials.
-* Added new `PolylineOutline`, `PolylineArrow`, and `Fade` materials.
+* Added new `PolylineOutline`, `PolylineGlow`, `PolylineArrow`, and `Fade` materials.
 * Added `czm_pixelSizeInMeters` automatic GLSL uniform.
 * Added `AnimationViewModel.snapToTicks`, which when set to true, causes the shuttle ring on the Animation widget to snap to the defined tick values, rather than interpolate between them.
 * Added `Color.toRgba` and `Color.fromRgba` to convert to/from numeric unsigned 32-bit RGBA values.
@@ -44,6 +45,7 @@ Beta Releases
 * Improved rendering performance by minimizing WebGL state calls.
 * Fixed an error in Web Worker creation when loading Cesium.js from a different origin.
 * Fixed `EllipsoidPrimitive` picking and picking objects with materials that have transparent parts.
+* Fixed imagery smearing artifacts on mobile devices and other devices without high-precision fragment shaders.
 
 ### b15 - 2013-04-01
 

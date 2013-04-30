@@ -362,7 +362,6 @@ mat3 czm_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
  * @property {vec3} normalEC Unperturbed surface normal in eye coordinates.
  * @property {mat3} tangentToEyeMatrix Matrix for converting a tangent space normal to eye space.
  * @property {vec3} positionToEyeEC Vector from the fragment to the eye in eye coordinates.  The magnitude is the distance in meters from the fragment to the eye.
- * @property {vec3} positionMC Position in model coordinates.
  */
 struct czm_materialInput
 {
@@ -372,7 +371,6 @@ struct czm_materialInput
     vec3 normalEC;
     mat3 tangentToEyeMatrix;
     vec3 positionToEyeEC;
-    vec3 positionMC;
 };
 
 /**
