@@ -179,8 +179,13 @@ define([
         if (typeof this._va === 'undefined') {
             this._va = getVertexArray(context);
             this._overlayCommand.vertexArray = this._va;
+        }
+
+        var rs = this._overlayCommand.renderState;
+        if ((typeof rs === 'undefined') || !BoundingRectangle.equals(rs.viewport, this.rectangle)) {
             this._overlayCommand.renderState = context.createRenderState({
-                blending : BlendingState.ALPHA_BLEND
+                blending : BlendingState.ALPHA_BLEND,
+                viewport : this.rectangle
             });
         }
 
@@ -200,7 +205,6 @@ define([
                     this._overlayCommand.shaderProgram, ViewportQuadVS, fsSource, attributeIndices);
             }
 
-            this._overlayCommand.renderState.viewport = this.rectangle;
             this._overlayCommand.uniformMap = this._material._uniforms;
             commandList.push(this._commandLists);
         }

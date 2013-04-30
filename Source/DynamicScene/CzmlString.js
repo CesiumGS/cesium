@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/defaultValue'
+    ], function(
+        defaultValue) {
     "use strict";
 
     /**
@@ -29,8 +32,7 @@ define(function() {
          * @param {Object} czmlInterval The CZML interval to unwrap.
          */
         unwrapInterval : function(czmlInterval) {
-            var result = czmlInterval.string;
-            return typeof result === 'undefined' ? czmlInterval : result;
+            return defaultValue(czmlInterval.string, czmlInterval);
         },
 
         /**

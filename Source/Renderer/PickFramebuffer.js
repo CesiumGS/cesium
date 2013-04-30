@@ -24,25 +24,25 @@ define([
      */
     var PickFramebuffer = function(context) {
         // Override per-command states
-        var passState = new PassState();
+        var passState = new PassState(context);
         passState.blendingEnabled = false;
         passState.scissorTest = {
             enabled : true,
             rectangle : new BoundingRectangle()
         };
 
+        // Clear to black.  Since this is the background color, no objects will be black
+        var command = new ClearCommand();
+        command.color = new Color(0.0, 0.0, 0.0, 0.0);
+        command.depth = 1.0;
+        command.stencil = 0;
+
         this._context = context;
         this._fb = undefined;
         this._passState = passState;
         this._width = 0;
         this._height = 0;
-
-        // Clear to black.  Since this is the background color, no objects will be black
-        this._clearCommand = new ClearCommand(context.createClearState({
-            color : new Color(0.0, 0.0, 0.0, 0.0),
-            depth : 1.0,
-            stencil : 0
-        }));
+        this._clearCommand = command;
     };
 
     PickFramebuffer.prototype.begin = function(screenSpaceRectangle) {

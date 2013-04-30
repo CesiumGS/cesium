@@ -7,6 +7,7 @@ defineSuite([
          'Specs/createFrameState',
          'Core/Cartesian3',
          'Core/Ellipsoid',
+         'Renderer/ClearCommand',
          'Scene/SceneMode'
      ], function(
          SkyAtmosphere,
@@ -16,6 +17,7 @@ defineSuite([
          createFrameState,
          Cartesian3,
          Ellipsoid,
+         ClearCommand,
          SceneMode) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -33,7 +35,7 @@ defineSuite([
     it('draws sky with camera in atmosphere', function() {
         var s = new SkyAtmosphere();
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var us = context.getUniformState();
@@ -52,7 +54,7 @@ defineSuite([
     it('draws sky with camera in space', function() {
         var s = new SkyAtmosphere();
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var us = context.getUniformState();

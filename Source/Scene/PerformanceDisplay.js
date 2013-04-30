@@ -1,17 +1,26 @@
 /*global define*/
 define([
-        '../Core/destroyObject',
         '../Core/BoundingRectangle',
+        '../Core/Color',
+        '../Core/defaultValue',
+        '../Core/destroyObject',
         '../Renderer/PixelFormat',
         './Material',
         './ViewportQuad'
     ], function(
-        destroyObject,
         BoundingRectangle,
+        Color,
+        defaultValue,
+        destroyObject,
         PixelFormat,
         Material,
         ViewportQuad) {
     "use strict";
+
+    var defaultFpsColor = Color.fromCssColorString('#e52');
+    var defaultFrameTimeColor = Color.fromCssColorString('#de3');
+    var defaultBackgroundColor = Color.fromCssColorString('rgba(0, 0, 30, 0.9)');
+    var defaultRectangle = new BoundingRectangle(0, 0, 80, 40);
 
     /**
      * Draws a display in the top left corner of the scene displaying FPS (frames per second),
@@ -30,15 +39,13 @@ define([
      * scene.getPrimitives().add(new PerformanceDisplay());
      */
     var PerformanceDisplay = function(description) {
-        if (typeof description === 'undefined') {
-            description = {};
-        }
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
 
-        this._fpsColor = typeof description.fpsColor !== 'undefined' ? description.fpsColor.toCssColorString() : '#e52';
-        this._frameTimeColor = typeof description.frameTimeColor !== 'undefined' ? description.frameTimeColor.toCssColorString() : '#de3';
-        this._backgroundColor = typeof description.backgroundColor !== 'undefined' ? description.backgroundColor.toCssColorString() : 'rgba(0, 0, 30, 0.9)';
-        this._font = typeof description.font !== 'undefined' ? description.font : 'bold 10px Helvetica,Arial,sans-serif';
-        this._rectangle = typeof description.rectangle !== 'undefined' ? description.rectangle : new BoundingRectangle(0, 0, 80, 40);
+        this._fpsColor = defaultValue(description.fpsColor, defaultFpsColor).toCssColorString();
+        this._frameTimeColor = defaultValue(description.frameTimeColor, defaultFrameTimeColor).toCssColorString();
+        this._backgroundColor = defaultValue(description.backgroundColor, defaultBackgroundColor).toCssColorString();
+        this._font = defaultValue(description.font, 'bold 10px Helvetica,Arial,sans-serif');
+        this._rectangle = defaultValue(description.rectangle, defaultRectangle);
 
         this._canvas = document.createElement('canvas');
         this._canvas.width = this._rectangle.width;

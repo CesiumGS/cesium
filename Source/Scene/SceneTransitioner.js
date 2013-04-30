@@ -83,7 +83,7 @@ define([
         this.onTransitionComplete = new Event();
 
         this._scene = scene;
-        this._ellipsoid = (typeof ellipsoid === 'undefined') ? Ellipsoid.WGS84 : ellipsoid;
+        this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var canvas = scene.getCanvas();
 
         // Position camera and size frustum so the entire 2D map is visible

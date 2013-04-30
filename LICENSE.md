@@ -1,4 +1,4 @@
-Copyright 2011-2012 Cesium Contributors
+Copyright 2011-2013 Cesium Contributors
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
@@ -11,7 +11,7 @@ Columbus View (Pat. Pend.)
 Third-Party Code
 ================
 
-Cesium includes third-party code from the following.
+Cesium includes the following third-party code.
 
 ### Sean O'Neil
 
