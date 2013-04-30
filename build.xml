@@ -244,15 +244,13 @@
 		<mkdir dir="${combineOutputDirectory}" />
 		<property name="relativeCombineOutputDirectory" location="${combineOutputDirectory}" relative="true" basedir="${sourceDirectory}" />
 
-		<!-- create combined Cesium.js  -->
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} wrap=true baseUrl=. name=${relativeAlmondPath} include=main out=${relativeCombineOutputDirectory}/Cesium.js" />
-		</exec>
+		<!-- create combined Cesium.js	-->
+		<antcall target="combineJavaScript.combineCesium" />
 
 		<!-- create cesiumWorkerBootstrapper -->
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. include=Workers/cesiumWorkerBootstrapper.js out=${relativeCombineOutputDirectory}/Workers/cesiumWorkerBootstrapper.js" />
-		</exec>
+		<antcall target="combineJavaScript.combineWorker">
+			<param name="worker" value="cesiumWorkerBootstrapper" />
+		</antcall>
 
 		<!-- create each combined worker layer -->
 		<antcall target="combineJavaScript.combineWorker">
@@ -272,6 +270,7 @@
 		<!-- copy other resources -->
 		<copy todir="${buildOutputDirectory}" includeEmptyDirs="false">
 			<fileset dir="${sourceDirectory}">
+				<modified />	 
 				<exclude name="**/*.js" />
 				<exclude name="**/*.glsl" />
 				<exclude name="**/.gitignore" />
@@ -281,10 +280,26 @@
 		</copy>
 	</target>
 
-	<target name="combineJavaScript.combineWorker">
+	<target name="combineJavaScript.combineCesium" depends="combineJavaScript.combineCesium.check" unless="no.combineCesium.create">
+		<exec executable="${nodePath}" dir="${sourceDirectory}">
+			<arg line="${rjsPath} -o optimize=${optimize} wrap=true baseUrl=. name=${relativeAlmondPath} include=main out=${relativeCombineOutputDirectory}/Cesium.js" />
+		</exec>
+	</target>
+
+	<target name="combineJavaScript.combineCesium.check">
+		<uptodate property="no.combineCesium.create" targetfile="${unminifiedOutputDirectory}/Cesium.js">
+			<srcfiles dir="${sourceDirectory}" includes="**/*.js"/>
+		</uptodate>
+	</target>
+
+	<target name="combineJavaScript.combineWorker" depends="combineJavaScript.combineWorker.check" unless="no.combineWorker.create">
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. name=Workers/${worker} out=${relativeCombineOutputDirectory}/Workers/${worker}.js" />
 		</exec>
+	</target>
+
+	<target name="combineJavaScript.combineWorker.check">
+		<uptodate property="no.combineWorker.create" srcfile="${sourceDirectory}/Workers/${worker}.js" targetfile="${buildOutputDirectory}/Workers/${worker}.js" />
 	</target>
 
 	<target name="combineJavaScript.createUnminified" depends="combineJavaScript.setNodePath">
