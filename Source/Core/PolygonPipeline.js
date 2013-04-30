@@ -565,8 +565,6 @@ define([
 
             var newIndices = [];
 
-            var plane = new Plane(Cartesian3.UNIT_Y, 0.0);
-
             var len = indices.length;
             for (var i = 0; i < len; i += 3) {
                 var p0 = positions[indices[i]];
@@ -578,7 +576,7 @@ define([
                 // negative side of the plane x = 0.
                 if ((p0.x < 0.0) && (p1.x < 0.0) && (p2.x < 0.0)) {
                     // Then it needs to intersect the plane y = 0.
-                    var triangles = IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
+                    var triangles = IntersectionTests.triangleXZPlaneIntersection(p0, p1, p2);
                     if (triangles) {
 
                         var positionsLen = positions.length;
