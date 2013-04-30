@@ -32,6 +32,7 @@ Beta Releases
    * Replaced `computeSunPosition` with `Simon1994PlanetaryPosition`, which has functions to calculate the position of the sun and the moon more accurately.
    * Removed `Context.createClearState`.  These properties are now part of `ClearCommand`.
    * `RenderState` objects returned from `Context.createRenderState` are now immutable.
+   * Removed `positionMC` from `czm_materialInput`.  It is no longer used by any materials.
 * Added wide polylines that work with and without ANGLE.
 * Polylines now use materials to describe their surface appearance. See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page for more details on how to create materials.
 * Added new `PolylineOutline`, `PolylineArrow`, and `Fade` materials.
