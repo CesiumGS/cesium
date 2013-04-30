@@ -23,6 +23,7 @@ define([
         './TileProviderError',
         './ImageryState',
         './TileImagery',
+        './TerrainProvider',
         './TexturePool',
         '../ThirdParty/when',
         '../Shaders/ReprojectWebMercatorFS',
@@ -51,6 +52,7 @@ define([
         TileProviderError,
         ImageryState,
         TileImagery,
+        TerrainProvider,
         TexturePool,
         when,
         ReprojectWebMercatorFS,
@@ -778,14 +780,37 @@ define([
             reproject.framebuffer = context.createFramebuffer();
             reproject.framebuffer.destroyAttachments = false;
 
+            // We need a vertex array with close to one vertex per output texel because we're doing
+            // the reprojection by computing texture coordinates in the vertex shader.
+            // If we computed Web Mercator texture coordinate per-fragment instead, we could get away with only
+            // four vertices.  Problem is: fragment shaders have limited precision on many mobile devices,
+            // leading to all kinds of smearing artifacts.  Current browsers (Chrome 26 for example)
+            // do not correctly report the available fragment shader precision, so we can't have different
+            // paths for devices with or without high precision fragment shaders, even if we want to.
+
+            var positions = new Array(256 * 256 * 2);
+            var index = 0;
+            for (var j = 0; j < 256; ++j) {
+                var y = j / 255.0;
+                for (var i = 0; i < 256; ++i) {
+                    var x = i / 255.0;
+                    positions[index++] = x;
+                    positions[index++] = y;
+                }
+            }
+
             var reprojectMesh = {
                 attributes : {
                     position : {
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 2,
-                        values : [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
+                        values : positions
                     }
-                }
+                },
+                indexLists : [{
+                    primitiveType : PrimitiveType.TRIANGLES,
+                    values : TerrainProvider.getRegularGridIndices(256, 256)
+                }]
             };
 
             var reprojectAttribInds = {
@@ -870,7 +895,7 @@ define([
             framebuffer : reproject.framebuffer,
             shaderProgram : reproject.shaderProgram,
             renderState : reproject.renderState,
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLES,
             vertexArray : reproject.vertexArray,
             uniformMap : uniformMap
         });
