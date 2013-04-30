@@ -2294,7 +2294,7 @@ define([
         }
 
         return context.createVertexArray(vaAttributes);
-    };
+    }
 
     /**
      * Creates a vertex array from a mesh.  A mesh contains vertex attributes and optional index data
