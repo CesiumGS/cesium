@@ -45,6 +45,7 @@ Beta Releases
 * Improved rendering performance by minimizing WebGL state calls.
 * Fixed an error in Web Worker creation when loading Cesium.js from a different origin.
 * Fixed `EllipsoidPrimitive` picking and picking objects with materials that have transparent parts.
+* Fixed imagery smearing artifacts on mobile devices and other devices without high-precision fragment shaders.
 
 ### b15 - 2013-04-01
 
