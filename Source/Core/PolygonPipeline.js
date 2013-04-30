@@ -374,6 +374,137 @@ define([
         return newPolygonVertices;
     }
 
+    /**
+     * Computes the intersection of a triangle and the international date line.  Offsets points from the international date line.
+     *
+     * @param {Cartesian3} p0 First point of triangle
+     * @param {Cartesian3} p1 Second point of triange
+     * @param {Cartesian3} p2 Third point of triange
+     *
+     * @return Three triangles that are offset from intersecting with the plane. (Undefined if no intersection found)
+     *
+     * @private
+     */
+    var xz_plane = new Plane(Cartesian3.UNIT_Y, 0.0);
+    function splitTriangleAtInternationalDateLine(p0, p1, p2) {
+        if ((typeof p0 === 'undefined') ||
+            (typeof p1 === 'undefined') ||
+            (typeof p2 === 'undefined')) {
+            throw new DeveloperError('p0, p1 and p2 are required.');
+        }
+
+        var p0Behind = p0.y  < 0.0;
+        var p1Behind = p1.y < 0.0;
+        var p2Behind = p2.y < 0.0;
+
+        offsetPointFromXZPlane(p0, p0Behind);
+        offsetPointFromXZPlane(p1, p1Behind);
+        offsetPointFromXZPlane(p2, p2Behind);
+
+        var numBehind = 0;
+        numBehind += p0Behind ? 1 : 0;
+        numBehind += p1Behind ? 1 : 0;
+        numBehind += p2Behind ? 1 : 0;
+
+        var u1, u2, v1, v2, result;
+
+        if (numBehind === 1 || numBehind === 2) {
+            u1 = new Cartesian3();
+            u2 = new Cartesian3();
+            v1 = new Cartesian3();
+            v2 = new Cartesian3();
+            result = { positions : [p0, p1, p2, u1, u2, v1, v2 ] };
+        }
+
+        if (numBehind === 1) {
+            if (p0Behind) {
+                getXZIntersectionOffsetPoints(p0, p1, p2, u1, u2, v1, v2);
+                result.indices = [
+                        // Behind
+                        0, 3, 4,
+
+                        // In front
+                        1, 2, 6,
+                        1, 6, 5
+                    ];
+            } else if (p1Behind) {
+                getXZIntersectionOffsetPoints(p1, p0, p2, u1, u2, v1, v2);
+                result.indices = [
+                        // Behind
+                        1, 3, 4,
+
+                        // In front
+                        2, 0, 6,
+                        2, 6, 5
+                    ];
+            } else if (p2Behind) {
+                getXZIntersectionOffsetPoints(p2, p0, p1, u1, u2, v1, v2);
+                result.indices = [
+                        // Behind
+                        2, 3, 4,
+
+                        // In front
+                        0, 1, 6,
+                        0, 6, 5
+                    ];
+            }
+        } else if (numBehind === 2) {
+            if (!p0Behind) {
+                getXZIntersectionOffsetPoints(p0, p1, p2, u1, u2, v1, v2);
+                result.indices = [
+                        // Behind
+                        1, 2, 4,
+                        1, 4, 3,
+
+                        // In front
+                        0, 5, 6
+                    ];
+            } else if (!p1Behind) {
+                getXZIntersectionOffsetPoints(p1, p2, p0, u1, u2, v1, v2);
+                result.indices = [
+                        // Behind
+                        2, 0, 4,
+                        2, 4, 3,
+
+                        // In front
+                        1, 5, 6
+                    ];
+            } else if (!p2Behind) {
+                getXZIntersectionOffsetPoints(p2, p0, p1, u1, u2, v1, v2);
+                result.indices = [
+                        // Behind
+                        0, 1, 4,
+                        0, 4, 3,
+
+                        // In front
+                        2, 5, 6
+                    ];
+            }
+        }
+        return result;
+    }
+
+    function getXZIntersectionOffsetPoints(p, p1, p2, u1, u2, v1, v2) {
+        IntersectionTests.lineSegmentPlane(p, p1, xz_plane, u1);
+        IntersectionTests.lineSegmentPlane(p, p2, xz_plane, u2);
+        Cartesian3.clone(u1, v1);
+        Cartesian3.clone(u2, v2);
+        offsetPointFromXZPlane(u1, true);
+        offsetPointFromXZPlane(u2, true);
+        offsetPointFromXZPlane(v1, false);
+        offsetPointFromXZPlane(v2, false);
+    }
+
+    function offsetPointFromXZPlane(p, isBehind) {
+        if (Math.abs(p.y) < CesiumMath.EPSILON11){
+            if (isBehind) {
+                p.y = -CesiumMath.EPSILON11;
+            } else {
+                p.y = CesiumMath.EPSILON11;
+            }
+        }
+    }
+
     var scaleToGeodeticHeightN = new Cartesian3();
     var scaleToGeodeticHeightP = new Cartesian3();
 
@@ -543,12 +674,23 @@ define([
         },
 
         /**
-         * @see PolylinePipeline.wrapLongitude
+         * Subdivides a {@link Polygon} such that no triangles cross the &plusmn;180 degree meridian of an ellipsoid.
+         * @memberof PolygonPipeline
+         *
+         * @param {Array} positions The Cartesian positions of triangles that make up a polygon.
+         * @param {Array} indices The indices of positions in the positions array that make up triangles
+         *
+         * @returns {Object} The full set of indices, including those for positions added for newly created triangles
          *
          * @exception {DeveloperError} positions and indices are required
          * @exception {DeveloperError} At least three indices are required.
          * @exception {DeveloperError} The number of indices must be divisable by three.
+         *
+         * @see Polygon
+         *
+         * @example TODO
          */
+
         wrapLongitude : function(positions, indices) {
             if ((typeof positions === 'undefined') ||
                 (typeof indices === 'undefined')) {
@@ -576,14 +718,13 @@ define([
                 // negative side of the plane x = 0.
                 if ((p0.x < 0.0) && (p1.x < 0.0) && (p2.x < 0.0)) {
                     // Then it needs to intersect the plane y = 0.
-                    var triangles = IntersectionTests.triangleXZPlaneIntersection(p0, p1, p2);
+                    var triangles = splitTriangleAtInternationalDateLine(p0, p1, p2);
                     if (triangles) {
 
                         var positionsLen = positions.length;
                         // Append two new points, the intersection points of the
                         // triangle edges and the plane.
 
-                        // TODO: raise to surface in plane
                         positions.push(triangles.positions[3]);
                         positions.push(triangles.positions[4]);
                         positions.push(triangles.positions[5]);
@@ -615,10 +756,6 @@ define([
                     } else {
                         newIndices.push(indices[i], indices[i + 1], indices[i + 2]);
                     }
-
-                    // PERFORMANCE_IDEA:  Given the plane y = 0, there will be lots of zeros,
-                    // so we could hardcode the triangle-plane test.  We'd avoid some allocations
-                    // too.  We could also probably check just one of the point's x components above.
                 } else {
                     newIndices.push(indices[i], indices[i + 1], indices[i + 2]);
                 }

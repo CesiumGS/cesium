@@ -44,10 +44,8 @@ Beta Releases
 * Improved rendering performance by minimizing WebGL state calls.
 * Fixed an error in Web Worker creation when loading Cesium.js from a different origin.
 * Fixed `EllipsoidPrimitive` picking and picking objects with materials that have transparent parts.
-
-### TODO
-
 * Added `IntersectionTests.trianglePlaneIntersection`.
+* Fixed polygon crossing international date line for 2D and Columbus view
 
 ### b15 - 2013-04-01
 

@@ -540,7 +540,7 @@ define([
     var createMeshFromPositionsPositions = [];
     var createMeshFromPositionsBoundingRectangle = new BoundingRectangle();
 
-    function createMeshFromPositions(polygon, positions, angle, outerPositions) {
+    function createMeshFromPositions(polygon, positions, angle, boundingSphere, outerPositions) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
         if (cleanedPositions.length < 3) {
             // Duplicate positions result in not enough positions to form a polygon.
@@ -556,8 +556,8 @@ define([
             cleanedPositions.reverse();
         }
         var indices = PolygonPipeline.earClip2D(positions2D);
-        // PERFORMANCE_IDEA:  Checking bounding sphere with plane for quick reject
-        if ((BoundingSphere.intersect(BoundingSphere.fromPoints(cleanedPositions), new Cartesian4(0, 1, 0, 0))) === Intersect.INTERSECTING) {
+        // Checking bounding sphere with plane for quick reject
+        if ((BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y)) === Intersect.INTERSECTING) {
             indices = PolygonPipeline.wrapLongitude(cleanedPositions, indices);
         }
         var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, polygon._granularity);
@@ -583,7 +583,7 @@ define([
                 polygon._boundingVolume2D.center = new Cartesian3(0.0, center2D.x, center2D.y);
             }
         } else if (typeof polygon._positions !== 'undefined') {
-            mesh = createMeshFromPositions(polygon, polygon._positions, polygon._textureRotationAngle);
+            mesh = createMeshFromPositions(polygon, polygon._positions, polygon._textureRotationAngle, polygon._boundingVolume);
             if (typeof mesh !== 'undefined') {
                 meshes.push(mesh);
                 polygon._boundingVolume = BoundingSphere.fromPoints(polygon._positions, polygon._boundingVolume);
@@ -591,7 +591,7 @@ define([
         } else if (typeof polygon._polygonHierarchy !== 'undefined') {
             var outerPositions =  polygon._polygonHierarchy[0];
             for (i = 0; i < polygon._polygonHierarchy.length; i++) {
-                mesh = createMeshFromPositions(polygon, polygon._polygonHierarchy[i], polygon._textureRotationAngle, outerPositions);
+                mesh = createMeshFromPositions(polygon, polygon._polygonHierarchy[i], polygon._textureRotationAngle, polygon._boundingVolume, outerPositions);
                 if (typeof mesh !== 'undefined') {
                     meshes.push(mesh);
                 }

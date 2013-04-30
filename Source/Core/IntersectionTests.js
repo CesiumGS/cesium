@@ -20,13 +20,6 @@ define([
         QuarticRealPolynomial) {
     "use strict";
 
-// TODO
-// equals, etc. for Plane?
-// Should ray constructor normalize?
-// Make EllipsoidTangentPlane contain plane?
-// Does extent triangulator work over IDL?
-// Tests for new wrapLongitude.
-
     /**
      * DOC_TBA
      *
@@ -437,6 +430,19 @@ define([
      * @returns Three triangles that do not cross the plane. (Undefined if no intersection exists)
      *
      * @exception {DeveloperError} p0, p1, p2, and plane are required.
+     *
+     * @example
+     * var origin = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883, 0.0));
+     * var normal = ellipsoid.geodeticSurfaceNormal(origin);
+     * var plane = Plane.fromPointNormal(origin, normal);
+     *
+     * var p0 = new Cartesian3(...);
+     * var p1 = new Cartesian3(...);
+     * var p2 = new Cartesian3(...);
+     *
+     * // convert the triangle composed of points (p0, p1, p2) to three triangles that don't cross the plane
+     * var triangles = IntersectionTests.lineSegmentPlane(p0, p1, p2, plane);
+     *
      */
     IntersectionTests.trianglePlaneIntersection = function(p0, p1, p2, plane) {
         if ((typeof p0 === 'undefined') ||
@@ -446,7 +452,6 @@ define([
             throw new DeveloperError('p0, p1, p2, and plane are required.');
         }
 
-        // TODO: returning triangle strips or fans?
         var planeNormal = plane.normal;
         var planeD = plane.distance;
         var p0Behind = (Cartesian3.dot(planeNormal, p0) + planeD) < 0.0;
@@ -566,139 +571,6 @@ define([
         // otherwise, it is completely in front (numBehind is 0).
         return undefined;
     };
-
-
-    /**
-     * Computes the intersection of a triangle and the XZ plane.  Offsets points from the XZ plane.
-     * @memberof IntersectionTests
-     *
-     * @param {Cartesian3} p0 First point of triangle
-     * @param {Cartesian3} p1 Second point of triange
-     * @param {Cartesian3} p2 Third point of triange
-     *
-     * @return Three triangles that are offset from intersecting with the plane. (Undefined if no intersection found)
-     *
-     * @exception {DeveloperError} p0, p1 and p2 are required.
-     */
-    var xz_plane = new Plane(Cartesian3.UNIT_Y, 0.0);
-    IntersectionTests.triangleXZPlaneIntersection = function(p0, p1, p2) {
-        if ((typeof p0 === 'undefined') ||
-            (typeof p1 === 'undefined') ||
-            (typeof p2 === 'undefined')) {
-            throw new DeveloperError('p0, p1 and p2 are required.');
-        }
-
-        var p0Behind = p0.y  < 0.0;
-        var p1Behind = p1.y < 0.0;
-        var p2Behind = p2.y < 0.0;
-
-        offsetPointFromXZPlane(p0, p0Behind);
-        offsetPointFromXZPlane(p1, p1Behind);
-        offsetPointFromXZPlane(p2, p2Behind);
-
-        var numBehind = 0;
-        numBehind += p0Behind ? 1 : 0;
-        numBehind += p1Behind ? 1 : 0;
-        numBehind += p2Behind ? 1 : 0;
-
-        var u1, u2, v1, v2, result;
-
-        if (numBehind === 1 || numBehind === 2) {
-            u1 = new Cartesian3();
-            u2 = new Cartesian3();
-            v1 = new Cartesian3();
-            v2 = new Cartesian3();
-            result = { positions : [p0, p1, p2, u1, u2, v1, v2 ] };
-        }
-
-        if (numBehind === 1) {
-            if (p0Behind) {
-                getXZIntersectionOffsetPoints(p0, p1, p2, u1, u2, v1, v2);
-                result.indices = [
-                        // Behind
-                        0, 3, 4,
-
-                        // In front
-                        1, 2, 6,
-                        1, 6, 5
-                    ];
-            } else if (p1Behind) {
-                getXZIntersectionOffsetPoints(p1, p0, p2, u1, u2, v1, v2);
-                result.indices = [
-                        // Behind
-                        1, 3, 4,
-
-                        // In front
-                        2, 0, 6,
-                        2, 6, 5
-                    ];
-            } else if (p2Behind) {
-                getXZIntersectionOffsetPoints(p2, p0, p1, u1, u2, v1, v2);
-                result.indices = [
-                        // Behind
-                        2, 3, 4,
-
-                        // In front
-                        0, 1, 6,
-                        0, 6, 5
-                    ];
-            }
-        } else if (numBehind === 2) {
-            if (!p0Behind) {
-                getXZIntersectionOffsetPoints(p0, p1, p2, u1, u2, v1, v2);
-                result.indices = [
-                        // Behind
-                        1, 2, 4,
-                        1, 4, 3,
-
-                        // In front
-                        0, 5, 6
-                    ];
-            } else if (!p1Behind) {
-                getXZIntersectionOffsetPoints(p1, p2, p0, u1, u2, v1, v2);
-                result.indices = [
-                        // Behind
-                        2, 0, 4,
-                        2, 4, 3,
-
-                        // In front
-                        1, 5, 6
-                    ];
-            } else if (!p2Behind) {
-                getXZIntersectionOffsetPoints(p2, p0, p1, u1, u2, v1, v2);
-                result.indices = [
-                        // Behind
-                        0, 1, 4,
-                        0, 4, 3,
-
-                        // In front
-                        2, 5, 6
-                    ];
-            }
-        }
-        return result;
-    };
-
-    function getXZIntersectionOffsetPoints(p, p1, p2, u1, u2, v1, v2) {
-        IntersectionTests.lineSegmentPlane(p, p1, xz_plane, u1);
-        IntersectionTests.lineSegmentPlane(p, p2, xz_plane, u2);
-        Cartesian3.clone(u1, v1);
-        Cartesian3.clone(u2, v2);
-        offsetPointFromXZPlane(u1, true);
-        offsetPointFromXZPlane(u2, true);
-        offsetPointFromXZPlane(v1, false);
-        offsetPointFromXZPlane(v2, false);
-    }
-
-    function offsetPointFromXZPlane(p, isBehind) {
-        if (Math.abs(p.y) < CesiumMath.EPSILON11){
-            if (isBehind) {
-                p.y = -CesiumMath.EPSILON11;
-            } else {
-                p.y = CesiumMath.EPSILON11;
-            }
-        }
-    }
 
     return IntersectionTests;
 });
