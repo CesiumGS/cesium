@@ -1503,6 +1503,35 @@ defineSuite([
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
 
+    it('does not render with width 0.0', function() {
+        var positions = [
+        {
+            x : -1.0,
+            y : 1.0,
+            z : 0.0
+        },{
+            x : -1.0,
+            y : -1.0,
+            z : 0.0
+        }];
+        var line = polylines.add({
+            positions : positions
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, polylines);
+        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        line.setWidth(0.0);
+        render(context, frameState, polylines);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+    });
+
     it('changes polyline position size recreates vertex arrays', function() {
         var positions = [];
         for(var i = 0; i < 20; ++i){
