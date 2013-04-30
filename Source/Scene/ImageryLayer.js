@@ -794,8 +794,8 @@ define([
                 var y = j / 255.0;
                 for (var i = 0; i < 256; ++i) {
                     var x = i / 255.0;
-                    positions[++index] = x;
-                    positions[++index] = y;
+                    positions[index++] = x;
+                    positions[index++] = y;
                 }
             }
 
