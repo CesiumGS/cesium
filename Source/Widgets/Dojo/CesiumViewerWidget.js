@@ -58,10 +58,10 @@ define([
         '../../Scene/SceneMode',
         '../../Scene/SkyBox',
         '../../Scene/SkyAtmosphere',
-        '../../DynamicScene/processCzml',
+        '../../DynamicScene/CzmlDefaults',
+        '../../DynamicScene/CzmlDataSource',
+        '../../DynamicScene/DataSourceDisplay',
         '../../DynamicScene/DynamicObjectView',
-        '../../DynamicScene/DynamicObjectCollection',
-        '../../DynamicScene/VisualizerCollection',
         'dojo/text!./CesiumViewerWidget.html'
     ], function (
         require,
@@ -122,10 +122,10 @@ define([
         SceneMode,
         SkyBox,
         SkyAtmosphere,
-        processCzml,
+        CzmlDefaults,
+        CzmlDataSource,
+        DataSourceDisplay,
         DynamicObjectView,
-        DynamicObjectCollection,
-        VisualizerCollection,
         template) {
     "use strict";
 
@@ -686,11 +686,11 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
          * @function
          * @memberof CesiumViewerWidget.prototype
          */
-        setTimeFromBuffer : function() {
+        setTimeFromBuffer : function(dynamicObjectCollection) {
             var clock = this.clock;
 
-            var document = this.dynamicObjectCollection.getObject('document');
-            var availability = this.dynamicObjectCollection.computeAvailability();
+            var document = dynamicObjectCollection.getObject('document');
+            var availability = dynamicObjectCollection.computeAvailability();
             var adjustShuttleRing = false;
 
             if (typeof document !== 'undefined' && typeof document.clock !== 'undefined') {
@@ -749,63 +749,6 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
         },
 
         /**
-         * Removes all CZML data from the viewer.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         */
-        removeAllCzml : function() {
-            this.centerCameraOnObject(undefined);
-            //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
-            //cache data indefinitely and removeAll is the only way to get rid of it.
-            //while there are no visual differences, removeAll cleans the cache and improves performance
-            this.visualizers.removeAllPrimitives();
-            this.dynamicObjectCollection.clear();
-        },
-
-        /**
-         * Add CZML data to the viewer.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @param {CZML} czml - The CZML (as objects) to be processed and added to the viewer.
-         * @param {string} source - The filename or URI that was the source of the CZML collection.
-         * @param {string} lookAt - Optional.  The ID of the object to center the camera on.
-         * @see CesiumViewerWidget#loadCzml
-         */
-        addCzml : function(czml, source, lookAt) {
-            processCzml(czml, this.dynamicObjectCollection, source);
-            this.setTimeFromBuffer();
-            if (typeof lookAt !== 'undefined') {
-                var lookAtObject = this.dynamicObjectCollection.getObject(lookAt);
-                this.centerCameraOnObject(lookAtObject);
-            }
-        },
-
-        /**
-         * Asynchronously load and add CZML data to the viewer.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @param {string} source - The URI to load the CZML from.
-         * @param {string} lookAt - Optional.  The ID of the object to center the camera on.
-         * @see CesiumViewerWidget#addCzml
-         */
-        loadCzml : function(source, lookAt) {
-            var widget = this;
-            widget._setLoading(true);
-            loadJson(source).then(function(czml) {
-                widget.addCzml(czml, source, lookAt);
-                widget._setLoading(false);
-            },
-            function(error) {
-                widget._setLoading(false);
-                console.error(error);
-                window.alert(error);
-            });
-        },
-
-        /**
          * This function is called when files are dropped on the widget, if drag-and-drop is enabled.
          *
          * @function
@@ -818,13 +761,16 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
 
             var widget = this;
             widget._setLoading(true);
-            widget.removeAllCzml();
 
             var files = event.dataTransfer.files;
             var f = files[0];
+            var name = f.name;
             var reader = new FileReader();
             reader.onload = function(evt) {
-                widget.addCzml(JSON.parse(evt.target.result), f.name);
+                var s =  CzmlDataSource.fromString(evt.target.result);
+                widget.dataSourceDisplay.dataSourceCollection.removeAll();
+                widget.dataSourceDisplay.dataSourceCollection.add(s, name);
+                widget.setTimeFromBuffer(s.getDynamicObjectCollection());
                 widget._setLoading(false);
             };
             reader.readAsText(f);
@@ -962,9 +908,11 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
 
             this.animation = new Animation(this.animationContainer, animationViewModel);
 
-            var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
-            this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
+
+            this.dataSourceDisplay = new DataSourceDisplay(function() {
+                return CzmlDefaults.createVisualizers(scene);
+            });
 
             this.sceneModePicker = new SceneModePicker(this.sceneModePickerContainer, transitioner);
 
@@ -974,7 +922,24 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             this.baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
 
             if (typeof endUserOptions.source !== 'undefined') {
-                this.loadCzml(endUserOptions.source, endUserOptions.lookAt);
+                this._setLoading(true);
+                CzmlDataSource.fromUrl(endUserOptions.source).then(function(source) {
+                    that.dataSourceDisplay.dataSourceCollection.add(source, endUserOptions.source);
+
+                    var dynamicObjectCollection = source.getDynamicObjectCollection();
+                    that.setTimeFromBuffer(dynamicObjectCollection);
+                    that._setLoading(false);
+
+                    var lookAt = endUserOptions.lookAt;
+                    if (typeof lookAt !== 'undefined') {
+                        var lookAtObject = dynamicObjectCollection.getObject(lookAt);
+                        that.centerCameraOnObject(lookAtObject);
+                    }
+                }, function(error) {
+                    that._setLoading(false);
+                    console.error(error);
+                    window.alert(error);
+                });
             }
 
             if (typeof endUserOptions.stats !== 'undefined' && endUserOptions.stats) {
@@ -1193,7 +1158,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             } else {
                 currentTime = this.clock.currentTime;
             }
-            this.visualizers.update(currentTime);
+            this.dataSourceDisplay.update(currentTime);
 
             // Update the camera to stay centered on the selected object, if any.
             var viewFromTo = this._viewFromTo;
