@@ -1293,6 +1293,37 @@ define([
         },
 
         /**
+         * An automatic GLSL uniform representing the sun position in world coordinates.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_sunPositionWC</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_sunPositionWC
+         * @glslUniform
+         *
+         * @see UniformState#getSunPositionWC
+         * @see czm_sunDirectionWC
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_sunPositionWC;
+         */
+        czm_sunPositionWC : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_VECTOR3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getSunPositionWC();
+            }
+        },
+
+        /**
          * An automatic GLSL uniform representing the normalized direction to the sun in eye coordinates.
          * This is commonly used for directional lighting computations.
          * <br /><br />
@@ -1340,6 +1371,7 @@ define([
          * @glslUniform
          *
          * @see UniformState#getSunDirectionWC
+         * @see czm_sunPositionWC
          * @see czm_sunDirectionEC
          *
          * @example

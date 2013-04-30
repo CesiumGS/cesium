@@ -696,6 +696,14 @@ defineSuite([
         verifyDraw(fs);
     });
 
+    it('has czm_sunPositionWC', function() {
+        var us = context.getUniformState();
+        us.update(createFrameState(createMockCamera()));
+
+        var fs = 'void main() { gl_FragColor = vec4(czm_sunPositionWC != vec3(0.0)); }';
+        verifyDraw(fs);
+    });
+
     it('has czm_sunDirectionEC', function() {
         var us = context.getUniformState();
         us.update(createFrameState(createMockCamera()));
