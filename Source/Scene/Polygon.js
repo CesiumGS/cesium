@@ -468,9 +468,6 @@ define([
         var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, appendTextureCoordinatesQuaternion);
         var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
 
-        // PERFORMANCE_IDEA:  Instead of storing texture coordinates per-vertex, we could
-        // save memory by computing them in the fragment shader.  However, projecting
-        // the point onto the plane may have precision issues.
         for ( var i = 0; i < length; i += 3) {
             var p = appendTextureCoordinatesCartesian3;
             p.x = positions[i];
@@ -566,7 +563,10 @@ define([
         var mesh;
 
         if ((typeof polygon._extent !== 'undefined') && !polygon._extent.isEmpty()) {
-            meshes.push(ExtentTessellator.compute({extent: polygon._extent, generateTextureCoordinates:true}));
+            meshes.push(ExtentTessellator.compute({
+                extent : polygon._extent,
+                generateTextureCoordinates : true
+            }));
 
             polygon._boundingVolume = BoundingSphere.fromExtent3D(polygon._extent, polygon._ellipsoid, polygon._boundingVolume);
             if (polygon._mode !== SceneMode.SCENE3D) {
@@ -736,7 +736,7 @@ define([
         var commands;
         var command;
 
-        var materialChanged = this._material !== this.material;
+        var materialChanged = (this._material !== this.material);
 
         this._commandLists.removeAll();
         if (pass.color) {
