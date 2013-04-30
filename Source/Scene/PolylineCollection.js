@@ -1073,7 +1073,7 @@ define([
         for ( var i = 0; i < length; ++i) {
             var polyline = polylines[i];
             var width = polyline.getWidth();
-            var show = polyline.getShow();
+            var show = polyline.getShow() && width > 0.0;
             var segments = this.getSegments(polyline);
             var positions = segments.positions;
             var lengths = segments.lengths;
@@ -1397,7 +1397,7 @@ define([
             var position;
 
             var width = polyline.getWidth();
-            var show = polyline.getShow();
+            var show = polyline.getShow() && width > 0.0;
 
             positionsLength = positions.length;
             for ( var i = 0; i < positionsLength; ++i) {
