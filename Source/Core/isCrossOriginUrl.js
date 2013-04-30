@@ -16,6 +16,7 @@ define(function() {
 
         var location = window.location;
         a.href = url;
+        a.href = a.href; // IE only absolutizes href on get, not set
 
         // host includes both hostname and port if the port is not standard
         return a.protocol !== location.protocol || a.host !== location.host;
