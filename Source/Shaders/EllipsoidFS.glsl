@@ -22,7 +22,6 @@ vec4 computeEllipsoidColor(czm_ray ray, float intersection, float side)
     materialInput.normalEC = normalEC;
     materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(positionMC, normalEC);
     materialInput.positionToEyeEC = positionToEyeEC;
-    materialInput.positionMC = positionMC;
     czm_material material = czm_getMaterial(materialInput);
 
     return czm_phong(normalize(positionToEyeEC), material);
