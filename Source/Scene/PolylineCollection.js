@@ -380,6 +380,7 @@ define([
     };
 
     var emptyArray = [];
+    var scracthBoundingSphere = new BoundingSphere();
 
     /**
      * @private
@@ -449,10 +450,13 @@ define([
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolume = this._boundingVolume;
             modelMatrix = this.modelMatrix;
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW || frameState.mode === SceneMode.SCENE2D) {
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
             boundingVolume = this._boundingVolume2D;
-        } else {
-            boundingVolume = this._boundingVolume && this._boundingVolume2D && this._boundingVolume.union(this._boundingVolume2D);
+        } else if (frameState.mode === SceneMode.SCENE2D) {
+            boundingVolume = BoundingSphere.clone(this._boundingVolume2D, scracthBoundingSphere);
+            boundingVolume.center.x = 0.0;
+        } else if (typeof this._boundingVolume !== 'undefined' && typeof this._boundingVolume2D !== 'undefined') {
+            boundingVolume = BoundingSphere.union(this._boundingVolume, this._boundingVolume2D, scracthBoundingSphere);
         }
 
         var pass = frameState.passes;
@@ -1071,7 +1075,7 @@ define([
         for ( var i = 0; i < length; ++i) {
             var polyline = polylines[i];
             var width = polyline.getWidth();
-            var show = polyline.getShow();
+            var show = polyline.getShow() && width > 0.0;
             var segments = this.getSegments(polyline);
             var positions = segments.positions;
             var lengths = segments.lengths;
@@ -1395,7 +1399,7 @@ define([
             var position;
 
             var width = polyline.getWidth();
-            var show = polyline.getShow();
+            var show = polyline.getShow() && width > 0.0;
 
             positionsLength = positions.length;
             for ( var i = 0; i < positionsLength; ++i) {
