@@ -35,7 +35,7 @@ Beta Releases
    * Removed `positionMC` from `czm_materialInput`.  It is no longer used by any materials.
 * Added wide polylines that work with and without ANGLE.
 * Polylines now use materials to describe their surface appearance. See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page for more details on how to create materials.
-* Added new `PolylineOutline`, `PolylineArrow`, and `Fade` materials.
+* Added new `PolylineOutline`, `PolylineGlow`, `PolylineArrow`, and `Fade` materials.
 * Added `czm_pixelSizeInMeters` automatic GLSL uniform.
 * Added `AnimationViewModel.snapToTicks`, which when set to true, causes the shuttle ring on the Animation widget to snap to the defined tick values, rather than interpolate between them.
 * Added `Color.toRgba` and `Color.fromRgba` to convert to/from numeric unsigned 32-bit RGBA values.
