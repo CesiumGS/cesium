@@ -250,9 +250,9 @@
 		<antcall target="combineJavaScript.combineCesium" />
 
 		<!-- create cesiumWorkerBootstrapper -->
-		<antcall target="combineJavaScript.combineWorker">
-			<param name="worker" value="cesiumWorkerBootstrapper" />
-		</antcall>
+		<exec executable="${nodePath}" dir="${sourceDirectory}">
+			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. include=Workers/cesiumWorkerBootstrapper.js out=${relativeCombineOutputDirectory}/Workers/cesiumWorkerBootstrapper.js" />
+		</exec>
 
 		<!-- create each combined worker layer -->
 		<antcall target="combineJavaScript.combineWorker">
@@ -293,14 +293,10 @@
 		</uptodate>
 	</target>
 
-	<target name="combineJavaScript.combineWorker" depends="combineJavaScript.combineWorker.check" unless="no.combineWorker.create">
+	<target name="combineJavaScript.combineWorker">
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. name=Workers/${worker} out=${relativeCombineOutputDirectory}/Workers/${worker}.js" />
 		</exec>
-	</target>
-
-	<target name="combineJavaScript.combineWorker.check">
-		<uptodate property="no.combineWorker.create" srcfile="${sourceDirectory}/Workers/${worker}.js" targetfile="${buildOutputDirectory}/Workers/${worker}.js" />
 	</target>
 
 	<target name="combineJavaScript.createUnminified" depends="combineJavaScript.setNodePath">
