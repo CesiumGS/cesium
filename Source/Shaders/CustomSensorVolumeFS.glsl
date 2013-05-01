@@ -18,7 +18,6 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     vec3 pointMC = (czm_inverseModelView * vec4(pointEC, 1.0)).xyz;                                
     materialInput.st = sensor2dTextureCoordinates(sensorRadius, pointMC);   
     materialInput.str = pointMC / sensorRadius;
-    materialInput.positionMC = pointMC;               
     
     vec3 positionToEyeEC = -v_positionEC;
     materialInput.positionToEyeEC = positionToEyeEC;

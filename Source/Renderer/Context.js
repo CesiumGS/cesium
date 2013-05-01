@@ -2229,7 +2229,7 @@ define([
         return undefined;
     };
 
-    Context.prototype._createVertexArrayAttributes = function(creationArguments) {
+    function createVertexArrayAttributes(context, creationArguments) {
         var ca = creationArguments || {};
         var mesh = ca.mesh || {};
         var attributeIndices = ca.attributeIndices || {};
@@ -2243,9 +2243,9 @@ define([
 
         if (interleave) {
             // Use a single vertex buffer with interleaved vertices.
-            var interleavedAttributes = this._interleaveAttributes(attributes);
+            var interleavedAttributes = context._interleaveAttributes(attributes);
             if (interleavedAttributes) {
-                var vertexBuffer = this.createVertexBuffer(interleavedAttributes.buffer, bufferUsage);
+                var vertexBuffer = context.createVertexBuffer(interleavedAttributes.buffer, bufferUsage);
                 var offsetsInBytes = interleavedAttributes.offsetsInBytes;
                 var strideInBytes = interleavedAttributes.vertexSizeInBytes;
 
@@ -2283,7 +2283,7 @@ define([
                     attribute = attributes[name];
                     vaAttributes.push({
                         index : attributeIndices[name],
-                        vertexBuffer : attribute.values ? this.createVertexBuffer(attribute.componentDatatype.toTypedArray(attribute.values), bufferUsage) : undefined,
+                        vertexBuffer : attribute.values ? context.createVertexBuffer(attribute.componentDatatype.toTypedArray(attribute.values), bufferUsage) : undefined,
                         value : attribute.value ? attribute.value : undefined,
                         componentDatatype : attribute.componentDatatype,
                         componentsPerAttribute : attribute.componentsPerAttribute,
@@ -2293,8 +2293,8 @@ define([
             }
         }
 
-        return this.createVertexArray(vaAttributes);
-    };
+        return context.createVertexArray(vaAttributes);
+    }
 
     /**
      * Creates a vertex array from a mesh.  A mesh contains vertex attributes and optional index data
@@ -2368,7 +2368,7 @@ define([
             }
         }
 
-        var va = this._createVertexArrayAttributes(creationArguments);
+        var va = createVertexArrayAttributes(this, creationArguments);
 
         if (indexLists) {
             va.setIndexBuffer(this.createIndexBuffer(new Uint16Array(indexLists[0].values), bufferUsage, IndexDatatype.UNSIGNED_SHORT));
