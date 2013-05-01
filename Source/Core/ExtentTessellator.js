@@ -8,6 +8,7 @@ define([
         './Extent',
         './Cartesian3',
         './Quaternion',
+        './Matrix3',
         './ComponentDatatype',
         './PrimitiveType'
     ], function(
@@ -19,6 +20,7 @@ define([
         Extent,
         Cartesian3,
         Quaternion,
+        Matrix3,
         ComponentDatatype,
         PrimitiveType) {
     "use strict";
@@ -119,9 +121,9 @@ define([
                     var carto = extent.getCenter();
                     var ellip = Ellipsoid.WGS84;
                     var carte = ellip.cartographicToCartesian(carto);
-                    var quat = Quaternion.fromAxisAngle(carte, extent.rotation);
+                    var rotationMatrix = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(carte, extent.rotation));
                     var pos = new Cartesian3(x, y, z);
-                    pos = Cartesian3.rotate(pos, quat, pos);
+                    rotationMatrix.multiplyByVector(pos, pos);
 
                     x = pos.x;
                     y = pos.y;
