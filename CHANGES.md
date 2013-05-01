@@ -8,7 +8,7 @@ Beta Releases
 
 * Breaking changes:
    * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.    
-*
+* Added `czm_morphTime` automatic GLSL uniform.
 
 ### b16 - 2013-05-01
 * Breaking changes:

@@ -17,8 +17,6 @@ varying vec2  v_textureCoordinates;
 varying float v_width;
 varying vec4  czm_pickColor;
 
-uniform float u_morphTime;
-
 const vec2 czm_highResolutionSnapScale = vec2(1.0, 1.0);    // TODO
 
 void clipLineSegmentToNearPlane(
@@ -65,13 +63,13 @@ void main()
     float show = texCoordExpandWidthAndShow.w;
     
     vec4 p, prev, next;
-    if (u_morphTime == 1.0)
+    if (czm_morphTime == 1.0)
     {
         p = vec4(czm_translateRelativeToEye(position3DHigh.xyz, position3DLow.xyz), 1.0);
         prev = vec4(czm_translateRelativeToEye(prevPosition3DHigh.xyz, prevPosition3DLow.xyz), 1.0);
         next = vec4(czm_translateRelativeToEye(nextPosition3DHigh.xyz, nextPosition3DLow.xyz), 1.0);
     }
-    else if (u_morphTime == 0.0)
+    else if (czm_morphTime == 0.0)
     {
         p = vec4(czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy), 1.0);
         prev = vec4(czm_translateRelativeToEye(prevPosition2DHigh.zxy, prevPosition2DLow.zxy), 1.0);
@@ -82,15 +80,15 @@ void main()
         p = czm_columbusViewMorph(
                 czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),
                 czm_translateRelativeToEye(position3DHigh.xyz, position3DLow.xyz),
-                u_morphTime);
+                czm_morphTime);
         prev = czm_columbusViewMorph(
                 czm_translateRelativeToEye(prevPosition2DHigh.zxy, prevPosition2DLow.zxy),
                 czm_translateRelativeToEye(prevPosition3DHigh.xyz, prevPosition3DLow.xyz),
-                u_morphTime);
+                czm_morphTime);
         next = czm_columbusViewMorph(
                 czm_translateRelativeToEye(nextPosition2DHigh.zxy, nextPosition2DLow.zxy),
                 czm_translateRelativeToEye(nextPosition3DHigh.xyz, nextPosition3DLow.xyz),
-                u_morphTime);
+                czm_morphTime);
     }
     
     vec4 endPointWC, p0, p1;
