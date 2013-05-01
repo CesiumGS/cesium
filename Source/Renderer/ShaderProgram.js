@@ -1516,7 +1516,7 @@ define([
             },
 
             getValue : function(uniformState) {
-                return uniformState.getFrameNumber();
+                return uniformState.getFrameState().frameNumber;
             }
         },
 

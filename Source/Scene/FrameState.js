@@ -29,7 +29,7 @@ define(['../Core/Cartesian2'], function(Cartesian2) {
          *
          * @type Number
          */
-        this.frameNumber = undefined;
+        this.frameNumber = 0;
 
         /**
          * The scene's current time.
