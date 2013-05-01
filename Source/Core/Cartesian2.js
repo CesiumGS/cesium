@@ -167,6 +167,10 @@ define([
      * @return {Number} The squared magnitude.
      *
      * @exception {DeveloperError} cartesian is required.
+     *
+     * @example
+     * var cartesian = new Cartesian2(2.0, 3.0);
+     * var val = Cartesian2.magnitudeSquared(cartesian); //returns 13.0
      */
     Cartesian2.magnitudeSquared = function(cartesian) {
         if (typeof cartesian === 'undefined') {
@@ -183,6 +187,10 @@ define([
      * @return {Number} The magnitude.
      *
      * @exception {DeveloperError} cartesian is required.
+     *
+     * @example
+     * var cartesian = new Cartesian2(4.0, 3.0);
+     * var val = Cartesian2.magnitudeSquared(cartesian); //returns 5.0
      */
     Cartesian2.magnitude = function(cartesian) {
         return Math.sqrt(Cartesian2.magnitudeSquared(cartesian));
@@ -223,6 +231,10 @@ define([
      * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
+     *
+     * @example
+     * //returns cartesian with x = y = sqrt(1/2)
+     * var cartesian = Cartesian2.normalize(new Cartesian2(2.0, 2.0));
      */
     Cartesian2.normalize = function(cartesian, result) {
         if (typeof cartesian === 'undefined') {
@@ -247,6 +259,10 @@ define([
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
+     *
+     * @example
+     * //returns 1.0 * 3.0 + 2.0 * 4.0 = 11.0
+     * var v = Cartesian2.dot(new Cartesian2(1.0, 2.0), new Cartesian2(3.0, 4.0));
      */
     Cartesian2.dot = function(left, right) {
         if (typeof left === 'undefined') {
@@ -269,6 +285,10 @@ define([
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
+     *
+     * @example
+     * //returns cartesian with x = 1.0 * 3.0 = 3.0 and y = 2.0 * 4.0 = 8.0
+     * var v = Cartesian2.multiplyComponents(new Cartesian2(1.0, 2.0), new Cartesian2(3.0, 4.0));
      */
     Cartesian2.multiplyComponents = function(left, right, result) {
         if (typeof left === 'undefined') {
@@ -424,6 +444,10 @@ define([
      * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
+     *
+     * @example
+     * //returns Cartesian2 with x = 1.0 and y = 2.0
+     * var v = Cartesian2.abs(new Cartesian2(-1.0, -2.0));
      */
     Cartesian2.abs = function(cartesian, result) {
         if (typeof cartesian === 'undefined') {
@@ -451,6 +475,13 @@ define([
      * @exception {DeveloperError} start is required.
      * @exception {DeveloperError} end is required.
      * @exception {DeveloperError} t is required and must be a number.
+     *
+     * @example
+     * //returns cartesian with x = 1.0 and y = 2.0
+     * var v1 = Cartesian2.lerp(new Cartesian2(0.0, 0.0), new Cartesian2(2.0, 4.0), 0.5);
+     *
+     * //returns cartesian with x = 4.0 and y = 8.0
+     * var v2 = Cartesian2.lerp(new Cartesian2(0.0, 0.0), new Cartesian2(2.0, 4.0), 2.0);
      */
     Cartesian2.lerp = function(start, end, t, result) {
         if (typeof start === 'undefined') {
@@ -479,6 +510,10 @@ define([
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
+     *
+     * @example
+     * //returns Pi/2
+     * var angle = Cartesian2.angleBetween(new Cartesian2(1.0, 0.0), new Cartesian2(0.0, 1.0));
      */
     Cartesian2.angleBetween = function(left, right) {
         if (typeof left === 'undefined') {
@@ -615,6 +650,10 @@ define([
      * @memberof Cartesian2
      *
      * @return {Number} The squared magnitude.
+     *
+     * @example
+     * //returns 25.0
+     * var v = (new Cartesian2(3.0, 4.0)).magnitudeSquared();
      */
     Cartesian2.prototype.magnitudeSquared = function() {
         return Cartesian2.magnitudeSquared(this);
@@ -625,6 +664,10 @@ define([
      * @memberof Cartesian2
      *
      * @return {Number} The magnitude.
+     *
+     * @example
+     * //returns 5.0
+     * var v = (new Cartesian2(3.0, 4.0)).magnitude();
      */
     Cartesian2.prototype.magnitude = function() {
         return Cartesian2.magnitude(this);
@@ -636,6 +679,10 @@ define([
      *
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     *
+     * @example
+     * //returns Cartesian2 with x = y = sqrt(1/2)
+     * var v = (new Cartesian2(4.0, 4.0)).normalize();
      */
     Cartesian2.prototype.normalize = function(result) {
         return Cartesian2.normalize(this, result);
@@ -649,6 +696,10 @@ define([
      * @return {Number} The dot product.
      *
      * @exception {DeveloperError} right is required.
+     *
+     * @example
+     * //returns 1.0 * 3.0 + 2.0 * 4.0 = 11.0
+     * var v = (new Cartesian2(1.0, 2.0)).dot(new Cartesian2(3.0, 4.0));
      */
     Cartesian2.prototype.dot = function(right) {
         return Cartesian2.dot(this, right);
@@ -663,6 +714,10 @@ define([
      * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
+     * 
+     * @example
+     * //returns Cartesian2 with x = 1.0 * 3.0 = 3.0 and y = 2.0 * 4.0 = 8.0
+     * var v = (new Cartesian2(1.0, 2.0)).multiplyComponents(new Cartesian2(3.0, 4.0));
      */
     Cartesian2.prototype.multiplyComponents = function(right, result) {
         return Cartesian2.multiplyComponents(this, right, result);
@@ -741,6 +796,10 @@ define([
      *
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     *
+     * @example
+     * //returns Cartesian2 with x = 1.0 and y = 2.0
+     * var v = (new Cartesian2(1.0, -2.0)).abs();
      */
     Cartesian2.prototype.abs = function(result) {
         return Cartesian2.abs(this, result);
@@ -758,6 +817,13 @@ define([
      *
      * @exception {DeveloperError} end is required.
      * @exception {DeveloperError} t is required and must be a number.
+     * 
+     * @example
+     * //returns cartesian with x = 1.0 and y = 2.0
+     * var v1 = (new Cartesian2(0.0, 0.0)).lerp(new Cartesian2(2.0, 4.0), 0.5);
+     *
+     * //returns cartesian with x = 4.0 and y = 8.0
+     * var v2 = (new Cartesian2(0.0, 0.0)).lerp(new Cartesian2(2.0, 4.0), 2.0);
      */
     Cartesian2.prototype.lerp = function(end, t, result) {
         return Cartesian2.lerp(this, end, t, result);
@@ -772,6 +838,10 @@ define([
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
+     *
+     * @example
+     * //returns Pi/2
+     * var angle = (new Cartesian2(1.0, 0.0)).angleBetween(new Cartesian2(0.0, 1.0));
      */
     Cartesian2.prototype.angleBetween = function(right) {
         return Cartesian2.angleBetween(this, right);

@@ -50,6 +50,25 @@ define([
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} spherical is required.
+     *
+     * @example
+     * //returns vector pointing in direction of positive x-axis
+     * var xplus = Cartesian3.fromSpherical(new Spherical(0.0, Math.PI/2, 1.0));
+     * 
+     * //returns vector pointing in direction of negative x-axis
+     * var xminus = Cartesian3.fromSpherical(new Spherical(Math.PI, Math.PI/2, 1.0));
+     * 
+     * //returns vector pointing in direction of positive y-axis
+     * var yplus = Cartesian3.fromSpherical(new Spherical(Math.PI/2, Math.PI/2, 1.0));
+     * 
+     * //returns vector pointing in direction of negative y-axis
+     * var yminus = Cartesian3.fromSpherical(new Spherical(3*Math.PI/2, Math.PI/2, 1.0));
+     *
+     * //returns vector pointing in direction of positive z-axis
+     * var zplus = Cartesian3.fromSpherical(new Spherical(0.0, 0.0, 1.0));
+     * 
+     * //returns vector pointing in direction of negative z-axis
+     * var zminus = Cartesian3.fromSpherical(new Spherical(0.0, Math.PI, 1.0));
      */
     Cartesian3.fromSpherical = function(spherical, result) {
         if (typeof spherical === 'undefined') {
@@ -189,6 +208,13 @@ define([
      * @return {Number} The squared magnitude.
      *
      * @exception {DeveloperError} cartesian is required.
+     *
+     * @example
+     * //returns 27.0
+     * var v1 = Cartesian3.magnitudeSquared(new Cartesian3(3.0, 3.0, 3.0));
+     *
+     * //returns 25.0
+     * var v2 = Cartesian3.magnitudeSquared(Cartesian3.fromSpherical(new Spherical(0.0, Math.PI, 5.0)));
      */
     Cartesian3.magnitudeSquared = function(cartesian) {
         if (typeof cartesian === 'undefined') {
@@ -205,6 +231,13 @@ define([
      * @return {Number} The magnitude.
      *
      * @exception {DeveloperError} cartesian is required.
+     *
+     * @example
+     * //returns sqrt(27.0)
+     * var v1 = Cartesian3.magnitude(new Cartesian3(3.0, 3.0, 3.0));
+     *
+     * //returns 5.0
+     * var v2 = Cartesian3.magnitude(Cartesian3.fromSpherical(new Spherical(0.0, Math.PI, 5.0)));
      */
     Cartesian3.magnitude = function(cartesian) {
         return Math.sqrt(Cartesian3.magnitudeSquared(cartesian));
@@ -245,6 +278,10 @@ define([
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
+     *
+     * @example
+     * //returns (1.0/sqrt(14.0), 2.0/sqrt(14.0), 3.0/sqrt(14.0))
+     * var v = Cartesian3.normalize(new Cartesian3(1.0, 2.0, 3.0));
      */
     Cartesian3.normalize = function(cartesian, result) {
         if (typeof cartesian === 'undefined') {
@@ -270,6 +307,10 @@ define([
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
+     *
+     * @example
+     * //returns 1.0 * 4.0 + 2.0 * 5.0 + 3.0 * 6.0
+     * var v = Cartesian3.dot(new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0))
      */
     Cartesian3.dot = function(left, right) {
         if (typeof left === 'undefined') {
@@ -292,6 +333,10 @@ define([
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
+     *
+     * @example
+     * //returns (1.0 * 4.0, 2.0 * 5.0, 3.0 * 6.0)
+     * var v = Cartesian3.multiplyComponents(new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0))
      */
     Cartesian3.multiplyComponents = function(left, right, result) {
         if (typeof left === 'undefined') {
@@ -453,6 +498,10 @@ define([
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
+     *
+     * @example
+     * //returns (1.0, 2.0, 3.0)
+     * var v = Cartesian3.abs(new Cartesian3(1.0, -2.0, -3.0));
      */
     Cartesian3.abs = function(cartesian, result) {
         if (typeof cartesian === 'undefined') {
@@ -481,6 +530,13 @@ define([
      * @exception {DeveloperError} start is required.
      * @exception {DeveloperError} end is required.
      * @exception {DeveloperError} t is required and must be a number.
+     *
+     * @example
+     * //returns (0.5, 1.0, 2.0)
+     * var v1 = Cartesian3.lerp(new Cartesian3(0.0, 0.0, 0.0), new Cartesian3(1.0, 2.0, 4.0), 0.5);
+     *
+     * //returns (2.0, 4.0, 8.0)
+     * var v2 = Cartesian3.lerp(new Cartesian3(0.0, 0.0, 0.0), new Cartesian3(1.0, 2.0, 4.0), 2.0);
      */
     Cartesian3.lerp = function(start, end, t, result) {
         if (typeof start === 'undefined') {
@@ -509,6 +565,10 @@ define([
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
+     *
+     * @example
+     * //returns Pi/4
+     * var angle = Cartesian3.angleBetween(new Cartesian3(0.0, 0.0, 0.0), new Cartesian3(1.0, 1.0, 0.0));
      */
     Cartesian3.angleBetween = function(left, right) {
         if (typeof left === 'undefined') {
@@ -613,6 +673,10 @@ define([
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
+     *
+     * @example
+     * //returns (0.0, 0.0, 0.0) since both vectors are parallel
+     * var v = Cartesian3.cross(new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(2.0, 4.0, 6.0));
      */
     Cartesian3.cross = function(left, right, result) {
         if (typeof left === 'undefined') {
@@ -702,6 +766,13 @@ define([
      * @memberof Cartesian3
      *
      * @return {Number} The squared magnitude.
+     * 
+     * @example
+     * //returns 27.0
+     * var v1 = (new Cartesian3(3.0, 3.0, 3.0)).magnitudeSquared();
+     *
+     * //returns 25.0
+     * var v2 = (Cartesian3.fromSpherical(new Spherical(0.0, Math.PI, 5.0))).magnitudeSquared();
      */
     Cartesian3.prototype.magnitudeSquared = function() {
         return Cartesian3.magnitudeSquared(this);
@@ -712,6 +783,13 @@ define([
      * @memberof Cartesian3
      *
      * @return {Number} The magnitude.
+     * 
+     * @example
+     * //returns sqrt(27.0)
+     * var v1 = (new Cartesian3(3.0, 3.0, 3.0)).magnitude();
+     *
+     * //returns 5.0
+     * var v2 = (Cartesian3.fromSpherical(new Spherical(0.0, Math.PI, 5.0))).magnitude();
      */
     Cartesian3.prototype.magnitude = function() {
         return Cartesian3.magnitude(this);
@@ -723,6 +801,10 @@ define([
      *
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     *
+     * @example
+     * //returns (1.0/sqrt(14.0), 2.0/sqrt(14.0), 3.0/sqrt(14.0))
+     * var v = (new Cartesian3(1.0, 2.0, 3.0)).normalize();
      */
     Cartesian3.prototype.normalize = function(result) {
         return Cartesian3.normalize(this, result);
@@ -736,6 +818,10 @@ define([
      * @return {Number} The dot product.
      *
      * @exception {DeveloperError} right is required.
+     * 
+     * @example
+     * //returns 1.0 * 4.0 + 2.0 * 5.0 + 3.0 * 6.0
+     * var v = (new Cartesian3(1.0, 2.0, 3.0)).dot(new Cartesian3(4.0, 5.0, 6.0))
      */
     Cartesian3.prototype.dot = function(right) {
         return Cartesian3.dot(this, right);
@@ -750,6 +836,10 @@ define([
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
+     *
+     * @example
+     * //returns (1.0 * 4.0, 2.0 * 5.0, 3.0 * 6.0)
+     * var v = (new Cartesian3(1.0, 2.0, 3.0)).multiplyComponents(new Cartesian3(4.0, 5.0, 6.0))
      */
     Cartesian3.prototype.multiplyComponents = function(right, result) {
         return Cartesian3.multiplyComponents(this, right, result);
@@ -828,6 +918,10 @@ define([
      *
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     *
+     * @example
+     * //returns (1.0, 2.0, 3.0)
+     * var v = (new Cartesian3(1.0, -2.0, -3.0)).abs();
      */
     Cartesian3.prototype.abs = function(result) {
         return Cartesian3.abs(this, result);
@@ -845,6 +939,13 @@ define([
      *
      * @exception {DeveloperError} end is required.
      * @exception {DeveloperError} t is required and must be a number.
+     *
+     * @example
+     * //returns (0.5, 1.0, 2.0)
+     * var v1 = (new Cartesian3(0.0, 0.0, 0.0)).lerp(new Cartesian3(1.0, 2.0, 4.0), 0.5);
+     *
+     * //returns (2.0, 4.0, 8.0)
+     * var v2 = (new Cartesian3(0.0, 0.0, 0.0)).lerp(new Cartesian3(1.0, 2.0, 4.0), 2.0);
      */
     Cartesian3.prototype.lerp = function(end, t, result) {
         return Cartesian3.lerp(this, end, t, result);
@@ -859,6 +960,10 @@ define([
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
+     *
+     * @example
+     * //returns Pi/4
+     * var angle = (new Cartesian3(0.0, 0.0, 0.0)).angleBetween(new Cartesian3(1.0, 1.0, 0.0));
      */
     Cartesian3.prototype.angleBetween = function(right) {
         return Cartesian3.angleBetween(this, right);
@@ -921,6 +1026,10 @@ define([
      * @return {Number} The cross product.
      *
      * @exception {DeveloperError} right is required.
+     * 
+     * @example
+     * //returns (0.0, 0.0, 0.0) since both vectors are parallel
+     * var v = (new Cartesian3(1.0, 2.0, 3.0)).cross(new Cartesian3(2.0, 4.0, 6.0));
      */
     Cartesian3.prototype.cross = function(right, result) {
         return Cartesian3.cross(this, right, result);
