@@ -1,55 +1,63 @@
 /*global define*/
 define(['./DataSourceCollection',
-        './VisualizerCollection'
+        './VisualizerCollection',
+        '../Core/Iso8601'
         ], function(
                 DataSourceCollection,
-                VisualizerCollection) {
+                VisualizerCollection,
+                Iso8601) {
     "use strict";
 
     /**
-     * asd
+     * Visualizes a collection of  {@link DataSource} instances.
+     *
      * @alias DataSourceDisplay
      * @constructor
      */
     var DataSourceDisplay = function(visualizerCreator) {
         /**
-         *
+         * Gets the collection of data sources.
+         * @type {DataSourceCollection}
          */
         this.dataSourceCollection = new DataSourceCollection();
-
-        this._visualizerCreator = visualizerCreator;
-        this._visualizerCollections = [];
-
         this.dataSourceCollection.dataSourceAdded.addEventListener(this._onDataSourceAdded, this);
         this.dataSourceCollection.dataSourceRemoved.addEventListener(this._onDataSourceRemoved, this);
+
+        this._visualizerCreator = visualizerCreator;
     };
 
     DataSourceDisplay.prototype.destroy = function() {
-        this.dataSourceCollection.dataSourceAdded.removeEventListener(DataSourceDisplay._onDataSourceAdded, this);
-        this.dataSourceCollection.dataSourceRemoved.removeEventListener(DataSourceDisplay._onDataSourceRemoved, this);
+        this.dataSourceCollection.dataSourceAdded.removeEventListener(this._onDataSourceAdded, this);
+        this.dataSourceCollection.dataSourceRemoved.removeEventListener(this._onDataSourceRemoved, this);
     };
 
     DataSourceDisplay.prototype.update = function(time) {
-        var collections = this._visualizerCollections;
-        var length = collections.length;
+        var dataSources = this.dataSourceCollection;
+        var length = dataSources.getLength();
         for ( var i = 0; i < length; i++) {
-            collections[i].update(time);
+            var dataSource = dataSources.get(i);
+            if (dataSource.getIsReady() && dataSource.getIsTemporal()) {
+                dataSource._visualizerCollection.update(time);
+            }
         }
     };
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
         var vCollection = new VisualizerCollection(this._visualizerCreator(), dataSource.getDynamicObjectCollection());
         dataSource._visualizerCollection = vCollection;
-        this._visualizerCollections.push(vCollection);
+        dataSource.changed.addEventListener(this._onDataSourceChanged, this);
     };
 
     DataSourceDisplay.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
-        var vCollection = dataSource._visualizerCollection;
-        var vCollections = this._visualizerCollections;
-        var index = vCollections.indexOf(vCollection);
-        vCollections.splice(index, 1);
-        vCollection.destroy();
+        dataSource.changed.removeEventListener(this._onDataSourceChanged, this);
+        dataSource._visualizerCollection.destroy();
         dataSource._visualizerCollection = undefined;
+    };
+
+    DataSourceDisplay.prototype._onDataSourceChanged = function(dataSource) {
+        if (dataSource.getIsReady()) {
+            dataSource._visualizerCollection.update(Iso8601.MINIMUM_VALUE);
+        }
     };
 
     return DataSourceDisplay;

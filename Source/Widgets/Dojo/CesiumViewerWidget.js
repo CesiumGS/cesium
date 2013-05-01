@@ -686,37 +686,17 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
          * @function
          * @memberof CesiumViewerWidget.prototype
          */
-        setTimeFromBuffer : function(dynamicObjectCollection) {
+        setTimeFromDataSource : function(dataSource) {
             var clock = this.clock;
-
-            var document = dynamicObjectCollection.getObject('document');
-            var availability = dynamicObjectCollection.computeAvailability();
+            var dataSourceClock = dataSource.getClock();
             var adjustShuttleRing = false;
-
-            if (typeof document !== 'undefined' && typeof document.clock !== 'undefined') {
-                clock.startTime = document.clock.startTime;
-                clock.stopTime = document.clock.stopTime;
-                clock.clockRange = document.clock.clockRange;
-                clock.clockStep = document.clock.clockStep;
-                clock.multiplier = document.clock.multiplier;
-                clock.currentTime = document.clock.currentTime;
-                adjustShuttleRing = true;
-            } else if (!availability.start.equals(Iso8601.MINIMUM_VALUE)) {
-                clock.startTime = availability.start;
-                clock.stopTime = availability.stop;
-                if (typeof this.endUserOptions.loop === 'undefined' || this.endUserOptions.loop === '1') {
-                    clock.clockRange = ClockRange.LOOP_STOP;
-                } else {
-                    clock.clockRange = ClockRange.CLAMPED;
-                }
-                var totalSeconds = clock.startTime.getSecondsDifference(clock.stopTime);
-                var multiplier = Math.round(totalSeconds / 120.0);
-                if (multiplier < 1) {
-                    multiplier = 1;
-                }
-                clock.multiplier = multiplier;
-                clock.currentTime = clock.startTime;
-                clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+            if (typeof dataSourceClock !== 'undefined') {
+                clock.startTime = dataSourceClock.startTime;
+                clock.stopTime = dataSourceClock.stopTime;
+                clock.clockRange = dataSourceClock.clockRange;
+                clock.clockStep = dataSourceClock.clockStep;
+                clock.multiplier = dataSourceClock.multiplier;
+                clock.currentTime = dataSourceClock.currentTime;
                 adjustShuttleRing = true;
             } else {
                 clock.startTime = new JulianDate();
@@ -770,7 +750,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
                 var s =  CzmlDataSource.fromString(evt.target.result);
                 widget.dataSourceDisplay.dataSourceCollection.removeAll();
                 widget.dataSourceDisplay.dataSourceCollection.add(s, name);
-                widget.setTimeFromBuffer(s.getDynamicObjectCollection());
+                widget.setTimeFromDataSource(s);
                 widget._setLoading(false);
             };
             reader.readAsText(f);
@@ -927,7 +907,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
                     that.dataSourceDisplay.dataSourceCollection.add(source, endUserOptions.source);
 
                     var dynamicObjectCollection = source.getDynamicObjectCollection();
-                    that.setTimeFromBuffer(dynamicObjectCollection);
+                    that.setTimeFromDataSource(source);
                     that._setLoading(false);
 
                     var lookAt = endUserOptions.lookAt;
