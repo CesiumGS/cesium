@@ -7,6 +7,7 @@ define([
         './Ellipsoid',
         './Extent',
         './Cartesian3',
+        './Quaternion',
         './ComponentDatatype',
         './PrimitiveType'
     ], function(
@@ -17,6 +18,7 @@ define([
         Ellipsoid,
         Extent,
         Cartesian3,
+        Quaternion,
         ComponentDatatype,
         PrimitiveType) {
     "use strict";
@@ -38,7 +40,7 @@ define([
      * {@link ExtentTessellator#compute} and {@link ExtentTessellator#computeBuffers}
      * in that it assumes that you have already allocated output arrays of the correct size.
      *
-     * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
+     * @param {Extent} description.extent A cartographic extent with north, south, east, west and rotation properties in radians.
      * @param {Number} description.width The number of vertices in the longitude direction.
      * @param {Number} description.height The number of vertices in the latitude direction.
      * @param {Number} description.granularityX The distance, in radians, between each longitude.
@@ -54,7 +56,6 @@ define([
      */
     ExtentTessellator.computeVertices = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-
         var extent = description.extent;
         var surfaceHeight = description.surfaceHeight;
         var width = description.width;
@@ -111,9 +112,25 @@ define([
                 var rSurfaceY = kY / gamma;
                 var rSurfaceZ = kZ / gamma;
 
-                vertices[vertexArrayIndex++] = rSurfaceX + nX * surfaceHeight - relativeToCenter.x;
-                vertices[vertexArrayIndex++] = rSurfaceY + nY * surfaceHeight - relativeToCenter.y;
-                vertices[vertexArrayIndex++] = rSurfaceZ + nZ * surfaceHeight - relativeToCenter.z;
+                var x = rSurfaceX + nX * surfaceHeight - relativeToCenter.x;
+                var y = rSurfaceY + nY * surfaceHeight - relativeToCenter.y;
+                var z = rSurfaceZ + nZ * surfaceHeight - relativeToCenter.z;
+                if (extent.rotation !== 0.0) {
+                    var carto = extent.getCenter();
+                    var ellip = Ellipsoid.WGS84;
+                    var carte = ellip.cartographicToCartesian(carto);
+                    var quat = Quaternion.fromAxisAngle(carte, extent.rotation);
+                    var pos = new Cartesian3(x, y, z);
+                    pos = Cartesian3.rotate(pos, quat, pos);
+
+                    x = pos.x;
+                    y = pos.y;
+                    z = pos.z;
+                }
+
+                vertices[vertexArrayIndex++] = x;
+                vertices[vertexArrayIndex++] = y;
+                vertices[vertexArrayIndex++] = z;
 
                 if (generateTextureCoordinates) {
                     var geographicU = (longitude - extent.west) * lonScalar;

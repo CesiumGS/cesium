@@ -24,8 +24,9 @@ define([
      * @param {Number} [south=0.0] The southernmost latitude in the range [-Pi/2, Pi/2].
      * @param {Number} [east=0.0] The easternmost longitude in the range [-Pi, Pi].
      * @param {Number} [north=0.0] The northernmost latitude in the range [-Pi/2, Pi/2].
+     * @param {Number} [rotation=0.0] The rotation in range [-Pi, Pi] where 0 is north (no rotation).
      */
-    var Extent = function(west, south, east, north) {
+    var Extent = function(west, south, east, north, rotation) {
         /**
          * The westernmost longitude in the range [-Pi, Pi].
          * @type Number
@@ -49,6 +50,12 @@ define([
          * @type Number
          */
         this.north = defaultValue(north, 0.0);
+
+        /**
+         * The rotation in range [-Pi, Pi] where 0 is north (no rotation).
+         * @type Number
+         */
+        this.rotation = defaultValue(rotation, 0.0);
     };
 
     /**
@@ -85,6 +92,7 @@ define([
         result.south = minLat;
         result.east = maxLon;
         result.north = maxLat;
+        result.rotation = 0.0;
         return result;
     };
 
@@ -105,6 +113,7 @@ define([
         result.south = extent.south;
         result.east = extent.east;
         result.north = extent.north;
+        result.rotation = extent.rotation;
         return result;
     };
 
@@ -133,7 +142,8 @@ define([
                this.west === other.west &&
                this.south === other.south &&
                this.east === other.east &&
-               this.north === other.north;
+               this.north === other.north &&
+               this.rotation === other.rotation;
     };
 
     /**
@@ -157,7 +167,8 @@ define([
                (Math.abs(this.west - other.west) <= epsilon) &&
                (Math.abs(this.south - other.south) <= epsilon) &&
                (Math.abs(this.east - other.east) <= epsilon) &&
-               (Math.abs(this.north - other.north) <= epsilon);
+               (Math.abs(this.north - other.north) <= epsilon) &&
+               (Math.abs(this.rotation - other.rotation) <= epsilon);
     };
 
     /**
@@ -207,6 +218,15 @@ define([
 
         if (east < -Math.PI || east > Math.PI) {
             throw new DeveloperError('east must be in the interval [-Pi, Pi].');
+        }
+
+        var rotation = this.rotation;
+        if (typeof rotation !== 'number') {
+            throw new DeveloperError('rotation is required to be a number.');
+        }
+
+        if (rotation < -Math.PI || rotation > Math.PI) {
+            throw new DeveloperError('rotation must be in the interval [-Pi, Pi].');
         }
     };
 
@@ -309,6 +329,7 @@ define([
         if (typeof otherExtent === 'undefined') {
             throw new DeveloperError('otherExtent is required.');
         }
+        //TODO: handle rotation
         var west = Math.max(this.west, otherExtent.west);
         var south = Math.max(this.south, otherExtent.south);
         var east = Math.min(this.east, otherExtent.east);
@@ -336,6 +357,7 @@ define([
         if (typeof cartographic === 'undefined') {
             throw new DeveloperError('cartographic is required.');
         }
+        //TODO: handle rotation
         return cartographic.longitude >= this.west &&
                cartographic.longitude <= this.east &&
                cartographic.latitude >= this.south &&
@@ -371,7 +393,7 @@ define([
             result = [];
         }
         var length = 0;
-
+        //TODO: handle rotation
         var north = this.north;
         var south = this.south;
         var east = this.east;
