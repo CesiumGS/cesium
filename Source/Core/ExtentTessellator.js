@@ -56,6 +56,8 @@ define([
      * @param {Array|Float32Array} description.textureCoordinates The array to use to store computed texture coordinates, unless interleaved.
      * @param {Array|Float32Array} [description.indices] The array to use to store computed indices.  If undefined, indices will be not computed.
      */
+    var pos = new Cartesian3();
+    var rotationMatrix = new Matrix3();
     ExtentTessellator.computeVertices = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var extent = description.extent;
@@ -89,6 +91,11 @@ define([
         var vertexArrayIndex = 0;
         var textureCoordinatesIndex = 0;
 
+        if (extent.rotation !== 0.0) {
+            Ellipsoid.WGS84.cartographicToCartesian(extent.getCenter(), pos);
+            rotationMatrix = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(pos, -extent.rotation), rotationMatrix);
+        }
+
         for ( var row = 0; row < height; ++row) {
             var latitude = extent.north - granularityY * row;
             var cosLatitude = cos(latitude);
@@ -118,11 +125,9 @@ define([
                 var y = rSurfaceY + nY * surfaceHeight - relativeToCenter.y;
                 var z = rSurfaceZ + nZ * surfaceHeight - relativeToCenter.z;
                 if (extent.rotation !== 0.0) {
-                    var carto = extent.getCenter();
-                    var ellip = Ellipsoid.WGS84;
-                    var carte = ellip.cartographicToCartesian(carto);
-                    var rotationMatrix = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(carte, extent.rotation));
-                    var pos = new Cartesian3(x, y, z);
+                    pos.x = x;
+                    pos.y = y;
+                    pos.z = z;
                     rotationMatrix.multiplyByVector(pos, pos);
 
                     x = pos.x;
