@@ -58,6 +58,7 @@ define([
         '../../Scene/SceneMode',
         '../../Scene/SkyBox',
         '../../Scene/SkyAtmosphere',
+        '../../Scene/Sun',
         '../../DynamicScene/processCzml',
         '../../DynamicScene/DynamicObjectView',
         '../../DynamicScene/DynamicObjectCollection',
@@ -122,6 +123,7 @@ define([
         SceneMode,
         SkyBox,
         SkyAtmosphere,
+        Sun,
         processCzml,
         DynamicObjectView,
         DynamicObjectCollection,
@@ -335,6 +337,15 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
          * @see SkyBox
          */
         showSkyBox : true,
+        /**
+         * Determines if the sun is drawn.  This is read-only after construction.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default true
+         * @see Sun
+         */
+        showSun : true,
         /**
          * An object containing settings supplied by the end user, typically from the query string
          * of the URL of the page with the widget.
@@ -900,6 +911,10 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
                     positiveZ : this.skyBoxBaseUrl + '_pz.jpg',
                     negativeZ : this.skyBoxBaseUrl + '_mz.jpg'
                 });
+            }
+
+            if (this.showSun) {
+                scene.sun = new Sun();
             }
 
             scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);

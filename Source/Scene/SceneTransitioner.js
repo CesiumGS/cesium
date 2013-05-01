@@ -707,6 +707,10 @@ define([
             scene.skyBox.morphTime = morphTime;
         }
 
+        if (typeof scene.sun !== 'undefined') {
+            scene.sun.morphTime = morphTime;
+        }
+
         if (typeof scene.skyAtmosphere !== 'undefined') {
             scene.skyAtmosphere.morphTime = morphTime;
         }
@@ -737,6 +741,11 @@ define([
 
         if (typeof scene.skyBox !== 'undefined') {
             animation = sceneAnimations.addProperty(scene.skyBox, 'morphTime', start, stop, template);
+            transitioner._currentAnimations.push(animation);
+        }
+
+        if (typeof scene.sun !== 'undefined') {
+            animation = sceneAnimations.addProperty(scene.sun, 'morphTime', start, stop, template);
             transitioner._currentAnimations.push(animation);
         }
 

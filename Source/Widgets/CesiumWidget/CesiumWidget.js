@@ -15,7 +15,8 @@ define(['../../Core/buildModuleUrl',
         '../../Scene/Scene',
         '../../Scene/SceneTransitioner',
         '../../Scene/SkyBox',
-        '../../Scene/SkyAtmosphere'
+        '../../Scene/SkyAtmosphere',
+        '../../Scene/Sun'
     ], function(
         buildModuleUrl,
         Cartesian2,
@@ -33,7 +34,8 @@ define(['../../Core/buildModuleUrl',
         Scene,
         SceneTransitioner,
         SkyBox,
-        SkyAtmosphere) {
+        SkyAtmosphere,
+        Sun) {
     "use strict";
 
     function getDefaultSkyBoxUrl(suffix) {
@@ -123,7 +125,7 @@ define(['../../Core/buildModuleUrl',
             positiveZ : getDefaultSkyBoxUrl('pz'),
             negativeZ : getDefaultSkyBoxUrl('mz')
         });
-
+        scene.sun = new Sun();
         scene.skyAtmosphere = new SkyAtmosphere(_ellipsoid);
 
         //Set the base imagery layer

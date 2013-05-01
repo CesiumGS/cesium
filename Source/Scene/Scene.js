@@ -110,6 +110,15 @@ define([
         this.skyBox = undefined;
 
         /**
+         * The {@link Sun}.
+         *
+         * @type Sun
+         *
+         * @default undefined
+         */
+        this.sun = undefined;
+
+        /**
          * The sky atmosphere drawn around the globe.
          *
          * @type SkyAtmosphere
@@ -403,6 +412,7 @@ define([
         var context = scene._context;
         var us = context.getUniformState();
         var skyBoxCommand = typeof scene.skyBox !== 'undefined' ? scene.skyBox.update(context, scene._frameState) : undefined;
+        var sunCommand = typeof scene.sun !== 'undefined' ? scene.sun.update(context, scene._frameState) : undefined;
         var skyAtmosphereCommand = typeof scene.skyAtmosphere !== 'undefined' ? scene.skyAtmosphere.update(context, scene._frameState) : undefined;
 
         var clear = scene._clearColorCommand;
@@ -417,6 +427,10 @@ define([
 
         if (typeof skyBoxCommand !== 'undefined') {
             skyBoxCommand.execute(context, passState);
+        }
+
+        if (typeof sunCommand !== 'undefined') {
+            sunCommand.execute(context, passState);
         }
 
         if (typeof skyAtmosphereCommand !== 'undefined') {
@@ -630,6 +644,7 @@ define([
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
         this.skyBox = this.skyBox && this.skyBox.destroy();
+        this.sun = this.sun && this.sun.destroy();
         this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
         this._context = this._context && this._context.destroy();
         return destroyObject(this);
