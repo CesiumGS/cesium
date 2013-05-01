@@ -159,6 +159,9 @@ require([
                 }),
                 1.0);
         addAdditionalLayerOption(
+                'Grid',
+                new Cesium.GridImageryProvider(), 1.0, false);
+        addAdditionalLayerOption(
                 'Tile Coordinates',
                 new Cesium.TileCoordinatesImageryProvider(), 1.0, false);
     }

@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Browse Cesium's built in materials and define new ones using the Fabric schema.">
+    <meta name="cesium-sandcastle-labels" content="">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript">
@@ -464,13 +465,20 @@ require([
         Sandcastle.declare(applyRimLightingMaterial);  // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'RimLighting');
     }
-    
+
     function applyPolylineArrowMaterial(primitive, scene) {
         Sandcastle.declare(applyPolylineArrowMaterial);  // For highlighting in Sandcastle.
         var material = new Cesium.Material.fromType(scene.getContext(), 'PolylineArrow');
         primitive.setMaterial(material);
     }
-    
+
+    function applyPolylineGlowMaterial(primitive, scene) {
+        Sandcastle.declare(applyPolylineGlowMaterial);  // For highlighting in Sandcastle.
+        var material = new Cesium.Material.fromType(scene.getContext(), 'PolylineGlow');
+        material.uniforms.innerWidth = primitive.getWidth() / 2.0;
+        primitive.setMaterial(material);
+    }
+
     function applyPolylineOutlineMaterial(primitive, scene) {
         Sandcastle.declare(applyPolylineOutlineMaterial);  // For highlighting in Sandcastle.
         var material = new Cesium.Material.fromType(scene.getContext(), 'PolylineOutline');
@@ -769,6 +777,15 @@ require([
         }));
         
         polylineMaterialMenu.addChild(new MenuItem({
+            label: 'PolylineGlow',
+            onClick: function() {
+                togglePolylineVisibility();
+                applyPolylineGlowMaterial(polyline, scene);
+                Sandcastle.highlight(applyPolylineGlowMaterial);
+            }
+        }));
+
+        polylineMaterialMenu.addChild(new MenuItem({
             label: 'PolylineOutline',
             onClick: function() {
                 togglePolylineVisibility();
@@ -806,7 +823,7 @@ require([
             dropDown: compositeMaterialMenu,
             maxHeight: -1
         }).placeAt('toolbar');
-        
+
         new DropDownButton({
             label : 'Polyline materials',
             dropDown : polylineMaterialMenu,

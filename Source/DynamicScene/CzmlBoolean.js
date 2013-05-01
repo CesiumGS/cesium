@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/defaultValue'
+    ], function(
+        defaultValue) {
     "use strict";
 
     /**
@@ -10,7 +13,7 @@ define(function() {
      * @see DynamicProperty
      * @see CzmlCartesian2
      * @see CzmlCartesian3
-     * @see CzmlCartographic
+     * @see CzmlPosition
      * @see CzmlColor
      * @see CzmlHorizontalOrigin
      * @see CzmlLabelStyle
@@ -30,8 +33,8 @@ define(function() {
          */
         unwrapInterval : function(czmlInterval) {
             /*jshint sub:true*/
-            var result = czmlInterval['boolean']; // boolean is a JS reserved word
-            return typeof result === 'undefined' ? czmlInterval : result;
+            // boolean is a JS reserved word
+            return defaultValue(czmlInterval['boolean'], czmlInterval);
         },
 
         /**

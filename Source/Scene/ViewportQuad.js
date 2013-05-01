@@ -13,7 +13,6 @@ define([
         '../Renderer/BlendingState',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
-        '../Shaders/Noise',
         '../Shaders/ViewportQuadVS',
         '../Shaders/ViewportQuadFS'
     ], function(
@@ -30,7 +29,6 @@ define([
         BlendingState,
         CommandLists,
         DrawCommand,
-        Noise,
         ViewportQuadVS,
         ViewportQuadFS) {
     "use strict";
@@ -181,8 +179,13 @@ define([
         if (typeof this._va === 'undefined') {
             this._va = getVertexArray(context);
             this._overlayCommand.vertexArray = this._va;
+        }
+
+        var rs = this._overlayCommand.renderState;
+        if ((typeof rs === 'undefined') || !BoundingRectangle.equals(rs.viewport, this.rectangle)) {
             this._overlayCommand.renderState = context.createRenderState({
-                blending : BlendingState.ALPHA_BLEND
+                blending : BlendingState.ALPHA_BLEND,
+                viewport : this.rectangle
             });
         }
 
@@ -194,17 +197,14 @@ define([
 
                 var fsSource =
                     '#line 0\n' +
-                    Noise +
-                    '#line 0\n' +
                     this._material.shaderSource +
                     '#line 0\n' +
                     ViewportQuadFS;
 
-                this._overlayCommand.shaderProgram = this._overlayCommand.shaderProgram && this._overlayCommand.shaderProgram.release();
-                this._overlayCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fsSource, attributeIndices);
+                this._overlayCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
+                    this._overlayCommand.shaderProgram, ViewportQuadVS, fsSource, attributeIndices);
             }
 
-            this._overlayCommand.renderState.viewport = this.rectangle;
             this._overlayCommand.uniformMap = this._material._uniforms;
             commandList.push(this._commandLists);
         }

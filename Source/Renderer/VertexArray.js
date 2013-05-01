@@ -1,11 +1,13 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
+        '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/ComponentDatatype'
     ], function(
-        DeveloperError,
+        defaultValue,
         destroyObject,
+        DeveloperError,
         ComponentDatatype) {
     "use strict";
 
@@ -82,8 +84,8 @@ define([
 
         // Shallow copy the attribute; we do not want to copy the vertex buffer.
         var attr = {
-            index : (typeof attribute.index === 'undefined') ? index : attribute.index,
-            enabled : (typeof attribute.enabled === 'undefined') ? true : attribute.enabled,
+            index : defaultValue(attribute.index, index),
+            enabled : defaultValue(attribute.enabled, true),
             vertexBuffer : attribute.vertexBuffer,
             value : attribute.value ? attribute.value.slice(0) : undefined,
             componentsPerAttribute : componentsPerAttribute,
@@ -180,7 +182,7 @@ define([
     VertexArray.prototype.addAttribute = function(attribute) {
         if (attribute) {
             var attributes = this._attributes;
-            var index = (typeof attribute.index === 'undefined') ? attributes.length : attribute.index;
+            var index = defaultValue(attribute.index, attributes.length);
             for ( var i = 0; i < attributes.length; ++i) {
                 if (index === attributes[i].index) {
                     throw new DeveloperError('Index ' + index + ' is already in use.');

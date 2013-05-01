@@ -1,5 +1,10 @@
 /*global define*/
-define(function() {
+define([
+        './DeveloperError',
+        './defaultValue'
+    ], function(
+        DeveloperError,
+        defaultValue) {
     "use strict";
 
     /**
@@ -13,9 +18,9 @@ define(function() {
      * @param {Number} [magnitude=1.0] The linear coordinate measured from the origin.
      */
     var Spherical = function(clock, cone, magnitude) {
-        this.clock = typeof clock === 'undefined' ? 0.0 : clock;
-        this.cone = typeof cone === 'undefined' ? 0.0 : cone;
-        this.magnitude = typeof magnitude === 'undefined' ? 1.0 : magnitude;
+        this.clock = defaultValue(clock, 0.0);
+        this.cone = defaultValue(cone, 0.0);
+        this.magnitude = defaultValue(magnitude, 1.0);
     };
 
     /**
@@ -26,15 +31,23 @@ define(function() {
      * @param {Spherical} [spherical] The object in which the result will be stored, if undefined a new instance will be created.
      *
      * @returns The modified result parameter, or a new instance if one was not provided.
+     *
+     * @exception {DeveloperError} cartesian3 is required.
      */
     Spherical.fromCartesian3 = function(cartesian3, result) {
-        if (typeof result === 'undefined') {
-            result = new Spherical();
+        if (typeof cartesian3 === 'undefined') {
+            throw new DeveloperError('cartesian3 is required');
         }
+
         var x = cartesian3.x;
         var y = cartesian3.y;
         var z = cartesian3.z;
         var radialSquared = x * x + y * y;
+
+        if (typeof result === 'undefined') {
+            result = new Spherical();
+        }
+
         result.clock = Math.atan2(y, x);
         result.cone = Math.atan2(Math.sqrt(radialSquared), z);
         result.magnitude = Math.sqrt(radialSquared + z * z);
@@ -49,11 +62,18 @@ define(function() {
      * @param {Spherical} [result] The object to store the result into, if undefined a new instance will be created.
      *
      * @return The modified result parameter or a new instance if result was undefined.
+     *
+     * @exception {DeveloperError} spherical is required.
      */
     Spherical.clone = function(spherical, result) {
-        if (typeof result === 'undefined') {
-            result = new Spherical();
+        if (typeof spherical === 'undefined') {
+            throw new DeveloperError('spherical is required');
         }
+
+        if (typeof result === 'undefined') {
+            return new Spherical(spherical.clock, spherical.cone, spherical.magnitude);
+        }
+
         result.clock = spherical.clock;
         result.cone = spherical.cone;
         result.magnitude = spherical.magnitude;
@@ -68,11 +88,18 @@ define(function() {
      * @param {Spherical} [result] The object to store the result into, if undefined a new instance will be created.
      *
      * @return The modified result parameter or a new instance if result was undefined.
+     *
+     * @exception {DeveloperError} spherical is required.
      */
     Spherical.normalize = function(spherical, result) {
-        if (typeof result === 'undefined') {
-            result = new Spherical();
+        if (typeof spherical === 'undefined') {
+            throw new DeveloperError('spherical is required');
         }
+
+        if (typeof result === 'undefined') {
+            return new Spherical(spherical.clock, spherical.cone, 1.0);
+        }
+
         result.clock = spherical.clock;
         result.cone = spherical.cone;
         result.magnitude = 1.0;
@@ -108,7 +135,7 @@ define(function() {
      * @return true if the first spherical is within the provided epsilon of the second spherical, false otherwise.
      */
     Spherical.equalsEpsilon = function(left, right, epsilon) {
-        epsilon = typeof epsilon === 'undefined' ? 0.0 : epsilon;
+        epsilon = defaultValue(epsilon, 0.0);
         return (left === right) ||
                ((typeof left !== 'undefined') &&
                 (typeof right !== 'undefined') &&

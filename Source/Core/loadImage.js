@@ -2,10 +2,12 @@
 define([
         './defaultValue',
         './DeveloperError',
+        './isCrossOriginUrl',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         DeveloperError,
+        isCrossOriginUrl,
         when) {
     "use strict";
 
@@ -18,8 +20,9 @@ define([
      * @exports loadImage
      *
      * @param {String|Promise} url The source of the image, or a promise for the URL.
-     * @param {Boolean} [crossOrigin=true] Whether to request the image using Cross-Origin
-     *        Resource Sharing (CORS).  Data URIs are never requested using CORS.
+     * @param {Boolean} [allowCrossOrigin=true] Whether to request the image using Cross-Origin
+     *        Resource Sharing (CORS).  CORS is only actually used if the image URL is actually cross-origin.
+     *        Data URIs are never requested using CORS.
      *
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
@@ -39,17 +42,21 @@ define([
      *     // images is an array containing all the loaded images
      * });
      */
-    var loadImage = function(url, crossOrigin) {
+    var loadImage = function(url, allowCrossOrigin) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
 
-        crossOrigin = defaultValue(crossOrigin, true);
+        allowCrossOrigin = defaultValue(allowCrossOrigin, true);
 
         return when(url, function(url) {
-            // data URIs can't have crossOrigin set.
-            if (dataUriRegex.test(url)) {
+            var crossOrigin;
+
+            // data URIs can't have allowCrossOrigin set.
+            if (dataUriRegex.test(url) || !allowCrossOrigin) {
                 crossOrigin = false;
+            } else {
+                crossOrigin = isCrossOriginUrl(url);
             }
 
             var deferred = when.defer();

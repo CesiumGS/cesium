@@ -40,14 +40,7 @@ html, body {
  }
 
 .cesiumTitle {
-    display: block;
-    position: absolute;
-    bottom: 0;
-    right: 5px;
-    color: #DDD;
-    font-style: italic;
-    font-size: 24px;
-    z-index: -1;
+    float: right;
 }
 
 #codeContainer {
@@ -55,19 +48,19 @@ html, body {
 }
 
 #bottomPanel {
-	height: 205px;
+	height: 225px;
 }
 
-#galleryContainer {
+.galleryContainer {
     width: 100%;
+}
+
+.demosContainer {
+	overflow: auto;
     background: rgba(0, 0, 0, 0.8);
 }
 
-#demosContainer {
-	overflow: auto;
-}
-
-#demos {
+.demos {
     padding: 0 5px 5px;
     white-space: nowrap;
 }
@@ -75,7 +68,7 @@ html, body {
 .demoTileThumbnail {	
     max-height: 150px;
     max-width: 225px;
-    height: 111px;
+    height: 100px;
     width: auto;
 }
 

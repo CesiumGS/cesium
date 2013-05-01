@@ -109,6 +109,8 @@ define([
             spanX : 0
         };
         this._mouseX = 0;
+        this._timelineDrag = 0;
+        this._timelineDragLocation = undefined;
         var widget = this;
 
         this.container.className += ' cesium-timeline-main';
@@ -483,6 +485,10 @@ define([
                 this._needleEle.style.left = xPos + 'px';
             }
         }
+        if (typeof this._timelineDragLocation !== 'undefined') {
+            this._setTimeBarTime(this._timelineDragLocation, this._timelineDragLocation * this._timeBarSecondsSpan / this.container.clientWidth);
+            this.zoomTo(this._startJulian.addSeconds(this._timelineDrag), this._endJulian.addSeconds(this._timelineDrag));
+        }
     };
 
     Timeline.prototype._setTimeBarTime = function(xPos, seconds) {
@@ -526,15 +532,26 @@ define([
         if (this._scrubElement) {
             this._scrubElement.style.backgroundPosition = '0px 0px';
         }
+        this._timelineDrag = 0;
+        this._timelineDragLocation = undefined;
     };
     Timeline.prototype._handleMouseMove = function(e) {
         var dx;
         if (this._mouseMode === timelineMouseMode.scrub) {
             e.preventDefault();
             var x = e.clientX - this.container.getBoundingClientRect().left;
-            if ((x >= 0) && (x <= this.container.clientWidth)) {
+
+            if (x < 0) {
+                this._timelineDragLocation = 0;
+                this._timelineDrag = -0.01*this._timeBarSecondsSpan;
+            } else if (x > this.container.clientWidth) {
+                this._timelineDragLocation = this.container.clientWidth;
+                this._timelineDrag = 0.01*this._timeBarSecondsSpan;
+            } else {
+                this._timelineDragLocation = undefined;
                 this._setTimeBarTime(x, x * this._timeBarSecondsSpan / this.container.clientWidth);
             }
+
         } else if (this._mouseMode === timelineMouseMode.slide) {
             dx = this._mouseX - e.clientX;
             this._mouseX = e.clientX;

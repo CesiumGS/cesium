@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/defaultValue'
+    ], function(
+        defaultValue) {
     "use strict";
 
     var doublesPerValue = 1;
@@ -13,7 +16,7 @@ define(function() {
      * @see CzmlBoolean
      * @see CzmlCartesian2
      * @see CzmlCartesian3
-     * @see CzmlCartographic
+     * @see CzmlPosition
      * @see CzmlColor
      * @see CzmlHorizontalOrigin
      * @see CzmlLabelStyle
@@ -41,8 +44,7 @@ define(function() {
          * @param {Object} czmlInterval The CZML interval to unwrap.
          */
         unwrapInterval : function(czmlInterval) {
-            var result = czmlInterval.number;
-            return typeof result === 'undefined' ? czmlInterval : result;
+            return defaultValue(czmlInterval.number, czmlInterval);
         },
 
         /**

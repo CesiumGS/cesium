@@ -77,6 +77,35 @@ define([
         return new Color(red, green, blue, alpha);
     };
 
+    var scratchArrayBuffer;
+    var scratchUint32Array;
+    var scratchUint8Array;
+    if (typeof ArrayBuffer !== 'undefined') {
+        scratchArrayBuffer = new ArrayBuffer(4);
+        scratchUint32Array = new Uint32Array(scratchArrayBuffer);
+        scratchUint8Array = new Uint8Array(scratchArrayBuffer);
+    }
+
+    /**
+     * Creates a new Color from a single numeric unsigned 32-bit RGBA value, using the endianness
+     * of the system.
+     *
+     * @memberof Color
+     *
+     * @param {Number} rgba A single numeric unsigned 32-bit RGBA value.
+     * @return {Color} A new color instance.
+     *
+     * @example
+     * var color = Color.fromRgba(0x67ADDFFF);
+     *
+     * @see Color#toRgba
+     */
+    Color.fromRgba = function(rgba) {
+        // scratchUint32Array and scratchUint8Array share an underlying array buffer
+        scratchUint32Array[0] = rgba;
+        return Color.fromBytes(scratchUint8Array[0], scratchUint8Array[1], scratchUint8Array[2], scratchUint8Array[3]);
+    };
+
     /**
      * Creates a Color instance from hue, saturation, and lightness.
      * @memberof Color
@@ -327,6 +356,28 @@ define([
         var blue = Color.floatToByte(this.blue);
         var alpha = Color.floatToByte(this.alpha);
         return [red, green, blue, alpha];
+    };
+
+    /**
+     * Converts this color to a single numeric unsigned 32-bit RGBA value, using the endianness
+     * of the system.
+     *
+     * @memberof Color
+     *
+     * @return {Number} A single numeric unsigned 32-bit RGBA value.
+     *
+     * @example
+     * var rgba = Color.BLUE.toRgba();
+     *
+     * @see Color.fromRgba
+     */
+    Color.prototype.toRgba = function() {
+        // scratchUint32Array and scratchUint8Array share an underlying array buffer
+        scratchUint8Array[0] = Color.floatToByte(this.red);
+        scratchUint8Array[1] = Color.floatToByte(this.green);
+        scratchUint8Array[2] = Color.floatToByte(this.blue);
+        scratchUint8Array[3] = Color.floatToByte(this.alpha);
+        return scratchUint32Array[0];
     };
 
     /**

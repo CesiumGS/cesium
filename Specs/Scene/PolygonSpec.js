@@ -18,6 +18,7 @@ defineSuite([
          'Core/Math',
          'Core/JulianDate',
          'Renderer/BufferUsage',
+         'Renderer/ClearCommand',
          'Scene/SceneMode'
      ], function(
          Polygon,
@@ -38,6 +39,7 @@ defineSuite([
          CesiumMath,
          JulianDate,
          BufferUsage,
+         ClearCommand,
          SceneMode) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -219,7 +221,7 @@ defineSuite([
             alpha : 1.0
         };
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polygon);
@@ -245,7 +247,7 @@ defineSuite([
             alpha : 1.0
         };
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polygon);
@@ -332,11 +334,20 @@ defineSuite([
         expect(pickedObject).toEqual(polygon);
     });
 
-    it('is not picked', function() {
+    it('is not picked (show === false)', function() {
         polygon = createPolygon();
         polygon.show = false;
 
-        expect(render(context, frameState, polygon)).toEqual(0);
+        var pickedObject = pick(context, frameState, polygon, 0, 0);
+        expect(pickedObject).not.toBeDefined();
+    });
+
+    it('is not picked (alpha === 0.0)', function() {
+        polygon = createPolygon();
+        polygon.material.uniforms.color.alpha = 0.0;
+
+        var pickedObject = pick(context, frameState, polygon, 0, 0);
+        expect(pickedObject).not.toBeDefined();
     });
 
     it('test 3D bounding sphere from positions', function() {

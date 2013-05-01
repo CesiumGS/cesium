@@ -1,9 +1,11 @@
 /*global define*/
 define([
+        './clone',
         './defaultValue',
         './loadText',
         './DeveloperError'
     ], function(
+        clone,
         defaultValue,
         loadText,
         DeveloperError) {
@@ -42,7 +44,8 @@ define([
             throw new DeveloperError('url is required.');
         }
 
-        headers = defaultValue(headers, {});
+        // make a copy of headers to allow us to change values before passing to computeVertices
+        headers = clone(defaultValue(headers, defaultValue.EMPTY_OBJECT));
         headers.Accept = 'application/json';
 
         return loadText(url, headers).then(function(value) {

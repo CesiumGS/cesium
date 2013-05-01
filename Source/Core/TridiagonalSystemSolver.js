@@ -45,19 +45,19 @@ define(['./DeveloperError'], function(DeveloperError) {
      * var solution = TridiagonalSystemSolver.solve(lowerDiagonal, diagonal, upperDiagonal, rightHandSide);
      */
     TridiagonalSystemSolver.solve = function(lower, diagonal, upper, right) {
-        if (!lower || !(lower instanceof Array)) {
+        if (typeof lower === 'undefined' || !(lower instanceof Array)) {
             throw new DeveloperError('The array lower is required.');
         }
 
-        if (!diagonal || !(diagonal instanceof Array)) {
+        if (typeof diagonal === 'undefined' || !(diagonal instanceof Array)) {
             throw new DeveloperError('The array diagonal is required.');
         }
 
-        if (!upper || !(upper instanceof Array)) {
+        if (typeof upper === 'undefined' || !(upper instanceof Array)) {
             throw new DeveloperError('The array upper is required.');
         }
 
-        if (!right || !(right instanceof Array)) {
+        if (typeof right === 'undefined' || !(right instanceof Array)) {
             throw new DeveloperError('The array right is required.');
         }
 

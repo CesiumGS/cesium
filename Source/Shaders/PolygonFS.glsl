@@ -11,7 +11,6 @@ void main()
     // TODO: Real 1D distance, and better 3D coordinate
     materialInput.st = v_textureCoordinates;
     materialInput.str = vec3(v_textureCoordinates, 0.0);
-    materialInput.positionMC = v_positionMC;
     
     //Convert tangent space material normal to eye space
     materialInput.normalEC = normalize(czm_normal3D * czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));

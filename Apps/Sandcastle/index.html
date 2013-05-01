@@ -32,7 +32,7 @@
     <script src="../../Build/CesiumUnminified/Cesium.js"></script>
     <script src="../../ThirdParty/CodeMirror-2.24/lib/util/simple-hint.js"></script>
     <link rel="stylesheet" href="../../ThirdParty/CodeMirror-2.24/lib/util/simple-hint.css">
-    <script src="Cesium-hint.js"></script>
+    <script src="ThirdParty/Cesium-hint.js"></script>
     <!-- End of autocomplete -->
     <script src="../../ThirdParty/CodeMirror-2.24/mode/javascript/javascript.js"></script>
     <script src="../../ThirdParty/CodeMirror-2.24/mode/css/css.js"></script>
@@ -71,7 +71,7 @@
     <div id="loading"><span>Loading...</span></div>
     <div id="appLayout" data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="design: 'headline', gutters: true, liveSplitters: true">
         <div id="toolbar" data-dojo-type="dijit.Toolbar" data-dojo-props="region: 'top'">
-            <div class="cesiumTitle">Cesium Sandcastle</div>
+            <div class="cesiumTitle"><a href="http://cesium.agi.com" target="_blank"><img src="./images/Cesium_Logo_Color_Overlay.png" style="width: 118px"/></a></div>
             <div id="buttonRun" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconFunction', showLabel: true">
                 Run (F8)
             </div>
@@ -85,6 +85,11 @@
                 <div id="dropDownInfo" data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'popDownDialog'">
                     <div>Description:<br/>
                         <textarea data-dojo-type="dijit.form.Textarea" id="description"
+                            data-dojo-props="trim:true" style="width: 335px;"></textarea>
+                    </div>
+                    <br/>
+                    <div>Labels:<br/>
+                        <textarea data-dojo-type="dijit.form.Textarea" id="label"
                             data-dojo-props="trim:true" style="width: 335px;"></textarea>
                     </div>
                     <p><span class="subInfo">Included libraries:</span><br/>
@@ -125,7 +130,7 @@
                 View as Thumbnail
             </div>
             <span data-dojo-type="dijit.ToolbarSeparator"></span>
-            <input data-dojo-type="dijit.form.TextBox" type="text" id="search" name="search" data-dojo-props="trim:true, placeHolder:'Search Gallery', intermediateChanges:true" />            
+            <input data-dojo-type="dijit.form.TextBox" type="text" id="search" name="search" data-dojo-props="trim:true, placeHolder:'Search Gallery', intermediateChanges:true"/>            
         </div>
         <div id="codeContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'leading', splitter: true">
             <script type='dojo/method' event='_onKeyPress'></script>
@@ -147,9 +152,16 @@
             </div>
         </div>
         <div id="bottomPanel" class="bottomPanel" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'bottom', splitter: true">
-            <div id="galleryContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Gallery', selected: true">
-                <div id="demosContainer">
-                    <div id="demos"></div>
+            <div id="innerPanel" class="bottomPanel" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="title: 'Gallery', nested: true">
+                <div id="searchContainer" class="galleryContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Search Results'">
+                    <div id="searchResults" class="demosContainer">
+                        <div id="searchDemos" class="demos"></div>
+                    </div>
+                </div>
+                <div id="galleryContainer" class="galleryContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'All', selected: true">
+                    <div id="demosContainer" class="demosContainer">
+                        <div id="demos" class="demos"></div>
+                    </div>
                 </div>
             </div>
             <div id="logContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Console'">

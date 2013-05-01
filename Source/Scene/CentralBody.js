@@ -131,7 +131,10 @@ define([
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
 
-        this._clearDepthCommand = new ClearCommand();
+        var clearDepthCommand = new ClearCommand();
+        clearDepthCommand.depth = 1.0;
+        clearDepthCommand.stencil = 0;
+        this._clearDepthCommand = clearDepthCommand;
 
         this._depthCommand = new DrawCommand();
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
@@ -541,10 +544,6 @@ define([
                         alpha : false
                     }
                 });
-                this._clearDepthCommand.clearState = context.createClearState({ // Clear depth only
-                    depth : 1.0,
-                    stencil : 0.0
-                });
             } else {
                 this._rsColor = context.createRenderState({
                     cull : {
@@ -599,7 +598,7 @@ define([
 
         var shaderCache = context.getShaderCache();
 
-        if (!this._depthCommand.shaderProgram) {
+        if (typeof this._depthCommand.shaderProgram === 'undefined') {
             this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
                     CentralBodyVSDepth,
                     '#line 0\n' +
@@ -614,7 +613,7 @@ define([
             this._lastOceanNormalMapUrl = this.oceanNormalMapUrl;
 
             var that = this;
-            when(loadImage(this.oceanNormalMapUrl, true), function(image) {
+            when(loadImage(this.oceanNormalMapUrl), function(image) {
                 that._oceanNormalMap = that._oceanNormalMap && that._oceanNormalMap.destroy();
                 that._oceanNormalMap = context.createTexture2D({
                     source : image
@@ -682,8 +681,8 @@ define([
                 CentralBodyFS;
             this._surfaceShaderSet.invalidateShaders();
 
-            var poleShaderProgram = this._northPoleCommand.shaderProgram && this._northPoleCommand.shaderProgram.release();
-            poleShaderProgram = shaderCache.getShaderProgram(CentralBodyVSPole, CentralBodyFSPole, TerrainProvider.attributeIndices);
+            var poleShaderProgram = shaderCache.replaceShaderProgram(this._northPoleCommand.shaderProgram,
+                CentralBodyVSPole, CentralBodyFSPole, TerrainProvider.attributeIndices);
 
             this._northPoleCommand.shaderProgram = poleShaderProgram;
             this._southPoleCommand.shaderProgram = poleShaderProgram;

@@ -97,7 +97,6 @@ defineSuite([
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url).toEqual(baseUrl + '/tile/0/0/0');
-                expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -170,7 +169,6 @@ defineSuite([
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url).toEqual(baseUrl + '/tile/0/0/0');
-                expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -233,7 +231,6 @@ defineSuite([
                 expect(url).toMatch('format=png');
                 expect(url).toMatch('transparent=true');
                 expect(url).toMatch('size=256%2C256');
-                expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -313,7 +310,6 @@ defineSuite([
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url).toEqual(proxy.getURL(baseUrl + '/tile/0/0/0'));
-                expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);

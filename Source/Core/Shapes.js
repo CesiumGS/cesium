@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError',
         './Math',
         './Cartesian2',
@@ -7,6 +8,7 @@ define([
         './Quaternion',
         './Matrix3'
     ], function(
+        defaultValue,
         DeveloperError,
         CesiumMath,
         Cartesian2,
@@ -102,7 +104,7 @@ define([
          *     Cartographic.fromDegrees(-75.59777, 40.03883, 0.0)), 100000.0));
          */
         computeCircleBoundary : function(ellipsoid, center, radius, granularity) {
-            if (!ellipsoid || !center || !radius) {
+            if (typeof ellipsoid === 'undefined' || typeof center === 'undefined' || typeof radius === 'undefined') {
                 throw new DeveloperError('ellipsoid, center, and radius are required.');
             }
 
@@ -110,7 +112,7 @@ define([
                 throw new DeveloperError('radius must be greater than zero.');
             }
 
-            granularity = granularity || CesiumMath.toRadians(1.0);
+            granularity = defaultValue(granularity, CesiumMath.toRadians(1.0));
             if (granularity <= 0.0) {
                 throw new DeveloperError('granularity must be greater than zero.');
             }
@@ -153,7 +155,7 @@ define([
          *      Cartographic.fromDegrees(-75.59777, 40.03883)), 500000.0, 300000.0, Math.toRadians(60)));
          */
         computeEllipseBoundary : function(ellipsoid, center, semiMajorAxis, semiMinorAxis, bearing, granularity) {
-            if (!ellipsoid || !center || !semiMajorAxis || !semiMinorAxis) {
+            if (typeof ellipsoid === 'undefined' || typeof center === 'undefined' || typeof semiMajorAxis === 'undefined' || typeof semiMinorAxis === 'undefined') {
                 throw new DeveloperError('ellipsoid, center, semiMajorAxis, and semiMinorAxis are required.');
             }
 
@@ -162,7 +164,7 @@ define([
             }
 
             bearing = bearing || 0.0;
-            granularity = granularity || CesiumMath.toRadians(1.0);
+            granularity = defaultValue(granularity, CesiumMath.toRadians(1.0));
 
             if (granularity <= 0.0) {
                 throw new DeveloperError('granularity must be greater than zero.');
