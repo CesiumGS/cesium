@@ -225,9 +225,6 @@ define([
         var that = this;
 
         this._drawUniforms = {
-            u_mode : function() {
-                return that._mode;
-            },
             u_zoomedOutOceanSpecularIntensity : function() {
                 return that._zoomedOutOceanSpecularIntensity;
             },
@@ -722,7 +719,6 @@ define([
                     drawUniforms,
                     this._surfaceShaderSet,
                     this._rsColor,
-                    this._mode,
                     this._projection);
 
             updateLogos(this, context, frameState, commandList);

@@ -170,6 +170,7 @@ require([
         this._position = position;
         this._modelMatrix = undefined;
 
+        var that = this;
         this._colorCommand.uniformMap = {
             u_color : function() {
                 return Cesium.Color.LIME;
