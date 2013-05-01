@@ -184,16 +184,6 @@ define([
          */
         this.show = true;
 
-        /**
-         * The current morph transition time between 2D/Columbus View and 3D,
-         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
-         *
-         * @type Number
-         *
-         * @default 1.0
-         */
-        this.morphTime = 1.0;
-
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
 
@@ -235,12 +225,6 @@ define([
         var that = this;
 
         this._drawUniforms = {
-            u_mode : function() {
-                return that._mode;
-            },
-            u_morphTime : function() {
-                return that.morphTime;
-            },
             u_zoomedOutOceanSpecularIntensity : function() {
                 return that._zoomedOutOceanSpecularIntensity;
             },
@@ -735,7 +719,6 @@ define([
                     drawUniforms,
                     this._surfaceShaderSet,
                     this._rsColor,
-                    this._mode,
                     this._projection);
 
             updateLogos(this, context, frameState, commandList);

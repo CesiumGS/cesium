@@ -4,12 +4,14 @@ Change Log
 Beta Releases
 -------------
 
-### TODO
+### b17 - 2013-06-03
 
 * Breaking changes:
    * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
+   * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.    
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 * Added `MeshFilters.combine` to combine meshes for better batching.
+* Added `czm_morphTime` automatic GLSL uniform.
 
 ### b16 - 2013-05-01
 * Breaking changes:

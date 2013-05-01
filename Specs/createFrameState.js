@@ -21,8 +21,6 @@ define([
         // Mock frame-state for testing.
         var frameState = new FrameState();
 
-        frameState.mode = SceneMode.SCENE3D;
-        frameState.morphTime = 1.0;
         frameState.scene2D = {
             projection : new GeographicProjection(Ellipsoid.WGS84)
         };
