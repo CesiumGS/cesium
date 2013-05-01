@@ -38,7 +38,7 @@ define(['./FullscreenViewModel',
         }
 
         /**
-         * Gets the parent container.
+         * Gets the container element for the widget.
          * @memberof FullscreenWidget
          * @type {Element}
          */
@@ -50,13 +50,6 @@ define(['./FullscreenViewModel',
          * @type {FullscreenViewModel}
          */
         this.viewModel = new FullscreenViewModel(fullscreenElement);
-
-        /**
-         * Gets the container element for the widget.
-         * @memberof FullscreenWidget
-         * @type {Element}
-         */
-        this.container = container;
 
         /**
          * Gets the element created by this widget.

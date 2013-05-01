@@ -6,7 +6,7 @@ define([
         'dojo/parser',
         'dojo/ready',
         'Widgets/Dojo/checkForChromeFrame',
-        'Widgets/Dojo/CesiumViewerWidget'
+        'Widgets/Viewer/Viewer'
     ], function(
         win,
         domClass,
@@ -14,7 +14,7 @@ define([
         parser,
         ready,
         checkForChromeFrame,
-        CesiumViewerWidget) {
+        Viewer) {
     "use strict";
     /*global console*/
 
@@ -28,14 +28,7 @@ define([
             endUserOptions = ioQuery.queryToObject(window.location.search.substring(1));
         }
 
-        var widget = new CesiumViewerWidget({
-            endUserOptions : endUserOptions,
-            enableDragDrop : true
-        });
-        widget.placeAt('cesiumContainer');
-        widget.startup();
-        widget.fullscreen.viewModel.fullscreenElement(document.body);
-
+        var widget = new Viewer('cesiumContainer');
         domClass.remove(win.body(), 'loading');
     });
 });
