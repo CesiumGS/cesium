@@ -7,13 +7,7 @@
 		</glslToJavascript>
 
 		<createCesiumJs output="${sourceDirectory}/Cesium.js">
-			<sourcefiles dir="${sourceDirectory}">
-				<include name="**/*.js" />
-				<exclude name="*.js" />
-				<exclude name="Widgets/Dojo/**" />
-				<exclude name="Workers/**" />
-				<exclude name="**/*.profile.js" />
-			</sourcefiles>
+			<sourcefiles refid="cesiumJsFileSet" /> 
 		</createCesiumJs>
 
 		<createSpecList output="${specsDirectory}/SpecList.js">
@@ -147,6 +141,14 @@
 		<pathelement path="${toolsDirectory}/commons-logging-1.1.1/commons-logging-1.1.1.jar" />
 	</path>
 
+	<fileset dir="${sourceDirectory}" id="cesiumJsFileSet">
+		<include name="**/*.js" />
+		<exclude name="*.js" />
+		<exclude name="Widgets/Dojo/**" />
+		<exclude name="Workers/**" />
+		<exclude name="**/*.profile.js" />
+	</fileset>
+
 	<scriptdef name="glslToJavascript" language="javascript" src="${tasksDirectory}/glslToJavaScript.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<attribute name="minify" />
 		<attribute name="minifystatefile" />
@@ -270,7 +272,6 @@
 		<!-- copy other resources -->
 		<copy todir="${buildOutputDirectory}" includeEmptyDirs="false">
 			<fileset dir="${sourceDirectory}">
-				<modified />	 
 				<exclude name="**/*.js" />
 				<exclude name="**/*.glsl" />
 				<exclude name="**/.gitignore" />
@@ -288,7 +289,7 @@
 
 	<target name="combineJavaScript.combineCesium.check">
 		<uptodate property="no.combineCesium.create" targetfile="${unminifiedOutputDirectory}/Cesium.js">
-			<srcfiles dir="${sourceDirectory}" includes="**/*.js"/>
+			<srcfiles refid="cesiumJsFileSet" />  
 		</uptodate>
 	</target>
 
