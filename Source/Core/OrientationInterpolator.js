@@ -43,7 +43,6 @@ define([
         return this._points;
     };
 
-    //OrientationInterpolator.prototype._findIndex = function(time) {
     function findIndex(orientationInterpolator, time) {
         // Take advantage of temporal coherence by checking current, next and previous intervals
         // for containment of time.

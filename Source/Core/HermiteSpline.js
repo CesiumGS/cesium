@@ -85,7 +85,6 @@ define(['./defaultValue',
              1.0, -2.0,  1.0,  0.0,
              1.0, -1.0,  0.0,  0.0);
 
-    //HermiteSpline.prototype._findIndex = function(time) {
     function findIndex(hermiteSpline, time) {
         // Take advantage of temporal coherence by checking current, next and previous intervals
         // for containment of time.
@@ -119,7 +118,6 @@ define(['./defaultValue',
         return hermiteSpline._lastTimeIndex;
     }
 
-    //HermiteSpline.prototype._generateClamped = function() {
     function generateClamped(hermiteSpline) {
         var l = [], d = [], u = [], r = [];
         l.length = u.length = hermiteSpline._points.length - 1;
@@ -147,7 +145,6 @@ define(['./defaultValue',
         }
     }
 
-    //HermiteSpline.prototype._generateNatural = function() {
     function generateNatural(hermiteSpline){
         var l = [], d = [], u = [], r = [];
         l.length = u.length = hermiteSpline._points.length - 1;

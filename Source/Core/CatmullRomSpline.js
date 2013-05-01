@@ -126,7 +126,6 @@ define([
         return this._to;
     };
 
-    //CatmullRomSpline.prototype._findIndex = function(time) {
     function findIndex(catmullRomSpline, time) {
         // Take advantage of temporal coherence by checking current, next and previous intervals
         // for containment of time.

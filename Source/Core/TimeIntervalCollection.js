@@ -498,7 +498,6 @@ define([
         return intersectInternal(this, intervals, equalsCallback, mergeCallback);
     };
 
-    //TimeIntervalCollection.prototype._intersectInternal = function(intervals, equalsCallback, mergeCallback) {
     function intersectInternal(timeIntervalCollection, intervals, equalsCallback, mergeCallback) {
         var left = 0;
         var right = 0;

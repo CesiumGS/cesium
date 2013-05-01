@@ -68,7 +68,6 @@ define([
         register(this);
     };
 
-    //ScreenSpaceEventHandler.prototype._getPosition = function(event) {
     function getPosition(screenSpaceEventHandler, event) {
         if (screenSpaceEventHandler._element === document) {
             return {
@@ -185,7 +184,6 @@ define([
         }
     };
 
-    //ScreenSpaceEventHandler.prototype._getModifier = function(event) {
     function getModifier(screenSpaceEventHandler, event) {
         if (event.shiftKey) {
             return KeyboardEventModifier.SHIFT;
@@ -198,7 +196,6 @@ define([
         return undefined;
     }
 
-    //ScreenSpaceEventHandler.prototype._handleMouseDown = function(event) {
     function handleMouseDown(screenSpaceEventHandler, event) {
         var pos = getPosition(screenSpaceEventHandler, event);
         screenSpaceEventHandler._lastMouseX = pos.x;
@@ -234,7 +231,6 @@ define([
         event.preventDefault();
     }
 
-    //ScreenSpaceEventHandler.prototype._handleMouseUp = function(event) {
     function handleMouseUp(screenSpaceEventHandler, event) {
         var modifier = getModifier(screenSpaceEventHandler, event);
         var action, clickAction;
@@ -279,7 +275,6 @@ define([
         }
     }
 
-    //ScreenSpaceEventHandler.prototype._handleMouseMove = function(event) {
     function handleMouseMove(screenSpaceEventHandler, event) {
         var pos = getPosition(screenSpaceEventHandler, event);
         if (screenSpaceEventHandler._seenAnyTouchEvents) {
@@ -310,7 +305,6 @@ define([
         }
     }
 
-    //ScreenSpaceEventHandler.prototype._handleTouchStart = function(event) {
     function handleTouchStart(screenSpaceEventHandler, event) {
         var pos, pos2, numberOfTouches = event.touches.length;
         screenSpaceEventHandler._seenAnyTouchEvents = true;
@@ -369,7 +363,6 @@ define([
         }
     }
 
-    //ScreenSpaceEventHandler.prototype._handleTouchEnd = function(event) {
     function handleTouchEnd(screenSpaceEventHandler, event) {
         var numberOfTouches = event.touches.length;
         var numberOfChangedTouches = event.changedTouches.length;
@@ -415,7 +408,6 @@ define([
         }
     }
 
-    //ScreenSpaceEventHandler.prototype._handleTouchMove = function(event) {
     function handleTouchMove(screenSpaceEventHandler, event) {
         var modifier = getModifier(screenSpaceEventHandler, event);
         var pos, pos2, action, movement;
@@ -490,7 +482,6 @@ define([
         }
     }
 
-    //ScreenSpaceEventHandler.prototype._handleMouseWheel = function(event) {
     function handleMouseWheel(screenSpaceEventHandler, event) {
         // Some browsers use event.detail to count the number of clicks. The sign
         // of the integer is the direction the wheel is scrolled. In that case, convert
@@ -507,7 +498,6 @@ define([
         }
     }
 
-    //ScreenSpaceEventHandler.prototype._handleMouseDblClick = function(event) {
     function handleMouseDblClick(screenSpaceEventHandler, event) {
         var modifier = getModifier(screenSpaceEventHandler, event);
         var action;
@@ -532,7 +522,6 @@ define([
         }
     }
 
-    //ScreenSpaceEventHandler.prototype._register = function() {
     function register(screenSpaceEventHandler) {
         var that = screenSpaceEventHandler, useDoc = true;
 
@@ -617,17 +606,16 @@ define([
         }
     }
 
-    //ScreenSpaceEventHandler.prototype._unregister = function() {
-    function unregister(screenSpaceEventHandler) {
-        for ( var i = 0; i < screenSpaceEventHandler._callbacks.length; i++) {
-            var cback = screenSpaceEventHandler._callbacks[i];
+    ScreenSpaceEventHandler.prototype._unregister = function() {
+        for ( var i = 0; i < this._callbacks.length; i++) {
+            var cback = this._callbacks[i];
             if (cback.onDoc) {
                 document.removeEventListener(cback.name, cback.action, false);
             } else {
-                screenSpaceEventHandler._element.removeEventListener(cback.name, cback.action, false);
+                this._element.removeEventListener(cback.name, cback.action, false);
             }
         }
-    }
+    };
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
@@ -664,7 +652,7 @@ define([
      * handler = handler && handler.destroy();
      */
     ScreenSpaceEventHandler.prototype.destroy = function() {
-        unregister(this);
+        this._unregister();
         return destroyObject(this);
     };
 
