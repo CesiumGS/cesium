@@ -804,7 +804,7 @@ define([
      * //     [12.0, 16.0, 20.0, 24.0]
      * //     [13.0, 17.0, 21.0, 25.0]
      * var a = Matrix4.toArray(m);
-     * 
+     *
      * // m remains the same
      * //creates a = [10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0]
      *
@@ -885,10 +885,10 @@ define([
      * //     [14.0, 15.0, 16.0, 17.0]
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
-     * 
-     * //Example 1: Creates an instance of Cartesian 
+     *
+     * //Example 1: Creates an instance of Cartesian
      * var a = Matrix4.getColumn(m, 2);
-     * 
+     *
      * //Example 2: Sets values for Cartesian instance
      * var a = new Cartesian4();
      * Matrix4.getColumn(m, 2, a);
@@ -943,7 +943,7 @@ define([
      * //     [14.0, 15.0, 16.0, 17.0]
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
-     * 
+     *
      * var a = Matrix4.setColumn(m, 2, new Cartesian4(99.0, 98.0, 97.0, 96.0));
      *
      * // m remains the same
@@ -992,11 +992,11 @@ define([
      * //     [14.0, 15.0, 16.0, 17.0]
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
-     * 
-     * //Example 1: Returns an instance of Cartesian 
+     *
+     * //Example 1: Returns an instance of Cartesian
      * var a = Matrix4.getRow(m, 2);
-     * 
-     * //Example 1: Sets values for a Cartesian instance 
+     *
+     * //Example 1: Sets values for a Cartesian instance
      * var a = new Cartesian4();
      * Matrix4.getRow(m, 2, a);
      *
@@ -1394,7 +1394,7 @@ define([
      * //     [14.0, 15.0, 16.0, 17.0]
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
-     * 
+     *
      * var a = Matrix4.multiplyByScalar(m, -2);
      *
      * // m remains the same
@@ -1453,7 +1453,7 @@ define([
      * //     [14.0, 15.0, 16.0, 17.0]
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
-     * 
+     *
      * var a = Matrix4.negate(m);
      *
      * // m remains the same
@@ -1509,7 +1509,7 @@ define([
      * //     [14.0, 15.0, 16.0, 17.0]
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
-     * 
+     *
      * var a = Matrix4.negate(m);
      *
      * // m remains the same
@@ -1566,7 +1566,7 @@ define([
      * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      *
      * @example
-     * //compares two Matrix4 instances 
+     * //compares two Matrix4 instances
      *
      * // a = [10.0, 14.0, 18.0, 22.0]
      * //     [11.0, 15.0, 19.0, 23.0]
@@ -1577,7 +1577,7 @@ define([
      * //     [11.0, 15.0, 19.0, 23.0]
      * //     [12.0, 16.0, 20.0, 24.0]
      * //     [13.0, 17.0, 21.0, 25.0]
-     * 
+     *
      * if(Matrix4.equals(a,b)) {
      *      console.log("Both matrices are equal");
      * } else {
@@ -1623,7 +1623,7 @@ define([
      * @exception {DeveloperError} epsilon is required and must be a number.
      *
      * @example
-     * //compares two Matrix4 instances 
+     * //compares two Matrix4 instances
      *
      * // a = [10.5, 14.5, 18.5, 22.5]
      * //     [11.5, 15.5, 19.5, 23.5]
@@ -1634,7 +1634,7 @@ define([
      * //     [11.0, 15.0, 19.0, 23.0]
      * //     [12.0, 16.0, 20.0, 24.0]
      * //     [13.0, 17.0, 21.0, 25.0]
-     * 
+     *
      * if(Matrix4.equalsEpsilon(a,b,0.1)){
      *      console.log("Difference between both the matrices is less than 0.1");
      * } else {
@@ -1707,8 +1707,8 @@ define([
      *
      * @see Matrix3
      *
-     * @example 
-     * // returns a Matrix3 instance from a Matrix4 instance 
+     * @example
+     * // returns a Matrix3 instance from a Matrix4 instance
      *
      * // m = [10.0, 14.0, 18.0, 22.0]
      * //     [11.0, 15.0, 19.0, 23.0]
