@@ -211,7 +211,7 @@ define([
 
         // If not a leaf node
         return findNode(textureAtlas, node.childNode1, image) ||
-            textureAtlas(textureAtlas, node.childNode2, image);
+            findNode(textureAtlas, node.childNode2, image);
     }
 
     // Adds image of given index to the texture atlas. Called from addImage and addImages.
