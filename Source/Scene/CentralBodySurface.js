@@ -955,6 +955,7 @@ define([
                     var command = tileCommands[tileCommandIndex];
                     if (typeof command === 'undefined') {
                         command = new DrawCommand();
+                        command.cull = false;
                         tileCommands[tileCommandIndex] = command;
                         tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap();
                     }
@@ -977,6 +978,7 @@ define([
                     var applyHue = false;
                     var applySaturation = false;
                     var applyGamma = false;
+                    var applyAlpha = false;
 
                     while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                         var tileImagery = tileImageryCollection[imageryIndex];
@@ -1001,6 +1003,7 @@ define([
                         } else {
                             uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
                         }
+                        applyAlpha = applyAlpha || uniformMap.dayTextureAlpha[numberOfDayTextures] !== 1.0;
 
                         if (typeof imageryLayer.brightness === 'function') {
                             uniformMap.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
@@ -1048,7 +1051,7 @@ define([
 
                     colorCommandList.push(command);
 
-                    command.shaderProgram = shaderSet.getShaderProgram(context, tileSetIndex, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma);
+                    command.shaderProgram = shaderSet.getShaderProgram(context, tileSetIndex, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha);
                     command.renderState = renderState;
                     command.primitiveType = TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
                     command.vertexArray = tile.vertexArray;
