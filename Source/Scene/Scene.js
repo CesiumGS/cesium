@@ -87,6 +87,8 @@ define([
 
         this._shaderFrameCount = 0;
 
+        this._renderSun = false;
+
         this._commandList = [];
         this._frustumCommandsList = [];
 
@@ -324,6 +326,8 @@ define([
 
     var scratchCullingVolume = new CullingVolume();
     var distances = new Interval();
+    var sunBS = new BoundingSphere();
+
     function createPotentiallyVisibleSet(scene, listName) {
         var commandLists = scene._commandList;
         var cullingVolume = scene._frameState.cullingVolume;
@@ -353,6 +357,9 @@ define([
             planes[k] = cullingVolume.planes[k];
         }
         cullingVolume = scratchCullingVolume;
+
+        Cartesian3.clone(scene.getUniformState().getSunPositionWC(), sunBS.center);
+        scene._renderSun = (cullingVolume.getVisibility(sunBS) === Intersect.OUTSIDE) ? false : true;
 
         var length = commandLists.length;
         for (var i = 0; i < length; ++i) {
@@ -430,7 +437,7 @@ define([
             skyBoxCommand.execute(context, passState);
         }
 
-        if (typeof sunCommand !== 'undefined') {
+        if (typeof sunCommand !== 'undefined' && scene._renderSun) {
             sunCommand.execute(context, passState);
         }
 
