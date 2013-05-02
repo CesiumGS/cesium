@@ -124,14 +124,6 @@ define([
      */
     var PolylineCollection = function() {
         /**
-         * The current morph transition time between 2D/Columbus View and 3D,
-         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
-         *
-         * @type Number
-         */
-        this.morphTime = 1.0;
-
-        /**
          * The 4x4 transformation matrix that transforms each polyline in this collection from model to world coordinates.
          * When this is the identity matrix, the polylines are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
@@ -169,13 +161,6 @@ define([
         ];
 
         this._mode = undefined;
-        var that = this;
-
-        this._uniforms = {
-            u_morphTime : function() {
-                return that.morphTime;
-            }
-        };
 
         this._polylinesToUpdate = [];
         this._vertexArrays = [];
@@ -380,6 +365,7 @@ define([
     };
 
     var emptyArray = [];
+    var scracthBoundingSphere = new BoundingSphere();
 
     /**
      * @private
@@ -449,14 +435,17 @@ define([
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolume = this._boundingVolume;
             modelMatrix = this.modelMatrix;
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW || frameState.mode === SceneMode.SCENE2D) {
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
             boundingVolume = this._boundingVolume2D;
-        } else {
-            boundingVolume = this._boundingVolume && this._boundingVolume2D && this._boundingVolume.union(this._boundingVolume2D);
+        } else if (frameState.mode === SceneMode.SCENE2D) {
+            boundingVolume = BoundingSphere.clone(this._boundingVolume2D, scracthBoundingSphere);
+            boundingVolume.center.x = 0.0;
+        } else if (typeof this._boundingVolume !== 'undefined' && typeof this._boundingVolume2D !== 'undefined') {
+            boundingVolume = BoundingSphere.union(this._boundingVolume, this._boundingVolume2D, scracthBoundingSphere);
         }
 
         var pass = frameState.passes;
-        var useDepthTest = (this.morphTime !== 0.0);
+        var useDepthTest = (frameState.morphTime !== 0.0);
         var commandLists = this._commandLists;
         commandLists.colorList = emptyArray;
         commandLists.pickList = emptyArray;
@@ -475,14 +464,14 @@ define([
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
-            createCommandLists(colorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, this._uniforms, true);
+            createCommandLists(colorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, true);
         }
 
         if (pass.pick) {
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            createCommandLists(pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, this._uniforms, false);
+            createCommandLists(pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, false);
         }
 
         if (!this._commandLists.empty()) {
@@ -490,7 +479,7 @@ define([
         }
     };
 
-    function createCommandLists(commands, boundingVolume, modelMatrix, vertexArrays, renderState, uniforms, colorPass) {
+    function createCommandLists(commands, boundingVolume, modelMatrix, vertexArrays, renderState, colorPass) {
         var length = vertexArrays.length;
 
         var commandsLength = commands.length;
@@ -535,7 +524,7 @@ define([
                             command.vertexArray = va.va;
                             command.renderState = renderState;
 
-                            command.uniformMap = combine([uniforms, currentMaterial._uniforms], false, false);
+                            command.uniformMap = currentMaterial._uniforms;
                             command.count = count;
                             command.offset = offset;
 
@@ -574,7 +563,7 @@ define([
                     command.vertexArray = va.va;
                     command.renderState = renderState;
 
-                    command.uniformMap = combine([uniforms, currentMaterial._uniforms], false, false);
+                    command.uniformMap = currentMaterial._uniforms;
                     command.count = count;
                     command.offset = offset;
                 }
@@ -931,9 +920,7 @@ define([
     function updateMode(collection, frameState) {
         var mode = frameState.mode;
         var projection = frameState.scene2D.projection;
-        if (collection._mode !== mode && typeof mode.morphTime !== 'undefined') {
-            collection.morphTime = mode.morphTime;
-        }
+
         if (collection._mode !== mode || (collection._projection !== projection) || (!collection._modelMatrix.equals(collection.modelMatrix))) {
             collection._mode = mode;
             collection._projection = projection;
@@ -1071,7 +1058,7 @@ define([
         for ( var i = 0; i < length; ++i) {
             var polyline = polylines[i];
             var width = polyline.getWidth();
-            var show = polyline.getShow();
+            var show = polyline.getShow() && width > 0.0;
             var segments = this.getSegments(polyline);
             var positions = segments.positions;
             var lengths = segments.lengths;
@@ -1395,7 +1382,7 @@ define([
             var position;
 
             var width = polyline.getWidth();
-            var show = polyline.getShow();
+            var show = polyline.getShow() && width > 0.0;
 
             positionsLength = positions.length;
             for ( var i = 0; i < positionsLength; ++i) {

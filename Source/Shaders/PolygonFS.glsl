@@ -1,5 +1,3 @@
-uniform float u_morphTime;
-
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec2 v_textureCoordinates;

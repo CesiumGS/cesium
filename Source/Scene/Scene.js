@@ -355,8 +355,9 @@ define([
                 if (typeof boundingVolume !== 'undefined') {
                     var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
                     var transformedBV = boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
-                    if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
-                            (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(transformedBV))) {
+                    if (command.cull &&
+                            ((cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE) ||
+                             (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(transformedBV)))) {
                         continue;
                     }
 
@@ -486,7 +487,7 @@ define([
         var us = this.getUniformState();
         var frameState = this._frameState;
 
-        var frameNumber = CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0);
+        var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
         updateFrameState(this, frameNumber, time);
         frameState.passes.color = true;
         frameState.passes.overlay = true;

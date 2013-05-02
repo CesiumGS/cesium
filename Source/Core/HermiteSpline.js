@@ -73,9 +73,9 @@ define(['./defaultValue',
         this._lastTimeIndex = 0;
 
         if (typeof this._points[0].tangent === 'undefined' || typeof this._points[this._points.length - 1].tangent === 'undefined') {
-            this._generateNatural();
+            generateNatural(this);
         } else if (typeof this._points[0].tangent !== 'undefined' && typeof this._points[1].tangent === 'undefined' && typeof this._points[this._points.length - 1].tangent !== 'undefined' && typeof this._points[this._points.length - 2].tangent === 'undefined') {
-            this._generateClamped();
+            generateClamped(this);
         }
     };
 
@@ -85,88 +85,88 @@ define(['./defaultValue',
              1.0, -2.0,  1.0,  0.0,
              1.0, -1.0,  0.0,  0.0);
 
-    HermiteSpline.prototype._findIndex = function(time) {
+    function findIndex(hermiteSpline, time) {
         // Take advantage of temporal coherence by checking current, next and previous intervals
         // for containment of time.
-        var i = defaultValue(this._lastTimeIndex, 0);
-        if (time >= this._points[i].time) {
-            if (i + 1 < this._points.length && time < this._points[i + 1].time) {
+        var i = defaultValue(hermiteSpline._lastTimeIndex, 0);
+        if (time >= hermiteSpline._points[i].time) {
+            if (i + 1 < hermiteSpline._points.length && time < hermiteSpline._points[i + 1].time) {
                 return i;
-            } else if (i + 2 < this._points.length && time < this._points[i + 2].time) {
-                this._lastTimeIndex = i + 1;
-                return this._lastTimeIndex;
+            } else if (i + 2 < hermiteSpline._points.length && time < hermiteSpline._points[i + 2].time) {
+                hermiteSpline._lastTimeIndex = i + 1;
+                return hermiteSpline._lastTimeIndex;
             }
-        } else if (i - 1 >= 0 && time >= this._points[i - 1].time) {
-            this._lastTimeIndex = i - 1;
-            return this._lastTimeIndex;
+        } else if (i - 1 >= 0 && time >= hermiteSpline._points[i - 1].time) {
+            hermiteSpline._lastTimeIndex = i - 1;
+            return hermiteSpline._lastTimeIndex;
         }
 
         // The above failed so do a linear search. For the use cases so far, the
         // length of the list is less than 10. In the future, if there is a bottle neck,
         // it might be here.
-        for (i = 0; i < this._points.length - 1; ++i) {
-            if (time >= this._points[i].time && time < this._points[i + 1].time) {
+        for (i = 0; i < hermiteSpline._points.length - 1; ++i) {
+            if (time >= hermiteSpline._points[i].time && time < hermiteSpline._points[i + 1].time) {
                 break;
             }
         }
 
-        if (i === this._points.length - 1) {
-            i = this._points.length - 2;
+        if (i === hermiteSpline._points.length - 1) {
+            i = hermiteSpline._points.length - 2;
         }
 
-        this._lastTimeIndex = i;
-        return this._lastTimeIndex;
-    };
+        hermiteSpline._lastTimeIndex = i;
+        return hermiteSpline._lastTimeIndex;
+    }
 
-    HermiteSpline.prototype._generateClamped = function() {
+    function generateClamped(hermiteSpline) {
         var l = [], d = [], u = [], r = [];
-        l.length = u.length = this._points.length - 1;
-        d.length = r.length = this._points.length;
+        l.length = u.length = hermiteSpline._points.length - 1;
+        d.length = r.length = hermiteSpline._points.length;
 
         var i;
         l[0] = d[0] = 1.0;
         u[0] = 0.0;
-        r[0] = this._points[0].tangent;
+        r[0] = hermiteSpline._points[0].tangent;
         for (i = 1; i < l.length - 1; ++i) {
             l[i] = u[i] = 1.0;
             d[i] = 4.0;
-            r[i] = this._points[i + 1].point.subtract(this._points[i - 1].point).multiplyByScalar(3.0);
+            r[i] = hermiteSpline._points[i + 1].point.subtract(hermiteSpline._points[i - 1].point).multiplyByScalar(3.0);
         }
         l[i] = 0.0;
         u[i] = 1.0;
         d[i] = 4.0;
-        r[i] = this._points[i + 1].point.subtract(this._points[i - 1].point).multiplyByScalar(3.0);
+        r[i] = hermiteSpline._points[i + 1].point.subtract(hermiteSpline._points[i - 1].point).multiplyByScalar(3.0);
         d[i + 1] = 1.0;
-        r[i + 1] = this._points[i + 1].tangent;
+        r[i + 1] = hermiteSpline._points[i + 1].tangent;
 
         var tangents = TridiagonalSystemSolver.solve(l, d, u, r);
-        for (i = 0; i < this._points.length; ++i) {
-            this._points[i].tangent = tangents[i];
+        for (i = 0; i < hermiteSpline._points.length; ++i) {
+            hermiteSpline._points[i].tangent = tangents[i];
         }
-    };
+    }
 
-    HermiteSpline.prototype._generateNatural = function() {
+    function generateNatural(hermiteSpline){
         var l = [], d = [], u = [], r = [];
-        l.length = u.length = this._points.length - 1;
-        d.length = r.length = this._points.length;
+        l.length = u.length = hermiteSpline._points.length - 1;
+        d.length = r.length = hermiteSpline._points.length;
 
         var i;
         l[0] = u[0] = 1.0;
         d[0] = 2.0;
-        r[0] = this._points[1].point.subtract(this._points[0].point).multiplyByScalar(3.0);
+        r[0] = hermiteSpline._points[1].point.subtract(hermiteSpline._points[0].point).multiplyByScalar(3.0);
         for (i = 1; i < l.length; ++i) {
             l[i] = u[i] = 1.0;
             d[i] = 4.0;
-            r[i] = this._points[i + 1].point.subtract(this._points[i - 1].point).multiplyByScalar(3.0);
+            r[i] = hermiteSpline._points[i + 1].point.subtract(hermiteSpline._points[i - 1].point).multiplyByScalar(3.0);
         }
         d[i] = 2.0;
-        r[i] = this._points[i].point.subtract(this._points[i - 1].point).multiplyByScalar(3.0);
+        r[i] = hermiteSpline._points[i].point.subtract(hermiteSpline._points[i - 1].point).multiplyByScalar(3.0);
 
         var tangents = TridiagonalSystemSolver.solve(l, d, u, r);
-        for (i = 0; i < this._points.length; ++i) {
-            this._points[i].tangent = tangents[i];
+        for (i = 0; i < hermiteSpline._points.length; ++i) {
+            hermiteSpline._points[i].tangent = tangents[i];
         }
-    };
+    }
 
     /**
      * Returns the array of control points.
@@ -215,7 +215,7 @@ define(['./defaultValue',
             throw new DeveloperError('time is out of range.');
         }
 
-        var i = this._findIndex(time);
+        var i = findIndex(this, time);
         var u = (time - this._points[i].time) / (this._points[i + 1].time - this._points[i].time);
 
         var timeVec = new Cartesian4(0.0, u * u, u);

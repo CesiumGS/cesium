@@ -3,6 +3,14 @@ Change Log
 
 Beta Releases
 -------------
+
+### b17 - 2013-06-03
+
+* Breaking changes:
+   * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.    
+* Added `DrawCommand.cull` to avoid redundant visibility checks.
+* Added `czm_morphTime` automatic GLSL uniform.
+
 ### b16 - 2013-05-01
 * Breaking changes:
    * Removed the color, outline color, and outline width properties of polylines. Instead, use materials for polyline color and outline properties. Code that looked like:
@@ -45,6 +53,7 @@ Beta Releases
 * Improved rendering performance by minimizing WebGL state calls.
 * Fixed an error in Web Worker creation when loading Cesium.js from a different origin.
 * Fixed `EllipsoidPrimitive` picking and picking objects with materials that have transparent parts.
+* Fixed imagery smearing artifacts on mobile devices and other devices without high-precision fragment shaders.
 
 ### b15 - 2013-04-01
 
