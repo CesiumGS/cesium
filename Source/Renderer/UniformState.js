@@ -55,8 +55,7 @@ define([
         this._currentFrustum = new Cartesian2();
         this._pixelSize = 0.0;
 
-        this._frameNumber = 1.0;
-        this._time = undefined;
+        this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.IDENTITY.clone();
 
         // Derived members
@@ -253,8 +252,7 @@ define([
         this._entireFrustum.y = camera.frustum.far;
         this.updateFrustum(camera.frustum);
 
-        this._frameNumber = frameState.frameNumber;
-        this._time = frameState.time;
+        this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time);
     };
 
@@ -1010,27 +1008,16 @@ define([
     };
 
     /**
-     * Gets the current frame number.
+     * Gets the current frame state.
      *
      * @memberof UniformState
      *
-     * @return {number} A number representing the current frame number.
+     * @return {FrameState} The current frame state.
      *
      * @see czm_frameNumber
      */
-    UniformState.prototype.getFrameNumber = function() {
-        return this._frameNumber;
-    };
-
-    /**
-     * Gets the scene's current time.
-     *
-     * @memberof UniformState
-     *
-     * @return {JulianDate} The scene's current time.
-     */
-    UniformState.prototype.getTime = function() {
-        return this._time;
+    UniformState.prototype.getFrameState = function() {
+        return this._frameState;
     };
 
     /**

@@ -736,6 +736,14 @@ defineSuite([
         verifyDraw(fs);
     });
 
+    it('has czm_morphTime', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_morphTime == 1.0); ' +   // 3D
+            '}';
+        verifyDraw(fs);
+    });
+
     it('has czm_temeToPseudoFixed', function() {
         var us = context.getUniformState();
         us.update(createFrameState(createMockCamera()));

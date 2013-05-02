@@ -487,7 +487,7 @@ define([
         var us = this.getUniformState();
         var frameState = this._frameState;
 
-        var frameNumber = CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0);
+        var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
         updateFrameState(this, frameNumber, time);
         frameState.passes.color = true;
         frameState.passes.overlay = true;

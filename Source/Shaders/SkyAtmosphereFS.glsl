@@ -33,8 +33,6 @@
  // Code:  http://sponeil.net/
  // GPU Gems 2 Article:  http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter16.html
  
-uniform float u_morphTime;
- 
 const float g = -0.95;
 const float g2 = g * g;
 
@@ -66,5 +64,5 @@ void main (void)
     vec3 rgb = fRayleighPhase * v_rayleighColor + fMiePhase * v_mieColor;
     rgb = vec3(1.0) - exp(-fExposure * rgb);
     float l = czm_luminance(rgb);
-    gl_FragColor = vec4(rgb, min(smoothstep(0.0, 0.1, l), 1.0) * smoothstep(0.0, 1.0, u_morphTime));
+    gl_FragColor = vec4(rgb, min(smoothstep(0.0, 0.1, l), 1.0) * smoothstep(0.0, 1.0, czm_morphTime));
 }

@@ -1,7 +1,5 @@
 //#define SHOW_TILE_BOUNDARIES
 
-uniform float u_morphTime;
-
 #if TEXTURE_UNITS > 0
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
@@ -121,7 +119,7 @@ void main()
         vec2 ellipsoidTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC);
         vec2 ellipsoidFlippedTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC.zyx);
 
-        vec2 textureCoordinates = mix(ellipsoidTextureCoordinates, ellipsoidFlippedTextureCoordinates, u_morphTime * smoothstep(0.9, 0.95, normalMC.z));
+        vec2 textureCoordinates = mix(ellipsoidTextureCoordinates, ellipsoidFlippedTextureCoordinates, czm_morphTime * smoothstep(0.9, 0.95, normalMC.z));
 
         color = computeWaterColor(v_positionEC, textureCoordinates, enuToEye, startDayColor, mask);
     }
