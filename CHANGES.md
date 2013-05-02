@@ -7,8 +7,9 @@ Beta Releases
 ### b17 - 2013-06-03
 
 * Breaking changes:
-   *
+   * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.    
 * Added `DrawCommand.cull` to avoid redundant visibility checks.
+* Added `czm_morphTime` automatic GLSL uniform.
 
 ### b16 - 2013-05-01
 * Breaking changes:

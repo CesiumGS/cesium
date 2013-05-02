@@ -257,19 +257,8 @@ define([
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
 
-        /**
-         * The current morph transition time between 2D/Columbus View and 3D,
-         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
-         *
-         * @type Number
-         */
-        this.morphTime = this._mode.morphTime;
-
         var that = this;
         this._uniforms = {
-            u_morphTime : function() {
-                return that.morphTime;
-            },
             u_height : function() {
                 return (that._mode !== SceneMode.SCENE2D) ? that.height : 0.0;
             }
@@ -710,10 +699,6 @@ define([
             // transition only occurs when switching from/to SCENE3D
             this._createVertexArray = this._mode === SceneMode.SCENE3D || mode === SceneMode.SCENE3D;
             this._mode = mode;
-
-            if (typeof mode.morphTime !== 'undefined') {
-                this.morphTime = mode.morphTime;
-            }
         }
 
         if (this._createVertexArray) {
