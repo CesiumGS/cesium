@@ -13,6 +13,8 @@ define([
 
     /**
      * Creates an instance of an AxisAlignedBoundingBox from the minimum and maximum points along the x, y, and z axes.
+     *
+     * Look at {@link https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/AxisAlignedBoundingBox.js AxisAlignedBoundingBox.js}
      * @alias AxisAlignedBoundingBox
      * @constructor
      *
