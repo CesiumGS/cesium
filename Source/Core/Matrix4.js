@@ -799,10 +799,10 @@ define([
      *
      * @example
      * //create an array from an instance of Matrix4
-     * // m = [10.0, 11.0, 12.0, 13.0]
-     * //     [14.0, 15.0, 16.0, 17.0]
-     * //     [18.0, 19.0, 20.0, 21.0]
-     * //     [22.0, 23.0, 24.0, 25.0]
+     * // m = [10.0, 14.0, 18.0, 22.0]
+     * //     [11.0, 15.0, 19.0, 23.0]
+     * //     [12.0, 16.0, 20.0, 24.0]
+     * //     [13.0, 17.0, 21.0, 25.0]
      * var a = Matrix4.toArray(m);
      * 
      * // m remains the same
@@ -1578,10 +1578,11 @@ define([
      * //     [12.0, 16.0, 20.0, 24.0]
      * //     [13.0, 17.0, 21.0, 25.0]
      * 
-     * if(Matrix4.equals(a,b))
+     * if(Matrix4.equals(a,b)) {
      *      console.log("Both matrices are equal");
-     * else
+     * } else {
      *      console.log("They are not equal");
+     * }
      *
      * //Prints "Both matrices are equal" on the console
      *
@@ -1634,10 +1635,11 @@ define([
      * //     [12.0, 16.0, 20.0, 24.0]
      * //     [13.0, 17.0, 21.0, 25.0]
      * 
-     * if(Matrix4.equalsEpsilon(a,b,0.1))
+     * if(Matrix4.equalsEpsilon(a,b,0.1)){
      *      console.log("Difference between both the matrices is less than 0.1");
-     * else
+     * } else {
      *      console.log("Difference between both the matrices is not less than 0.1");
+     * }
      *
      * //Prints "Difference between both the matrices is not less than 0.1" on the console
      *
@@ -1713,7 +1715,7 @@ define([
      * //     [12.0, 16.0, 20.0, 24.0]
      * //     [13.0, 17.0, 21.0, 25.0]
      *
-     * var b = new Matrix3;
+     * var b = new Matrix3();
      * Matrix4.getRotation(m,b);
      *
      * // b = [10.0, 14.0, 18.0]
