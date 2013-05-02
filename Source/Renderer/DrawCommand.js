@@ -30,6 +30,15 @@ define(function() {
         this.boundingVolume = undefined;
 
         /**
+         * When <code>true</code>, the renderer frustum and horizon culls the command based on its {@link DrawCommand#boundingVolume}.
+         * If the command was already culled, set this to <code>false</code> for a performance improvement.
+         *
+         * @type Boolean
+         * @default true
+         */
+        this.cull = true;
+
+        /**
          * The transformation from the geometry in model space to world space.
          * <p>
          * When <code>undefined</code>, the geometry is assumed to be defined in world space.

@@ -169,23 +169,16 @@ require([
 
         this._position = position;
         this._modelMatrix = undefined;
-        this.morphTime = 1.0;
 
         var that = this;
         this._colorCommand.uniformMap = {
             u_color : function() {
                 return Cesium.Color.LIME;
-            },
-            u_morphTime : function() {
-                return that.morphTime;
             }
         };
         this._pickCommand.uniformMap = {
             u_color : function() {
                 return that._pickId.color;
-            },
-            u_morphTime : function() {
-                return that.morphTime;
             }
         };
     };
@@ -199,10 +192,6 @@ require([
         if (mode !== this._mode || projection !== this._projection) {
             this._mode = mode;
             this._projection = projection;
-
-            if (typeof mode.morphTime !== 'undefined') {
-                this.morphTime = mode.morphTime;
-            }
 
             var zLength = this._ellipsoid.getRadii().getMaximumComponent() * 0.1;
             var x = zLength * 0.1;
@@ -283,10 +272,9 @@ require([
             var vs = '';
             vs += 'attribute vec3 position2D;';
             vs += 'attribute vec3 position3D;';
-            vs += 'uniform float u_morphTime;';
             vs += 'void main()';
             vs += '{';
-            vs += '    vec4 p = czm_columbusViewMorph(position2D, position3D, u_morphTime);';
+            vs += '    vec4 p = czm_columbusViewMorph(position2D, position3D, czm_morphTime);';
             vs += '    gl_Position = czm_modelViewProjection * p;';
             vs += '}';
 

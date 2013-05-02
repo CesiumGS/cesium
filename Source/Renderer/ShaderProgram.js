@@ -1516,7 +1516,39 @@ define([
             },
 
             getValue : function(uniformState) {
-                return uniformState.getFrameNumber();
+                return uniformState.getFrameState().frameNumber;
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing the current morph transition time between
+         * 2D/Columbus View and 3D, with 0.0 being 2D or Columbus View and 1.0 being 3D.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_morphTime</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_morphTime
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform float czm_morphTime;
+         *
+         * // Example
+         * vec4 p = czm_columbusViewMorph(position2D, position3D, czm_morphTime);
+         */
+        czm_morphTime : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getFrameState().morphTime;
             }
         },
 
