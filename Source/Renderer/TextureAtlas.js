@@ -192,7 +192,7 @@ define([
             if (widthDifference > heightDifference) {
                 node.childNode1 = new TextureAtlasNode(new Cartesian2(node.bottomLeft.x, node.bottomLeft.y), new Cartesian2(node.bottomLeft.x + image.width, node.topRight.y));
                 // Only make a second child if the border gives enough space.
-                var childNode2BottomLeftX = node.bottomLeft.x + image.width + textureAtlas._botextureAtlasWidthInPixels;
+                var childNode2BottomLeftX = node.bottomLeft.x + image.width + textureAtlas._borderWidthInPixels;
                 if (childNode2BottomLeftX < node.topRight.x) {
                     node.childNode2 = new TextureAtlasNode(new Cartesian2(childNode2BottomLeftX, node.bottomLeft.y), new Cartesian2(node.topRight.x, node.topRight.y));
                 }
