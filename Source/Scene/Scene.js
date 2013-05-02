@@ -355,8 +355,9 @@ define([
                 if (typeof boundingVolume !== 'undefined') {
                     var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
                     var transformedBV = boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
-                    if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
-                            (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(transformedBV))) {
+                    if (command.cull &&
+                            ((cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE) ||
+                             (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(transformedBV)))) {
                         continue;
                     }
 
