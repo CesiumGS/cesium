@@ -1,5 +1,10 @@
 /*global define*/
-define(['../Core/Cartesian2'], function(Cartesian2) {
+define([
+        '../Core/Cartesian2',
+        './SceneMode'
+    ], function(
+        Cartesian2,
+        SceneMode) {
     "use strict";
 
     /**
@@ -14,7 +19,7 @@ define(['../Core/Cartesian2'], function(Cartesian2) {
          * The current mode of the scene.
          * @type SceneMode
          */
-        this.mode = undefined;
+        this.mode = SceneMode.SCENE3D;
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -22,14 +27,14 @@ define(['../Core/Cartesian2'], function(Cartesian2) {
          *
          * @type Number
          */
-        this.morphTime = undefined;
+        this.morphTime = SceneMode.SCENE3D.morphTime;
 
         /**
          * The current frame number.
          *
          * @type Number
          */
-        this.frameNumber = undefined;
+        this.frameNumber = 0;
 
         /**
          * The scene's current time.

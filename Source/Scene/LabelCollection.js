@@ -366,14 +366,6 @@ define([
          * });
          */
         this.modelMatrix = Matrix4.IDENTITY.clone();
-
-        /**
-         * The current morph transition time between 2D/Columbus View and 3D,
-         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
-         *
-         * @type Number
-         */
-        this.morphTime = 1.0;
     };
 
     /**
@@ -589,7 +581,6 @@ define([
         var billboardCollection = this._billboardCollection;
 
         billboardCollection.modelMatrix = this.modelMatrix;
-        billboardCollection.morphTime = this.morphTime;
 
         var rebindAllGlyphsInAllLabels = false;
         if (++this._frameCount % 100 === 0) {

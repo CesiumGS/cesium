@@ -90,14 +90,6 @@ define([
          * @type Boolean
          */
         this.show = true;
-
-        /**
-         * The current morph transition time between 2D/Columbus View and 3D,
-         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
-         *
-         * @type Number
-         */
-        this.morphTime = 1.0;
     };
 
     /**
@@ -153,9 +145,6 @@ define([
             command.uniformMap = {
                 u_cubeMap: function() {
                     return that._cubeMap;
-                },
-                u_morphTime : function() {
-                    return that.morphTime;
                 }
             };
 
