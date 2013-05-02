@@ -798,13 +798,14 @@ define([
      * @exception {DeveloperError} matrix is required.
      *
      * @example
-     * //converts a matrix of order 4 to an array
+     * //create an array from an instance of Matrix4
      * // m = [10.0, 11.0, 12.0, 13.0]
      * //     [14.0, 15.0, 16.0, 17.0]
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
      * var a = Matrix4.toArray(m);
      * 
+     * // m remains the same
      * //creates a = [10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0]
      *
      */
@@ -937,7 +938,7 @@ define([
      * @see Cartesian4
      *
      * @example
-     * //creates a new matrix of order 4 with new column values from the Cartesian4 instance
+     * //creates a new Matrix4 instance with new column values from the Cartesian4 instance
      * // m = [10.0, 11.0, 12.0, 13.0]
      * //     [14.0, 15.0, 16.0, 17.0]
      * //     [18.0, 19.0, 20.0, 21.0]
@@ -1042,7 +1043,7 @@ define([
      * @see Cartesian4
      *
      * @example
-     * //create a new matrix of order 4 with new row values from the Cartesian4 instance
+     * //create a new Matrix4 instance with new row values from the Cartesian4 instance
      * // m = [10.0, 11.0, 12.0, 13.0]
      * //     [14.0, 15.0, 16.0, 17.0]
      * //     [18.0, 19.0, 20.0, 21.0]
@@ -1386,6 +1387,22 @@ define([
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} scalar is required and must be a number.
+     *
+     * @example
+     * //create a Matrix4 instance which is a scaled version of the supplied Matrix4
+     * // m = [10.0, 11.0, 12.0, 13.0]
+     * //     [14.0, 15.0, 16.0, 17.0]
+     * //     [18.0, 19.0, 20.0, 21.0]
+     * //     [22.0, 23.0, 24.0, 25.0]
+     * 
+     * var a = Matrix4.multiplyByScalar(m, -2);
+     *
+     * // m remains the same
+     * // a = [-20.0, -22.0, -24.0, -26.0]
+     * //     [-28.0, -30.0, -32.0, -34.0]
+     * //     [-36.0, -38.0, -40.0, -42.0]
+     * //     [-44.0, -46.0, -48.0, -50.0]
+     *
      */
     Matrix4.multiplyByScalar = function(matrix, scalar, result) {
         if (typeof matrix === 'undefined') {
@@ -1431,7 +1448,7 @@ define([
      * @exception {DeveloperError} matrix is required.
      *
      * @example
-     * //create a new matrix of order 4 
+     * //create a new Matrix4 instance which is a negation of a Matrix4
      * // m = [10.0, 11.0, 12.0, 13.0]
      * //     [14.0, 15.0, 16.0, 17.0]
      * //     [18.0, 19.0, 20.0, 21.0]
@@ -1487,7 +1504,7 @@ define([
      * @exception {DeveloperError} matrix is required.
      *
      * @example
-     * //returns transpose of a matrix of order 4
+     * //returns transpose of a Matrix4
      * // m = [10.0, 11.0, 12.0, 13.0]
      * //     [14.0, 15.0, 16.0, 17.0]
      * //     [18.0, 19.0, 20.0, 21.0]
@@ -1547,6 +1564,27 @@ define([
      * @param {Matrix4} [left] The first matrix.
      * @param {Matrix4} [right] The second matrix.
      * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     *
+     * @example
+     * //compares two Matrix4 instances 
+     *
+     * // a = [10.0, 14.0, 18.0, 22.0]
+     * //     [11.0, 15.0, 19.0, 23.0]
+     * //     [12.0, 16.0, 20.0, 24.0]
+     * //     [13.0, 17.0, 21.0, 25.0]
+     *
+     * // b = [10.0, 14.0, 18.0, 22.0]
+     * //     [11.0, 15.0, 19.0, 23.0]
+     * //     [12.0, 16.0, 20.0, 24.0]
+     * //     [13.0, 17.0, 21.0, 25.0]
+     * 
+     * if(Matrix4.equals(a,b))
+     *      console.log("Both matrices are equal");
+     * else
+     *      console.log("They are not equal");
+     *
+     * //Prints "Both matrices are equal" on the console
+     *
      */
     Matrix4.equals = function(left, right) {
         return (left === right) ||
@@ -1582,6 +1620,27 @@ define([
      * @return {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
+     *
+     * @example
+     * //compares two Matrix4 instances 
+     *
+     * // a = [10.5, 14.5, 18.5, 22.5]
+     * //     [11.5, 15.5, 19.5, 23.5]
+     * //     [12.5, 16.5, 20.5, 24.5]
+     * //     [13.5, 17.5, 21.5, 25.5]
+     *
+     * // b = [10.0, 14.0, 18.0, 22.0]
+     * //     [11.0, 15.0, 19.0, 23.0]
+     * //     [12.0, 16.0, 20.0, 24.0]
+     * //     [13.0, 17.0, 21.0, 25.0]
+     * 
+     * if(Matrix4.equalsEpsilon(a,b,0.1))
+     *      console.log("Difference between both the matrices is less than 0.1");
+     * else
+     *      console.log("Difference between both the matrices is not less than 0.1");
+     *
+     * //Prints "Difference between both the matrices is not less than 0.1" on the console
+     *
      */
     Matrix4.equalsEpsilon = function(left, right, epsilon) {
         if (typeof epsilon !== 'number') {
@@ -1645,6 +1704,22 @@ define([
      * @exception {DeveloperError} matrix is required.
      *
      * @see Matrix3
+     *
+     * @example 
+     * // returns transpose of Matrix3 instance from a Matrix4 instance 
+     *
+     * // m = [10.0, 11.0, 12.0, 13.0]
+     * //     [14.0, 15.0, 16.0, 17.0]
+     * //     [18.0, 19.0, 20.0, 21.0]
+     * //     [22.0, 23.0, 24.0, 25.0]
+     *
+     * var b = new Matrix3;
+     * Matrix4.getRotation(m,b);
+     *
+     * // m = [10.0, 14.0, 18.0]
+     * //     [11.0, 15.0, 19.0]
+     * //     [12.0, 16.0, 20.0]
+     *
      */
     Matrix4.getRotation = function(matrix, result) {
         if (typeof matrix === 'undefined') {
