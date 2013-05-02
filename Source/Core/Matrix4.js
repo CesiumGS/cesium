@@ -1706,7 +1706,7 @@ define([
      * @see Matrix3
      *
      * @example 
-     * // returns transpose of Matrix3 instance from a Matrix4 instance 
+     * // returns a Matrix3 instance from a Matrix4 instance 
      *
      * // m = [10.0, 14.0, 18.0, 22.0]
      * //     [11.0, 15.0, 19.0, 23.0]
