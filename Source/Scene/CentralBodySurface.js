@@ -955,6 +955,7 @@ define([
                     var command = tileCommands[tileCommandIndex];
                     if (typeof command === 'undefined') {
                         command = new DrawCommand();
+                        command.cull = false;
                         tileCommands[tileCommandIndex] = command;
                         tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap();
                     }

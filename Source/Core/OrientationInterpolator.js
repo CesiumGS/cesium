@@ -43,38 +43,38 @@ define([
         return this._points;
     };
 
-    OrientationInterpolator.prototype._findIndex = function(time) {
+    function findIndex(orientationInterpolator, time) {
         // Take advantage of temporal coherence by checking current, next and previous intervals
         // for containment of time.
-        var i = this._lastTimeIndex || 0;
-        if (time >= this._points[i].time) {
-            if (i + 1 < this._points.length && time < this._points[i + 1].time) {
+        var i = orientationInterpolator._lastTimeIndex || 0;
+        if (time >= orientationInterpolator._points[i].time) {
+            if (i + 1 < orientationInterpolator._points.length && time < orientationInterpolator._points[i + 1].time) {
                 return i;
-            } else if (i + 2 < this._points.length && time < this._points[i + 2].time) {
-                this._lastTimeIndex = i + 1;
-                return this._lastTimeIndex;
+            } else if (i + 2 < orientationInterpolator._points.length && time < orientationInterpolator._points[i + 2].time) {
+                orientationInterpolator._lastTimeIndex = i + 1;
+                return orientationInterpolator._lastTimeIndex;
             }
-        } else if (i - 1 >= 0 && time >= this._points[i - 1].time) {
-            this._lastTimeIndex = i - 1;
-            return this._lastTimeIndex;
+        } else if (i - 1 >= 0 && time >= orientationInterpolator._points[i - 1].time) {
+            orientationInterpolator._lastTimeIndex = i - 1;
+            return orientationInterpolator._lastTimeIndex;
         }
 
         // The above failed so do a linear search. For the use cases so far, the
         // length of the list is less than 10. In the future, if there is a bottle neck,
         // it might be here.
-        for (i = 0; i < this._points.length - 1; ++i) {
-            if (time >= this._points[i].time && time < this._points[i + 1].time) {
+        for (i = 0; i < orientationInterpolator._points.length - 1; ++i) {
+            if (time >= orientationInterpolator._points[i].time && time < orientationInterpolator._points[i + 1].time) {
                 break;
             }
         }
 
-        if (i === this._points.length - 1) {
-            i = this._points.length - 2;
+        if (i === orientationInterpolator._points.length - 1) {
+            i = orientationInterpolator._points.length - 2;
         }
 
-        this._lastTimeIndex = i;
-        return this._lastTimeIndex;
-    };
+        orientationInterpolator._lastTimeIndex = i;
+        return orientationInterpolator._lastTimeIndex;
+    }
 
     /**
      * Evaluates the orientation at a given time.
@@ -99,7 +99,7 @@ define([
             throw new DeveloperError('time is out of range.');
         }
 
-        var i = this._findIndex(time);
+        var i = findIndex(this, time);
         var u = (time - this._points[i].time) / (this._points[i + 1].time - this._points[i].time);
 
         return this._points[i].orientation.slerp(this._points[i + 1].orientation, u);
