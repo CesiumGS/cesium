@@ -1,5 +1,4 @@
 //#define SHOW_TILE_BOUNDARIES
-//#define SHOW_TEXTURE_BOUNDARIES
 
 uniform float u_morphTime;
 
@@ -42,18 +41,13 @@ vec3 sampleAndBlend(
     float textureSaturation,
     float textureOneOverGamma)
 {
-    // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
-    //    tileTextureCoordinates.s < textureCoordinateExtent.s ||
-    //    tileTextureCoordinates.s > textureCoordinateExtent.p ||
-    //    tileTextureCoordinates.t < textureCoordinateExtent.t ||
-    //    tileTextureCoordinates.t > textureCoordinateExtent.q
-    // In other words, the alpha is zero if the fragment is outside the extent
-    // covered by this texture.  Would an actual 'if' yield better performance?
-    vec2 alphaMultiplier = step(textureCoordinateExtent.st, tileTextureCoordinates); 
-    textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
-    
-    alphaMultiplier = step(vec2(0.0), textureCoordinateExtent.pq - tileTextureCoordinates);
-    textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
+    if (tileTextureCoordinates.s < textureCoordinateExtent.s ||
+        tileTextureCoordinates.s > textureCoordinateExtent.p ||
+        tileTextureCoordinates.t < textureCoordinateExtent.t ||
+        tileTextureCoordinates.t > textureCoordinateExtent.q)
+    {
+        return previousColor;
+    }
     
     vec2 translation = textureCoordinateTranslationAndScale.xy;
     vec2 scale = textureCoordinateTranslationAndScale.zw;
@@ -82,16 +76,11 @@ vec3 sampleAndBlend(
     color = pow(color, vec3(textureOneOverGamma));
 #endif
 
-#ifdef SHOW_TEXTURE_BOUNDARIES
-    if (textureCoordinates.x < (1.0/256.0) || textureCoordinates.x > (255.0/256.0) ||
-        textureCoordinates.y < (1.0/256.0) || textureCoordinates.y > (255.0/256.0))
-    {
-        color = vec3(1.0);
-        alpha = 1.0;
-    }
+#ifdef APPLY_ALPHA
+    alpha *= textureAlpha;
 #endif
 
-    return mix(previousColor, color, alpha * textureAlpha);
+    return mix(previousColor, color, alpha);
 }
 
 vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates);

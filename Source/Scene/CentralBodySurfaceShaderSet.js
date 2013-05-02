@@ -31,7 +31,7 @@ define([
         this._shaders = {};
     };
 
-    function getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma) {
+    function getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha) {
         var key = '';
         key += textureCount;
         key += applyBrightness ? '_brightness' : '';
@@ -39,18 +39,13 @@ define([
         key += applyHue ? '_hue' : '';
         key += applySaturation ? '_saturation' : '';
         key += applyGamma ? '_gamma' : '';
+        key += applyAlpha ? '_alpha' : '';
 
         return key;
     }
 
-    CentralBodySurfaceShaderSet.prototype.getShaderProgram = function(context, textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma) {
-        applyBrightness = defaultValue(applyBrightness, false);
-        applyContrast = defaultValue(applyContrast, false);
-        applyHue = defaultValue(applyHue, false);
-        applySaturation = defaultValue(applySaturation, false);
-        applyGamma = defaultValue(applyGamma, false);
-
-        var key = getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma);
+    CentralBodySurfaceShaderSet.prototype.getShaderProgram = function(context, textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha) {
+        var key = getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha);
         var shader = this._shaders[key];
         if (typeof shader === 'undefined') {
             var vs = this.baseVertexShaderString;
@@ -60,6 +55,7 @@ define([
                 (applyHue ? '#define APPLY_HUE\n' : '') +
                 (applySaturation ? '#define APPLY_SATURATION\n' : '') +
                 (applyGamma ? '#define APPLY_GAMMA\n' : '') +
+                (applyAlpha ? '#define APPLY_ALPHA\n' : '') +
                 '#define TEXTURE_UNITS ' + textureCount + '\n' +
                 this.baseFragmentShaderString + '\n' +
                 'vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)\n' +
