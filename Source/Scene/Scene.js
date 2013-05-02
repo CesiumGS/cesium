@@ -294,15 +294,28 @@ define([
             var curNear = frustumCommands.near;
             var curFar = frustumCommands.far;
 
-            if (typeof distance !== 'undefined') {
-                if (distance.start > curFar) {
-                    continue;
-                }
-
-                if (distance.stop < curNear) {
-                    break;
-                }
+            if (distance.start > curFar) {
+                continue;
             }
+
+            if (distance.stop < curNear) {
+                break;
+            }
+
+            // PERFORMANCE_IDEA: sort bins
+            frustumCommands.commands[frustumCommands.index++] = command;
+
+            if (command.executeInClosestFrustum) {
+                break;
+            }
+        }
+    }
+
+    function insertIntoAllBins(scene, command) {
+        var frustumCommandsList = scene._frustumCommandsList;
+        var length = frustumCommandsList.length;
+        for (var i = 0; i < length; ++i) {
+            var frustumCommands = frustumCommandsList[i];
 
             // PERFORMANCE_IDEA: sort bins
             frustumCommands.commands[frustumCommands.index++] = command;
@@ -371,7 +384,7 @@ define([
                     // If another command has no bounding volume, though, we need to use the camera's
                     // worst-case near and far planes to avoid clipping something important.
                     undefBV = !(command instanceof ClearCommand);
-                    insertIntoBin(scene, command);
+                    insertIntoAllBins(scene, command);
                 }
             }
         }
