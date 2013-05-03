@@ -4,19 +4,23 @@ defineSuite([
          'Core/Occluder',
          'Core/Cartesian3',
          'Core/BoundingSphere',
+         'Core/IntersectionTests',
          'Core/Visibility',
          'Core/Math',
          'Core/Ellipsoid',
-         'Core/Extent'
+         'Core/Extent',
+         'Core/Ray'
      ], function(
          EllipsoidalOccluder,
          Occluder,
          Cartesian3,
          BoundingSphere,
+         IntersectionTests,
          Visibility,
          CesiumMath,
          Ellipsoid,
-         Extent) {
+         Extent,
+         Ray) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -84,5 +88,24 @@ defineSuite([
 
         var point = new Cartesian3(4510635.0, 4510635.0, 0.0);
         expect(occluder.isPointVisible(point)).toEqual(false);
+    });
+
+    it('can compute a horizon culling point from a single position', function() {
+        var ellipsoid = new Ellipsoid(12345.0, 12345.0, 12345.0);
+        var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+
+        var positions = [new Cartesian3(-12345.0, 12345.0, 12345.0), new Cartesian3(-12346.0, 12345.0, 12345.0)];
+        var boundingSphere = BoundingSphere.fromPoints(positions);
+
+        var firstPositionArray = [positions[0]];
+        var result = ellipsoidalOccluder.computeHorizonCullingPoint(boundingSphere.center, firstPositionArray);
+        var unscaledResult = result.multiplyComponents(ellipsoid.getRadii());
+
+        // The grazing altitude of the ray from the horizon culling point to the
+        // position used to compute it should be very nearly zero.
+        var direction = positions[0].subtract(unscaledResult).normalize();
+        var nearest = IntersectionTests.grazingAltitudeLocation(new Ray(unscaledResult, direction), ellipsoid);
+        var nearestCartographic = ellipsoid.cartesianToCartographic(nearest);
+        expect(nearestCartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
     });
 });
