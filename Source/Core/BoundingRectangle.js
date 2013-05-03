@@ -124,7 +124,7 @@ define([
             return result;
         }
 
-        projection = (typeof projection !== 'undefined') ? projection : defaultProjection;
+        projection = defaultValue(projection, defaultProjection);
 
         var lowerLeft = projection.project(extent.getSouthwest(fromExtentLowerLeft));
         var upperRight = projection.project(extent.getNortheast(fromExtentUpperRight));

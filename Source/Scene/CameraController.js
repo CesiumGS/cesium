@@ -934,7 +934,7 @@ define([
         if (typeof extent === 'undefined') {
             throw new DeveloperError('extent is required.');
         }
-        ellipsoid = (typeof ellipsoid === 'undefined') ? Ellipsoid.WGS84 : ellipsoid;
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         if (this._mode === SceneMode.SCENE3D) {
             viewExtent3D(this._camera, extent, ellipsoid);
@@ -947,7 +947,7 @@ define([
 
     var pickEllipsoid3DRay = new Ray();
     function pickEllipsoid3D(controller, windowPosition, ellipsoid, result) {
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var ray = controller.getPickRay(windowPosition, pickEllipsoid3DRay);
         var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
         if (!intersection) {
@@ -1010,7 +1010,7 @@ define([
             result = new Cartesian3();
         }
 
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         if (this._mode === SceneMode.SCENE3D) {
             result = pickEllipsoid3D(this, windowPosition, ellipsoid, result);

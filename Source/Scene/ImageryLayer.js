@@ -23,6 +23,7 @@ define([
         './TileProviderError',
         './ImageryState',
         './TileImagery',
+        './TerrainProvider',
         './TexturePool',
         '../ThirdParty/when',
         '../Shaders/ReprojectWebMercatorFS',
@@ -51,6 +52,7 @@ define([
         TileProviderError,
         ImageryState,
         TileImagery,
+        TerrainProvider,
         TexturePool,
         when,
         ReprojectWebMercatorFS,
@@ -750,7 +752,7 @@ define([
         oneOverMercatorHeight : 0
     };
 
-    var float32ArrayScratch = typeof Float32Array === 'undefined' ? undefined : new Float32Array(1);
+    var float32ArrayScratch = typeof Float32Array !== 'undefined' ? new Float32Array(1) : undefined;
 
     function reprojectToGeographic(imageryLayer, context, texture, extent) {
         var reproject = context.cache.imageryLayer_reproject;
@@ -778,14 +780,37 @@ define([
             reproject.framebuffer = context.createFramebuffer();
             reproject.framebuffer.destroyAttachments = false;
 
+            // We need a vertex array with close to one vertex per output texel because we're doing
+            // the reprojection by computing texture coordinates in the vertex shader.
+            // If we computed Web Mercator texture coordinate per-fragment instead, we could get away with only
+            // four vertices.  Problem is: fragment shaders have limited precision on many mobile devices,
+            // leading to all kinds of smearing artifacts.  Current browsers (Chrome 26 for example)
+            // do not correctly report the available fragment shader precision, so we can't have different
+            // paths for devices with or without high precision fragment shaders, even if we want to.
+
+            var positions = new Array(256 * 256 * 2);
+            var index = 0;
+            for (var j = 0; j < 256; ++j) {
+                var y = j / 255.0;
+                for (var i = 0; i < 256; ++i) {
+                    var x = i / 255.0;
+                    positions[index++] = x;
+                    positions[index++] = y;
+                }
+            }
+
             var reprojectMesh = {
                 attributes : {
                     position : {
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 2,
-                        values : [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
+                        values : positions
                     }
-                }
+                },
+                indexLists : [{
+                    primitiveType : PrimitiveType.TRIANGLES,
+                    values : TerrainProvider.getRegularGridIndices(256, 256)
+                }]
             };
 
             var reprojectAttribInds = {
@@ -802,8 +827,6 @@ define([
                 ReprojectWebMercatorVS,
                 ReprojectWebMercatorFS,
                 reprojectAttribInds);
-
-            reproject.renderState = context.createRenderState();
 
             var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
             reproject.sampler = context.createSampler({
@@ -854,24 +877,25 @@ define([
 
         reproject.framebuffer.setColorTexture(outputTexture);
 
-        context.clear(new ClearCommand(context.createClearState({
-            color : Color.BLACK
-        }), reproject.framebuffer));
+        var command = new ClearCommand();
+        command.color = Color.BLACK;
+        command.framebuffer = reproject.framebuffer;
+        command.execute(context);
 
-        var renderState = reproject.renderState;
-        var viewport = renderState.viewport;
-        if (typeof viewport === 'undefined') {
-            viewport = new BoundingRectangle();
-            renderState.viewport = viewport;
+        if ((typeof reproject.renderState === 'undefined') ||
+                (reproject.renderState.viewport.width !== width) ||
+                (reproject.renderState.viewport.height !== height)) {
+
+            reproject.renderState = context.createRenderState({
+                viewport : new BoundingRectangle(0, 0, width, height)
+            });
         }
-        viewport.width = width;
-        viewport.height = height;
 
         context.draw({
             framebuffer : reproject.framebuffer,
             shaderProgram : reproject.shaderProgram,
-            renderState : renderState,
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            renderState : reproject.renderState,
+            primitiveType : PrimitiveType.TRIANGLES,
             vertexArray : reproject.vertexArray,
             uniformMap : uniformMap
         });

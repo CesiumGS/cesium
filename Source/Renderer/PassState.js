@@ -12,7 +12,14 @@ define(function() {
      * @see DrawCommand
      * @see ClearCommand
      */
-    var PassState = function() {
+    var PassState = function(context) {
+        /**
+         * The context used to execute commands for this pass.
+         *
+         * @type Context
+         */
+        this.context = context;
+
         /**
          * The framebuffer to render to.  This framebuffer is used unless a {@link DrawCommand}
          * or {@link ClearCommand} explicitly define a framebuffer, which is used for off-screen

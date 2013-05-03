@@ -1,10 +1,12 @@
 /*global define*/
 define([
         'Core/PrimitiveType',
-        'Renderer/BufferUsage'
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand'
     ], function(
         PrimitiveType,
-        BufferUsage) {
+        BufferUsage,
+        ClearCommand) {
     "use strict";
     /*global expect*/
 
@@ -19,7 +21,7 @@ define([
             componentsPerAttribute : 4
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({

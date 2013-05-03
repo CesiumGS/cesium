@@ -186,14 +186,6 @@ define([
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
 
-        /**
-         * The current morph transition time between 2D/Columbus View and 3D,
-         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
-         *
-         * @type Number
-         */
-        this.morphTime = this._mode.morphTime;
-
         // The buffer usage for each attribute is determined based on the usage of the attribute over time.
         this._buffersUsage = [
                               BufferUsage.STATIC_DRAW, // SHOW_INDEX
@@ -214,9 +206,6 @@ define([
             },
             u_atlasSize : function() {
                 return that._textureAtlas.getTexture().getDimensions();
-            },
-            u_morphTime : function() {
-                return that.morphTime;
             }
         };
     };
@@ -246,14 +235,14 @@ define([
      * // Example 1:  Add a billboard, specifying all the default values.
      * var b = billboards.add({
      *   show : true,
-     *   position : new Cartesian3(0.0, 0.0, 0.0),
-     *   pixelOffset : new Cartesian2(0.0, 0.0),
-     *   eyeOffset : new Cartesian3(0.0, 0.0, 0.0),
+     *   position : Cartesian3.ZERO,
+     *   pixelOffset : Cartesian2.ZERO,
+     *   eyeOffset : Cartesian3.ZERO,
      *   horizontalOrigin : HorizontalOrigin.CENTER,
      *   verticalOrigin : VerticalOrigin.CENTER,
      *   scale : 1.0,
      *   imageIndex : 0,
-     *   color : new Color(1.0, 1.0, 1.0, 1.0)
+     *   color : Color.WHITE
      * });
      *
      * // Example 2:  Specify only the billboard's cartographic position.
@@ -836,7 +825,7 @@ define([
         writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
-    function recomputeActualPositions(billboardCollection, billboards, length, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
+    function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
         var boundingVolume;
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolume = billboardCollection._baseVolume;
@@ -848,7 +837,7 @@ define([
         for ( var i = 0; i < length; ++i) {
             var billboard = billboards[i];
             var position = billboard.getPosition();
-            var actualPosition = Billboard._computeActualPosition(position, frameState, morphTime, modelMatrix);
+            var actualPosition = Billboard._computeActualPosition(position, frameState, modelMatrix);
             if (typeof actualPosition !== 'undefined') {
                 billboard._setActualPosition(actualPosition);
 
@@ -871,11 +860,10 @@ define([
 
         var billboards = billboardCollection._billboards;
         var billboardsToUpdate = billboardCollection._billboardsToUpdate;
-        var morphTime = billboardCollection.morphTime;
         var modelMatrix = billboardCollection._modelMatrix;
 
         if (billboardCollection._mode !== mode ||
-                billboardCollection._projection !== projection ||
+            billboardCollection._projection !== projection ||
             mode !== SceneMode.SCENE3D &&
             !modelMatrix.equals(billboardCollection.modelMatrix)) {
 
@@ -885,12 +873,12 @@ define([
             billboardCollection._createVertexArray = true;
 
             if (mode === SceneMode.SCENE3D || mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
-                recomputeActualPositions(billboardCollection, billboards, billboards.length, frameState, morphTime, modelMatrix, true);
+                recomputeActualPositions(billboardCollection, billboards, billboards.length, frameState, modelMatrix, true);
             }
         } else if (mode === SceneMode.MORPHING) {
-            recomputeActualPositions(billboardCollection, billboards, billboards.length, frameState, morphTime, modelMatrix, true);
+            recomputeActualPositions(billboardCollection, billboards, billboards.length, frameState, modelMatrix, true);
         } else if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
-            recomputeActualPositions(billboardCollection, billboardsToUpdate, billboardCollection._billboardsToUpdateIndex, frameState, morphTime, modelMatrix, false);
+            recomputeActualPositions(billboardCollection, billboardsToUpdate, billboardCollection._billboardsToUpdateIndex, frameState, modelMatrix, false);
         }
     }
 

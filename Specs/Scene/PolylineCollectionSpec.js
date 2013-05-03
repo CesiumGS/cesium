@@ -18,6 +18,7 @@ defineSuite([
          'Core/Math',
          'Core/JulianDate',
          'Renderer/BufferUsage',
+         'Renderer/ClearCommand',
          'Scene/SceneMode',
          'Scene/Material'
      ], function(
@@ -39,6 +40,7 @@ defineSuite([
          CesiumMath,
          JulianDate,
          BufferUsage,
+         ClearCommand,
          SceneMode,
          Material) {
     "use strict";
@@ -337,7 +339,7 @@ defineSuite([
     });
 
     it('does not render when constructed', function() {
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -360,30 +362,32 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
         polylines.add();
         polylines.add({
-            positions: positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions: positions
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+    });
+
+    it('does not crash is polyline has one position', function() {
+        polylines.add({
+            positions : [{
+                x : 1647745.6656519484,
+                y : 4949018.87918947,
+                z : 3661524.164064342
+            }]
+        });
+
+        ClearCommand.ALL.execute(context);
+        render(context, frameState, polylines);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
     it('A polyline that used to cross the IDL but now does not, triggers vertex creation (This code used to crash)', function() {
@@ -406,17 +410,11 @@ defineSuite([
 
         //Create a line
         var line = polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
 
         //Render it
-        context.clear();
+        ClearCommand.ALL.execute(context);
         render(context, frameState, polylines);
 
         //We need to setPositions and render it again
@@ -456,15 +454,9 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -487,38 +479,26 @@ defineSuite([
         }
 
         var p1 = polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         p1.setShow(false);
         render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 1,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
 
         render(context, frameState, polylines);
@@ -552,15 +532,9 @@ defineSuite([
         });
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -583,31 +557,19 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
         polylines.add({
-            positions : [],
-            color : {
-                red : 0,
-                green : 1,
-                blue : 0,
-                alpha : 1
-            }
+            positions : []
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -630,31 +592,19 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
         var p2 = polylines.add({
-            positions : [],
-            color : {
-                red : 0,
-                green : 1,
-                blue : 0,
-                alpha : 1
-            }
+            positions : []
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -663,7 +613,7 @@ defineSuite([
         //recreates vertex array because buffer usage changed
         p2.setPositions([]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -672,7 +622,7 @@ defineSuite([
         //should call PolylineCollection.writePositionsUpdate
         p2.setPositions([]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -695,31 +645,19 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
         var p2 = polylines.add({
-            positions : [],
-            color : {
-                red : 0,
-                green : 1,
-                blue : 0,
-                alpha : 1
-            }
+            positions : []
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -728,7 +666,7 @@ defineSuite([
         //recreates vertex array because buffer usage changed
         p2.setShow(false);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -737,7 +675,7 @@ defineSuite([
         //should call PolylineCollection.writeMiscUpdate
         p2.setShow(true);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -763,7 +701,7 @@ defineSuite([
         polylines.add({
             positions : positions
         });
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -773,7 +711,7 @@ defineSuite([
             positions : []
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -782,7 +720,7 @@ defineSuite([
         //recreates vertex array because buffer usage changed
         p2.setMaterial(Material.fromType(context, Material.PolylineOutlineType));
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -805,15 +743,9 @@ defineSuite([
         }
 
         var p = polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -823,7 +755,7 @@ defineSuite([
         p.setPositions(positions);
         render(context, frameState, polylines);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         for(var j = 0; j < 101; ++j){
@@ -849,13 +781,7 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
         positions = [];
 
@@ -870,15 +796,9 @@ defineSuite([
             z : 0
         });
         polylines.add({
-           positions:positions,
-            color : {
-                red : 0,
-                green : 1,
-                blue : 0,
-                alpha : 1
-            }
+           positions:positions
         });
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -901,23 +821,11 @@ defineSuite([
         }
 
         polylines.add({
-            positions : positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            }
+            positions : positions
         });
 
         polylines.add({
             positions:positions,
-            color : {
-                red : 1,
-                green : 0,
-                blue : 0,
-                alpha : 1
-            },
             width:2
         });
         positions = [];
@@ -944,15 +852,9 @@ defineSuite([
         });
         polylines.add({
            positions:positions,
-           width:5,
-            color : {
-                red : 0,
-                green : 1,
-                blue : 0,
-                alpha : 1
-            }
+           width:5
         });
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -969,23 +871,17 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            }]
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
         p.setShow(false);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -1002,16 +898,10 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            }]
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -1019,7 +909,7 @@ defineSuite([
 
         polylines.remove(p);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -1036,16 +926,10 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 0.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            }]
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -1062,16 +946,10 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 0.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            }]
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -1086,13 +964,7 @@ defineSuite([
                 x : 0.5,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 0.0,
-                green : 0.0,
-                blue : 1.0,
-                alpha : 1.0
-            }
+            }]
         });
 
         render(context, frameState, polylines);
@@ -1109,13 +981,7 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            }]
         });
         var bluePolyline = polylines.add({
             positions : [{
@@ -1126,22 +992,16 @@ defineSuite([
                 x : 0.5,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 0.0,
-                green : 0.0,
-                blue : 1.0,
-                alpha : 1.0
-            }
+            }]
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polylines.remove(bluePolyline);
@@ -1159,22 +1019,16 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            }]
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polylines.removeAll();
@@ -1192,22 +1046,16 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            }]
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polylines.removeAll();
@@ -1220,13 +1068,7 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }],
-            color : {
-                red : 0.0,
-                green : 0.0,
-                blue : 1.0,
-                alpha : 1.0
-            }
+            }]
         });
 
         render(context, frameState, polylines);
@@ -1246,13 +1088,13 @@ defineSuite([
             }]
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         p.setPositions([{
@@ -1318,29 +1160,23 @@ defineSuite([
                 y : 1.0,
                 z : 0.0
             }],
-            width:2,
-            color : {
-                red : 1.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 1.0
-            }
+            width:2
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         p.setShow(false);
         render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         p.setShow(true);
@@ -1363,13 +1199,13 @@ defineSuite([
             show:true
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         p.setShow(false);
@@ -1377,7 +1213,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // Update a second time since it goes through a different vertex array update path
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         p.setShow(true);
@@ -1400,32 +1236,14 @@ defineSuite([
         }
         polylines.add({
             positions : positions,
-            color:{
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            },
             width : 3
         });
         polylines.add({
             positions : positions,
-            color:{
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            },
             width : 1
         });
         polylines.add({
             positions : positions,
-            color:{
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            },
             width : 2
         });
         polylines.add({
@@ -1438,15 +1256,9 @@ defineSuite([
                 y : 1.0,
                 z : 0.0
             }],
-            color:{
-                red : 0.0,
-                green : 0.0,
-                blue : 1.0,
-                alpha : 1.0
-            },
             width : 7
         });
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -1486,7 +1298,7 @@ defineSuite([
             }],
             width : 7
         });
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -1499,6 +1311,35 @@ defineSuite([
         p2.setMaterial(Material.fromType(context, Material.ColorType));
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+    });
+
+    it('does not render with width 0.0', function() {
+        var positions = [
+        {
+            x : -1.0,
+            y : 1.0,
+            z : 0.0
+        },{
+            x : -1.0,
+            y : -1.0,
+            z : 0.0
+        }];
+        var line = polylines.add({
+            positions : positions
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, polylines);
+        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        line.setWidth(0.0);
+        render(context, frameState, polylines);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
     it('changes polyline position size recreates vertex arrays', function() {
@@ -1518,7 +1359,7 @@ defineSuite([
             positions : positions
         });
 
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
@@ -1563,7 +1404,7 @@ defineSuite([
                 z : 0.0
             }]
         });
-        context.clear();
+        ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);

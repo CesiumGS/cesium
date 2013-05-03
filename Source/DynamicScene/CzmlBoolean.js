@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/defaultValue'
+    ], function(
+        defaultValue) {
     "use strict";
 
     /**
@@ -30,8 +33,8 @@ define(function() {
          */
         unwrapInterval : function(czmlInterval) {
             /*jshint sub:true*/
-            var result = czmlInterval['boolean']; // boolean is a JS reserved word
-            return typeof result === 'undefined' ? czmlInterval : result;
+            // boolean is a JS reserved word
+            return defaultValue(czmlInterval['boolean'], czmlInterval);
         },
 
         /**

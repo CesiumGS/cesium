@@ -1,17 +1,21 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
+        '../Core/clone',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
         './Material',
         './CustomSensorVolume'
     ], function(
-        DeveloperError,
+        clone,
         Color,
+        defaultValue,
         destroyObject,
+        DeveloperError,
         CesiumMath,
         Matrix4,
         BufferUsage,
@@ -27,15 +31,15 @@ define([
      *
      * @see SensorVolumeCollection#addRectangularPyramid
      */
-    var RectangularPyramidSensorVolume = function(template) {
-        var t = template || {};
+    var RectangularPyramidSensorVolume = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
          * <code>true</code> if this sensor will be shown; otherwise, <code>false</code>
          *
          * @type Boolean
          */
-        this.show = (typeof t.show === 'undefined') ? true : t.show;
+        this.show = defaultValue(options.show, true);
 
         /**
          * When <code>true</code>, a polyline is shown where the sensor outline intersections the central body.  The default is <code>true</code>.
@@ -44,7 +48,7 @@ define([
          *
          * @see RectangularPyramidSensorVolume#intersectionColor
          */
-        this.showIntersection = (typeof t.showIntersection === 'undefined') ? true : t.showIntersection;
+        this.showIntersection = defaultValue(options.showIntersection, true);
 
         /**
          * <p>
@@ -57,7 +61,7 @@ define([
          *
          * @type Boolean
          */
-        this.showThroughEllipsoid = (typeof t.showThroughEllipsoid === 'undefined') ? false : t.showThroughEllipsoid;
+        this.showThroughEllipsoid = defaultValue(options.showThroughEllipsoid, false);
 
         /**
          * The 4x4 transformation matrix that transforms this sensor from model to world coordinates.  In it's model
@@ -81,21 +85,21 @@ define([
          * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          */
-        this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY.clone();
+        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
 
         /**
          * DOC_TBA
          *
          * @type BufferUsage
          */
-        this.bufferUsage = t.bufferUsage || BufferUsage.STATIC_DRAW;
+        this.bufferUsage = defaultValue(options.bufferUsage, BufferUsage.STATIC_DRAW);
 
         /**
          * DOC_TBA
          *
          * @type Number
          */
-        this.radius = (typeof t.radius === 'undefined') ? Number.POSITIVE_INFINITY : t.radius;
+        this.radius = defaultValue(options.radius, Number.POSITIVE_INFINITY);
 
         /**
          * DOC_TBA
@@ -104,7 +108,7 @@ define([
          *
          * @see RectangularPyramidSensorVolume#yHalfAngle
          */
-        this.xHalfAngle = (typeof t.xHalfAngle === 'undefined') ? CesiumMath.PI_OVER_TWO : t.xHalfAngle;
+        this.xHalfAngle = defaultValue(options.xHalfAngle, CesiumMath.PI_OVER_TWO);
         this._xHalfAngle = undefined;
 
         /**
@@ -114,7 +118,7 @@ define([
          *
          * @see RectangularPyramidSensorVolume#xHalfAngle
          */
-        this.yHalfAngle = (typeof t.yHalfAngle === 'undefined') ? CesiumMath.PI_OVER_TWO : t.yHalfAngle;
+        this.yHalfAngle = defaultValue(options.yHalfAngle, CesiumMath.PI_OVER_TWO);
         this._yHalfAngle = undefined;
 
         /**
@@ -135,7 +139,7 @@ define([
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = (typeof t.material !== 'undefined') ? t.material : Material.fromType(undefined, Material.ColorType);
+        this.material = typeof options.material !== 'undefined' ? options.material : Material.fromType(undefined, Material.ColorType);
 
         /**
          * The color of the polyline where the sensor outline intersects the central body.  The default is {@link Color.WHITE}.
@@ -144,10 +148,11 @@ define([
          *
          * @see RectangularPyramidSensorVolume#showIntersection
          */
-        this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : Color.clone(Color.WHITE);
+        this.intersectionColor = Color.clone(defaultValue(options.intersectionColor, Color.WHITE));
 
-        t._pickIdThis = t._pickIdThis || this;
-        this._customSensor = new CustomSensorVolume(t);
+        var customSensorOptions = clone(options);
+        customSensorOptions._pickIdThis = defaultValue(options._pickIdThis, this);
+        this._customSensor = new CustomSensorVolume(customSensorOptions);
     };
 
     /**

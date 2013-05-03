@@ -103,7 +103,10 @@ define([
     }
 
     Billboard.prototype.getPickId = function(context) {
-        this._pickId = this._pickId || context.createPickId(this._pickIdThis || this);
+        if (typeof this._pickId === 'undefined') {
+            this._pickId = context.createPickId(defaultValue(this._pickIdThis, this));
+        }
+
         return this._pickId;
     };
 
@@ -557,7 +560,7 @@ define([
 
     var tempCartesian4 = new Cartesian4();
     var tempCartographic = new Cartographic();
-    Billboard._computeActualPosition = function(position, frameState, morphTime, modelMatrix) {
+    Billboard._computeActualPosition = function(position, frameState, modelMatrix) {
         var mode = frameState.mode;
 
         if (mode === SceneMode.SCENE3D) {
@@ -574,6 +577,7 @@ define([
 
         var projectedPosition = projection.project(cartographic);
         if (mode === SceneMode.MORPHING) {
+            var morphTime = frameState.morphTime;
             var x = CesiumMath.lerp(projectedPosition.z, tempCartesian4.x, morphTime);
             var y = CesiumMath.lerp(projectedPosition.x, tempCartesian4.y, morphTime);
             var z = CesiumMath.lerp(projectedPosition.y, tempCartesian4.z, morphTime);

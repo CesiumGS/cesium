@@ -21,8 +21,6 @@ define([
         VerticalOrigin) {
     "use strict";
 
-    var EMPTY_OBJECT = {};
-
     function rebindAllGlyphs(label) {
         if (!label._rebindAllGlyphs && !label._repositionAllGlyphs) {
             // only push label if it's not already been marked dirty
@@ -52,7 +50,7 @@ define([
      * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Labels.html">Cesium Sandcastle Labels Demo</a>
      */
     var Label = function(description, labelCollection) {
-        description = defaultValue(description, EMPTY_OBJECT);
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
 
         this._text = defaultValue(description.text, '');
         this._show = defaultValue(description.show, true);
@@ -697,7 +695,7 @@ define([
 
         var labelCollection = this._labelCollection;
         var modelMatrix = labelCollection.modelMatrix;
-        var actualPosition = Billboard._computeActualPosition(this._position, frameState, labelCollection.morphTime, modelMatrix);
+        var actualPosition = Billboard._computeActualPosition(this._position, frameState, modelMatrix);
 
         return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, context, frameState);
     };

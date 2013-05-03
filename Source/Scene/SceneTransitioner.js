@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
@@ -17,6 +18,7 @@ define([
         './PerspectiveFrustum',
         './SceneMode'
     ], function(
+        defaultValue,
         destroyObject,
         DeveloperError,
         CesiumMath,
@@ -81,7 +83,7 @@ define([
         this.onTransitionComplete = new Event();
 
         this._scene = scene;
-        this._ellipsoid = ellipsoid || Ellipsoid.WGS84;
+        this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var canvas = scene.getCanvas();
 
         // Position camera and size frustum so the entire 2D map is visible
@@ -686,62 +688,12 @@ define([
         addMorphTimeAnimations(transitioner, scene, 1.0, 0.0, duration, onComplete);
     }
 
-    //immediately set the morph time of all objects in the scene
-    function setMorphTime(scene, morphTime) {
-        scene.morphTime = morphTime;
-
-        var primitives = scene.getPrimitives();
-        for ( var i = 0, len = primitives.getLength(); i < len; i++) {
-            var primitive = primitives.get(i);
-            if (typeof primitive.morphTime !== 'undefined') {
-                primitive.morphTime = morphTime;
-            }
-        }
-
-        var centralBody = primitives.getCentralBody();
-        centralBody.morphTime = morphTime;
-
-        if (typeof scene.skyBox !== 'undefined') {
-            scene.skyBox.morphTime = morphTime;
-        }
-
-        if (typeof scene.skyAtmosphere !== 'undefined') {
-            scene.skyAtmosphere.morphTime = morphTime;
-        }
-    }
-
-    //in the future the animations will be more complicated
     function addMorphTimeAnimations(transitioner, scene, start, stop, duration, onComplete) {
-        //for now, all objects morph at the same rate
+        // Later, this will be linear and each object will adjust, if desired, in its vertex shader.
         var template = {
             duration : duration,
             easingFunction : Tween.Easing.Quartic.Out
         };
-
-        var primitives = scene.getPrimitives();
-        var sceneAnimations = scene.getAnimations();
-        var animation;
-        for ( var i = 0, len = primitives.getLength(); i < len; i++) {
-            var primitive = primitives.get(i);
-            if (typeof primitive.morphTime !== 'undefined') {
-                animation = sceneAnimations.addProperty(primitive, 'morphTime', start, stop, template);
-                transitioner._currentAnimations.push(animation);
-            }
-        }
-
-        var centralBody = primitives.getCentralBody();
-        animation = sceneAnimations.addProperty(centralBody, 'morphTime', start, stop, template);
-        transitioner._currentAnimations.push(animation);
-
-        if (typeof scene.skyBox !== 'undefined') {
-            animation = sceneAnimations.addProperty(scene.skyBox, 'morphTime', start, stop, template);
-            transitioner._currentAnimations.push(animation);
-        }
-
-        if (typeof scene.skyAtmosphere !== 'undefined') {
-            animation = sceneAnimations.addProperty(scene.skyAtmosphere, 'morphTime', start, stop, template);
-            transitioner._currentAnimations.push(animation);
-        }
 
         if (typeof onComplete !== 'undefined') {
             template.onComplete = function() {
@@ -749,7 +701,7 @@ define([
             };
         }
 
-        animation = sceneAnimations.addProperty(scene, 'morphTime', start, stop, template);
+        var animation = scene.getAnimations().addProperty(scene, 'morphTime', start, stop, template);
         transitioner._currentAnimations.push(animation);
     }
 
@@ -788,7 +740,7 @@ define([
     function complete3DCallback(transitioner) {
         var scene = transitioner._scene;
         scene.mode = SceneMode.SCENE3D;
-        setMorphTime(scene, 1.0);
+        scene.morphTime = SceneMode.SCENE3D.morphTime;
 
         destroyMorphHandler(transitioner);
 
@@ -814,7 +766,7 @@ define([
         var scene = transitioner._scene;
 
         scene.mode = SceneMode.SCENE2D;
-        setMorphTime(scene, 0.0);
+        scene.morphTime = SceneMode.SCENE2D.morphTime;
 
         destroyMorphHandler(transitioner);
 
@@ -835,7 +787,7 @@ define([
     function completeColumbusViewCallback(transitioner) {
         var scene = transitioner._scene;
         scene.mode = SceneMode.COLUMBUS_VIEW;
-        setMorphTime(scene, 0.0);
+        scene.morphTime = SceneMode.COLUMBUS_VIEW.morphTime;
 
         destroyMorphHandler(transitioner);
 

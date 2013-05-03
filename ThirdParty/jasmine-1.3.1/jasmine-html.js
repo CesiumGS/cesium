@@ -243,14 +243,6 @@ jasmine.HtmlReporter = function(_doc) {
     }
   };
 
-  function wrapWithDebugger(originalFunction) {
-    return function() {
-        var stepIntoThisFunction = originalFunction.bind(this);
-        debugger;
-        stepIntoThisFunction();
-    };
-}
-
   self.specFilter = function(spec) {
 	var paramMap = [];
     var params = jasmine.HtmlReporter.parameters(doc);
@@ -258,11 +250,6 @@ jasmine.HtmlReporter = function(_doc) {
     for (var i = 0; i < params.length; i++) {
       var p = params[i].split('=');
       paramMap[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
-    }
-
-    if (paramMap.debug && spec.getFullName() === paramMap.debug) {
-      var block = spec.queue.blocks[0];
-      block.func = wrapWithDebugger(block.func);
     }
 
     var focusedSpecName = getFocusedSpecName();
@@ -320,7 +307,19 @@ jasmine.HtmlReporter = function(_doc) {
       return matchedCategory;
     }
 
-    return (spec.getFullName() === focusedSpecName) || (spec.suite.getFullName() === focusedSpecName);
+    if (spec.getFullName() === focusedSpecName) {
+        return true;
+    }
+
+    var suite = spec.suite;
+    while (suite) {
+        if (suite.getFullName() === focusedSpecName) {
+            return true;
+        }
+        suite = suite.parentSuite;
+    }
+
+    return false;
   };
 
   return self;
@@ -385,8 +384,8 @@ jasmine.HtmlReporter = function(_doc) {
         dom.exceptions = self.createDom('span', { className: 'exceptions' },
           self.createDom('label', { className: 'label', 'for': 'no_try_catch' }, 'No try/catch'),
           self.createDom('input', { id: 'no_try_catch', type: 'checkbox' }),
-          self.createDom('input', { type: 'button', value: 'run', id: 'runButton'}, 'run'),
-          self.createDom('input',  { type: 'button', value: 'run with coverage', id: 'runCoverageButton' }, 'run with coverage'))),
+          self.createDom('input', { type: 'button', value: 'run', id: 'runButton'}),
+          self.createDom('input',  { type: 'button', value: 'run with coverage', id: 'runCoverageButton' }))),
       dom.results = self.createDom('div', {className: 'results'},
         dom.summary = self.createDom('div', { className: 'summary' }),
         dom.details = self.createDom('div', { id: 'details' }),

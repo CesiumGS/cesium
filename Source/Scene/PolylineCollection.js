@@ -124,14 +124,6 @@ define([
      */
     var PolylineCollection = function() {
         /**
-         * The current morph transition time between 2D/Columbus View and 3D,
-         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
-         *
-         * @type Number
-         */
-        this.morphTime = 1.0;
-
-        /**
          * The 4x4 transformation matrix that transforms each polyline in this collection from model to world coordinates.
          * When this is the identity matrix, the polylines are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
@@ -169,13 +161,6 @@ define([
         ];
 
         this._mode = undefined;
-        var that = this;
-
-        this._uniforms = {
-            u_morphTime : function() {
-                return that.morphTime;
-            }
-        };
 
         this._polylinesToUpdate = [];
         this._vertexArrays = [];
@@ -380,6 +365,7 @@ define([
     };
 
     var emptyArray = [];
+    var scracthBoundingSphere = new BoundingSphere();
 
     /**
      * @private
@@ -449,39 +435,49 @@ define([
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolume = this._boundingVolume;
             modelMatrix = this.modelMatrix;
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW || frameState.mode === SceneMode.SCENE2D) {
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
             boundingVolume = this._boundingVolume2D;
-        } else {
-            boundingVolume = this._boundingVolume && this._boundingVolume2D && this._boundingVolume.union(this._boundingVolume2D);
+        } else if (frameState.mode === SceneMode.SCENE2D) {
+            if (typeof this._boundingVolume2D !== 'undefined') {
+                boundingVolume = BoundingSphere.clone(this._boundingVolume2D, scracthBoundingSphere);
+                boundingVolume.center.x = 0.0;
+            }
+        } else if (typeof this._boundingVolume !== 'undefined' && typeof this._boundingVolume2D !== 'undefined') {
+            boundingVolume = BoundingSphere.union(this._boundingVolume, this._boundingVolume2D, scracthBoundingSphere);
+        }
+
+        if (typeof boundingVolume === 'undefined') {
+            return;
         }
 
         var pass = frameState.passes;
-        var useDepthTest = (this.morphTime !== 0.0);
+        var useDepthTest = (frameState.morphTime !== 0.0);
         var commandLists = this._commandLists;
         commandLists.colorList = emptyArray;
         commandLists.pickList = emptyArray;
 
+        if ((typeof this._rs === 'undefined') || (this._rs.depthTest.enabled !== useDepthTest)) {
+            this._rs = context.createRenderState({
+                blending : BlendingState.ALPHA_BLEND,
+                depthMask : !useDepthTest,
+                depthTest : {
+                    enabled : useDepthTest
+                }
+            });
+        }
+
         if (pass.color) {
-            if (typeof this._rs === 'undefined') {
-                this._rs = context.createRenderState({
-                    blending : BlendingState.ALPHA_BLEND
-                });
-            }
-
-            this._rs.depthMask = !useDepthTest;
-            this._rs.depthTest.enabled = useDepthTest;
-
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
-            createCommandLists(colorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, this._uniforms, true);
+            createCommandLists(colorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, true);
         }
 
         if (pass.pick) {
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            createCommandLists(pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, this._uniforms, false);
+            createCommandLists(pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, false);
         }
 
         if (!this._commandLists.empty()) {
@@ -489,7 +485,7 @@ define([
         }
     };
 
-    function createCommandLists(commands, boundingVolume, modelMatrix, vertexArrays, renderState, uniforms, colorPass) {
+    function createCommandLists(commands, boundingVolume, modelMatrix, vertexArrays, renderState, colorPass) {
         var length = vertexArrays.length;
 
         var commandsLength = commands.length;
@@ -534,7 +530,7 @@ define([
                             command.vertexArray = va.va;
                             command.renderState = renderState;
 
-                            command.uniformMap = combine([uniforms, currentMaterial._uniforms], false, false);
+                            command.uniformMap = currentMaterial._uniforms;
                             command.count = count;
                             command.offset = offset;
 
@@ -573,7 +569,7 @@ define([
                     command.vertexArray = va.va;
                     command.renderState = renderState;
 
-                    command.uniformMap = combine([uniforms, currentMaterial._uniforms], false, false);
+                    command.uniformMap = currentMaterial._uniforms;
                     command.count = count;
                     command.offset = offset;
                 }
@@ -915,22 +911,22 @@ define([
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
             var p = polylines[i];
-            p.update();
-            var material = p.getMaterial();
-            var value = polylineBuckets[material.type];
-            if (typeof value === 'undefined') {
-                value = polylineBuckets[material.type] = new PolylineBucket(material, mode, projection, modelMatrix);
+            if (p.getPositions().length > 1) {
+                p.update();
+                var material = p.getMaterial();
+                var value = polylineBuckets[material.type];
+                if (typeof value === 'undefined') {
+                    value = polylineBuckets[material.type] = new PolylineBucket(material, mode, projection, modelMatrix);
+                }
+                value.addPolyline(p);
             }
-            value.addPolyline(p);
         }
     }
 
     function updateMode(collection, frameState) {
         var mode = frameState.mode;
         var projection = frameState.scene2D.projection;
-        if (collection._mode !== mode && typeof mode.morphTime !== 'undefined') {
-            collection.morphTime = mode.morphTime;
-        }
+
         if (collection._mode !== mode || (collection._projection !== projection) || (!collection._modelMatrix.equals(collection.modelMatrix))) {
             collection._mode = mode;
             collection._projection = projection;
@@ -1043,7 +1039,7 @@ define([
         var length;
         if (this.mode === SceneMode.SCENE3D || !intersectsIDL(polyline)) {
             length = polyline.getPositions().length;
-            return (length > 1.0) ? length * 4.0 - 4.0 : 0.0;
+            return length * 4.0 - 4.0;
         }
 
         var count = 0;
@@ -1059,6 +1055,7 @@ define([
     var scratchWritePosition = new Cartesian3();
     var scratchWritePrevPosition = new Cartesian3();
     var scratchWriteNextPosition = new Cartesian3();
+    var scratchWriteVector = new Cartesian3();
 
     PolylineBucket.prototype.write = function(positionArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, colorIndex, texCoordExpandWidthAndShowIndex, context) {
         var mode = this.mode;
@@ -1067,7 +1064,7 @@ define([
         for ( var i = 0; i < length; ++i) {
             var polyline = polylines[i];
             var width = polyline.getWidth();
-            var show = polyline.getShow();
+            var show = polyline.getShow() && width > 0.0;
             var segments = this.getSegments(polyline);
             var positions = segments.positions;
             var lengths = segments.lengths;
@@ -1077,9 +1074,17 @@ define([
 
             var segmentIndex = 0;
             var count = 0;
+            var position;
 
             for ( var j = 0; j < positionsLength; ++j) {
-                var position = (j !== 0) ? positions[j - 1] : positions[j];
+                if (j === 0) {
+                    position = scratchWriteVector;
+                    Cartesian3.subtract(positions[0], positions[1], position);
+                    Cartesian3.add(positions[0], position, position);
+                } else {
+                    position = positions[j - 1];
+                }
+
                 scratchWritePrevPosition.x = position.x;
                 scratchWritePrevPosition.y = position.y;
                 scratchWritePrevPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
@@ -1089,7 +1094,14 @@ define([
                 scratchWritePosition.y = position.y;
                 scratchWritePosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
 
-                position = (j !== positionsLength - 1) ? positions[j + 1] : positions[j];
+                if (j === positionsLength - 1) {
+                    position = scratchWriteVector;
+                    Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], position);
+                    Cartesian3.add(positions[positionsLength - 1], position, position);
+                } else {
+                    position = positions[j + 1];
+                }
+
                 scratchWriteNextPosition.x = position.x;
                 scratchWriteNextPosition.y = position.y;
                 scratchWriteNextPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
@@ -1133,6 +1145,7 @@ define([
     var morphPositionScratch = new Cartesian3();
     var morphPrevPositionScratch = new Cartesian3();
     var morphNextPositionScratch = new Cartesian3();
+    var morphVectorScratch = new Cartesian3();
 
     PolylineBucket.prototype.writeForMorph = function(positionArray, positionIndex) {
         var modelMatrix = this.modelMatrix;
@@ -1148,12 +1161,28 @@ define([
             var count = 0;
 
             for ( var j = 0; j < positionsLength; ++j) {
-                var prevPosition = (j !== 0) ? positions[j - 1] : positions[j];
+                var prevPosition;
+                if (j === 0) {
+                    prevPosition = morphVectorScratch;
+                    Cartesian3.subtract(positions[0], positions[1], prevPosition);
+                    Cartesian3.add(positions[0], prevPosition, prevPosition);
+                } else {
+                    prevPosition = positions[j - 1];
+                }
+
                 prevPosition = Matrix4.multiplyByPoint(modelMatrix, prevPosition, morphPrevPositionScratch);
 
                 var position = Matrix4.multiplyByPoint(modelMatrix, positions[j], morphPositionScratch);
 
-                var nextPosition = (j !== positionsLength - 1) ? positions[j + 1] : positions[j];
+                var nextPosition;
+                if (j === positionsLength - 1) {
+                    nextPosition = morphVectorScratch;
+                    Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], nextPosition);
+                    Cartesian3.add(positions[positionsLength - 1], nextPosition, nextPosition);
+                } else {
+                    nextPosition = positions[j + 1];
+                }
+
                 nextPosition = Matrix4.multiplyByPoint(modelMatrix, nextPosition, morphNextPositionScratch);
 
                 var segmentLength = lengths[segmentIndex];
@@ -1356,13 +1385,21 @@ define([
 
             var segmentIndex = 0;
             var count = 0;
+            var position;
 
             var width = polyline.getWidth();
-            var show = polyline.getShow();
+            var show = polyline.getShow() && width > 0.0;
 
             positionsLength = positions.length;
             for ( var i = 0; i < positionsLength; ++i) {
-                var position = (i !== 0) ? positions[i - 1] : positions[i];
+                if (i === 0) {
+                    position = scratchWriteVector;
+                    Cartesian3.subtract(positions[0], positions[1], position);
+                    Cartesian3.add(positions[0], position, position);
+                } else {
+                    position = positions[i - 1];
+                }
+
                 scratchWritePrevPosition.x = position.x;
                 scratchWritePrevPosition.y = position.y;
                 scratchWritePrevPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
@@ -1372,7 +1409,14 @@ define([
                 scratchWritePosition.y = position.y;
                 scratchWritePosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
 
-                position = (i !== positionsLength - 1) ? positions[i + 1] : positions[i];
+                if (i === positionsLength - 1) {
+                    position = scratchWriteVector;
+                    Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], position);
+                    Cartesian3.add(positions[positionsLength - 1], position, position);
+                } else {
+                    position = positions[i + 1];
+                }
+
                 scratchWriteNextPosition.x = position.x;
                 scratchWriteNextPosition.y = position.y;
                 scratchWriteNextPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;

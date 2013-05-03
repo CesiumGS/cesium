@@ -1,15 +1,15 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/destroyObject',
-        '../Core/ComponentDatatype',
+        '../Core/DeveloperError',
         './BufferUsage'
     ], function(
-        DeveloperError,
+        ComponentDatatype,
         defaultValue,
         destroyObject,
-        ComponentDatatype,
+        DeveloperError,
         BufferUsage) {
     "use strict";
 
@@ -159,8 +159,8 @@ define([
             var attribute = attributes[i];
 
             var attr = {
-                index : (typeof attribute.index === 'undefined') ? i : attribute.index,
-                enabled : (typeof attribute.enabled === 'undefined') ? true : attribute.enabled,
+                index : defaultValue(attribute.index, i),
+                enabled : defaultValue(attribute.enabled, true),
                 componentsPerAttribute : attribute.componentsPerAttribute,
                 componentDatatype : attribute.componentDatatype || ComponentDatatype.FLOAT,
                 normalize : attribute.normalize || false,
@@ -290,7 +290,7 @@ define([
         }
 
         // VAs are recreated next time commit is called.
-        this._destroyVA();
+        destroyVA(this);
     };
 
     VertexArrayFacade._resize = function(buffer, size) {
@@ -387,7 +387,7 @@ define([
 
         for (var i = 0, len = allBuffers.length; i < len; ++i) {
             buffer = allBuffers[i];
-            recreateVA = this._commit(buffer) || recreateVA;
+            recreateVA = commit(this, buffer) || recreateVA;
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -395,7 +395,7 @@ define([
         if (recreateVA || typeof this.vaByPurpose === 'undefined') {
             var buffersByPurposeAndUsage = this._buffersByPurposeAndUsage;
 
-            this._destroyVA();
+            destroyVA(this);
             this.vaByPurpose = {};
 
             for (var purpose in buffersByPurposeAndUsage) {
@@ -441,18 +441,18 @@ define([
         }
     };
 
-    VertexArrayFacade.prototype._commit = function(buffer) {
+    function commit(vertexArrayFacade, buffer) {
         if (buffer.needsCommit && (buffer.vertexSizeInBytes > 0)) {
             buffer.needsCommit = false;
 
             var vertexBuffer = buffer.vertexBuffer;
-            var vertexBufferSizeInBytes = this._size * buffer.vertexSizeInBytes;
+            var vertexBufferSizeInBytes = vertexArrayFacade._size * buffer.vertexSizeInBytes;
             var vertexBufferDefined = typeof vertexBuffer !== 'undefined';
             if (!vertexBufferDefined || (vertexBuffer.getSizeInBytes() < vertexBufferSizeInBytes)) {
                 if (vertexBufferDefined) {
                     vertexBuffer.destroy();
                 }
-                buffer.vertexBuffer = this._context.createVertexBuffer(buffer.arrayBuffer, buffer.usage);
+                buffer.vertexBuffer = vertexArrayFacade._context.createVertexBuffer(buffer.arrayBuffer, buffer.usage);
                 buffer.vertexBuffer.setVertexArrayDestroyable(false);
 
                 return true; // Created new vertex buffer
@@ -462,7 +462,7 @@ define([
         }
 
         return false; // Did not create new vertex buffer
-    };
+    }
 
     VertexArrayFacade._appendAttributes = function(attributes, buffer, vertexBufferOffset) {
         var arrayViews = buffer.arrayViews;
@@ -499,11 +499,11 @@ define([
         var allBuffers = this._allBuffers;
 
         for (var i = 0, len = allBuffers.length; i < len; ++i) {
-            this._subCommit(allBuffers[i], offsetInVertices, lengthInVertices);
+            subCommit(this, allBuffers[i], offsetInVertices, lengthInVertices);
         }
     };
 
-    VertexArrayFacade.prototype._subCommit = function(buffer, offsetInVertices, lengthInVertices) {
+    function subCommit(vertexArrayFacade, buffer, offsetInVertices, lengthInVertices) {
         if (buffer.needsCommit && (buffer.vertexSizeInBytes > 0)) {
             var byteOffset = buffer.vertexSizeInBytes * offsetInVertices;
             var byteLength = buffer.vertexSizeInBytes * lengthInVertices;
@@ -514,7 +514,7 @@ define([
             // PERFORMANCE_IDEA: Does creating the typed view add too much GC overhead?
             buffer.vertexBuffer.copyFromArrayView(new Uint8Array(buffer.arrayBuffer, byteOffset, byteLength), byteOffset);
         }
-    };
+    }
 
     /**
      * DOC_TBA
@@ -528,8 +528,8 @@ define([
         }
     };
 
-    VertexArrayFacade.prototype._destroyVA = function() {
-        var vaByPurpose = this.vaByPurpose;
+    function destroyVA(vertexArrayFacade) {
+        var vaByPurpose = vertexArrayFacade.vaByPurpose;
         if (typeof vaByPurpose === 'undefined') {
             return;
         }
@@ -544,8 +544,8 @@ define([
             }
         }
 
-        this.vaByPurpose = undefined;
-    };
+        vertexArrayFacade.vaByPurpose = undefined;
+    }
 
     /**
      * DOC_TBA
@@ -566,7 +566,7 @@ define([
             buffer.vertexBuffer = buffer.vertexBuffer && buffer.vertexBuffer.destroy();
         }
 
-        this._destroyVA();
+        destroyVA(this);
 
         return destroyObject(this);
     };

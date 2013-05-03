@@ -64,7 +64,7 @@ define([
         var sampleStop;
         var showProperty = dynamicPath.show;
         var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
-        var show = (typeof showProperty === 'undefined' || showProperty.getValue(time));
+        var show = typeof showProperty === 'undefined' || showProperty.getValue(time);
 
         //While we want to show the path, there may not actually be anything to show
         //depending on lead/trail settings.  Compute the interval of the path to
@@ -234,10 +234,7 @@ define([
             throw new DeveloperError('scene is required.');
         }
         this._scene = scene;
-        this._updaters = {
-            FIXED : new PolylineUpdater(scene, ReferenceFrame.FIXED),
-            INERTIAL : new PolylineUpdater(scene, ReferenceFrame.INERTIAL)
-        };
+        this._updaters = {};
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
