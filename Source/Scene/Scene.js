@@ -437,12 +437,12 @@ define([
             skyBoxCommand.execute(context, passState);
         }
 
-        if (typeof sunCommand !== 'undefined' && scene._renderSun) {
-            sunCommand.execute(context, passState);
-        }
-
         if (typeof skyAtmosphereCommand !== 'undefined') {
             skyAtmosphereCommand.execute(context, passState);
+        }
+
+        if (typeof sunCommand !== 'undefined' && scene._renderSun) {
+            sunCommand.execute(context, passState);
         }
 
         var clearDepthStencil = scene._clearDepthStencilCommand;
