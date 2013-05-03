@@ -339,6 +339,23 @@ defineSuite([
         expect(sampler.maximumAnisotropy).toEqual(1.0);
     });
 
+    it('is created with a default valid sampler when data type is FLOAT ', function() {
+        if (context.getFloatingPointTexture()) {
+            texture = context.createTexture2D({
+                source : blueImage,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.FLOAT
+            });
+
+            var sampler = texture.getSampler();
+            expect(sampler.wrapS).toEqual(TextureWrap.CLAMP);
+            expect(sampler.wrapT).toEqual(TextureWrap.CLAMP);
+            expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+            expect(sampler.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
+            expect(sampler.maximumAnisotropy).toEqual(1.0);
+        }
+    });
+
     it('can set a sampler', function() {
         texture = context.createTexture2D({
             source : blueImage,
@@ -526,6 +543,19 @@ defineSuite([
         }
     });
 
+    it('throws when creating if pixelDatatype is FLOAT, and OES_texture_float is not supported', function() {
+        if (!context.getFloatingPointTexture()) {
+            expect(function() {
+                texture = context.createTexture2D({
+                    width : 1,
+                    height : 1,
+                    pixelFormat : PixelFormat.RGBA,
+                    pixelDatatype : PixelDatatype.FLOAT
+                });
+            }).toThrow();
+        }
+    });
+
     it('throws when creating from the framebuffer with an invalid pixel format', function() {
         expect(function() {
             texture = context.createTexture2DFromFramebuffer('invalid PixelFormat');
@@ -569,6 +599,21 @@ defineSuite([
                 height : 1,
                 pixelFormat : PixelFormat.DEPTH_COMPONENT,
                 pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+            });
+
+            expect(function() {
+                texture.copyFromFramebuffer();
+            }).toThrow();
+        }
+    });
+
+    it('throws when copying to a texture from the framebuffer with a FLOAT pixel data type', function() {
+        if (context.getFloatingPointTexture()) {
+            texture = context.createTexture2D({
+                width : 1,
+                height : 1,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.FLOAT
             });
 
             expect(function() {
@@ -755,6 +800,36 @@ defineSuite([
         expect(function() {
             texture.generateMipmap('invalid hint');
         }).toThrow();
+    });
+
+    it('throws when data type is FLOAT and minification filter is not NEAREST or NEAREST_MIPMAP_NEAREST', function() {
+        if (context.getFloatingPointTexture()) {
+            texture = context.createTexture2D({
+                source : blueImage,
+                pixelDatatype : PixelDatatype.FLOAT
+            });
+
+            expect(function() {
+                texture.setSampler(context.createSample({
+                    minificationFilter : TextureMinificationFilter.LINEAR
+                }));
+            }).toThrow();
+        }
+    });
+
+    it('throws when data type is FLOAT and magnification filter is not NEAREST', function() {
+        if (context.getFloatingPointTexture()) {
+            texture = context.createTexture2D({
+                source : blueImage,
+                pixelDatatype : PixelDatatype.FLOAT
+            });
+
+            expect(function() {
+                texture.setSampler(context.createSample({
+                    magnificationFilter : TextureMagnificationFilter.LINEAR
+                }));
+            }).toThrow();
+        }
     });
 
     it('throws when destroy is called after destroying', function() {

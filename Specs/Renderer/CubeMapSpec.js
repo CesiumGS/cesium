@@ -92,6 +92,12 @@ defineSuite([
         });
 
         expect(cubeMap.getPixelDatatype()).toEqual(PixelDatatype.UNSIGNED_BYTE);
+        expect(cubeMap.getPositiveX().getPixelDatatype()).toEqual(PixelDatatype.UNSIGNED_BYTE);
+        expect(cubeMap.getNegativeX().getPixelDatatype()).toEqual(PixelDatatype.UNSIGNED_BYTE);
+        expect(cubeMap.getPositiveY().getPixelDatatype()).toEqual(PixelDatatype.UNSIGNED_BYTE);
+        expect(cubeMap.getNegativeY().getPixelDatatype()).toEqual(PixelDatatype.UNSIGNED_BYTE);
+        expect(cubeMap.getPositiveZ().getPixelDatatype()).toEqual(PixelDatatype.UNSIGNED_BYTE);
+        expect(cubeMap.getNegativeZ().getPixelDatatype()).toEqual(PixelDatatype.UNSIGNED_BYTE);
     });
 
     it('gets the default sampler', function() {
@@ -105,6 +111,24 @@ defineSuite([
         expect(sampler.wrapT).toEqual(TextureWrap.CLAMP);
         expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.LINEAR);
         expect(sampler.magnificationFilter).toEqual(TextureMagnificationFilter.LINEAR);
+        expect(sampler.maximumAnisotropy).toEqual(1.0);
+    });
+
+    it('gets the default valid sampler when data type is FLOAT ', function() {
+        if (context.getFloatingPointTexture()) {
+            cubeMap = context.createCubeMap({
+                width : 16,
+                height : 16,
+                pixelDatatype : PixelDatatype.FLOAT
+            });
+
+            var sampler = cubeMap.getSampler();
+            expect(sampler.wrapS).toEqual(TextureWrap.CLAMP);
+            expect(sampler.wrapT).toEqual(TextureWrap.CLAMP);
+            expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+            expect(sampler.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
+            expect(sampler.maximumAnisotropy).toEqual(1.0);
+        }
     });
 
     it('sets a sampler', function() {
@@ -843,6 +867,18 @@ defineSuite([
         }).toThrow();
     });
 
+    it('throws during creation if pixelDatatype is FLOAT, and OES_texture_float is not supported', function() {
+        if (!context.getFloatingPointTexture()) {
+            expect(function() {
+                cubeMap = context.createCubeMap({
+                    width : 16,
+                    height : 16,
+                    pixelDatatype : PixelDatatype.FLOAT
+                });
+            }).toThrow();
+        }
+    });
+
     it('fails to create (pixelDatatype)', function() {
         expect(function() {
             cubeMap = context.createCubeMap({
@@ -938,6 +974,20 @@ defineSuite([
         }).toThrow();
     });
 
+    it('fails to copy from the frame buffer (invalid data type)', function() {
+        if (context.getFloatingPointTexture()) {
+            cubeMap = context.createCubeMap({
+                width : 1,
+                height : 1,
+                pixelDatatype : PixelDatatype.FLOAT
+            });
+
+            expect(function() {
+                cubeMap.getPositiveX().copyFromFramebuffer();
+            }).toThrow();
+        }
+    });
+
     it('fails to copy from the frame buffer (xOffset)', function() {
         cubeMap = context.createCubeMap({
             width : 1,
@@ -1024,6 +1074,38 @@ defineSuite([
         expect(function() {
             cubeMap.generateMipmap('invalid hint');
         }).toThrow();
+    });
+
+    it('throws when data type is FLOAT and minification filter is not NEAREST or NEAREST_MIPMAP_NEAREST', function() {
+        if (context.getFloatingPointTexture()) {
+            cubeMap = context.createCubeMap({
+                width : 16,
+                height : 16,
+                pixelDatatype : PixelDatatype.FLOAT
+            });
+
+            expect(function() {
+                cubeMap.setSampler(context.createSample({
+                    minificationFilter : TextureMinificationFilter.LINEAR
+                }));
+            }).toThrow();
+        }
+    });
+
+    it('throws when data type is FLOAT and magnification filter is not NEAREST', function() {
+        if (context.getFloatingPointTexture()) {
+            cubeMap = context.createCubeMap({
+                width : 16,
+                height : 16,
+                pixelDatatype : PixelDatatype.FLOAT
+            });
+
+            expect(function() {
+                cubeMap.setSampler(context.createSample({
+                    magnificationFilter : TextureMagnificationFilter.LINEAR
+                }));
+            }).toThrow();
+        }
     });
 
     it('fails to destroy', function() {
