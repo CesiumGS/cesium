@@ -355,7 +355,7 @@ define([
 
             var directions = this._directions;
             if (directions && (directions.length >= 3)) {
-                this._colorCommand.vertexArray = this._pickCommand.vertexArray = this._createVertexArray(context);
+                this._colorCommand.vertexArray = this._pickCommand.vertexArray = createVertexArray(this, context);
             }
         }
 
