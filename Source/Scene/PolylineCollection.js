@@ -446,6 +446,10 @@ define([
             boundingVolume = BoundingSphere.union(this._boundingVolume, this._boundingVolume2D, scracthBoundingSphere);
         }
 
+        if (typeof boundingVolume === 'undefined') {
+            return;
+        }
+
         var pass = frameState.passes;
         var useDepthTest = (frameState.morphTime !== 0.0);
         var commandLists = this._commandLists;
