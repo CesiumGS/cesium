@@ -7,13 +7,7 @@
 		</glslToJavascript>
 
 		<createCesiumJs output="${sourceDirectory}/Cesium.js">
-			<sourcefiles dir="${sourceDirectory}">
-				<include name="**/*.js" />
-				<exclude name="*.js" />
-				<exclude name="Widgets/Dojo/**" />
-				<exclude name="Workers/**" />
-				<exclude name="**/*.profile.js" />
-			</sourcefiles>
+			<sourcefiles refid="cesiumJsFileSet" /> 
 		</createCesiumJs>
 
 		<createSpecList output="${specsDirectory}/SpecList.js">
@@ -147,6 +141,14 @@
 		<pathelement path="${toolsDirectory}/commons-logging-1.1.1/commons-logging-1.1.1.jar" />
 	</path>
 
+	<fileset dir="${sourceDirectory}" id="cesiumJsFileSet">
+		<include name="**/*.js" />
+		<exclude name="*.js" />
+		<exclude name="Widgets/Dojo/**" />
+		<exclude name="Workers/**" />
+		<exclude name="**/*.profile.js" />
+	</fileset>
+
 	<scriptdef name="glslToJavascript" language="javascript" src="${tasksDirectory}/glslToJavaScript.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<attribute name="minify" />
 		<attribute name="minifystatefile" />
@@ -244,10 +246,8 @@
 		<mkdir dir="${combineOutputDirectory}" />
 		<property name="relativeCombineOutputDirectory" location="${combineOutputDirectory}" relative="true" basedir="${sourceDirectory}" />
 
-		<!-- create combined Cesium.js  -->
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} wrap=true baseUrl=. name=${relativeAlmondPath} include=main out=${relativeCombineOutputDirectory}/Cesium.js" />
-		</exec>
+		<!-- create combined Cesium.js	-->
+		<antcall target="combineJavaScript.combineCesium" />
 
 		<!-- create cesiumWorkerBootstrapper -->
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
@@ -279,6 +279,18 @@
 				<exclude name="Widgets/Dojo/**" />
 			</fileset>
 		</copy>
+	</target>
+
+	<target name="combineJavaScript.combineCesium" depends="combineJavaScript.combineCesium.check" unless="no.combineCesium.create">
+		<exec executable="${nodePath}" dir="${sourceDirectory}">
+			<arg line="${rjsPath} -o optimize=${optimize} wrap=true baseUrl=. name=${relativeAlmondPath} include=main out=${relativeCombineOutputDirectory}/Cesium.js" />
+		</exec>
+	</target>
+
+	<target name="combineJavaScript.combineCesium.check">
+		<uptodate property="no.combineCesium.create" targetfile="${unminifiedOutputDirectory}/Cesium.js">
+			<srcfiles refid="cesiumJsFileSet" />  
+		</uptodate>
 	</target>
 
 	<target name="combineJavaScript.combineWorker">

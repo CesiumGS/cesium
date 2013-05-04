@@ -96,27 +96,27 @@ define([
     };
 
     // Builds a larger texture and copies the old texture into the new one.
-    TextureAtlas.prototype._resizeAtlas = function(image) {
-        var numImages = this.getNumberOfImages();
+    function resizeAtlas(textureAtlas, image) {
+        var numImages = textureAtlas.getNumberOfImages();
         var scalingFactor = 2.0;
         if (numImages > 0) {
-            var oldAtlasWidth = this._texture.getWidth();
-            var oldAtlasHeight = this._texture.getHeight();
-            var atlasWidth = scalingFactor * (oldAtlasWidth + image.width + this._borderWidthInPixels);
-            var atlasHeight = scalingFactor * (oldAtlasHeight + image.height + this._borderWidthInPixels);
+            var oldAtlasWidth = textureAtlas._texture.getWidth();
+            var oldAtlasHeight = textureAtlas._texture.getHeight();
+            var atlasWidth = scalingFactor * (oldAtlasWidth + image.width + textureAtlas._borderWidthInPixels);
+            var atlasHeight = scalingFactor * (oldAtlasHeight + image.height + textureAtlas._borderWidthInPixels);
             var widthRatio = oldAtlasWidth / atlasWidth;
             var heightRatio = oldAtlasHeight / atlasHeight;
 
             // Create new node structure, putting the old root node in the bottom left.
-            var nodeBottomRight = new TextureAtlasNode(new Cartesian2(oldAtlasWidth + this._borderWidthInPixels, 0.0), new Cartesian2(atlasWidth, oldAtlasHeight));
-            var nodeBottomHalf = new TextureAtlasNode(new Cartesian2(), new Cartesian2(atlasWidth, oldAtlasHeight), this._root, nodeBottomRight);
-            var nodeTopHalf = new TextureAtlasNode(new Cartesian2(0.0, oldAtlasHeight + this._borderWidthInPixels), new Cartesian2(atlasWidth, atlasHeight));
+            var nodeBottomRight = new TextureAtlasNode(new Cartesian2(oldAtlasWidth + textureAtlas._borderWidthInPixels, 0.0), new Cartesian2(atlasWidth, oldAtlasHeight));
+            var nodeBottomHalf = new TextureAtlasNode(new Cartesian2(), new Cartesian2(atlasWidth, oldAtlasHeight), textureAtlas._root, nodeBottomRight);
+            var nodeTopHalf = new TextureAtlasNode(new Cartesian2(0.0, oldAtlasHeight + textureAtlas._borderWidthInPixels), new Cartesian2(atlasWidth, atlasHeight));
             var nodeMain = new TextureAtlasNode(new Cartesian2(), new Cartesian2(atlasWidth, atlasHeight), nodeBottomHalf, nodeTopHalf);
-            this._root = nodeMain;
+            textureAtlas._root = nodeMain;
 
             // Resize texture coordinates.
-            for ( var i = 0; i < this._textureCoordinates.length; i++) {
-                var texCoord = this._textureCoordinates[i];
+            for ( var i = 0; i < textureAtlas._textureCoordinates.length; i++) {
+                var texCoord = textureAtlas._textureCoordinates[i];
                 if (typeof texCoord !== 'undefined') {
                     texCoord.x *= widthRatio;
                     texCoord.y *= heightRatio;
@@ -126,40 +126,40 @@ define([
             }
 
             // Copy larger texture.
-            var newTexture = this._context.createTexture2D({
+            var newTexture = textureAtlas._context.createTexture2D({
                 width : atlasWidth,
                 height : atlasHeight,
-                pixelFormat : this._pixelFormat
+                pixelFormat : textureAtlas._pixelFormat
             });
 
             // Copy old texture into new using an fbo.
-            var framebuffer = this._context.createFramebuffer({
-                colorTexture : this._texture
+            var framebuffer = textureAtlas._context.createFramebuffer({
+                colorTexture : textureAtlas._texture
             });
             framebuffer._bind();
             newTexture.copyFromFramebuffer(0, 0, 0, 0, oldAtlasWidth, oldAtlasHeight);
             framebuffer._unBind();
             framebuffer.destroy();
-            this._texture = newTexture;
+            textureAtlas._texture = newTexture;
         }
         // First image exceeds initialSize
         else {
-            var initialWidth = scalingFactor * (image.width + this._borderWidthInPixels);
-            var initialHeight = scalingFactor * (image.height + this._borderWidthInPixels);
-            this._texture = this._texture && this._texture.destroy();
-            this._texture = this._context.createTexture2D({
+            var initialWidth = scalingFactor * (image.width + textureAtlas._borderWidthInPixels);
+            var initialHeight = scalingFactor * (image.height + textureAtlas._borderWidthInPixels);
+            textureAtlas._texture = textureAtlas._texture && textureAtlas._texture.destroy();
+            textureAtlas._texture = textureAtlas._context.createTexture2D({
                 width : initialWidth,
                 height : initialHeight,
-                pixelFormat : this._pixelFormat
+                pixelFormat : textureAtlas._pixelFormat
             });
-            this._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialWidth, initialHeight));
+            textureAtlas._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialWidth, initialHeight));
         }
-    };
+    }
 
     // A recursive function that finds the best place to insert
     // a new image based on existing image 'nodes'.
     // Inspired by: http://blackpawn.com/texts/lightmaps/default.html
-    TextureAtlas.prototype._findNode = function (node, image) {
+    function findNode(textureAtlas, node, image) {
         if (typeof node === 'undefined') {
             return undefined;
         }
@@ -192,7 +192,7 @@ define([
             if (widthDifference > heightDifference) {
                 node.childNode1 = new TextureAtlasNode(new Cartesian2(node.bottomLeft.x, node.bottomLeft.y), new Cartesian2(node.bottomLeft.x + image.width, node.topRight.y));
                 // Only make a second child if the border gives enough space.
-                var childNode2BottomLeftX = node.bottomLeft.x + image.width + this._borderWidthInPixels;
+                var childNode2BottomLeftX = node.bottomLeft.x + image.width + textureAtlas._borderWidthInPixels;
                 if (childNode2BottomLeftX < node.topRight.x) {
                     node.childNode2 = new TextureAtlasNode(new Cartesian2(childNode2BottomLeftX, node.bottomLeft.y), new Cartesian2(node.topRight.x, node.topRight.y));
                 }
@@ -201,48 +201,48 @@ define([
             else {
                 node.childNode1 = new TextureAtlasNode(new Cartesian2(node.bottomLeft.x, node.bottomLeft.y), new Cartesian2(node.topRight.x, node.bottomLeft.y + image.height));
                 // Only make a second child if the border gives enough space.
-                var childNode2BottomLeftY = node.bottomLeft.y + image.height + this._borderWidthInPixels;
+                var childNode2BottomLeftY = node.bottomLeft.y + image.height + textureAtlas._borderWidthInPixels;
                 if (childNode2BottomLeftY < node.topRight.y) {
                     node.childNode2 = new TextureAtlasNode(new Cartesian2(node.bottomLeft.x, childNode2BottomLeftY), new Cartesian2(node.topRight.x, node.topRight.y));
                 }
             }
-            return this._findNode(node.childNode1, image);
+            return findNode(textureAtlas, node.childNode1, image);
         }
 
         // If not a leaf node
-        return this._findNode(node.childNode1, image) ||
-               this._findNode(node.childNode2, image);
-    };
+        return findNode(textureAtlas, node.childNode1, image) ||
+            findNode(textureAtlas, node.childNode2, image);
+    }
 
     // Adds image of given index to the texture atlas. Called from addImage and addImages.
-    TextureAtlas.prototype._addImage = function(image, index) {
+    function addImage(textureAtlas, image, index) {
         if (typeof image === 'undefined') {
             throw new DeveloperError('image is required.');
         }
 
-        var node = this._findNode(this._root, image);
+        var node = findNode(textureAtlas, textureAtlas._root, image);
 
         // Found a node that can hold the image.
         if (typeof node !== 'undefined') {
             node.imageIndex = index;
 
             // Add texture coordinate and write to texture
-            var atlasWidth = this._texture.getWidth();
-            var atlasHeight = this._texture.getHeight();
+            var atlasWidth = textureAtlas._texture.getWidth();
+            var atlasHeight = textureAtlas._texture.getHeight();
             var nodeWidth = node.topRight.x - node.bottomLeft.x;
             var nodeHeight = node.topRight.y - node.bottomLeft.y;
-            this._textureCoordinates[index] = new BoundingRectangle(
+            textureAtlas._textureCoordinates[index] = new BoundingRectangle(
                 node.bottomLeft.x / atlasWidth, node.bottomLeft.y / atlasHeight,
                 nodeWidth / atlasWidth, nodeHeight / atlasHeight
             );
-            this._texture.copyFrom(image, node.bottomLeft.x, node.bottomLeft.y);
+            textureAtlas._texture.copyFrom(image, node.bottomLeft.x, node.bottomLeft.y);
         }
         // No node found, must resize the texture atlas.
         else {
-            this._resizeAtlas(image);
-            this._addImage(image, index);
+            resizeAtlas(textureAtlas, image);
+            addImage(textureAtlas, image, index);
         }
-    };
+    }
 
     /**
      * Adds an image to the texture atlas.
@@ -263,7 +263,7 @@ define([
      */
     TextureAtlas.prototype.addImage = function(image) {
         var index = this.getNumberOfImages();
-        this._addImage(image, index);
+        addImage(this, image, index);
 
         this._guid = createGuid();
 
@@ -314,7 +314,7 @@ define([
         // Add images to the texture atlas.
         for (i = 0; i < numberOfImages; ++i) {
             var annotatedImage = annotatedImages[i];
-            this._addImage(annotatedImage.image, annotatedImage.index);
+            addImage(this, annotatedImage.image, annotatedImage.index);
         }
 
         this._guid = createGuid();

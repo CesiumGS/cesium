@@ -126,38 +126,38 @@ define([
         return this._to;
     };
 
-    CatmullRomSpline.prototype._findIndex = function(time) {
+    function findIndex(catmullRomSpline, time) {
         // Take advantage of temporal coherence by checking current, next and previous intervals
         // for containment of time.
-        var i = defaultValue(this._lastTimeIndex, 0);
-        if (time >= this._points[i].time) {
-            if (i + 1 < this._points.length && time < this._points[i + 1].time) {
+        var i = defaultValue(catmullRomSpline._lastTimeIndex, 0);
+        if (time >= catmullRomSpline._points[i].time) {
+            if (i + 1 < catmullRomSpline._points.length && time < catmullRomSpline._points[i + 1].time) {
                 return i;
-            } else if (i + 2 < this._points.length && time < this._points[i + 2].time) {
-                this._lastTimeIndex = i + 1;
-                return this._lastTimeIndex;
+            } else if (i + 2 < catmullRomSpline._points.length && time < catmullRomSpline._points[i + 2].time) {
+                catmullRomSpline._lastTimeIndex = i + 1;
+                return catmullRomSpline._lastTimeIndex;
             }
-        } else if (i - 1 >= 0 && time >= this._points[i - 1].time) {
-            this._lastTimeIndex = i - 1;
-            return this._lastTimeIndex;
+        } else if (i - 1 >= 0 && time >= catmullRomSpline._points[i - 1].time) {
+            catmullRomSpline._lastTimeIndex = i - 1;
+            return catmullRomSpline._lastTimeIndex;
         }
 
         // The above failed so do a linear search. For the use cases so far, the
         // length of the list is less than 10. In the future, if there is a bottle neck,
         // it might be here.
-        for (i = 0; i < this._points.length - 1; ++i) {
-            if (time >= this._points[i].time && time < this._points[i + 1].time) {
+        for (i = 0; i < catmullRomSpline._points.length - 1; ++i) {
+            if (time >= catmullRomSpline._points[i].time && time < catmullRomSpline._points[i + 1].time) {
                 break;
             }
         }
 
-        if (i === this._points.length - 1) {
-            i = this._points.length - 2;
+        if (i === catmullRomSpline._points.length - 1) {
+            i = catmullRomSpline._points.length - 2;
         }
 
-        this._lastTimeIndex = i;
-        return this._lastTimeIndex;
-    };
+        catmullRomSpline._lastTimeIndex = i;
+        return catmullRomSpline._lastTimeIndex;
+    }
 
     /**
      * Evaluates the curve at a given time.
@@ -196,7 +196,7 @@ define([
             throw new DeveloperError('time is out of range.');
         }
 
-        var i = this._findIndex(time);
+        var i = findIndex(this, time);
         var u = (time - this._points[i].time) / (this._points[i + 1].time - this._points[i].time);
 
         var timeVec = new Cartesian3(0.0, u * u, u);
