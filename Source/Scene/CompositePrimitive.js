@@ -222,13 +222,13 @@ define([
                   primitive._external._composites[this._guid]);
     };
 
-    CompositePrimitive.prototype._getPrimitiveIndex = function(primitive) {
-        if (!this.contains(primitive)) {
+    function getPrimitiveIndex(compositePrimitive, primitive) {
+        if (!compositePrimitive.contains(primitive)) {
             throw new DeveloperError('primitive is not in this composite.');
         }
 
-        return this._primitives.indexOf(primitive);
-    };
+        return compositePrimitive._primitives.indexOf(primitive);
+    }
 
     /**
      * DOC_TBA
@@ -245,7 +245,7 @@ define([
      */
     CompositePrimitive.prototype.raise = function(primitive) {
         if (typeof primitive !== 'undefined') {
-            var index = this._getPrimitiveIndex(primitive);
+            var index = getPrimitiveIndex(this, primitive);
             var primitives = this._primitives;
 
             if (index !== primitives.length - 1) {
@@ -271,7 +271,7 @@ define([
      */
     CompositePrimitive.prototype.raiseToTop = function(primitive) {
         if (typeof primitive !== 'undefined') {
-            var index = this._getPrimitiveIndex(primitive);
+            var index = getPrimitiveIndex(this, primitive);
             var primitives = this._primitives;
 
             if (index !== primitives.length - 1) {
@@ -297,7 +297,7 @@ define([
      */
     CompositePrimitive.prototype.lower = function(primitive) {
         if (typeof primitive !== 'undefined') {
-            var index = this._getPrimitiveIndex(primitive);
+            var index = getPrimitiveIndex(this, primitive);
             var primitives = this._primitives;
 
             if (index !== 0) {
@@ -323,7 +323,7 @@ define([
      */
     CompositePrimitive.prototype.lowerToBottom = function(primitive) {
         if (typeof primitive !== 'undefined') {
-            var index = this._getPrimitiveIndex(primitive);
+            var index = getPrimitiveIndex(this, primitive);
             var primitives = this._primitives;
 
             if (index !== 0) {
