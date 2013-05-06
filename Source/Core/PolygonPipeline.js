@@ -724,7 +724,7 @@ define([
                 if ((p0.x < 0.0) && (p1.x < 0.0) && (p2.x < 0.0)) {
                     // Then it needs to intersect the plane y = 0.
                     var triangles = splitTriangleAtInternationalDateLine(p0, p1, p2);
-                    if (triangles) {
+                    if (typeof triangles !== undefined) {
 
                         var positionsLen = positions.length;
                         // Append two new points, the intersection points of the

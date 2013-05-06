@@ -427,7 +427,7 @@ define([
      * @param {Cartesian3} p2 Third point of the triangle
      * @param {Plane} plane Intersection plane
      *
-     * @returns Three triangles that do not cross the plane. (Undefined if no intersection exists)
+     * @returns {Object} An object with properties <code>positions</code> and <code>indices</code>, which are arrays that represent three triangles that do not cross the plane. (Undefined if no intersection exists)
      *
      * @exception {DeveloperError} p0, p1, p2, and plane are required.
      *
