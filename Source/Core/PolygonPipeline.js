@@ -374,121 +374,6 @@ define([
         return newPolygonVertices;
     }
 
-    /**
-     * Computes the intersection of a triangle and the international date line.  Offsets points from the international date line.
-     *
-     * @param {Cartesian3} p0 First point of triangle
-     * @param {Cartesian3} p1 Second point of triange
-     * @param {Cartesian3} p2 Third point of triange
-     *
-     * @return Three triangles that are offset from intersecting with the plane. (Undefined if no intersection found)
-     *
-     * @private
-     */
-    function splitTriangleAtInternationalDateLine(p0, p1, p2) {
-        if ((typeof p0 === 'undefined') ||
-            (typeof p1 === 'undefined') ||
-            (typeof p2 === 'undefined')) {
-            throw new DeveloperError('p0, p1 and p2 are required.');
-        }
-
-        var p0Behind = p0.y < 0.0;
-        var p1Behind = p1.y < 0.0;
-        var p2Behind = p2.y < 0.0;
-
-        offsetPointFromXZPlane(p0, p0Behind);
-        offsetPointFromXZPlane(p1, p1Behind);
-        offsetPointFromXZPlane(p2, p2Behind);
-
-        var numBehind = 0;
-        numBehind += p0Behind ? 1 : 0;
-        numBehind += p1Behind ? 1 : 0;
-        numBehind += p2Behind ? 1 : 0;
-
-        var u1, u2, v1, v2, result;
-
-        if (numBehind === 1 || numBehind === 2) {
-            u1 = new Cartesian3();
-            u2 = new Cartesian3();
-            v1 = new Cartesian3();
-            v2 = new Cartesian3();
-            result = { positions : [p0, p1, p2, u1, u2, v1, v2 ] };
-        }
-
-        if (numBehind === 1) {
-            if (p0Behind) {
-                getXZIntersectionOffsetPoints(p0, p1, u1, v1);
-                getXZIntersectionOffsetPoints(p0, p2, u2, v2);
-                result.indices = [
-                        // Behind
-                        0, 3, 4,
-
-                        // In front
-                        1, 2, 6,
-                        1, 6, 5
-                    ];
-            } else if (p1Behind) {
-                getXZIntersectionOffsetPoints(p1, p0, u1, v1);
-                getXZIntersectionOffsetPoints(p1, p2, u2, v2);
-                result.indices = [
-                        // Behind
-                        1, 3, 4,
-
-                        // In front
-                        2, 0, 6,
-                        2, 6, 5
-                    ];
-            } else if (p2Behind) {
-                getXZIntersectionOffsetPoints(p2, p0, u1, v1);
-                getXZIntersectionOffsetPoints(p2, p1, u2, v2);
-                result.indices = [
-                        // Behind
-                        2, 3, 4,
-
-                        // In front
-                        0, 1, 6,
-                        0, 6, 5
-                    ];
-            }
-        } else if (numBehind === 2) {
-            if (!p0Behind) {
-                getXZIntersectionOffsetPoints(p0, p1, u1, v1);
-                getXZIntersectionOffsetPoints(p0, p2, u2, v2);
-                result.indices = [
-                        // Behind
-                        1, 2, 4,
-                        1, 4, 3,
-
-                        // In front
-                        0, 5, 6
-                    ];
-            } else if (!p1Behind) {
-                getXZIntersectionOffsetPoints(p1, p2, u1, v1);
-                getXZIntersectionOffsetPoints(p1, p0, u2, v2);
-                result.indices = [
-                        // Behind
-                        2, 0, 4,
-                        2, 4, 3,
-
-                        // In front
-                        1, 5, 6
-                    ];
-            } else if (!p2Behind) {
-                getXZIntersectionOffsetPoints(p2, p0, u1, v1);
-                getXZIntersectionOffsetPoints(p2, p1, u2, v2);
-                result.indices = [
-                        // Behind
-                        0, 1, 4,
-                        0, 4, 3,
-
-                        // In front
-                        2, 5, 6
-                    ];
-            }
-        }
-        return result;
-    }
-
     var c3 = new Cartesian3();
     function getXZIntersectionOffsetPoints(p, p1, u1, v1) {
         p.add(p1.subtract(p, c3).multiplyByScalar(p.y/(p.y-p1.y), c3), u1);
@@ -714,56 +599,80 @@ define([
 
             var len = indices.length;
             for (var i = 0; i < len; i += 3) {
-                var p0 = positions[indices[i]];
-                var p1 = positions[indices[i + 1]];
-                var p2 = positions[indices[i + 2]];
+                var i0 = indices[i];
+                var i1 = indices[i + 1];
+                var i2 = indices[i + 2];
+                var p0 = positions[i0];
+                var p1 = positions[i1];
+                var p2 = positions[i2];
 
                 // In WGS84 coordinates, for a triangle approximately on the
                 // ellipsoid to cross the IDL, first it needs to be on the
                 // negative side of the plane x = 0.
                 if ((p0.x < 0.0) && (p1.x < 0.0) && (p2.x < 0.0)) {
-                    // Then it needs to intersect the plane y = 0.
-                    var triangles = splitTriangleAtInternationalDateLine(p0, p1, p2);
-                    if (typeof triangles !== undefined) {
+                    var p0Behind = p0.y < 0.0;
+                    var p1Behind = p1.y < 0.0;
+                    var p2Behind = p2.y < 0.0;
 
-                        var positionsLen = positions.length;
-                        // Append two new points, the intersection points of the
-                        // triangle edges and the plane.
+                    offsetPointFromXZPlane(p0, p0Behind);
+                    offsetPointFromXZPlane(p1, p1Behind);
+                    offsetPointFromXZPlane(p2, p2Behind);
 
-                        positions.push(triangles.positions[3]);
-                        positions.push(triangles.positions[4]);
-                        positions.push(triangles.positions[5]);
-                        positions.push(triangles.positions[6]);
+                    var numBehind = 0;
+                    numBehind += p0Behind ? 1 : 0;
+                    numBehind += p1Behind ? 1 : 0;
+                    numBehind += p2Behind ? 1 : 0;
 
-                        // Replace triangle that crosses the IDL with three
-                        // triangles that do not cross.
-                        var subdividedIndices = triangles.indices;
-                        for (var k = 0; k < subdividedIndices.length; ++k) {
-                            // Convert from indices for the subdivided triangle
-                            // to polygon indices.  Nasty.
-                            var index = subdividedIndices[k];
-                            switch (index) {
-                                case 0:
-                                case 1:
-                                case 2:
-                                    newIndices.push(indices[i + index]);
-                                    break;
-                                case 3:
-                                case 4:
-                                case 5:
-                                case 6:
-                                    newIndices.push(positionsLen + index - 3);
-                                    break;
-                            }
+                    var u1, u2, v1, v2;
+
+                    if (numBehind === 1 || numBehind === 2) {
+                        u1 = new Cartesian3();
+                        u2 = new Cartesian3();
+                        v1 = new Cartesian3();
+                        v2 = new Cartesian3();
+                    }
+                    var iu1 = positions.length;
+                    if (numBehind === 1) {
+                        if (p0Behind) {
+                            getXZIntersectionOffsetPoints(p0, p1, u1, v1);
+                            getXZIntersectionOffsetPoints(p0, p2, u2, v2);
+                            positions.push(u1, u2, v1, v2);
+                            newIndices.push(i0, iu1, iu1+1, i1, i2, iu1+3, i1, iu1+3, iu1+2);
+                        } else if (p1Behind) {
+                            getXZIntersectionOffsetPoints(p1, p0, u1, v1);
+                            getXZIntersectionOffsetPoints(p1, p2, u2, v2);
+                            positions.push(u1, u2, v1, v2);
+                            newIndices.push(i1, iu1, iu1+1, i2, i0, iu1+3, i2, iu1+3, iu1+2);
+                        } else if (p2Behind) {
+                            getXZIntersectionOffsetPoints(p2, p0, u1, v1);
+                            getXZIntersectionOffsetPoints(p2, p1, u2, v2);
+                            positions.push(u1, u2, v1, v2);
+                            newIndices.push(i2, iu1, iu1+1, i0, i1, iu1+3, i0, iu1+3, iu1+2);
+                        }
+                    } else if (numBehind === 2) {
+                        if (!p0Behind) {
+                            getXZIntersectionOffsetPoints(p0, p1, u1, v1);
+                            getXZIntersectionOffsetPoints(p0, p2, u2, v2);
+                            positions.push(u1, u2, v1, v2);
+                            newIndices.push(i1, i2, iu1+1, i1, iu1+1, iu1, i0, iu1+2, iu1+3);
+                        } else if (!p1Behind) {
+                            getXZIntersectionOffsetPoints(p1, p2, u1, v1);
+                            getXZIntersectionOffsetPoints(p1, p0, u2, v2);
+                            positions.push(u1, u2, v1, v2);
+                            newIndices.push(i2, i0, iu1+1, i2, iu1+1, iu1, i1, iu1+2, iu1+3);
+                        } else if (!p2Behind) {
+                            getXZIntersectionOffsetPoints(p2, p0, u1, v1);
+                            getXZIntersectionOffsetPoints(p2, p1, u2, v2);
+                            positions.push(u1, u2, v1, v2);
+                            newIndices.push(i0, i1, iu1+1, i0, iu1+1, iu1, i2, iu1+2, iu1+3);
                         }
                     } else {
-                        newIndices.push(indices[i], indices[i + 1], indices[i + 2]);
+                        newIndices.push(i0, i1, i2);
                     }
                 } else {
-                    newIndices.push(indices[i], indices[i + 1], indices[i + 2]);
+                    newIndices.push(i0, i1, i2);
                 }
             }
-
             return newIndices;
         },
 
