@@ -435,6 +435,99 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 255, 0, 0]);
     });
 
+    it('creates a cube map with floating-point textures', function() {
+        if (context.getFloatingPointTexture()) {
+            var positiveXColor = new Color(0.0, 0.0, 0.0, 1.0);
+            var negativeXColor = new Color(0.0, 0.0, 1.0, 0.0);
+            var positiveYColor = new Color(0.0, 1.0, 0.0, 0.0);
+            var negativeYColor = new Color(1.0, 0.0, 0.0, 0.0);
+            var positiveZColor = new Color(0.0, 0.0, 1.0, 1.0);
+            var negativeZColor = new Color(1.0, 1.0, 0.0, 0.0);
+
+            cubeMap = context.createCubeMap({
+                source : {
+                    positiveX : {
+                        width : 1,
+                        height : 1,
+                        arrayBufferView : new Float32Array([positiveXColor.red, positiveXColor.green, positiveXColor.blue, positiveXColor.alpha])
+                    },
+                    negativeX : {
+                        width : 1,
+                        height : 1,
+                        arrayBufferView : new Float32Array([negativeXColor.red, negativeXColor.green, negativeXColor.blue, negativeXColor.alpha])
+                    },
+                    positiveY : {
+                        width : 1,
+                        height : 1,
+                        arrayBufferView : new Float32Array([positiveYColor.red, positiveYColor.green, positiveYColor.blue, positiveYColor.alpha])
+                    },
+                    negativeY : {
+                        width : 1,
+                        height : 1,
+                        arrayBufferView : new Float32Array([negativeYColor.red, negativeYColor.green, negativeYColor.blue, negativeYColor.alpha])
+                    },
+                    positiveZ : {
+                        width : 1,
+                        height : 1,
+                        arrayBufferView : new Float32Array([positiveZColor.red, positiveZColor.green, positiveZColor.blue, positiveZColor.alpha])
+                    },
+                    negativeZ : {
+                        width : 1,
+                        height : 1,
+                        arrayBufferView : new Float32Array([negativeZColor.red, negativeZColor.green, negativeZColor.blue, negativeZColor.alpha])
+                    }
+                },
+                pixelDatatype : PixelDatatype.FLOAT
+            });
+
+            var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+            var fs =
+                'uniform samplerCube u_texture;' +
+                'uniform mediump vec3 u_direction;' +
+                'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+            sp = context.createShaderProgram(vs, fs, {
+                position : 0
+            });
+            sp.getAllUniforms().u_texture.value = cubeMap;
+
+            va = context.createVertexArray();
+            va.addAttribute({
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            });
+
+            var da = {
+                primitiveType : PrimitiveType.POINTS,
+                shaderProgram : sp,
+                vertexArray : va
+            };
+
+            sp.getAllUniforms().u_direction.value = new Cartesian3(1, 0, 0);
+            context.draw(da);
+            expect(context.readPixels()).toEqual(positiveXColor.toBytes());
+
+            sp.getAllUniforms().u_direction.value = new Cartesian3(-1, 0, 0);
+            context.draw(da);
+            expect(context.readPixels()).toEqual(negativeXColor.toBytes());
+
+            sp.getAllUniforms().u_direction.value = new Cartesian3(0, 1, 0);
+            context.draw(da);
+            expect(context.readPixels()).toEqual(positiveYColor.toBytes());
+
+            sp.getAllUniforms().u_direction.value = new Cartesian3(0, -1, 0);
+            context.draw(da);
+            expect(context.readPixels()).toEqual(negativeYColor.toBytes());
+
+            sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, 1);
+            context.draw(da);
+            expect(context.readPixels()).toEqual(positiveZColor.toBytes());
+
+            sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, -1);
+            context.draw(da);
+            expect(context.readPixels()).toEqual(negativeZColor.toBytes());
+        }
+    });
+
     it('creates a cube map with typed arrays and images', function() {
         cubeMap = context.createCubeMap({
             source : {

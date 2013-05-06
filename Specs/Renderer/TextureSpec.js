@@ -167,6 +167,26 @@ defineSuite([
         expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
     });
 
+    it('draws the expected floating-point texture color', function() {
+        if (context.getFloatingPointTexture()) {
+            var color = new Color(0.2, 0.4, 0.6, 0.8);
+            var floats = new Float32Array([color.red, color.green, color.blue, color.alpha]);
+
+            texture = context.createTexture2D({
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.FLOAT,
+                source : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : floats
+                }
+            });
+
+            var pixels = renderFragment(context);
+            expect(pixels).toEqual(color.toBytes());
+        }
+    });
+
     it('renders with premultiplied alpha', function() {
         texture = context.createTexture2D({
             source : blueAlphaImage,
