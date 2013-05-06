@@ -143,11 +143,11 @@ define([
         };
     };
 
-    CentralBodySurface.prototype.update = function(context, frameState, colorCommandList, centralBodyUniformMap, shaderSet, renderState, mode, projection) {
+    CentralBodySurface.prototype.update = function(context, frameState, colorCommandList, centralBodyUniformMap, shaderSet, renderState, projection) {
         updateLayers(this);
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
-        createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState);
+        createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, projection, centralBodyUniformMap, colorCommandList, renderState);
         debugCreateRenderCommandsForTileBoundingSphere(this, context, frameState, centralBodyUniformMap, shaderSet, renderState, colorCommandList);
     };
 
@@ -866,7 +866,7 @@ define([
     var rtcScratch = new Cartesian3();
     var centerEyeScratch = new Cartesian4();
 
-    function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState) {
+    function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, projection, centralBodyUniformMap, colorCommandList, renderState) {
         var viewMatrix = frameState.camera.getViewMatrix();
 
         var maxTextures = context.getMaximumTextureImageUnits();
@@ -899,7 +899,7 @@ define([
                 var southMercatorYLow = 0.0;
                 var oneOverMercatorHeight = 0.0;
 
-                if (mode !== SceneMode.SCENE3D) {
+                if (frameState.mode !== SceneMode.SCENE3D) {
                     var southwest = projection.project(tile.extent.getSouthwest());
                     var northeast = projection.project(tile.extent.getNortheast());
 
@@ -909,7 +909,7 @@ define([
                     tileExtent.w = northeast.y;
 
                     // In 2D and Columbus View, use the center of the tile for RTC rendering.
-                    if (mode !== SceneMode.MORPHING) {
+                    if (frameState.mode !== SceneMode.MORPHING) {
                         rtc = rtcScratch;
                         rtc.x = 0.0;
                         rtc.y = (tileExtent.z + tileExtent.x) * 0.5;
@@ -955,6 +955,7 @@ define([
                     var command = tileCommands[tileCommandIndex];
                     if (typeof command === 'undefined') {
                         command = new DrawCommand();
+                        command.cull = false;
                         tileCommands[tileCommandIndex] = command;
                         tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap();
                     }
@@ -977,6 +978,7 @@ define([
                     var applyHue = false;
                     var applySaturation = false;
                     var applyGamma = false;
+                    var applyAlpha = false;
 
                     while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                         var tileImagery = tileImageryCollection[imageryIndex];
@@ -1001,6 +1003,7 @@ define([
                         } else {
                             uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
                         }
+                        applyAlpha = applyAlpha || uniformMap.dayTextureAlpha[numberOfDayTextures] !== 1.0;
 
                         if (typeof imageryLayer.brightness === 'function') {
                             uniformMap.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
@@ -1048,7 +1051,7 @@ define([
 
                     colorCommandList.push(command);
 
-                    command.shaderProgram = shaderSet.getShaderProgram(context, tileSetIndex, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma);
+                    command.shaderProgram = shaderSet.getShaderProgram(context, tileSetIndex, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha);
                     command.renderState = renderState;
                     command.primitiveType = TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
                     command.vertexArray = tile.vertexArray;

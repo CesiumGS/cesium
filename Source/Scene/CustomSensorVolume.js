@@ -219,11 +219,11 @@ define([
         return this._directions;
     };
 
-    CustomSensorVolume.prototype._computePositions = function() {
-        var directions = this._directions;
+    function computePositions(customSensorVolume) {
+        var directions = customSensorVolume._directions;
         var length = directions.length;
         var positions = new Float32Array(3 * length);
-        var r = isFinite(this.radius) ? this.radius : FAR;
+        var r = isFinite(customSensorVolume.radius) ? customSensorVolume.radius : FAR;
 
         var boundingVolumePositions = [Cartesian3.ZERO];
 
@@ -245,15 +245,15 @@ define([
             boundingVolumePositions.push(p);
         }
 
-        BoundingSphere.fromPoints(boundingVolumePositions, this._colorCommand.boundingVolume);
+        BoundingSphere.fromPoints(boundingVolumePositions, customSensorVolume._colorCommand.boundingVolume);
 
         return positions;
-    };
+    }
 
-    CustomSensorVolume.prototype._createVertexArray = function(context) {
-        var positions = this._computePositions();
+    function createVertexArray(customSensorVolume, context) {
+        var positions = computePositions(customSensorVolume);
 
-        var length = this._directions.length;
+        var length = customSensorVolume._directions.length;
         var vertices = new Float32Array(2 * 3 * 3 * length);
 
         var k = 0;
@@ -284,7 +284,7 @@ define([
             vertices[k++] = n.z;
         }
 
-        var vertexBuffer = context.createVertexBuffer(new Float32Array(vertices), this.bufferUsage);
+        var vertexBuffer = context.createVertexBuffer(new Float32Array(vertices), customSensorVolume.bufferUsage);
         var stride = 2 * 3 * Float32Array.BYTES_PER_ELEMENT;
 
         var attributes = [{
@@ -304,7 +304,7 @@ define([
         }];
 
         return context.createVertexArray(attributes);
-    };
+    }
 
     /**
      * DOC_TBA
@@ -355,7 +355,7 @@ define([
 
             var directions = this._directions;
             if (directions && (directions.length >= 3)) {
-                this._colorCommand.vertexArray = this._pickCommand.vertexArray = this._createVertexArray(context);
+                this._colorCommand.vertexArray = this._pickCommand.vertexArray = createVertexArray(this, context);
             }
         }
 
