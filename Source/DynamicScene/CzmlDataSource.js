@@ -51,18 +51,21 @@ define(['../Core/ClockRange',
     }
 
     var CzmlDataSource = function(czml, source) {
-        this.changed = new Event();
-
-        this._dynamicObjectCollection = new DynamicObjectCollection();
+        this._changed = new Event();
         this._clock = undefined;
+        this._dynamicObjectCollection = new DynamicObjectCollection();
         this._ready = false;
         this._temporal = true;
 
         if (typeof czml !== 'undefined') {
             this._clock = loadCzml(czml, this._dynamicObjectCollection, source);
             this._ready = true;
-            this.changed.raiseEvent(this);
+            this._changed.raiseEvent(this);
         }
+    };
+
+    CzmlDataSource.prototype.getChangedEvent = function() {
+        return this._changed;
     };
 
     CzmlDataSource.fromString = function(string, name) {
@@ -74,7 +77,7 @@ define(['../Core/ClockRange',
             var dataSource = new CzmlDataSource();
             dataSource._clock = loadCzml(czml, dataSource._dynamicObjectCollection, url);
             dataSource._ready = true;
-            dataSource.changed.raiseEvent(dataSource);
+            dataSource._changed.raiseEvent(dataSource);
             return dataSource;
         });
     };
