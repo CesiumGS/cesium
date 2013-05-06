@@ -4,6 +4,7 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         './MipmapHint',
+        './PixelDatatype',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
         './TextureWrap'
@@ -12,6 +13,7 @@ define([
         DeveloperError,
         destroyObject,
         MipmapHint,
+        PixelDatatype,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap) {
@@ -123,6 +125,7 @@ define([
      * @param {Number} [width=CubeMap's width] The width of the subimage to copy.
      * @param {Number} [height=CubeMap's height] The height of the subimage to copy.
      *
+     * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      * @exception {DeveloperError} xOffset must be greater than or equal to zero.
      * @exception {DeveloperError} yOffset must be greater than or equal to zero.
@@ -168,6 +171,10 @@ define([
             throw new DeveloperError('yOffset + source.height must be less than or equal to getHeight().');
         }
 
+        if (this._pixelDatatype === PixelDatatype.FLOAT) {
+            throw new DeveloperError('Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.');
+        }
+
         var gl = this._gl;
         var target = this._textureTarget;
 
@@ -188,6 +195,19 @@ define([
      */
     CubeMapFace.prototype.getPixelFormat = function() {
         return this._pixelFormat;
+    };
+
+    /**
+     * Returns the pixel data type of this cube map face.  All faces in the same cube map have the same pixel data type.
+     *
+     * @memberof CubeMapFace
+     *
+     * @returns {PixelFormat} The pixel data type of this cubemap face.
+     *
+     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
+     */
+    CubeMapFace.prototype.getPixelDatatype = function() {
+        return this._pixelDatatype;
     };
 
     CubeMapFace.prototype._getTexture = function() {

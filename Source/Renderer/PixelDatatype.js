@@ -33,6 +33,14 @@ define(['../Core/Enumeration'], function(Enumeration) {
         UNSIGNED_INT : new Enumeration(0x1405, 'UNSIGNED_INT'),
 
         /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        FLOAT : new Enumeration(0x1406, 'FLOAT'),
+
+        /**
          * An unsigned int pixel datatype used for depth-stencil textures with 24-bit depth and 8-bit stencil values.
          *
          * @constant
@@ -75,6 +83,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
             return ((pixelDatatype === PixelDatatype.UNSIGNED_BYTE) ||
                     (pixelDatatype === PixelDatatype.UNSIGNED_SHORT) ||
                     (pixelDatatype === PixelDatatype.UNSIGNED_INT) ||
+                    (pixelDatatype === PixelDatatype.FLOAT) ||
                     (pixelDatatype === PixelDatatype.UNSIGNED_INT_24_8_WEBGL) ||
                     (pixelDatatype === PixelDatatype.UNSIGNED_SHORT_4_4_4_4) ||
                     (pixelDatatype === PixelDatatype.UNSIGNED_SHORT_5_5_5_1) ||
