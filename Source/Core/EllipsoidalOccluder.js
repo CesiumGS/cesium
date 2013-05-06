@@ -191,6 +191,12 @@ define([
             resultMagnitude = Math.max(resultMagnitude, candidateMagnitude);
         }
 
+        // The horizon culling point is undefined if there were no positions from which to compute it,
+        // or if we computed NaN.
+        if (resultMagnitude === 0.0 || resultMagnitude !== resultMagnitude) {
+            return undefined;
+        }
+
         return scaledSpaceDirectionToPoint.multiplyByScalar(resultMagnitude, result);
     };
 
@@ -238,8 +244,15 @@ define([
             positionScratch.x = vertices[i] + center.x;
             positionScratch.y = vertices[i + 1] + center.y;
             positionScratch.z = vertices[i + 2] + center.z;
+
             var candidateMagnitude = computeMagnitude(ellipsoid, positionScratch, scaledSpaceDirectionToPoint);
             resultMagnitude = Math.max(resultMagnitude, candidateMagnitude);
+        }
+
+        // The horizon culling point is undefined if there were no positions from which to compute it,
+        // or if we computed NaN.
+        if (resultMagnitude === 0.0 || resultMagnitude !== resultMagnitude) {
+            return undefined;
         }
 
         return scaledSpaceDirectionToPoint.multiplyByScalar(resultMagnitude, result);

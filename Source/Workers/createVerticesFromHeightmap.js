@@ -3,6 +3,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Ellipsoid',
+        '../Core/EllipsoidalOccluder',
         '../Core/Extent',
         '../Core/HeightmapTessellator',
         '../Core/Occluder',
@@ -11,11 +12,14 @@ define([
         BoundingSphere,
         Cartesian3,
         Ellipsoid,
+        EllipsoidalOccluder,
         Extent,
         HeightmapTessellator,
         Occluder,
         createTaskProcessorWorker) {
     "use strict";
+
+    var subsampledExtentScratch = new Cartesian3();
 
     function createVerticesFromHeightmap(parameters, transferableObjects) {
         var numberOfAttributes = 6;
@@ -39,18 +43,16 @@ define([
         var statistics = HeightmapTessellator.computeVertices(parameters);
         var boundingSphere3D = BoundingSphere.fromVertices(vertices, parameters.relativeToCenter, numberOfAttributes);
 
-        var extent = parameters.extent;
         var ellipsoid = parameters.ellipsoid;
 
-        // We should really take the heights into account when computing the occludee point.
-        // And we should compute the occludee point using something less over-conservative than
-        // the ellipsoid-min-radius bounding sphere.  But these two wrongs cancel each other out
-        // enough that I've never seen artifacts from it.  Fixing this up (and perhaps culling
-        // more tiles as a result) is on the roadmap.
-        var occludeePointInScaledSpace = Occluder.computeOccludeePointFromExtent(extent, ellipsoid);
-        if (typeof occludeePointInScaledSpace !== 'undefined') {
-            Cartesian3.multiplyComponents(occludeePointInScaledSpace, ellipsoid.getOneOverRadii(), occludeePointInScaledSpace);
-        }
+        // For horizon culling, use an ellipsoid that is 1000.0 meters smaller than WGS84 in each direction,
+        // and don't take heights into account.  This is clearly wrong, but is close enough to avoid
+        // major artifacts.  Fixing it is on the roadmap.  A really good solution probably involves
+        // some metadata computed during terrain preprocessing.
+        var newRadii = ellipsoid.getRadii().subtract(new Cartesian3(1000.0, 1000.0, 1000.0));
+        var occluder = new EllipsoidalOccluder(new Ellipsoid(newRadii.x, newRadii.y, newRadii.z));
+        var subsampledExtent = parameters.extent.subsample(ellipsoid, subsampledExtentScratch);
+        var occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(boundingSphere3D.center, subsampledExtent);
 
         return {
             vertices : vertices.buffer,
