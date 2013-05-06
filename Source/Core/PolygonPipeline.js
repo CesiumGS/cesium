@@ -385,7 +385,6 @@ define([
      *
      * @private
      */
-    var xz_plane = new Plane(Cartesian3.UNIT_Y, 0.0);
     function splitTriangleAtInternationalDateLine(p0, p1, p2) {
         if ((typeof p0 === 'undefined') ||
             (typeof p1 === 'undefined') ||
@@ -393,7 +392,7 @@ define([
             throw new DeveloperError('p0, p1 and p2 are required.');
         }
 
-        var p0Behind = p0.y  < 0.0;
+        var p0Behind = p0.y < 0.0;
         var p1Behind = p1.y < 0.0;
         var p2Behind = p2.y < 0.0;
 
@@ -418,7 +417,8 @@ define([
 
         if (numBehind === 1) {
             if (p0Behind) {
-                getXZIntersectionOffsetPoints(p0, p1, p2, u1, u2, v1, v2);
+                getXZIntersectionOffsetPoints(p0, p1, u1, v1);
+                getXZIntersectionOffsetPoints(p0, p2, u2, v2);
                 result.indices = [
                         // Behind
                         0, 3, 4,
@@ -428,7 +428,8 @@ define([
                         1, 6, 5
                     ];
             } else if (p1Behind) {
-                getXZIntersectionOffsetPoints(p1, p0, p2, u1, u2, v1, v2);
+                getXZIntersectionOffsetPoints(p1, p0, u1, v1);
+                getXZIntersectionOffsetPoints(p1, p2, u2, v2);
                 result.indices = [
                         // Behind
                         1, 3, 4,
@@ -438,7 +439,8 @@ define([
                         2, 6, 5
                     ];
             } else if (p2Behind) {
-                getXZIntersectionOffsetPoints(p2, p0, p1, u1, u2, v1, v2);
+                getXZIntersectionOffsetPoints(p2, p0, u1, v1);
+                getXZIntersectionOffsetPoints(p2, p1, u2, v2);
                 result.indices = [
                         // Behind
                         2, 3, 4,
@@ -450,7 +452,8 @@ define([
             }
         } else if (numBehind === 2) {
             if (!p0Behind) {
-                getXZIntersectionOffsetPoints(p0, p1, p2, u1, u2, v1, v2);
+                getXZIntersectionOffsetPoints(p0, p1, u1, v1);
+                getXZIntersectionOffsetPoints(p0, p2, u2, v2);
                 result.indices = [
                         // Behind
                         1, 2, 4,
@@ -460,7 +463,8 @@ define([
                         0, 5, 6
                     ];
             } else if (!p1Behind) {
-                getXZIntersectionOffsetPoints(p1, p2, p0, u1, u2, v1, v2);
+                getXZIntersectionOffsetPoints(p1, p2, u1, v1);
+                getXZIntersectionOffsetPoints(p1, p0, u2, v2);
                 result.indices = [
                         // Behind
                         2, 0, 4,
@@ -470,7 +474,8 @@ define([
                         1, 5, 6
                     ];
             } else if (!p2Behind) {
-                getXZIntersectionOffsetPoints(p2, p0, p1, u1, u2, v1, v2);
+                getXZIntersectionOffsetPoints(p2, p0, u1, v1);
+                getXZIntersectionOffsetPoints(p2, p1, u2, v2);
                 result.indices = [
                         // Behind
                         0, 1, 4,
@@ -484,15 +489,12 @@ define([
         return result;
     }
 
-    function getXZIntersectionOffsetPoints(p, p1, p2, u1, u2, v1, v2) {
-        IntersectionTests.lineSegmentPlane(p, p1, xz_plane, u1);
-        IntersectionTests.lineSegmentPlane(p, p2, xz_plane, u2);
+    var c3 = new Cartesian3();
+    function getXZIntersectionOffsetPoints(p, p1, u1, v1) {
+        p.add(p1.subtract(p, c3).multiplyByScalar(p.y/(p.y-p1.y), c3), u1);
         Cartesian3.clone(u1, v1);
-        Cartesian3.clone(u2, v2);
         offsetPointFromXZPlane(u1, true);
-        offsetPointFromXZPlane(u2, true);
         offsetPointFromXZPlane(v1, false);
-        offsetPointFromXZPlane(v2, false);
     }
 
     function offsetPointFromXZPlane(p, isBehind) {
@@ -688,7 +690,10 @@ define([
          *
          * @see Polygon
          *
-         * @example TODO
+         * @example
+         * var positions = [new Cartesian3(-1, -1, 0), new Cartesian3(-1, 1, 2), new Cartesian3(-1, 2, 2)];
+         * var indices = [0, 1, 2];
+         * indices = PolygonPipeline.wrapLongitude(positions, indices);
          */
 
         wrapLongitude : function(positions, indices) {
@@ -745,8 +750,6 @@ define([
                                     break;
                                 case 3:
                                 case 4:
-                                    newIndices.push(positionsLen + index - 3);
-                                    break;
                                 case 5:
                                 case 6:
                                     newIndices.push(positionsLen + index - 3);

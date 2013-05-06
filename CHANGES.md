@@ -11,6 +11,8 @@ Beta Releases
 * Added `DrawCommand.cull` to avoid redundant visibility checks.
 * Added `czm_morphTime` automatic GLSL uniform.
 * Fixed polyline clipping artifact. [#728](https://github.com/AnalyticalGraphicsInc/cesium/issues/728).
+* Added `IntersectionTests.trianglePlaneIntersection`.
+* Fixed polygon crossing international date line for 2D and Columbus view
 
 ### b16 - 2013-05-01
 * Breaking changes:
@@ -54,9 +56,7 @@ Beta Releases
 * Improved rendering performance by minimizing WebGL state calls.
 * Fixed an error in Web Worker creation when loading Cesium.js from a different origin.
 * Fixed `EllipsoidPrimitive` picking and picking objects with materials that have transparent parts.
-* Fixed imagery smearing artifacts on mobile devices and other devices without high-precision fragment shaders.* Added `IntersectionTests.trianglePlaneIntersection`.
-* Added `IntersectionTests.trianglePlaneIntersection`.
-* Fixed polygon crossing international date line for 2D and Columbus view
+* Fixed imagery smearing artifacts on mobile devices and other devices without high-precision fragment shaders.
 
 ### b15 - 2013-04-01
 
