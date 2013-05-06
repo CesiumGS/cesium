@@ -71,29 +71,29 @@ define([
 
             if (shouldRemoveTile) {
                 tileToTrim.freeResources();
-                this._remove(tileToTrim);
+                remove(this, tileToTrim);
             }
 
             tileToTrim = previous;
         }
     };
 
-    TileReplacementQueue.prototype._remove = function(item) {
+    function remove(tileReplacementQueue, item) {
         var previous = item.replacementPrevious;
         var next = item.replacementNext;
 
-        if (item === this._lastBeforeStartOfFrame) {
-            this._lastBeforeStartOfFrame = next;
+        if (item === tileReplacementQueue._lastBeforeStartOfFrame) {
+            tileReplacementQueue._lastBeforeStartOfFrame = next;
         }
 
-        if (item === this.head) {
-            this.head = next;
+        if (item === tileReplacementQueue.head) {
+            tileReplacementQueue.head = next;
         } else {
             previous.replacementNext = next;
         }
 
-        if (item === this.tail) {
-            this.tail = previous;
+        if (item === tileReplacementQueue.tail) {
+            tileReplacementQueue.tail = previous;
         } else {
             next.replacementPrevious = previous;
         }
@@ -101,8 +101,8 @@ define([
         item.replacementPrevious = undefined;
         item.replacementNext = undefined;
 
-        --this.count;
-    };
+        --tileReplacementQueue.count;
+    }
 
     /**
      * Marks a tile as rendered this frame and moves it before the first tile that was not rendered
@@ -134,7 +134,7 @@ define([
 
         if (typeof item.replacementPrevious !== 'undefined' || typeof item.replacementNext !== 'undefined') {
             // tile already in the list, remove from its current location
-            this._remove(item);
+            remove(this, item);
         }
 
         item.replacementPrevious = undefined;
