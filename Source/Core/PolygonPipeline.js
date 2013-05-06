@@ -11,9 +11,7 @@ define([
         './ComponentDatatype',
         './PrimitiveType',
         './Queue',
-        './WindingOrder',
-        './IntersectionTests',
-        './Plane'
+        './WindingOrder'
     ], function(
         DeveloperError,
         CesiumMath,
@@ -26,9 +24,7 @@ define([
         ComponentDatatype,
         PrimitiveType,
         Queue,
-        WindingOrder,
-        IntersectionTests,
-        Plane) {
+        WindingOrder) {
     "use strict";
 
     function DoublyLinkedList() {
