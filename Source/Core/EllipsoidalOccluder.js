@@ -258,6 +258,37 @@ define([
         return scaledSpaceDirectionToPoint.multiplyByScalar(resultMagnitude, result);
     };
 
+    var subsampleScratch = [];
+
+    /**
+     * Computes a point that can be used for horizon culling of an extent.  If the point is below
+     * the horizon, the ellipsoid-conforming extent is guaranteed to be below the horizon as well.
+     * The returned point is expressed in the ellipsoid-scaled space and is suitable for use with
+     * {@link EllipsoidalOccluder#isScaledSpacePointVisible}.
+     *
+     * @param {Extent} extent The extent for which to compute the horizon culling point.
+     * @param {Ellipsoid} ellipsoid The ellipsoid on which the extent is defined.  This may be different from
+     *                    the ellipsoid used by this instance for occlusion testing.
+     * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
+     * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
+     */
+    EllipsoidalOccluder.prototype.computeHorizonCullingPointFromExtent = function(extent, ellipsoid, result) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
+        var positions = extent.subsample(ellipsoid, subsampleScratch);
+        var bs = BoundingSphere.fromPoints(positions);
+
+        // If the bounding sphere center is too close to the center of the occluder, it doesn't make
+        // sense to try to horizon cull it.
+        if (bs.center.magnitude() < 0.1 * ellipsoid.getMinimumRadius()) {
+            return undefined;
+        }
+
+        return this.computeHorizonCullingPoint(bs.center, positions, result);
+    };
+
     function computeMagnitude(ellipsoid, position, scaledSpaceDirectionToPoint) {
         var scaledSpacePosition = ellipsoid.transformPositionToScaledSpace(position, scaledSpaceScratch);
         var magnitudeSquared = scaledSpacePosition.magnitudeSquared();
