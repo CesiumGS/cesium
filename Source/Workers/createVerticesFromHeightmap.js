@@ -44,14 +44,8 @@ define([
         var boundingSphere3D = BoundingSphere.fromVertices(vertices, parameters.relativeToCenter, numberOfAttributes);
 
         var ellipsoid = parameters.ellipsoid;
-
-        // For horizon culling, use an ellipsoid that is about 150.0 meters smaller than WGS84 in each direction,
-        // and don't take heights into account.  This is clearly wrong, but is close enough to avoid
-        // major artifacts.  Fixing it is on the roadmap.  A really good solution probably involves
-        // some metadata computed during terrain preprocessing.
-        var newRadii = ellipsoid.getRadii().multiplyByScalar(0.999976);
-        var occluder = new EllipsoidalOccluder(new Ellipsoid(newRadii.x, newRadii.y, newRadii.z));
-        var occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromExtent(parameters.extent, ellipsoid);
+        var occluder = new EllipsoidalOccluder(ellipsoid);
+        var occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromVertices(boundingSphere3D.center, vertices, numberOfAttributes, parameters.relativeToCenter);
 
         return {
             vertices : vertices.buffer,
