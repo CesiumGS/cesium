@@ -1,6 +1,7 @@
 /*global define*/
 define(['require',
         '../BaseLayerPicker/ImageryProviderViewModel',
+        '../../Core/buildModuleUrl',
         '../../Core/FeatureDetection',
         '../../Core/DefaultProxy',
         '../../Scene/BingMapsImageryProvider',
@@ -12,6 +13,7 @@ define(['require',
         ], function (
                 require,
                 ImageryProviderViewModel,
+                buildModuleUrl,
                 FeatureDetection,
                 DefaultProxy,
                 BingMapsImageryProvider,
@@ -30,7 +32,7 @@ define(['require',
         var providerViewModels = [];
         providerViewModels.push(ImageryProviderViewModel.fromConstants({
             name : 'Bing Maps Aerial',
-            iconUrl : require.toUrl('Widgets/Images/ImageryProviders/bingAerial.png'),
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingAerial.png'),
             tooltip : 'Bing Maps aerial imagery \nhttp://www.bing.com/maps',
             creationFunction : function() {
                 return new BingMapsImageryProvider({
@@ -43,7 +45,7 @@ define(['require',
 
         providerViewModels.push(ImageryProviderViewModel.fromConstants({
             name : 'Bing Maps Aerial with Labels',
-            iconUrl : require.toUrl('Widgets/Images/ImageryProviders/bingAerialLabels.png'),
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingAerialLabels.png'),
             tooltip : 'Bing Maps aerial imagery with label overlays \nhttp://www.bing.com/maps',
             creationFunction : function() {
                 return new BingMapsImageryProvider({
@@ -56,7 +58,7 @@ define(['require',
 
         providerViewModels.push(ImageryProviderViewModel.fromConstants({
             name : 'Bing Maps Roads',
-            iconUrl : require.toUrl('Widgets/Images/ImageryProviders/bingRoads.png'),
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingRoads.png'),
             tooltip : 'Bing Maps standard road maps\nhttp://www.bing.com/maps',
             creationFunction : function() {
                 return new BingMapsImageryProvider({
@@ -69,7 +71,7 @@ define(['require',
 
         providerViewModels.push(ImageryProviderViewModel.fromConstants({
             name : 'ESRI World Imagery',
-            iconUrl : require.toUrl('Widgets/Images/ImageryProviders/esriWorldImagery.png'),
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/esriWorldImagery.png'),
             tooltip : '\
 World Imagery provides one meter or better satellite and aerial imagery in many parts of the world and lower resolution \
 satellite imagery worldwide.  The map includes NASA Blue Marble: Next Generation 500m resolution imagery at small scales \
@@ -88,7 +90,7 @@ contributed by the GIS User Community.\nhttp://www.esri.com',
 
         providerViewModels.push(ImageryProviderViewModel.fromConstants({
             name : 'ESRI World Street Map',
-            iconUrl : require.toUrl('Widgets/Images/ImageryProviders/esriWorldStreetMap.png'),
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/esriWorldStreetMap.png'),
             tooltip : '\
 This worldwide street map presents highway-level data for the world. Street-level data includes the United States; much of \
 Canada; Japan; most countries in Europe; Australia and New Zealand; India; parts of South America including Argentina, Brazil, \
@@ -104,7 +106,7 @@ http://www.esri.com',
 
         providerViewModels.push(ImageryProviderViewModel.fromConstants({
             name : 'ESRI National Geographic',
-            iconUrl : require.toUrl('Widgets/Images/ImageryProviders/esriNationalGeographic.png'),
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/esriNationalGeographic.png'),
             tooltip : '\
 This web map contains the National Geographic World Map service. This map service is designed to be used as a general reference map \
 for informational and educational purposes as well as a basemap by GIS professionals and other users for creating web maps and web \
@@ -119,7 +121,7 @@ mapping applications.\nhttp://www.esri.com',
 
         providerViewModels.push(ImageryProviderViewModel.fromConstants({
             name : 'Open\u00adStreet\u00adMap',
-            iconUrl : require.toUrl('Widgets/Images/ImageryProviders/openStreetMap.png'),
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/openStreetMap.png'),
             tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable map \
 of the world.\nhttp://www.openstreetmap.org',
             creationFunction : function() {
@@ -132,7 +134,7 @@ of the world.\nhttp://www.openstreetmap.org',
 
         providerViewModels.push(ImageryProviderViewModel.fromConstants({
             name : 'Stamen Watercolor',
-            iconUrl : require.toUrl('Widgets/Images/ImageryProviders/stamenWatercolor.png'),
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/stamenWatercolor.png'),
             tooltip : 'Reminiscent of hand drawn maps, Stamen watercolor maps apply raster effect \
 area washes and organic edges over a paper texture to add warm pop to any map.\nhttp://maps.stamen.com',
             creationFunction : function() {
@@ -146,7 +148,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
 
         providerViewModels.push(ImageryProviderViewModel.fromConstants({
             name : 'Stamen Toner',
-            iconUrl : require.toUrl('Widgets/Images/ImageryProviders/stamenToner.png'),
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/stamenToner.png'),
             tooltip : 'A high contrast black and white map.\nhttp://maps.stamen.com',
             creationFunction : function() {
                 return new OpenStreetMapImageryProvider({
@@ -159,7 +161,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
 
         providerViewModels.push(ImageryProviderViewModel.fromConstants({
             name : 'MapQuest Open\u00adStreet\u00adMap',
-            iconUrl : require.toUrl('Widgets/Images/ImageryProviders/mapQuestOpenStreetMap.png'),
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/mapQuestOpenStreetMap.png'),
             tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
 map of the world.\nhttp://www.openstreetmap.org',
             creationFunction : function() {
@@ -172,7 +174,7 @@ map of the world.\nhttp://www.openstreetmap.org',
 
         providerViewModels.push(ImageryProviderViewModel.fromConstants({
             name : 'The Black Marble',
-            iconUrl : require.toUrl('Widgets/Images/ImageryProviders/blackMarble.png'),
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/blackMarble.png'),
             tooltip : 'The lights of cities and villages trace the outlines of civilization in this global view of the \
 Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             creationFunction : function() {
@@ -187,11 +189,11 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
 
         providerViewModels.push(ImageryProviderViewModel.fromConstants({
             name : 'Disable Streaming Imagery',
-            iconUrl : require.toUrl('Widgets/Images/ImageryProviders/singleTile.png'),
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/singleTile.png'),
             tooltip : 'Uses a single image for the entire world.',
             creationFunction : function() {
                 return new SingleTileImageryProvider({
-                    url : require.toUrl('Assets/Textures/NE2_LR_LC_SR_W_DR_2048.jpg')
+                    url : buildModuleUrl('Assets/Textures/NE2_LR_LC_SR_W_DR_2048.jpg')
                 });
             }
         }));
