@@ -1,36 +1,78 @@
 /*global define*/
 define(['./DataSourceCollection',
+        './DynamicBillboardVisualizer',
+        './DynamicEllipsoidVisualizer',
+        './DynamicConeVisualizerUsingCustomSensor',
+        './DynamicLabelVisualizer',
+        './DynamicPathVisualizer',
+        './DynamicPointVisualizer',
+        './DynamicPolygonVisualizer',
+        './DynamicPolylineVisualizer',
+        './DynamicPyramidVisualizer',
         './VisualizerCollection',
+        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Iso8601'
         ], function(
                 DataSourceCollection,
+                DynamicBillboardVisualizer,
+                DynamicEllipsoidVisualizer,
+                DynamicConeVisualizerUsingCustomSensor,
+                DynamicLabelVisualizer,
+                DynamicPathVisualizer,
+                DynamicPointVisualizer,
+                DynamicPolygonVisualizer,
+                DynamicPolylineVisualizer,
+                DynamicPyramidVisualizer,
                 VisualizerCollection,
+                defaultValue,
                 destroyObject,
                 DeveloperError,
                 Iso8601) {
     "use strict";
 
+    var defaultVisualizerTypes = [DynamicBillboardVisualizer,
+                                  DynamicEllipsoidVisualizer,
+                                  DynamicConeVisualizerUsingCustomSensor,
+                                  DynamicLabelVisualizer,
+                                  DynamicPointVisualizer,
+                                  DynamicPolygonVisualizer,
+                                  DynamicPolylineVisualizer,
+                                  DynamicPyramidVisualizer,
+                                  DynamicPathVisualizer];
+
     /**
      * Visualizes a collection of  {@link DataSource} instances.
-     *
      * @alias DataSourceDisplay
      * @constructor
+     *
+     * @param {Scene} scene The scene in which to display the data.
+     * @param {Array} [visualizerTypes] The array of visualizer constructor functions that will be created for each data source.  If undefined, All standard visualizers will be used.
+     *
+     * @exception {DeveloperError} scene is required.
      */
-    var DataSourceDisplay = function(visualizerCreator) {
-        /**
-         * Gets the collection of data sources.
-         * @type {DataSourceCollection}
-         */
-        this.dataSourceCollection = new DataSourceCollection();
-        this.dataSourceCollection.dataSourceAdded.addEventListener(this._onDataSourceAdded, this);
-        this.dataSourceCollection.dataSourceRemoved.addEventListener(this._onDataSourceRemoved, this);
+    var DataSourceDisplay = function(scene, visualizerTypes) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
 
-        this._visualizerCreator = visualizerCreator;
-
+        var dataSourceCollection = new DataSourceCollection();
+        dataSourceCollection.dataSourceAdded.addEventListener(this._onDataSourceAdded, this);
+        dataSourceCollection.dataSourceRemoved.addEventListener(this._onDataSourceRemoved, this);
+        this._dataSourceCollection = dataSourceCollection;
+        this._scene = scene;
         this._temporalSources = [];
         this._staticSourcesToUpdate = [];
+        this._visualizers = defaultValue(visualizerTypes, defaultVisualizerTypes);
+    };
+
+    /**
+     * Get the collection of data sources to be displayed.
+     * @returns {DataSourceCollection} The collection of data sources.
+     */
+    DataSourceDisplay.prototype.getDataSources = function() {
+        return this._dataSourceCollection;
     };
 
     /**
@@ -38,8 +80,6 @@ define(['./DataSourceCollection',
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof DataSourceDisplay
      *
      * @return {Boolean} True if this object was destroyed; otherwise, false.
      *
@@ -57,8 +97,6 @@ define(['./DataSourceCollection',
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof DataSourceDisplay
-     *
      * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -69,7 +107,7 @@ define(['./DataSourceCollection',
      * dataSourceDisplay = dataSourceDisplay.destroy();
      */
     DataSourceDisplay.prototype.destroy = function() {
-        var dataSources = this.dataSourceCollection;
+        var dataSources = this._dataSourceCollection;
         dataSources.dataSourceAdded.removeEventListener(this._onDataSourceAdded, this);
         dataSources.dataSourceRemoved.removeEventListener(this._onDataSourceRemoved, this);
 
@@ -90,6 +128,8 @@ define(['./DataSourceCollection',
      * call to update.
      *
      * @param {JulianDate} time The time to updated to.
+     *
+     * @exception {DeveloperError} time is required.
      */
     DataSourceDisplay.prototype.update = function(time) {
         if (typeof time === 'undefined') {
@@ -116,7 +156,15 @@ define(['./DataSourceCollection',
     };
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
-        var vCollection = new VisualizerCollection(this._visualizerCreator(), dataSource.getDynamicObjectCollection());
+        var visualizerTypes = this._visualizers;
+        var length = visualizerTypes.length;
+        var visualizers = new Array(length);
+        var scene = this._scene;
+        for ( var i = 0; i < length; i++) {
+            visualizers[i] = new visualizerTypes[i](scene);
+        }
+
+        var vCollection = new VisualizerCollection(visualizers, dataSource.getDynamicObjectCollection());
         dataSource._visualizerCollection = vCollection;
         dataSource.getChangedEvent().addEventListener(this._onDataSourceChanged, this);
         this._onDataSourceChanged(dataSource);
