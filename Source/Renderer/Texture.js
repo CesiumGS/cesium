@@ -6,6 +6,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         './MipmapHint',
+        './PixelDatatype',
         './PixelFormat',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
@@ -17,6 +18,7 @@ define([
         DeveloperError,
         CesiumMath,
         MipmapHint,
+        PixelDatatype,
         PixelFormat,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -138,6 +140,7 @@ define([
      * @param {Number} [height=getHeight()] optional
      *
      * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
+     * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      * @exception {DeveloperError} xOffset must be greater than or equal to zero.
      * @exception {DeveloperError} yOffset must be greater than or equal to zero.
@@ -149,6 +152,10 @@ define([
     Texture.prototype.copyFromFramebuffer = function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
         if (PixelFormat.isDepthFormat(this._pixelFormat)) {
             throw new DeveloperError('Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.');
+        }
+
+        if (this._pixelDatatype === PixelDatatype.FLOAT) {
+            throw new DeveloperError('Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.');
         }
 
         xOffset = defaultValue(xOffset, 0);
@@ -258,13 +265,31 @@ define([
     */
     Texture.prototype.setSampler = function(sampler) {
         if (typeof sampler === 'undefined') {
+            var minFilter = TextureMinificationFilter.LINEAR;
+            var magFilter = TextureMagnificationFilter.LINEAR;
+            if (this._pixelDatatype === PixelDatatype.FLOAT) {
+                minFilter = TextureMinificationFilter.NEAREST;
+                magFilter = TextureMagnificationFilter.NEAREST;
+            }
+
             sampler = {
                 wrapS : TextureWrap.CLAMP,
                 wrapT : TextureWrap.CLAMP,
-                minificationFilter : TextureMinificationFilter.LINEAR,
-                magnificationFilter : TextureMagnificationFilter.LINEAR,
+                minificationFilter : minFilter,
+                magnificationFilter : magFilter,
                 maximumAnisotropy : 1.0
             };
+        }
+
+        if (this._pixelDatatype === PixelDatatype.FLOAT) {
+            if (sampler.minificationFilter !== TextureMinificationFilter.NEAREST &&
+                    sampler.minificationFilter !== TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) {
+                throw new DeveloperError('Only NEAREST and NEAREST_MIPMAP_NEAREST minification filters are supported for floating point textures.');
+            }
+
+            if (sampler.magnificationFilter !== TextureMagnificationFilter.NEAREST) {
+                throw new DeveloperError('Only the NEAREST magnification filter is supported for floating point textures.');
+            }
         }
 
         var gl = this._gl;
