@@ -12,6 +12,8 @@ Beta Releases
 * Added `czm_morphTime` automatic GLSL uniform.
 * Added support for floating-point textures.
 * Fixed polyline clipping artifact. [#728](https://github.com/AnalyticalGraphicsInc/cesium/issues/728).
+* Added `IntersectionTests.trianglePlaneIntersection`.
+* Fixed polygon crossing international date line for 2D and Columbus view
 
 ### b16 - 2013-05-01
 * Breaking changes:
