@@ -90,7 +90,7 @@ defineSuite([
         expect(occluder.isPointVisible(point)).toEqual(false);
     });
 
-    it('can compute a horizon culling point from a single position', function() {
+    it('horizon culling point computed from a single position should produce a grazing altitude close to zero', function() {
         var ellipsoid = new Ellipsoid(12345.0, 12345.0, 12345.0);
         var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
 
@@ -108,4 +108,32 @@ defineSuite([
         var nearestCartographic = ellipsoid.cartesianToCartographic(nearest);
         expect(nearestCartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
     });
+
+    it('horizon culling point computed from multiple positions should produce a grazing altitude close to zero for one of the positions and less than zero for the others', function() {
+        var ellipsoid = new Ellipsoid(12345.0, 12345.0, 12345.0);
+        var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+
+        var positions = [new Cartesian3(-12345.0, 12345.0, 12345.0), new Cartesian3(-12346.0, 12345.0, 12345.0), new Cartesian3(-12446.0, 12445.0, 12445.0)];
+        var boundingSphere = BoundingSphere.fromPoints(positions);
+
+        var result = ellipsoidalOccluder.computeHorizonCullingPoint(boundingSphere.center, positions);
+        var unscaledResult = result.multiplyComponents(ellipsoid.getRadii());
+
+        // The grazing altitude of the ray from the horizon culling point to the
+        // position used to compute it should be very nearly zero.
+        var foundOneNearZero = false;
+        for (var i = 0; i < positions.length; ++i) {
+            var direction = positions[i].subtract(unscaledResult).normalize();
+            var nearest = IntersectionTests.grazingAltitudeLocation(new Ray(unscaledResult, direction), ellipsoid);
+            var nearestCartographic = ellipsoid.cartesianToCartographic(nearest);
+            if (Math.abs(nearestCartographic.height) < CesiumMath.EPSILON5) {
+                foundOneNearZero = true;
+            } else {
+                expect(nearestCartographic.height).toBeLessThan(0.0);
+            }
+        }
+
+        expect(foundOneNearZero).toBe(true);
+    });
+
 });
