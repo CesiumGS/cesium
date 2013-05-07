@@ -3,6 +3,7 @@ define(['./viewHome',
         '../../Core/Cartesian2',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
+        '../../DynamicScene/DataSourceDisplay',
         '../ClockViewModel',
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
@@ -17,6 +18,7 @@ define(['./viewHome',
                 Cartesian2,
                 DeveloperError,
                 destroyObject,
+                DataSourceDisplay,
                 ClockViewModel,
                 Animation,
                 AnimationViewModel,
@@ -73,6 +75,11 @@ define(['./viewHome',
         this._resizeCallback();
 
         var clock = cesiumWidget.clock;
+
+        //Data source display
+        var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene);
+        this._dataSourceDisplay = dataSourceDisplay;
+        cesiumWidget.clock.onTick.addEventListener(this._onTick, this);
 
         //Animation
         var clockViewModel = new ClockViewModel(clock);
@@ -175,6 +182,17 @@ define(['./viewHome',
          * @type {BaseLayerPicker}
          */
         this.baseLayerPicker = baseLayerPicker;
+
+        /**
+         * Gets the set of {@link DataSource} instances to be visualized.
+         * @memberof Viewer
+         * @type {DataSourceCollection}
+         */
+        this.dataSources = dataSourceDisplay.getDataSources();
+    };
+
+    Viewer.prototype._onTick = function(clock) {
+        this._dataSourceDisplay.update(clock.currentTime);
     };
 
     /**
@@ -188,6 +206,7 @@ define(['./viewHome',
         this.timelineWidget = this.timelineWidget.destroy();
         this.sceneModePicker = this.sceneModePicker.destroy();
         this.fullscreenWidget = this.fullscreenWidget.destroy();
+        this._dataSourceDisplay = this._dataSourceDisplay.destroy();
         return destroyObject(this);
     };
 
