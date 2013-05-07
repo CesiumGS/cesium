@@ -155,6 +155,8 @@ define(['../Core/ClockRange',
      *
      * @param {Object} url The url to be processed.
      *
+     * @returns {Promise} a promise that will resolve when the CZML is processed.
+     *
      * @exception {DeveloperError} url is required.
      */
     CzmlDataSource.prototype.processUrl = function(url) {
@@ -163,7 +165,7 @@ define(['../Core/ClockRange',
         }
 
         var dataSource = this;
-        loadJson(url).then(function(czml) {
+        return loadJson(url).then(function(czml) {
             dataSource.process(czml, url);
         }, function(error) {
             this._error.raiseEvent(this, error);
@@ -175,6 +177,8 @@ define(['../Core/ClockRange',
      *
      * @param {Object} url The url to be processed.
      *
+     * @returns {Promise} a promise that will resolve when the CZML is processed.
+     *
      * @exception {DeveloperError} url is required.
      */
     CzmlDataSource.prototype.loadUrl = function(url) {
@@ -183,8 +187,8 @@ define(['../Core/ClockRange',
         }
 
         var dataSource = this;
-        loadJson(url).then(function(czml) {
-            dataSource.loadCzml(czml, url);
+        return loadJson(url).then(function(czml) {
+            dataSource.load(czml, url);
         }, function(error) {
             this._error.raiseEvent(this, error);
         });
