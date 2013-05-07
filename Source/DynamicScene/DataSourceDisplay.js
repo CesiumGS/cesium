@@ -142,25 +142,16 @@ define(['./DataSourceCollection',
     DataSourceDisplay.prototype._onDataSourceChanged = function(dataSource) {
         var temporalIndex = this._temporalSources.indexOf(dataSource);
         var staticIndex = this._staticSourcesToUpdate.indexOf(dataSource);
-        if (dataSource.getIsReady()) {
-            if (dataSource.getIsTemporal()) {
-                if (temporalIndex === -1) {
-                    this._temporalSources.push(dataSource);
-                }
-                if (staticIndex !== -1) {
-                    this._staticSourcesToUpdate.splice(staticIndex, 1);
-                }
-            } else {
-                if (staticIndex === -1) {
-                    this._staticSourcesToUpdate.push(dataSource);
-                }
-                if (temporalIndex !== -1) {
-                    this._temporalSources.splice(staticIndex, 1);
-                }
+        if (dataSource.getIsTemporal()) {
+            if (temporalIndex === -1) {
+                this._temporalSources.push(dataSource);
             }
-        } else {
             if (staticIndex !== -1) {
                 this._staticSourcesToUpdate.splice(staticIndex, 1);
+            }
+        } else {
+            if (staticIndex === -1) {
+                this._staticSourcesToUpdate.push(dataSource);
             }
             if (temporalIndex !== -1) {
                 this._temporalSources.splice(staticIndex, 1);

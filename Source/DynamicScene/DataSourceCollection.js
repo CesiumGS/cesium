@@ -6,15 +6,15 @@ define([
         '../Core/Event',
         '../Core/Math'
     ], function(
-        DeveloperError,
-        defaultValue,
-        destroyObject,
-        Event,
-        CesiumMath) {
+            DeveloperError,
+            defaultValue,
+            destroyObject,
+            Event,
+            CesiumMath) {
     "use strict";
 
     /**
-     * An ordered collection of data sources.
+     * A collection of {@link DataSource} instances.
      * @alias DataSourceCollection
      * @constructor
      */
@@ -23,14 +23,14 @@ define([
 
         /**
          * An event that is raised when a data source is added to the collection.  Event handlers are passed the data source that
-         * was added and the index at which it was added.
+         * was added.
          * @type {Event}
          */
         this.dataSourceAdded = new Event();
 
         /**
          * An event that is raised when a data source is removed from the collection.  Event handlers are passed the data source that
-         * was removed and the index from which it was removed.
+         * was removed.
          * @type {Event}
          */
         this.dataSourceRemoved = new Event();
@@ -38,17 +38,16 @@ define([
 
     /**
      * Adds a data source to the collection.
-     *
      * @memberof DataSourceCollection
      *
      * @param {DataSource} dataSource The data source to add.
-     * @param {Number} [index] the index to add the data source at.  If omitted, the data source will
-     *                         added on top of all existing data sources.
      *
      * @exception {DeveloperError} dataSource is required.
-     * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of the data sources.
      */
     DataSourceCollection.prototype.add = function(dataSource) {
+        if (typeof dataSource === 'undefined') {
+            throw new DeveloperError('dataSource is required.');
+        }
         this._dataSources.push(dataSource);
         this.dataSourceAdded.raiseEvent(this, dataSource);
     };
@@ -68,7 +67,7 @@ define([
         var index = this._dataSources.indexOf(dataSource);
         if (index !== -1) {
             this._dataSources.splice(index, 1);
-            this.dataSourceRemoved.raiseEvent(this, dataSource, index);
+            this.dataSourceRemoved.raiseEvent(this, dataSource);
 
             if (typeof dataSource.destroy === 'function' && destroy) {
                 dataSource.destroy();
@@ -139,7 +138,7 @@ define([
      */
     DataSourceCollection.prototype.get = function(index) {
         if (typeof index === 'undefined') {
-            throw new DeveloperError('index is required.', 'index');
+            throw new DeveloperError('index is required.');
         }
 
         return this._dataSources[index];
