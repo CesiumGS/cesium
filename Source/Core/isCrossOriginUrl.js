@@ -14,11 +14,18 @@ define(function() {
             a = document.createElement('a');
         }
 
-        var location = window.location;
-        a.href = url;
+        // copy window location into the anchor to get consistent results
+        // when the port is default for the protocol (e.g. 80 for HTTP)
+        a.href = window.location.href;
 
         // host includes both hostname and port if the port is not standard
-        return a.protocol !== location.protocol || a.host !== location.host;
+        var host = a.host;
+        var protocol = a.protocol;
+
+        a.href = url;
+        a.href = a.href; // IE only absolutizes href on get, not set
+
+        return protocol !== a.protocol || host !== a.host;
     };
 
     return isCrossOriginUrl;
