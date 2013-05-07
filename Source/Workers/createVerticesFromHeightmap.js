@@ -19,8 +19,6 @@ define([
         createTaskProcessorWorker) {
     "use strict";
 
-    var subsampledExtentScratch = new Cartesian3();
-
     function createVerticesFromHeightmap(parameters, transferableObjects) {
         var numberOfAttributes = 6;
 
