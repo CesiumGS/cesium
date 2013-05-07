@@ -6,7 +6,6 @@ define([
         '../Core/EllipsoidalOccluder',
         '../Core/Extent',
         '../Core/HeightmapTessellator',
-        '../Core/Occluder',
         './createTaskProcessorWorker'
     ], function(
         BoundingSphere,
@@ -15,7 +14,6 @@ define([
         EllipsoidalOccluder,
         Extent,
         HeightmapTessellator,
-        Occluder,
         createTaskProcessorWorker) {
     "use strict";
 
