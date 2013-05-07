@@ -60,14 +60,6 @@ define([
          */
         this.show = true;
 
-        /**
-         * The current morph transition time between 2D/Columbus View and 3D,
-         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
-         *
-         * @type Number
-         */
-        this.morphTime = 1.0;
-
         this._ellipsoid = ellipsoid;
         this._command = new DrawCommand();
         this._spSkyFromSpace = undefined;
@@ -105,9 +97,6 @@ define([
             },
             fScaleOverScaleDepth : function() {
                 return (1.0 / (that._outerRadius - innerRadius)) / rayleighScaleDepth;
-            },
-            u_morphTime : function() {
-                return that.morphTime;
             }
         };
     };

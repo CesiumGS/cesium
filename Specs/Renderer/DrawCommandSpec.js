@@ -9,6 +9,7 @@ defineSuite([
     it('constructs', function() {
         var c = new DrawCommand();
         expect(c.boundingVolume).toBeUndefined();
+        expect(c.cull).toEqual(true);
         expect(c.modelMatrix).toBeUndefined();
         expect(c.offset).toBeUndefined();
         expect(c.count).toBeUndefined();

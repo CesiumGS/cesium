@@ -1,8 +1,6 @@
 attribute vec4 position3DAndHeight;
 attribute vec2 textureCoordinates;
 
-uniform float u_morphTime;
-
 uniform vec3 u_center3D;
 uniform mat4 u_modifiedModelView;
 uniform vec4 u_tileExtent;
@@ -77,7 +75,7 @@ vec4 getPositionMorphingMode(vec3 position3DWC)
     // This is unlikely to be noticable, though.
     float yPositionFraction = get2DYPositionFraction();
     vec3 position2DWC = vec3(0.0, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, yPositionFraction)));
-    vec4 morphPosition = czm_columbusViewMorph(position2DWC, position3DWC, u_morphTime);
+    vec4 morphPosition = czm_columbusViewMorph(position2DWC, position3DWC, czm_morphTime);
     return czm_modelViewProjection * morphPosition;
 }
 
