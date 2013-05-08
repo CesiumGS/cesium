@@ -557,37 +557,13 @@ define([
     };
 
     var tempCartesian4 = new Cartesian4();
-    var tempCartographic = new Cartographic();
     Billboard._computeActualPosition = function(position, frameState, modelMatrix) {
-        var mode = frameState.mode;
-
-        if (mode === SceneMode.SCENE3D) {
+        if (frameState.mode === SceneMode.SCENE3D) {
             return position;
         }
 
         modelMatrix.multiplyByPoint(position, tempCartesian4);
-
-        var projection = frameState.scene2D.projection;
-        var cartographic = projection.getEllipsoid().cartesianToCartographic(tempCartesian4, tempCartographic);
-        if (typeof cartographic === 'undefined') {
-            return undefined;
-        }
-
-        var projectedPosition = projection.project(cartographic);
-        if (mode === SceneMode.MORPHING) {
-            var morphTime = frameState.morphTime;
-            var x = CesiumMath.lerp(projectedPosition.z, tempCartesian4.x, morphTime);
-            var y = CesiumMath.lerp(projectedPosition.x, tempCartesian4.y, morphTime);
-            var z = CesiumMath.lerp(projectedPosition.y, tempCartesian4.z, morphTime);
-            return new Cartesian3(x, y, z);
-        }
-        if (mode === SceneMode.SCENE2D) {
-            return new Cartesian3(0.0, projectedPosition.x, projectedPosition.y);
-        }
-        if (mode === SceneMode.COLUMBUS_VIEW) {
-            return new Cartesian3(projectedPosition.z, projectedPosition.x, projectedPosition.y);
-        }
-        return undefined;
+        return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian4);
     };
 
     Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, context, frameState) {
@@ -606,8 +582,8 @@ define([
         positionEC.y += eyeOffset.y + zEyeOffset.y;
         positionEC.z += zEyeOffset.z;
 
-        var q = projection.multiplyByVector(positionEC); // clip coordinates
-        var positionWC = SceneTransforms.clipToWindowCoordinates(context.getCanvas(), q);
+        var positionCC = projection.multiplyByVector(positionEC); // clip coordinates
+        var positionWC = SceneTransforms.clipToWindowCoordinates(context.getCanvas(), positionCC);
 
         // Apply pixel offset
         var uniformState = context.getUniformState();
