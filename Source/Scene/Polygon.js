@@ -7,7 +7,6 @@ define([
         '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Math',
-        '../Core/Matrix4',
         '../Core/Ellipsoid',
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
@@ -44,7 +43,6 @@ define([
         destroyObject,
         Cartesian2,
         CesiumMath,
-        Matrix4,
         Ellipsoid,
         BoundingRectangle,
         BoundingSphere,
@@ -819,69 +817,6 @@ define([
         if (!this._commandLists.empty()) {
             commandList.push(this._commandLists);
         }
-    };
-
-    var scratchViewport = new BoundingRectangle();
-    var scratchViewportTransform = new Matrix4();
-    Polygon._computeScreenSpacePosition = function (position, context, frameState) {
-        var camera = frameState.camera;
-        var view = camera.getViewMatrix();
-        var projection = camera.frustum.getProjectionMatrix();
-
-        // Assuming viewport takes up the entire canvas...
-        var canvas = context.getCanvas();
-        scratchViewport.width = canvas.clientWidth;
-        scratchViewport.height = canvas.clientHeight;
-        var viewportTransformation = Matrix4.computeViewportTransformation(scratchViewport, 0.0, 1.0, scratchViewportTransform);
-
-        // Model to eye coordinates
-        var positionEC = view.multiplyByPoint(position);
-
-        // Eye to window coordinates, e.g., czm_eyeToWindowCoordinates
-        var q = projection.multiplyByVector(positionEC); // clip coordinates
-        q.x /= q.w; // normalized device coordinates
-        q.y /= q.w;
-        q.z /= q.w;
-        var positionWC = viewportTransformation.multiplyByPoint(q); // window coordinates
-
-        return new Cartesian2(positionWC.x, positionWC.y);
-    };
-
-    /**
-     * Computes the screen-space position of the polygon's first position.
-     * The screen space origin is the bottom, left corner of the canvas; <code>x</code> increases from
-     * left to right, and <code>y</code> increases from bottom to top.
-     *
-     * @memberof Polygon
-     *
-     * @param {Context} context The context.
-     * @param {FrameState} frameState The same state object passed to {@link Polygon#update}.
-     *
-     * @return {Cartesian2} The screen-space position of the polygon.
-     *
-     * @exception {DeveloperError} at least one position is required.
-     * @exception {DeveloperError} context is required.
-     * @exception {DeveloperError} frameState is required.
-     *
-     *
-     * @example
-     * console.log(p.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()).toString());
-     */
-    Polygon.prototype.computeScreenSpacePosition = function (context, frameState) {
-
-        if (typeof context === 'undefined') {
-            throw new DeveloperError('context is required.');
-        }
-
-        if (typeof frameState === 'undefined') {
-            throw new DeveloperError('frameState is required.');
-        }
-
-        if (this._positions.length < 1) {
-            throw new DeveloperError('at least one position is required.');
-        }
-
-        return Polygon._computeScreenSpacePosition(this._positions[0], context, frameState);
     };
 
     /**
