@@ -123,7 +123,7 @@ define(['./BaseLayerPickerViewModel',
 
         /**
          * Gets the element created by this widget.
-         * @memberof FullscreenWidget
+         * @memberof FullscreenButton
          * @type {Element}
          */
         this.element = document.createElement('img');

@@ -17,7 +17,7 @@ define([
         '../Timeline/Timeline',
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
-        '../Fullscreen/FullscreenWidget',
+        '../FullscreenButton/FullscreenButton',
         '../SceneModePicker/SceneModePicker',
         '../BaseLayerPicker/BaseLayerPicker',
         '../BaseLayerPicker/ImageryProviderViewModel',
@@ -81,7 +81,7 @@ define([
         Timeline,
         Animation,
         AnimationViewModel,
-        FullscreenWidget,
+        FullscreenButton,
         SceneModePicker,
         BaseLayerPicker,
         ImageryProviderViewModel,
@@ -404,7 +404,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
          * The fullscreen widget, configured to put only the viewer widget
          * into fullscreen mode by default.
          *
-         * @type {FullscreenWidget}
+         * @type {FullscreenButton}
          * @memberof CesiumViewerWidget.prototype
          */
         fullscreen: undefined,
@@ -945,7 +945,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
                 on(dropBox, 'dragexit', event.stop);
             }
 
-            this.fullscreen = new FullscreenWidget(this.fullscreenContainer, this.cesiumNode);
+            this.fullscreen = new FullscreenButton(this.fullscreenContainer, this.cesiumNode);
 
             var animationViewModel = this.animationViewModel;
             if (typeof animationViewModel === 'undefined') {

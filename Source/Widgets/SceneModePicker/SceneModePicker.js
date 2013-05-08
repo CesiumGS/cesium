@@ -72,7 +72,7 @@ define(['./SceneModePickerViewModel',
 
         /**
          * Gets the element created by this widget.
-         * @memberof FullscreenWidget
+         * @memberof SceneModePicker
          * @type {Element}
          */
         this.element = document.createElement('span');

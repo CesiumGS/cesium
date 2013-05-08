@@ -7,7 +7,10 @@ Beta Releases
 ### b17 - 2013-06-03
 
 * Breaking changes:
-   * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.    
+   * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.
+   * Renamed `Widgets/Fullscreen` folder to `Widgets/FullscreenButton` along with associated objects/files.
+      * `FullscreenWidget` -> `FullscreenButton`
+      * `FullscreenViewModel` -> `FullscreenButtonViewModel`
 * Added `DrawCommand.cull` to avoid redundant visibility checks.
 * Added `czm_morphTime` automatic GLSL uniform.
 * Added support for floating-point textures.

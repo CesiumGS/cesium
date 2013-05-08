@@ -11,15 +11,13 @@ define(['../createCommand',
     "use strict";
 
     /**
-     * The ViewModel for {@link FullscreenWidget}.
-     * @alias FullscreenViewModel
+     * The ViewModel for {@link FullscreenButton}.
+     * @alias FullscreenButtonViewModel
      * @constructor
      *
      * @param {Element} [fullscreenElement=document.body] The element to be placed into fullscreen mode.
-     *
-     * @see FullscreenWidget
      */
-    var FullscreenViewModel = function(fullscreenElement) {
+    var FullscreenButtonViewModel = function(fullscreenElement) {
         var that = this;
         var isFullscreen = knockout.observable(Fullscreen.isFullscreen());
         var tmp = knockout.observable(Fullscreen.isFullscreenEnabled());
@@ -79,10 +77,20 @@ define(['../createCommand',
          */
         this.fullscreenElement = knockout.observable(defaultValue(fullscreenElement, document.body));
 
-        document.addEventListener(Fullscreen.getFullscreenChangeEventName(), function() {
+        this._callback = function() {
             isFullscreen(Fullscreen.isFullscreen());
-        });
+        };
+        document.addEventListener(Fullscreen.getFullscreenChangeEventName(), this._callback);
     };
 
-    return FullscreenViewModel;
+    /**
+     * Destroys the view model.  Should be called to
+     * properly clean up the view model when it is no longer needed.
+     * @memberof FullscreenButtonViewModel
+     */
+    FullscreenButtonViewModel.prototype.destroy = function() {
+        document.removeEventListener(Fullscreen.getFullscreenChangeEventName(), this._callback);
+    };
+
+    return FullscreenButtonViewModel;
 });
