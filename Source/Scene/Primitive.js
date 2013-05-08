@@ -48,6 +48,8 @@ define([
         this._sp = undefined;
         this._rs = undefined;
         this._va = undefined;
+
+        this._commands = [];
         this._commandLists = new CommandLists();
     };
 
@@ -75,19 +77,24 @@ define([
             this._sp = context.getShaderCache().replaceShaderProgram(this._sp, appearance.vertexShaderSource, appearance.getFragmentShaderSource(), attributeIndices);
             this._rs = context.createRenderState(appearance.renderState);
 
-            var colorCommand = new DrawCommand();
-// TODO: primitive type from mesh
-            colorCommand.primitiveType = PrimitiveType.TRIANGLES;
-            colorCommand.vertexArray = this._va;
-            colorCommand.renderState = this._rs;
-            colorCommand.shaderProgram = this._sp;
-            colorCommand.uniformMap = appearance.material._uniforms;
-// TODO:    colorCommand.boundingVolume =
-            colorCommand.modelMatrix = this.modelMatrix;
-            this._commandLists.colorList.push(colorCommand);
+            var command = new DrawCommand();
+// TODO: this assumes indices in the mesh - and only one set
+            command.primitiveType = this.mesh.indexLists[0].primitiveType;
+            command.vertexArray = this._va;
+            command.renderState = this._rs;
+            command.shaderProgram = this._sp;
+            command.uniformMap = appearance.material._uniforms;
+// TODO:    command.boundingVolume =
+            this._commands.push(command);
         }
 
         if (frameState.passes.color) {
+            var commands = this._commands;
+            var len = commands.length;
+            for (var i = 0; i < len; ++i) {
+                commands[i].modelMatrix = this.modelMatrix;
+                this._commandLists.colorList[i] = commands[i];
+            }
             commandList.push(this._commandLists);
         }
     };
