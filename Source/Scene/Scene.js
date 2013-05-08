@@ -14,10 +14,11 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Intersect',
-        '../Core/IntersectionTests',
         '../Core/Interval',
         '../Core/Matrix4',
         '../Core/JulianDate',
+        '../Core/CubeMapEllipsoidTessellator',
+        '../Core/MeshFilters',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
@@ -31,8 +32,8 @@ define([
         './OrthographicFrustum',
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
-        './EllipsoidPrimitive',
-        './Material'
+        './Primitive',
+        './Appearance'
     ], function(
         CesiumMath,
         Color,
@@ -48,10 +49,11 @@ define([
         Cartesian3,
         Cartesian4,
         Intersect,
-        IntersectionTests,
         Interval,
         Matrix4,
         JulianDate,
+        CubeMapEllipsoidTessellator,
+        MeshFilters,
         Context,
         ClearCommand,
         PassState,
@@ -65,8 +67,8 @@ define([
         OrthographicFrustum,
         PerspectiveOffCenterFrustum,
         FrustumCommands,
-        EllipsoidPrimitive,
-        Material) {
+        Primitive,
+        Appearance) {
     "use strict";
 
     /**
@@ -194,6 +196,8 @@ define([
          * };
          */
         this.debugCommandFilter = undefined;
+
+        this._debugSphere = undefined;
 
         // initial guess at frustums.
         var near = this._camera.frustum.near;
@@ -445,19 +449,18 @@ define([
         if (command.debugShowBoundingVolume && (typeof command.boundingVolume !== 'undefined')) {
             // Debug code to draw bounding volume for command.  Not optimized!
             // Assumes bounding volume is a bounding sphere.
-            var r = command.boundingVolume.radius;
-            var m = Matrix4.multiplyByTranslation(defaultValue(command.modelMatrix, Matrix4.IDENTITY), command.boundingVolume.center);
 
-            var sphere = new EllipsoidPrimitive();
-            sphere.modelMatrix = Matrix4.fromTranslation(Cartesian3.fromArray(m, 12));
-            sphere.radii = new Cartesian3(r, r, r);
-            sphere.material = Material.fromType(context, 'Grid');
-            sphere.material.cellAlpha = 0.0;
+            if (typeof scene._debugSphere === 'undefined') {
+                var mesh = CubeMapEllipsoidTessellator.compute(Ellipsoid.UNIT_SPHERE, 20);
+                scene._debugSphere = new Primitive(MeshFilters.toWireframeInPlace(mesh), Appearance.EXAMPLE_APPEARANCE);
+            }
+
+            var m = Matrix4.multiplyByTranslation(defaultValue(command.modelMatrix, Matrix4.IDENTITY), command.boundingVolume.center);
+            scene._debugSphere.modelMatrix = Matrix4.multiplyByUniformScale(Matrix4.fromTranslation(Cartesian3.fromArray(m, 12)), command.boundingVolume.radius);
 
             var commandList = [];
-            sphere.update(context, scene._frameState, commandList);
+            scene._debugSphere.update(context, scene._frameState, commandList);
             commandList[0].colorList[0].execute(context, passState);
-            sphere.destroy();
         }
     }
 
@@ -695,6 +698,7 @@ define([
         this._primitives = this._primitives && this._primitives.destroy();
         this.skyBox = this.skyBox && this.skyBox.destroy();
         this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
+        this._debugSphere = this._debugSphere && this._debugSphere.destroy();
         this._context = this._context && this._context.destroy();
         return destroyObject(this);
     };
