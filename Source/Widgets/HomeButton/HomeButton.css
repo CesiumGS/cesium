@@ -1,0 +1,19 @@
+.cesium-homeButton {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    vertical-align: middle;
+    background-image: url(../Images/home.svg);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    border-radius: 14%;
+    position: relative;
+    text-align: center;
+    color: white;
+    margin: 1px;
+    cursor: pointer;
+}
+
+.cesium-homeButton:hover {
+    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+}

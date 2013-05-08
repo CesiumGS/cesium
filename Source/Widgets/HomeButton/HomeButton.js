@@ -1,10 +1,10 @@
 /*global define*/
-define(['./FullscreenButtonViewModel',
+define(['./HomeButtonViewModel',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
         '../../ThirdParty/knockout'
         ], function(
-         FullscreenButtonViewModel,
+         HomeButtonViewModel,
          DeveloperError,
          destroyObject,
          knockout) {
@@ -13,18 +13,14 @@ define(['./FullscreenButtonViewModel',
     /**
      * A single button widget for toggling fullscreen mode.
      *
-     * @alias FullscreenButton
+     * @alias HomeButton
      * @constructor
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
-     * @param {Element} [fullscreenElement=document.body] The element to be placed into fullscreen mode.
      *
      * @exception {DeveloperError} container is required.
-     * @exception {DeveloperError} Element with id "container" does not exist in the document.
-     *
-     * @see Fullscreen
      */
-    var FullscreenButton = function(container, fullscreenElement) {
+    var HomeButton = function(container, scene, transitioner, ellipsoid) {
         if (typeof container === 'undefined') {
             throw new DeveloperError('container is required.');
         }
@@ -39,28 +35,28 @@ define(['./FullscreenButtonViewModel',
 
         /**
          * Gets the parent container.
-         * @memberof FullscreenButton
+         * @memberof HomeButton
          * @type {Element}
          */
         this.container = container;
 
         /**
          * Gets the viewModel being used by the widget.
-         * @memberof FullscreenButton
-         * @type {FullscreenButtonViewModel}
+         * @memberof HomeButton
+         * @type {HomeButtonViewModel}
          */
-        this.viewModel = new FullscreenButtonViewModel(fullscreenElement);
+        this.viewModel = new HomeButtonViewModel(scene, transitioner, ellipsoid);
 
         /**
          * Gets the container element for the widget.
-         * @memberof FullscreenButton
+         * @memberof HomeButton
          * @type {Element}
          */
         this.container = container;
 
-        this._element = document.createElement('button');
-        this._element.className = 'cesium-fullscreenButton';
-        this._element.setAttribute('data-bind', 'attr: { title: tooltip }, css: { "cesium-fullscreenButton-exit": toggled }, click: command, enable: isFullscreenEnabled');
+        this._element = document.createElement('span');
+        this._element.className = 'cesium-homeButton';
+        this._element.setAttribute('data-bind', 'attr: { title: tooltip }, click: command');
         container.appendChild(this._element);
 
         knockout.applyBindings(this.viewModel, this._element);
@@ -69,15 +65,14 @@ define(['./FullscreenButtonViewModel',
     /**
      * Destroys the  widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof FullscreenButton
+     * @memberof HomeButton
      */
-    FullscreenButton.prototype.destroy = function() {
+    HomeButton.prototype.destroy = function() {
         var container = this.container;
         knockout.cleanNode(container);
-        this.viewModel.destroy();
         container.removeChild(this._element);
         return destroyObject(this);
     };
 
-    return FullscreenButton;
+    return HomeButton;
 });
