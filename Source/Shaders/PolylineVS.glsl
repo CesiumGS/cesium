@@ -23,9 +23,11 @@ void clipLineSegmentToNearPlane(
     vec3 p0,
     vec3 p1,
     out vec4 positionWC,
+    out bool clipped,
     out bool culledByNearPlane)
 {
     culledByNearPlane = false;
+    clipped = false;
     
     vec3 p1ToP0 = p1 - p0;
     float magnitude = length(p1ToP0);
@@ -48,6 +50,7 @@ void clipLineSegmentToNearPlane(
         else
         {
             p0 = p0 + t * direction;
+            clipped = true;
         }
     }
     
@@ -92,15 +95,15 @@ void main()
     }
     
     vec4 endPointWC, p0, p1;
-    bool culledByNearPlane;
+    bool culledByNearPlane, clipped;
     
     vec4 positionEC = czm_modelViewRelativeToEye * p;
     vec4 prevEC = czm_modelViewRelativeToEye * prev;
     vec4 nextEC = czm_modelViewRelativeToEye * next;
     
-    clipLineSegmentToNearPlane(prevEC.xyz, positionEC.xyz, p0, culledByNearPlane);
-    clipLineSegmentToNearPlane(nextEC.xyz, positionEC.xyz, p1, culledByNearPlane);
-    clipLineSegmentToNearPlane(positionEC.xyz, usePrev ? prevEC.xyz : nextEC.xyz, endPointWC, culledByNearPlane);
+    clipLineSegmentToNearPlane(prevEC.xyz, positionEC.xyz, p0, clipped, culledByNearPlane);
+    clipLineSegmentToNearPlane(nextEC.xyz, positionEC.xyz, p1, clipped, culledByNearPlane);
+    clipLineSegmentToNearPlane(positionEC.xyz, usePrev ? prevEC.xyz : nextEC.xyz, endPointWC, clipped, culledByNearPlane);
     
     if (culledByNearPlane)
     {
@@ -118,7 +121,7 @@ void main()
 	{
 	    direction = vec2(-nextWC.y, nextWC.x);
     }
-	else if (czm_equalsEpsilon(normalize(next.xyz - p.xyz), vec3(0.0), czm_epsilon1))
+	else if (czm_equalsEpsilon(normalize(next.xyz - p.xyz), vec3(0.0), czm_epsilon1) || clipped)
 	{
         direction = vec2(prevWC.y, -prevWC.x);
     }
