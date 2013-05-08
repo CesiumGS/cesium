@@ -78,6 +78,8 @@ define([
             this._rs = context.createRenderState(appearance.renderState);
 
             var command = new DrawCommand();
+// TODO: best owner?  Include mesh?
+            command.owner = this;
 // TODO: this assumes indices in the mesh - and only one set
             command.primitiveType = this.mesh.indexLists[0].primitiveType;
             command.vertexArray = this._va;
