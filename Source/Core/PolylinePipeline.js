@@ -44,6 +44,7 @@ define([
      * @returns {Object} An object with a <code>positions</code> property that is an array of positions and a
      * <code>segments</code> property.
      *
+     * @see PolygonPipeline.wrapLongitude
      * @see Polyline
      * @see PolylineCollection
      *

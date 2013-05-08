@@ -13,6 +13,11 @@ Beta Releases
 * Added `MeshFilters.combine` to combine meshes for better batching.
 * Added `DrawCommand.cull` to avoid redundant visibility checks.
 * Added `czm_morphTime` automatic GLSL uniform.
+* Added support for floating-point textures.
+* Fixed polyline clipping artifact. [#728](https://github.com/AnalyticalGraphicsInc/cesium/issues/728).
+* Added `IntersectionTests.trianglePlaneIntersection`.
+* Fixed polygon crossing international date line for 2D and Columbus view
+* Added `computeHorizonCullingPoint`, `computeHorizonCullingPointFromVertices`, and `computeHorizonCullingPointFromExtent` methods to `EllipsoidalOccluder` and used them to build a more accurate horizon occlusion test for terrain rendering.
 
 ### b16 - 2013-05-01
 * Breaking changes:
