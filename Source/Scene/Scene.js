@@ -30,7 +30,9 @@ define([
         './FrameState',
         './OrthographicFrustum',
         './PerspectiveOffCenterFrustum',
-        './FrustumCommands'
+        './FrustumCommands',
+        './EllipsoidPrimitive',
+        './Material'
     ], function(
         CesiumMath,
         Color,
@@ -62,7 +64,9 @@ define([
         FrameState,
         OrthographicFrustum,
         PerspectiveOffCenterFrustum,
-        FrustumCommands) {
+        FrustumCommands,
+        EllipsoidPrimitive,
+        Material) {
     "use strict";
 
     /**
@@ -92,10 +96,12 @@ define([
 
         this._clearColorCommand = new ClearCommand();
         this._clearColorCommand.color = new Color();
+        this._clearColorCommand.owner = true;
 
         var clearDepthStencilCommand = new ClearCommand();
         clearDepthStencilCommand.depth = 1.0;
         clearDepthStencilCommand.stencil = 1.0;
+        clearDepthStencilCommand.owner = this;
         this._clearDepthStencilCommand = clearDepthStencilCommand;
 
         /**
@@ -157,6 +163,37 @@ define([
          * @type Number
          */
         this.farToNearRatio = 1000.0;
+
+        /**
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * A function that determines what commands are executed.  As shown in the examples below,
+         * the function receives the command's <code>owner</code> as an argument, and returns a boolean indicating if the
+         * command should be executed.
+         * </p>
+         * <p>
+         * The default is <code>undefined</code>, indicating that all commands are executed.
+         * </p>
+         *
+         * @type Function
+         * @default undefined
+         *
+         * @see DrawCommand
+         * @see ClearCommand
+         *
+         * @example
+         * // Do not execute any commands.
+         * scene.debugCommandFilter = function(command) {
+         *     return false;
+         * };
+         *
+         * // Execute only the billboard's commands.  That is, only draw the billboard.
+         * var billboards = new BillboardCollection();
+         * scene.debugCommandFilter = function(command) {
+         *     return command.owner === billboards;
+         * };
+         */
+        this.debugCommandFilter = undefined;
 
         // initial guess at frustums.
         var near = this._camera.frustum.near;
@@ -398,6 +435,32 @@ define([
         }
     }
 
+    function executeCommand(command, scene, context, passState) {
+        if ((typeof scene.debugCommandFilter !== 'undefined') && !scene.debugCommandFilter(command)) {
+            return;
+        }
+
+        command.execute(context, passState);
+
+        if (command.debugShowBoundingVolume && (typeof command.boundingVolume !== 'undefined')) {
+            // Debug code to draw bounding volume for command.  Not optimized!
+            // Assumes bounding volume is a bounding sphere.
+            var r = command.boundingVolume.radius;
+            var m = Matrix4.multiplyByTranslation(defaultValue(command.modelMatrix, Matrix4.IDENTITY), command.boundingVolume.center);
+
+            var sphere = new EllipsoidPrimitive();
+            sphere.modelMatrix = Matrix4.fromTranslation(Cartesian3.fromArray(m, 12));
+            sphere.radii = new Cartesian3(r, r, r);
+            sphere.material = Material.fromType(context, 'Grid');
+            sphere.material.cellAlpha = 0.0;
+
+            var commandList = [];
+            sphere.update(context, scene._frameState, commandList);
+            commandList[0].colorList[0].execute(context, passState);
+            sphere.destroy();
+        }
+    }
+
     function executeCommands(scene, passState) {
         var camera = scene._camera;
         var frustum = camera.frustum.clone();
@@ -417,11 +480,11 @@ define([
         us.updateFrustum(frustum);
 
         if (typeof skyBoxCommand !== 'undefined') {
-            skyBoxCommand.execute(context, passState);
+            executeCommand(skyBoxCommand, scene, context, passState);
         }
 
         if (typeof skyAtmosphereCommand !== 'undefined') {
-            skyAtmosphereCommand.execute(context, passState);
+            executeCommand(skyAtmosphereCommand, scene, context, passState);
         }
 
         var clearDepthStencil = scene._clearDepthStencilCommand;
@@ -441,7 +504,7 @@ define([
             var commands = frustumCommands.commands;
             var length = frustumCommands.index;
             for (var j = 0; j < length; ++j) {
-                commands[j].execute(context, passState);
+                executeCommand(commands[j], scene, context, passState);
             }
         }
     }

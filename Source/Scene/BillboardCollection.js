@@ -1101,6 +1101,7 @@ define([
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
+                command.owner = this;
             }
         }
         if (picking) {
@@ -1132,6 +1133,7 @@ define([
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
+                command.owner = this;
             }
         }
 

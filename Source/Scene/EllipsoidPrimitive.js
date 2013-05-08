@@ -4,7 +4,6 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/combine',
-        '../Core/ComponentDatatype',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
@@ -27,7 +26,6 @@ define([
         Cartesian3,
         Cartesian4,
         combine,
-        ComponentDatatype,
         DeveloperError,
         destroyObject,
         Ellipsoid,
@@ -175,7 +173,9 @@ define([
         this._pickId = undefined;
 
         this._colorCommand = new DrawCommand();
+        this._colorCommand.owner = this;
         this._pickCommand = new DrawCommand();
+        this._pickCommand.owner = this;
         this._commandLists = new CommandLists();
 
         var that = this;

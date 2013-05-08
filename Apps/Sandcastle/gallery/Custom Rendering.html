@@ -48,6 +48,7 @@ require([
 
         this._colorCommand = new Cesium.DrawCommand();
         this._pickCommand = new Cesium.DrawCommand();
+        this._colorCommand.owner = this._pickCommand.owner = this;
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
         this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new Cesium.BoundingSphere();
         this._colorCommand.modelMatrix = this._pickCommand.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
@@ -154,6 +155,7 @@ require([
 
         this._colorCommand = new Cesium.DrawCommand();
         this._pickCommand = new Cesium.DrawCommand();
+        this._colorCommand.owner = this._pickCommand.owner = this;
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
         this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new Cesium.BoundingSphere();
 

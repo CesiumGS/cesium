@@ -14,6 +14,7 @@ Beta Releases
 * Added `DrawCommand.cull` to avoid redundant visibility checks.
 * Added `czm_morphTime` automatic GLSL uniform.
 * Added support for floating-point textures.
+* Added debugging aids for low-level rendering: `DrawCommand.debugShowBoundingVolume` and `Scene.debugCommandFilter`.
 * Fixed polyline clipping artifact. [#728](https://github.com/AnalyticalGraphicsInc/cesium/issues/728).
 * Added `IntersectionTests.trianglePlaneIntersection`.
 * Fixed polygon crossing international date line for 2D and Columbus view

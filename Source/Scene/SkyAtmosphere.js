@@ -62,6 +62,7 @@ define([
 
         this._ellipsoid = ellipsoid;
         this._command = new DrawCommand();
+        this._command.owner = this;
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
 

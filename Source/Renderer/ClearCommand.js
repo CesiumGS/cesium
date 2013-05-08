@@ -57,9 +57,24 @@ define([
          * The framebuffer to clear.
          *
          * @type Framebuffer
+         *
          * @default undefined
          */
         this.framebuffer = undefined;
+
+        /**
+         * The object who created this command.  This is useful for debugging command
+         * execution; it allows you to see who created a command when you only have a
+         * reference to the command, and can be used to selectively execute commands
+         * with {@link Scene#debugCommandFilter}.
+         *
+         * @type Object
+         *
+         * @default undefined
+         *
+         * @see Scene#debugCommandFilter
+         */
+        this.owner = undefined;
     };
 
     var all = new ClearCommand();

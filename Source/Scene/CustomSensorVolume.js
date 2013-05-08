@@ -67,7 +67,9 @@ define([
         this._pickIdThis = defaultValue(options._pickIdThis, this);
 
         this._colorCommand = new DrawCommand();
+        this._colorCommand.owner = this;
         this._pickCommand = new DrawCommand();
+        this._pickCommand.owner = this;
         this._commandLists = new CommandLists();
 
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = PrimitiveType.TRIANGLES;

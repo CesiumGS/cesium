@@ -772,6 +772,7 @@ define([
                 command.uniformMap = this._drawUniforms;
                 command.vertexArray = vas[i];
                 command.renderState = this._rs;
+                command.owner = this;
             }
         }
 
@@ -807,6 +808,7 @@ define([
                 command.uniformMap = this._pickUniforms;
                 command.vertexArray = vas[j];
                 command.renderState = this._rs;
+                command.owner = this;
             }
         }
 

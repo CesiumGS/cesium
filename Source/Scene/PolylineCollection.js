@@ -470,14 +470,14 @@ define([
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
-            createCommandLists(colorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, true);
+            createCommandLists(this, colorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, true);
         }
 
         if (pass.pick) {
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            createCommandLists(pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, false);
+            createCommandLists(this, pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, false);
         }
 
         if (!this._commandLists.empty()) {
@@ -485,7 +485,7 @@ define([
         }
     };
 
-    function createCommandLists(commands, boundingVolume, modelMatrix, vertexArrays, renderState, colorPass) {
+    function createCommandLists(polylineCollection, commands, boundingVolume, modelMatrix, vertexArrays, renderState, colorPass) {
         var length = vertexArrays.length;
 
         var commandsLength = commands.length;
@@ -516,6 +516,7 @@ define([
                         if (typeof currentId !== 'undefined') {
                             if (commandIndex >= commandsLength) {
                                 command = new DrawCommand();
+                                command.owner = polylineCollection;
                                 commands.push(command);
                             } else {
                                 command = commands[commandIndex];
@@ -555,6 +556,7 @@ define([
                 if (typeof currentId !== 'undefined' && count > 0) {
                     if (commandIndex >= commandsLength) {
                         command = new DrawCommand();
+                        command.owner = polylineCollection;
                         commands.push(command);
                     } else {
                         command = commands[commandIndex];
