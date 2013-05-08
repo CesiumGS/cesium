@@ -197,6 +197,9 @@ define([
             u_texture : function() {
                 return downScaleTexture;
             },
+            u_avgLuminance : function() {
+                return 0.5;
+            },
             u_threshold : function() {
                 return 0.25;
             },
