@@ -31,6 +31,58 @@ define([
      */
     var SceneTransforms = {};
 
+    var actualPosition = new Cartesian3();
+    var positionCC = new Cartesian4();
+
+    /**
+     * Transforms a position in WGS84 coordinates to window coordinates.  This is commonly used to place an
+     * HTML element at the same screen position as an object in the scene.
+     *
+     * @memberof SceneTransforms
+     *
+     * @param {Scene} scene The scene.
+     * @param {Cartesian3} position The position in WGS84 (world) coordinates.
+     * @param {Cartesian2} [result=undefined] An optional object to return the input position transformed to window coordinates.
+     *
+     * @return {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+     *
+     * @exception {DeveloperError} scene is required.
+     * @exception {DeveloperError} position is required.
+     *
+     * @example
+     * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
+     * var scene = widget.scene;
+     * var ellipsoid = widget.centralBody.getEllipsoid();
+     * var position = ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0));
+     * var handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
+     * handler.setInputAction(function(movement) {
+     *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
+     * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+     */
+    SceneTransforms.wgs84ToWindowCoordinates = function(scene, position, result) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
+
+        if (typeof position === 'undefined') {
+            throw new DeveloperError('position is required.');
+        }
+
+        // Transform for 3D, 2D, or Columbus view
+        SceneTransforms.computeActualWgs84Position(scene.getFrameState(), position, actualPosition);
+
+        if (typeof actualPosition === 'undefined') {
+            result = undefined;
+            return undefined;
+        }
+
+        // View-projection matrix to transform from world coordinates to clip coordinates
+        var viewProjection = scene.getUniformState().getViewProjection();
+        viewProjection.multiplyByPoint(actualPosition, positionCC);
+
+        return SceneTransforms.clipToWindowCoordinates(scene.getCanvas(), positionCC, result);
+    };
+
     var projectedPosition = new Cartesian3();
     var positionInCartographic = new Cartographic();
 
@@ -70,63 +122,15 @@ define([
             result);
     };
 
-    var actualPosition = new Cartesian3();
-    var positionCC = new Cartesian4();
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof SceneTransforms
-     *
-     * @exception {DeveloperError} scene is required.
-     * @exception {DeveloperError} position is required.
-     */
-    SceneTransforms.wgs84ToWindowCoordinates = function(scene, position, result) {
-        if (typeof scene === 'undefined') {
-            throw new DeveloperError('scene is required.');
-        }
-
-        if (typeof position === 'undefined') {
-            throw new DeveloperError('position is required.');
-        }
-
-        // Transform for 3D, 2D, or Columbus view
-        SceneTransforms.computeActualWgs84Position(scene.getFrameState(), position, actualPosition);
-
-        if (typeof actualPosition === 'undefined') {
-            result = undefined;
-            return undefined;
-        }
-
-        // View-projection matrix to transform from world coordinates to clip coordinates
-        var viewProjection = scene.getUniformState().getViewProjection();
-        viewProjection.multiplyByPoint(actualPosition, positionCC);
-
-        return SceneTransforms.clipToWindowCoordinates(scene.getCanvas(), positionCC, result);
-    };
-
     var positionNDC = new Cartesian3();
     var positionWC = new Cartesian4();
     var viewport = new BoundingRectangle();
     var viewportTransform = new Matrix4();
 
     /**
-     * DOC_TBA
-     *
-     * @memberof SceneTransforms
-     *
-     * @exception {DeveloperError} canvas is required.
-     * @exception {DeveloperError} position is required.
+     * @private
      */
     SceneTransforms.clipToWindowCoordinates = function(canvas, position, result) {
-        if (typeof canvas === 'undefined') {
-            throw new DeveloperError('canvas is required.');
-        }
-
-        if (typeof position === 'undefined') {
-            throw new DeveloperError('position is required.');
-        }
-
         // Perspective divide to transform from clip coordinates to normalized device coordinates
         positionNDC.x = position.x / position.w;
         positionNDC.y = position.y / position.w;
