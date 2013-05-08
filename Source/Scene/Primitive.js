@@ -104,7 +104,7 @@ define([
      */
     Primitive.prototype.destroy = function() {
         this._sp = this._sp && this._sp.release();
-        this._va = this._va && this._va.release();
+        this._va = this._va && this._va.destroy();
         return destroyObject(this);
     };
 
