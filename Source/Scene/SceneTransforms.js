@@ -25,7 +25,7 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Functions that do scene-dependent transforms between rendering-related coordinate systems.
      *
      * @exports SceneTransforms
      */
