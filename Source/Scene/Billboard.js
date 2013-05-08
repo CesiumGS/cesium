@@ -2,31 +2,29 @@
 define([
         '../Core/defaultValue',
         '../Core/DeveloperError',
-        '../Core/BoundingRectangle',
         '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/Math',
-        '../Core/Matrix4',
         './HorizontalOrigin',
         './VerticalOrigin',
-        './SceneMode'
+        './SceneMode',
+        './SceneTransforms'
     ], function(
         defaultValue,
         DeveloperError,
-        BoundingRectangle,
         Color,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
         CesiumMath,
-        Matrix4,
         HorizontalOrigin,
         VerticalOrigin,
-        SceneMode) {
+        SceneMode,
+        SceneTransforms) {
     "use strict";
 
     var EMPTY_OBJECT = {};
@@ -592,20 +590,11 @@ define([
         return undefined;
     };
 
-    var scratchViewport = new BoundingRectangle();
-    var scratchViewportTransform = new Matrix4();
     Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, context, frameState) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
-
         var camera = frameState.camera;
         var view = camera.getViewMatrix();
         var projection = camera.frustum.getProjectionMatrix();
-
-        // Assuming viewport takes up the entire canvas...
-        var canvas = context.getCanvas();
-        scratchViewport.width = canvas.clientWidth;
-        scratchViewport.height = canvas.clientHeight;
-        var viewportTransformation = Matrix4.computeViewportTransformation(scratchViewport, 0.0, 1.0, scratchViewportTransform);
 
         // Model to eye coordinates
         var mv = view.multiply(modelMatrix);
@@ -617,12 +606,8 @@ define([
         positionEC.y += eyeOffset.y + zEyeOffset.y;
         positionEC.z += zEyeOffset.z;
 
-        // Eye to window coordinates, e.g., czm_eyeToWindowCoordinates
         var q = projection.multiplyByVector(positionEC); // clip coordinates
-        q.x /= q.w; // normalized device coordinates
-        q.y /= q.w;
-        q.z /= q.w;
-        var positionWC = viewportTransformation.multiplyByPoint(q); // window coordinates
+        var positionWC = SceneTransforms.clipToWindowCoordinates(context.getCanvas(), q);
 
         // Apply pixel offset
         var uniformState = context.getUniformState();
