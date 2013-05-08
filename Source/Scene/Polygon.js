@@ -11,6 +11,7 @@ define([
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/ComponentDatatype',
         '../Core/MeshFilters',
@@ -19,6 +20,7 @@ define([
         '../Core/PolygonPipeline',
         '../Core/WindingOrder',
         '../Core/ExtentTessellator',
+        '../Core/Intersect',
         '../Core/Queue',
         '../Core/Matrix3',
         '../Core/Quaternion',
@@ -45,6 +47,7 @@ define([
         BoundingRectangle,
         BoundingSphere,
         Cartesian3,
+        Cartesian4,
         Cartographic,
         ComponentDatatype,
         MeshFilters,
@@ -53,6 +56,7 @@ define([
         PolygonPipeline,
         WindingOrder,
         ExtentTessellator,
+        Intersect,
         Queue,
         Matrix3,
         Quaternion,
@@ -525,7 +529,7 @@ define([
     var createMeshFromPositionsPositions = [];
     var createMeshFromPositionsBoundingRectangle = new BoundingRectangle();
 
-    function createMeshFromPositions(polygon, positions, angle, outerPositions) {
+    function createMeshFromPositions(polygon, positions, angle, boundingSphere, outerPositions) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
         if (cleanedPositions.length < 3) {
             // Duplicate positions result in not enough positions to form a polygon.
@@ -541,6 +545,11 @@ define([
             cleanedPositions.reverse();
         }
         var indices = PolygonPipeline.earClip2D(positions2D);
+        // Checking bounding sphere with plane for quick reject
+        var minX = boundingSphere.center.x - boundingSphere.radius;
+        if ((minX < 0) && (BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) === Intersect.INTERSECTING)) {
+            indices = PolygonPipeline.wrapLongitude(cleanedPositions, indices);
+        }
         var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, polygon._granularity);
         var boundary = outerPositions || cleanedPositions;
         var boundingRectangle = computeBoundingRectangle(tangentPlane, boundary, angle, createMeshFromPositionsBoundingRectangle);
@@ -564,25 +573,22 @@ define([
                 polygon._boundingVolume2D.center = new Cartesian3(0.0, center2D.x, center2D.y);
             }
         } else if (typeof polygon._positions !== 'undefined') {
-            mesh = createMeshFromPositions(polygon, polygon._positions, polygon._textureRotationAngle);
+            polygon._boundingVolume = BoundingSphere.fromPoints(polygon._positions, polygon._boundingVolume);
+            mesh = createMeshFromPositions(polygon, polygon._positions, polygon._textureRotationAngle, polygon._boundingVolume);
             if (typeof mesh !== 'undefined') {
                 meshes.push(mesh);
-                polygon._boundingVolume = BoundingSphere.fromPoints(polygon._positions, polygon._boundingVolume);
             }
         } else if (typeof polygon._polygonHierarchy !== 'undefined') {
             var outerPositions =  polygon._polygonHierarchy[0];
+            // The bounding volume is just around the boundary points, so there could be cases for
+            // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
+            // volume doesn't cover the polygon.
+            polygon._boundingVolume = BoundingSphere.fromPoints(outerPositions, polygon._boundingVolume);
             for (i = 0; i < polygon._polygonHierarchy.length; i++) {
-                mesh = createMeshFromPositions(polygon, polygon._polygonHierarchy[i], polygon._textureRotationAngle, outerPositions);
+                mesh = createMeshFromPositions(polygon, polygon._polygonHierarchy[i], polygon._textureRotationAngle, polygon._boundingVolume, outerPositions);
                 if (typeof mesh !== 'undefined') {
                     meshes.push(mesh);
                 }
-            }
-
-            if (meshes.length > 0) {
-                // The bounding volume is just around the boundary points, so there could be cases for
-                // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
-                // volume doesn't cover the polygon.
-                polygon._boundingVolume = BoundingSphere.fromPoints(outerPositions, polygon._boundingVolume);
             }
         }
 

@@ -166,6 +166,10 @@ defineSuite([
         expect(context.getDepthTexture()).toBeDefined();
     });
 
+    it('gets the texture float extension', function() {
+        expect(context.getFloatingPointTexture()).toBeDefined();
+    });
+
     it('gets texture filter anisotropic', function() {
         expect(context.getTextureFilterAnisotropic()).toBeDefined();
     });

@@ -438,10 +438,16 @@ define([
         } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
             boundingVolume = this._boundingVolume2D;
         } else if (frameState.mode === SceneMode.SCENE2D) {
-            boundingVolume = BoundingSphere.clone(this._boundingVolume2D, scracthBoundingSphere);
-            boundingVolume.center.x = 0.0;
+            if (typeof this._boundingVolume2D !== 'undefined') {
+                boundingVolume = BoundingSphere.clone(this._boundingVolume2D, scracthBoundingSphere);
+                boundingVolume.center.x = 0.0;
+            }
         } else if (typeof this._boundingVolume !== 'undefined' && typeof this._boundingVolume2D !== 'undefined') {
             boundingVolume = BoundingSphere.union(this._boundingVolume, this._boundingVolume2D, scracthBoundingSphere);
+        }
+
+        if (typeof boundingVolume === 'undefined') {
+            return;
         }
 
         var pass = frameState.passes;

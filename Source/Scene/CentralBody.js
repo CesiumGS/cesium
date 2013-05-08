@@ -260,12 +260,12 @@ define([
         return this._imageryLayerCollection;
     };
 
-    CentralBody.prototype._computeDepthQuad = function(frameState) {
-        var radii = this._ellipsoid.getRadii();
+    function computeDepthQuad(centralBody, frameState) {
+        var radii = centralBody._ellipsoid.getRadii();
         var p = frameState.camera.getPositionWC();
 
         // Find the corresponding position in the scaled space of the ellipsoid.
-        var q = this._ellipsoid.getOneOverRadii().multiplyComponents(p);
+        var q = centralBody._ellipsoid.getOneOverRadii().multiplyComponents(p);
 
         var qMagnitude = q.magnitude();
         var qUnit = q.normalize();
@@ -289,14 +289,14 @@ define([
         var lowerLeft = radii.multiplyComponents(center.subtract(northOffset).subtract(eastOffset));
         var lowerRight = radii.multiplyComponents(center.subtract(northOffset).add(eastOffset));
         return [upperLeft.x, upperLeft.y, upperLeft.z, lowerLeft.x, lowerLeft.y, lowerLeft.z, upperRight.x, upperRight.y, upperRight.z, lowerRight.x, lowerRight.y, lowerRight.z];
-    };
+    }
 
-    CentralBody.prototype._computePoleQuad = function(frameState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
-        var pt1 = this._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxGivenLat));
-        var pt2 = this._ellipsoid.cartographicToCartesian(new Cartographic(Math.PI, maxGivenLat));
+    function computePoleQuad(centralBody, frameState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
+        var pt1 = centralBody._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxGivenLat));
+        var pt2 = centralBody._ellipsoid.cartographicToCartesian(new Cartographic(Math.PI, maxGivenLat));
         var radius = pt1.subtract(pt2).magnitude() * 0.5;
 
-        var center = this._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxLat));
+        var center = centralBody._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxLat));
 
         var right;
         var dir = frameState.camera.direction;
@@ -321,12 +321,12 @@ define([
                 Math.floor(center.y) - halfHeight,
                 halfWidth * 2.0,
                 halfHeight * 2.0);
-    };
+    }
 
     var viewportScratch = new BoundingRectangle();
     var vpTransformScratch = new Matrix4();
-    CentralBody.prototype._fillPoles = function(context, frameState) {
-        var terrainProvider = this._surface._terrainProvider;
+    function fillPoles(centralBody, context, frameState) {
+        var terrainProvider = centralBody._surface._terrainProvider;
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
@@ -352,7 +352,7 @@ define([
         var mesh;
         var rect;
         var positions;
-        var occluder = this._occluder;
+        var occluder = centralBody._occluder;
 
         // handle north pole
         if (terrainMaxExtent.north < CesiumMath.PI_OVER_TWO) {
@@ -362,14 +362,14 @@ define([
                 Math.PI,
                 CesiumMath.PI_OVER_TWO
             );
-            boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
+            boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
             frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
-            occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
+            occludeePoint = Occluder.computeOccludeePointFromExtent(extent, centralBody._ellipsoid);
             occluded = (occludeePoint && !occluder.isPointVisible(occludeePoint, 0.0)) || !occluder.isBoundingSphereVisible(boundingVolume);
 
-            this._drawNorthPole = !frustumCull && !occluded;
-            if (this._drawNorthPole) {
-                rect = this._computePoleQuad(frameState, extent.north, extent.south - latitudeExtension, viewProjMatrix, viewportTransformation);
+            centralBody._drawNorthPole = !frustumCull && !occluded;
+            if (centralBody._drawNorthPole) {
+                rect = computePoleQuad(centralBody, frameState, extent.north, extent.south - latitudeExtension, viewProjMatrix, viewportTransformation);
                 positions = [
                     rect.x, rect.y,
                     rect.x + rect.width, rect.y,
@@ -377,8 +377,8 @@ define([
                     rect.x, rect.y + rect.height
                 ];
 
-                if (typeof this._northPoleCommand.vertexArray === 'undefined') {
-                    this._northPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
+                if (typeof centralBody._northPoleCommand.vertexArray === 'undefined') {
+                    centralBody._northPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
                     mesh = {
                         attributes : {
                             position : {
@@ -388,7 +388,7 @@ define([
                             }
                         }
                     };
-                    this._northPoleCommand.vertexArray = context.createVertexArrayFromMesh({
+                    centralBody._northPoleCommand.vertexArray = context.createVertexArrayFromMesh({
                         mesh : mesh,
                         attributeIndices : {
                             position : 0
@@ -397,7 +397,7 @@ define([
                     });
                 } else {
                     datatype = ComponentDatatype.FLOAT;
-                    this._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                    centralBody._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
                 }
             }
         }
@@ -410,14 +410,14 @@ define([
                 Math.PI,
                 terrainMaxExtent.south
             );
-            boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
+            boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
             frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
-            occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
+            occludeePoint = Occluder.computeOccludeePointFromExtent(extent, centralBody._ellipsoid);
             occluded = (occludeePoint && !occluder.isPointVisible(occludeePoint)) || !occluder.isBoundingSphereVisible(boundingVolume);
 
-            this._drawSouthPole = !frustumCull && !occluded;
-            if (this._drawSouthPole) {
-                rect = this._computePoleQuad(frameState, extent.south, extent.north + latitudeExtension, viewProjMatrix, viewportTransformation);
+            centralBody._drawSouthPole = !frustumCull && !occluded;
+            if (centralBody._drawSouthPole) {
+                rect = computePoleQuad(centralBody, frameState, extent.south, extent.north + latitudeExtension, viewProjMatrix, viewportTransformation);
                 positions = [
                      rect.x, rect.y,
                      rect.x + rect.width, rect.y,
@@ -425,8 +425,8 @@ define([
                      rect.x, rect.y + rect.height
                  ];
 
-                 if (typeof this._southPoleCommand.vertexArray === 'undefined') {
-                     this._southPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
+                 if (typeof centralBody._southPoleCommand.vertexArray === 'undefined') {
+                     centralBody._southPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
                      mesh = {
                          attributes : {
                              position : {
@@ -436,7 +436,7 @@ define([
                              }
                          }
                      };
-                     this._southPoleCommand.vertexArray = context.createVertexArrayFromMesh({
+                     centralBody._southPoleCommand.vertexArray = context.createVertexArrayFromMesh({
                          mesh : mesh,
                          attributeIndices : {
                              position : 0
@@ -445,13 +445,13 @@ define([
                      });
                  } else {
                      datatype = ComponentDatatype.FLOAT;
-                     this._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                     centralBody._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
                  }
             }
         }
 
         var poleIntensity = 0.0;
-        var baseLayer = this._imageryLayerCollection.getLength() > 0 ? this._imageryLayerCollection.get(0) : undefined;
+        var baseLayer = centralBody._imageryLayerCollection.getLength() > 0 ? centralBody._imageryLayerCollection.get(0) : undefined;
         if (typeof baseLayer !== 'undefined' && typeof baseLayer.getImageryProvider() !== 'undefined' && typeof baseLayer.getImageryProvider().getPoleIntensity !== 'undefined') {
             poleIntensity = baseLayer.getImageryProvider().getPoleIntensity();
         }
@@ -462,25 +462,25 @@ define([
             }
         };
 
-        var that = this;
-        if (typeof this._northPoleCommand.uniformMap === 'undefined') {
+        var that = centralBody;
+        if (typeof centralBody._northPoleCommand.uniformMap === 'undefined') {
             var northPoleUniforms = combine([drawUniforms, {
                 u_color : function() {
                     return that.northPoleColor;
                 }
             }], false, false);
-            this._northPoleCommand.uniformMap = combine([northPoleUniforms, this._drawUniforms], false, false);
+            centralBody._northPoleCommand.uniformMap = combine([northPoleUniforms, centralBody._drawUniforms], false, false);
         }
 
-        if (typeof this._southPoleCommand.uniformMap === 'undefined') {
+        if (typeof centralBody._southPoleCommand.uniformMap === 'undefined') {
             var southPoleUniforms = combine([drawUniforms, {
                 u_color : function() {
                     return that.southPoleColor;
                 }
             }], false, false);
-            this._southPoleCommand.uniformMap = combine([southPoleUniforms, this._drawUniforms], false, false);
+            centralBody._southPoleCommand.uniformMap = combine([southPoleUniforms, centralBody._drawUniforms], false, false);
         }
-    };
+    }
 
     /**
      * @private
@@ -555,7 +555,7 @@ define([
         this._southPoleCommand.renderState = this._rsColorWithoutDepthTest;
 
         // update depth plane
-        var depthQuad = this._computeDepthQuad(frameState);
+        var depthQuad = computeDepthQuad(this, frameState);
 
         // depth plane
         if (!this._depthCommand.vertexArray) {
@@ -683,7 +683,7 @@ define([
 
         this._occluder.setCameraPosition(cameraPosition);
 
-        this._fillPoles(context, frameState);
+        fillPoles(this, context, frameState);
 
         this._mode = mode;
         this._projection = projection;
