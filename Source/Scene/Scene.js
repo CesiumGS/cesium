@@ -434,15 +434,13 @@ define([
     }
 
     function executeCommand(command, scene, context, passState) {
-        if (scene.debugCommandFilter && !scene.debugCommandFilter(command)) {
+        if ((typeof scene.debugCommandFilter !== 'undefined') && !scene.debugCommandFilter(command)) {
             return;
         }
 
         command.execute(context, passState);
 
-// TODO: check if the command is for the color pass so we don't draw the sphere for the color pass, etc.
-        if (command.debugShowBoundingVolume && typeof command.boundingVolume !== 'undefined') {
-
+        if (command.debugShowBoundingVolume && (typeof command.boundingVolume !== 'undefined')) {
             // Debug code to draw bounding volume for command.  Not optimized!
             // Assumes bounding volume is a bounding sphere.
             var r = command.boundingVolume.radius;
