@@ -9,6 +9,7 @@ Beta Releases
 * Breaking changes:
    * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.    
 * Added `SceneTransforms.wgs84ToWindowCoordinates`. [#746](https://github.com/AnalyticalGraphicsInc/cesium/issues/746).
+* Added `computeHorizonCullingPoint`, `computeHorizonCullingPointFromVertices`, and `computeHorizonCullingPointFromExtent` methods to `EllipsoidalOccluder` and used them to build a more accurate horizon occlusion test for terrain rendering.
 * Added support for floating-point textures.
 * Added `IntersectionTests.trianglePlaneIntersection`.
 * Added `fromElements` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
