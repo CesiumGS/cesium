@@ -31,7 +31,8 @@ define([
         './OrthographicFrustum',
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
-        './EllipsoidPrimitive'
+        './EllipsoidPrimitive',
+        './Material'
     ], function(
         CesiumMath,
         Color,
@@ -64,7 +65,8 @@ define([
         OrthographicFrustum,
         PerspectiveOffCenterFrustum,
         FrustumCommands,
-        EllipsoidPrimitive) {
+        EllipsoidPrimitive,
+        Material) {
     "use strict";
 
     /**
@@ -449,6 +451,8 @@ define([
             var sphere = new EllipsoidPrimitive();
             sphere.modelMatrix = Matrix4.fromTranslation(Cartesian3.fromArray(m, 12));
             sphere.radii = new Cartesian3(r, r, r);
+            sphere.material = Material.fromType(context, 'Grid');
+            sphere.material.cellAlpha = 0.0;
 
             var commandList = [];
             sphere.update(context, scene._frameState, commandList);
