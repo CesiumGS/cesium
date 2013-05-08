@@ -8,7 +8,10 @@ defineSuite([
          'Core/Cartesian3',
          'Core/EncodedCartesian3',
          'Core/Tipsify',
-         'Core/GeographicProjection'
+         'Core/GeographicProjection',
+         'Core/Geometry',
+         'Core/GeometryAttribute',
+         'Core/GeometryIndices'
      ], function(
          MeshFilters,
          PrimitiveType,
@@ -18,7 +21,10 @@ defineSuite([
          Cartesian3,
          EncodedCartesian3,
          Tipsify,
-         GeographicProjection) {
+         GeographicProjection,
+         Geometry,
+         GeometryAttribute,
+         GeometryIndices) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -493,24 +499,24 @@ defineSuite([
     });
 
     it('MeshFilters.combine combines one mesh', function() {
-        var mesh = {
-            attributes : {
+        var mesh = new Geometry({
+            attributes : new GeometryAttribute({
                 position : {
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [0.0, 0.0, 0.0]
                 }
-            }
-        };
+            })
+        });
 
         var combinedMesh = MeshFilters.combine([mesh]);
         expect(combinedMesh).toBe(mesh);
     });
 
     it('MeshFilters.combine combines several meshes', function() {
-        var mesh = {
+        var mesh = new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [
@@ -518,8 +524,8 @@ defineSuite([
                         1.0, 1.0, 1.0,
                         2.0, 2.0, 2.0
                     ]
-                },
-                normal : {
+                }),
+                normal : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [
@@ -527,19 +533,19 @@ defineSuite([
                         1.0, 1.0, 1.0,
                         2.0, 2.0, 2.0
                     ]
-                }
+                })
             },
-            indexLists : [{
+            indexLists : [new GeometryIndices({
                 primitiveType : PrimitiveType.TRIANGLES,
                 values : [0, 1, 2]
-            }, {
+            }), new GeometryIndices({
                 primitiveType : PrimitiveType.LINES,
                 values : [1, 2]
-            }]
-        };
-        var anotherMesh = {
+            })]
+        });
+        var anotherMesh = new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [
@@ -547,21 +553,21 @@ defineSuite([
                         4.0, 4.0, 4.0,
                         5.0, 5.0, 5.0
                     ]
-                }
+                })
             },
-            indexLists : [{
+            indexLists : [new GeometryIndices({
                 primitiveType : PrimitiveType.TRIANGLES,
                 values : [0, 1, 2]
-            }, {
+            }), new GeometryIndices({
                 primitiveType : PrimitiveType.POINTS,
                 values : [0, 1, 2]
-            }]
-        };
+            })]
+        });
 
         var combinedMesh = MeshFilters.combine([mesh, anotherMesh]);
-        expect(combinedMesh).toEqual({
+        expect(combinedMesh).toEqual(new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : new Float32Array([
@@ -572,19 +578,19 @@ defineSuite([
                         4.0, 4.0, 4.0,
                         5.0, 5.0, 5.0
                     ])
-                }
+                })
             },
-            indexLists : [{
+            indexLists : [new GeometryIndices({
                 primitiveType : PrimitiveType.TRIANGLES,
                 values : new Uint16Array([0, 1, 2, 3, 4, 5])
-            }, {
+            }), new GeometryIndices({
                 primitiveType : PrimitiveType.LINES,
                 values : new Uint16Array([1, 2])
-            }, {
+            }), new GeometryIndices({
                 primitiveType : PrimitiveType.POINTS,
                 values : new Uint16Array([3, 4, 5])
-            }]
-        });
+            })]
+        }));
     });
 
     it('MeshFilters.combine throws with meshes', function() {

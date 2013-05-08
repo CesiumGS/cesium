@@ -4,6 +4,7 @@ define([
         '../Core/Matrix4',
         '../Core/MeshFilters',
         '../Core/PrimitiveType',
+        '../Core/BoundingSphere',
         '../Renderer/BufferUsage',
         '../Renderer/VertexLayout',
         '../Renderer/CommandLists',
@@ -14,6 +15,7 @@ define([
         Matrix4,
         MeshFilters,
         PrimitiveType,
+        BoundingSphere,
         BufferUsage,
         VertexLayout,
         CommandLists,
@@ -84,7 +86,9 @@ define([
             command.renderState = this._rs;
             command.shaderProgram = this._sp;
             command.uniformMap = appearance.material._uniforms;
-// TODO:    command.boundingVolume =
+// TODO: make this part of mesh
+            command.boundingVolume = BoundingSphere.fromVertices(this.mesh.attributes.position.values);
+
             this._commands.push(command);
         }
 

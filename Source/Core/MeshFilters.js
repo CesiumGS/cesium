@@ -7,7 +7,10 @@ define([
         './GeographicProjection',
         './ComponentDatatype',
         './PrimitiveType',
-        './Tipsify'
+        './Tipsify',
+        './Geometry',
+        './GeometryAttribute',
+        './GeometryIndices'
     ], function(
         defaultValue,
         DeveloperError,
@@ -16,7 +19,10 @@ define([
         GeographicProjection,
         ComponentDatatype,
         PrimitiveType,
-        Tipsify) {
+        Tipsify,
+        Geometry,
+        GeometryAttribute,
+        GeometryIndices) {
     "use strict";
 
     /**
@@ -37,7 +43,7 @@ define([
      * <br /><br />
      * This filter is commonly used to create a wireframe mesh for visual debugging.
      *
-     * @param {Object} mesh The mesh to filter, which is modified in place.
+     * @param {Geometry} mesh The mesh to filter, which is modified in place.
      *
      * @returns The modified <code>mesh</code> argument, with its triangle indices converted to lines.
      *
@@ -186,7 +192,7 @@ define([
      * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxTessellator}.
      * <br /><br />
 
-     * @param {Object} mesh The mesh to filter, which is modified in place.
+     * @param {Geometry} mesh The mesh to filter, which is modified in place.
      *
      * @exception {DeveloperError} All mesh attribute lists must have the same number of attributes.
      *
@@ -271,7 +277,7 @@ define([
      * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxTessellator}.
      * <br /><br />
 
-     * @param {Object} mesh The mesh to filter, which is modified in place.
+     * @param {Geometry} mesh The mesh to filter, which is modified in place.
      * @param {Number} [cacheCapacity=24] The number of vertices that can be held in the GPU's vertex cache.
      *
      * @exception {DeveloperError} Mesh's index list must be defined.
@@ -305,9 +311,11 @@ define([
                             maximumIndex = indices[j];
                         }
                     }
-                    indexLists[i].values = Tipsify.tipsify({indices : indices,
-                                                            maximumIndex : maximumIndex,
-                                                            cacheSize : cacheCapacity});
+                    indexLists[i].values = Tipsify.tipsify({
+                        indices : indices,
+                        maximumIndex : maximumIndex,
+                        cacheSize : cacheCapacity
+                    });
                 }
             }
         }
@@ -329,11 +337,11 @@ define([
         for ( var attribute in attributes) {
             if (attributes.hasOwnProperty(attribute) && attributes[attribute].values) {
                 var attr = attributes[attribute];
-                newAttributes[attribute] = {
+                newAttributes[attribute] = new GeometryAttribute({
                     componentDatatype : attr.componentDatatype,
                     componentsPerAttribute : attr.componentsPerAttribute,
                     values : []
-                };
+                });
             }
         }
 
@@ -360,13 +368,13 @@ define([
      */
     MeshFilters.fitToUnsignedShortIndices = function(mesh) {
         function createMesh(attributes, primitiveType, indices) {
-            return {
+            return new Geometry({
                 attributes : attributes,
-                indexLists : [{
+                indexLists : [new GeometryIndices({
                     primitiveType : primitiveType,
                     values : indices
-                }]
-            };
+                })]
+            });
         }
 
         var meshes = [];
@@ -498,7 +506,7 @@ define([
      * This is commonly used to create high-precision position vertex attributes.
      * </p>
      *
-     * @param {Object} mesh The mesh to filter, which is modified in place.
+     * @param {Geometry} mesh The mesh to filter, which is modified in place.
      * @param {String} [attributeName='position'] The name of the attribute.
      * @param {String} [attributeHighName='positionHigh'] The name of the attribute for the encoded high bits.
      * @param {String} [attributeLowName='positionLow'] The name of the attribute for the encoded low bits.
@@ -549,16 +557,16 @@ define([
             lowValues[i] = encodedResult.low;
         }
 
-        mesh.attributes[attributeHighName] = {
+        mesh.attributes[attributeHighName] = new GeometryAttribute({
             componentDatatype : attribute.componentDatatype,
             componentsPerAttribute : attribute.componentsPerAttribute,
             values : highValues
-        };
-        mesh.attributes[attributeLowName] = {
+        });
+        mesh.attributes[attributeLowName] = new GeometryAttribute({
             componentDatatype : attribute.componentDatatype,
             componentsPerAttribute : attribute.componentsPerAttribute,
             values : lowValues
-        };
+        });
         delete mesh.attributes[attributeName];
 
         return mesh;
@@ -595,13 +603,12 @@ define([
                 }
 
                 if (inAllMeshes) {
-// TODO: new type to allocate this
-                    attributesInAllMeshes[name] = {
+                    attributesInAllMeshes[name] = new GeometryAttribute({
                         componentDatatype : attribute.componentDatatype,
                         componentsPerAttribute : attribute.componentsPerAttribute,
                         normalize : attribute.normalize,
                         values : attribute.componentDatatype.createTypedArray(numberOfComponents)
-                    };
+                    });
                 }
             }
         }
@@ -688,11 +695,10 @@ define([
                     values = new Uint32Array(num);
                 }
 
-                combinedIndexLists.push({
-// TODO: Explicit type for this
+                combinedIndexLists.push(new GeometryIndices({
                     primitiveType : PrimitiveType[name],
                     values : values
-                });
+                }));
 
                 indexListsByPrimitiveType[name] = {
                     values : values,
@@ -731,10 +737,11 @@ define([
             }
         }
 
-        return {
+// TODO: combine bounding spheres
+        return new Geometry({
             attributes : attributes,
             indexLists : combinedIndexLists
-        };
+        });
     };
 
     return MeshFilters;
