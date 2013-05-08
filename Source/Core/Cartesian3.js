@@ -112,6 +112,20 @@ define([
     };
 
     /**
+     * DOC_TBA
+     */
+    Cartesian3.fromElements = function(x, y, z, result) {
+        if (typeof result === 'undefined') {
+            return new Cartesian3(x, y, z);
+        }
+
+        result.x = x;
+        result.y = y;
+        result.z = z;
+        return result;
+    };
+
+    /**
      * Duplicates a Cartesian3 instance.
      * @memberof Cartesian3
      *
