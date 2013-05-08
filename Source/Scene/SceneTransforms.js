@@ -2,20 +2,26 @@
 define([
         '../Core/defaultValue',
         '../Core/DeveloperError',
+        '../Core/Cartographic',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Matrix4',
-        '../Core/BoundingRectangle'
+        '../Core/BoundingRectangle',
+        '../Core/Math',
+        './SceneMode'
     ],
     function(
         defaultValue,
         DeveloperError,
+        Cartographic,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Matrix4,
-        BoundingRectangle) {
+        BoundingRectangle,
+        CesiumMath,
+        SceneMode) {
     "use strict";
 
     /**
@@ -24,6 +30,80 @@ define([
      * @exports SceneTransforms
      */
     var SceneTransforms = {};
+
+    var projectedPosition = new Cartesian3();
+    var positionInCartographic = new Cartographic();
+
+    /**
+     * @private
+     */
+    SceneTransforms.computeActualWgs84Position = function(frameState, position, result) {
+        var mode = frameState.mode;
+
+        if (mode === SceneMode.SCENE3D) {
+            return Cartesian3.clone(position, result);
+        }
+
+        var projection = frameState.scene2D.projection;
+        projection.getEllipsoid().cartesianToCartographic(position, positionInCartographic);
+        if (typeof positionInCartographic === 'undefined') {
+            result = undefined;
+            return result;
+        }
+
+        projection.project(positionInCartographic, projectedPosition);
+
+        if (mode === SceneMode.COLUMBUS_VIEW) {
+            return Cartesian3.fromElements(projectedPosition.z, projectedPosition.x, projectedPosition.y, result);
+        }
+
+        if (mode === SceneMode.SCENE2D) {
+            return Cartesian3.fromElements(0.0, projectedPosition.x, projectedPosition.y, result);
+        }
+
+        // mode === SceneMode.MORPHING
+        var morphTime = frameState.morphTime;
+        return Cartesian3.fromElements(
+            CesiumMath.lerp(projectedPosition.z, position.x, morphTime),
+            CesiumMath.lerp(projectedPosition.x, position.y, morphTime),
+            CesiumMath.lerp(projectedPosition.y, position.z, morphTime),
+            result);
+    };
+
+    var actualPosition = new Cartesian3();
+    var positionCC = new Cartesian4();
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof SceneTransforms
+     *
+     * @exception {DeveloperError} scene is required.
+     * @exception {DeveloperError} position is required.
+     */
+    SceneTransforms.wgs84ToWindowCoordinates = function(scene, position, result) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
+
+        if (typeof position === 'undefined') {
+            throw new DeveloperError('position is required.');
+        }
+
+        // Transform for 3D, 2D, or Columbus view
+        SceneTransforms.computeActualWgs84Position(scene.getFrameState(), position, actualPosition);
+
+        if (typeof actualPosition === 'undefined') {
+            result = undefined;
+            return undefined;
+        }
+
+        // View-projection matrix to transform from world coordinates to clip coordinates
+        var viewProjection = scene.getUniformState().getViewProjection();
+        viewProjection.multiplyByPoint(actualPosition, positionCC);
+
+        return SceneTransforms.clipToWindowCoordinates(scene.getCanvas(), positionCC, result);
+    };
 
     var positionNDC = new Cartesian3();
     var positionWC = new Cartesian4();
@@ -37,7 +117,6 @@ define([
      *
      * @exception {DeveloperError} canvas is required.
      * @exception {DeveloperError} position is required.
-     *
      */
     SceneTransforms.clipToWindowCoordinates = function(canvas, position, result) {
         if (typeof canvas === 'undefined') {
