@@ -90,24 +90,20 @@ define([
 
         var vertexArrayIndex = 0;
         var textureCoordinatesIndex = 0;
-
-        if (extent.rotation !== 0.0) {
-            Ellipsoid.WGS84.cartographicToCartesian(extent.getCenter(), pos);
-            rotationMatrix = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(pos, -extent.rotation), rotationMatrix);
-        }
+        Ellipsoid.WGS84.cartographicToCartesian(extent.getCenter(), pos);
+        Matrix3.fromQuaternion(Quaternion.fromAxisAngle(pos, -extent.rotation), rotationMatrix);
+        Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest(), pos);
+        rotationMatrix.multiplyByVector(pos, pos);
+        var cart = Ellipsoid.WGS84.cartesianToCartographic(pos);
 
         for ( var row = 0; row < height; ++row) {
-            var latitude = extent.north - granularityY * row;
-            var cosLatitude = cos(latitude);
-            var nZ = sin(latitude);
-            var kZ = radiiSquaredZ * nZ;
-
-            var geographicV = (latitude - extent.south) * latScalar;
-
-            var v = geographicV;
-
             for ( var col = 0; col < width; ++col) {
-                var longitude = extent.west + granularityX * col;
+                var latitude = cart.latitude - granularityY * row * cos(extent.rotation) + col * granularityX * sin(extent.rotation);
+                var cosLatitude = cos(latitude);
+                var nZ = sin(latitude);
+                var kZ = radiiSquaredZ * nZ;
+
+                var longitude = cart.longitude + row * granularityY * sin(extent.rotation) + col * granularityX * cos(extent.rotation);
 
                 var nX = cosLatitude * cos(longitude);
                 var nY = cosLatitude * sin(longitude);
@@ -121,26 +117,15 @@ define([
                 var rSurfaceY = kY / gamma;
                 var rSurfaceZ = kZ / gamma;
 
-                var x = rSurfaceX + nX * surfaceHeight - relativeToCenter.x;
-                var y = rSurfaceY + nY * surfaceHeight - relativeToCenter.y;
-                var z = rSurfaceZ + nZ * surfaceHeight - relativeToCenter.z;
-                if (extent.rotation !== 0.0) {
-                    pos.x = x;
-                    pos.y = y;
-                    pos.z = z;
-                    rotationMatrix.multiplyByVector(pos, pos);
-
-                    x = pos.x;
-                    y = pos.y;
-                    z = pos.z;
-                }
-
-                vertices[vertexArrayIndex++] = x;
-                vertices[vertexArrayIndex++] = y;
-                vertices[vertexArrayIndex++] = z;
+                vertices[vertexArrayIndex++] = rSurfaceX + nX * surfaceHeight - relativeToCenter.x;
+                vertices[vertexArrayIndex++] = rSurfaceY + nY * surfaceHeight - relativeToCenter.y;
+                vertices[vertexArrayIndex++] = rSurfaceZ + nZ * surfaceHeight - relativeToCenter.z;
 
                 if (generateTextureCoordinates) {
                     var geographicU = (longitude - extent.west) * lonScalar;
+                    var geographicV = (latitude - extent.south) * latScalar;
+
+                    var v = geographicV;
 
                     var u = geographicU;
 
