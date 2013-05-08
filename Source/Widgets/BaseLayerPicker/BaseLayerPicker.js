@@ -137,6 +137,7 @@ define(['./BaseLayerPickerViewModel',
         container.appendChild(element);
 
         var choices = document.createElement('div');
+        this._choices = choices;
         choices.className = 'cesium-baseLayerPicker-dropDown';
         choices.setAttribute('data-bind', '\
                 css: { "cesium-baseLayerPicker-visible" : dropDownVisible(),\
@@ -187,6 +188,7 @@ define(['./BaseLayerPickerViewModel',
         var container = this.container;
         knockout.cleanNode(container);
         container.removeChild(this.element);
+        container.removeChild(this._choices);
         return destroyObject(this);
     };
 

@@ -1,6 +1,7 @@
 /*global define*/
 define(['./viewHome',
         '../../Core/Cartesian2',
+        '../../Core/defaultValue',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
         '../../DynamicScene/DataSourceDisplay',
@@ -16,6 +17,7 @@ define(['./viewHome',
         ], function(
                 viewHome,
                 Cartesian2,
+                defaultValue,
                 DeveloperError,
                 destroyObject,
                 DataSourceDisplay,
@@ -37,6 +39,12 @@ define(['./viewHome',
         }
     }
 
+    function onTimelineScrubfunction(e) {
+        var clock = e.clock;
+        clock.currentTime = e.timeJulian;
+        clock.shouldAnimate = false;
+    }
+
     /**
      * A simple viewer.
      *
@@ -48,7 +56,9 @@ define(['./viewHome',
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      */
-    var Viewer = function(container) {
+    var Viewer = function(container, options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         if (typeof container === 'undefined') {
             throw new DeveloperError('container is required.');
         }
@@ -81,58 +91,72 @@ define(['./viewHome',
         this._dataSourceDisplay = dataSourceDisplay;
         cesiumWidget.clock.onTick.addEventListener(this._onTick, this);
 
-        //Animation
-        var clockViewModel = new ClockViewModel(clock);
-        var animationContainer = document.createElement('div');
-        animationContainer.className = 'cesium-viewer-animationContainer';
-        container.appendChild(animationContainer);
-        var animationWidget = new Animation(animationContainer, new AnimationViewModel(clockViewModel));
-
-        //Timeline
-        var timelineContainer = document.createElement('div');
-        timelineContainer.className = 'cesium-viewer-timelineContainer';
-        container.appendChild(timelineContainer);
-        var timelineWidget = new Timeline(timelineContainer, clock);
-
-        function onTimelineScrub(e) {
-            clock.currentTime = e.timeJulian;
-            clock.shouldAnimate = false;
-        }
-        timelineWidget.addEventListener('settime', onTimelineScrub, false);
-        timelineWidget.zoomTo(clock.startTime, clock.stopTime);
-
-        //Fullscreen
-        var fullscreenContainer = document.createElement('div');
-        fullscreenContainer.className = 'cesium-viewer-fullscreenContainer';
-        container.appendChild(fullscreenContainer);
-        var fullscreenWidget = new FullscreenWidget(fullscreenContainer, container);
-
         var toolbar = document.createElement('div');
+        this._toolbar = toolbar;
         toolbar.className = 'cesium-viewer-viewButtons';
         container.appendChild(toolbar);
 
         //View home
-        var homeButton = document.createElement('div');
-        homeButton.className = 'cesium-viewer-home';
-        toolbar.appendChild(homeButton);
-        var camera3D = cesiumWidget.scene.getCamera().clone();
-        homeButton.addEventListener('click', function() {
-            viewHome(cesiumWidget.scene, cesiumWidget.transitioner, cesiumWidget.canvas, cesiumWidget.centralBody.getEllipsoid(), camera3D);
-        });
+        var homeButton;
+        if (typeof options.homeButton === 'undefined' || options.homeButton !== false) {
+            homeButton = document.createElement('div');
+            homeButton.className = 'cesium-viewer-home';
+            toolbar.appendChild(homeButton);
+            var camera3D = cesiumWidget.scene.getCamera().clone();
+            homeButton.addEventListener('click', function() {
+                viewHome(cesiumWidget.scene, cesiumWidget.transitioner, cesiumWidget.canvas, cesiumWidget.centralBody.getEllipsoid(), camera3D);
+            });
+        }
 
         //SceneModePicker
-        var sceneModePickerContainer = document.createElement('div');
-        sceneModePickerContainer.className = 'cesium-viewer-sceneModePickerContainer';
-        toolbar.appendChild(sceneModePickerContainer);
-        var sceneModePicker = new SceneModePicker(sceneModePickerContainer, cesiumWidget.transitioner);
+        var sceneModePicker;
+        if (typeof options.sceneModePicker === 'undefined' || options.sceneModePicker !== false) {
+            var sceneModePickerContainer = document.createElement('div');
+            sceneModePickerContainer.className = 'cesium-viewer-sceneModePickerContainer';
+            toolbar.appendChild(sceneModePickerContainer);
+            sceneModePicker = new SceneModePicker(sceneModePickerContainer, cesiumWidget.transitioner);
+        }
 
         //BaseLayerPicker
-        var baseLayerPickerContainer = document.createElement('div');
-        baseLayerPickerContainer.className = 'cesium-viewer-baseLayerPickerContainer';
-        toolbar.appendChild(baseLayerPickerContainer);
-        var providerViewModels = createDefaultBaseLayers();
-        var baseLayerPicker = new BaseLayerPicker(baseLayerPickerContainer, cesiumWidget.centralBody.getImageryLayers(), providerViewModels);
-        baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
+        var baseLayerPicker;
+        if (typeof options.baseLayerPicker === 'undefined' || options.baseLayerPicker !== false) {
+            var baseLayerPickerContainer = document.createElement('div');
+            baseLayerPickerContainer.className = 'cesium-viewer-baseLayerPickerContainer';
+            toolbar.appendChild(baseLayerPickerContainer);
+            var providerViewModels = createDefaultBaseLayers();
+            baseLayerPicker = new BaseLayerPicker(baseLayerPickerContainer, cesiumWidget.centralBody.getImageryLayers(), providerViewModels);
+            baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
+        }
+
+        //Animation
+        var animation;
+        if (typeof options.animation === 'undefined' || options.animation !== false) {
+            var clockViewModel = new ClockViewModel(clock);
+            var animationContainer = document.createElement('div');
+            animationContainer.className = 'cesium-viewer-animationContainer';
+            container.appendChild(animationContainer);
+            animation = new Animation(animationContainer, new AnimationViewModel(clockViewModel));
+        }
+
+        //Timeline
+        var timeline;
+        if (typeof options.timeline === 'undefined' || options.timeline !== false) {
+            var timelineContainer = document.createElement('div');
+            timelineContainer.className = 'cesium-viewer-timelineContainer';
+            container.appendChild(timelineContainer);
+            timeline = new Timeline(timelineContainer, clock);
+            timeline.addEventListener('settime', onTimelineScrubfunction, false);
+            timeline.zoomTo(clock.startTime, clock.stopTime);
+        }
+
+        //Fullscreen
+        var fullscreenWidget;
+        if (typeof options.fullscreenWidget === 'undefined' || options.fullscreenWidget !== false) {
+            var fullscreenContainer = document.createElement('div');
+            fullscreenContainer.className = 'cesium-viewer-fullscreenContainer';
+            container.appendChild(fullscreenContainer);
+            fullscreenWidget = new FullscreenWidget(fullscreenContainer, container);
+        }
 
         /**
          * Gets the container element for the widget.
@@ -149,18 +173,11 @@ define(['./viewHome',
         this.cesiumWidget = cesiumWidget;
 
         /**
-         * Gets the Animation widget instance.
+         * Gets the HomeButton instance.
          * @memberof Viewer
-         * @type {Animation}
+         * @type {HomeButton}
          */
-        this.animationWidget = animationWidget;
-
-        /**
-         * Gets the Timeline widget instance.
-         * @memberof Viewer
-         * @type {Timeline}
-         */
-        this.timelineWidget = timelineWidget;
+        this.homeButton = homeButton;
 
         /**
          * Gets the SceneModePicker instance.
@@ -170,18 +187,32 @@ define(['./viewHome',
         this.sceneModePicker = sceneModePicker;
 
         /**
-         * Gets the FullscreenWidget instance.
-         * @memberof Viewer
-         * @type {FullscreenWidget}
-         */
-        this.fullscreenWidget = fullscreenWidget;
-
-        /**
          * Gets the BaseLayerPicker instance.
          * @memberof Viewer
          * @type {BaseLayerPicker}
          */
         this.baseLayerPicker = baseLayerPicker;
+
+        /**
+         * Gets the Animation widget instance.
+         * @memberof Viewer
+         * @type {Animation}
+         */
+        this.animation = animation;
+
+        /**
+         * Gets the Timeline widget instance.
+         * @memberof Viewer
+         * @type {Timeline}
+         */
+        this.timeline = timeline;
+
+        /**
+         * Gets the FullscreenWidget instance.
+         * @memberof Viewer
+         * @type {FullscreenWidget}
+         */
+        this.fullscreenWidget = fullscreenWidget;
 
         /**
          * Gets the set of {@link DataSource} instances to be visualized.
@@ -201,11 +232,34 @@ define(['./viewHome',
      * @memberof Viewer
      */
     Viewer.prototype.destroy = function() {
+        this.container.removeChild(this._toolbar);
+
+        if (typeof this.sceneModePicker !== 'undefined') {
+            this.sceneModePicker = this.sceneModePicker.destroy();
+        }
+
+        if (typeof this.baseLayerPicker !== 'undefined') {
+            this.baseLayerPicker = this.baseLayerPicker.destroy();
+        }
+
+        if (typeof this.animation !== 'undefined') {
+            this.container.removeChild(this.animation.container);
+            this.animation = this.animation.destroy();
+        }
+
+        if (typeof this.timeline !== 'undefined') {
+            this.timeline.removeEventListener('settime', onTimelineScrubfunction, false);
+            this.container.removeChild(this.timeline.container);
+            this.timeline = this.timeline.destroy();
+        }
+
+        if (typeof this.fullscreenWidget !== 'undefined') {
+            this.container.removeChild(this.fullscreenWidget.container);
+            this.fullscreenWidget = this.fullscreenWidget.destroy();
+        }
+
+        this.cesiumWidget.clock.onTick.removeEventListener(this._onTick, this);
         this.cesiumWidget = this.cesiumWidget.destroy();
-        this.animationWidget = this.animationWidget.destroy();
-        this.timelineWidget = this.timelineWidget.destroy();
-        this.sceneModePicker = this.sceneModePicker.destroy();
-        this.fullscreenWidget = this.fullscreenWidget.destroy();
         this._dataSourceDisplay = this._dataSourceDisplay.destroy();
         return destroyObject(this);
     };
