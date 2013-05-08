@@ -519,7 +519,8 @@ define([
         this._primitives.update(this._context, frameState, this._commandList);
 
         var passState = this._passState;
-        passState.framebuffer = undefined;
+        //passState.framebuffer = undefined;
+        passState.framebuffer = this.framebuffer;
 
         createPotentiallyVisibleSet(this, 'colorList');
         executeCommands(this, passState);

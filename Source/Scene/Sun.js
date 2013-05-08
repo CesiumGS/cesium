@@ -26,7 +26,8 @@ define([
     var Sun = function() {
         this._command = new DrawCommand();
 
-        this.size = new Cartesian2(100.0, 100.0);
+        var size = 200.0;
+        this.size = new Cartesian2(size, size);
 
         /**
          * Determines if the sun will be shown.
