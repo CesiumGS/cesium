@@ -159,6 +159,16 @@ defineSuite([
         expect(indices).toEqual([3, 4, 5, 3, 5, 6, 3, 6, 7, 7, 0, 1, 7, 1, 2, 2, 3, 7]);
     });
 
+    it('earClip2D triangulates example', function() {
+        var positions = [new Cartesian2(0.0, 0.0), new Cartesian2(1.0, -2.0), new Cartesian2(2.0, -0.2),
+                         new Cartesian2(3.0, -1.0), new Cartesian2(4.0, 1.0), new Cartesian2(3.0, 0.9),
+                new Cartesian2(2.0, 2.0), new Cartesian2(1.5, -0.5), new Cartesian2(0.5, 0.2), new Cartesian2(0.6, 1.8)];
+
+        var indices = PolygonPipeline.earClip2D(positions);
+
+        expect(indices).toEqual([2, 3, 4, 2, 4, 5, 2, 5, 6, 2, 6, 7, 8, 9, 0, 8, 0, 1, 1, 2, 7, 7, 8, 1]);
+    });
+
     it('earClip2D throws without positions', function() {
         expect(function() {
             PolygonPipeline.earClip2D();
