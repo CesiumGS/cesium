@@ -38,12 +38,6 @@
 		
 		<?js= self.partial('details.tmpl', doc) ?>
     <?js } ?>
-    <?js if(typeof doc.longname === 'string') { ?>
-        <div class="source-link">
-            <h5>Source:</h5>
-            <div><a href="https://github.com/AnalyticalGraphicsInc/cesium/blob/master/<?js= doc.longname?>"><?js= doc.longname?></a></div>
-        </div>
-    <?js } ?>
     </div>
     
     <?js if (doc.augments && doc.augments.length) { ?>
