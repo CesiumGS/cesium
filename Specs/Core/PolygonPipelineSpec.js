@@ -133,13 +133,13 @@ defineSuite([
     it('earClip2D triangulates a triangle', function() {
         var indices = PolygonPipeline.earClip2D([new Cartesian2(0.0, 0.0), new Cartesian2(1.0, 0.0), new Cartesian2(0.0, 1.0)]);
 
-        expect(indices).toEqual([2, 0, 1]);
+        expect(indices).toEqual([0, 1, 2]);
     });
 
     it('earClip2D triangulates a square', function() {
         var indices = PolygonPipeline.earClip2D([new Cartesian2(0.0, 0.0), new Cartesian2(1.0, 0.0), new Cartesian2(1.0, 1.0), new Cartesian2(0.0, 1.0)]);
 
-        expect(indices).toEqual([3, 0, 1, 3, 1, 2]);
+        expect(indices).toEqual([1, 2, 3, 1, 3, 0]);
     });
 
     it('earClip2D triangulates simple concave', function() {
@@ -147,7 +147,7 @@ defineSuite([
 
         var indices = PolygonPipeline.earClip2D(positions);
 
-        expect(indices).toEqual([1, 2, 3, 3, 4, 0, 0, 1, 3]);
+        expect(indices).toEqual([1, 2, 3, 0, 1, 3, 0, 3, 4]);
     });
 
     it('earClip2D triangulates complex concave', function() {
@@ -156,7 +156,7 @@ defineSuite([
 
         var indices = PolygonPipeline.earClip2D(positions);
 
-        expect(indices).toEqual([ 7, 0, 1, 3, 4, 5, 7, 1, 2, 3, 5, 6, 6, 7, 2, 6, 2, 3 ]);
+        expect(indices).toEqual([3, 4, 5, 3, 5, 6, 3, 6, 7, 2, 3, 7, 1, 2, 7, 1, 7, 0]);
     });
 
     it('earClip2D throws without positions', function() {

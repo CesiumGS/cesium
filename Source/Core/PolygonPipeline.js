@@ -84,7 +84,7 @@ define([
         this.head = undefined;
         this.tail = undefined;
         this.length = 0;
-        this.list = [];
+        this.list.length = 0;
     };
 
     function isTipConvex(p0, p1, p2) {
@@ -92,7 +92,19 @@ define([
         var v = p2.subtract(p1);
 
         // Use the sign of the z component of the cross product
-        return ((u.x * v.y) - (u.y * v.x)) >= 0.0;
+        return ((u.x * v.y) - (u.y * v.x)) > 0.0;
+    }
+
+    function isVertexEar (v){
+        var v0 = v.previous;
+        var v1 = v.next;
+        var isEar = true;
+        for (var n = v1.next; n !== v0; n = n.next) {
+            if (pointInsideTriangle2D(n.item, v0.item, v.item, v1.item)) {
+                isEar = false;
+            }
+        }
+        return isEar;
     }
 
     /**
@@ -380,16 +392,6 @@ define([
         return newPolygonVertices;
     }
 
-    function isVertexEar (v0, v, v1){
-        var isEar = true;
-        for (var n = v1.next; n !== v0; n = n.next) {
-            if (pointInsideTriangle2D(n.item, v0.item, v.item, v1.item)) {
-                isEar = false;
-            }
-        }
-        return isEar;
-    }
-
     var scaleToGeodeticHeightN = new Cartesian3();
     var scaleToGeodeticHeightP = new Cartesian3();
 
@@ -486,10 +488,7 @@ define([
          * @exception {DeveloperError} At least three positions are required.
          */
         earClip2D : function(positions) {
-            // PERFORMANCE_IDEA:  This is slow at n^3.  Make it faster with:
-            //   * http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-            //   * http://cgm.cs.mcgill.ca/~godfried/publications/triangulation.held.ps.gz
-            //   * http://blogs.agi.com/insight3d/index.php/2008/03/20/triangulation-rhymes-with-strangulation/
+            // Based on http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
 
             if (typeof positions  === 'undefined') {
                 throw new DeveloperError('positions is required.');
@@ -500,68 +499,69 @@ define([
                 throw new DeveloperError('At least three positions are required.');
             }
 
-            polygonVertices.clear();
-            var convexVertices = [];
+            if (polygonVertices.length > 0) {
+                polygonVertices.clear();
+            }
+
             var earTips = [];
+            var indices = [];
+            var v, v0, v1;
 
             for ( var i = 0; i < length; ++i) {
                 polygonVertices.add(positions[i]);
             }
 
-            var v = polygonVertices.head;
-            var v0 = v.previous;
-            var v1 = v.next;
-            for (i = 0; i < length; i++) {
-                if (isTipConvex(v0.item, v.item, v1.item)) {
-                    convexVertices.push(v.index);
-                }
-                v = v.next;
-                v0 = v.previous;
-                v1 = v.next;
-            }
-
-
-            for (i = 0; i < convexVertices.length; i++) {
-                v = polygonVertices.get(convexVertices[i]);
-                v0 = v.previous;
-                v1 = v.next;
-                if (isVertexEar(v0, v, v1)) {
-                    earTips.push(v.index);
+            for (v = polygonVertices.head; v.next !== polygonVertices.head; v = v.next) {
+                if (isTipConvex(v.previous.item, v.item, v.next.item)) {
+                    v.convex = true;
+                    if (isVertexEar(v)) {
+                        earTips.push(v.index);
+                    }
+                } else {
+                    v.convex = false;
                 }
             }
 
-            var indices = [];
-            v = polygonVertices.get(earTips[0]);
+            v = polygonVertices.get(earTips.pop());
             v0 = v.previous;
             v1 = v.next;
-            while (polygonVertices.length > 3 && typeof v !== 'undefined') {
+            while (polygonVertices.length > 3) {
                 indices.push(v0.index, v.index, v1.index);
                 polygonVertices.remove(v.index);
-                earTips.shift();
 
-                if (convexVertices.indexOf(v0.index) === -1) {
+                // Check the previous vertex for changes
+                if ((i = earTips.indexOf(v0.index)) !== -1) { // If tip that was previously an ear tip is no longer
+                    if (!isVertexEar(v0)) {
+                        earTips.splice(i, 1);
+                    }
+                } else if (!v0.convex) { // If reflex vertex is now convex
                     if(isTipConvex(v0.previous.item, v0.item, v0.next.item)) {
-                        convexVertices.push(v0.index);
-                        if (isVertexEar(v0.previous, v0, v0.next)) {
+                        v0.convex = true;
+                        if (isVertexEar(v0)) { // If vertex is also an ear tip
                             earTips.push(v0.index);
                         }
                     }
-                } else if ((earTips.indexOf(v0.index) === -1) && (isVertexEar(v0.previous, v0, v0.next))){
+                } else if (isVertexEar(v0)){ // If convex vertex is now also an ear tip
                     earTips.push(v0.index);
                 }
 
-                if (convexVertices.indexOf(v1.index) === -1) {
+                // Check next vertex for changes
+                if ((i = earTips.indexOf(v1.index)) !== -1) {
+                    if (!isVertexEar(v1)) {
+                        earTips.splice(i, 1);
+                    }
+                } else if (!v1.convex) {
                     if (isTipConvex(v1.previous.item, v1.item, v1.next.item ))  {
-                        convexVertices.push(v1.index);
-                        if (isVertexEar(v1.previous, v1, v1.next)) {
+                        v1.convex = true;
+                        if (isVertexEar(v1)) {
                             earTips.push(v1.index);
                         }
                     }
-                } else if ((earTips.indexOf(v1.index) === -1) && (isVertexEar(v1.previous, v1, v1.next))) {
+                } else if (isVertexEar(v1)) {
                     earTips.push(v1.index);
                 }
 
-                v = polygonVertices.get(earTips[0]);
+                v = polygonVertices.get(earTips.pop()); //go to next ear tip
                 v0 = v.previous;
                 v1 = v.next;
             }
