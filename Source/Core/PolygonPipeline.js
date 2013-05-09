@@ -496,11 +496,11 @@ define([
         },
 
         /**
-         * Triangulates a polygon by the ear clipping method
+         * Triangulates a polygon by an ear clipping method
          *
-         * @param Array {Cartesian2} Array of points, representing polygon vertices
+         * @param {Array} Cartesian2 Array of points, representing polygon vertices
          *
-         * @return Array {Number} Indices of vertices (in sets of three) representing triangles
+         * @return {Array} Number Indices of vertices (in sets of three) representing triangles
          *
          * @exception {DeveloperError} positions is required.
          * @exception {DeveloperError} At least three positions are required.
