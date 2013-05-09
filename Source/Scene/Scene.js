@@ -17,8 +17,8 @@ define([
         '../Core/Interval',
         '../Core/Matrix4',
         '../Core/JulianDate',
-        '../Core/CubeMapEllipsoidTessellator',
-        '../Core/MeshFilters',
+        '../Core/EllipsoidGeometry',
+        '../Core/GeometryFilters',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
@@ -52,8 +52,8 @@ define([
         Interval,
         Matrix4,
         JulianDate,
-        CubeMapEllipsoidTessellator,
-        MeshFilters,
+        EllipsoidGeometry,
+        GeometryFilters,
         Context,
         ClearCommand,
         PassState,
@@ -451,8 +451,8 @@ define([
             // Assumes bounding volume is a bounding sphere.
 
             if (typeof scene._debugSphere === 'undefined') {
-                var mesh = CubeMapEllipsoidTessellator.compute(Ellipsoid.UNIT_SPHERE, 20);
-                scene._debugSphere = new Primitive(MeshFilters.toWireframeInPlace(mesh), Appearance.EXAMPLE_APPEARANCE);
+                var geometry = new EllipsoidGeometry(Ellipsoid.UNIT_SPHERE, 20);
+                scene._debugSphere = new Primitive(GeometryFilters.toWireframe(geometry), Appearance.EXAMPLE_APPEARANCE);
             }
 
             var m = Matrix4.multiplyByTranslation(defaultValue(command.modelMatrix, Matrix4.IDENTITY), command.boundingVolume.center);
