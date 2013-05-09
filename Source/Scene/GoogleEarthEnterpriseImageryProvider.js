@@ -45,7 +45,7 @@ define([
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} <code>description.url</code> is required.
-     * @exception {DeveloperError} <code>description.requestType</code> is required.
+     * @exception {DeveloperError} <code>description.channel</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -59,6 +59,7 @@ define([
      * @example
      * var google = new GoogleEarthEnterpriseImageryProvider({
      *     url : 'http://earth.localdomain',
+     *     channel : 1008,
      *     requestType : 'ImageryMaps'
      * });
      */
@@ -68,13 +69,14 @@ define([
         if (typeof description.url === 'undefined') {
             throw new DeveloperError('description.url is required.');
         }
-        if (typeof description.requestType === 'undefined') {
-            throw new DeveloperError('description.requestType is required.');
+        if (typeof description.channel === 'undefined') {
+            throw new DeveloperError('description.channel is required.');
         }
 
         this._url = description.url;
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
+        this._channel = description.channel;
         this._requestType = 'ImageryMaps';
 
         /**
@@ -93,7 +95,6 @@ define([
         });
 
         this.version = undefined;
-        this.channel = undefined;
 
 
         this._tileWidth = 256;
@@ -113,7 +114,7 @@ define([
             console.log(data);
             var layer;
             for(var i = 0; i < data.layers.length; i++) {
-              if(data.layers[i].requestType === that._requestType) {
+              if(data.layers[i].id === that._channel) {
                 layer = data.layers[i];
                 console.log('success')
                 break;
@@ -121,9 +122,8 @@ define([
             }
 
             that.version = layer.version;
-            that.channel = layer.id;
             that._imageUrlTemplate = that._imageUrlTemplate.replace('{request}', that._requestType) 
-              .replace('{channel}', that.channel).replace('{version}', that.version); 
+              .replace('{channel}', that._channel).replace('{version}', that.version); 
 
             // Install the default tile discard policy if none has been supplied.
             if (typeof that._tileDiscardPolicy === 'undefined') {
