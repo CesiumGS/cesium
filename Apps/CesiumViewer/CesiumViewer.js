@@ -8,7 +8,7 @@ define([
         'Core/Math',
         'Core/Extent',
         'Core/ExtentTessellator',
-        'Core/MeshFilters',
+        'Core/GeometryFilters',
         'Scene/Primitive',
         'Scene/Appearance',
         'Widgets/Dojo/checkForChromeFrame',

@@ -5,7 +5,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
-        '../Core/MeshFilters',
+        '../Core/GeometryFilters',
         '../Core/PrimitiveType',
         '../Renderer/loadCubeMap',
         '../Renderer/BufferUsage',

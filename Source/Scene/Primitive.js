@@ -2,7 +2,7 @@
 define([
         '../Core/destroyObject',
         '../Core/Matrix4',
-        '../Core/MeshFilters',
+        '../Core/GeometryFilters',
         '../Core/PrimitiveType',
         '../Core/BoundingSphere',
         '../Renderer/BufferUsage',

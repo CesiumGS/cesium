@@ -3,7 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/EllipsoidGeometry',
         '../Core/destroyObject',
-        '../Core/MeshFilters',
+        '../Core/GeometryFilters',
         '../Core/PrimitiveType',
         '../Core/Ellipsoid',
         '../Renderer/BufferUsage',

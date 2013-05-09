@@ -11,7 +11,7 @@ defineSuite([
          'Core/defaultValue',
          'Core/Math',
          'Core/Matrix4',
-         'Core/MeshFilters',
+         'Core/GeometryFilters',
          'Core/PrimitiveType',
          'Renderer/BlendingState',
          'Renderer/BufferUsage',

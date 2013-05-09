@@ -13,7 +13,7 @@ define([
         '../Core/EllipsoidalOccluder',
         '../Core/Intersect',
         '../Core/Matrix4',
-        '../Core/MeshFilters',
+        '../Core/GeometryFilters',
         '../Core/PrimitiveType',
         '../Core/Queue',
         '../Core/TaskProcessor',

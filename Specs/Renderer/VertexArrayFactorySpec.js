@@ -3,7 +3,7 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Core/ComponentDatatype',
-         'Core/MeshFilters',
+         'Core/GeometryFilters',
          'Core/PrimitiveType',
          'Core/IndexDatatype',
          'Renderer/BufferUsage',

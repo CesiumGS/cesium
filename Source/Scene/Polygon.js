@@ -14,7 +14,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/ComponentDatatype',
-        '../Core/MeshFilters',
+        '../Core/GeometryFilters',
         '../Core/PrimitiveType',
         '../Core/EllipsoidTangentPlane',
         '../Core/PolygonPipeline',
