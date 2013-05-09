@@ -31,6 +31,7 @@ define([
      * @constructor
      *
      * @param {String} description.url The url of the Google Earth Enterprise server hosting the imagery.
+     * @param {Number} description.channel The channel (id) to be used when requesting data from the server. 
      * @param {TileDiscardPolicy} [description.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
      *        {@link DiscardMissingTileImagePolicy} is used which requests
@@ -38,9 +39,9 @@ define([
      *        (200,50), and (200,200).  If all of these pixels are transparent, the discard check is
      *        disabled and no tiles are discarded.  If any of them have a non-transparent color, any
      *        tile that has the same values in these pixel locations is discarded.  The end result of
-     *        these defaults should be correct tile discarding for a standard Bing Maps server.  To ensure
-     *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
-     *        parameter.
+     *        these defaults should be correct tile discarding for a standard Google Earth Enterprise server.
+     *        To ensure that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for
+     *        this parameter.
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
@@ -211,7 +212,7 @@ define([
     };
 
     /**
-     * Gets the name of the Bing Maps server url hosting the imagery.
+     * Gets the name of the Google Earth Enterprise server url hosting the imagery.
      *
      * @memberof GoogleEarthEnterpriseImageryProvider
      *
