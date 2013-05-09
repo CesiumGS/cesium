@@ -704,7 +704,6 @@ define([
             var additiveBlendCommand = scene._blendCommand = new DrawCommand();
             additiveBlendCommand.primitiveType = primitiveType;
             additiveBlendCommand.vertexArray = vertexArray;
-            additiveBlendCommand.renderState = context.createRenderState();
             additiveBlendCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, AdditiveBlend, attributeIndices);
         }
 
@@ -791,8 +790,8 @@ define([
         size.y = sunSize.y * downSampleHeight / height;
 
         var scissorRectangle = scissorTestBoundingRectangle;
-        scissorRectangle.x = sunPositionWC.x - size.x;
-        scissorRectangle.y = sunPositionWC.y - size.y;
+        scissorRectangle.x = sunPositionWC.x - size.x * 0.5;
+        scissorRectangle.y = sunPositionWC.y - size.y * 0.5;
         scissorRectangle.width = size.x;
         scissorRectangle.height = size.y;
 
@@ -807,6 +806,31 @@ define([
         scene._brightPassCommand.renderState = renderState;
         scene._blurXCommand.renderState = renderState;
         scene._blurYCommand.renderState = renderState;
+
+        /*
+        viewport.width = width;
+        viewport.height = height;
+
+        viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, postProcessMatrix4Scratch);
+        sunPositionWC = Transforms.pointToWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
+
+        size.x = sunSize.x;
+        size.y = sunSize.y;
+
+        scissorRectangle.x = sunPositionWC.x - size.x * 0.5;
+        scissorRectangle.y = sunPositionWC.y - size.y * 0.5;
+        scissorRectangle.width = size.x;
+        scissorRectangle.height = size.y;
+
+        scene._blendCommand.renderState = context.createRenderState({
+            viewport : viewport,
+            scissorTest : {
+                enabled : true,
+                rectangle : scissorRectangle
+            }
+        });
+        */
+        scene._blendCommand.renderState = context.createRenderState();
     }
 
     var orthoPickingFrustum = new OrthographicFrustum();
