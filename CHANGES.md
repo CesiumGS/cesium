@@ -18,6 +18,8 @@ Beta Releases
 * Added `IntersectionTests.trianglePlaneIntersection`.
 * Fixed polygon crossing international date line for 2D and Columbus view
 * Added `computeHorizonCullingPoint`, `computeHorizonCullingPointFromVertices`, and `computeHorizonCullingPointFromExtent` methods to `EllipsoidalOccluder` and used them to build a more accurate horizon occlusion test for terrain rendering.
+* Added a new `HomeButton` widget for returning to the default view of the current scene mode.
+* Added `Command.beforeExecute` and `Command.afterExecute` events to enable additional processing when a command is executed.
 
 ### b16 - 2013-05-01
 * Breaking changes:
