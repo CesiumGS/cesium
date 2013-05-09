@@ -370,6 +370,24 @@ define([
         return newPolygonVertices;
     }
 
+    var c3 = new Cartesian3();
+    function getXZIntersectionOffsetPoints(p, p1, u1, v1) {
+        p.add(p1.subtract(p, c3).multiplyByScalar(p.y/(p.y-p1.y), c3), u1);
+        Cartesian3.clone(u1, v1);
+        offsetPointFromXZPlane(u1, true);
+        offsetPointFromXZPlane(v1, false);
+    }
+
+    function offsetPointFromXZPlane(p, isBehind) {
+        if (Math.abs(p.y) < CesiumMath.EPSILON11){
+            if (isBehind) {
+                p.y = -CesiumMath.EPSILON11;
+            } else {
+                p.y = CesiumMath.EPSILON11;
+            }
+        }
+    }
+
     var scaleToGeodeticHeightN = new Cartesian3();
     var scaleToGeodeticHeightP = new Cartesian3();
 
@@ -539,6 +557,122 @@ define([
         },
 
         /**
+         * Subdivides a {@link Polygon} such that no triangles cross the &plusmn;180 degree meridian of an ellipsoid.
+         * @memberof PolygonPipeline
+         *
+         * @param {Array} positions The Cartesian positions of triangles that make up a polygon.
+         * @param {Array} indices The indices of positions in the positions array that make up triangles
+         *
+         * @returns {Object} The full set of indices, including those for positions added for newly created triangles
+         *
+         * @exception {DeveloperError} positions and indices are required
+         * @exception {DeveloperError} At least three indices are required.
+         * @exception {DeveloperError} The number of indices must be divisable by three.
+         *
+         * @see Polygon
+         *
+         * @example
+         * var positions = [new Cartesian3(-1, -1, 0), new Cartesian3(-1, 1, 2), new Cartesian3(-1, 2, 2)];
+         * var indices = [0, 1, 2];
+         * indices = PolygonPipeline.wrapLongitude(positions, indices);
+         */
+
+        wrapLongitude : function(positions, indices) {
+            if ((typeof positions === 'undefined') ||
+                (typeof indices === 'undefined')) {
+                throw new DeveloperError('positions and indices are required.');
+            }
+
+            if (indices.length < 3) {
+                throw new DeveloperError('At least three indices are required.');
+            }
+
+            if (indices.length % 3 !== 0) {
+                throw new DeveloperError('The number of indices must be divisable by three.');
+            }
+
+            var newIndices = [];
+
+            var len = indices.length;
+            for (var i = 0; i < len; i += 3) {
+                var i0 = indices[i];
+                var i1 = indices[i + 1];
+                var i2 = indices[i + 2];
+                var p0 = positions[i0];
+                var p1 = positions[i1];
+                var p2 = positions[i2];
+
+                // In WGS84 coordinates, for a triangle approximately on the
+                // ellipsoid to cross the IDL, first it needs to be on the
+                // negative side of the plane x = 0.
+                if ((p0.x < 0.0) && (p1.x < 0.0) && (p2.x < 0.0)) {
+                    var p0Behind = p0.y < 0.0;
+                    var p1Behind = p1.y < 0.0;
+                    var p2Behind = p2.y < 0.0;
+
+                    offsetPointFromXZPlane(p0, p0Behind);
+                    offsetPointFromXZPlane(p1, p1Behind);
+                    offsetPointFromXZPlane(p2, p2Behind);
+
+                    var numBehind = 0;
+                    numBehind += p0Behind ? 1 : 0;
+                    numBehind += p1Behind ? 1 : 0;
+                    numBehind += p2Behind ? 1 : 0;
+
+                    var u1, u2, v1, v2;
+
+                    if (numBehind === 1 || numBehind === 2) {
+                        u1 = new Cartesian3();
+                        u2 = new Cartesian3();
+                        v1 = new Cartesian3();
+                        v2 = new Cartesian3();
+                    }
+                    var iu1 = positions.length;
+                    if (numBehind === 1) {
+                        if (p0Behind) {
+                            getXZIntersectionOffsetPoints(p0, p1, u1, v1);
+                            getXZIntersectionOffsetPoints(p0, p2, u2, v2);
+                            positions.push(u1, u2, v1, v2);
+                            newIndices.push(i0, iu1, iu1+1, i1, i2, iu1+3, i1, iu1+3, iu1+2);
+                        } else if (p1Behind) {
+                            getXZIntersectionOffsetPoints(p1, p0, u1, v1);
+                            getXZIntersectionOffsetPoints(p1, p2, u2, v2);
+                            positions.push(u1, u2, v1, v2);
+                            newIndices.push(i1, iu1, iu1+1, i2, i0, iu1+3, i2, iu1+3, iu1+2);
+                        } else if (p2Behind) {
+                            getXZIntersectionOffsetPoints(p2, p0, u1, v1);
+                            getXZIntersectionOffsetPoints(p2, p1, u2, v2);
+                            positions.push(u1, u2, v1, v2);
+                            newIndices.push(i2, iu1, iu1+1, i0, i1, iu1+3, i0, iu1+3, iu1+2);
+                        }
+                    } else if (numBehind === 2) {
+                        if (!p0Behind) {
+                            getXZIntersectionOffsetPoints(p0, p1, u1, v1);
+                            getXZIntersectionOffsetPoints(p0, p2, u2, v2);
+                            positions.push(u1, u2, v1, v2);
+                            newIndices.push(i1, i2, iu1+1, i1, iu1+1, iu1, i0, iu1+2, iu1+3);
+                        } else if (!p1Behind) {
+                            getXZIntersectionOffsetPoints(p1, p2, u1, v1);
+                            getXZIntersectionOffsetPoints(p1, p0, u2, v2);
+                            positions.push(u1, u2, v1, v2);
+                            newIndices.push(i2, i0, iu1+1, i2, iu1+1, iu1, i1, iu1+2, iu1+3);
+                        } else if (!p2Behind) {
+                            getXZIntersectionOffsetPoints(p2, p0, u1, v1);
+                            getXZIntersectionOffsetPoints(p2, p1, u2, v2);
+                            positions.push(u1, u2, v1, v2);
+                            newIndices.push(i0, i1, iu1+1, i0, iu1+1, iu1, i2, iu1+2, iu1+3);
+                        }
+                    } else {
+                        newIndices.push(i0, i1, i2);
+                    }
+                } else {
+                    newIndices.push(i0, i1, i2);
+                }
+            }
+            return newIndices;
+        },
+
+        /**
          * DOC_TBA
          *
          * @param {DOC_TBA} positions DOC_TBA
@@ -552,7 +686,7 @@ define([
          * @exception {DeveloperError} Granularity must be greater than zero.
          */
         computeSubdivision : function(positions, indices, granularity) {
-            if (typeof positions  === 'undefined') {
+            if (typeof positions === 'undefined') {
                 throw new DeveloperError('positions is required.');
             }
 
