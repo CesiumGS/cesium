@@ -97,11 +97,11 @@ require([
             var minimumCorner = maximumCorner.negate();
             Cesium.BoundingSphere.fromPoints([minimumCorner, maximumCorner], colorCommand.boundingVolume);
 
-            var mesh = Cesium.MeshFilters.toWireframeInPlace(Cesium.BoxTessellator.compute({
+            var mesh = Cesium.GeometryFilters.toWireframe(Cesium.BoxTessellator.compute({
                 minimumCorner : minimumCorner,
                 maximumCorner : maximumCorner
             }));
-            var attributeIndices = Cesium.MeshFilters.createAttributeIndices(mesh);
+            var attributeIndices = Cesium.GeometryFilters.createAttributeIndices(mesh);
 
             colorCommand.vertexArray = pickCommand.vertexArray = context.createVertexArrayFromMesh({
                 mesh : mesh,
@@ -206,7 +206,7 @@ require([
             var maximumCorner = dimensions.multiplyByScalar(0.5);
             var minimumCorner = maximumCorner.negate();
 
-            var mesh = Cesium.MeshFilters.toWireframeInPlace(Cesium.BoxTessellator.compute({
+            var mesh = Cesium.GeometryFilters.toWireframe(Cesium.BoxTessellator.compute({
                 minimumCorner : minimumCorner,
                 maximumCorner : maximumCorner
             }));

@@ -1,29 +1,35 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/MeshFilters',
+         'Core/GeometryFilters',
          'Core/PrimitiveType',
          'Core/ComponentDatatype',
-         'Core/CubeMapEllipsoidTessellator',
+         'Core/EllipsoidGeometry',
          'Core/Ellipsoid',
          'Core/Cartesian3',
          'Core/EncodedCartesian3',
          'Core/Tipsify',
-         'Core/GeographicProjection'
+         'Core/GeographicProjection',
+         'Core/Geometry',
+         'Core/GeometryAttribute',
+         'Core/GeometryIndices'
      ], function(
-         MeshFilters,
+         GeometryFilters,
          PrimitiveType,
          ComponentDatatype,
-         CubeMapEllipsoidTessellator,
+         EllipsoidGeometry,
          Ellipsoid,
          Cartesian3,
          EncodedCartesian3,
          Tipsify,
-         GeographicProjection) {
+         GeographicProjection,
+         Geometry,
+         GeometryAttribute,
+         GeometryIndices) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('converts triangles to wireframe in place', function() {
-        var mesh = MeshFilters.toWireframeInPlace({
+        var mesh = GeometryFilters.toWireframe({
             indexLists : [{
                 primitiveType : PrimitiveType.TRIANGLES,
                 values : [0, 1, 2, 3, 4, 5]
@@ -51,7 +57,7 @@ defineSuite([
     });
 
     it('converts a triangle fan to wireframe in place', function() {
-        var mesh = MeshFilters.toWireframeInPlace({
+        var mesh = GeometryFilters.toWireframe({
             indexLists : [{
                 primitiveType : PrimitiveType.TRIANGLE_FAN,
                 values : [0, 1, 2, 3]
@@ -79,7 +85,7 @@ defineSuite([
     });
 
     it('converts a triangle strip to wireframe in place', function() {
-        var mesh = MeshFilters.toWireframeInPlace({
+        var mesh = GeometryFilters.toWireframe({
             indexLists : [{
                 primitiveType : PrimitiveType.TRIANGLE_STRIP,
                 values : [0, 1, 2, 3]
@@ -115,7 +121,7 @@ defineSuite([
             }
         };
 
-        var indices = MeshFilters.createAttributeIndices(mesh);
+        var indices = GeometryFilters.createAttributeIndices(mesh);
 
         var validIndices = [0, 1, 2];
         expect(validIndices).toContain(indices.position);
@@ -132,7 +138,7 @@ defineSuite([
             colors : 2
         };
 
-        var mappedIndices = MeshFilters.mapAttributeIndices(indices, {
+        var mappedIndices = GeometryFilters.mapAttributeIndices(indices, {
             positions : 'position',
             normals : 'normal',
             colors : 'color'
@@ -159,7 +165,7 @@ defineSuite([
                 componentsPerAttribute : 3,
                 values : [0, 1, 2, 3, 4, 5]
             };
-            mesh = MeshFilters.reorderForPreVertexCache(mesh);
+            mesh = GeometryFilters.reorderForPreVertexCache(mesh);
         }).toThrow();
     });
 
@@ -189,7 +195,7 @@ defineSuite([
             componentsPerAttribute : 3,
             values : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
         };
-        MeshFilters.reorderForPreVertexCache(mesh);
+        GeometryFilters.reorderForPreVertexCache(mesh);
 
         expect(mesh.indexLists[0].values[0]).toEqual(0);
         expect(mesh.indexLists[0].values[1]).toEqual(1);
@@ -233,7 +239,7 @@ defineSuite([
     });
 
     it('can reorder indices for the post vertex cache', function() {
-        var mesh = CubeMapEllipsoidTessellator.compute(new Ellipsoid(10.0, 10.0, 10.0), 100);
+        var mesh = new EllipsoidGeometry(new Ellipsoid(10.0, 10.0, 10.0), 100);
         var indices = mesh.indexLists[0].values;
         var numIndices = indices.length;
         var maximumIndex = 0;
@@ -246,7 +252,7 @@ defineSuite([
                                                 maximumIndex : maximumIndex,
                                                 cacheSize : 24});
         expect(ACMRbefore).toBeGreaterThan(1.00);
-        mesh = MeshFilters.reorderForPostVertexCache(mesh);
+        mesh = GeometryFilters.reorderForPostVertexCache(mesh);
         indices = mesh.indexLists[0].values;
         var ACMRafter = Tipsify.calculateACMR({indices : indices,
                                                maximumIndex : maximumIndex,
@@ -274,7 +280,7 @@ defineSuite([
             }]
         };
 
-        var meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
+        var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
 
         expect(meshes.length).toEqual(1);
         expect(meshes[0]).toBe(mesh);
@@ -301,7 +307,7 @@ defineSuite([
             }]
         };
 
-        var meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
+        var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
 
         expect(meshes.length).toEqual(1);
         expect(meshes[0].attributes.time.componentDatatype).toEqual(ComponentDatatype.FLOAT);
@@ -340,7 +346,7 @@ defineSuite([
             }]
         };
 
-        var meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
+        var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
 
         expect(meshes.length).toEqual(2);
 
@@ -368,7 +374,7 @@ defineSuite([
         };
 
         expect(function() {
-            return MeshFilters.fitToUnsignedShortIndices(mesh);
+            return GeometryFilters.fitToUnsignedShortIndices(mesh);
         }).toThrow();
     });
 
@@ -395,7 +401,7 @@ defineSuite([
         };
 
         expect(function() {
-            return MeshFilters.fitToUnsignedShortIndices(mesh);
+            return GeometryFilters.fitToUnsignedShortIndices(mesh);
         }).toThrow();
     });
 
@@ -411,7 +417,7 @@ defineSuite([
             values : [p1.x, p1.y, p1.z, p2.x, p2.y, p2.z]
         };
 
-        mesh = MeshFilters.projectTo2D(mesh);
+        mesh = GeometryFilters.projectTo2D(mesh);
 
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection();
@@ -431,7 +437,7 @@ defineSuite([
         expect(mesh.attributes.position3D.values[5]).toEqual(p2.z);
     });
 
-    it('MeshFilters.encodeAttribute encodes positions', function() {
+    it('GeometryFilters.encodeAttribute encodes positions', function() {
         var c = new Cartesian3(-10000000.0, 0.0, 10000000.0);
         var encoded = EncodedCartesian3.fromCartesian(c);
 
@@ -444,7 +450,7 @@ defineSuite([
                 }
             }
         };
-        mesh = MeshFilters.encodeAttribute(mesh);
+        mesh = GeometryFilters.encodeAttribute(mesh);
 
         expect(mesh.attributes.positionHigh).toBeDefined();
         expect(mesh.attributes.positionHigh.values[0]).toEqual(encoded.high.x);
@@ -457,29 +463,29 @@ defineSuite([
         expect(mesh.attributes.position).not.toBeDefined();
     });
 
-    it('MeshFilters.encodeAttribute throws without a mesh', function() {
+    it('GeometryFilters.encodeAttribute throws without a mesh', function() {
         expect(function() {
-            MeshFilters.encodeAttribute(undefined);
+            GeometryFilters.encodeAttribute(undefined);
         }).toThrow();
     });
 
-    it('MeshFilters.encodeAttribute throws with mesh without attributes property', function() {
+    it('GeometryFilters.encodeAttribute throws with mesh without attributes property', function() {
         expect(function() {
-            MeshFilters.encodeAttribute({});
+            GeometryFilters.encodeAttribute({});
         }).toThrow();
     });
 
-    it('MeshFilters.encodeAttribute throws without attribute', function() {
+    it('GeometryFilters.encodeAttribute throws without attribute', function() {
         expect(function() {
             var mesh = {
                 attributes : {
                 }
             };
-            MeshFilters.encodeAttribute(mesh);
+            GeometryFilters.encodeAttribute(mesh);
         }).toThrow();
     });
 
-    it('MeshFilters.encodeAttribute throws without ComponentDatatype.FLOAT', function() {
+    it('GeometryFilters.encodeAttribute throws without ComponentDatatype.FLOAT', function() {
         expect(function() {
             var mesh = {
                 attributes : {
@@ -488,29 +494,29 @@ defineSuite([
                     values : [0.0]
                 }
             };
-            MeshFilters.encodeAttribute(mesh);
+            GeometryFilters.encodeAttribute(mesh);
         }).toThrow();
     });
 
-    it('MeshFilters.combine combines one mesh', function() {
-        var mesh = {
-            attributes : {
+    it('GeometryFilters.combine combines one mesh', function() {
+        var mesh = new Geometry({
+            attributes : new GeometryAttribute({
                 position : {
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [0.0, 0.0, 0.0]
                 }
-            }
-        };
+            })
+        });
 
-        var combinedMesh = MeshFilters.combine([mesh]);
+        var combinedMesh = GeometryFilters.combine([mesh]);
         expect(combinedMesh).toBe(mesh);
     });
 
-    it('MeshFilters.combine combines several meshes', function() {
-        var mesh = {
+    it('GeometryFilters.combine combines several meshes', function() {
+        var mesh = new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [
@@ -518,8 +524,8 @@ defineSuite([
                         1.0, 1.0, 1.0,
                         2.0, 2.0, 2.0
                     ]
-                },
-                normal : {
+                }),
+                normal : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [
@@ -527,19 +533,19 @@ defineSuite([
                         1.0, 1.0, 1.0,
                         2.0, 2.0, 2.0
                     ]
-                }
+                })
             },
-            indexLists : [{
+            indexLists : [new GeometryIndices({
                 primitiveType : PrimitiveType.TRIANGLES,
                 values : [0, 1, 2]
-            }, {
+            }), new GeometryIndices({
                 primitiveType : PrimitiveType.LINES,
                 values : [1, 2]
-            }]
-        };
-        var anotherMesh = {
+            })]
+        });
+        var anotherMesh = new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [
@@ -547,21 +553,21 @@ defineSuite([
                         4.0, 4.0, 4.0,
                         5.0, 5.0, 5.0
                     ]
-                }
+                })
             },
-            indexLists : [{
+            indexLists : [new GeometryIndices({
                 primitiveType : PrimitiveType.TRIANGLES,
                 values : [0, 1, 2]
-            }, {
+            }), new GeometryIndices({
                 primitiveType : PrimitiveType.POINTS,
                 values : [0, 1, 2]
-            }]
-        };
+            })]
+        });
 
-        var combinedMesh = MeshFilters.combine([mesh, anotherMesh]);
-        expect(combinedMesh).toEqual({
+        var combinedMesh = GeometryFilters.combine([mesh, anotherMesh]);
+        expect(combinedMesh).toEqual(new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : new Float32Array([
@@ -572,30 +578,30 @@ defineSuite([
                         4.0, 4.0, 4.0,
                         5.0, 5.0, 5.0
                     ])
-                }
+                })
             },
-            indexLists : [{
+            indexLists : [new GeometryIndices({
                 primitiveType : PrimitiveType.TRIANGLES,
                 values : new Uint16Array([0, 1, 2, 3, 4, 5])
-            }, {
+            }), new GeometryIndices({
                 primitiveType : PrimitiveType.LINES,
                 values : new Uint16Array([1, 2])
-            }, {
+            }), new GeometryIndices({
                 primitiveType : PrimitiveType.POINTS,
                 values : new Uint16Array([3, 4, 5])
-            }]
-        });
+            })]
+        }));
     });
 
-    it('MeshFilters.combine throws with meshes', function() {
+    it('GeometryFilters.combine throws with meshes', function() {
         expect(function() {
-            MeshFilters.combine();
+            GeometryFilters.combine();
         }).toThrow();
     });
 
-    it('MeshFilters.combine throws when meshes.length is zero', function() {
+    it('GeometryFilters.combine throws when meshes.length is zero', function() {
         expect(function() {
-            MeshFilters.combine([]);
+            GeometryFilters.combine([]);
         }).toThrow();
     });
 

@@ -4,39 +4,35 @@ define([
         './DeveloperError',
         './Cartesian3',
         './ComponentDatatype',
-        './PrimitiveType'
+        './PrimitiveType',
+        './BoundingSphere',
+        './Geometry',
+        './GeometryAttribute',
+        './GeometryIndices'
     ], function(
         defaultValue,
         DeveloperError,
         Cartesian3,
         ComponentDatatype,
-        PrimitiveType) {
+        PrimitiveType,
+        BoundingSphere,
+        Geometry,
+        GeometryAttribute,
+        GeometryIndices) {
     "use strict";
 
     /**
      * DOC_TBA
      *
-     * @exports CubeMapEllipsoidTessellator
-     *
-     * @see BoxTessellator
-     */
-    var CubeMapEllipsoidTessellator = {};
-
-    /**
-     * DOC_TBA
-     *
-     * @param {Ellipsoid} ellipsoid DOC_TBA.
-     * @param {Number} numberOfPartitions DOC_TBA.
-     * @param {String} attributeName DOC_TBA.
+     * @alias EllipsoidGeometry
+     * @constructor
      *
      * @exception {DeveloperError} numberOfPartitions must be greater than zero.
      */
-    CubeMapEllipsoidTessellator.compute = function(ellipsoid, numberOfPartitions, attributeName) {
+    var EllipsoidGeometry = function(ellipsoid, numberOfPartitions, attributeName) {
         if (numberOfPartitions <= 0) {
             throw new DeveloperError('numberOfPartitions must be greater than zero.');
         }
-
-        attributeName = defaultValue(attributeName, 'position');
 
         var positions = [];
         var indices = [];
@@ -178,23 +174,34 @@ define([
             flattenedPositions[q++] = item.z;
         }
 
-        var mesh = {};
-        mesh.attributes = {};
-        mesh.indexLists = [];
-
-        mesh.attributes[attributeName] = {
-            componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 3,
-            values : flattenedPositions
+        /**
+         * DOC_TBA
+         */
+        this.attributes = {
+            position : new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : flattenedPositions
+            })
         };
 
-        mesh.indexLists.push({
-            primitiveType : PrimitiveType.TRIANGLES,
-            values : indices
-        });
+        /**
+         * DOC_TBA
+         */
+        this.indexLists = [
+            new GeometryIndices({
+                primitiveType : PrimitiveType.TRIANGLES,
+                values : indices
+            })
+        ];
 
-        return mesh;
+        /**
+         * DOC_TBA
+         */
+        this.boundingSphere = BoundingSphere.fromEllipsoid(ellipsoid);
     };
 
-    return CubeMapEllipsoidTessellator;
+    EllipsoidGeometry.prototype = new Geometry();
+
+    return EllipsoidGeometry;
 });

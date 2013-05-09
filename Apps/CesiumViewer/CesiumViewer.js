@@ -8,7 +8,7 @@ define([
         'Core/Math',
         'Core/Extent',
         'Core/ExtentTessellator',
-        'Core/MeshFilters',
+        'Core/GeometryFilters',
         'Scene/Primitive',
         'Scene/Appearance',
         'Widgets/Dojo/checkForChromeFrame',
@@ -22,7 +22,7 @@ define([
         CesiumMath,
         Extent,
         ExtentTessellator,
-        MeshFilters,
+        GeometryFilters,
         Primitive,
         Appearance,
         checkForChromeFrame,
@@ -63,7 +63,7 @@ define([
                 CesiumMath.toRadians(30.0))
         });
 
-        var primitive = new Primitive(MeshFilters.combine([mesh, anotherMesh]), Appearance.EXAMPLE_APPEARANCE);
+        var primitive = new Primitive(GeometryFilters.combine([mesh, anotherMesh]), Appearance.EXAMPLE_APPEARANCE);
         widget.scene.getPrimitives().add(primitive);
 
         domClass.remove(win.body(), 'loading');

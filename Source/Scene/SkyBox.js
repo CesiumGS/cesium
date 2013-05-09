@@ -5,7 +5,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
-        '../Core/MeshFilters',
+        '../Core/GeometryFilters',
         '../Core/PrimitiveType',
         '../Renderer/loadCubeMap',
         '../Renderer/BufferUsage',
@@ -20,7 +20,7 @@ define([
         destroyObject,
         DeveloperError,
         Matrix4,
-        MeshFilters,
+        GeometryFilters,
         PrimitiveType,
         loadCubeMap,
         BufferUsage,
@@ -152,7 +152,7 @@ define([
             var mesh = BoxTessellator.compute({
                 dimensions : new Cartesian3(2.0, 2.0, 2.0)
             });
-            var attributeIndices = MeshFilters.createAttributeIndices(mesh);
+            var attributeIndices = GeometryFilters.createAttributeIndices(mesh);
 
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.modelMatrix = Matrix4.IDENTITY.clone();

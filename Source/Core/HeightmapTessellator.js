@@ -29,7 +29,7 @@ define([
      * @exports HeightmapTessellator
      *
      * @see ExtentTessellator
-     * @see CubeMapEllipsoidTessellator
+     * @see EllipsoidGeometry
      * @see BoxTessellator
      * @see PlaneTessellator
      */

@@ -1,9 +1,9 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/CubeMapEllipsoidTessellator',
+        '../Core/EllipsoidGeometry',
         '../Core/destroyObject',
-        '../Core/MeshFilters',
+        '../Core/GeometryFilters',
         '../Core/PrimitiveType',
         '../Core/Ellipsoid',
         '../Renderer/BufferUsage',
@@ -15,9 +15,9 @@ define([
         '../Shaders/SkyAtmosphereFS'
     ], function(
         defaultValue,
-        CubeMapEllipsoidTessellator,
+        EllipsoidGeometry,
         destroyObject,
-        MeshFilters,
+        GeometryFilters,
         PrimitiveType,
         Ellipsoid,
         BufferUsage,
@@ -134,10 +134,10 @@ define([
         var command = this._command;
 
         if (typeof command.vertexArray === 'undefined') {
-            var mesh = CubeMapEllipsoidTessellator.compute(Ellipsoid.fromCartesian3(this._ellipsoid.getRadii().multiplyByScalar(1.025)), 60);
+            var mesh = new EllipsoidGeometry(Ellipsoid.fromCartesian3(this._ellipsoid.getRadii().multiplyByScalar(1.025)), 60);
             command.vertexArray = context.createVertexArrayFromMesh({
                 mesh : mesh,
-                attributeIndices : MeshFilters.createAttributeIndices(mesh),
+                attributeIndices : GeometryFilters.createAttributeIndices(mesh),
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
             command.primitiveType = PrimitiveType.TRIANGLES;

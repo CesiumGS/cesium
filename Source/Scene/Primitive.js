@@ -2,8 +2,9 @@
 define([
         '../Core/destroyObject',
         '../Core/Matrix4',
-        '../Core/MeshFilters',
+        '../Core/GeometryFilters',
         '../Core/PrimitiveType',
+        '../Core/BoundingSphere',
         '../Renderer/BufferUsage',
         '../Renderer/VertexLayout',
         '../Renderer/CommandLists',
@@ -12,8 +13,9 @@ define([
     ], function(
         destroyObject,
         Matrix4,
-        MeshFilters,
+        GeometryFilters,
         PrimitiveType,
+        BoundingSphere,
         BufferUsage,
         VertexLayout,
         CommandLists,
@@ -65,7 +67,7 @@ define([
 // TODO: throw if mesh and appearance are not defined
 
         if (typeof this._va === 'undefined') {
-            var attributeIndices = MeshFilters.createAttributeIndices(this.mesh);
+            var attributeIndices = GeometryFilters.createAttributeIndices(this.mesh);
             var appearance = this.appearance;
 
             this._va = context.createVertexArrayFromMesh({
@@ -86,7 +88,9 @@ define([
             command.renderState = this._rs;
             command.shaderProgram = this._sp;
             command.uniformMap = appearance.material._uniforms;
-// TODO:    command.boundingVolume =
+            command.boundingVolume = this.mesh.boundingSphere;
+//            command.boundingVolume = BoundingSphere.fromVertices(this.mesh.attributes.position.values);
+
             this._commands.push(command);
         }
 

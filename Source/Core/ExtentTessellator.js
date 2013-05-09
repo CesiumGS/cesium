@@ -27,7 +27,7 @@ define([
      * @exports ExtentTessellator
      *
      * @see HeightmapTessellator
-     * @see CubeMapEllipsoidTessellator
+     * @see EllipsoidGeometry
      * @see BoxTessellator
      * @see PlaneTessellator
      */
@@ -178,8 +178,8 @@ define([
      * from the extent for creating a vertex array.
      *
      * @see Context#createVertexArrayFromMesh
-     * @see MeshFilters.createAttributeIndices
-     * @see MeshFilters.toWireframeInPlace
+     * @see GeometryFilters.createAttributeIndices
+     * @see GeometryFilters.toWireframe
      * @see Extent
      *
      * @example
@@ -195,10 +195,10 @@ define([
      *     granularity : 0.01,
      *     surfaceHeight : 10000.0
      * });
-     * mesh = MeshFilters.toWireframeInPlace(mesh);
+     * mesh = GeometryFilters.toWireframe(mesh);
      * var va = context.createVertexArrayFromMesh({
      *     mesh             : mesh,
-     *     attributeIndices : MeshFilters.createAttributeIndices(mesh)
+     *     attributeIndices : GeometryFilters.createAttributeIndices(mesh)
      * });
      */
     ExtentTessellator.compute = function(description) {
