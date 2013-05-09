@@ -1,9 +1,10 @@
-@import url('../Timeline/Timeline.css');
 @import url('../Animation/Animation.css');
-@import url('../Fullscreen/FullscreenWidget.css');
-@import url('../SceneModePicker/SceneModePicker.css');
 @import url('../BaseLayerPicker/BaseLayerPicker.css');
 @import url('../CesiumWidget/CesiumWidget.css');
+@import url('../FullscreenButton/FullscreenButton.css');
+@import url('../HomeButton/HomeButton.css');
+@import url('../SceneModePicker/SceneModePicker.css');
+@import url('../Timeline/Timeline.css');
 
 .cesium-viewer-node {
 	font-family: sans-serif;
@@ -66,35 +67,19 @@
 	overflow: hidden;
 }
 
-.cesium-viewer-home {
-    display: inline-block;
-	width: 32px;
-	height: 32px;
-	vertical-align: middle;
-	background-image: url(../Images/home.svg);
-	background-repeat: no-repeat;
-	background-size: 100% 100%;
-	border-radius: 14%;
-	position: relative;
-	text-align: center;
-	color: white;
-	margin: 1px;
-    cursor: pointer;
-}
-
-.cesium-viewer-home:hover {
-	box-shadow: 0 0 8px #fff, 0 0 8px #fff;
-}
-
-.cesium-lighter .cesium-viewer-home {
-	background-image: url(../Images/home-lighter.svg);
-}
-
-.cesium-viewer-viewButtons {
+.cesium-viewer-toolbar {
 	display: block;
 	position: absolute;
 	top: 5px;
 	right: 5px;
+}
+
+.cesium-viewer-homeButtonContainer {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    vertical-align: middle;
+    margin: 1px;
 }
 
 .cesium-viewer-sceneModePickerContainer {

@@ -1,6 +1,5 @@
 /*global define*/
-define(['./viewHome',
-        '../../Core/Cartesian2',
+define(['../../Core/Cartesian2',
         '../../Core/defaultValue',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
@@ -11,11 +10,11 @@ define(['./viewHome',
         '../BaseLayerPicker/BaseLayerPicker',
         '../BaseLayerPicker/createDefaultBaseLayers',
         '../CesiumWidget/CesiumWidget',
-        '../Fullscreen/FullscreenWidget',
+        '../FullscreenButton/FullscreenButton',
+        '../HomeButton/HomeButton',
         '../SceneModePicker/SceneModePicker',
         '../Timeline/Timeline'
         ], function(
-                viewHome,
                 Cartesian2,
                 defaultValue,
                 DeveloperError,
@@ -27,7 +26,8 @@ define(['./viewHome',
                 BaseLayerPicker,
                 createDefaultBaseLayers,
                 CesiumWidget,
-                FullscreenWidget,
+                FullscreenButton,
+                HomeButton,
                 SceneModePicker,
                 Timeline) {
     "use strict";
@@ -93,19 +93,16 @@ define(['./viewHome',
 
         var toolbar = document.createElement('div');
         this._toolbar = toolbar;
-        toolbar.className = 'cesium-viewer-viewButtons';
+        toolbar.className = 'cesium-viewer-toolbar';
         container.appendChild(toolbar);
 
         //View home
         var homeButton;
         if (typeof options.homeButton === 'undefined' || options.homeButton !== false) {
-            homeButton = document.createElement('div');
-            homeButton.className = 'cesium-viewer-home';
-            toolbar.appendChild(homeButton);
-            var camera3D = cesiumWidget.scene.getCamera().clone();
-            homeButton.addEventListener('click', function() {
-                viewHome(cesiumWidget.scene, cesiumWidget.transitioner, cesiumWidget.canvas, cesiumWidget.centralBody.getEllipsoid(), camera3D);
-            });
+            var homeButtonContainer = document.createElement('div');
+            homeButtonContainer.className = 'cesium-viewer-homeButtonContainer';
+            toolbar.appendChild(homeButtonContainer);
+            homeButton = new HomeButton(homeButtonContainer, cesiumWidget.scene, cesiumWidget.transitioner, cesiumWidget.centralBody.ellipsoid);
         }
 
         //SceneModePicker
@@ -150,12 +147,12 @@ define(['./viewHome',
         }
 
         //Fullscreen
-        var fullscreenWidget;
-        if (typeof options.fullscreenWidget === 'undefined' || options.fullscreenWidget !== false) {
+        var fullscreenButton;
+        if (typeof options.fullscreenButton === 'undefined' || options.fullscreenButton !== false) {
             var fullscreenContainer = document.createElement('div');
             fullscreenContainer.className = 'cesium-viewer-fullscreenContainer';
             container.appendChild(fullscreenContainer);
-            fullscreenWidget = new FullscreenWidget(fullscreenContainer, container);
+            fullscreenButton = new FullscreenButton(fullscreenContainer, container);
         }
 
         /**
@@ -208,11 +205,11 @@ define(['./viewHome',
         this.timeline = timeline;
 
         /**
-         * Gets the FullscreenWidget instance.
+         * Gets the FullscreenButton instance.
          * @memberof Viewer
-         * @type {FullscreenWidget}
+         * @type {FullscreenButton}
          */
-        this.fullscreenWidget = fullscreenWidget;
+        this.fullscreenButton = fullscreenButton;
 
         /**
          * Gets the set of {@link DataSource} instances to be visualized.
@@ -253,9 +250,9 @@ define(['./viewHome',
             this.timeline = this.timeline.destroy();
         }
 
-        if (typeof this.fullscreenWidget !== 'undefined') {
-            this.container.removeChild(this.fullscreenWidget.container);
-            this.fullscreenWidget = this.fullscreenWidget.destroy();
+        if (typeof this.fullscreenButton !== 'undefined') {
+            this.container.removeChild(this.fullscreenButton.container);
+            this.fullscreenButton = this.fullscreenButton.destroy();
         }
 
         this.cesiumWidget.clock.onTick.removeEventListener(this._onTick, this);
