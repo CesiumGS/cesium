@@ -463,7 +463,8 @@ define([
 
         imageUrl = imageUrl.replace('{x}', x); 
         imageUrl = imageUrl.replace('{y}', y); 
-        imageUrl = imageUrl.replace('{zoom}', level + 1); 
+        // Google Earth Enterprise starts with a zoom level of 1, not 0
+        imageUrl = imageUrl.replace('{zoom}', (level + 1)); 
 
         var proxy = imageryProvider._proxy;
         if (typeof proxy !== 'undefined') {
