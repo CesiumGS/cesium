@@ -27,7 +27,7 @@ define([
     "use strict";
 
     /**
-     * Provides tiled imagery using the Bing Maps Imagery REST API.
+     * Provides tiled imagery using the Google Earth Enterprise Imagery API.
      *
      * @alias GoogleEarthEnterpriseImageryProvider 
      * @constructor
@@ -51,6 +51,7 @@ define([
      * @exception {DeveloperError} <code>description.url</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
+     * @see BingMapsImageryProvider
      * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
@@ -60,8 +61,8 @@ define([
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      *
      * @example
-     * var bing = new GoogleEarthEnterpriseImageryProvider({
-     *     url : 'http://dev.virtualearth.net',
+     * var google = new GoogleEarthEnterpriseImageryProvider({
+     *     url : 'http://earth.localdomain',
      *     mapStyle : BingMapsStyle.AERIAL
      * });
      */
