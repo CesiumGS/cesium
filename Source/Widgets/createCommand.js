@@ -22,8 +22,14 @@ define(['../Core/defaultValue',
      *
      * @param {Function} func The function to execute.
      * @param {Observable} [canExecute=true] An observable indicating if the function can currently be executed.
+     *
+     * @exception {DeveloperError} func is required.
      */
     var createCommand = function(func, canExecute) {
+        if (typeof func === 'undefined') {
+            throw new DeveloperError('func is required.');
+        }
+
         canExecute = defaultValue(canExecute, knockout.observable(true));
 
         var beforeExecute = new Event();

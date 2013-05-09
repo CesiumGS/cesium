@@ -2,6 +2,7 @@
 define(['../createCommand',
         '../../Core/defaultValue',
         '../../Core/Cartesian3',
+        '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
         '../../Core/Extent',
         '../../Core/Math',
@@ -15,6 +16,7 @@ define(['../createCommand',
             createCommand,
             defaultValue,
             Cartesian3,
+            DeveloperError,
             Ellipsoid,
             Extent,
             CesiumMath,
@@ -39,7 +41,7 @@ define(['../createCommand',
         controller.columbusViewMode = CameraColumbusViewMode.FREE;
 
         var canvas = scene.getCanvas();
-        if (mode === SceneMode.MORPHING) {
+        if (typeof transitioner !== 'undefined' && mode === SceneMode.MORPHING) {
             transitioner.completeMorph();
         }
 
@@ -81,13 +83,39 @@ define(['../createCommand',
      * The ViewModel for {@link HomeButton}.
      * @alias HomeButtonViewModel
      * @constructor
+     *
+     * @param {Scene} scene The Scene instance to use.
+     * @param {SceneTransitioner} [transitioner] The SceneTransitioner instance to use.
+     * @param {Ellipsoid} [ellipsoid] The Scene's primary ellipsoid.
+     *
+     * @exception {Scene} scene is required.
      */
     var HomeButtonViewModel = function(scene, transitioner, ellipsoid) {
-        this.scene = scene;
-        this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        this.transitioner = transitioner;
-
         var that = this;
+
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
+
+        /**
+         * The scene.
+         * @type Scene
+         */
+        this.scene = scene;
+
+        /**
+         * The primary ellipsoid for the scene.
+         * @type Ellipsoid
+         */
+        this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
+        /**
+         * The scene transitioner being used by the host application.
+         * If a transitioner is assigned, any running morphs will be completed
+         * when the home button is pressed.
+         * @type SceneTransitioner
+         */
+        this.transitioner = transitioner;
 
         /**
          * The command for switching to home view.
