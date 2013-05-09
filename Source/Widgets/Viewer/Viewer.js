@@ -231,6 +231,10 @@ define(['../../Core/Cartesian2',
     Viewer.prototype.destroy = function() {
         this.container.removeChild(this._toolbar);
 
+        if (typeof this.homeButton !== 'undefined') {
+            this.homeButton = this.homeButton.destroy();
+        }
+
         if (typeof this.sceneModePicker !== 'undefined') {
             this.sceneModePicker = this.sceneModePicker.destroy();
         }
