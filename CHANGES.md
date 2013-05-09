@@ -10,6 +10,7 @@ Beta Releases
    * Replaced tessellators and meshes with geometry.  In particular:
       * Replaced `CubeMapEllipsoidTessellator` with `EllipsoidGeometry`.
       * Renamed `MeshFilters` to `GeometryFilters`.
+      * Renamed `MeshFilters.toWireframeInPlace` to `GeometryFilters.toWireframe`.
    * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
    * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.    
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.

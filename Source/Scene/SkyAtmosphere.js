@@ -17,7 +17,7 @@ define([
         defaultValue,
         EllipsoidGeometry,
         destroyObject,
-        MeshFilters,
+        GeometryFilters,
         PrimitiveType,
         Ellipsoid,
         BufferUsage,
@@ -136,7 +136,7 @@ define([
             var mesh = new EllipsoidGeometry(Ellipsoid.fromCartesian3(this._ellipsoid.getRadii().multiplyByScalar(1.025)), 60);
             command.vertexArray = context.createVertexArrayFromMesh({
                 mesh : mesh,
-                attributeIndices : MeshFilters.createAttributeIndices(mesh),
+                attributeIndices : GeometryFilters.createAttributeIndices(mesh),
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
             command.primitiveType = PrimitiveType.TRIANGLES;

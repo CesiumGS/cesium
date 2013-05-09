@@ -13,7 +13,7 @@ defineSuite([
          createContext,
          destroyContext,
          ComponentDatatype,
-         MeshFilters,
+         GeometryFilters,
          PrimitiveType,
          IndexDatatype,
          BufferUsage,
@@ -66,7 +66,7 @@ defineSuite([
 
         var va = context.createVertexArrayFromMesh({
             mesh : mesh,
-            attributeIndices : MeshFilters.createAttributeIndices(mesh)
+            attributeIndices : GeometryFilters.createAttributeIndices(mesh)
         });
 
         expect(va.getNumberOfAttributes()).toEqual(1);
@@ -95,7 +95,7 @@ defineSuite([
 
         var va = context.createVertexArrayFromMesh({
             mesh : mesh,
-            attributeIndices : MeshFilters.createAttributeIndices(mesh),
+            attributeIndices : GeometryFilters.createAttributeIndices(mesh),
             vertexLayout : VertexLayout.INTERLEAVED,
             bufferUsage : BufferUsage.STATIC_DRAW
         });
@@ -131,7 +131,7 @@ defineSuite([
 
         var va = context.createVertexArrayFromMesh({
             mesh : mesh,
-            attributeIndices : MeshFilters.createAttributeIndices(mesh)
+            attributeIndices : GeometryFilters.createAttributeIndices(mesh)
         });
 
         expect(va.getNumberOfAttributes()).toEqual(2);
@@ -172,7 +172,7 @@ defineSuite([
 
         var va = context.createVertexArrayFromMesh({
             mesh : mesh,
-            attributeIndices : MeshFilters.createAttributeIndices(mesh),
+            attributeIndices : GeometryFilters.createAttributeIndices(mesh),
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
@@ -216,7 +216,7 @@ defineSuite([
 
         var va = context.createVertexArrayFromMesh({
             mesh : mesh,
-            attributeIndices : MeshFilters.createAttributeIndices(mesh),
+            attributeIndices : GeometryFilters.createAttributeIndices(mesh),
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
@@ -263,7 +263,7 @@ defineSuite([
             }
         };
 
-        var attributeIndices = MeshFilters.createAttributeIndices(mesh);
+        var attributeIndices = GeometryFilters.createAttributeIndices(mesh);
         var va = context.createVertexArrayFromMesh({
             mesh : mesh,
             attributeIndices : attributeIndices,
@@ -323,7 +323,7 @@ defineSuite([
             }
         };
 
-        var attributeIndices = MeshFilters.createAttributeIndices(mesh);
+        var attributeIndices = GeometryFilters.createAttributeIndices(mesh);
         var va = context.createVertexArrayFromMesh({
             mesh : mesh,
             attributeIndices : attributeIndices,
@@ -397,7 +397,7 @@ defineSuite([
             }
         };
 
-        var attributeIndices = MeshFilters.createAttributeIndices(mesh);
+        var attributeIndices = GeometryFilters.createAttributeIndices(mesh);
         var va = context.createVertexArrayFromMesh({
             mesh : mesh,
             attributeIndices : attributeIndices,
@@ -465,7 +465,7 @@ defineSuite([
             }
         };
 
-        var attributeIndices = MeshFilters.createAttributeIndices(mesh);
+        var attributeIndices = GeometryFilters.createAttributeIndices(mesh);
         var va = context.createVertexArrayFromMesh({
             mesh : mesh,
             attributeIndices : attributeIndices,

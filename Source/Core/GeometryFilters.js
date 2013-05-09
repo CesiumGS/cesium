@@ -28,11 +28,11 @@ define([
     /**
      * DOC_TBA
      *
-     * @exports MeshFilters
+     * @exports GeometryFilters
      *
      * @see Context#createVertexArrayFromMesh
      */
-    var MeshFilters = {};
+    var GeometryFilters = {};
 
     /**
      * Converts a mesh's triangle indices to line indices.  Each list of indices in the mesh's <code>indexList</code> with
@@ -51,9 +51,9 @@ define([
      *
      * @example
      * var mesh = BoxTessellator.compute();
-     * mesh = MeshFilters.toWireframeInPlace(mesh);
+     * mesh = GeometryFilters.toWireframe(mesh);
      */
-    MeshFilters.toWireframeInPlace = function(mesh) {
+    GeometryFilters.toWireframe = function(mesh) {
         function addTriangle(lines, i0, i1, i2) {
             lines.push(i0);
             lines.push(i1);
@@ -135,7 +135,7 @@ define([
     /**
      * DOC_TBA
      */
-    MeshFilters.createAttributeIndices = function(mesh) {
+    GeometryFilters.createAttributeIndices = function(mesh) {
         var indices = {};
 
         if (typeof mesh !== 'undefined') {
@@ -155,7 +155,7 @@ define([
     /**
      * DOC_TBA
      */
-    MeshFilters.mapAttributeIndices = function(indices, map) {
+    GeometryFilters.mapAttributeIndices = function(indices, map) {
         var mappedIndices = {};
 
         if (typeof indices !== 'undefined' && typeof map !== 'undefined') {
@@ -169,7 +169,7 @@ define([
         return mappedIndices;
     };
 
-    MeshFilters._computeNumberOfAttributes = function(mesh) {
+    GeometryFilters._computeNumberOfAttributes = function(mesh) {
         var numberOfVertices = -1;
         for ( var property in mesh.attributes) {
             if (mesh.attributes.hasOwnProperty(property) && mesh.attributes[property].values) {
@@ -198,15 +198,15 @@ define([
      *
      * @returns The modified <code>mesh</code> argument, with its vertices and indices reordered for the GPU's pre-vertex-shader cache.
      *
-     * @see MeshFilters.reorderForPostVertexCache
+     * @see GeometryFilters.reorderForPostVertexCache
      *
      * @example
      * var mesh = new EllipsoidGeometry(...);
-     * mesh = MeshFilters.reorderForPreVertexCache(mesh);
+     * mesh = GeometryFilters.reorderForPreVertexCache(mesh);
      */
-    MeshFilters.reorderForPreVertexCache = function(mesh) {
+    GeometryFilters.reorderForPreVertexCache = function(mesh) {
         if (typeof mesh !== 'undefined') {
-            var numVertices = MeshFilters._computeNumberOfAttributes(mesh);
+            var numVertices = GeometryFilters._computeNumberOfAttributes(mesh);
 
             var indexCrossReferenceOldToNew = [];
             for ( var i = 0; i < numVertices; i++) {
@@ -287,7 +287,7 @@ define([
      *
      * @returns The modified <code>mesh</code> argument, with its indices optimally reordered for the post-vertex-shader cache.
      *
-     * @see MeshFilters.reorderForPreVertexCache
+     * @see GeometryFilters.reorderForPreVertexCache
      * @see Tipsify
      * @see <a href='http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf'>
      * Fast Triangle Reordering for Vertex Locality and Reduced Overdraw</a>
@@ -295,9 +295,9 @@ define([
      *
      * @example
      * var mesh = new EllipsoidGeometry(...);
-     * mesh = MeshFilters.reorderForPostVertexCache(mesh);
+     * mesh = GeometryFilters.reorderForPostVertexCache(mesh);
      */
-    MeshFilters.reorderForPostVertexCache = function(mesh, cacheCapacity) {
+    GeometryFilters.reorderForPostVertexCache = function(mesh, cacheCapacity) {
         if (typeof mesh !== 'undefined') {
             var indexLists = mesh.indexLists;
             if (typeof indexLists !== 'undefined') {
@@ -322,7 +322,7 @@ define([
         return mesh;
     };
 
-    MeshFilters._verifyTrianglesPrimitiveType = function(indexLists) {
+    GeometryFilters._verifyTrianglesPrimitiveType = function(indexLists) {
         var length = indexLists.length;
         for ( var i = 0; i < length; ++i) {
             if (indexLists[i].primitiveType !== PrimitiveType.TRIANGLES) {
@@ -331,7 +331,7 @@ define([
         }
     };
 
-    MeshFilters._copyAttributesDescriptions = function(attributes) {
+    GeometryFilters._copyAttributesDescriptions = function(attributes) {
         var newAttributes = {};
 
         for ( var attribute in attributes) {
@@ -366,7 +366,7 @@ define([
      * @exception {DeveloperError} The mesh's index-lists must have PrimitiveType equal to PrimitiveType.TRIANGLES.
      * @exception {DeveloperError} All mesh attribute lists must have the same number of attributes.
      */
-    MeshFilters.fitToUnsignedShortIndices = function(mesh) {
+    GeometryFilters.fitToUnsignedShortIndices = function(mesh) {
         function createMesh(attributes, primitiveType, indices) {
             return new Geometry({
                 attributes : attributes,
@@ -380,9 +380,9 @@ define([
         var meshes = [];
 
         if (typeof mesh !== 'undefined') {
-            MeshFilters._verifyTrianglesPrimitiveType(mesh.indexLists);
+            GeometryFilters._verifyTrianglesPrimitiveType(mesh.indexLists);
 
-            var numberOfVertices = MeshFilters._computeNumberOfAttributes(mesh);
+            var numberOfVertices = GeometryFilters._computeNumberOfAttributes(mesh);
 
             // If there's an index list and more than 64K attributes, it is possible that
             // some indices are outside the range of unsigned short [0, 64K - 1]
@@ -397,7 +397,7 @@ define([
                     var oldToNewIndex = [];
                     var newIndices = [];
                     var currentIndex = 0;
-                    var newAttributes = MeshFilters._copyAttributesDescriptions(mesh.attributes);
+                    var newAttributes = GeometryFilters._copyAttributesDescriptions(mesh.attributes);
 
                     var originalIndices = indexLists[i].values;
                     var numberOfIndices = originalIndices.length;
@@ -444,7 +444,7 @@ define([
                             oldToNewIndex = [];
                             newIndices = [];
                             currentIndex = 0;
-                            newAttributes = MeshFilters._copyAttributesDescriptions(mesh.attributes);
+                            newAttributes = GeometryFilters._copyAttributesDescriptions(mesh.attributes);
                         }
                     }
 
@@ -464,7 +464,7 @@ define([
     /**
      * DOC_TBA
      */
-    MeshFilters.projectTo2D = function(mesh, projection) {
+    GeometryFilters.projectTo2D = function(mesh, projection) {
         if (typeof mesh !== 'undefined' && typeof mesh.attributes !== 'undefined' && typeof mesh.attributes.position !== 'undefined') {
             projection = typeof projection !== 'undefined' ? projection : new GeographicProjection();
             var ellipsoid = projection.getEllipsoid();
@@ -519,11 +519,11 @@ define([
      * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.FLOAT.
      *
      * @example
-     * mesh = MeshFilters.encodeAttribute(mesh, 'position3D', 'position3DHigh', 'position3DLow');
+     * mesh = GeometryFilters.encodeAttribute(mesh, 'position3D', 'position3DHigh', 'position3DLow');
      *
      * @see EncodedCartesian3
      */
-    MeshFilters.encodeAttribute = function(mesh, attributeName, attributeHighName, attributeLowName) {
+    GeometryFilters.encodeAttribute = function(mesh, attributeName, attributeHighName, attributeLowName) {
         attributeName = defaultValue(attributeName, 'position');
         attributeHighName = defaultValue(attributeHighName, 'positionHigh');
         attributeLowName = defaultValue(attributeLowName, 'positionLow');
@@ -621,7 +621,7 @@ define([
      *
      * @exception {DeveloperError} meshes is required and must have length greater than zero.
      */
-    MeshFilters.combine = function(meshes) {
+    GeometryFilters.combine = function(meshes) {
         if ((typeof meshes === 'undefined') || (meshes.length < 1)) {
             throw new DeveloperError('meshes is required.');
         }
@@ -744,5 +744,5 @@ define([
         });
     };
 
-    return MeshFilters;
+    return GeometryFilters;
 });

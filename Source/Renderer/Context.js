@@ -2349,7 +2349,7 @@ define([
      * @see Context#createVertexArray
      * @see Context#createVertexBuffer
      * @see Context#createIndexBuffer
-     * @see MeshFilters.createAttributeIndices
+     * @see GeometryFilters.createAttributeIndices
      * @see ShaderProgram
      * @see BoxTessellator
      *
@@ -2360,7 +2360,7 @@ define([
      * var mesh = BoxTessellator.compute();
      * var va = context.createVertexArrayFromMesh({
      *     mesh             : mesh,
-     *     attributeIndices : MeshFilters.createAttributeIndices(mesh),
+     *     attributeIndices : GeometryFilters.createAttributeIndices(mesh),
      * });
      *
      * ////////////////////////////////////////////////////////////////////////////////
@@ -2369,7 +2369,7 @@ define([
      * // single vertex buffer.  The vertex and index buffer have static draw usage.
      * var va = context.createVertexArrayFromMesh({
      *     mesh             : mesh,
-     *     attributeIndices : MeshFilters.createAttributeIndices(mesh),
+     *     attributeIndices : GeometryFilters.createAttributeIndices(mesh),
      *     bufferUsage      : BufferUsage.STATIC_DRAW,
      *     vertexLayout     : VertexLayout.INTERLEAVED
      * });

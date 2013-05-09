@@ -48,7 +48,7 @@ define([
         EllipsoidalOccluder,
         Intersect,
         Matrix4,
-        MeshFilters,
+        GeometryFilters,
         PrimitiveType,
         Queue,
         TaskProcessor,
@@ -723,10 +723,10 @@ define([
             if (!surface._debug.boundingSphereVA) {
                 var radius = surface._debug.boundingSphereTile.boundingSphere3D.radius;
                 var sphere = new EllipsoidGeometry(new Ellipsoid(radius, radius, radius), 10);
-                MeshFilters.toWireframeInPlace(sphere);
+                GeometryFilters.toWireframe(sphere);
                 surface._debug.boundingSphereVA = context.createVertexArrayFromMesh({
                     mesh : sphere,
-                    attributeIndices : MeshFilters.createAttributeIndices(sphere)
+                    attributeIndices : GeometryFilters.createAttributeIndices(sphere)
                 });
             }
 

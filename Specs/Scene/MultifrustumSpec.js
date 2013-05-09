@@ -33,7 +33,7 @@ defineSuite([
          defaultValue,
          CesiumMath,
          Matrix4,
-         MeshFilters,
+         GeometryFilters,
          PrimitiveType,
          BlendingState,
          BufferUsage,
@@ -216,7 +216,7 @@ defineSuite([
                     minimumCorner: minimumCorner,
                     maximumCorner: maximumCorner
                 });
-                var attributeIndices = MeshFilters.createAttributeIndices(mesh);
+                var attributeIndices = GeometryFilters.createAttributeIndices(mesh);
                 this._va = context.createVertexArrayFromMesh({
                     mesh: mesh,
                     attributeIndices: attributeIndices,

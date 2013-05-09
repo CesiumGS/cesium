@@ -50,7 +50,7 @@ define([
         Cartesian4,
         Cartographic,
         ComponentDatatype,
-        MeshFilters,
+        GeometryFilters,
         PrimitiveType,
         EllipsoidTangentPlane,
         PolygonPipeline,
@@ -596,10 +596,10 @@ define([
             return undefined;
         }
 
-        mesh = MeshFilters.combine(meshes);
+        mesh = GeometryFilters.combine(meshes);
         mesh = PolygonPipeline.scaleToGeodeticHeight(mesh, polygon.height, polygon.ellipsoid);
-        mesh = MeshFilters.reorderForPostVertexCache(mesh);
-        mesh = MeshFilters.reorderForPreVertexCache(mesh);
+        mesh = GeometryFilters.reorderForPostVertexCache(mesh);
+        mesh = GeometryFilters.reorderForPreVertexCache(mesh);
 
         if (polygon._mode === SceneMode.SCENE3D) {
             mesh.attributes.position2DHigh = { // Not actually used in shader
@@ -608,9 +608,9 @@ define([
             mesh.attributes.position2DLow = { // Not actually used in shader
                 value : [0.0, 0.0]
             };
-            mesh = MeshFilters.encodeAttribute(mesh, 'position', 'position3DHigh', 'position3DLow');
+            mesh = GeometryFilters.encodeAttribute(mesh, 'position', 'position3DHigh', 'position3DLow');
         } else {
-            mesh = MeshFilters.projectTo2D(mesh, polygon._projection);
+            mesh = GeometryFilters.projectTo2D(mesh, polygon._projection);
 
             if (polygon._mode !== SceneMode.SCENE3D) {
                 var projectedPositions = mesh.attributes.position2D.values;
@@ -625,11 +625,11 @@ define([
                 polygon._boundingVolume2D.center = new Cartesian3(0.0, center2DPositions.x, center2DPositions.y);
             }
 
-            mesh = MeshFilters.encodeAttribute(mesh, 'position3D', 'position3DHigh', 'position3DLow');
-            mesh = MeshFilters.encodeAttribute(mesh, 'position2D', 'position2DHigh', 'position2DLow');
+            mesh = GeometryFilters.encodeAttribute(mesh, 'position3D', 'position3DHigh', 'position3DLow');
+            mesh = GeometryFilters.encodeAttribute(mesh, 'position2D', 'position2DHigh', 'position2DLow');
         }
 
-        return MeshFilters.fitToUnsignedShortIndices(mesh);
+        return GeometryFilters.fitToUnsignedShortIndices(mesh);
     }
 
     function getGranularity(polygon, mode) {

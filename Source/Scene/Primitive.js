@@ -13,7 +13,7 @@ define([
     ], function(
         destroyObject,
         Matrix4,
-        MeshFilters,
+        GeometryFilters,
         PrimitiveType,
         BoundingSphere,
         BufferUsage,
@@ -67,7 +67,7 @@ define([
 // TODO: throw if mesh and appearance are not defined
 
         if (typeof this._va === 'undefined') {
-            var attributeIndices = MeshFilters.createAttributeIndices(this.mesh);
+            var attributeIndices = GeometryFilters.createAttributeIndices(this.mesh);
             var appearance = this.appearance;
 
             this._va = context.createVertexArrayFromMesh({
