@@ -46,6 +46,7 @@ define([
      *
      * @exception {DeveloperError} <code>description.url</code> is required.
      * @exception {DeveloperError} <code>description.channel</code> is required.
+     * @exception {DeveloperError} Could not find layer with channel (id) of <code>description.channel</code>.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -111,14 +112,16 @@ define([
         var metadataError;
 
         function metadataSuccess(data) {
-            console.log(data);
-            var layer;
+            var layer = undefined;
             for(var i = 0; i < data.layers.length; i++) {
               if(data.layers[i].id === that._channel) {
                 layer = data.layers[i];
-                console.log('success')
                 break;
               }
+            }
+
+            if(typeof layer === 'undefined') {
+              throw new DeveloperError('Could not find layer with channel (id) of ' + that._channel + '.');
             }
 
             that.version = layer.version;
