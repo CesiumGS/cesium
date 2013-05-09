@@ -20,6 +20,7 @@ define([
         '../Core/JulianDate',
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
+        '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
@@ -64,6 +65,7 @@ define([
         JulianDate,
         ComponentDatatype,
         PrimitiveType,
+        Transforms,
         BufferUsage,
         Context,
         ClearCommand,
@@ -617,6 +619,12 @@ define([
         return vertexArray;
     }
 
+    var viewportBoundingRectangle  = new BoundingRectangle();
+    var scissorTestBoundingRectangle = new BoundingRectangle();
+    var sunPositionWCScratch = new Cartesian2();
+    var sizeScratch = new Cartesian2();
+    var postProcessMatrix4Scratch= new Matrix4();
+
     function updatePostProcess(scene) {
         var context = scene.getContext();
         var canvas = context.getCanvas();
@@ -734,21 +742,14 @@ define([
                 height : downSampleSize
             }));
 
-            var renderState = context.createRenderState({
-                viewport : new BoundingRectangle(0.0, 0.0, downSampleSize, downSampleSize)
-            });
-
-            scene._downSampleCommand.renderState = renderState;
             scene._downSampleCommand.uniformMap.u_texture = function() {
                 return fbo.getColorTexture();
             };
 
-            scene._brightPassCommand.renderState = renderState;
             scene._brightPassCommand.uniformMap.u_texture = function() {
                 return scene._downSampleFBO1.getColorTexture();
             };
 
-            scene._blurXCommand.renderState = renderState;
             scene._blurXCommand.uniformMap.u_texture = function() {
                 return scene._downSampleFBO2.getColorTexture();
             };
@@ -756,7 +757,6 @@ define([
                 return new Cartesian2(1.0 / downSampleSize, 1.0 / downSampleSize);
             };
 
-            scene._blurYCommand.renderState = renderState;
             scene._blurYCommand.uniformMap.u_texture = function() {
                 return scene._downSampleFBO1.getColorTexture();
             };
@@ -773,6 +773,40 @@ define([
                 }
             };
         }
+
+        var us = scene.getUniformState();
+        var sunPosition = us.getSunPositionWC();
+        var viewProjectionMatrix = us.getViewProjection();
+
+        var viewport = viewportBoundingRectangle;
+        viewport.width = downSampleSize;
+        viewport.height = downSampleSize;
+
+        var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, postProcessMatrix4Scratch);
+        var sunPositionWC = Transforms.pointToWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
+
+        var sunSize = scene.sun.size;
+        var size = sizeScratch;
+        size.x = sunSize.x * downSampleWidth / width;
+        size.y = sunSize.y * downSampleHeight / height;
+
+        var scissorRectangle = scissorTestBoundingRectangle;
+        scissorRectangle.x = sunPositionWC.x - size.x;
+        scissorRectangle.y = sunPositionWC.y - size.y;
+        scissorRectangle.width = size.x;
+        scissorRectangle.height = size.y;
+
+        var renderState = context.createRenderState({
+            viewport : viewport,
+            scissorTest : {
+                enabled : true,
+                rectangle : scissorRectangle
+            }
+        });
+        scene._downSampleCommand.renderState = renderState;
+        scene._brightPassCommand.renderState = renderState;
+        scene._blurXCommand.renderState = renderState;
+        scene._blurYCommand.renderState = renderState;
     }
 
     var orthoPickingFrustum = new OrthographicFrustum();
