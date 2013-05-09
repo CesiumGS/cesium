@@ -61,8 +61,7 @@ define([
      * @example
      * var google = new GoogleEarthEnterpriseImageryProvider({
      *     url : 'http://earth.localdomain',
-     *     channel : 1008,
-     *     requestType : 'ImageryMaps'
+     *     channel : 1008
      * });
      */
     var GoogleEarthEnterpriseImageryProvider = function GoogleEarthEnterpriseImageryProvider(description) {
