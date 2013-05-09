@@ -117,11 +117,14 @@ define([
         this._fbo = undefined;
         this._downSampleFBO1 = undefined;
         this._downSampleFBO2 = undefined;
+        this._clearFBO1Command = undefined;
+        this._clearFBO2Command = undefined;
         this._downSampleCommand = undefined;
         this._brightPassCommand = undefined;
         this._blurXCommand = undefined;
         this._blurYCommand = undefined;
         this._blendCommand = undefined;
+        this._fullScreenCommand = undefined;
 
         this._commandList = [];
         this._frustumCommandsList = [];
@@ -390,6 +393,7 @@ define([
 
         Cartesian3.clone(scene.getUniformState().getSunPositionWC(), sunBS.center);
         scene._renderSun = (cullingVolume.getVisibility(sunBS) === Intersect.OUTSIDE) ? false : true;
+        scene._renderSun = scene._renderSun || (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(sunBS));
 
         var length = commandLists.length;
         for (var i = 0; i < length; ++i) {
@@ -457,6 +461,16 @@ define([
         Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.color);
         clear.execute(context, passState);
 
+        if (typeof sunCommand !== 'undefined' && scene._renderSun) {
+            clear = scene._clearFBO1Command;
+            Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.color);
+            clear.execute(context);
+
+            clear = scene._clearFBO2Command;
+            Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.color);
+            clear.execute(context);
+        }
+
         // Ideally, we would render the sky box and atmosphere last for
         // early-z, but we would have to draw it in each frustum
         frustum.near = camera.frustum.near;
@@ -501,6 +515,7 @@ define([
             scene._brightPassCommand.execute(context);
             scene._blurXCommand.execute(context);
             scene._blurYCommand.execute(context);
+            scene._fullScreenCommand.execute(context);
             scene._blendCommand.execute(context);
         }
     }
@@ -637,6 +652,14 @@ define([
             scene._downSampleFBO1 = context.createFramebuffer();
             scene._downSampleFBO2 = context.createFramebuffer();
 
+            scene._clearFBO1Command = new ClearCommand();
+            scene._clearFBO1Command.color = new Color();
+            scene._clearFBO1Command.framebuffer = scene._downSampleFBO1;
+
+            scene._clearFBO2Command = new ClearCommand();
+            scene._clearFBO2Command.color = new Color();
+            scene._clearFBO2Command.framebuffer = scene._downSampleFBO2;
+
             var primitiveType = PrimitiveType.TRIANGLE_FAN;
             var vertexArray = getVertexArray(context);
 
@@ -705,6 +728,13 @@ define([
             additiveBlendCommand.primitiveType = primitiveType;
             additiveBlendCommand.vertexArray = vertexArray;
             additiveBlendCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, AdditiveBlend, attributeIndices);
+            additiveBlendCommand.uniformMap = {};
+
+            var fullScreenCommand = scene._fullScreenCommand = new DrawCommand();
+            fullScreenCommand.primitiveType = primitiveType;
+            fullScreenCommand.vertexArray = vertexArray;
+            fullScreenCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeIndices);
+            fullScreenCommand.uniformMap = {};
         }
 
         var downSampleWidth = Math.pow(2.0, Math.ceil(Math.log(width) / Math.log(2)) - 2.0);
@@ -763,13 +793,15 @@ define([
                 return new Cartesian2(1.0 / downSampleSize, 1.0 / downSampleSize);
             };
 
-            scene._blendCommand.uniformMap = {
-                u_texture0 : function() {
-                    return fbo.getColorTexture();
-                },
-                u_texture1 : function() {
-                    return scene._downSampleFBO2.getColorTexture();
-                }
+            scene._blendCommand.uniformMap.u_texture0 = function() {
+                return fbo.getColorTexture();
+            };
+            scene._blendCommand.uniformMap.u_texture1 = function() {
+                return scene._downSampleFBO2.getColorTexture();
+            };
+
+            scene._fullScreenCommand.uniformMap.u_texture = function() {
+                return fbo.getColorTexture();
             };
         }
 
@@ -807,7 +839,6 @@ define([
         scene._blurXCommand.renderState = renderState;
         scene._blurYCommand.renderState = renderState;
 
-        /*
         viewport.width = width;
         viewport.height = height;
 
@@ -829,8 +860,8 @@ define([
                 rectangle : scissorRectangle
             }
         });
-        */
-        scene._blendCommand.renderState = context.createRenderState();
+
+        scene._fullScreenCommand.renderState = context.createRenderState();
     }
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -969,6 +1000,7 @@ define([
         this._blurXCommand = this._blurXCommand && this._blurXCommand.shaderProgram && this._blurXCommand.release();
         this._blurYCommand = this._blurYCommand && this._blurYCommand.shaderProgram && this._blurYCommand.release();
         this._blendCommand = this._blendCommand && this._blendCommand.shaderProgram && this._blendCommand.release();
+        this._fullScreenCommand = this._fullScreenCommand && this._fullScreenCommand.shaderProgram && this._fullScreenCommand.release();
         this._context = this._context && this._context.destroy();
         return destroyObject(this);
     };
