@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        '../Core/BoxTessellator',
+        '../Core/BoxGeometry',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/combine',

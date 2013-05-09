@@ -4,7 +4,7 @@ defineSuite([
          'Specs/destroyScene',
          'Core/destroyObject',
          'Core/BoundingSphere',
-         'Core/BoxTessellator',
+         'Core/BoxGeometry',
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Color',

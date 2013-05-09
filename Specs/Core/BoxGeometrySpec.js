@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/BoxTessellator',
+         'Core/BoxGeometry',
          'Core/Cartesian3'
      ], function(
          BoxTessellator,

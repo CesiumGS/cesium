@@ -9,6 +9,7 @@ Beta Releases
 * Breaking changes:
    * Replaced tessellators and meshes with geometry.  In particular:
       * Replaced `CubeMapEllipsoidTessellator` with `EllipsoidGeometry`.
+      * Replaced `BoxTessellator` with `BoxGeometry`.
       * Renamed `MeshFilters` to `GeometryFilters`.
       * Renamed `MeshFilters.toWireframeInPlace` to `GeometryFilters.toWireframe`.
    * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
