@@ -539,19 +539,23 @@ define([
                 polygonVertices.remove(v.index);
                 earTips.shift();
 
-                if ((convexVertices.indexOf(v0.index)) === -1 && (isTipConvex(v0.previous.item, v0.item, v0.next.item))) {
-                    convexVertices.push(v0.index);
-                    if (isVertexEar(v0.previous, v0, v0.next)) {
-                        earTips.push(v0.index);
+                if (convexVertices.indexOf(v0.index) === -1) {
+                    if(isTipConvex(v0.previous.item, v0.item, v0.next.item)) {
+                        convexVertices.push(v0.index);
+                        if (isVertexEar(v0.previous, v0, v0.next)) {
+                            earTips.push(v0.index);
+                        }
                     }
                 } else if ((earTips.indexOf(v0.index) === -1) && (isVertexEar(v0.previous, v0, v0.next))){
                     earTips.push(v0.index);
                 }
 
-                if ((convexVertices.indexOf(v1.index) === -1) && (isTipConvex(v1.previous.item, v1.item, v1.next.item )))  {
-                    convexVertices.push(v1.index);
-                    if (isVertexEar(v1.previous, v1, v1.next)) {
-                        earTips.push(v1.index);
+                if (convexVertices.indexOf(v1.index) === -1) {
+                    if (isTipConvex(v1.previous.item, v1.item, v1.next.item ))  {
+                        convexVertices.push(v1.index);
+                        if (isVertexEar(v1.previous, v1, v1.next)) {
+                            earTips.push(v1.index);
+                        }
                     }
                 } else if ((earTips.indexOf(v1.index) === -1) && (isVertexEar(v1.previous, v1, v1.next))) {
                     earTips.push(v1.index);
