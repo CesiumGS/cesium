@@ -95,7 +95,7 @@ define([
             numberOfLevelZeroTilesY : 2
         });
 
-        this.version = undefined;
+        this._version = undefined;
 
 
         this._tileWidth = 256;
@@ -124,9 +124,9 @@ define([
               throw new DeveloperError('Could not find layer with channel (id) of ' + that._channel + '.');
             }
 
-            that.version = layer.version;
+            that._version = layer.version;
             that._imageUrlTemplate = that._imageUrlTemplate.replace('{request}', that._requestType) 
-              .replace('{channel}', that._channel).replace('{version}', that.version); 
+              .replace('{channel}', that._channel).replace('{version}', that._version); 
 
             // Install the default tile discard policy if none has been supplied.
             if (typeof that._tileDiscardPolicy === 'undefined') {
@@ -302,6 +302,40 @@ define([
             throw new DeveloperError('getTilingScheme must not be called before the imagery provider is ready.');
         }
         return this._tilingScheme;
+    };
+
+    /**
+     * Gets the version of the data used by this provider.  This function should
+     * not be called before {@link GoogleEarthEnterpriseImageryProvider#isReady} returns true.
+     *
+     * @memberof GoogleEarthEnterpriseImageryProvider
+     *
+     * @returns {Number} The data version number.
+     *
+     * @exception {DeveloperError} <code>getVersion</code> must not be called before the imagery provider is ready.
+     */
+    GoogleEarthEnterpriseImageryProvider.prototype.getVersion = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getVersion must not be called before the imagery provider is ready.');
+        }
+        return this._version;
+    };
+
+    /**
+     * Gets the type of data that is being requested from the provider.  This function should
+     * not be called before {@link GoogleEarthEnterpriseImageryProvider#isReady} returns true.
+     *
+     * @memberof GoogleEarthEnterpriseImageryProvider
+     *
+     * @returns {String} The data request type.
+     *
+     * @exception {DeveloperError} <code>getRequestType</code> must not be called before the imagery provider is ready.
+     */
+    GoogleEarthEnterpriseImageryProvider.prototype.getRequestType = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getRequestType must not be called before the imagery provider is ready.');
+        }
+        return this._requestType;
     };
 
     /**
