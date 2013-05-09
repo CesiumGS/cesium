@@ -860,6 +860,12 @@ define([
                 rectangle : scissorRectangle
             }
         });
+        scene._blendCommand.uniformMap.u_center = function() {
+            return sunPositionWC;
+        };
+        scene._blendCommand.uniformMap.u_radius = function() {
+            return Math.max(size.x, size.y) * 0.5;
+        };
 
         scene._fullScreenCommand.renderState = context.createRenderState();
     }
