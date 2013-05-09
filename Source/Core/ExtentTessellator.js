@@ -7,8 +7,8 @@ define([
         './Ellipsoid',
         './Extent',
         './Cartesian3',
-        './Quaternion',
-        './Matrix3',
+        './Matrix2',
+        './GeographicProjection',
         './ComponentDatatype',
         './PrimitiveType'
     ], function(
@@ -19,8 +19,8 @@ define([
         Ellipsoid,
         Extent,
         Cartesian3,
-        Quaternion,
-        Matrix3,
+        Matrix2,
+        GeographicProjection,
         ComponentDatatype,
         PrimitiveType) {
     "use strict";
@@ -56,8 +56,10 @@ define([
      * @param {Array|Float32Array} description.textureCoordinates The array to use to store computed texture coordinates, unless interleaved.
      * @param {Array|Float32Array} [description.indices] The array to use to store computed indices.  If undefined, indices will be not computed.
      */
-    var pos = new Cartesian3();
-    var rotationMatrix = new Matrix3();
+    var corner = new Cartesian3();
+    var center = new Cartesian3();
+    var rotationMatrix = new Matrix2();
+    var proj = new GeographicProjection();
     ExtentTessellator.computeVertices = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var extent = description.extent;
@@ -90,11 +92,15 @@ define([
 
         var vertexArrayIndex = 0;
         var textureCoordinatesIndex = 0;
-        Ellipsoid.WGS84.cartographicToCartesian(extent.getCenter(), pos);
-        Matrix3.fromQuaternion(Quaternion.fromAxisAngle(pos, -extent.rotation), rotationMatrix);
-        Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest(), pos);
-        rotationMatrix.multiplyByVector(pos, pos);
-        var cart = Ellipsoid.WGS84.cartesianToCartographic(pos);
+
+        proj.project(extent.getNorthwest(), corner);
+        proj.project(extent.getCenter(), center);
+
+        corner.subtract(center, corner);
+        rotationMatrix = Matrix2.fromRotation(extent.rotation);
+        rotationMatrix.multiplyByVector(corner, corner);
+        corner.add(center, corner);
+        var cart = proj.unproject(corner);
 
         for ( var row = 0; row < height; ++row) {
             for ( var col = 0; col < width; ++col) {
