@@ -7,7 +7,7 @@
 		</glslToJavascript>
 
 		<createCesiumJs output="${sourceDirectory}/Cesium.js">
-			<sourcefiles refid="cesiumJsFileSet" /> 
+			<sourcefiles refid="cesiumJsFileSet" />
 		</createCesiumJs>
 
 		<createSpecList output="${specsDirectory}/SpecList.js">
@@ -21,7 +21,7 @@
 		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptions="${jsHintEclipseSettings.options}" />
 	</target>
 
-	<target name="combine" description="Combines all source files into a single stand-alone script." depends="build, combineJavaScript">
+	<target name="combine" description="Combines all source files into a single stand-alone script." depends="build,combineJavaScript">
 		<copy todir="Build">
 			<fileset dir="Apps/">
 				<include name="HelloWorld.html" />
@@ -34,9 +34,6 @@
 	</target>
 
 	<target name="minify" description="Combines all source files into a single stand-alone, minified script.">
-		<delete includeEmptyDirs="true" failonerror="false">
-			<fileset dir="${shadersDirectory}" includes="**/*.js" excludes="*.profile.js" />
-		</delete>
 		<antcall target="combine">
 			<param name="build.minification" value="true" />
 		</antcall>
@@ -201,7 +198,7 @@
 
 				<include name="Apps/**/*.js" />
 				<include name="Apps/Sandcastle/gallery/*.html" />
-				
+
 				<exclude name="Apps/Sandcastle/ThirdParty/**" />
 
 				<include name="Specs/**/*.js" />
@@ -260,7 +257,7 @@
 		</antcall>
 
 		<!-- copy to build folder with copyright header added at the top -->
-		<copy todir="${buildOutputDirectory}">
+		<copy todir="${outputDirectory}">
 			<fileset dir="${combineOutputDirectory}" />
 			<filterchain>
 				<concatfilter prepend="${sourceDirectory}/copyrightHeader.js" />
@@ -270,7 +267,7 @@
 		<delete dir="${combineOutputDirectory}" />
 
 		<!-- copy other resources -->
-		<copy todir="${buildOutputDirectory}" includeEmptyDirs="false">
+		<copy todir="${outputDirectory}" includeEmptyDirs="false">
 			<fileset dir="${sourceDirectory}">
 				<exclude name="**/*.js" />
 				<exclude name="**/*.glsl" />
@@ -288,8 +285,8 @@
 	</target>
 
 	<target name="combineJavaScript.combineCesium.check">
-		<uptodate property="no.combineCesium.create" targetfile="${unminifiedOutputDirectory}/Cesium.js">
-			<srcfiles refid="cesiumJsFileSet" />  
+		<uptodate property="no.combineCesium.create" targetfile="${outputDirectory}/Cesium.js">
+			<srcfiles refid="cesiumJsFileSet" />
 		</uptodate>
 	</target>
 
@@ -299,24 +296,27 @@
 		</exec>
 	</target>
 
-	<target name="combineJavaScript.createUnminified" depends="combineJavaScript.setNodePath">
+	<target name="combineJavaScript.createUnminified">
 		<antcall target="combineJavaScript.create">
 			<param name="optimize" value="none" />
+			<param name="outputDirectory" value="${unminifiedOutputDirectory}" />
 		</antcall>
+	</target>
 
-		<mkdir dir="${unminifiedOutputDirectory}" />
-		<copy todir="${unminifiedOutputDirectory}">
-			<fileset dir="${buildOutputDirectory}" />
+	<target name="combineJavaScript.copyUnminified" unless="${build.minification}">
+		<copy todir="${buildOutputDirectory}">
+			<fileset dir="${unminifiedOutputDirectory}" />
 		</copy>
 	</target>
 
 	<target name="combineJavaScript.createMinified" if="${build.minification}">
 		<antcall target="combineJavaScript.create">
 			<param name="optimize" value="uglify2" />
+			<param name="outputDirectory" value="${buildOutputDirectory}" />
 		</antcall>
 	</target>
 
-	<target name="combineJavaScript" depends="combineJavaScript.createUnminified,combineJavaScript.createMinified" />
+	<target name="combineJavaScript" depends="combineJavaScript.setNodePath,combineJavaScript.createUnminified,combineJavaScript.copyUnminified,combineJavaScript.createMinified" />
 
 	<target name="generateDocumentation">
 		<extractShaderComments output="${shadersDirectory}/glslComments.js">
