@@ -26,6 +26,22 @@ define([
          */
         this.canExecute = undefined;
 
+        /**
+         * An event which is raised before the command executes, the event
+         * is raised with an object containing two properties: a <code>cancel</code> property,
+         * which if set to false by the listener will prevent the command from being executed, and
+         * an <code>args</code> property, which is the array of arguments being passed to the command.
+         * @type Event
+         */
+        this.beforeExecute = undefined;
+
+        /**
+         * An event which is raised after the command executes, the event
+         * is raised with the return value of the command as its only parameter.
+         * @type Event
+         */
+        this.afterExecute = undefined;
+
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 

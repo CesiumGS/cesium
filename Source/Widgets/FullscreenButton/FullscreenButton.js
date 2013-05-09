@@ -1,10 +1,10 @@
 /*global define*/
-define(['./FullscreenViewModel',
+define(['./FullscreenButtonViewModel',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
         '../../ThirdParty/knockout'
         ], function(
-         FullscreenViewModel,
+         FullscreenButtonViewModel,
          DeveloperError,
          destroyObject,
          knockout) {
@@ -13,7 +13,7 @@ define(['./FullscreenViewModel',
     /**
      * A single button widget for toggling fullscreen mode.
      *
-     * @alias FullscreenWidget
+     * @alias FullscreenButton
      * @constructor
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
@@ -24,7 +24,7 @@ define(['./FullscreenViewModel',
      *
      * @see Fullscreen
      */
-    var FullscreenWidget = function(container, fullscreenElement) {
+    var FullscreenButton = function(container, fullscreenElement) {
         if (typeof container === 'undefined') {
             throw new DeveloperError('container is required.');
         }
@@ -38,43 +38,39 @@ define(['./FullscreenViewModel',
         }
 
         /**
+         * Gets the viewModel being used by the widget.
+         * @memberof FullscreenButton
+         * @type {FullscreenButtonViewModel}
+         */
+        this.viewModel = new FullscreenButtonViewModel(fullscreenElement);
+
+        /**
          * Gets the container element for the widget.
-         * @memberof FullscreenWidget
+         * @memberof FullscreenButton
          * @type {Element}
          */
         this.container = container;
 
-        /**
-         * Gets the viewModel being used by the widget.
-         * @memberof FullscreenWidget
-         * @type {FullscreenViewModel}
-         */
-        this.viewModel = new FullscreenViewModel(fullscreenElement);
+        this._element = document.createElement('button');
+        this._element.className = 'cesium-fullscreenButton';
+        this._element.setAttribute('data-bind', 'attr: { title: tooltip }, css: { "cesium-fullscreenButton-exit": toggled }, click: command, enable: isFullscreenEnabled');
+        container.appendChild(this._element);
 
-        /**
-         * Gets the element created by this widget.
-         * @memberof FullscreenWidget
-         * @type {Element}
-         */
-        this.element = document.createElement('button');
-        this.element.className = 'cesium-fullscreen';
-        this.element.setAttribute('data-bind', 'attr: { title: tooltip }, css: { "cesium-fullscreen-exit": toggled }, click: command, enable: isFullscreenEnabled');
-        container.appendChild(this.element);
-
-        knockout.applyBindings(this.viewModel, this.element);
+        knockout.applyBindings(this.viewModel, this._element);
     };
 
     /**
      * Destroys the  widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof FullscreenWidget
+     * @memberof FullscreenButton
      */
-    FullscreenWidget.prototype.destroy = function() {
+    FullscreenButton.prototype.destroy = function() {
         var container = this.container;
         knockout.cleanNode(container);
-        container.removeChild(this.element);
+        this.viewModel.destroy();
+        container.removeChild(this._element);
         return destroyObject(this);
     };
 
-    return FullscreenWidget;
+    return FullscreenButton;
 });
