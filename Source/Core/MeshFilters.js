@@ -201,7 +201,7 @@ define([
      * @see MeshFilters.reorderForPostVertexCache
      *
      * @example
-     * var mesh = CubeMapEllipsoidTessellator.compute(...);
+     * var mesh = new EllipsoidGeometry(...);
      * mesh = MeshFilters.reorderForPreVertexCache(mesh);
      */
     MeshFilters.reorderForPreVertexCache = function(mesh) {
@@ -294,7 +294,7 @@ define([
      * by Sander, Nehab, and Barczak
      *
      * @example
-     * var mesh = CubeMapEllipsoidTessellator.compute(...);
+     * var mesh = new EllipsoidGeometry(...);
      * mesh = MeshFilters.reorderForPostVertexCache(mesh);
      */
     MeshFilters.reorderForPostVertexCache = function(mesh, cacheCapacity) {

@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/CubeMapEllipsoidTessellator',
+         'Core/EllipsoidGeometry',
          'Core/Cartesian3',
          'Core/Ellipsoid',
          'Core/Math'
      ], function(
-         CubeMapEllipsoidTessellator,
+         EllipsoidGeometry,
          Cartesian3,
          Ellipsoid,
          CesiumMath) {
@@ -14,26 +14,27 @@ defineSuite([
 
     it('compute0', function() {
         expect(function() {
-            return CubeMapEllipsoidTessellator.compute(Ellipsoid.UNIT_SPHERE, -1);
+            return new EllipsoidGeometry(Ellipsoid.UNIT_SPHERE, -1);
         }).toThrow();
     });
 
     it('compute1', function() {
-        var m = CubeMapEllipsoidTessellator.compute(Ellipsoid.UNIT_SPHERE, 1);
+        var m = new EllipsoidGeometry(Ellipsoid.UNIT_SPHERE, 1);
 
         expect(m.attributes.position.values.length).toEqual(3 * 8);
         expect(m.indexLists[0].values.length).toEqual(12 * 3);
+        expect(m.boundingSphere.radius).toEqual(1);
     });
 
     it('compute2', function() {
-        var m = CubeMapEllipsoidTessellator.compute(Ellipsoid.UNIT_SPHERE, 2);
+        var m = new EllipsoidGeometry(Ellipsoid.UNIT_SPHERE, 2);
 
         expect(m.attributes.position.values.length).toEqual(3 * (8 + 6 + 12));
         expect(m.indexLists[0].values.length).toEqual(2 * 3 * 4 * 6);
     });
 
     it('compute3', function() {
-        var m = CubeMapEllipsoidTessellator.compute(Ellipsoid.UNIT_SPHERE, 3);
+        var m = new EllipsoidGeometry(Ellipsoid.UNIT_SPHERE, 3);
 
         var position = m.attributes.position.values;
         for ( var i = 0; i < position.length; i += 3) {

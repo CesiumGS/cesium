@@ -7,7 +7,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/CubeMapEllipsoidTessellator',
+        '../Core/EllipsoidGeometry',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
@@ -42,7 +42,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        CubeMapEllipsoidTessellator,
+        EllipsoidGeometry,
         DeveloperError,
         Ellipsoid,
         EllipsoidalOccluder,
@@ -722,7 +722,7 @@ define([
         if (typeof surface._debug !== 'undefined' && typeof surface._debug.boundingSphereTile !== 'undefined') {
             if (!surface._debug.boundingSphereVA) {
                 var radius = surface._debug.boundingSphereTile.boundingSphere3D.radius;
-                var sphere = CubeMapEllipsoidTessellator.compute(new Ellipsoid(radius, radius, radius), 10);
+                var sphere = new EllipsoidGeometry(new Ellipsoid(radius, radius, radius), 10);
                 MeshFilters.toWireframeInPlace(sphere);
                 surface._debug.boundingSphereVA = context.createVertexArrayFromMesh({
                     mesh : sphere,

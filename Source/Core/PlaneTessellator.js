@@ -16,7 +16,7 @@ define([
      *
      * @exports PlaneTessellator
      *
-     * @see CubeMapEllipsoidTessellator
+     * @see EllipsoidGeometry
      * @see BoxTessellator
      */
     var PlaneTessellator = {

@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        './defaultValue'
+    ], function(
+        defaultValue) {
     "use strict";
 
     /**
@@ -9,6 +12,8 @@ define(function() {
      * @constructor
      */
     var Geometry = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         /**
          * DOC_TBA
          */

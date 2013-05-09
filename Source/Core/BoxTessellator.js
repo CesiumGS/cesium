@@ -19,7 +19,7 @@ define([
      * @alias BoxTessellator
      * @exports BoxTessellator
      *
-     * @see CubeMapEllipsoidTessellator
+     * @see EllipsoidGeometry
      * @see PlaneTessellator
      */
     var BoxTessellator = {

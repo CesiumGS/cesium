@@ -86,8 +86,8 @@ define([
             command.renderState = this._rs;
             command.shaderProgram = this._sp;
             command.uniformMap = appearance.material._uniforms;
-// TODO: make this part of mesh
-            command.boundingVolume = BoundingSphere.fromVertices(this.mesh.attributes.position.values);
+            command.boundingVolume = this.mesh.boundingSphere;
+//            command.boundingVolume = BoundingSphere.fromVertices(this.mesh.attributes.position.values);
 
             this._commands.push(command);
         }

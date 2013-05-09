@@ -27,7 +27,7 @@ define([
      * @exports ExtentTessellator
      *
      * @see HeightmapTessellator
-     * @see CubeMapEllipsoidTessellator
+     * @see EllipsoidGeometry
      * @see BoxTessellator
      * @see PlaneTessellator
      */
