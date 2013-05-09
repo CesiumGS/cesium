@@ -39,7 +39,7 @@ define([
      * a primitive type of <code>triangles</code>, <code>triangleStrip</code>, or <code>trangleFan</code> is converted to a
      * list of indices with a primitive type of <code>lines</code>.  Lists of indices with other primitive types remain unchanged.
      * <br /><br />
-     * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxTessellator}.
+     * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxGeometry}.
      * <br /><br />
      * This filter is commonly used to create a wireframe mesh for visual debugging.
      *
@@ -47,10 +47,8 @@ define([
      *
      * @returns The modified <code>mesh</code> argument, with its triangle indices converted to lines.
      *
-     * @see BoxTessellator
-     *
      * @example
-     * var mesh = BoxTessellator.compute();
+     * var mesh = new BoxGeometry();
      * mesh = GeometryFilters.toWireframe(mesh);
      */
     GeometryFilters.toWireframe = function(mesh) {
@@ -189,7 +187,7 @@ define([
      * Reorders a mesh's indices to achieve better performance from the GPU's pre-vertex-shader cache.
      * Each list of indices in the mesh's <code>indexList</code> is reordered to keep the same index-vertex correspondence.
      * <br /><br />
-     * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxTessellator}.
+     * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxGeometry}.
      * <br /><br />
 
      * @param {Geometry} mesh The mesh to filter, which is modified in place.
@@ -274,7 +272,7 @@ define([
      * Reorders a mesh's indices to achieve better performance from the GPU's post vertex-shader cache by using the Tipsify algorithm.
      * Each list of indices in the mesh's <code>indexList</code> is optimally reordered.
      * <br /><br />
-     * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxTessellator}.
+     * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxGeometry}.
      * <br /><br />
 
      * @param {Geometry} mesh The mesh to filter, which is modified in place.

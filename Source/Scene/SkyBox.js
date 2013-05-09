@@ -15,7 +15,7 @@ define([
         '../Shaders/SkyBoxVS',
         '../Shaders/SkyBoxFS'
     ], function(
-        BoxTessellator,
+        BoxGeometry,
         Cartesian3,
         destroyObject,
         DeveloperError,
@@ -148,7 +148,7 @@ define([
                 }
             };
 
-            var mesh = BoxTessellator.compute({
+            var mesh = new BoxGeometry({
                 dimensions : new Cartesian3(2.0, 2.0, 2.0)
             });
             var attributeIndices = GeometryFilters.createAttributeIndices(mesh);

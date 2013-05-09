@@ -25,11 +25,6 @@ define([
      * Contains class functions to create a mesh or vertex array from a cartographic extent.
      *
      * @exports ExtentTessellator
-     *
-     * @see HeightmapTessellator
-     * @see EllipsoidGeometry
-     * @see BoxTessellator
-     * @see PlaneTessellator
      */
     var ExtentTessellator = {};
 

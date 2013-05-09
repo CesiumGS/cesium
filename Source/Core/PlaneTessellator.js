@@ -15,9 +15,6 @@ define([
      * DOC_TBA
      *
      * @exports PlaneTessellator
-     *
-     * @see EllipsoidGeometry
-     * @see BoxTessellator
      */
     var PlaneTessellator = {
         /**
