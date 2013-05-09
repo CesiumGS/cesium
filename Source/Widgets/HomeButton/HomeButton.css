@@ -1,16 +1,12 @@
 .cesium-homeButton {
     display: inline-block;
-    width: 32px;
-    height: 32px;
-    vertical-align: middle;
+    position: relative;
+    width: 100%;
+    height: 100%;
     background-image: url(../Images/home.svg);
     background-repeat: no-repeat;
     background-size: 100% 100%;
     border-radius: 14%;
-    position: relative;
-    text-align: center;
-    color: white;
-    margin: 1px;
     cursor: pointer;
 }
 
