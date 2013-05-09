@@ -5,7 +5,6 @@ define([
         '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/Event',
-        './BingMapsStyle',
         './DiscardMissingTileImagePolicy',
         './ImageryProvider',
         './TileProviderError',
@@ -17,7 +16,6 @@ define([
         Cartesian2,
         DeveloperError,
         Event,
-        BingMapsStyle,
         DiscardMissingTileImagePolicy,
         ImageryProvider,
         TileProviderError,
@@ -33,8 +31,6 @@ define([
      * @constructor
      *
      * @param {String} description.url The url of the Google Earth Enterprise server hosting the imagery.
-     * @param {Enumeration} [description.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
-     *        imagery to load.
      * @param {TileDiscardPolicy} [description.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
      *        {@link DiscardMissingTileImagePolicy} is used which requests
@@ -58,14 +54,12 @@ define([
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
-     * @see <a href='http://msdn.microsoft.com/en-us/library/ff701713.aspx'>Bing Maps REST Services</a>
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      *
      * @example
      * var google = new GoogleEarthEnterpriseImageryProvider({
      *     url : 'http://earth.localdomain',
-     *     requestType : 'ImageryMaps',
-     *     mapStyle : BingMapsStyle.AERIAL
+     *     requestType : 'ImageryMaps'
      * });
      */
     var GoogleEarthEnterpriseImageryProvider = function GoogleEarthEnterpriseImageryProvider(description) {
@@ -79,7 +73,6 @@ define([
         }
 
         this._url = description.url;
-        //this._mapStyle = defaultValue(description.mapStyle, BingMapsStyle.AERIAL);
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
         this._requestType = 'ImageryMaps';
@@ -92,10 +85,7 @@ define([
          *
          * @type {Number}
          */
-        this.defaultGamma = 1.0;
-        if (this._mapStyle === BingMapsStyle.AERIAL || this._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) {
-            this.defaultGamma = 1.3;
-        }
+        this.defaultGamma = 1.3;
 
         this._tilingScheme = new WebMercatorTilingScheme({
             numberOfLevelZeroTilesX : 2,
@@ -239,17 +229,6 @@ define([
      */
     GoogleEarthEnterpriseImageryProvider.prototype.getProxy = function() {
         return this._proxy;
-    };
-
-    /**
-     * Gets the type of Bing Maps imagery to load.
-     *
-     * @memberof GoogleEarthEnterpriseImageryProvider
-     *
-     * @returns {BingMapsStyle} The style.
-     */
-    GoogleEarthEnterpriseImageryProvider.prototype.getMapStyle = function() {
-        return this._mapStyle;
     };
 
     /**
