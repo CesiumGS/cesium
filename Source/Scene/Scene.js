@@ -113,8 +113,8 @@ define([
 
         this._renderSun = false;
         this._fbo = undefined;
-        this._downScaleFBO1 = undefined;
-        this._downScaleFBO2 = undefined;
+        this._downSampleFBO1 = undefined;
+        this._downSampleFBO2 = undefined;
         this._downSampleCommand = undefined;
         this._brightPassCommand = undefined;
         this._blurXCommand = undefined;
@@ -626,8 +626,8 @@ define([
         if (typeof scene._fbo === 'undefined') {
             scene._fbo = context.createFramebuffer();
 
-            scene._downScaleFBO1 = context.createFramebuffer();
-            scene._downScaleFBO2 = context.createFramebuffer();
+            scene._downSampleFBO1 = context.createFramebuffer();
+            scene._downSampleFBO2 = context.createFramebuffer();
 
             var primitiveType = PrimitiveType.TRIANGLE_FAN;
             var vertexArray = getVertexArray(context);
@@ -637,7 +637,7 @@ define([
             downSampleCommand.vertexArray = vertexArray;
             downSampleCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeIndices);
             downSampleCommand.uniformMap = {};
-            downSampleCommand.framebuffer = scene._downScaleFBO1;
+            downSampleCommand.framebuffer = scene._downSampleFBO1;
 
             var brightPassCommand = scene._brightPassCommand = new DrawCommand();
             brightPassCommand.primitiveType = primitiveType;
@@ -654,7 +654,7 @@ define([
                     return 0.1;
                 }
             };
-            brightPassCommand.framebuffer = scene._downScaleFBO2;
+            brightPassCommand.framebuffer = scene._downSampleFBO2;
 
             var delta = 1.0;
             var sigma = 2.0;
@@ -674,7 +674,7 @@ define([
                     return 0.0;
                 }
             };
-            blurXCommand.framebuffer = scene._downScaleFBO1;
+            blurXCommand.framebuffer = scene._downSampleFBO1;
 
             var blurYCommand = scene._blurYCommand = new DrawCommand();
             blurYCommand.primitiveType = primitiveType;
@@ -691,7 +691,7 @@ define([
                     return 1.0;
                 }
             };
-            blurYCommand.framebuffer = scene._downScaleFBO2;
+            blurYCommand.framebuffer = scene._downSampleFBO2;
 
             var additiveBlendCommand = scene._blendCommand = new DrawCommand();
             additiveBlendCommand.primitiveType = primitiveType;
@@ -699,6 +699,10 @@ define([
             additiveBlendCommand.renderState = context.createRenderState();
             additiveBlendCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, AdditiveBlend, attributeIndices);
         }
+
+        var downSampleWidth = Math.pow(2.0, Math.ceil(Math.log(width) / Math.log(2)) - 2.0);
+        var downSampleHeight = Math.pow(2.0, Math.ceil(Math.log(height) / Math.log(2)) - 2.0);
+        var downSampleSize = Math.max(downSampleWidth, downSampleHeight);
 
         var fbo = scene._fbo;
         var colorTexture = fbo.getColorTexture();
@@ -721,21 +725,17 @@ define([
                 }));
             }
 
-            var downScaleWidth = Math.pow(2.0, Math.ceil(Math.log(width) / Math.log(2)) - 2.0);
-            var downScaleHeight = Math.pow(2.0, Math.ceil(Math.log(height) / Math.log(2)) - 2.0);
-            var downScaleSize = Math.max(downScaleWidth, downScaleHeight);
-
-            scene._downScaleFBO1.setColorTexture(context.createTexture2D({
-                width : downScaleSize,
-                height : downScaleSize
+            scene._downSampleFBO1.setColorTexture(context.createTexture2D({
+                width : downSampleSize,
+                height : downSampleSize
             }));
-            scene._downScaleFBO2.setColorTexture(context.createTexture2D({
-                width : downScaleSize,
-                height : downScaleSize
+            scene._downSampleFBO2.setColorTexture(context.createTexture2D({
+                width : downSampleSize,
+                height : downSampleSize
             }));
 
             var renderState = context.createRenderState({
-                viewport : new BoundingRectangle(0.0, 0.0, downScaleSize, downScaleSize)
+                viewport : new BoundingRectangle(0.0, 0.0, downSampleSize, downSampleSize)
             });
 
             scene._downSampleCommand.renderState = renderState;
@@ -745,23 +745,23 @@ define([
 
             scene._brightPassCommand.renderState = renderState;
             scene._brightPassCommand.uniformMap.u_texture = function() {
-                return scene._downScaleFBO1.getColorTexture();
+                return scene._downSampleFBO1.getColorTexture();
             };
 
             scene._blurXCommand.renderState = renderState;
             scene._blurXCommand.uniformMap.u_texture = function() {
-                return scene._downScaleFBO2.getColorTexture();
+                return scene._downSampleFBO2.getColorTexture();
             };
             scene._blurXCommand.uniformMap.u_step = function() {
-                return new Cartesian2(1.0 / downScaleSize, 1.0 / downScaleSize);
+                return new Cartesian2(1.0 / downSampleSize, 1.0 / downSampleSize);
             };
 
             scene._blurYCommand.renderState = renderState;
             scene._blurYCommand.uniformMap.u_texture = function() {
-                return scene._downScaleFBO1.getColorTexture();
+                return scene._downSampleFBO1.getColorTexture();
             };
             scene._blurYCommand.uniformMap.u_step = function() {
-                return new Cartesian2(1.0 / downScaleSize, 1.0 / downScaleSize);
+                return new Cartesian2(1.0 / downSampleSize, 1.0 / downSampleSize);
             };
 
             scene._blendCommand.uniformMap = {
@@ -769,7 +769,7 @@ define([
                     return fbo.getColorTexture();
                 },
                 u_texture1 : function() {
-                    return scene._downScaleFBO2.getColorTexture();
+                    return scene._downSampleFBO2.getColorTexture();
                 }
             };
         }
@@ -904,8 +904,8 @@ define([
         this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
         this.sun = this.sun && this.sun.destroy();
         this._fbo = this._fbo && this._fbo.destroy();
-        this._downScaleFBO1 = this._downScaleFBO1 && this._downScaleFBO1.destroy();
-        this._downScaleFBO2 = this._downScaleFBO2 && this._downScaleFBO2.destroy();
+        this._downSampleFBO1 = this._downSampleFBO1 && this._downSampleFBO1.destroy();
+        this._downSampleFBO2 = this._downSampleFBO2 && this._downSampleFBO2.destroy();
         this._downSampleCommand = this._downSampleCommand && this._downSampleCommand.shaderProgram && this._downSampleCommand.release();
         this._brightPassCommand = this._brightPassCommand && this._brightPassCommand.shaderProgram && this._brightPassCommand.release();
         this._blurXCommand = this._blurXCommand && this._blurXCommand.shaderProgram && this._blurXCommand.release();
