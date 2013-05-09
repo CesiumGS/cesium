@@ -49,6 +49,7 @@ define([
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} <code>description.url</code> is required.
+     * @exception {DeveloperError} <code>description.requestType</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -63,6 +64,7 @@ define([
      * @example
      * var google = new GoogleEarthEnterpriseImageryProvider({
      *     url : 'http://earth.localdomain',
+     *     requestType : 'ImageryMaps',
      *     mapStyle : BingMapsStyle.AERIAL
      * });
      */
@@ -72,11 +74,15 @@ define([
         if (typeof description.url === 'undefined') {
             throw new DeveloperError('description.url is required.');
         }
+        if (typeof description.requestType === 'undefined') {
+            throw new DeveloperError('description.requestType is required.');
+        }
 
         this._url = description.url;
         //this._mapStyle = defaultValue(description.mapStyle, BingMapsStyle.AERIAL);
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
+        this._requestType = 'ImageryMaps';
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
@@ -95,9 +101,6 @@ define([
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 2
         });
-
-        ////////////
-        this._requestType = 'ImageryMaps';
 
         this.version = undefined;
         this.channel = undefined;
