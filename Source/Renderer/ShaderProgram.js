@@ -2463,7 +2463,9 @@ define([
              * // GLSL declaration
              * const float czm_solarRadius = ...;
              */
-            czm_solarRadius : CesiumMath.SOLAR_RADIUS.toString()
+            // use toExponential instead of toString to prevent a number like 1.2e2 from expanding to 120
+            // and have a shader fail to compile because it thinks it should be an int.
+            czm_solarRadius : CesiumMath.SOLAR_RADIUS.toExponential()
         };
 
         var glslConstants = '';

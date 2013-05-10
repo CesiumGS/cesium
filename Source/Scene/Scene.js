@@ -113,7 +113,6 @@ define([
 
         this._shaderFrameCount = 0;
 
-        this._renderSun = false;
         this._fbo = undefined;
         this._downSampleFBO1 = undefined;
         this._downSampleFBO2 = undefined;
@@ -128,6 +127,7 @@ define([
 
         this._commandList = [];
         this._frustumCommandsList = [];
+        this._entireFrustumCommands = {};
 
         this._clearColorCommand = new ClearCommand();
         this._clearColorCommand.color = new Color();
@@ -359,7 +359,6 @@ define([
 
     var scratchCullingVolume = new CullingVolume();
     var distances = new Interval();
-    var sunBS = new BoundingSphere();
 
     function createPotentiallyVisibleSet(scene, listName) {
         var commandLists = scene._commandList;
@@ -391,17 +390,31 @@ define([
         }
         cullingVolume = scratchCullingVolume;
 
-        Cartesian3.clone(scene.getUniformState().getSunPositionWC(), sunBS.center);
-        scene._renderSun = (cullingVolume.getVisibility(sunBS) === Intersect.OUTSIDE) ? false : true;
-        scene._renderSun = scene._renderSun || (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(sunBS));
+        var command;
+        var boundingVolume;
+
+        var entireFrustumCommands = scene._entireFrustumCommands;
+        for (var commandName in entireFrustumCommands) {
+            if (entireFrustumCommands.hasOwnProperty(commandName)) {
+                command = entireFrustumCommands[commandName];
+                if (typeof command !== 'undefined') {
+                    boundingVolume = command.boundingVolume;
+                    if (typeof boundingVolume !== 'undefined' &&
+                            ((cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) /*||
+                            (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(boundingVolume))*/)) {
+                        entireFrustumCommands[commandName] = undefined;
+                    }
+                }
+            }
+        }
 
         var length = commandLists.length;
         for (var i = 0; i < length; ++i) {
             var commandList = commandLists[i][listName];
             var commandListLength = commandList.length;
             for (var j = 0; j < commandListLength; ++j) {
-                var command = commandList[j];
-                var boundingVolume = command.boundingVolume;
+                command = commandList[j];
+                boundingVolume = command.boundingVolume;
                 if (typeof boundingVolume !== 'undefined') {
                     var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
                     var transformedBV = boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
@@ -453,15 +466,16 @@ define([
         var frustum = camera.frustum.clone();
         var context = scene._context;
         var us = context.getUniformState();
-        var skyBoxCommand = typeof scene.skyBox !== 'undefined' ? scene.skyBox.update(context, scene._frameState) : undefined;
-        var sunCommand = typeof scene.sun !== 'undefined' ? scene.sun.update(context, scene._frameState) : undefined;
-        var skyAtmosphereCommand = typeof scene.skyAtmosphere !== 'undefined' ? scene.skyAtmosphere.update(context, scene._frameState) : undefined;
+
+        var skyBoxCommand = scene._entireFrustumCommands.skyBoxCommand;
+        var skyAtmosphereCommand = scene._entireFrustumCommands.skyAtmosphereCommand;
+        var sunCommand = scene._entireFrustumCommands.sunCommand;
 
         var clear = scene._clearColorCommand;
         Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.color);
         clear.execute(context, passState);
 
-        if (typeof sunCommand !== 'undefined' && scene._renderSun) {
+        if (typeof sunCommand !== 'undefined') {
             clear = scene._clearFBO1Command;
             Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.color);
             clear.execute(context);
@@ -485,7 +499,7 @@ define([
             skyAtmosphereCommand.execute(context, passState);
         }
 
-        if (typeof sunCommand !== 'undefined' && scene._renderSun) {
+        if (typeof sunCommand !== 'undefined') {
             sunCommand.execute(context, passState);
         }
 
@@ -510,7 +524,7 @@ define([
             }
         }
 
-        if (typeof sunCommand !== 'undefined' && scene._renderSun) {
+        if (typeof sunCommand !== 'undefined') {
             scene._downSampleCommand.execute(context);
             scene._brightPassCommand.execute(context);
             scene._blurXCommand.execute(context);
@@ -568,13 +582,18 @@ define([
 
         us.update(frameState);
 
+        var context = this._context;
+        this._entireFrustumCommands.skyBoxCommand = typeof this.skyBox !== 'undefined' ? this.skyBox.update(context, frameState) : undefined;
+        this._entireFrustumCommands.sunCommand = typeof this.sun !== 'undefined' ? this.sun.update(context, frameState) : undefined;
+        this._entireFrustumCommands.skyAtmosphereCommand = typeof this.skyAtmosphere !== 'undefined' ? this.skyAtmosphere.update(context, frameState) : undefined;
+
         this._commandList.length = 0;
-        this._primitives.update(this._context, frameState, this._commandList);
+        this._primitives.update(context, frameState, this._commandList);
 
         createPotentiallyVisibleSet(this, 'colorList');
 
         var passState = this._passState;
-        if (typeof this.sun !== 'undefined' && this._renderSun) {
+        if (typeof this.sun !== 'undefined' && typeof this._entireFrustumCommands.sunCommand !== 'undefined') {
             updatePostProcess(this);
             passState.framebuffer = this._fbo;
         } else {
