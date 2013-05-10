@@ -93,9 +93,7 @@ defineSuite([
                     ],
                     "serverUrl": "https://fake.com",
                     "useGoogleLayers": false
-                  }                
-                                    
-                                    
+                  }
                  );
             }, 1);
         };
