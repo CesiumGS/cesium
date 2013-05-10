@@ -41,7 +41,7 @@ define([
 
         var ellipsoid = parameters.ellipsoid;
         var occluder = new EllipsoidalOccluder(ellipsoid);
-        var occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromVertices(boundingSphere3D.center, vertices, numberOfAttributes, parameters.relativeToCenter);
+        var occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromVertices(parameters.relativeToCenter, vertices, numberOfAttributes, parameters.relativeToCenter);
 
         return {
             vertices : vertices.buffer,
