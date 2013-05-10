@@ -640,7 +640,9 @@ define([
         result.y = y;
         result.z = z;
         return result;
-    };    /**
+    };
+
+    /**
      * An immutable Cartesian3 instance initialized to (0.0, 0.0, 0.0).
      * @memberof Cartesian3
      */

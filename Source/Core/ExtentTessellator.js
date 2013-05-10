@@ -63,6 +63,7 @@ define([
     ExtentTessellator.computeVertices = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var extent = description.extent;
+        var rotation = description.rotation;
         var surfaceHeight = description.surfaceHeight;
         var width = description.width;
         var height = description.height;
@@ -97,19 +98,19 @@ define([
         proj.project(extent.getCenter(), center);
 
         corner.subtract(center, corner);
-        rotationMatrix = Matrix2.fromRotation(extent.rotation);
+        rotationMatrix = Matrix2.fromRotation(rotation);
         rotationMatrix.multiplyByVector(corner, corner);
         corner.add(center, corner);
         var cart = proj.unproject(corner);
 
         for ( var row = 0; row < height; ++row) {
             for ( var col = 0; col < width; ++col) {
-                var latitude = cart.latitude - granularityY * row * cos(extent.rotation) + col * granularityX * sin(extent.rotation);
+                var latitude = cart.latitude - granularityY * row * cos(rotation) + col * granularityX * sin(rotation);
                 var cosLatitude = cos(latitude);
                 var nZ = sin(latitude);
                 var kZ = radiiSquaredZ * nZ;
 
-                var longitude = cart.longitude + row * granularityY * sin(extent.rotation) + col * granularityX * cos(extent.rotation);
+                var longitude = cart.longitude + row * granularityY * sin(rotation) + col * granularityX * cos(rotation);
                 if (latitude > CesiumMath.PI/2 || latitude < -CesiumMath.PI/2) {
                     indices.length = 0;
                     return;
