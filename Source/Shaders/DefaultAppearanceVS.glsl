@@ -1,4 +1,5 @@
-attribute vec4 position;
+attribute vec3 positionHigh;
+attribute vec3 positionLow;
 //attribute vec3 normal;
 //attribute vec2 st;
 attribute vec4 pickColor;
@@ -10,10 +11,12 @@ varying vec4 czm_pickColor;
 
 void main() 
 {
-//    v_normalEC = czm_normal * normal;                   // normal in eye coordinates
-//    v_positionEC = (czm_modelView * position).xyz;      // position in eye coordinates
+    vec4 p = vec4(czm_translateRelativeToEye(positionHigh, positionLow), 1.0);   
+
+//    v_normalEC = czm_normal * normal;                         // normal in eye coordinates
+//    v_positionEC = (czm_modelViewRelativeToEye * p).xyz;      // position in eye coordinates
 //    v_st = st;
     czm_pickColor = pickColor;
     
-    gl_Position = czm_modelViewProjection * position;
+    gl_Position = czm_modelViewProjectionRelativeToEye * p;
 }

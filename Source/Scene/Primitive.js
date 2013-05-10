@@ -110,21 +110,24 @@ define([
     }
 
     function processGeometry(primitive, context) {
-        // Unify to world coordinates before combining.
         var geometries = primitive.geometries;
+
+        // Add pickColor attribute if any geometries are pickable
+        if (Geometry.isPickable(geometries)) {
+            addPickColorAttribute(primitive, context);
+        }
+
+        // Unify to world coordinates before combining.
         var length = geometries.length;
         for (var i = 0; i < length; ++i) {
             GeometryFilters.transformToWorldCoordinates(geometries[i]);
         }
 
-        // Add pickColor attribute if any geometries are pickable
-        var pickable = Geometry.isPickable(geometries);
-        if (pickable) {
-            addPickColorAttribute(primitive, context);
-        }
-
         // Combine into single geometry for better rendering performance.
         var geometry = GeometryFilters.combine(geometries);
+
+        // Split position for GPU RTE
+        geometry = GeometryFilters.encodeAttribute(geometry, 'position', 'positionHigh', 'positionLow');
 
         return geometry;
     }
