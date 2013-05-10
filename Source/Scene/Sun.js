@@ -26,9 +26,6 @@ define([
     var Sun = function() {
         this._command = new DrawCommand();
 
-        var size = 200.0;
-        this.size = new Cartesian2(size, size);
-
         /**
          * Determines if the sun will be shown.
          * <p>
@@ -103,9 +100,6 @@ define([
 
             var that = this;
             command.uniformMap = {
-                u_size : function () {
-                    return that.size;
-                },
                 u_morphTime : function() {
                     return that.morphTime;
                 }

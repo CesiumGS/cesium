@@ -816,7 +816,9 @@ define([
         var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, postProcessMatrix4Scratch);
         var sunPositionWC = Transforms.pointToWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
 
-        var sunSize = scene.sun.size;
+        // TODO
+        var sunSize = new Cartesian2(200.0, 200.0);
+
         var size = sizeScratch;
         size.x = sunSize.x * downSampleWidth / width;
         size.y = sunSize.y * downSampleHeight / height;
