@@ -228,6 +228,18 @@ define([
     GoogleEarthImageryProvider.prototype.getProxy = function() {
         return this._proxy;
     };
+    
+    /**
+     * Gets the imagery channel (id) currently being used.
+     *
+     * @memberof GoogleEarthImageryProvider
+     *
+     * @returns {Number} The url.
+     */
+    GoogleEarthImageryProvider.prototype.getChannel = function() {
+        return this._channel;
+    };
+
 
     /**
      * Gets the width of each tile, in pixels.  This function should
