@@ -121,6 +121,7 @@ define([
         this._cameraPosition = new Cartesian3();
 
         this._sunPositionWC = new Cartesian3();
+        this._sunPosition2D = new Cartesian3();
         this._sunDirectionWC = new Cartesian3();
         this._sunDirectionEC = new Cartesian3();
         this._moonDirectionEC = new Cartesian3();
@@ -183,6 +184,7 @@ define([
     }
 
     var transformMatrix = new Matrix3();
+    var sunCartographicScratch = new Cartographic();
     function setSunAndMoonDirections(uniformState, frameState) {
         if (typeof Transforms.computeIcrfToFixedMatrix(frameState.time, transformMatrix) === 'undefined') {
             transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, transformMatrix);
@@ -200,6 +202,11 @@ define([
         Matrix3.multiplyByVector(transformMatrix, position, position);
         Matrix3.multiplyByVector(uniformState.getViewRotation3D(), position, position);
         Cartesian3.normalize(position, position);
+
+        var projection = frameState.scene2D.projection;
+        var ellipsoid = projection.getEllipsoid();
+        var sunCartographic = ellipsoid.cartesianToCartographic(uniformState._sunPositionWC, sunCartographicScratch);
+        projection.project(sunCartographic, uniformState._sunPosition2D);
     }
 
     /**
@@ -927,8 +934,7 @@ define([
     };
 
     /**
-     * Returns the sun position in 3D world coordinates at the current scene time.  Even in 2D or
-     * Columbus View mode, this returns the position of the sun in the 3D scene.
+     * Returns the sun position in 3D world coordinates at the current scene time.
      *
      * @memberof UniformState
      *
@@ -938,6 +944,19 @@ define([
      */
     UniformState.prototype.getSunPositionWC = function() {
         return this._sunPositionWC;
+    };
+
+    /**
+     * Returns the sun position in 2D world coordinates at the current scene time.
+     *
+     * @memberof UniformState
+     *
+     * @return {Cartesian3} The sun position in 2D world coordinates at the current scene time.
+     *
+     * @see czm_sunPosition2D
+     */
+    UniformState.prototype.getSunPosition2D = function() {
+        return this._sunPosition2D;
     };
 
     /**

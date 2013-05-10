@@ -2,6 +2,7 @@
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Core/ComponentDatatype',
         '../Core/destroyObject',
         '../Core/Math',
@@ -15,6 +16,7 @@ define([
     ], function(
         BoundingSphere,
         Cartesian2,
+        Cartesian3,
         ComponentDatatype,
         destroyObject,
         CesiumMath,
@@ -30,6 +32,12 @@ define([
     var Sun = function() {
         this._command = new DrawCommand();
 
+        this._boundingVolume = new BoundingSphere();
+        this._boundingVolume.radius = CesiumMath.SOLAR_RADIUS * 30.0;
+
+        this._boundingVolume2D = new BoundingSphere();
+        this._boundingVolume2D.radius = this._boundingVolume.radius;
+
         /**
          * Determines if the sun will be shown.
          * <p>
@@ -39,14 +47,6 @@ define([
          * @type Boolean
          */
         this.show = true;
-
-        /**
-         * The current morph transition time between 2D/Columbus View and 3D,
-         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
-         *
-         * @type Number
-         */
-        this.morphTime = 1.0;
     };
 
     /**
@@ -57,8 +57,7 @@ define([
             return undefined;
         }
 
-        // TODO
-        if (frameState.mode !== SceneMode.SCENE3D) {
+        if (frameState.mode === SceneMode.SCENE2D || frameState.mode === SceneMode.MORPHING) {
             return undefined;
         }
 
@@ -108,12 +107,24 @@ define([
                     return that.morphTime;
                 }
             };
-
-            command.boundingVolume = new BoundingSphere();
-            command.boundingVolume.radius = CesiumMath.SOLAR_RADIUS * 30.0;
         }
 
-        command.boundingVolume.center = context.getUniformState().getSunPositionWC();
+        var mode = frameState.mode;
+        var sunPosition = context.getUniformState().getSunPositionWC();
+
+        var boundingVolume = this._boundingVolume;
+        var boundingVolume2D = this._boundingVolume2D;
+
+        Cartesian3.clone(sunPosition, boundingVolume.center);
+        boundingVolume2D.center.x = sunPosition.z;
+        boundingVolume2D.center.y = sunPosition.x;
+        boundingVolume2D.center.z = sunPosition.y;
+
+        if (mode === SceneMode.SCENE3D) {
+            command.boundingVolume = BoundingSphere.clone(boundingVolume, command.boundingVolume);
+        } else if (mode === SceneMode.SCENE2D) {
+            command.boundingVolume = BoundingSphere.clone(boundingVolume2D, command.boundingVolume);
+        }
 
         return command;
     };

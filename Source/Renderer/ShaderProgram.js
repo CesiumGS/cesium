@@ -1303,6 +1303,7 @@ define([
          * @glslUniform
          *
          * @see UniformState#getSunPositionWC
+         * @see czm_sunPosition2D
          * @see czm_sunDirectionWC
          *
          * @example
@@ -1320,6 +1321,37 @@ define([
 
             getValue : function(uniformState) {
                 return uniformState.getSunPositionWC();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing the sun position in 2D world coordinates.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_sunPosition2D</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_sunPosition2D
+         * @glslUniform
+         *
+         * @see UniformState#getSunPosition2D
+         * @see czm_sunPositionWC
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_sunPosition2D;
+         */
+        czm_sunPosition2D : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_VECTOR3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getSunPosition2D();
             }
         },
 
