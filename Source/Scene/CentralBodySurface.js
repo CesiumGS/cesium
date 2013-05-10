@@ -387,6 +387,7 @@ define([
         var levelZeroTiles = surface._levelZeroTiles;
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
             tile = levelZeroTiles[i];
+            surface._tileReplacementQueue.markTileRendered(tile);
             if (tile.state !== TileState.READY) {
                 queueTileLoad(surface, tile);
             }
