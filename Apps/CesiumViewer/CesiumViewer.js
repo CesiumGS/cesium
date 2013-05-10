@@ -83,7 +83,7 @@ define([
                 Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0))
         });
 
-        var primitive = new Primitive(GeometryFilters.combine([mesh, mesh2, mesh3]), Appearance.CLOSED_TRANSLUCENT);
+        var primitive = new Primitive([mesh, mesh2, mesh3], Appearance.CLOSED_TRANSLUCENT);
 
 /*
         var m = new Material({
@@ -104,7 +104,7 @@ define([
             material : m,
             renderState : rs
         });
-        var primitive = new Primitive(GeometryFilters.combine([mesh3]), appearance);
+        var primitive = new Primitive(mesh3, appearance);
 */
 
         widget.scene.getPrimitives().add(primitive);

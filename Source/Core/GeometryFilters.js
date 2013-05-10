@@ -10,6 +10,7 @@ define([
         './ComponentDatatype',
         './PrimitiveType',
         './Tipsify',
+        './BoundingSphere',
         './Geometry',
         './GeometryAttribute',
         './GeometryIndices'
@@ -24,6 +25,7 @@ define([
         ComponentDatatype,
         PrimitiveType,
         Tipsify,
+        BoundingSphere,
         Geometry,
         GeometryAttribute,
         GeometryIndices) {
@@ -687,6 +689,8 @@ define([
             Matrix4.multiplyByPoint(mesh.modelMatrix, mesh.boundingSphere.center, mesh.boundingSphere.center);
         }
 
+        mesh.modelMatrix = Matrix4.IDENTITY.clone();
+
         return mesh;
     };
 
@@ -694,27 +698,30 @@ define([
      * DOC_TBA
      *
      * @exception {DeveloperError} meshes is required and must have length greater than zero.
+     * @exception {DeveloperError} All meshes must have the same modelMatrix.
      */
     GeometryFilters.combine = function(meshes) {
         if ((typeof meshes === 'undefined') || (meshes.length < 1)) {
-            throw new DeveloperError('meshes is required.');
+            throw new DeveloperError('meshes is required and must have length greater than zero.');
         }
 
         var length = meshes.length;
-        var i;
-
-        // Unify to world coordinates before combining.
-        for (i = 0; i < length; ++i) {
-            GeometryFilters.transformToWorldCoordinates(meshes[i]);
-        }
 
         if (length === 1) {
             return meshes[0];
         }
 
         var name;
+        var i;
         var j;
         var k;
+
+        var m = meshes[0].modelMatrix;
+        for (i = 1; i < length; ++i) {
+            if (!Matrix4.equals(meshes[i].modelMatrix, m)) {
+                throw new DeveloperError('All meshes must have the same modelMatrix.');
+            }
+        }
 
         // Find subset of attributes in all meshes
         var attributes = findAttributesInAllMeshes(meshes);
@@ -817,10 +824,28 @@ define([
             }
         }
 
-// TODO: combine bounding spheres
+        // Create bounding sphere that includes all meshes
+        var boundingSphere = undefined;
+
+        for (i = 0; i < length; ++i) {
+            var bs = meshes[i].boundingSphere;
+            if (typeof bs === 'undefined') {
+                // If any meshes have an undefined bounding sphere, then so does the combined mesh
+                boundingSphere = undefined;
+                break;
+            }
+
+            if (typeof boundingSphere === 'undefined') {
+                boundingSphere = bs.clone();
+            } else {
+                BoundingSphere.union(boundingSphere, bs, boundingSphere);
+            }
+        }
+
         return new Geometry({
             attributes : attributes,
-            indexLists : combinedIndexLists
+            indexLists : combinedIndexLists,
+            boundingSphere : boundingSphere
         });
     };
 

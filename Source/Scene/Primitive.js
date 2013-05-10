@@ -26,11 +26,11 @@ define([
     /**
      * DOC_TBA
      */
-    var Primitive = function(mesh, appearance) {
+    var Primitive = function(meshes, appearance) {
         /**
          * DOC_TBA
          */
-        this.mesh = mesh;
+        this.meshes = meshes;
 
         /**
          * DOC_TBA
@@ -51,9 +51,20 @@ define([
         this._rs = undefined;
         this._va = undefined;
 
-        this._commands = [];
         this._commandLists = new CommandLists();
     };
+
+    function processGeometry(geometries) {
+        // Unify to world coordinates before combining.
+        var length = geometries.length;
+        for (var i = 0; i < length; ++i) {
+            GeometryFilters.transformToWorldCoordinates(geometries[i]);
+        }
+
+        var geometry = GeometryFilters.combine(geometries);
+
+        return geometry;
+    }
 
     /**
      * @private
@@ -64,14 +75,16 @@ define([
             return;
         }
 
-// TODO: throw if mesh and appearance are not defined
+// TODO: throw if meshes and appearance are not defined
+
+        var colorCommands = this._commandLists.colorList;
 
         if (typeof this._va === 'undefined') {
-            var attributeIndices = GeometryFilters.createAttributeIndices(this.mesh);
-            var appearance = this.appearance;
-
+            var mesh = processGeometry(this.meshes);
             // Break into multiple meshes to fit within unsigned short indices if needed
-            var meshes = GeometryFilters.fitToUnsignedShortIndices(this.mesh);
+            var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
+            var attributeIndices = GeometryFilters.createAttributeIndices(mesh);
+
             var va = [];
             var length = meshes.length;
             var i;
@@ -84,29 +97,31 @@ define([
                 }));
             }
 
+            var appearance = this.appearance;
+
             this._va = va;
             this._sp = context.getShaderCache().replaceShaderProgram(this._sp, appearance.vertexShaderSource, appearance.getFragmentShaderSource(), attributeIndices);
             this._rs = context.createRenderState(appearance.renderState);
 
             for (i = 0; i < length; ++i) {
                 var command = new DrawCommand();
-// TODO: this assumes indices in the mesh - and only one set
-                command.primitiveType = this.mesh.indexLists[0].primitiveType;
+// TODO: this assumes indices in the meshes - and only one set
+                command.primitiveType = mesh.indexLists[0].primitiveType;
                 command.vertexArray = this._va[i];
                 command.renderState = this._rs;
                 command.shaderProgram = this._sp;
                 command.uniformMap = appearance.material._uniforms;
-                command.boundingVolume = this.mesh.boundingSphere;
-                this._commands.push(command);
+// TODO: could use bounding volume per mesh
+                command.boundingVolume = mesh.boundingSphere;
+                colorCommands.push(command);
             }
         }
 
         if (frameState.passes.color) {
-            var commands = this._commands;
-            var len = commands.length;
+            // The geometry is static but the model matrix can change
+            var len = colorCommands.length;
             for (var i = 0; i < len; ++i) {
-                commands[i].modelMatrix = this.modelMatrix;
-                this._commandLists.colorList[i] = commands[i];
+                colorCommands[i].modelMatrix = this.modelMatrix;
             }
             commandList.push(this._commandLists);
         }
