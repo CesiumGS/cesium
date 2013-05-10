@@ -29,6 +29,18 @@ define([
         SunFS) {
     "use strict";
 
+    /**
+     * Draws a sun billboard.
+     * <p>This is only supported in 3D and Columbus view.</p>
+     *
+     * @alias Sun
+     * @constructor
+     *
+     * @example
+     * scene.sun = new Sun();
+     *
+     * @see Scene.sun
+     */
     var Sun = function() {
         this._command = new DrawCommand();
 

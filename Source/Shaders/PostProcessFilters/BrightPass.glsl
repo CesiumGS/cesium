@@ -12,6 +12,9 @@ float key(float avg)
     return max(0.0, guess) + 0.1;
 }
 
+// see http://content.gpwiki.org/index.php/D3DBook:High-Dynamic_Range_Rendering#Luminance_Transform
+// for transformations between RGB and CIE Yxy
+
 const mat3 RGB2XYZ = mat3(0.4124, 0.2126, 0.0193,
                     0.3576, 0.7152, 0.1192,
                     0.1805, 0.0722, 0.9505);
@@ -38,6 +41,9 @@ vec3 xyzToRGB(vec3 Yxy)
     
     return XYZ2RGB * xyz;
 }
+
+// See section 9. "The bright-pass filter" of Realtime HDR Rendering
+// http://www.cg.tuwien.ac.at/research/publications/2007/Luksch_2007_RHR/Luksch_2007_RHR-RealtimeHDR%20.pdf
 
 void main()
 {

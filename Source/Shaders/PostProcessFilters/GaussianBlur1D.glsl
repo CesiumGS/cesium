@@ -9,6 +9,9 @@ uniform vec2 u_step;
 
 varying vec2 v_textureCoordinates;
 
+//  Incremental Computation of the Gaussian:
+//  http://http.developer.nvidia.com/GPUGems3/gpugems3_ch40.html
+
 void main()
 {
     vec2 st = v_textureCoordinates;
