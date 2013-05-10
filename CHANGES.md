@@ -17,13 +17,15 @@ Beta Releases
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 * Added `GeometryFilters.combine` to combine meshes for better batching.
 * Added `BoundingSphere.fromEllipsoid`.
+* Added `SceneTransforms.wgs84ToWindowCoordinates`. [#746](https://github.com/AnalyticalGraphicsInc/cesium/issues/746).
+* Added `computeHorizonCullingPoint`, `computeHorizonCullingPointFromVertices`, and `computeHorizonCullingPointFromExtent` methods to `EllipsoidalOccluder` and used them to build a more accurate horizon occlusion test for terrain rendering.
+* Added support for floating-point textures.
+* Added `IntersectionTests.trianglePlaneIntersection`.
+* Added `fromElements` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `DrawCommand.cull` to avoid redundant visibility checks.
 * Added `czm_morphTime` automatic GLSL uniform.
-* Added support for floating-point textures.
 * Fixed polyline clipping artifact. [#728](https://github.com/AnalyticalGraphicsInc/cesium/issues/728).
-* Added `IntersectionTests.trianglePlaneIntersection`.
-* Fixed polygon crossing international date line for 2D and Columbus view
-* Added `computeHorizonCullingPoint`, `computeHorizonCullingPointFromVertices`, and `computeHorizonCullingPointFromExtent` methods to `EllipsoidalOccluder` and used them to build a more accurate horizon occlusion test for terrain rendering.
+* Fixed polygon crossing International Date Line for 2D and Columbus view. [#99](https://github.com/AnalyticalGraphicsInc/cesium/issues/99).
 
 ### b16 - 2013-05-01
 * Breaking changes:

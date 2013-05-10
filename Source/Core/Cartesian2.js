@@ -77,6 +77,19 @@ define([
     };
 
     /**
+     * DOC_TBA
+     */
+    Cartesian2.fromElements = function(x, y, result) {
+        if (typeof result === 'undefined') {
+            return new Cartesian2(x, y);
+        }
+
+        result.x = x;
+        result.y = y;
+        return result;
+    };
+
+    /**
      * Duplicates a Cartesian2 instance.
      * @memberof Cartesian2
      *
