@@ -599,8 +599,9 @@ define([
         } else {
             passState.framebuffer = undefined;
         }
-
         executeCommands(this, passState);
+
+        passState.framebuffer = undefined;
         executeOverlayCommands(this, passState);
     };
 
