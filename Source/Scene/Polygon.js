@@ -425,7 +425,7 @@ define([
      *
      * @param {extent} extent. The cartographic extent of the tile, with north, south, east and
      * west properties in radians.
-
+     *
      * @param {double} [height=0.0]. The height of the cartographic extent.
      * @param {double} [rotation=0.0]. The rotation of the cartographic extent.
      * @example
