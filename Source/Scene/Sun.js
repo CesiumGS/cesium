@@ -100,29 +100,23 @@ define([
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
-
-            var that = this;
-            command.uniformMap = {
-                u_morphTime : function() {
-                    return that.morphTime;
-                }
-            };
         }
 
         var mode = frameState.mode;
         var sunPosition = context.getUniformState().getSunPositionWC();
+        var sunPosition2D = context.getUniformState().getSunPosition2D();
 
         var boundingVolume = this._boundingVolume;
         var boundingVolume2D = this._boundingVolume2D;
 
         Cartesian3.clone(sunPosition, boundingVolume.center);
-        boundingVolume2D.center.x = sunPosition.z;
-        boundingVolume2D.center.y = sunPosition.x;
-        boundingVolume2D.center.z = sunPosition.y;
+        boundingVolume2D.center.x = sunPosition2D.z;
+        boundingVolume2D.center.y = sunPosition2D.x;
+        boundingVolume2D.center.z = sunPosition2D.y;
 
         if (mode === SceneMode.SCENE3D) {
             command.boundingVolume = BoundingSphere.clone(boundingVolume, command.boundingVolume);
-        } else if (mode === SceneMode.SCENE2D) {
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
             command.boundingVolume = BoundingSphere.clone(boundingVolume2D, command.boundingVolume);
         }
 
