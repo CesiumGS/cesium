@@ -1,26 +1,26 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        //'../Core/jsonp',
+        '../Core/jsonp',
         '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/Event',
         './DiscardMissingTileImagePolicy',
         './ImageryProvider',
         './TileProviderError',
-        './WebMercatorTilingScheme'//,
-        //'../ThirdParty/when'
+        './WebMercatorTilingScheme',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
-        //jsonp,
+        jsonp,
         Cartesian2,
         DeveloperError,
         Event,
         DiscardMissingTileImagePolicy,
         ImageryProvider,
         TileProviderError,
-        WebMercatorTilingScheme//,
-        //when) {
+        WebMercatorTilingScheme,
+        when
         ) {
     "use strict";
 
@@ -148,7 +148,7 @@ define([
 
         function requestMetadata() {
           //document.write('<script src="' + metadataUrl + '" type="text/javascript"></script>'); 
-
+          /*
           var data = {
             isAuthenticated: true,
             layers: [ 
@@ -192,19 +192,14 @@ define([
           }
 
           metadataSuccess(data);
+          */
+          
 
-
-          /*
-            loadText(metadataUrl)
-            .then(metadataSuccess, metadataFailure);
-            */
-            /*
-            var metadata = jsonp(metadataUrl, {
-                callbackParameterName : 'jsonp',
-                proxy : that._proxy
-            });
-            when(metadata, metadataSuccess, metadataFailure);
-            */
+          var metadata = jsonp(metadataUrl, {
+              callbackParameterName : 'jsonp',
+              proxy : that._proxy
+          });
+          when(metadata, metadataSuccess, metadataFailure);
         }
 
         requestMetadata();
