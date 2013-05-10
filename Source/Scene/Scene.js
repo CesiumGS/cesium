@@ -400,8 +400,7 @@ define([
                 if (typeof command !== 'undefined') {
                     boundingVolume = command.boundingVolume;
                     if (typeof boundingVolume !== 'undefined' &&
-                            ((cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) /*||
-                            (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(boundingVolume))*/)) {
+                            cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
                         entireFrustumCommands[commandName] = undefined;
                     }
                 }
