@@ -14,7 +14,6 @@ define([
         '../Core/Intersect',
         '../Core/Matrix4',
         '../Core/MeshFilters',
-        '../Core/Occluder',
         '../Core/PrimitiveType',
         '../Core/Queue',
         '../Core/TaskProcessor',
@@ -50,7 +49,6 @@ define([
         Intersect,
         Matrix4,
         MeshFilters,
-        Occluder,
         PrimitiveType,
         Queue,
         TaskProcessor,
@@ -389,6 +387,7 @@ define([
         var levelZeroTiles = surface._levelZeroTiles;
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
             tile = levelZeroTiles[i];
+            surface._tileReplacementQueue.markTileRendered(tile);
             if (tile.state !== TileState.READY) {
                 queueTileLoad(surface, tile);
             }
