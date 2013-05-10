@@ -27,54 +27,64 @@ define([
         WindingOrder) {
     "use strict";
 
-    function DoublyLinkedList() {
+    function CyclicalDoublyLinkedList() {
+        this.list = [];
         this.head = undefined;
         this.tail = undefined;
         this.length = 0;
     }
 
-    DoublyLinkedList.prototype.add = function(item) {
+    CyclicalDoublyLinkedList.prototype.add = function(item) {
         if (typeof item !== 'undefined') {
+            var index = this.length;
             var node = {
                 item : item,
+                index: index,
                 previous : this.tail,
-                next : undefined
+                next : this.head
             };
 
-            if (typeof this.tail !== 'undefined') {
-                this.tail.next = node;
+            if (this.length === 0) {
+                this.head = node;
                 this.tail = node;
             } else {
-                // Insert into empty list.
-                this.head = node;
+                this.head.previous = node;
+                this.tail.next = node;
                 this.tail = node;
             }
 
+            this.list[index] = node;
             ++this.length;
         }
     };
 
-    DoublyLinkedList.prototype.remove = function(item) {
-        if (typeof item !== 'undefined') {
-            if (typeof item.previous !== 'undefined' && typeof item.next  !== 'undefined') {
-                item.previous.next = item.next;
-                item.next.previous = item.previous;
-            } else if (typeof item.previous  !== 'undefined') {
-                // Remove last node.
-                item.previous.next = undefined;
-                this.tail = item.previous;
-            } else if (typeof item.next !== 'undefined') {
-                // Remove first node.
-                item.next.previous = undefined;
-                this.head = item.next;
+    CyclicalDoublyLinkedList.prototype.remove = function(index) {
+        if (typeof index !== 'undefined') {
+            var node = this.list[index];
+            this.list[index] = undefined;
+            if (this.length > 1) {
+                node.previous.next = node.next;
+                node.next.previous = node.previous;
             } else {
                 // Remove last node in linked list.
                 this.head = undefined;
                 this.tail = undefined;
             }
-
             --this.length;
         }
+    };
+
+    CyclicalDoublyLinkedList.prototype.get = function(index) {
+        if (typeof index !== 'undefined') {
+            return this.list[index];
+        }
+    };
+
+    CyclicalDoublyLinkedList.prototype.clear = function() {
+        this.head = undefined;
+        this.tail = undefined;
+        this.length = 0;
+        this.list.length = 0;
     };
 
     function isTipConvex(p0, p1, p2) {
@@ -82,7 +92,19 @@ define([
         var v = p2.subtract(p1);
 
         // Use the sign of the z component of the cross product
-        return ((u.x * v.y) - (u.y * v.x)) >= 0.0;
+        return ((u.x * v.y) - (u.y * v.x)) > 0.0;
+    }
+
+    function isVertexEar (v){
+        var v0 = v.previous;
+        var v1 = v.next;
+        var isEar = true;
+        for (var n = v1.next; n !== v0; n = n.next) {
+            if (pointInsideTriangle2D(n.item, v0.item, v.item, v1.item)) {
+                isEar = false;
+            }
+        }
+        return isEar;
     }
 
     /**
@@ -391,6 +413,8 @@ define([
     var scaleToGeodeticHeightN = new Cartesian3();
     var scaleToGeodeticHeightP = new Cartesian3();
 
+    var polygonVertices = new CyclicalDoublyLinkedList();
+
     /**
      * DOC_TBA
      *
@@ -472,16 +496,17 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Triangulates a polygon by an ear clipping method
+         *
+         * @param {Array} Cartesian2 Array of points, representing polygon vertices
+         *
+         * @return {Array} Number Indices of vertices (in sets of three) representing triangles
          *
          * @exception {DeveloperError} positions is required.
          * @exception {DeveloperError} At least three positions are required.
          */
         earClip2D : function(positions) {
-            // PERFORMANCE_IDEA:  This is slow at n^3.  Make it faster with:
-            //   * http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-            //   * http://cgm.cs.mcgill.ca/~godfried/publications/triangulation.held.ps.gz
-            //   * http://blogs.agi.com/insight3d/index.php/2008/03/20/triangulation-rhymes-with-strangulation/
+            // Based on http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
 
             if (typeof positions  === 'undefined') {
                 throw new DeveloperError('positions is required.');
@@ -492,67 +517,74 @@ define([
                 throw new DeveloperError('At least three positions are required.');
             }
 
-            var remainingPositions = new DoublyLinkedList();
+            if (polygonVertices.length > 0) {
+                polygonVertices.clear();
+            }
+
+            var earTips = [];
+            var indices = [];
+            var v, v0, v1;
 
             for ( var i = 0; i < length; ++i) {
-                remainingPositions.add({
-                    position : positions[i],
-                    index : i
-                });
+                polygonVertices.add(positions[i]);
             }
 
-            var indices = [];
+            for (v = polygonVertices.head; v.next !== polygonVertices.head; v = v.next) {
+                if (isTipConvex(v.previous.item, v.item, v.next.item)) {
+                    v.convex = true;
+                    if (isVertexEar(v)) {
+                        earTips.push(v.index);
+                    }
+                } else {
+                    v.convex = false;
+                }
+            }
 
-            var previousNode = remainingPositions.head;
-            var node = previousNode.next;
-            var nextNode = node.next;
+            v = polygonVertices.get(earTips.pop());
+            v0 = v.previous;
+            v1 = v.next;
+            while (polygonVertices.length > 3) {
+                indices.push(v0.index, v.index, v1.index);
+                polygonVertices.remove(v.index);
 
-            var bailCount = length * length;
-
-            while (remainingPositions.length > 3) {
-                var p0 = previousNode.item.position;
-                var p1 = node.item.position;
-                var p2 = nextNode.item.position;
-
-                if (isTipConvex(p0, p1, p2)) {
-                    var isEar = true;
-
-                    for ( var n = (nextNode.next ? nextNode.next : remainingPositions.head); n !== previousNode; n = (n.next ? n.next : remainingPositions.head)) {
-                        if (pointInsideTriangle2D(n.item.position, p0, p1, p2)) {
-                            isEar = false;
-                            break;
+                // Check the previous vertex for changes
+                if ((i = earTips.indexOf(v0.index)) !== -1) { // If tip that was previously an ear tip is no longer
+                    if (!isVertexEar(v0)) {
+                        earTips.splice(i, 1);
+                    }
+                } else if (!v0.convex) { // If reflex vertex is now convex
+                    if(isTipConvex(v0.previous.item, v0.item, v0.next.item)) {
+                        v0.convex = true;
+                        if (isVertexEar(v0)) { // If vertex is also an ear tip
+                            earTips.push(v0.index);
                         }
                     }
+                } else if (isVertexEar(v0)){ // If convex vertex is now also an ear tip
+                    earTips.push(v0.index);
+                }
 
-                    if (isEar) {
-                        indices.push(previousNode.item.index);
-                        indices.push(node.item.index);
-                        indices.push(nextNode.item.index);
-
-                        remainingPositions.remove(node);
-
-                        node = nextNode;
-                        nextNode = nextNode.next ? nextNode.next : remainingPositions.head;
-                        continue;
+                // Check next vertex for changes
+                if ((i = earTips.indexOf(v1.index)) !== -1) {
+                    if (!isVertexEar(v1)) {
+                        earTips.splice(i, 1);
                     }
+                } else if (!v1.convex) {
+                    if (isTipConvex(v1.previous.item, v1.item, v1.next.item ))  {
+                        v1.convex = true;
+                        if (isVertexEar(v1)) {
+                            earTips.push(v1.index);
+                        }
+                    }
+                } else if (isVertexEar(v1)) {
+                    earTips.push(v1.index);
                 }
 
-                previousNode = previousNode.next ? previousNode.next : remainingPositions.head;
-                node = node.next ? node.next : remainingPositions.head;
-                nextNode = nextNode.next ? nextNode.next : remainingPositions.head;
-
-                if (--bailCount === 0) {
-                    break;
-                }
+                v = polygonVertices.get(earTips.pop()); //go to next ear tip
+                v0 = v.previous;
+                v1 = v.next;
             }
 
-            var n0 = remainingPositions.head;
-            var n1 = n0.next;
-            var n2 = n1.next;
-            indices.push(n0.item.index);
-            indices.push(n1.item.index);
-            indices.push(n2.item.index);
-
+            indices.push(v0.index, v.index, v1.index);
             return indices;
         },
 
