@@ -110,7 +110,7 @@ define([
             };
 
             command.boundingVolume = new BoundingSphere();
-            command.boundingVolume.radius = CesiumMath.SOLAR_RADIUS;
+            command.boundingVolume.radius = CesiumMath.SOLAR_RADIUS * 30.0;
         }
 
         command.boundingVolume.center = context.getUniformState().getSunPositionWC();
