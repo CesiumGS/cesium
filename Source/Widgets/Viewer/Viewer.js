@@ -46,15 +46,36 @@ define(['../../Core/Cartesian2',
     }
 
     /**
-     * A simple viewer.
+     * A base widget for building simple applications.  It composites most of
+     * the standard Cesium widget into one reusable package.
      *
      * @alias Viewer
      * @constructor
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
+     * @param {Object} [options] Configuration options for the widget.
+     * @param {Boolean} [options.animation=true] If set to false, the Animation widget will not be created.
+     * @param {Boolean} [options.baselayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
+     * @param {Boolean} [options.fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
+     * @param {Boolean} [options.homeButton=true] If set to false, the HomeButton widget will not be created.
+     * @param {Boolean} [options.sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
+     * @param {Boolean} [options.timeline=true] If set to false, the Timeline widget will not be created.
+     * @param {ImageryProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, it not supplied the first available base layer is used.
+     * @param {Array} [options.imageryProviderViewModels=createDefaultBaseLayers()] The array of ImageryProviderViewModels to be selectable from the BaseLyerPicker.
+     * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
+     * @param {Element} [options.fullscreenElement=container] The element to make full screen when the full screen button is pressed.
+     * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      *
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
+     *
+     * @see Animation
+     * @see BaseLayerPicker
+     * @see CesiumWidget
+     * @see FullscreenButton
+     * @see HomeButton
+     * @see SceneModePicker
+     * @see Timeline
      */
     var Viewer = function(container, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -75,7 +96,10 @@ define(['../../Core/Cartesian2',
         var cesiumWidgetContainer = document.createElement('div');
         cesiumWidgetContainer.className = 'cesium-viewer-node';
         container.appendChild(cesiumWidgetContainer);
-        var cesiumWidget = new CesiumWidget(cesiumWidgetContainer);
+        var cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
+            terrainProvider : options.terrainProvider,
+            sceneMode : options.sceneMode
+        });
 
         //Subscribe for resize events and set the initial size.
         this._resizeCallback = function() {
@@ -120,9 +144,9 @@ define(['../../Core/Cartesian2',
             var baseLayerPickerContainer = document.createElement('div');
             baseLayerPickerContainer.className = 'cesium-viewer-baseLayerPickerContainer';
             toolbar.appendChild(baseLayerPickerContainer);
-            var providerViewModels = createDefaultBaseLayers();
+            var providerViewModels = defaultValue(options.imageryProviderViewModels, createDefaultBaseLayers());
             baseLayerPicker = new BaseLayerPicker(baseLayerPickerContainer, cesiumWidget.centralBody.getImageryLayers(), providerViewModels);
-            baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
+            baseLayerPicker.viewModel.selectedItem(defaultValue(options.selectedImageryProviderViewModel, providerViewModels[0]));
         }
 
         //Animation
@@ -152,7 +176,7 @@ define(['../../Core/Cartesian2',
             var fullscreenContainer = document.createElement('div');
             fullscreenContainer.className = 'cesium-viewer-fullscreenContainer';
             container.appendChild(fullscreenContainer);
-            fullscreenButton = new FullscreenButton(fullscreenContainer, container);
+            fullscreenButton = new FullscreenButton(fullscreenContainer, defaultValue(options.fullscreenElement, container));
         }
 
         /**

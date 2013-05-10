@@ -13,6 +13,7 @@ define(['../../Core/buildModuleUrl',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/CentralBody',
         '../../Scene/Scene',
+        '../../Scene/SceneMode',
         '../../Scene/SceneTransitioner',
         '../../Scene/SkyBox',
         '../../Scene/SkyAtmosphere'
@@ -31,6 +32,7 @@ define(['../../Core/buildModuleUrl',
         BingMapsImageryProvider,
         CentralBody,
         Scene,
+        SceneMode,
         SceneTransitioner,
         SkyBox,
         SkyAtmosphere) {
@@ -51,6 +53,7 @@ define(['../../Core/buildModuleUrl',
      * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
+     * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      *
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
@@ -198,6 +201,15 @@ define(['../../Core/buildModuleUrl',
          * @type {SceneTransitioner}
          */
         this.transitioner = new SceneTransitioner(scene, _ellipsoid);
+
+        if (options.sceneMode) {
+            if (options.sceneMode === SceneMode.SCENE2D) {
+                this.transitioner.to2D();
+            }
+            if (options.sceneMode === SceneMode.COLUMBUS_VIEW) {
+                this.transitioner.toColumbusView();
+            }
+        }
 
         var widget = this;
         //Subscribe for resize events and set the initial size.

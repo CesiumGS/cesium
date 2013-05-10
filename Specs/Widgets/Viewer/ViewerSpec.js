@@ -2,37 +2,30 @@
 defineSuite(['Widgets/Viewer/Viewer',
              'Widgets/Animation/Animation',
              'Widgets/BaseLayerPicker/BaseLayerPicker',
+             'Widgets/BaseLayerPicker/ImageryProviderViewModel',
              'Widgets/CesiumWidget/CesiumWidget',
              'Widgets/FullscreenButton/FullscreenButton',
              'Widgets/HomeButton/HomeButton',
              'Widgets/SceneModePicker/SceneModePicker',
              'Widgets/Timeline/Timeline',
-             'DynamicScene/DataSourceCollection'
+             'DynamicScene/DataSourceCollection',
+             'Scene/EllipsoidTerrainProvider',
+             'Scene/SceneMode'
             ], function(
                     Viewer,
                     Animation,
                     BaseLayerPicker,
+                    ImageryProviderViewModel,
                     CesiumWidget,
                     FullscreenButton,
                     HomeButton,
                     SceneModePicker,
                     Timeline,
-                    DataSourceCollection) {
+                    DataSourceCollection,
+                    EllipsoidTerrainProvider,
+                    SceneMode) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
-
-    var cssElement;
-    beforeAll(function(){
-        cssElement = document.createElement('link');
-        cssElement.href = '/Source/Widgets/Viewer/Viewer.css';
-        cssElement.rel = 'stylesheet';
-        cssElement.type = 'text/css';
-        document.body.appendChild(cssElement);
-    });
-
-    afterAll(function(){
-        document.body.removeChild(cssElement);
-    });
 
     it('constructor sets default values', function() {
         var viewer = new Viewer(document.body);
@@ -48,7 +41,7 @@ defineSuite(['Widgets/Viewer/Viewer',
         viewer.destroy();
     });
 
-    it('can shut off HomeButtom', function() {
+    it('can shut off HomeButton', function() {
         var viewer = new Viewer(document.body, {
             homeButton : false
         });
@@ -63,7 +56,7 @@ defineSuite(['Widgets/Viewer/Viewer',
         viewer.destroy();
     });
 
-    it('can shut off HomeButtom', function() {
+    it('can shut off SceneModePicker', function() {
         var viewer = new Viewer(document.body, {
             sceneModePicker : false
         });
@@ -137,6 +130,70 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.fullscreenButton).toBeUndefined();
         viewer.destroy();
     });
+
+    it('can set terrainProvider', function() {
+        var provider = new EllipsoidTerrainProvider();
+        var viewer = new Viewer(document.body, {
+            terrainProvider : provider
+        });
+        expect(viewer.cesiumWidget.centralBody.terrainProvider).toBe(provider);
+        viewer.destroy();
+    });
+
+    it('can set fullScreenElement', function() {
+        var testElement = document.createElement('span');
+        var viewer = new Viewer(document.body, {
+            fullscreenElement : testElement
+        });
+        expect(viewer.fullscreenButton.viewModel.fullscreenElement()).toBe(testElement);
+        viewer.destroy();
+    });
+
+    it('can set scene mode', function() {
+        var viewer = new Viewer(document.body, {
+            sceneMode : SceneMode.SCENE2D
+        });
+        expect(viewer.cesiumWidget.scene.mode).toBe(SceneMode.SCENE2D);
+        viewer.destroy();
+    });
+
+    var testProvider = {
+            isReady : function() {
+                return false;
+            }
+        };
+
+    var testProviderViewModel = ImageryProviderViewModel.fromConstants({
+        name : 'name',
+        tooltip : 'tooltip',
+        iconUrl : 'url',
+        creationFunction : function() {
+            return testProvider;
+        }
+    });
+
+    it('can set selectedImageryProviderViewModel', function() {
+        var viewer = new Viewer(document.body, {
+            selectedImageryProviderViewModel : testProviderViewModel
+        });
+        expect(viewer.cesiumWidget.centralBody.getImageryLayers().getLength()).toEqual(1);
+        expect(viewer.cesiumWidget.centralBody.getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.baseLayerPicker.viewModel.selectedItem()).toBe(testProviderViewModel);
+        viewer.destroy();
+    });
+
+    it('can set imageryProviderViewModels', function() {
+        var models = [testProviderViewModel];
+        var viewer = new Viewer(document.body, {
+            imageryProviderViewModels : models
+        });
+        expect(viewer.cesiumWidget.centralBody.getImageryLayers().getLength()).toEqual(1);
+        expect(viewer.cesiumWidget.centralBody.getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.baseLayerPicker.viewModel.selectedItem()).toBe(testProviderViewModel);
+        expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels()).toBe(models);
+        viewer.destroy();
+    });
+
 
     it('constructor works with container id string', function() {
         var container = document.createElement('span');
