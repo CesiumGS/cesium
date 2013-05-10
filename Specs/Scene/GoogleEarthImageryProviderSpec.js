@@ -226,7 +226,8 @@ defineSuite([
     it('raises error on invalid url', function() {
         var url = 'invalid.localhost';
         var provider = new GoogleEarthImageryProvider({
-            url : url
+            url : url,
+            channel: 1234
         });
 
         var errorEventRaised = false;
@@ -278,7 +279,8 @@ defineSuite([
         };
 
         var provider = new GoogleEarthImageryProvider({
-            url : 'invalid.localhost'
+            url : 'invalid.localhost',
+            channel: 1234
         });
 
         var layer = new ImageryLayer(provider);
