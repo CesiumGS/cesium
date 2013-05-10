@@ -65,36 +65,34 @@ defineSuite([
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url.indexOf(metadataUrl) === 0).toEqual(true);
             setTimeout(function() {
-                window[functionName](
-                 {
-                    "isAuthenticated": true,
-                    "layers": [ 
-                      {
-                        "icon": "icons/773_l.png",
-                        "id": 1234,
-                        "initialState": true,
-                        "isPng": false,
-                        "label": "Imagery",
-                        "lookAt": "none",
-                        "opacity": 1,
-                        "requestType": "ImageryMaps",
-                        "version": 1
-                      },{
-                        "icon": "icons/773_l.png",
-                        "id": 1007,
-                        "initialState": true,
-                        "isPng": true,
-                        "label": "Labels",
-                        "lookAt": "none",
-                        "opacity": 1,
-                        "requestType": "VectorMapsRaster",
-                        "version": 8
-                      }
-                    ],
-                    "serverUrl": "https://fake.com",
-                    "useGoogleLayers": false
-                  }
-                 );
+                window[functionName]({
+                  "isAuthenticated": true,
+                  "layers": [ 
+                    {
+                      "icon": "icons/773_l.png",
+                      "id": 1234,
+                      "initialState": true,
+                      "isPng": false,
+                      "label": "Imagery",
+                      "lookAt": "none",
+                      "opacity": 1,
+                      "requestType": "ImageryMaps",
+                      "version": 1
+                    },{
+                      "icon": "icons/773_l.png",
+                      "id": 1007,
+                      "initialState": true,
+                      "isPng": true,
+                      "label": "Labels",
+                      "lookAt": "none",
+                      "opacity": 1,
+                      "requestType": "VectorMapsRaster",
+                      "version": 8
+                    }
+                  ],
+                  "serverUrl": "https://fake.com",
+                  "useGoogleLayers": false
+                });
             }, 1);
         };
 
@@ -158,34 +156,32 @@ defineSuite([
             expect(url.indexOf(proxy.getURL(metadataUrl)) === 0).toEqual(true);
             setTimeout(function() {
                 window[functionName]({
-                  {
-                    "isAuthenticated": true,
-                    "layers": [ 
-                      {
-                        "icon": "icons/773_l.png",
-                        "id": 1234,
-                        "initialState": true,
-                        "isPng": false,
-                        "label": "Imagery",
-                        "lookAt": "none",
-                        "opacity": 1,
-                        "requestType": "ImageryMaps",
-                        "version": 1
-                      },{
-                        "icon": "icons/773_l.png",
-                        "id": 1007,
-                        "initialState": true,
-                        "isPng": true,
-                        "label": "Labels",
-                        "lookAt": "none",
-                        "opacity": 1,
-                        "requestType": "VectorMapsRaster",
-                        "version": 8
-                      }
-                    ],
-                    "serverUrl": "https://fake.com",
-                    "useGoogleLayers": false
-                  }
+                  "isAuthenticated": true,
+                  "layers": [ 
+                    {
+                      "icon": "icons/773_l.png",
+                      "id": 1234,
+                      "initialState": true,
+                      "isPng": false,
+                      "label": "Imagery",
+                      "lookAt": "none",
+                      "opacity": 1,
+                      "requestType": "ImageryMaps",
+                      "version": 1
+                    },{
+                      "icon": "icons/773_l.png",
+                      "id": 1007,
+                      "initialState": true,
+                      "isPng": true,
+                      "label": "Labels",
+                      "lookAt": "none",
+                      "opacity": 1,
+                      "requestType": "VectorMapsRaster",
+                      "version": 8
+                    }
+                  ],
+                  "serverUrl": "https://fake.com",
+                  "useGoogleLayers": false
                 });
             }, 1);
         };
@@ -253,34 +249,32 @@ defineSuite([
     it('raises error event when image cannot be loaded', function() {
         jsonp.loadAndExecuteScript = function(url, functionName) {
             window[functionName]({
-              {
-                "isAuthenticated": true,
-                "layers": [ 
-                  {
-                    "icon": "icons/773_l.png",
-                    "id": 1234,
-                    "initialState": true,
-                    "isPng": false,
-                    "label": "Imagery",
-                    "lookAt": "none",
-                    "opacity": 1,
-                    "requestType": "ImageryMaps",
-                    "version": 1
-                  },{
-                    "icon": "icons/773_l.png",
-                    "id": 1007,
-                    "initialState": true,
-                    "isPng": true,
-                    "label": "Labels",
-                    "lookAt": "none",
-                    "opacity": 1,
-                    "requestType": "VectorMapsRaster",
-                    "version": 8
-                  }
-                ],
-                "serverUrl": "https://fake.com",
-                "useGoogleLayers": false
-              }
+              "isAuthenticated": true,
+              "layers": [ 
+                {
+                  "icon": "icons/773_l.png",
+                  "id": 1234,
+                  "initialState": true,
+                  "isPng": false,
+                  "label": "Imagery",
+                  "lookAt": "none",
+                  "opacity": 1,
+                  "requestType": "ImageryMaps",
+                  "version": 1
+                },{
+                  "icon": "icons/773_l.png",
+                  "id": 1007,
+                  "initialState": true,
+                  "isPng": true,
+                  "label": "Labels",
+                  "lookAt": "none",
+                  "opacity": 1,
+                  "requestType": "VectorMapsRaster",
+                  "version": 8
+                }
+              ],
+              "serverUrl": "https://fake.com",
+              "useGoogleLayers": false
             });
         };
 
