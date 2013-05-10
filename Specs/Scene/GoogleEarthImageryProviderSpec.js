@@ -127,7 +127,7 @@ defineSuite([
             expect(provider.getLogo()).toBeInstanceOf(Image);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url).toEqual('https://fake.net/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1');
+                expect(url).toEqual('http://fake.fake.net/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1');
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -203,8 +203,7 @@ defineSuite([
 
         runs(function() {
             loadImage.createImage = function(url, crossOrigin, deferred) {
-                //expect(url).toEqual(proxy.getURL('http://
-                expect(url).toEqual(proxy.getURL('http://ecn.t0.tiles.virtualearth.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB'));
+                expect(url).toEqual(proxy.getURL('http://foo.bar.net/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1'));
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
