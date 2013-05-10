@@ -129,7 +129,7 @@ defineSuite([
             expect(provider.getLogo()).toBeInstanceOf(Image);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url).toEqual('https://fake.net/query?request=ImageryMaps&channel=1234&version=1&x=1&y=1&z=0');
+                expect(url).toEqual('https://fake.net/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1');
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
