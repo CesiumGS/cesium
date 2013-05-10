@@ -16,11 +16,11 @@ void main()
 
     if (czm_morphTime == 1.0)
     {
-        p = vec4(czm_translateRelativeToEye(position3DHigh, position3DLow), 1.0);
+        p = czm_translateRelativeToEye(position3DHigh, position3DLow);
     }
     else if (czm_morphTime == 0.0)
     {
-        p = vec4(czm_translateRelativeToEye(vec3(u_height, position2DHigh), vec3(u_height, position2DLow)), 1.0);
+        p = czm_translateRelativeToEye(vec3(u_height, position2DHigh), vec3(u_height, position2DLow));
     }
     else
     {

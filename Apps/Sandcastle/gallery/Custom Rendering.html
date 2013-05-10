@@ -270,8 +270,8 @@ require([
 
         if (typeof colorCommand.shaderProgram === 'undefined') {
             var vs = '';
-            vs += 'attribute vec3 position2D;';
-            vs += 'attribute vec3 position3D;';
+            vs += 'attribute vec4 position2D;';
+            vs += 'attribute vec4 position3D;';
             vs += 'void main()';
             vs += '{';
             vs += '    vec4 p = czm_columbusViewMorph(position2D, position3D, czm_morphTime);';

@@ -1,9 +1,11 @@
 /*global defineSuite*/
 defineSuite([
          'Core/BoxGeometry',
+         'Core/VertexFormat',
          'Core/Cartesian3'
      ], function(
          BoxGeometry,
+         VertexFormat,
          Cartesian3) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -18,7 +20,8 @@ defineSuite([
 
     it('compute1', function() {
         var m = new BoxGeometry({
-            dimensions : new Cartesian3(1, 2, 3)
+            dimensions : new Cartesian3(1, 2, 3),
+            vertexFormat : VertexFormat.POSITION_ONLY
         });
 
         expect(m.attributes.position.values.length).toEqual(8 * 3);

@@ -11,7 +11,7 @@ varying vec4 czm_pickColor;
 
 void main() 
 {
-    vec4 p = vec4(czm_translateRelativeToEye(positionHigh, positionLow), 1.0);   
+    vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);   
 
 //    v_normalEC = czm_normal * normal;                         // normal in eye coordinates
 //    v_positionEC = (czm_modelViewRelativeToEye * p).xyz;      // position in eye coordinates
