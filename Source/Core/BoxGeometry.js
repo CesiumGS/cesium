@@ -150,6 +150,51 @@ define([
                 });
             }
 
+
+            if (vertexFormat.st) {
+                attributes.st = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : [
+                        // +z face
+                        0.0, 0.0,
+                        1.0, 0.0,
+                        1.0, 1.0,
+                        0.0, 1.0,
+
+                        // -z face
+                        1.0, 0.0,
+                        0.0, 0.0,
+                        0.0, 1.0,
+                        1.0, 1.0,
+
+                        // +x face
+                        0.0, 0.0,
+                        1.0, 0.0,
+                        1.0, 1.0,
+                        0.0, 1.0,
+
+                        // -x face
+                        1.0, 0.0,
+                        0.0, 0.0,
+                        0.0, 1.0,
+                        1.0, 1.0,
+
+                        // +y face
+                        1.0, 0.0,
+                        0.0, 0.0,
+                        0.0, 1.0,
+                        1.0, 1.0,
+
+                        // -y face
+                        0.0, 0.0,
+                        1.0, 0.0,
+                        1.0, 1.0,
+                        0.0, 1.0
+                    ]
+                });
+            }
+
             indexLists.push(
                 new GeometryIndices({
                     // 12 triangles:  6 faces, 2 triangles each.

@@ -18,6 +18,7 @@ define([
         'Core/Transforms',
         'Scene/Primitive',
         'Scene/Appearance',
+        'Scene/Material',
         'Widgets/Dojo/checkForChromeFrame',
         'Widgets/Dojo/CesiumViewerWidget'
     ], function(
@@ -39,6 +40,7 @@ define([
         Transforms,
         Primitive,
         Appearance,
+        Material,
         checkForChromeFrame,
         CesiumViewerWidget) {
     "use strict";
@@ -81,8 +83,30 @@ define([
                 Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0))
         });
 
-//        var primitive = new Primitive(GeometryFilters.combine([mesh, mesh2, mesh3]), Appearance.EXAMPLE_APPEARANCE);
-        var primitive = new Primitive(GeometryFilters.combine([mesh3]), Appearance.EXAMPLE_APPEARANCE);
+        var primitive = new Primitive(GeometryFilters.combine([mesh, mesh2, mesh3]), Appearance.CLOSED_TRANSLUCENT);
+
+/*
+        var m = new Material({
+            context : widget.scene.getContext(),
+            fabric : {
+                type : 'Image',
+                uniforms : {
+                    image : '../Sandcastle/images/Cesium_Logo_Color.jpg'
+                }
+            }
+         });
+        var rs = {
+            depthTest : {
+                enabled : true
+            }
+        };
+        var appearance = new Appearance({
+            material : m,
+            renderState : rs
+        });
+        var primitive = new Primitive(GeometryFilters.combine([mesh3]), appearance);
+*/
+
         widget.scene.getPrimitives().add(primitive);
 
         domClass.remove(win.body(), 'loading');

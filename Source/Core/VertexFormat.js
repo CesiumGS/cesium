@@ -29,7 +29,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.textureCoordinates = defaultValue(options.textureCoordinates, true);
+        this.st = defaultValue(options.textureCoordinates, true);
 
         /**
          * DOC_TBA
@@ -51,7 +51,7 @@ define([
      * DOC_TBA
      */
     VertexFormat.POSITION_ONLY = freezeObject(new VertexFormat({
-        normal : false,
+        st : false,
         textureCoordinates : false
     }));
 
