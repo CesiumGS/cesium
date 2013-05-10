@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/jsonp',
+        '../Core/loadText',
         '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -13,6 +14,7 @@ define([
     ], function(
         defaultValue,
         jsonp,
+        loadText,
         Cartesian2,
         DeveloperError,
         Event,
@@ -112,6 +114,7 @@ define([
         var metadataError;
 
         function metadataSuccess(data) {
+            data = eval("(" + data + ")");
             var layer = undefined;
             for(var i = 0; i < data.layers.length; i++) {
               if(data.layers[i].id === that._channel) {
@@ -147,58 +150,26 @@ define([
         }
 
         function requestMetadata() {
-          //document.write('<script src="' + metadataUrl + '" type="text/javascript"></script>'); 
           /*
-          var data = {
-            isAuthenticated: true,
-            layers: [ 
-              {
-                icon: "icons/773_l.png",
-                id: 1002,
-                initialState: true,
-                isPng: false,
-                label: "Imagery",
-                lookAt: "none",
-                opacity: 1,
-                requestType: "ImageryMaps",
-                version: 1
-              },{
-                icon: "icons/773_l.png",
-                id: 1007,
-                initialState: true,
-                isPng: true,
-                label: "Labels",
-                lookAt: "none",
-                opacity: 1,
-                requestType: "VectorMapsRaster",
-                version: 8
-              }
-            ],
-            projection: "mercator",
-            searchTabs: [
-              {
-                args: [
-                  {
-                    screenLabel: "City, Country or lat, lng (e.g., 40, -90) ",
-                    urlTerm: "location"
-                  }
-                ],
-                tabLabel: "Places or Coordinates",
-                url: "https://gmdemo.keyhole.com:443/s/SearchServlet/MapsAdapter?service=GeocodingFederatedPlugin&DbId=12&flyToFirstElement=true&displayKeys=location"
-              }
-            ],
-            serverUrl: "https://gmdemo.keyhole.com",
-            useGoogleLayers: false
-          }
-
-          metadataSuccess(data);
+          $.get(that._proxy.getURL(metadataUrl), {}, function(text) {
+            json = eval("(" + text + ")");
+            metadataSuccess(json);
+          }, 'html')
+          .fail(function() { console.log('failed'); })
+          .done(function() { console.log('second success'); })
+          ;
           */
-          
 
+          var url = (typeof that._proxy === 'undefined') ? metadataUrl : that._proxy.getURL(metadataUrl);
+
+          var metadata = loadText(url);
+
+          /*
           var metadata = jsonp(metadataUrl, {
               callbackParameterName : 'jsonp',
               proxy : that._proxy
           });
+          */
           when(metadata, metadataSuccess, metadataFailure);
         }
 
