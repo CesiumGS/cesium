@@ -4,19 +4,23 @@ defineSuite([
          'Core/Occluder',
          'Core/Cartesian3',
          'Core/BoundingSphere',
+         'Core/IntersectionTests',
          'Core/Visibility',
          'Core/Math',
          'Core/Ellipsoid',
-         'Core/Extent'
+         'Core/Extent',
+         'Core/Ray'
      ], function(
          EllipsoidalOccluder,
          Occluder,
          Cartesian3,
          BoundingSphere,
+         IntersectionTests,
          Visibility,
          CesiumMath,
          Ellipsoid,
-         Extent) {
+         Extent,
+         Ray) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -84,5 +88,209 @@ defineSuite([
 
         var point = new Cartesian3(4510635.0, 4510635.0, 0.0);
         expect(occluder.isPointVisible(point)).toEqual(false);
+    });
+
+    describe('computeHorizonCullingPoint', function() {
+        it('requires directionToPoint and positions', function() {
+            var ellipsoid = new Ellipsoid(12345.0, 12345.0, 12345.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+            var positions = [new Cartesian3(-12345.0, 12345.0, 12345.0)];
+            var directionToPoint = BoundingSphere.fromPoints(positions).center;
+
+            expect(function() {
+                ellipsoidalOccluder.computeHorizonCullingPoint(undefined, positions);
+            }).toThrow();
+
+            expect(function() {
+                ellipsoidalOccluder.computeHorizonCullingPoint(directionToPoint, undefined);
+            }).toThrow();
+        });
+
+        it('returns point on ellipsoid when single position is on center line', function() {
+            var ellipsoid = new Ellipsoid(12345.0, 4567.0, 8910.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+            var positions = [new Cartesian3(12345.0, 0.0, 0.0)];
+            var directionToPoint = new Cartesian3(1.0, 0.0, 0.0);
+
+            var result = ellipsoidalOccluder.computeHorizonCullingPoint(directionToPoint, positions);
+
+            expect(result.x).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+            expect(result.y).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
+            expect(result.z).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
+        });
+
+        it('returns undefined when horizon of single point is parallel to center line', function() {
+            var ellipsoid = new Ellipsoid(12345.0, 4567.0, 8910.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+            var positions = [new Cartesian3(0.0, 4567.0, 0.0)];
+            var directionToPoint = new Cartesian3(1.0, 0.0, 0.0);
+
+            var result = ellipsoidalOccluder.computeHorizonCullingPoint(directionToPoint, positions);
+            expect(result).toBeUndefined();
+        });
+
+        it('returns undefined when single point is in the opposite direction of the center line', function() {
+            var ellipsoid = new Ellipsoid(12345.0, 4567.0, 8910.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+            var positions = [new Cartesian3(-14000.0, -1000.0, 0.0)];
+            var directionToPoint = new Cartesian3(1.0, 0.0, 0.0);
+
+            var result = ellipsoidalOccluder.computeHorizonCullingPoint(directionToPoint, positions);
+            expect(result).toBeUndefined();
+        });
+
+        it('computes a point from a single position with a grazing altitude close to zero', function() {
+            var ellipsoid = new Ellipsoid(12345.0, 12345.0, 12345.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+
+            var positions = [new Cartesian3(-12345.0, 12345.0, 12345.0), new Cartesian3(-12346.0, 12345.0, 12345.0)];
+            var boundingSphere = BoundingSphere.fromPoints(positions);
+
+            var firstPositionArray = [positions[0]];
+            var result = ellipsoidalOccluder.computeHorizonCullingPoint(boundingSphere.center, firstPositionArray);
+            var unscaledResult = result.multiplyComponents(ellipsoid.getRadii());
+
+            // The grazing altitude of the ray from the horizon culling point to the
+            // position used to compute it should be very nearly zero.
+            var direction = positions[0].subtract(unscaledResult).normalize();
+            var nearest = IntersectionTests.grazingAltitudeLocation(new Ray(unscaledResult, direction), ellipsoid);
+            var nearestCartographic = ellipsoid.cartesianToCartographic(nearest);
+            expect(nearestCartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+        });
+
+        it('computes a point from multiple positions with a grazing altitude close to zero for one of the positions and less than zero for the others', function() {
+            var ellipsoid = new Ellipsoid(12345.0, 12345.0, 12345.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+
+            var positions = [new Cartesian3(-12345.0, 12345.0, 12345.0), new Cartesian3(-12346.0, 12345.0, 12345.0), new Cartesian3(-12446.0, 12445.0, 12445.0)];
+            var boundingSphere = BoundingSphere.fromPoints(positions);
+
+            var result = ellipsoidalOccluder.computeHorizonCullingPoint(boundingSphere.center, positions);
+            var unscaledResult = result.multiplyComponents(ellipsoid.getRadii());
+
+            // The grazing altitude of the ray from the horizon culling point to the
+            // position used to compute it should be very nearly zero.
+            var foundOneNearZero = false;
+            for (var i = 0; i < positions.length; ++i) {
+                var direction = positions[i].subtract(unscaledResult).normalize();
+                var nearest = IntersectionTests.grazingAltitudeLocation(new Ray(unscaledResult, direction), ellipsoid);
+                var nearestCartographic = ellipsoid.cartesianToCartographic(nearest);
+                if (Math.abs(nearestCartographic.height) < CesiumMath.EPSILON5) {
+                    foundOneNearZero = true;
+                } else {
+                    expect(nearestCartographic.height).toBeLessThan(0.0);
+                }
+            }
+
+            expect(foundOneNearZero).toBe(true);
+        });
+    });
+
+    describe('computeHorizonCullingPointFromVertices', function() {
+        it('requires directionToPoint, vertices, and stride', function() {
+            var ellipsoid = new Ellipsoid(12345.0, 12345.0, 12345.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+
+            var positions = [new Cartesian3(-12345.0, 12345.0, 12345.0), new Cartesian3(-12346.0, 12345.0, 12345.0), new Cartesian3(-12446.0, 12445.0, 12445.0)];
+            var boundingSphere = BoundingSphere.fromPoints(positions);
+
+            var vertices = [];
+            for (var i = 0; i < positions.length; ++i) {
+                var position = positions[i];
+                vertices.push(position.x);
+                vertices.push(position.y);
+                vertices.push(position.z);
+                vertices.push(1.0);
+                vertices.push(2.0);
+                vertices.push(3.0);
+                vertices.push(4.0);
+            }
+
+            expect(function() {
+                ellipsoidalOccluder.computeHorizonCullingPointFromVertices(boundingSphere.center, vertices, 7);
+            }).not.toThrow();
+
+            expect(function() {
+                ellipsoidalOccluder.computeHorizonCullingPointFromVertices(undefined, vertices, 7);
+            }).toThrow();
+
+            expect(function() {
+                ellipsoidalOccluder.computeHorizonCullingPointFromVertices(boundingSphere.center, undefined, 7);
+            }).toThrow();
+
+            expect(function() {
+                ellipsoidalOccluder.computeHorizonCullingPointFromVertices(boundingSphere.center, vertices, undefined);
+            }).toThrow();
+        });
+
+        it('produces same answers as computeHorizonCullingPoint', function() {
+            var ellipsoid = new Ellipsoid(12345.0, 12345.0, 12345.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+
+            var positions = [new Cartesian3(-12345.0, 12345.0, 12345.0), new Cartesian3(-12346.0, 12345.0, 12345.0), new Cartesian3(-12446.0, 12445.0, 12445.0)];
+            var boundingSphere = BoundingSphere.fromPoints(positions);
+
+            var center = new Cartesian3(-12000.0, 12000.0, 12000.0);
+
+            var vertices = [];
+            for (var i = 0; i < positions.length; ++i) {
+                var position = positions[i];
+                vertices.push(position.x - center.x);
+                vertices.push(position.y - center.y);
+                vertices.push(position.z - center.z);
+                vertices.push(1.0);
+                vertices.push(2.0);
+                vertices.push(3.0);
+                vertices.push(4.0);
+            }
+
+            var result1 = ellipsoidalOccluder.computeHorizonCullingPoint(boundingSphere.center, positions);
+            var result2 = ellipsoidalOccluder.computeHorizonCullingPointFromVertices(boundingSphere.center, vertices, 7, center);
+
+            expect(result1.x).toEqualEpsilon(result2.x, CesiumMath.EPSILON14);
+            expect(result1.y).toEqualEpsilon(result2.y, CesiumMath.EPSILON14);
+            expect(result1.z).toEqualEpsilon(result2.z, CesiumMath.EPSILON14);
+        });
+    });
+
+    describe('computeHorizonCullingPointFromExtent', function() {
+        it('returns undefined for global extent', function() {
+            var ellipsoid = new Ellipsoid(12345.0, 12345.0, 12345.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+            var extent = Extent.MAX_VALUE;
+            var result = ellipsoidalOccluder.computeHorizonCullingPointFromExtent(extent, ellipsoid);
+            expect(result).toBeUndefined();
+        });
+
+        it('computes a point with a grazing altitude close to zero for one of the extent corners and less than or equal to zero for the others', function() {
+            var ellipsoid = new Ellipsoid(12345.0, 12345.0, 12345.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+
+            var extent = new Extent(0.1, 0.2, 0.3, 0.4);
+            var result = ellipsoidalOccluder.computeHorizonCullingPointFromExtent(extent, ellipsoid);
+            expect(result).toBeDefined();
+            var unscaledResult = result.multiplyComponents(ellipsoid.getRadii());
+
+            // The grazing altitude of the ray from the horizon culling point to the
+            // position used to compute it should be very nearly zero.
+            var positions = [ellipsoid.cartographicToCartesian(extent.getSouthwest()),
+                             ellipsoid.cartographicToCartesian(extent.getSoutheast()),
+                             ellipsoid.cartographicToCartesian(extent.getNorthwest()),
+                             ellipsoid.cartographicToCartesian(extent.getNortheast())];
+
+            var foundOneNearZero = false;
+            for (var i = 0; i < positions.length; ++i) {
+                var direction = positions[i].subtract(unscaledResult).normalize();
+                var nearest = IntersectionTests.grazingAltitudeLocation(new Ray(unscaledResult, direction), ellipsoid);
+                var nearestCartographic = ellipsoid.cartesianToCartographic(nearest);
+                if (Math.abs(nearestCartographic.height) < CesiumMath.EPSILON5) {
+                    foundOneNearZero = true;
+                } else {
+                    expect(nearestCartographic.height).toBeLessThanOrEqualTo(0.0);
+                }
+            }
+
+            expect(foundOneNearZero).toBe(true);
+        });
     });
 });
