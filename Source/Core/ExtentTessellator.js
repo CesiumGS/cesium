@@ -7,6 +7,7 @@ define([
         './Ellipsoid',
         './Extent',
         './Cartesian3',
+        './Cartographic',
         './Matrix2',
         './GeographicProjection',
         './ComponentDatatype',
@@ -19,6 +20,7 @@ define([
         Ellipsoid,
         Extent,
         Cartesian3,
+        Cartographic,
         Matrix2,
         GeographicProjection,
         ComponentDatatype,
@@ -42,7 +44,8 @@ define([
      * {@link ExtentTessellator#compute} and {@link ExtentTessellator#computeBuffers}
      * in that it assumes that you have already allocated output arrays of the correct size.
      *
-     * @param {Extent} description.extent A cartographic extent with north, south, east, west and rotation properties in radians.
+     * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
+     * @param {Number} description.rotation The rotation of the extent in radians.
      * @param {Number} description.width The number of vertices in the longitude direction.
      * @param {Number} description.height The number of vertices in the latitude direction.
      * @param {Number} description.granularityX The distance, in radians, between each longitude.
@@ -56,7 +59,8 @@ define([
      * @param {Array|Float32Array} description.textureCoordinates The array to use to store computed texture coordinates, unless interleaved.
      * @param {Array|Float32Array} [description.indices] The array to use to store computed indices.  If undefined, indices will be not computed.
      */
-    var corner = new Cartesian3();
+    var nw = new Cartesian3();
+    var nwCartographic = new Cartographic();
     var center = new Cartesian3();
     var rotationMatrix = new Matrix2();
     var proj = new GeographicProjection();
@@ -94,23 +98,23 @@ define([
         var vertexArrayIndex = 0;
         var textureCoordinatesIndex = 0;
 
-        proj.project(extent.getNorthwest(), corner);
+        proj.project(extent.getNorthwest(), nw);
         proj.project(extent.getCenter(), center);
 
-        corner.subtract(center, corner);
+        nw.subtract(center, nw);
         rotationMatrix = Matrix2.fromRotation(rotation);
-        rotationMatrix.multiplyByVector(corner, corner);
-        corner.add(center, corner);
-        var cart = proj.unproject(corner);
+        rotationMatrix.multiplyByVector(nw, nw);
+        nw.add(center, nw);
+        nwCartographic = proj.unproject(nw);
 
         for ( var row = 0; row < height; ++row) {
             for ( var col = 0; col < width; ++col) {
-                var latitude = cart.latitude - granularityY * row * cos(rotation) + col * granularityX * sin(rotation);
+                var latitude = nwCartographic.latitude - granularityY * row * cos(rotation) + col * granularityX * sin(rotation);
                 var cosLatitude = cos(latitude);
                 var nZ = sin(latitude);
                 var kZ = radiiSquaredZ * nZ;
 
-                var longitude = cart.longitude + row * granularityY * sin(rotation) + col * granularityX * cos(rotation);
+                var longitude = nwCartographic.longitude + row * granularityY * sin(rotation) + col * granularityX * cos(rotation);
                 if (latitude > CesiumMath.PI/2 || latitude < -CesiumMath.PI/2) {
                     indices.length = 0;
                     return;

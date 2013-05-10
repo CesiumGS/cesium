@@ -423,9 +423,9 @@ define([
      *
      * @memberof Polygon
      *
-     * @param {extent} extent. The cartographic extent of the tile, with north, south, east, west and rotation
-     * properties in radians.
-     *
+     * @param {extent} extent. The cartographic extent of the tile, with north, south, east and
+     * west properties in radians.
+
      * @param {double} [height=0.0]. The height of the cartographic extent.
      * @param {double} [rotation=0.0]. The rotation of the cartographic extent.
      * @example
@@ -433,9 +433,10 @@ define([
      *     CesiumMath.toRadians(0.0),
      *     CesiumMath.toRadians(0.0),
      *     CesiumMath.toRadians(10.0),
-     *     CesiumMath.toRadians(10.0),
+     *     CesiumMath.toRadians(10.0)),
+     *     0.0,
      *     CesiumMath.toRadians(45.0),
-     * ));
+     * );
      */
     Polygon.prototype.configureExtent = function(extent, height, rotation) {
         this._extent = extent;
