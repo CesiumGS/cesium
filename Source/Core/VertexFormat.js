@@ -40,6 +40,8 @@ define([
          * DOC_TBA
          */
         this.tangent = defaultValue(options.tangent, false);
+
+        // pickColor is also a reserved name added, when needed, for picking.
     };
 
     /**

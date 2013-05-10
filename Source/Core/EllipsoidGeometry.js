@@ -211,6 +211,11 @@ define([
          * DOC_TBA
          */
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
+
+        /**
+         * DOC_TBA
+         */
+        this.pickData = options.pickData;
     };
 
     return EllipsoidGeometry;

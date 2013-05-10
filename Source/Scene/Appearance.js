@@ -63,6 +63,10 @@ define([
                 enabled : true,
                 face : CullFace.BACK
             },
+            depthTest : {
+                enabled : true
+            },
+            depthMask : false,
             blending : BlendingState.ALPHA_BLEND
         }
     }));

@@ -2,35 +2,45 @@
 define([
         '../Core/destroyObject',
         '../Core/Matrix4',
+        '../Core/Color',
         '../Core/GeometryFilters',
         '../Core/PrimitiveType',
         '../Core/BoundingSphere',
+        '../Core/Geometry',
+        '../Core/GeometryAttribute',
+        '../Core/ComponentDatatype',
         '../Renderer/BufferUsage',
         '../Renderer/VertexLayout',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
+        '../Renderer/createPickFragmentShaderSource',
         './SceneMode'
     ], function(
         destroyObject,
         Matrix4,
+        Color,
         GeometryFilters,
         PrimitiveType,
         BoundingSphere,
+        Geometry,
+        GeometryAttribute,
+        ComponentDatatype,
         BufferUsage,
         VertexLayout,
         CommandLists,
         DrawCommand,
+        createPickFragmentShaderSource,
         SceneMode) {
     "use strict";
 
     /**
      * DOC_TBA
      */
-    var Primitive = function(meshes, appearance) {
+    var Primitive = function(geometries, appearance) {
         /**
          * DOC_TBA
          */
-        this.meshes = meshes;
+        this.geometries = geometries;
 
         /**
          * DOC_TBA
@@ -49,18 +59,71 @@ define([
 
         this._sp = undefined;
         this._rs = undefined;
-        this._va = undefined;
+        this._va = [];
+
+        this._pickSP = undefined;
+        this._pickIds = [];
 
         this._commandLists = new CommandLists();
     };
 
-    function processGeometry(geometries) {
+    function addPickColorAttribute(primitive, context) {
+        var geometries = primitive.geometries;
+        var length = geometries.length;
+        var i;
+
+        for (i = 0; i < length; ++i) {
+            var geometry = geometries[i];
+            var attributes = geometry.attributes;
+            var positionAttr = attributes.position;
+            var numberOfComponents = 4 * (positionAttr.values.length / positionAttr.componentsPerAttribute);
+
+            attributes.pickData = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 4,
+                normalize : true,
+                values : new Uint8Array(numberOfComponents)
+            });
+
+            if (typeof geometry.pickData !== 'undefined') {
+                var pickId = context.createPickId({
+                    primitive : primitive,
+                    pickData : geometry.pickData
+                });
+                primitive._pickIds.push(pickId);
+
+                var pickColor = pickId.color;
+                var red = Color.floatToByte(pickColor.red);
+                var green = Color.floatToByte(pickColor.green);
+                var blue = Color.floatToByte(pickColor.blue);
+                var alpha = Color.floatToByte(pickColor.alpha);
+                var values = attributes.pickData.values;
+
+                for (var j = 0; j < numberOfComponents; j += 4) {
+                    values[j] = red;
+                    values[j + 1] = green;
+                    values[j + 2] = blue;
+                    values[j + 3] = alpha;
+                }
+            }
+        }
+    }
+
+    function processGeometry(primitive, context) {
         // Unify to world coordinates before combining.
+        var geometries = primitive.geometries;
         var length = geometries.length;
         for (var i = 0; i < length; ++i) {
             GeometryFilters.transformToWorldCoordinates(geometries[i]);
         }
 
+        // Add pickColor attribute if any geometries are pickable
+        var pickable = Geometry.isPickable(geometries);
+        if (pickable) {
+            addPickColorAttribute(primitive, context);
+        }
+
+        // Combine into single geometry for better rendering performance.
         var geometry = GeometryFilters.combine(geometries);
 
         return geometry;
@@ -75,22 +138,26 @@ define([
             return;
         }
 
-// TODO: throw if meshes and appearance are not defined
+// TODO: throw if geometries and appearance are not defined
 
         var colorCommands = this._commandLists.colorList;
+        var pickCommands = this._commandLists.pickList;
+        var length;
+        var i;
 
-        if (typeof this._va === 'undefined') {
-            var mesh = processGeometry(this.meshes);
-            // Break into multiple meshes to fit within unsigned short indices if needed
-            var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
-            var attributeIndices = GeometryFilters.createAttributeIndices(mesh);
+        if (typeof this._sp === 'undefined') {
+            var pickable = Geometry.isPickable(this.geometries);
+
+            var geometry = processGeometry(this, context);
+            // Break into multiple geometries to fit within unsigned short indices if needed
+            var geometries = GeometryFilters.fitToUnsignedShortIndices(geometry);
+            var attributeIndices = GeometryFilters.createAttributeIndices(geometry);
 
             var va = [];
-            var length = meshes.length;
-            var i;
+            length = geometries.length;
             for (i = 0; i < length; ++i) {
                 va.push(context.createVertexArrayFromMesh({
-                    mesh : meshes[i],
+                    mesh : geometries[i],
                     attributeIndices : attributeIndices,
                     bufferUsage : BufferUsage.STATIC_DRAW,
                     vertexLayout : VertexLayout.INTERLEAVED
@@ -98,31 +165,54 @@ define([
             }
 
             var appearance = this.appearance;
+            var vs = appearance.vertexShaderSource;
+            var fs = appearance.getFragmentShaderSource();
 
             this._va = va;
-            this._sp = context.getShaderCache().replaceShaderProgram(this._sp, appearance.vertexShaderSource, appearance.getFragmentShaderSource(), attributeIndices);
+// TODO: recompile on material change.
+            this._sp = context.getShaderCache().replaceShaderProgram(this._sp, appearance.vertexShaderSource, fs, attributeIndices);
+            if (pickable) {
+                this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, vs, createPickFragmentShaderSource(fs, 'varying'), attributeIndices);
+            }
             this._rs = context.createRenderState(appearance.renderState);
 
             for (i = 0; i < length; ++i) {
                 var command = new DrawCommand();
-// TODO: this assumes indices in the meshes - and only one set
-                command.primitiveType = mesh.indexLists[0].primitiveType;
+// TODO: this assumes indices in the geometries - and only one set
+                command.primitiveType = geometry.indexLists[0].primitiveType;
                 command.vertexArray = this._va[i];
                 command.renderState = this._rs;
                 command.shaderProgram = this._sp;
                 command.uniformMap = appearance.material._uniforms;
-// TODO: could use bounding volume per mesh
-                command.boundingVolume = mesh.boundingSphere;
+// TODO: could use bounding volume per geometry
+                command.boundingVolume = geometry.boundingSphere;
                 colorCommands.push(command);
+
+                if (pickable) {
+                    var pickCommand = new DrawCommand();
+                    pickCommand.primitiveType = geometry.indexLists[0].primitiveType;
+                    pickCommand.vertexArray = this._va[i];
+                    pickCommand.renderState = this._rs;
+                    pickCommand.shaderProgram = this._pickSP;
+                    pickCommand.uniformMap = appearance.material._uniforms;
+                    pickCommand.boundingVolume = geometry.boundingSphere;
+                    pickCommands.push(pickCommand);
+                }
             }
         }
 
-        if (frameState.passes.color) {
-            // The geometry is static but the model matrix can change
-            var len = colorCommands.length;
-            for (var i = 0; i < len; ++i) {
+        // The geometry is static but the model matrix can change
+        if (frameState.passes.color || frameState.passes.pick) {
+            length = colorCommands.length;
+            for (var i = 0; i < length; ++i) {
                 colorCommands[i].modelMatrix = this.modelMatrix;
             }
+
+            length = pickCommands.length;
+            for (var i = 0; i < length; ++i) {
+                pickCommands[i].modelMatrix = this.modelMatrix;
+            }
+
             commandList.push(this._commandLists);
         }
     };
@@ -138,16 +228,25 @@ define([
      * DOC_TBA
      */
     Primitive.prototype.destroy = function() {
+        var length;
+        var i;
+
         this._sp = this._sp && this._sp.release();
+        this._pickSP = this._pickSP && this._pickSP.release();
 
         var va = this._va;
-        if (typeof va !== 'undefined') {
-            var length = va.length;
-            for (var i = 0; i < length; ++i) {
-                va[i].destroy();
-            }
-            this._va = undefined;
+        length = va.length;
+        for (i = 0; i < length; ++i) {
+            va[i].destroy();
         }
+        this._va = undefined;
+
+        var pickIds = this_pickIds;
+        length = pickIds.length;
+        for (i = 0; i < length; ++i) {
+            pickIds[i].destroy();
+        }
+        this.this_pickIds = undefined;
 
         return destroyObject(this);
     };

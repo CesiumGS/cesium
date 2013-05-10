@@ -344,6 +344,7 @@ define([
                 newAttributes[attribute] = new GeometryAttribute({
                     componentDatatype : attr.componentDatatype,
                     componentsPerAttribute : attr.componentsPerAttribute,
+                    normalize : attr.normalize,
                     values : []
                 });
             }

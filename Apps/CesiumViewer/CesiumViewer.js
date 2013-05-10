@@ -15,7 +15,10 @@ define([
         'Core/EllipsoidGeometry',
         'Core/BoxGeometry',
         'Core/GeometryFilters',
+        'Core/VertexFormat',
         'Core/Transforms',
+        'Core/ScreenSpaceEventHandler',
+        'Core/ScreenSpaceEventType',
         'Scene/Primitive',
         'Scene/Appearance',
         'Scene/Material',
@@ -37,7 +40,10 @@ define([
         EllipsoidGeometry,
         BoxGeometry,
         GeometryFilters,
+        VertexFormat,
         Transforms,
+        ScreenSpaceEventHandler,
+        ScreenSpaceEventType,
         Primitive,
         Appearance,
         Material,
@@ -64,6 +70,8 @@ define([
         widget.startup();
         widget.fullscreen.viewModel.fullscreenElement(document.body);
 
+        var scene = widget.scene;
+
         var mesh = ExtentTessellator.compute({
             extent : new Extent(
                 CesiumMath.toRadians(-180.0),
@@ -72,15 +80,21 @@ define([
                 CesiumMath.toRadians(90.0)),
             granularity : 0.006                     // More than 64K vertices
         });
+        mesh.pickData = 'mesh';
+
         var mesh2 = new EllipsoidGeometry({
             ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                    Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0))
+                    Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
+            pickData : 'mesh2'
         });
+
         var mesh3 = new BoxGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
             dimensions : new Cartesian3(1000000.0, 1000000.0, 2000000.0),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0))
+                Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
+            pickData : 'mesh3'
         });
 
         var primitive = new Primitive([mesh, mesh2, mesh3], Appearance.CLOSED_TRANSLUCENT);
@@ -108,6 +122,18 @@ define([
 */
 
         widget.scene.getPrimitives().add(primitive);
+
+
+        var handler = new ScreenSpaceEventHandler(scene.getCanvas());
+        handler.setInputAction(
+            function (movement) {
+                var pickedObject = scene.pick(movement.endPosition);
+                if (typeof pickedObject !== 'undefined') {
+                    console.log(pickedObject);
+                }
+            },
+            ScreenSpaceEventType.MOUSE_MOVE
+        );
 
         domClass.remove(win.body(), 'loading');
     });
