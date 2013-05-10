@@ -655,6 +655,7 @@ define([
 
     var viewportBoundingRectangle  = new BoundingRectangle();
     var scissorTestBoundingRectangle = new BoundingRectangle();
+    var sunPositionECScratch = new Cartesian4();
     var sunPositionWCScratch = new Cartesian2();
     var sizeScratch = new Cartesian2();
     var postProcessMatrix4Scratch= new Matrix4();
@@ -824,51 +825,32 @@ define([
             };
         }
 
+        scene._fullScreenCommand.renderState = context.createRenderState();
+
         var us = scene.getUniformState();
         var sunPosition = us.getSunPositionWC();
+        var viewMatrix = us.getView();
         var viewProjectionMatrix = us.getViewProjection();
+        var projectionMatrix = us.getProjection();
 
+        // create up sampled render state
         var viewport = viewportBoundingRectangle;
-        viewport.width = downSampleSize;
-        viewport.height = downSampleSize;
-
-        var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, postProcessMatrix4Scratch);
-        var sunPositionWC = Transforms.pointToWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
-
-        // TODO
-        var sunSize = new Cartesian2(200.0, 200.0);
-
-        var size = sizeScratch;
-        size.x = sunSize.x * downSampleWidth / width;
-        size.y = sunSize.y * downSampleHeight / height;
-
-        var scissorRectangle = scissorTestBoundingRectangle;
-        scissorRectangle.x = sunPositionWC.x - size.x * 0.5;
-        scissorRectangle.y = sunPositionWC.y - size.y * 0.5;
-        scissorRectangle.width = size.x;
-        scissorRectangle.height = size.y;
-
-        var renderState = context.createRenderState({
-            viewport : viewport,
-            scissorTest : {
-                enabled : true,
-                rectangle : scissorRectangle
-            }
-        });
-        scene._downSampleCommand.renderState = renderState;
-        scene._brightPassCommand.renderState = renderState;
-        scene._blurXCommand.renderState = renderState;
-        scene._blurYCommand.renderState = renderState;
-
         viewport.width = width;
         viewport.height = height;
 
-        viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, postProcessMatrix4Scratch);
-        sunPositionWC = Transforms.pointToWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
+        var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, postProcessMatrix4Scratch);
+        var sunPositionEC = Matrix4.multiplyByPoint(viewMatrix, sunPosition, sunPositionECScratch);
+        var sunPositionWC = Transforms.pointToWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
 
-        size.x = sunSize.x;
-        size.y = sunSize.y;
+        sunPositionEC.x += CesiumMath.SOLAR_RADIUS;
+        var limbWC = Transforms.pointToWindowCoordinates(projectionMatrix, viewportTransformation, sunPositionEC, sunPositionEC);
+        var sunSize = Cartesian2.subtract(limbWC, sunPositionWC, limbWC).magnitude() * 30.0 * 2.0;
 
+        var size = sizeScratch;
+        size.x = sunSize;
+        size.y = sunSize;
+
+        var scissorRectangle = scissorTestBoundingRectangle;
         scissorRectangle.x = sunPositionWC.x - size.x * 0.5;
         scissorRectangle.y = sunPositionWC.y - size.y * 0.5;
         scissorRectangle.width = size.x;
@@ -888,7 +870,32 @@ define([
             return Math.max(size.x, size.y) * 0.5;
         };
 
-        scene._fullScreenCommand.renderState = context.createRenderState();
+        // create down sampled render state
+        viewport.width = downSampleSize;
+        viewport.height = downSampleSize;
+
+        viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, postProcessMatrix4Scratch);
+        sunPositionWC = Transforms.pointToWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
+
+        size.x *= downSampleWidth / width;
+        size.y *= downSampleHeight / height;
+
+        scissorRectangle.x = sunPositionWC.x - size.x * 0.5;
+        scissorRectangle.y = sunPositionWC.y - size.y * 0.5;
+        scissorRectangle.width = size.x;
+        scissorRectangle.height = size.y;
+
+        var renderState = context.createRenderState({
+            viewport : viewport,
+            scissorTest : {
+                enabled : true,
+                rectangle : scissorRectangle
+            }
+        });
+        scene._downSampleCommand.renderState = renderState;
+        scene._brightPassCommand.renderState = renderState;
+        scene._blurXCommand.renderState = renderState;
+        scene._blurYCommand.renderState = renderState;
     }
 
     var orthoPickingFrustum = new OrthographicFrustum();
