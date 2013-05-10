@@ -8,7 +8,9 @@ define([
         './Extent',
         './Cartesian3',
         './ComponentDatatype',
-        './PrimitiveType'
+        './PrimitiveType',
+        './GeometryAttribute',
+        './GeometryIndices'
     ], function(
         clone,
         defaultValue,
@@ -18,7 +20,9 @@ define([
         Extent,
         Cartesian3,
         ComponentDatatype,
-        PrimitiveType) {
+        PrimitiveType,
+        GeometryAttribute,
+        GeometryIndices) {
     "use strict";
 
     /**
@@ -229,26 +233,26 @@ define([
 
         var mesh = {
             attributes : {},
-            indexLists : [{
+            indexLists : [new GeometryIndices({
                 primitiveType : PrimitiveType.TRIANGLES,
                 values : indices
-            }]
+            })]
         };
 
         var positionName = defaultValue(description.positionName, 'position');
-        mesh.attributes[positionName] = {
+        mesh.attributes[positionName] = new GeometryAttribute({
             componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 3,
             values : vertices
-        };
+        });
 
         if (description.generateTextureCoordinates) {
             var textureCoordinatesName = defaultValue(description.textureCoordinatesName, 'textureCoordinates');
-            mesh.attributes[textureCoordinatesName] = {
+            mesh.attributes[textureCoordinatesName] = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 2,
                 values : textureCoordinates
-            };
+            });
         }
 
         return mesh;

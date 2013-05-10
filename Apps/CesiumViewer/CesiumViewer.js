@@ -6,8 +6,12 @@ define([
         'dojo/parser',
         'dojo/ready',
         'Core/Math',
+        'Core/Cartesian3',
+        'Core/Ellipsoid',
         'Core/Extent',
         'Core/ExtentTessellator',
+        'Core/EllipsoidGeometry',
+        'Core/BoxGeometry',
         'Core/GeometryFilters',
         'Scene/Primitive',
         'Scene/Appearance',
@@ -20,8 +24,12 @@ define([
         parser,
         ready,
         CesiumMath,
+        Cartesian3,
+        Ellipsoid,
         Extent,
         ExtentTessellator,
+        EllipsoidGeometry,
+        BoxGeometry,
         GeometryFilters,
         Primitive,
         Appearance,
@@ -53,17 +61,16 @@ define([
                 CesiumMath.toRadians(-180.0),
                 CesiumMath.toRadians(50.0),
                 CesiumMath.toRadians(180.0),
-                CesiumMath.toRadians(90.0))
+                CesiumMath.toRadians(90.0)),
+            granularity : 0.006                     // More than 64K vertices
         });
-        var anotherMesh = ExtentTessellator.compute({
-            extent : new Extent(
-                CesiumMath.toRadians(-180.0),
-                CesiumMath.toRadians(10.0),
-                CesiumMath.toRadians(180.0),
-                CesiumMath.toRadians(30.0))
+        var mesh2 = new EllipsoidGeometry(new Ellipsoid(8000000.0, 1000000.0, 1000000.0));
+
+        var mesh3 = new BoxGeometry({
+            dimensions : new Cartesian3(100000.0, 100000.0, 15000000.0)
         });
 
-        var primitive = new Primitive(GeometryFilters.combine([mesh, anotherMesh]), Appearance.EXAMPLE_APPEARANCE);
+        var primitive = new Primitive(GeometryFilters.combine([mesh, mesh2, mesh3]), Appearance.EXAMPLE_APPEARANCE);
         widget.scene.getPrimitives().add(primitive);
 
         domClass.remove(win.body(), 'loading');

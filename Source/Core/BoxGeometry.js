@@ -8,7 +8,8 @@ define([
         './BoundingSphere',
         './Geometry',
         './GeometryAttribute',
-        './GeometryIndices'
+        './GeometryIndices',
+        './VertexFormat'
     ], function(
         DeveloperError,
         Cartesian3,
@@ -18,64 +19,9 @@ define([
         BoundingSphere,
         Geometry,
         GeometryAttribute,
-        GeometryIndices) {
+        GeometryIndices,
+        VertexFormat) {
     "use strict";
-
-// TODO: move elsewhere
-
-    /**
-     * DOC_TBA
-     *
-     * @alias GeometryVertexFormat
-     * @constructor
-     */
-    var GeometryVertexFormat = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        /**
-         * DOC_TBA
-         */
-        this.position = defaultValue(options.position, true);
-
-        /**
-         * DOC_TBA
-         */
-        this.normal = defaultValue(options.normal, true);
-
-        /**
-         * DOC_TBA
-         */
-        this.textureCoordinates = defaultValue(options.textureCoordinates, true);
-
-        /**
-         * DOC_TBA
-         */
-        this.binormal = defaultValue(options.binormal, false);
-
-        /**
-         * DOC_TBA
-         */
-        this.tangent = defaultValue(options.tangent, false);
-    };
-
- // TODO: freezeObject
-
-    /**
-     * DOC_TBA
-     */
-    GeometryVertexFormat.DEFAULT = new GeometryVertexFormat();
-
-    /**
-     * DOC_TBA
-     */
-    GeometryVertexFormat.POSITION_ONLY = new GeometryVertexFormat({
-        normal : false,
-        textureCoordinates : false
-    });
-
-/////////////////////////////////////////////////////////////////
-
-
 
     /**
      * DOC_TBA
@@ -106,12 +52,12 @@ define([
             maximumCorner = corner;
         }
 
-        var vertexFormat = defaultValue(options.vertexFormat, GeometryVertexFormat.DEFAULT);
+        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         var attributes;
         var indexLists;
 
-//        if (vertexFormat !== GeometryVertexFormat.POSITION_ONLY) {
+//        if (vertexFormat !== VertexFormat.POSITION_ONLY) {
 //        } else {
             // Positions only - no need to duplicate corner points
             attributes = {

@@ -30,6 +30,8 @@ define([
      * @exception {DeveloperError} numberOfPartitions must be greater than zero.
      */
     var EllipsoidGeometry = function(ellipsoid, numberOfPartitions, attributeName) {
+        numberOfPartitions = defaultValue(numberOfPartitions, 32);
+
         if (numberOfPartitions <= 0) {
             throw new DeveloperError('numberOfPartitions must be greater than zero.');
         }

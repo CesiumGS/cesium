@@ -70,26 +70,35 @@ define([
             var attributeIndices = GeometryFilters.createAttributeIndices(this.mesh);
             var appearance = this.appearance;
 
-            this._va = context.createVertexArrayFromMesh({
-                mesh : this.mesh,
-                attributeIndices : attributeIndices,
-                bufferUsage : BufferUsage.STATIC_DRAW,
-                vertexLayout : VertexLayout.INTERLEAVED
-            });
+            // Break into multiple meshes to fit within unsigned short indices if needed
+            var meshes = GeometryFilters.fitToUnsignedShortIndices(this.mesh);
+            var va = [];
+            var length = meshes.length;
+            var i;
+            for (i = 0; i < length; ++i) {
+                va.push(context.createVertexArrayFromMesh({
+                    mesh : meshes[i],
+                    attributeIndices : attributeIndices,
+                    bufferUsage : BufferUsage.STATIC_DRAW,
+                    vertexLayout : VertexLayout.INTERLEAVED
+                }));
+            }
+
+            this._va = va;
             this._sp = context.getShaderCache().replaceShaderProgram(this._sp, appearance.vertexShaderSource, appearance.getFragmentShaderSource(), attributeIndices);
             this._rs = context.createRenderState(appearance.renderState);
 
-            var command = new DrawCommand();
+            for (i = 0; i < length; ++i) {
+                var command = new DrawCommand();
 // TODO: this assumes indices in the mesh - and only one set
-            command.primitiveType = this.mesh.indexLists[0].primitiveType;
-            command.vertexArray = this._va;
-            command.renderState = this._rs;
-            command.shaderProgram = this._sp;
-            command.uniformMap = appearance.material._uniforms;
-            command.boundingVolume = this.mesh.boundingSphere;
-//            command.boundingVolume = BoundingSphere.fromVertices(this.mesh.attributes.position.values);
-
-            this._commands.push(command);
+                command.primitiveType = this.mesh.indexLists[0].primitiveType;
+                command.vertexArray = this._va[i];
+                command.renderState = this._rs;
+                command.shaderProgram = this._sp;
+                command.uniformMap = appearance.material._uniforms;
+                command.boundingVolume = this.mesh.boundingSphere;
+                this._commands.push(command);
+            }
         }
 
         if (frameState.passes.color) {
@@ -115,7 +124,16 @@ define([
      */
     Primitive.prototype.destroy = function() {
         this._sp = this._sp && this._sp.release();
-        this._va = this._va && this._va.destroy();
+
+        var va = this._va;
+        if (typeof va !== 'undefined') {
+            var length = va.length;
+            for (var i = 0; i < length; ++i) {
+                va[i].destroy();
+            }
+            this._va = undefined;
+        }
+
         return destroyObject(this);
     };
 
