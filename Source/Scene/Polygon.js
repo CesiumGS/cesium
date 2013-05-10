@@ -565,8 +565,10 @@ define([
         var mesh;
 
         if ((typeof polygon._extent !== 'undefined') && !polygon._extent.isEmpty()) {
-            meshes.push(ExtentTessellator.compute({extent: polygon._extent, generateTextureCoordinates:true}));
-
+            mesh = ExtentTessellator.compute({extent: polygon._extent, generateTextureCoordinates:true});
+            if (typeof mesh !== 'undefined') {
+                meshes.push(mesh);
+            }
             polygon._boundingVolume = BoundingSphere.fromExtent3D(polygon._extent, polygon._ellipsoid, polygon._boundingVolume);
             if (polygon._mode !== SceneMode.SCENE3D) {
                 polygon._boundingVolume2D = BoundingSphere.fromExtent2D(polygon._extent, polygon._projection, polygon._boundingVolume2D);

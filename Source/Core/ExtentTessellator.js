@@ -110,6 +110,14 @@ define([
                 var kZ = radiiSquaredZ * nZ;
 
                 var longitude = cart.longitude + row * granularityY * sin(extent.rotation) + col * granularityX * cos(extent.rotation);
+                if (latitude > CesiumMath.PI/2 || latitude < -CesiumMath.PI/2) {
+                    indices.length = 0;
+                    return;
+                }
+                if (longitude > CesiumMath.PI || longitude < -CesiumMath.PI) {
+                    indices.length = 0;
+                    return;
+                }
 
                 var nX = cosLatitude * cos(longitude);
                 var nY = cosLatitude * sin(longitude);
@@ -190,7 +198,7 @@ define([
      * @exception {DeveloperError} <code>description.context</code> is required.
      *
      * @return {Object} A mesh containing attributes for positions, possibly texture coordinates and indices
-     * from the extent for creating a vertex array.
+     * from the extent for creating a vertex array. (returns undefined if no indices are found)
      *
      * @see Context#createVertexArrayFromMesh
      * @see MeshFilters.createAttributeIndices
@@ -246,6 +254,10 @@ define([
         computeVerticesDescription.indices = indices;
 
         ExtentTessellator.computeVertices(computeVerticesDescription);
+
+        if (indices.length === 0) {
+            return undefined;
+        }
 
         var mesh = {
             attributes : {},
