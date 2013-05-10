@@ -45,7 +45,7 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
-     * @see GoogleEarthEnterpriseImageryProvider
+     * @see GoogleEarthImageryProvider
      * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see WebMapServiceImageryProvider

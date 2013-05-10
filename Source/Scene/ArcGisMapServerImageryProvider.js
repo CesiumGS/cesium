@@ -57,7 +57,7 @@ define([
      * @exception {DeveloperError} <code>description.url</code> is required.
      *
      * @see BingMapsImageryProvider
-     * @see GoogleEarthEnterpriseImageryProvider
+     * @see GoogleEarthImageryProvider
      * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
