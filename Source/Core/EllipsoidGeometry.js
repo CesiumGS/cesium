@@ -3,20 +3,22 @@ define([
         './defaultValue',
         './DeveloperError',
         './Cartesian3',
+        './Matrix4',
+        './Ellipsoid',
         './ComponentDatatype',
         './PrimitiveType',
         './BoundingSphere',
-        './Geometry',
         './GeometryAttribute',
         './GeometryIndices'
     ], function(
         defaultValue,
         DeveloperError,
         Cartesian3,
+        Matrix4,
+        Ellipsoid,
         ComponentDatatype,
         PrimitiveType,
         BoundingSphere,
-        Geometry,
         GeometryAttribute,
         GeometryIndices) {
     "use strict";
@@ -27,13 +29,16 @@ define([
      * @alias EllipsoidGeometry
      * @constructor
      *
-     * @exception {DeveloperError} numberOfPartitions must be greater than zero.
+     * @exception {DeveloperError} options.numberOfPartitions must be greater than zero.
      */
-    var EllipsoidGeometry = function(ellipsoid, numberOfPartitions, attributeName) {
-        numberOfPartitions = defaultValue(numberOfPartitions, 32);
+    var EllipsoidGeometry = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.UNIT_SPHERE);
+        var numberOfPartitions = defaultValue(options.numberOfPartitions, 32);
 
         if (numberOfPartitions <= 0) {
-            throw new DeveloperError('numberOfPartitions must be greater than zero.');
+            throw new DeveloperError('options.numberOfPartitions must be greater than zero.');
         }
 
         var positions = [];
@@ -201,9 +206,12 @@ define([
          * DOC_TBA
          */
         this.boundingSphere = BoundingSphere.fromEllipsoid(ellipsoid);
-    };
 
-    EllipsoidGeometry.prototype = new Geometry();
+        /**
+         * DOC_TBA
+         */
+        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
+    };
 
     return EllipsoidGeometry;
 });

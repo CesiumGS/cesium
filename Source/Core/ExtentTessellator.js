@@ -9,6 +9,7 @@ define([
         './Cartesian3',
         './ComponentDatatype',
         './PrimitiveType',
+        './Geometry',
         './GeometryAttribute',
         './GeometryIndices'
     ], function(
@@ -21,6 +22,7 @@ define([
         Cartesian3,
         ComponentDatatype,
         PrimitiveType,
+        Geometry,
         GeometryAttribute,
         GeometryIndices) {
     "use strict";
@@ -231,13 +233,13 @@ define([
 
         ExtentTessellator.computeVertices(computeVerticesDescription);
 
-        var mesh = {
+        var mesh = new Geometry({
             attributes : {},
             indexLists : [new GeometryIndices({
                 primitiveType : PrimitiveType.TRIANGLES,
                 values : indices
             })]
-        };
+        });
 
         var positionName = defaultValue(description.positionName, 'position');
         mesh.attributes[positionName] = new GeometryAttribute({

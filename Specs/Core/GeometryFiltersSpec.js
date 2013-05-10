@@ -239,7 +239,10 @@ defineSuite([
     });
 
     it('can reorder indices for the post vertex cache', function() {
-        var mesh = new EllipsoidGeometry(new Ellipsoid(10.0, 10.0, 10.0), 100);
+        var mesh = new EllipsoidGeometry({
+            ellipsoid : new Ellipsoid(10.0, 10.0, 10.0),
+            numberOfPartitions : 100
+        });
         var indices = mesh.indexLists[0].values;
         var numIndices = indices.length;
         var maximumIndex = 0;

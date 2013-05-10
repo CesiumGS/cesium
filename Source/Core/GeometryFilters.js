@@ -4,6 +4,8 @@ define([
         './DeveloperError',
         './Cartesian3',
         './EncodedCartesian3',
+        './Matrix3',
+        './Matrix4',
         './GeographicProjection',
         './ComponentDatatype',
         './PrimitiveType',
@@ -16,6 +18,8 @@ define([
         DeveloperError,
         Cartesian3,
         EncodedCartesian3,
+        Matrix3,
+        Matrix4,
         GeographicProjection,
         ComponentDatatype,
         PrimitiveType,
@@ -614,6 +618,78 @@ define([
         return attributesInAllMeshes;
     }
 
+    var scratch = new Cartesian3();
+
+    function transformPoint(matrix, attribute) {
+        if (typeof attribute !== 'undefined') {
+            var values = attribute.values;
+            var length = values.length;
+            for (var i = 0; i < length; i += 3) {
+                Cartesian3.fromArray(values, i, scratch);
+                Matrix4.multiplyByPoint(matrix, scratch, scratch);
+                values[i] = scratch.x;
+                values[i + 1] = scratch.y;
+                values[i + 2] = scratch.z;
+            }
+        }
+    }
+
+    function transformVector(matrix, attribute) {
+        if (typeof attribute !== 'undefined') {
+            var values = attribute.values;
+            var length = values.length;
+            for (var i = 0; i < length; i += 3) {
+                Cartesian3.fromArray(values, i, scratch);
+                Matrix3.multiplyByVector(matrix, scratch, scratch);
+                values[i] = scratch.x;
+                values[i + 1] = scratch.y;
+                values[i + 2] = scratch.z;
+            }
+        }
+    }
+
+    /**
+     * DOC_TBA
+     *
+     * @exception {DeveloperError} mesh is required.
+     */
+    GeometryFilters.transformToWorldCoordinates = function(mesh) {
+        if (typeof mesh === 'undefined') {
+            throw new DeveloperError('mesh is required.');
+        }
+
+        if (mesh.modelMatrix.equals(Matrix4.IDENTITY)) {
+            // Already in world coordinates
+            return;
+        }
+
+        var attributes = mesh.attributes;
+
+        // Transform attributes in known vertex formats
+        transformPoint(mesh.modelMatrix, attributes.position);
+
+        if ((typeof attributes.normal !== 'undefined') ||
+            (typeof attributes.binormal !== 'undefined') ||
+            (typeof attributes.tangent !== 'undefined')) {
+
+            var inverseTranspose = new Matrix4();
+            var normalMatrix = new Matrix3();
+            Matrix4.inverse(mesh.modelMatrix, inverseTranspose);
+            Matrix4.transpose(inverseTranspose, inverseTranspose);
+            Matrix4.getRotation(inverseTranspose, normalMatrix);
+
+            transformVector(normalMatrix, attributes.normal);
+            transformVector(normalMatrix, attributes.binormal);
+            transformVector(normalMatrix, attributes.tangent);
+        }
+
+        if (typeof mesh.boundingSphere !== 'undefined') {
+            Matrix4.multiplyByPoint(mesh.modelMatrix, mesh.boundingSphere.center, mesh.boundingSphere.center);
+        }
+
+        return mesh;
+    };
+
     /**
      * DOC_TBA
      *
@@ -624,13 +700,19 @@ define([
             throw new DeveloperError('meshes is required.');
         }
 
-        if (meshes.length === 1) {
+        var length = meshes.length;
+        var i;
+
+        // Unify to world coordinates before combining.
+        for (i = 0; i < length; ++i) {
+            GeometryFilters.transformToWorldCoordinates(meshes[i]);
+        }
+
+        if (length === 1) {
             return meshes[0];
         }
 
-        var length = meshes.length;
         var name;
-        var i;
         var j;
         var k;
 

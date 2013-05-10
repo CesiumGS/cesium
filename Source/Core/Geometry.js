@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        './defaultValue'
+        './defaultValue',
+        './Matrix4',
     ], function(
-        defaultValue) {
+        defaultValue,
+        Matrix4) {
     "use strict";
 
     /**
@@ -28,6 +30,11 @@ define([
          * DOC_TBA
          */
         this.boundingSphere = options.boundingSphere;
+
+        /**
+         * DOC_TBA
+         */
+        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
     };
 
     return Geometry;

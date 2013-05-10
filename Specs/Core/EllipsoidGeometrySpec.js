@@ -14,12 +14,17 @@ defineSuite([
 
     it('compute0', function() {
         expect(function() {
-            return new EllipsoidGeometry(Ellipsoid.UNIT_SPHERE, -1);
+            return new EllipsoidGeometry({
+                numberOfPartitions : -1
+            });
         }).toThrow();
     });
 
     it('compute1', function() {
-        var m = new EllipsoidGeometry(Ellipsoid.UNIT_SPHERE, 1);
+        var m = new EllipsoidGeometry({
+            ellipsoid : Ellipsoid.UNIT_SPHERE,
+            numberOfPartitions : 1
+        });
 
         expect(m.attributes.position.values.length).toEqual(3 * 8);
         expect(m.indexLists[0].values.length).toEqual(12 * 3);
@@ -27,14 +32,20 @@ defineSuite([
     });
 
     it('compute2', function() {
-        var m = new EllipsoidGeometry(Ellipsoid.UNIT_SPHERE, 2);
+        var m = new EllipsoidGeometry({
+            ellipsoid : Ellipsoid.UNIT_SPHERE,
+            numberOfPartitions : 2
+        });
 
         expect(m.attributes.position.values.length).toEqual(3 * (8 + 6 + 12));
         expect(m.indexLists[0].values.length).toEqual(2 * 3 * 4 * 6);
     });
 
     it('compute3', function() {
-        var m = new EllipsoidGeometry(Ellipsoid.UNIT_SPHERE, 3);
+        var m = new EllipsoidGeometry({
+            ellipsoid : Ellipsoid.UNIT_SPHERE,
+            numberOfPartitions : 3
+        });
 
         var position = m.attributes.position.values;
         for ( var i = 0; i < position.length; i += 3) {

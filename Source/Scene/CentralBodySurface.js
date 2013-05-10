@@ -722,7 +722,10 @@ define([
         if (typeof surface._debug !== 'undefined' && typeof surface._debug.boundingSphereTile !== 'undefined') {
             if (!surface._debug.boundingSphereVA) {
                 var radius = surface._debug.boundingSphereTile.boundingSphere3D.radius;
-                var sphere = new EllipsoidGeometry(new Ellipsoid(radius, radius, radius), 10);
+                var sphere = new EllipsoidGeometry({
+                    ellipsoid : new Ellipsoid(radius, radius, radius),
+                    numberOfPartitions : 10
+                });
                 GeometryFilters.toWireframe(sphere);
                 surface._debug.boundingSphereVA = context.createVertexArrayFromMesh({
                     mesh : sphere,
