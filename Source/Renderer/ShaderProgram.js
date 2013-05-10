@@ -2449,7 +2449,21 @@ define([
              * // Example
              * float deg = czm_degreesPerRadian * rad;
              */
-            czm_degreesPerRadian : CesiumMath.DEGREES_PER_RADIAN.toString()
+            czm_degreesPerRadian : CesiumMath.DEGREES_PER_RADIAN.toString(),
+
+            /**
+             * A built-in GLSL floating-point constant for one solar radius.
+             *
+             * @alias czm_solarRadius
+             * @glslConstant
+             *
+             * @see CesiumMath.SOLAR_RADIUS
+             *
+             * @example
+             * // GLSL declaration
+             * const float czm_solarRadius = ...;
+             */
+            czm_solarRadius : CesiumMath.SOLAR_RADIUS.toString()
         };
 
         var glslConstants = '';

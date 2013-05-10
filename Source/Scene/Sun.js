@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/ComponentDatatype',
         '../Core/destroyObject',
+        '../Core/Math',
         '../Core/PrimitiveType',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
@@ -11,9 +13,11 @@ define([
         '../Shaders/SunVS',
         '../Shaders/SunFS'
     ], function(
+        BoundingSphere,
         Cartesian2,
         ComponentDatatype,
         destroyObject,
+        CesiumMath,
         PrimitiveType,
         BlendingState,
         BufferUsage,
@@ -104,7 +108,12 @@ define([
                     return that.morphTime;
                 }
             };
+
+            command.boundingVolume = new BoundingSphere();
+            command.boundingVolume.radius = CesiumMath.SOLAR_RADIUS;
         }
+
+        command.boundingVolume.center = context.getUniformState().getSunPositionWC();
 
         return command;
     };
