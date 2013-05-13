@@ -33,7 +33,7 @@ define([
      * @constructor
      *
      * @param {String} description.url The url of the Google Earth server hosting the imagery.
-     * @param {Number} description.channel The channel (id) to be used when requesting data from the server. 
+     * @param {Number} description.channel The channel (id) to be used when requesting data from the server.
      * @param {TileDiscardPolicy} [description.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
      *        {@link DiscardMissingTileImagePolicy} is used which requests
@@ -113,8 +113,18 @@ define([
         var that = this;
         var metadataError;
 
-        function metadataSuccess(data) {
-            data = eval("(" + data + ")");
+        function metadataSuccess(text) {
+            var data;
+
+            // The Google Earth server sends malformed JSON data currently...
+            try {
+                // First, try parsing it like normal in case a future version sends correctly formatted JSON
+                data = JSON.parse(text);
+            } catch(e) {
+                // Quote object strings manually, then try parsing again
+                data = JSON.parse(text.replace(/([\[\{,])[\n\r ]*([A-Za-z0-9]+)[\n\r ]*:/g, '$1"$2":'));
+            }
+
             var layer = undefined;
             for(var i = 0; i < data.layers.length; i++) {
               if(data.layers[i].id === that._channel) {
@@ -128,8 +138,8 @@ define([
             }
 
             that._version = layer.version;
-            that._imageUrlTemplate = that._imageUrlTemplate.replace('{request}', that._requestType) 
-              .replace('{channel}', that._channel).replace('{version}', that._version); 
+            that._imageUrlTemplate = that._imageUrlTemplate.replace('{request}', that._requestType)
+              .replace('{channel}', that._channel).replace('{version}', that._version);
 
             // Install the default tile discard policy if none has been supplied.
             if (typeof that._tileDiscardPolicy === 'undefined') {
@@ -150,26 +160,9 @@ define([
         }
 
         function requestMetadata() {
-          /*
-          $.get(that._proxy.getURL(metadataUrl), {}, function(text) {
-            json = eval("(" + text + ")");
-            metadataSuccess(json);
-          }, 'html')
-          .fail(function() { console.log('failed'); })
-          .done(function() { console.log('second success'); })
-          ;
-          */
-
           var url = (typeof that._proxy === 'undefined') ? metadataUrl : that._proxy.getURL(metadataUrl);
 
           var metadata = loadText(url);
-
-          /*
-          var metadata = jsonp(metadataUrl, {
-              callbackParameterName : 'jsonp',
-              proxy : that._proxy
-          });
-          */
           when(metadata, metadataSuccess, metadataFailure);
         }
 
@@ -199,7 +192,7 @@ define([
     GoogleEarthImageryProvider.prototype.getProxy = function() {
         return this._proxy;
     };
-    
+
     /**
      * Gets the imagery channel (id) currently being used.
      *
@@ -439,10 +432,10 @@ define([
     function buildImageUrl(imageryProvider, x, y, level) {
         var imageUrl = imageryProvider._imageUrlTemplate;
 
-        imageUrl = imageUrl.replace('{x}', x); 
-        imageUrl = imageUrl.replace('{y}', y); 
+        imageUrl = imageUrl.replace('{x}', x);
+        imageUrl = imageUrl.replace('{y}', y);
         // Google Earth starts with a zoom level of 1, not 0
-        imageUrl = imageUrl.replace('{zoom}', (level + 1)); 
+        imageUrl = imageUrl.replace('{zoom}', (level + 1));
 
         var proxy = imageryProvider._proxy;
         if (typeof proxy !== 'undefined') {

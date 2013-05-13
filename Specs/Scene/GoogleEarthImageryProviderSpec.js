@@ -51,7 +51,7 @@ defineSuite([
     it('constructor throws when channel is not specified', function() {
         function constructWithoutServer() {
             return new GoogleEarthImageryProvider({
-              url: 'http://foo.bar.net' 
+              url: 'http://foo.bar.net'
             });
         }
         expect(constructWithoutServer).toThrow();
@@ -59,7 +59,7 @@ defineSuite([
 
     it('can provide a root tile', function() {
         var url = 'http://fake.fake.net';
-        var metadataUrl = url + '/query?request=Json&vars=geeServerDefs&is2d=t' 
+        var metadataUrl = url + '/query?request=Json&vars=geeServerDefs&is2d=t';
         var channel = 1234;
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
@@ -67,7 +67,7 @@ defineSuite([
             setTimeout(function() {
                 window[functionName]({
                   "isAuthenticated": true,
-                  "layers": [ 
+                  "layers": [
                     {
                       "icon": "icons/773_l.png",
                       "id": 1234,
@@ -149,7 +149,7 @@ defineSuite([
 
     it('routes requests through a proxy if one is specified', function() {
         var url = 'http://foo.bar.net';
-        var metadataUrl = url + '/query?request=Json&vars=geeServerDefs&is2d=t' 
+        var metadataUrl = url + '/query?request=Json&vars=geeServerDefs&is2d=t';
         var proxy = new DefaultProxy('/proxy/');
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
@@ -157,7 +157,7 @@ defineSuite([
             setTimeout(function() {
                 window[functionName]({
                   "isAuthenticated": true,
-                  "layers": [ 
+                  "layers": [
                     {
                       "icon": "icons/773_l.png",
                       "id": 1234,
@@ -250,7 +250,7 @@ defineSuite([
         jsonp.loadAndExecuteScript = function(url, functionName) {
             window[functionName]({
               "isAuthenticated": true,
-              "layers": [ 
+              "layers": [
                 {
                   "icon": "icons/773_l.png",
                   "id": 1234,
