@@ -124,6 +124,11 @@
 	<property name="dojoPath" location="${thirdPartyDirectory}/dojo-release-1.8.3-src" />
 	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-r12/jshint.js" />
 
+	<!-- properties controlling documentation source-->
+	<property name="githubRepoLink" value="https://github.com/AnalyticalGraphicsInc/cesium/" />
+	<property name="githubLinkExt" value="blob/" />
+
+
 	<!-- Outputs -->
 	<property name="buildDirectory" location="Build" />
 	<property name="buildOutputDirectory" location="${buildDirectory}/Cesium" />
@@ -337,6 +342,9 @@
 			<arg line="-r" />
 			<arg line="-d ${relativeDocOutputDirectory}" />
 			<arg line="${relativeSourceFilesPath}" />
+			<arg line='${version}' />
+			<arg line='${githubRepoLink}' />
+			<arg line='${githubLinkExt}' />
 		</java>
 
 		<copy todir="${buildDocumentationImagesDirectory}">
