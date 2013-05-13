@@ -173,8 +173,8 @@ defineSuite([
             'uniform vec3 u_high;' +
             'uniform vec3 u_low;' +
             'void main() { ' +
-            '  vec3 p = czm_translateRelativeToEye(u_high, u_low);' +
-            '  gl_FragColor = vec4(p == vec3(5.0, 3.0, 1.0)); ' +
+            '  vec4 p = czm_translateRelativeToEye(u_high, u_low);' +
+            '  gl_FragColor = vec4(p == vec4(5.0, 3.0, 1.0, 1.0)); ' +
             '}';
 
         verifyDraw(fs, uniformMap);

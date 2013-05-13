@@ -93,6 +93,21 @@ define([
     };
 
     /**
+     * DOC_TBA
+     */
+    Cartesian4.fromElements = function(x, y, z, w, result) {
+        if (typeof result === 'undefined') {
+            return new Cartesian4(x, y, z, w);
+        }
+
+        result.x = x;
+        result.y = y;
+        result.z = z;
+        result.w = w;
+        return result;
+    };
+
+    /**
      * Duplicates a Cartesian4 instance.
      * @memberof Cartesian4
      *

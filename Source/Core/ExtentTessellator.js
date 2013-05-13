@@ -8,7 +8,10 @@ define([
         './Extent',
         './Cartesian3',
         './ComponentDatatype',
-        './PrimitiveType'
+        './PrimitiveType',
+        './Geometry',
+        './GeometryAttribute',
+        './GeometryIndices'
     ], function(
         clone,
         defaultValue,
@@ -18,18 +21,16 @@ define([
         Extent,
         Cartesian3,
         ComponentDatatype,
-        PrimitiveType) {
+        PrimitiveType,
+        Geometry,
+        GeometryAttribute,
+        GeometryIndices) {
     "use strict";
 
     /**
      * Contains class functions to create a mesh or vertex array from a cartographic extent.
      *
      * @exports ExtentTessellator
-     *
-     * @see HeightmapTessellator
-     * @see EllipsoidGeometry
-     * @see BoxTessellator
-     * @see PlaneTessellator
      */
     var ExtentTessellator = {};
 
@@ -232,28 +233,28 @@ define([
 
         ExtentTessellator.computeVertices(computeVerticesDescription);
 
-        var mesh = {
+        var mesh = new Geometry({
             attributes : {},
-            indexLists : [{
+            indexLists : [new GeometryIndices({
                 primitiveType : PrimitiveType.TRIANGLES,
                 values : indices
-            }]
-        };
+            })]
+        });
 
         var positionName = defaultValue(description.positionName, 'position');
-        mesh.attributes[positionName] = {
+        mesh.attributes[positionName] = new GeometryAttribute({
             componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 3,
             values : vertices
-        };
+        });
 
         if (description.generateTextureCoordinates) {
             var textureCoordinatesName = defaultValue(description.textureCoordinatesName, 'textureCoordinates');
-            mesh.attributes[textureCoordinatesName] = {
+            mesh.attributes[textureCoordinatesName] = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 2,
                 values : textureCoordinates
-            };
+            });
         }
 
         return mesh;

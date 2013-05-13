@@ -134,7 +134,10 @@ define([
         var command = this._command;
 
         if (typeof command.vertexArray === 'undefined') {
-            var mesh = new EllipsoidGeometry(Ellipsoid.fromCartesian3(this._ellipsoid.getRadii().multiplyByScalar(1.025)), 60);
+            var mesh = new EllipsoidGeometry({
+                ellipsoid : Ellipsoid.fromCartesian3(this._ellipsoid.getRadii().multiplyByScalar(1.025)),
+                numberOfPartitions : 60
+            });
             command.vertexArray = context.createVertexArrayFromMesh({
                 mesh : mesh,
                 attributeIndices : GeometryFilters.createAttributeIndices(mesh),

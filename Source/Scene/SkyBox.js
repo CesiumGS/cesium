@@ -1,11 +1,12 @@
 /*global define*/
 define([
-        '../Core/BoxTessellator',
+        '../Core/BoxGeometry',
         '../Core/Cartesian3',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
         '../Core/GeometryFilters',
+        '../Core/VertexFormat',
         '../Core/PrimitiveType',
         '../Renderer/loadCubeMap',
         '../Renderer/BufferUsage',
@@ -15,12 +16,13 @@ define([
         '../Shaders/SkyBoxVS',
         '../Shaders/SkyBoxFS'
     ], function(
-        BoxTessellator,
+        BoxGeometry,
         Cartesian3,
         destroyObject,
         DeveloperError,
         Matrix4,
         GeometryFilters,
+        VertexFormat,
         PrimitiveType,
         loadCubeMap,
         BufferUsage,
@@ -149,8 +151,9 @@ define([
                 }
             };
 
-            var mesh = BoxTessellator.compute({
-                dimensions : new Cartesian3(2.0, 2.0, 2.0)
+            var mesh = new BoxGeometry({
+                dimensions : new Cartesian3(2.0, 2.0, 2.0),
+                vertexFormat : VertexFormat.POSITION_ONLY
             });
             var attributeIndices = GeometryFilters.createAttributeIndices(mesh);
 

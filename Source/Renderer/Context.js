@@ -2326,7 +2326,7 @@ define([
      * in system memory, whereas a vertex array contains vertex buffers and an optional index buffer in WebGL
      * memory for use with rendering.
      * <br /><br />
-     * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxTessellator}.
+     * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxGeometry}.
      * <br /><br />
      * <code>creationArguments</code> can have four properties:
      * <ul>
@@ -2351,13 +2351,12 @@ define([
      * @see Context#createIndexBuffer
      * @see GeometryFilters.createAttributeIndices
      * @see ShaderProgram
-     * @see BoxTessellator
      *
      * @example
      * // Example 1. Creates a vertex array for rendering a box.  The default dynamic draw
      * // usage is used for the created vertex and index buffer.  The attributes are not
      * // interleaved by default.
-     * var mesh = BoxTessellator.compute();
+     * var mesh = new BoxGeometry();
      * var va = context.createVertexArrayFromMesh({
      *     mesh             : mesh,
      *     attributeIndices : GeometryFilters.createAttributeIndices(mesh),

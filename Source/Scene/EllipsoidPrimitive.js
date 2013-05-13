@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        '../Core/BoxTessellator',
+        '../Core/BoxGeometry',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/combine',
@@ -21,7 +21,7 @@ define([
         '../Shaders/EllipsoidVS',
         '../Shaders/EllipsoidFS'
     ], function(
-        BoxTessellator,
+        BoxGeometry,
         Cartesian3,
         Cartesian4,
         combine,
@@ -200,7 +200,7 @@ define([
             return vertexArray;
         }
 
-        var mesh = BoxTessellator.compute({
+        var mesh = new BoxGeometry({
             dimensions : new Cartesian3(2.0, 2.0, 2.0)
         });
 

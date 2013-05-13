@@ -4,7 +4,7 @@ defineSuite([
          'Specs/destroyScene',
          'Core/destroyObject',
          'Core/BoundingSphere',
-         'Core/BoxTessellator',
+         'Core/BoxGeometry',
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Color',
@@ -26,7 +26,7 @@ defineSuite([
          destroyScene,
          destroyObject,
          BoundingSphere,
-         BoxTessellator,
+         BoxGeometry,
          Cartesian2,
          Cartesian3,
          Color,
@@ -212,7 +212,7 @@ defineSuite([
                 var dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
                 var maximumCorner = dimensions.multiplyByScalar(0.5);
                 var minimumCorner = maximumCorner.negate();
-                var mesh = BoxTessellator.compute({
+                var mesh = new BoxGeometry({
                     minimumCorner: minimumCorner,
                     maximumCorner: maximumCorner
                 });

@@ -1,8 +1,12 @@
 /*global define*/
 define([
-        './defaultValue'
+        './defaultValue',
+        './DeveloperError',
+        './Matrix4',
     ], function(
-        defaultValue) {
+        defaultValue,
+        DeveloperError,
+        Matrix4) {
     "use strict";
 
     /**
@@ -28,6 +32,38 @@ define([
          * DOC_TBA
          */
         this.boundingSphere = options.boundingSphere;
+
+        /**
+         * DOC_TBA
+         */
+        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
+
+        /**
+         * DOC_TBA
+         */
+        this.pickData = options.pickData;
+    };
+
+    /**
+     * DOC_TBA
+     *
+     * @exception {DeveloperError} geometries is required.
+     */
+    Geometry.isPickable = function(geometries) {
+        if (typeof geometries === 'undefined') {
+            throw new DeveloperError('geometries is required.');
+        }
+
+        var pickable = false;
+        var length = geometries.length;
+        for (var i = 0; i < length; ++i) {
+            if (typeof geometries[i].pickData !== 'undefined') {
+                pickable = true;
+                break;
+            }
+        }
+
+        return pickable;
     };
 
     return Geometry;

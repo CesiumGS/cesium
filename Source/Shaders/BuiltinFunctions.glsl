@@ -670,10 +670,10 @@ const int czm_morphing = 3;
  * @name czm_columbusViewMorph
  * @glslFunction
  */
-vec4 czm_columbusViewMorph(vec3 position2D, vec3 position3D, float time)
+vec4 czm_columbusViewMorph(vec4 position2D, vec4 position3D, float time)
 {
     // Just linear for now.
-    vec3 p = mix(position2D, position3D, time);
+    vec3 p = mix(position2D.xyz, position3D.xyz, time);
     return vec4(p, 1.0);
 } 
 
@@ -984,20 +984,20 @@ float czm_latitudeToWebMercatorFraction(float latitude, float southMercatorYLow,
  * 
  * void main() 
  * {
- *   vec3 p = czm_translateRelativeToEye(positionHigh, positionLow);
- *   gl_Position = czm_modelViewProjectionRelativeToEye * vec4(p, 1.0);
+ *   vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
+ *   gl_Position = czm_modelViewProjectionRelativeToEye * p;
  * }
  *
  * @see czm_modelViewRelativeToEye
  * @see czm_modelViewProjectionRelativeToEye
  * @see EncodedCartesian3
  */
-vec3 czm_translateRelativeToEye(vec3 high, vec3 low)
+vec4 czm_translateRelativeToEye(vec3 high, vec3 low)
 {
     vec3 highDifference = high - czm_encodedCameraPositionMCHigh;
     vec3 lowDifference = low - czm_encodedCameraPositionMCLow;
 
-    return highDifference + lowDifference;
+    return vec4(highDifference + lowDifference, 1.0);
 }
 
 /**

@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/freezeObject',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
@@ -7,6 +8,7 @@ define([
         '../Shaders/DefaultAppearanceVS',
         '../Shaders/DefaultAppearanceFS'
     ], function(
+        defaultValue,
         freezeObject,
         CullFace,
         BlendingState,
@@ -19,26 +21,27 @@ define([
      * DOC_TBA
      */
     var Appearance = function(options) {
-// TODO: throw without options
-        /**
-         * DOC_TBA
-         */
-        this.material = options.material;
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
          * DOC_TBA
          */
-        this.vertexShaderSource = options.vertexShaderSource;
+        this.material = (typeof options.material !== 'undefined') ? options.material : Material.fromType(undefined, Material.ColorType);
 
         /**
          * DOC_TBA
          */
-        this.fragmentShaderSource = options.fragmentShaderSource;
+        this.vertexShaderSource = defaultValue(options.vertexShaderSource, DefaultAppearanceVS);
 
         /**
          * DOC_TBA
          */
-        this.renderState = options.renderState;
+        this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, DefaultAppearanceFS);
+
+        /**
+         * DOC_TBA
+         */
+        this.renderState = defaultValue(options.renderState, {});
     };
 
     /**
@@ -51,15 +54,19 @@ define([
             this.fragmentShaderSource;
     };
 
-    Appearance.EXAMPLE_APPEARANCE = freezeObject(new Appearance({
-        material : Material.fromType(undefined, Material.ColorType),
-        vertexShaderSource : DefaultAppearanceVS,
-        fragmentShaderSource : DefaultAppearanceFS,
+    /**
+     * DOC_TBA
+     */
+    Appearance.CLOSED_TRANSLUCENT = freezeObject(new Appearance({
         renderState : {
             cull : {
                 enabled : true,
                 face : CullFace.BACK
             },
+            depthTest : {
+                enabled : true
+            },
+            depthMask : false,
             blending : BlendingState.ALPHA_BLEND
         }
     }));
