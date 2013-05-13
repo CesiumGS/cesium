@@ -97,9 +97,10 @@ define([
             pickData : 'mesh3'
         });
 
+//        var primitive = new Primitive([mesh3], Appearance.CLOSED_TRANSLUCENT);
         var primitive = new Primitive([mesh, mesh2, mesh3], Appearance.CLOSED_TRANSLUCENT);
+        widget.scene.getPrimitives().add(primitive);
 
-/*
         var m = new Material({
             context : widget.scene.getContext(),
             fabric : {
@@ -118,10 +119,16 @@ define([
             material : m,
             renderState : rs
         });
-        var primitive = new Primitive(mesh3, appearance);
-*/
 
-        widget.scene.getPrimitives().add(primitive);
+        var mesh4 = new BoxGeometry({
+            dimensions : new Cartesian3(1000000.0, 1000000.0, 1000000.0),
+            modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+                Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 4500000.0)),
+            pickData : 'mesh4'
+        });
+
+        var primitive2 = new Primitive([mesh4], appearance);
+        widget.scene.getPrimitives().add(primitive2);
 
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());

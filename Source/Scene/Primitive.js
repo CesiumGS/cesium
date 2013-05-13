@@ -78,7 +78,7 @@ define([
             var positionAttr = attributes.position;
             var numberOfComponents = 4 * (positionAttr.values.length / positionAttr.componentsPerAttribute);
 
-            attributes.pickData = new GeometryAttribute({
+            attributes.pickColor = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 4,
                 normalize : true,
@@ -97,7 +97,7 @@ define([
                 var green = Color.floatToByte(pickColor.green);
                 var blue = Color.floatToByte(pickColor.blue);
                 var alpha = Color.floatToByte(pickColor.alpha);
-                var values = attributes.pickData.values;
+                var values = attributes.pickColor.values;
 
                 for (var j = 0; j < numberOfComponents; j += 4) {
                     values[j] = red;
