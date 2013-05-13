@@ -98,14 +98,19 @@ define([
         var vertexArrayIndex = 0;
         var textureCoordinatesIndex = 0;
 
-        proj.project(extent.getNorthwest(), nw);
-        proj.project(extent.getCenter(), center);
+        nwCartographic = extent.getNorthwest();
 
-        nw.subtract(center, nw);
-        rotationMatrix = Matrix2.fromRotation(rotation);
-        rotationMatrix.multiplyByVector(nw, nw);
-        nw.add(center, nw);
-        nwCartographic = proj.unproject(nw);
+        if (typeof rotation !== 'undefined') {
+            proj.project(extent.getNorthwest(), nw);
+            proj.project(extent.getCenter(), center);
+            nw.subtract(center, nw);
+            rotationMatrix = Matrix2.fromRotation(rotation);
+            rotationMatrix.multiplyByVector(nw, nw);
+            nw.add(center, nw);
+            nwCartographic = proj.unproject(nw);
+        } else {
+            rotation = 0;
+        }
 
         for ( var row = 0; row < height; ++row) {
             for ( var col = 0; col < width; ++col) {
@@ -115,7 +120,7 @@ define([
                 var kZ = radiiSquaredZ * nZ;
 
                 var longitude = nwCartographic.longitude + row * granularityY * sin(rotation) + col * granularityX * cos(rotation);
-                if (latitude > CesiumMath.PI/2 || latitude < -CesiumMath.PI/2) {
+                if (latitude < -CesiumMath.PI_OVER_TWO || latitude > CesiumMath.PI_OVER_TWO) {
                     indices.length = 0;
                     return;
                 }

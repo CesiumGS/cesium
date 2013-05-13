@@ -2,10 +2,14 @@
 defineSuite([
          'Core/ExtentTessellator',
          'Core/Extent',
+         'Core/Ellipsoid',
+         'Core/Cartesian3',
          'Core/Math'
      ], function(
          ExtentTessellator,
          Extent,
+         Ellipsoid,
+         Cartesian3,
          CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -63,5 +67,46 @@ defineSuite([
 
         expect(buffers.vertices.length).toEqual(9 * 3 + 9 * 2);
         expect(buffers.indices.length).toEqual(8 * 3);
+    });
+
+    it('compute vertices', function() {
+        var extent = new Extent(-1, -1, 1, 1);
+        var description = {
+                extent: extent,
+                granularity: 1.0,
+                width: Math.ceil(extent.east - extent.west) + 1,
+                height: Math.ceil(extent.north - extent.south) + 1,
+                radiiSquared: Ellipsoid.WGS84.getRadiiSquared(),
+                relativeToCenter: Cartesian3.ZERO,
+                surfaceHeight: 0,
+                vertices: [],
+                indices: []
+        };
+        ExtentTessellator.computeVertices(description);
+        expect(description.vertices.length).toEqual(9 * 3);
+        expect(description.indices.length).toEqual(8 * 3);
+        var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest());
+        expect(new Cartesian3(description.vertices[0], description.vertices[1], description.vertices[2])).toEqual(expectedNWCorner);
+    });
+
+    it('compute vertices with rotation', function() {
+        var extent = new Extent(-1, -1, 1, 1);
+        var description = {
+                extent: extent,
+                granularity: 1.0,
+                rotation: CesiumMath.PI_OVER_TWO,
+                width: Math.ceil(extent.east - extent.west) + 1,
+                height: Math.ceil(extent.north - extent.south) + 1,
+                radiiSquared: Ellipsoid.WGS84.getRadiiSquared(),
+                relativeToCenter: Cartesian3.ZERO,
+                surfaceHeight: 0,
+                vertices: [],
+                indices: []
+        };
+        ExtentTessellator.computeVertices(description);
+        expect(description.vertices.length).toEqual(9 * 3);
+        expect(description.indices.length).toEqual(8 * 3);
+        var unrotatedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest());
+        expect(new Cartesian3(description.vertices[0], description.vertices[1], description.vertices[2])).not.toEqual(unrotatedNWCorner);
     });
 });

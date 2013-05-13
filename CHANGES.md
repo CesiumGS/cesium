@@ -13,8 +13,9 @@ Beta Releases
 * Added support for floating-point textures.
 * Fixed polyline clipping artifact. [#728](https://github.com/AnalyticalGraphicsInc/cesium/issues/728).
 * Added `IntersectionTests.trianglePlaneIntersection`.
-* Fixed polygon crossing international date line for 2D and Columbus view
+* Fixed polygon crossing international date line for 2D and Columbus view.
 * Added `computeHorizonCullingPoint`, `computeHorizonCullingPointFromVertices`, and `computeHorizonCullingPointFromExtent` methods to `EllipsoidalOccluder` and used them to build a more accurate horizon occlusion test for terrain rendering.
+* Added rotation parameter to `Polygon.configureExtent`.
 
 ### b16 - 2013-05-01
 * Breaking changes:
