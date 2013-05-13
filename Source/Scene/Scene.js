@@ -399,7 +399,7 @@ define([
                 command = entireFrustumCommands[commandName];
                 if (typeof command !== 'undefined') {
                     boundingVolume = command.boundingVolume;
-                    if (typeof boundingVolume !== 'undefined' &&
+                    if (typeof boundingVolume !== 'undefined' && command.cull &&
                             ((cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) ||
                             (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(boundingVolume)))) {
                         entireFrustumCommands[commandName] = undefined;
@@ -697,6 +697,7 @@ define([
             brightPassCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, BrightPass, attributeIndices);
             brightPassCommand.uniformMap = {
                 u_avgLuminance : function() {
+                    // A guess at the average luminance across the entire scene
                     return 0.5;
                 },
                 u_threshold : function() {
@@ -756,6 +757,7 @@ define([
             fullScreenCommand.vertexArray = vertexArray;
             fullScreenCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeIndices);
             fullScreenCommand.uniformMap = {};
+            fullScreenCommand.renderState = context.createRenderState();
         }
 
         var downSampleWidth = Math.pow(2.0, Math.ceil(Math.log(width) / Math.log(2)) - 2.0);
@@ -825,8 +827,6 @@ define([
                 return fbo.getColorTexture();
             };
         }
-
-        scene._fullScreenCommand.renderState = context.createRenderState();
 
         var us = scene.getUniformState();
         var sunPosition = us.getSunPositionWC();

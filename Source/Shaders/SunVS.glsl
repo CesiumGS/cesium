@@ -11,7 +11,7 @@ void main()
     }
     else
     {
-        position = vec4(czm_sunPosition2D.zxy, 1.0);
+        position = vec4(czm_sunPositionColumbusView.zxy, 1.0);
     }
     
     vec4 positionEC = czm_view * position;

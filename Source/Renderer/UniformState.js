@@ -121,7 +121,7 @@ define([
         this._cameraPosition = new Cartesian3();
 
         this._sunPositionWC = new Cartesian3();
-        this._sunPosition2D = new Cartesian3();
+        this._sunPositionColumbusView = new Cartesian3();
         this._sunDirectionWC = new Cartesian3();
         this._sunDirectionEC = new Cartesian3();
         this._moonDirectionEC = new Cartesian3();
@@ -206,7 +206,7 @@ define([
         var projection = frameState.scene2D.projection;
         var ellipsoid = projection.getEllipsoid();
         var sunCartographic = ellipsoid.cartesianToCartographic(uniformState._sunPositionWC, sunCartographicScratch);
-        projection.project(sunCartographic, uniformState._sunPosition2D);
+        projection.project(sunCartographic, uniformState._sunPositionColumbusView);
     }
 
     /**
@@ -953,10 +953,10 @@ define([
      *
      * @return {Cartesian3} The sun position in 2D world coordinates at the current scene time.
      *
-     * @see czm_sunPosition2D
+     * @see czm_sunPositionColumbusView
      */
-    UniformState.prototype.getSunPosition2D = function() {
-        return this._sunPosition2D;
+    UniformState.prototype.getSunPositionColumbusView = function() {
+        return this._sunPositionColumbusView;
     };
 
     /**
