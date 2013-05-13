@@ -378,7 +378,10 @@ define([
                 indexLists : [new GeometryIndices({
                     primitiveType : primitiveType,
                     values : indices
-                })]
+                })],
+                boundingSphere : (typeof mesh.boundingSphere !== 'undefined') ? BoundingSphere.clone(mesh.boundingSphere) : undefined,
+                modelMatrix : (typeof mesh.modelMatrix !== 'undefined') ? Matrix4.clone(mesh.modelMatrix) : undefined,
+                pickData : mesh.pickData
             });
         }
 

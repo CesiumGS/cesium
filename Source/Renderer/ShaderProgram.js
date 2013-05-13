@@ -2516,7 +2516,7 @@ define([
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);
 
-        if (attributeLocations) {
+        if (typeof attributeLocations !== 'undefined') {
             for ( var attribute in attributeLocations) {
                 if (attributeLocations.hasOwnProperty(attribute)) {
                     gl.bindAttribLocation(program, attributeLocations[attribute], attribute);
