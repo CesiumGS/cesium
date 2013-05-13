@@ -67,8 +67,7 @@ define([
         this._commandLists = new CommandLists();
     };
 
-    function addPickColorAttribute(primitive, context) {
-        var geometries = primitive.geometries;
+    function addPickColorAttribute(primitive, geometries, context) {
         var length = geometries.length;
         var i;
 
@@ -109,12 +108,10 @@ define([
         }
     }
 
-    function processGeometry(primitive, context) {
-        var geometries = primitive.geometries;
-
+    function processGeometry(primitive, geometries, context) {
         // Add pickColor attribute if any geometries are pickable
         if (Geometry.isPickable(geometries)) {
-            addPickColorAttribute(primitive, context);
+            addPickColorAttribute(primitive, geometries, context);
         }
 
         // Unify to world coordinates before combining.
@@ -136,12 +133,13 @@ define([
      * @private
      */
     Primitive.prototype.update = function(context, frameState, commandList) {
-        if (!this.show || (frameState.mode !== SceneMode.SCENE3D)) {
+        if (!this.show ||
+            (frameState.mode !== SceneMode.SCENE3D) ||
+            (typeof this.geometries === 'undefined') ||
+            (typeof this.appearance === 'undefined')) {
 // TODO: support Columbus view and 2D
             return;
         }
-
-// TODO: throw if geometries and appearance are not defined
 
         var colorCommands = this._commandLists.colorList;
         var pickCommands = this._commandLists.pickList;
@@ -149,18 +147,17 @@ define([
         var i;
 
         if (typeof this._sp === 'undefined') {
-            var pickable = Geometry.isPickable(this.geometries);
-
-            var geometry = processGeometry(this, context);
+            var geometries = (this.geometries instanceof Array) ? this.geometries : [this.geometries];
+            var geometry = processGeometry(this, geometries, context);
             // Break into multiple geometries to fit within unsigned short indices if needed
-            var geometries = GeometryFilters.fitToUnsignedShortIndices(geometry);
+            var finalGeometries = GeometryFilters.fitToUnsignedShortIndices(geometry);
             var attributeIndices = GeometryFilters.createAttributeIndices(geometry);
 
             var va = [];
-            length = geometries.length;
+            length = finalGeometries.length;
             for (i = 0; i < length; ++i) {
                 va.push(context.createVertexArrayFromMesh({
-                    mesh : geometries[i],
+                    mesh : finalGeometries[i],
                     attributeIndices : attributeIndices,
                     bufferUsage : BufferUsage.STATIC_DRAW,
                     vertexLayout : VertexLayout.INTERLEAVED
@@ -170,6 +167,7 @@ define([
             var appearance = this.appearance;
             var vs = appearance.vertexShaderSource;
             var fs = appearance.getFragmentShaderSource();
+            var pickable = Geometry.isPickable(geometries);
 
             this._va = va;
 // TODO: recompile on material change.

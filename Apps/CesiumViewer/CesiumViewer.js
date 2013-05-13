@@ -127,7 +127,7 @@ define([
             pickData : 'mesh4'
         });
 
-        var primitive2 = new Primitive([mesh4], appearance);
+        var primitive2 = new Primitive(mesh4, appearance);
         widget.scene.getPrimitives().add(primitive2);
 
 
