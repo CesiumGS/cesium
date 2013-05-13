@@ -331,10 +331,10 @@ define([
         size.y = sunSize;
 
         var scissorRectangle = scissorTestBoundingRectangle;
-        scissorRectangle.x = sunPositionWC.x - size.x * 0.5;
-        scissorRectangle.y = sunPositionWC.y - size.y * 0.5;
-        scissorRectangle.width = size.x;
-        scissorRectangle.height = size.y;
+        scissorRectangle.x = Math.max(sunPositionWC.x - size.x * 0.5, 0.0);
+        scissorRectangle.y = Math.max(sunPositionWC.y - size.y * 0.5, 0.0);
+        scissorRectangle.width = Math.min(size.x, width);
+        scissorRectangle.height = Math.min(size.y, height);
 
         this._blendCommand.renderState = context.createRenderState({
             viewport : viewport,
@@ -360,10 +360,10 @@ define([
         size.x *= downSampleWidth / width;
         size.y *= downSampleHeight / height;
 
-        scissorRectangle.x = sunPositionWC.x - size.x * 0.5;
-        scissorRectangle.y = sunPositionWC.y - size.y * 0.5;
-        scissorRectangle.width = size.x;
-        scissorRectangle.height = size.y;
+        scissorRectangle.x = Math.max(sunPositionWC.x - size.x * 0.5, 0.0);
+        scissorRectangle.y = Math.max(sunPositionWC.y - size.y * 0.5, 0.0);
+        scissorRectangle.width = Math.min(size.x, width);
+        scissorRectangle.height = Math.min(size.y, height);
 
         var renderState = context.createRenderState({
             viewport : viewport,
