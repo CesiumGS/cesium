@@ -580,50 +580,6 @@ define([
         return mesh;
     };
 
-    function findAttributesInAllMeshes(meshes) {
-        var length = meshes.length;
-
-        var attributesInAllMeshes = {};
-
-        var attributes0 = meshes[0].attributes;
-        var name;
-
-        for (name in attributes0) {
-            if (attributes0.hasOwnProperty(name)) {
-                var attribute = attributes0[name];
-                var numberOfComponents = attribute.values.length;
-                var inAllMeshes = true;
-
-                // Does this same attribute exist in all meshes?
-                for (var i = 1; i < length; ++i) {
-                    var otherAttribute = meshes[i].attributes[name];
-
-                    if ((typeof otherAttribute === 'undefined') ||
-                        (attribute.componentDatatype !== otherAttribute.componentDatatype) ||
-                        (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
-                        (attribute.normalize !== otherAttribute.normalize)) {
-
-                        inAllMeshes = false;
-                        break;
-                    }
-
-                    numberOfComponents += otherAttribute.values.length;
-                }
-
-                if (inAllMeshes) {
-                    attributesInAllMeshes[name] = new GeometryAttribute({
-                        componentDatatype : attribute.componentDatatype,
-                        componentsPerAttribute : attribute.componentsPerAttribute,
-                        normalize : attribute.normalize,
-                        values : attribute.componentDatatype.createTypedArray(numberOfComponents)
-                    });
-                }
-            }
-        }
-
-        return attributesInAllMeshes;
-    }
-
     var scratch = new Cartesian3();
 
     function transformPoint(matrix, attribute) {
@@ -697,6 +653,50 @@ define([
 
         return mesh;
     };
+
+    function findAttributesInAllMeshes(meshes) {
+        var length = meshes.length;
+
+        var attributesInAllMeshes = {};
+
+        var attributes0 = meshes[0].attributes;
+        var name;
+
+        for (name in attributes0) {
+            if (attributes0.hasOwnProperty(name)) {
+                var attribute = attributes0[name];
+                var numberOfComponents = attribute.values.length;
+                var inAllMeshes = true;
+
+                // Does this same attribute exist in all meshes?
+                for (var i = 1; i < length; ++i) {
+                    var otherAttribute = meshes[i].attributes[name];
+
+                    if ((typeof otherAttribute === 'undefined') ||
+                        (attribute.componentDatatype !== otherAttribute.componentDatatype) ||
+                        (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
+                        (attribute.normalize !== otherAttribute.normalize)) {
+
+                        inAllMeshes = false;
+                        break;
+                    }
+
+                    numberOfComponents += otherAttribute.values.length;
+                }
+
+                if (inAllMeshes) {
+                    attributesInAllMeshes[name] = new GeometryAttribute({
+                        componentDatatype : attribute.componentDatatype,
+                        componentsPerAttribute : attribute.componentsPerAttribute,
+                        normalize : attribute.normalize,
+                        values : attribute.componentDatatype.createTypedArray(numberOfComponents)
+                    });
+                }
+            }
+        }
+
+        return attributesInAllMeshes;
+    }
 
     /**
      * DOC_TBA
