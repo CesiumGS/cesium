@@ -14,6 +14,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
+        '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/PixelFormat',
         '../Renderer/RenderbufferFormat',
@@ -37,6 +38,7 @@ define([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        PassState,
         PixelDatatype,
         PixelFormat,
         RenderbufferFormat,
@@ -62,6 +64,18 @@ define([
         this._blurYCommand = undefined;
         this._blendCommand = undefined;
         this._fullScreenCommand = undefined;
+
+        this._downSamplePassState = new PassState();
+        this._downSamplePassState.scissorTest = {
+            enable : true,
+            rectangle : new BoundingRectangle()
+        };
+
+        this._upSamplePassState = new PassState();
+        this._upSamplePassState.scissorTest = {
+            enabled : true,
+            rectangle : new BoundingRectangle()
+        };
     };
 
     SunPostProcess.prototype.clear = function(context, color) {
@@ -75,12 +89,12 @@ define([
     };
 
     SunPostProcess.prototype.execute = function(context) {
-        this._downSampleCommand.execute(context);
-        this._brightPassCommand.execute(context);
-        this._blurXCommand.execute(context);
-        this._blurYCommand.execute(context);
+        this._downSampleCommand.execute(context, this._downSamplePassState);
+        this._brightPassCommand.execute(context, this._downSamplePassState);
+        this._blurXCommand.execute(context, this._downSamplePassState);
+        this._blurYCommand.execute(context, this._downSamplePassState);
         this._fullScreenCommand.execute(context);
-        this._blendCommand.execute(context);
+        this._blendCommand.execute(context, this._upSamplePassState);
     };
 
     var attributeIndices = {
@@ -133,7 +147,7 @@ define([
     }
 
     var viewportBoundingRectangle  = new BoundingRectangle();
-    var scissorTestBoundingRectangle = new BoundingRectangle();
+    var downSampleViewportBoundingRectangle = new BoundingRectangle();
     var sunPositionECScratch = new Cartesian4();
     var sunPositionWCScratch = new Cartesian2();
     var sizeScratch = new Cartesian2();
@@ -234,12 +248,19 @@ define([
             fullScreenCommand.vertexArray = vertexArray;
             fullScreenCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeIndices);
             fullScreenCommand.uniformMap = {};
-            fullScreenCommand.renderState = context.createRenderState();
         }
 
         var downSampleWidth = Math.pow(2.0, Math.ceil(Math.log(width) / Math.log(2)) - 2.0);
         var downSampleHeight = Math.pow(2.0, Math.ceil(Math.log(height) / Math.log(2)) - 2.0);
         var downSampleSize = Math.max(downSampleWidth, downSampleHeight);
+
+        var viewport = viewportBoundingRectangle;
+        viewport.width = width;
+        viewport.height = height;
+
+        var downSampleViewport = downSampleViewportBoundingRectangle;
+        downSampleViewport.width = downSampleSize;
+        downSampleViewport.height = downSampleSize;
 
         var fbo = this._fbo;
         var colorTexture = fbo.getColorTexture();
@@ -273,13 +294,20 @@ define([
                 height : downSampleSize
             }));
 
+            var downSampleRenderState = context.createRenderState({
+                viewport : downSampleViewport
+            });
+            var upSampleRenderState = context.createRenderState();
+
             this._downSampleCommand.uniformMap.u_texture = function() {
                 return fbo.getColorTexture();
             };
+            this._downSampleCommand.renderState = downSampleRenderState;
 
             this._brightPassCommand.uniformMap.u_texture = function() {
                 return that._downSampleFBO1.getColorTexture();
             };
+            this._brightPassCommand.renderState = downSampleRenderState;
 
             this._blurXCommand.uniformMap.u_texture = function() {
                 return that._downSampleFBO2.getColorTexture();
@@ -287,6 +315,7 @@ define([
             this._blurXCommand.uniformMap.u_step = function() {
                 return new Cartesian2(1.0 / downSampleSize, 1.0 / downSampleSize);
             };
+            this._blurXCommand.renderState = downSampleRenderState;
 
             this._blurYCommand.uniformMap.u_texture = function() {
                 return that._downSampleFBO1.getColorTexture();
@@ -294,6 +323,7 @@ define([
             this._blurYCommand.uniformMap.u_step = function() {
                 return new Cartesian2(1.0 / downSampleSize, 1.0 / downSampleSize);
             };
+            this._blurYCommand.renderState = downSampleRenderState;
 
             this._blendCommand.uniformMap.u_texture0 = function() {
                 return fbo.getColorTexture();
@@ -301,10 +331,12 @@ define([
             this._blendCommand.uniformMap.u_texture1 = function() {
                 return that._downSampleFBO2.getColorTexture();
             };
+            this._blendCommand.renderState = upSampleRenderState;
 
             this._fullScreenCommand.uniformMap.u_texture = function() {
                 return fbo.getColorTexture();
             };
+            this._fullScreenCommand.renderState = upSampleRenderState;
         }
 
         var us = context.getUniformState();
@@ -314,10 +346,6 @@ define([
         var projectionMatrix = us.getProjection();
 
         // create up sampled render state
-        var viewport = viewportBoundingRectangle;
-        viewport.width = width;
-        viewport.height = height;
-
         var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, postProcessMatrix4Scratch);
         var sunPositionEC = Matrix4.multiplyByPoint(viewMatrix, sunPosition, sunPositionECScratch);
         var sunPositionWC = Transforms.pointToWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
@@ -330,19 +358,12 @@ define([
         size.x = sunSize;
         size.y = sunSize;
 
-        var scissorRectangle = scissorTestBoundingRectangle;
+        var scissorRectangle = this._upSamplePassState.scissorTest.rectangle;
         scissorRectangle.x = Math.max(sunPositionWC.x - size.x * 0.5, 0.0);
         scissorRectangle.y = Math.max(sunPositionWC.y - size.y * 0.5, 0.0);
         scissorRectangle.width = Math.min(size.x, width);
         scissorRectangle.height = Math.min(size.y, height);
 
-        this._blendCommand.renderState = context.createRenderState({
-            viewport : viewport,
-            scissorTest : {
-                enabled : true,
-                rectangle : scissorRectangle
-            }
-        });
         this._blendCommand.uniformMap.u_center = function() {
             return sunPositionWC;
         };
@@ -351,31 +372,20 @@ define([
         };
 
         // create down sampled render state
-        viewport.width = downSampleSize;
-        viewport.height = downSampleSize;
-
-        viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, postProcessMatrix4Scratch);
+        viewportTransformation = Matrix4.computeViewportTransformation(downSampleViewport, 0.0, 1.0, postProcessMatrix4Scratch);
         sunPositionWC = Transforms.pointToWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
 
         size.x *= downSampleWidth / width;
         size.y *= downSampleHeight / height;
 
+        scissorRectangle = this._downSamplePassState.scissorTest.rectangle;
         scissorRectangle.x = Math.max(sunPositionWC.x - size.x * 0.5, 0.0);
         scissorRectangle.y = Math.max(sunPositionWC.y - size.y * 0.5, 0.0);
         scissorRectangle.width = Math.min(size.x, width);
         scissorRectangle.height = Math.min(size.y, height);
 
-        var renderState = context.createRenderState({
-            viewport : viewport,
-            scissorTest : {
-                enabled : true,
-                rectangle : scissorRectangle
-            }
-        });
-        this._downSampleCommand.renderState = renderState;
-        this._brightPassCommand.renderState = renderState;
-        this._blurXCommand.renderState = renderState;
-        this._blurYCommand.renderState = renderState;
+        this._downSamplePassState.context = context;
+        this._upSamplePassState.context = context;
 
         return this._fbo;
     };
