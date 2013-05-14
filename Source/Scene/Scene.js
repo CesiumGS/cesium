@@ -408,7 +408,7 @@ define([
         }
     }
 
-    function isSunVisible(command, frameState, cullingVolume) {
+    function isSunVisible(command, frameState) {
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
 
@@ -422,7 +422,7 @@ define([
         return ((typeof command !== 'undefined') &&
                  ((typeof command.boundingVolume === 'undefined') ||
                   !command.cull ||
-                  ((frameState.cullingVolume.getVisibility(command.boundingVolume) !== Intersect.OUTSIDE) &&
+                  ((cullingVolume.getVisibility(command.boundingVolume) !== Intersect.OUTSIDE) &&
                    (typeof occluder === 'undefined' || occluder.isBoundingSphereVisible(command.boundingVolume)))));
     }
 
@@ -437,8 +437,6 @@ define([
         var skyAtmosphereCommand = (frameState.passes.color && typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.color && typeof scene.sun !== 'undefined') ? scene.sun.update(context, frameState) : undefined;
         var sunVisible = isSunVisible(sunCommand, frameState);
-
-console.log(sunVisible);
 
         if (sunVisible) {
             passState.framebuffer = scene._sunPostProcess.update(context);
@@ -466,7 +464,7 @@ console.log(sunVisible);
             skyAtmosphereCommand.execute(context, passState);
         }
 
-        if (typeof sunCommand !== 'undefined') {
+        if (typeof sunCommand !== 'undefined' && sunVisible) {
             sunCommand.execute(context, passState);
         }
 
