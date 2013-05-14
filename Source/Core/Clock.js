@@ -145,22 +145,17 @@ define([
      * regardless of other settings.
      * @returns {JulianDate} The new value of the <code>currentTime</code> property.
      */
-    Clock.prototype.tick = function(secondsToTick) {
+    Clock.prototype.tick = function() {
         var currentSystemTime = Date.now();
+        var currentTime = this.currentTime;
+        var startTime = this.startTime;
+        var stopTime = this.stopTime;
+        var multiplier = this.multiplier;
 
-        var currentTime;
-        if (this.clockStep === ClockStep.SYSTEM_CLOCK) {
-            currentTime = new JulianDate();
-        } else {
-            var startTime = this.startTime;
-            var stopTime = this.stopTime;
-            var multiplier = this.multiplier;
-            var shouldAnimate = this.shouldAnimate;
-            currentTime = this.currentTime;
-
-            if (typeof secondsToTick !== 'undefined') {
-                currentTime = currentTime.addSeconds(secondsToTick);
-            } else if (shouldAnimate) {
+        if (this.shouldAnimate) {
+            if (this.clockStep === ClockStep.SYSTEM_CLOCK) {
+                currentTime = new JulianDate();
+            } else {
                 if (this.clockStep === ClockStep.TICK_DEPENDENT) {
                     currentTime = currentTime.addSeconds(multiplier);
                 } else {
@@ -168,7 +163,9 @@ define([
                     currentTime = currentTime.addSeconds(multiplier * (milliseconds / 1000.0));
                 }
             }
+        }
 
+        if (this.clockStep !== ClockStep.SYSTEM_CLOCK) {
             if (this.clockRange === ClockRange.CLAMPED) {
                 if (currentTime.lessThan(startTime)) {
                     currentTime = startTime;
