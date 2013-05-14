@@ -39,6 +39,15 @@ define([
      */
     var ExtentTessellator = {};
 
+    function isValidLatLon(latitude, longitude) {
+        if (latitude < -CesiumMath.PI_OVER_TWO || latitude > CesiumMath.PI_OVER_TWO) {
+            return false;
+        }
+        if (longitude > CesiumMath.PI || longitude < -CesiumMath.PI) {
+            return false;
+        }
+        return true;
+    }
     /**
      * Compute vertices from a cartographic extent.  This function is different from
      * {@link ExtentTessellator#compute} and {@link ExtentTessellator#computeBuffers}
@@ -48,8 +57,6 @@ define([
      * @param {Number} description.rotation The rotation of the extent in radians.
      * @param {Number} description.width The number of vertices in the longitude direction.
      * @param {Number} description.height The number of vertices in the latitude direction.
-     * @param {Number} description.granularityX The distance, in radians, between each longitude.
-     * @param {Number} description.granularityY The distance, in radians, between each latitude.
      * @param {Number} description.surfaceHeight The height from the surface of the ellipsoid.
      * @param {Boolean} description.generateTextureCoordinates Whether to generate texture coordinates.
      * @param {Boolean} description.interleaveTextureCoordinates Whether to interleave the texture coordinates into the vertex array.
@@ -67,6 +74,7 @@ define([
     ExtentTessellator.computeVertices = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var extent = description.extent;
+        extent.validate();
         var rotation = description.rotation;
         var surfaceHeight = description.surfaceHeight;
         var width = description.width;
@@ -99,8 +107,18 @@ define([
         var textureCoordinatesIndex = 0;
 
         nwCartographic = extent.getNorthwest();
+        var latitude, longitude;
 
-        if (typeof rotation !== 'undefined') {
+        if (typeof rotation === 'undefined') {
+            rotation = 0;
+        }
+
+        var granYCos = granularityY * cos(rotation);
+        var granYSin = granularityY * sin(rotation);
+        var granXCos = granularityX * cos(rotation);
+        var granXSin = granularityX * sin(rotation);
+
+        if (rotation !== 0) {
             proj.project(extent.getNorthwest(), nw);
             proj.project(extent.getCenter(), center);
             nw.subtract(center, nw);
@@ -108,26 +126,30 @@ define([
             rotationMatrix.multiplyByVector(nw, nw);
             nw.add(center, nw);
             nwCartographic = proj.unproject(nw);
-        } else {
-            rotation = 0;
+            latitude = nwCartographic.latitude;
+            longitude = nwCartographic.longitude;
+            if (!isValidLatLon(latitude, longitude)) { //NW corner
+                return;
+            }
+            if (!isValidLatLon(latitude + (width-1)*granXSin, longitude + (width-1)*granXCos)) { //NE corner
+                return;
+            }
+            if (!isValidLatLon(latitude - granYCos*(height-1), longitude + (height-1)*granYSin)) { //SW corner
+                return;
+            }
+            if (!isValidLatLon(latitude - granYCos*(height-1) + (width-1)*granXSin, longitude + (height-1)*granYSin + (width-1)*granXCos)) { //SE corner
+                return;
+            }
         }
 
         for ( var row = 0; row < height; ++row) {
             for ( var col = 0; col < width; ++col) {
-                var latitude = nwCartographic.latitude - granularityY * row * cos(rotation) + col * granularityX * sin(rotation);
+                latitude = nwCartographic.latitude - granYCos*row + col*granXSin;
                 var cosLatitude = cos(latitude);
                 var nZ = sin(latitude);
                 var kZ = radiiSquaredZ * nZ;
 
-                var longitude = nwCartographic.longitude + row * granularityY * sin(rotation) + col * granularityX * cos(rotation);
-                if (latitude < -CesiumMath.PI_OVER_TWO || latitude > CesiumMath.PI_OVER_TWO) {
-                    indices.length = 0;
-                    return;
-                }
-                if (longitude > CesiumMath.PI || longitude < -CesiumMath.PI) {
-                    indices.length = 0;
-                    return;
-                }
+                longitude = nwCartographic.longitude + row*granYSin + col*granXCos;
 
                 var nX = cosLatitude * cos(longitude);
                 var nY = cosLatitude * sin(longitude);
@@ -146,12 +168,8 @@ define([
                 vertices[vertexArrayIndex++] = rSurfaceZ + nZ * surfaceHeight - relativeToCenter.z;
 
                 if (generateTextureCoordinates) {
-                    var geographicU = (longitude - extent.west) * lonScalar;
-                    var geographicV = (latitude - extent.south) * latScalar;
-
-                    var v = geographicV;
-
-                    var u = geographicU;
+                    var u = (longitude - extent.west) * lonScalar;
+                    var v = (latitude - extent.south) * latScalar;
 
                     if (interleaveTextureCoordinates) {
                         vertices[vertexArrayIndex++] = u;
