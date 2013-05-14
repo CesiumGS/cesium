@@ -35,6 +35,15 @@ defineSuite([
         expect(m.indexLists[0].values.length).toEqual(8 * 3);
     });
 
+    it('compute returns undefined if rotation makes extent invalid', function() {
+        expect(typeof ExtentTessellator.compute({
+            extent : new Extent(-CesiumMath.PI, -1.0, 0.0, 1.0),
+            rotation: CesiumMath.PI_OVER_TWO,
+            granularity : 1.0,
+            generateTextureCoordinates : true
+        }) === 'undefined').toEqual(true);
+    });
+
     it('computeBuffers 0', function() {
         var buffers = ExtentTessellator.computeBuffers({
             extent : new Extent(-2.0, -1.0, 0.0, 1.0),
@@ -135,7 +144,7 @@ defineSuite([
         expect(new Cartesian3(description.vertices[length-3], description.vertices[length-2], description.vertices[length-1])).toEqualEpsilon(unrotatedNWCorner, CesiumMath.EPSILON8);
     });
 
-    it('compute vertices has empty indices and vertices if rotated extent crosses north pole', function() {
+    it('compute vertices has empty indices and vertices if rotated extent crosses north pole (NE Corner)', function() {
         var extent = new Extent(-CesiumMath.PI_OVER_TWO, 1, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
         var description = {
                 extent: extent,
@@ -153,11 +162,47 @@ defineSuite([
         expect(description.indices.length).toEqual(0);
     });
 
-    it('compute vertices has empty indices and vertices if rotated extent crosses IDL', function() {
+    it('compute vertices has empty indices and vertices if rotated extent crosses south pole (NW Corner)', function() {
+        var extent = new Extent(-CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO, -1);
+        var description = {
+                extent : new Extent(-CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO, -1),
+                rotation: CesiumMath.PI_OVER_TWO,
+                width: Math.ceil(extent.east - extent.west) + 1,
+                height: Math.ceil(extent.north - extent.south) + 1,
+                radiiSquared: Ellipsoid.WGS84.getRadiiSquared(),
+                relativeToCenter: Cartesian3.ZERO,
+                surfaceHeight: 0,
+                vertices: [],
+                indices: []
+        };
+        ExtentTessellator.computeVertices(description);
+        expect(description.vertices.length).toEqual(0);
+        expect(description.indices.length).toEqual(0);
+    });
+
+    it('compute vertices has empty indices and vertices if rotated extent crosses IDL (SW Corner)', function() {
         var extent = new Extent(-CesiumMath.PI, 0, -3, 0.3);
         var description = {
                 extent: extent,
-                rotation: CesiumMath.PI_OVER_TWO,
+                rotation: -CesiumMath.PI_OVER_TWO,
+                width: Math.ceil(extent.east - extent.west) + 1,
+                height: Math.ceil(extent.north - extent.south) + 1,
+                radiiSquared: Ellipsoid.WGS84.getRadiiSquared(),
+                relativeToCenter: Cartesian3.ZERO,
+                surfaceHeight: 0,
+                vertices: [],
+                indices: []
+        };
+        ExtentTessellator.computeVertices(description);
+        expect(description.vertices.length).toEqual(0);
+        expect(description.indices.length).toEqual(0);
+    });
+
+    it('compute vertices has empty indices and vertices if rotated extent crosses IDL (SE Corner)', function() {
+        var extent = new Extent(3, 0, CesiumMath.PI, 0.3);
+        var description = {
+                extent: extent,
+                rotation: 0.1,
                 width: Math.ceil(extent.east - extent.west) + 1,
                 height: Math.ceil(extent.north - extent.south) + 1,
                 radiiSquared: Ellipsoid.WGS84.getRadiiSquared(),

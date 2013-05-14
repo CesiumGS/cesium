@@ -68,6 +68,7 @@ define([
      */
     var nw = new Cartesian3();
     var nwCartographic = new Cartographic();
+    var centerCartographic = new Cartographic();
     var center = new Cartesian3();
     var rotationMatrix = new Matrix2();
     var proj = new GeographicProjection();
@@ -106,7 +107,8 @@ define([
         var vertexArrayIndex = 0;
         var textureCoordinatesIndex = 0;
 
-        nwCartographic = extent.getNorthwest();
+        extent.getNorthwest(nwCartographic);
+        extent.getCenter(centerCartographic);
         var latitude, longitude;
 
         if (typeof rotation === 'undefined') {
@@ -119,13 +121,13 @@ define([
         var granXSin = granularityX * sin(rotation);
 
         if (rotation !== 0) {
-            proj.project(extent.getNorthwest(), nw);
-            proj.project(extent.getCenter(), center);
+            proj.project(nwCartographic, nw);
+            proj.project(centerCartographic, center);
             nw.subtract(center, nw);
-            rotationMatrix = Matrix2.fromRotation(rotation);
+            Matrix2.fromRotation(rotation, rotationMatrix);
             rotationMatrix.multiplyByVector(nw, nw);
             nw.add(center, nw);
-            nwCartographic = proj.unproject(nw);
+            proj.unproject(nw, nwCartographic);
             latitude = nwCartographic.latitude;
             longitude = nwCartographic.longitude;
             if (!isValidLatLon(latitude, longitude)) { //NW corner
