@@ -77,7 +77,7 @@ define([
             rectangle : new BoundingRectangle()
         };
 
-        this._uCenter = undefined;
+        this._uCenter = new Cartesian2();
         this._uRadius = undefined;
     };
 
@@ -374,7 +374,7 @@ define([
         scissorRectangle.width = Math.min(size.x, width);
         scissorRectangle.height = Math.min(size.y, height);
 
-        this._uCenter = sunPositionWC;
+        Cartesian2.clone(sunPositionWC, this._uCenter);
         this._uRadius = Math.max(size.x, size.y) * 0.5;
 
         // create down sampled render state
