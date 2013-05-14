@@ -93,7 +93,6 @@ define([
 
         this._commandList = [];
         this._frustumCommandsList = [];
-        this._entireFrustumCommands = {};
 
         this._clearColorCommand = new ClearCommand();
         this._clearColorCommand.color = new Color();
@@ -115,15 +114,6 @@ define([
         this.skyBox = undefined;
 
         /**
-         * The {@link Sun}.
-         *
-         * @type Sun
-         *
-         * @default undefined
-         */
-        this.sun = undefined;
-
-        /**
          * The sky atmosphere drawn around the globe.
          *
          * @type SkyAtmosphere
@@ -131,6 +121,15 @@ define([
          * @default undefined
          */
         this.skyAtmosphere = undefined;
+
+        /**
+         * The {@link Sun}.
+         *
+         * @type Sun
+         *
+         * @default undefined
+         */
+        this.sun = undefined;
 
         /**
          * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
@@ -356,31 +355,13 @@ define([
         }
         cullingVolume = scratchCullingVolume;
 
-        var command;
-        var boundingVolume;
-
-        var entireFrustumCommands = scene._entireFrustumCommands;
-        for (var commandName in entireFrustumCommands) {
-            if (entireFrustumCommands.hasOwnProperty(commandName)) {
-                command = entireFrustumCommands[commandName];
-                if (typeof command !== 'undefined') {
-                    boundingVolume = command.boundingVolume;
-                    if (typeof boundingVolume !== 'undefined' && command.cull &&
-                            ((cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) ||
-                            (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(boundingVolume)))) {
-                        entireFrustumCommands[commandName] = undefined;
-                    }
-                }
-            }
-        }
-
         var length = commandLists.length;
         for (var i = 0; i < length; ++i) {
             var commandList = commandLists[i][listName];
             var commandListLength = commandList.length;
             for (var j = 0; j < commandListLength; ++j) {
-                command = commandList[j];
-                boundingVolume = command.boundingVolume;
+                var command = commandList[j];
+                var boundingVolume = command.boundingVolume;
                 if (typeof boundingVolume !== 'undefined') {
                     var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
                     var transformedBV = boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
@@ -427,21 +408,45 @@ define([
         }
     }
 
+    function isSunVisible(command, frameState) {
+        var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
+        var cullingVolume = frameState.cullingVolume;
+
+        // get user culling volume minus the far plane.
+        var planes = scratchCullingVolume.planes;
+        for (var k = 0; k < 5; ++k) {
+            planes[k] = cullingVolume.planes[k];
+        }
+        cullingVolume = scratchCullingVolume;
+
+        return ((typeof command !== 'undefined') &&
+                 ((typeof command.boundingVolume === 'undefined') ||
+                  !command.cull ||
+                  ((cullingVolume.getVisibility(command.boundingVolume) !== Intersect.OUTSIDE) &&
+                   (typeof occluder === 'undefined' || occluder.isBoundingSphereVisible(command.boundingVolume)))));
+    }
+
     function executeCommands(scene, passState) {
+        var frameState = scene._frameState;
         var camera = scene._camera;
         var frustum = camera.frustum.clone();
         var context = scene._context;
         var us = context.getUniformState();
 
-        var skyBoxCommand = scene._entireFrustumCommands.skyBoxCommand;
-        var skyAtmosphereCommand = scene._entireFrustumCommands.skyAtmosphereCommand;
-        var sunCommand = scene._entireFrustumCommands.sunCommand;
+        var skyBoxCommand = (frameState.passes.color && typeof scene.skyBox !== 'undefined') ? scene.skyBox.update(context, frameState) : undefined;
+        var skyAtmosphereCommand = (frameState.passes.color && typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, frameState) : undefined;
+        var sunCommand = (frameState.passes.color && typeof scene.sun !== 'undefined') ? scene.sun.update(context, frameState) : undefined;
+        var sunVisible = isSunVisible(sunCommand, frameState);
+
+        if (sunVisible) {
+            passState.framebuffer = scene._sunPostProcess.update(context);
+        }
 
         var clear = scene._clearColorCommand;
         Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.color);
         clear.execute(context, passState);
 
-        if (typeof sunCommand !== 'undefined') {
+        if (sunVisible) {
             scene._sunPostProcess.clear(context, scene.backgroundColor);
         }
 
@@ -459,7 +464,7 @@ define([
             skyAtmosphereCommand.execute(context, passState);
         }
 
-        if (typeof sunCommand !== 'undefined') {
+        if (typeof sunCommand !== 'undefined' && sunVisible) {
             sunCommand.execute(context, passState);
         }
 
@@ -484,8 +489,9 @@ define([
             }
         }
 
-        if (typeof sunCommand !== 'undefined') {
+        if (sunVisible) {
             scene._sunPostProcess.execute(context);
+            passState.framebuffer = undefined;
         }
     }
 
@@ -538,9 +544,6 @@ define([
         us.update(frameState);
 
         var context = this._context;
-        this._entireFrustumCommands.skyBoxCommand = typeof this.skyBox !== 'undefined' ? this.skyBox.update(context, frameState) : undefined;
-        this._entireFrustumCommands.sunCommand = typeof this.sun !== 'undefined' ? this.sun.update(context, frameState) : undefined;
-        this._entireFrustumCommands.skyAtmosphereCommand = typeof this.skyAtmosphere !== 'undefined' ? this.skyAtmosphere.update(context, frameState) : undefined;
 
         this._commandList.length = 0;
         this._primitives.update(context, frameState, this._commandList);
@@ -548,14 +551,7 @@ define([
         createPotentiallyVisibleSet(this, 'colorList');
 
         var passState = this._passState;
-        if (typeof this.sun !== 'undefined' && typeof this._entireFrustumCommands.sunCommand !== 'undefined') {
-            passState.framebuffer = this._sunPostProcess.update(context);
-        } else {
-            passState.framebuffer = undefined;
-        }
         executeCommands(this, passState);
-
-        passState.framebuffer = undefined;
         executeOverlayCommands(this, passState);
     };
 
