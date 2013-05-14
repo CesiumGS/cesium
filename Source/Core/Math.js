@@ -161,6 +161,13 @@ define([
     CesiumMath.GRAVITATIONALPARAMETER = 3.986004418e14;
 
     /**
+     * Radius of the sun in meters: 6.995e8
+     * @constant
+     * @type Number
+     */
+    CesiumMath.SOLAR_RADIUS = 6.995e8;
+
+    /**
      * Returns the sign of the value; 1 if the value is positive, -1 if the value is
      * negative, or 0 if the value is 0.
      *
