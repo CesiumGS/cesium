@@ -7,7 +7,10 @@ Beta Releases
 ### b17 - 2013-06-03
 
 * Breaking changes:
-   * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.    
+   * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.
+   * Renamed `Widgets/Fullscreen` folder to `Widgets/FullscreenButton` along with associated objects/files.
+      * `FullscreenWidget` -> `FullscreenButton`
+      * `FullscreenViewModel` -> `FullscreenButtonViewModel`
 * Added `DrawCommand.cull` to avoid redundant visibility checks.
 * Added `czm_morphTime` automatic GLSL uniform.
 * Added support for floating-point textures.
@@ -16,6 +19,8 @@ Beta Releases
 * Fixed polygon crossing international date line for 2D and Columbus view
 * Added `computeHorizonCullingPoint`, `computeHorizonCullingPointFromVertices`, and `computeHorizonCullingPointFromExtent` methods to `EllipsoidalOccluder` and used them to build a more accurate horizon occlusion test for terrain rendering.
 * Added sun visualization. See `Sun` and `Scene.sun`.
+* Added a new `HomeButton` widget for returning to the default view of the current scene mode.
+* Added `Command.beforeExecute` and `Command.afterExecute` events to enable additional processing when a command is executed.
 
 ### b16 - 2013-05-01
 * Breaking changes:
