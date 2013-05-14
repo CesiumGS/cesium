@@ -76,6 +76,9 @@ define([
             enabled : true,
             rectangle : new BoundingRectangle()
         };
+
+        this._uCenter = undefined;
+        this._uRadius = undefined;
     };
 
     SunPostProcess.prototype.clear = function(context, color) {
@@ -157,6 +160,8 @@ define([
         var canvas = context.getCanvas();
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
+
+        var that = this;
 
         if (typeof this._fbo === 'undefined') {
             this._fbo = context.createFramebuffer();
@@ -241,7 +246,14 @@ define([
             additiveBlendCommand.primitiveType = primitiveType;
             additiveBlendCommand.vertexArray = vertexArray;
             additiveBlendCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, AdditiveBlend, attributeIndices);
-            additiveBlendCommand.uniformMap = {};
+            additiveBlendCommand.uniformMap = {
+                u_center : function() {
+                    return that._uCenter;
+                },
+                u_radius : function() {
+                    return that._uRadius;
+                }
+            };
 
             var fullScreenCommand = this._fullScreenCommand = new DrawCommand();
             fullScreenCommand.primitiveType = primitiveType;
@@ -265,8 +277,6 @@ define([
         var fbo = this._fbo;
         var colorTexture = fbo.getColorTexture();
         if (typeof colorTexture === 'undefined' || colorTexture.getWidth() !== width || colorTexture.getHeight() !== height) {
-            var that = this;
-
             fbo.setColorTexture(context.createTexture2D({
                 width : width,
                 height : height
@@ -364,12 +374,8 @@ define([
         scissorRectangle.width = Math.min(size.x, width);
         scissorRectangle.height = Math.min(size.y, height);
 
-        this._blendCommand.uniformMap.u_center = function() {
-            return sunPositionWC;
-        };
-        this._blendCommand.uniformMap.u_radius = function() {
-            return Math.max(size.x, size.y) * 0.5;
-        };
+        this._uCenter = sunPositionWC;
+        this._uRadius = Math.max(size.x, size.y) * 0.5;
 
         // create down sampled render state
         viewportTransformation = Matrix4.computeViewportTransformation(downSampleViewport, 0.0, 1.0, postProcessMatrix4Scratch);
