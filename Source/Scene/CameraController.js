@@ -786,7 +786,7 @@ define([
     var viewExtent3DNorthWest = new Cartesian3();
     var viewExtent3DSouthEast = new Cartesian3();
     var viewExtent3DCenter = new Cartesian3();
-    function viewExtent3D(camera, extent, ellipsoid) {
+    CameraController.prototype.extentCameraPosition3D = function(camera, extent, ellipsoid, result) {
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
@@ -817,12 +817,12 @@ define([
         Cartesian3.subtract(northEast, center, northEast);
         Cartesian3.subtract(southWest, center, southWest);
 
-        var direction = ellipsoid.geodeticSurfaceNormal(center, camera.direction);
+        var direction = ellipsoid.geodeticSurfaceNormal(center);
         Cartesian3.negate(direction, direction);
         Cartesian3.normalize(direction, direction);
-        var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, camera.right);
+        var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z);
         Cartesian3.normalize(right, right);
-        var up = Cartesian3.cross(right, direction, camera.up);
+        var up = Cartesian3.cross(right, direction);
 
         var height = Math.max(Math.abs(up.dot(northWest)), Math.abs(up.dot(southEast)), Math.abs(up.dot(northEast)), Math.abs(up.dot(southWest)));
         var width = Math.max(Math.abs(right.dot(northWest)), Math.abs(right.dot(southEast)), Math.abs(right.dot(northEast)), Math.abs(right.dot(southWest)));
@@ -833,14 +833,14 @@ define([
 
         var scalar = center.magnitude() + d;
         Cartesian3.normalize(center, center);
-        Cartesian3.multiplyByScalar(center, scalar, camera.position);
-    }
+        return {position: Cartesian3.multiplyByScalar(center, scalar, result), direction: direction, right: right, up: up};
+    };
 
     var viewExtentCVCartographic = new Cartographic();
     var viewExtentCVNorthEast = Cartesian4.UNIT_W.clone();
     var viewExtentCVSouthWest = Cartesian4.UNIT_W.clone();
     var viewExtentCVTransform = new Matrix4();
-    function viewExtentColumbusView(camera, extent, projection) {
+    CameraController.prototype.extentCameraPositionColumbusView = function(camera, extent, projection, result) {
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
@@ -867,20 +867,19 @@ define([
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
+        if (typeof result === 'undefined') {
+            result = new Cartesian3();
+        }
 
-        position = camera.position;
-        position.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
-        position.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
-        position.z = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
+        result.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
+        result.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
+        result.z = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
 
-        var direction = Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
-        Cartesian3.negate(direction, direction);
-        var right = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
-        Cartesian3.cross(right, direction, camera.up);
-    }
+        return result;
+    };
 
     var viewExtent2DCartographic = new Cartographic();
-    function viewExtent2D(camera, extent, projection) {
+    CameraController.prototype.extentCameraPosition2D = function(camera, extent, projection, result) {
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
@@ -908,18 +907,18 @@ define([
             right = heightRatio;
         }
 
-        camera.frustum.right = right;
-        camera.frustum.left = -right;
-        camera.frustum.top = top;
-        camera.frustum.bottom = -top;
+        height = Math.max(2.0 * right, 2.0 * top);
 
-        camera.position.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
-        camera.position.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
+        var position = new Cartesian3();
+        position.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
+        position.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
 
-        //Orient the camera north.
-        var cameraRight = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
-        Cartesian3.cross(cameraRight, camera.direction, camera.up);
-    }
+        cart = projection.unproject(position);
+        cart.height = height;
+        result = projection.project(cart, result);
+
+        return result;
+    };
 
     /**
      * View an extent on an ellipsoid or map.
@@ -937,11 +936,28 @@ define([
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         if (this._mode === SceneMode.SCENE3D) {
-            viewExtent3D(this._camera, extent, ellipsoid);
+            var r = this.extentCameraPosition3D(this._camera, extent, ellipsoid, this._camera.position);
+            this._camera.direction = r.direction;
+            this._camera.up = r.up;
+            this._camera.right = r.right;
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
-            viewExtentColumbusView(this._camera, extent, this._projection);
+            this.extentCameraPositionColumbusView(this._camera, extent, this._projection, this._camera.position);
+            var direction = Cartesian3.clone(Cartesian3.UNIT_Z, this._camera.direction);
+            Cartesian3.negate(direction, direction);
+            var right = Cartesian3.clone(Cartesian3.UNIT_X, this._camera.right);
+            Cartesian3.cross(right, direction, this._camera.up);
         } else if (this._mode === SceneMode.SCENE2D) {
-            viewExtent2D(this._camera, extent, this._projection);
+            this.extentCameraPosition2D(this._camera, extent, this._projection, this._camera.position);
+            var frustum = this._camera.frustum;
+            var ratio = frustum.top / frustum.right;
+            var incrementAmount = (this._camera.position.z - (frustum.right - frustum.left)) * 0.5;
+            frustum.right += incrementAmount;
+            frustum.left -= incrementAmount;
+            frustum.top = ratio * frustum.right;
+            frustum.bottom = -frustum.top;
+
+            var cameraRight = Cartesian3.clone(Cartesian3.UNIT_X, this._camera.right);
+            Cartesian3.cross(cameraRight, this._camera.direction, this._camera.up);
         }
     };
 

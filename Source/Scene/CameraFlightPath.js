@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/clone',
         '../Core/defaultValue',
@@ -10,6 +11,7 @@ define([
         '../Core/IntersectionTests',
         '../Core/Math',
         '../Core/Matrix3',
+        '../Core/Matrix4',
         '../Core/OrientationInterpolator',
         '../Core/Quaternion',
         '../Core/Ray',
@@ -19,6 +21,7 @@ define([
         '../ThirdParty/Tween'
     ], function(
         Cartesian3,
+        Cartesian4,
         Cartographic,
         clone,
         defaultValue,
@@ -28,6 +31,7 @@ define([
         IntersectionTests,
         CesiumMath,
         Matrix3,
+        Matrix4,
         OrientationInterpolator,
         Quaternion,
         Ray,
@@ -388,6 +392,21 @@ define([
         return update;
     }
 
+    function createNullAnimation(onComplete) {
+        return {
+            duration : 0,
+            easingFunction : Tween.Easing.Sinusoidal.InOut,
+            startValue : {
+                time : 0.0
+            },
+            stopValue : {
+                time : 0
+            },
+            onUpdate : undefined,
+            onComplete : onComplete
+        };
+    }
+
     /**
      * Creates an animation to fly the camera from it's current position to a position given by a Cartesian. All arguments should
      * be in the current camera reference frame.
@@ -405,7 +424,7 @@ define([
      * @exception {DeveloperError} description.destination is required.
      *
      * @see Scene#getFrameState
-     * @see Scene#getAnimationCollection
+     * @see Scene#getAnimation
      * @see CameraFlightPath#createAnimationCartographic
      */
     CameraFlightPath.createAnimation = function(frameState, description) {
@@ -420,6 +439,10 @@ define([
 
         if (typeof destination === 'undefined') {
             throw new DeveloperError('destination is required.');
+        }
+
+        if (frameState.mode === SceneMode.MORPHING) {
+            return createNullAnimation(description.onComplete);
         }
 
         var duration = defaultValue(description.duration, 3000.0);
@@ -453,7 +476,7 @@ define([
      * will happen in the camera's current reference frame.
      *
      * @param {FrameState} frameState The current frame state.
-     * @param {Cartesian3} description.destination The final position of the camera.
+     * @param {Cartographic} description.destination The final position of the camera.
      * @param {Cartesian3} [description.direction] The final direction of the camera. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
      * @param {Cartesian3} [description.up] The final up direction. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
      * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
@@ -465,8 +488,8 @@ define([
      * @exception {DeveloperError} description.destination is required.
      *
      * @see Scene#getFrameState
-     * @see Scene#getAnimationCollection
-     * @see CameraFlightPath#createAnimationCartographic
+     * @see Scene#getAnimation
+     * @see CameraFlightPath#createAnimation
      */
     CameraFlightPath.createAnimationCartographic = function(frameState, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
@@ -478,6 +501,10 @@ define([
 
         if (typeof destination === 'undefined') {
             throw new DeveloperError('description.destination is required.');
+        }
+
+        if (frameState.mode === SceneMode.MORPHING) {
+            return createNullAnimation(description.onComplete);
         }
 
         var end;
@@ -493,6 +520,39 @@ define([
         createAnimationDescription.destination = end;
         return this.createAnimation(frameState, createAnimationDescription);
     };
+
+    CameraFlightPath.createAnimationExtent = function(frameState, description) {
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
+        var extent = description.destination;
+        if (typeof frameState === 'undefined') {
+            throw new DeveloperError('frameState is required.');
+        }
+
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('description.destination is required.');
+        }
+
+        if (frameState.mode === SceneMode.MORPHING) {
+            return createNullAnimation(description.onComplete);
+        }
+
+        var mode = frameState.mode;
+        var createAnimationDescription = clone(description);
+        var cartographic;
+        var camera = frameState.camera;
+        var projection = frameState.scene2D.projection;
+        var ellipsoid = projection.getEllipsoid();
+        if (mode === SceneMode.SCENE3D) {
+            cartographic = ellipsoid.cartesianToCartographic(camera.controller.extentCameraPosition3D(camera, extent, ellipsoid).position);
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+            cartographic = projection.unproject(camera.controller.extentCameraPositionColumbusView(camera, extent, projection));
+        } else {
+            cartographic = projection.unproject(camera.controller.extentCameraPosition2D(camera, extent, projection));
+        }
+        createAnimationDescription.destination = cartographic;
+        return this.createAnimationCartographic(frameState, createAnimationDescription);
+
+  };
 
     return CameraFlightPath;
 });
