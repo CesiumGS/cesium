@@ -392,7 +392,7 @@
                 title: title,
                 docs: docs
             };
-            
+
             var path = outdir + '/' + filename,
                 html = view.render('container.tmpl', data),
                 titleLower = title.toLowerCase();
