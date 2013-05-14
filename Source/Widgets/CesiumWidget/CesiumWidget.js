@@ -125,8 +125,8 @@ define(['../../Core/buildModuleUrl',
             positiveZ : getDefaultSkyBoxUrl('pz'),
             negativeZ : getDefaultSkyBoxUrl('mz')
         });
-        scene.sun = new Sun();
         scene.skyAtmosphere = new SkyAtmosphere(_ellipsoid);
+        scene.sun = new Sun();
 
         //Set the base imagery layer
         var imageryProvider = options.imageryProvider;
