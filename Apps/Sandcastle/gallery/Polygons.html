@@ -52,6 +52,18 @@ require([
             Cesium.Cartographic.fromDegrees(-68.0, 40.0)
         ]));
         primitives.add(polygon);
+        
+        polygon = new Cesium.Polygon();
+        Sandcastle.declare(polygon);
+        polygon.configureExtent(new Cesium.Extent(
+                Cesium.Math.toRadians(-110.0),
+                Cesium.Math.toRadians(0.0),
+                Cesium.Math.toRadians(-90.0),
+                Cesium.Math.toRadians(20.0)),
+                0.0, Cesium.Math.toRadians(45));
+        polygon.material = Cesium.Material.fromType(scene.getContext(), Cesium.Material.ColorType);
+        polygon.material.uniforms.color = {red: 1.0, green: 0.0, blue: 1.0, alpha: 0.75};
+        primitives.add(polygon);
 
         // Create a nested polygon with holes
         var polygonHierarchy = new Cesium.Polygon();
