@@ -70,28 +70,12 @@
 	border: none;
 }
 
-.cesium-viewerWidget-home {
+.cesium-viewerWidget-homeButtonContainer {
     display: inline-block;
-	width: 32px;
-	height: 32px;
-	vertical-align: middle;
-	background-image: url(../Images/home.svg);
-	background-repeat: no-repeat;
-	background-size: 100% 100%;
-	border-radius: 14%;
-	position: relative;
-	text-align: center;
-	color: white;
-	margin: 1px;
-    cursor: pointer;
-}
-
-.cesium-viewerWidget-home:hover {
-	box-shadow: 0 0 8px #fff, 0 0 8px #fff;
-}
-
-.cesium-lighter .cesium-viewerWidget-home {
-	background-image: url(../Images/home-lighter.svg);
+    width: 32px;
+    height: 32px;
+    vertical-align: middle;
+    margin: 1px;
 }
 
 .cesium-viewerWidget-viewButtons {
