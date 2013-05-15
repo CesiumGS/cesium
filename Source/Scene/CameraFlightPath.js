@@ -48,13 +48,24 @@ define([
     var CameraFlightPath = {
     };
 
-    function createQuaternion(direction, up) {
+    var c3destination = new Cartesian3();
+    var rotMatrix = new Matrix3();
+    var viewMat = new Matrix3();
+
+    function createQuaternion(direction, up, result) {
         var right = direction.cross(up);
         up = right.cross(direction);
-        var viewMat = new Matrix3( right.x,      right.y,      right.z,
-                                   up.x,         up.y,         up.z,
-                                  -direction.x, -direction.y, -direction.z);
-        return Quaternion.fromRotationMatrix(viewMat);
+        viewMat[0] = right.x;
+        viewMat[1] = up.x;
+        viewMat[2] = -direction.x;
+        viewMat[3] = right.y;
+        viewMat[4] = up.y;
+        viewMat[5] = -direction.y;
+        viewMat[6] = right.z;
+        viewMat[7] = up.z;
+        viewMat[8] = -direction.z;
+
+        return Quaternion.fromRotationMatrix(viewMat, result);
     }
 
     function getAltitude(frustum, dx, dy) {
@@ -91,10 +102,10 @@ define([
                 return points;
             },
 
-            evaluate : function(time) {
+            evaluate : function(time, result) {
                 time = CesiumMath.clamp(time, p.time, q.time);
                 var t = (time - p.time) / (q.time - p.time);
-                return Cartesian3.lerp(p.point, q.point, t);
+                return Cartesian3.lerp(p.point, q.point, t, result);
             }
         };
     }
@@ -178,32 +189,30 @@ define([
 
         return createSpline(points);
     }
-
+    var direction3D = new Cartesian3();
+    var right3D = new Cartesian3();
+    var up3D = new Cartesian3();
+    var quat3D = new Quaternion();
     function createOrientations3D(camera, points, endDirection, endUp) {
         points[0].orientation = createQuaternion(camera.direction, camera.up);
-
         var point;
-        var direction;
-        var right;
-        var up;
-
         var length = points.length - 1;
         for (var i = 1; i < length; ++i) {
             point = points[i];
-            direction = point.point.negate().normalize();
-            right = direction.cross(Cartesian3.UNIT_Z).normalize();
-            up = right.cross(direction);
-            point.orientation = createQuaternion(direction, up);
+            point.point.negate(direction3D).normalize(direction3D);
+            direction3D.cross(Cartesian3.UNIT_Z, right3D).normalize(right3D);
+            right3D.cross(direction3D, up3D);
+            point.orientation = createQuaternion(direction3D, up3D, quat3D);
         }
 
         point = points[length];
         if (typeof endDirection !== 'undefined' && typeof endUp !== 'undefined') {
             point.orientation = createQuaternion(endDirection, endUp);
         } else {
-            direction = point.point.negate().normalize();
-            right = direction.cross(Cartesian3.UNIT_Z).normalize();
-            up = right.cross(direction);
-            point.orientation = createQuaternion(direction, up);
+            point.point.negate(direction3D).normalize(direction3D);
+            direction3D.cross(Cartesian3.UNIT_Z, right3D).normalize(right3D);
+            right3D.cross(direction3D, up3D);
+            point.orientation = createQuaternion(direction3D, up3D, quat3D);
         }
 
         return new OrientationInterpolator(points);
@@ -219,12 +228,12 @@ define([
         var update = function(value) {
             var time = value.time;
             var orientation = orientations.evaluate(time);
-            var rotationMatrix = Matrix3.fromQuaternion(orientation);
+            Matrix3.fromQuaternion(orientation, rotMatrix);
 
-            camera.position = path.evaluate(time);
-            camera.right = rotationMatrix.getRow(0);
-            camera.up = rotationMatrix.getRow(1);
-            camera.direction = rotationMatrix.getRow(2).negate();
+            camera.position = path.evaluate(time, camera.position);
+            camera.right = rotMatrix.getRow(0, camera.right);
+            camera.up = rotMatrix.getRow(1, camera.up);
+            camera.direction = rotMatrix.getRow(2, camera.direction).negate(camera.direction);
         };
 
         return update;
@@ -302,31 +311,24 @@ define([
         return createSpline(points);
     }
 
+    var direction2D = Cartesian3.UNIT_Z.negate();
+    var right2D = direction2D.cross(Cartesian3.UNIT_Y).normalize();
+    var up2D = right2D.cross(direction2D);
+    var quat = createQuaternion(direction2D, up2D);
     function createOrientations2D(camera, points, endDirection, endUp) {
         points[0].orientation = createQuaternion(camera.direction, camera.up);
-
         var point;
-        var direction;
-        var right;
-        var up;
-
         var length = points.length - 1;
         for (var i = 1; i < length; ++i) {
             point = points[i];
-            direction = Cartesian3.UNIT_Z.negate();
-            right = direction.cross(Cartesian3.UNIT_Y).normalize();
-            up = right.cross(direction);
-            point.orientation = createQuaternion(direction, up);
+            point.orientation = quat;
         }
 
         point = points[length];
         if (typeof endDirection !== 'undefined' && typeof endUp !== 'undefined') {
             point.orientation = createQuaternion(endDirection, endUp);
         } else {
-            direction = Cartesian3.UNIT_Z.negate();
-            right = direction.cross(Cartesian3.UNIT_Y).normalize();
-            up = right.cross(direction);
-            point.orientation = createQuaternion(direction, up);
+            point.orientation = quat;
         }
 
         return new OrientationInterpolator(points);
@@ -342,12 +344,12 @@ define([
         var update = function(value) {
             var time = value.time;
             var orientation = orientations.evaluate(time);
-            var rotationMatrix = Matrix3.fromQuaternion(orientation);
+            Matrix3.fromQuaternion(orientation, rotMatrix);
 
-            camera.position = path.evaluate(time);
-            camera.right = rotationMatrix.getRow(0);
-            camera.up = rotationMatrix.getRow(1);
-            camera.direction = rotationMatrix.getRow(2).negate();
+            camera.position = path.evaluate(time, camera.position);
+            camera.right = rotMatrix.getRow(0, camera.right);
+            camera.up = rotMatrix.getRow(1, camera.up);
+            camera.direction = rotMatrix.getRow(2, camera.direction).negate(camera.direction);
         };
 
         return update;
@@ -369,15 +371,15 @@ define([
         var update = function(value) {
             var time = value.time;
             var orientation = orientations.evaluate(time);
-            var rotationMatrix = Matrix3.fromQuaternion(orientation);
+            Matrix3.fromQuaternion(orientation, rotMatrix);
 
-            camera.position = path.evaluate(time);
+            camera.position = path.evaluate(time, camera.position);
             var zoom = camera.position.z;
             camera.position.z = height;
 
-            camera.right = rotationMatrix.getRow(0);
-            camera.up = rotationMatrix.getRow(1);
-            camera.direction = rotationMatrix.getRow(2).negate();
+            camera.right = rotMatrix.getRow(0, camera.right);
+            camera.up = rotMatrix.getRow(1, camera.up);
+            camera.direction = rotMatrix.getRow(2, camera.direction).negate(camera.direction);
 
             var frustum = camera.frustum;
             var ratio = frustum.top / frustum.right;
@@ -507,17 +509,16 @@ define([
             return createNullAnimation(description.onComplete);
         }
 
-        var end;
         var projection = frameState.scene2D.projection;
         if (frameState.mode === SceneMode.SCENE3D) {
             var ellipsoid = projection.getEllipsoid();
-            end = ellipsoid.cartographicToCartesian(destination);
+            ellipsoid.cartographicToCartesian(destination, c3destination);
         } else {
-            end = projection.project(destination);
+            projection.project(destination, c3destination);
         }
 
         var createAnimationDescription = clone(description);
-        createAnimationDescription.destination = end;
+        createAnimationDescription.destination = c3destination;
         return this.createAnimation(frameState, createAnimationDescription);
     };
 
@@ -538,19 +539,18 @@ define([
 
         var mode = frameState.mode;
         var createAnimationDescription = clone(description);
-        var cartographic;
         var camera = frameState.camera;
         var projection = frameState.scene2D.projection;
         var ellipsoid = projection.getEllipsoid();
         if (mode === SceneMode.SCENE3D) {
-            cartographic = ellipsoid.cartesianToCartographic(camera.controller.extentCameraPosition3D(camera, extent, ellipsoid).position);
+            camera.controller.extentCameraPosition3D(camera, extent, ellipsoid, c3destination);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            cartographic = projection.unproject(camera.controller.extentCameraPositionColumbusView(camera, extent, projection));
+            camera.controller.extentCameraPositionColumbusView(camera, extent, projection, c3destination);
         } else {
-            cartographic = projection.unproject(camera.controller.extentCameraPosition2D(camera, extent, projection));
+            camera.controller.extentCameraPosition2D(camera, extent, projection, c3destination);
         }
-        createAnimationDescription.destination = cartographic;
-        return this.createAnimationCartographic(frameState, createAnimationDescription);
+        createAnimationDescription.destination = c3destination;
+        return this.createAnimation(frameState, createAnimationDescription);
 
   };
 

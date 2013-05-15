@@ -786,7 +786,7 @@ define([
     var viewExtent3DNorthWest = new Cartesian3();
     var viewExtent3DSouthEast = new Cartesian3();
     var viewExtent3DCenter = new Cartesian3();
-    CameraController.prototype.extentCameraPosition3D = function(camera, extent, ellipsoid, result) {
+    CameraController.prototype.extentCameraPosition3D = function(camera, extent, ellipsoid, result, cameraView) {
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
@@ -833,7 +833,12 @@ define([
 
         var scalar = center.magnitude() + d;
         Cartesian3.normalize(center, center);
-        return {position: Cartesian3.multiplyByScalar(center, scalar, result), direction: direction, right: right, up: up};
+        if (typeof cameraView !== 'undefined') {
+            cameraView.direction = direction;
+            cameraView.right = right;
+            cameraView.up = up;
+        }
+        return Cartesian3.multiplyByScalar(center, scalar, result);
     };
 
     var viewExtentCVCartographic = new Cartographic();
@@ -936,10 +941,7 @@ define([
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         if (this._mode === SceneMode.SCENE3D) {
-            var r = this.extentCameraPosition3D(this._camera, extent, ellipsoid, this._camera.position);
-            this._camera.direction = r.direction;
-            this._camera.up = r.up;
-            this._camera.right = r.right;
+            this.extentCameraPosition3D(this._camera, extent, ellipsoid, this._camera.position, this._camera);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
             this.extentCameraPositionColumbusView(this._camera, extent, this._projection, this._camera.position);
             var direction = Cartesian3.clone(Cartesian3.UNIT_Z, this._camera.direction);
