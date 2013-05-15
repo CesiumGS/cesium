@@ -248,7 +248,7 @@ defineSuite([
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
         camera.direction = Cartesian3.UNIT_Z.negate();
-        camera.up = Cartesian3.UNIT_Y;
+        camera.up = Cartesian3.UNIT_Y.clone();
         camera.right = camera.direction.cross(camera.up);
 
         var startPosition = camera.position.clone();
@@ -284,7 +284,7 @@ defineSuite([
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
         camera.direction = Cartesian3.UNIT_Z.negate();
-        camera.up = Cartesian3.UNIT_Y;
+        camera.up = Cartesian3.UNIT_Y.clone();
         camera.right = camera.direction.cross(camera.up);
 
         var startPosition = camera.position.clone();
@@ -322,7 +322,7 @@ defineSuite([
         var startPosition = frameState.scene2D.projection.getEllipsoid().cartographicToCartesian(new Cartographic(CesiumMath.PI, 0, 20));
         camera.position = startPosition;
         camera.direction = Cartesian3.UNIT_Z.negate();
-        camera.up = Cartesian3.UNIT_Y;
+        camera.up = Cartesian3.UNIT_Y.clone();
         camera.right = camera.direction.cross(camera.up);
 
         var startDirection = camera.direction.clone();
@@ -359,7 +359,7 @@ defineSuite([
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
         camera.direction = Cartesian3.UNIT_Z.negate();
-        camera.up = Cartesian3.UNIT_Y;
+        camera.up = Cartesian3.UNIT_Y.clone();
         camera.right = camera.direction.cross(camera.up);
         camera.frustum = createOrthographicFrustum();
 
@@ -401,7 +401,7 @@ defineSuite([
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
         camera.direction = Cartesian3.UNIT_Z.negate();
-        camera.up = Cartesian3.UNIT_Y;
+        camera.up = Cartesian3.UNIT_Y.clone();
         camera.right = camera.direction.cross(camera.up);
         camera.frustum = createOrthographicFrustum();
 
@@ -445,7 +445,7 @@ defineSuite([
         var startPosition = frameState.scene2D.projection.getEllipsoid().cartographicToCartesian(new Cartographic(CesiumMath.PI, 0, 20));
         camera.position = startPosition;
         camera.direction = Cartesian3.UNIT_Z.negate();
-        camera.up = Cartesian3.UNIT_Y;
+        camera.up = Cartesian3.UNIT_Y.clone();
         camera.right = camera.direction.cross(camera.up);
         camera.frustum = createOrthographicFrustum();
 
