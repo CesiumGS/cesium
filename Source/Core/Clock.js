@@ -141,8 +141,6 @@ define([
      * or not.  To control animation, use the <code>shouldAnimate</code> property.
      * @memberof Clock
      *
-     * @param {Number} [secondsToTick] optional parameter to force the clock to tick the provided number of seconds,
-     * regardless of other settings.
      * @returns {JulianDate} The new value of the <code>currentTime</code> property.
      */
     Clock.prototype.tick = function() {
@@ -162,22 +160,20 @@ define([
                     var milliseconds = currentSystemTime - this._lastSystemTime;
                     currentTime = currentTime.addSeconds(multiplier * (milliseconds / 1000.0));
                 }
-            }
-        }
 
-        if (this.clockStep !== ClockStep.SYSTEM_CLOCK) {
-            if (this.clockRange === ClockRange.CLAMPED) {
-                if (currentTime.lessThan(startTime)) {
-                    currentTime = startTime;
-                } else if (currentTime.greaterThan(stopTime)) {
-                    currentTime = stopTime;
-                }
-            } else if (this.clockRange === ClockRange.LOOP_STOP) {
-                if (currentTime.lessThan(startTime)) {
-                    currentTime = startTime.clone();
-                }
-                while (currentTime.greaterThan(stopTime)) {
-                    currentTime = startTime.addSeconds(stopTime.getSecondsDifference(currentTime));
+                if (this.clockRange === ClockRange.CLAMPED) {
+                    if (currentTime.lessThan(startTime)) {
+                        currentTime = startTime;
+                    } else if (currentTime.greaterThan(stopTime)) {
+                        currentTime = stopTime;
+                    }
+                } else if (this.clockRange === ClockRange.LOOP_STOP) {
+                    if (currentTime.lessThan(startTime)) {
+                        currentTime = startTime.clone();
+                    }
+                    while (currentTime.greaterThan(stopTime)) {
+                        currentTime = startTime.addSeconds(stopTime.getSecondsDifference(currentTime));
+                    }
                 }
             }
         }
