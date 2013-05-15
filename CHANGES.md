@@ -8,6 +8,9 @@ Beta Releases
 
 * Breaking changes:
    * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.    
+   * Renamed `Widgets/Fullscreen` folder to `Widgets/FullscreenButton` along with associated objects/files.
+      * `FullscreenWidget` -> `FullscreenButton`
+      * `FullscreenViewModel` -> `FullscreenButtonViewModel`
 * Added `SceneTransforms.wgs84ToWindowCoordinates`. [#746](https://github.com/AnalyticalGraphicsInc/cesium/issues/746).
 * Added `computeHorizonCullingPoint`, `computeHorizonCullingPointFromVertices`, and `computeHorizonCullingPointFromExtent` methods to `EllipsoidalOccluder` and used them to build a more accurate horizon occlusion test for terrain rendering.
 * Added support for floating-point textures.
@@ -17,6 +20,10 @@ Beta Releases
 * Added `czm_morphTime` automatic GLSL uniform.
 * Fixed polyline clipping artifact. [#728](https://github.com/AnalyticalGraphicsInc/cesium/issues/728).
 * Fixed polygon crossing International Date Line for 2D and Columbus view. [#99](https://github.com/AnalyticalGraphicsInc/cesium/issues/99).
+* Added `computeHorizonCullingPoint`, `computeHorizonCullingPointFromVertices`, and `computeHorizonCullingPointFromExtent` methods to `EllipsoidalOccluder` and used them to build a more accurate horizon occlusion test for terrain rendering.
+* Added a new `HomeButton` widget for returning to the default view of the current scene mode.
+* Added `Command.beforeExecute` and `Command.afterExecute` events to enable additional processing when a command is executed.
+* Added rotation parameter to `Polygon.configureExtent`.
 
 ### b16 - 2013-05-01
 * Breaking changes:

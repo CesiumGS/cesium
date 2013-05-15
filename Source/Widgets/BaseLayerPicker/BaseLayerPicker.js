@@ -121,14 +121,9 @@ define(['./BaseLayerPickerViewModel',
          */
         this.container = container;
 
-        /**
-         * Gets the element created by this widget.
-         * @memberof FullscreenWidget
-         * @type {Element}
-         */
-        this.element = document.createElement('img');
+        this._element = document.createElement('img');
 
-        var element = this.element;
+        var element = this._element;
         element.setAttribute('draggable', 'false');
         element.className = 'cesium-baseLayerPicker-selected';
         element.setAttribute('data-bind', '\
@@ -186,7 +181,7 @@ define(['./BaseLayerPickerViewModel',
         document.removeEventListener('touchstart', this._closeDropDown);
         var container = this.container;
         knockout.cleanNode(container);
-        container.removeChild(this.element);
+        container.removeChild(this._element);
         return destroyObject(this);
     };
 
