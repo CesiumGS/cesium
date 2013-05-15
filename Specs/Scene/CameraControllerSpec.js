@@ -568,9 +568,6 @@ defineSuite([
         frustum.far = 21.0;
         camera.frustum = frustum;
 
-        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
-        camera.position = new Cartesian3(0.0, 0.0, maxRadii * 2.0);
-
         var extent = new Extent(
                 -CesiumMath.PI_OVER_TWO,
                 -CesiumMath.PI_OVER_FOUR,
@@ -583,8 +580,9 @@ defineSuite([
         controller._mode = SceneMode.SCENE2D;
         controller._projection = projection;
         controller.viewExtent(extent);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, maxRadii * 2.0), CesiumMath.EPSILON10);
 
+        expect(camera.position.x).toEqual(0);
+        expect(camera.position.y).toEqual(0);
         expect(frustum.right - expected <= CesiumMath.EPSILON14).toEqual(true);
         expect(frustum.left + expected <= CesiumMath.EPSILON14).toEqual(true);
         expect(frustum.top - expected <= CesiumMath.EPSILON14).toEqual(true);
@@ -601,9 +599,6 @@ defineSuite([
         frustum.far = 21.0;
         camera.frustum = frustum;
 
-        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
-        camera.position = new Cartesian3(0.0, 0.0, maxRadii * 2.0);
-
         var extent = new Extent(
                 -CesiumMath.PI_OVER_FOUR,
                 -CesiumMath.PI_OVER_TWO,
@@ -616,8 +611,9 @@ defineSuite([
         controller._mode = SceneMode.SCENE2D;
         controller._projection = projection;
         controller.viewExtent(extent);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, maxRadii * 2.0), CesiumMath.EPSILON10);
 
+        expect(camera.position.x).toEqual(0);
+        expect(camera.position.y).toEqual(0);
         expect(frustum.right - expected <= CesiumMath.EPSILON14).toEqual(true);
         expect(frustum.left + expected <= CesiumMath.EPSILON14).toEqual(true);
         expect(frustum.top - expected <= CesiumMath.EPSILON14).toEqual(true);

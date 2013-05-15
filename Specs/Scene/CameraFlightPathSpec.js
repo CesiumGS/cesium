@@ -328,7 +328,7 @@ defineSuite([
         var startDirection = camera.direction.clone();
         var startUp = camera.up.clone();
 
-        var endPosition = startPosition.add(new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
+        var endPosition = startPosition.add(new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 20.0));
         var endCartographic = frameState.scene2D.projection.unproject(endPosition);
         var extent = new Extent(endCartographic.longitude - 0.0000019, endCartographic.latitude - 0.0000019, endCartographic.longitude + 0.0000019, endCartographic.latitude + 0.0000019);
         var endDirection = startDirection.clone();
@@ -442,18 +442,18 @@ defineSuite([
         frameState.mode = SceneMode.SCENE2D;
         var camera = frameState.camera;
 
-        var startPosition = frameState.scene2D.projection.getEllipsoid().cartographicToCartesian(new Cartographic(CesiumMath.PI, 0, 20));
-        camera.position = startPosition;
+        camera.position = new Cartesian3(CesiumMath.PI, 0.0, 20.0);
         camera.direction = Cartesian3.UNIT_Z.negate();
         camera.up = Cartesian3.UNIT_Y.clone();
         camera.right = camera.direction.cross(camera.up);
         camera.frustum = createOrthographicFrustum();
 
         var startHeight = camera.frustum.right - camera.frustum.left;
+        var startPosition = camera.position.clone();
         var startDirection = camera.direction.clone();
         var startUp = camera.up.clone();
 
-        var endPosition = startPosition.add(new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
+        var endPosition = startPosition.add(new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 0.0));
         var endCartographic = frameState.scene2D.projection.unproject(endPosition);
         var extent = new Extent(endCartographic.longitude - 0.0000019, endCartographic.latitude - 0.0000019, endCartographic.longitude + 0.0000019, endCartographic.latitude + 0.0000019);
         var endDirection = startDirection.clone();
@@ -474,12 +474,11 @@ defineSuite([
         expect(camera.frustum.right - camera.frustum.left).toEqual(startHeight);
 
         flight.onUpdate({ time : duration });
-        expect(camera.position.x).toEqualEpsilon(endPosition.x, 1);
-        expect(camera.position.y).toEqualEpsilon(endPosition.y, 1);
-        expect(camera.position.z).toEqualEpsilon(startPosition.z, 1);
+        expect(camera.position.x).toEqualEpsilon(endPosition.x, CesiumMath.EPSILON12);
+        expect(camera.position.y).toEqualEpsilon(endPosition.y, CesiumMath.EPSILON12);
+        expect(camera.position.z).toEqualEpsilon(startPosition.z, CesiumMath.EPSILON12);
         expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON12);
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
-        expect(camera.frustum.right - camera.frustum.left).toEqual(endPosition.z);
     });
 
 
