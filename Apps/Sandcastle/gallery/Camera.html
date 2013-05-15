@@ -210,22 +210,6 @@ require([
         scene.getPrimitives().removeAll();
         scene.getAnimations().removeAll();
         enableInput(scene);
-
-        var camera = scene.getCamera();
-        if (camera.transform.equals(Cesium.Matrix4.IDENTITY)) {
-            return;
-        }
-
-        camera.transform = Cesium.Matrix4.IDENTITY;
-        camera.controller.constrainedAxis = undefined;
-        camera.controller.lookAt(
-                new Cesium.Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.0 * ellipsoid.getMaximumRadius()),
-                Cesium.Cartesian3.ZERO,
-                Cesium.Cartesian3.UNIT_Z);
-
-        var controller = scene.getScreenSpaceCameraController();
-        controller.setEllipsoid(ellipsoid);
-        controller.enableTilt = true;
     }
 
     function createButtons(scene) {

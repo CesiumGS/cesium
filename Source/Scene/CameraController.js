@@ -786,7 +786,11 @@ define([
     var viewExtent3DNorthWest = new Cartesian3();
     var viewExtent3DSouthEast = new Cartesian3();
     var viewExtent3DCenter = new Cartesian3();
+    var defaultcv = {direction: new Cartesian3(), right: new Cartesian3(), up: new Cartesian3()};
     CameraController.prototype.extentCameraPosition3D = function(camera, extent, ellipsoid, result, cameraView) {
+        if (typeof cameraView === 'undefined') {
+            cameraView = defaultcv;
+        }
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
@@ -817,12 +821,12 @@ define([
         Cartesian3.subtract(northEast, center, northEast);
         Cartesian3.subtract(southWest, center, southWest);
 
-        var direction = ellipsoid.geodeticSurfaceNormal(center);
+        var direction = ellipsoid.geodeticSurfaceNormal(center, cameraView.direction);
         Cartesian3.negate(direction, direction);
         Cartesian3.normalize(direction, direction);
-        var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z);
+        var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, cameraView.right);
         Cartesian3.normalize(right, right);
-        var up = Cartesian3.cross(right, direction);
+        var up = Cartesian3.cross(right, direction, cameraView.up);
 
         var height = Math.max(Math.abs(up.dot(northWest)), Math.abs(up.dot(southEast)), Math.abs(up.dot(northEast)), Math.abs(up.dot(southWest)));
         var width = Math.max(Math.abs(right.dot(northWest)), Math.abs(right.dot(southEast)), Math.abs(right.dot(northEast)), Math.abs(right.dot(southWest)));
@@ -833,11 +837,6 @@ define([
 
         var scalar = center.magnitude() + d;
         Cartesian3.normalize(center, center);
-        if (typeof cameraView !== 'undefined') {
-            cameraView.direction = direction;
-            cameraView.right = right;
-            cameraView.up = up;
-        }
         return Cartesian3.multiplyByScalar(center, scalar, result);
     };
 
@@ -914,11 +913,13 @@ define([
 
         height = Math.max(2.0 * right, 2.0 * top);
 
-        var position = new Cartesian3();
-        position.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
-        position.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
+        if (typeof result === 'undefined') {
+            result = new Cartesian3();
+        }
+        result.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
+        result.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
 
-        cart = projection.unproject(position);
+        cart = projection.unproject(result);
         cart.height = height;
         result = projection.project(cart, result);
 
