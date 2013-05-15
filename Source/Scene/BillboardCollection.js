@@ -60,6 +60,8 @@ define([
     var SCALE_INDEX = Billboard.SCALE_INDEX;
     var IMAGE_INDEX_INDEX = Billboard.IMAGE_INDEX_INDEX;
     var COLOR_INDEX = Billboard.COLOR_INDEX;
+    var ROTATION_INDEX = Billboard.ROTATION_INDEX;
+    var ALIGNED_AXIS_INDEX = Billboard.ALIGNED_AXIS_INDEX;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     // PERFORMANCE_IDEA:  Use vertex compression so we don't run out of
@@ -73,7 +75,8 @@ define([
         originAndShow : 5,
         direction : 6,
         pickColor : 7,  // pickColor and color shared an index because pickColor is only used during
-        color : 7       // the 'pick' pass and 'color' is only used during the 'color' pass.
+        color : 7,      // the 'pick' pass and 'color' is only used during the 'color' pass.
+        rotationAndAlignedAxis : 8
     };
 
     // Identifies to the VertexArrayFacade the attributes that are used only for the pick
@@ -196,7 +199,9 @@ define([
                               BufferUsage.STATIC_DRAW, // VERTICAL_ORIGIN_INDEX
                               BufferUsage.STATIC_DRAW, // SCALE_INDEX
                               BufferUsage.STATIC_DRAW, // IMAGE_INDEX_INDEX
-                              BufferUsage.STATIC_DRAW // COLOR_INDEX
+                              BufferUsage.STATIC_DRAW, // COLOR_INDEX
+                              BufferUsage.STATIC_DRAW, // ROTATION_INDEX
+                              BufferUsage.STATIC_DRAW  // ALIGNED_AXIS_INDEX
                           ];
 
         var that = this;
@@ -661,6 +666,11 @@ define([
             componentsPerAttribute : 2,
             normalize : true,
             componentDatatype : ComponentDatatype.UNSIGNED_BYTE
+        }, {
+            index : attributeIndices.rotationAndAlignedAxis,
+            componentsPerAttribute : 4,
+            componentDatatype : ComponentDatatype.BYTE,
+            usage : buffersUsage[ROTATION_INDEX] // buffersUsage[ALIGNED_AXIS_INDEX] ignored
         }], 4 * numberOfBillboards); // 4 vertices per billboard
     }
 
@@ -815,6 +825,23 @@ define([
         writer(i + 3, bottomLeftX * 65535, topRightY * 65535, width * 65535, height * 65535); // Upper Left
     }
 
+    function writeRotationAndAlignedAxis(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+        var i = (billboard._index * 4);
+        var rotation = billboard.getRotation();
+        var alignedAxis = billboard.getAlignedAxis();
+
+        var x = alignedAxis.x;
+        var y = alignedAxis.y;
+        var z = alignedAxis.z;
+
+        var allPurposeWriters = vafWriters[allPassPurpose];
+        var writer = allPurposeWriters[attributeIndices.rotationAndAlignedAxis];
+        writer(i + 0, rotation, x, y, z);
+        writer(i + 1, rotation, x, y, z);
+        writer(i + 2, rotation, x, y, z);
+        writer(i + 3, rotation, x, y, z);
+    }
+
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         writePosition(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -823,6 +850,7 @@ define([
         writeColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeOriginAndShow(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeRotationAndAlignedAxis(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
     function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -1005,6 +1033,10 @@ define([
 
                 if (properties[HORIZONTAL_ORIGIN_INDEX] || properties[VERTICAL_ORIGIN_INDEX] || properties[SHOW_INDEX]) {
                     writers.push(writeOriginAndShow);
+                }
+
+                if (properties[ROTATION_INDEX] || properties[ALIGNED_AXIS_INDEX]) {
+                    writers.push(writeRotationAndAlignedAxis);
                 }
 
                 vafWriters = this._vaf.writers;

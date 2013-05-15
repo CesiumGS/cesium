@@ -4,7 +4,8 @@ attribute vec2 direction;                       // in screen space
 attribute vec4 textureCoordinatesAndImageSize;  // size in normalized texture coordinates
 attribute vec3 originAndShow;                   // show is 0.0 (false) or 1.0 (true)
 attribute vec2 pixelOffset;
-attribute vec4 eyeOffsetAndScale;                       // eye offset in meters
+attribute vec4 eyeOffsetAndScale;               // eye offset in meters
+attribute vec4 rotationAndAlignedAxis;
 
 #ifdef RENDER_FOR_PICK
 attribute vec4 pickColor;
@@ -35,6 +36,8 @@ void main()
     vec2 imageSize = textureCoordinatesAndImageSize.zw;
     vec2 origin = originAndShow.xy;
     float show = originAndShow.z;
+    float rotation = rotationAndAlignedAxis.x;
+    vec3 alignedAxis = rotationAndAlignedAxis.yzw;
     
     ///////////////////////////////////////////////////////////////////////////
     
@@ -49,7 +52,25 @@ void main()
     
     vec2 halfSize = u_atlasSize * imageSize * 0.5 * scale * czm_highResolutionSnapScale;
     halfSize *= ((direction * 2.0) - 1.0);
-
+    
+    if (!all(equal(rotationAndAlignedAxis, vec4(0.0))))
+    {
+        float angle = rotation;
+        if (!all(equal(alignedAxis, vec3(0.0))))
+        {
+            vec3 pos = positionEC.xyz + czm_encodedCameraPositionMCHigh + czm_encodedCameraPositionMCLow;
+            vec3 normal = normalize(cross(alignedAxis, pos));
+            vec4 tangent = vec4(normalize(cross(pos, normal)), 0.0);
+            tangent = czm_modelViewProjection * tangent;
+            angle += sign(-tangent.x) * acos(tangent.y / length(tangent.xy));
+        }
+        
+        float cosTheta = cos(angle);
+        float sinTheta = sin(angle);
+        mat2 rotationMatrix = mat2(cosTheta, sinTheta, -sinTheta, cosTheta);
+        halfSize = rotationMatrix * halfSize;
+    }
+    
     positionWC.xy += (origin * abs(halfSize)) + halfSize;
     positionWC.xy += (pixelOffset * czm_highResolutionSnapScale);
 
