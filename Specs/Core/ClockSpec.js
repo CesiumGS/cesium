@@ -383,7 +383,18 @@ defineSuite([
         expect(start).toEqual(clock.currentTime);
     });
 
-    it('Passing parameter to tick ticks that many seconds.', function() {
+    it('throws if start time is after stop time.', function() {
+        var start = JulianDate.fromTotalDays(1);
+        var stop = JulianDate.fromTotalDays(0);
+        expect(function() {
+            return new Clock({
+                startTime : start,
+                stopTime : stop
+            });
+        }).toThrow();
+    });
+
+    it('system clock multiplier clock step works fine', function() {
         var start = JulianDate.fromTotalDays(0);
         var stop = JulianDate.fromTotalDays(1);
         var currentTime = JulianDate.fromTotalDays(0);
@@ -400,22 +411,26 @@ defineSuite([
         });
 
         expect(clock.currentTime).toEqual(currentTime);
-        currentTime = currentTime.addSeconds(5);
-        clock.tick(5);
-        expect(clock.currentTime).toEqual(currentTime);
-        clock.tick(-5);
-        currentTime = currentTime.addSeconds(-5);
+        var milliseconds = Date.now() - clock._lastSystemTime;
+        currentTime = currentTime.addSeconds(multiplier * (milliseconds / 1000.0));
+        expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
     });
 
-    it('throws if start time is after stop time.', function() {
-        var start = JulianDate.fromTotalDays(1);
-        var stop = JulianDate.fromTotalDays(0);
-        expect(function() {
-            return new Clock({
-                startTime : start,
-                stopTime : stop
-            });
-        }).toThrow();
+    it('tick works if shouldAnimate is false', function() {
+        var start = JulianDate.fromTotalDays(0);
+        var stop = JulianDate.fromTotalDays(1);
+        var currentTime = JulianDate.fromTotalDays(0);
+        var shouldAnimate = false;
+        var clock = new Clock({
+            currentTime : currentTime,
+            startTime : start,
+            stopTime : stop,
+            shouldAnimate : shouldAnimate
+        });
+
+        expect(clock.currentTime).toEqual(currentTime);
+        expect(currentTime).toEqual(clock.tick());
+        expect(clock.currentTime).toEqual(currentTime);
     });
 });
