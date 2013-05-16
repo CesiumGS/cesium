@@ -88,16 +88,9 @@ define([
      */
     DataSourceCollection.prototype.removeAll = function(destroy) {
         var dataSources = this._dataSources;
-        for ( var i = 0, len = dataSources.length; i < len; i++) {
-            var dataSource = dataSources[i];
-            this.dataSourceRemoved.raiseEvent(this, dataSource, i);
-
-            if (typeof dataSource.destroy === 'function' && destroy) {
-                dataSource.destroy();
-            }
+        for ( var i = dataSources.length - 1; i >= 0; i--) {
+            this.remove(dataSources[i], destroy);
         }
-
-        this._dataSources = [];
     };
 
     /**

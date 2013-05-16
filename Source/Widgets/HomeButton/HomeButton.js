@@ -11,7 +11,7 @@ define(['./HomeButtonViewModel',
     "use strict";
 
     /**
-     * A single button widget for toggling fullscreen mode.
+     * A single button widget for returning to the default camera view of the current scene.
      *
      * @alias HomeButton
      * @constructor

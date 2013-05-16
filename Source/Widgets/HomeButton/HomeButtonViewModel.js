@@ -56,7 +56,10 @@ define(['../createCommand',
             defaultCamera.transform.clone(camera.transform);
             defaultCamera.frustum.clone(camera.frustum);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            var transform = new Matrix4(0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+            var transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                        1.0, 0.0, 0.0, 0.0,
+                                        0.0, 1.0, 0.0, 0.0,
+                                        0.0, 0.0, 0.0, 1.0);
 
             var maxRadii = ellipsoid.getMaximumRadius();
             var position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
