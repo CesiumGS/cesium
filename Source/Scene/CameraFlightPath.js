@@ -394,21 +394,6 @@ define([
         return update;
     }
 
-    function createNullAnimation(onComplete) {
-        return {
-            duration : 0,
-            easingFunction : Tween.Easing.Sinusoidal.InOut,
-            startValue : {
-                time : 0.0
-            },
-            stopValue : {
-                time : 0
-            },
-            onUpdate : undefined,
-            onComplete : onComplete
-        };
-    }
-
     /**
      * Creates an animation to fly the camera from it's current position to a position given by a Cartesian. All arguments should
      * be in the current camera reference frame.
@@ -443,12 +428,23 @@ define([
             throw new DeveloperError('destination is required.');
         }
 
-        if (frameState.mode === SceneMode.MORPHING) {
-            return createNullAnimation(description.onComplete);
-        }
-
         var duration = defaultValue(description.duration, 3000.0);
         var onComplete = description.onComplete;
+
+        if (frameState.mode === SceneMode.MORPHING || destination === frameState.camera.position) {
+            return {
+                duration : 0,
+                easingFunction : Tween.Easing.Sinusoidal.InOut,
+                startValue : {
+                    time : 0.0
+                },
+                stopValue : {
+                    time : 0
+                },
+                onUpdate : undefined,
+                onComplete : onComplete
+            };
+        }
 
         var update;
         if (frameState.mode === SceneMode.SCENE3D) {
@@ -505,16 +501,14 @@ define([
             throw new DeveloperError('description.destination is required.');
         }
 
-        if (frameState.mode === SceneMode.MORPHING) {
-            return createNullAnimation(description.onComplete);
-        }
-
         var projection = frameState.scene2D.projection;
         if (frameState.mode === SceneMode.SCENE3D) {
             var ellipsoid = projection.getEllipsoid();
             ellipsoid.cartographicToCartesian(destination, c3destination);
-        } else {
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW || frameState.mode === SceneMode.SCENE2D) {
             projection.project(destination, c3destination);
+        } else {
+            c3destination = frameState.camera.position;
         }
 
         var createAnimationDescription = clone(description);
@@ -528,27 +522,14 @@ define([
         if (typeof frameState === 'undefined') {
             throw new DeveloperError('frameState is required.');
         }
-
         if (typeof extent === 'undefined') {
             throw new DeveloperError('description.destination is required.');
         }
-
-        if (frameState.mode === SceneMode.MORPHING) {
-            return createNullAnimation(description.onComplete);
-        }
-
         var mode = frameState.mode;
         var createAnimationDescription = clone(description);
         var camera = frameState.camera;
         var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
-        if (mode === SceneMode.SCENE3D) {
-            camera.controller.extentCameraPosition3D(camera, extent, ellipsoid, c3destination);
-        } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            camera.controller.extentCameraPositionColumbusView(camera, extent, projection, c3destination);
-        } else {
-            camera.controller.extentCameraPosition2D(camera, extent, projection, c3destination);
-        }
+        camera.controller.getExtentCameraCoordinates(mode, camera, extent, projection, c3destination);
         createAnimationDescription.destination = c3destination;
         return this.createAnimation(frameState, createAnimationDescription);
 

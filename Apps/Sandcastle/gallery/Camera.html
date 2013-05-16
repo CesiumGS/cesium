@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Fly to a specified location or view a geographic extent.">
+    <meta name="cesium-sandcastle-labels" content="">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript">
@@ -23,16 +24,15 @@
 <body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
     @import url(../templates/bucket.css);
-    @import url(../../../Source/Widgets/Dojo/CesiumViewerWidget.css);
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 require([
-    'Cesium', 'dijit/form/Button', 'Widgets/Dojo/CesiumViewerWidget'
+    'Cesium', 'dijit/form/Button'
 ], function(
-    Cesium, Button, CesiumViewerWidget)
+    Cesium, Button)
 {
     "use strict";
 
@@ -210,6 +210,22 @@ require([
         scene.getPrimitives().removeAll();
         scene.getAnimations().removeAll();
         enableInput(scene);
+
+        var camera = scene.getCamera();
+        if (camera.transform.equals(Cesium.Matrix4.IDENTITY)) {
+            return;
+        }
+
+        camera.transform = Cesium.Matrix4.IDENTITY;
+        camera.controller.constrainedAxis = undefined;
+        camera.controller.lookAt(
+                new Cesium.Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.0 * ellipsoid.getMaximumRadius()),
+                Cesium.Cartesian3.ZERO,
+                Cesium.Cartesian3.UNIT_Z);
+
+        var controller = scene.getScreenSpaceCameraController();
+        controller.setEllipsoid(ellipsoid);
+        controller.enableTilt = true;
     }
 
     function createButtons(scene) {
@@ -230,21 +246,21 @@ require([
                 Sandcastle.highlight(flyToMyLocation);
             }
         }).placeAt('toolbar');
-
-        new Button({
-            label : "View an Extent",
-            onClick : function() {
-                reset(scene);
-                viewAnExtent(scene);
-                Sandcastle.highlight(viewAnExtent);
-            }
-        }).placeAt('toolbar');
-        
+      
         new Button({
             label : "Fly to Extent",
             onClick : function() {
                 reset(scene);
                 flyToExtent(scene);
+                Sandcastle.highlight(flyToExtent);
+            }
+        }).placeAt('toolbar');
+        
+        new Button({
+            label : "View an Extent",
+            onClick : function() {
+                reset(scene);
+                viewAnExtent(scene);
                 Sandcastle.highlight(viewAnExtent);
             }
         }).placeAt('toolbar');
@@ -259,9 +275,7 @@ require([
         }).placeAt('toolbar');
     }
 
-    var widget = new CesiumViewerWidget({});
-    widget.placeAt('cesiumContainer');
-    widget.startup();
+    var widget = new Cesium.CesiumWidget('cesiumContainer');
 
     createButtons(widget.scene);
 

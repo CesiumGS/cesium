@@ -786,10 +786,11 @@ define([
     var viewExtent3DNorthWest = new Cartesian3();
     var viewExtent3DSouthEast = new Cartesian3();
     var viewExtent3DCenter = new Cartesian3();
-    var defaultcv = {direction: new Cartesian3(), right: new Cartesian3(), up: new Cartesian3()};
-    CameraController.prototype.extentCameraPosition3D = function(camera, extent, ellipsoid, result, cameraView) {
-        if (typeof cameraView === 'undefined') {
-            cameraView = defaultcv;
+    var defaultRF = {direction: new Cartesian3(), right: new Cartesian3(), up: new Cartesian3()};
+    function extentCameraPosition3D (camera, extent, ellipsoid, result, positionOnly) {
+        var cameraRF = camera;
+        if (positionOnly) {
+            cameraRF = defaultRF;
         }
         var north = extent.north;
         var south = extent.south;
@@ -821,12 +822,12 @@ define([
         Cartesian3.subtract(northEast, center, northEast);
         Cartesian3.subtract(southWest, center, southWest);
 
-        var direction = ellipsoid.geodeticSurfaceNormal(center, cameraView.direction);
+        var direction = ellipsoid.geodeticSurfaceNormal(center, cameraRF.direction);
         Cartesian3.negate(direction, direction);
         Cartesian3.normalize(direction, direction);
-        var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, cameraView.right);
+        var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, cameraRF.right);
         Cartesian3.normalize(right, right);
-        var up = Cartesian3.cross(right, direction, cameraView.up);
+        var up = Cartesian3.cross(right, direction, cameraRF.up);
 
         var height = Math.max(Math.abs(up.dot(northWest)), Math.abs(up.dot(southEast)), Math.abs(up.dot(northEast)), Math.abs(up.dot(southWest)));
         var width = Math.max(Math.abs(right.dot(northWest)), Math.abs(right.dot(southEast)), Math.abs(right.dot(northEast)), Math.abs(right.dot(southWest)));
@@ -838,13 +839,13 @@ define([
         var scalar = center.magnitude() + d;
         Cartesian3.normalize(center, center);
         return Cartesian3.multiplyByScalar(center, scalar, result);
-    };
+    }
 
     var viewExtentCVCartographic = new Cartographic();
     var viewExtentCVNorthEast = Cartesian4.UNIT_W.clone();
     var viewExtentCVSouthWest = Cartesian4.UNIT_W.clone();
     var viewExtentCVTransform = new Matrix4();
-    CameraController.prototype.extentCameraPositionColumbusView = function(camera, extent, projection, result) {
+    function extentCameraPositionColumbusView(camera, extent, projection, result, positionOnly) {
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
@@ -879,11 +880,18 @@ define([
         result.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
         result.z = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
 
+        if (!positionOnly) {
+            var direction = Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
+            Cartesian3.negate(direction, direction);
+            var right = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
+            Cartesian3.cross(right, direction, camera.up);
+        }
+
         return result;
-    };
+    }
 
     var viewExtent2DCartographic = new Cartographic();
-    CameraController.prototype.extentCameraPosition2D = function(camera, extent, projection, result) {
+    function extentCameraPosition2D (camera, extent, projection, result, positionOnly) {
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
@@ -923,7 +931,30 @@ define([
         cart.height = height;
         result = projection.project(cart, result);
 
+        if (!positionOnly) {
+            var frustum = camera.frustum;
+            var incrementAmount = (camera.position.z - (frustum.right - frustum.left)) * 0.5;
+            frustum.right += incrementAmount;
+            frustum.left -= incrementAmount;
+            frustum.top = ratio * frustum.right;
+            frustum.bottom = -frustum.top;
+
+            var cameraRight = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
+            Cartesian3.cross(cameraRight, camera.direction, camera.up);
+        }
+
         return result;
+    }
+
+    CameraController.prototype.getExtentCameraCoordinates = function(mode, camera, extent, projection, result) {
+        if (mode === SceneMode.SCENE3D) {
+            return extentCameraPosition3D(camera, extent, projection.getEllipsoid(), result, true);
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+            return extentCameraPositionColumbusView(camera, extent, projection, result, true);
+        } else if (mode === SceneMode.SCENE2D) {
+            return extentCameraPosition2D(camera, extent, projection, result, true);
+        }
+        return camera.position;
     };
 
     /**
@@ -942,25 +973,11 @@ define([
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         if (this._mode === SceneMode.SCENE3D) {
-            this.extentCameraPosition3D(this._camera, extent, ellipsoid, this._camera.position, this._camera);
+            extentCameraPosition3D(this._camera, extent, ellipsoid, this._camera.position);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
-            this.extentCameraPositionColumbusView(this._camera, extent, this._projection, this._camera.position);
-            var direction = Cartesian3.clone(Cartesian3.UNIT_Z, this._camera.direction);
-            Cartesian3.negate(direction, direction);
-            var right = Cartesian3.clone(Cartesian3.UNIT_X, this._camera.right);
-            Cartesian3.cross(right, direction, this._camera.up);
+            extentCameraPositionColumbusView(this._camera, extent, this._projection, this._camera.position);
         } else if (this._mode === SceneMode.SCENE2D) {
-            this.extentCameraPosition2D(this._camera, extent, this._projection, this._camera.position);
-            var frustum = this._camera.frustum;
-            var ratio = frustum.top / frustum.right;
-            var incrementAmount = (this._camera.position.z - (frustum.right - frustum.left)) * 0.5;
-            frustum.right += incrementAmount;
-            frustum.left -= incrementAmount;
-            frustum.top = ratio * frustum.right;
-            frustum.bottom = -frustum.top;
-
-            var cameraRight = Cartesian3.clone(Cartesian3.UNIT_X, this._camera.right);
-            Cartesian3.cross(cameraRight, this._camera.direction, this._camera.up);
+            extentCameraPosition2D(this._camera, extent, this._projection, this._camera.position);
         }
     };
 
