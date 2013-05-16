@@ -945,16 +945,27 @@ define([
 
         return result;
     }
-
-    CameraController.prototype.getExtentCameraCoordinates = function(mode, camera, extent, projection, result) {
+    /**
+     * Get the camera position neede to view an extent on an ellipsoid or map
+     * @memberof CameraController
+     *
+     * @param {SceneMode} mode The camera mode
+     * @param {Extent} extent The extent to view.
+     * @param {Cartesian3} [result] The camera position needed to view the extent
+     *
+     * @returns {Cartesian3} The camera position needed to view the extent
+     *
+     * @exception {DeveloperError} extent is required.
+     */
+    CameraController.prototype.getExtentCameraCoordinates = function(mode, extent, result) {
         if (mode === SceneMode.SCENE3D) {
-            return extentCameraPosition3D(camera, extent, projection.getEllipsoid(), result, true);
+            return extentCameraPosition3D(this._camera, extent, this._projection.getEllipsoid(), result, true);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            return extentCameraPositionColumbusView(camera, extent, projection, result, true);
+            return extentCameraPositionColumbusView(this._camera, extent, this._projection, result, true);
         } else if (mode === SceneMode.SCENE2D) {
-            return extentCameraPosition2D(camera, extent, projection, result, true);
+            return extentCameraPosition2D(this._camera, extent, this._projection, result, true);
         }
-        return camera.position;
+        return this._camera.position;
     };
 
     /**

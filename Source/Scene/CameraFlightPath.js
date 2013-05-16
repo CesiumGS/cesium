@@ -411,8 +411,7 @@ define([
      * @exception {DeveloperError} description.destination is required.
      *
      * @see Scene#getFrameState
-     * @see Scene#getAnimation
-     * @see CameraFlightPath#createAnimationCartographic
+     * @see Scene#getAnimations
      */
     CameraFlightPath.createAnimation = function(frameState, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
@@ -486,8 +485,7 @@ define([
      * @exception {DeveloperError} description.destination is required.
      *
      * @see Scene#getFrameState
-     * @see Scene#getAnimation
-     * @see CameraFlightPath#createAnimation
+     * @see Scene#getAnimations
      */
     CameraFlightPath.createAnimationCartographic = function(frameState, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
@@ -516,6 +514,23 @@ define([
         return this.createAnimation(frameState, createAnimationDescription);
     };
 
+    /**
+     * Creates an animation to fly the camera from it's current position to a position in which the entire extent will be visible. Keep in mind that the animation
+     * will happen in the camera's current reference frame.
+     *
+     * @param {FrameState} frameState The current frame state.
+     * @param {Extent} description.destination The final position of the camera.
+     * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
+     * @param {Function} [onComplete] The function to execute when the animation has completed.
+     *
+     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
+     *
+     * @exception {DeveloperError} frameState is required.
+     * @exception {DeveloperError} description.destination is required.
+     *
+     * @see Scene#getFrameState
+     * @see Scene#getAnimations
+     */
     CameraFlightPath.createAnimationExtent = function(frameState, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var extent = description.destination;
@@ -528,8 +543,7 @@ define([
         var mode = frameState.mode;
         var createAnimationDescription = clone(description);
         var camera = frameState.camera;
-        var projection = frameState.scene2D.projection;
-        camera.controller.getExtentCameraCoordinates(mode, camera, extent, projection, c3destination);
+        camera.controller.getExtentCameraCoordinates(mode, extent, c3destination);
         createAnimationDescription.destination = c3destination;
         return this.createAnimation(frameState, createAnimationDescription);
 
