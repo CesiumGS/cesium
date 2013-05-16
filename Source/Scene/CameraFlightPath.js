@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
-        '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/clone',
         '../Core/defaultValue',
@@ -11,7 +10,6 @@ define([
         '../Core/IntersectionTests',
         '../Core/Math',
         '../Core/Matrix3',
-        '../Core/Matrix4',
         '../Core/OrientationInterpolator',
         '../Core/Quaternion',
         '../Core/Ray',
@@ -21,7 +19,6 @@ define([
         '../ThirdParty/Tween'
     ], function(
         Cartesian3,
-        Cartesian4,
         Cartographic,
         clone,
         defaultValue,
@@ -31,7 +28,6 @@ define([
         IntersectionTests,
         CesiumMath,
         Matrix3,
-        Matrix4,
         OrientationInterpolator,
         Quaternion,
         Ray,
@@ -543,7 +539,7 @@ define([
         var mode = frameState.mode;
         var createAnimationDescription = clone(description);
         var camera = frameState.camera;
-        camera.controller.getExtentCameraCoordinates(mode, extent, c3destination);
+        camera.controller.getExtentCameraCoordinates(extent, mode, c3destination);
         createAnimationDescription.destination = c3destination;
         return this.createAnimation(frameState, createAnimationDescription);
 

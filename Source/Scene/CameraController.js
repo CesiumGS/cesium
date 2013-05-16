@@ -949,15 +949,20 @@ define([
      * Get the camera position neede to view an extent on an ellipsoid or map
      * @memberof CameraController
      *
-     * @param {SceneMode} mode The camera mode
      * @param {Extent} extent The extent to view.
+     * @param {SceneMode} [mode] The camera mode.  Defaults to the mode of the camera controller.
      * @param {Cartesian3} [result] The camera position needed to view the extent
      *
      * @returns {Cartesian3} The camera position needed to view the extent
      *
      * @exception {DeveloperError} extent is required.
      */
-    CameraController.prototype.getExtentCameraCoordinates = function(mode, extent, result) {
+    CameraController.prototype.getExtentCameraCoordinates = function(extent, mode, result) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required');
+        }
+        mode = defaultValue(mode, this._mode);
+
         if (mode === SceneMode.SCENE3D) {
             return extentCameraPosition3D(this._camera, extent, this._projection.getEllipsoid(), result, true);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
