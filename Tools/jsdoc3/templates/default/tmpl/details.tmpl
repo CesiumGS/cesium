@@ -80,6 +80,13 @@
 	<?js }); ?></ul>
 	<?js } ?>
 	
+	<?js if(typeof meta.filename === 'string' && (kind === 'class' || kind === 'module' || kind === 'enumeration' || kind === 'glsl')){?>
+	<h5>Source:</h5> 
+		<ul class="see-list">
+			<li><a href='<?js= args[5]+args[6]+args[4]+meta.filename.substring(5) ?>' target="_blank"><?js= meta.filename.substring(5) ?></a></li>
+		</ul>
+	<?js }?>
+
 	<?js if (data.todo && todo.length) {?>
 	<dt class="tag-todo">To Do:</dt>
 	<dd class="tag-todo">

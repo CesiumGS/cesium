@@ -17,7 +17,8 @@ define([
         '../Timeline/Timeline',
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
-        '../Fullscreen/FullscreenWidget',
+        '../FullscreenButton/FullscreenButton',
+        '../HomeButton/HomeButton',
         '../SceneModePicker/SceneModePicker',
         '../BaseLayerPicker/BaseLayerPicker',
         '../BaseLayerPicker/ImageryProviderViewModel',
@@ -58,6 +59,7 @@ define([
         '../../Scene/SceneMode',
         '../../Scene/SkyBox',
         '../../Scene/SkyAtmosphere',
+        '../../Scene/Sun',
         '../../DynamicScene/processCzml',
         '../../DynamicScene/DynamicObjectView',
         '../../DynamicScene/DynamicObjectCollection',
@@ -81,7 +83,8 @@ define([
         Timeline,
         Animation,
         AnimationViewModel,
-        FullscreenWidget,
+        FullscreenButton,
+        HomeButton,
         SceneModePicker,
         BaseLayerPicker,
         ImageryProviderViewModel,
@@ -122,6 +125,7 @@ define([
         SceneMode,
         SkyBox,
         SkyAtmosphere,
+        Sun,
         processCzml,
         DynamicObjectView,
         DynamicObjectCollection,
@@ -336,6 +340,15 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
          */
         showSkyBox : true,
         /**
+         * Determines if the sun is drawn.  This is read-only after construction.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default true
+         * @see Sun
+         */
+        showSun : true,
+        /**
          * An object containing settings supplied by the end user, typically from the query string
          * of the URL of the page with the widget.
          *
@@ -404,7 +417,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
          * The fullscreen widget, configured to put only the viewer widget
          * into fullscreen mode by default.
          *
-         * @type {FullscreenWidget}
+         * @type {FullscreenButton}
          * @memberof CesiumViewerWidget.prototype
          */
         fullscreen: undefined,
@@ -902,6 +915,10 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
                 });
             }
 
+            if (this.showSun) {
+                scene.sun = new Sun();
+            }
+
             scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
 
             var camera = scene.getCamera();
@@ -945,7 +962,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
                 on(dropBox, 'dragexit', event.stop);
             }
 
-            this.fullscreen = new FullscreenWidget(this.fullscreenContainer, this.cesiumNode);
+            this.fullscreen = new FullscreenButton(this.fullscreenContainer, this.cesiumNode);
 
             var animationViewModel = this.animationViewModel;
             if (typeof animationViewModel === 'undefined') {
@@ -991,11 +1008,11 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             timeline.addEventListener('settime', onTimelineScrub, false);
             timeline.zoomTo(clock.startTime, clock.stopTime);
 
-            var viewHomeButton = this.viewHomeButton;
-
-            viewHomeButton.addEventListener('click', function() {
-                that.viewHome();
-            }, false);
+            var homeButton = new HomeButton(this.homeButtonContainer, scene, transitioner, ellipsoid);
+            this.homeButton = homeButton;
+            homeButton.viewModel.command.beforeExecute.addEventListener(function() {
+                that._viewFromTo = undefined;
+            });
 
             if (this.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {
@@ -1018,59 +1035,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
          * @memberof CesiumViewerWidget.prototype
          */
         viewHome : function() {
-            this._viewFromTo = undefined;
-
-            var scene = this.scene;
-            var mode = scene.mode;
-
-            var camera = scene.getCamera();
-            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
-
-            var controller = scene.getScreenSpaceCameraController();
-            controller.enableTranslate = true;
-            controller.enableTilt = true;
-            controller.setEllipsoid(Ellipsoid.WGS84);
-            controller.columbusViewMode = CameraColumbusViewMode.FREE;
-
-            if (mode === SceneMode.MORPHING) {
-                this.sceneTransitioner.completeMorph();
-            }
-
-            if (mode === SceneMode.SCENE2D) {
-                camera.controller.viewExtent(Extent.MAX_VALUE);
-            } else if (mode === SceneMode.SCENE3D) {
-                var camera3D = this._camera3D;
-                camera3D.position.clone(camera.position);
-                camera3D.direction.clone(camera.direction);
-                camera3D.up.clone(camera.up);
-                camera3D.right.clone(camera.right);
-                camera3D.transform.clone(camera.transform);
-                camera3D.frustum.clone(camera.frustum);
-            } else if (mode === SceneMode.COLUMBUS_VIEW) {
-                var transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                            1.0, 0.0, 0.0, 0.0,
-                                            0.0, 1.0, 0.0, 0.0,
-                                            0.0, 0.0, 0.0, 1.0);
-
-                var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
-                var position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
-                var direction = Cartesian3.ZERO.subtract(position).normalize();
-                var right = direction.cross(Cartesian3.UNIT_Z);
-                var up = right.cross(direction);
-                right = direction.cross(up);
-                direction = up.cross(right);
-
-                var frustum = new PerspectiveFrustum();
-                frustum.fovy = CesiumMath.toRadians(60.0);
-                frustum.aspectRatio = this.canvas.clientWidth / this.canvas.clientHeight;
-
-                camera.position = position;
-                camera.direction = direction;
-                camera.up = up;
-                camera.right = right;
-                camera.frustum = frustum;
-                camera.transform = transform;
-            }
+            this.homeButton.viewModel.command();
         },
 
         /**
