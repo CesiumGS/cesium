@@ -26,7 +26,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @alias EllipsoidGeometry
+     * @alias BoxGeometry
      * @constructor
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
@@ -150,6 +150,94 @@ define([
                 });
             }
 
+            if (vertexFormat.tangent) {
+                attributes.tangent = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [
+                        // +z face
+                        1.0, 0.0, 0.0,
+                        1.0, 0.0, 0.0,
+                        1.0, 0.0, 0.0,
+                        1.0, 0.0, 0.0,
+
+                        // -z face
+                        -1.0, 0.0, 0.0,
+                        -1.0, 0.0, 0.0,
+                        -1.0, 0.0, 0.0,
+                        -1.0, 0.0, 0.0,
+
+                        // +x face
+                        0.0, 0.0, -1.0,
+                        0.0, 0.0, -1.0,
+                        0.0, 0.0, -1.0,
+                        0.0, 0.0, -1.0,
+
+                        // -x face
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+
+                        // +y face
+                        1.0, 0.0, 0.0,
+                        1.0, 0.0, 0.0,
+                        1.0, 0.0, 0.0,
+                        1.0, 0.0, 0.0,
+
+                        // -y face
+                        -1.0, 0.0, 0.0,
+                        -1.0, 0.0, 0.0,
+                        -1.0, 0.0, 0.0,
+                        -1.0, 0.0, 0.0
+                    ]
+                });
+            }
+
+            if (vertexFormat.binormal) {
+                attributes.binormal = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [
+                        // +z face
+                        0.0, -1.0, 0.0,
+                        0.0, -1.0, 0.0,
+                        0.0, -1.0, 0.0,
+                        0.0, -1.0, 0.0,
+
+                        // -z face
+                        0.0, -1.0, 0.0,
+                        0.0, -1.0, 0.0,
+                        0.0, -1.0, 0.0,
+                        0.0, -1.0, 0.0,
+
+                        // +x face
+                        0.0, -1.0, 0.0,
+                        0.0, -1.0, 0.0,
+                        0.0, -1.0, 0.0,
+                        0.0, -1.0, 0.0,
+
+                        // -x face
+                        0.0, -1.0, 0.0,
+                        0.0, -1.0, 0.0,
+                        0.0, -1.0, 0.0,
+                        0.0, -1.0, 0.0,
+
+                        // +y face
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+
+                        // -y face
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0
+                    ]
+                });
+            }
+
 
             if (vertexFormat.st) {
                 attributes.st = new GeometryAttribute({
@@ -222,7 +310,7 @@ define([
 
                         // -y face
                         20 + 0, 20 + 1, 20 + 2,
-                        20 + 0, 20 + 2, 20 + 3,
+                        20 + 0, 20 + 2, 20 + 3
                     ]
                 }));
         } else {
