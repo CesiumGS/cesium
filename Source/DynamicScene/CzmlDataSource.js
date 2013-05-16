@@ -20,19 +20,21 @@ define(['../Core/ClockRange',
                 DynamicObjectCollection) {
     "use strict";
 
-    function loadCzml(czml, dynamicObjectCollection, source) {
-        processCzml(czml, dynamicObjectCollection, source);
+    function loadCzml(dataSource, czml, sourceUri) {
+        var dynamicObjectCollection = dataSource._dynamicObjectCollection;
+        processCzml(czml, dynamicObjectCollection, sourceUri);
         var availability = dynamicObjectCollection.computeAvailability();
 
         var clock;
-        if (typeof document !== 'undefined' && typeof document.clock !== 'undefined') {
+        var documentObject = dynamicObjectCollection.getObject('document');
+        if (typeof documentObject !== 'undefined' && typeof documentObject.clock !== 'undefined') {
             clock = new DynamicClock();
-            clock.startTime = document.clock.startTime;
-            clock.stopTime = document.clock.stopTime;
-            clock.clockRange = document.clock.clockRange;
-            clock.clockStep = document.clock.clockStep;
-            clock.multiplier = document.clock.multiplier;
-            clock.currentTime = document.clock.currentTime;
+            clock.startTime = documentObject.clock.startTime;
+            clock.stopTime = documentObject.clock.stopTime;
+            clock.clockRange = documentObject.clock.clockRange;
+            clock.clockStep = documentObject.clock.clockStep;
+            clock.multiplier = documentObject.clock.multiplier;
+            clock.currentTime = documentObject.clock.currentTime;
         } else if (!availability.start.equals(Iso8601.MINIMUM_VALUE)) {
             clock = new DynamicClock();
             clock.startTime = availability.start;
@@ -40,9 +42,6 @@ define(['../Core/ClockRange',
             clock.clockRange = ClockRange.LOOP_STOP;
             var totalSeconds = clock.startTime.getSecondsDifference(clock.stopTime);
             var multiplier = Math.round(totalSeconds / 120.0);
-            if (multiplier < 1) {
-                multiplier = 1;
-            }
             clock.multiplier = multiplier;
             clock.currentTime = clock.startTime;
             clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
@@ -130,7 +129,7 @@ define(['../Core/ClockRange',
             throw new DeveloperError('czml is required.');
         }
 
-        this._clock = loadCzml(czml, this._dynamicObjectCollection, source);
+        this._clock = loadCzml(this, czml, source);
     };
 
     /**
@@ -147,7 +146,7 @@ define(['../Core/ClockRange',
         }
 
         this._dynamicObjectCollection.clear();
-        this._clock = loadCzml(czml, this._dynamicObjectCollection, source);
+        this._clock = loadCzml(this, czml, source);
     };
 
     /**
