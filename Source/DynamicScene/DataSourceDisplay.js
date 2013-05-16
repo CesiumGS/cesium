@@ -68,7 +68,15 @@ define(['./DataSourceCollection',
     };
 
     /**
-     * Get the collection of data sources to be displayed.
+     * Gets the scene being used for display.
+     * @returns {Scene} The scene.
+     */
+    DataSourceDisplay.prototype.getScene = function() {
+        return this._scene;
+    };
+
+    /**
+     * Gets the collection of data sources to be displayed.
      * @returns {DataSourceCollection} The collection of data sources.
      */
     DataSourceDisplay.prototype.getDataSources = function() {
@@ -114,7 +122,7 @@ define(['./DataSourceCollection',
         var length = dataSources.getLength();
         for ( var i = 0; i < length; i++) {
             var dataSource = dataSources.get(i);
-            this._onDataSourceRemoved(dataSource);
+            this._onDataSourceRemoved(this._dataSourceCollection, dataSource);
             if (typeof dataSource.destroy === 'function') {
                 dataSource.destroy();
             }
