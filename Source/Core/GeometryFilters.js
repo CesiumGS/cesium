@@ -853,11 +853,9 @@ define([
         });
     };
 
-    var normalsPerVertex = [];
-    var normalsPerTriangle = [];
-    var normalIndices = [];
     var p = new Cartesian3();
     var q = new Cartesian3();
+    var normal = new Cartesian3();
     GeometryFilters.computeNormals = function(vertices, indices, result) {
         if (typeof vertices === 'undefined' || vertices.length < 0) {
             throw new DeveloperError('vertices is required to have a length greater than zero');
@@ -868,8 +866,10 @@ define([
         if (indices.length % 3 !== 0) {
             throw new DeveloperError('length of indices must be a multiple of three');
         }
-        normalsPerVertex.length = 0;
-        normalsPerTriangle.length = 0;
+
+        var normalsPerVertex = [];
+        var normalsPerTriangle = [];
+        var normalIndices = [];
         var numVertices = vertices.length;
         var numIndices = indices.length;
 
@@ -935,7 +935,7 @@ define([
         for (i = 0; i < numVertices; i++) {
             vertexNormalData = normalsPerVertex[i];
             if (vertexNormalData.count > 0) {
-                var normal = new Cartesian3();
+                Cartesian3.ZERO.clone(normal);
                 for (j = 0; j < vertexNormalData.count; j++) {
                     normal.add(normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
                 }

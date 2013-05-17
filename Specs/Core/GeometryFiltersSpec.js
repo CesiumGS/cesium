@@ -643,4 +643,28 @@ defineSuite([
         expect(results[3]).toEqual(new Cartesian3(1, 0, 1).normalize());
     });
 
+    it('GeometryFilters.computeNormals computes normal for six triangles', function() {
+        var vertices = [];
+        var indices = [0, 1, 2, 3, 0, 2, 4, 0, 3, 4, 5, 0, 5, 6, 0, 6, 1, 0];
+
+        vertices.push(Cartesian3.ZERO);
+        vertices.push(new Cartesian3(1,0,0));
+        vertices.push(new Cartesian3(1,0,1));
+        vertices.push(new Cartesian3(0,0,1));
+        vertices.push(new Cartesian3(0,1,1));
+        vertices.push(new Cartesian3(0,1,0));
+        vertices.push(new Cartesian3(1,1,0));
+
+        var results = GeometryFilters.computeNormals(vertices, indices);
+
+        expect(results.length).toEqual(7);
+        expect(results[0]).toEqual(new Cartesian3(-1, -1, -1).normalize());
+        expect(results[1]).toEqual(new Cartesian3(0, -1, -1).normalize());
+        expect(results[2]).toEqual(new Cartesian3(0, -1, 0).normalize());
+        expect(results[3]).toEqual(new Cartesian3(-1, -1, 0).normalize());
+        expect(results[4]).toEqual(new Cartesian3(-1, 0, 0).normalize());
+        expect(results[5]).toEqual(new Cartesian3(-1, 0, -1).normalize());
+        expect(results[6]).toEqual(new Cartesian3(0, 0, -1).normalize());
+    });
+
 });
