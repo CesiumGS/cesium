@@ -395,42 +395,50 @@ defineSuite([
     });
 
     it('system clock multiplier clock step works fine', function() {
-        var start = JulianDate.fromTotalDays(0);
-        var stop = JulianDate.fromTotalDays(1);
-        var currentTime = JulianDate.fromTotalDays(0);
-        var step = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-        var range = ClockRange.UNBOUNDED;
-        var multiplier = 10000;
         var clock = new Clock({
-            currentTime : currentTime,
-            clockStep : step,
-            multiplier : multiplier,
-            startTime : start,
-            stopTime : stop,
-            clockRange : range
+            clockStep : ClockStep.SYSTEM_CLOCK_MULTIPLIER
         });
-
-        expect(clock.currentTime).toEqual(currentTime);
-        var milliseconds = Date.now() - clock._lastSystemTime;
-        currentTime = currentTime.addSeconds(multiplier * (milliseconds / 1000.0));
-        expect(currentTime).toEqual(clock.tick());
-        expect(clock.currentTime).toEqual(currentTime);
+        var time1 = clock.tick();
+        waitsFor(function() {
+            var time2 = clock.tick();
+            return time2.greaterThan(time1);
+        });
     });
 
-    it('tick works if shouldAnimate is false', function() {
-        var start = JulianDate.fromTotalDays(0);
-        var stop = JulianDate.fromTotalDays(1);
-        var currentTime = JulianDate.fromTotalDays(0);
-        var shouldAnimate = false;
-        var clock = new Clock({
-            currentTime : currentTime,
-            startTime : start,
-            stopTime : stop,
-            shouldAnimate : shouldAnimate
-        });
+    it('clock does not advance if shouldAnimate is false and advances if true', function() {
+        var clock = new Clock;
 
-        expect(clock.currentTime).toEqual(currentTime);
+        clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+        var currentTime = clock.currentTime;
+        clock.shouldAnimate = false;
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
+        clock.shouldAnimate = true;
+        var time1 = clock.tick();
+        waitsFor(function() {
+            var time2 = clock.tick();
+            return time2.greaterThan(time1);
+        });
+
+        clock.clockStep = ClockStep.SYSTEM_CLOCK;
+        currentTime = clock.currentTime;
+        clock.shouldAnimate = false;
+        expect(currentTime).toEqual(clock.tick());
+        expect(clock.currentTime).toEqual(currentTime);
+        clock.shouldAnimate = true;
+        var time1 = clock.tick();
+        waitsFor(function() {
+            var time2 = clock.tick();
+            return time2.greaterThan(time1);
+        });
+
+        clock.clockStep = ClockStep.TICK_DEPENDENT;
+        currentTime = clock.currentTime;
+        clock.shouldAnimate = false;
+        expect(currentTime).toEqual(clock.tick());
+        expect(clock.currentTime).toEqual(currentTime);
+        clock.shouldAnimate = true;
+        expect((clock.tick()).greaterThan(currentTime)).toEqual(true);
+
     });
 });
