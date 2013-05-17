@@ -24,10 +24,17 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Creates vertices and indices for a cube centered at the origin.
      *
      * @alias BoxGeometry
      * @constructor
+     *
+     * @param {Cartesian3} [options.minimumCorner] The minimum x, y, and z coordinates of the box.
+     * @param {Cartesian3} [options.maximumCorner] The maximum x, y, and z coordinates of the box.
+     * @param {Cartesian3} [options.dimensions=new Cartesian3(1.0, 1.0, 1.0)] The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
+     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+     * @param {Matrix4} [options.modelMatrix] The model matrix for this box. See {@link czm_model}.
+     * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      */
@@ -352,22 +359,38 @@ define([
         }
 
         /**
-         * DOC_TBA
+         * An object containing {@link GeometryAttribute} properties named after each of the
+         * <code>true</code> values of the {@link VertexFormat} option.
+         *
+         * @type Object
          */
         this.attributes = attributes;
 
         /**
-         * DOC_TBA
+         * An array of {@link GeometryIndices} defining primitives.
+         *
+         * @type Array
          */
         this.indexLists = indexLists;
 
         /**
-         * DOC_TBA
+         * A tight-fitting bounding sphere that encloses the vertices of the box
+         *
+         * @type BoundingSphere
          */
         this.boundingSphere = new BoundingSphere(new Cartesian3(), max.subtract(min).magnitude() * 0.5);
 
         /**
-         * DOC_TBA
+         * The 4x4 transformation matrix that transforms the box from model to world coordinates.
+         * When this is the identity matrix, the box is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+         * Local reference frames can be used by providing a different transformation matrix, like that returned
+         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
+         * shaders via {@link czm_model} and derived uniforms.
+         *
+         * @type Matrix4
+         *
+         * @see Transforms.eastNorthUpToFixedFrame
+         * @see czm_model
          */
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
 
