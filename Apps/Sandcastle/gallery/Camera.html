@@ -5,7 +5,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Fly to a specified location or view a geographic extent.">
-    <meta name="cesium-sandcastle-labels" content="">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript">
@@ -60,17 +59,14 @@ require([
         Sandcastle.declare(flyToSanDiego); // For highlighting in Sandcastle.
         var destination = Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0);
 
-        // only fly there if it is not the camera's current position
-        if (!ellipsoid.cartographicToCartesian(destination).equalsEpsilon(scene.getCamera().getPositionWC(), Cesium.Math.EPSILON6)) {
-            disableInput(scene);
-            var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
-                destination : destination,
-                onComplete : function() {
-                    enableInput(scene);
-                }
-            });
-            scene.getAnimations().add(flight);
-        }
+        disableInput(scene);
+        var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
+            destination : destination,
+            onComplete : function() {
+                enableInput(scene);
+            }
+        });
+        scene.getAnimations().add(flight);
     }
 
     function flyToMyLocation(scene) {
@@ -79,17 +75,14 @@ require([
             var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
             destination = ellipsoid.cartographicToCartesian(destination);
 
-            // only fly there if it is not the camera's current position
-            if (!destination.equalsEpsilon(scene.getCamera().getPositionWC(), Cesium.Math.EPSILON6)) {
-                disableInput(scene);
-                var flight = Cesium.CameraFlightPath.createAnimation(scene.getFrameState(), {
-                    destination : destination,
-                    onComplete : function() {
-                        enableInput(scene);
-                    }
-                });
-                scene.getAnimations().add(flight);
-            }
+            disableInput(scene);
+            var flight = Cesium.CameraFlightPath.createAnimation(scene.getFrameState(), {
+                destination : destination,
+                onComplete : function() {
+                    enableInput(scene);
+                }
+            });
+            scene.getAnimations().add(flight);
         }
 
         navigator.geolocation.getCurrentPosition(fly);
@@ -128,17 +121,15 @@ require([
         var north = Cesium.Math.toRadians(40.0);
 
         var extent = new Cesium.Extent(west, south, east, north);
-        // only fly there if it is not the camera's current position
-        if (!ellipsoid.cartographicToCartesian(extent.getCenter()).equalsEpsilon(scene.getCamera().getPositionWC(), Cesium.Math.EPSILON6)) {
-            disableInput(scene);
-            var flight = Cesium.CameraFlightPath.createAnimationExtent(scene.getFrameState(), {
-                destination : extent,
-                onComplete : function() {
-                    enableInput(scene);
-                }
-            });
-            scene.getAnimations().add(flight);
-        }
+
+        disableInput(scene);
+        var flight = Cesium.CameraFlightPath.createAnimationExtent(scene.getFrameState(), {
+            destination : extent,
+            onComplete : function() {
+                enableInput(scene);
+            }
+        });
+        scene.getAnimations().add(flight);
         
         // Show the extent.  Not required; just for show.
         var polylines = new Cesium.PolylineCollection();
