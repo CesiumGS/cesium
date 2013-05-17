@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/clone',
         '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/Matrix4',
@@ -17,6 +18,7 @@ define([
         '../Renderer/createPickFragmentShaderSource',
         './SceneMode'
     ], function(
+        clone,
         defaultValue,
         destroyObject,
         Matrix4,
@@ -68,7 +70,6 @@ define([
         this._transformToWorldCoordinates = defaultValue(options.transformToWorldCoordinates, true);
 
         this._sp = undefined;
-        this._rs = undefined;
         this._va = [];
 
         this._pickSP = undefined;
@@ -209,15 +210,29 @@ define([
             var appearance = this.appearance;
             var vs = appearance.vertexShaderSource;
             var fs = appearance.getFragmentShaderSource();
-            var pickable = Geometry.isPickable(geometries);
 
             this._va = va;
 // TODO: recompile on material change.
             this._sp = context.getShaderCache().replaceShaderProgram(this._sp, appearance.vertexShaderSource, fs, attributeIndices);
-            if (pickable) {
+            var rs = context.createRenderState(appearance.renderState);
+            var pickRS;
+
+            if (Geometry.isPickable(geometries)) {
                 this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, vs, createPickFragmentShaderSource(fs, 'varying'), attributeIndices);
+                pickRS = rs;
+            } else {
+                this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, appearance.vertexShaderSource, fs, attributeIndices);
+
+                // Still render during pick pass, but depth-only.
+                var appearanceRS = clone(appearance.renderState, true);
+                appearanceRS.colorMask = {
+                    red : false,
+                    green : false,
+                    blue : false,
+                    alpha : false
+                };
+                pickRS = context.createRenderState(appearanceRS);
             }
-            this._rs = context.createRenderState(appearance.renderState);
 
             for (i = 0; i < length; ++i) {
                 var geometry = finalGeometries[i];
@@ -226,22 +241,20 @@ define([
 // TODO: this assumes indices in the geometries - and only one set
                 command.primitiveType = geometry.indexLists[0].primitiveType;
                 command.vertexArray = this._va[i];
-                command.renderState = this._rs;
+                command.renderState = rs;
                 command.shaderProgram = this._sp;
                 command.uniformMap = appearance.material._uniforms;
                 command.boundingVolume = geometry.boundingSphere;
                 colorCommands.push(command);
 
-                if (pickable) {
-                    var pickCommand = new DrawCommand();
-                    pickCommand.primitiveType = geometry.indexLists[0].primitiveType;
-                    pickCommand.vertexArray = this._va[i];
-                    pickCommand.renderState = this._rs;
-                    pickCommand.shaderProgram = this._pickSP;
-                    pickCommand.uniformMap = appearance.material._uniforms;
-                    pickCommand.boundingVolume = geometry.boundingSphere;
-                    pickCommands.push(pickCommand);
-                }
+                var pickCommand = new DrawCommand();
+                pickCommand.primitiveType = geometry.indexLists[0].primitiveType;
+                pickCommand.vertexArray = this._va[i];
+                pickCommand.renderState = pickRS;
+                pickCommand.shaderProgram = this._pickSP;
+                pickCommand.uniformMap = appearance.material._uniforms;
+                pickCommand.boundingVolume = geometry.boundingSphere;
+                pickCommands.push(pickCommand);
             }
 
             if (this._releaseGeometries) {
@@ -254,10 +267,6 @@ define([
             length = colorCommands.length;
             for (var i = 0; i < length; ++i) {
                 colorCommands[i].modelMatrix = this.modelMatrix;
-            }
-
-            length = pickCommands.length;
-            for (var i = 0; i < length; ++i) {
                 pickCommands[i].modelMatrix = this.modelMatrix;
             }
 
