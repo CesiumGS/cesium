@@ -148,6 +148,51 @@ defineSuite([
         expect(flight.easingFunction).toBeDefined();
     });
 
+    it('createAnimation returns null for morphing', function() {
+        frameState.mode = SceneMode.MORPHING;
+        var destination = new Cartesian3(1e9, 1e9, 1e9);
+        var duration = 5000.0;
+        var onComplete = function() {
+            return true;
+        };
+
+        expect(typeof CameraFlightPath.createAnimation(frameState, {
+            destination : destination,
+            duration : duration,
+            onComplete : onComplete
+        }) === 'undefined').toEqual(true);
+    });
+
+    it('createAnimationCartographic returns null for morphing', function() {
+        frameState.mode = SceneMode.MORPHING;
+        var destination = new Cartographic(0.0, 0.0, 1e6);
+        var duration = 5000.0;
+        var onComplete = function() {
+            return true;
+        };
+        expect(typeof CameraFlightPath.createAnimationCartographic(frameState, {
+            destination : destination,
+            duration : duration,
+            onComplete : onComplete
+        }) === 'undefined').toEqual(true);
+    });
+
+    it('createAnimationExtent returns null for morphing', function() {
+        frameState.mode = SceneMode.MORPHING;
+        var destination = new Extent(-1, -1, 1, 1);
+        var duration = 5000.0;
+        var onComplete = function() {
+            return true;
+        };
+
+        expect(typeof CameraFlightPath.createAnimationExtent(frameState, {
+            destination : destination,
+            duration : duration,
+            onComplete : onComplete
+        }) === 'undefined').toEqual(true);
+    });
+
+
     it('creates an animation in 3d', function() {
         var camera = frameState.camera;
 
@@ -483,8 +528,6 @@ defineSuite([
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
     });
 
-
-
     it('creates a path where the start and end points only differ in height', function() {
         var camera = frameState.camera;
         var start = camera.position.clone();
@@ -505,7 +548,7 @@ defineSuite([
         expect(camera.position).toEqualEpsilon(expected, CesiumMath.EPSILON12);
     });
 
-    it('creates a path to the same point', function() {
+    it('does not create a path to the same point', function() {
         var camera = frameState.camera;
         camera.position = new Cartesian3(7000000.0, 0.0, 0.0);
         camera.direction = camera.position.normalize().negate();
@@ -516,26 +559,17 @@ defineSuite([
         var startDirection = camera.direction.clone();
         var startUp = camera.up.clone();
 
-        var endPosition = startPosition.clone();
-        var endDirection = startDirection.negate();
-        var endUp = startUp.negate();
-
         var duration = 3000.0;
         var flight = CameraFlightPath.createAnimation(frameState, {
-            destination : endPosition,
-            direction : endDirection,
-            up : endUp,
+            destination : startPosition,
+            direction : startDirection,
+            up : startUp,
             duration : duration
         });
 
-        flight.onUpdate({ time : 0.0 });
-        expect(camera.position).toEqualEpsilon(startPosition, CesiumMath.EPSILON12);
-        expect(camera.direction).toEqualEpsilon(startDirection, CesiumMath.EPSILON12);
-        expect(camera.up).toEqualEpsilon(startUp, CesiumMath.EPSILON12);
-
-        flight.onUpdate({ time : duration });
-        expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON12);
-        expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON12);
-        expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
+        expect(flight.duration).toEqual(0);
+        expect(camera.position).toEqual(startPosition);
+        expect(camera.direction).toEqual(startDirection);
+        expect(camera.up).toEqual(startUp);
     });
 });
