@@ -59,17 +59,14 @@ require([
         Sandcastle.declare(flyToSanDiego); // For highlighting in Sandcastle.
         var destination = Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0);
 
-        // only fly there if it is not the camera's current position
-        if (!ellipsoid.cartographicToCartesian(destination).equalsEpsilon(scene.getCamera().getPositionWC(), Cesium.Math.EPSILON6)) {
-            disableInput(scene);
-            var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
-                destination : destination,
-                onComplete : function() {
-                    enableInput(scene);
-                }
-            });
-            scene.getAnimations().add(flight);
-        }
+        disableInput(scene);
+        var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
+            destination : destination,
+            onComplete : function() {
+                enableInput(scene);
+            }
+        });
+        scene.getAnimations().add(flight);
     }
 
     function flyToMyLocation(scene) {
@@ -78,17 +75,14 @@ require([
             var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
             destination = ellipsoid.cartographicToCartesian(destination);
 
-            // only fly there if it is not the camera's current position
-            if (!destination.equalsEpsilon(scene.getCamera().getPositionWC(), Cesium.Math.EPSILON6)) {
-                disableInput(scene);
-                var flight = Cesium.CameraFlightPath.createAnimation(scene.getFrameState(), {
-                    destination : destination,
-                    onComplete : function() {
-                        enableInput(scene);
-                    }
-                });
-                scene.getAnimations().add(flight);
-            }
+            disableInput(scene);
+            var flight = Cesium.CameraFlightPath.createAnimation(scene.getFrameState(), {
+                destination : destination,
+                onComplete : function() {
+                    enableInput(scene);
+                }
+            });
+            scene.getAnimations().add(flight);
         }
 
         navigator.geolocation.getCurrentPosition(fly);
@@ -104,6 +98,39 @@ require([
         var extent = new Cesium.Extent(west, south, east, north);
         scene.getCamera().controller.viewExtent(extent, ellipsoid);
 
+        // Show the extent.  Not required; just for show.
+        var polylines = new Cesium.PolylineCollection();
+        polylines.add({
+            positions : ellipsoid.cartographicArrayToCartesianArray(
+                    [
+                     new Cesium.Cartographic(west, south),
+                     new Cesium.Cartographic(west, north),
+                     new Cesium.Cartographic(east, north),
+                     new Cesium.Cartographic(east, south),
+                     new Cesium.Cartographic(west, south)
+                    ])
+        });
+        scene.getPrimitives().add(polylines);
+    }
+    
+    function flyToExtent(scene) {
+        Sandcastle.declare(flyToExtent); // For highlighting in Sandcastle.
+        var west = Cesium.Math.toRadians(-90.0);
+        var south = Cesium.Math.toRadians(38.0);
+        var east = Cesium.Math.toRadians(-87.0);
+        var north = Cesium.Math.toRadians(40.0);
+
+        var extent = new Cesium.Extent(west, south, east, north);
+
+        disableInput(scene);
+        var flight = Cesium.CameraFlightPath.createAnimationExtent(scene.getFrameState(), {
+            destination : extent,
+            onComplete : function() {
+                enableInput(scene);
+            }
+        });
+        scene.getAnimations().add(flight);
+        
         // Show the extent.  Not required; just for show.
         var polylines = new Cesium.PolylineCollection();
         polylines.add({
@@ -214,7 +241,16 @@ require([
                 Sandcastle.highlight(flyToMyLocation);
             }
         }).placeAt('toolbar');
-
+      
+        new Button({
+            label : "Fly to Extent",
+            onClick : function() {
+                reset(scene);
+                flyToExtent(scene);
+                Sandcastle.highlight(flyToExtent);
+            }
+        }).placeAt('toolbar');
+        
         new Button({
             label : "View an Extent",
             onClick : function() {
