@@ -112,7 +112,14 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Creates a Cartesian3 instance from x, y and z coordinates.
+     * @memberof Cartesian3
+     *
+     * @param {Number} x The x coordinate.
+     * @param {Number} y The y coordinate.
+     * @param {Number} z The z coordinate.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      */
     Cartesian3.fromElements = function(x, y, z, result) {
         if (typeof result === 'undefined') {
