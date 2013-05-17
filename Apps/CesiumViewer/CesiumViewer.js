@@ -100,10 +100,11 @@ define([
                 Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
             pickData : 'mesh3'
         });
-
-        //var primitive = new Primitive([mesh3], Appearance.CLOSED_TRANSLUCENT);
-        //var primitive = new Primitive([mesh, mesh2, mesh3], Appearance.CLOSED_TRANSLUCENT);
-        //widget.scene.getPrimitives().add(primitive);
+        var primitive = new Primitive({
+            geometries : [mesh, mesh2, mesh3],
+            appearance : Appearance.CLOSED_TRANSLUCENT
+        });
+        widget.scene.getPrimitives().add(primitive);
 
         var m = new Material({
             context : widget.scene.getContext(),
@@ -150,9 +151,14 @@ define([
             pickData : 'mesh4'
         });
 
-        var primitive2 = new Primitive(mesh4, appearance);
+        var primitive2 = new Primitive({
+            geometries : mesh4,
+            appearance :appearance,
+            vertexCacheOptimize : false,
+            releaseGeometries : true,
+            transformToWorldCoordinates : false
+        });
         widget.scene.getPrimitives().add(primitive2);
-
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(

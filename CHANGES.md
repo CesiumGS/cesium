@@ -18,6 +18,7 @@ Beta Releases
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 * Added `GeometryFilters.combine` to combine meshes for better batching.
 * Added `BoundingSphere.fromEllipsoid`.
+* Added renderer support for `OES_element_index_uint`, which can improve performance by reducing batch sizes.
 
 ### b17 - 2013-06-03
 
