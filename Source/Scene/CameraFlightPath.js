@@ -427,12 +427,19 @@ define([
         var duration = defaultValue(description.duration, 3000.0);
         var onComplete = description.onComplete;
 
-        if (frameState.mode === SceneMode.MORPHING || CesiumMath.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
+        if (frameState.mode === SceneMode.MORPHING) {
             if (typeof description.onComplete === 'function') {
                 description.onComplete();
             }
 
             return undefined;
+        }
+
+        if (Cartesian3.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
+            return {
+                duration : 0,
+                onComplete : description.onComplete
+            };
         }
 
         var update;
@@ -497,12 +504,19 @@ define([
             projection.project(destination, c3destination);
         }
 
-        if (frameState.mode === SceneMode.MORPHING || CesiumMath.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
+        if (frameState.mode === SceneMode.MORPHING) {
             if (typeof description.onComplete === 'function') {
                 description.onComplete();
             }
 
             return undefined;
+        }
+
+        if (Cartesian3.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
+            return {
+                duration : 0,
+                onComplete : description.onComplete
+            };
         }
 
         var createAnimationDescription = clone(description);
@@ -540,12 +554,19 @@ define([
         var camera = frameState.camera;
         camera.controller.getExtentCameraCoordinates(extent, c3destination);
 
-        if (frameState.mode === SceneMode.MORPHING || CesiumMath.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
+        if (frameState.mode === SceneMode.MORPHING) {
             if (typeof description.onComplete === 'function') {
                 description.onComplete();
             }
 
             return undefined;
+        }
+
+        if (Cartesian3.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
+            return {
+                duration : 0,
+                onComplete : description.onComplete
+            };
         }
 
         createAnimationDescription.destination = c3destination;
