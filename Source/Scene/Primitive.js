@@ -63,6 +63,9 @@ define([
 
         this._vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, true);
         this._releaseGeometries = defaultValue(options.releaseGeometries, false);
+        // When true, geometry is transformed to world coordinates even if there is a single
+        // geometry or all geometries are in the same reference frame.
+        this._transformToWorldCoordinates = defaultValue(options.transformToWorldCoordinates, true);
 
         this._sp = undefined;
         this._rs = undefined;
@@ -115,17 +118,41 @@ define([
         }
     }
 
+    function transformToWorldCoordinates(primitive, geometries) {
+        var toWorld = primitive._transformToWorldCoordinates;
+        var length = geometries.length;
+        var i;
+
+        if (!toWorld && (length > 1)) {
+            var modelMatrix = Matrix4.clone(geometries[0].modelMatrix);
+
+            for (i = 1; i < length; ++i) {
+                if (!Matrix4.equals(modelMatrix, geometries[i])) {
+                    toWorld = true;
+                    break;
+                }
+            }
+        }
+
+        if (toWorld) {
+            for (i = 0; i < length; ++i) {
+                GeometryFilters.transformToWorldCoordinates(geometries[i]);
+            }
+        } else {
+            // Leave geometry in local coordinate system; auto update model-matrix.
+            Matrix4.clone(geometries[0].modelMatrix, primitive.modelMatrix);
+        }
+    }
+
     function geometryPipeline(primitive, geometries, context) {
         // Add pickColor attribute if any geometries are pickable
         if (Geometry.isPickable(geometries)) {
             addPickColorAttribute(primitive, geometries, context);
         }
 
-        // Unify to world coordinates before combining.
-        var length = geometries.length;
-        for (var i = 0; i < length; ++i) {
-            GeometryFilters.transformToWorldCoordinates(geometries[i]);
-        }
+        // Unify to world coordinates before combining.  If there is only one geometry or all
+        // geometries are in the same (non-world) coordinate system, only combine if the user requested it.
+        transformToWorldCoordinates(primitive, geometries);
 
         // Combine into single geometry for better rendering performance.
         var geometry = GeometryFilters.combine(geometries);

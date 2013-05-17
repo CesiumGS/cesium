@@ -132,7 +132,8 @@ define([
             geometries : mesh4,
             appearance :appearance,
             vertexCacheOptimize : false,
-            releaseGeometries : true
+            releaseGeometries : true,
+            transformToWorldCoordinates : false
         });
         widget.scene.getPrimitives().add(primitive2);
 
