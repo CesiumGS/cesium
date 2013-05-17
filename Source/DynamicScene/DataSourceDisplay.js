@@ -43,7 +43,7 @@ define(['./DataSourceCollection',
                                   DynamicPathVisualizer];
 
     /**
-     * Visualizes a collection of  {@link DataSource} instances.
+     * Visualizes a collection of {@link DataSource} instances.
      * @alias DataSourceDisplay
      * @constructor
      *
@@ -64,11 +64,27 @@ define(['./DataSourceCollection',
         this._scene = scene;
         this._temporalSources = [];
         this._staticSourcesToUpdate = [];
-        this._visualizers = defaultValue(visualizerTypes, defaultVisualizerTypes);
+        this._visualizersTypes = defaultValue(visualizerTypes, defaultVisualizerTypes).slice(0);
     };
 
     /**
-     * Get the collection of data sources to be displayed.
+     * Gets the scene being used for display.
+     * @returns {Scene} The scene.
+     */
+    DataSourceDisplay.prototype.getScene = function() {
+        return this._scene;
+    };
+
+    /**
+     * Gets the types of visualizers being used for display.
+     * @returns {Array} A copy of the visualizer types being used for display.
+     */
+    DataSourceDisplay.prototype.getVisualizerTypes = function() {
+        return this._visualizersTypes.slice(0);
+    };
+
+    /**
+     * Gets the collection of data sources to be displayed.
      * @returns {DataSourceCollection} The collection of data sources.
      */
     DataSourceDisplay.prototype.getDataSources = function() {
@@ -114,7 +130,7 @@ define(['./DataSourceCollection',
         var length = dataSources.getLength();
         for ( var i = 0; i < length; i++) {
             var dataSource = dataSources.get(i);
-            this._onDataSourceRemoved(dataSource);
+            this._onDataSourceRemoved(this._dataSourceCollection, dataSource);
             if (typeof dataSource.destroy === 'function') {
                 dataSource.destroy();
             }
@@ -127,7 +143,7 @@ define(['./DataSourceCollection',
      * updates static data sources that have changed since the last
      * call to update.
      *
-     * @param {JulianDate} time The time to updated to.
+     * @param {JulianDate} time The simulation time.
      *
      * @exception {DeveloperError} time is required.
      */
@@ -149,14 +165,14 @@ define(['./DataSourceCollection',
         length = staticSourcesToUpdate.length;
         if (length > 0) {
             for (i = 0; i < length; i++) {
-                staticSourcesToUpdate[i]._visualizerCollection.update(Iso8601.MINIMUM_VALUE);
+                staticSourcesToUpdate[i]._visualizerCollection.update(time);
             }
-            staticSourcesToUpdate = [];
+            this._staticSourcesToUpdate = [];
         }
     };
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
-        var visualizerTypes = this._visualizers;
+        var visualizerTypes = this._visualizersTypes;
         var length = visualizerTypes.length;
         var visualizers = new Array(length);
         var scene = this._scene;
