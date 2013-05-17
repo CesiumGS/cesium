@@ -33,7 +33,8 @@ define([
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
         './Primitive',
-        './Appearance'
+        './Appearance',
+        './SunPostProcess'
     ], function(
         CesiumMath,
         Color,
@@ -68,7 +69,8 @@ define([
         PerspectiveOffCenterFrustum,
         FrustumCommands,
         Primitive,
-        Appearance) {
+        Appearance,
+        SunPostProcess) {
     "use strict";
 
     /**
@@ -92,6 +94,8 @@ define([
         this._animations = new AnimationCollection();
 
         this._shaderFrameCount = 0;
+
+        this._sunPostProcess = new SunPostProcess();
 
         this._commandList = [];
         this._frustumCommandsList = [];
@@ -125,6 +129,15 @@ define([
          * @default undefined
          */
         this.skyAtmosphere = undefined;
+
+        /**
+         * The {@link Sun}.
+         *
+         * @type Sun
+         *
+         * @default undefined
+         */
+        this.sun = undefined;
 
         /**
          * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
@@ -273,10 +286,6 @@ define([
         return this._animations;
     };
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
     function clearPasses(passes) {
         passes.color = false;
         passes.pick = false;
@@ -356,6 +365,7 @@ define([
 
     var scratchCullingVolume = new CullingVolume();
     var distances = new Interval();
+
     function createPotentiallyVisibleSet(scene, listName) {
         var commandLists = scene._commandList;
         var cullingVolume = scene._frameState.cullingVolume;
@@ -464,17 +474,47 @@ define([
         }
     }
 
+    function isSunVisible(command, frameState) {
+        var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
+        var cullingVolume = frameState.cullingVolume;
+
+        // get user culling volume minus the far plane.
+        var planes = scratchCullingVolume.planes;
+        for (var k = 0; k < 5; ++k) {
+            planes[k] = cullingVolume.planes[k];
+        }
+        cullingVolume = scratchCullingVolume;
+
+        return ((typeof command !== 'undefined') &&
+                 ((typeof command.boundingVolume === 'undefined') ||
+                  !command.cull ||
+                  ((cullingVolume.getVisibility(command.boundingVolume) !== Intersect.OUTSIDE) &&
+                   (typeof occluder === 'undefined' || occluder.isBoundingSphereVisible(command.boundingVolume)))));
+    }
+
     function executeCommands(scene, passState) {
+        var frameState = scene._frameState;
         var camera = scene._camera;
         var frustum = camera.frustum.clone();
         var context = scene._context;
         var us = context.getUniformState();
-        var skyBoxCommand = typeof scene.skyBox !== 'undefined' ? scene.skyBox.update(context, scene._frameState) : undefined;
-        var skyAtmosphereCommand = typeof scene.skyAtmosphere !== 'undefined' ? scene.skyAtmosphere.update(context, scene._frameState) : undefined;
+
+        var skyBoxCommand = (frameState.passes.color && typeof scene.skyBox !== 'undefined') ? scene.skyBox.update(context, frameState) : undefined;
+        var skyAtmosphereCommand = (frameState.passes.color && typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, frameState) : undefined;
+        var sunCommand = (frameState.passes.color && typeof scene.sun !== 'undefined') ? scene.sun.update(context, frameState) : undefined;
+        var sunVisible = isSunVisible(sunCommand, frameState);
+
+        if (sunVisible) {
+            passState.framebuffer = scene._sunPostProcess.update(context);
+        }
 
         var clear = scene._clearColorCommand;
         Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.color);
         clear.execute(context, passState);
+
+        if (sunVisible) {
+            scene._sunPostProcess.clear(context, scene.backgroundColor);
+        }
 
         // Ideally, we would render the sky box and atmosphere last for
         // early-z, but we would have to draw it in each frustum
@@ -490,6 +530,10 @@ define([
             executeCommand(skyAtmosphereCommand, scene, context, passState);
         }
 
+        if (typeof sunCommand !== 'undefined' && sunVisible) {
+            sunCommand.execute(context, passState);
+        }
+
         var clearDepthStencil = scene._clearDepthStencilCommand;
 
         var frustumCommandsList = scene._frustumCommandsList;
@@ -497,7 +541,7 @@ define([
         for (var i = 0; i < numFrustums; ++i) {
             clearDepthStencil.execute(context, passState);
 
-            var index = numFrustums - i - 1.0;
+            var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
             frustum.near = frustumCommands.near;
             frustum.far = frustumCommands.far;
@@ -509,6 +553,11 @@ define([
             for (var j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
+        }
+
+        if (sunVisible) {
+            scene._sunPostProcess.execute(context);
+            passState.framebuffer = undefined;
         }
     }
 
@@ -560,13 +609,14 @@ define([
 
         us.update(frameState);
 
-        this._commandList.length = 0;
-        this._primitives.update(this._context, frameState, this._commandList);
+        var context = this._context;
 
-        var passState = this._passState;
-        passState.framebuffer = undefined;
+        this._commandList.length = 0;
+        this._primitives.update(context, frameState, this._commandList);
 
         createPotentiallyVisibleSet(this, 'colorList');
+
+        var passState = this._passState;
         executeCommands(this, passState);
         executeOverlayCommands(this, passState);
     };
@@ -699,6 +749,8 @@ define([
         this.skyBox = this.skyBox && this.skyBox.destroy();
         this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
         this._debugSphere = this._debugSphere && this._debugSphere.destroy();
+        this.sun = this.sun && this.sun.destroy();
+        this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._context = this._context && this._context.destroy();
         return destroyObject(this);
     };
