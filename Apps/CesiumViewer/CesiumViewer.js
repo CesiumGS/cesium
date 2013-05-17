@@ -131,7 +131,8 @@ define([
         var primitive2 = new Primitive({
             geometries : mesh4,
             appearance :appearance,
-            vertexCacheOptimize : false
+            vertexCacheOptimize : false,
+            releaseGeometries : true
         });
         widget.scene.getPrimitives().add(primitive2);
 

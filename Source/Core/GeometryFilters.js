@@ -647,6 +647,7 @@ define([
 
         if (typeof mesh.boundingSphere !== 'undefined') {
             Matrix4.multiplyByPoint(mesh.modelMatrix, mesh.boundingSphere.center, mesh.boundingSphere.center);
+            mesh.boundingSphere.center = Cartesian3.fromCartesian4(mesh.boundingSphere.center);
         }
 
         mesh.modelMatrix = Matrix4.IDENTITY.clone();
