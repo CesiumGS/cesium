@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/Matrix4',
         '../Core/Color',
@@ -16,6 +17,7 @@ define([
         '../Renderer/createPickFragmentShaderSource',
         './SceneMode'
     ], function(
+        defaultValue,
         destroyObject,
         Matrix4,
         Color,
@@ -36,16 +38,18 @@ define([
     /**
      * DOC_TBA
      */
-    var Primitive = function(geometries, appearance) {
-        /**
-         * DOC_TBA
-         */
-        this.geometries = geometries;
+    var Primitive = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
          * DOC_TBA
          */
-        this.appearance = appearance;
+        this.geometries = options.geometries;
+
+        /**
+         * DOC_TBA
+         */
+        this.appearance = options.appearance;
 
         /**
          * DOC_TBA
@@ -56,6 +60,8 @@ define([
          * DOC_TBA
          */
         this.show = true;
+
+        this._vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, true);
 
         this._sp = undefined;
         this._rs = undefined;
@@ -108,7 +114,7 @@ define([
         }
     }
 
-    function processGeometry(primitive, geometries, context) {
+    function geometryPipeline(primitive, geometries, context) {
         // Add pickColor attribute if any geometries are pickable
         if (Geometry.isPickable(geometries)) {
             addPickColorAttribute(primitive, geometries, context);
@@ -148,13 +154,22 @@ define([
 
         if (typeof this._sp === 'undefined') {
             var geometries = (this.geometries instanceof Array) ? this.geometries : [this.geometries];
-            var geometry = processGeometry(this, geometries, context);
+            var geometry = geometryPipeline(this, geometries, context);
             // Break into multiple geometries to fit within unsigned short indices if needed
             var finalGeometries = GeometryFilters.fitToUnsignedShortIndices(geometry);
+
+            length = finalGeometries.length;
+            if (this._vertexCacheOptimize) {
+                // Optimize for vertex shader caches
+                for (i = 0; i < length; ++i) {
+                    GeometryFilters.reorderForPostVertexCache(finalGeometries[i]);
+                    GeometryFilters.reorderForPreVertexCache(finalGeometries[i]);
+                }
+            }
+
             var attributeIndices = GeometryFilters.createAttributeIndices(geometry);
 
             var va = [];
-            length = finalGeometries.length;
             for (i = 0; i < length; ++i) {
                 va.push(context.createVertexArrayFromMesh({
                     mesh : finalGeometries[i],
