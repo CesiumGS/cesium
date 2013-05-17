@@ -40,6 +40,8 @@ Beta Releases
 * Added a new `HomeButton` widget for returning to the default view of the current scene mode.
 * Added `Command.beforeExecute` and `Command.afterExecute` events to enable additional processing when a command is executed.
 * Added rotation parameter to `Polygon.configureExtent`.
+* Added camera flight to extents.  See new methods `CameraController.getExtentCameraCoordinates` and `CameraFlightPath.createAnimationExtent`.
+* Fixed issue for camera flights when `frameState.mode === SceneMode.MORPHING`
 
 ### b16 - 2013-05-01
 
