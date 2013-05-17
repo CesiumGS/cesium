@@ -891,6 +891,8 @@ define([
     }
 
     var viewExtent2DCartographic = new Cartographic();
+    var viewExtent2DNorthEast = new Cartesian3();
+    var viewExtent2DSouthWest = new Cartesian3();
     function extentCameraPosition2D (camera, extent, projection, result, positionOnly) {
         var north = extent.north;
         var south = extent.south;
@@ -900,10 +902,10 @@ define([
         var cart = viewExtent2DCartographic;
         cart.longitude = east;
         cart.latitude = north;
-        var northEast = projection.project(cart);
+        var northEast = projection.project(cart, viewExtent2DNorthEast);
         cart.longitude = west;
         cart.latitude = south;
-        var southWest = projection.project(cart);
+        var southWest = projection.project(cart, viewExtent2DSouthWest);
 
         var width = Math.abs(northEast.x - southWest.x) * 0.5;
         var height = Math.abs(northEast.y - southWest.y) * 0.5;
@@ -927,17 +929,16 @@ define([
         result.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
         result.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
 
-        cart = projection.unproject(result);
-        cart.height = height;
-        result = projection.project(cart, result);
-
-        if (!positionOnly) {
+        if (positionOnly) {
+            cart = projection.unproject(result, cart);
+            cart.height = height;
+            result = projection.project(cart, result);
+        } else {
             var frustum = camera.frustum;
-            var incrementAmount = (camera.position.z - (frustum.right - frustum.left)) * 0.5;
-            frustum.right += incrementAmount;
-            frustum.left -= incrementAmount;
-            frustum.top = ratio * frustum.right;
-            frustum.bottom = -frustum.top;
+            frustum.right = right;
+            frustum.left = -right;
+            frustum.top = top;
+            frustum.bottom = -top;
 
             var cameraRight = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
             Cartesian3.cross(cameraRight, camera.direction, camera.up);
@@ -950,27 +951,26 @@ define([
      * @memberof CameraController
      *
      * @param {Extent} extent The extent to view.
-     * @param {SceneMode} [mode] The camera mode.  Defaults to the mode of the camera controller.
      * @param {Cartesian3} [result] The camera position needed to view the extent
      *
      * @returns {Cartesian3} The camera position needed to view the extent
      *
      * @exception {DeveloperError} extent is required.
      */
-    CameraController.prototype.getExtentCameraCoordinates = function(extent, mode, result) {
+    CameraController.prototype.getExtentCameraCoordinates = function(extent, result) {
         if (typeof extent === 'undefined') {
             throw new DeveloperError('extent is required');
         }
-        mode = defaultValue(mode, this._mode);
 
-        if (mode === SceneMode.SCENE3D) {
+        if (this._mode === SceneMode.SCENE3D) {
             return extentCameraPosition3D(this._camera, extent, this._projection.getEllipsoid(), result, true);
-        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
             return extentCameraPositionColumbusView(this._camera, extent, this._projection, result, true);
-        } else if (mode === SceneMode.SCENE2D) {
+        } else if (this._mode === SceneMode.SCENE2D) {
             return extentCameraPosition2D(this._camera, extent, this._projection, result, true);
         }
-        return this._camera.position;
+
+        return undefined;
     };
 
     /**

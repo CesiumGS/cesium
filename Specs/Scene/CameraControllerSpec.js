@@ -652,7 +652,8 @@ defineSuite([
         var direction = camera.direction.clone();
         var up = camera.up.clone();
         var right = camera.right.clone();
-        controller.getExtentCameraCoordinates(extent, SceneMode.SCENE3D, position);
+        controller._mode = SceneMode.SCENE3D;
+        controller.getExtentCameraCoordinates(extent, position);
         expect(position).toEqualEpsilon(new Cartesian3(-11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
         expect(camera.direction).toEqual(direction);
         expect(camera.up).toEqual(up);
@@ -669,7 +670,8 @@ defineSuite([
         var direction = camera.direction.clone();
         var up = camera.up.clone();
         var right = camera.right.clone();
-        position = controller.getExtentCameraCoordinates(extent, SceneMode.SCENE3D);
+        controller._mode = SceneMode.SCENE3D;
+        position = controller.getExtentCameraCoordinates(extent);
         expect(position).toEqualEpsilon(new Cartesian3(11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
         expect(camera.direction).toEqual(direction);
         expect(camera.up).toEqual(up);
@@ -697,7 +699,7 @@ defineSuite([
         controller._camera = cam;
         controller._mode = SceneMode.SCENE2D;
         controller._projection = projection;
-        camera.position = controller.getExtentCameraCoordinates(extent, SceneMode.SCENE2D);
+        camera.position = controller.getExtentCameraCoordinates(extent);
 
         expect(camera.position.x).toEqual(0);
         expect(camera.position.y).toEqual(0);
@@ -720,7 +722,7 @@ defineSuite([
         var direction = camera.direction.clone();
         var up = camera.up.clone();
         var right = camera.right.clone();
-        camera.position = controller.getExtentCameraCoordinates(extent, SceneMode.COLUMBUS_VIEW);
+        camera.position = controller.getExtentCameraCoordinates(extent);
         expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, 17352991.253398113), CesiumMath.EPSILON10);
         expect(camera.direction).toEqual(direction);
         expect(camera.up).toEqual(up);
@@ -741,7 +743,7 @@ defineSuite([
         var direction = camera.direction.clone();
         var up = camera.up.clone();
         var right = camera.right.clone();
-        controller.getExtentCameraCoordinates(extent, SceneMode.MORPHING, camera.position);
+        controller.getExtentCameraCoordinates(extent, camera.position);
         expect(camera.position).toEqual(position);
         expect(camera.direction).toEqual(direction);
         expect(camera.up).toEqual(up);

@@ -130,8 +130,12 @@ require([
         var extent = new Cesium.Extent(west, south, east, north);
         // only fly there if it is not the camera's current position
         if (!ellipsoid.cartographicToCartesian(extent.getCenter()).equalsEpsilon(scene.getCamera().getPositionWC(), Cesium.Math.EPSILON6)) {
+            disableInput(scene);
             var flight = Cesium.CameraFlightPath.createAnimationExtent(scene.getFrameState(), {
-                destination : extent
+                destination : extent,
+                onComplete : function() {
+                    enableInput(scene);
+                }
             });
             scene.getAnimations().add(flight);
         }

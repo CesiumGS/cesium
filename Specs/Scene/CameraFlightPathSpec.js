@@ -318,6 +318,7 @@ defineSuite([
     it('creates an animation in Columbus view with extent', function() {
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         var camera = frameState.camera;
+        camera.controller._mode = SceneMode.COLUMBUS_VIEW;
 
         var startPosition = frameState.scene2D.projection.getEllipsoid().cartographicToCartesian(new Cartographic(CesiumMath.PI, 0, 20));
         camera.position = startPosition;
@@ -441,6 +442,7 @@ defineSuite([
     it('creates an animation in 2D with extent', function() {
         frameState.mode = SceneMode.SCENE2D;
         var camera = frameState.camera;
+        camera.controller._mode = SceneMode.SCENE2D;
 
         camera.position = new Cartesian3(CesiumMath.PI, 0.0, 20.0);
         camera.direction = Cartesian3.UNIT_Z.negate();

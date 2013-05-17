@@ -48,16 +48,17 @@ define([
     var rotMatrix = new Matrix3();
     var viewMat = new Matrix3();
 
+    var cqRight = new Cartesian3();
     function createQuaternion(direction, up, result) {
-        var right = direction.cross(up);
-        up = right.cross(direction);
-        viewMat[0] = right.x;
+        direction.cross(up, cqRight);
+        cqRight.cross(direction, up);
+        viewMat[0] = cqRight.x;
         viewMat[1] = up.x;
         viewMat[2] = -direction.x;
-        viewMat[3] = right.y;
+        viewMat[3] = cqRight.y;
         viewMat[4] = up.y;
         viewMat[5] = -direction.y;
-        viewMat[6] = right.z;
+        viewMat[6] = cqRight.z;
         viewMat[7] = up.z;
         viewMat[8] = -direction.z;
 
@@ -426,17 +427,9 @@ define([
         var duration = defaultValue(description.duration, 3000.0);
         var onComplete = description.onComplete;
 
-        if (frameState.mode === SceneMode.MORPHING || destination === frameState.camera.position) {
+        if (frameState.mode === SceneMode.MORPHING || CesiumMath.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
             return {
                 duration : 0,
-                easingFunction : Tween.Easing.Sinusoidal.InOut,
-                startValue : {
-                    time : 0.0
-                },
-                stopValue : {
-                    time : 0
-                },
-                onUpdate : undefined,
                 onComplete : onComplete
             };
         }
@@ -501,8 +494,13 @@ define([
             ellipsoid.cartographicToCartesian(destination, c3destination);
         } else if (frameState.mode === SceneMode.COLUMBUS_VIEW || frameState.mode === SceneMode.SCENE2D) {
             projection.project(destination, c3destination);
-        } else {
-            c3destination = frameState.camera.position;
+        }
+
+        if (frameState.mode === SceneMode.MORPHING || CesiumMath.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
+            return {
+                duration : 0,
+                onComplete : description.onComplete;
+            };
         }
 
         var createAnimationDescription = clone(description);
@@ -536,10 +534,17 @@ define([
         if (typeof extent === 'undefined') {
             throw new DeveloperError('description.destination is required.');
         }
-        var mode = frameState.mode;
         var createAnimationDescription = clone(description);
         var camera = frameState.camera;
-        camera.controller.getExtentCameraCoordinates(extent, mode, c3destination);
+        camera.controller.getExtentCameraCoordinates(extent, c3destination);
+
+        if (typeof c3destination === 'undefined' || CesiumMath.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
+            return {
+                duration : 0,
+                onComplete : description.onComplete
+            };
+        }
+
         createAnimationDescription.destination = c3destination;
         return this.createAnimation(frameState, createAnimationDescription);
 
