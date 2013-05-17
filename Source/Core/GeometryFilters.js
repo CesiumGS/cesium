@@ -853,5 +853,100 @@ define([
         });
     };
 
+    var normalsPerVertex = [];
+    var normalsPerTriangle = [];
+    var normalIndices = [];
+    var p = new Cartesian3();
+    var q = new Cartesian3();
+    GeometryFilters.computeNormals = function(vertices, indices, result) {
+        if (typeof vertices === 'undefined' || vertices.length < 0) {
+            throw new DeveloperError('vertices is required to have a length greater than zero');
+        }
+        if (typeof indices === 'undefined' || indices.length < 2) {
+            throw new DeveloperError('indices is requred to have a length greater than two');
+        }
+        if (indices.length % 3 !== 0) {
+            throw new DeveloperError('length of indices must be a multiple of three');
+        }
+        normalsPerVertex.length = 0;
+        normalsPerTriangle.length = 0;
+        var numVertices = vertices.length;
+        var numIndices = indices.length;
+
+        if (typeof result === 'undefined') {
+            result = [];
+        }
+
+        for (var i = 0; i < numVertices; i++) {
+            normalsPerVertex[i] = {
+                    indexOffset: 0,
+                    count: 0,
+                    currentCount: 0
+                };
+        }
+
+        var j = 0;
+        for (i = 0; i < numIndices; i+=3) {
+            var i0 = indices[i];
+            var i1 = indices[i+1];
+            var i2 = indices[i+2];
+
+            var v0 = vertices[i0];
+            var v1 = vertices[i1];
+            var v2 = vertices[i2];
+
+            normalsPerVertex[i0].count++;
+            normalsPerVertex[i1].count++;
+            normalsPerVertex[i2].count++;
+
+            v1.subtract(v0, p);
+            v2.subtract(v1, q);
+            normalsPerTriangle[j] = p.cross(q);
+            j++;
+        }
+
+        var indexOffset = 0;
+        for (i = 0; i < numVertices; i++) {
+            normalsPerVertex[i].indexOffset += indexOffset;
+            indexOffset += normalsPerVertex[i].count;
+        }
+
+        j = 0;
+        var vertexNormalData;
+        for (i = 0; i < numIndices; i+=3) {
+            vertexNormalData = normalsPerVertex[indices[i]];
+            var index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
+            normalIndices[index] = j;
+            vertexNormalData.currentCount++;
+
+            vertexNormalData = normalsPerVertex[indices[i+1]];
+            index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
+            normalIndices[index] = j;
+            vertexNormalData.currentCount++;
+
+            vertexNormalData = normalsPerVertex[indices[i+2]];
+            index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
+            normalIndices[index] = j;
+            vertexNormalData.currentCount++;
+
+            j++;
+        }
+
+        for (i = 0; i < numVertices; i++) {
+            vertexNormalData = normalsPerVertex[i];
+            if (vertexNormalData.count > 0) {
+                var normal = new Cartesian3();
+                for (j = 0; j < vertexNormalData.count; j++) {
+                    normal.add(normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
+                }
+                result[i] = normal.normalize();
+            } else {
+                result[i] = Cartesian3.UNIT_Z;
+            }
+        }
+
+        return result;
+    };
+
     return GeometryFilters;
 });

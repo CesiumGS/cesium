@@ -608,4 +608,39 @@ defineSuite([
         }).toThrow();
     });
 
+
+    it('GeometryFilters.computeNormals computes normal for one triangle', function() {
+        var vertices = [];
+        var indices = [0, 1, 2];
+
+        vertices.push(Cartesian3.ZERO);
+        vertices.push(Cartesian3.UNIT_X);
+        vertices.push(Cartesian3.UNIT_Y);
+
+        var results = GeometryFilters.computeNormals(vertices, indices);
+
+        expect(results.length).toEqual(3);
+        expect(results[0]).toEqual(Cartesian3.UNIT_Z);
+        expect(results[1]).toEqual(Cartesian3.UNIT_Z);
+        expect(results[2]).toEqual(Cartesian3.UNIT_Z);
+    });
+
+    it('GeometryFilters.computeNormals computes normal for two triangles', function() {
+        var vertices = [];
+        var indices = [0, 1, 2, 1, 3, 2];
+
+        vertices.push(Cartesian3.ZERO);
+        vertices.push(new Cartesian3(1,0,1));
+        vertices.push(new Cartesian3(1,1,1));
+        vertices.push(new Cartesian3(2,0,0));
+
+        var results = GeometryFilters.computeNormals(vertices, indices);
+
+        expect(results.length).toEqual(4);
+        expect(results[0]).toEqual(new Cartesian3(-1, 0, 1).normalize());
+        expect(results[1]).toEqual(Cartesian3.UNIT_Z);
+        expect(results[2]).toEqual(Cartesian3.UNIT_Z);
+        expect(results[3]).toEqual(new Cartesian3(1, 0, 1).normalize());
+    });
+
 });
