@@ -150,95 +150,6 @@ define([
                 });
             }
 
-            if (vertexFormat.tangent) {
-                attributes.tangent = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : [
-                        // +z face
-                        1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-
-                        // -z face
-                        -1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0,
-
-                        // +x face
-                        0.0, 0.0, -1.0,
-                        0.0, 0.0, -1.0,
-                        0.0, 0.0, -1.0,
-                        0.0, 0.0, -1.0,
-
-                        // -x face
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-
-                        // +y face
-                        1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-
-                        // -y face
-                        -1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0
-                    ]
-                });
-            }
-
-            if (vertexFormat.binormal) {
-                attributes.binormal = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : [
-                        // +z face
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-
-                        // -z face
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-
-                        // +x face
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-
-                        // -x face
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-
-                        // +y face
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-
-                        // -y face
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0
-                    ]
-                });
-            }
-
-
             if (vertexFormat.st) {
                 attributes.st = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
@@ -279,6 +190,94 @@ define([
                         1.0, 0.0,
                         1.0, 1.0,
                         0.0, 1.0
+                    ]
+                });
+            }
+
+            if (vertexFormat.tangent) {
+                attributes.tangent = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [
+                        // +z face
+                        1.0, 0.0, 0.0,
+                        1.0, 0.0, 0.0,
+                        1.0, 0.0, 0.0,
+                        1.0, 0.0, 0.0,
+
+                        // -z face
+                        -1.0, 0.0, 0.0,
+                        -1.0, 0.0, 0.0,
+                        -1.0, 0.0, 0.0,
+                        -1.0, 0.0, 0.0,
+
+                        // +x face
+                        0.0, 1.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 1.0, 0.0,
+
+                        // -x face
+                        0.0, -1.0, 0.0,
+                        0.0, -1.0, 0.0,
+                        0.0, -1.0, 0.0,
+                        0.0, -1.0, 0.0,
+
+                        // +y face
+                        -1.0, 0.0, 0.0,
+                        -1.0, 0.0, 0.0,
+                        -1.0, 0.0, 0.0,
+                        -1.0, 0.0, 0.0,
+
+                        // -y face
+                        1.0, 0.0, 0.0,
+                        1.0, 0.0, 0.0,
+                        1.0, 0.0, 0.0,
+                        1.0, 0.0, 0.0
+                    ]
+                });
+            }
+
+            if (vertexFormat.binormal) {
+                attributes.binormal = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [
+                        // +z face
+                        0.0, 1.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 1.0, 0.0,
+
+                        // -z face
+                        0.0, 1.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 1.0, 0.0,
+
+                        // +x face
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+
+                        // -x face
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+
+                        // +y face
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+
+                        // -y face
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0
                     ]
                 });
             }
