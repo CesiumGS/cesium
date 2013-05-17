@@ -108,25 +108,48 @@ define([
 
         var attributes = {};
 
+        var length = positions.length;
+        var i;
+        var j;
+
         if (vertexFormat.position) {
             // Expand cube into ellipsoid and flatten values
             var radii = ellipsoid.getRadii();
-            var length = positions.length;
-            var q = 0;
             var flattenedPositions = new Array(length * 3);
-            for ( var i = 0; i < length; ++i) {
+
+            j = 0;
+            for (i = 0; i < length; ++i) {
                 var item = positions[i];
                 Cartesian3.normalize(item, item);
                 Cartesian3.multiplyComponents(item, radii, item);
-                flattenedPositions[q++] = item.x;
-                flattenedPositions[q++] = item.y;
-                flattenedPositions[q++] = item.z;
+                flattenedPositions[j++] = item.x;
+                flattenedPositions[j++] = item.y;
+                flattenedPositions[j++] = item.z;
             }
 
             attributes.position = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
                 values : flattenedPositions
+            });
+        }
+
+        if (vertexFormat.normal) {
+            var normals = new Array(length * 3);
+            var normal = new Cartesian3();
+
+            j = 0;
+            for (i = 0; i < length; ++i) {
+                ellipsoid.geodeticSurfaceNormal(positions[i], normal);
+                normals[j++] = normal.x;
+                normals[j++] = normal.y;
+                normals[j++] = normal.z;
+            }
+
+            attributes.normal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : normals
             });
         }
 
