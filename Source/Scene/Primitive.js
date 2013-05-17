@@ -161,8 +161,13 @@ define([
         // Split position for GPU RTE
         GeometryFilters.encodeAttribute(geometry, 'position', 'positionHigh', 'positionLow');
 
-        // Break into multiple geometries to fit within unsigned short indices if needed
-        return GeometryFilters.fitToUnsignedShortIndices(geometry);
+        if (!context.getElementIndexUint()) {
+            // Break into multiple geometries to fit within unsigned short indices if needed
+            return GeometryFilters.fitToUnsignedShortIndices(geometry);
+        }
+
+        // Unsigned int indices are supported.  No need to break into multiple geometries.
+        return [geometry];
     }
 
     /**
