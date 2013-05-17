@@ -402,7 +402,7 @@ define([
      * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
      * @param {Function} [onComplete] The function to execute when the animation has completed.
      *
-     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
+     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation. (undefined if mode is morphing, or position hasn't changed)
      *
      * @exception {DeveloperError} frameState is required.
      * @exception {DeveloperError} description.destination is required.
@@ -428,10 +428,11 @@ define([
         var onComplete = description.onComplete;
 
         if (frameState.mode === SceneMode.MORPHING || CesiumMath.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
-            return {
-                duration : 0,
-                onComplete : onComplete
-            };
+            if (typeof description.onComplete === 'function') {
+                description.onComplete();
+            }
+
+            return undefined;
         }
 
         var update;
@@ -468,7 +469,7 @@ define([
      * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
      * @param {Function} [onComplete] The function to execute when the animation has completed.
      *
-     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
+     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation. (undefined if mode is morphing, or position hasn't changed)
      *
      * @exception {DeveloperError} frameState is required.
      * @exception {DeveloperError} description.destination is required.
@@ -497,10 +498,11 @@ define([
         }
 
         if (frameState.mode === SceneMode.MORPHING || CesiumMath.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
-            return {
-                duration : 0,
-                onComplete : description.onComplete;
-            };
+            if (typeof description.onComplete === 'function') {
+                description.onComplete();
+            }
+
+            return undefined;
         }
 
         var createAnimationDescription = clone(description);
@@ -517,7 +519,7 @@ define([
      * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
      * @param {Function} [onComplete] The function to execute when the animation has completed.
      *
-     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
+     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation. (undefined if mode is morphing, or position hasn't changed)
      *
      * @exception {DeveloperError} frameState is required.
      * @exception {DeveloperError} description.destination is required.
@@ -538,11 +540,12 @@ define([
         var camera = frameState.camera;
         camera.controller.getExtentCameraCoordinates(extent, c3destination);
 
-        if (typeof c3destination === 'undefined' || CesiumMath.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
-            return {
-                duration : 0,
-                onComplete : description.onComplete
-            };
+        if (frameState.mode === SceneMode.MORPHING || CesiumMath.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
+            if (typeof description.onComplete === 'function') {
+                description.onComplete();
+            }
+
+            return undefined;
         }
 
         createAnimationDescription.destination = c3destination;

@@ -969,8 +969,9 @@ define([
         } else if (this._mode === SceneMode.SCENE2D) {
             return extentCameraPosition2D(this._camera, extent, this._projection, result, true);
         }
+        result = undefined;
 
-        return undefined;
+        return result;
     };
 
     /**
