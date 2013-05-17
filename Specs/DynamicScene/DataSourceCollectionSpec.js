@@ -2,45 +2,15 @@
 defineSuite([
              'DynamicScene/DataSourceCollection',
              'Core/Event',
-             'DynamicScene/DynamicObjectCollection'
+             'DynamicScene/DynamicObjectCollection',
+             'Specs/MockDataSource'
             ], function(
                     DataSourceCollection,
                     Event,
-                    DynamicObjectCollection) {
+                    DynamicObjectCollection,
+                    MockDataSource) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
-
-    var MockDataSource = function() {
-        var event = new Event();
-        this.getChangedEvent = function() {
-            return event;
-        };
-
-        var errorEvent = new Event();
-
-        this.getErrorEvent = function() {
-            return errorEvent;
-        };
-
-        this.getClock = function() {
-            return undefined;
-        };
-
-        var dynamicObjectCollection = new DynamicObjectCollection();
-
-        this.getDynamicObjectCollection = function() {
-            return dynamicObjectCollection;
-        };
-
-        this.getIsTemporal = function() {
-            return false;
-        };
-
-        this.destroyCalled = false;
-        this.destroy = function() {
-            this.destroyCalled = true;
-        };
-    };
 
     it('contains, get, getLength, and indexOf work', function() {
         var collection = new DataSourceCollection();
@@ -129,9 +99,9 @@ defineSuite([
         collection.destroy();
         expect(collection.isDestroyed()).toEqual(true);
         expect(removeCalled).toEqual(sources.length);
-        expect(sources[0].destroyCalled).toEqual(true);
-        expect(sources[1].destroyCalled).toEqual(true);
-        expect(sources[2].destroyCalled).toEqual(true);
+        expect(sources[0].destroyed).toEqual(true);
+        expect(sources[1].destroyed).toEqual(true);
+        expect(sources[2].destroyed).toEqual(true);
     });
 
     it('remove returns fals for non-member', function() {

@@ -64,7 +64,7 @@ define(['./DataSourceCollection',
         this._scene = scene;
         this._temporalSources = [];
         this._staticSourcesToUpdate = [];
-        this._visualizers = defaultValue(visualizerTypes, defaultVisualizerTypes);
+        this._visualizersTypes = defaultValue(visualizerTypes, defaultVisualizerTypes).slice(0);
     };
 
     /**
@@ -73,6 +73,14 @@ define(['./DataSourceCollection',
      */
     DataSourceDisplay.prototype.getScene = function() {
         return this._scene;
+    };
+
+    /**
+     * Gets the types of visualizers being used for display.
+     * @returns {Array} A copy of the visualizer types being used for display.
+     */
+    DataSourceDisplay.prototype.getVisualizerTypes = function() {
+        return this._visualizersTypes.slice(0);
     };
 
     /**
@@ -157,14 +165,14 @@ define(['./DataSourceCollection',
         length = staticSourcesToUpdate.length;
         if (length > 0) {
             for (i = 0; i < length; i++) {
-                staticSourcesToUpdate[i]._visualizerCollection.update(Iso8601.MINIMUM_VALUE);
+                staticSourcesToUpdate[i]._visualizerCollection.update(time);
             }
-            staticSourcesToUpdate = [];
+            this._staticSourcesToUpdate = [];
         }
     };
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
-        var visualizerTypes = this._visualizers;
+        var visualizerTypes = this._visualizersTypes;
         var length = visualizerTypes.length;
         var visualizers = new Array(length);
         var scene = this._scene;
