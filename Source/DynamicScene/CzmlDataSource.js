@@ -84,9 +84,9 @@ define(['../Core/ClockRange',
     };
 
     /**
-     * Gets the top level clock defined in CZML or the full availability of the
+     * Gets the top level clock defined in CZML or the availability of the
      * underlying data if no clock is defined.  If the CZML document only contains
-     * static data, undefined will be returned.
+     * infinite data, undefined will be returned.
      * @memberof CzmlDataSource
      *
      * @returns {DynamicClock} The clock associated with the current CZML data, or undefined if none exists.

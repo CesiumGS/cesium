@@ -43,7 +43,7 @@ define(['./DataSourceCollection',
                                   DynamicPathVisualizer];
 
     /**
-     * Visualizes a collection of  {@link DataSource} instances.
+     * Visualizes a collection of {@link DataSource} instances.
      * @alias DataSourceDisplay
      * @constructor
      *
@@ -143,7 +143,7 @@ define(['./DataSourceCollection',
      * updates static data sources that have changed since the last
      * call to update.
      *
-     * @param {JulianDate} time The time to updated to.
+     * @param {JulianDate} time The simulation time.
      *
      * @exception {DeveloperError} time is required.
      */
