@@ -49,17 +49,18 @@ define([
     var viewMat = new Matrix3();
 
     var cqRight = new Cartesian3();
+    var cqUp = new Cartesian3();
     function createQuaternion(direction, up, result) {
         direction.cross(up, cqRight);
-        cqRight.cross(direction, up);
+        cqRight.cross(direction, cqUp);
         viewMat[0] = cqRight.x;
-        viewMat[1] = up.x;
+        viewMat[1] = cqUp.x;
         viewMat[2] = -direction.x;
         viewMat[3] = cqRight.y;
-        viewMat[4] = up.y;
+        viewMat[4] = cqUp.y;
         viewMat[5] = -direction.y;
         viewMat[6] = cqRight.z;
-        viewMat[7] = up.z;
+        viewMat[7] = cqUp.z;
         viewMat[8] = -direction.z;
 
         return Quaternion.fromRotationMatrix(viewMat, result);
@@ -402,10 +403,11 @@ define([
      * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
      * @param {Function} [onComplete] The function to execute when the animation has completed.
      *
-     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation. (undefined if mode is morphing, or position hasn't changed)
+     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
      * @exception {DeveloperError} frameState is required.
      * @exception {DeveloperError} description.destination is required.
+     * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
      *
      * @see Scene#getFrameState
      * @see Scene#getAnimations
@@ -413,27 +415,21 @@ define([
     CameraFlightPath.createAnimation = function(frameState, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var destination = description.destination;
-        var direction = description.direction;
-        var up = description.up;
 
         if (typeof frameState === 'undefined') {
             throw new DeveloperError('frameState is required.');
         }
-
         if (typeof destination === 'undefined') {
             throw new DeveloperError('destination is required.');
         }
+        if (frameState.mode === SceneMode.MORPHING) {
+            throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
+        }
 
+        var direction = description.direction;
+        var up = description.up;
         var duration = defaultValue(description.duration, 3000.0);
         var onComplete = description.onComplete;
-
-        if (frameState.mode === SceneMode.MORPHING) {
-            if (typeof description.onComplete === 'function') {
-                description.onComplete();
-            }
-
-            return undefined;
-        }
 
         if (Cartesian3.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
             return {
@@ -476,10 +472,11 @@ define([
      * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
      * @param {Function} [onComplete] The function to execute when the animation has completed.
      *
-     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation. (undefined if mode is morphing, or position hasn't changed)
+     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
      * @exception {DeveloperError} frameState is required.
      * @exception {DeveloperError} description.destination is required.
+     * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
      *
      * @see Scene#getFrameState
      * @see Scene#getAnimations
@@ -491,7 +488,6 @@ define([
         if (typeof frameState === 'undefined') {
             throw new DeveloperError('frameState is required.');
         }
-
         if (typeof destination === 'undefined') {
             throw new DeveloperError('description.destination is required.');
         }
@@ -502,14 +498,8 @@ define([
             ellipsoid.cartographicToCartesian(destination, c3destination);
         } else if (frameState.mode === SceneMode.COLUMBUS_VIEW || frameState.mode === SceneMode.SCENE2D) {
             projection.project(destination, c3destination);
-        }
-
-        if (frameState.mode === SceneMode.MORPHING) {
-            if (typeof description.onComplete === 'function') {
-                description.onComplete();
-            }
-
-            return undefined;
+        } else {
+            throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
         }
 
         if (Cartesian3.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
@@ -533,10 +523,11 @@ define([
      * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
      * @param {Function} [onComplete] The function to execute when the animation has completed.
      *
-     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation. (undefined if mode is morphing, or position hasn't changed)
+     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
      * @exception {DeveloperError} frameState is required.
      * @exception {DeveloperError} description.destination is required.
+     * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
      *
      * @see Scene#getFrameState
      * @see Scene#getAnimations
@@ -550,17 +541,13 @@ define([
         if (typeof extent === 'undefined') {
             throw new DeveloperError('description.destination is required.');
         }
+        if (frameState.mode === SceneMode.MORPHING) {
+            throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
+        }
+
         var createAnimationDescription = clone(description);
         var camera = frameState.camera;
         camera.controller.getExtentCameraCoordinates(extent, c3destination);
-
-        if (frameState.mode === SceneMode.MORPHING) {
-            if (typeof description.onComplete === 'function') {
-                description.onComplete();
-            }
-
-            return undefined;
-        }
 
         if (Cartesian3.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
             return {
@@ -571,8 +558,7 @@ define([
 
         createAnimationDescription.destination = c3destination;
         return this.createAnimation(frameState, createAnimationDescription);
-
-  };
+    };
 
     return CameraFlightPath;
 });

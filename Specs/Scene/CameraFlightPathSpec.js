@@ -148,50 +148,35 @@ defineSuite([
         expect(flight.easingFunction).toBeDefined();
     });
 
-    it('createAnimation returns null for morphing', function() {
-        frameState.mode = SceneMode.MORPHING;
-        var destination = new Cartesian3(1e9, 1e9, 1e9);
-        var duration = 5000.0;
-        var onComplete = function() {
-            return true;
-        };
-
-        expect(typeof CameraFlightPath.createAnimation(frameState, {
-            destination : destination,
-            duration : duration,
-            onComplete : onComplete
-        }) === 'undefined').toEqual(true);
+    it('createAnimation throws if mode is morphing', function() {
+        expect( function() {
+            frameState.mode = SceneMode.MORPHING;
+            var destination = new Cartesian3(1e9, 1e9, 1e9);
+            CameraFlightPath.createAnimation(frameState, {
+                destination : destination
+            });
+        }).toThrow();
     });
 
-    it('createAnimationCartographic returns null for morphing', function() {
-        frameState.mode = SceneMode.MORPHING;
-        var destination = new Cartographic(0.0, 0.0, 1e6);
-        var duration = 5000.0;
-        var onComplete = function() {
-            return true;
-        };
-        expect(typeof CameraFlightPath.createAnimationCartographic(frameState, {
-            destination : destination,
-            duration : duration,
-            onComplete : onComplete
-        }) === 'undefined').toEqual(true);
+    it('createAnimationCartographic throws if mode is morphing', function() {
+        expect(function () {
+            frameState.mode = SceneMode.MORPHING;
+            var destination = new Cartesian3(1e9, 1e9, 1e9);
+            CameraFlightPath.createAnimationCartographic(frameState, {
+                destination : destination
+            });
+        }).toThrow();
     });
 
-    it('createAnimationExtent returns null for morphing', function() {
-        frameState.mode = SceneMode.MORPHING;
-        var destination = new Extent(-1, -1, 1, 1);
-        var duration = 5000.0;
-        var onComplete = function() {
-            return true;
-        };
-
-        expect(typeof CameraFlightPath.createAnimationExtent(frameState, {
-            destination : destination,
-            duration : duration,
-            onComplete : onComplete
-        }) === 'undefined').toEqual(true);
+    it('createAnimationExtent throws if mode is morphing', function() {
+        expect(function() {
+            frameState.mode = SceneMode.MORPHING;
+            var destination = new Extent(-1, -1, 1, 1);
+            CameraFlightPath.createAnimationExtent(frameState, {
+                destination : destination
+            });
+        }).toThrow();
     });
-
 
     it('creates an animation in 3d', function() {
         var camera = frameState.camera;
