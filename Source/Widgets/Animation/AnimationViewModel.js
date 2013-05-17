@@ -292,11 +292,9 @@ define([
             }),
             command : createCommand(function() {
                 var clockViewModel = that.clockViewModel;
-                if (that._isSystemTimeAvailable()) {
-                    clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK);
-                    clockViewModel.multiplier(1.0);
-                    clockViewModel.shouldAnimate(true);
-                }
+                clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK);
+                clockViewModel.multiplier(1.0);
+                clockViewModel.shouldAnimate(true);
             }, knockout.computed(function() {
                 return that._isSystemTimeAvailable();
             }))
