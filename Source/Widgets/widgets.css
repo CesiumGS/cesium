@@ -1,5 +1,6 @@
 @import url('./Timeline/Timeline.css');
 @import url('./Animation/Animation.css');
-@import url('./Fullscreen/FullscreenWidget.css');
+@import url('./FullscreenButton/FullscreenButton.css');
+@import url('./HomeButton/HomeButton.css');
 @import url('./SceneModePicker/SceneModePicker.css');
 @import url('./BaseLayerPicker/BaseLayerPicker.css');

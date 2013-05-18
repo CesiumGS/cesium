@@ -427,17 +427,21 @@ define([
      * west properties in radians.
      *
      * @param {double} [height=0.0]. The height of the cartographic extent.
+     * @param {double} [rotation=0.0]. The rotation of the cartographic extent.
      * @example
      * polygon.configureExtent(new Extent(
      *     CesiumMath.toRadians(0.0),
      *     CesiumMath.toRadians(0.0),
      *     CesiumMath.toRadians(10.0),
-     *     CesiumMath.toRadians(10.0)
-     * ));
+     *     CesiumMath.toRadians(10.0)),
+     *     0.0,
+     *     CesiumMath.toRadians(45.0),
+     * );
      */
-    Polygon.prototype.configureExtent = function(extent, height) {
+    Polygon.prototype.configureExtent = function(extent, height, rotation) {
         this._extent = extent;
         this.height = defaultValue(height, 0.0);
+        this.rotation = defaultValue(rotation, 0.0);
         this._textureRotationAngle = undefined;
         this._positions = undefined;
         this._polygonHierarchy = undefined;
@@ -564,8 +568,10 @@ define([
         var mesh;
 
         if ((typeof polygon._extent !== 'undefined') && !polygon._extent.isEmpty()) {
-            meshes.push(ExtentTessellator.compute({extent: polygon._extent, generateTextureCoordinates:true}));
-
+            mesh = ExtentTessellator.compute({extent: polygon._extent, rotation: polygon.rotation, generateTextureCoordinates:true});
+            if (typeof mesh !== 'undefined') {
+                meshes.push(mesh);
+            }
             polygon._boundingVolume = BoundingSphere.fromExtent3D(polygon._extent, polygon._ellipsoid, polygon._boundingVolume);
             if (polygon._mode !== SceneMode.SCENE3D) {
                 polygon._boundingVolume2D = BoundingSphere.fromExtent2D(polygon._extent, polygon._projection, polygon._boundingVolume2D);

@@ -584,4 +584,21 @@ defineSuite([
             });
         });
     }, 'WebGL');
+
+    it('renders back side of globe when camera is near the poles', function() {
+        var camera = frameState.camera;
+        camera.position = new Cartesian3(2909078.1077849553, -38935053.40234136, -63252400.94628872);
+        camera.direction = new Cartesian3(-0.03928753135806185, 0.44884096070717633, 0.8927476025569903);
+        camera.up = new Cartesian3(0.00002847975895320034, -0.8934368803055558, 0.4491887577613425);
+        camera.right = new Cartesian3(0.99922794650124, 0.017672942642764363, 0.03508814656908402);
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
+
+        updateUntilDone(cb);
+
+        runs(function() {
+            // Both level zero tiles should be rendered.
+            forEachRenderedTile(surface, 2, 2, function(tile) {
+            });
+        });
+    });
 }, 'WebGL');
