@@ -652,6 +652,7 @@ define([
             }
 
             this._surfaceShaderSet.baseVertexShaderString =
+                 (hasWaterMask ? '#define XXXX\n' : '') +
                  CentralBodyVS + '\n' +
                  getPositionMode + '\n' +
                  get2DYPositionFraction;
