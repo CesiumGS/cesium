@@ -462,7 +462,10 @@ define([
 
             if (typeof scene._debugSphere === 'undefined') {
                 var geometry = new EllipsoidGeometry(Ellipsoid.UNIT_SPHERE, 20);
-                scene._debugSphere = new Primitive(GeometryFilters.toWireframe(geometry), Appearance.EXAMPLE_APPEARANCE);
+                scene._debugSphere = new Primitive({
+                    geometries : GeometryFilters.toWireframe(geometry),
+                    appearance : Appearance.CLOSED_TRANSLUCENT
+                });
             }
 
             var m = Matrix4.multiplyByTranslation(defaultValue(command.modelMatrix, Matrix4.IDENTITY), command.boundingVolume.center);

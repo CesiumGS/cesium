@@ -229,7 +229,7 @@ define([
                 this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, appearance.vertexShaderSource, fs, attributeIndices);
 
                 // Still render during pick pass, but depth-only.
-                var appearanceRS = clone(appearance.renderState, true);
+                var appearanceRS = clone(appearance.renderState);
                 appearanceRS.colorMask = {
                     red : false,
                     green : false,
