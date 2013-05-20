@@ -18,7 +18,6 @@ require({
     }]
 }, [
     'Sandcastle/LinkButton',
-    'Widgets/Dojo/CesiumViewerWidget',
     'dojo/mouse',
     'dojo/on',
     'dojo/parser',
@@ -50,7 +49,6 @@ require({
     'dojo/domReady!'
 ], function(
     LinkButton,
-    CesiumViewerWidget,
     mouse,
     on,
     parser,
@@ -69,7 +67,6 @@ require({
 
     parser.parse();
 
-    window.CesiumViewerWidget = CesiumViewerWidget; // for autocomplete.
     fx.fadeOut({
         node : 'loading',
         onEnd : function() {
