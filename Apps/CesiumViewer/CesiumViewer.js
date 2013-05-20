@@ -22,8 +22,6 @@ define([
         'Scene/Primitive',
         'Scene/Appearance',
         'Scene/Material',
-        'Shaders/DefaultAppearanceAllFS',
-        'Shaders/DefaultAppearanceAllVS',
         'Widgets/Dojo/checkForChromeFrame',
         'Widgets/Dojo/CesiumViewerWidget'
     ], function(
@@ -49,8 +47,6 @@ define([
         Primitive,
         Appearance,
         Material,
-        DefaultAppearanceAllFS,
-        DefaultAppearanceAllVS,
         checkForChromeFrame,
         CesiumViewerWidget) {
     "use strict";
@@ -138,8 +134,6 @@ define([
         };
         var appearance = new Appearance({
             material : m,
-            vertexShaderSource : DefaultAppearanceAllVS,
-            fragmentShaderSource : DefaultAppearanceAllFS,
             renderState : rs
         });
 
