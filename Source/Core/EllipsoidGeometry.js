@@ -3,6 +3,7 @@ define([
         './defaultValue',
         './DeveloperError',
         './Cartesian3',
+        './Math',
         './Matrix4',
         './Ellipsoid',
         './ComponentDatatype',
@@ -15,6 +16,7 @@ define([
         defaultValue,
         DeveloperError,
         Cartesian3,
+        CesiumMath,
         Matrix4,
         Ellipsoid,
         ComponentDatatype,
@@ -131,6 +133,27 @@ define([
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
                 values : flattenedPositions
+            });
+        }
+
+        if (vertexFormat.st) {
+            var texCoords = new Array(length * 2);
+            var oneOverRadii = ellipsoid.getOneOverRadii();
+            var sphericalNormal = new Cartesian3();
+
+            j = 0;
+            for (i = 0; i < length; ++i) {
+                Cartesian3.multiplyComponents(positions[i], oneOverRadii, sphericalNormal);
+                Cartesian3.normalize(sphericalNormal, sphericalNormal);
+
+                texCoords[j++] = Math.atan2(sphericalNormal.y, sphericalNormal.x) * CesiumMath.ONE_OVER_TWO_PI + 0.5;
+                texCoords[j++] = Math.asin(sphericalNormal.z) * CesiumMath.ONE_OVER_PI + 0.5;
+            }
+
+            attributes.st = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                values : texCoords
             });
         }
 
