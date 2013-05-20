@@ -259,14 +259,8 @@ define(['../../Core/Cartesian2',
                 if (firstTime) {
                     var dataClock = czmlSource.getClock();
                     if (typeof dataClock !== 'undefined') {
-                        var widgetClock = viewer.cesiumWidget.clock;
-                        widgetClock.startTime = dataClock.startTime;
-                        widgetClock.stopTime = dataClock.stopTime;
-                        widgetClock.clockRange = dataClock.clockRange;
-                        widgetClock.clockStep = dataClock.clockStep;
-                        widgetClock.multiplier = dataClock.multiplier;
-                        widgetClock.currentTime = dataClock.currentTime;
-                        viewer.timeline.zoomTo(widgetClock.startTime, widgetClock.stopTime);
+                        dataClock.clone(viewer.cesiumWidget.clock);
+                        viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
                     }
                 }
             } catch (error) {

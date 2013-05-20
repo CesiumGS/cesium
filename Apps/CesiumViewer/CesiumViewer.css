@@ -1,5 +1,6 @@
 @import	url('../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css');
 @import url('../../Source/Widgets/Viewer/Viewer.css');
+@import url('../../Source/Widgets/Viewer/lighter.css');
 
 .fullWindow {
     position: absolute;
