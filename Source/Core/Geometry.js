@@ -66,5 +66,30 @@ define([
         return pickable;
     };
 
+    /**
+     * DOC_TBA
+     *
+     * @exception {DeveloperError} geometries is required.
+     */
+    Geometry.computeNumberOfVertices = function(geometry) {
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('geometry is required.');
+        }
+
+        var numberOfVertices = -1;
+        for ( var property in geometry.attributes) {
+            if (geometry.attributes.hasOwnProperty(property) && geometry.attributes[property].values) {
+                var attribute = geometry.attributes[property];
+                var num = attribute.values.length / attribute.componentsPerAttribute;
+                if ((numberOfVertices !== num) && (numberOfVertices !== -1)) {
+                    throw new DeveloperError('All attribute lists must have the same number of attributes.');
+                }
+                numberOfVertices = num;
+            }
+        }
+
+        return numberOfVertices;
+    };
+
     return Geometry;
 });

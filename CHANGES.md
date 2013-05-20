@@ -18,8 +18,8 @@ Beta Releases
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 * Added `GeometryFilters.combine` to combine meshes for better batching.
 * Added `BoundingSphere.fromEllipsoid`.
+* Added renderer support for `OES_element_index_uint`, which can improve performance by reducing batch sizes.
 * Added `GeometryFilters.computeNormals` to find the normals of vertices in a mesh.
-
 ### b17 - 2013-06-03
 
 * Breaking changes:
@@ -40,6 +40,8 @@ Beta Releases
 * Added a new `HomeButton` widget for returning to the default view of the current scene mode.
 * Added `Command.beforeExecute` and `Command.afterExecute` events to enable additional processing when a command is executed.
 * Added rotation parameter to `Polygon.configureExtent`.
+* Added camera flight to extents.  See new methods `CameraController.getExtentCameraCoordinates` and `CameraFlightPath.createAnimationExtent`.
+* Fixed issue for camera flights when `frameState.mode === SceneMode.MORPHING`
 
 ### b16 - 2013-05-01
 
