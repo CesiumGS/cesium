@@ -18,6 +18,7 @@ Beta Releases
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 * Added `GeometryFilters.combine` to combine meshes for better batching.
 * Added `BoundingSphere.fromEllipsoid`.
+* Added `GeometryFilters.computeNormals` to find the normals of vertices in a mesh.
 
 ### b17 - 2013-06-03
 

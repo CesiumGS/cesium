@@ -853,99 +853,128 @@ define([
         });
     };
 
-    var p = new Cartesian3();
-    var q = new Cartesian3();
+    /**
+     * Computes the normals of all vertices in a mesh based on the normals of triangles that include the vertex.
+     *
+     * @param {Geometry} mesh The mesh to filter, which is modified in place.
+     * @param {Object} mesh.attributes.position
+     *
+     * @returns The modified <code>mesh</code> argument.
+     *
+     * @exception {DeveloperError} mesh.attributes.position.values is required
+     *
+     * @example
+     * mesh = GeometryFilters.computeNormals(mesh);
+     *
+     */
+    var pScratch = new Cartesian3();
+    var qScratch = new Cartesian3();
     var normal = new Cartesian3();
-    GeometryFilters.computeNormals = function(vertices, indices, result) {
-        if (typeof vertices === 'undefined' || vertices.length < 0) {
-            throw new DeveloperError('vertices is required to have a length greater than zero');
+    GeometryFilters.computeNormals = function(mesh) {
+        if (typeof mesh === 'undefined') {
+            throw new DeveloperError('mesh is required.');
         }
-        if (typeof indices === 'undefined' || indices.length < 2) {
-            throw new DeveloperError('indices is requred to have a length greater than two');
+        var attributes = mesh.attributes;
+        if (typeof mesh === 'undefined' || typeof attributes.position === 'undefined' ||
+                typeof attributes.position.values === 'undefined' || typeof mesh.attributes.position.values === 'undefined') {
+            throw new DeveloperError('mesh.attributes.position.values is required');
         }
-        if (indices.length % 3 !== 0) {
-            throw new DeveloperError('length of indices must be a multiple of three');
-        }
-
-        var normalsPerVertex = [];
-        var normalsPerTriangle = [];
-        var normalIndices = [];
-        var numVertices = vertices.length;
-        var numIndices = indices.length;
-
-        if (typeof result === 'undefined') {
-            result = [];
+        var vertices = mesh.attributes.position.values;
+        var indexLists = mesh.indexLists;
+        if (typeof indexLists === 'undefined') {
+            return mesh;
         }
 
-        for (var i = 0; i < numVertices; i++) {
-            normalsPerVertex[i] = {
-                    indexOffset: 0,
-                    count: 0,
-                    currentCount: 0
-                };
-        }
+        var length = indexLists.length;
+        for (var k = 0; k < length; k++) {
+            var indices = indexLists[k].values;
+            if (indexLists[k].primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
+                    indices.length < 2 || indices.length % 3 !== 0) {
+                continue;
+            }
 
-        var j = 0;
-        for (i = 0; i < numIndices; i+=3) {
-            var i0 = indices[i];
-            var i1 = indices[i+1];
-            var i2 = indices[i+2];
+            var normalsPerVertex = [];
+            var normalsPerTriangle = [];
+            var normalIndices = [];
+            var numVertices = vertices.length;
+            var numIndices = indices.length;
 
-            var v0 = vertices[i0];
-            var v1 = vertices[i1];
-            var v2 = vertices[i2];
+            for (var i = 0; i < numVertices; i++) {
+                normalsPerVertex[i] = {
+                        indexOffset: 0,
+                        count: 0,
+                        currentCount: 0
+                    };
+            }
 
-            normalsPerVertex[i0].count++;
-            normalsPerVertex[i1].count++;
-            normalsPerVertex[i2].count++;
+            var j = 0;
+            for (i = 0; i < numIndices; i+=3) {
+                var i0 = indices[i];
+                var i1 = indices[i+1];
+                var i2 = indices[i+2];
 
-            v1.subtract(v0, p);
-            v2.subtract(v1, q);
-            normalsPerTriangle[j] = p.cross(q);
-            j++;
-        }
+                var v0 = vertices[i0];
+                var v1 = vertices[i1];
+                var v2 = vertices[i2];
 
-        var indexOffset = 0;
-        for (i = 0; i < numVertices; i++) {
-            normalsPerVertex[i].indexOffset += indexOffset;
-            indexOffset += normalsPerVertex[i].count;
-        }
+                normalsPerVertex[i0].count++;
+                normalsPerVertex[i1].count++;
+                normalsPerVertex[i2].count++;
 
-        j = 0;
-        var vertexNormalData;
-        for (i = 0; i < numIndices; i+=3) {
-            vertexNormalData = normalsPerVertex[indices[i]];
-            var index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
-            normalIndices[index] = j;
-            vertexNormalData.currentCount++;
+                v1.subtract(v0, pScratch);
+                v2.subtract(v1, qScratch);
+                normalsPerTriangle[j] = pScratch.cross(qScratch);
+                j++;
+            }
 
-            vertexNormalData = normalsPerVertex[indices[i+1]];
-            index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
-            normalIndices[index] = j;
-            vertexNormalData.currentCount++;
+            var indexOffset = 0;
+            for (i = 0; i < numVertices; i++) {
+                normalsPerVertex[i].indexOffset += indexOffset;
+                indexOffset += normalsPerVertex[i].count;
+            }
 
-            vertexNormalData = normalsPerVertex[indices[i+2]];
-            index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
-            normalIndices[index] = j;
-            vertexNormalData.currentCount++;
+            j = 0;
+            var vertexNormalData;
+            for (i = 0; i < numIndices; i+=3) {
+                vertexNormalData = normalsPerVertex[indices[i]];
+                var index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
+                normalIndices[index] = j;
+                vertexNormalData.currentCount++;
 
-            j++;
-        }
+                vertexNormalData = normalsPerVertex[indices[i+1]];
+                index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
+                normalIndices[index] = j;
+                vertexNormalData.currentCount++;
 
-        for (i = 0; i < numVertices; i++) {
-            vertexNormalData = normalsPerVertex[i];
-            if (vertexNormalData.count > 0) {
-                Cartesian3.ZERO.clone(normal);
-                for (j = 0; j < vertexNormalData.count; j++) {
-                    normal.add(normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
+                vertexNormalData = normalsPerVertex[indices[i+2]];
+                index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
+                normalIndices[index] = j;
+                vertexNormalData.currentCount++;
+
+                j++;
+            }
+
+            for (i = 0; i < numVertices; i++) {
+                vertexNormalData = normalsPerVertex[i];
+                if (typeof mesh.attributes.normal === 'undefined') {
+                    mesh.attributes.normal = {
+                            values: []
+                    };
                 }
-                result[i] = normal.normalize();
-            } else {
-                result[i] = Cartesian3.UNIT_Z;
+
+                if (vertexNormalData.count > 0) {
+                    Cartesian3.ZERO.clone(normal);
+                    for (j = 0; j < vertexNormalData.count; j++) {
+                        normal.add(normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
+                    }
+                    mesh.attributes.normal.values[i] = normal.normalize();
+                } else {
+                    mesh.attributes.normal.values[i] = Cartesian3.UNIT_Z.clone();
+                }
             }
         }
 
-        return result;
+        return mesh;
     };
 
     return GeometryFilters;
