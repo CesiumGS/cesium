@@ -10,6 +10,7 @@ define(['../../Core/buildModuleUrl',
         '../../Core/Ellipsoid',
         '../../Core/FeatureDetection',
         '../../Core/requestAnimationFrame',
+        '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/CentralBody',
         '../../Scene/Scene',
@@ -30,6 +31,7 @@ define(['../../Core/buildModuleUrl',
         Ellipsoid,
         FeatureDetection,
         requestAnimationFrame,
+        ScreenSpaceEventHandler,
         BingMapsImageryProvider,
         CentralBody,
         Scene,
@@ -203,6 +205,13 @@ define(['../../Core/buildModuleUrl',
          * @type {SceneTransitioner}
          */
         this.transitioner = new SceneTransitioner(scene, _ellipsoid);
+
+        /**
+         * Gets the screen space event handler.
+         * @memberof CesiumWidget
+         * @type {ScreenSpaceEventHandler}
+         */
+        this.screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
 
         if (options.sceneMode) {
             if (options.sceneMode === SceneMode.SCENE2D) {

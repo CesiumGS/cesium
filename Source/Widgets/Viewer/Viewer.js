@@ -3,6 +3,7 @@ define(['../../Core/Cartesian2',
         '../../Core/defaultValue',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
+        '../../Core/ScreenSpaceEventType',
         '../../DynamicScene/CzmlDataSource',
         '../../DynamicScene/DataSourceDisplay',
         '../ClockViewModel',
@@ -20,6 +21,7 @@ define(['../../Core/Cartesian2',
                 defaultValue,
                 DeveloperError,
                 destroyObject,
+                ScreenSpaceEventType,
                 CzmlDataSource,
                 DataSourceDisplay,
                 ClockViewModel,
@@ -48,8 +50,7 @@ define(['../../Core/Cartesian2',
     }
 
     /**
-     * A base widget for building simple applications.  It composites most of
-     * the standard Cesium widget into one reusable package.
+     * A base widget for building applications.  It composites all of the standard Cesium widgets into one reusable package.
      *
      * @alias Viewer
      * @constructor
@@ -122,7 +123,7 @@ define(['../../Core/Cartesian2',
         toolbar.className = 'cesium-viewer-toolbar';
         container.appendChild(toolbar);
 
-        //View home
+        //HomeButton
         var homeButton;
         if (typeof options.homeButton === 'undefined' || options.homeButton !== false) {
             var homeButtonContainer = document.createElement('div');
@@ -180,6 +181,10 @@ define(['../../Core/Cartesian2',
             container.appendChild(fullscreenContainer);
             fullscreenButton = new FullscreenButton(fullscreenContainer, defaultValue(options.fullscreenElement, container));
         }
+
+        //Drag and drop
+        this._handleDrop = undefined;
+        this._dropContainer = undefined;
 
         /**
          * Gets the container element for the widget.
@@ -279,10 +284,12 @@ define(['../../Core/Cartesian2',
     }
 
     /**
-     * Processes a browser generated drop event
+     * Processes the browser generated drop event.  This method will load any dropped CZML files
+     * onto the globe.  If dropping multiple files, the clock configuration of the first file is used.
+     * @memberof Viewer
      *
      * @param {MouseEvent} event The browser generated drop event.
-     * @param {Function} errorCallback A function to be called when any errors are encountered.  It takes three parameters, the widget, the filename, and the error object.
+     * @param {Function} [errorCallback] A function to be called when any errors are encountered.  It takes three parameters, the widget, the filename, and the error object.
      *
      * @exception {DeveloperError} event is required.
      *
@@ -321,12 +328,58 @@ define(['../../Core/Cartesian2',
         }
     };
 
+    function stop(event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+
+    /**
+     * Enables default drag and drop behavior for loading data into the widget.
+     * @memberof Viewer
+     *
+     * @param [container=this.container] The container to serve as the drop target.
+     * @param {Function} [errorCallback] A function to be called when any errors are encountered.  It takes three parameters, the widget, the filename, and the error object.
+     */
+    Viewer.prototype.enableDragAndDrop = function(container, errorCallback) {
+        this.disableDragAndDrop();
+
+        var that = this;
+        this._handleDrop = function(event) {
+            stop(event);
+            that.handleDrop(event, errorCallback);
+        };
+
+        container = defaultValue(container, this.container);
+        container.addEventListener('drop', this._handleDrop, false);
+        container.addEventListener('dragenter', stop, false);
+        container.addEventListener('dragover', stop, false);
+        container.addEventListener('dragexit', stop, false);
+        this._dropContainer = container;
+    };
+
+    /**
+     * Disables default drag and drop behavior previously enabled by a call to enableDragAndDrop.
+     * If drag and drop is not enabled, this method does nothing.
+     * @memberof Viewer
+     */
+    Viewer.prototype.disableDragAndDrop = function() {
+        var currentContainer = this._dropContainer;
+        if (typeof currentContainer !== 'undefined') {
+            currentContainer.removeEventListener('drop', this._handleDrop, false);
+            currentContainer.removeEventListener('dragenter', stop, false);
+            currentContainer.removeEventListener('dragover', stop, false);
+            currentContainer.removeEventListener('dragexit', stop, false);
+            this._dropContainer = undefined;
+        }
+    };
+
     /**
      * Destroys the  widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof Viewer
      */
     Viewer.prototype.destroy = function() {
+        this.disableDragAndDrop();
         this.container.removeChild(this._toolbar);
 
         if (typeof this.homeButton !== 'undefined') {
@@ -364,7 +417,8 @@ define(['../../Core/Cartesian2',
     };
 
     Viewer.prototype._onTick = function(clock) {
-        this._dataSourceDisplay.update(clock.currentTime);
+        var currentTime = clock.currentTime;
+        this._dataSourceDisplay.update(currentTime);
     };
 
     return Viewer;
