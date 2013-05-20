@@ -173,22 +173,6 @@ define([
         return mappedIndices;
     };
 
-    GeometryFilters._computeNumberOfAttributes = function(mesh) {
-        var numberOfVertices = -1;
-        for ( var property in mesh.attributes) {
-            if (mesh.attributes.hasOwnProperty(property) && mesh.attributes[property].values) {
-                var attribute = mesh.attributes[property];
-                var num = attribute.values.length / attribute.componentsPerAttribute;
-                if ((numberOfVertices !== num) && (numberOfVertices !== -1)) {
-                    throw new DeveloperError('All mesh attribute lists must have the same number of attributes.');
-                }
-                numberOfVertices = num;
-            }
-        }
-
-        return numberOfVertices;
-    };
-
     /**
      * Reorders a mesh's indices to achieve better performance from the GPU's pre-vertex-shader cache.
      * Each list of indices in the mesh's <code>indexList</code> is reordered to keep the same index-vertex correspondence.
@@ -210,7 +194,7 @@ define([
      */
     GeometryFilters.reorderForPreVertexCache = function(mesh) {
         if (typeof mesh !== 'undefined') {
-            var numVertices = GeometryFilters._computeNumberOfAttributes(mesh);
+            var numVertices = Geometry.computeNumberOfVertices(mesh);
 
             var indexCrossReferenceOldToNew = [];
             for ( var i = 0; i < numVertices; i++) {
@@ -390,7 +374,7 @@ define([
         if (typeof mesh !== 'undefined') {
             GeometryFilters._verifyTrianglesPrimitiveType(mesh.indexLists);
 
-            var numberOfVertices = GeometryFilters._computeNumberOfAttributes(mesh);
+            var numberOfVertices = Geometry.computeNumberOfVertices(mesh);
 
             // If there's an index list and more than 64K attributes, it is possible that
             // some indices are outside the range of unsigned short [0, 64K - 1]
@@ -647,6 +631,7 @@ define([
 
         if (typeof mesh.boundingSphere !== 'undefined') {
             Matrix4.multiplyByPoint(mesh.modelMatrix, mesh.boundingSphere.center, mesh.boundingSphere.center);
+            mesh.boundingSphere.center = Cartesian3.fromCartesian4(mesh.boundingSphere.center);
         }
 
         mesh.modelMatrix = Matrix4.IDENTITY.clone();

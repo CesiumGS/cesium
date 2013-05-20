@@ -57,5 +57,13 @@ define([
         textureCoordinates : false
     }));
 
+    /**
+     * DOC_TBA
+     */
+    VertexFormat.ALL = freezeObject(new VertexFormat({
+        binormal : true,
+        tangent : true
+    }));
+
     return VertexFormat;
 });
