@@ -105,12 +105,28 @@ define([
         var m = new Material({
             context : widget.scene.getContext(),
             fabric : {
-                type : 'Image',
-                uniforms : {
-                    image : '../Sandcastle/images/Cesium_Logo_Color.jpg'
+                materials : {
+                    diffuseMaterial : {
+                        type : 'DiffuseMap',
+                        uniforms : {
+                            image : '../Sandcastle/images/bumpmap.png'
+                        }
+                    },
+                    normalMap : {
+                        type : 'NormalMap',
+                        uniforms : {
+                            image : '../Sandcastle/images/normalmap.png',
+                            strength : 0.6
+                        }
+                    }
+                },
+                components : {
+                    diffuse : 'diffuseMaterial.diffuse',
+                    specular : 0.01,
+                    normal : 'normalMap.normal'
                 }
             }
-         });
+        });
         var rs = {
             depthTest : {
                 enabled : true
@@ -122,6 +138,7 @@ define([
         });
 
         var mesh4 = new BoxGeometry({
+            vertexFormat : VertexFormat.ALL,
             dimensions : new Cartesian3(1000000.0, 1000000.0, 1000000.0),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
                 Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 4500000.0)),
