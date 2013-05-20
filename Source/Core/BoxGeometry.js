@@ -37,6 +37,13 @@ define([
      * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
+     *
+     * @example
+     * var box = new BoxGeometry({
+     *     vertexFormat : VertexFormat.POSITION_ONLY,
+     *     dimensions : new Cartesian3(500000.0, 500000.0, 500000.0),
+     *     modelMatrix : Transforms.eastNorthUpToFixedFrame(center)
+     * });
      */
     var BoxGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -381,16 +388,14 @@ define([
         this.boundingSphere = new BoundingSphere(new Cartesian3(), max.subtract(min).magnitude() * 0.5);
 
         /**
-         * The 4x4 transformation matrix that transforms the box from model to world coordinates.
-         * When this is the identity matrix, the box is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
+         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
-         * shaders via {@link czm_model} and derived uniforms.
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
          * @type Matrix4
          *
          * @see Transforms.eastNorthUpToFixedFrame
-         * @see czm_model
          */
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
 
