@@ -119,11 +119,11 @@ define([
             var radii = ellipsoid.getRadii();
             var flattenedPositions = new Array(length * 3);
 
-            j = 0;
-            for (i = 0; i < length; ++i) {
+            for (i = j = 0; i < length; ++i) {
                 var item = positions[i];
                 Cartesian3.normalize(item, item);
                 Cartesian3.multiplyComponents(item, radii, item);
+
                 flattenedPositions[j++] = item.x;
                 flattenedPositions[j++] = item.y;
                 flattenedPositions[j++] = item.z;
@@ -141,8 +141,7 @@ define([
             var oneOverRadii = ellipsoid.getOneOverRadii();
             var sphericalNormal = new Cartesian3();
 
-            j = 0;
-            for (i = 0; i < length; ++i) {
+            for (i = j = 0; i < length; ++i) {
                 Cartesian3.multiplyComponents(positions[i], oneOverRadii, sphericalNormal);
                 Cartesian3.normalize(sphericalNormal, sphericalNormal);
 
@@ -157,23 +156,56 @@ define([
             });
         }
 
-        if (vertexFormat.normal) {
+        if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
             var normals = new Array(length * 3);
-            var normal = new Cartesian3();
+            var tangents = new Array(length * 3);
+            var binormals = new Array(length * 3);
 
-            j = 0;
-            for (i = 0; i < length; ++i) {
+            var normal = new Cartesian3();
+            var tangent = new Cartesian3();
+            var binormal = new Cartesian3();
+
+            for (i = j = 0; i < length; ++i, j += 3) {
                 ellipsoid.geodeticSurfaceNormal(positions[i], normal);
-                normals[j++] = normal.x;
-                normals[j++] = normal.y;
-                normals[j++] = normal.z;
+                Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                Cartesian3.cross(normal, tangent, binormal);
+
+                normals[j] = normal.x;
+                normals[j + 1] = normal.y;
+                normals[j + 2] = normal.z;
+
+                tangents[j] = tangent.x;
+                tangents[j + 1] = tangent.y;
+                tangents[j + 2] = tangent.z;
+
+                binormals[j] = binormal.x;
+                binormals[j + 1] = binormal.y;
+                binormals[j + 2] = binormal.z;
             }
 
-            attributes.normal = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : normals
-            });
+            if (vertexFormat.normal) {
+                attributes.normal = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : normals
+                });
+            }
+
+            if (vertexFormat.tangent) {
+                attributes.tangent = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : tangents
+                });
+            }
+
+            if (vertexFormat.binormal) {
+                attributes.binormal = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : binormals
+                });
+            }
         }
 
         /**

@@ -137,11 +137,11 @@ define([
             renderState : rs
         });
 
-        var mesh4 = new BoxGeometry({
+        var mesh4 = new EllipsoidGeometry({
             vertexFormat : VertexFormat.ALL,
-            dimensions : new Cartesian3(1000000.0, 1000000.0, 1000000.0),
+            ellipsoid : new Ellipsoid(1000000.0, 500000.0, 500000.0),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 4500000.0)),
+                    Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 4500000.0)),
             pickData : 'mesh4'
         });
 
