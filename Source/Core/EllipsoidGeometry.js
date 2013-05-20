@@ -27,13 +27,31 @@ define([
         VertexFormat) {
     "use strict";
 
+    var sphericalNormal = new Cartesian3();
+    var normal = new Cartesian3();
+    var tangent = new Cartesian3();
+    var binormal = new Cartesian3();
+
     /**
-     * DOC_TBA
+     * Creates vertices and indices for an ellipsoid centered at the origin.
      *
      * @alias EllipsoidGeometry
      * @constructor
      *
+     * @param {Ellipsoid} [options.ellipsoi=Ellipsoid.UNIT_SPHERE] The ellipsoid used to create vertex attributes.
+     * @param {Number} [options.numberOfPartitions=32] The number of times to partition the ellipsoid in a plane formed by two radii in a single quadrant.
+     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+     * @param {Matrix4} [options.modelMatrix] The model matrix for this ellipsoid.
+     * @param {DOC_TBA} [options.pickData] DOC_TBA
+     *
      * @exception {DeveloperError} options.numberOfPartitions must be greater than zero.
+     *
+     * @example
+     * var ellipsoid = new EllipsoidGeometry({
+     *     vertexFormat : VertexFormat.POSITION_ONLY,
+     *     ellipsoid : new Ellipsoid(1000000.0, 500000.0, 500000.0),
+     *     modelMatrix : Transforms.eastNorthUpToFixedFrame(center)
+     * });
      */
     var EllipsoidGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -139,7 +157,6 @@ define([
         if (vertexFormat.st) {
             var texCoords = new Array(length * 2);
             var oneOverRadii = ellipsoid.getOneOverRadii();
-            var sphericalNormal = new Cartesian3();
 
             for (i = j = 0; i < length; ++i) {
                 Cartesian3.multiplyComponents(positions[i], oneOverRadii, sphericalNormal);
@@ -160,10 +177,6 @@ define([
             var normals = new Array(length * 3);
             var tangents = new Array(length * 3);
             var binormals = new Array(length * 3);
-
-            var normal = new Cartesian3();
-            var tangent = new Cartesian3();
-            var binormal = new Cartesian3();
 
             for (i = j = 0; i < length; ++i, j += 3) {
                 ellipsoid.geodeticSurfaceNormal(positions[i], normal);
@@ -209,12 +222,17 @@ define([
         }
 
         /**
-         * DOC_TBA
+         * An object containing {@link GeometryAttribute} properties named after each of the
+         * <code>true</code> values of the {@link VertexFormat} option.
+         *
+         * @type Object
          */
         this.attributes = attributes;
 
         /**
-         * DOC_TBA
+         * An array of {@link GeometryIndices} defining primitives.
+         *
+         * @type Array
          */
         this.indexLists = [
             new GeometryIndices({
@@ -224,12 +242,21 @@ define([
         ];
 
         /**
-         * DOC_TBA
+         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
+         *
+         * @type BoundingSphere
          */
         this.boundingSphere = BoundingSphere.fromEllipsoid(ellipsoid);
 
         /**
-         * DOC_TBA
+         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
+         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+         * Local reference frames can be used by providing a different transformation matrix, like that returned
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
+         *
+         * @type Matrix4
+         *
+         * @see Transforms.eastNorthUpToFixedFrame
          */
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
 
@@ -239,28 +266,37 @@ define([
         this.pickData = options.pickData;
     };
 
+    var scratchDirection = new Cartesian3();
+
     function addEdgePositions(i0, i1, numberOfPartitions, positions) {
         var indices = [];
         indices[0] = i0;
         indices[2 + (numberOfPartitions - 1) - 1] = i1;
 
         var origin = positions[i0];
-        var direction = positions[i1].subtract(positions[i0]);
+        var direction = Cartesian3.subtract(positions[i1], positions[i0], scratchDirection);
 
         for ( var i = 1; i < numberOfPartitions; ++i) {
             var delta = i / numberOfPartitions;
+            var position = Cartesian3.multiplyByScalar(direction, delta);
+            Cartesian3.add(origin, position, position);
 
             indices[i] = positions.length;
-            positions.push(origin.add(direction.multiplyByScalar(delta)));
+            positions.push(position);
         }
 
         return indices;
     }
 
+    var scratchX = new Cartesian3();
+    var scratchY = new Cartesian3();
+    var scratchOffsetX = new Cartesian3();
+    var scratchOffsetY = new Cartesian3();
+
     function addFaceTriangles(leftBottomToTop, bottomLeftToRight, rightBottomToTop, topLeftToRight, numberOfPartitions, positions, indices) {
         var origin = positions[bottomLeftToRight[0]];
-        var x = positions[bottomLeftToRight[bottomLeftToRight.length - 1]].subtract(origin);
-        var y = positions[topLeftToRight[0]].subtract(origin);
+        var x = Cartesian3.subtract(positions[bottomLeftToRight[bottomLeftToRight.length - 1]], origin, scratchX);
+        var y = Cartesian3.subtract(positions[topLeftToRight[0]], origin, scratchY);
 
         var bottomIndicesBuffer = [];
         var topIndicesBuffer = [];
@@ -282,14 +318,16 @@ define([
                 topIndicesBuffer[numberOfPartitions] = rightBottomToTop[j];
 
                 var deltaY = j / numberOfPartitions;
-                var offsetY = y.multiplyByScalar(deltaY);
+                var offsetY = Cartesian3.multiplyByScalar(y, deltaY, scratchOffsetY);
 
                 for ( var i = 1; i < numberOfPartitions; ++i) {
                     var deltaX = i / numberOfPartitions;
-                    var offsetX = x.multiplyByScalar(deltaX);
+                    var offsetX = Cartesian3.multiplyByScalar(x, deltaX, scratchOffsetX);
+                    var position = Cartesian3.add(origin, offsetX);
+                    Cartesian3.add(position, offsetY, position);
 
                     topIndicesBuffer[i] = positions.length;
-                    positions.push(origin.add(offsetX).add(offsetY));
+                    positions.push(position);
                 }
             } else {
                 if (j !== 1) {
