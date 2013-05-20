@@ -3,6 +3,7 @@ define(['../../Core/Cartesian2',
         '../../Core/defaultValue',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
+        '../../DynamicScene/CzmlDataSource',
         '../../DynamicScene/DataSourceDisplay',
         '../ClockViewModel',
         '../Animation/Animation',
@@ -19,6 +20,7 @@ define(['../../Core/Cartesian2',
                 defaultValue,
                 DeveloperError,
                 destroyObject,
+                CzmlDataSource,
                 DataSourceDisplay,
                 ClockViewModel,
                 Animation,
@@ -243,8 +245,80 @@ define(['../../Core/Cartesian2',
         this.dataSources = dataSourceDisplay.getDataSources();
     };
 
-    Viewer.prototype._onTick = function(clock) {
-        this._dataSourceDisplay.update(clock.currentTime);
+    function createOnLoadCallback(viewer, source, errorCallback, firstTime) {
+        return function(evt) {
+            var czmlSource = new CzmlDataSource();
+            try {
+                czmlSource.load(JSON.parse(evt.target.result), source);
+                viewer.dataSources.add(czmlSource);
+                if (firstTime) {
+                    var dataClock = czmlSource.getClock();
+                    if (typeof dataClock !== 'undefined') {
+                        var widgetClock = viewer.cesiumWidget.clock;
+                        widgetClock.startTime = dataClock.startTime;
+                        widgetClock.stopTime = dataClock.stopTime;
+                        widgetClock.clockRange = dataClock.clockRange;
+                        widgetClock.clockStep = dataClock.clockStep;
+                        widgetClock.multiplier = dataClock.multiplier;
+                        widgetClock.currentTime = dataClock.currentTime;
+                        viewer.timeline.zoomTo(widgetClock.startTime, widgetClock.stopTime);
+                    }
+                }
+            } catch (error) {
+                if (typeof errorCallback !== 'undefined') {
+                    errorCallback(viewer, source, error);
+                }
+            }
+        };
+    }
+
+    function createOnErrorCallback(viewer, source, errorCallback) {
+        return function(evt) {
+            errorCallback(viewer, source, evt.target.error);
+        };
+    }
+
+    /**
+     * Processes a browser generated drop event
+     *
+     * @param {MouseEvent} event The browser generated drop event.
+     * @param {Function} errorCallback A function to be called when any errors are encountered.  It takes three parameters, the widget, the filename, and the error object.
+     *
+     * @exception {DeveloperError} event is required.
+     *
+     * @example
+     * //Implement drag and drop support for the widget container.
+     * function stop(event) {
+     *  event.stopPropagation();
+     *  event.preventDefault();
+     * }
+     *
+     * var container = viewer.container;
+     * container.addEventListener('drop', function(event) {
+     *   stop(event);
+     *   widget.handleDrop(event);
+     * }, false);
+     * container.addEventListener('dragenter', stop, false);
+     * container.addEventListener('dragover', stop, false);
+     * container.addEventListener('dragexit', stop, false);
+     */
+    Viewer.prototype.handleDrop = function(event, errorCallback) {
+        if (typeof event === 'undefined') {
+            throw new DeveloperError('event is required.');
+        }
+
+        var dataSources = this.dataSources;
+        dataSources.removeAll();
+
+        var files = event.dataTransfer.files;
+        var length = files.length;
+        for ( var i = 0; i < length; i++) {
+            var f = files[i];
+            var reader = new FileReader();
+            reader.onload = createOnLoadCallback(this, f.name, errorCallback, i === 0);
+            reader.onerror = typeof errorCallback !== 'undefined' ? createOnErrorCallback(this, f.name, errorCallback) : undefined;
+            reader.readAsText(f);
+        }
     };
 
     /**
@@ -287,6 +361,10 @@ define(['../../Core/Cartesian2',
         this.cesiumWidget = this.cesiumWidget.destroy();
         this._dataSourceDisplay = this._dataSourceDisplay.destroy();
         return destroyObject(this);
+    };
+
+    Viewer.prototype._onTick = function(clock) {
+        this._dataSourceDisplay.update(clock.currentTime);
     };
 
     return Viewer;

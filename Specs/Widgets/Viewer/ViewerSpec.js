@@ -216,4 +216,13 @@ defineSuite(['Widgets/Viewer/Viewer',
             return new Viewer('container');
         }).toThrow();
     });
+
+    it('handleDrop throws with undefined event', function() {
+        var viewer = new Viewer(document.body);
+        expect(function() {
+            return viewer.handleDrop(undefined, function() {
+            });
+        }).toThrow();
+        viewer.destroy();
+    });
 });

@@ -16,7 +16,17 @@ define([
         checkForChromeFrame,
         Viewer) {
     "use strict";
-    /*global console*/
+    /*global console alert*/
+
+    function stop(event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+
+    function onError(viewer, name, error) {
+        console.log(error);
+        alert(error);
+    }
 
     ready(function() {
         parser.parse();
@@ -28,7 +38,18 @@ define([
             endUserOptions = ioQuery.queryToObject(window.location.search.substring(1));
         }
 
-        var widget = new Viewer('cesiumContainer');
+        var container = document.getElementById('cesiumContainer');
+        var widget = new Viewer(container);
+
+        //Set up drag and drop.
+        container.addEventListener('drop', function(event) {
+            stop(event);
+            widget.handleDrop(event, onError);
+        }, false);
+        container.addEventListener('dragenter', stop, false);
+        container.addEventListener('dragover', stop, false);
+        container.addEventListener('dragexit', stop, false);
+
         domClass.remove(win.body(), 'loading');
     });
 });
