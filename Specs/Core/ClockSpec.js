@@ -406,7 +406,9 @@ defineSuite([
     });
 
     it('clock does not advance if shouldAnimate is false and advances if true', function() {
-        var clock = new Clock;
+        var clock = new Clock();
+        var time1;
+        var time2;
 
         clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
         var currentTime = clock.currentTime;
@@ -414,9 +416,9 @@ defineSuite([
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
         clock.shouldAnimate = true;
-        var time1 = clock.tick();
+        time1 = clock.tick();
         waitsFor(function() {
-            var time2 = clock.tick();
+            time2 = clock.tick();
             return time2.greaterThan(time1);
         });
 
@@ -426,9 +428,9 @@ defineSuite([
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
         clock.shouldAnimate = true;
-        var time1 = clock.tick();
+        time1 = clock.tick();
         waitsFor(function() {
-            var time2 = clock.tick();
+            time2 = clock.tick();
             return time2.greaterThan(time1);
         });
 
