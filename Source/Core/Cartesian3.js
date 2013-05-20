@@ -609,7 +609,8 @@ define([
      *
      * @param {Cartesian3} left The first Cartesian.
      * @param {Cartesian3} right The second Cartesian.
-     * @return {Number} The cross product.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The cross product.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -918,7 +919,8 @@ define([
      * @memberof Cartesian3
      *
      * @param {Cartesian3} right The right hand side Cartesian.
-     * @return {Number} The cross product.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The cross product.
      *
      * @exception {DeveloperError} right is required.
      */
