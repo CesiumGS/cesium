@@ -12,7 +12,7 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('constructor throws with negative dimanesions', function() {
+    it('constructor throws with negative dimensions', function() {
         expect(function() {
             return new BoxGeometry({
                 dimensions : new Cartesian3(1, 2, -1)
