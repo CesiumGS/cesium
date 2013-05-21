@@ -12,7 +12,7 @@ define(['Core/Event',
         this.errorEvent = new Event();
         this.clock = undefined;
         this.dynamicObjectCollection = new DynamicObjectCollection();
-        this.isTemporal = false;
+        this.isTimeVarying = false;
         this.destroyed = false;
 
         var that = this;
@@ -34,7 +34,7 @@ define(['Core/Event',
         };
 
         this.getIsTimeVarying = function() {
-            return that.isTemporal;
+            return that.isTimeVarying;
         };
 
         this.destroy = function() {

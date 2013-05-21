@@ -59,11 +59,11 @@ define(['../Core/ClockRange',
         this._error = new Event();
         this._clock = undefined;
         this._dynamicObjectCollection = new DynamicObjectCollection();
-        this._temporal = true;
+        this._timeVarying = true;
     };
 
     /**
-     * Gets an event that will be raised when non-temporal data changes
+     * Gets an event that will be raised when non-time-varying data changes
      * or if the return value of getIsTimeVarying changes.
      * @memberof DataSource
      *
@@ -113,7 +113,7 @@ define(['../Core/ClockRange',
      * @returns {Boolean} True if the data is varies with simulation time, false otherwise.
      */
     CzmlDataSource.prototype.getIsTimeVarying = function() {
-        return this._temporal;
+        return this._timeVarying;
     };
 
     /**
