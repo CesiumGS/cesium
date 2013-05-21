@@ -38,25 +38,27 @@ define(['../../Core/DeveloperError',
         var selectedViewModel = knockout.observable();
 
         /**
-         * Gets the ImageryLayerCollection.
+         * Gets a readonly observable whose value is the imagery layers collection being used.
          * @type ImageryLayerCollection
          */
-        this.imageryLayers = imageryLayers;
+        this.imageryLayers = knockout.computed(function() {
+            return imageryLayers;
+        });
 
         /**
-         * Gets the observable array of ImageryProviderViewModel instances available for selection.
+         * Gets a writable observable array of ImageryProviderViewModel instances available for selection.
          * @type Observable
          */
         this.imageryProviderViewModels = knockout.observableArray(imageryProviderViewModels);
 
         /**
-         * Gets or sets whether the imagery selection dropDown is currently visible.
+         * Gets a writable observable whose value indicates if the imagery selection dropDown is currently visible.
          * @type Observable
         */
         this.dropDownVisible = dropDownVisible;
 
         /**
-         * Command to toggle dropDown visibility.
+         * Gets the command to toggle dropDown visibility.
          * @type Command
         */
         this.toggleDropDown = createCommand(function() {
@@ -64,7 +66,7 @@ define(['../../Core/DeveloperError',
         });
 
         /**
-         * Gets the name of the currently selected item.
+         * Gets a readonly observable for the the name of the currently selected item.
          * @type Observable
         */
         this.selectedName = knockout.computed(function() {
@@ -73,7 +75,7 @@ define(['../../Core/DeveloperError',
         });
 
         /**
-         * Gets the image url of the currently selected item.
+         * Gets a readonly observable for the image url of the currently selected item.
          * @type Observable
         */
         this.selectedIconUrl = knockout.computed(function() {

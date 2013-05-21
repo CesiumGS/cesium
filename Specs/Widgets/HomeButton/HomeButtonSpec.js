@@ -30,9 +30,9 @@ defineSuite(['Widgets/HomeButton/HomeButton',
     it('constructor sets default values', function() {
         var homeButton = new HomeButton(document.body, scene);
         expect(homeButton.container).toBe(document.body);
-        expect(homeButton.viewModel.scene).toBe(scene);
-        expect(homeButton.viewModel.transitioner).toBeUndefined();
-        expect(homeButton.viewModel.ellipsoid).toBe(Ellipsoid.WGS84);
+        expect(homeButton.viewModel.scene()).toBe(scene);
+        expect(homeButton.viewModel.transitioner()).toBeUndefined();
+        expect(homeButton.viewModel.ellipsoid()).toBe(Ellipsoid.WGS84);
         homeButton.destroy();
     });
 
@@ -40,9 +40,9 @@ defineSuite(['Widgets/HomeButton/HomeButton',
         var ellipsoid = new Ellipsoid();
         var homeButton = new HomeButton(document.body, scene, transitioner, ellipsoid);
         expect(homeButton.container).toBe(document.body);
-        expect(homeButton.viewModel.scene).toBe(scene);
-        expect(homeButton.viewModel.transitioner).toBe(transitioner);
-        expect(homeButton.viewModel.ellipsoid).toBe(ellipsoid);
+        expect(homeButton.viewModel.scene()).toBe(scene);
+        expect(homeButton.viewModel.transitioner()).toBe(transitioner);
+        expect(homeButton.viewModel.ellipsoid()).toBe(ellipsoid);
         homeButton.destroy();
     });
 

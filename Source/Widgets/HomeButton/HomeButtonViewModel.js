@@ -94,42 +94,47 @@ define(['../createCommand',
      * @exception {Scene} scene is required.
      */
     var HomeButtonViewModel = function(scene, transitioner, ellipsoid) {
-        var that = this;
-
         if (typeof scene === 'undefined') {
             throw new DeveloperError('scene is required.');
         }
 
-        /**
-         * The scene.
-         * @type Scene
-         */
-        this.scene = scene;
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         /**
-         * The primary ellipsoid for the scene.
-         * @type Ellipsoid
+         * Gets a readonly observable whose value is the scene.
+         * @type Observable
          */
-        this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
+        this.scene = knockout.computed(function() {
+            return scene;
+        });
         /**
-         * The scene transitioner being used by the host application.
-         * If a transitioner is assigned, any running morphs will be completed
-         * when the home button is pressed.
-         * @type SceneTransitioner
+         * Gets a readonly observable whose value is the primary ellipsoid for the scene.
+         * @type Observable
          */
-        this.transitioner = transitioner;
-
-        /**
-         * The command for switching to home view.
-         * @type Command
-         */
-        this.command = createCommand(function() {
-            viewHome(that.scene, that.ellipsoid, that.transitioner);
+        this.ellipsoid = knockout.computed(function() {
+            return ellipsoid;
         });
 
         /**
-         * The current button tooltip.
+         * Gets a readonly observable whose value is the scene transitioner being
+         * used by the host application. If a transitioner is assigned, any running
+         * morphs will be completed when the home button is pressed.
+         * @type Observable
+         */
+        this.transitioner = knockout.computed(function() {
+            return transitioner;
+        });
+
+        /**
+         * Gets the command for switching to home view.
+         * @type Command
+         */
+        this.command = createCommand(function() {
+            viewHome(scene, ellipsoid, transitioner);
+        });
+
+        /**
+         * Gets a writable observable indicating the current tooltip.
          * @type Observable
          */
         this.tooltip = knockout.observable('View Home');

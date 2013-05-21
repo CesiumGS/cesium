@@ -301,7 +301,7 @@ define([
         });
 
         /**
-         * A boolean observable indicating if dragging the shuttle ring should cause the multiplier
+         * Gets a writable observable indicating if dragging the shuttle ring should cause the multiplier
          * to snap to the defined tick values rather than interpolating between them.
          * @type Observable
          * @default false
@@ -309,7 +309,7 @@ define([
         this.snapToTicks = knockout.observable(false);
 
         /**
-         * The current shuttle ring Angle.
+         * Gets a writable observable for the current shuttle ring Angle.
          * @type Observable
          */
         this.shuttleRingAngle = knockout.computed({
@@ -354,7 +354,7 @@ define([
         });
 
         /**
-         * The command to decrease the speed of animation.
+         * Gets the command to decrease the speed of animation.
          * @type Command
          */
         this.slower = createCommand(function() {
@@ -369,7 +369,7 @@ define([
         });
 
         /**
-         * The command to increase the speed of animation.
+         * Gets the command to increase the speed of animation.
          * @type Command
          */
         this.faster = createCommand(function() {

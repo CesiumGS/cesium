@@ -38,19 +38,21 @@ define(['../../Core/DeveloperError',
         var tooltipColumbusView = knockout.observable('Columbus View');
 
         /**
-         * Gets the SceneTransitioner being used.
+         * Gets a readonly observable whose value is the SceneTransitioner being used.
          * @type Observable
         */
-        this.transitioner = transitioner;
+        this.transitioner = knockout.computed(function() {
+            return transitioner;
+        });
 
         /**
-         * Gets the current SceneMode
+         * Gets a writable observable whose value is the current SceneMode
          * @type Observable
         */
         this.sceneMode = sceneMode;
 
         /**
-         * Gets or sets whether the button dropDown is currently visible.
+         * Gets a writable observable indicating if the button dropDown is currently visible.
          * @type Observable
         */
         this.dropDownVisible = dropDownVisible;
@@ -128,7 +130,7 @@ define(['../../Core/DeveloperError',
     };
 
     SceneModePickerViewModel.prototype.destroy = function() {
-        this.transitioner.onTransitionStart.removeEventListener(this._transitionStart);
+        this.transitioner().onTransitionStart.removeEventListener(this._transitionStart);
     };
 
     return SceneModePickerViewModel;
