@@ -848,6 +848,7 @@ define([
      * @returns The modified <code>mesh</code> argument.
      *
      * @exception {DeveloperError} mesh.attributes.position.values is required
+     * @exception {DeveloperError} mesh.attributes.position.values.length must be a multiple of 3
      *
      * @example
      * mesh = GeometryFilters.computeNormals(mesh);
@@ -887,7 +888,7 @@ define([
             var numIndices = indices.length;
             var normalsPerVertex = new Array(numVertices);
             var normalsPerTriangle = new Array(numIndices/3);
-            var normalIndices = new Array(numVertices);
+            var normalIndices = new Array(numIndices);
 
             for (var i = 0; i < numVertices; i++) {
                 normalsPerVertex[i] = {
@@ -902,16 +903,19 @@ define([
                 var i0 = indices[i];
                 var i1 = indices[i+1];
                 var i2 = indices[i+2];
+                var i03 = i0*3;
+                var i13 = i1*3;
+                var i23 = i2*3;
 
-                v0.x = vertices[i0*3];
-                v0.y = vertices[i0*3+1];
-                v0.z = vertices[i0*3+2];
-                v1.x = vertices[i1*3];
-                v1.y = vertices[i1*3+1];
-                v1.z = vertices[i1*3+2];
-                v2.x = vertices[i2*3];
-                v2.y = vertices[i2*3+1];
-                v2.z = vertices[i2*3+2];
+                v0.x = vertices[i03];
+                v0.y = vertices[i03+1];
+                v0.z = vertices[i03+2];
+                v1.x = vertices[i13];
+                v1.y = vertices[i13+1];
+                v1.z = vertices[i13+2];
+                v2.x = vertices[i23];
+                v2.y = vertices[i23+1];
+                v2.z = vertices[i23+2];
 
                 normalsPerVertex[i0].count++;
                 normalsPerVertex[i1].count++;
@@ -957,7 +961,9 @@ define([
                         values: new Array(numVertices * 3)
                 });
             }
+            var normalValues = mesh.attributes.normal.values;
             for (i = 0; i < numVertices; i++) {
+                var i3 = i * 3;
                 vertexNormalData = normalsPerVertex[i];
                 if (vertexNormalData.count > 0) {
                     Cartesian3.ZERO.clone(normal);
@@ -965,13 +971,13 @@ define([
                         normal.add(normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
                     }
                     normal.normalize(normal);
-                    mesh.attributes.normal.values[3*i] = normal.x;
-                    mesh.attributes.normal.values[3*i+1] = normal.y;
-                    mesh.attributes.normal.values[3*i+2] = normal.z;
+                    normalValues[i3] = normal.x;
+                    normalValues[i3+1] = normal.y;
+                    normalValues[i3+2] = normal.z;
                 } else {
-                    mesh.attributes.normal.values[3*i] = 0;
-                    mesh.attributes.normal.values[3*i+1] = 0;
-                    mesh.attributes.normal.values[3*i+2] = 1;
+                    normalValues[i3] = 0;
+                    normalValues[i3+1] = 0;
+                    normalValues[i3+2] = 1;
                 }
             }
         }
