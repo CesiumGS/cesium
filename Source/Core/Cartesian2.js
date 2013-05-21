@@ -77,6 +77,25 @@ define([
     };
 
     /**
+     * Creates a Cartesian2 instance from x and y coordinates.
+     * @memberof Cartesian2
+     *
+     * @param {Number} x The x coordinate.
+     * @param {Number} y The y coordinate.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     */
+    Cartesian2.fromElements = function(x, y, result) {
+        if (typeof result === 'undefined') {
+            return new Cartesian2(x, y);
+        }
+
+        result.x = x;
+        result.y = y;
+        return result;
+    };
+
+    /**
      * Duplicates a Cartesian2 instance.
      * @memberof Cartesian2
      *

@@ -624,4 +624,17 @@ defineSuite([
             Cartesian4.equalsEpsilon(new Cartesian4(), new Cartesian4(), undefined);
         }).toThrow();
     });
+
+    it('fromElements returns a cartesian4 with corrrect coordinates', function(){
+        var cartesian4 = Cartesian4.fromElements(2, 2, 4, 7);
+        var expectedResult = new Cartesian4(2, 2, 4, 7);
+        expect(cartesian4).toEqual(expectedResult);
+    });
+
+    it('fromElements result param returns cartesian4 with correct coordinates', function(){
+        var cartesian4 = new Cartesian4();
+        Cartesian4.fromElements(2, 2, 4, 7, cartesian4);
+        var expectedResult = new Cartesian4(2, 2, 4, 7);
+        expect(cartesian4).toEqual(expectedResult);
+    });
 });
