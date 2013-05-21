@@ -4,6 +4,23 @@ Change Log
 Beta Releases
 -------------
 
+### TODO
+
+* Breaking changes:
+   * Replaced tessellators and meshes with geometry.  In particular:
+      * Replaced `CubeMapEllipsoidTessellator` with `EllipsoidGeometry`.
+      * Replaced `BoxTessellator` with `BoxGeometry`.
+      * Removed `PlaneTessellator`.  It was incomplete and not used.
+      * Renamed `MeshFilters` to `GeometryFilters`.
+      * Renamed `MeshFilters.toWireframeInPlace` to `GeometryFilters.toWireframe`.
+   * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
+   * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.    
+* Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
+* Added `GeometryFilters.combine` to combine meshes for better batching.
+* Added `BoundingSphere.fromEllipsoid`.
+* Added renderer support for `OES_element_index_uint`, which can improve performance by reducing batch sizes.
+* Added 'czm_tangentToEyeSpaceMatrix` built-in GLSL function.
+
 ### b17 - 2013-06-03
 
 * Breaking changes:
@@ -11,12 +28,14 @@ Beta Releases
    * Renamed `Widgets/Fullscreen` folder to `Widgets/FullscreenButton` along with associated objects/files.
       * `FullscreenWidget` -> `FullscreenButton`
       * `FullscreenViewModel` -> `FullscreenButtonViewModel`
+* Added `SceneTransforms.wgs84ToWindowCoordinates`. [#746](https://github.com/AnalyticalGraphicsInc/cesium/issues/746).
+* Added `fromElements` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `DrawCommand.cull` to avoid redundant visibility checks.
 * Added `czm_morphTime` automatic GLSL uniform.
 * Added support for floating-point textures.
 * Fixed polyline clipping artifact. [#728](https://github.com/AnalyticalGraphicsInc/cesium/issues/728).
 * Added `IntersectionTests.trianglePlaneIntersection`.
-* Fixed polygon crossing international date line for 2D and Columbus view.
+* Fixed polygon crossing International Date Line for 2D and Columbus view. [#99](https://github.com/AnalyticalGraphicsInc/cesium/issues/99).
 * Added `computeHorizonCullingPoint`, `computeHorizonCullingPointFromVertices`, and `computeHorizonCullingPointFromExtent` methods to `EllipsoidalOccluder` and used them to build a more accurate horizon occlusion test for terrain rendering.
 * Added sun visualization. See `Sun` and `Scene.sun`.
 * Added a new `HomeButton` widget for returning to the default view of the current scene mode.

@@ -7,6 +7,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/RuntimeError',
         '../Core/PrimitiveType',
+        '../Core/Geometry',
         '../Core/createGuid',
         '../Core/Matrix4',
         './Buffer',
@@ -40,6 +41,7 @@ define([
         IndexDatatype,
         RuntimeError,
         PrimitiveType,
+        Geometry,
         createGuid,
         Matrix4,
         Buffer,
@@ -222,6 +224,7 @@ define([
 
         // Query and initialize extensions
         this._standardDerivatives = gl.getExtension('OES_standard_derivatives');
+        this._elementIndexUint = gl.getExtension('OES_element_index_uint');
         this._depthTexture = gl.getExtension('WEBKIT_WEBGL_depth_texture') || gl.getExtension('MOZ_WEBGL_depth_texture');
         this._textureFloat = gl.getExtension('OES_texture_float');
         var textureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') || gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
@@ -688,6 +691,21 @@ define([
     };
 
     /**
+     * Returns <code>true</code> if the OES_element_index_uint extension is supported.  This
+     * extension allows the use of unsigned int indices, which can improve performance by
+     * eliminating batch breaking caused by unsigned short indices.
+     *
+     * @memberof Context
+     *
+     * @returns {Boolean} <code>true</code> if OES_element_index_uint is supported; otherwise, <code>false</code>.
+     *
+     * @see <a href='http://www.khronos.org/registry/webgl/extensions/OES_element_index_uint/'>OES_element_index_uint</a>
+     */
+    Context.prototype.getElementIndexUint = function() {
+        return !!this._elementIndexUint;
+    };
+
+    /**
      * Returns <code>true</code> if WEBGL_depth_texture is supported.  This extension provides
      * access to depth textures that, for example, can be attached to framebuffers for shadow mapping.
      *
@@ -1037,6 +1055,7 @@ define([
      *
      * @return {IndexBuffer} The index buffer, ready to be attached to a vertex array.
      *
+     * @exception {RuntimeError} IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.
      * @exception {DeveloperError} The size in bytes must be greater than zero.
      * @exception {DeveloperError} Invalid <code>usage</code>.
      * @exception {DeveloperError} Invalid <code>indexDatatype</code>.
@@ -1062,15 +1081,15 @@ define([
      *     BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT)
      */
     Context.prototype.createIndexBuffer = function(typedArrayOrSizeInBytes, usage, indexDatatype) {
-        var bytesPerIndex;
-
-        if (indexDatatype === IndexDatatype.UNSIGNED_BYTE) {
-            bytesPerIndex = Uint8Array.BYTES_PER_ELEMENT;
-        } else if (indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
-            bytesPerIndex = Uint16Array.BYTES_PER_ELEMENT;
-        } else {
+        if (!IndexDatatype.validate(indexDatatype)) {
             throw new DeveloperError('Invalid indexDatatype.');
         }
+
+        if ((indexDatatype === IndexDatatype.UNSIGNED_INT) && !this.getElementIndexUint()) {
+            throw new RuntimeError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.');
+        }
+
+        var bytesPerIndex = indexDatatype.sizeInBytes;
 
         var gl = this._gl;
         var buffer = createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, typedArrayOrSizeInBytes, usage);
@@ -2218,7 +2237,7 @@ define([
                 var sizeInBytes = attributes[name].componentDatatype.sizeInBytes;
 
                 views[name] = {
-                    pointer : attributes[name].componentDatatype.toTypedArray(buffer),
+                    pointer : attributes[name].componentDatatype.createTypedArray(buffer),
                     index : offsetsInBytes[name] / sizeInBytes, // Offset in ComponentType
                     strideInComponentType : vertexSizeInBytes / sizeInBytes
                 };
@@ -2308,7 +2327,7 @@ define([
                     attribute = attributes[name];
                     vaAttributes.push({
                         index : attributeIndices[name],
-                        vertexBuffer : attribute.values ? context.createVertexBuffer(attribute.componentDatatype.toTypedArray(attribute.values), bufferUsage) : undefined,
+                        vertexBuffer : attribute.values ? context.createVertexBuffer(attribute.componentDatatype.createTypedArray(attribute.values), bufferUsage) : undefined,
                         value : attribute.value ? attribute.value : undefined,
                         componentDatatype : attribute.componentDatatype,
                         componentsPerAttribute : attribute.componentsPerAttribute,
@@ -2326,7 +2345,7 @@ define([
      * in system memory, whereas a vertex array contains vertex buffers and an optional index buffer in WebGL
      * memory for use with rendering.
      * <br /><br />
-     * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxTessellator}.
+     * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxGeometry}.
      * <br /><br />
      * <code>creationArguments</code> can have four properties:
      * <ul>
@@ -2349,18 +2368,17 @@ define([
      * @see Context#createVertexArray
      * @see Context#createVertexBuffer
      * @see Context#createIndexBuffer
-     * @see MeshFilters.createAttributeIndices
+     * @see GeometryFilters.createAttributeIndices
      * @see ShaderProgram
-     * @see BoxTessellator
      *
      * @example
      * // Example 1. Creates a vertex array for rendering a box.  The default dynamic draw
      * // usage is used for the created vertex and index buffer.  The attributes are not
      * // interleaved by default.
-     * var mesh = BoxTessellator.compute();
+     * var mesh = new BoxGeometry();
      * var va = context.createVertexArrayFromMesh({
      *     mesh             : mesh,
-     *     attributeIndices : MeshFilters.createAttributeIndices(mesh),
+     *     attributeIndices : GeometryFilters.createAttributeIndices(mesh),
      * });
      *
      * ////////////////////////////////////////////////////////////////////////////////
@@ -2369,7 +2387,7 @@ define([
      * // single vertex buffer.  The vertex and index buffer have static draw usage.
      * var va = context.createVertexArrayFromMesh({
      *     mesh             : mesh,
-     *     attributeIndices : MeshFilters.createAttributeIndices(mesh),
+     *     attributeIndices : GeometryFilters.createAttributeIndices(mesh),
      *     bufferUsage      : BufferUsage.STATIC_DRAW,
      *     vertexLayout     : VertexLayout.INTERLEAVED
      * });
@@ -2396,7 +2414,11 @@ define([
         var va = createVertexArrayAttributes(this, creationArguments);
 
         if (indexLists) {
-            va.setIndexBuffer(this.createIndexBuffer(new Uint16Array(indexLists[0].values), bufferUsage, IndexDatatype.UNSIGNED_SHORT));
+            if ((Geometry.computeNumberOfVertices(mesh) > 64 * 1024) && this.getElementIndexUint()) {
+                va.setIndexBuffer(this.createIndexBuffer(new Uint32Array(indexLists[0].values), bufferUsage, IndexDatatype.UNSIGNED_INT));
+            } else{
+                va.setIndexBuffer(this.createIndexBuffer(new Uint16Array(indexLists[0].values), bufferUsage, IndexDatatype.UNSIGNED_SHORT));
+            }
         }
 
         return va;

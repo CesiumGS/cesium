@@ -14,7 +14,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/ComponentDatatype',
-        '../Core/MeshFilters',
+        '../Core/GeometryFilters',
         '../Core/PrimitiveType',
         '../Core/EllipsoidTangentPlane',
         '../Core/PolygonPipeline',
@@ -50,7 +50,7 @@ define([
         Cartesian4,
         Cartographic,
         ComponentDatatype,
-        MeshFilters,
+        GeometryFilters,
         PrimitiveType,
         EllipsoidTangentPlane,
         PolygonPipeline,
@@ -465,9 +465,6 @@ define([
         var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, appendTextureCoordinatesQuaternion);
         var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
 
-        // PERFORMANCE_IDEA:  Instead of storing texture coordinates per-vertex, we could
-        // save memory by computing them in the fragment shader.  However, projecting
-        // the point onto the plane may have precision issues.
         for ( var i = 0; i < length; i += 3) {
             var p = appendTextureCoordinatesCartesian3;
             p.x = positions[i];
@@ -568,7 +565,11 @@ define([
         var mesh;
 
         if ((typeof polygon._extent !== 'undefined') && !polygon._extent.isEmpty()) {
-            mesh = ExtentTessellator.compute({extent: polygon._extent, rotation: polygon.rotation, generateTextureCoordinates:true});
+            mesh = ExtentTessellator.compute({
+                extent : polygon._extent, 
+                rotation : polygon.rotation, 
+                generateTextureCoordinates : true
+            });
             if (typeof mesh !== 'undefined') {
                 meshes.push(mesh);
             }
@@ -602,44 +603,40 @@ define([
             return undefined;
         }
 
-        var processedMeshes = [];
-        for (i = 0; i < meshes.length; i++) {
-            mesh = meshes[i];
-            mesh = PolygonPipeline.scaleToGeodeticHeight(mesh, polygon.height, polygon.ellipsoid);
-            mesh = MeshFilters.reorderForPostVertexCache(mesh);
-            mesh = MeshFilters.reorderForPreVertexCache(mesh);
+        mesh = GeometryFilters.combine(meshes);
+        mesh = PolygonPipeline.scaleToGeodeticHeight(mesh, polygon.height, polygon.ellipsoid);
+        mesh = GeometryFilters.reorderForPostVertexCache(mesh);
+        mesh = GeometryFilters.reorderForPreVertexCache(mesh);
 
-            if (polygon._mode === SceneMode.SCENE3D) {
-                mesh.attributes.position2DHigh = { // Not actually used in shader
-                    value : [0.0, 0.0]
-                };
-                mesh.attributes.position2DLow = { // Not actually used in shader
-                    value : [0.0, 0.0]
-                };
-                mesh = MeshFilters.encodeAttribute(mesh, 'position', 'position3DHigh', 'position3DLow');
-            } else {
-                mesh = MeshFilters.projectTo2D(mesh, polygon._projection);
+        if (polygon._mode === SceneMode.SCENE3D) {
+            mesh.attributes.position2DHigh = { // Not actually used in shader
+                value : [0.0, 0.0]
+            };
+            mesh.attributes.position2DLow = { // Not actually used in shader
+                value : [0.0, 0.0]
+            };
+            mesh = GeometryFilters.encodeAttribute(mesh, 'position', 'position3DHigh', 'position3DLow');
+        } else {
+            mesh = GeometryFilters.projectTo2D(mesh, polygon._projection);
 
-                if ((i === 0) && (polygon._mode !== SceneMode.SCENE3D)) {
-                    var projectedPositions = mesh.attributes.position2D.values;
-                    var positions = [];
+            if (polygon._mode !== SceneMode.SCENE3D) {
+                var projectedPositions = mesh.attributes.position2D.values;
+                var positions = [];
 
-                    for (var j = 0; j < projectedPositions.length; j += 2) {
-                        positions.push(new Cartesian3(projectedPositions[j], projectedPositions[j + 1], 0.0));
-                    }
-
-                    polygon._boundingVolume2D = BoundingSphere.fromPoints(positions, polygon._boundingVolume2D);
-                    var center2DPositions = polygon._boundingVolume2D.center;
-                    polygon._boundingVolume2D.center = new Cartesian3(0.0, center2DPositions.x, center2DPositions.y);
+                for (var j = 0; j < projectedPositions.length; j += 2) {
+                    positions.push(new Cartesian3(projectedPositions[j], projectedPositions[j + 1], 0.0));
                 }
 
-                mesh = MeshFilters.encodeAttribute(mesh, 'position3D', 'position3DHigh', 'position3DLow');
-                mesh = MeshFilters.encodeAttribute(mesh, 'position2D', 'position2DHigh', 'position2DLow');
+                polygon._boundingVolume2D = BoundingSphere.fromPoints(positions, polygon._boundingVolume2D);
+                var center2DPositions = polygon._boundingVolume2D.center;
+                polygon._boundingVolume2D.center = new Cartesian3(0.0, center2DPositions.x, center2DPositions.y);
             }
-            processedMeshes = processedMeshes.concat(MeshFilters.fitToUnsignedShortIndices(mesh));
+
+            mesh = GeometryFilters.encodeAttribute(mesh, 'position3D', 'position3DHigh', 'position3DLow');
+            mesh = GeometryFilters.encodeAttribute(mesh, 'position2D', 'position2DHigh', 'position2DLow');
         }
 
-        return processedMeshes;
+        return GeometryFilters.fitToUnsignedShortIndices(mesh);
     }
 
     function getGranularity(polygon, mode) {
@@ -737,7 +734,7 @@ define([
         var commands;
         var command;
 
-        var materialChanged = this._material !== this.material;
+        var materialChanged = (this._material !== this.material);
 
         this._commandLists.removeAll();
         if (pass.color) {

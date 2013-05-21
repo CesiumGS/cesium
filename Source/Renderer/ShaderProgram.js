@@ -759,8 +759,8 @@ define([
          *
          * void main()
          * {
-         *   vec3 p = czm_translateRelativeToEye(positionHigh, positionLow);
-         *   gl_Position = czm_projection * (czm_modelViewRelativeToEye * vec4(p, 1.0));
+         *   vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
+         *   gl_Position = czm_projection * (czm_modelViewRelativeToEye * p);
          * }
          *
          * @see czm_modelViewProjectionRelativeToEye
@@ -963,8 +963,8 @@ define([
          *
          * void main()
          * {
-         *   vec3 p = czm_translateRelativeToEye(positionHigh, positionLow);
-         *   gl_Position = czm_modelViewProjectionRelativeToEye * vec4(p, 1.0);
+         *   vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
+         *   gl_Position = czm_modelViewProjectionRelativeToEye * p;
          * }
          *
          * @see czm_modelViewRelativeToEye
@@ -2596,7 +2596,7 @@ define([
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);
 
-        if (attributeLocations) {
+        if (typeof attributeLocations !== 'undefined') {
             for ( var attribute in attributeLocations) {
                 if (attributeLocations.hasOwnProperty(attribute)) {
                     gl.bindAttribLocation(program, attributeLocations[attribute], attribute);

@@ -96,11 +96,11 @@ require([
             var minimumCorner = maximumCorner.negate();
             Cesium.BoundingSphere.fromPoints([minimumCorner, maximumCorner], colorCommand.boundingVolume);
 
-            var mesh = Cesium.MeshFilters.toWireframeInPlace(Cesium.BoxTessellator.compute({
+            var mesh = Cesium.GeometryFilters.toWireframe(new Cesium.BoxGeometry({
                 minimumCorner : minimumCorner,
                 maximumCorner : maximumCorner
             }));
-            var attributeIndices = Cesium.MeshFilters.createAttributeIndices(mesh);
+            var attributeIndices = Cesium.GeometryFilters.createAttributeIndices(mesh);
 
             colorCommand.vertexArray = pickCommand.vertexArray = context.createVertexArrayFromMesh({
                 mesh : mesh,
@@ -204,7 +204,7 @@ require([
             var maximumCorner = dimensions.multiplyByScalar(0.5);
             var minimumCorner = maximumCorner.negate();
 
-            var mesh = Cesium.MeshFilters.toWireframeInPlace(Cesium.BoxTessellator.compute({
+            var mesh = Cesium.GeometryFilters.toWireframe(new Cesium.BoxGeometry({
                 minimumCorner : minimumCorner,
                 maximumCorner : maximumCorner
             }));
@@ -270,8 +270,8 @@ require([
 
         if (typeof colorCommand.shaderProgram === 'undefined') {
             var vs = '';
-            vs += 'attribute vec3 position2D;';
-            vs += 'attribute vec3 position3D;';
+            vs += 'attribute vec4 position2D;';
+            vs += 'attribute vec4 position3D;';
             vs += 'void main()';
             vs += '{';
             vs += '    vec4 p = czm_columbusViewMorph(position2D, position3D, czm_morphTime);';
