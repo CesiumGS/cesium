@@ -146,8 +146,10 @@ define([
 
     function isVertexEar (v0, v, v1){
         for (var n = v1.next; n !== v0; n = n.next) {
-            if (pointInsideTriangle2D(n.item, v0.item, v.item, v1.item)) {
-                return false;
+            if (!n.convex) {
+                if (pointInsideTriangle2D(n.item, v0.item, v.item, v1.item)) {
+                    return false;
+                }
             }
         }
         return true;
@@ -579,15 +581,22 @@ define([
                 v1 = v.next;
                 if (isTipConvex(v0.item, v.item, v1.item)) {
                     v.convex = true;
-                    if (isVertexEar(v0, v, v1)) {
-                        polygonVertices.addEarTip(v);
-                    }
                 } else {
                     v.convex = false;
                 }
                 v = v.next;
             }
-
+            v = polygonVertices.head;
+            for (i = 0; i < length; ++i) {
+                v0 = v.previous;
+                v1 = v.next;
+                if (v.convex) {
+                    if (isVertexEar(v.previous, v, v.next)) {
+                        polygonVertices.addEarTip(v);
+                    }
+                }
+                v = v.next;
+            }
             v = polygonVertices.earTipHead;
             v0 = v.previous;
             v1 = v.next;
