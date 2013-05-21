@@ -33,7 +33,7 @@ define(['Core/Event',
             return that.dynamicObjectCollection;
         };
 
-        this.getIsTemporal = function() {
+        this.getIsTimeVarying = function() {
             return that.isTemporal;
         };
 

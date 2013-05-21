@@ -77,7 +77,7 @@ defineSuite(['DynamicScene/CzmlDataSource',
         expect(dataSource.getClock()).toBeUndefined();
         expect(dataSource.getDynamicObjectCollection()).toBeInstanceOf(DynamicObjectCollection);
         expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(0);
-        expect(dataSource.getIsTemporal()).toEqual(true);
+        expect(dataSource.getIsTimeVarying()).toEqual(true);
     });
 
     it('getClock returns undefined for static CZML', function() {
