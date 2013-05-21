@@ -62,7 +62,7 @@ define(['./DataSourceCollection',
         dataSourceCollection.dataSourceRemoved.addEventListener(this._onDataSourceRemoved, this);
         this._dataSourceCollection = dataSourceCollection;
         this._scene = scene;
-        this._temporalSources = [];
+        this._timeVaryingSources = [];
         this._staticSourcesToUpdate = [];
         this._visualizersTypes = defaultValue(visualizerTypes, defaultVisualizerTypes).slice(0);
     };
@@ -152,14 +152,14 @@ define(['./DataSourceCollection',
             throw new DeveloperError('time is required.');
         }
 
-        var temporalSources = this._temporalSources;
+        var timeVaryingSources = this._timeVaryingSources;
         var staticSourcesToUpdate = this._staticSourcesToUpdate;
         var length;
         var i;
 
-        length = temporalSources.length;
+        length = timeVaryingSources.length;
         for (i = 0; i < length; i++) {
-            temporalSources[i]._visualizerCollection.update(time);
+            timeVaryingSources[i]._visualizerCollection.update(time);
         }
 
         length = staticSourcesToUpdate.length;
@@ -189,9 +189,9 @@ define(['./DataSourceCollection',
     DataSourceDisplay.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
         dataSource.getChangedEvent().removeEventListener(this._onDataSourceChanged, this);
 
-        var temporalIndex = this._temporalSources.indexOf(dataSource);
-        if (temporalIndex !== -1) {
-            this._temporalSources.splice(temporalIndex, 1);
+        var timeVaryingIndex = this._timeVaryingSources.indexOf(dataSource);
+        if (timeVaryingIndex !== -1) {
+            this._timeVaryingSources.splice(timeVaryingIndex, 1);
         }
 
         var staticIndex = this._staticSourcesToUpdate.indexOf(dataSource);
@@ -204,11 +204,11 @@ define(['./DataSourceCollection',
     };
 
     DataSourceDisplay.prototype._onDataSourceChanged = function(dataSource) {
-        var temporalIndex = this._temporalSources.indexOf(dataSource);
+        var timeVaryingIndex = this._timeVaryingSources.indexOf(dataSource);
         var staticIndex = this._staticSourcesToUpdate.indexOf(dataSource);
         if (dataSource.getIsTimeVarying()) {
-            if (temporalIndex === -1) {
-                this._temporalSources.push(dataSource);
+            if (timeVaryingIndex === -1) {
+                this._timeVaryingSources.push(dataSource);
             }
             if (staticIndex !== -1) {
                 this._staticSourcesToUpdate.splice(staticIndex, 1);
@@ -217,8 +217,8 @@ define(['./DataSourceCollection',
             if (staticIndex === -1) {
                 this._staticSourcesToUpdate.push(dataSource);
             }
-            if (temporalIndex !== -1) {
-                this._temporalSources.splice(staticIndex, 1);
+            if (timeVaryingIndex !== -1) {
+                this._timeVaryingSources.splice(staticIndex, 1);
             }
         }
     };

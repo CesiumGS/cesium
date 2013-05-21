@@ -15,12 +15,10 @@ define(['../Core/DeveloperError'
      * @alias DataSource
      * @constructor
      */
-    var DataSource = function() {
-        throwInstantiationError();
-    };
+    var DataSource = throwInstantiationError;
 
     /**
-     * Gets an event that will be raised when non-temporal data changes
+     * Gets an event that will be raised when non-time-Varying data changes
      * or if the return value of getIsTimeVarying changes.
      * @memberof DataSource
      *

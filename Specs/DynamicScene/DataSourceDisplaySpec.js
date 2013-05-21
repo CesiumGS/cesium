@@ -92,10 +92,10 @@ defineSuite(['DynamicScene/DataSourceDisplay',
         expect(display.isDestroyed()).toEqual(true);
     });
 
-    it('update identifies temporarl/non-temporal sources and updates them accordingly', function() {
+    it('update identifies temporarl/non-time-varying sources and updates them accordingly', function() {
         var staticSource = new MockDataSource();
         var dynamicSource = new MockDataSource();
-        dynamicSource.isTemporal = true;
+        dynamicSource.isTimeVarying = true;
 
         var display = new DataSourceDisplay(scene, [MockVisualizer]);
         display.getDataSources().add(staticSource);
@@ -160,10 +160,10 @@ defineSuite(['DynamicScene/DataSourceDisplay',
         expect(sourceVisualizer.lastUpdateTime).toBe(Iso8601.MINIMUM_VALUE);
         expect(sourceVisualizer.updatesCalled).toEqual(1);
 
-        //Scheduling a static source for update, but then changing it to temporal
+        //Scheduling a static source for update, but then changing it to time-varying
         //should only result in a single update
         source.getChangedEvent().raiseEvent(source);
-        source.isTemporal = true;
+        source.isTimeVarying = true;
         source.getChangedEvent().raiseEvent(source);
 
         //Every update should now result in the visualizer being updated
@@ -179,7 +179,7 @@ defineSuite(['DynamicScene/DataSourceDisplay',
 
 
         //Switch back to static
-        source.isTemporal = false;
+        source.isTimeVarying = false;
         source.getChangedEvent().raiseEvent(source);
 
         newTime = new JulianDate();

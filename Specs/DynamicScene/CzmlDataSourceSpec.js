@@ -126,14 +126,15 @@ defineSuite(['DynamicScene/CzmlDataSource',
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            var ready = dataSource.getDynamicObjectCollection().getObjects().length === 12;
-            if (ready) {
-                dataSource.processUrl(vehicleUrl);
-                waitsFor(function() {
-                    return dataSource.getDynamicObjectCollection().getObjects().length === 13;
-                });
-            }
-            return ready;
+            return dataSource.getDynamicObjectCollection().getObjects().length === 12;
+        });
+
+        runs(function() {
+            dataSource.processUrl(vehicleUrl);
+        });
+
+        waitsFor(function() {
+            return dataSource.getDynamicObjectCollection().getObjects().length === 13;
         });
     });
 
@@ -141,68 +142,57 @@ defineSuite(['DynamicScene/CzmlDataSource',
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            var ready = dataSource.getDynamicObjectCollection().getObjects().length === 12;
-            if (ready) {
-                dataSource.loadUrl(vehicleUrl);
-                waitsFor(function() {
-                    return dataSource.getDynamicObjectCollection().getObjects().length === 1;
-                });
-            }
-            return ready;
+            return dataSource.getDynamicObjectCollection().getObjects().length === 12;
+        });
+
+        runs(function() {
+            dataSource.loadUrl(vehicleUrl);
+        });
+
+        waitsFor(function() {
+            return dataSource.getDynamicObjectCollection().getObjects().length === 1;
         });
     });
 
     it('process loads expected data', function() {
         waitsFor(function() {
-            var ready = typeof simple !== 'undefined';
-            if (ready) {
-                var dataSource = new CzmlDataSource();
-                dataSource.process(simple, simpleUrl);
-                ready = dataSource.getDynamicObjectCollection().getObjects().length === 12;
-            }
-            return ready;
+            return typeof simple !== 'undefined';
+        });
+
+        runs(function() {
+            var dataSource = new CzmlDataSource();
+            dataSource.process(simple, simpleUrl);
+            expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(12);
         });
     });
 
     it('process loads data on top of existing', function() {
         waitsFor(function() {
-            var ready = typeof simple !== 'undefined' && typeof vehicle !== 'undefined';
-            if (ready) {
-                var dataSource = new CzmlDataSource();
-                dataSource.process(simple, simpleUrl);
-                waitsFor(function() {
-                    var loaded = dataSource.getDynamicObjectCollection().getObjects().length === 12;
-                    if (loaded) {
-                        dataSource.process(vehicle, vehicleUrl);
-                        waitsFor(function() {
-                            return dataSource.getDynamicObjectCollection().getObjects().length === 13;
-                        });
-                    }
-                    return loaded;
-                });
-            }
-            return ready;
+            return typeof simple !== 'undefined' && typeof vehicle !== 'undefined';
+        });
+
+        runs(function() {
+            var dataSource = new CzmlDataSource();
+            dataSource.process(simple, simpleUrl);
+            expect(dataSource.getDynamicObjectCollection().getObjects().length === 12);
+
+            dataSource.process(vehicle, vehicleUrl);
+            expect(dataSource.getDynamicObjectCollection().getObjects().length === 13);
         });
     });
 
     it('load replaces data', function() {
         waitsFor(function() {
-            var ready = typeof simple !== 'undefined' && typeof vehicle !== 'undefined';
-            if (ready) {
-                var dataSource = new CzmlDataSource();
-                dataSource.process(simple, simpleUrl);
-                waitsFor(function() {
-                    if (dataSource.getDynamicObjectCollection().getObjects().length === 12) {
-                        dataSource.load(vehicle, vehicleUrl);
-                        waitsFor(function() {
-                            return dataSource.getDynamicObjectCollection().getObjects().length === 1;
-                        });
-                        return true;
-                    }
-                    return false;
-                });
-            }
-            return ready;
+            return typeof simple !== 'undefined' && typeof vehicle !== 'undefined';
+        });
+
+        runs(function() {
+            var dataSource = new CzmlDataSource();
+            dataSource.process(simple, simpleUrl);
+            expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(12);
+
+            dataSource.load(vehicle, vehicleUrl);
+            expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(1);
         });
     });
 
