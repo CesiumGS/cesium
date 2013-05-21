@@ -92,7 +92,7 @@ defineSuite(['DynamicScene/DataSourceDisplay',
         expect(display.isDestroyed()).toEqual(true);
     });
 
-    it('update identifies temporarl/non-time-varying sources and updates them accordingly', function() {
+    it('update identifies time-varying/non-time-varying sources and updates them accordingly', function() {
         var staticSource = new MockDataSource();
         var dynamicSource = new MockDataSource();
         dynamicSource.isTimeVarying = true;
