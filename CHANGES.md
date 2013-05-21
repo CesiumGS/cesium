@@ -20,7 +20,7 @@ Beta Releases
 * Added `GeometryFilters.computeNormals` to find the normals of vertices in a mesh.
 * Added `BoundingSphere.fromEllipsoid`.
 * Added renderer support for `OES_element_index_uint`, which can improve performance by reducing batch sizes.
-* Added 'czm_tangentToEyeSpaceMatrix` built-in GLSL function.
+* Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
 
 ### b17 - 2013-06-03
 
