@@ -206,7 +206,7 @@ define(['./DataSourceCollection',
     DataSourceDisplay.prototype._onDataSourceChanged = function(dataSource) {
         var temporalIndex = this._temporalSources.indexOf(dataSource);
         var staticIndex = this._staticSourcesToUpdate.indexOf(dataSource);
-        if (dataSource.getIsTemporal()) {
+        if (dataSource.getIsTimeVarying()) {
             if (temporalIndex === -1) {
                 this._temporalSources.push(dataSource);
             }

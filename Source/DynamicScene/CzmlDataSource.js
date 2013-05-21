@@ -64,7 +64,7 @@ define(['../Core/ClockRange',
 
     /**
      * Gets an event that will be raised when non-temporal data changes
-     * or if the return value of getIsTemporal changes.
+     * or if the return value of getIsTimeVarying changes.
      * @memberof DataSource
      *
      * @returns {Event} The event.
@@ -112,7 +112,7 @@ define(['../Core/ClockRange',
      *
      * @returns {Boolean} True if the data is varies with simulation time, false otherwise.
      */
-    CzmlDataSource.prototype.getIsTemporal = function() {
+    CzmlDataSource.prototype.getIsTimeVarying = function() {
         return this._temporal;
     };
 
