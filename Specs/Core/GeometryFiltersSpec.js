@@ -608,4 +608,184 @@ defineSuite([
         }).toThrow();
     });
 
+    it('GeometryFilters.computeNormals throws when mesh is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeNormals();
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeNormals throws when mesh.attributes is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeNormals(new Geometry());
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeNormals throws when mesh.attributes.position is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeNormals(new Geometry( {
+                attributes: {}
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeNormals throws when mesh.attributes.position.values is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeNormals(new Geometry( {
+                attributes: {
+                    position: {}
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeNormals throws when mesh.attributes.position.componentsPerAttribute is not 3', function() {
+        expect(function() {
+            GeometryFilters.computeNormals(new Geometry( {
+                attributes: {
+                    position: {
+                        values: [3, 2, 1, 1, 2, 4],
+                        componentsPerAttribute: 2
+                    }
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeNormals throws when mesh.attributes.position.values is not a multiple of 3', function() {
+        expect(function() {
+            GeometryFilters.computeNormals(new Geometry( {
+                attributes: {
+                    position: {
+                        values: [3, 2, 1, 1, 2, 4, 3],
+                        componentsPerAttribute: 3
+                    }
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeNormals does not compute normals when mesh.indexLists is undefined', function() {
+        var mesh = new Geometry({
+            attributes: {
+                position: {
+                    values: [0, 0, 0,
+                             1, 0, 0,
+                             0, 1, 0],
+                    componentsPerAttribute: 3
+                }
+            }
+        });
+
+        mesh = GeometryFilters.computeNormals(mesh);
+
+        expect(typeof mesh.attributes.normal === 'undefined').toEqual(true);
+    });
+
+    it('GeometryFilters.computeNormals does not compute normals when primitive type is not triangle', function() {
+        var mesh = new Geometry({
+            attributes: {
+                position: {
+                    values: [0, 0, 0,
+                             1, 0, 0,
+                             0, 1, 0],
+                             componentsPerAttribute: 3
+
+                }
+            },
+            indexLists: [{
+                primitiveType: PrimitiveType.TRIANGLE_STRIP,
+                values: [0, 1, 2]
+            }]
+        });
+
+        mesh = GeometryFilters.computeNormals(mesh);
+
+        expect(typeof mesh.attributes.normal === 'undefined').toEqual(true);
+    });
+
+
+    it('GeometryFilters.computeNormals computes normal for one triangle', function() {
+        var mesh = new Geometry({
+            attributes: {
+                position: {
+                    values: [0, 0, 0,
+                             1, 0, 0,
+                             0, 1, 0],
+                             componentsPerAttribute: 3
+                }
+            },
+            indexLists: [{
+                primitiveType: PrimitiveType.TRIANGLES,
+                values: [0, 1, 2]
+            }]
+        });
+
+        mesh = GeometryFilters.computeNormals(mesh);
+
+        expect(mesh.attributes.normal.values.length).toEqual(3*3);
+        expect(mesh.attributes.normal.values).toEqual([0, 0, 1, 0, 0, 1, 0, 0, 1]);
+    });
+
+    it('GeometryFilters.computeNormals computes normal for two triangles', function() {
+        var mesh = new Geometry({
+            attributes: {
+                position: {
+                    values: [0, 0, 0,
+                             1, 0, 1,
+                             1, 1, 1,
+                             2, 0, 0],
+                             componentsPerAttribute: 3
+                }
+            },
+            indexLists: [{
+                primitiveType: PrimitiveType.TRIANGLES,
+                values: [0, 1, 2, 1, 3, 2]
+            }]
+        });
+
+        mesh = GeometryFilters.computeNormals(mesh);
+
+        expect(mesh.attributes.normal.values.length).toEqual(4*3);
+        var a = new Cartesian3(-1, 0, 1).normalize();
+        expect(mesh.attributes.normal.values.slice(0, 3)).toEqual([a.x, a.y, a.z]);
+        expect(mesh.attributes.normal.values.slice(3, 9)).toEqual([0, 0, 1, 0, 0, 1]);
+        a = new Cartesian3(1, 0, 1).normalize();
+        expect(mesh.attributes.normal.values.slice(9, 12)).toEqual([a.x, a.y, a.z]);
+    });
+
+    it('GeometryFilters.computeNormals computes normal for six triangles', function() {
+        var mesh = new Geometry ({
+            attributes: {
+                position: {
+                    values: [0, 0, 0,
+                             1, 0, 0,
+                             1, 0, 1,
+                             0, 0, 1,
+                             0, 1, 1,
+                             0, 1, 0,
+                             1, 1, 0],
+                             componentsPerAttribute: 3
+                }
+            },
+            indexLists: [{
+                primitiveType: PrimitiveType.TRIANGLES,
+                values: [0, 1, 2, 3, 0, 2, 4, 0, 3, 4, 5, 0, 5, 6, 0, 6, 1, 0]
+            }]
+        });
+
+        mesh = GeometryFilters.computeNormals(mesh);
+
+        expect(mesh.attributes.normal.values.length).toEqual(7*3);
+        var a = new Cartesian3(-1, -1, -1).normalize();
+        expect(mesh.attributes.normal.values.slice(0, 3)).toEqual([a.x, a.y, a.z]);
+        a = new Cartesian3(0, -1, -1).normalize();
+        expect(mesh.attributes.normal.values.slice(3, 6)).toEqual([a.x, a.y, a.z]);
+        expect(mesh.attributes.normal.values.slice(6, 9)).toEqual([0, -1, 0]);
+        a = new Cartesian3(-1, -1, 0).normalize();
+        expect(mesh.attributes.normal.values.slice(9, 12)).toEqual([a.x, a.y, a.z]);
+        expect(mesh.attributes.normal.values.slice(12, 15)).toEqual([-1, 0, 0]);
+        a = new Cartesian3(-1, 0, -1).normalize();
+        expect(mesh.attributes.normal.values.slice(15,18)).toEqual([a.x, a.y, a.z]);
+        expect(mesh.attributes.normal.values.slice(18,21)).toEqual([0, 0, -1]);
+    });
 });

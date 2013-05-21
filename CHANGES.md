@@ -21,7 +21,7 @@ Beta Releases
 * Added renderer support for `OES_element_index_uint`, which can improve performance by reducing batch sizes.
 * Added debugging aids for low-level rendering: `DrawCommand.debugShowBoundingVolume` and `Scene.debugCommandFilter`.
 * Added 'czm_tangentToEyeSpaceMatrix` built-in GLSL function.
-
+* Added `GeometryFilters.computeNormals` to find the normals of vertices in a mesh.
 ### b17 - 2013-06-03
 
 * Breaking changes:
