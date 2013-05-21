@@ -181,7 +181,7 @@ define([
             for (i = j = 0; i < length; ++i, j += 3) {
                 ellipsoid.geodeticSurfaceNormal(positions[i], normal);
                 Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
-                Cartesian3.cross(normal, tangent, binormal);
+                Cartesian3.cross(tangent, normal, binormal);
 
                 normals[j] = normal.x;
                 normals[j + 1] = normal.y;
