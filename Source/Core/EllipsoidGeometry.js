@@ -27,6 +27,88 @@ define([
         VertexFormat) {
     "use strict";
 
+    var scratchDirection = new Cartesian3();
+
+    function addEdgePositions(i0, i1, numberOfPartitions, positions) {
+        var indices = [];
+        indices[0] = i0;
+        indices[2 + (numberOfPartitions - 1) - 1] = i1;
+
+        var origin = positions[i0];
+        var direction = Cartesian3.subtract(positions[i1], positions[i0], scratchDirection);
+
+        for ( var i = 1; i < numberOfPartitions; ++i) {
+            var delta = i / numberOfPartitions;
+            var position = Cartesian3.multiplyByScalar(direction, delta);
+            Cartesian3.add(origin, position, position);
+
+            indices[i] = positions.length;
+            positions.push(position);
+        }
+
+        return indices;
+    }
+
+    var scratchX = new Cartesian3();
+    var scratchY = new Cartesian3();
+    var scratchOffsetX = new Cartesian3();
+    var scratchOffsetY = new Cartesian3();
+
+    function addFaceTriangles(leftBottomToTop, bottomLeftToRight, rightBottomToTop, topLeftToRight, numberOfPartitions, positions, indices) {
+        var origin = positions[bottomLeftToRight[0]];
+        var x = Cartesian3.subtract(positions[bottomLeftToRight[bottomLeftToRight.length - 1]], origin, scratchX);
+        var y = Cartesian3.subtract(positions[topLeftToRight[0]], origin, scratchY);
+
+        var bottomIndicesBuffer = [];
+        var topIndicesBuffer = [];
+
+        var bottomIndices = bottomLeftToRight;
+        var topIndices = topIndicesBuffer;
+
+        for ( var j = 1; j <= numberOfPartitions; ++j) {
+            if (j !== numberOfPartitions) {
+                if (j !== 1) {
+                    //
+                    // This copy could be avoided by ping ponging buffers.
+                    //
+                    bottomIndicesBuffer = topIndicesBuffer.slice(0);
+                    bottomIndices = bottomIndicesBuffer;
+                }
+
+                topIndicesBuffer[0] = leftBottomToTop[j];
+                topIndicesBuffer[numberOfPartitions] = rightBottomToTop[j];
+
+                var deltaY = j / numberOfPartitions;
+                var offsetY = Cartesian3.multiplyByScalar(y, deltaY, scratchOffsetY);
+
+                for ( var i = 1; i < numberOfPartitions; ++i) {
+                    var deltaX = i / numberOfPartitions;
+                    var offsetX = Cartesian3.multiplyByScalar(x, deltaX, scratchOffsetX);
+                    var position = Cartesian3.add(origin, offsetX);
+                    Cartesian3.add(position, offsetY, position);
+
+                    topIndicesBuffer[i] = positions.length;
+                    positions.push(position);
+                }
+            } else {
+                if (j !== 1) {
+                    bottomIndices = topIndicesBuffer;
+                }
+                topIndices = topLeftToRight;
+            }
+
+            for ( var k = 0; k < numberOfPartitions; ++k) {
+                indices.push(bottomIndices[k]);
+                indices.push(bottomIndices[k + 1]);
+                indices.push(topIndices[k + 1]);
+
+                indices.push(bottomIndices[k]);
+                indices.push(topIndices[k + 1]);
+                indices.push(topIndices[k]);
+            }
+        }
+    }
+
     var sphericalNormal = new Cartesian3();
     var normal = new Cartesian3();
     var tangent = new Cartesian3();
@@ -174,26 +256,32 @@ define([
         }
 
         if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-            var normals = new Array(length * 3);
-            var tangents = new Array(length * 3);
-            var binormals = new Array(length * 3);
+            var normals = (vertexFormat.normal) ? new Array(length * 3) : undefined;
+            var tangents = (vertexFormat.tangent) ? new Array(length * 3) : undefined;
+            var binormals = (vertexFormat.binormal) ? new Array(length * 3) : undefined;
 
             for (i = j = 0; i < length; ++i, j += 3) {
                 ellipsoid.geodeticSurfaceNormal(positions[i], normal);
                 Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
                 Cartesian3.cross(tangent, normal, binormal);
 
-                normals[j] = normal.x;
-                normals[j + 1] = normal.y;
-                normals[j + 2] = normal.z;
+                if (vertexFormat.normal) {
+                    normals[j] = normal.x;
+                    normals[j + 1] = normal.y;
+                    normals[j + 2] = normal.z;
+                }
 
-                tangents[j] = tangent.x;
-                tangents[j + 1] = tangent.y;
-                tangents[j + 2] = tangent.z;
+                if (vertexFormat.tangent) {
+                    tangents[j] = tangent.x;
+                    tangents[j + 1] = tangent.y;
+                    tangents[j + 2] = tangent.z;
+                }
 
-                binormals[j] = binormal.x;
-                binormals[j + 1] = binormal.y;
-                binormals[j + 2] = binormal.z;
+                if (vertexFormat.binormal) {
+                    binormals[j] = binormal.x;
+                    binormals[j + 1] = binormal.y;
+                    binormals[j + 2] = binormal.z;
+                }
             }
 
             if (vertexFormat.normal) {
@@ -265,88 +353,6 @@ define([
          */
         this.pickData = options.pickData;
     };
-
-    var scratchDirection = new Cartesian3();
-
-    function addEdgePositions(i0, i1, numberOfPartitions, positions) {
-        var indices = [];
-        indices[0] = i0;
-        indices[2 + (numberOfPartitions - 1) - 1] = i1;
-
-        var origin = positions[i0];
-        var direction = Cartesian3.subtract(positions[i1], positions[i0], scratchDirection);
-
-        for ( var i = 1; i < numberOfPartitions; ++i) {
-            var delta = i / numberOfPartitions;
-            var position = Cartesian3.multiplyByScalar(direction, delta);
-            Cartesian3.add(origin, position, position);
-
-            indices[i] = positions.length;
-            positions.push(position);
-        }
-
-        return indices;
-    }
-
-    var scratchX = new Cartesian3();
-    var scratchY = new Cartesian3();
-    var scratchOffsetX = new Cartesian3();
-    var scratchOffsetY = new Cartesian3();
-
-    function addFaceTriangles(leftBottomToTop, bottomLeftToRight, rightBottomToTop, topLeftToRight, numberOfPartitions, positions, indices) {
-        var origin = positions[bottomLeftToRight[0]];
-        var x = Cartesian3.subtract(positions[bottomLeftToRight[bottomLeftToRight.length - 1]], origin, scratchX);
-        var y = Cartesian3.subtract(positions[topLeftToRight[0]], origin, scratchY);
-
-        var bottomIndicesBuffer = [];
-        var topIndicesBuffer = [];
-
-        var bottomIndices = bottomLeftToRight;
-        var topIndices = topIndicesBuffer;
-
-        for ( var j = 1; j <= numberOfPartitions; ++j) {
-            if (j !== numberOfPartitions) {
-                if (j !== 1) {
-                    //
-                    // This copy could be avoided by ping ponging buffers.
-                    //
-                    bottomIndicesBuffer = topIndicesBuffer.slice(0);
-                    bottomIndices = bottomIndicesBuffer;
-                }
-
-                topIndicesBuffer[0] = leftBottomToTop[j];
-                topIndicesBuffer[numberOfPartitions] = rightBottomToTop[j];
-
-                var deltaY = j / numberOfPartitions;
-                var offsetY = Cartesian3.multiplyByScalar(y, deltaY, scratchOffsetY);
-
-                for ( var i = 1; i < numberOfPartitions; ++i) {
-                    var deltaX = i / numberOfPartitions;
-                    var offsetX = Cartesian3.multiplyByScalar(x, deltaX, scratchOffsetX);
-                    var position = Cartesian3.add(origin, offsetX);
-                    Cartesian3.add(position, offsetY, position);
-
-                    topIndicesBuffer[i] = positions.length;
-                    positions.push(position);
-                }
-            } else {
-                if (j !== 1) {
-                    bottomIndices = topIndicesBuffer;
-                }
-                topIndices = topLeftToRight;
-            }
-
-            for ( var k = 0; k < numberOfPartitions; ++k) {
-                indices.push(bottomIndices[k]);
-                indices.push(bottomIndices[k + 1]);
-                indices.push(topIndices[k + 1]);
-
-                indices.push(bottomIndices[k]);
-                indices.push(topIndices[k + 1]);
-                indices.push(topIndices[k]);
-            }
-        }
-    }
 
     return EllipsoidGeometry;
 });
