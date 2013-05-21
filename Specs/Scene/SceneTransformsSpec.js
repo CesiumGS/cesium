@@ -3,12 +3,14 @@ defineSuite([
          'Scene/SceneTransforms',
          'Core/Cartographic',
          'Core/Ellipsoid',
+         'Core/Math',
          'Specs/createScene',
          'Specs/destroyScene'
      ], function(
          SceneTransforms,
          Cartographic,
          Ellipsoid,
+         CesiumMath,
          createScene,
          destroyScene) {
     "use strict";
@@ -39,10 +41,17 @@ defineSuite([
 
     it('returns correct position', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var position = ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0));
+        var positionCartographic = ellipsoid.cartesianToCartographic(scene.getCamera().position);
+        positionCartographic.height = 0.0;
+        var position = ellipsoid.cartographicToCartesian(positionCartographic);
+
+        // Update scene state
+        scene.initializeFrame();
+        scene.render();
+
         var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
-        expect(windowCoordinates.x).toBeGreaterThan(0);
-        expect(windowCoordinates.y).toBeGreaterThan(0);
+        expect(windowCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON3);
+        expect(windowCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON3);
     });
 
 }, 'WebGL');
