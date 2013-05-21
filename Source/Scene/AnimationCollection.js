@@ -35,25 +35,29 @@ define([
             throw new DeveloperError('duration is required.');
         }
 
-        var delayDuration = defaultValue(options.delayDuration, 0);
-        var easingFunction = defaultValue(options.easingFunction, Tween.Easing.Linear.None);
+        if (options.duration !== 0) {
+            var delayDuration = defaultValue(options.delayDuration, 0);
+            var easingFunction = defaultValue(options.easingFunction, Tween.Easing.Linear.None);
 
-        var value = clone(options.startValue);
-        var tween = new Tween.Tween(value);
-        tween.to(options.stopValue, options.duration);
-        tween.delay(delayDuration);
-        tween.easing(easingFunction);
-        if (typeof options.onUpdate === 'function') {
-            tween.onUpdate(function() {
-                options.onUpdate(value);
-            });
+            var value = clone(options.startValue);
+            var tween = new Tween.Tween(value);
+            tween.to(options.stopValue, options.duration);
+            tween.delay(delayDuration);
+            tween.easing(easingFunction);
+            if (typeof options.onUpdate === 'function') {
+                tween.onUpdate(function() {
+                    options.onUpdate(value);
+                });
+            }
+            tween.onComplete(defaultValue(options.onComplete, null));
+            tween.start();
+
+            return {
+                _tween : tween
+            };
+        } else if (typeof options.onComplete === 'function') {
+            options.onComplete();
         }
-        tween.onComplete(defaultValue(options.onComplete, null));
-        tween.start();
-
-        return {
-            _tween : tween
-        };
     };
 
     /**
