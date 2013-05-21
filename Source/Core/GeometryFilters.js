@@ -714,6 +714,9 @@ define([
 
         // Find subset of attributes in all meshes
         var attributes = findAttributesInAllMeshes(meshes);
+        var values;
+        var sourceValues;
+        var sourceValuesLength;
 
         // PERFORMANCE_IDEA: Interleave here instead of createVertexArrayFromMesh to save a copy.
         // This will require adding offset and stride to the mesh.
@@ -721,12 +724,12 @@ define([
         // Combine attributes from each mesh into a single typed array
         for (name in attributes) {
             if (attributes.hasOwnProperty(name)) {
-                var values = attributes[name].values;
+                values = attributes[name].values;
 
                 k = 0;
                 for (i = 0; i < length; ++i) {
-                    var sourceValues = meshes[i].attributes[name].values;
-                    var sourceValuesLength = sourceValues.length;
+                    sourceValues = meshes[i].attributes[name].values;
+                    sourceValuesLength = sourceValues.length;
 
                     for (j = 0; j < sourceValuesLength; ++j) {
                         values[k++] = sourceValues[j];
@@ -791,17 +794,17 @@ define([
             indexListsLength = indexLists.length;
 
             for (j = 0; j < indexListsLength; ++j) {
-                var indices = indexLists[j];
-                var sourceValues = indices.values;
-                var sourceValuesLength = sourceValues.length;
+                indices = indexLists[j];
+                sourceValues = indices.values;
+                sourceValuesLength = sourceValues.length;
                 var destValues = indexListsByPrimitiveType[indices.primitiveType].values;
-                var m = indexListsByPrimitiveType[indices.primitiveType].currentOffset;
+                var n = indexListsByPrimitiveType[indices.primitiveType].currentOffset;
 
                 for (k = 0; k < sourceValuesLength; ++k) {
-                    destValues[m++] = offset + sourceValues[k];
+                    destValues[n++] = offset + sourceValues[k];
                 }
 
-                indexListsByPrimitiveType[indices.primitiveType].currentOffset = m;
+                indexListsByPrimitiveType[indices.primitiveType].currentOffset = n;
             }
 
             var attrs = meshes[i].attributes;
@@ -814,7 +817,7 @@ define([
         }
 
         // Create bounding sphere that includes all meshes
-        var boundingSphere = undefined;
+        var boundingSphere;
 
         for (i = 0; i < length; ++i) {
             var bs = meshes[i].boundingSphere;
