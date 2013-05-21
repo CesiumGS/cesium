@@ -282,7 +282,7 @@ define([
          */
         this.playRealtimeViewModel = new ToggleButtonViewModel({
             toggled : knockout.computed(function() {
-                return clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK;
+                return clockViewModel.shouldAnimate() && clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK;
             }),
             tooltip : knockout.computed(function() {
                 if (that._isSystemTimeAvailable()) {
@@ -292,13 +292,9 @@ define([
             }),
             command : createCommand(function() {
                 var clockViewModel = that.clockViewModel;
-                if (clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK) {
-                    if (that._isSystemTimeAvailable()) {
-                        clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK);
-                        clockViewModel.multiplier(1.0);
-                        that.clockViewModel.shouldAnimate(true);
-                    }
-                }
+                clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK);
+                clockViewModel.multiplier(1.0);
+                clockViewModel.shouldAnimate(true);
             }, knockout.computed(function() {
                 return that._isSystemTimeAvailable();
             }))
