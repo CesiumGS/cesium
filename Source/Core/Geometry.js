@@ -2,7 +2,7 @@
 define([
         './defaultValue',
         './DeveloperError',
-        './Matrix4',
+        './Matrix4'
     ], function(
         defaultValue,
         DeveloperError,
