@@ -80,9 +80,8 @@ define([
 
     function addPickColorAttribute(primitive, geometries, context) {
         var length = geometries.length;
-        var i;
 
-        for (i = 0; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             var geometry = geometries[i];
             var attributes = geometry.attributes;
             var positionAttr = attributes.position;
@@ -119,6 +118,83 @@ define([
         }
     }
 
+    function addDefaultAttributes(geometries) {
+        var length = geometries.length;
+        for (var i = 0; i < length; ++i) {
+            var geometry = geometries[i];
+            var attributes = geometry.attributes;
+            var positionAttr = attributes.position;
+            var positionLength = positionAttr.values.length / positionAttr.componentsPerAttribute;
+
+            var numberOfComponents;
+            var values;
+            var j;
+
+            if (typeof attributes.normal === 'undefined') {
+                numberOfComponents = 3 * positionLength;
+                values = new Float32Array(numberOfComponents);
+                attributes.normal = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : values
+                });
+
+                for (j = 0; j < numberOfComponents; j += 3) {
+                    values[j] = 0.0;
+                    values[j + 1] = 0.0;
+                    values[j + 2] = 1.0;
+                }
+            }
+
+            if (typeof attributes.tangent === 'undefined') {
+                numberOfComponents = 3 * positionLength;
+                values = new Float32Array(numberOfComponents);
+                attributes.tangent = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : values
+                });
+
+                for (j = 0; j < numberOfComponents; j += 3) {
+                    values[j] = 1.0;
+                    values[j + 1] = 0.0;
+                    values[j + 2] = 0.0;
+                }
+            }
+
+            if (typeof attributes.binormal === 'undefined') {
+                numberOfComponents = 3 * positionLength;
+                values = new Float32Array(numberOfComponents);
+                attributes.binormal = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : values
+                });
+
+                for (j = 0; j < numberOfComponents; j += 3) {
+                    values[j] = 0.0;
+                    values[j + 1] = 1.0;
+                    values[j + 2] = 0.0;
+                }
+            }
+
+            if (typeof attributes.st === 'undefined') {
+                numberOfComponents = 2 * positionLength;
+                values = new Float32Array(numberOfComponents);
+                attributes.st = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : values
+                });
+
+                for (j = 0; j < numberOfComponents; j += 2) {
+                    values[j] = 0.0;
+                    values[j + 1] = 0.0;
+                }
+            }
+        }
+    }
+
     function transformToWorldCoordinates(primitive, geometries) {
         var toWorld = primitive._transformToWorldCoordinates;
         var length = geometries.length;
@@ -150,6 +226,9 @@ define([
         if (Geometry.isPickable(geometries)) {
             addPickColorAttribute(primitive, geometries, context);
         }
+
+        // Add default values for any undefined attributes
+        addDefaultAttributes(geometries);
 
         // Unify to world coordinates before combining.  If there is only one geometry or all
         // geometries are in the same (non-world) coordinate system, only combine if the user requested it.
@@ -270,7 +349,7 @@ define([
         // The geometry is static but the model matrix can change
         if (frameState.passes.color || frameState.passes.pick) {
             length = colorCommands.length;
-            for (var i = 0; i < length; ++i) {
+            for (i = 0; i < length; ++i) {
                 colorCommands[i].modelMatrix = this.modelMatrix;
                 pickCommands[i].modelMatrix = this.modelMatrix;
             }
@@ -303,12 +382,12 @@ define([
         }
         this._va = undefined;
 
-        var pickIds = this_pickIds;
+        var pickIds = this._pickIds;
         length = pickIds.length;
         for (i = 0; i < length; ++i) {
             pickIds[i].destroy();
         }
-        this.this_pickIds = undefined;
+        this._pickIds = undefined;
 
         return destroyObject(this);
     };
