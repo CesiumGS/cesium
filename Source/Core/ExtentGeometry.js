@@ -2,43 +2,40 @@
 define([
         './clone',
         './defaultValue',
-        './DeveloperError',
-        './Math',
-        './Ellipsoid',
-        './Extent',
+        './BoundingSphere',
         './Cartesian3',
         './Cartographic',
-        './Matrix2',
-        './GeographicProjection',
         './ComponentDatatype',
-        './PrimitiveType',
-        './Geometry',
+        './DeveloperError',
+        './Ellipsoid',
+        './Extent',
+        './GeographicProjection',
         './GeometryAttribute',
-        './GeometryIndices'
+        './GeometryIndices',
+        './Math',
+        './Matrix2',
+        './Matrix4',
+        './PrimitiveType',
+        './VertexFormat'
     ], function(
         clone,
         defaultValue,
-        DeveloperError,
-        CesiumMath,
-        Ellipsoid,
-        Extent,
+        BoundingSphere,
         Cartesian3,
         Cartographic,
-        Matrix2,
-        GeographicProjection,
         ComponentDatatype,
-        PrimitiveType,
-        Geometry,
+        DeveloperError,
+        Ellipsoid,
+        Extent,
+        GeographicProjection,
         GeometryAttribute,
-        GeometryIndices) {
+        GeometryIndices,
+        CesiumMath,
+        Matrix2,
+        Matrix4,
+        PrimitiveType,
+        VertexFormat) {
     "use strict";
-
-    /**
-     * Contains class functions to create a mesh or vertex array from a cartographic extent.
-     *
-     * @exports ExtentGeometry
-     */
-    var ExtentGeometry = {};
 
     function isValidLatLon(latitude, longitude) {
         if (latitude < -CesiumMath.PI_OVER_TWO || latitude > CesiumMath.PI_OVER_TWO) {
@@ -49,53 +46,69 @@ define([
         }
         return true;
     }
-    /**
-     * Compute vertices from a cartographic extent.  This function is different from
-     * {@link ExtentGeometry#compute} and {@link ExtentGeometry#computeBuffers}
-     * in that it assumes that you have already allocated output arrays of the correct size.
-     *
-     * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
-     * @param {Number} description.rotation The rotation of the extent in radians.
-     * @param {Number} description.width The number of vertices in the longitude direction.
-     * @param {Number} description.height The number of vertices in the latitude direction.
-     * @param {Number} description.surfaceHeight The height from the surface of the ellipsoid.
-     * @param {Boolean} description.generateTextureCoordinates Whether to generate texture coordinates.
-     * @param {Boolean} description.interleaveTextureCoordinates Whether to interleave the texture coordinates into the vertex array.
-     * @param {Cartesian3} description.relativetoCenter The positions will be computed as <code>worldPosition.subtract(relativeToCenter)</code>.
-     * @param {Cartesian3} description.radiiSquared The radii squared of the ellipsoid to use.
-     * @param {Array|Float32Array} description.vertices The array to use to store computed vertices.
-     * @param {Array|Float32Array} description.textureCoordinates The array to use to store computed texture coordinates, unless interleaved.
-     * @param {Array|Float32Array} [description.indices] The array to use to store computed indices.  If undefined, indices will be not computed.
-     */
+
     var nw = new Cartesian3();
     var nwCartographic = new Cartographic();
     var centerCartographic = new Cartographic();
     var center = new Cartesian3();
     var rotationMatrix = new Matrix2();
     var proj = new GeographicProjection();
-    ExtentGeometry.computeVertices = function(description) {
-        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-        var extent = description.extent;
-        extent.validate();
-        var rotation = description.rotation;
-        var surfaceHeight = description.surfaceHeight;
-        var width = description.width;
-        var height = description.height;
 
+    /**
+     * Creates geometry for a cartographic extent of an ellipsoid centered at the origin.
+     *
+     * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
+     * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
+     * @param {Number} [description.granularity=0.1] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Number} [description.surfaceHeight=0.0] The height from the surface of the ellipsoid.
+     * @param {Cartesian3} [description.relativetoCenter=Cartesian3.ZERO] The positions will be computed as <code>worldPosition.subtract(relativeToCenter)</code>.
+     * @param {Number} [description.rotation=0.0] The rotation of the extent in radians.
+     *
+     * @exception {DeveloperError} <code>description.extent</code> is required and must have north, south, east and west attributes.
+     * @exception {DeveloperError} <code>description.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+     * @exception {DeveloperError} <code>description.extent.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+     * @exception {DeveloperError} <code>description.extent.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+     * @exception {DeveloperError} <code>description.extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+     * @exception {DeveloperError} <code>description.extent.north</code> must be greater than <code>extent.south</code>.
+     * @exception {DeveloperError} <code>description.extent.east</code> must be greater than <code>extent.west</code>.
+     * @exception {DeveloperError} <code>description.context</code> is required.
+     *
+     * @see Extent
+     *
+     * @example
+     * var extent = new ExtentGeometry({
+     *     ellipsoid : Ellipsoid.WGS84,
+     *     extent : new Extent(
+     *         CesiumMath.toRadians(-80.0),
+     *         CesiumMath.toRadians(39.0),
+     *         CesiumMath.toRadians(-74.0),
+     *         CesiumMath.toRadians(42.0)
+     *     ),
+     *     granularity : 0.01,
+     *     surfaceHeight : 10000.0
+     * });
+     */
+    var ExtentGeometry = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var extent = options.extent;
+        extent.validate();
+
+        var granularity = defaultValue(options.granularity, 0.1);
+        var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
+        var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
         var granularityX = (extent.east - extent.west) / (width - 1);
         var granularityY = (extent.north - extent.south) / (height - 1);
-        var generateTextureCoordinates = description.generateTextureCoordinates;
-        var interleaveTextureCoordinates = description.interleaveTextureCoordinates;
-        var relativeToCenter = description.relativeToCenter;
 
-        var vertices = description.vertices;
-        var textureCoordinates = description.textureCoordinates;
-        var indices = description.indices;
-
-        var radiiSquared = description.radiiSquared;
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        var radiiSquared = ellipsoid.getRadiiSquared();
         var radiiSquaredX = radiiSquared.x;
         var radiiSquaredY = radiiSquared.y;
         var radiiSquaredZ = radiiSquared.z;
+
+        var relativeToCenter = defaultValue(options.relativeToCenter, Cartesian3.ZERO);
+        var surfaceHeight = defaultValue(options.surfaceHeight, 0.0);
+        var rotation = defaultValue(options.rotation, 0.0);
 
         var cos = Math.cos;
         var sin = Math.sin;
@@ -105,16 +118,9 @@ define([
         var lonScalar = 1.0 / (extent.east - extent.west);
         var latScalar = 1.0 / (extent.north - extent.south);
 
-        var vertexArrayIndex = 0;
-        var textureCoordinatesIndex = 0;
-
         extent.getNorthwest(nwCartographic);
         extent.getCenter(centerCartographic);
         var latitude, longitude;
-
-        if (typeof rotation === 'undefined') {
-            rotation = 0;
-        }
 
         var granYCos = granularityY * cos(rotation);
         var granYSin = granularityY * sin(rotation);
@@ -145,6 +151,14 @@ define([
             }
         }
 
+        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        var attributes = {};
+
+        var positionIndex = 0;
+        var stIndex = 0;
+
+        var positions = [];
+
         for ( var row = 0; row < height; ++row) {
             for ( var col = 0; col < width; ++col) {
                 latitude = nwCartographic.latitude - granYCos*row + col*granXSin;
@@ -166,155 +180,100 @@ define([
                 var rSurfaceY = kY / gamma;
                 var rSurfaceZ = kZ / gamma;
 
-                vertices[vertexArrayIndex++] = rSurfaceX + nX * surfaceHeight - relativeToCenter.x;
-                vertices[vertexArrayIndex++] = rSurfaceY + nY * surfaceHeight - relativeToCenter.y;
-                vertices[vertexArrayIndex++] = rSurfaceZ + nZ * surfaceHeight - relativeToCenter.z;
+                positions[positionIndex++] = rSurfaceX + nX * surfaceHeight - relativeToCenter.x;
+                positions[positionIndex++] = rSurfaceY + nY * surfaceHeight - relativeToCenter.y;
+                positions[positionIndex++] = rSurfaceZ + nZ * surfaceHeight - relativeToCenter.z;
 
+                /*
                 if (generateTextureCoordinates) {
-                    var u = (longitude - extent.west) * lonScalar;
-                    var v = (latitude - extent.south) * latScalar;
-
-                    if (interleaveTextureCoordinates) {
-                        vertices[vertexArrayIndex++] = u;
-                        vertices[vertexArrayIndex++] = v;
-                    } else {
-                        textureCoordinates[textureCoordinatesIndex++] = u;
-                        textureCoordinates[textureCoordinatesIndex++] = v;
-                    }
+                    textureCoordinates[stIndex++] = (longitude - extent.west) * lonScalar;
+                    textureCoordinates[stIndex++] = (latitude - extent.south) * latScalar;
                 }
+                */
             }
         }
 
-        if (typeof indices !== 'undefined') {
-            var index = 0;
-            var indicesIndex = 0;
-            for ( var i = 0; i < height - 1; ++i) {
-                for ( var j = 0; j < width - 1; ++j) {
-                    var upperLeft = index;
-                    var lowerLeft = upperLeft + width;
-                    var lowerRight = lowerLeft + 1;
-                    var upperRight = upperLeft + 1;
+        var indices = [];
+        var index = 0;
+        var indicesIndex = 0;
+        for ( var i = 0; i < height - 1; ++i) {
+            for ( var j = 0; j < width - 1; ++j) {
+                var upperLeft = index;
+                var lowerLeft = upperLeft + width;
+                var lowerRight = lowerLeft + 1;
+                var upperRight = upperLeft + 1;
 
-                    indices[indicesIndex++] = upperLeft;
-                    indices[indicesIndex++] = lowerLeft;
-                    indices[indicesIndex++] = upperRight;
-                    indices[indicesIndex++] = upperRight;
-                    indices[indicesIndex++] = lowerLeft;
-                    indices[indicesIndex++] = lowerRight;
+                indices[indicesIndex++] = upperLeft;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = lowerRight;
 
-                    ++index;
-                }
                 ++index;
             }
-        }
-    };
-
-    /**
-     * Creates a mesh from a cartographic extent.
-     *
-     * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
-     * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
-     * @param {Number} [description.granularity=0.1] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number} [description.surfaceHeight=0.0] The height from the surface of the ellipsoid.
-     * @param {Cartesian3} [description.relativetoCenter=Cartesian3.ZERO] The positions will be computed as <code>worldPosition.subtract(relativeToCenter)</code>.
-     * @param {Boolean} [description.generateTextureCoordinates=false] Whether to generate texture coordinates.
-     *
-     * @exception {DeveloperError} <code>description.extent</code> is required and must have north, south, east and west attributes.
-     * @exception {DeveloperError} <code>description.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
-     * @exception {DeveloperError} <code>description.extent.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
-     * @exception {DeveloperError} <code>description.extent.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
-     * @exception {DeveloperError} <code>description.extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
-     * @exception {DeveloperError} <code>description.extent.north</code> must be greater than <code>extent.south</code>.
-     * @exception {DeveloperError} <code>description.extent.east</code> must be greater than <code>extent.west</code>.
-     * @exception {DeveloperError} <code>description.context</code> is required.
-     *
-     * @return {Object} A mesh containing attributes for positions, possibly texture coordinates and indices
-     * from the extent for creating a vertex array. (returns undefined if no indices are found)
-     *
-     * @see Context#createVertexArrayFromMesh
-     * @see GeometryFilters.createAttributeIndices
-     * @see GeometryFilters.toWireframe
-     * @see Extent
-     *
-     * @example
-     * // Create a vertex array for rendering a wireframe extent.
-     * var mesh = ExtentGeometry.compute({
-     *     ellipsoid : Ellipsoid.WGS84,
-     *     extent : new Extent(
-     *         CesiumMath.toRadians(-80.0),
-     *         CesiumMath.toRadians(39.0),
-     *         CesiumMath.toRadians(-74.0),
-     *         CesiumMath.toRadians(42.0)
-     *     ),
-     *     granularity : 0.01,
-     *     surfaceHeight : 10000.0
-     * });
-     * mesh = GeometryFilters.toWireframe(mesh);
-     * var va = context.createVertexArrayFromMesh({
-     *     mesh             : mesh,
-     *     attributeIndices : GeometryFilters.createAttributeIndices(mesh)
-     * });
-     */
-    ExtentGeometry.compute = function(description) {
-        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-
-        // make a copy of description to allow us to change values before passing to computeVertices
-        var computeVerticesDescription = clone(description);
-
-        var extent = description.extent;
-        extent.validate();
-
-        var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
-        computeVerticesDescription.radiiSquared = ellipsoid.getRadiiSquared();
-        computeVerticesDescription.relativeToCenter = defaultValue(description.relativeToCenter, Cartesian3.ZERO);
-
-        var granularity = defaultValue(description.granularity, 0.1);
-        computeVerticesDescription.surfaceHeight = defaultValue(description.surfaceHeight, 0.0);
-
-        computeVerticesDescription.width = Math.ceil((extent.east - extent.west) / granularity) + 1;
-        computeVerticesDescription.height = Math.ceil((extent.north - extent.south) / granularity) + 1;
-
-        var vertices = [];
-        var indices = [];
-        var textureCoordinates = [];
-
-        computeVerticesDescription.generateTextureCoordinates = defaultValue(computeVerticesDescription.generateTextureCoordinates, false);
-        computeVerticesDescription.interleaveTextureCoordinates = false;
-        computeVerticesDescription.vertices = vertices;
-        computeVerticesDescription.textureCoordinates = textureCoordinates;
-        computeVerticesDescription.indices = indices;
-
-        ExtentGeometry.computeVertices(computeVerticesDescription);
-
-        if (indices.length === 0) {
-            return undefined;
+            ++index;
         }
 
-        var mesh = new Geometry({
-            attributes : {},
-            indexLists : [new GeometryIndices({
-                primitiveType : PrimitiveType.TRIANGLES,
-                values : indices
-            })]
-        });
-
-        var positionName = defaultValue(description.positionName, 'position');
-        mesh.attributes[positionName] = new GeometryAttribute({
-            componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 3,
-            values : vertices
-        });
-
-        if (description.generateTextureCoordinates) {
-            var textureCoordinatesName = defaultValue(description.textureCoordinatesName, 'textureCoordinates');
-            mesh.attributes[textureCoordinatesName] = new GeometryAttribute({
+        if (vertexFormat.position) {
+            attributes.position = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 2,
-                values : textureCoordinates
+                componentsPerAttribute : 3,
+                values : positions
             });
         }
 
-        return mesh;
+        /*
+        attributes.st = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 2,
+            values : textureCoordinates
+        });
+        */
+
+        /**
+         * An object containing {@link GeometryAttribute} properties named after each of the
+         * <code>true</code> values of the {@link VertexFormat} option.
+         *
+         * @type Object
+         */
+        this.attributes = attributes;
+
+        /**
+         * An array of {@link GeometryIndices} defining primitives.
+         *
+         * @type Array
+         */
+        this.indexLists = [
+            new GeometryIndices({
+                primitiveType : PrimitiveType.TRIANGLES,
+                values : indices
+            })
+        ];
+
+        /**
+         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
+         *
+         * @type BoundingSphere
+         */
+        this.boundingSphere = BoundingSphere.fromExtent3D(extent, ellipsoid); // TODO: surface height
+
+        /**
+         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
+         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+         * Local reference frames can be used by providing a different transformation matrix, like that returned
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
+         *
+         * @type Matrix4
+         *
+         * @see Transforms.eastNorthUpToFixedFrame
+         */
+        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
+
+        /**
+         * DOC_TBA
+         */
+        this.pickData = options.pickData;
     };
 
     return ExtentGeometry;

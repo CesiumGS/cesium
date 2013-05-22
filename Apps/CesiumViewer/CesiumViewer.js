@@ -72,7 +72,8 @@ define([
 
         var scene = widget.scene;
 
-        var mesh = ExtentGeometry.compute({
+        var mesh = new ExtentGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
             extent : new Extent(
                 CesiumMath.toRadians(-180.0),
                 CesiumMath.toRadians(50.0),
