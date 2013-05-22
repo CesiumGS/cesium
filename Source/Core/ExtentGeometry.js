@@ -59,7 +59,7 @@ define([
     var binormal = new Cartesian3();
 
     /**
-     * Creates geometry for a cartographic extent of an ellipsoid centered at the origin.
+     * Creates geometry for a cartographic extent on an ellipsoid centered at the origin.
      *
      * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
@@ -74,6 +74,7 @@ define([
      * @exception {DeveloperError} <code>description.extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>description.extent.north</code> must be greater than <code>extent.south</code>.
      * @exception {DeveloperError} <code>description.extent.east</code> must be greater than <code>extent.west</code>.
+     * @exception {DeveloperError} Rotated extent is invalid.
      *
      * @see Extent
      *
@@ -138,17 +139,12 @@ define([
             proj.unproject(nw, nwCartographic);
             latitude = nwCartographic.latitude;
             longitude = nwCartographic.longitude;
-            if (!isValidLatLon(latitude, longitude)) { //NW corner
-                return;
-            }
-            if (!isValidLatLon(latitude + (width-1)*granXSin, longitude + (width-1)*granXCos)) { //NE corner
-                return;
-            }
-            if (!isValidLatLon(latitude - granYCos*(height-1), longitude + (height-1)*granYSin)) { //SW corner
-                return;
-            }
-            if (!isValidLatLon(latitude - granYCos*(height-1) + (width-1)*granXSin, longitude + (height-1)*granYSin + (width-1)*granXCos)) { //SE corner
-                return;
+
+            if (!isValidLatLon(latitude, longitude) ||
+                    !isValidLatLon(latitude + (width-1)*granXSin, longitude + (width-1)*granXCos) ||
+                    !isValidLatLon(latitude - granYCos*(height-1), longitude + (height-1)*granYSin) ||
+                    !isValidLatLon(latitude - granYCos*(height-1) + (width-1)*granXSin, longitude + (height-1)*granYSin + (width-1)*granXCos)) {
+                throw new DeveloperError('Rotated extent is invalid.');
             }
         }
 

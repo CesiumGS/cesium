@@ -346,14 +346,6 @@ defineSuite([
         test2DBoundingSphereFromPositions(SceneMode.SCENE2D);
     });
 
-    it('test 2D bounding sphere from extent', function() {
-        test2DBoundingSphereFromExtent(SceneMode.COLUMBUS_VIEW);
-    });
-
-    it('test 2D bounding sphere from extent', function() {
-        test2DBoundingSphereFromExtent(SceneMode.SCENE2D);
-    });
-
     it('isDestroyed', function() {
         var p = new Polygon();
         expect(p.isDestroyed()).toEqual(false);
