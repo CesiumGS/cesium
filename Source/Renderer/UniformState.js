@@ -1115,43 +1115,42 @@ define([
         // In 2D and Columbus View, the camera can travel outside the projection, and when it does so
         // there's not really any corresponding location in the real world.  So clamp the unprojected
         // longitude and latitude to their valid ranges.
-        if(typeof projection !== 'undefined'){
-            var cartographic = projection.unproject(p, view2Dto3DCartographicScratch);
-            cartographic.longitude = CesiumMath.clamp(cartographic.longitude, -Math.PI, Math.PI);
-            cartographic.latitude = CesiumMath.clamp(cartographic.latitude, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
-            var ellipsoid = projection.getEllipsoid();
-            var position3D = ellipsoid.cartographicToCartesian(cartographic, view2Dto3DCartesian3Scratch);
+        var cartographic = projection.unproject(p, view2Dto3DCartographicScratch);
+        cartographic.longitude = CesiumMath.clamp(cartographic.longitude, -Math.PI, Math.PI);
+        cartographic.latitude = CesiumMath.clamp(cartographic.latitude, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
+        var ellipsoid = projection.getEllipsoid();
+        var position3D = ellipsoid.cartographicToCartesian(cartographic, view2Dto3DCartesian3Scratch);
 
-            // Compute the rotation from the local ENU at the real world camera position to the fixed axes.
-            var enuToFixed = Transforms.eastNorthUpToFixedFrame(position3D, ellipsoid, view2Dto3DMatrix4Scratch);
+        // Compute the rotation from the local ENU at the real world camera position to the fixed axes.
+        var enuToFixed = Transforms.eastNorthUpToFixedFrame(position3D, ellipsoid, view2Dto3DMatrix4Scratch);
 
-            // Transform each camera direction to the fixed axes.
-            enuToFixed.multiplyByVector(r, r);
-            enuToFixed.multiplyByVector(u, u);
-            enuToFixed.multiplyByVector(d, d);
+        // Transform each camera direction to the fixed axes.
+        enuToFixed.multiplyByVector(r, r);
+        enuToFixed.multiplyByVector(u, u);
+        enuToFixed.multiplyByVector(d, d);
 
-            // Compute the view matrix based on the new fixed-frame camera position and directions.
-            if (typeof result === 'undefined') {
-                result = new Matrix4();
-            }
-
-            result[0] = r.x;
-            result[1] = u.x;
-            result[2] = -d.x;
-            result[3] = 0.0;
-            result[4] = r.y;
-            result[5] = u.y;
-            result[6] = -d.y;
-            result[7] = 0.0;
-            result[8] = r.z;
-            result[9] = u.z;
-            result[10] = -d.z;
-            result[11] = 0.0;
-            result[12] = -Cartesian3.dot(r, position3D);
-            result[13] = -Cartesian3.dot(u, position3D);
-            result[14] = Cartesian3.dot(d, position3D);
-            result[15] = 1.0;
+        // Compute the view matrix based on the new fixed-frame camera position and directions.
+        if (typeof result === 'undefined') {
+            result = new Matrix4();
         }
+
+        result[0] = r.x;
+        result[1] = u.x;
+        result[2] = -d.x;
+        result[3] = 0.0;
+        result[4] = r.y;
+        result[5] = u.y;
+        result[6] = -d.y;
+        result[7] = 0.0;
+        result[8] = r.z;
+        result[9] = u.z;
+        result[10] = -d.z;
+        result[11] = 0.0;
+        result[12] = -Cartesian3.dot(r, position3D);
+        result[13] = -Cartesian3.dot(u, position3D);
+        result[14] = Cartesian3.dot(d, position3D);
+        result[15] = 1.0;
+
         return result;
     }
 
