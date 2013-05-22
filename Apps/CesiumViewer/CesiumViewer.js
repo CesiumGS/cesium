@@ -72,59 +72,6 @@ define([
 
         var scene = widget.scene;
 
-        var imageMaterial = new Material({
-            context : scene.getContext(),
-            fabric : {
-                type : 'Image',
-                uniforms : {
-                    image : '../Sandcastle/images/Cesium_Logo_Color.jpg'
-                }
-            }
-         });
-        var imageAppearance = new Appearance({
-            material : imageMaterial,
-            renderState : {
-                depthTest : {
-                    enabled : true
-                }
-            }
-        });
-        var mesh = new ExtentGeometry({
-            vertexFormat : VertexFormat.DEFAULT,
-            extent : new Extent(
-                CesiumMath.toRadians(-180.0),
-                CesiumMath.toRadians(50.0),
-                CesiumMath.toRadians(180.0),
-                CesiumMath.toRadians(90.0)),
-            granularity : 0.006                     // More than 64K vertices
-        });
-        mesh.pickData = 'mesh';
-        var extent = new Primitive({
-            geometries : [mesh],
-            appearance : imageAppearance
-        });
-        widget.scene.getPrimitives().add(extent);
-
-        var mesh2 = new EllipsoidGeometry({
-            ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0),
-            modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                    Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
-            pickData : 'mesh2'
-        });
-
-        var mesh3 = new BoxGeometry({
-            vertexFormat : VertexFormat.POSITION_ONLY,
-            dimensions : new Cartesian3(1000000.0, 1000000.0, 2000000.0),
-            modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
-            pickData : 'mesh3'
-        });
-        var primitive = new Primitive({
-            geometries : [/*mesh,*/ mesh2, mesh3],
-            appearance : Appearance.CLOSED_TRANSLUCENT
-        });
-        widget.scene.getPrimitives().add(primitive);
-
         var m = new Material({
             context : widget.scene.getContext(),
             fabric : {
@@ -159,6 +106,42 @@ define([
             material : m,
             renderState : rs
         });
+
+        var mesh = new ExtentGeometry({
+            vertexFormat : VertexFormat.DEFAULT,
+            extent : new Extent(
+                CesiumMath.toRadians(-180.0),
+                CesiumMath.toRadians(50.0),
+                CesiumMath.toRadians(180.0),
+                CesiumMath.toRadians(90.0)),
+            granularity : 0.006                     // More than 64K vertices
+        });
+        mesh.pickData = 'mesh';
+        var extent = new Primitive({
+            geometries : [mesh],
+            appearance : appearance
+        });
+        widget.scene.getPrimitives().add(extent);
+
+        var mesh2 = new EllipsoidGeometry({
+            ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0),
+            modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+                    Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
+            pickData : 'mesh2'
+        });
+
+        var mesh3 = new BoxGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            dimensions : new Cartesian3(1000000.0, 1000000.0, 2000000.0),
+            modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+                Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
+            pickData : 'mesh3'
+        });
+        var primitive = new Primitive({
+            geometries : [/*mesh,*/ mesh2, mesh3],
+            appearance : Appearance.CLOSED_TRANSLUCENT
+        });
+        widget.scene.getPrimitives().add(primitive);
 
         var mesh4 = new EllipsoidGeometry({
             vertexFormat : VertexFormat.ALL,

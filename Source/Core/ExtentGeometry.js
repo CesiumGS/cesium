@@ -53,6 +53,10 @@ define([
     var center = new Cartesian3();
     var rotationMatrix = new Matrix2();
     var proj = new GeographicProjection();
+    var position = new Cartesian3();
+    var normal = new Cartesian3();
+    var tangent = new Cartesian3();
+    var binormal = new Cartesian3();
 
     /**
      * Creates geometry for a cartographic extent of an ellipsoid centered at the origin.
@@ -61,7 +65,6 @@ define([
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
      * @param {Number} [description.granularity=0.1] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [description.surfaceHeight=0.0] The height from the surface of the ellipsoid.
-     * @param {Cartesian3} [description.relativetoCenter=Cartesian3.ZERO] The positions will be computed as <code>worldPosition.subtract(relativeToCenter)</code>.
      * @param {Number} [description.rotation=0.0] The rotation of the extent in radians.
      *
      * @exception {DeveloperError} <code>description.extent</code> is required and must have north, south, east and west attributes.
@@ -71,7 +74,6 @@ define([
      * @exception {DeveloperError} <code>description.extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>description.extent.north</code> must be greater than <code>extent.south</code>.
      * @exception {DeveloperError} <code>description.extent.east</code> must be greater than <code>extent.west</code>.
-     * @exception {DeveloperError} <code>description.context</code> is required.
      *
      * @see Extent
      *
@@ -106,7 +108,6 @@ define([
         var radiiSquaredY = radiiSquared.y;
         var radiiSquaredZ = radiiSquared.z;
 
-        var relativeToCenter = defaultValue(options.relativeToCenter, Cartesian3.ZERO);
         var surfaceHeight = defaultValue(options.surfaceHeight, 0.0);
         var rotation = defaultValue(options.rotation, 0.0);
 
@@ -156,10 +157,16 @@ define([
 
         var positionIndex = 0;
         var stIndex = 0;
+        var normalIndex = 0;
+        var tangentIndex = 0;
+        var binormalIndex = 0;
 
         var size = width * height;
         var positions = (vertexFormat.position) ? new Array(size * 3) : undefined;
         var textureCoordinates = (vertexFormat.st) ? new Array(size * 2) : undefined;
+        var normals = (vertexFormat.normal) ? new Array(size * 3) : undefined;
+        var tangents = (vertexFormat.tangent) ? new Array(size * 3) : undefined;
+        var binormals = (vertexFormat.binormal) ? new Array(size * 3) : undefined;
 
         for ( var row = 0; row < height; ++row) {
             for ( var col = 0; col < width; ++col) {
@@ -182,19 +189,43 @@ define([
                 var rSurfaceY = kY / gamma;
                 var rSurfaceZ = kZ / gamma;
 
-                var x = rSurfaceX + nX * surfaceHeight - relativeToCenter.x;
-                var y = rSurfaceY + nY * surfaceHeight - relativeToCenter.y;
-                var z = rSurfaceZ + nZ * surfaceHeight - relativeToCenter.z;
+                position.x = rSurfaceX + nX * surfaceHeight;
+                position.y = rSurfaceY + nY * surfaceHeight;
+                position.z = rSurfaceZ + nZ * surfaceHeight;
 
                 if (vertexFormat.position) {
-                    positions[positionIndex++] = x;
-                    positions[positionIndex++] = y;
-                    positions[positionIndex++] = z;
+                    positions[positionIndex++] = position.x;
+                    positions[positionIndex++] = position.y;
+                    positions[positionIndex++] = position.z;
                 }
 
                 if (vertexFormat.st) {
                     textureCoordinates[stIndex++] = (longitude - extent.west) * lonScalar;
                     textureCoordinates[stIndex++] = (latitude - extent.south) * latScalar;
+                }
+
+                if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+                    ellipsoid.geodeticSurfaceNormal(position, normal);
+                    Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                    Cartesian3.cross(normal, tangent, binormal);
+
+                    if (vertexFormat.normal) {
+                        normals[normalIndex++] = normal.x;
+                        normals[normalIndex++] = normal.y;
+                        normals[normalIndex++] = normal.z;
+                    }
+
+                    if (vertexFormat.tangent) {
+                        tangents[tangentIndex++] = tangent.x;
+                        tangents[tangentIndex++] = tangent.y;
+                        tangents[tangentIndex++] = tangent.z;
+                    }
+
+                    if (vertexFormat.binormal) {
+                        binormals[binormalIndex++] = binormal.x;
+                        binormals[binormalIndex++] = binormal.y;
+                        binormals[binormalIndex++] = binormal.z;
+                    }
                 }
             }
         }
@@ -234,6 +265,30 @@ define([
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 2,
                 values : textureCoordinates
+            });
+        }
+
+        if (vertexFormat.normal) {
+            attributes.normal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : normals
+            });
+        }
+
+        if (vertexFormat.tangent) {
+            attributes.tangent = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : tangents
+            });
+        }
+
+        if (vertexFormat.binormal) {
+            attributes.binormal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : binormals
             });
         }
 
