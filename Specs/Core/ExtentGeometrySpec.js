@@ -101,6 +101,12 @@ defineSuite([
         expect(actual).toEqualEpsilon(unrotatedNWCorner, CesiumMath.EPSILON8);
     });
 
+    it('throws without extent', function() {
+        expect(function() {
+            return new ExtentGeometry({});
+        }).toThrow();
+    });
+
     it('throws if rotated extent is invalid', function() {
         expect(function() {
             return new ExtentGeometry({

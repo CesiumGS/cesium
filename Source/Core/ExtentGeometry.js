@@ -95,6 +95,10 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var extent = options.extent;
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
         extent.validate();
 
         var granularity = defaultValue(options.granularity, 0.1);
