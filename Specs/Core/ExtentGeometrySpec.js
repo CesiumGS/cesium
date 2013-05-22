@@ -44,40 +44,6 @@ defineSuite([
         }) === 'undefined').toEqual(true);
     });
 
-    it('computeBuffers 0', function() {
-        var buffers = ExtentGeometry.computeBuffers({
-            extent : new Extent(-2.0, -1.0, 0.0, 1.0),
-            granularity : 1.0
-        });
-
-        expect(buffers.positions.length).toEqual(9 * 3);
-        expect(buffers.indices.length).toEqual(8 * 3);
-    });
-
-    it('computeBuffers 1', function() {
-        var buffers = ExtentGeometry.computeBuffers({
-            extent : new Extent(-2.0, -1.0, 0.0, 1.0),
-            granularity : 1.0,
-            generateTextureCoordinates : true
-        });
-
-        expect(buffers.positions.length).toEqual(9 * 3);
-        expect(buffers.textureCoordinates.length).toEqual(9 * 2);
-        expect(buffers.indices.length).toEqual(8 * 3);
-    });
-
-    it('computeBuffers 2', function() {
-        var buffers = ExtentGeometry.computeBuffers({
-            extent : new Extent(-2.0, -1.0, 0.0, 1.0),
-            granularity : 1.0,
-            generateTextureCoordinates : true,
-            interleaveTextureCoordinates : true
-        });
-
-        expect(buffers.vertices.length).toEqual(9 * 3 + 9 * 2);
-        expect(buffers.indices.length).toEqual(8 * 3);
-    });
-
     it('compute vertices', function() {
         var extent = new Extent(-CesiumMath.PI, -CesiumMath.PI_OVER_TWO, CesiumMath.PI, CesiumMath.PI_OVER_TWO);
         var description = {
