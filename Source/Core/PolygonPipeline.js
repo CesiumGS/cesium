@@ -618,12 +618,12 @@ define([
             var v, v0, v1;
 
             for (var i = 0; i < length; ++i) {
-                polygonVertices.add(positions[i], i);
+                polygonVertices.add(positions[i], i); //add vertex list
                 v = positions[i];
                 v0 = (i === 0) ? positions[length-1] : positions[i-1];
                 v1 = (i === length-1) ? positions[0] : positions[i+1];
                 if (!isTipConvex(v0, v, v1)) {
-                    polygonVertices.addReflex(polygonVertices.tail);
+                    polygonVertices.addReflex(polygonVertices.tail); //add to reflex vertex list
                 }
             }
 
@@ -633,20 +633,20 @@ define([
                     v0 = v.previous;
                     v1 = v.next;
                     if (isVertexEar(v0.item, v.item, v1.item, polygonVertices)) {
-                        polygonVertices.addEarTip(v);
+                        polygonVertices.addEarTip(v); //add to ear clip list
                     }
                 }
                 v = v.next;
             }
 
-            v = polygonVertices.earTipHead;
-            v0 = v.previous;
-            v1 = v.next;
             while (polygonVertices.length > 3) {
+                v = polygonVertices.earTipHead;
+                v0 = v.previous;
+                v1 = v.next;
+
                 indices.push(v0.index, v.index, v1.index);
 
                 polygonVertices.remove(v);
-                v = polygonVertices.earTipHead;
 
                 // Check adjacent vertices for changes
                 if (v0.isReflex) { // If reflex vertex is now convex
@@ -677,11 +677,13 @@ define([
                         polygonVertices.addEarTip(v1);
                     }
                 }
-                v0 = v.previous;
-                v1 = v.next;
             }
 
+            v = polygonVertices.earTipHead;
+            v0 = v.previous;
+            v1 = v.next;
             indices.push(v0.index, v.index, v1.index);
+
             return indices;
         },
 

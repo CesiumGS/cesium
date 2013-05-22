@@ -175,12 +175,6 @@ defineSuite([
         }).toThrow();
     });
 
-    it('earClip2D throws without three positions', function() {
-        expect(function() {
-            PolygonPipeline.earClip2D([Cartesian2.ZERO, Cartesian2.ZERO]);
-        }).toThrow();
-    });
-
     ///////////////////////////////////////////////////////////////////////
 
     it('wrapLongitude subdivides triangle it crosses the international date line, p0 behind', function() {
