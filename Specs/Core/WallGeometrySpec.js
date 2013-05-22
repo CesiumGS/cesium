@@ -1,12 +1,16 @@
 /*global defineSuite*/
 defineSuite([
          'Core/WallGeometry',
-         'Core/Cartographic'
+         'Core/Cartographic',
+         'Core/Ellipsoid'
      ], function(
          WallGeometry,
-         Cartographic) {
+         Cartographic,
+         Ellipsoid) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    var ellipsoid = Ellipsoid.WGS84;
 
     it('create with no parameters', function() {
         expect(function() {
@@ -23,7 +27,7 @@ defineSuite([
 
         var w = new WallGeometry({
             altitudeMode : 'absolute',
-            coordinates  : coords
+            positions    : ellipsoid.cartographicArrayToCartesianArray(coords)
         });
 
         expect(w.attributes.position.values.length).toEqual(2 * 2 * 3);
@@ -40,7 +44,7 @@ defineSuite([
         expect(function() {
             return new WallGeometry({
                 altitudeMode : 'relativeToGround',
-                coordinates  : coords
+                positions    : ellipsoid.cartographicArrayToCartesianArray(coords)
             }).toThrow();
         });
     });
@@ -58,7 +62,7 @@ defineSuite([
 
         var w = new WallGeometry({
             altitudeMode : 'relativeToGround',
-            coordinates  : coords,
+            positions    : ellipsoid.cartographicArrayToCartesianArray(coords),
             terrain      : terrain
         });
 

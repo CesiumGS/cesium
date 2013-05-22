@@ -39,29 +39,30 @@ define([
      * @alias WallGeometry
      * @constructor
      *
-     * @param {array of Cartographic} coordinates an array of Cartographic objects, which are the coordinates of the wall
+     * @param {array of Cartesian} positions an array of Cartesian objects, which are the points of the wall
      * @param {string} altitudeMode either 'absolute' or 'relativeToGround'. 'absolute' means the height
      *        is treated from the WGS84 ellipsoid. 'relativeToGround' means they are treated
      *        relative to the supplied terrain data
-     * @param {array of Cartographic} [terrain] requred if altitudeMode is 'relativeToGround'. has to denote the same points
-     *        as in coordinates, with the ground elevation in the height property of each point
+     * @param {array of Cartesian} [terrain] requred if altitudeMode is 'relativeToGround'. has to denote the same points
+     *        as in positions, with the ground elevation reflecting the terrain elevation
      * @param {number} [top] optional, the top of the wall. if specified, the top of the wall is treated as this
-     *        height, and the information in the coordinates array is disregarded
+     *        height, and the information in the positions array is disregarded
      * @param {number} [bottom] optional, the bottom of the wall. if specified, the bottom of the wall is treated as
      *        this height. otherwise its treated as 'ground' (the WGS84 ellipsoid height 0)
      * @param {object} [pickData] the geometry pick data
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] ellispoid for coordinate manipulation
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      */
     var WallGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var coordinates;
+        var positions;
 
-        if (typeof options.coordinates !== 'undefined') {
-            coordinates = options.coordinates;
+        if (typeof options.positions !== 'undefined') {
+            positions = options.positions;
         } else {
-            throw new DeveloperError('Coordinates must be supplied.');
+            throw new DeveloperError('positions must be supplied.');
         }
 
         var attributes = {};
@@ -70,12 +71,11 @@ define([
         if (options.altitudeMode === 'relativeToGround' && typeof options.terrain === 'undefined') {
             throw new DeveloperError('No terrain supplied when required.');
         }
-        if (typeof options.terrain !== 'undefined' && options.terrain.length !== options.coordinates.length) {
+        if (typeof options.terrain !== 'undefined' && options.terrain.length !== options.positions.length) {
             throw new DeveloperError('Coordinates and terrain points don\'t match in number');
         }
 
-        var c = new Cartographic();
-        var ellipsoid = Ellipsoid.WGS84;
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
         attributes.position = new GeometryAttribute({
             componentDatatype : ComponentDatatype.FLOAT,
@@ -85,8 +85,11 @@ define([
 
         // add lower and upper points one after the other, lower
         // points being even and upper points being odd
-        for (var i = 0; i < options.coordinates.length; ++i) {
-            c = Cartographic.clone(options.coordinates[i]);
+        var origHeight;
+        var c;
+        for (var i = 0; i < options.positions.length; ++i) {
+            c = ellipsoid.cartesianToCartographic(options.positions[i]);
+            origHeight = c.height;
             c.height = 0;
             if (options.bottom !== undefined) {
                 c.height = options.bottom;
@@ -104,8 +107,7 @@ define([
             attributes.position.values.push(v.z);
 
             // get the original height back, or set the top value
-            c.height    = options.top === undefined ? options.coordinates[i].height
-                                                    : options.top;
+            c.height    = options.top === undefined ? origHeight : options.top;
             if (options.terrain !== undefined && !isNaN(options.terrain[i].height)) {
                 c.height += options.terrain[i].height;
             }
@@ -254,21 +256,21 @@ define([
         altitudeMode = xpResult.stringValue;
 
         var options = {
-            altitudeMode    : altitudeMode,
-            coordinates     : coordinates
+            altitudeMode : altitudeMode,
+            positions    : Ellipsoid.WGS84.cartographicArrayToCartesianArray(coordinates)
         };
 
         if (altitudeMode === 'relativeToGround') {
             // request the terrain data for each point of the line string
             var coords = [];
 
-            for (i = 0; i < options.coordinates.length; ++i) {
-                coords.push(Cartographic.clone(options.coordinates[i]));
+            for (i = 0; i < options.positions.length; ++i) {
+                coords.push(Ellipsoid.WGS84.cartesianToCartographic(options.positions[i]));
             }
 
             // request the elevation ground data
             when(sampleTerrain(terrainProvider, 11, coords), function(positions) {
-                options.terrain = positions;
+                options.terrain = Ellipsoid.WGS84.cartographicArrayToCartesianArray(positions);
 
                 var wall = new WallGeometry(options);
                 callback(wall);
