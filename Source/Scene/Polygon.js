@@ -19,7 +19,6 @@ define([
         '../Core/EllipsoidTangentPlane',
         '../Core/PolygonPipeline',
         '../Core/WindingOrder',
-        '../Core/ExtentGeometry',
         '../Core/Intersect',
         '../Core/Queue',
         '../Core/Matrix3',
@@ -55,7 +54,6 @@ define([
         EllipsoidTangentPlane,
         PolygonPipeline,
         WindingOrder,
-        ExtentGeometry,
         Intersect,
         Queue,
         Matrix3,
@@ -210,7 +208,6 @@ define([
 
         this._positions = undefined;
         this._textureRotationAngle = undefined;
-        this._extent = undefined;
         this._polygonHierarchy = undefined;
         this._createVertexArray = false;
 
@@ -319,7 +316,6 @@ define([
         }
         this.height = defaultValue(height, 0.0);
         this._textureRotationAngle = defaultValue(textureRotationAngle, 0.0);
-        this._extent = undefined;
         this._polygonHierarchy = undefined;
         this._positions = positions;
         this._createVertexArray = true;
@@ -413,38 +409,7 @@ define([
         this.height = defaultValue(height, 0.0);
         this._textureRotationAngle = defaultValue(textureRotationAngle, 0.0);
         this._positions = undefined;
-        this._extent = undefined;
         this._polygonHierarchy = polygons;
-        this._createVertexArray = true;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Polygon
-     *
-     * @param {extent} extent. The cartographic extent of the tile, with north, south, east and
-     * west properties in radians.
-     *
-     * @param {double} [height=0.0]. The height of the cartographic extent.
-     * @param {double} [rotation=0.0]. The rotation of the cartographic extent.
-     * @example
-     * polygon.configureExtent(new Extent(
-     *     CesiumMath.toRadians(0.0),
-     *     CesiumMath.toRadians(0.0),
-     *     CesiumMath.toRadians(10.0),
-     *     CesiumMath.toRadians(10.0)),
-     *     0.0,
-     *     CesiumMath.toRadians(45.0),
-     * );
-     */
-    Polygon.prototype.configureExtent = function(extent, height, rotation) {
-        this._extent = extent;
-        this.height = defaultValue(height, 0.0);
-        this.rotation = defaultValue(rotation, 0.0);
-        this._textureRotationAngle = undefined;
-        this._positions = undefined;
-        this._polygonHierarchy = undefined;
         this._createVertexArray = true;
     };
 
@@ -564,22 +529,7 @@ define([
         var meshes = [];
         var mesh;
 
-        if ((typeof polygon._extent !== 'undefined') && !polygon._extent.isEmpty()) {
-            mesh = ExtentGeometry.compute({
-                extent : polygon._extent,
-                rotation : polygon.rotation,
-                generateTextureCoordinates : true
-            });
-            if (typeof mesh !== 'undefined') {
-                meshes.push(mesh);
-            }
-            polygon._boundingVolume = BoundingSphere.fromExtent3D(polygon._extent, polygon._ellipsoid, polygon._boundingVolume);
-            if (polygon._mode !== SceneMode.SCENE3D) {
-                polygon._boundingVolume2D = BoundingSphere.fromExtent2D(polygon._extent, polygon._projection, polygon._boundingVolume2D);
-                var center2D = polygon._boundingVolume2D.center;
-                polygon._boundingVolume2D.center = new Cartesian3(0.0, center2D.x, center2D.y);
-            }
-        } else if (typeof polygon._positions !== 'undefined') {
+        if (typeof polygon._positions !== 'undefined') {
             polygon._boundingVolume = BoundingSphere.fromPoints(polygon._positions, polygon._boundingVolume);
             mesh = createMeshFromPositions(polygon, polygon._positions, polygon._textureRotationAngle, polygon._boundingVolume);
             if (typeof mesh !== 'undefined') {
