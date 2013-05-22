@@ -520,3 +520,11 @@ h6
         display: none;
     }
 }
+
+dt a {
+    text-decoration: none;
+}
+
+dt a:hover{
+    text-decoration: underline;
+}
