@@ -72,8 +72,25 @@ define([
 
         var scene = widget.scene;
 
+        var imageMaterial = new Material({
+            context : scene.getContext(),
+            fabric : {
+                type : 'Image',
+                uniforms : {
+                    image : '../Sandcastle/images/Cesium_Logo_Color.jpg'
+                }
+            }
+         });
+        var imageAppearance = new Appearance({
+            material : imageMaterial,
+            renderState : {
+                depthTest : {
+                    enabled : true
+                }
+            }
+        });
         var mesh = new ExtentGeometry({
-            vertexFormat : VertexFormat.POSITION_ONLY,
+            vertexFormat : VertexFormat.DEFAULT,
             extent : new Extent(
                 CesiumMath.toRadians(-180.0),
                 CesiumMath.toRadians(50.0),
@@ -82,6 +99,11 @@ define([
             granularity : 0.006                     // More than 64K vertices
         });
         mesh.pickData = 'mesh';
+        var extent = new Primitive({
+            geometries : [mesh],
+            appearance : imageAppearance
+        });
+        widget.scene.getPrimitives().add(extent);
 
         var mesh2 = new EllipsoidGeometry({
             ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0),
@@ -98,7 +120,7 @@ define([
             pickData : 'mesh3'
         });
         var primitive = new Primitive({
-            geometries : [mesh, mesh2, mesh3],
+            geometries : [/*mesh,*/ mesh2, mesh3],
             appearance : Appearance.CLOSED_TRANSLUCENT
         });
         widget.scene.getPrimitives().add(primitive);

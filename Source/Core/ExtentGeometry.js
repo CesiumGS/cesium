@@ -157,7 +157,9 @@ define([
         var positionIndex = 0;
         var stIndex = 0;
 
-        var positions = [];
+        var size = width * height;
+        var positions = (vertexFormat.position) ? new Array(size * 3) : undefined;
+        var textureCoordinates = (vertexFormat.st) ? new Array(size * 2) : undefined;
 
         for ( var row = 0; row < height; ++row) {
             for ( var col = 0; col < width; ++col) {
@@ -180,16 +182,20 @@ define([
                 var rSurfaceY = kY / gamma;
                 var rSurfaceZ = kZ / gamma;
 
-                positions[positionIndex++] = rSurfaceX + nX * surfaceHeight - relativeToCenter.x;
-                positions[positionIndex++] = rSurfaceY + nY * surfaceHeight - relativeToCenter.y;
-                positions[positionIndex++] = rSurfaceZ + nZ * surfaceHeight - relativeToCenter.z;
+                var x = rSurfaceX + nX * surfaceHeight - relativeToCenter.x;
+                var y = rSurfaceY + nY * surfaceHeight - relativeToCenter.y;
+                var z = rSurfaceZ + nZ * surfaceHeight - relativeToCenter.z;
 
-                /*
-                if (generateTextureCoordinates) {
+                if (vertexFormat.position) {
+                    positions[positionIndex++] = x;
+                    positions[positionIndex++] = y;
+                    positions[positionIndex++] = z;
+                }
+
+                if (vertexFormat.st) {
                     textureCoordinates[stIndex++] = (longitude - extent.west) * lonScalar;
                     textureCoordinates[stIndex++] = (latitude - extent.south) * latScalar;
                 }
-                */
             }
         }
 
@@ -223,13 +229,13 @@ define([
             });
         }
 
-        /*
-        attributes.st = new GeometryAttribute({
-            componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 2,
-            values : textureCoordinates
-        });
-        */
+        if (vertexFormat.st) {
+            attributes.st = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                values : textureCoordinates
+            });
+        }
 
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
