@@ -50,35 +50,27 @@ define([
     }
 
     var implementation;
-    var a;
 
     /**
-     * Given a non-relative moduleID, returns an absolute URL to the file represented by that module ID,
+     * Given a non-relative moduleID, returns a URL to the file represented by that module ID,
      * using, in order of preference, require.toUrl, the value of a global CESIUM_BASE_URL, or
      * the base URL of the Cesium.js script.
      *
      * @private
      */
     var buildModuleUrl = function(moduleID) {
-        if (typeof implementation === 'undefined') {
-            //select implementation
-            if (typeof require.toUrl !== 'undefined') {
-                implementation = buildModuleUrlFromRequireToUrl;
-            } else {
-                implementation = buildModuleUrlFromBaseUrl;
-            }
+        if (typeof implementation !== 'undefined') {
+            return implementation(moduleID);
         }
 
-        if (typeof a === 'undefined') {
-            a = document.createElement('a');
+        //select implementation
+        if (typeof require.toUrl !== 'undefined') {
+            implementation = buildModuleUrlFromRequireToUrl;
+        } else {
+            implementation = buildModuleUrlFromBaseUrl;
         }
 
-        var url = implementation(moduleID);
-
-        a.href = url;
-        a.href = a.href; // IE only absolutizes href on get, not set
-
-        return a.href;
+        return implementation(moduleID);
     };
 
     return buildModuleUrl;
