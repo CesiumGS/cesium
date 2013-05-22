@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/ExtentTessellator',
+         'Core/ExtentGeometry',
          'Core/Extent',
          'Core/Ellipsoid',
          'Core/Cartesian3',
          'Core/Math'
      ], function(
-         ExtentTessellator,
+         ExtentGeometry,
          Extent,
          Ellipsoid,
          Cartesian3,
@@ -15,7 +15,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('compute 0', function() {
-        var m = ExtentTessellator.compute({
+        var m = ExtentGeometry.compute({
             extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0
         });
@@ -25,7 +25,7 @@ defineSuite([
     });
 
     it('compute 1', function() {
-        var m = ExtentTessellator.compute({
+        var m = ExtentGeometry.compute({
             extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0,
             generateTextureCoordinates : true
@@ -36,7 +36,7 @@ defineSuite([
     });
 
     it('compute returns undefined if rotation makes extent invalid', function() {
-        expect(typeof ExtentTessellator.compute({
+        expect(typeof ExtentGeometry.compute({
             extent : new Extent(-CesiumMath.PI, -1.0, 0.0, 1.0),
             rotation: CesiumMath.PI_OVER_TWO,
             granularity : 1.0,
@@ -45,7 +45,7 @@ defineSuite([
     });
 
     it('computeBuffers 0', function() {
-        var buffers = ExtentTessellator.computeBuffers({
+        var buffers = ExtentGeometry.computeBuffers({
             extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0
         });
@@ -55,7 +55,7 @@ defineSuite([
     });
 
     it('computeBuffers 1', function() {
-        var buffers = ExtentTessellator.computeBuffers({
+        var buffers = ExtentGeometry.computeBuffers({
             extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0,
             generateTextureCoordinates : true
@@ -67,7 +67,7 @@ defineSuite([
     });
 
     it('computeBuffers 2', function() {
-        var buffers = ExtentTessellator.computeBuffers({
+        var buffers = ExtentGeometry.computeBuffers({
             extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0,
             generateTextureCoordinates : true,
@@ -90,7 +90,7 @@ defineSuite([
                 vertices: [],
                 indices: []
         };
-        ExtentTessellator.computeVertices(description);
+        ExtentGeometry.computeVertices(description);
         var length = description.vertices.length;
         var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest());
         var expectedSECorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getSoutheast());
@@ -111,7 +111,7 @@ defineSuite([
                 vertices: [],
                 indices: []
         };
-        ExtentTessellator.computeVertices(description);
+        ExtentGeometry.computeVertices(description);
         var length = description.vertices.length;
         expect(length).toEqual(9 * 3);
         expect(description.indices.length).toEqual(8 * 3);
@@ -134,7 +134,7 @@ defineSuite([
                 vertices: [],
                 indices: []
         };
-        ExtentTessellator.computeVertices(description);
+        ExtentGeometry.computeVertices(description);
         var length = description.vertices.length;
         expect(length).toEqual(9 * 3);
         expect(description.indices.length).toEqual(8 * 3);
@@ -157,7 +157,7 @@ defineSuite([
                 vertices: [],
                 indices: []
         };
-        ExtentTessellator.computeVertices(description);
+        ExtentGeometry.computeVertices(description);
         expect(description.vertices.length).toEqual(0);
         expect(description.indices.length).toEqual(0);
     });
@@ -175,7 +175,7 @@ defineSuite([
                 vertices: [],
                 indices: []
         };
-        ExtentTessellator.computeVertices(description);
+        ExtentGeometry.computeVertices(description);
         expect(description.vertices.length).toEqual(0);
         expect(description.indices.length).toEqual(0);
     });
@@ -193,7 +193,7 @@ defineSuite([
                 vertices: [],
                 indices: []
         };
-        ExtentTessellator.computeVertices(description);
+        ExtentGeometry.computeVertices(description);
         expect(description.vertices.length).toEqual(0);
         expect(description.indices.length).toEqual(0);
     });
@@ -211,7 +211,7 @@ defineSuite([
                 vertices: [],
                 indices: []
         };
-        ExtentTessellator.computeVertices(description);
+        ExtentGeometry.computeVertices(description);
         expect(description.vertices.length).toEqual(0);
         expect(description.indices.length).toEqual(0);
     });

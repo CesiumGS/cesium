@@ -36,9 +36,9 @@ define([
     /**
      * Contains class functions to create a mesh or vertex array from a cartographic extent.
      *
-     * @exports ExtentTessellator
+     * @exports ExtentGeometry
      */
-    var ExtentTessellator = {};
+    var ExtentGeometry = {};
 
     function isValidLatLon(latitude, longitude) {
         if (latitude < -CesiumMath.PI_OVER_TWO || latitude > CesiumMath.PI_OVER_TWO) {
@@ -51,7 +51,7 @@ define([
     }
     /**
      * Compute vertices from a cartographic extent.  This function is different from
-     * {@link ExtentTessellator#compute} and {@link ExtentTessellator#computeBuffers}
+     * {@link ExtentGeometry#compute} and {@link ExtentGeometry#computeBuffers}
      * in that it assumes that you have already allocated output arrays of the correct size.
      *
      * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
@@ -73,7 +73,7 @@ define([
     var center = new Cartesian3();
     var rotationMatrix = new Matrix2();
     var proj = new GeographicProjection();
-    ExtentTessellator.computeVertices = function(description) {
+    ExtentGeometry.computeVertices = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var extent = description.extent;
         extent.validate();
@@ -238,7 +238,7 @@ define([
      *
      * @example
      * // Create a vertex array for rendering a wireframe extent.
-     * var mesh = ExtentTessellator.compute({
+     * var mesh = ExtentGeometry.compute({
      *     ellipsoid : Ellipsoid.WGS84,
      *     extent : new Extent(
      *         CesiumMath.toRadians(-80.0),
@@ -255,7 +255,7 @@ define([
      *     attributeIndices : GeometryFilters.createAttributeIndices(mesh)
      * });
      */
-    ExtentTessellator.compute = function(description) {
+    ExtentGeometry.compute = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
 
         // make a copy of description to allow us to change values before passing to computeVertices
@@ -284,7 +284,7 @@ define([
         computeVerticesDescription.textureCoordinates = textureCoordinates;
         computeVerticesDescription.indices = indices;
 
-        ExtentTessellator.computeVertices(computeVerticesDescription);
+        ExtentGeometry.computeVertices(computeVerticesDescription);
 
         if (indices.length === 0) {
             return undefined;
@@ -341,7 +341,7 @@ define([
      * @example
      * // Example 1:
      * // Create a vertex array for a solid extent, with separate positions and texture coordinates.
-     * var buffers = ExtentTessellator.computeBuffers({
+     * var buffers = ExtentGeometry.computeBuffers({
      *     ellipsoid : ellipsoid,
      *     extent : extent,
      *     generateTextureCoordinates : true
@@ -368,7 +368,7 @@ define([
      * @example
      * // Example 2:
      * // Create a vertex array for a solid extent, with interleaved positions and texture coordinates.
-     * var buffers = ExtentTessellator.computeBuffers({
+     * var buffers = ExtentGeometry.computeBuffers({
      *     ellipsoid : ellipsoid,
      *     extent : extent,
      *     generateTextureCoordinates : true,
@@ -400,7 +400,7 @@ define([
      * var indexBuffer = context.createIndexBuffer(new Uint16Array(buffers.indices), usage, IndexDatatype.UNSIGNED_SHORT);
      * var vacontext.createVertexArray(attributes, indexBuffer);
      */
-    ExtentTessellator.computeBuffers = function(description) {
+    ExtentGeometry.computeBuffers = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
 
         // make a copy of description to allow us to change values before passing to computeVertices
@@ -429,7 +429,7 @@ define([
         computeVerticesDescription.textureCoordinates = textureCoordinates;
         computeVerticesDescription.indices = indices;
 
-        ExtentTessellator.computeVertices(computeVerticesDescription);
+        ExtentGeometry.computeVertices(computeVerticesDescription);
 
         var result = {
             indices : indices
@@ -447,5 +447,5 @@ define([
         return result;
     };
 
-    return ExtentTessellator;
+    return ExtentGeometry;
 });

@@ -19,7 +19,7 @@ define([
         '../Core/EllipsoidTangentPlane',
         '../Core/PolygonPipeline',
         '../Core/WindingOrder',
-        '../Core/ExtentTessellator',
+        '../Core/ExtentGeometry',
         '../Core/Intersect',
         '../Core/Queue',
         '../Core/Matrix3',
@@ -55,7 +55,7 @@ define([
         EllipsoidTangentPlane,
         PolygonPipeline,
         WindingOrder,
-        ExtentTessellator,
+        ExtentGeometry,
         Intersect,
         Queue,
         Matrix3,
@@ -565,9 +565,9 @@ define([
         var mesh;
 
         if ((typeof polygon._extent !== 'undefined') && !polygon._extent.isEmpty()) {
-            mesh = ExtentTessellator.compute({
-                extent : polygon._extent, 
-                rotation : polygon.rotation, 
+            mesh = ExtentGeometry.compute({
+                extent : polygon._extent,
+                rotation : polygon.rotation,
                 generateTextureCoordinates : true
             });
             if (typeof mesh !== 'undefined') {
