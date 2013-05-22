@@ -149,7 +149,7 @@ defineSuite([
 
         var indices = PolygonPipeline.earClip2D(positions);
 
-        expect(indices).toEqual([3, 4, 0, 1, 2, 3, 3, 0, 1]);
+        expect(indices).toEqual([3, 4, 0, 3, 0, 1, 3, 1, 2]);
     });
 
     it('earClip2D triangulates complex concave', function() {
@@ -158,7 +158,7 @@ defineSuite([
 
         var indices = PolygonPipeline.earClip2D(positions);
 
-        expect(indices).toEqual([3, 4, 5, 7, 0, 1, 3, 5, 6, 7, 1, 2, 3, 6, 7, 7, 2, 3]);
+        expect(indices).toEqual([3, 4, 5, 3, 5, 6, 3, 6, 7, 2, 3, 7, 1, 2, 7, 1, 7, 0]);
     });
 
     it('earClip2D throws without positions', function() {
