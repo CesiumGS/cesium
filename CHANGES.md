@@ -10,6 +10,7 @@ Beta Releases
    * Replaced tessellators and meshes with geometry.  In particular:
       * Replaced `CubeMapEllipsoidTessellator` with `EllipsoidGeometry`.
       * Replaced `BoxTessellator` with `BoxGeometry`.
+      * Replaced `ExtentTessletaor` with `ExtentGeometry`.
       * Removed `PlaneTessellator`.  It was incomplete and not used.
       * Renamed `MeshFilters` to `GeometryFilters`.
       * Renamed `MeshFilters.toWireframeInPlace` to `GeometryFilters.toWireframe`.
