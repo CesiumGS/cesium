@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'Core/PolygonPipeline',
+         'Core/PolygonPipeline_old',
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartographic',
@@ -9,6 +10,7 @@ defineSuite([
          'Core/Math'
      ], function(
          PolygonPipeline,
+         PolygonPipeline_old,
          Cartesian2,
          Cartesian3,
          Cartographic,
@@ -135,13 +137,13 @@ defineSuite([
     it('earClip2D triangulates a triangle', function() {
         var indices = PolygonPipeline.earClip2D([new Cartesian2(0.0, 0.0), new Cartesian2(1.0, 0.0), new Cartesian2(0.0, 1.0)]);
 
-        expect(indices).toEqual([1, 2, 0]);
+        expect(indices).toEqual([2, 0, 1]);
     });
 
     it('earClip2D triangulates a square', function() {
         var indices = PolygonPipeline.earClip2D([new Cartesian2(0.0, 0.0), new Cartesian2(1.0, 0.0), new Cartesian2(1.0, 1.0), new Cartesian2(0.0, 1.0)]);
 
-        expect(indices).toEqual([2, 3, 0, 1, 2, 0]);
+        expect(indices).toEqual([3, 0, 1, 3, 1, 2]);
     });
 
     it('earClip2D triangulates simple concave', function() {
@@ -149,7 +151,7 @@ defineSuite([
 
         var indices = PolygonPipeline.earClip2D(positions);
 
-        expect(indices).toEqual([3, 4, 0, 3, 0, 1, 3, 1, 2]);
+        expect(indices).toEqual([1, 2, 3, 3, 4, 0, 0, 1, 3]);
     });
 
     it('earClip2D triangulates complex concave', function() {
@@ -158,7 +160,7 @@ defineSuite([
 
         var indices = PolygonPipeline.earClip2D(positions);
 
-        expect(indices).toEqual([3, 4, 5, 3, 5, 6, 3, 6, 7, 2, 3, 7, 1, 2, 7, 1, 7, 0]);
+        expect(indices).toEqual([7, 0, 1, 3, 4, 5, 7, 1, 2, 3, 5, 6, 6, 7, 2, 6, 2, 3]);
     });
 
     it('earClip2D throws without positions', function() {
@@ -172,6 +174,116 @@ defineSuite([
             PolygonPipeline.earClip2D([Cartesian2.ZERO, Cartesian2.ZERO]);
         }).toThrow();
     });
+
+    it('earClip2D throws without three positions', function() {
+        expect(function() {
+            PolygonPipeline.earClip2D([Cartesian2.ZERO, Cartesian2.ZERO]);
+        }).toThrow();
+    });
+
+
+    it('it times stuff', function() {
+        var positions = [new Cartesian2(0.0, 0.0), new Cartesian2(2.0, 0.0), new Cartesian2(2.0, 1.0), new Cartesian2(0.1, 1.5), new Cartesian2(2.0, 2.0), new Cartesian2(0.0, 2.0),
+                         new Cartesian2(0.0, 1.0), new Cartesian2(1.9, 0.5)];
+        var i;
+        console.time('new 1');
+        for(i = 0; i < 5000; i++) {
+            PolygonPipeline.earClip2D(positions);
+        }
+        console.timeEnd('new 1');
+
+        console.time('new 2');
+        for(i = 0; i < 5000; i++) {
+            PolygonPipeline.earClip2D(positions);
+        }
+        console.timeEnd('new 2');
+
+
+        console.time('new 3');
+        for(i = 0; i < 5000; i++) {
+            PolygonPipeline.earClip2D(positions);
+        }
+        console.timeEnd('new 3');
+
+
+        console.time('new 4');
+        for(i = 0; i < 5000; i++) {
+            PolygonPipeline.earClip2D(positions);
+        }
+        console.timeEnd('new 4');
+
+
+        console.time('new 5');
+        for(i = 0; i < 5000; i++) {
+            PolygonPipeline.earClip2D(positions);
+        }
+        console.timeEnd('new 5');
+
+    });
+
+/*    it('it times stuff', function() {
+        var positions = [new Cartesian2(0.0, 0.0), new Cartesian2(2.0, 0.0), new Cartesian2(2.0, 1.0), new Cartesian2(0.1, 1.5), new Cartesian2(2.0, 2.0), new Cartesian2(0.0, 2.0),
+                         new Cartesian2(0.0, 1.0), new Cartesian2(1.9, 0.5)];
+        var i;
+        console.profile('new');
+        for(i = 0; i < 5000; i++) {
+            PolygonPipeline.earClip2D(positions);
+        }
+        for(i = 0; i < 5000; i++) {
+            PolygonPipeline.earClip2D(positions);
+        }
+        for(i = 0; i < 5000; i++) {
+            PolygonPipeline.earClip2D(positions);
+        }
+        for(i = 0; i < 5000; i++) {
+            PolygonPipeline.earClip2D(positions);
+        }
+        for(i = 0; i < 5000; i++) {
+            PolygonPipeline.earClip2D(positions);
+        }
+        console.profileEnd('new');
+
+    });*/
+
+ /*   it('it times stuff', function() {
+        var positions = [new Cartesian2(0.0, 0.0), new Cartesian2(2.0, 0.0), new Cartesian2(2.0, 1.0), new Cartesian2(0.1, 1.5), new Cartesian2(2.0, 2.0), new Cartesian2(0.0, 2.0),
+                         new Cartesian2(0.0, 1.0), new Cartesian2(1.9, 0.5)];
+        var i;
+        console.time('old 1');
+        for(i = 0; i < 5000; i++) {
+            PolygonPipeline_old.earClip2D(positions);
+        }
+        console.timeEnd('old 1');
+
+        console.time('old 2');
+        for(i = 0; i < 5000; i++) {
+            PolygonPipeline_old.earClip2D(positions);
+        }
+        console.timeEnd('old 2');
+
+
+        console.time('old 3');
+        for(i = 0; i < 5000; i++) {
+            PolygonPipeline_old.earClip2D(positions);
+        }
+        console.timeEnd('old 3');
+
+
+        console.time('old 4');
+        for(i = 0; i < 5000; i++) {
+            PolygonPipeline_old.earClip2D(positions);
+        }
+        console.timeEnd('old 4');
+
+
+        console.time('old 5');
+        for(i = 0; i < 5000; i++) {
+            PolygonPipeline_old.earClip2D(positions);
+        }
+        console.timeEnd('old 5');
+
+    });*/
+
 
     ///////////////////////////////////////////////////////////////////////
 
