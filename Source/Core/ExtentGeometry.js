@@ -313,7 +313,7 @@ define([
          *
          * @type BoundingSphere
          */
-        this.boundingSphere = BoundingSphere.fromExtent3D(extent, ellipsoid); // TODO: surface height
+        this.boundingSphere = BoundingSphere.fromExtentWithHeight3D(extent, ellipsoid, surfaceHeight);
 
         /**
          * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
