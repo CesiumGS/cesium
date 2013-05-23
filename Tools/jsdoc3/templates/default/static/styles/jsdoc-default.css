@@ -80,17 +80,29 @@ header
 .popout {
     display: block;
     position: absolute;
-    top: 24px;
+    top: 27px;
     right: 10px;
     font-size: 12pt;
+    height: 12px;
+    width: 12px;
+    background: url('../icons/popout.png') bottom;
+}
+.popout:hover {
+    background-position: 0 0;
 }
 
 .back {
     display: block;
     position: absolute;
-    top: 24px;
+    height: 12px;
+    width: 12px;
+    top: 27px;
     left: 35px;
     font-size: 12pt;
+    background: url('../icons/home.png') bottom;
+}
+.back:hover {
+    background-position: 0 0;
 }
 
 section
