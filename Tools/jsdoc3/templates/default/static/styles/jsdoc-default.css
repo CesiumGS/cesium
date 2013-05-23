@@ -523,8 +523,18 @@ h6
 
 dt a {
     text-decoration: none;
+    color: #A35A00;
 }
 
 dt a:hover{
     text-decoration: underline;
+}
+
+dt>h4>a:link, dt>h4>a:active, dt>h4>a:visited  {
+    text-decoration: none;
+    color: #A35A00;
+}
+
+dt>h4>a:hover {
+    text-decoration: underline;   
 }
