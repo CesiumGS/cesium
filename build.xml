@@ -7,13 +7,7 @@
 		</glslToJavascript>
 
 		<createCesiumJs output="${sourceDirectory}/Cesium.js">
-			<sourcefiles dir="${sourceDirectory}">
-				<include name="**/*.js" />
-				<exclude name="*.js" />
-				<exclude name="Widgets/Dojo/**" />
-				<exclude name="Workers/**" />
-				<exclude name="**/*.profile.js" />
-			</sourcefiles>
+			<sourcefiles refid="cesiumJsFileSet" />
 		</createCesiumJs>
 
 		<createSpecList output="${specsDirectory}/SpecList.js">
@@ -27,7 +21,7 @@
 		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptions="${jsHintEclipseSettings.options}" />
 	</target>
 
-	<target name="combine" description="Combines all source files into a single stand-alone script." depends="build, combineJavaScript">
+	<target name="combine" description="Combines all source files into a single stand-alone script." depends="build,combineJavaScript">
 		<copy todir="Build">
 			<fileset dir="Apps/">
 				<include name="HelloWorld.html" />
@@ -40,9 +34,6 @@
 	</target>
 
 	<target name="minify" description="Combines all source files into a single stand-alone, minified script.">
-		<delete includeEmptyDirs="true" failonerror="false">
-			<fileset dir="${shadersDirectory}" includes="**/*.js" excludes="*.profile.js" />
-		</delete>
 		<antcall target="combine">
 			<param name="build.minification" value="true" />
 		</antcall>
@@ -133,6 +124,11 @@
 	<property name="dojoPath" location="${thirdPartyDirectory}/dojo-release-1.8.3-src" />
 	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-r12/jshint.js" />
 
+	<!-- properties controlling documentation source-->
+	<property name="githubRepoLink" value="https://github.com/AnalyticalGraphicsInc/cesium/" />
+	<property name="githubLinkExt" value="blob/" />
+
+
 	<!-- Outputs -->
 	<property name="buildDirectory" location="Build" />
 	<property name="buildOutputDirectory" location="${buildDirectory}/Cesium" />
@@ -146,6 +142,14 @@
 		<pathelement path="${toolsDirectory}/bsf-2.4.0/bsf.jar" />
 		<pathelement path="${toolsDirectory}/commons-logging-1.1.1/commons-logging-1.1.1.jar" />
 	</path>
+
+	<fileset dir="${sourceDirectory}" id="cesiumJsFileSet">
+		<include name="**/*.js" />
+		<exclude name="*.js" />
+		<exclude name="Widgets/Dojo/**" />
+		<exclude name="Workers/**" />
+		<exclude name="**/*.profile.js" />
+	</fileset>
 
 	<scriptdef name="glslToJavascript" language="javascript" src="${tasksDirectory}/glslToJavaScript.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<attribute name="minify" />
@@ -199,7 +203,7 @@
 
 				<include name="Apps/**/*.js" />
 				<include name="Apps/Sandcastle/gallery/*.html" />
-				
+
 				<exclude name="Apps/Sandcastle/ThirdParty/**" />
 
 				<include name="Specs/**/*.js" />
@@ -244,10 +248,8 @@
 		<mkdir dir="${combineOutputDirectory}" />
 		<property name="relativeCombineOutputDirectory" location="${combineOutputDirectory}" relative="true" basedir="${sourceDirectory}" />
 
-		<!-- create combined Cesium.js  -->
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} wrap=true baseUrl=. name=${relativeAlmondPath} include=main out=${relativeCombineOutputDirectory}/Cesium.js" />
-		</exec>
+		<!-- create combined Cesium.js	-->
+		<antcall target="combineJavaScript.combineCesium" />
 
 		<!-- create cesiumWorkerBootstrapper -->
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
@@ -260,7 +262,7 @@
 		</antcall>
 
 		<!-- copy to build folder with copyright header added at the top -->
-		<copy todir="${buildOutputDirectory}">
+		<copy todir="${outputDirectory}">
 			<fileset dir="${combineOutputDirectory}" />
 			<filterchain>
 				<concatfilter prepend="${sourceDirectory}/copyrightHeader.js" />
@@ -270,7 +272,7 @@
 		<delete dir="${combineOutputDirectory}" />
 
 		<!-- copy other resources -->
-		<copy todir="${buildOutputDirectory}" includeEmptyDirs="false">
+		<copy todir="${outputDirectory}" includeEmptyDirs="false">
 			<fileset dir="${sourceDirectory}">
 				<exclude name="**/*.js" />
 				<exclude name="**/*.glsl" />
@@ -281,30 +283,45 @@
 		</copy>
 	</target>
 
+	<target name="combineJavaScript.combineCesium" depends="combineJavaScript.combineCesium.check" unless="no.combineCesium.create">
+		<exec executable="${nodePath}" dir="${sourceDirectory}">
+			<arg line="${rjsPath} -o optimize=${optimize} wrap=true baseUrl=. name=${relativeAlmondPath} include=main out=${relativeCombineOutputDirectory}/Cesium.js" />
+		</exec>
+	</target>
+
+	<target name="combineJavaScript.combineCesium.check">
+		<uptodate property="no.combineCesium.create" targetfile="${outputDirectory}/Cesium.js">
+			<srcfiles refid="cesiumJsFileSet" />
+		</uptodate>
+	</target>
+
 	<target name="combineJavaScript.combineWorker">
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. name=Workers/${worker} out=${relativeCombineOutputDirectory}/Workers/${worker}.js" />
 		</exec>
 	</target>
 
-	<target name="combineJavaScript.createUnminified" depends="combineJavaScript.setNodePath">
+	<target name="combineJavaScript.createUnminified">
 		<antcall target="combineJavaScript.create">
 			<param name="optimize" value="none" />
+			<param name="outputDirectory" value="${unminifiedOutputDirectory}" />
 		</antcall>
+	</target>
 
-		<mkdir dir="${unminifiedOutputDirectory}" />
-		<copy todir="${unminifiedOutputDirectory}">
-			<fileset dir="${buildOutputDirectory}" />
+	<target name="combineJavaScript.copyUnminified" unless="${build.minification}">
+		<copy todir="${buildOutputDirectory}">
+			<fileset dir="${unminifiedOutputDirectory}" />
 		</copy>
 	</target>
 
 	<target name="combineJavaScript.createMinified" if="${build.minification}">
 		<antcall target="combineJavaScript.create">
 			<param name="optimize" value="uglify2" />
+			<param name="outputDirectory" value="${buildOutputDirectory}" />
 		</antcall>
 	</target>
 
-	<target name="combineJavaScript" depends="combineJavaScript.createUnminified,combineJavaScript.createMinified" />
+	<target name="combineJavaScript" depends="combineJavaScript.setNodePath,combineJavaScript.createUnminified,combineJavaScript.copyUnminified,combineJavaScript.createMinified" />
 
 	<target name="generateDocumentation">
 		<extractShaderComments output="${shadersDirectory}/glslComments.js">
@@ -325,6 +342,9 @@
 			<arg line="-r" />
 			<arg line="-d ${relativeDocOutputDirectory}" />
 			<arg line="${relativeSourceFilesPath}" />
+			<arg line='${version}' />
+			<arg line='${githubRepoLink}' />
+			<arg line='${githubLinkExt}' />
 		</java>
 
 		<copy todir="${buildDocumentationImagesDirectory}">

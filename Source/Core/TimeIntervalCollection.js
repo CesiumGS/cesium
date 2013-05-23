@@ -468,7 +468,7 @@ define([
         if (typeof timeIntervalCollection === 'undefined') {
             throw new DeveloperError('timeIntervalCollection is required.');
         }
-        return this._intersectInternal(timeIntervalCollection, equalsCallback, mergeCallback);
+        return intersectInternal(this, timeIntervalCollection, equalsCallback, mergeCallback);
     };
 
     /**
@@ -495,14 +495,14 @@ define([
         }
         var intervals = new TimeIntervalCollection();
         intervals.addInterval(interval);
-        return this._intersectInternal(intervals, equalsCallback, mergeCallback);
+        return intersectInternal(this, intervals, equalsCallback, mergeCallback);
     };
 
-    TimeIntervalCollection.prototype._intersectInternal = function(intervals, equalsCallback, mergeCallback) {
+    function intersectInternal(timeIntervalCollection, intervals, equalsCallback, mergeCallback) {
         var left = 0;
         var right = 0;
         var result = new TimeIntervalCollection();
-        var thisIntervals = this._intervals;
+        var thisIntervals = timeIntervalCollection._intervals;
         var otherIntervals = intervals._intervals;
 
         while (left < thisIntervals.length && right < otherIntervals.length) {
@@ -537,7 +537,7 @@ define([
             }
         }
         return result;
-    };
+    }
 
     return TimeIntervalCollection;
 });

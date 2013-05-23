@@ -786,7 +786,12 @@ define([
     var viewExtent3DNorthWest = new Cartesian3();
     var viewExtent3DSouthEast = new Cartesian3();
     var viewExtent3DCenter = new Cartesian3();
-    function viewExtent3D(camera, extent, ellipsoid) {
+    var defaultRF = {direction: new Cartesian3(), right: new Cartesian3(), up: new Cartesian3()};
+    function extentCameraPosition3D (camera, extent, ellipsoid, result, positionOnly) {
+        var cameraRF = camera;
+        if (positionOnly) {
+            cameraRF = defaultRF;
+        }
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
@@ -817,12 +822,12 @@ define([
         Cartesian3.subtract(northEast, center, northEast);
         Cartesian3.subtract(southWest, center, southWest);
 
-        var direction = ellipsoid.geodeticSurfaceNormal(center, camera.direction);
+        var direction = ellipsoid.geodeticSurfaceNormal(center, cameraRF.direction);
         Cartesian3.negate(direction, direction);
         Cartesian3.normalize(direction, direction);
-        var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, camera.right);
+        var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, cameraRF.right);
         Cartesian3.normalize(right, right);
-        var up = Cartesian3.cross(right, direction, camera.up);
+        var up = Cartesian3.cross(right, direction, cameraRF.up);
 
         var height = Math.max(Math.abs(up.dot(northWest)), Math.abs(up.dot(southEast)), Math.abs(up.dot(northEast)), Math.abs(up.dot(southWest)));
         var width = Math.max(Math.abs(right.dot(northWest)), Math.abs(right.dot(southEast)), Math.abs(right.dot(northEast)), Math.abs(right.dot(southWest)));
@@ -833,14 +838,14 @@ define([
 
         var scalar = center.magnitude() + d;
         Cartesian3.normalize(center, center);
-        Cartesian3.multiplyByScalar(center, scalar, camera.position);
+        return Cartesian3.multiplyByScalar(center, scalar, result);
     }
 
     var viewExtentCVCartographic = new Cartographic();
     var viewExtentCVNorthEast = Cartesian4.UNIT_W.clone();
     var viewExtentCVSouthWest = Cartesian4.UNIT_W.clone();
     var viewExtentCVTransform = new Matrix4();
-    function viewExtentColumbusView(camera, extent, projection) {
+    function extentCameraPositionColumbusView(camera, extent, projection, result, positionOnly) {
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
@@ -867,20 +872,28 @@ define([
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
+        if (typeof result === 'undefined') {
+            result = new Cartesian3();
+        }
 
-        position = camera.position;
-        position.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
-        position.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
-        position.z = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
+        result.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
+        result.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
+        result.z = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
 
-        var direction = Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
-        Cartesian3.negate(direction, direction);
-        var right = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
-        Cartesian3.cross(right, direction, camera.up);
+        if (!positionOnly) {
+            var direction = Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
+            Cartesian3.negate(direction, direction);
+            var right = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
+            Cartesian3.cross(right, direction, camera.up);
+        }
+
+        return result;
     }
 
     var viewExtent2DCartographic = new Cartographic();
-    function viewExtent2D(camera, extent, projection) {
+    var viewExtent2DNorthEast = new Cartesian3();
+    var viewExtent2DSouthWest = new Cartesian3();
+    function extentCameraPosition2D (camera, extent, projection, result, positionOnly) {
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
@@ -889,10 +902,10 @@ define([
         var cart = viewExtent2DCartographic;
         cart.longitude = east;
         cart.latitude = north;
-        var northEast = projection.project(cart);
+        var northEast = projection.project(cart, viewExtent2DNorthEast);
         cart.longitude = west;
         cart.latitude = south;
-        var southWest = projection.project(cart);
+        var southWest = projection.project(cart, viewExtent2DSouthWest);
 
         var width = Math.abs(northEast.x - southWest.x) * 0.5;
         var height = Math.abs(northEast.y - southWest.y) * 0.5;
@@ -908,18 +921,57 @@ define([
             right = heightRatio;
         }
 
-        camera.frustum.right = right;
-        camera.frustum.left = -right;
-        camera.frustum.top = top;
-        camera.frustum.bottom = -top;
+        height = Math.max(2.0 * right, 2.0 * top);
 
-        camera.position.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
-        camera.position.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
+        if (typeof result === 'undefined') {
+            result = new Cartesian3();
+        }
+        result.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
+        result.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
 
-        //Orient the camera north.
-        var cameraRight = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
-        Cartesian3.cross(cameraRight, camera.direction, camera.up);
+        if (positionOnly) {
+            cart = projection.unproject(result, cart);
+            cart.height = height;
+            result = projection.project(cart, result);
+        } else {
+            var frustum = camera.frustum;
+            frustum.right = right;
+            frustum.left = -right;
+            frustum.top = top;
+            frustum.bottom = -top;
+
+            var cameraRight = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
+            Cartesian3.cross(cameraRight, camera.direction, camera.up);
+        }
+
+        return result;
     }
+    /**
+     * Get the camera position neede to view an extent on an ellipsoid or map
+     * @memberof CameraController
+     *
+     * @param {Extent} extent The extent to view.
+     * @param {Cartesian3} [result] The camera position needed to view the extent
+     *
+     * @returns {Cartesian3} The camera position needed to view the extent
+     *
+     * @exception {DeveloperError} extent is required.
+     */
+    CameraController.prototype.getExtentCameraCoordinates = function(extent, result) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required');
+        }
+
+        if (this._mode === SceneMode.SCENE3D) {
+            return extentCameraPosition3D(this._camera, extent, this._projection.getEllipsoid(), result, true);
+        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
+            return extentCameraPositionColumbusView(this._camera, extent, this._projection, result, true);
+        } else if (this._mode === SceneMode.SCENE2D) {
+            return extentCameraPosition2D(this._camera, extent, this._projection, result, true);
+        }
+
+        return undefined;
+    };
 
     /**
      * View an extent on an ellipsoid or map.
@@ -937,11 +989,11 @@ define([
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         if (this._mode === SceneMode.SCENE3D) {
-            viewExtent3D(this._camera, extent, ellipsoid);
+            extentCameraPosition3D(this._camera, extent, ellipsoid, this._camera.position);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
-            viewExtentColumbusView(this._camera, extent, this._projection);
+            extentCameraPositionColumbusView(this._camera, extent, this._projection, this._camera.position);
         } else if (this._mode === SceneMode.SCENE2D) {
-            viewExtent2D(this._camera, extent, this._projection);
+            extentCameraPosition2D(this._camera, extent, this._projection, this._camera.position);
         }
     };
 

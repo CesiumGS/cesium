@@ -93,6 +93,29 @@ define([
     };
 
     /**
+     * Creates a Cartesian4 instance from x, y, z and w coordinates.
+     * @memberof Cartesian4
+     *
+     * @param {Number} x The x coordinate.
+     * @param {Number} y The y coordinate.
+     * @param {Number} z The z coordinate.
+     * @param {Number} w The w coordinate.
+     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     */
+    Cartesian4.fromElements = function(x, y, z, w, result) {
+        if (typeof result === 'undefined') {
+            return new Cartesian4(x, y, z, w);
+        }
+
+        result.x = x;
+        result.y = y;
+        result.z = z;
+        result.w = w;
+        return result;
+    };
+
+    /**
      * Duplicates a Cartesian4 instance.
      * @memberof Cartesian4
      *

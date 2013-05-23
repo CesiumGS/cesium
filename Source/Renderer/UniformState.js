@@ -55,8 +55,7 @@ define([
         this._currentFrustum = new Cartesian2();
         this._pixelSize = 0.0;
 
-        this._frameNumber = 1.0;
-        this._time = undefined;
+        this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.IDENTITY.clone();
 
         // Derived members
@@ -121,6 +120,8 @@ define([
         this._encodedCameraPositionMC = new EncodedCartesian3();
         this._cameraPosition = new Cartesian3();
 
+        this._sunPositionWC = new Cartesian3();
+        this._sunPositionColumbusView = new Cartesian3();
         this._sunDirectionWC = new Cartesian3();
         this._sunDirectionEC = new Cartesian3();
         this._moonDirectionEC = new Cartesian3();
@@ -182,23 +183,30 @@ define([
         uniformState._encodedCameraPositionMCDirty = true;
     }
 
-    var position = new Cartesian3();
     var transformMatrix = new Matrix3();
+    var sunCartographicScratch = new Cartographic();
     function setSunAndMoonDirections(uniformState, frameState) {
         if (typeof Transforms.computeIcrfToFixedMatrix(frameState.time, transformMatrix) === 'undefined') {
             transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, transformMatrix);
         }
 
-        position = Simon1994PlanetaryPositions.ComputeSunPositionInEarthInertialFrame(frameState.time, position);
-        transformMatrix.multiplyByVector(position, position);
-        Cartesian3.normalize(position, uniformState._sunDirectionWC);
-        Matrix3.multiplyByVector(uniformState.getViewRotation3D(), position, position);
-        Cartesian3.normalize(position, uniformState._sunDirectionEC);
+        var position = Simon1994PlanetaryPositions.ComputeSunPositionInEarthInertialFrame(frameState.time, uniformState._sunPositionWC);
+        Matrix3.multiplyByVector(transformMatrix, position, position);
 
-        position = Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame(frameState.time, position);
-        transformMatrix.multiplyByVector(position, position);
+        Cartesian3.normalize(position, uniformState._sunDirectionWC);
+
+        position = Matrix3.multiplyByVector(uniformState.getViewRotation3D(), position, uniformState._sunDirectionEC);
+        Cartesian3.normalize(position, position);
+
+        position = Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame(frameState.time, uniformState._moonDirectionEC);
+        Matrix3.multiplyByVector(transformMatrix, position, position);
         Matrix3.multiplyByVector(uniformState.getViewRotation3D(), position, position);
-        Cartesian3.normalize(position, uniformState._moonDirectionEC);
+        Cartesian3.normalize(position, position);
+
+        var projection = frameState.scene2D.projection;
+        var ellipsoid = projection.getEllipsoid();
+        var sunCartographic = ellipsoid.cartesianToCartographic(uniformState._sunPositionWC, sunCartographicScratch);
+        projection.project(sunCartographic, uniformState._sunPositionColumbusView);
     }
 
     /**
@@ -253,8 +261,7 @@ define([
         this._entireFrustum.y = camera.frustum.far;
         this.updateFrustum(camera.frustum);
 
-        this._frameNumber = frameState.frameNumber;
-        this._time = frameState.time;
+        this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time);
     };
 
@@ -927,6 +934,32 @@ define([
     };
 
     /**
+     * Returns the sun position in 3D world coordinates at the current scene time.
+     *
+     * @memberof UniformState
+     *
+     * @return {Cartesian3} The sun position in 3D world coordinates at the current scene time.
+     *
+     * @see czm_sunPositionWC
+     */
+    UniformState.prototype.getSunPositionWC = function() {
+        return this._sunPositionWC;
+    };
+
+    /**
+     * Returns the sun position in 2D world coordinates at the current scene time.
+     *
+     * @memberof UniformState
+     *
+     * @return {Cartesian3} The sun position in 2D world coordinates at the current scene time.
+     *
+     * @see czm_sunPositionColumbusView
+     */
+    UniformState.prototype.getSunPositionColumbusView = function() {
+        return this._sunPositionColumbusView;
+    };
+
+    /**
      * Returns a normalized vector to the sun in 3D world coordinates at the current scene time.  Even in 2D or
      * Columbus View mode, this returns the position of the sun in the 3D scene.
      *
@@ -1010,27 +1043,16 @@ define([
     };
 
     /**
-     * Gets the current frame number.
+     * Gets the current frame state.
      *
      * @memberof UniformState
      *
-     * @return {number} A number representing the current frame number.
+     * @return {FrameState} The current frame state.
      *
      * @see czm_frameNumber
      */
-    UniformState.prototype.getFrameNumber = function() {
-        return this._frameNumber;
-    };
-
-    /**
-     * Gets the scene's current time.
-     *
-     * @memberof UniformState
-     *
-     * @return {JulianDate} The scene's current time.
-     */
-    UniformState.prototype.getTime = function() {
-        return this._time;
+    UniformState.prototype.getFrameState = function() {
+        return this._frameState;
     };
 
     /**
