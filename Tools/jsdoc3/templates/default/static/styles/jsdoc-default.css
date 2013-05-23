@@ -80,7 +80,7 @@ header
 .popout {
     display: block;
     position: absolute;
-    top: 20px;
+    top: 24px;
     right: 10px;
     font-size: 12pt;
 }
@@ -88,7 +88,7 @@ header
 .back {
     display: block;
     position: absolute;
-    top: 20px;
+    top: 24px;
     left: 35px;
     font-size: 12pt;
 }

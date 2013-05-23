@@ -63,15 +63,15 @@
         ele.className = "popout";
         ele.target = "_blank";
         ele.href = window.location.href;
-        ele.innerHTML = "&raquo;";
+        ele.innerHTML = '<img src="icons/popout.png" alt="Pop out"/>';
         ele.title = "Pop out";
         document.getElementById('main').appendChild(ele);
         
         ele = document.createElement('a');
         ele.className = "back";
         ele.href = "index.html";
-        ele.innerHTML = "&laquo";
-        ele.title = "Back";
+        ele.innerHTML = '<img src="icons/home.png" alt="Home"/>';
+        ele.title = "Home";
         document.getElementById('main').appendChild(ele);
         
         
