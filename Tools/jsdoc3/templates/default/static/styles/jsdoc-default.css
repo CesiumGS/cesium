@@ -520,3 +520,13 @@ h6
         display: none;
     }
 }
+
+.permalink:link, .permalink:active, .permalink:visited  {
+    text-decoration: none;
+    color: #A35A00;
+}
+
+.permalink:hover {
+    text-decoration: none;
+    border-bottom: 1px solid #A35A00;
+}
