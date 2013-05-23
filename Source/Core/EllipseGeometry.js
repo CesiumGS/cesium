@@ -1,70 +1,44 @@
 /*global define*/
 define([
         './defaultValue',
-        './DeveloperError',
-        './Ellipsoid',
-        './Math',
+        './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
-        './Quaternion',
-        './Matrix3'
+        './Cartographic',
+        './ComponentDatatype',
+        './DeveloperError',
+        './Ellipsoid',
+        './GeographicProjection',
+        './GeometryAttribute',
+        './GeometryIndices',
+        './Math',
+        './Matrix2',
+        './Matrix4',
+        './PrimitiveType',
+        './VertexFormat'
     ], function(
         defaultValue,
-        DeveloperError,
-        Ellipsoid,
-        CesiumMath,
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
-        Quaternion,
-        Matrix3) {
+        Cartographic,
+        ComponentDatatype,
+        DeveloperError,
+        Ellipsoid,
+        GeographicProjection,
+        GeometryAttribute,
+        GeometryIndices,
+        CesiumMath,
+        Matrix2,
+        Matrix4,
+        PrimitiveType,
+        VertexFormat) {
     "use strict";
 
-    function computeEllipseQuadrant(cb, cbRadius, aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
-                                     thetaPts, thetaPtsIndex, offset, clockDir, ellipsePts, ellipsePtsIndex, numPts) {
-        var angle;
-        var theta;
-        var radius;
-        var azimuth;
-        var temp;
-        var temp2;
-        var rotAxis;
-        var tempVec;
-
-        for (var i = 0; i < numPts; i++, thetaPtsIndex += clockDir, ++ellipsePtsIndex) {
-            theta = (clockDir > 0) ? (thetaPts[thetaPtsIndex] + offset) : (offset - thetaPts[thetaPtsIndex]);
-
-            azimuth = theta + bearing;
-
-            temp = -Math.cos(azimuth);
-
-            rotAxis = eastVec.multiplyByScalar(temp);
-
-            temp = Math.sin(azimuth);
-            tempVec = northVec.multiplyByScalar(temp);
-
-            rotAxis = rotAxis.add(tempVec);
-
-            temp = Math.cos(theta);
-            temp = temp * temp;
-
-            temp2 = Math.sin(theta);
-            temp2 = temp2 * temp2;
-
-            radius = ab / Math.sqrt(bSqr * temp + aSqr * temp2);
-            angle = radius / cbRadius;
-
-            // Create the quaternion to rotate the position vector to the boundary of the ellipse.
-            temp = Math.sin(angle / 2.0);
-
-            var unitQuat = (new Quaternion(rotAxis.x * temp, rotAxis.y * temp, rotAxis.z * temp, Math.cos(angle / 2.0))).normalize();
-            var rotMtx = Matrix3.fromQuaternion(unitQuat);
-
-            var tmpEllipsePts = rotMtx.multiplyByVector(unitPos);
-            var unitCart = tmpEllipsePts.normalize();
-            tmpEllipsePts = unitCart.multiplyByScalar(mag);
-            ellipsePts[ellipsePtsIndex] = tmpEllipsePts;
-        }
-    }
+    var position = new Cartesian3();
+    var reflectedPosition = new Cartesian3();
+    var interiorPosition = new Cartesian3();
+    var scratchCart = new Cartographic();
 
     /**
      * Computes boundary points for an ellipse on the ellipsoid.
@@ -123,62 +97,172 @@ define([
         }
 
         if (semiMajorAxis < semiMinorAxis) {
-           var t = semiMajorAxis;
+           var temp = semiMajorAxis;
            semiMajorAxis = semiMinorAxis;
-           semiMinorAxis = t;
+           semiMinorAxis = temp;
         }
 
-        var MAX_ANOMALY_LIMIT = 2.31;
+        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
-        var aSqr = semiMajorAxis * semiMajorAxis;
-        var bSqr = semiMinorAxis * semiMinorAxis;
-        var ab = semiMajorAxis * semiMinorAxis;
+        var numPts = Math.ceil(CesiumMath.PI_OVER_TWO / granularity) + 1;
+        var deltaTheta = CesiumMath.PI_OVER_TWO / (numPts - 1);
+        //var size = 2 * numPts * numPts;
+        var size = numPts * numPts;
 
-        var value = 1.0 - (bSqr / aSqr);
-        var ecc = Math.sqrt(value);
+        var reachedPiOverTwo = false;
+        if (deltaTheta * (numPts - 1) > CesiumMath.PI_OVER_TWO) {
+            size -= 2 * numPts - 1;
+            reachedPiOverTwo = true;
+        }
 
-        var surfPos = Cartesian3.clone(center);
-        var mag = surfPos.magnitude();
+        var i;
+        var j;
+        var numInterior;
 
-        var tempVec = new Cartesian3(0.0, 0.0, 1);
-        var temp = 1.0 / mag;
+        var positions = (vertexFormat.position) ? new Array(size * 3) : undefined;
+        positions[0] = semiMajorAxis;
+        positions[1] = 0.0;
+        positions[2] = 0.0;
+        var positionIndex = 3;
 
-        var unitPos = surfPos.multiplyByScalar(temp);
-        var eastVec = tempVec.cross(surfPos).normalize();
-        var northVec = unitPos.cross(eastVec);
+        for (i = 1; i < numPts; ++i) {
+            var angle = Math.min(i * deltaTheta, CesiumMath.PI_OVER_TWO);
 
-        var numQuadrantPts = 1 + Math.ceil(CesiumMath.PI_OVER_TWO / granularity);
-        var deltaTheta = MAX_ANOMALY_LIMIT / (numQuadrantPts - 1);
-        var thetaPts = [];
-        var thetaPtsIndex = 0;
+            position.x = Math.cos(angle) * semiMajorAxis;
+            position.y = Math.sin(angle) * semiMinorAxis;
 
-        var sampleTheta = 0.0;
-        for (var i = 0; i < numQuadrantPts; i++, sampleTheta += deltaTheta, ++thetaPtsIndex) {
-            thetaPts[thetaPtsIndex] = sampleTheta - ecc * Math.sin(sampleTheta);
-            if (thetaPts[thetaPtsIndex] >= CesiumMath.PI_OVER_TWO) {
-                thetaPts[thetaPtsIndex] = CesiumMath.PI_OVER_TWO;
-                numQuadrantPts = i + 1;
-                break;
+            reflectedPosition.x =  position.x;
+            reflectedPosition.y = -position.y;
+
+            positions[positionIndex++] = position.x;
+            positions[positionIndex++] = position.y;
+            positions[positionIndex++] = position.z;
+
+            numInterior = 2 * i + 1;
+            for (j = 1; j < numInterior - 1; ++j) {
+                var t = j / (numInterior - 1);
+                Cartesian3.lerp(position, reflectedPosition, t, interiorPosition);
+                positions[positionIndex++] = interiorPosition.x;
+                positions[positionIndex++] = interiorPosition.y;
+                positions[positionIndex++] = interiorPosition.z;
             }
+
+            positions[positionIndex++] = reflectedPosition.x;
+            positions[positionIndex++] = reflectedPosition.y;
+            positions[positionIndex++] = reflectedPosition.z;
         }
 
-        var ellipsePts = [];
+        /*
+        i = (reachedPiOverTwo) ? positionIndex - 3 * (2 * numPts - 1) - 1: positionIndex - 1;
+        for (; i > 0; i -= 3) {
+            positions[positionIndex++] = -positions[i - 2];
+            positions[positionIndex++] =  positions[i - 1];
+            positions[positionIndex++] =  positions[i];
+        }
+        */
 
-        computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
-                               thetaPts, 0.0, 0.0, 1, ellipsePts, 0, numQuadrantPts - 1);
+        var projection = new GeographicProjection(ellipsoid);
+        var centerCart = ellipsoid.cartesianToCartographic(center, scratchCart);
+        var projectedCenter = projection.project(centerCart);
+        var rotation = Matrix2.fromRotation(bearing);
 
-        computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
-                               thetaPts, numQuadrantPts - 1, Math.PI, -1, ellipsePts, numQuadrantPts - 1, numQuadrantPts - 1);
+        var length = positions.length;
+        for (i = 0; i < length; i += 3) {
+            Cartesian3.fromArray(positions, i, position);
+            Matrix2.multiplyByVector(rotation, position, position);
+            Cartesian2.add(projectedCenter, position, position);
 
-        computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
-                               thetaPts, 0.0, Math.PI, 1, ellipsePts, (2 * numQuadrantPts) - 2, numQuadrantPts - 1);
+            var unprojected = projection.unproject(position, scratchCart);
+            ellipsoid.cartographicToCartesian(unprojected, position);
 
-        computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
-                               thetaPts, numQuadrantPts - 1, CesiumMath.TWO_PI, -1, ellipsePts, (3 * numQuadrantPts) - 3, numQuadrantPts);
+            positions[i] = position.x;
+            positions[i + 1] = position.y;
+            positions[i + 2] = position.z;
+        }
 
-        ellipsePts.push(ellipsePts[0].clone()); // Duplicates first and last point for polyline
+        var attributes = {};
 
-        return ellipsePts;
+        if (vertexFormat.position) {
+            attributes.position = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : positions
+            });
+        }
+
+        var indicesSize = size * 2 * 3;
+        var indices = new Array(indicesSize);
+        var indicesIndex = 0;
+
+        for (i = 0; i < numPts - 1; ++i) {
+            positionIndex = i + 1;
+            positionIndex *= positionIndex;
+            var prevIndex = i * i;
+
+            indices[indicesIndex++] = positionIndex++;
+            indices[indicesIndex++] = positionIndex;
+            indices[indicesIndex++] = prevIndex;
+
+            numInterior = 2 * i + 1;
+            for (j = 0; j < numInterior - 1; ++j) {
+                indices[indicesIndex++] = prevIndex++;
+                indices[indicesIndex++] = positionIndex;
+                indices[indicesIndex++] = prevIndex;
+
+                indices[indicesIndex++] = positionIndex++;
+                indices[indicesIndex++] = positionIndex;
+                indices[indicesIndex++] = prevIndex;
+            }
+
+            indices[indicesIndex++] = positionIndex++;
+            indices[indicesIndex++] = positionIndex;
+            indices[indicesIndex++] = prevIndex;
+        }
+
+        /**
+         * An object containing {@link GeometryAttribute} properties named after each of the
+         * <code>true</code> values of the {@link VertexFormat} option.
+         *
+         * @type Object
+         */
+        this.attributes = attributes;
+
+        /**
+         * An array of {@link GeometryIndices} defining primitives.
+         *
+         * @type Array
+         */
+        this.indexLists = [
+            new GeometryIndices({
+                primitiveType : PrimitiveType.TRIANGLES,
+                values : indices
+            })
+        ];
+
+        /**
+         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
+         *
+         * @type BoundingSphere
+         */
+        this.boundingSphere = new BoundingSphere(center, semiMajorAxis);
+
+        /**
+         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
+         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+         * Local reference frames can be used by providing a different transformation matrix, like that returned
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
+         *
+         * @type Matrix4
+         *
+         * @see Transforms.eastNorthUpToFixedFrame
+         */
+        //this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
+        this.modelMatrix = Matrix4.IDENTITY.clone();
+
+        /**
+         * DOC_TBA
+         */
+        this.pickData = options.pickData;
     };
 
     return EllipseGeometry;

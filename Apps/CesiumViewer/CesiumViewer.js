@@ -12,6 +12,7 @@ define([
         'Core/Ellipsoid',
         'Core/Extent',
         'Core/ExtentTessellator',
+        'Core/EllipseGeometry',
         'Core/EllipsoidGeometry',
         'Core/BoxGeometry',
         'Core/GeometryFilters',
@@ -37,6 +38,7 @@ define([
         Ellipsoid,
         Extent,
         ExtentTessellator,
+        EllipseGeometry,
         EllipsoidGeometry,
         BoxGeometry,
         GeometryFilters,
@@ -72,6 +74,7 @@ define([
 
         var scene = widget.scene;
 
+        /*
         var mesh = ExtentTessellator.compute({
             extent : new Extent(
                 CesiumMath.toRadians(-180.0),
@@ -81,6 +84,18 @@ define([
             granularity : 0.006                     // More than 64K vertices
         });
         mesh.pickData = 'mesh';
+        */
+        var ellipsoid = Ellipsoid.WGS84;
+        var mesh = new EllipseGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            ellipsoid : ellipsoid,
+            center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
+            semiMinorAxis : 500000.0,
+            semiMajorAxis : 1000000.0,
+            bearing : 0.0,
+            //granularity : 0.75,
+            pickData : 'mesh'
+        });
 
         var mesh2 = new EllipsoidGeometry({
             ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0),
