@@ -3,6 +3,7 @@ define([
         './defaultValue',
         './DeveloperError',
         './Cartesian3',
+        './Cartesian2',
         './EncodedCartesian3',
         './Matrix3',
         './Matrix4',
@@ -18,6 +19,7 @@ define([
         defaultValue,
         DeveloperError,
         Cartesian3,
+        Cartesian2,
         EncodedCartesian3,
         Matrix3,
         Matrix4,
@@ -985,6 +987,147 @@ define([
             }
         }
 
+        return mesh;
+    };
+
+    var w1 = new Cartesian2();
+    var w2 = new Cartesian2();
+    var w3 = new Cartesian2();
+    var u1 = new Cartesian3();
+    var u2 = new Cartesian3();
+    var u3 = new Cartesian3();
+    GeometryFilters.computeTangentAndBinormal = function(mesh) {
+        if (typeof mesh === 'undefined') {
+            throw new DeveloperError('mesh is required.');
+        }
+        var attributes = mesh.attributes;
+        if (typeof attributes === 'undefined' || typeof attributes.position === 'undefined' ||
+                typeof attributes.position.values === 'undefined') {
+            throw new DeveloperError('mesh.attributes.position.values is required');
+        }
+        var vertices = mesh.attributes.position.values;
+        if (mesh.attributes.position.componentsPerAttribute !== 3 || vertices.length % 3 !== 0) {
+            throw new DeveloperError('mesh.attributes.position.values.length must be a multiple of 3');
+        }
+        if (typeof attributes.normal === 'undefined' ||
+                typeof attributes.normal.values === 'undefined') {
+            throw new DeveloperError('mesh.attributes.normal.values is required');
+        }
+        var normals = mesh.attributes.normal.values;
+        if (mesh.attributes.normal.componentsPerAttribute !== 3 || normals.length % 3 !== 0) {
+            throw new DeveloperError('mesh.attributes.normals.values.length must be a multiple of 3');
+        }
+        if (typeof attributes.st === 'undefined' ||
+                typeof attributes.st.values === 'undefined') {
+            throw new DeveloperError('mesh.attributes.st.values is required');
+        }
+        var st = mesh.attributes.st.values;
+        if (mesh.attributes.st.componentsPerAttribute !== 2 || st.length % 2 !== 0) {
+            throw new DeveloperError('mesh.attributes.st.values.length must be a multiple of 3');
+        }
+
+        var indexLists = mesh.indexLists;
+        if (typeof indexLists === 'undefined') {
+            return mesh;
+        }
+
+        var length = indexLists.length;
+        for (var k = 0; k < length; k++) {
+            var indices = indexLists[k].values;
+            if (indexLists[k].primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
+                    indices.length < 2 || indices.length % 3 !== 0) {
+                continue;
+            }
+
+            var numVertices = mesh.attributes.position.values.length/3;
+            var numIndices = indices.length;
+            var tan1 = new Array(numVertices*2);
+            for (var i = 0; i < tan1.length; i++) {
+                tan1[i] = new Cartesian3();
+            }
+
+            for (i = 0; i < numIndices; i+=3) {
+                var i0 = indices[i];
+                var i1 = indices[i+1];
+                var i2 = indices[i+2];
+                var i03 = i0*3;
+                var i13 = i1*3;
+                var i23 = i2*3;
+                var i02 = i0*2;
+                var i12 = i1*2;
+                var i22 = i2*2;
+
+                u1.x = vertices[i03];
+                u1.y = vertices[i03+1];
+                u1.z = vertices[i03+2];
+                u2.x = vertices[i13];
+                u2.y = vertices[i13+1];
+                u2.z = vertices[i13+2];
+                u3.x = vertices[i23];
+                u3.y = vertices[i23+1];
+                u3.z = vertices[i23+2];
+
+                w1.x = st[i02];
+                w1.y = st[i02+1];
+                w2.x = st[i12];
+                w2.y = st[i12+1];
+                w3.x = st[i22];
+                w3.y = st[i22+1];
+
+                var x1 = u2.x - u1.x;
+                var x2 = u3.x - u1.x;
+                var y1 = u2.y - u1.y;
+                var y2 = u3.y - u1.y;
+                var z1 = u2.z - u1.z;
+                var z2 = u3.z - u1.z;
+
+                var s1 = w2.x - w1.x;
+                var s2 = w3.x - w1.x;
+                var t1 = w2.y - w1.y;
+                var t2 = w3.y - w1.y;
+
+                var r = 1.0/(s1 * t2 - s2 * t1);
+                var sdir = new Cartesian3((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
+
+                tan1[i0].add(sdir, tan1[i0]);
+                tan1[i1].add(sdir, tan1[i1]);
+                tan1[i2].add(sdir, tan1[i2]);
+            }
+
+            if (typeof mesh.attributes.tangent === 'undefined') {
+                mesh.attributes.tangent = new GeometryAttribute({
+                        componentDatatype: ComponentDatatype.FLOAT,
+                        componentsPerAttribute: 3,
+                        values: new Array(numVertices * 3)
+                });
+            }
+            if (typeof mesh.attributes.binormal === 'undefined') {
+                mesh.attributes.binormal = new GeometryAttribute({
+                        componentDatatype: ComponentDatatype.FLOAT,
+                        componentsPerAttribute: 3,
+                        values: new Array(numVertices * 3)
+                });
+            }
+            for (i = 0; i < numVertices; i++) {
+                var i3 = i*3;
+                var i31 = i3+1;
+                var i32 = i3+2;
+
+                var n = new Cartesian3(normals[i3], normals[i31], normals[i32]);
+                var t = tan1[i];
+                var tr = new Cartesian3();
+                var scalar = n.dot(t);
+                var v = n.multiplyByScalar(scalar);
+                tr = (t.subtract(v)).normalize();
+                mesh.attributes.tangent.values[i3] = tr.x;
+                mesh.attributes.tangent.values[i31] = tr.y;
+                mesh.attributes.tangent.values[i32] = tr.z;
+                tr = n.cross(tr);
+                mesh.attributes.binormal.values[i3] = tr.x;
+                mesh.attributes.binormal.values[i31] = tr.y;
+                mesh.attributes.binormal.values[i32] = tr.z;
+            }
+        }
         return mesh;
     };
 
