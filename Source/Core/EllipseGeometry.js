@@ -103,10 +103,29 @@ define([
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
+        // The number of points in the first quadrant
         var numPts = Math.ceil(CesiumMath.PI_OVER_TWO / granularity) + 1;
         var deltaTheta = CesiumMath.PI_OVER_TWO / (numPts - 1);
+
+        // If the number of points were three, the ellipse
+        // would be tessellated like below:
+        //
+        //         *---*
+        //       / | \ | \
+        //     *---*---*---*
+        //   / | \ | \ | \ | \
+        // *---*---*---*---*---*
+        //   \ | \ | \ | \ | /
+        //     *---*---*---*
+        //       \ | \ | /
+        //         *---*
+        // Notice each vertical column contains an odd number of positions.
+        // The sum of the first n odd numbers is n^2. Double it for the number of points
+        // for the whole ellipse
         var size = 2 * numPts * numPts;
 
+        // If the ellipsoid contains points on the y axis, remove on of the
+        // central columns of positions because they would be duplicated.
         var reachedPiOverTwo = false;
         if (deltaTheta * (numPts - 1) > CesiumMath.PI_OVER_TWO) {
             size -= 2 * numPts - 1;
@@ -117,6 +136,7 @@ define([
         var j;
         var numInterior;
 
+        // Compute the points in the positive x half-space in 2D.
         var positions = new Array(size * 3);
         positions[0] = semiMajorAxis;
         positions[1] = 0.0;
@@ -129,9 +149,12 @@ define([
         for (i = 1; i < numPts; ++i) {
             var angle = Math.min(i * deltaTheta, CesiumMath.PI_OVER_TWO);
 
+            // Compute the position on the ellipse in the first quadrant.
             position.x = Math.cos(angle) * semiMajorAxis;
             position.y = Math.sin(angle) * semiMinorAxis;
 
+            // Reflect the position across the x axis for a point on the ellipse
+            // in the fourth quadrant.
             reflectedPosition.x =  position.x;
             reflectedPosition.y = -position.y;
 
@@ -139,6 +162,8 @@ define([
             positions[positionIndex++] = position.y;
             positions[positionIndex++] = position.z;
 
+            // Compute the points on the interior of the ellipse, on the line
+            // through the points in the first and fourth quadrants
             numInterior = 2 * i + 1;
             for (j = 1; j < numInterior - 1; ++j) {
                 var t = j / (numInterior - 1);
@@ -162,6 +187,7 @@ define([
             reverseIndex = positionIndex;
         }
 
+        // Reflect the points across the y axis to get the other half of the ellipsoid.
         for (; i > 0; --i) {
             numInterior = 2 * i - 1;
             reverseIndex -= numInterior * 3;
@@ -180,6 +206,8 @@ define([
 
         var textureCoordIndex = 0;
 
+        // Rotate/translate the positions in the xy-plane and un-project to the ellipsoid in 3D.
+        // Compute the texture coordinates, normals, tangents, and binormals at the same times.
         var projection = new GeographicProjection(ellipsoid);
         var centerCart = ellipsoid.cartesianToCartographic(center, scratchCartographic);
         var projectedCenter = projection.project(centerCart, scratchCartesian1);
@@ -280,18 +308,27 @@ define([
             });
         }
 
-        var indicesSize = numPts * (numPts - 1.0) / 2.0;
-        indicesSize *= 4.0;
-        indicesSize += (numPts - 1.0) * 2.0;
-        indicesSize *= 2.0 * 3.0;
+        // The number of triangles in the ellipse on the positive x half-space is:
+        //
+        // numInteriorTriangles = 4 + 8 + 12 + ... = 4 + (4 + 4) + (4 + 4 + 4) + ... = 4 * (1 + 2 + 3 + ...)
+        //                      = 4 * ((n * ( n + 1)) / 2)
+        // numExteriorTriangles = 2 * n
+        //
+        // Substitute (numPts - 1.0) for n above and then:
+        //
+        // numTriangles = 2 * (numInteriorTriangles + numExteriorTriangles)
+        // numIndices = 3 * numTriangles
+
+        var indicesSize = 12.0 * numPts * numPts;
         if (reachedPiOverTwo) {
-            indicesSize += (((numPts * 2.0 - 1.0) * 2.0) - 2.0) * 3.0;
+            indicesSize += 12.0 * (numPts - 1.0);
         }
 
         var indices = new Array(indicesSize);
         var indicesIndex = 0;
         var prevIndex;
 
+        // Indices for positive x half-space
         for (i = 0; i < numPts - 1; ++i) {
             positionIndex = i + 1;
             positionIndex *= positionIndex;
@@ -317,6 +354,7 @@ define([
             indices[indicesIndex++] = prevIndex;
         }
 
+        // Indices for central column of triangles (if there is one)
         if (!reachedPiOverTwo) {
             numInterior = numPts * 2 - 1;
             ++positionIndex;
@@ -332,6 +370,8 @@ define([
             }
         }
 
+        // Reverse the process creating indices for the ellipse on the positive x half-space
+        // to create the part of the ellipse reflected on the y axis.
         ++prevIndex;
         ++positionIndex;
         for (i = numPts - 1; i > 0; --i) {
