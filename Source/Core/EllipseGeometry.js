@@ -44,38 +44,35 @@ define([
     var binormal = new Cartesian3();
 
     /**
-     * Computes boundary points for an ellipse on the ellipsoid.
-     * <br /><br />
-     * The <code>granularity</code> determines the number of points
-     * in the boundary.  A lower granularity results in more points and a more
-     * exact circle.
-     * <br /><br />
-     * An outlined ellipse is rendered by passing the result of this function call to
-     * {@link Polyline#setPositions}.  A filled ellipse is rendered by passing
-     * the result to {@link Polygon#setPositions}.
+     * Computes vertices and indices for an ellipse on the ellipsoid.
      *
-     * @param {Ellipsoid} ellipsoid The ellipsoid the ellipse will be on.
-     * @param {Cartesian3} center The ellipse's center point in the fixed frame.
-     * @param {Number} semiMajorAxis The length of the ellipse's semi-major axis in meters.
-     * @param {Number} semiMinorAxis The length of the ellipse's semi-minor axis in meters.
-     * @param {Number} [bearing] The angle from north (clockwise) in radians. The default is zero.
-     * @param {Number} [granularity] The angular distance between points on the circle.
+     * @alias EllipseGeometry
+     * @constructor
      *
-     * @exception {DeveloperError} ellipsoid, center, semiMajorAxis, and semiMinorAxis are required.
-     * @exception {DeveloperError} Semi-major and semi-minor axes must be greater than zero.
+     * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
+     * @param {Number} [options.semiMajorAxis=1.0] The length of the ellipse's semi-major axis in meters.
+     * @param {Number} [options.semiMinorAxis=1.0] The length of the ellipse's semi-minor axis in meters.
+     * @param {Number} [options.bearing=0.0] The angle from north (clockwise) in radians. The default is zero.
+     * @param {Number} [options.granularity=0.02] The angular distance between points on the circle.
+     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+     * @param {Matrix4} [options.modelMatrix] The model matrix for this ellipsoid.
+     * @param {DOC_TBA} [options.pickData] DOC_TBA
+     *
+     * @exception {DeveloperError} center is required.
+     * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
-     * @see Polyline#setPositions
-     * @see Polygon#setPositions
-     *
-     * @return The set of points that form the ellipse's boundary.
-     *
      * @example
-     * // Create a filled ellipse.
-     * var polygon = new Polygon();
-     * polygon.setPositions(Shapes.computeEllipseBoundary(
-     *   ellipsoid, ellipsoid.cartographicToCartesian(
-     *      Cartographic.fromDegrees(-75.59777, 40.03883)), 500000.0, 300000.0, Math.toRadians(60)));
+     * // Create an ellipse.
+     * var ellipsoid = Ellipsoid.WGS84;
+     * var ellipse = new EllipseGeometry({
+     *     ellipsoid : ellipsoid,
+     *     center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
+     *     semiMajorAxis : 500000.0,
+     *     semiMinorAxis : 300000.0,
+     *     bearing : CesiumMath.toRadians(60.0)
+     * });
      */
     var EllipseGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -391,8 +388,7 @@ define([
          *
          * @see Transforms.eastNorthUpToFixedFrame
          */
-        //this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
-        this.modelMatrix = Matrix4.IDENTITY.clone();
+        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
 
         /**
          * DOC_TBA

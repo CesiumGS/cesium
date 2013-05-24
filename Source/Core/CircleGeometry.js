@@ -12,34 +12,31 @@ define([
     "use strict";
 
     /**
-     * Computes boundary points for a circle on the ellipsoid.
-     * <br /><br />
-     * The <code>granularity</code> determines the number of points
-     * in the boundary.  A lower granularity results in more points and a more
-     * exact circle.
-     * <br /><br />
-     * An outlined circle is rendered by passing the result of this function call to
-     * {@link Polyline#setPositions}.  A filled circle is rendered by passing
-     * the result to {@link Polygon#setPositions}.
+     * Computes vertices and indices for a circle on the ellipsoid.
      *
-     * @param {Ellipsoid} ellipsoid The ellipsoid the circle will be on.
-     * @param {Cartesian3} center The circle's center point in the fixed frame.
-     * @param {Number} radius The radius in meters.
-     * @param {Number} [granularity] The angular distance between points on the circle.
+     * @alias EllipseGeometry
+     * @constructor
      *
-     * @exception {DeveloperError} ellipsoid, center, and radius are required.
+     * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
+     * @param {Number} [options.center=1.0] The radius in meters.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
+     * @param {Number} [options.granularity=0.02] The angular distance between points on the circle.
+     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+     * @param {Matrix4} [options.modelMatrix] The model matrix for this ellipsoid.
+     * @param {DOC_TBA} [options.pickData] DOC_TBA
+     *
+     * @exception {DeveloperError} center is required.
      * @exception {DeveloperError} radius must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
-     * @see Polyline#setPositions
-     * @see Polygon#setPositions
-     *
      * @example
-     * // Create a polyline of a circle
-     * var polyline = new Polyline();
-     * polyline.setPositions(Shapes.computeCircleBoundary(
-     *   ellipsoid, ellipsoid.cartographicToCartesian(
-     *     Cartographic.fromDegrees(-75.59777, 40.03883, 0.0)), 100000.0));
+     * // Create a circle.
+     * var ellipsoid = Ellipsoid.WGS84;
+     * var circle = new CircleGeometry({
+     *     ellipsoid : ellipsoid,
+     *     center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
+     *     radius : 100000.0
+     * });
      */
     var CircleGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -86,7 +83,7 @@ define([
          *
          * @see Transforms.eastNorthUpToFixedFrame
          */
-        //this.modelMatrix = ellipseGeometry.modelMatrix;
+        this.modelMatrix = ellipseGeometry.modelMatrix;
 
         /**
          * DOC_TBA
