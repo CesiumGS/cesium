@@ -93,7 +93,6 @@ define([
             semiMinorAxis : 500000.0,
             semiMajorAxis : 1000000.0,
             bearing : 0.0,
-            granularity : 0.75,
             pickData : 'mesh'
         });
 

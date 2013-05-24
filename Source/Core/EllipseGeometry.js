@@ -234,12 +234,9 @@ define([
 
         if (!reachedPiOverTwo) {
             numInterior = numPts * 2 - 1;
-            prevIndex = numPts - 1;
-            prevIndex *= prevIndex;
-            --prevIndex;
+            ++positionIndex;
+            ++prevIndex;
             for (i = 0; i < numInterior - 1; ++i) {
-                positionIndex = prevIndex + numInterior + 1;
-
                 indices[indicesIndex++] = prevIndex++;
                 indices[indicesIndex++] = positionIndex;
                 indices[indicesIndex++] = prevIndex;
@@ -251,10 +248,8 @@ define([
         }
 
         ++prevIndex;
+        ++positionIndex;
         for (i = numPts - 1; i > 0; --i) {
-            positionIndex = 2 * (i + 1) - 1;
-            positionIndex += prevIndex;
-
             indices[indicesIndex++] = prevIndex++;
             indices[indicesIndex++] = positionIndex;
             indices[indicesIndex++] = prevIndex;
@@ -271,10 +266,8 @@ define([
             }
 
             indices[indicesIndex++] = prevIndex++;
-            indices[indicesIndex++] = positionIndex;
-            indices[indicesIndex++] = prevIndex;
-
-            prevIndex = positionIndex + 1;
+            indices[indicesIndex++] = positionIndex++;
+            indices[indicesIndex++] = prevIndex++;
         }
 
         /**
