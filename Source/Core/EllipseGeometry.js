@@ -106,8 +106,7 @@ define([
 
         var numPts = Math.ceil(CesiumMath.PI_OVER_TWO / granularity) + 1;
         var deltaTheta = CesiumMath.PI_OVER_TWO / (numPts - 1);
-        //var size = 2 * numPts * numPts;
-        var size = numPts * numPts;
+        var size = 2 * numPts * numPts;
 
         var reachedPiOverTwo = false;
         if (deltaTheta * (numPts - 1) > CesiumMath.PI_OVER_TWO) {
@@ -152,14 +151,25 @@ define([
             positions[positionIndex++] = reflectedPosition.z;
         }
 
-        /*
-        i = (reachedPiOverTwo) ? positionIndex - 3 * (2 * numPts - 1) - 1: positionIndex - 1;
-        for (; i > 0; i -= 3) {
-            positions[positionIndex++] = -positions[i - 2];
-            positions[positionIndex++] =  positions[i - 1];
-            positions[positionIndex++] =  positions[i];
+        var reverseIndex;
+        if (reachedPiOverTwo) {
+            i = numPts - 1;
+            reverseIndex = positionIndex - (numPts * 2 - 1) * 3;
+        } else {
+            i = numPts;
+            reverseIndex = positionIndex;
         }
-        */
+
+        for (; i > 0; --i) {
+            numInterior = 2 * i - 1;
+            reverseIndex -= numInterior * 3;
+            for (j = 0; j < numInterior; ++j) {
+                var index = reverseIndex  + j * 3;
+                positions[positionIndex++] = -positions[index];
+                positions[positionIndex++] =  positions[index + 1];
+                positions[positionIndex++] =  positions[index + 2];
+            }
+        }
 
         var projection = new GeographicProjection(ellipsoid);
         var centerCart = ellipsoid.cartesianToCartographic(center, scratchCart);
@@ -190,14 +200,17 @@ define([
             });
         }
 
-        var indicesSize = size * 2 * 3;
-        var indices = new Array(indicesSize);
+        // TODO: compute correct indices array size
+        //var indicesSize = size * 2 * 3;
+        //var indices = new Array(indicesSize);
+        var indices = [];
         var indicesIndex = 0;
+        var prevIndex;
 
         for (i = 0; i < numPts - 1; ++i) {
             positionIndex = i + 1;
             positionIndex *= positionIndex;
-            var prevIndex = i * i;
+            prevIndex = i * i;
 
             indices[indicesIndex++] = positionIndex++;
             indices[indicesIndex++] = positionIndex;
@@ -217,6 +230,51 @@ define([
             indices[indicesIndex++] = positionIndex++;
             indices[indicesIndex++] = positionIndex;
             indices[indicesIndex++] = prevIndex;
+        }
+
+        if (!reachedPiOverTwo) {
+            numInterior = numPts * 2 - 1;
+            prevIndex = numPts - 1;
+            prevIndex *= prevIndex;
+            --prevIndex;
+            for (i = 0; i < numInterior - 1; ++i) {
+                positionIndex = prevIndex + numInterior + 1;
+
+                indices[indicesIndex++] = prevIndex++;
+                indices[indicesIndex++] = positionIndex;
+                indices[indicesIndex++] = prevIndex;
+
+                indices[indicesIndex++] = positionIndex++;
+                indices[indicesIndex++] = positionIndex;
+                indices[indicesIndex++] = prevIndex;
+            }
+        }
+
+        ++prevIndex;
+        for (i = numPts - 1; i > 0; --i) {
+            positionIndex = 2 * (i + 1) - 1;
+            positionIndex += prevIndex;
+
+            indices[indicesIndex++] = prevIndex++;
+            indices[indicesIndex++] = positionIndex;
+            indices[indicesIndex++] = prevIndex;
+
+            numInterior = 2 * (i - 1) + 1;
+            for (j = 0; j < numInterior - 1; ++j) {
+                indices[indicesIndex++] = prevIndex++;
+                indices[indicesIndex++] = positionIndex;
+                indices[indicesIndex++] = prevIndex;
+
+                indices[indicesIndex++] = positionIndex++;
+                indices[indicesIndex++] = positionIndex;
+                indices[indicesIndex++] = prevIndex;
+            }
+
+            indices[indicesIndex++] = prevIndex++;
+            indices[indicesIndex++] = positionIndex;
+            indices[indicesIndex++] = prevIndex;
+
+            prevIndex = positionIndex + 1;
         }
 
         /**
