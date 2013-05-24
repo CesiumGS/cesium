@@ -1,7 +1,6 @@
 /*global defineSuite*/
 defineSuite([
          'Core/PolygonPipeline',
-         'Core/PolygonPipeline_old',
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartographic',
@@ -10,7 +9,6 @@ defineSuite([
          'Core/Math'
      ], function(
          PolygonPipeline,
-         PolygonPipeline_old,
          Cartesian2,
          Cartesian3,
          Cartographic,

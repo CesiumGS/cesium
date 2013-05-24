@@ -656,7 +656,7 @@ define([
                 }
                 if (v1.isReflex) { // If reflex vertex is now convex
                     if(isTipConvex(v1.previous.item, v1.item, v1.next.item)) {
-                        polygonVertices.addReflex(v1);
+                        polygonVertices.removeReflex(v1);
                     }
                 }
                 if (v0.isEar) { // If tip that was previously an ear tip is no longer
