@@ -39,6 +39,9 @@ define([
     var reflectedPosition = new Cartesian3();
     var interiorPosition = new Cartesian3();
     var scratchCart = new Cartographic();
+    var normal = new Cartesian3();
+    var tangent = new Cartesian3();
+    var binormal = new Cartesian3();
 
     /**
      * Computes boundary points for an ellipse on the ellipsoid.
@@ -118,7 +121,7 @@ define([
         var j;
         var numInterior;
 
-        var positions = (vertexFormat.position) ? new Array(size * 3) : undefined;
+        var positions = new Array(size * 3);
         positions[0] = semiMajorAxis;
         positions[1] = 0.0;
         positions[2] = 0.0;
@@ -171,6 +174,13 @@ define([
             }
         }
 
+        var textureCoordinates = (vertexFormat.st) ? new Array(size * 2) : undefined;
+        var normals = (vertexFormat.normal) ? new Array(size * 3) : undefined;
+        var tangents = (vertexFormat.tangent) ? new Array(size * 3) : undefined;
+        var binormals = (vertexFormat.binormal) ? new Array(size * 3) : undefined;
+
+        var textureCoordIndex = 0;
+
         var projection = new GeographicProjection(ellipsoid);
         var centerCart = ellipsoid.cartesianToCartographic(center, scratchCart);
         var projectedCenter = projection.project(centerCart);
@@ -179,15 +189,50 @@ define([
         var length = positions.length;
         for (i = 0; i < length; i += 3) {
             Cartesian3.fromArray(positions, i, position);
+
+            if (vertexFormat.st) {
+                textureCoordinates[textureCoordIndex++] = (position.x + semiMajorAxis) / (2.0 * semiMajorAxis);
+                textureCoordinates[textureCoordIndex++] = (position.y + semiMinorAxis) / (2.0 * semiMinorAxis);
+            }
+
             Matrix2.multiplyByVector(rotation, position, position);
             Cartesian2.add(projectedCenter, position, position);
 
             var unprojected = projection.unproject(position, scratchCart);
             ellipsoid.cartographicToCartesian(unprojected, position);
 
-            positions[i] = position.x;
-            positions[i + 1] = position.y;
-            positions[i + 2] = position.z;
+            if (vertexFormat.position) {
+                positions[i] = position.x;
+                positions[i + 1] = position.y;
+                positions[i + 2] = position.z;
+            }
+
+            if (vertexFormat.normal) {
+                ellipsoid.geodeticSurfaceNormal(position, normal);
+
+                normals[i] = normal.x;
+                normals[i + 1] = normal.y;
+                normals[i + 2] = normal.z;
+            }
+
+            if (vertexFormat.tangent) {
+                ellipsoid.geodeticSurfaceNormal(position, normal);
+                Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+
+                tangents[i] = tangent.x;
+                tangents[i + 1] = tangent.y;
+                tangents[i + 2] = tangent.z;
+            }
+
+            if (vertexFormat.binormal) {
+                ellipsoid.geodeticSurfaceNormal(position, normal);
+                Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                Cartesian3.cross(normal, tangent, binormal);
+
+                binormals[i] = binormal.x;
+                binormals[i + 1] = binormal.y;
+                binormals[i + 2] = binormal.z;
+            }
         }
 
         var attributes = {};
@@ -197,6 +242,38 @@ define([
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
                 values : positions
+            });
+        }
+
+        if (vertexFormat.st) {
+            attributes.st = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                values : textureCoordinates
+            });
+        }
+
+        if (vertexFormat.normal) {
+            attributes.normal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : normals
+            });
+        }
+
+        if (vertexFormat.tangent) {
+            attributes.tangent = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : tangents
+            });
+        }
+
+        if (vertexFormat.binormal) {
+            attributes.binormal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : binormals
             });
         }
 
@@ -274,6 +351,8 @@ define([
             indices[indicesIndex++] = positionIndex++;
             indices[indicesIndex++] = prevIndex++;
         }
+
+        indices.length = indicesIndex;
 
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
