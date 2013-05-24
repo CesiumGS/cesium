@@ -35,13 +35,12 @@ define([
         VertexFormat) {
     "use strict";
 
-    var position = new Cartesian3();
-    var reflectedPosition = new Cartesian3();
-    var interiorPosition = new Cartesian3();
-    var scratchCart = new Cartographic();
-    var normal = new Cartesian3();
-    var tangent = new Cartesian3();
-    var binormal = new Cartesian3();
+    var scratchCartesian1 = new Cartesian3();
+    var scratchCartesian2 = new Cartesian3();
+    var scratchCartesian3 = new Cartesian3();
+    var scratchCartesian4 = new Cartesian3();
+    var scratchCartographic = new Cartographic();
+    var scratchMatrix2 = new Matrix2();
 
     /**
      * Computes vertices and indices for an ellipse on the ellipsoid.
@@ -124,6 +123,9 @@ define([
         positions[2] = 0.0;
         var positionIndex = 3;
 
+        var position = scratchCartesian1;
+        var reflectedPosition = scratchCartesian2;
+
         for (i = 1; i < numPts; ++i) {
             var angle = Math.min(i * deltaTheta, CesiumMath.PI_OVER_TWO);
 
@@ -140,7 +142,7 @@ define([
             numInterior = 2 * i + 1;
             for (j = 1; j < numInterior - 1; ++j) {
                 var t = j / (numInterior - 1);
-                Cartesian3.lerp(position, reflectedPosition, t, interiorPosition);
+                var interiorPosition = Cartesian3.lerp(position, reflectedPosition, t, scratchCartesian3);
                 positions[positionIndex++] = interiorPosition.x;
                 positions[positionIndex++] = interiorPosition.y;
                 positions[positionIndex++] = interiorPosition.z;
@@ -179,13 +181,17 @@ define([
         var textureCoordIndex = 0;
 
         var projection = new GeographicProjection(ellipsoid);
-        var centerCart = ellipsoid.cartesianToCartographic(center, scratchCart);
-        var projectedCenter = projection.project(centerCart);
-        var rotation = Matrix2.fromRotation(bearing);
+        var centerCart = ellipsoid.cartesianToCartographic(center, scratchCartographic);
+        var projectedCenter = projection.project(centerCart, scratchCartesian1);
+        var rotation = Matrix2.fromRotation(bearing, scratchMatrix2);
+
+        var normal;
+        var tangent;
+        var binormal;
 
         var length = positions.length;
         for (i = 0; i < length; i += 3) {
-            Cartesian3.fromArray(positions, i, position);
+            position = Cartesian3.fromArray(positions, i, scratchCartesian2);
 
             if (vertexFormat.st) {
                 textureCoordinates[textureCoordIndex++] = (position.x + semiMajorAxis) / (2.0 * semiMajorAxis);
@@ -195,7 +201,7 @@ define([
             Matrix2.multiplyByVector(rotation, position, position);
             Cartesian2.add(projectedCenter, position, position);
 
-            var unprojected = projection.unproject(position, scratchCart);
+            var unprojected = projection.unproject(position, scratchCartographic);
             ellipsoid.cartographicToCartesian(unprojected, position);
 
             if (vertexFormat.position) {
@@ -205,7 +211,7 @@ define([
             }
 
             if (vertexFormat.normal) {
-                ellipsoid.geodeticSurfaceNormal(position, normal);
+                normal = ellipsoid.geodeticSurfaceNormal(position, scratchCartesian3);
 
                 normals[i] = normal.x;
                 normals[i + 1] = normal.y;
@@ -213,8 +219,8 @@ define([
             }
 
             if (vertexFormat.tangent) {
-                ellipsoid.geodeticSurfaceNormal(position, normal);
-                Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                normal = ellipsoid.geodeticSurfaceNormal(position, scratchCartesian3);
+                tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, scratchCartesian3);
 
                 tangents[i] = tangent.x;
                 tangents[i + 1] = tangent.y;
@@ -222,9 +228,9 @@ define([
             }
 
             if (vertexFormat.binormal) {
-                ellipsoid.geodeticSurfaceNormal(position, normal);
-                Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
-                Cartesian3.cross(normal, tangent, binormal);
+                normal = ellipsoid.geodeticSurfaceNormal(position, scratchCartesian3);
+                tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, scratchCartesian4);
+                binormal = Cartesian3.cross(normal, tangent, scratchCartesian3);
 
                 binormals[i] = binormal.x;
                 binormals[i + 1] = binormal.y;
