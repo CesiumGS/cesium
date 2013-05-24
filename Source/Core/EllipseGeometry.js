@@ -200,10 +200,15 @@ define([
             });
         }
 
-        // TODO: compute correct indices array size
-        //var indicesSize = size * 2 * 3;
-        //var indices = new Array(indicesSize);
-        var indices = [];
+        var indicesSize = numPts * (numPts - 1.0) / 2.0;
+        indicesSize *= 4.0;
+        indicesSize += (numPts - 1.0) * 2.0;
+        indicesSize *= 2.0 * 3.0;
+        if (reachedPiOverTwo) {
+            indicesSize += (((numPts * 2.0 - 1.0) * 2.0) - 2.0) * 3.0;
+        }
+
+        var indices = new Array(indicesSize);
         var indicesIndex = 0;
         var prevIndex;
 
